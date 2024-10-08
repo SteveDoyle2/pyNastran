@@ -99,6 +99,7 @@ class PreferencesWindow(PyDialog):
         #self._default_annotation_size = data['annotation_size'] # int
         #self.default_magnify = data['magnify']
 
+        self._is_trackball_camera = data['is_trackball_camera']
         self._parallel_projection = data['use_parallel_projection']
         self._use_gradient_background = data['use_gradient_background'] # bool
         self._show_corner_coord = data['show_corner_coord']
@@ -1327,6 +1328,7 @@ def main():  # pragma: no cover
         'highlight_opacity' : 0.8,
         'highlight_point_size' : 10.0,
 
+        'is_trackball_camera': True,
         'use_parallel_projection': True,
         'annotation_color' : (1., 0., 0.), # red
         'annotation_size' : 11,

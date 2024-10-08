@@ -195,8 +195,8 @@ from .bdf_interface.verify_validate import verify_bdf, validate_bdf
 from .bdf_interface.stats import get_bdf_stats
 
 from .errors import (CrossReferenceError, DuplicateIDsError,
-                                  CardParseSyntaxError, UnsupportedCard, DisabledCardError,
-                                  SuperelementFlagError, ReplicationError)
+                     CardParseSyntaxError, UnsupportedCard, DisabledCardError,
+                     SuperelementFlagError, ReplicationError)
 from .bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, _check_for_spaces,
     add_superelements_from_deck_lines,
@@ -206,6 +206,45 @@ from .bdf_interface.pybdf import (
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
+Element = (
+    CELAS1 | CELAS2 | CELAS3 | CELAS4 |
+   CDAMP1 | CDAMP2 | CDAMP3 | CDAMP4 | CDAMP5 |
+   CVISC | CBUSH | CBUSH1D | CBUSH2D | CFAST | #CWELD
+   CGAP | GENEL | CCONEAX |
+   CROD | CTUBE | CONROD |
+   CBAR | CBEAM | CBEAM3 | CBEND | CSHEAR |
+   CTRIA3 | CTRIA6 | CTRIAR |
+   CQUAD4 | CQUAD8 | CQUADR | CQUAD |
+   CTRIAX | CTRIAX6 |
+   CQUADX | CQUADX4 | CQUADX8 |
+   CRAC2D | CRAC3D |
+   CPLSTN3 | CPLSTN4 | CPLSTN6 | CPLSTN8 |
+   CPLSTS3 | #CPLSTS4 | CPLSTS6 | CPLSTS8 |
+   CTETRA4 | CTETRA10 | CPENTA6 | CPENTA15 |
+   CHEXA8 | CHEXA20 | CPYRAM5 | CPYRAM13 |
+   CTRAX3 | CTRAX6 |
+   # thermal
+   CHBDYE |CHBDYG | CHBDYP |
+   # Nastran 95
+   CIHEX1 | CIHEX2 |
+   CHEXA1 | CHEXA2)
+Property = (
+    PELAS | PELAST | PDAMP | PDAMPT | PDAMP5 | PMASS |
+    PROD | PTUBE | PVISC |
+    PBUSH | PBUSH1D | PBUSH2D | PGAP |
+    PRAC2D | PRAC3D | PCONEAX |
+    PBAR | PBARL | PBEAM | PBRSECT |
+    PBEAML | PBCOMP | PBMSECT |
+    PBEND | PBEAM3 |
+    PSHEAR | PPLANE |
+    PSHELL | PCOMP | PCOMPG |
+    PSOLID | PLSOLID | PIHEX | PCOMPS | PCOMPLS |
+    PTRSHL #| PWELD
+)
+Material = (
+        MAT1 | MAT2 | MAT3 | MAT8 | MAT9 | MAT10 | MAT11 |
+        MAT3D | EQUIV | MATG)
+ThermalMaterial = MAT4 | MAT5
 CORD = CORD1R | CORD1C | CORD1S | CORD2R | CORD2C | CORD2S
 
 REMOVED_CARDS = {

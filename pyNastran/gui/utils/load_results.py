@@ -319,7 +319,9 @@ def _load_format_header(file_obj, ext, force_float=False):
     }
     return names, fmt_dict, dtype, delimiter
 
-def load_user_geom(fname: str, log=None, encoding: str='latin1'):
+def load_user_geom(fname: str, log=None,
+                   encoding: str='latin1') -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                    np.ndarray, np.ndarray]:
     """
     Loads a file of the form:
 
@@ -398,7 +400,7 @@ def load_user_geom(fname: str, log=None, encoding: str='latin1'):
                 assert len(sline) == 6, sline
                 quads.append(sline[1:])
             else:
-                log.warning(sline)
+                log.warning(str(sline))
 
     grid_ids = np.array(grid_ids, dtype='int32')
     xyz = np.array(xyz, dtype='float32')

@@ -42,6 +42,7 @@ class PreferencesObject(BaseGui):
             'use_startup_directory': settings.use_startup_directory,
 
             'use_gradient_background' : settings.use_gradient_background,
+            'is_trackball_camera' : settings.is_trackball_camera,
             'use_parallel_projection': settings.use_parallel_projection,
             'background_color' : settings.background_color,
             'background_color2' : settings.background_color2,

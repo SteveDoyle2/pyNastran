@@ -21,8 +21,7 @@ from pyNastran.utils.mathematics import integrate_positive_unit_line
 CHECK_MASS = False  # should additional checks be done
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF, NSM1, CQUAD4, CBAR, CBEAM, CROD, CONROD, CTRIA3
-    Element = CQUAD4 | CBAR | CBEAM | CROD | CONROD | CTRIA3
+    from pyNastran.bdf.bdf import BDF, NSM1, CQUAD4, CBAR, CBEAM, CROD, CONROD, CTRIA3, Element
 
 NO_MASS = {
     # has mass

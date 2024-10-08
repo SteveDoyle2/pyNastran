@@ -76,19 +76,7 @@ from pyNastran.gui.vtk_rendering_core import vtkRenderWindow, vtkGenericRenderWi
 #from vtkmodules.vtkRenderingCore import vtkRenderWindow
 #from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
 
-if PyQtImpl == "PyQt5":
-    if QVTKRWIBase == "QGLWidget":
-        from PyQt5.QtOpenGL import QGLWidget
-    from PyQt5.QtWidgets import QWidget, QSizePolicy, QApplication, QMainWindow
-    from PyQt5.QtGui import QCursor
-    from PyQt5.QtCore import Qt, QTimer, QObject, QSize, QEvent, Qt as MouseButton
-elif qt_version == "pyside2":
-    if QVTKRWIBase == "QGLWidget":
-        from PySide2.QtOpenGL import QGLWidget
-    from PySide2.QtWidgets import QWidget, QSizePolicy, QApplication, QMainWindow
-    from PySide2.QtGui import QCursor
-    from PySide2.QtCore import Qt, QTimer, QObject, QSize, QEvent, Qt as MouseButton
-elif qt_version == "pyside6":
+if qt_version == "pyside6":
     if QVTKRWIBase == "QOpenGLWidget":
         from PySide6.QtOpenGLWidgets import QOpenGLWidget
     from PySide6.QtWidgets import QWidget, QSizePolicy, QApplication, QMainWindow
@@ -101,14 +89,20 @@ elif qt_version == "pyqt6":
     from PyQt6.QtGui import QCursor
     from PyQt6.QtCore import Qt, QTimer, QObject, QSize, QEvent
     MouseButton = Qt.MouseButton
+elif PyQtImpl == "PyQt5":
+    if QVTKRWIBase == "QGLWidget":
+        from PyQt5.QtOpenGL import QGLWidget
+    from PyQt5.QtWidgets import QWidget, QSizePolicy, QApplication, QMainWindow
+    from PyQt5.QtGui import QCursor
+    from PyQt5.QtCore import Qt, QTimer, QObject, QSize, QEvent, Qt as MouseButton
+elif qt_version == "pyside2":
+    if QVTKRWIBase == "QGLWidget":
+        from PySide2.QtOpenGL import QGLWidget
+    from PySide2.QtWidgets import QWidget, QSizePolicy, QApplication, QMainWindow
+    from PySide2.QtGui import QCursor
+    from PySide2.QtCore import Qt, QTimer, QObject, QSize, QEvent, Qt as MouseButton
 else:
     raise ImportError("Unknown PyQt implementation " + repr(qt_version))
-
-#if PyQtImpl in ('PyQt4', 'PySide'):
-    #MiddleButton = MouseButton.MidButton
-#else:
-MiddleButton = MouseButton.MiddleButton
-
 
 # Define types for base class, based on string
 if QVTKRWIBase == "QWidget":
@@ -122,20 +116,28 @@ else:
 
 if PyQtImpl == 'PyQt6':
     CursorShape = Qt.CursorShape
-    MouseButton = Qt.MouseButton
-    WindowType = Qt.WindowType
     WidgetAttribute = Qt.WidgetAttribute
-    KeyboardModifier = Qt.KeyboardModifier
     FocusPolicy = Qt.FocusPolicy
     ConnectionType = Qt.ConnectionType
     Key = Qt.Key
     SizePolicy = QSizePolicy.Policy
     EventType = QEvent.Type
+    try:
+        MouseButton = Qt.MouseButton
+        WindowType = Qt.WindowType
+        KeyboardModifier = Qt.KeyboardModifier
+    except AttributeError:
+        # Fallback solution for PyQt6 versions < 6.1.0
+        MouseButton = Qt.MouseButtons
+        WindowType = Qt.WindowFlags
+        KeyboardModifier = Qt.KeyboardModifiers
 else:
     CursorShape = MouseButton = WindowType = WidgetAttribute = \
         KeyboardModifier = FocusPolicy = ConnectionType = Key = Qt
     SizePolicy = QSizePolicy
     EventType = QEvent
+
+MiddleButton = MouseButton.MiddleButton
 
 
 def _get_event_pos(ev):
@@ -261,7 +263,7 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
 
         # create base qt-level widget
         if QVTKRWIBase == "QWidget":
-            if 'wflags' in kw:
+            if "wflags" in kw:
                 wflags = kw['wflags']
             else:
                 wflags = WindowType.Widget  # what Qt.WindowFlags() returns (0)
@@ -278,17 +280,7 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
 
         WId = self.winId()
 
-        # Python2
-        if type(WId).__name__ == 'PyCObject':
-            from ctypes import pythonapi, c_void_p, py_object
-
-            pythonapi.PyCObject_AsVoidPtr.restype  = c_void_p
-            pythonapi.PyCObject_AsVoidPtr.argtypes = [py_object]
-
-            WId = pythonapi.PyCObject_AsVoidPtr(WId)
-
-        # Python3
-        elif type(WId).__name__ == 'PyCapsule':
+        if type(WId).__name__ == 'PyCapsule':
             from ctypes import pythonapi, c_void_p, py_object, c_char_p
 
             pythonapi.PyCapsule_GetName.restype = c_char_p

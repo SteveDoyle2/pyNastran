@@ -200,7 +200,7 @@ class CMASS1(PointMassElement):
         self.nodes_ref, missing_nodes = model.safe_empty_nodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property_mass(self.pid, self.eid, xref_errors, msg=msg)
         if missing_nodes:
-            model.log.warning(missing_nodes)
+            model.log.warning(str(missing_nodes))
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -500,7 +500,7 @@ class CMASS2(PointMassElement):
         msg = ', which is required by CMASS2 eid=%s' % self.eid
         self.nodes_ref, missing_nodes = model.safe_empty_nodes(self.node_ids, msg=msg)
         if missing_nodes:
-            model.log.warning(missing_nodes)
+            model.log.warning(str(missing_nodes))
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

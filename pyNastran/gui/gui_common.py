@@ -1052,7 +1052,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.rend.SetBackground2(*self.background_color2)
 
         rend.ResetCamera()
-        self.mouse_actions.set_style_as_trackball()
+        self.mouse_actions.set_style()
         self._build_vtk_frame_post()
 
     def on_reset_camera(self):

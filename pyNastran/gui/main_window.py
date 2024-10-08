@@ -168,6 +168,7 @@ class MainWindow(GuiCommon, NastranIO):
         self.start_logging()
         self._load_plugins()
         self.setup_gui(is_gui)
+        self.setup_controls()
         self.setup_post(inputs)
 
         if is_pynastrangui_exe and '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
@@ -194,6 +195,61 @@ class MainWindow(GuiCommon, NastranIO):
                 #self.repaint()
                 #self.update()
                 #print("WindowMaximized")
+
+    def setup_controls(self):
+        """
+        Catia
+        Pan:    Click and hold the middle mouse button, then drag
+        Zoom:   Press and hold the middle mouse button, then click and drag the left or right mouse button
+        Rotate: Press and hold the middle mouse button, then press and drag the left or right mouse button
+        Center a graph: Use the RH-click menu in the Navigation window
+        Return to pan mode: Release the mouse buttons and middle-click
+        Toggle between rotation and zoom mode: Press or release the side button
+
+        Solidworks
+        The middle mouse button can be used for various view commands, including:
+        Rotate view: Drag with the middle mouse button to rotate the model view
+        Pan: Hold down Ctrl and drag with the middle mouse button
+        Zoom in/out: Hold down Shift and drag with the middle mouse button
+
+        Femap
+        Rotate, pan, or zoom: Use the middle mouse button to rotate, pan, or zoom in a dialog box or when you're not in a command.
+        Select: Use the left mouse button to select in a dialog.
+          Scroll through the list of entities: Use the Next or Previous buttons to scroll through the list of entities.
+          Move to the next defined selection: Use Control and Shift with the middle mouse wheel to move to the next defined selection.
+          Access the Quick Access Menu: Hold down the Alt key while clicking the right mouse button.
+        Set the center of rotation:   Hold Ctrl and middle mouse click on the model.
+        Reset the center of rotation: Hold Ctrl and middle mouse click in empty space.
+        Control the model clipping:   Use the Alt key and the middle mouse
+             button to interactively slide the plane through the model.
+
+        Patran
+        Shift + Middle mouse button to Pan X/Y
+        Control + Middle mouse button to Zoom
+        Shift + Control + Middle mouse button to Rotate Z
+
+        NX
+        Deselect: Press and hold “Shift” and click the “Left Mouse Button”
+                  selected items to deselect.
+        Rotate:   Press and hold the “Middle Mouse Button” and drag to rotate.
+                  (Note: If the rotation velocity is too fast for you, you can
+                  decrease speed by activating “Precise Rotation”.   It is
+                  currently hidden. You can find it by using “Command Finder”.)
+        Pan:      Press and hold the “Middle Mouse Button” then press the
+                  “Right Mouse Button” and drag the mouse. Press and hold
+                  “Shift” then press and hold the “Middle Mouse Button”
+                  and drag the mouse to pan.
+        Zoom In /Out: Scroll the “Middle Mouse Button” forward/reverse to zoom in/out.
+                  Press and hold “CTRL” then press and hold the “Middle Mouse Button”
+                  and drag the mouse to zoom in/out. Press and hold the “Middle
+                  Mouse Button” then press the “Left Mouse Button” and drag the
+                  mouse. (I don’t use this method. Because I use the index
+                  finger for both “Left Mouse Button” and “Middle Mouse Button”.
+                  It might be hard for someone to press both “Left Mouse Button”
+                  and “Middle Mouse Button”. I use zoom in/out by scrolling the
+                  “Middle Mouse Button”. It is very fast and easy to use.)
+        """
+        pass
 
     def _load_plugins(self, plugin_name_to_path: Optional[list[tuple[str, str, str]]]=None):
         """loads the plugins from pyNastran/gui/plugins.py

@@ -4,13 +4,16 @@ Creates safe cross referencing
 Safe cross-referencing skips failed xref's
 
 """
+from __future__ import annotations
 from collections import defaultdict
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import zeros, argsort, arange, array_equal
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
-
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import Element, Property #, GRID
+    from pyNastran.bdf.cards.nodes import GRID
 
 class SafeXrefMesh(XrefMesh):
     """
@@ -28,21 +31,21 @@ class SafeXrefMesh(XrefMesh):
         # for elem in model.elements:
             # elem.check_unique_nodes()
 
-    def safe_cross_reference(self, xref=True,
-                             xref_nodes=True,
-                             xref_elements=True,
-                             xref_nodes_with_elements=False,
-                             xref_properties=True,
-                             xref_masses=True,
-                             xref_materials=True,
-                             xref_loads=True,
-                             xref_constraints=True,
-                             xref_aero=True,
-                             xref_sets=True,
-                             xref_optimization=True,
-                             create_superelement_geometry=False,
+    def safe_cross_reference(self, xref: bool=True,
+                             xref_nodes: bool=True,
+                             xref_elements: bool=True,
+                             xref_nodes_with_elements: bool=False,
+                             xref_properties: bool=True,
+                             xref_masses: bool=True,
+                             xref_materials: bool=True,
+                             xref_loads: bool=True,
+                             xref_constraints: bool=True,
+                             xref_aero: bool=True,
+                             xref_sets: bool=True,
+                             xref_optimization: bool=True,
+                             create_superelement_geometry: bool=False,
                              debug=True,
-                             word=''):
+                             word: str='') -> None:
         """
         Performs cross referencing in a way that skips data gracefully.
 
@@ -85,7 +88,7 @@ class SafeXrefMesh(XrefMesh):
         self.pop_xref_errors()
         for superelement_tuple, superelement in sorted(self.superelement_models.items()):
             if isinstance(superelement_tuple, int):
-                word = f' (Superelement {super_tuple:d})'
+                word = f' (Superelement {superelement_tuple:d})'
             else:
                 wordi, value, label = superelement_tuple
                 if label:
@@ -382,7 +385,7 @@ class SafeXrefMesh(XrefMesh):
         for unused_key, topvar in self.topvar.items():
             topvar.safe_cross_reference(self)
 
-    def safe_empty_nodes(self, nids, msg=''):
+    def safe_empty_nodes(self, nids: list[int], msg: str='') -> tuple[list[GRID], list[int]]:
         """safe xref version of self.Nodes(nid, msg='')"""
         nodes = []
         missing_nodes = []
@@ -398,7 +401,7 @@ class SafeXrefMesh(XrefMesh):
             self.log.warning('Nodes %s are missing%s' % (str(missing_nodes), msg))
         return nodes, missing_nodes
 
-    def safe_get_nodes(self, nids: list[int], msg: str='') -> tuple[list[Any], str]:
+    def safe_get_nodes(self, nids: list[int], msg: str='') -> tuple[list[GRID], str]:
         """safe xref version of self.Nodes(nid, msg='')"""
         nodes = []
         error_nodes = []
@@ -414,7 +417,7 @@ class SafeXrefMesh(XrefMesh):
             msgi += 'Could not find nodes %s%s\n' % (', '.join(error_nodes), msg)
         return nodes, msgi
 
-    def safe_get_points(self, point_ids, msg=''):
+    def safe_get_points(self, point_ids: list[int], msg: str=''):
         """safe xref version of self.Points(point_ids, msg='')"""
         points = []
         error_points = []
@@ -430,7 +433,7 @@ class SafeXrefMesh(XrefMesh):
             msgi += 'Could not find POINTs %s%s\n' % (', '.join(error_points), msg)
         return points, msgi
 
-    def safe_get_elements(self, eids, msg=''):
+    def safe_get_elements(self, eids: list[int], msg: str=''):
         """safe xref version of self.Elements(eid, msg='')"""
         elements = []
         msgi = ''
@@ -443,7 +446,7 @@ class SafeXrefMesh(XrefMesh):
             elements.append(element)
         return elements, msgi
 
-    def safe_element(self, eid, ref_id, xref_errors, msg=''):
+    def safe_element(self, eid: int, ref_id: int, xref_errors, msg: str='') -> ELement:
         """
         Gets an element card
 
@@ -466,8 +469,9 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['eid'].append((ref_id, eid))
         return eid_ref
 
-    def safe_elements(self, eids, ref_id: int,
-                      xref_errors: dict[str, tuple[int, int]], msg=''):
+    def safe_elements(self, eids: list[int], ref_id: int,
+                      xref_errors: dict[str, tuple[int, int]],
+                      msg: str='') -> list[Element]:
         """
         Gets an series of elements
 
@@ -497,7 +501,7 @@ class SafeXrefMesh(XrefMesh):
             #raise KeyError(msg)
         return elements
 
-    def safe_property(self, pid, ref_id, xref_errors, msg=''):
+    def safe_property(self, pid: int, ref_id: int, xref_errors, msg: str='') -> Property:
         """
         Parameters
         ----------

@@ -68,6 +68,7 @@ SHEAR_MOMENT_TORQUE_LINE_WIDTH = 5.0
 LINE_WIDTH_MIN = 0.1
 LINE_WIDTH_MAX = 2000.
 
+IS_TRACKBALL_CAMERA = True
 USE_PARALLEL_PROJECTION = True
 DEFAULT_COLORMAP = 'jet'
 NFILES_TO_SAVE = 9
@@ -325,6 +326,7 @@ class Settings:
         self.shear_moment_torque_point_size = SHEAR_MOMENT_TORQUE_POINT_SIZE # float
         self.shear_moment_torque_line_width = SHEAR_MOMENT_TORQUE_LINE_WIDTH # float
 
+        self.is_trackball_camera = IS_TRACKBALL_CAMERA
         self.use_parallel_projection = USE_PARALLEL_PROJECTION
         self.displacement_model_scale = DISPLACEMENT_MODEL_SCALE
         self.show_info = True
@@ -398,6 +400,9 @@ class Settings:
             self.font_size, min_value=FONT_SIZE_MIN, max_value=None)
 
         # parallel/perspective
+        self._set_setting(settings, setting_keys, ['is_trackball_camera'],
+                          default=self.is_trackball_camera,
+                          save=True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['use_parallel_projection'],
                           default=self.use_parallel_projection,
                           save=True, auto_type=bool)
@@ -695,6 +700,7 @@ class Settings:
             settings.setValue('main_window_state', parent.saveState())
 
         # booleans
+        settings.setValue('is_trackball_camera', self.is_trackball_camera)
         settings.setValue('use_parallel_projection', self.use_parallel_projection)
         settings.setValue('use_gradient_background', self.use_gradient_background)
 
@@ -1111,6 +1117,14 @@ class Settings:
     def set_magnify(self, magnify: int=5) -> None:
         """sets the screenshot magnification factor"""
         self.magnify = magnify
+
+    def set_trackball_camera(self, is_trackball_camera: bool,
+                             render: bool=True) -> None:
+        """sets the parallel_projection flag"""
+        self.is_trackball_camera = is_trackball_camera
+        self.parent.mouse_settings.set_style()
+        if render:
+            self.parent.vtk_interactor.Render()
 
     def set_parallel_projection(self, parallel_projection: bool,
                                 render: bool=True) -> None:

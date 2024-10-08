@@ -4,11 +4,13 @@ from typing import Optional, TYPE_CHECKING
 from vtkmodules.vtkRenderingCore import vtkRenderer
 from pyNastran.gui.qt_files.colors import BLACK_FLOAT
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
+from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera, JoystickStyleCamera
 
 if TYPE_CHECKING:  # pragma: no cover
     import numpy as np
+    from cpylog import SimpleLogger
     from pyNastran.gui.dev.gui2.gui2 import MainWindow2
+    from vtkmodules.vtkInteractionStyle import vtkInteractor
 
 
 class ScalarBar:
@@ -30,6 +32,7 @@ class VtkInterface:
 
         self.vtk_interactor = QVTKRenderWindowInteractor(parent=parent)
         self.set_style_as_trackball()
+        #self.set_style_as_joystick()
 
         self.rend = vtkRenderer()
         #self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
@@ -46,13 +49,21 @@ class VtkInterface:
         return self.gui.settings
 
     @property
-    def log(self):
+    def log(self) -> SimpleLogger:
         return self.gui.log
 
-    def set_style_as_trackball(self):
+    def set_style(self):
+        #self.mouse_actions.set_style_as_trackball()
+        self.mouse_actions.set_style_as_joystick()
+
+    def set_style_as_trackball(self) -> None:
         """sets the default rotation style"""
         #self._simulate_key_press('t') # change mouse style to trackball
         self.style = TrackballStyleCamera(self.vtk_interactor, self)
+        self.vtk_interactor.SetInteractorStyle(self.style)
+
+    def set_style_as_joystick(self) -> None:
+        self.style = JoystickStyleCamera(self.vtk_interactor, self)
         self.vtk_interactor.SetInteractorStyle(self.style)
 
     def set_quad_grid(self, box_name: str,
@@ -67,7 +78,7 @@ class VtkInterface:
         self.log.warning('create_global_axes')
 
 
-def fill_render_window(vtk_interactor,
+def fill_render_window(vtk_interactor: vtkInteractor,
                        rend: vtkRenderer,
                        nframes: int=1) -> list[vtkRenderer]:
     assert nframes in [1, 2, 4], nframes
@@ -126,4 +137,3 @@ def fill_render_window(vtk_interactor,
         render_window.AddRenderer(rend4)
         return [rend, rend2, rend3, rend4]
     raise ValueError(nframes)
-

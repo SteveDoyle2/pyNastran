@@ -28,7 +28,7 @@ from pyNastran.gui.styles.area_pick_style import AreaPickStyle
 from pyNastran.gui.styles.zoom_style import ZoomStyle
 #from pyNastran.gui.styles.probe_style import ProbeResultStyle
 from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
-from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
+from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera, JoystickStyleCamera
 from pyNastran.gui.utils.vtk.vtk_utils import (
         find_point_id_closest_to_xyz, create_vtk_selection_node_by_cell_ids)
 
@@ -112,7 +112,7 @@ class MouseActions:
             self.vtk_interactor.AddObserver('EndPickEvent', self._probe_picker)
             # there should be a cleaner way to revert the trackball Rotate command
             # it apparently requires an (obj, event) argument instead of a void...
-            self.set_style_as_trackball()
+            self.set_style()
 
             # the more correct-ish way to reset the 'LeftButtonPressEvent' to Rotate
             # that doesn't work...
@@ -265,10 +265,24 @@ class MouseActions:
                 self.setup_mouse_buttons(mode='default')
                 return
 
+    def set_style(self):
+        gui: MainWindow = self.gui
+        settings = gui.settings
+        if settings.is_trackball_camera:
+            self.set_style_as_trackball()
+        else:
+            self.set_style_as_joystick()
+
     def set_style_as_trackball(self) -> None:
         """sets the default rotation style"""
         #self._simulate_key_press('t') # change mouse style to trackball
         self.style = TrackballStyleCamera(self.vtk_interactor, self)
+        self.vtk_interactor.SetInteractorStyle(self.style)
+
+    def set_style_as_joystick(self) -> None:
+        """sets the default rotation style"""
+        #self._simulate_key_press('t') # change mouse style to trackball
+        self.style = JoystickStyleCamera(self.vtk_interactor, self)
         self.vtk_interactor.SetInteractorStyle(self.style)
 
     def on_highlight_node(self) -> None:

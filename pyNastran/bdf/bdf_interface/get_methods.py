@@ -8,7 +8,7 @@ import numpy as np
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.utils.numpy_utils import integer_types
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, Element, Property, Material, ThermalMaterial
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.bdf.cards.nodes import POINT, GRID, SPOINT, EPOINT # , SPOINTs, EPOINTs, SEQGP, GRIDB
     from pyNastran.bdf.cards.aero.aero import (
@@ -261,7 +261,7 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # PROPERTY CARDS
-    def Property(self, pid: int, msg: str='') -> Any:
+    def Property(self, pid: int, msg: str='') -> Property:
         """
         gets an elemental property (e.g. PSOLID, PLSOLID, PCOMP, PSHELL, PSHEAR);
         not mass property (PMASS)
@@ -321,7 +321,7 @@ class GetMethods(BDFAttributes):
         """gets the thermal material ids"""
         return self.thermal_materials.keys()
 
-    def Material(self, mid: int, msg: str='') -> Union[MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11, MAT3D, EQUIV, MATG]:
+    def Material(self, mid: int, msg: str='') -> Material | ThermalMaterial:
         """gets a structural or thermal material"""
         if mid in self.materials:
             return self.materials[mid]
@@ -336,7 +336,7 @@ class GetMethods(BDFAttributes):
             )
             raise KeyError(msg2)
 
-    def StructuralMaterial(self, mid, msg='') -> Union[MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11, MAT3D, EQUIV, MATG]:
+    def StructuralMaterial(self, mid, msg='') -> Material:
         """gets a structural material"""
         try:
             mat = self.materials[mid]
@@ -363,7 +363,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('Invalid Hyperelastic Material ID:  mid=%s%s' % (mid, msg))
         return mat
 
-    def Materials(self, mids, msg='') -> list[Union[MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11, MAT3D, EQUIV, MATG]]:
+    def Materials(self, mids, msg='') -> list[Material]:
         """gets one or more Materials"""
         if isinstance(mids, integer_types):
             mids = [mids]
