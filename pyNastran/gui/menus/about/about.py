@@ -27,9 +27,11 @@ from qtpy.QtWidgets import (
 
 import cpylog
 from pyNastran.gui import ICON_PATH, IS_LINUX, IS_MAC # IS_WINDOWS
+from pyNastran.gui.default_controls import CONTROLS
 from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments
 from pyNastran.gui.menus.python_console import QSCINTILLA_VERSION
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
+
 
 def get_qt_license(qt_namei: str) -> str:
     if qt_namei == 'PyQt5':
@@ -389,33 +391,13 @@ def get_shortcuts() -> tuple[dict[str, str], dict[str, str]]:
         'Shift + Left Click' : 'Pan/Recenter Rotation Point',
         'Right Mouse / Wheel' : 'Zoom',
     }
-    keyboard_shortcuts = {
-        'R' : 'reset camera view',
-        'Shift+X/X' : 'snap to x axis',
-        'Shift+Y/Y' : 'snap to y axis',
-        'Shift+Z/Z' : 'snap to z axis',
-        #'',
-        #'h   - show/hide legend & info',
+    shortcuts_order = [
+        'reset', 'xsnap', 'ysnap', 'zsnap', 'fwd_scale', 'rev_scale',
+        'scale', 'rotate', 'pick', 'edge1', 'edge2', 'rotation_center',
+    ]
 
-        # shown on the menu
-        #'CTRL+I - take a screenshot (image)',
-        #'CTRL+W - clear the labels',
-        #'CTRL+L - Legend',
-        #'CTRL+A - Animation',
-        #'S      - view model as a surface',
-        #'W      - view model as a wireframe',
-
-        'L' : 'cycle the results forwards',
-        'K' : 'cycle the results backwards',
-        'm/Shift+M' : 'scale up/scale down by 1.1 times',
-        'o/Shift+O' : 'rotate counter-clockwise/clockwise 5 degrees',
-        'P' : 'pick node/element',
-        'F' : 'set rotation center (zoom out when picking to disable clipping)',
-        'E' : 'view model edges',
-        'B' : 'change edge color from scalar/black',
-        #'',
-        #'Reload Model:  using the same filename, reload the model',
-    }
+    keyboard_shortcuts = {shortcut_msg[0]: shortcut_msg[1]
+        for unused_key, shortcut_msg in CONTROLS.items()}
     return mouse_shortcuts, keyboard_shortcuts
 
 def layout_to_vlayout(layout):

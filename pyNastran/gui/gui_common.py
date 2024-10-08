@@ -29,6 +29,7 @@ from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode
 from vtkmodules.vtkRenderingCore import vtkImageActor, vtkProperty
 from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader
 
+#from pyNastran.gui.default_controls import BASE_TOOLS
 from pyNastran.gui.utils.qt.qsettings import QSettingsLike
 from pyNastran.gui.vtk_common_core import vtkIdTypeArray
 from pyNastran.gui.vtk_rendering_core import vtkRenderer
@@ -291,7 +292,43 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         is_visible = True
         if tools is None:
-            recent_file_tools = self.get_recent_file_tools(self.settings.recent_files)
+            recent_file_tools: list[Tool] = self.get_recent_file_tools(self.settings.recent_files)
+
+            base_tools_dict = {
+                # flag : (func, ???)
+                'exit' : (self.closeEvent, is_visible),
+                'reload': (self.on_reload, is_visible),
+                'load_geometry' : (self.on_load_geometry, is_visible),
+                'load_results': (self.on_load_results, is_visible),
+                'load_csv_user_geom': (self.on_load_user_geom, is_visible),
+                'load_csv_user_points': (self.on_load_csv_points, is_visible),
+                'load_custom_result': (self.on_load_custom_results, is_visible),
+                'save_vtk': (self.on_save_vtk, is_visible),
+                'script': (self.on_run_script, is_visible),
+            }
+
+            # flag,  label,   picture,     shortcut, tooltip             func
+            if 0:  # pragma: no cover
+                base_tools0: list[Tool] = [tuple([key, *BASE_TOOLS[key], *funcs])
+                                          for key, funcs in base_tools_dict.items()]
+
+                base_tools_dict = {
+                    # flag : (func, ???)
+                    'exit' : (self.closeEvent, is_visible),
+                    'reload': (self.on_reload, is_visible),
+                    'load_geometry' : (self.on_load_geometry, is_visible),
+                    'load_results': (self.on_load_results, is_visible),
+                    'load_csv_user_geom': (self.on_load_user_geom, is_visible),
+                    'load_csv_user_points': (self.on_load_csv_points, is_visible),
+                    'load_custom_result': (self.on_load_custom_results, is_visible),
+                    'save_vtk': (self.on_save_vtk, is_visible),
+                    'script': (self.on_run_script, is_visible),
+                }
+
+                # flag,  label,   picture,     shortcut, tooltip             func
+                base_tools: list[Tool] = [tuple([key, *BASE_TOOLS[key], *funcs])
+                                          for key, funcs in base_tools_dict.items()]
+                file_tools: list[Tool] = base_tools + recent_file_tools
 
             file_tools: list[Tool] = [
                 # flag,  label,   picture,     shortcut, tooltip             func
@@ -393,7 +430,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('anti_alias_8', '8x',               '',                 '',  'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8), is_visible),
 
                 # mouse buttons
-                ('rotation_center',  'Set the Rotation Center', 'trotation_center.png', 'f', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center, is_visible),
+                ('rotation_center',  'Set the Rotation Center', 'trotation_center.png', 'Ctrl+F', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center, is_visible),
                 ('measure_distance', 'Measure Distance',        'measure_distance.png', '',  'Measure the distance between two nodes', self.mouse_actions.on_measure_distance, is_visible),
                 ('highlight_cell',   'Highlight Cell',          '',                     '',  'Highlight a single cell', self.mouse_actions.on_highlight_cell, is_visible),
                 ('highlight_node',   'Highlight Node',          '',                     '',  'Highlight a single node', self.mouse_actions.on_highlight_node, is_visible),
