@@ -126,7 +126,7 @@ class Usm3d:
         mapbc = {}
         for line in lines[1:]:
             sline = line.split()
-            #self.log.info(sline)
+            #self.log.info(str(sline))
             patch_id, bc, family, surf, surf_ids = sline[:5]
             mapbc[int(patch_id)] = [int(bc), int(family), int(surf), surf_ids]
         return mapbc

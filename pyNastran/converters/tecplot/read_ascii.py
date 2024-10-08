@@ -699,7 +699,7 @@ def read_point(lines: list[str], iline: int,
             print(msg)
             raise
         iline, line, sline = get_next_sline(lines, iline)
-        #log.debug(sline)
+        #log.debug(str(sline))
     log.debug('end of POINT')
     return iline, line, sline
 
@@ -728,7 +728,7 @@ def read_block(lines: list[str], iline: int,
         if len(sline) == 0:
             raise
         iline, line, sline = get_next_sline(lines, iline)
-        #log.debug(sline)
+        #log.debug(str(sline))s
     #print(len(results))
     assert len(results) == ndata, 'len(results)=%s expected=%s' % (len(results), ndata)
     log.debug('end of BLOCK')
@@ -796,4 +796,3 @@ def split_line(line: str) -> list[str]:
     else:
         sline = line.split()
     return sline
-

@@ -49,6 +49,9 @@ allowed_element_types = [
     'r2d2',
     'mass',
 
+    # rods
+    't3d2',
+
     # lines
     'b31', # 3d, 2-node, linear beam
     'b31h', #3d 2-node linear beam; hybrid
@@ -92,6 +95,8 @@ class Elements:
             rigid:
                 r2d2 : (nelements, 2) int ndarray
                 mass : (mass, 1) int ndarray
+            rods:
+                t3d2 : (nelements, 2) int ndarray
             bars:
             beams:
                 b31  : (nelements, 3) int ndarray - 2 nodes and g0
@@ -145,6 +150,10 @@ class Elements:
         # rigid elements
         self.r2d2 = None
         self.r2d2_eids = None
+
+        # rods
+        self.t3d2 = None
+        self.t3d2_eids = None
 
         # bars/beams
         self.b31 = None
@@ -305,6 +314,9 @@ class Elements:
         # rigid elements
         n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
 
+        # rods
+        n_t3d2 = self.t3d2.shape[0] if self.t3d2 is not None else 0
+
         # bar/beam
         n_b31 = self.b31.shape[0] if self.b31 is not None else 0  #  beam
         n_b31h = self.b31h.shape[0] if self.b31h is not None else 0  #  beam
@@ -355,6 +367,7 @@ class Elements:
 
         neids = (n_mass +
                  n_r2d2 +  # rigid elements
+                 n_t3d2 + # rods
                  n_b31 + n_b31h + n_b31r +  # bar/beam
                  n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
                  n_cps3 + n_cps4 + n_cps4r +  # plane stress
@@ -380,6 +393,9 @@ class Elements:
 
         # rigid elements
         n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
+
+        # rods
+        n_t3d2 = self.t3d2.shape[0] if self.t3d2 is not None else 0
 
         # bar/beam
         n_b31 = self.b31.shape[0] if self.b31 is not None else 0
@@ -431,6 +447,7 @@ class Elements:
 
         neids = (n_mass +
                  n_r2d2 +  # rigid
+                 n_t3d2 +  # rod
                  n_b31 + n_b31h + n_b31r +  # bar/beam
                  n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
                  n_cps3 + n_cps4 + n_cps4r +  # plane stress
@@ -454,7 +471,7 @@ class Elements:
         msg = (
             f'Element(neids={neids:d}, element_type_to_elset_name={elset_str},\n'
             f'        n_mass={n_mass}, \n'
-            f'        n_r2d2={n_r2d2}, \n'
+            f'        n_r2d2={n_r2d2}, n_t3d2={n_t3d2},\n'
             f'        n_b31={n_b31}, n_b31h={n_b31h}, n_b31r={n_b31r},\n' # bar/beam
             # shells
             f'        n_cpe3={n_cpe3}, n_cpe4={n_cpe4}, n_cpe4r={n_cpe4r},\n' # plane strain
@@ -481,6 +498,9 @@ class Elements:
 
         # rigid
         element_types['r2d2'] = (self.r2d2_eids, self.r2d2)
+
+        # rods
+        element_types['t3d2'] = (self.t3d2_eids, self.t3d2)
 
         # bar/beam
         element_types['b31'] = (self.b31_eids, self.b31)
@@ -541,7 +561,7 @@ class Elements:
             eids_elems = np.hstack([eids2, elems])
 
             abq_file.write('*Element,type=%s\n' % elem_type)
-            fmt = '%d,\t' * (nnodes) + '%d\n'
+            fmt = '%d,\t' * nnodes + '%d\n'
             for eid_elem in eids_elems:
                 abq_file.write(fmt % tuple(eid_elem))
 
@@ -553,6 +573,9 @@ def _etypes_nnodes() -> list[tuple[str, int]]:
 
         # rigid
         ('r2d2', 2),  #  similar to a RBAR
+
+        # rod
+        ('r2d2', 2),  # CROD/PROD or CONROD
 
         # bar/beam
         # 2 required nodes, but 3rd orientation node (g0) is possible

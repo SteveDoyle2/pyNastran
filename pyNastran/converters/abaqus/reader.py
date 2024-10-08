@@ -577,7 +577,7 @@ def read_material(iline: int, word: str,
             key = 'damage initiation'
             #log.debug('  damage0 %s' % line0)
             sline = line0.split(',')
-            log.debug(sline)
+            log.debug(str(sline))
             assert len(sline) == 3, sline
             iline += 1
         elif word.startswith('damage evolution'):
