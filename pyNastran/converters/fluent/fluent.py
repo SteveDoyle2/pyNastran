@@ -2,19 +2,98 @@ import os
 from pathlib import Path
 from typing import Any
 
+import h5py
 import numpy as np
 from cpylog import SimpleLogger, get_logger2 # get_logger,
 from pyNastran.utils import PathLike, print_bad_path
 
 class Fluent:
-    def __init__(self, log=None, debug: bool=True):
+    def __init__(self, auto_read_write_h5: bool=True,
+                 log=None, debug: bool=True):
+        """
+        Parameters
+        ----------
+        auto_read_write_h5: bool; default=True
+            the vrt/cel/daten files are really slow, so save an h5 file
+            and load it instead
+        log: SimpleLogger or None
+            the log
+        debug: bool; default=False
+            logging debug
+        """
+        self.auto_read_write_h5 = auto_read_write_h5
         self.log = get_logger2(log=log, debug=debug)
+
+    def _get_h5_filename(self, h5_filename: PathLike) -> str:
+        if h5_filename == '':
+            base, ext = os.path.splitext(self.fluent_filename)
+            h5_filename = base + '.h5'
+        return h5_filename
+
+    def write_h5(self, h5_filename: PathLike='',
+                 require_write: bool=True) -> bool:
+        is_written = False
+        try:
+            import tables
+        except ImportError:
+            if require_write:
+                raise
+            return is_written
+        h5_filename = self._get_h5_filename(h5_filename)
+
+        h5file = tables.open_file(h5_filename, 'w', driver='H5FD_CORE')
+        names = ['node_id', 'xyz', 'element_id', 'titles', 'results',
+                 'quads', 'tris', 'element_ids', 'region']
+        for name in names:
+            datai = getattr(self, name)
+            h5file.create_array(h5file.root, name, datai)
+
+        h5file.close()
+        self.fluent_filename = h5_filename
+        is_written = True
+        return is_written
+
+    def read_h5(self, h5_filename: PathLike='',
+                require_load: bool=True) -> bool:
+        is_loaded = False
+        try:
+            import tables
+        except ImportError:
+            if require_load:
+                raise
+            return is_loaded
+        names = ['node_id', 'xyz', 'element_id', 'titles', 'results',
+                 'quads', 'tris', 'element_ids', 'region']
+        h5_filename = self._get_h5_filename(h5_filename)
+
+        assert os.path.exists(h5_filename), print_bad_path(h5_filename)
+        h5file = tables.open_file(h5_filename, 'r', driver='H5FD_CORE')
+        for name in names:
+            table = h5file.get_node(f'/{name}')
+            datai = table.read()
+            if name == 'titles':
+                # strings are stored as bytes so cast them back to strings
+                data_list = [title.decode('latin1') for title in datai]
+                data_array = np.array(data_list)
+                setattr(self, name, data_array)
+            else:
+                setattr(self, name, datai)
+        h5file.close()
+        is_loaded = True
+        return is_loaded
 
     def read_fluent(self, fluent_filename: PathLike) -> None:
         base, ext = os.path.splitext(fluent_filename)
         vrt_filename = base + '.vrt'
         daten_filename = base + '.daten'
         cell_filename = base + '.cel'
+        h5_filename = base + '.h5'
+        self.fluent_filename = fluent_filename
+        if self.auto_read_write_h5 and os.path.exists(h5_filename):
+            # fails if pytables isn't installed
+            is_loaded = self.read_h5(h5_filename, require_load=False)
+            if is_loaded:
+                return
         assert os.path.exists(vrt_filename), print_bad_path(vrt_filename)
         assert os.path.exists(daten_filename), print_bad_path(daten_filename)
         assert os.path.exists(cell_filename), print_bad_path(cell_filename)
@@ -37,6 +116,9 @@ class Fluent:
         self.region = region
         # TDOO: should be removed, but it's way easier to add to the gui
         self.elements_list = elements_list
+        if self.auto_read_write_h5:
+            # fails if pytables isn't installed
+            self.write_h5(h5_filename, require_write=False)
         #self.tri_pressure = tri_
 
     def write_fluent(self, fluent_filename: str) -> None:
@@ -279,7 +361,10 @@ def quad_split(xyz: np.ndarray,
     quad_pressure = results[ieid]
     return quad_centroid, quad_pressure
 
-def read_fluent(fluent_filename: PathLike, log=None, debug: bool=False) -> Fluent:
-    model = Fluent(log=log)
+def read_fluent(fluent_filename: PathLike,
+                auto_read_write_h5: bool=True,
+                log=None, debug: bool=False) -> Fluent:
+    model = Fluent(auto_read_write_h5=auto_read_write_h5,
+                   log=log)
     model.read_fluent(fluent_filename)
     return model

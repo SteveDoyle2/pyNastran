@@ -9,7 +9,7 @@ import numpy as np
 #from cpylog import get_logger
 
 import pyNastran
-from pyNastran.converters.fluent.fluent import read_vrt, read_cell, read_daten, read_fluent
+from pyNastran.converters.fluent.fluent import Fluent, read_vrt, read_cell, read_daten, read_fluent
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 from pyNastran.converters.fluent.fluent_to_tecplot import fluent_to_tecplot
 from pyNastran.converters.tecplot.tecplot import read_tecplot
@@ -78,7 +78,13 @@ class TestFluent(unittest.TestCase):
         vrt_filename = BWB_PATH / 'bwb_saero.vrt'
         cel_filename = BWB_PATH / 'bwb_saero.cel'
         daten_filename = BWB_PATH / 'bwb_saero.daten'
+        h5_filename = BWB_PATH / 'bwb_saero.h5'
         tecplot_filename = BWB_PATH / 'bwb_saero.plt'
+
+        #model = Fluent()
+        #is_loaded = model.read_h5(h5_filename)
+        #assert is_loaded is True, h5_filename
+
         nastran_to_fluent(nastran_filename, vrt_filename)
 
         node_id, xyz = read_vrt(vrt_filename)
