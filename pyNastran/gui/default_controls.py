@@ -29,8 +29,6 @@ CONTROLS: dict[str, tuple[str, str]] = {
 }
 
 BASE_TOOL_SHORTCUTS = {
-#BASE_FILE_TOOLS: dict[str, str] = {
-    # shortcut
     'exit': 'Ctrl+Q',
 
     #'reload': (               'Reload Model...',           'treload.png',       '',       'Remove the model and reload the same geometry file'),
@@ -42,10 +40,8 @@ BASE_TOOL_SHORTCUTS = {
 
     #'save_vtk': ( 'Export VTK...',        '',             '', 'Export a VTK file'),
     #'script': (  'Run Python Script...', 'python48.png', '', 'Runs pyNastranGUI in batch mode'),
-#}
-#
-#
-#BASE_TOOLS: dict[str, str] = {
+
+
     # labels
     'label_clear': 'CTRL+W',
     #'label_reset': ('Clear All Labels',     '', '',       'Clear all labels'),
