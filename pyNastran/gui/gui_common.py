@@ -4,6 +4,7 @@ import os.path
 import contextlib
 from math import ceil
 from functools import partial
+from collections import defaultdict
 from typing import Callable, Optional, Union, Any, cast
 
 import numpy as np
@@ -20,16 +21,12 @@ from qtpy.QtWidgets import (
 #QKeySequence = QtGui.QKeySequence
 MenuTuple = tuple[QMenu, tuple[str, ...]]
 
-#from vtk import (vtkExtractSelection,
-                 #vtkSelection, vtkSelectionNode,
-                 #vtkImageActor,
-                 #vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader, )
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
 from vtkmodules.vtkCommonDataModel import vtkSelection, vtkSelectionNode
 from vtkmodules.vtkRenderingCore import vtkImageActor, vtkProperty
 from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader
 
-#from pyNastran.gui.default_controls import BASE_TOOLS
+from pyNastran.gui.default_controls import BASE_TOOL_SHORTCUTS
 from pyNastran.gui.utils.qt.qsettings import QSettingsLike
 from pyNastran.gui.vtk_common_core import vtkIdTypeArray
 from pyNastran.gui.vtk_rendering_core import vtkRenderer
@@ -294,180 +291,146 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if tools is None:
             recent_file_tools: list[Tool] = self.get_recent_file_tools(self.settings.recent_files)
 
-            base_tools_dict = {
-                # flag : (func, ???)
-                'exit' : (self.closeEvent, is_visible),
-                'reload': (self.on_reload, is_visible),
-                'load_geometry' : (self.on_load_geometry, is_visible),
-                'load_results': (self.on_load_results, is_visible),
-                'load_csv_user_geom': (self.on_load_user_geom, is_visible),
-                'load_csv_user_points': (self.on_load_csv_points, is_visible),
-                'load_custom_result': (self.on_load_custom_results, is_visible),
-                'save_vtk': (self.on_save_vtk, is_visible),
-                'script': (self.on_run_script, is_visible),
-            }
-
             # flag,  label,   picture,     shortcut, tooltip             func
-            if 0:  # pragma: no cover
-                base_tools0: list[Tool] = [tuple([key, *BASE_TOOLS[key], *funcs])
-                                          for key, funcs in base_tools_dict.items()]
+            file_tools: list[tuple[str, str, str, str, Callable]] = [
+                # flag,  label,   picture,     tooltip             func
+                ('exit', '&Exit', 'texit.png', 'Exit application', self.closeEvent, is_visible),
 
-                base_tools_dict = {
-                    # flag : (func, ???)
-                    'exit' : (self.closeEvent, is_visible),
-                    'reload': (self.on_reload, is_visible),
-                    'load_geometry' : (self.on_load_geometry, is_visible),
-                    'load_results': (self.on_load_results, is_visible),
-                    'load_csv_user_geom': (self.on_load_user_geom, is_visible),
-                    'load_csv_user_points': (self.on_load_csv_points, is_visible),
-                    'load_custom_result': (self.on_load_custom_results, is_visible),
-                    'save_vtk': (self.on_save_vtk, is_visible),
-                    'script': (self.on_run_script, is_visible),
-                }
+                ('reload',               'Reload Model...',           'treload.png',       'Remove the model and reload the same geometry file', self.on_reload, is_visible),
+                ('load_geometry',        'Load &Geometry...',         'load_geometry.png', 'Loads a geometry input file', self.on_load_geometry, is_visible),
+                ('load_results',         'Load &Results...',          'load_results.png',  'Loads a results file', self.on_load_results, is_visible),
+                ('load_csv_user_geom',   'Load CSV User Geometry...', '',                  'Loads custom geometry file', self.on_load_user_geom, is_visible),
+                ('load_csv_user_points', 'Load CSV User Points...',   'user_points.png',   'Loads CSV points', self.on_load_csv_points, is_visible),
+                ('load_custom_result',   'Load Custom Results...',    '',                  'Loads a custom results file', self.on_load_custom_results, is_visible),
 
-                # flag,  label,   picture,     shortcut, tooltip             func
-                base_tools: list[Tool] = [tuple([key, *BASE_TOOLS[key], *funcs])
-                                          for key, funcs in base_tools_dict.items()]
-                file_tools: list[Tool] = base_tools + recent_file_tools
-
-            file_tools: list[Tool] = [
-                # flag,  label,   picture,     shortcut, tooltip             func
-                ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent, is_visible),
-
-                ('reload',               'Reload Model...',           'treload.png',       '',       'Remove the model and reload the same geometry file', self.on_reload, is_visible),
-                ('load_geometry',        'Load &Geometry...',         'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry, is_visible),
-                ('load_results',         'Load &Results...',          'load_results.png',  'Ctrl+R', 'Loads a results file', self.on_load_results, is_visible),
-                ('load_csv_user_geom',   'Load CSV User Geometry...', '',                  '',       'Loads custom geometry file', self.on_load_user_geom, is_visible),
-                ('load_csv_user_points', 'Load CSV User Points...',   'user_points.png',   '',       'Loads CSV points', self.on_load_csv_points, is_visible),
-                ('load_custom_result',   'Load Custom Results...',    '',                  '',       'Loads a custom results file', self.on_load_custom_results, is_visible),
-
-                ('save_vtk', 'Export VTK...',        '',             '', 'Export a VTK file', self.on_save_vtk, is_visible),
-                ('script',   'Run Python Script...', 'python48.png', '', 'Runs pyNastranGUI in batch mode', self.on_run_script, is_visible),
+                ('save_vtk', 'Export VTK...',        '',             'Export a VTK file', self.on_save_vtk, is_visible),
+                ('script',   'Run Python Script...', 'python48.png', 'Runs pyNastranGUI in batch mode', self.on_run_script, is_visible),
             ] + recent_file_tools
 
-            tools: list[Tool] = file_tools + [
+            tools: list[tuple[str, str, str, str, Callable]] = [
                 # labels
-                ('label_clear', 'Clear Current Labels', '', 'CTRL+W', 'Clear current labels', self.clear_labels, is_visible),
-                ('label_reset', 'Clear All Labels',     '', '',       'Clear all labels',     self.reset_labels, is_visible),
+                ('label_clear', 'Clear Current Labels', '', 'Clear current labels', self.clear_labels, is_visible),
+                ('label_reset', 'Clear All Labels',     '', 'Clear all labels',     self.reset_labels, is_visible),
 
                 # view
-                ('wireframe',  'Wireframe Model',      'twireframe.png', 'w',      'Show Model as a Wireframe Model', self.on_wireframe, is_visible),
-                ('surface',    'Surface Model',        'tsolid.png',     's',      'Show Model as a Surface Model', self.on_surface, is_visible),
-                ('screenshot', 'Take a Screenshot...', 'tcamera.png',    'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot, is_visible),
+                ('wireframe',  'Wireframe Model',      'twireframe.png', 'Show Model as a Wireframe Model', self.on_wireframe, is_visible),
+                ('surface',    'Surface Model',        'tsolid.png',     'Show Model as a Surface Model', self.on_surface, is_visible),
+                ('screenshot', 'Take a Screenshot...', 'tcamera.png',    'Take a Screenshot of current view', self.tool_actions.on_take_screenshot, is_visible),
 
                 # geometry
                 # Geometry:
                 #  - Create
                 #  - Modify
-                ('geometry', 'Geometry', 'geometry.png', '', 'Geometry', self.geometry_obj.show, is_visible),
+                ('geometry', 'Geometry', 'geometry.png', 'Geometry', self.geometry_obj.show, is_visible),
                 #
                 # core menus
-                ('legend',             'Modify Legend...',           'legend.png',      'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu, is_visible),
-                ('animation',          'Create Animation...',        'animation.png',   'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu, is_visible),
-                ('clipping',           'Set Clipping...',            '',                '',       'Set Clipping', self.clipping_obj.set_clipping_menu, is_visible),
-                ('set_preferences',    'Preferences...',             'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu, is_visible),
-                ('geo_properties',     'Edit Geometry Properties...', '',               'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties, is_visible),
-                ('map_element_fringe', 'Map Element Fringe',          '',               'CTRL+F', 'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result, is_visible),
+                ('legend',             'Modify Legend...',           'legend.png',      'Set Legend', self.legend_obj.set_legend_menu, is_visible),
+                ('animation',          'Create Animation...',        'animation.png',   'Create Animation', self.legend_obj.set_animation_menu, is_visible),
+                ('clipping',           'Set Clipping...',            '',                'Set Clipping', self.clipping_obj.set_clipping_menu, is_visible),
+                ('set_preferences',    'Preferences...',             'preferences.png', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu, is_visible),
+                ('geo_properties',     'Edit Geometry Properties...', '',               'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties, is_visible),
+                ('map_element_fringe', 'Map Element Fringe',          '',               'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result, is_visible),
 
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
                 # groups
-                ('modify_groups',                     'Modify Groups...',                '', 'CTRL+G', 'Create/Edit/Delete Groups', self.on_set_modify_groups, is_visible),
-                ('create_groups_by_visible_result',   'Create Groups By Visible Result', '', '',       'Create Groups', self.create_groups_by_visible_result, is_visible),
-                ('create_groups_by_property_id',      'Create Groups By Property ID',    '', '',       'Create Groups', self.create_groups_by_property_id, is_visible),
-                ('create_groups_by_model_group',      'Create Groups By Model Group',    '', '',       'Create Groups', self.create_groups_by_model_group, is_visible),
+                ('modify_groups',                     'Modify Groups...',                '', 'Create/Edit/Delete Groups', self.on_set_modify_groups, is_visible),
+                ('create_groups_by_visible_result',   'Create Groups By Visible Result', '', 'Create Groups', self.create_groups_by_visible_result, is_visible),
+                ('create_groups_by_property_id',      'Create Groups By Property ID',    '', 'Create Groups', self.create_groups_by_property_id, is_visible),
+                ('create_groups_by_model_group',      'Create Groups By Model Group',    '', 'Create Groups', self.create_groups_by_model_group, is_visible),
                 #('create_list', 'Create Lists through Booleans', '', None, 'Create List', self.create_list),
 
                 # logging
-                ('show_info',    'Show INFO',    'show_info.png',    '', 'Show "INFO" messages', self.on_show_info, is_visible),
-                ('show_debug',   'Show DEBUG',   'show_debug.png',   '', 'Show "DEBUG" messages', self.on_show_debug, is_visible),
-                ('show_command', 'Show COMMAND', 'show_command.png', '', 'Show "COMMAND" messages', self.on_show_command, is_visible),
-                ('show_warning', 'Show WARNING', 'show_warning.png', '', 'Show "COMMAND" messages', self.on_show_warning, is_visible),
-                ('show_error',   'Show ERROR',   'show_error.png',   '', 'Show "COMMAND" messages', self.on_show_error, is_visible),
+                ('show_info',    'Show INFO',    'show_info.png',    'Show "INFO" messages', self.on_show_info, is_visible),
+                ('show_debug',   'Show DEBUG',   'show_debug.png',   'Show "DEBUG" messages', self.on_show_debug, is_visible),
+                ('show_command', 'Show COMMAND', 'show_command.png', 'Show "COMMAND" messages', self.on_show_command, is_visible),
+                ('show_warning', 'Show WARNING', 'show_warning.png', 'Show "COMMAND" messages', self.on_show_warning, is_visible),
+                ('show_error',   'Show ERROR',   'show_error.png',   'Show "COMMAND" messages', self.on_show_error, is_visible),
 
                 # zoom
-                ('magnify', 'Zoom In', 'plus_zoom.png',  'm',       'Increase Magnfication', self.on_increase_magnification, is_visible),
-                ('shrink', 'Zoom Out', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification, is_visible),
+                ('magnify', 'Zoom In', 'plus_zoom.png',  'Increase Magnfication', self.on_increase_magnification, is_visible),
+                ('shrink', 'Zoom Out', 'minus_zoom.png', 'Decrease Magnfication', self.on_decrease_magnification, is_visible),
 
                 # rotation
-                ('rotate_clockwise',  'Rotate Clockwise',         'tclock.png',  'o',       'Rotate Clockwise', self.on_rotate_clockwise, is_visible),
-                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise, is_visible),
+                ('rotate_clockwise',  'Rotate Clockwise',         'tclock.png',  'Rotate Clockwise', self.on_rotate_clockwise, is_visible),
+                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise, is_visible),
 
 
                 #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
                 #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
                 # help
-                ('website',          'Open pyNastran Website...',       '',           '',       'Open the pyNastran website', self.open_website, is_visible),
-                ('docs',             'Open pyNastran Docs Website...',  '',           '',       'Open the pyNastran documentation website', self.open_docs, is_visible),
-                ('report_issue',     'Report a Bug/Feature Request...', '',           '',       'Open the pyNastran issue tracker', self.open_issue, is_visible),
-                ('discussion_forum', 'Discussion Forum Website...',     '',           '',       'Open the discussion forum to ask questions', self.open_discussion_forum, is_visible),
-                ('about',            'About pyNastran GUI...',          'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog, is_visible),
+                ('website',          'Open pyNastran Website...',       '',           'Open the pyNastran website', self.open_website, is_visible),
+                ('docs',             'Open pyNastran Docs Website...',  '',           'Open the pyNastran documentation website', self.open_docs, is_visible),
+                ('report_issue',     'Report a Bug/Feature Request...', '',           'Open the pyNastran issue tracker', self.open_issue, is_visible),
+                ('discussion_forum', 'Discussion Forum Website...',     '',           'Open the discussion forum to ask questions', self.open_discussion_forum, is_visible),
+                ('about',            'About pyNastran GUI...',          'tabout.png', 'About pyNastran GUI and help on shortcuts', self.about_dialog, is_visible),
 
                 # camera
-                ('view',         'Camera View',       'view.png',     '',  'Load the camera menu', self.camera_obj.set_camera_menu, is_visible),
-                ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera, is_visible),
+                ('view',         'Camera View',       'view.png',     'Load the camera menu', self.camera_obj.set_camera_menu, is_visible),
+                ('camera_reset', 'Reset Camera View', 'trefresh.png', 'Reset the camera view to default', self.on_reset_camera, is_visible),
 
                 # results
-                ('cycle_results',  'Cycle Results', 'cycle_results.png',  'L', 'Changes the result case', self.on_cycle_results, is_visible),
-                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'k', 'Changes the result case', self.on_rcycle_results, is_visible),
+                ('cycle_results',  'Cycle Results', 'cycle_results.png',  'Changes the result case', self.on_cycle_results, is_visible),
+                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'Changes the result case', self.on_rcycle_results, is_visible),
 
                 # view actions
-                ('back_view',   'Back View',   'back.png',   'x',       'Flips to +X Axis', lambda: self.view_actions.update_camera('+x'), is_visible),
-                ('right_view',  'Right View',  'right.png',  'y',       'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y'), is_visible),
-                ('top_view',    'Top View',    'top.png',    'z',       'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z'), is_visible),
-                ('front_view',  'Front View',  'front.png',  'Shift+X', 'Flips to -X Axis', lambda: self.view_actions.update_camera('-x'), is_visible),
-                ('left_view',   'Left View',   'left.png',   'Shift+Y', 'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y'), is_visible),
-                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z'), is_visible),
+                ('back_view',   'Back View',   'back.png',   'Flips to +X Axis', lambda: self.view_actions.update_camera('+x'), is_visible),
+                ('right_view',  'Right View',  'right.png',  'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y'), is_visible),
+                ('top_view',    'Top View',    'top.png',    'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z'), is_visible),
+                ('front_view',  'Front View',  'front.png',  'Flips to -X Axis', lambda: self.view_actions.update_camera('-x'), is_visible),
+                ('left_view',   'Left View',   'left.png',   'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y'), is_visible),
+                ('bottom_view', 'Bottom View', 'bottom.png', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z'), is_visible),
 
 
-                ('edges',       'Show/Hide Edges',   'tedges.png',       'e', 'Show/Hide Model Edges', self.on_flip_edge_visibility, is_visible),
-                ('edges_black', 'Color Edges Black', 'tedges_color.png', 'b', 'Set Edge Color to Color/Black', self.on_flip_edge_color, is_visible),
-                ('anti_alias_0', 'Off',              '',                 '',  'Disable Anti-Aliasing',   lambda: self.on_set_anti_aliasing(0), is_visible),
-                ('anti_alias_1', '1x',               '',                 '',  'Set Anti-Aliasing to 1x', lambda: self.on_set_anti_aliasing(1), is_visible),
-                ('anti_alias_2', '2x',               '',                 '',  'Set Anti-Aliasing to 2x', lambda: self.on_set_anti_aliasing(2), is_visible),
-                ('anti_alias_4', '4x',               '',                 '',  'Set Anti-Aliasing to 4x', lambda: self.on_set_anti_aliasing(4), is_visible),
-                ('anti_alias_8', '8x',               '',                 '',  'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8), is_visible),
+                ('edges',       'Show/Hide Edges',   'tedges.png',       'Show/Hide Model Edges', self.on_flip_edge_visibility, is_visible),
+                ('edges_black', 'Color Edges Black', 'tedges_color.png', 'Set Edge Color to Color/Black', self.on_flip_edge_color, is_visible),
+                ('anti_alias_0', 'Off',              '',                 'Disable Anti-Aliasing',   lambda: self.on_set_anti_aliasing(0), is_visible),
+                ('anti_alias_1', '1x',               '',                 'Set Anti-Aliasing to 1x', lambda: self.on_set_anti_aliasing(1), is_visible),
+                ('anti_alias_2', '2x',               '',                 'Set Anti-Aliasing to 2x', lambda: self.on_set_anti_aliasing(2), is_visible),
+                ('anti_alias_4', '4x',               '',                 'Set Anti-Aliasing to 4x', lambda: self.on_set_anti_aliasing(4), is_visible),
+                ('anti_alias_8', '8x',               '',                 'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8), is_visible),
 
                 # mouse buttons
-                ('rotation_center',  'Set the Rotation Center', 'trotation_center.png', 'Ctrl+F', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center, is_visible),
-                ('measure_distance', 'Measure Distance',        'measure_distance.png', '',  'Measure the distance between two nodes', self.mouse_actions.on_measure_distance, is_visible),
-                ('highlight_cell',   'Highlight Cell',          '',                     '',  'Highlight a single cell', self.mouse_actions.on_highlight_cell, is_visible),
-                ('highlight_node',   'Highlight Node',          '',                     '',  'Highlight a single node', self.mouse_actions.on_highlight_node, is_visible),
+                ('rotation_center',  'Set the Rotation Center', 'trotation_center.png', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center, is_visible),
+                ('measure_distance', 'Measure Distance',        'measure_distance.png', 'Measure the distance between two nodes', self.mouse_actions.on_measure_distance, is_visible),
+                ('highlight_cell',   'Highlight Cell',          '',                     'Highlight a single cell', self.mouse_actions.on_highlight_cell, is_visible),
+                ('highlight_node',   'Highlight Node',          '',                     'Highlight a single node', self.mouse_actions.on_highlight_node, is_visible),
 
                 # name, gui_name, png, shortcut, desc, func
-                ('probe_result',       'Probe the model and mark it with the value of a node/element', 'tprobe.png', '',  'Probe the displayed result', self.mouse_actions.on_probe_result, is_visible),
-                ('quick_probe_result', 'Quick Probe',                                                  '',           'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result, is_visible),
+                ('probe_result',       'Probe the model and mark it with the value of a node/element', 'tprobe.png', 'Probe the displayed result', self.mouse_actions.on_probe_result, is_visible),
+                ('quick_probe_result', 'Quick Probe',                                                  '',           'Probe the displayed result', self.mouse_actions.on_quick_probe_result, is_visible),
 
                 #Probe all the results at the given location (slow!)
-                ('probe_result_all',       'Probe All Results', 'tprobe_all.png', '',  'Probe results for all cases', self.mouse_actions.on_probe_result_all, is_visible),
-                ('quick_probe_result_all', 'Quick Probe All',   '',               'a', 'Probe all cases', self.mouse_actions.on_quick_probe_result_all, is_visible),
+                ('probe_result_all',       'Probe All Results', 'tprobe_all.png', 'Probe results for all cases', self.mouse_actions.on_probe_result_all, is_visible),
+                ('quick_probe_result_all', 'Quick Probe All',   '',               'Probe all cases', self.mouse_actions.on_quick_probe_result_all, is_visible),
 
-                ('zoom', 'Zoom', 'zoom.png', '', 'Zoom In', self.mouse_actions.on_zoom, is_visible),
+                ('zoom', 'Zoom', 'zoom.png', 'Zoom In', self.mouse_actions.on_zoom, is_visible),
 
                 # font size
-                ('font_size_increase', 'Increase Font Size', 'text_up.png',   'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size, is_visible),
-                ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size, is_visible),
+                ('font_size_increase', 'Increase Font Size', 'text_up.png',   'Increase Font Size', self.on_increase_font_size, is_visible),
+                ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Decrease Font Size', self.on_decrease_font_size, is_visible),
 
                 # picking
-                ('area_pick',                'Area Pick', 'tarea_pick.png', '', 'Get a list of nodes/elements', self.mouse_actions.on_area_pick, is_visible),
-                ('highlight',                'Highlight', 'thighlight.png', '', 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight, is_visible),
-                ('highlight_nodes_elements', 'Highlight', 'thighlight.png', '', 'Highlight a list of nodes/elements', self.highlight_obj.set_menu, is_visible),
-                ('mark_nodes_elements',      'Mark',      'tmark.png',      '', 'Mark a list of nodes/elements', self.mark_obj.set_menu, is_visible),
+                ('area_pick',                'Area Pick', 'tarea_pick.png', 'Get a list of nodes/elements', self.mouse_actions.on_area_pick, is_visible),
+                ('highlight',                'Highlight', 'thighlight.png', 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight, is_visible),
+                ('highlight_nodes_elements', 'Highlight', 'thighlight.png', 'Highlight a list of nodes/elements', self.highlight_obj.set_menu, is_visible),
+                ('mark_nodes_elements',      'Mark',      'tmark.png',      'Mark a list of nodes/elements', self.mark_obj.set_menu, is_visible),
             ]
 
         if hasattr(self, 'cutting_plane_obj'):
-            tools.append(('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', '', 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu, is_visible))
+            tools.append(('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu, is_visible))
 
         if 'nastran' in self.fmt_order:
             tools += [
-                ('caero',           'Show/Hide CAERO Panels', '', '', 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels, is_visible),
-                ('caero_subpanels', 'Toggle CAERO Subpanels', '', '', 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels, is_visible),
-                ('conm2', 'Toggle CONM2s', '', '', 'Show/Hide CONM2s', self.toggle_conms, is_visible),
-                ('min',   'Min',           '', '', 'Show/Hide Min Label', self.view_actions.on_show_hide_min_actor, is_visible),
-                ('max',   'Max',           '', '', 'Show/Hide Max Label', self.view_actions.on_show_hide_max_actor, is_visible),
+                ('caero',           'Show/Hide CAERO Panels', '', 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels, is_visible),
+                ('caero_subpanels', 'Toggle CAERO Subpanels', '', 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels, is_visible),
+                ('conm2', 'Toggle CONM2s', '', 'Show/Hide CONM2s', self.toggle_conms, is_visible),
+                ('min',   'Min',           '', 'Show/Hide Min Label', self.view_actions.on_show_hide_min_actor, is_visible),
+                ('max',   'Max',           '', 'Show/Hide Max Label', self.view_actions.on_show_hide_max_actor, is_visible),
             ]
-        self.tools: list[Tool] = tools
+        tools2 = tools_to_shortcut_tools(file_tools + tools)
+        self.tools: list[Tool] = tools2
         self.checkables: dict[str, bool] = checkables
 
     def get_recent_file_tools(self, recent_files: list[tuple[str, str]],
@@ -2562,3 +2525,20 @@ def update_shortcut_tip_func_visible(used_shortcuts: dict[str, str],
     if func:
         action.triggered.connect(func)
     action.setVisible(is_visible)
+
+
+def tools_to_shortcut_tools(tools) -> list[Tool]:
+    base_tool_shortcuts = defaultdict(str)
+    for key, shortcut in BASE_TOOL_SHORTCUTS.items():
+        base_tool_shortcuts[key] = shortcut
+
+    # flag,  label,   picture,     shortcut, tooltip             func
+    tools2 = []
+    for tooli in tools:
+        if len(tooli) == 6:
+            (key, label, picture, tooltip, func, visible) = tooli
+            tool2 = (key, label, picture, base_tool_shortcuts[key], tooltip, func, visible)
+            tools2.append(tool2)
+        else:
+            tools2.append(tooli)
+    return tools2
