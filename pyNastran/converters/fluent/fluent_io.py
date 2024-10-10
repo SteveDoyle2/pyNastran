@@ -129,15 +129,11 @@ class FluentIO:
         cases = {}
         self.gui.isubcase_name_map = {}
         ID = 1
-        if is_list:
-            form, cases = self._fill_fluent_case_list(
-                cases, ID, node_ids, element_ids,
-                region, results, titles)
-        else:
-            form, cases = self._fill_fluent_case(
-                cases, ID, node_ids, element_ids,
-                #tris, quads,
-                region, results, titles)
+
+        form, cases = self._fill_fluent_case(
+            cases, ID, node_ids, element_ids,
+            region, results, titles)
+
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
         log.debug(f'running _finish_results_io2')
@@ -150,8 +146,6 @@ class FluentIO:
                           node_ids: np.ndarray,
                           element_ids: np.ndarray,
                           region: np.ndarray,
-                          #tris: np.ndarray,
-                          #quads: np.ndarray,
                           results: np.ndarray,
                           titles: np.ndarray) -> None:
         """adds the sidebar results"""
@@ -192,47 +186,6 @@ class FluentIO:
 
         return form, cases
 
-    def _fill_fluent_case_list(self,
-                               cases: dict[int, Any],
-                               ID: int,
-                               node_ids: np.ndarray,
-                               element_ids: np.ndarray,
-                               region: np.ndarray,
-                               results: np.ndarray,
-                               titles: np.ndarray) -> None:
-        """adds the sidebar results"""
-        self.gui.isubcase_name_map[ID] = ('Fluent', '')
-        #colormap = 'jet'
-        icase = 0
-        itime = 0
-        nid_res = GuiResult(ID, header='NodeID', title='NodeID',
-                            location='node', scalar=node_ids)
-        eid_res = GuiResult(ID, header='ElementID', title='ElementID',
-                            location='centroid', scalar=element_ids)
-        region_res = GuiResult(ID, header='Region', title='Region',
-                               location='centroid', scalar=region)
-        cases[icase] = (nid_res, (itime, 'NodeID'))
-        cases[icase + 1] = (eid_res, (itime, 'ElementID'))
-        cases[icase + 2] = (region_res, (itime, 'Region'))
-
-        form = [
-            ('NodeID', icase, []),
-            ('ElementID', icase + 1, []),
-            ('Region', icase + 2, []),
-        ]
-        icase += 3
-
-        for i, title in enumerate(titles[1:]):
-            result = results[:, i]
-            pressure_res = GuiResult(ID, header=title, title=title,
-                                     location='centroid', scalar=result)
-            cases[icase] = (pressure_res, (itime, title))
-            formi = (title, icase, [])
-            form.append(formi)
-            icase += 1
-
-        return form, cases
-
 def _create_elements_list(grid: vtkUnstructuredGrid,
                           node_ids: np.ndarray,
                           elements_list: list[list[int]]):
@@ -263,42 +216,21 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
                      node_ids: np.ndarray,
                      tris: np.ndarray,
                      quads: np.ndarray) -> None:
-    #element_ids_list = []
-    #region_list = []
     cell_type_list = []
     cell_offset_list = []
 
-    # cell_offset0, n_nodesi, cell_typei, cell_offseti = _create_solid_vtk_arrays(
-    #     element, grid_id, cell_offset0)
-    # n_nodes_.append(n_nodesi.ravel())
-    # element_ids.append(element.element_id)
-    # property_ids.append(element.property_id)
-    # cell_type_.append(cell_typei)
-    # cell_offset_.append(cell_offseti)
-    # del n_nodesi, cell_typei, cell_offseti
-
-    #quad_nodes = quads[:, 2:] - 1
-    #tris_nodes = tris[:, 2:] - 1
-    #elements_list = []
     nquad = len(quads)
     ntri = len(tris)
     nelement_total = nquad + ntri
     cell_offset0 = 0
     n_nodes_list = []
     if nquad:
+        #elem.GetCellType() = 9  # vtkQuad
         cell_type = 9
         dnode = 4
         cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
             node_ids, quads[:, 2:],
             nquad, cell_type, cell_offset0, dnode)
-
-        #cell_typei = np.ones(nquad) * etype
-        #cell_offseti = np.ones(nquad) * offset
-        #elements_list.append()
-        #elem.GetCellType() = 9  # vtkQuad
-
-        #element_ids.append(element.element_id)
-        #property_ids.append(element.property_id)
         n_nodes_list.append(n_nodesi.ravel())
         cell_type_list.append(cell_typei)
         cell_offset_list.append(cell_offseti)
@@ -316,13 +248,9 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
                 ugrid.InsertNextCell(9, epoints)
 
     if ntri:
+        #elem.GetCellType() = 5  # vtkTriangle
         cell_type = 5
         dnode = 3
-        #cell_typei = np.ones(ntri) * cell_type
-        #cell_offseti = np.ones(ntri) * offset
-        #cell_type_list.append(cell_typei)
-        #cell_offset_list.append(cell_offseti)
-
         cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
             node_ids, tris[:, 2:],
             ntri, cell_type, cell_offset0, dnode)
@@ -330,7 +258,6 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
         cell_type_list.append(cell_typei)
         cell_offset_list.append(cell_offseti)
 
-        #elem.GetCellType() = 5  # vtkTriangle
         if 0:
             tris_nodes = np.searchsorted(node_ids, tris[:, 2:])
             for face in tris_nodes:
@@ -348,7 +275,4 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
     build_vtk_geometry(
         nelement_total, ugrid,
         n_nodes, cell_type, cell_offset)
-
-    # TODO: make this faster...
-    #etype = 5  # vtkTriangle().GetCellType()
-    #create_vtk_cells_of_constant_element_type(grid, tris, etype)
+    return
