@@ -1582,7 +1582,7 @@ def _create_solid_vtk_arrays(element: SolidElement,
     else:
         raise NotImplementedError(element.type)
     nelement = element.n
-    nodesi = element.base_nodes[nelement:, :]
+    nodesi = element.base_nodes[:nelement, :]
     cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
         grid_id, nodesi,
         nelement, cell_type, cell_offset0, dnode)
