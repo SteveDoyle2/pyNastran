@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from typing import Any
 
-import h5py
 import numpy as np
 from cpylog import SimpleLogger, get_logger2 # get_logger,
 from pyNastran.utils import PathLike, print_bad_path
