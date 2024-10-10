@@ -106,7 +106,7 @@ class Fluent:
         #quad_centroid, quad_pressure = quad_split(xyz, quads, element_id, results)
         self.node_id = node
         self.xyz = xyz
-        self.element_id = element_id
+        self.element_id = element_id  # result element ids
         self.titles = titles
         self.results = results
         self.quads = quads
