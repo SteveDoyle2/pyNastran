@@ -26,7 +26,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 from pyNastran.gui.utils.vtk.vectorized_geometry import (
-    create_offset_arrays, _cell_offset)
+    create_offset_arrays)
 from pyNastran.gui.gui_objects.gui_result import GuiResult# , NormalResult
 #from pyNastran.gui.gui_objects.displacements import ForceTableResults, ElementalTableResults
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
@@ -523,24 +523,19 @@ def load_elements(ugrid: vtkUnstructuredGrid,
                 property_id = property_id[i]
                 nodesi = nodesi[i, :]
 
-            nodes_indexi = np.searchsorted(grid_id, nodesi[:, :])
             dnode = nodesi.shape[1]
-            nnodesi = np.ones((nelement, 1), dtype='int64') * dnode
-            cell_typei = np.ones(nelement, dtype='int64') * cell_type
+            cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
+                grid_id, nodesi,
+                nelement, cell_type, cell_offset0, dnode)
 
-            cell_offseti = _cell_offset(cell_offset0, nelement, dnode)
-
-            #nnodes
-            n_nodesi = np.hstack([nnodesi, nodes_indexi])
             n_nodes_.append(n_nodesi.ravel())
-
             cell_type_.append(cell_typei)
             cell_offset_.append(cell_offseti)
             element_ids.append(element_id)
             property_ids.append(property_id)
             #nnodes_nodes = [nnodes, node_id]
             del cell_type
-            del cell_offseti, nnodesi, nodesi
+            del cell_offseti
             cell_offset0 += nelement * (dnode + 1)
         elif etype in midside_elements:
             #print('  midside')
@@ -716,21 +711,10 @@ def _save_element(i: np.ndarray,
     element_idi = element_id[i]
     property_idi = property_id[i]
 
-    if 0:
-        cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
-            grid_id, nodes,
-            nelement, cell_type, cell_offset0, dnode)
-    else:
-        nnodesi = np.ones((nelement, 1), dtype='int32') * dnode
-        nodes_indexi = np.searchsorted(grid_id, nodesi)
-        n_nodesi = np.hstack([nnodesi, nodes_indexi])
+    cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
+        grid_id, nodes,
+        nelement, cell_type, cell_offset0, dnode)
 
-        cell_offseti = _cell_offset(cell_offset0, nelement, dnode)
-        cell_typei = np.ones(nelement, dtype='int32') * cell_type
-        cell_offset0 += nelement * (dnode + 1)
-
-    #nodes_indexi = np.searchsorted(grid_id, nodesi)
-    #nnodesi = np.ones((nelement, 1), dtype='int32') * dnode
     element_ids.append(element_idi)
     property_ids.append(property_idi)
     n_nodes_.append(n_nodesi.ravel())
@@ -1579,7 +1563,7 @@ def _create_solid_vtk_arrays(element: SolidElement,
     elif element.type == 'CHEXA':
         cell_type = cell_type_hexa8
         dnode = 8
-    else:
+    else:  # pragma: no coer
         raise NotImplementedError(element.type)
     nelement = element.n
     nodesi = element.base_nodes[:nelement, :]
