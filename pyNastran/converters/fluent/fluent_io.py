@@ -36,59 +36,37 @@ class FluentIO:
         log = self.gui.log
         model = read_fluent(fld_filename, log=log, debug=False)
         #self.model_type = model.model_type
-        nodes = model.xyz
 
         #self.node = node
-        #self.xyz = xyz
+        nodes = model.xyz
         #self.element_id = element_id
-        #self.results = results
-        #self.quads = quads
-        #self.tris = tris
+        tris = model.tris
+        quads = model.quads
 
         # support multiple results
         titles = model.titles
         results = model.results
 
-        if 0:
-            element_ids = model.element_ids
-            region = model.region
-            elements_list = model.elements_list
-            nelement = len(element_ids)
-            is_list = True
-        else:
-            is_list = False
-            tris = model.tris
-            quads = model.quads
-            element_ids = model.element_id #np.arange(1, nelement+1)
-            assert np.array_equal(element_ids, np.unique(element_ids))
+        element_id = model.element_id #np.arange(1, nelement+1)
+        #assert np.array_equal(element_id, np.unique(element_id))
 
-            # we reordered the tris/quads to be continuous to make them easier to add
-            itri = np.searchsorted(element_ids, tris[:, 0])
-            iquad = np.searchsorted(element_ids, quads[:, 0])
+        # we reordered the tris/quads to be continuous to make them easier to add
+        iquad = np.searchsorted(element_id, quads[:, 0])
+        itri = np.searchsorted(element_id, tris[:, 0])
 
-            tri_results = results[itri, :]
-            quad_results = results[iquad, :]
+        quad_results = results[iquad, :]
+        tri_results = results[itri, :]
 
-            region = np.hstack([tris[:, 1], quads[:, 1],])
-            results = np.vstack([tri_results, quad_results])
-            ntri = len(tris)
-            nquad = len(quads)
-            # else:
-            #     ntri, ntri_col = tris.shape
-            #     nquad, nquad_col = quads.shape
-            #     ntri = 0
-            #     region = quads[:, 1]
-            #     tris = np.zeros((ntri, ntri_col))
-            #     results = quad_results
-            nelement = ntri + nquad
-            log.debug(f'results.shape = {results.shape}')
+        region = np.hstack([quads[:, 1], tris[:, 1]])
+        results = np.vstack([quad_results, tri_results])
+        nquad = len(quads)
+        ntri = len(tris)
+        nelement = nquad + ntri
+        log.debug(f'results.shape = {results.shape}')
 
-        node_ids = model.node_id
+        node_id = model.node_id
         nnodes = len(nodes)
-        #log.debug(f'nelement={nelement} nregion={len(region)}')
-        #log.debug('nnodes={nnodes} nnodes2={len(node_ids)}')
-        #log.debug(f'nquad={nquad} ntri={ntri}')
-        assert len(element_ids) == len(region)
+        assert len(element_id) == len(region)
 
         self.gui.nnodes = nnodes
         self.gui.nelements = nelement
@@ -98,12 +76,9 @@ class FluentIO:
         grid.Allocate(self.gui.nelements, 1000)
 
         points = numpy_to_vtk_points(nodes)
-        if is_list:
-            _create_elements_list(grid, node_ids, elements_list)
-        else:
-            _create_elements(grid, node_ids, model.tris, model.quads)
+        _create_elements(grid, node_id, model.quads, model.tris)
 
-        assert len(element_ids) == len(region)
+        assert len(element_id) == len(region)
         log.info(f'created vtk points')
         self.gui.nid_map = {}
         #elem.SetNumberOfPoints(nnodes)
@@ -130,87 +105,16 @@ class FluentIO:
         self.gui.isubcase_name_map = {}
         ID = 1
 
-        form, cases = self._fill_fluent_case(
-            cases, ID, node_ids, element_ids,
+        self.gui.isubcase_name_map[ID] = ('Fluent', '')
+        form, cases = _fill_fluent_case(
+            cases, ID, node_id, element_id,
             region, results, titles)
 
-        self.gui.node_ids = node_ids
-        self.gui.element_ids = element_ids
+        self.gui.node_ids = node_id
+        self.gui.element_ids = element_id
         log.debug(f'running _finish_results_io2')
         self.gui._finish_results_io2(model_name, form, cases)
         log.info(f'finished')
-
-    def _fill_fluent_case(self,
-                          cases: dict[int, Any],
-                          ID: int,
-                          node_ids: np.ndarray,
-                          element_ids: np.ndarray,
-                          region: np.ndarray,
-                          results: np.ndarray,
-                          titles: np.ndarray) -> None:
-        """adds the sidebar results"""
-        self.gui.isubcase_name_map[ID] = ('Fluent', '')
-        # reorg the ids
-        #element_ids = np.unique(np.hstack([tris[:, 0], quads[:, 0]]))
-        #colormap = 'jet'
-        icase = 0
-        itime = 0
-        nid_res = GuiResult(ID, header='NodeID', title='NodeID',
-                            location='node', scalar=node_ids)
-        eid_res = GuiResult(ID, header='ElementID', title='ElementID',
-                            location='centroid', scalar=element_ids)
-        region_res = GuiResult(ID, header='Region', title='Region',
-                               location='centroid', scalar=region)
-
-        assert len(element_ids) == len(region), f'neids={len(element_ids)} nregion={len(region)}'
-        cases[icase] = (nid_res, (itime, 'NodeID'))
-        cases[icase + 1] = (eid_res, (itime, 'ElementID'))
-        cases[icase + 2] = (region_res, (itime, 'Region'))
-
-        form = [
-            ('NodeID', icase, []),
-            ('ElementID', icase + 1, []),
-            ('Region', icase + 2, []),
-        ]
-        icase += 3
-
-        for i, title in enumerate(titles[1:]):
-            result = results[:, i]
-            assert len(element_ids) == len(result)
-            pressure_res = GuiResult(ID, header=title, title=title,
-                                     location='centroid', scalar=result)
-            cases[icase] = (pressure_res, (itime, title))
-            formi = (title, icase, [])
-            form.append(formi)
-            icase += 1
-
-        return form, cases
-
-def _create_elements_list(grid: vtkUnstructuredGrid,
-                          node_ids: np.ndarray,
-                          elements_list: list[list[int]]):
-    assert np.array_equal(node_ids, np.unique(node_ids))
-    nid_to_index = {nid : i for i, nid in enumerate(node_ids)}
-
-    for facei in elements_list:
-        face = np.array(facei, dtype='int32')
-        if len(face) == 3:
-            elem = vtkTriangle()
-            epoints = elem.GetPointIds()
-            epoints.SetId(0, nid_to_index[face[0]])
-            epoints.SetId(1, nid_to_index[face[1]])
-            epoints.SetId(2, nid_to_index[face[2]])
-            grid.InsertNextCell(5, epoints)
-        elif len(face) == 4:
-            elem = vtkQuad()
-            epoints = elem.GetPointIds()
-            epoints.SetId(0, nid_to_index[face[0]])
-            epoints.SetId(1, nid_to_index[face[1]])
-            epoints.SetId(2, nid_to_index[face[2]])
-            epoints.SetId(3, nid_to_index[face[3]])
-            grid.InsertNextCell(9, epoints)
-        else:  # pragma: no cover
-            raise RuntimeError(face)
 
 def _create_elements(ugrid: vtkUnstructuredGrid,
                      node_ids: np.ndarray,
@@ -235,18 +139,6 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
         cell_type_list.append(cell_typei)
         cell_offset_list.append(cell_offseti)
 
-        if 0:
-            quad_nodes = np.searchsorted(node_ids, quads[:, 2:])
-            for face in quad_nodes:
-                assert len(face) == 4, face
-                elem = vtkQuad()
-                epoints = elem.GetPointIds()
-                epoints.SetId(0, face[0])
-                epoints.SetId(1, face[1])
-                epoints.SetId(2, face[2])
-                epoints.SetId(3, face[3])
-                ugrid.InsertNextCell(9, epoints)
-
     if ntri:
         #elem.GetCellType() = 5  # vtkTriangle
         cell_type = 5
@@ -258,17 +150,6 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
         cell_type_list.append(cell_typei)
         cell_offset_list.append(cell_offseti)
 
-        if 0:
-            tris_nodes = np.searchsorted(node_ids, tris[:, 2:])
-            for face in tris_nodes:
-                assert len(face) == 3, face
-                elem = vtkTriangle()
-                epoints = elem.GetPointIds()
-                epoints.SetId(0, face[0])
-                epoints.SetId(1, face[1])
-                epoints.SetId(2, face[2])
-                ugrid.InsertNextCell(5, epoints)
-
     n_nodes = np.hstack(n_nodes_list)
     cell_type = np.hstack(cell_type_list)
     cell_offset = np.hstack(cell_offset_list)
@@ -276,3 +157,47 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
         nelement_total, ugrid,
         n_nodes, cell_type, cell_offset)
     return
+
+def _fill_fluent_case(cases: dict[int, Any],
+                      ID: int,
+                      node_ids: np.ndarray,
+                      element_ids: np.ndarray,
+                      region: np.ndarray,
+                      results: np.ndarray,
+                      titles: np.ndarray) -> None:
+    """adds the sidebar results"""
+    # reorg the ids
+    #element_ids = np.unique(np.hstack([tris[:, 0], quads[:, 0]]))
+    #colormap = 'jet'
+    icase = 0
+    itime = 0
+    nid_res = GuiResult(ID, header='NodeID', title='NodeID',
+                        location='node', scalar=node_ids)
+    eid_res = GuiResult(ID, header='ElementID', title='ElementID',
+                        location='centroid', scalar=element_ids)
+    region_res = GuiResult(ID, header='Region', title='Region',
+                           location='centroid', scalar=region)
+
+    assert len(element_ids) == len(region), f'neids={len(element_ids)} nregion={len(region)}'
+    cases[icase] = (nid_res, (itime, 'NodeID'))
+    cases[icase + 1] = (eid_res, (itime, 'ElementID'))
+    cases[icase + 2] = (region_res, (itime, 'Region'))
+
+    form = [
+        ('NodeID', icase, []),
+        ('ElementID', icase + 1, []),
+        ('Region', icase + 2, []),
+    ]
+    icase += 3
+
+    for i, title in enumerate(titles[1:]):
+        result = results[:, i]
+        assert len(element_ids) == len(result)
+        pressure_res = GuiResult(ID, header=title, title=title,
+                                 location='centroid', scalar=result)
+        cases[icase] = (pressure_res, (itime, title))
+        formi = (title, icase, [])
+        form.append(formi)
+        icase += 1
+
+    return form, cases

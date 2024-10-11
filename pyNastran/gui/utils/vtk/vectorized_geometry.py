@@ -69,8 +69,7 @@ def create_offset_arrays(all_grid_id: np.ndarray,
     #nodes_indexi = np.searchsorted(all_grid_id, element_nodes)
     #nnodesi = np.ones((nelement, 1), dtype='int32') * dnode
     cell_typei = np.ones(nelement, dtype='int32') * cell_type
-    #del cell_type
-    #del cell_offseti, nnodesi, nodesi
+
     cell_offset0 += nelement * (dnode + 1)
     return cell_offset0, n_nodesi, cell_typei, cell_offseti
 
