@@ -157,115 +157,13 @@ See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/
 
 ### v1.3.3 (2020/6/28)
 
-This is a bug fix only release outside of:
-      ```python
-     >>> subcase.add_set_from_values(set_id, values)
-     ```
-
-which was overly complicated to do before.
-
-Programmatics:
- - Supports Python 3.7 and 3.8
- - GUI is compatible with PyQt5 and PySide2 and VTK 7-9
- - improved testing of old versions of packages
- - updated nptyping requirements
- - support for NX 2019.0, 2019.1
-
-See pyNastran [release notes](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.3.3) for details on the 54 bug fixes.  Not too bad for 2.5 months!
-
+See [v1.3.3](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.3.3) for information regarding enhancements.
 
 ### pyNastran v1.3.2 has been released (2020/4/8)
 
-With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
+See [v1.3.2](https://github.com/SteveDoyle2/pyNastran/releases/tag/1.3.2) for information regarding enhancements.
 
-There is now support for writing OP2 files!  They're difficult to create from scratch,
-but modifying an existing one isn't difficult.  This includes geometry support.
-
-In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
-
-Programmatics:
- - Supports Python 3.7 and 3.8
- - Dropping Python 2.7 and 3.6 support
- - GUI is compatible with PyQt5 and PySide2
- - improved testing of old versions of packages
-
-BDF:
- - enhancements
-   - 405 cards supported (up from 373)
-   - improved mesh utilities
-      - bdf mirror, bdf convert, bdf export_caero_mesh
-      - additional `bdf scale`, which takes arbitrary mass, length, time, pressure, or velocity scale factors (3 of 5) to apply a scaling law
-   - added deck guessing with punch=None
-
-OP2:
- - enhancements:
-   - OP2 write support
-   - fixed most pandas deprecation warnings/added support for pandas 0.25
-   - much improved NX 2019.2 support
- - minor enhancements:
-   - more hdf5 results
-   - a few more cards supported in the OP2 geometry reader
-   - preliminary NX 64-bit support
-   - more MSC versions supported
-   - sped up R1TABRG (optimization) reading
-   - various geometry cards added
-   - supports more PARAM reading
- - new results:
-    - composite failure indices (OEFIT)
-    - sensitivity support (DSCMCOL)
-    - Cambpell diagrams (CDDATA)
-    - eigenvectors (BOPHIGF)
-    - grid point forces SORT2 (OGPFB2)
-    - stress/strain/force
-      - random stress/strain (OESVM1/2, OESVM1C, OSTRVM1/2, OSTRVM2, OESXRM1C, OESXNO1, OESXNO1C)
-      - real/complex stress/strain/force output for centroidal CQUADR/CTRIAR
-      - complex CBEAR forces
-      - real CFAST, CWELD forces
-      - nonlinear cbush stress/strain/force
-    - other
-      - PSDs
-      - optimization
-        - convergence table
-        - design variables
-        - weight, displacement, stress, strain, force, composite stress, composite strain, fractional mass response
-    - SOL 401/402 results:
-      - eigenvalue_fluid (LAMAF, LAMAS)
-      - eigenvectors (BOPHIGF, BOPHIGS)
-      - temperature (OTEMP1)
-      - solution set
-        - results: displacement, velocity, acceleration, eigenvectors:
-        - tables: OUXY1, OUXY2, OPHSA
-
-GUI:
- - enhancements:
-   - partial custom results many now be loaded
-   - animation now supports complex fringe
-   - result case description now shows the mode/time/frequency
-   - result case description now shows the min/max value as well as the location
-   - map centroidal to nodal option
-   - adding node/element highlight menu
-   - adding node/element mark/label menu
-   - result case description now shows the min/max value as well as the location
-   - result case description now shows the mode/time/frequency
- - minor enhancements:
-   - added export result option to right-click menu
-   - more keyboard shortcuts
- - nastran:
-   - geometry:
-     - added preferences for geometry/results to speed up model loading
-     - element & material coordinate systems
-   - results
-     - added acoustic displacements (OUG1F)
-     - real/complex stress/strain/force results
-       - plate by upper/lower, composite plates by ply, bars, rods, springs, cbush, cdamp
-     - fractional mass response
-
-F06:
- - KE support for plot_145
-
-Many bug fixes, and a few more details on features, can be found in the ![Release Notes](https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md)
-
-### v1.3.1/v1.3.0 (2020/4/8)
+### v1.3.2-v1.3.0 (2020/4/8)
 
 This result has been superseded by 1.3.2.  The PyPi page was fixed.
 
