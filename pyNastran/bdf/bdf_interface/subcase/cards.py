@@ -686,7 +686,7 @@ class MEFFMASS(CheckCard):
         'MINT3' : (int, None),
         'MAXIT' : (int, None),
         'THRESH' : (float, None),
-    }  # type: dict[str, Union[str, int]]
+    }  # type: dict[str, str | int]
     #alternate_names = {'PRES'}
     #allow_ints = True
 

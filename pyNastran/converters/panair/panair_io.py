@@ -2,8 +2,8 @@
 import os
 
 import numpy as np
-from numpy import zeros, amax, amin, arange
 
+from pyNastran.utils import PathLike
 from pyNastran.gui.vtk_common_core import vtkPoints
 from pyNastran.gui.vtk_interface import vtkQuad
 
@@ -30,7 +30,8 @@ class PanairIO:
                 'Panair (*agps);;All files (*)', self.load_panair_results)
         return data
 
-    def load_panair_geometry(self, panair_filename, name='main', plot=True):
+    def load_panair_geometry(self, panair_filename: PathLike,
+                             name: str='main', plot: bool=True):
         model_name = name
         self.gui.nid_map = {}
         #key = self.case_keys[self.icase]
@@ -63,8 +64,8 @@ class PanairIO:
         points.SetNumberOfPoints(self.gui.nnodes)
 
         assert len(nodes) > 0
-        mmax = amax(nodes, axis=0)
-        mmin = amin(nodes, axis=0)
+        mmax = np.amax(nodes, axis=0)
+        mmin = np.amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.gui.create_global_axes(dim_max)
         points = numpy_to_vtk_points(nodes)
@@ -87,7 +88,8 @@ class PanairIO:
         ID = 1
 
         loads = []
-        form, cases, node_ids, element_ids = self._fill_panair_geometry_case(
+        self.elements = elements
+        form, cases, node_ids, element_ids = _fill_panair_geometry_case(
             cases, ID, nodes, elements, regions, kt, cp_norm, loads)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
@@ -100,127 +102,7 @@ class PanairIO:
     def clear_panair(self):
         del self.elements
 
-    def _fill_panair_geometry_case(self, cases, ID, nodes, elements, regions,
-                                   kt, cp_norm, unused_loads):
-        self.elements = elements
-        colormap = 'jet' # self.colormap
-        nnids = nodes.shape[0]
-        neids = elements.shape[0]
-        nids = arange(0., nnids, dtype='int32') + 1
-        eids = arange(0., neids, dtype='int32') + 1
-
-        # centroidal
-        #nelements = len(elements)
-        #print('nelements = ', nelements)
-        #print('nnodes = ', nodes.shape)
-
-        p1 = nodes[elements[:, 0]]
-        p2 = nodes[elements[:, 1]]
-        p3 = nodes[elements[:, 2]]
-        p4 = nodes[elements[:, 3]]
-        xyz_centroid = (p1 + p2 + p3 + p4) / 4.
-
-        n = np.cross(p3 - p1, p4 - p2)
-        n_norm = np.linalg.norm(n, axis=1)
-        area = n_norm / 2.
-        normal = n / n_norm[:, np.newaxis]
-
-        itime = 0
-        # ID, header, title, location, values, format, uname
-        region_res = GuiResult(ID, 'Network', 'Network', 'centroid', regions,
-                               data_format=None, colormap=colormap, uname='Network')
-        eid_res = GuiResult(ID, 'ElementID', 'ElementID', 'centroid', eids,
-                            data_format=None, colormap=colormap, uname='ElementID')
-        nid_res = GuiResult(ID, 'NodeID', 'NodeID', 'node', nids,
-                            data_format=None, colormap=colormap, uname='NodeID')
-        area_res = GuiResult(ID, 'Area', 'Area', 'centroid', area,
-                             data_format=None, colormap=colormap, uname='Area')
-
-        nxyz_res = NormalResult(0, 'Normals', 'Normals',
-                                nlabels=2, labelsize=5, ncolors=2,
-                                #colormap=colormap,
-                                data_format='%.1f',
-                                uname='NormalResult')
-        nx_res = GuiResult(ID, 'normal_x', 'NormalX', 'centroid', normal[:, 0],
-                           data_format='%.3f', colormap=colormap, uname='NormalX')
-        ny_res = GuiResult(ID, 'normal_y', 'NormalY', 'centroid', normal[:, 1],
-                           data_format='%.3f', colormap=colormap, uname='NormalY')
-        nz_res = GuiResult(ID, 'normal_z', 'NormalZ', 'centroid', normal[:, 2],
-                           data_format='%.3f', colormap=colormap, uname='NormalZ')
-        cenx_res = GuiResult(ID, 'centroid_x', 'CentroidX', 'centroid', xyz_centroid[:, 0],
-                             data_format=None, colormap=colormap, uname='CentroidX')
-        ceny_res = GuiResult(ID, 'centroid_y', 'CentroidY', 'centroid', xyz_centroid[:, 1],
-                             data_format=None, colormap=colormap, uname='CentroidY')
-        cenz_res = GuiResult(ID, 'centroid_z', 'CentroidZ', 'centroid', xyz_centroid[:, 2],
-                             data_format=None, colormap=colormap, uname='CentroidZ')
-
-        kt_res = GuiResult(ID, 'Kt', 'Kt', 'centroid', kt,
-                           data_format=None, colormap=colormap, uname='Kt')
-        cp_res = GuiResult(ID, 'CpNorm', 'CpNorm', 'centroid', cp_norm,
-                           data_format=None, colormap=colormap, uname='CpNorm')
-
-        # nodal
-        cenx_res = GuiResult(ID, 'node_x', 'NodeX', 'node', nodes[:, 0],
-                             data_format='%.2f', colormap=colormap, uname='node_x')
-        ceny_res = GuiResult(ID, 'node_y', 'NodeY', 'node', nodes[:, 1],
-                             data_format='%.2f', colormap=colormap, uname='node_y')
-        cenz_res = GuiResult(ID, 'node_z', 'NodeZ', 'node', nodes[:, 2],
-                             data_format='%.2f', colormap=colormap, uname='node_z')
-
-        icase = 0
-        location_form = [
-            ('Normal', icase + 4, []),
-            ('normal_x', icase + 5, []),
-            ('normal_y', icase + 6, []),
-            ('normal_z', icase + 7, []),
-
-            ('centroid_x', icase + 8, []),
-            ('centroid_y', icase + 9, []),
-            ('centroid_z', icase + 10, []),
-
-            ('node_x', icase + 11, []),
-            ('node_y', icase + 12, []),
-            ('node_z', icase + 13, []),
-        ]
-
-        geometry_form = [
-            ('Patch', icase, []),
-            ('ElementID', icase + 1, []),
-            ('NodeID', icase + 2, []),
-            ('Area', icase + 3, []),
-            ('Location', None, location_form),
-            ('Kt', icase + 14, []),
-            ('CpNorm', icase + 15, []),
-        ]
-        form = [
-            ('Geometry', None, geometry_form),
-        ]
-
-        cases[icase] = (region_res, (itime, 'Patch'))
-        cases[icase + 1] = (eid_res, (itime, 'ElementID'))
-        cases[icase + 2] = (nid_res, (itime, 'NodeID'))
-        cases[icase + 3] = (area_res, (itime, 'Area'))
-
-        # location_form
-        cases[icase + 4] = (nxyz_res, (itime, 'Normal'))
-        cases[icase + 5] = (nx_res, (itime, 'NormalX'))
-        cases[icase + 6] = (ny_res, (itime, 'NormalY'))
-        cases[icase + 7] = (nz_res, (itime, 'NormalZ'))
-        #---
-        cases[icase + 8] = (cenx_res, (itime, 'CentroidX'))
-        cases[icase + 9] = (ceny_res, (itime, 'CentroidY'))
-        cases[icase + 10] = (cenz_res, (itime, 'CentroidZ'))
-        #---
-        cases[icase + 11] = (cenx_res, (itime, 'node_x'))
-        cases[icase + 12] = (ceny_res, (itime, 'node_y'))
-        cases[icase + 13] = (cenz_res, (itime, 'node_z'))
-
-        cases[icase + 14] = (kt_res, (itime, 'Kt'))
-        cases[icase + 15] = (cp_res, (itime, 'CpNorm'))
-
-        return form, cases, nids, eids
-
-    def load_panair_results(self, panair_filename):
+    def load_panair_results(self, panair_filename: PathLike):
         model_name = 'main'
         #colormap = self.colormap
         colormap = 'jet'
@@ -252,7 +134,7 @@ class PanairIO:
                 case_name += ' beta=%s' %  beta
 
             imin = 0
-            Cp_array = zeros(nnodes, dtype='float32')
+            Cp_array = np.zeros(nnodes, dtype='float32')
             for unused_ipatch, Cp in sorted(model.pressures.items()):
                 Cpv = Cp[icp].ravel()
                 nCp = len(Cpv)
@@ -306,9 +188,131 @@ class PanairIO:
                 assert len(ft13_form) > 0, ft13_form
                 form.append(('Ft13: Mach=%s' % mach, None, ft13_form))
 
-
         #cases[icase + 1] = (Cpc_res, (0, 'Cp_centroidal'))
         self.gui._finish_results_io2(model_name, form, cases)
+
+
+def _fill_panair_geometry_case(cases, ID,
+                               nodes: np.ndarray,
+                               elements: np.ndarray,
+                               regions: np.ndarray,
+                               kt, cp_norm, unused_loads):
+    colormap = 'jet' # self.colormap
+    nnids = nodes.shape[0]
+    neids = elements.shape[0]
+    nids = np.arange(0, nnids, dtype='int32') + 1
+    eids = np.arange(0, neids, dtype='int32') + 1
+
+    # centroidal
+    #nelements = len(elements)
+    #print('nelements = ', nelements)
+    #print('nnodes = ', nodes.shape)
+
+    p1 = nodes[elements[:, 0]]
+    p2 = nodes[elements[:, 1]]
+    p3 = nodes[elements[:, 2]]
+    p4 = nodes[elements[:, 3]]
+    xyz_centroid = (p1 + p2 + p3 + p4) / 4.
+
+    n = np.cross(p3 - p1, p4 - p2)
+    n_norm = np.linalg.norm(n, axis=1)
+    area = n_norm / 2.
+    normal = n / n_norm[:, np.newaxis]
+
+    itime = 0
+    # ID, header, title, location, values, format, uname
+    region_res = GuiResult(ID, 'Network', 'Network', 'centroid', regions,
+                           data_format=None, colormap=colormap, uname='Network')
+    eid_res = GuiResult(ID, 'ElementID', 'ElementID', 'centroid', eids,
+                        data_format=None, colormap=colormap, uname='ElementID')
+    nid_res = GuiResult(ID, 'NodeID', 'NodeID', 'node', nids,
+                        data_format=None, colormap=colormap, uname='NodeID')
+    area_res = GuiResult(ID, 'Area', 'Area', 'centroid', area,
+                         data_format=None, colormap=colormap, uname='Area')
+
+    nxyz_res = NormalResult(0, 'Normals', 'Normals',
+                            nlabels=2, labelsize=5, ncolors=2,
+                            #colormap=colormap,
+                            data_format='%.1f',
+                            uname='NormalResult')
+    nx_res = GuiResult(ID, 'normal_x', 'NormalX', 'centroid', normal[:, 0],
+                       data_format='%.3f', colormap=colormap, uname='NormalX')
+    ny_res = GuiResult(ID, 'normal_y', 'NormalY', 'centroid', normal[:, 1],
+                       data_format='%.3f', colormap=colormap, uname='NormalY')
+    nz_res = GuiResult(ID, 'normal_z', 'NormalZ', 'centroid', normal[:, 2],
+                       data_format='%.3f', colormap=colormap, uname='NormalZ')
+    cenx_res = GuiResult(ID, 'centroid_x', 'CentroidX', 'centroid', xyz_centroid[:, 0],
+                         data_format=None, colormap=colormap, uname='CentroidX')
+    ceny_res = GuiResult(ID, 'centroid_y', 'CentroidY', 'centroid', xyz_centroid[:, 1],
+                         data_format=None, colormap=colormap, uname='CentroidY')
+    cenz_res = GuiResult(ID, 'centroid_z', 'CentroidZ', 'centroid', xyz_centroid[:, 2],
+                         data_format=None, colormap=colormap, uname='CentroidZ')
+
+    kt_res = GuiResult(ID, 'Kt', 'Kt', 'centroid', kt,
+                       data_format=None, colormap=colormap, uname='Kt')
+    cp_res = GuiResult(ID, 'CpNorm', 'CpNorm', 'centroid', cp_norm,
+                       data_format=None, colormap=colormap, uname='CpNorm')
+
+    # nodal
+    cenx_res = GuiResult(ID, 'node_x', 'NodeX', 'node', nodes[:, 0],
+                         data_format='%.2f', colormap=colormap, uname='node_x')
+    ceny_res = GuiResult(ID, 'node_y', 'NodeY', 'node', nodes[:, 1],
+                         data_format='%.2f', colormap=colormap, uname='node_y')
+    cenz_res = GuiResult(ID, 'node_z', 'NodeZ', 'node', nodes[:, 2],
+                         data_format='%.2f', colormap=colormap, uname='node_z')
+
+    icase = 0
+    location_form = [
+        ('Normal', icase + 4, []),
+        ('normal_x', icase + 5, []),
+        ('normal_y', icase + 6, []),
+        ('normal_z', icase + 7, []),
+
+        ('centroid_x', icase + 8, []),
+        ('centroid_y', icase + 9, []),
+        ('centroid_z', icase + 10, []),
+
+        ('node_x', icase + 11, []),
+        ('node_y', icase + 12, []),
+        ('node_z', icase + 13, []),
+    ]
+
+    geometry_form = [
+        ('Patch', icase, []),
+        ('ElementID', icase + 1, []),
+        ('NodeID', icase + 2, []),
+        ('Area', icase + 3, []),
+        ('Location', None, location_form),
+        ('Kt', icase + 14, []),
+        ('CpNorm', icase + 15, []),
+    ]
+    form = [
+        ('Geometry', None, geometry_form),
+    ]
+
+    cases[icase] = (region_res, (itime, 'Patch'))
+    cases[icase + 1] = (eid_res, (itime, 'ElementID'))
+    cases[icase + 2] = (nid_res, (itime, 'NodeID'))
+    cases[icase + 3] = (area_res, (itime, 'Area'))
+
+    # location_form
+    cases[icase + 4] = (nxyz_res, (itime, 'Normal'))
+    cases[icase + 5] = (nx_res, (itime, 'NormalX'))
+    cases[icase + 6] = (ny_res, (itime, 'NormalY'))
+    cases[icase + 7] = (nz_res, (itime, 'NormalZ'))
+    #---
+    cases[icase + 8] = (cenx_res, (itime, 'CentroidX'))
+    cases[icase + 9] = (ceny_res, (itime, 'CentroidY'))
+    cases[icase + 10] = (cenz_res, (itime, 'CentroidZ'))
+    #---
+    cases[icase + 11] = (cenx_res, (itime, 'node_x'))
+    cases[icase + 12] = (ceny_res, (itime, 'node_y'))
+    cases[icase + 13] = (cenz_res, (itime, 'node_z'))
+
+    cases[icase + 14] = (kt_res, (itime, 'Kt'))
+    cases[icase + 15] = (cp_res, (itime, 'CpNorm'))
+
+    return form, cases, nids, eids
 
 def add_networks(out_networks, out_headers, is_beta0,
                  ID, icase, cases, geom_model, nelements, log, colormap='jet'):

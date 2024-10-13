@@ -34,7 +34,7 @@ class DISPLACEMENT(CheckCard):
     duplicate_names = {
         'PHAS' : 'PHASE',
     }
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -59,7 +59,7 @@ class VELOCITY(CheckCard):
     duplicate_names = {
         'PHAS' : 'PHASE',
     }
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -80,7 +80,7 @@ class ACCELERATION(CheckCard):
         'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -104,7 +104,7 @@ class VECTOR(CheckCard):
     duplicate_names = {
         'PHAS' : 'PHASE',
     }
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -125,7 +125,7 @@ class SDISPLACEMENT(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -147,7 +147,7 @@ class SVELOCITY(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -169,7 +169,7 @@ class SACCELERATION(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -190,7 +190,7 @@ class SVECTOR(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -211,7 +211,7 @@ class SPCFORCES(CheckCard):
         'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -232,7 +232,7 @@ class MPCFORCES(CheckCard):
         'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -249,7 +249,7 @@ class NLLOAD(CheckCard):
     #short_name = type
     allowed_keys = {'PRINT', 'PUNCH', 'PLOT'}
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -266,7 +266,7 @@ class NLSTRESS(CheckCard):
     #short_name = type
     allowed_keys = {'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT'}
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -301,7 +301,7 @@ class OLOAD(CheckCard):
                     'REAL', 'IMAG', 'PHASE', 'PSDF', 'ATOC', 'CRMS',
                     'RMS', 'RALL', 'RPRINT', 'NORPRINT', 'RPUNCH'}
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -319,7 +319,7 @@ class PRESSURE(CheckCard):
                     'SORT1', 'SORT2',
                     'REAL'}
     allowed_strings = {'ALL'} # , 'NONE'}
-    #allowed_values = {}  # type: dict[str, Union[str, int]]
+    #allowed_values: dict[str, str | int] = {}
     alternate_names = {'PRES'}
     allow_ints = True
 
@@ -335,7 +335,7 @@ class OPRESS(CheckCard):
     type = 'OPRESS'
     allowed_keys = {'PRINT', 'PUNCH'}
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -350,7 +350,7 @@ class OTEMP(CheckCard):
     type = 'OTEMP'
     allowed_keys = {'PRINT', 'PUNCH'}
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -383,7 +383,7 @@ class STRESS(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -410,7 +410,7 @@ class STRAIN(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -436,7 +436,7 @@ class FORCE(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -457,7 +457,7 @@ class GPFORCE(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -481,7 +481,7 @@ class EDE(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', } # 'NONE'
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -503,7 +503,7 @@ class ESE(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -524,7 +524,7 @@ class GPSTRESS(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -548,7 +548,7 @@ class GPSTRAIN(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -569,7 +569,7 @@ class STRFIELD(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -590,7 +590,7 @@ class GPSDCON(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -612,7 +612,7 @@ class ELSDCON(CheckCard):
         #'NOPRINT', 'RPUNCH',
     }
     allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: dict[str, Union[str, int]]
+    allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -805,7 +805,7 @@ class SENSITY(CheckCard):
     type = 'SENSITY'
     allowed_keys = {'STORE', }
     allowed_strings = {'ALL'} # , 'NONE'}
-    #allowed_values = {}  # type: dict[str, Union[str, int]]
+    #allowed_values: dict[str, str | int] = {}
     #alternate_names = {'PRES'}
     #allow_ints = True
 

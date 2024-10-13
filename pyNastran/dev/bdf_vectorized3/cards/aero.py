@@ -77,7 +77,7 @@ class AECOMP(VectorizedBaseCard):
         self.nlists = np.array([], dtype='int32')
         self.all_lists = np.array([], dtype='int32')
 
-    def add(self, name: str, list_type: list[str], lists: Union[int, list[int]],
+    def add(self, name: str, list_type: list[str], lists: int | list[int],
             comment: str='') -> int:
         """
         Creates an AECOMP card

@@ -429,7 +429,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         return xyz_cid0_out, nid_cp_cd_out
 
     def _get_model_unvectorized(self,
-                                bdf_filename: Union[str, BDF],
+                                bdf_filename: str | BDF,
                                 xref_loads: bool=True) -> tuple[BDF, bool]:
         """Loads the BDF/OP2 geometry"""
         log = self.gui.log
@@ -438,7 +438,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.model_type = 'nastran'
         return model, xref_nodes
 
-    def load_nastran_geometry(self, bdf_filename: Union[str, BDF],
+    def load_nastran_geometry(self, bdf_filename: str | BDF,
                               name: str='main',
                               plot: bool=True, **kwargs):
         """

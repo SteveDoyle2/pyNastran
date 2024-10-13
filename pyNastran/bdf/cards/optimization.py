@@ -421,7 +421,7 @@ def _check_dvmrel_options(mp_name, material_type, options):
             'valid: [%s]' % (mp_name, material_type, ', '.join(soptions)))
         raise ValueError(msg)
 
-def _check_dvprel_options(pname_fid: Union[str, int],
+def _check_dvprel_options(pname_fid: str | int,
                           prop_type: str, options):
     if pname_fid not in options:
         soptions = [str(val) for val in options]

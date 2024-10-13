@@ -880,7 +880,7 @@ class GetCard(GetMethods):
         return out
 
     def get_node_ids_with_elements(self, eids: list[int], msg: str='',
-                                   return_array: bool=False) -> Union[set[int], np.ndarray]:
+                                   return_array: bool=False) -> set[int] | np.ndarray:
         """
         Get the node IDs associated with a list of element IDs
 
@@ -1195,7 +1195,7 @@ class GetCard(GetMethods):
         return eids2
 
     def get_pid_to_node_ids_and_elements_array(self,
-                                               pids: Union[list[int], int, None]=None,
+                                               pids: list[int] | int | None=None,
                                                etypes: Optional[list[str]]=None,
                                                idtype: str='int32',
                                                msg: str='') -> tuple[dict[int, str], np.ndarray]:
@@ -1240,7 +1240,7 @@ class GetCard(GetMethods):
         return pid_to_eids_ieids_map
 
     def get_element_ids_dict_with_pids(self,
-                                       pids: Union[list[int], int, None]=None,
+                                       pids: list[int] | int | None=None,
                                        stop_if_no_eids: bool=True, msg: str='') -> dict[int, list[int]]:
         """
         Gets all the element IDs with a specific property ID.

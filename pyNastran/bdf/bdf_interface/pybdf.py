@@ -186,7 +186,7 @@ class BDFInputPy:
         self.log = get_logger2(log, debug)
         self.use_new_parser = False
 
-    def get_lines(self, bdf_filename: Union[str, StringIO],
+    def get_lines(self, bdf_filename: str | StringIO,
                   punch: Optional[bool]=False,
                   make_ilines: bool=True) -> tuple[list[str], list[str], list[str],
                                                    list[str], Optional[np.ndarray],
@@ -327,7 +327,7 @@ class BDFInputPy:
         system_lines = system_lines
         return bulk_data_lines, bulk_data_ilines, system_lines
 
-    def get_main_lines(self, bdf_filename: Union[str, StringIO]) -> list[str]:
+    def get_main_lines(self, bdf_filename: str | StringIO) -> list[str]:
         """
         Opens the bdf and extracts the lines
 
@@ -680,7 +680,7 @@ class BDFInputPy:
             self.log.error(msg)
             raise IOError(msg)
 
-    def _open_file(self, bdf_filename: Union[str, StringIO],
+    def _open_file(self, bdf_filename: str | StringIO,
                    basename: bool=False, check: bool=True, encoding: Optional[str]=None) -> Any:
         """
         Opens a new bdf_filename with the proper encoding and include directory
@@ -718,7 +718,7 @@ class BDFInputPy:
         bdf_file = open(_filename(bdf_filename_inc), 'r', encoding=encoding)
         return bdf_file
 
-    def _validate_open_file(self, bdf_filename: Union[str, StringIO],
+    def _validate_open_file(self, bdf_filename: str | StringIO,
                             bdf_filename_inc: str,
                             check: bool=True) -> None:
         """
@@ -830,7 +830,7 @@ def _is_case_control_line(text: str) -> bool:
     return False
 
 
-def _check_pynastran_encoding(bdf_filename: Union[str, StringIO], encoding: str) -> str:
+def _check_pynastran_encoding(bdf_filename: str | StringIO, encoding: str) -> str:
     """updates the $pyNastran: key=value variables"""
     line = '$pyNastran: punch=False'
     #line_temp = u'é à è ê'.encode('utf8').decode('ascii')
@@ -1631,7 +1631,7 @@ def _check_valid_deck(flag: int, old_flags: list[int],
         raise MissingDeckSections(msg)
     return
 
-def _show_bad_file(self: Any, bdf_filename: Union[str, StringIO],
+def _show_bad_file(self: Any, bdf_filename: str | StringIO,
                    encoding: str,
                    nlines_previous: int=10) -> None:
     """

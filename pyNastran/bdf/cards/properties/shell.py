@@ -690,7 +690,7 @@ class PCOMP(CompositeShellProperty):
         1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'tref', 7: 'ge', 8:'lam',
     }
     _properties = ['_field_map', 'plies', 'nplies', 'material_ids']
-    def update_by_pname_fid(self, pname_fid: Union[str, int],
+    def update_by_pname_fid(self, pname_fid: str | int,
                             value: int | float | str) -> None:
         if isinstance(pname_fid, int):
             self._update_field_helper(pname_fid, value)
@@ -1379,7 +1379,7 @@ class PCOMPG(CompositeShellProperty):
         #8 : 'tst', #'T' : 't',
     }
     _properties = ['_field_map', 'plies', 'nplies', 'material_ids']
-    def update_by_pname_fid(self, pname_fid: Union[str, int], value) -> None:
+    def update_by_pname_fid(self, pname_fid: str | int, value) -> None:
         if isinstance(pname_fid, int):
             self._update_field_helper(pname_fid, value)
         else:

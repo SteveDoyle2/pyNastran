@@ -2211,7 +2211,7 @@ def make_dvcrel_optimization(model: BDF, params, element_type: str, eid: int,
     return j + 1
 
 def make_dvprel_optimization(model: BDF,
-                             params: list[tuple[Union[str, int], float]],
+                             params: list[tuple[str | int, float]],
                              prop_type: str, pid: int,
                              i: int=1) -> int:
     """makes a series of DVPREL1 and a DESVAR"""

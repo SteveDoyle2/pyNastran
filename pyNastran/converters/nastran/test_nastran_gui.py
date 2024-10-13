@@ -63,7 +63,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         self.build_fmts(['nastran'], stop_on_failure=True)
         self.stop_on_failure = True
 
-    def load_nastran_geometry(self, bdf_filename: Union[str, BDF],
+    def load_nastran_geometry(self, bdf_filename: str | BDF,
                          name: str='main',
                          plot: bool=True,
                          stop_on_failure: bool=False):
@@ -72,7 +72,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
             plot=plot, stop_on_failure=stop_on_failure)
         self.validate_result_object_methods()
 
-    def load_nastran_results(self, op2_filename: Union[str, OP2]):
+    def load_nastran_results(self, op2_filename: str | OP2):
         self.stop_on_failure = True
         super().load_nastran_results(op2_filename)
         self.validate_result_object_methods()

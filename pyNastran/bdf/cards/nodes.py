@@ -1856,7 +1856,7 @@ class POINT(BaseCard):
         list_fields = ['POINT', self.nid, self.Cp()] + list(self.xyz)
         return list_fields
 
-    def repr_fields(self) -> list[Union[str, int, float]]:
+    def repr_fields(self) -> list[str | int | float]:
         """
         Gets the fields in their simplified form
 

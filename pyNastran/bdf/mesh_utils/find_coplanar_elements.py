@@ -7,7 +7,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
-def find_coplanar_triangles(bdf_filename: Union[BDF, str],
+def find_coplanar_triangles(bdf_filename: BDF | str,
                             eids: Optional[list[int]]=None) -> list[int]:
     """
     Finds coplanar triangles

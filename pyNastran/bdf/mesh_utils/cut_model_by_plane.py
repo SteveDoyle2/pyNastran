@@ -221,7 +221,7 @@ def get_stations(model: BDF,
 
     return xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, x_stations_march
 
-def _setup_faces(bdf_filename: Union[str, BDF]) -> tuple[np.ndarray, np.ndarray,
+def _setup_faces(bdf_filename: str | BDF) -> tuple[np.ndarray, np.ndarray,
                                                          list[tuple[int, int, int]], list[int]]:
     """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
@@ -257,7 +257,7 @@ def _setup_faces(bdf_filename: Union[str, BDF]) -> tuple[np.ndarray, np.ndarray,
     #edge_to_eid_map = out['edge_to_eid_map']
     return nids, xyz_cid0, faces, face_eids
 
-def cut_face_model_by_coord(bdf_filename: Union[str, BDF], coord: CORD2R, tol: float,
+def cut_face_model_by_coord(bdf_filename: str | BDF, coord: CORD2R, tol: float,
                             nodal_result, plane_atol=1e-5, skip_cleanup=True,
                             csv_filename=None,
                             plane_bdf_filename='plane_face.bdf',
@@ -1006,10 +1006,10 @@ def _face_on_edge(eid: int, eid_new: int,
     nid_a = inid1
     nid_b = inid2
 
-    out_grid1: list[Union[str, int, float]] = ['GRID', nid_new, cid, ] + xyz1_local.tolist()
-    out_grid2: list[Union[str, int, float]] = ['GRID', nid_new + 1, cid, ] + xyz2_local.tolist()
-    conrod: list[Union[str, int, float]] = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
-    conm2: list[Union[str, int, float]] = ['CONM2', eid_new+1, nid_new, 0, 100.]
+    out_grid1: list[str | int | float] = ['GRID', nid_new, cid, ] + xyz1_local.tolist()
+    out_grid2: list[str | int | float] = ['GRID', nid_new + 1, cid, ] + xyz2_local.tolist()
+    conrod: list[str | int | float] = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
+    conm2: list[str | int | float] = ['CONM2', eid_new+1, nid_new, 0, 100.]
     fbdf.write(print_card_8(out_grid1))
     fbdf.write(print_card_8(out_grid2))
     fbdf.write(print_card_8(conrod))

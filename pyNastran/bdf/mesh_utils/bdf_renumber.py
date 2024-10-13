@@ -19,7 +19,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
 
 
-def bdf_renumber(bdf_filename: Union[str, BDF, StringIO],
+def bdf_renumber(bdf_filename: str | BDF | StringIO,
                  bdf_filename_out: str,
                  size=8, is_double=False,
                  starting_id_dict=None, round_ids: bool=False,

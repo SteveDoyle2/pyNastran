@@ -22,7 +22,7 @@ from cpylog import get_logger
 from pyNastran.bdf.field_writer_8 import print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16
 
-PathLike = Union[str, PurePath]
+PathLike = str | PurePath
 
 
 def read_ugrid(ugrid_filename: Optional[PathLike]=None,

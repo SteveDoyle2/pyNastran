@@ -74,7 +74,7 @@ class AECOMP(BaseCard):
     allowed_list_types = ['SET1', 'AELIST', 'CAERO']
 
     def __init__(self, name: str, list_type: str,
-                 lists: Union[int, list[int]], comment: str='') -> None:
+                 lists: int | list[int], comment: str='') -> None:
         """
         Creates an AECOMP card
 

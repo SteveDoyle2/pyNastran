@@ -52,7 +52,7 @@ def convert(model: BDF, units_to: list[str],
     scale_model(model, xyz_scale, mass_scale, time_scale, force_scale, gravity_scale)
 
 
-def scale_by_terms(bdf_filename: Union[BDF, str], terms: list[float], scales: list[float],
+def scale_by_terms(bdf_filename: BDF | str, terms: list[float], scales: list[float],
                    bdf_filename_out: Optional[str]=None,
                    encoding: Optional[str]=None, log=None, debug: bool=True) -> BDF:
     """

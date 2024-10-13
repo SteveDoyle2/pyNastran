@@ -13,7 +13,7 @@ def read_avus(avus_filename, log=None, debug=False):
     return model
 
 class AvusGrid:
-    def __init__(self, log=None, debug: Union[str, bool, None]=False):
+    def __init__(self, log=None, debug: str | bool | None=False):
         self.log = get_logger2(log=log, debug=debug)
         self.infilename = None
 

@@ -18,7 +18,7 @@ class WriteMesh(BDFAttributes):
         #BDFAttributes.__init__(self)
         self.writer = Writer(self)
 
-    def write_bdf(self, out_filename: Optional[Union[str, StringIO]]=None,
+    def write_bdf(self, out_filename: Optional[str | StringIO]=None,
                   encoding: Optional[str]=None,
                   size: int=8,
                   nodes_size: Optional[int]=None,

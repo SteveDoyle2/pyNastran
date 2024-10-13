@@ -41,11 +41,11 @@ from pyNastran.nptyping_interface import NDArray3float, NDArray33float, NDArrayN
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, tri_cap
 
 Faces = list[list[int]]
-Dim1 = Union[np.ndarray, tuple[float]]
-Dim2 = Union[np.ndarray, tuple[float, float]]
-Dim3 = Union[np.ndarray, tuple[float, float, float]]
-Dim4 = Union[np.ndarray, tuple[float, float, float, float]]
-Dim6 = Union[np.ndarray, tuple[float, float, float, float, float, float]]
+Dim1 = np.ndarray | tuple[float]
+Dim2 = np.ndarray | tuple[float, float]
+Dim3 = np.ndarray | tuple[float, float, float]
+Dim4 = np.ndarray | tuple[float, float, float, float]
+Dim6 = np.ndarray | tuple[float, float, float, float, float, float]
 
 def _transform_points(n1: NDArray3float,
                       n2: NDArray3float,
@@ -1155,4 +1155,3 @@ def hat_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
     faces, points1, points2 = hat_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
-

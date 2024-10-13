@@ -1859,7 +1859,7 @@ class GuiQtCommon(GuiAttributes):
             the nodes that are brought along with a deflection
 
         """
-        self.alt_grids[name] = vtkUnstructuredGrid()
+        copied_grid = vtkUnstructuredGrid()
         if name_duplicate_from == 'main':
             grid_copy_from = self.grid
             representation = 'toggle'
@@ -1867,7 +1867,8 @@ class GuiQtCommon(GuiAttributes):
             grid_copy_from = self.alt_grids[name_duplicate_from]
             props = self.geometry_properties[name_duplicate_from]
             representation = props.representation
-        self.alt_grids[name].DeepCopy(grid_copy_from)
+        copied_grid.DeepCopy(grid_copy_from)
+        self.alt_grids[name] = copied_grid
 
         #representation : str
             #main - change with main mesh

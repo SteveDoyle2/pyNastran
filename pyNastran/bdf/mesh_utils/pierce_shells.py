@@ -78,7 +78,7 @@ def triangle_intersection(orig: np.ndarray, direction: np.ndarray,
     return orig + direction * (e2.dot(qvec) * inv_det)
 
 
-def pierce_shell_model(bdf_filename: Union[BDF, str], xyz_points: Any,
+def pierce_shell_model(bdf_filename: BDF | str, xyz_points: Any,
                        tol: float=1.0) -> tuple[list[int], np.ndarray, list[list[int]]]:
     """
     Pierces a shell model with a <0., 0., 1.> vector.  In other words,

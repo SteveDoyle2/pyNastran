@@ -2242,11 +2242,11 @@ class CSHEAR(QuadShell):
     def node_ids(self, value):
         raise ValueError("You cannot set node IDs like this...modify the node objects")
 
-    def raw_fields(self) -> list[Union[str, int]]:
+    def raw_fields(self) -> list[str | int]:
         list_fields = ['CSHEAR', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
-    def repr_fields(self) -> list[Union[str, int]]:
+    def repr_fields(self) -> list[str | int]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

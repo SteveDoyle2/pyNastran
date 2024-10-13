@@ -3310,7 +3310,7 @@ class AddAero(BDFAttributes):
         flfact = self.flfact.add(sid, factors, comment=comment)
         return flfact
 
-    def add_aecomp(self, name: str, list_type: list[str], lists: Union[int, list[int]],
+    def add_aecomp(self, name: str, list_type: list[str], lists: int | list[int],
                    comment: str='') -> int:
         """
         Creates an AECOMP card
@@ -5672,7 +5672,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_seqgp_object(seqgp)
         return seqgp
 
-    def add_spoint(self, ids: Union[int, list[int]], comment: str='') -> int:
+    def add_spoint(self, ids: int | list[int], comment: str='') -> int:
         """
         Creates the SPOINTs card that contains many SPOINTs
 
@@ -5687,7 +5687,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         spoint = self.spoint.add(ids, comment=comment)
         return spoint
 
-    def add_epoint(self, ids: Union[int, list[int]], comment: str='') -> int:
+    def add_epoint(self, ids: int | list[int], comment: str='') -> int:
         """
         Creates the EPOINTs card that contains many EPOINTs
 

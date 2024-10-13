@@ -516,7 +516,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    def __init__(self, debug: Union[str, bool, None]=True,
+    def __init__(self, debug: str | bool | None=True,
                  log: Optional[SimpleLogger]=None,
                  mode: str='msc') -> None:
         """
@@ -4239,7 +4239,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 #return False
         #return True
 
-    def _parse_primary_file_header(self, bdf_filename: Union[str, StringIO]) -> None:
+    def _parse_primary_file_header(self, bdf_filename: str | StringIO) -> None:
         """
         Extract encoding, nastran_format, and punch from the primary BDF.
 

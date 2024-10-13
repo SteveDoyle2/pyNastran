@@ -1,6 +1,6 @@
 """Parses Nastran fields"""
 import re
-from typing import Union, Optional, Any
+from typing import Optional, Any
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (
     integer_types, integer_float_types, float_types)
@@ -586,7 +586,7 @@ def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
 
-def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[float, str]:
+def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> float | str:
     """
     Casts a value to a double/string
 
@@ -1279,7 +1279,7 @@ def exact_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=No
 
 
 def interpret_value(value_raw: Optional[str],
-                    card: Union[str, BDFCard]='') -> Optional[int | float | str]:
+                    card: str | BDFCard='') -> Optional[int | float | str]:
     """
     Converts a value from nastran format into python format.
 

@@ -679,9 +679,9 @@ class BDFAttributes:
         # --------------------------- aero defaults --------------------------
         # aero cards
         #: stores CAEROx
-        self.caeros: dict[int, CAERO1 | CAERO2 | CAERO3 | CAERO4 | CAERO5] = {}
+        self.caeros: dict[int, CAEROs] = {}
         #: stores PAEROx
-        self.paeros: dict[int, PAERO1 | PAERO2 | PAERO3 | PAERO4 | PAERO5] = {}
+        self.paeros: dict[int, PAEROs] = {}
         # stores MONPNT1
         self.monitor_points: list[MONPNT1 | MONPNT2 | MONPNT3] = []
 
@@ -705,7 +705,7 @@ class BDFAttributes:
         self.csschds: dict[int, CSSCHD] = {}
 
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
-        self.splines: dict[int, SPLINE1 | SPLINE2 | SPLINE3 | SPLINE4 | SPLINE5] = {}
+        self.splines: dict[int, SPLINEs] = {}
         self.zona = ZONA(self)
 
         # axisymmetric
@@ -1343,7 +1343,7 @@ class BDFAttributes:
         return self.caeros.keys()
 
     @property
-    def wtmass(self):
+    def wtmass(self) -> float:
         """
         Gets the PARAM,WTMASS value, which defines the weight to mass
         conversion factor
@@ -1358,7 +1358,8 @@ class BDFAttributes:
             wtmass = param.values[0]
         return wtmass
 
-    def set_param(self, key: str, values: int | float | str | list[float], comment: str='') -> None:
+    def set_param(self, key: str, values: int | float | str | list[float],
+                  comment: str='') -> None:
         """sets a param card; creates it if necessary"""
         if isinstance(values, (int, float, str)):
             values = [values]

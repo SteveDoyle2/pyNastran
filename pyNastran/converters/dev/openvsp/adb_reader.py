@@ -6,7 +6,7 @@ from cpylog import get_logger2
 
 
 class ADB_Reader:
-    def __init__(self, log=None, debug: Union[str, bool, None]=None, batch=False):
+    def __init__(self, log=None, debug: str | bool | None=None, batch=False):
         self.log = get_logger2(log, debug)
         self.debug = debug
         self.n = 0

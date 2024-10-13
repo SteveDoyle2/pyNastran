@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 #from vtk import (
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from pyNastran.gui.main_window import MainWindow
 
 
-def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtkPolyData],
+def get_ids_filter(grid: vtkUnstructuredGrid | vtkPolyData,
                    idsname: str='Ids',
                    is_nids: bool=True,
                    is_eids: bool=True) -> vtkIdFilter:
@@ -311,6 +311,7 @@ def create_highlighted_actor(gui: MainWindow, ugrid: vtkUnstructuredGrid,
     # don't use a single color; makes setting prop values work
     mapper.ScalarVisibilityOff()
     actor.SetMapper(mapper)
+    actor.SetPickable(0)
 
     settings: Settings = gui.settings
     prop = actor.GetProperty()

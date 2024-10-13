@@ -235,8 +235,8 @@ def _save_layered_table_results(icase: int,
     del name, itime, ilayer, imethod
     return vtk_array
 
-def nastran_to_vtk(bdf_filename: Union[str, BDF],
-                   op2_filename: Union[str, OP2],
+def nastran_to_vtk(bdf_filename: str | BDF,
+                   op2_filename: str | OP2,
                    vtu_filename: str,
                    log_level: str='error',
                    compression_level: int=5) -> vtkUnstructuredGrid:

@@ -2888,7 +2888,7 @@ class Add3dElements:
         self._add_methods._add_element_object(elem)
         return elem
 
-    def add_cpenta(self, eid, pid, nids, comment='') -> Union[CPENTA6, CPENTA15]:
+    def add_cpenta(self, eid, pid, nids, comment='') -> CPENTA6 | CPENTA15:
         """
         Creates a CPENTA6/CPENTA15
 
@@ -2911,7 +2911,7 @@ class Add3dElements:
         self._add_methods._add_element_object(elem)
         return elem
 
-    def add_chexa(self, eid, pid, nids, comment='') -> Union[CHEXA8, CHEXA20]:
+    def add_chexa(self, eid, pid, nids, comment='') -> CHEXA8 | CHEXA20:
         """
         Creates a CHEXA8/CHEXA20
 
@@ -4461,7 +4461,7 @@ class AddAero:
         return spline
 
     def add_trim(self, sid, mach, q, labels, uxs, aeqr=1.0, trim_type=1,
-                 comment='') -> Union[TRIM, TRIM2]:
+                 comment='') -> TRIM | TRIM2:
         """
         Creates a TRIM/TRIM2 card for a static aero (144) analysis.
 
@@ -4661,7 +4661,7 @@ class AddAero:
         self._add_methods._add_flfact_object(flfact)
         return flfact
 
-    def add_aecomp(self, name: str, list_type: list[str], lists: Union[int, list[int]],
+    def add_aecomp(self, name: str, list_type: list[str], lists: list[int],
                    comment: str='') -> AECOMP:
         """
         Creates an AECOMP card
@@ -6129,7 +6129,7 @@ class AddOptimization:
         self.reject_card_lines('BNDGRID', print_card_8(fields).split('\n'), show_log=False)
 
 class AddSuperelements:
-    def add_sebset(self, seid: int, ids: list[int], components, comment='') -> Union[SEBSET, SEBSET1]:
+    def add_sebset(self, seid: int, ids: list[int], components, comment='') -> SEBSET | SEBSET1:
         """Creates an SEBSET/SEBSET1 card"""
         if isinstance(components, integer_string_types):
             sebset = SEBSET1(seid, ids, components, comment=comment)
@@ -6139,12 +6139,12 @@ class AddSuperelements:
         return sebset
 
     def add_sebset1(self, seid: int, ids: list[int],
-                    components, comment='') -> Union[SEBSET, SEBSET1]:
+                    components, comment='') -> SEBSET | SEBSET1:
         """.. seealso:: ``add_secset``"""
         return self.add_sebset(seid, ids, components, comment=comment)
 
     def add_secset(self, seid: int, ids: list[int],
-                   components, comment='') -> Union[SECSET, SECSET1]:
+                   components, comment='') -> SECSET | SECSET1:
         """Creates an SECSET/SECSET1 card"""
         if isinstance(components, integer_string_types):
             secset = SECSET1(seid, ids, components, comment=comment)
@@ -6154,12 +6154,12 @@ class AddSuperelements:
         return secset
 
     def add_secset1(self, seid: int, ids: list[int],
-                    components, comment='') -> Union[SECSET, SECSET1]:
+                    components, comment='') -> SECSET | SECSET1:
         """.. seealso:: ``add_secset``"""
         return self.add_secset(seid, ids, components, comment=comment)
 
     def add_seqset(self, seid: int, ids: list[int],
-                   components, comment='') -> Union[SEQSET, SEQSET1]:
+                   components, comment='') -> SEQSET | SEQSET1:
         """Creates an SEQSET card"""
         if isinstance(components, integer_string_types):
             seqset = SEQSET1(seid, ids, components, comment=comment)
@@ -6168,7 +6168,7 @@ class AddSuperelements:
         self._add_methods._add_seqset_object(seqset)
         return seqset
 
-    def add_seqset1(self, seid, ids, components, comment='') -> Union[SEQSET, SEQSET1]:
+    def add_seqset1(self, seid, ids, components, comment='') -> SEQSET | SEQSET1:
         """.. seealso:: ``add_secset``"""
         return self.add_seqset(seid, ids, components, comment=comment)
 
@@ -6293,7 +6293,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         custom_types['CaseControlDeck'] = CaseControlDeck
         return custom_types
 
-    def add_grid(self, nid: int, xyz: Union[None, list[float], NDArray3float],
+    def add_grid(self, nid: int, xyz: list[float] | NDArray3float,
                  cp: int=0, cd: int=0, ps: str='', seid: int=0, comment: str='') -> GRID:
         """
         Creates the GRID card
@@ -6365,7 +6365,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_seqgp_object(seqgp)
         return seqgp
 
-    def add_spoint(self, ids: Union[int, list[int]], comment: str='') -> SPOINTs:
+    def add_spoint(self, ids: int | list[int], comment: str='') -> SPOINTs:
         """
         Creates the SPOINTs card that contains many SPOINTs
 
@@ -6381,7 +6381,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_spoint_object(spoint)
         return spoint
 
-    def add_epoint(self, ids: Union[int, list[int]], comment: str='') -> EPOINTs:
+    def add_epoint(self, ids: int | list[int], comment: str='') -> EPOINTs:
         """
         Creates the EPOINTs card that contains many EPOINTs
 

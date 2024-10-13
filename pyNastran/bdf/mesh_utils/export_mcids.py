@@ -10,7 +10,7 @@ import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf, PCOMP, PCOMPG, PSHELL
 from pyNastran.bdf.cards.elements.shell import (
     CTRIA3, CTRIA6, CQUAD4, CQUAD8, CTRIAR, CQUADR, rotate_by_thetad)
-ShellElement = Union[CTRIA3, CTRIA6, CQUAD4, CQUAD8, CTRIAR, CQUADR]
+ShellElement = CTRIA3 | CTRIA6 | CQUAD4 | CQUAD8 | CTRIAR | CQUADR
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
@@ -32,7 +32,7 @@ SKIP_ETYPES = {
     'CTRSHL',
 }
 
-def export_mcids(bdf_filename: Union[BDF, str], csv_filename: Optional[str]=None,
+def export_mcids(bdf_filename: BDF | str, csv_filename: Optional[str]=None,
                  eids: Optional[list[int]]=None,
                  export_xaxis: bool=True, export_yaxis: bool=True,
                  consider_property_rotation: bool=True,
@@ -163,7 +163,7 @@ def _get_elements(model, eids):
         elements = {eid : model.elements[eid] for eid in eids}
     return elements
 
-def export_element_cid(bdf_filename: Union[BDF, str],
+def export_element_cid(bdf_filename: BDF | str,
                        eids: Optional[list[int]]=None,
                        log=None, debug=False):
     """
@@ -198,7 +198,7 @@ def export_element_cid(bdf_filename: Union[BDF, str],
     return nodes, bars
 
 
-def _load_bdf(bdf_filename: Union[BDF, str],
+def _load_bdf(bdf_filename: BDF | str,
               log: Optional[SimpleLogger]=None,
               debug: bool=True) -> BDF:
     if isinstance(bdf_filename, BDF):
@@ -209,7 +209,7 @@ def _load_bdf(bdf_filename: Union[BDF, str],
         model.safe_cross_reference()
     return model
 
-def export_mcids_all(bdf_filename: Union[BDF, str],
+def export_mcids_all(bdf_filename: BDF | str,
                      eids: Optional[list[int]]=None,
                      log: Optional[SimpleLogger]=None, debug: bool=False):
     """
@@ -327,7 +327,7 @@ def get_pid_to_nplies(model: BDF) -> tuple[dict[int, int], int]:
     assert isinstance(nplies_max, int), nplies_max
     return pid_to_nplies, nplies_max
 
-def get_pid_ref_prop_type(model: BDF, elem) -> tuple[Union[PCOMP, PCOMPG, PSHELL], str]:
+def get_pid_ref_prop_type(model: BDF, elem) -> tuple[PCOMP | PCOMPG | PSHELL, str]:
     """helper method for ``export_mcids``"""
     pid_ref = elem.pid_ref
     try:

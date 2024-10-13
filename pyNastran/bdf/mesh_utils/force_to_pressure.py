@@ -5,7 +5,7 @@ import numpy as np
 from pyNastran.bdf.bdf import read_bdf, BDF, FORCE, PLOAD4
 from pyNastran.utils import PathLike
 
-def force_to_pressure(bdf_filename: Union[str, BDF], bdf_filename_out=None,
+def force_to_pressure(bdf_filename: str | BDF, bdf_filename_out=None,
                       clear_model: bool=False):
     """converts FORCE cards to PLOAD4s for a shell model"""
     if isinstance(bdf_filename, BDF):

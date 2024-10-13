@@ -3009,7 +3009,7 @@ def get_caero_control_surface_grid(grid,
     return all_points, elements, centroids, areas
 
 def get_model_unvectorized(log,
-                           bdf_filename: Union[str, BDF],
+                           bdf_filename: str | BDF,
                            xref_loads: bool=True, is_h5py: bool=True):
     """Loads the BDF/OP2 geometry"""
     ext = '.bdf'

@@ -60,7 +60,7 @@ def build_table_lines(fields, nstart: int=1, nend: int=0):
     return fields_out
 
 
-def wipe_empty_fields(card: list[Union[str, int, float, None]]) -> list[Union[str, int, float, None]]:
+def wipe_empty_fields(card: list[str | int | float | None]) -> list[str | int | float | None]:
     """
     Removes any trailing Nones from the card.
     Also converts empty strings to None.
@@ -78,7 +78,7 @@ def wipe_empty_fields(card: list[Union[str, int, float, None]]) -> list[Union[st
         the card with no trailing blank fields
 
     """
-    short_card = []  # type: list[Union[str, int, float, None]]
+    short_card: list[str | int | float | None] = []
     for field in card:
         if isinstance(field, str):
             field = field.strip()
