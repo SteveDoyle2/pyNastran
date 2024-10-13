@@ -60,6 +60,7 @@ from pyNastran.gui.utils.vtk.gui_utils import remove_actors_from_gui
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
 
+from pyNastran.gui.menus.edit_geometry_properties.manage_actors import AltGeometry
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
@@ -1414,7 +1415,8 @@ class GuiAttributes:
             out_data, name=name, write_log=write_log)
 
     @start_stop_performance_mode
-    def on_update_geometry_properties_override_dialog(self, geometry_properties) -> None:
+    def on_update_geometry_properties_override_dialog(
+            self, geometry_properties: dict[str,CoordProperties | AltGeometry]) -> None:
         """
         Update the goemetry properties and overwrite the options in the
         edit geometry properties dialog if it is open.

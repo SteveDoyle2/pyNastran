@@ -10,6 +10,9 @@ from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot
 #from pyNastran.converters.tecplot.utils import merge_tecplot_files
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
+from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid
+from pyNastran.gui.utils.vtk.vectorized_geometry import (
+    build_vtk_geometry, create_offset_arrays)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
 
@@ -132,10 +135,12 @@ class TecplotIO:
             is_surface = False
             grid = self.gui.grid
             nelements = _create_tecplot_solids(
-                grid, model, nsolids, ntets, tets, nhexas, hexas,
+                grid, model,
+                ntets, tets,
+                nhexas, hexas,
                 is_surface=is_surface)
             self.gui.nelements = nelements
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('shells or solids only\n'
                                       f'ntris={ntris} nquads={nquads}; ntets={ntets}; nhexas={nhexas}')
 
@@ -241,32 +246,44 @@ class TecplotIO:
             form.append(('Results', None, results_form))
         return form, cases, nids, eids
 
-def _create_tecplot_shells(grid, is_quads, quads, is_tris, tris):
-    if is_quads:
+def _create_tecplot_shells(ugrid: vtkUnstructuredGrid,
+                           nquad: int, quads: np.ndarray,
+                           ntri: int, tris: np.ndarray):
+    null_grid_id = np.array([])
+    cell_offset0 = 0
+    cell_offset_list = []
+    cell_type_list = []
+    n_nodes_list = []
+    if nquad:
         #elem.GetCellType() = 9  # vtkQuad
-        for face in quads:
-            elem = vtkQuad()
-            epoints = elem.GetPointIds()
-            epoints.SetId(0, face[0])
-            epoints.SetId(1, face[1])
-            epoints.SetId(2, face[2])
-            epoints.SetId(3, face[3])
-            grid.InsertNextCell(9, epoints)
+        cell_type = 9
+        dnode = 4
+        cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
+            null_grid_id, quads, nquad, cell_type, cell_offset0, dnode)
+        n_nodes_list.append(n_nodesi)
+        cell_type_list.append(cell_typei)
+        cell_offset_list.append(cell_offseti)
 
-    if is_tris:
+    if ntri:
         #elem.GetCellType() = 5  # vtkTriangle
-        for face in tris:
-            elem = vtkTriangle()
-            epoints = elem.GetPointIds()
-            epoints.SetId(0, face[0])
-            epoints.SetId(1, face[1])
-            epoints.SetId(2, face[2])
-            grid.InsertNextCell(5, epoints)
+        cell_type = 5
+        dnode = 3
+        cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
+            null_grid_id, tris, ntri, cell_type, cell_offset0, dnode)
+        n_nodes_list.append(n_nodesi)
+        cell_type_list.append(cell_typei)
+        cell_offset_list.append(cell_offseti)
 
-def _create_tecplot_solids(grid, model: Tecplot,
-                           nsolids: int,
-                           ntets: int, tets: np.ndarray,
-                           nhexas: int, hexas: np.ndarray,
+    n_nodes = np.hstack(n_nodes_list)
+    cell_type = np.hstack(cell_type_list)
+    cell_offset = np.hstack(cell_offset_list)
+    nelement_total = nquad + ntri
+    build_vtk_geometry(nelement_total, ugrid, n_nodes, cell_type, cell_offset)
+
+def _create_tecplot_solids(ugrid: vtkUnstructuredGrid,
+                           model: Tecplot,
+                           ntet: int, tets: np.ndarray,
+                           nhexa: int, hexas: np.ndarray,
                            is_surface: bool=True):
     """
     add a model with solid elements
@@ -277,52 +294,58 @@ def _create_tecplot_solids(grid, model: Tecplot,
         True : skin the model (good for large models, but doesn't load everything)
         False : load the model normally
     """
+    nelement_total = ntet + nhexa
+    null_grid_id = np.array([])
+    cell_offset0 = 0
+    cell_offset_list = []
+    cell_type_list = []
+    n_nodes_list = []
     if is_surface:
-        if nhexas:
+        nfaces = 0
+        if nhexa:
             free_faces = np.array(model.get_free_faces(), dtype='int32')# + 1
-            nfaces = len(free_faces)
-            nelements = nfaces
-            unused_elements = free_faces
-            grid.Allocate(nfaces, 1000)
+            nfaces += len(free_faces)
 
-            #elem.GetCellType() = 9  # vtkQuad
-            for face in free_faces:
-                elem = vtkQuad()
-                epoints = elem.GetPointIds()
-                epoints.SetId(0, face[0])
-                epoints.SetId(1, face[1])
-                epoints.SetId(2, face[2])
-                epoints.SetId(3, face[3])
-                grid.InsertNextCell(9, epoints)
+            # elem.GetCellType() = 9  # vtkQuad
+            cell_type = 9
+            dnode = 4
+            nquad = len(free_faces)
+            quads = free_faces
+            cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
+                null_grid_id, quads, nquad, cell_type, cell_offset0, dnode)
+            n_nodes_list.append(n_nodesi)
+            cell_type_list.append(cell_typei)
+            cell_offset_list.append(cell_offseti)
+        nelement_total = nfaces
     else:
         # is_volume
-        grid.Allocate(nsolids, 1000)
-        nelements = nsolids
-        if ntets:
-            for node_ids in tets:
-                elem = vtkTetra()
-                epoints = elem.GetPointIds()
-                epoints.SetId(0, node_ids[0])
-                epoints.SetId(1, node_ids[1])
-                epoints.SetId(2, node_ids[2])
-                epoints.SetId(3, node_ids[3])
-                #elem.GetCellType() = 5  # vtkTriangle
-                grid.InsertNextCell(elem.GetCellType(), epoints)
 
+        # vtkTetra = 10
+        nelement_total = ntet + nhexa
+        if ntet:
+            # elem.GetCellType() = 10 # vtkTetra
+            cell_type = 10
+            dnode = 4
+            cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
+                null_grid_id, tets, ntet, cell_type, cell_offset0, dnode)
+            n_nodes_list.append(n_nodesi)
+            cell_type_list.append(cell_typei)
+            cell_offset_list.append(cell_offseti)
 
-        if nhexas:
-            for node_ids in hexas:
-                elem = vtkHexahedron()
-                epoints = elem.GetPointIds()
-                epoints.SetId(0, node_ids[0])
-                epoints.SetId(1, node_ids[1])
-                epoints.SetId(2, node_ids[2])
-                epoints.SetId(3, node_ids[3])
-                epoints.SetId(4, node_ids[4])
-                epoints.SetId(5, node_ids[5])
-                epoints.SetId(6, node_ids[6])
-                epoints.SetId(7, node_ids[7])
-                #elem.GetCellType() = 5  # vtkTriangle
-                grid.InsertNextCell(elem.GetCellType(), epoints)
-    assert nelements > 0, nelements
-    return nelements
+        if nhexa:
+            # elem.GetCellType() = 12 # vtkHexahedron
+            cell_type = 12
+            dnode = 8
+            cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
+                null_grid_id, hexas, nhexa, cell_type, cell_offset0, dnode)
+            n_nodes_list.append(n_nodesi)
+            cell_type_list.append(cell_typei)
+            cell_offset_list.append(cell_offseti)
+    assert nelement_total > 0, nelement_total
+
+    n_nodes = np.hstack(n_nodes_list)
+    cell_type = np.hstack(cell_type_list)
+    cell_offset = np.hstack(cell_offset_list)
+    build_vtk_geometry(nelement_total, ugrid,
+                       n_nodes, cell_type, cell_offset)
+    return nelement_total

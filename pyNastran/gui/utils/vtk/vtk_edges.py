@@ -32,6 +32,7 @@ def create_edges_from_grid(grid_selected: vtkUnstructuredGrid,
     #is_edges_visible
     edge_actor.SetMapper(edge_mapper)
     edge_actor.GetProperty().SetColor(0., 0., 0.)
+    edge_actor.SetPickable(0)
 
     edge_mapper.SetLookupTable(color_function)
     edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()

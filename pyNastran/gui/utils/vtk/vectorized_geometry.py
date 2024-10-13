@@ -36,6 +36,12 @@ def build_vtk_geometry(nelement: int,
     #print('cell_type =', cell_type)
     #print('cell_offset =', cell_offset)
     cells = n_nodes
+    if cells.dtype.name == 'int64':
+        pass
+    elif cells.dtype.name == 'int32':
+        cells = cells.astype('int64')
+    else:  # pragma: no cover
+        raise NotImplementedError(cells.dtype.name)
     cell_id_type = numpy_to_vtkIdTypeArray(cells, deep=1)
     vtk_cell = vtkCellArray()
     vtk_cell.SetCells(nelement, cell_id_type)
@@ -58,10 +64,14 @@ def create_offset_arrays(all_grid_id: np.ndarray,
                          cell_type: int,
                          cell_offset0: int,
                          dnode: int) -> tuple[int, np.ndarray, np.ndarray, np.ndarray]:
+    if len(all_grid_id) == 0:
+        nodes_indexi = element_nodes
+    else:
+        nodes_indexi = np.searchsorted(all_grid_id, element_nodes)
+
     nnodesi = np.ones((nelement, 1), dtype='int32') * dnode
-    nodes_indexi = np.searchsorted(all_grid_id, element_nodes)
     #n_nodesi = np.hstack([nnodesi, nodes_indexi])
-    print(nnodesi.shape, nodes_indexi.shape)
+    #print(nnodesi.shape, nodes_indexi.shape)
     n_nodesi = np.column_stack([nnodesi, nodes_indexi])
 
     cell_offseti = _cell_offset(cell_offset0, nelement, dnode)
