@@ -7461,7 +7461,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return set_obj
 
     def add_aset(self, ids: list[int],
-                 components: Union[str, list[str]],
+                 components: str | list[str],
                  comment: str='') -> int:
         """
         Creates an ASET/ASET1 card, which defines the degree of freedoms
@@ -7490,13 +7490,13 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return aset
 
     def add_aset1(self, ids: list[int],
-                  components: Union[str, list[str]],
+                  components: str | list[str],
                   comment: str='') -> int:
         """.. .. seealso:: ``add_aset``"""
         return self.add_aset(ids, components, comment=comment)
 
     def add_bset(self, ids: list[int],
-                 components: Union[str, list[str]],
+                 components: str | list[str],
                  comment: str='') -> int:
         """
         Creates an BSET/BSET1 card, which defines the degree of freedoms
@@ -7526,13 +7526,13 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return bset
 
     def add_bset1(self, ids: list[int],
-                  components: Union[str, list[str]],
+                  components: str | list[str],
                   comment: str='') -> int:
         """.. .. seealso:: ``add_bset``"""
         return self.add_bset(ids, components, comment=comment)
 
     def add_cset(self, ids: list[int],
-                 components: Union[str, list[str]],
+                 components: str | list[str],
                  comment: str='') -> int:
         """
         Creates an CSET/CSET1 card, which defines the degree of freedoms
@@ -7563,19 +7563,19 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return cset
 
     def add_cset1(self, ids: list[int],
-                  components: Union[str, list[str]],
+                  components: str | list[str],
                   comment: str='') -> int:
         """.. seealso:: ``add_cset``"""
         return self.add_cset(ids, components, comment=comment)
 
     def add_omit1(self, ids: list[int],
-                  components: Union[str, list[str]],
+                  components: str | list[str],
                   comment: str='') -> int:
         """.. seealso:: ``add_omit``"""
         return self.add_omit(ids, components, comment=comment)
 
     def add_omit(self, ids: list[int],
-                  components: Union[str, list[str]],
+                  components: str | list[str],
                   comment: str='') -> int:
         """
         Creates an OMIT1 card, which defines the degree of freedoms that
@@ -7601,7 +7601,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return omit
 
     def add_qset(self, ids: list[int],
-                 components: Union[str, list[str]],
+                 components: str | list[str],
                  comment: str='') -> int:
         """
         Creates a QSET/QSET1 card, which defines generalized degrees of
@@ -7628,7 +7628,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return qset
 
     def add_qset1(self, ids: list[int],
-                  components: Union[str, list[str]],
+                  components: str | list[str],
                   comment: str='') -> int:
         """.. seealso:: ``add_qset``"""
         return self.add_qset(ids, components, comment=comment)

@@ -3436,7 +3436,7 @@ class GEOM2:
         """VUQUAD4(11201,112,9940)"""
         return self._run_4nodes(self.op2.cquad4, data, n)
 
-    def _run_cquad_44(self, element: Union[CQUAD, CQUADX], data: bytes, n: int) -> int:
+    def _run_cquad_44(self, element: CQUAD | CQUADX, data: bytes, n: int) -> int:
         """common method for CQUAD, CQUADX"""
         op2 = self.op2
         ntotal = 44 * self.factor  # 11*4
@@ -3556,7 +3556,7 @@ class GEOM2:
         op2.card_count[element.type] = nelements
         return n
 
-    def _run_4nodes(self, element: Union[CQUAD4, CAABSF], data: bytes, n: int) -> int:
+    def _run_4nodes(self, element: CQUAD4 | CAABSF, data: bytes, n: int) -> int:
         """common method for CQUAD4, CQUADR"""
         op2 = self.op2
         nelements = (len(data) - n) // 24
@@ -3640,7 +3640,7 @@ class GEOM2:
 
         return n, elements
 
-    def _run_cquad4_nx_56(self, element: Union[CQUAD4, CQUADR],
+    def _run_cquad4_nx_56(self, element: CQUAD4 | CQUADR,
                           data: bytes, n: int) -> tuple[int, Any]:
         """
         common method for CQUAD4, CQUADR

@@ -263,7 +263,7 @@ class AFLR2:
                 #L1 = norm(v1, axis=1)
                 #L2 = norm(v2, axis=1)
 
-                #c = cross(v1, v2)
+                #c = np.cross(v1, v2)
                 #cn = norm(c, axis=1)
 
                 #L1L2 = (L1 * L2)

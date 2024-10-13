@@ -4,11 +4,11 @@ from itertools import count
 from typing import TYPE_CHECKING
 
 import numpy as np
-from pyNastran.gui.vtk_common_core import vtkUnsignedCharArray, vtkPoints, VTK_ID_TYPE
+from pyNastran.gui.vtk_common_core import vtkPoints
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkCellArray, vtkVertex
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
+from pyNastran.gui.utils.vtk.vectorized_geometry import build_vtk_geometry
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type,
     numpy_to_vtk_points)
@@ -36,6 +36,7 @@ if TYPE_CHECKING:  # pragma: no cover
         AECOMP, AECOMPL, SET1, RBE2, RBE3 #, GRID
     )
     from pyNastran.gui.main_window import MainWindow
+    from pyNastran.gui.gui_objects.settings import NastranSettings # Settings,
     from .nastran_io3 import Nastran3 as NastranIO
 
 
@@ -204,7 +205,8 @@ def create_alt_rbe3_grids(gui: MainWindow,
 
     """
     elem = model.rbe3
-    if elem.n == 0:
+    nastran_settings: NastranSettings = gui.settings.nastran_settings
+    if elem.n == 0 and nastran_settings.is_rbe:
         return
 
     i_independent = np.searchsorted(grid_id, elem.independent_nodes)
@@ -227,6 +229,58 @@ def create_alt_rbe3_grids(gui: MainWindow,
         inid_all_dependent = np.searchsorted(grid_id, all_dep_nodes)
         all_xyz_dependents = xyz_cid0[inid_all_dependent, :]
         _build_dots(gui, name, all_xyz_dependents, color=RED_FLOAT)
+
+    #----------------------
+    ref_igrids = np.searchsorted(grid_id, elem.ref_grid)
+    independent_inodes = np.searchsorted(grid_id, elem.independent_nodes)
+    dependent_inodes = np.searchsorted(grid_id, elem.dependent_nodes)
+    iweight0_for_grids = 0
+    #iGij0 = 0
+    igrid0 = 0
+    for eid, ref_igrid_dep, refc, nweight, iweight, \
+            idependent, ref_xyz_dependent in zip(elem.element_id, ref_igrids, elem.ref_component,
+                                                 elem.nweight, elem.iweight,
+                                                 elem.idependent, ref_xyz_dependents):
+        #idim0, idim1 = idim
+        #dep_nodes = dep_node_str[idim0:idim1].tolist()  # Gmi
+
+        # independent
+        iweight0, iweight1 = iweight
+        #weights = self.weight[iweight0:iweight1]
+        comps = elem.independent_dofs[iweight0:iweight1]
+
+        name = f'RBE3_eid={eid} ddof={refc} idof={ref_igrid_dep}'
+        Gijs = []
+        for i in range(nweight):
+            ngrid = elem.ngrid_per_weight[iweight0_for_grids+i]
+            igrid1 = igrid0 + ngrid
+            Gij = independent_inodes[igrid0:igrid1].tolist()
+            Gijs.append(Gij)
+            igrid0 = igrid1
+
+        nindependent = len(Gijs)
+        ref_igridsi = np.ones(nindependent) * ref_igrid_dep
+        lines = np.column_stack([Gijs, ref_igridsi])
+
+        iweight0_for_grids += nweight
+        #Gij = self.independent_nodes[iweight0:iweight1]
+        #igrid = make_idim(len(Gij), ngrid_per_weight)
+
+        # dependent
+        idependent0, idependent1 = idependent
+        Gmi = dependent_inodes[idependent0:idependent1]
+        i_independent = np.searchsorted(grid_id, Gmi)
+        xyz_independentsi = xyz_cid0[i_independent, :]
+
+        #Cmi = elem.dependent_dofs[idependent0:idependent1]
+        assert len(ref_xyz_dependent) == 3, ref_xyz_dependent
+
+        ndependent = idependent1 - idependent0
+        if ndependent:
+            ref_xyz_dependentsi = np.array([ref_xyz_dependent] * ndependent)
+            assert xyz_independentsi.shape == ref_xyz_dependentsi.shape, (xyz_independentsi.shape, ref_xyz_dependentsi.shape)
+            xyz_lines = np.vstack([xyz_independentsi, ref_xyz_dependentsi])
+            _build_lines(gui, name, xyz_lines, node_lines, color=LIGHT_GREEN_FLOAT)
 
     #_build_rbe3_vtk_lines(gui, elem, xyz_independents, ref_xyz_dependents)
     #for eid, ref_dep_node, ref_dep_xyz, dep_component, (iweight0, iweight1) in zip(elem.element_id,
@@ -512,7 +566,8 @@ def create_alt_rbe2_grids(gui: MainWindow,
 
     """
     elem = model.rbe2
-    if elem.n == 0:
+    nastran_settings: NastranSettings = gui.settings.nastran_settings
+    if elem.n == 0 and nastran_settings.is_rbe:
         return
 
     i_independent = np.searchsorted(grid_id, elem.independent_node)
@@ -1171,45 +1226,3 @@ def _build_vtk_data_from_dnode(alt_grid: vtkUnstructuredGrid,
         nelement_total, alt_grid,
         n_nodes, cell_type_, cell_offset)
     alt_grid.SetPoints(points)
-
-def build_vtk_geometry(nelement: int,
-                       ugrid: vtkUnstructuredGrid,
-                       n_nodes: np.ndarray,
-                       cell_type: np.ndarray,
-                       cell_offset: np.ndarray) -> vtkUnstructuredGrid:
-    """
-    # The cells must be int64 because numpy_to_vtkIdTypeArray requires that.
-    # I think it depends on what vtkIdTypeArray() was built with.
-    # nnodes_tetra, (nodes_tetra1)
-    # nnodes_hexa, (nodes_hexa1)
-    cells = np.array([
-        4, 0, 1, 2, 3, # tetra
-        8, 4, 5, 6, 7, 8, 9, 10, 11 # hex
-    ], dtype='int64')
-
-    # The offsets for the cells (i.e., the indices where the cells start)
-    # one for each element
-    cell_offsets = np.array([0, 5], dtype='int32')
-
-    """
-    deep = 1
-    #print('cells =', n_nodes)
-    #print('cell_type =', cell_type)
-    #print('cell_offset =', cell_offset)
-    cells = n_nodes
-    cell_id_type = numpy_to_vtkIdTypeArray(cells, deep=1)
-    vtk_cell = vtkCellArray()
-    vtk_cell.SetCells(nelement, cell_id_type)
-
-    # Cell types
-    vtk_cell_type = numpy_to_vtk(
-        cell_type, deep=deep,
-        array_type=vtkUnsignedCharArray().GetDataType())
-
-    vtk_cell_offset = numpy_to_vtk(cell_offset, deep=1,
-                                   array_type=VTK_ID_TYPE)
-
-    #ugrid = vtkUnstructuredGrid()
-    ugrid.SetCells(vtk_cell_type, vtk_cell_offset, vtk_cell)
-
-    #settings = {}

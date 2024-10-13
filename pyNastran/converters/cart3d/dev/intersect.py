@@ -24,7 +24,7 @@ class Intersect:
 
         a = p2 - p1
         b = p3 - p1
-        n = cross(a, b)
+        n = np.cross(a, b)
         assert len(n) == ne, 'len(n)=%s ne=%s' % (len(n), ne)
 
         print(n)

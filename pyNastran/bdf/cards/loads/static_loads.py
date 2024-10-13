@@ -1481,7 +1481,7 @@ class Load2(BaseCard):
             msg += 'g3.get_position()=%s\n' % xyz3
             msg += 'g4.get_position()=%s' % xyz4
             raise FloatingPointError(msg)
-        xyz = cross(v21, v2)
+        xyz = np.cross(v21, v2)
 
         self.xyz = xyz
 
@@ -1552,7 +1552,7 @@ class Load2(BaseCard):
                 msg += 'g3.get_position()=%s\n' % xyz3
                 msg += 'g4.get_position()=%s' % xyz4
                 raise FloatingPointError(msg)
-            self.xyz = cross(v21, v43)
+            self.xyz = np.cross(v21, v43)
 
             #msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43 (or v31)=%s\nxyz=%s' % (
                 #xyz1, xyz2, xyz3, xyz4, v21, v2, self.xyz)

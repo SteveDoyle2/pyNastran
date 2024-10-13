@@ -86,8 +86,8 @@ def _triangle_area_centroid_normal(nodes, card):
 
     """
     (n1, n2, n3) = nodes
-    vector = cross(n1 - n2, n1 - n3)
-    length = norm(vector)
+    vector = np.cross(n1 - n2, n1 - n3)
+    length = np.linalg.norm(vector)
     try:
         normal = vector / length
     except FloatingPointError as error:
@@ -116,9 +116,9 @@ def _triangle_area_centroid_normal(nodes, card):
 
 def _normal(a, b):
     """Finds the unit normal vector of 2 vectors"""
-    vector = cross(a, b)
-    normal = vector / norm(vector)
-    if not allclose(norm(normal), 1.):
+    vector = np.cross(a, b)
+    normal = vector / np.linalg.norm(vector)
+    if not allclose(np.linalg.norm(normal), 1.):
         msg = ('function _normal, check...\n'
                f'a = {a}\nb = {b}\nnormal = {normal}\n')
         raise RuntimeError(msg)
@@ -129,7 +129,7 @@ def _normal4(n1, n2, n3, n4, card):
     """Finds the unit normal vector of 2 vectors"""
     a = n1 - n3
     b = n2 - n4
-    vector = cross(a, b)
+    vector = np.cross(a, b)
     normal = vector / norm(vector)
     if not allclose(norm(normal), 1.):
         msg = ('function _normal4, check...\n'
@@ -284,8 +284,8 @@ class TriShell(ShellElement):
         g3 = n3.get_position()
         x = g2 - g1
         yprime = g3 - g1
-        normal = cross(x, yprime)
-        y = cross(normal, x)
+        normal = np.cross(x, yprime)
+        y = np.cross(normal, x)
         return x, y
 
 
@@ -1769,8 +1769,8 @@ class QuadShell(ShellElement):
         g14 = (g1 + g4) / 2.
         x = g23 - g14
         yprime = g34 - g12
-        normal = cross(x, yprime)
-        y = cross(normal, x)
+        normal = np.cross(x, yprime)
+        y = np.cross(normal, x)
         return x, y
 
     def get_thickness_scale(self):

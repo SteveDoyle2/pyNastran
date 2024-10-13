@@ -24,7 +24,7 @@ def read_abaqus(abaqus_inp_filename, encoding=None,
 class Abaqus:
     """defines the abaqus reader"""
     def __init__(self, log: Optional[SimpleLogger]=None,
-                 debug: Union[str, bool, None]=True):
+                 debug: str | bool | None=True):
         self.debug = debug
         self.parts: dict[str, Part] = {}
         self.boundaries: dict[str, Boundary] = {}

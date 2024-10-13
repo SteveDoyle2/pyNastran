@@ -1,6 +1,6 @@
 import os
 
-from numpy import vstack, amax, amin, arange, ones, zeros, where
+import numpy as np
 
 #VTK_TRIANGLE = 5
 from pyNastran.gui.vtk_common_core import vtkPoints
@@ -50,8 +50,8 @@ class SurfIO:
         assert nelements > 0, nelements
 
 
-        mmax = amax(nodes, axis=0)
-        mmin = amin(nodes, axis=0)
+        mmax = np.amax(nodes, axis=0)
+        mmin = np.amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.gui.create_global_axes(dim_max)
         self.gui.log.info('max = %s' % mmax)
@@ -74,14 +74,13 @@ class SurfIO:
             etypes.append(9) # vtkQuad().GetCellType()
         create_vtk_cells_of_constant_element_types(grid, elements, etypes)
 
-
         model.read_surf_failnode(surf_filename)
         if len(model.nodes_failed):
             if 'failed_nodes' not in self.gui.alt_grids:
                 self.gui.create_alternate_vtk_grid('failed_nodes', color=YELLOW_FLOAT,
                                                    line_width=3, opacity=1.0)
 
-            ifailed = where(model.nodes_failed == 1)[0]
+            ifailed = np.where(model.nodes_failed == 1)[0]
             nfailed = len(ifailed)
             failed_grid = self.gui.alt_grids['failed_nodes']
             failed_grid.Allocate(nfailed, 1000)
@@ -154,17 +153,17 @@ class SurfIO:
             ('normSpacing', 8, []),
             ('BL_thick', 9, []),
         ]
-        nids = arange(1, nnodes + 1)
+        nids = np.arange(1, nnodes + 1)
         norm_spacing = model.node_props[:, 0]
         bl_thickness = model.node_props[:, 1]
 
         ntris = model.tris.shape[0]
         nquads = model.quads.shape[0]
         #nelements = ntris + nquads
-        eids = arange(1, nelements + 1)
+        eids = np.arange(1, nelements + 1)
 
         if ntris and nquads:
-            element_props = vstack([model.tri_props, model.quad_props])
+            element_props = np.vstack([model.tri_props, model.quad_props])
         elif ntris:
             element_props = model.tri_props
         elif nquads:
@@ -218,13 +217,13 @@ class SurfIO:
             tagger = TagReader()
             data = tagger.read_tag_filename(tag_filename)
 
-            int_data = ones((nelements, 8), dtype='int32') * -10.
-            float_data = zeros((nelements, 2), dtype='float64')
+            int_data = np.ones((nelements, 8), dtype='int32') * -10.
+            float_data = np.zeros((nelements, 2), dtype='float64')
             for key, datai in sorted(data.items()):
                 #self.log.info(datai)
                 [name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
                  is_trans, is_delete, bl_spacing, bl_thickness, nlayers] = datai
-                i = where(surf_ids == key)[0]
+                i = np.where(surf_ids == key)[0]
                 int_data[i, :] = [is_visc, is_recon, is_rebuild, is_fixed,
                                   is_source, is_trans, is_delete, nlayers]
                 float_data[i, :] = [bl_spacing, bl_thickness]

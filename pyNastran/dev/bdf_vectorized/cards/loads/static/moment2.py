@@ -66,7 +66,7 @@ class MOMENT2(VectorizedLoad):
         #v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
         #v12 = v12 / norm(v12)
         #v34 = v34 / norm(v34)
-        #self.xyz = cross(v12, v34)
+        #self.xyz = np.cross(v12, v34)
 
     def __getitem__(self, i):
         unique_lid = unique(self.load_id)

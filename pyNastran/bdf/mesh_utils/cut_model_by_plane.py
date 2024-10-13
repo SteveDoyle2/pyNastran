@@ -1467,7 +1467,7 @@ def get_element_inertias(model: BDF, normal_plane: np.ndarray,
     E = np.array(E_list, dtype='float64')
     return centroid, area, thickness, E
 
-def _get_shell_inertia(element: Union[CTRIA3, CQUAD4],
+def _get_shell_inertia(element: CTRIA3 | CQUAD4,
                        normal_plane: np.ndarray,
                        normal_plane_vector: np.ndarray,
                        lengthi: float,) -> tuple[float, float, float,

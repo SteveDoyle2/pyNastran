@@ -129,7 +129,7 @@ def get_normal_groups(points: np.ndarray,
 
     a = p2 - p1
     b = p3 - p1
-    n = cross(a, b)
+    n = np.cross(a, b)
     ni = norm(n, axis=1)
     #print(n.shape)
     #print(ni.shape)

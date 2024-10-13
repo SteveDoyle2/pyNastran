@@ -104,7 +104,7 @@ class ResultSet:
         self.saved.clear()
         #self.log.warning(f'saved={self.saved}')
 
-    def add(self, results: Union[str, list[str]])  -> list[str]:
+    def add(self, results: str | list[str])  -> list[str]:
         """adds a list/str of results"""
         added = []
         if len(results) == 0:
@@ -122,7 +122,7 @@ class ResultSet:
         #assert 'displacements' not in self.saved, self.saved
         return added
 
-    def remove(self, results: Union[str, list[str]]) -> list[str]:
+    def remove(self, results: str | list[str]) -> list[str]:
         """removes a list/str of results"""
         #self.log.warning(f'removing...results={results}')
         removed = []
@@ -137,7 +137,7 @@ class ResultSet:
         #self.saved.difference(disable_set)
         return removed
 
-    def _get_matched_results(self, results: Union[str, list[str]]) -> list[str]:
+    def _get_matched_results(self, results: str | list[str]) -> list[str]:
         """handles expansion of regexs"""
         if isinstance(results, str):
             results = [results]

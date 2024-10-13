@@ -141,7 +141,7 @@ class GetMethods(BDFAttributes):
                 msg += 'epoints=%s\n' % _unique_keys(self.epoints)
             raise KeyError(msg)
 
-    def EmptyNodes(self, nids: list[int], msg: str='') -> list[Optional[Union[GRID, SPOINT, EPOINT]]]:
+    def EmptyNodes(self, nids: list[int], msg: str='') -> list[Optional[GRID | SPOINT | EPOINT]]:
         """
         Returns a series of node objects given a list of IDs
 
@@ -244,7 +244,7 @@ class GetMethods(BDFAttributes):
             raise KeyError(msg)
         return elements
 
-    def Mass(self, eid: int, msg: str='') -> Union[CMASS1, CMASS2, CMASS3, CMASS4, CONM1, CONM2]:
+    def Mass(self, eid: int, msg: str='') -> CMASS1 | CMASS2 | CMASS3 | CMASS4 | CONM1 | CONM2:
         """gets a mass element (CMASS1, CONM2)"""
         try:
             return self.masses[eid]
@@ -524,7 +524,7 @@ class GetMethods(BDFAttributes):
         return constraint
 
     def NSM(self, nsm_id: int, consider_nsmadd: bool=True,
-            msg: str='') -> Union[NSM, NSM1, NSML, NSML1, NSMADD]:
+            msg: str='') -> NSM | NSM1 | NSML | NSML1 | NSMADD:
         """
         Gets an LOAD or FORCE/PLOAD4/etc.
 
@@ -868,7 +868,7 @@ class GetMethods(BDFAttributes):
     #--------------------
     # SET CARDS
 
-    def Set(self, sid: int, msg: str='') -> Union[SET1, SET3]:
+    def Set(self, sid: int, msg: str='') -> SET1 | SET3:
         """gets a SET, SET1, SET2, or SET3 card"""
         try:
             return self.sets[sid]
@@ -878,7 +878,7 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # METHOD CARDS
-    def Method(self, sid: int, msg: str='') -> Union[EIGR, EIGRL]:
+    def Method(self, sid: int, msg: str='') -> EIGR | EIGRL:
         """gets a METHOD (EIGR, EIGRL)"""
         try:
             return self.methods[sid]
@@ -896,7 +896,7 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # TABLE CARDS
-    def Table(self, tid, msg='') -> Union[TABLES1, TABLEST, TABLEH1, TABLEHT]:
+    def Table(self, tid, msg='') -> TABLES1 | TABLEST | TABLEH1 | TABLEHT:
         """gets a TABLES1, TABLEST, TABLEH1, TABLEHT"""
         try:
             return self.tables[tid]
@@ -905,7 +905,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
                            % (tid, msg, table_keys))
 
-    def TableD(self, tid: int, msg: str='') -> Union[TABLED1, TABLED2, TABLED3, TABLED4]:
+    def TableD(self, tid: int, msg: str='') -> TABLED1 | TABLED2 | TABLED3 | TABLED4:
         """gets a TABLEDx (TABLED1, TABLED2, TABLED3, TABLED4)"""
         try:
             return self.tables_d[tid]
@@ -916,7 +916,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('tid=%s not found%s.  Allowed TABLEDs=%s; TABLEs=%s; TABLEMs=%s'
                            % (tid, msg, tabled_keys, table_keys, tablem_keys))
 
-    def TableM(self, table_id: int, msg: str='') -> Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]:
+    def TableM(self, table_id: int, msg: str='') -> TABLEM1 | TABLEM2 | TABLEM3 | TABLEM4:
         """gets a TABLEx (TABLEM1, TABLEM2, TABLEM3, TABLEM4)"""
         try:
             return self.tables_m[table_id]
@@ -927,7 +927,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('table_id=%s not found%s.  Allowed TABLEMs=%s; TABLEs=%s; TABLEDs=%s'
                            % (table_id, msg, tablem_keys, table_keys, tabled_keys))
 
-    def RandomTable(self, table_id: int, msg: str='') -> Union[TABRND1, TABRNDG]:
+    def RandomTable(self, table_id: int, msg: str='') -> TABRND1 | TABRNDG:
         """gets a TABRND1 / TABRNDG"""
         try:
             return self.random_tables[table_id]

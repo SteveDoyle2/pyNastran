@@ -44,7 +44,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
         CTETRA, CPENTA, CHEXA, CPYRAM,
     )
-    SolidElement = Union[CTETRA, CPENTA, CHEXA, CPYRAM]
+    SolidElement = CTETRA | CPENTA | CHEXA | CPYRAM
 
 
 class Nastran3:

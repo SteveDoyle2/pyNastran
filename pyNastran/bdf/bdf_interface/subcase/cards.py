@@ -16,7 +16,7 @@ def encode_str_list(strings: list[str], encoding: str) -> list[bytes]:
     return [stri.encode(encoding) for stri in strings]
 
 def encode_str_value_list(strings: list[int | float | str],
-                          encoding: str) -> list[Union[int, float, bytes]]:
+                          encoding: str) -> list[int | float | bytes]:
     values_bytes = [stri.encode(encoding) if isinstance(stri, str) else stri
                     for stri in strings]
     return values_bytes

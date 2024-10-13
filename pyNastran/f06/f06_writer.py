@@ -220,7 +220,7 @@ class F06Writer(OP2_F06_Common):
     def clear_results(self) -> None:
         self._results.clear()
 
-    def _add_results(self, results: Union[str, list[str]]) -> None:
+    def _add_results(self, results: str | list[str]) -> None:
         """supports catch all classes...don't call this..."""
         #self.log.warning(f'_add_results = {results}')
         if isinstance(results, str):
@@ -255,14 +255,14 @@ class F06Writer(OP2_F06_Common):
             self._results.add(result)
             #assert 'displacements' not in self._results.saved, result
 
-    def set_results(self, results: Union[str, list[str]]) -> None:
+    def set_results(self, results: str | list[str]) -> None:
         #self.log.warning(f'set_results = {results}')
         #assert 'displacements' not in results, results
         self.clear_results()
         results = self._results.add(results)
         self._add_results(results)
 
-    def remove_results(self, results: Union[str, list[str]]) -> None:
+    def remove_results(self, results: str | list[str]) -> None:
         self._results.remove(results)
 
     def make_f06_header(self) -> str:

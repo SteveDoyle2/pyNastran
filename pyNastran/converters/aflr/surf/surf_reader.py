@@ -1,6 +1,5 @@
 import os
-from numpy import zeros, cross, vstack, array
-from numpy.linalg import norm  # type: ignore
+import numpy as np
 
 
 def combine_surfs(surf_filenames, surf_out_filename=None):
@@ -37,11 +36,11 @@ def combine_surfs(surf_filenames, surf_out_filename=None):
         quad_props.append(surf.quad_props)
         n0 += nnodes
 
-    surf.nodes = vstack(nodes)
-    surf.tris = vstack(tris)
-    surf.quads = vstack(quads)
-    surf.tri_props = vstack(tri_props)
-    surf.quad_props = vstack(quad_props)
+    surf.nodes = np.vstack(nodes)
+    surf.tris = np.vstack(tris)
+    surf.quads = np.vstack(quads)
+    surf.tri_props = np.vstack(tri_props)
+    surf.quad_props = np.vstack(quad_props)
 
     if surf_out_filename is not None:
         surf.write_surf(surf_out_filename)
@@ -127,14 +126,14 @@ class SurfReader:
             nquads = int(nquads)
             nnodes = int(nnodes)
 
-            nodes = zeros((nnodes, 3), dtype='float64')
-            node_props = zeros((nnodes, 2), dtype='float64')
+            nodes = np.zeros((nnodes, 3), dtype='float64')
+            node_props = np.zeros((nnodes, 2), dtype='float64')
 
-            tris = zeros((ntris, 3), dtype='int32')
-            quads = zeros((nquads, 4), dtype='int32')
+            tris = np.zeros((ntris, 3), dtype='int32')
+            quads = np.zeros((nquads, 4), dtype='int32')
 
-            tri_props = zeros((ntris, 3), dtype='int32')
-            quad_props = zeros((nquads, 3), dtype='int32')
+            tri_props = np.zeros((ntris, 3), dtype='int32')
+            quad_props = np.zeros((nquads, 3), dtype='int32')
 
 
             # read nodes
@@ -190,21 +189,21 @@ class SurfReader:
                 for line in lines:
                     nid = int(line.split()[0])
                     nodes_failed.append(nid)
-            nodes_failed = array(nodes_failed, dtype='int32')
+            nodes_failed = np.array(nodes_failed, dtype='int32')
         self.nodes_failed = nodes_failed
 
     def get_normals(self):
         ntris = self.tris.shape[0]
         nquads = self.quads.shape[0]
         nelements = ntris + nquads
-        normals = zeros((nelements, 3), dtype='float64')
+        normals = np.zeros((nelements, 3), dtype='float64')
         n1 = self.tris[:, 0] - 1
         n2 = self.tris[:, 1] - 1
         n3 = self.tris[:, 2] - 1
         a = self.nodes[n2, :] - self.nodes[n1, :]
         b = self.nodes[n3, :] - self.nodes[n1, :]
-        normal = cross(a, b)
-        mag = norm(normal, axis=1)
+        normal = np.cross(a, b)
+        mag = np.linalg.norm(normal, axis=1)
         assert len(mag) == ntris, 'axis is wrong'
         normal /= mag[:, None]
         normals[:ntris, :] = normal
@@ -217,8 +216,8 @@ class SurfReader:
         #print(n3)
         a = self.nodes[n3, :] - self.nodes[n1, :]
         b = self.nodes[n4, :] - self.nodes[n2, :]
-        normal = cross(a, b)
-        mag = norm(normal, axis=1)
+        normal = np.cross(a, b)
+        mag = np.linalg.norm(normal, axis=1)
         assert len(mag) == nquads, 'axis is wrong'
         normal /= mag[:, None]
         normals[ntris:, :] = normal

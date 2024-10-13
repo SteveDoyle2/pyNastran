@@ -228,8 +228,8 @@ def _fill_shabp_geometry_case(cases, ID, nodes, elements, patches,
         p4 = nodes[n4, :]
         a = p3 - p1
         b = p4 - p2
-        n = cross(a, b)
-        nnorm = norm(n)
+        n = np.cross(a, b)
+        nnorm = np.linalg.norm(n)
 
         XYZc[i, :] = (p1 + p2 + p3 + p4) / 4.0
         if nnorm == 0.:

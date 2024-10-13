@@ -224,7 +224,7 @@ class CTRIAX6(Element):
 
         v12 = p2 - p1
         v13 = p3 - p1
-        v123 = cross(v12, v13)
+        v123 = np.cross(v12, v13)
         normi = np.linalg.norm(v123)
         if calculate_normal or calculate_area:
             normal = v123 / normi

@@ -535,7 +535,7 @@ class Coord(BaseCard):
         #Mg = self.transform_vector_to_global(self, M)
 
         #r = self.origin #  maybe a minus sign?
-        #Mdelta = cross(r, Fg)
+        #Mdelta = np.cross(r, Fg)
         #return Fg, Mg + Mdelta
 
     def transform_vector_to_global_assuming_rectangular(self, p):

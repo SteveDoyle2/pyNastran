@@ -49,7 +49,7 @@ class ToolActions:
         self.itext = 0
 
     #---------------------------------------------------------------------------
-    def get_icases(self, icases: Union[int, list[int], None]=None) -> list[int]:
+    def get_icases(self, icases: int | list[int] | None=None) -> list[int]:
         gui = self.gui
         if icases is None:
             icases = gui.result_cases.keys()

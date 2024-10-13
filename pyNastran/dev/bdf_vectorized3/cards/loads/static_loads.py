@@ -994,7 +994,7 @@ class FORCE2(Load2):
 
         #v21 = xyz2 - xyz1
         #v2 = xyz4 - xyz3
-        #xyz = cross(v21, v2)
+        #xyz = np.cross(v21, v2)
         nxyz = np.cross(xyz2 - xyz1, xyz4 - xyz3)
         dist = np.linalg.norm(nxyz, axis=1)
 
@@ -1046,7 +1046,7 @@ class MOMENT2(Load2):
 
         #v21 = xyz2 - xyz1
         #v2 = xyz4 - xyz3
-        #xyz = cross(v21, v2)
+        #xyz = np.cross(v21, v2)
         nxyz = np.cross(xyz2 - xyz1, xyz4 - xyz3)
         dist = np.linalg.norm(nxyz, axis=1)
 

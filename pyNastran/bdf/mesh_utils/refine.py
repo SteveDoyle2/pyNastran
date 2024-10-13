@@ -601,7 +601,7 @@ def _extract_edges(edges_to_center,
                    nnodes_to_add: int,
                    nnodes_to_add_with_ends: int,
                    nid0: int,
-                   elem: Union[CTRIA3, CQUAD4, CBAR, CHEXA8],
+                   elem: CTRIA3 | CQUAD4 | CBAR | CHEXA8,
                    debug: bool=False) -> int:
     edges = elem.get_edge_ids()
     for edge in edges:

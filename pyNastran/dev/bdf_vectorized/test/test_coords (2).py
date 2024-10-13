@@ -505,7 +505,7 @@ class TestCoords(unittest.TestCase):
 
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
-        M = cross(r, F)
+        M = np.cross(r, F)
         self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
@@ -529,7 +529,7 @@ class TestCoords(unittest.TestCase):
         Fxyz_local, Mxyz_local = transform_load(Fxyz, Mxyz, cid0, cid_new, model)
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
-        M = cross(r, F)
+        M = np.cross(r, F)
         self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 

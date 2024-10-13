@@ -177,7 +177,7 @@ def _build_kbb_celas4(model: BDF,
 
 def _build_kbbi_celas12(Kbb: dok_matrix,
                         dof_map: DOF_MAP,
-                        elem: Union[CELAS1, CELAS2],
+                        elem: CELAS1 | CELAS2,
                         ki: float) -> np.ndarray:
     """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes

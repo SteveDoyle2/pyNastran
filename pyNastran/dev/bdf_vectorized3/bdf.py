@@ -3472,7 +3472,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #raise RuntimeError(card_obj)
             self.reject_cards.append(card_obj)
 
-    def get_bdf_stats(self, return_type: str='string') -> Union[str, list[str]]:
+    def get_bdf_stats(self, return_type: str='string') -> str | list[str]:
         """
         Print statistics for the BDF
 
@@ -4455,7 +4455,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
         return cards_out
 
-    def create_subcases(self, subcase_ids: Union[int, list[int], None]=None) -> dict[int, Subcase]:
+    def create_subcases(self, subcase_ids: int | list[int] | None=None) -> dict[int, Subcase]:
         """creates a series of subcases"""
         if subcase_ids is None:
             subcase_ids = []

@@ -8,4 +8,4 @@ Format = tuple[str, str, str, Callable, str, Callable]
 ColorFloat = tuple[float, float, float]
 ColorInt = tuple[int, int, int]
 
-Actor = Union[vtkActor, vtkLODActor]
+Actor = vtkActor | vtkLODActor

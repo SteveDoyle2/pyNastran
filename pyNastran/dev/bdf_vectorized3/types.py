@@ -1,5 +1,5 @@
 from io import StringIO
-from typing import TextIO, Union
+from typing import TextIO
 
 __all__ = ['TextIOLike']
-TextIOLike = Union[TextIO, StringIO]
+TextIOLike = TextIO | StringIO

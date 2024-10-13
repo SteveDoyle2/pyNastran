@@ -177,7 +177,7 @@ def get_forces_moments_array(model: BDF,
                     area = elem.Area()
                     forcei = pressure * normal * area / nnodes
                     # r = elem.Centroid() - p0
-                    # m = cross(r, f)
+                    # m = np.cross(r, f)
                     centroidal_pressures[ie] += pressure
                     for nid in node_ids:
                         if nid in dependents_nodes:
@@ -417,7 +417,7 @@ def _get_forces_moments_pload4(model: BDF,
 
             #r = centroid - p
             #load.cid.transformToGlobal()
-            #m = cross(r, f)
+            #m = np.cross(r, f)
             #M += m
     if debugs_list:
         log.warning('\n'.join(debugs_list))

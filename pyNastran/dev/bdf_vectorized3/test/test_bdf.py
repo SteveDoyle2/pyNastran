@@ -89,8 +89,8 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       punch: bool=False,
                       nastran: str='',
                       encoding: Optional[str]=None,
-                      size: Union[int, list[int], None]=None,
-                      post: Union[int, list[int], None]=None,
+                      size: int | list[int] | None=None,
+                      post: int | list[int] | None=None,
                       is_double: Union[bool, list[bool], None]=None,
                       sum_load: bool=True,
                       run_nominal: bool=True,
@@ -637,7 +637,7 @@ def check_setup_flag(model: BDFv) -> None:
         if card_type in card_types:
             raise RuntimeError(f'card_type={card_type!r} was already added...check _cards_to_setup')
 
-def _setup_fem(fem1: Union[BDF_old, BDFv],
+def _setup_fem(fem1: BDF_old | BDFv,
                debug: bool, log: SimpleLogger, version: str,
                skip_cards: list[str],
                dumplines: bool, nerrors: int,

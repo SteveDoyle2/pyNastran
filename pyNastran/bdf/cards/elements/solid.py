@@ -1814,8 +1814,8 @@ def cpenta_face_area_centroid_normal(nid: int, nid_opposite: int,
         a = p1 - p3
         b = p2 - p4
         centroid = (p1 + p2 + p3 + p4) / 4.
-    normal = cross(a, b)
-    n = norm(normal)
+    normal = np.cross(a, b)
+    n = np.linalg.norm(normal)
     area = 0.5 * n
     return face, area, centroid, normal / n
 
@@ -1855,7 +1855,7 @@ def chexa_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
     n3 = nodes_ref[nid3].get_position()
     n4 = nodes_ref[nid4].get_position()
 
-    axb = cross(n3 - n1, n4 - n2)
+    axb = np.cross(n3 - n1, n4 - n2)
     areai = norm(axb)
     centroid = (n1 + n2 + n3 + n4) / 4.
     area = 0.5 * areai
@@ -2776,7 +2776,7 @@ def ctetra_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
     n2 = nodes_ref[nid2].get_position()
     n3 = nodes_ref[nid3].get_position()
 
-    axb = cross(n2 - n1, n3 - n1)
+    axb = np.cross(n2 - n1, n3 - n1)
     normi = norm(axb)
     centroid = (n1 + n2 + n3) / 3.
     area = 0.5 * normi
@@ -3024,7 +3024,7 @@ class CTETRA10(SolidElement):
         nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
         return nids
 
-def _ctetra_element_coordinate_system(element: Union[CTETRA4, CTETRA10], xyz=None):
+def _ctetra_element_coordinate_system(element: CTETRA4 | CTETRA10, xyz=None):
     """
     Returns
     -------
@@ -3061,7 +3061,8 @@ def _ctetra_element_coordinate_system(element: Union[CTETRA4, CTETRA10], xyz=Non
     ye /= np.linalg.norm(ye)
     return centroid, xe, ye, ze
 
-def _verify_solid_elem_linear(elem: Union[CTETRA4, CPYRAM5, CPENTA6, CHEXA8], xref: bool):
+def _verify_solid_elem_linear(elem: CTETRA4 | CPYRAM5 | CPENTA6 | CHEXA8,
+                              xref: bool):
     eid = elem.eid
     pid = elem.Pid()
     assert isinstance(eid, int)
@@ -3077,7 +3078,7 @@ def _verify_solid_elem_linear(elem: Union[CTETRA4, CPYRAM5, CPENTA6, CHEXA8], xr
         for i in range(3):
             assert isinstance(centroid[i], float)
 
-def _verify_solid_elem_quadratic(elem: Union[CTETRA10, CPYRAM13, CPENTA15, CHEXA20],
+def _verify_solid_elem_quadratic(elem: CTETRA10 | CPYRAM13 | CPENTA15 | CHEXA20,
                                  xref: bool, nnodes_min: int) -> None:
     eid = elem.eid
     pid = elem.Pid()

@@ -571,7 +571,7 @@ def transform_force_moment(force_in_local, moment_in_local,
         # point.  Then we transform it to the output XYZ frame
         if consider_rxf:
             delta = xyz_cid0[i, :] - summation_point_cid0[np.newaxis, :]
-            rxf = cross(delta, force_in_globali)
+            rxf = np.cross(delta, force_in_globali)
 
             rxf_in_cid = rxf @ beta_out
             if debug:

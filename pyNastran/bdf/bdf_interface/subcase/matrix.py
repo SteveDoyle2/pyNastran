@@ -12,7 +12,7 @@ class RealMatrixCard:
 
     """
     type = 'RealMatrixCard'
-    def __init__(self, value: Union[int, list[tuple[float, str]]]):
+    def __init__(self, value: int | list[tuple[float, str]]):
         """
         Creates an IntCard
 
@@ -124,7 +124,7 @@ class ImagMatrixCard:
 
     """
     type = 'ImagMatrixCard'
-    def __init__(self, value: Union[int, list[tuple[float, str]]]):
+    def __init__(self, value: int | list[tuple[float, str]]):
         """
         Creates an IntCard
         K2PP = 1
@@ -295,4 +295,3 @@ class M2PP(ImagMatrixCard):
 
 class K2PP(ImagMatrixCard):
     type = 'K2PP'
-

@@ -8146,7 +8146,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_set_object(set_obj)
         return set_obj
 
-    def add_aset(self, ids, components, comment='') -> Union[ASET, ASET1]:
+    def add_aset(self, ids, components, comment='') -> ASET | ASET1:
         """
         Creates an ASET/ASET1 card, which defines the degree of freedoms
         that will be retained during an ASET modal reduction.
@@ -8174,11 +8174,11 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_aset_object(aset)
         return aset
 
-    def add_aset1(self, ids, components, comment='') -> Union[ASET, ASET1]:
+    def add_aset1(self, ids, components, comment='') -> ASET | ASET1:
         """.. .. seealso:: ``add_aset``"""
         return self.add_aset(ids, components, comment=comment)
 
-    def add_bset(self, ids, components, comment='') -> Union[BSET, BSET1]:
+    def add_bset(self, ids, components, comment='') -> BSET | BSET1:
         """
         Creates an BSET/BSET1 card, which defines the degree of freedoms
         that will be fixed during a generalized dynamic reduction or
@@ -8206,11 +8206,11 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_bset_object(bset)
         return bset
 
-    def add_bset1(self, ids, components, comment='') -> Union[BSET, BSET1]:
+    def add_bset1(self, ids, components, comment='') -> BSET | BSET1:
         """.. .. seealso:: ``add_bset``"""
         return self.add_bset(ids, components, comment=comment)
 
-    def add_cset(self, ids, components, comment='') -> Union[CSET, CSET1]:
+    def add_cset(self, ids, components, comment='') -> CSET | CSET1:
         """
         Creates an CSET/CSET1 card, which defines the degree of freedoms
         that will be free during a generalized dynamic reduction or
@@ -8239,15 +8239,15 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_cset_object(cset)
         return cset
 
-    def add_cset1(self, ids, components, comment='') -> Union[CSET, CSET1]:
+    def add_cset1(self, ids, components, comment='') -> CSET | CSET1:
         """.. seealso:: ``add_cset``"""
         return self.add_cset(ids, components, comment=comment)
 
-    #def add_omit1(self, ids, components, comment='') -> Union[OMIT, OMIT1]:
+    #def add_omit1(self, ids, components, comment='') -> OMIT | OMIT1:
         #""".. seealso:: ``add_omit``"""
         #return self.add_omit(ids, components, comment=comment)
 
-    #def add_omit(self, ids, components, comment='') -> Union[OMIT, OMIT1]:
+    #def add_omit(self, ids, components, comment='') -> OMIT | OMIT1:
         #"""
         #Creates an OMIT1 card, which defines the degree of freedoms that
         #will be excluded (o-set) from the analysis set (a-set).
@@ -8270,7 +8270,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         #self._add_omit_object(omit)
         #return omit
 
-    def add_omit1(self, ids: list[int], components: str, comment='') -> Union[OMIT, OMIT1]:
+    def add_omit1(self, ids: list[int], components: str, comment='') -> OMIT | OMIT1:
         """
         Creates an OMIT1 card, which defines the degree of freedoms that
         will be excluded (o-set) from the analysis set (a-set).
@@ -8289,7 +8289,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_omit_object(omit1)
         return omit1
 
-    def add_qset(self, ids, components, comment='') -> Union[QSET, QSET1]:
+    def add_qset(self, ids, components, comment='') -> QSET | QSET1:
         """
         Creates a QSET/QSET1 card, which defines generalized degrees of
         freedom (q-set) to be used for dynamic reduction or component
@@ -8314,11 +8314,11 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_qset_object(qset)
         return qset
 
-    def add_qset1(self, ids, components, comment='') -> Union[QSET, QSET1]:
+    def add_qset1(self, ids, components, comment='') -> QSET | QSET1:
         """.. seealso:: ``add_qset``"""
         return self.add_qset(ids, components, comment=comment)
 
-    def add_uset(self, name, ids, components, comment='') -> Union[USET, USET1]:
+    def add_uset(self, name, ids, components, comment='') -> USET | USET1:
         """
         Creates a USET card, which defines a degrees-of-freedom set.
 
@@ -8344,7 +8344,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_uset_object(uset)
         return uset
 
-    def add_uset1(self, name, ids, components, comment='') -> Union[USET, USET1]:
+    def add_uset1(self, name, ids, components, comment='') -> USET | USET1:
         """.. seealso:: ``add_uset``"""
         return self.add_uset(name, ids, components, comment=comment)
 
@@ -8937,7 +8937,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         fields = ['RSPINT', rid, grida, gridb, gr, unit, table_id]
         self.reject_card_lines('RSPINT', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_dti(self, name: str, fields: dict[int, list], comment='') -> Union[DTI, DTI_UNITS]:
+    def add_dti(self, name: str, fields: dict[int, list], comment='') -> DTI | DTI_UNITS:
         """Creates a DTI card"""
         if name == 'UNITS':
             dti = DTI_UNITS(name, fields, comment=comment)

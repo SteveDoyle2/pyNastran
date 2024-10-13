@@ -5,7 +5,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def get_bdf_stats(model: BDF, return_type: str='string',
-                  word: str='') -> Union[str, list[str]]:
+                  word: str='') -> str | list[str]:
     """
     Print statistics for the BDF
 

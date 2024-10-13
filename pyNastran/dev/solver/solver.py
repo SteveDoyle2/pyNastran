@@ -793,7 +793,7 @@ class Solver:
     def _save_static_table(self, f06_file,
                            subcase: Subcase, itime: int, ntimes: int,
                            node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,
-                           obj: Union[RealSPCForcesArray],
+                           obj: RealSPCForcesArray,
                            f06_request_name: str,
                            table_name: str, slot: dict[Any, RealSPCForcesArray],
                            ngrid: int, ndof_per_grid: int,

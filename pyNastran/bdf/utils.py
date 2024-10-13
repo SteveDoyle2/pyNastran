@@ -11,7 +11,6 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import TYPE_CHECKING
 import numpy as np  # type: ignore
-from numpy import cross, dot  # type: ignore
 
 from pyNastran.utils import deprecated
 from pyNastran.utils.numpy_utils import integer_types
@@ -167,8 +166,8 @@ def transform_load(F: np.ndarray, M: np.ndarray,
     Fxyz_local_2 = (Fxyz_local_1 @ cp_ref.beta()) @ coord_to_ref.beta().T
 
     # find the moment about the new origin due to the force
-    unused_Mxyz_global = cross(r, Fxyz_global)
-    dMxyz_local_2 = cross(r, Fxyz_local_2)
+    unused_Mxyz_global = np.cross(r, Fxyz_global)
+    dMxyz_local_2 = np.cross(r, Fxyz_local_2)
     Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2
 
     # rotate the delta moment into the local frame

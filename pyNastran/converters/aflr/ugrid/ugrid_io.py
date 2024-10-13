@@ -1,6 +1,5 @@
 import os
-
-from numpy import amax, amin, arange, ones, zeros, where, unique
+import numpy as np
 
 #VTK_TRIANGLE = 5
 from pyNastran.gui.vtk_common_core import vtkPoints
@@ -120,8 +119,8 @@ class UGRID_IO:
         grid = self.gui.grid
         grid.Allocate(self.gui.nelements, 1000)
 
-        mmax = amax(nodes, axis=0)
-        mmin = amin(nodes, axis=0)
+        mmax = np.amax(nodes, axis=0)
+        mmin = np.amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.gui.create_global_axes(dim_max)
         self.gui.log.info('max = %s' % mmax)
@@ -236,8 +235,8 @@ class UGRID_IO:
 
         #ntris = model.tris.shape[0]
         #nquads = model.quads.shape[0]
-        eids = arange(1, nelements + 1)
-        nids = arange(1, nnodes + 1)
+        eids = np.arange(1, nelements + 1)
+        nids = np.arange(1, nnodes + 1)
 
         eid_res = GuiResult(0, header='ElementID', title='ElementID',
                             location='centroid', scalar=eids, colormap=colormap)
@@ -297,8 +296,8 @@ class UGRID_IO:
         #ntris = model.tris.shape[0]
         #nquads = model.quads.shape[0]
         #nelements = ntris + nquads
-        eids = arange(1, nelements + 1)
-        nids = arange(1, nnodes + 1)
+        eids = np.arange(1, nelements + 1)
+        nids = np.arange(1, nnodes + 1)
 
         #grid_bcs = element_props[:, 2]
 
@@ -333,13 +332,13 @@ class UGRID_IO:
             tagger = TagReader()
             data = tagger.read_tag_filename(tag_filename)
 
-            int_data = ones((nelements, 8), dtype='int32') * -10.
-            float_data = zeros((nelements, 2), dtype='float64')
+            int_data = np.ones((nelements, 8), dtype='int32') * -10.
+            float_data = np.zeros((nelements, 2), dtype='float64')
             for key, datai in sorted(data.items()):
                 #self.gui.log.info(datai)
                 [name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
                  is_trans, is_delete, bl_spacing, bl_thickness, nlayers] = datai
-                i = where(pids == key)[0]
+                i = np.where(pids == key)[0]
                 int_data[i, :] = [is_visc, is_recon, is_rebuild, is_fixed,
                                   is_source, is_trans, is_delete, nlayers]
                 float_data[i, :] = [bl_spacing, bl_thickness]
@@ -405,16 +404,16 @@ class UGRID_IO:
             lines = [line.strip() for line in lines
                      if not line.strip().startswith('#') and line.strip()]
             npatches = int(lines[0])
-            mapbcs = zeros(pids.shape, dtype='int32')
+            mapbcs = np.zeros(pids.shape, dtype='int32')
             for ipatch in range(npatches):
                 line = lines[ipatch + 1]
                 iline, bc_num, name = line.split()
                 iline = int(iline)
                 bc_num = int(bc_num)
                 assert ipatch + 1 == iline, 'line=%r; ipatch=%s iline=%s' % (line, ipatch + 1, iline)
-                islot = where(pids == ipatch + 1)[0]
+                islot = np.where(pids == ipatch + 1)[0]
                 if len(islot) == 0:
-                    upids = unique(pids)
+                    upids = np.unique(pids)
                     msg = 'ipatch=%s not found in pids=%s' % (ipatch + 1, upids)
                     raise RuntimeError(msg)
                 mapbcs[islot] = bc_num

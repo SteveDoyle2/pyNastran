@@ -1105,7 +1105,7 @@ class BNDGRID(CommonSet):
 
 
 def spc_cards_to_nid_dof(spc_id: int,
-                         cards: list[Union[SPC, SPC1]],
+                         cards: list[SPC | SPC1],
                          ) -> tuple[bool, np.ndarray, np.ndarray]:
     """helper for making SPCs/SPCADD node/component"""
     comp_list = []
@@ -1145,4 +1145,3 @@ def spc_cards_to_nid_dof(spc_id: int,
     return is_failed, nids, comp
 
 SPCs = Union[SPC, SPC1]
-

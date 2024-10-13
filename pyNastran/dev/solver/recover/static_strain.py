@@ -274,7 +274,7 @@ def _recover_strain_bar(f06_file, op2,
 
 def _recover_straini_cbar(model: BDF, xb: NDArrayNfloat,
                           dof_map,
-                          elem: CBAR, prop: Union[PBAR, PBARL], fdtype='float64'):
+                          elem: CBAR, prop: PBAR | PBARL, fdtype='float64'):
     """get the static bar strain"""
     nid1, nid2 = elem.nodes
 

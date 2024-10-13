@@ -11,8 +11,6 @@ from itertools import zip_longest
 from typing import Union, Optional
 
 import numpy as np
-from numpy import zeros, unique, array
-from numpy import arange, hstack, setdiff1d, union1d
 from cpylog import get_logger
 
 #from pyNastran.bdf.field_writer_double import print_card_double
@@ -21,8 +19,7 @@ from cpylog import get_logger
 
 from pyNastran.bdf.field_writer_8 import print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16
-
-PathLike = str | PurePath
+from pyNastran.utils import PathLike
 
 
 def read_ugrid(ugrid_filename: Optional[PathLike]=None,
@@ -69,15 +66,15 @@ class UGRID:
         self.debug = debug
         self.n = 0
 
-        self.nodes = array([], dtype='float32')
-        self.tris = array([], dtype='int32')
-        self.quads = array([], dtype='int32')
-        self.pids = array([], dtype='int32')
+        self.nodes = np.array([], dtype='float32')
+        self.tris = np.array([], dtype='int32')
+        self.quads = np.array([], dtype='int32')
+        self.pids = np.array([], dtype='int32')
 
-        self.tets = array([], dtype='int32')
-        self.penta5s = array([], dtype='int32')
-        self.penta6s = array([], dtype='int32')
-        self.hexas = array([], dtype='int32')
+        self.tets = np.array([], dtype='int32')
+        self.penta5s = np.array([], dtype='int32')
+        self.penta6s = np.array([], dtype='int32')
+        self.hexas = np.array([], dtype='int32')
         self.read_shells = read_shells
         self.read_solids = read_solids
 
@@ -108,6 +105,7 @@ class UGRID:
         $UG_IO_ Data
         $Number_of_Vol_Tets 1036480
         """
+        log = self.log
         out = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename)
         ndarray_float, float_fmt, nfloat, endian, ugrid_filename = out
 
@@ -125,22 +123,22 @@ class UGRID:
             nnodes, ntris, nquads, ntets, npenta5s, npenta6s, nhexas = unpack(endian + '7i', data)
             npids = nquads + ntris
             nvol_elements = ntets + npenta5s + npenta6s + nhexas
-            self.log.info(f'nnodes={_to_unit(nnodes)} ntris={_to_unit(ntris)} '
-                          f'nquads={_to_unit(nquads)} ntets={_to_unit(ntets)} '
-                          f'npenta5s={_to_unit(npenta5s)} npenta6s={_to_unit(npenta6s)} '
-                          f'nhexas={_to_unit(nhexas)}')
+            log.info(f'nnodes={_to_unit(nnodes)} ntris={_to_unit(ntris)} '
+                     f'nquads={_to_unit(nquads)} ntets={_to_unit(ntets)} '
+                     f'npenta5s={_to_unit(npenta5s)} npenta6s={_to_unit(npenta6s)} '
+                     f'nhexas={_to_unit(nhexas)}')
 
             nvolume_elements = ntets + npenta5s + npenta6s + nhexas
-            self.log.info(f'nsurface_elements={_to_unit(npids)} '
-                          f'nvolume_elements={_to_unit(nvolume_elements)}')
+            log.info(f'nsurface_elements={_to_unit(npids)} '
+                     f'nvolume_elements={_to_unit(nvolume_elements)}')
 
             # we know the shapes of nodes (e.g. Nx3), but we want to directly
             # unpack the data into the array, so we shape it as N*3, load the
             # data and and then do a reshape
-            self.log.debug('ndarray_float=%s' % (ndarray_float))
+            log.debug('ndarray_float=%s' % (ndarray_float))
             #nodes = zeros(nnodes * 3, dtype=ndarray_float)
-            tris = array([], dtype='int32')
-            quads = array([], dtype='int32')
+            tris = np.array([], dtype='int32')
+            quads = np.array([], dtype='int32')
             #pids = zeros(npids, dtype='int32')
             #nodes = array([], dtype='float32')
 
@@ -196,10 +194,10 @@ class UGRID:
                 #self.nodes = self.nodes[inid]
                 return
 
-            tets = zeros(ntets * 4, dtype='int32')
-            penta5s = zeros(npenta5s * 5, dtype='int32')
-            penta6s = zeros(npenta6s * 6, dtype='int32')
-            hexas = zeros(nhexas * 8, dtype='int32')
+            tets = np.zeros(ntets * 4, dtype='int32')
+            penta5s = np.zeros(npenta5s * 5, dtype='int32')
+            penta6s = np.zeros(npenta6s * 6, dtype='int32')
+            hexas = np.zeros(nhexas * 8, dtype='int32')
 
             if ntets:
                 ## CTETRA
@@ -395,7 +393,7 @@ class UGRID:
                     if size == 8:
                         for i, nid in enumerate(nids_to_write):
                             if i % 200000:  # pragma: no cover
-                                print('  i = %s' % i)
+                                log.debug('  i = %s' % i)
                             node = self.nodes[i, :]
                             bdf_file.write('GRID    %8i%8s%s%s%s\n' % (
                                 nid, '',
@@ -441,7 +439,7 @@ class UGRID:
             eid = 1
             pids = self.pids #+ 1
             if include_shells:
-                upids = unique(pids)  # auto-sorts
+                upids = np.unique(pids)  # auto-sorts
                 for pid in upids:
                     bdf_file.write('PSHELL,%i,%i, 0.1\n' % (pid, mid))
                 log.debug('writing CTRIA3')
@@ -478,7 +476,8 @@ class UGRID:
 
     def check_hanging_nodes(self, stop_on_diff: bool=True):
         """verifies that all nodes are used"""
-        self.log.debug('checking hanging nodes')
+        log = self.log
+        log.debug('checking hanging nodes')
         self._check_node_ids()
 
         tris = self.tris
@@ -507,60 +506,60 @@ class UGRID:
 
         nids = []
         if ntris:
-            nids.append(unique(tris.ravel()))
+            nids.append(np.unique(tris.ravel()))
         if nquads:
-            nids.append(unique(quads.ravel()))
+            nids.append(np.unique(quads.ravel()))
 
         if ntets:
-            nids.append(unique(tets.ravel()))
+            nids.append(np.unique(tets.ravel()))
         if npyramids:
-            nids.append(unique(pyrams.ravel()))
+            nids.append(np.unique(pyrams.ravel()))
         if npentas:
-            nids.append(unique(pentas.ravel()))
+            nids.append(np.unique(pentas.ravel()))
         if nhexas:
-            nids.append(unique(hexas.ravel()))
+            nids.append(np.unique(hexas.ravel()))
 
         if len(nids) == 0:
             raise RuntimeError('there are no solid nodes; nids=%s' % nids)
         elif len(nids) == 1:
             nids = nids[0]
         else:
-            nids = unique(hstack(nids))
+            nids = np.unique(np.hstack(nids))
 
         diff = []
         if nnodes != len(nids):
-            expected = arange(1, nnodes + 1, dtype='int32')
-            print('expected = %s' % expected)
-            print('actual   = %s' % nids)
+            expected = np.arange(1, nnodes + 1, dtype='int32')
+            log.debug('expected = %s' % expected)
+            log.debug('actual   = %s' % nids)
 
-            diff = setdiff1d(expected, nids)
-            diff2 = setdiff1d(nids, expected)
-            diff = union1d(diff, diff2)
+            diff = np.setdiff1d(expected, nids)
+            diff2 = np.setdiff1d(nids, expected)
+            diff = np.union1d(diff, diff2)
             msg = 'nnodes=%i len(actual)=%s expected-actual=%s (n=%s) actual-expected=%s (n=%s)' % (
                 nnodes, len(nids),
                 diff, len(diff),
                 diff2, len(diff),
             )
-            print(msg)
-            print('nids = %s' % nids)
+            log.info(msg)
+            log.debug('nids = %s' % nids)
             if stop_on_diff:
                 raise RuntimeError(msg)
 
         # check unique node ids
         for tri in tris:
-            assert len(unique(tri)) == 3, tri
+            assert len(np.unique(tri)) == 3, tri
         for quad in quads:
             # assert len(unique(quad)) == 4, quad
-            if len(unique(quad)) != 4:
+            if len(np.unique(quad)) != 4:
                 print(quad)
         for tet in tets:
-            assert len(unique(tet)) == 4, tet
+            assert len(np.unique(tet)) == 4, tet
         for pyram in pyrams:
-            assert len(unique(pyram)) == 5, pyram
+            assert len(np.unique(pyram)) == 5, pyram
         for penta in pentas:
-            assert len(unique(penta)) == 6, penta
+            assert len(np.unique(penta)) == 6, penta
         for hexa in hexas:
-            assert len(unique(hexa)) == 8, hexa
+            assert len(np.unique(hexa)) == 8, hexa
         return diff
 
     def _check_node_ids(self) -> None:
@@ -718,9 +717,9 @@ class UGRID:
         ntris = npenta5s * 4 + npenta6s * 2 + ntets * 4
         self.log.info('ntris=%s nquads=%s' % (ntris, nquads))
         if ntris:
-            tris = zeros((ntris, 3), dtype='int32')
+            tris = np.zeros((ntris, 3), dtype='int32')
         if nquads:
-            quads = zeros((nquads, 4), dtype='int32')
+            quads = np.zeros((nquads, 4), dtype='int32')
 
         ntri_start = 0
         nquad_start = 0

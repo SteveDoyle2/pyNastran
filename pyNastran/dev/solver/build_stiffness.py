@@ -109,7 +109,7 @@ def _build_kbb_celas4(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
     return len(eids)
 
 def _build_kbbi_celas12(Kbb, dof_map: DOF_MAP,
-                        elem: Union[CELAS1, CELAS2], ki: float) -> None:
+                        elem: CELAS1 | CELAS2, ki: float) -> None:
     """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes
     c1, c2 = elem.c1, elem.c2
@@ -129,7 +129,7 @@ def _build_kbbi_celas12(Kbb, dof_map: DOF_MAP,
     #del i, j, ki, nid1, nid2, c1, c2
 
 def _build_kbbi_celas34(Kbb, dof_map: DOF_MAP,
-                        elem: Union[CELAS3, CELAS4], ki: float) -> None:
+                        elem: CELAS3 | CELAS4, ki: float) -> None:
     """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes
     #print(dof_map)
@@ -404,7 +404,7 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
                     Kbb[i1, i2] += ki
     return nelements
 
-def _beami_stiffness(prop: Union[PBAR, PBARL, PBEAM, PBEAML],
+def _beami_stiffness(prop: PBAR | PBARL | PBEAM | PBEAML,
                      mat: MAT1,
                      L: float, Iy: float, Iz: float,
                      pa: int, pb: int,

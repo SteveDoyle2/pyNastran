@@ -1419,7 +1419,7 @@ def _add_vd_limit(plot_type: str,
                       linewidth=linewidth)
 
 
-def get_flutter_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[Union[str, dict[str, str]]]:
+def get_flutter_units(units: Optional[str | dict[str, str]]) -> Optional[str | dict[str, str]]:
     """gets the units"""
     if units is None:
         units = 'english_in'

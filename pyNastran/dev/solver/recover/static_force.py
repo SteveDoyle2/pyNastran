@@ -205,7 +205,7 @@ def _recover_force_cbar(f06_file, op2,
 
 def _recover_forcei_cbar(model: BDF,
                          xb, dof_map, elem: CBAR,
-                         prop: Union[PBAR, PBARL], fdtype: str='float64'):
+                         prop: PBAR | PBARL, fdtype: str='float64'):
     """get the static CBAR force"""
     #words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
              #'0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',

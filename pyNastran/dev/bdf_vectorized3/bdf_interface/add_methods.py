@@ -74,7 +74,7 @@ class AddMethods:
     # SOL 101
 
     # SOL 103
-    def _add_method_object(self, method: Union[EIGR, EIGRL, EIGB],
+    def _add_method_object(self, method: EIGR | EIGRL | EIGB,
                            allow_overwrites: bool=False) -> None:
         """adds a EIGR/EIGRL object"""
         key = method.sid
@@ -87,7 +87,7 @@ class AddMethods:
             self.model._type_to_id_map[method.type].append(key)
 
     # SOL 107? - complex eigenvectors
-    def _add_cmethod_object(self, method: Union[EIGC, EIGP],
+    def _add_cmethod_object(self, method: EIGC | EIGP,
                             allow_overwrites: bool=False) -> None:
         """adds a EIGB/EIGC object"""
         key = method.sid
@@ -100,7 +100,7 @@ class AddMethods:
             self.model._type_to_id_map[method.type].append(key)
 
     # SOL xxx - frequency
-    def _add_freq_object(self, freq: Union[FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5]) -> None:
+    def _add_freq_object(self, freq: FREQ | FREQ1 | FREQ2 | FREQ3 | FREQ4 | FREQ5) -> None:
         key = freq.sid
         assert key > 0
         if key in self.model.frequencies:
@@ -114,7 +114,7 @@ class AddMethods:
             self.model._type_to_id_map[freq.type].append(key)
 
     # SOL xxx - transient
-    def _add_tstep_object(self, tstep: Union[TSTEP, TSTEP1],
+    def _add_tstep_object(self, tstep: TSTEP | TSTEP1,
                           allow_overwrites: bool=False) -> None:
         """adds a TSTEP object"""
         key = tstep.sid
@@ -240,7 +240,7 @@ class AddMethods:
         self.model.bctparm[key] = card
         self.model._type_to_id_map[card.type].append(key)
 
-    def _add_table_object(self, table: Union[TABLEH1, TABLEHT, TABLES1, TABLEST]) -> None:
+    def _add_table_object(self, table: TABLEH1 | TABLEHT | TABLES1 | TABLEST) -> None:
         """adds a TABLES1, TABLEST object"""
         key = table.tid
         if key in self.model.tables:
@@ -251,7 +251,7 @@ class AddMethods:
         self.model.tables[key] = table
         self.model._type_to_id_map[table.type].append(key)
 
-    def _add_tabled_object(self, table: Union[TABLED1, TABLED2, TABLED3, TABLED4]) -> None:
+    def _add_tabled_object(self, table: TABLED1 | TABLED2 | TABLED3 | TABLED4) -> None:
         """adds a TABLED1, TABLED2, TABLED3, TABLED4 object"""
         key = table.tid
         assert key not in self.model.tables_d, '\ntabled=\n%s old_tabled=\n%s' % (
@@ -260,7 +260,7 @@ class AddMethods:
         self.model.tables_d[key] = table
         self.model._type_to_id_map[table.type].append(key)
 
-    def _add_tablem_object(self, table: Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]) -> None:
+    def _add_tablem_object(self, table: TABLEM1 | TABLEM2 | TABLEM3 | TABLEM4) -> None:
         """adds a TABLED1, TABLED2, TABLED3, TABLED4 object"""
         key = table.tid
         assert key not in self.model.tables_m, '\ntablem=\n%s old_tablem=\n%s' % (

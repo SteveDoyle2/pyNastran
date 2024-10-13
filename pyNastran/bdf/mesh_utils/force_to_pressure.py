@@ -73,7 +73,7 @@ def force_to_pressure(bdf_filename: str | BDF, bdf_filename_out=None,
                     forces[load_id][eid] += forcei
                 #node = self.Node(load.node_id)
                 #r = xyz[node.nid] - p
-                #m = cross(r, f)
+                #m = np.cross(r, f)
                 #F += f
                 #M += m
             else:  # pragma: no cover

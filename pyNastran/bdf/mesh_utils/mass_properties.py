@@ -2805,7 +2805,7 @@ def _breakdown_ctetra(xyz_cid0: np.ndarray, nids: np.ndarray,
     p4 = xyz_cid0[inids[:, 3], :]
     centroid = (p1 + p2 + p3 + p4) / 4.
     a = p1 - p4
-    b = cross(p2 - p4, p3 - p4)
+    b = np.cross(p2 - p4, p3 - p4)
     #volume = -dot(a, b) / 6.
     #volume = -np.tensordot(a, b, axes=1)
     volume = -np.einsum('ij,ij->i', a, b) / 6.

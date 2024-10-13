@@ -346,7 +346,7 @@ class Coord(VectorizedCard):
 
         coord.k = normalize(e12)
         coord.j = normalize(cross(coord.k, e13))
-        coord.i = cross(coord.j, coord.k)
+        coord.i = np.cross(coord.j, coord.k)
 
         #print("  e13 = %s" % e13)
         #print("  e12 = %s" % e12)
@@ -463,7 +463,7 @@ class Coord(VectorizedCard):
         #print('k = %s' % list(coord.k))
         coord.j = normalize(cross(coord.k, e13))
         #print('j = %s' % list(coord.j))
-        coord.i = cross(coord.j, coord.k)
+        coord.i = np.cross(coord.j, coord.k)
 
         #print("  e13 = %s" % e13)
         #print("  e12 = %s" % e12)
