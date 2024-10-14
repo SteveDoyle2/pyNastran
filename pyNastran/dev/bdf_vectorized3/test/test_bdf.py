@@ -51,7 +51,7 @@ try:
 except ImportError:
     IS_PYTABLES = False
 
-BDFs = Union[BDF_old, BDFv]
+BDFs = BDF_old | BDFv
 
 #from pyNastran.bdf.mesh_utils.export_mcids import export_mcids, export_mcids_all
 #from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
@@ -91,7 +91,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       encoding: Optional[str]=None,
                       size: int | list[int] | None=None,
                       post: int | list[int] | None=None,
-                      is_double: Union[bool, list[bool], None]=None,
+                      is_double: bool | list[bool] | None=None,
                       sum_load: bool=True,
                       run_nominal: bool=True,
                       run_equivalence: bool=True,

@@ -126,7 +126,7 @@ def bdf_equivalence_nodes(bdf_filename: str,
         model2.read_bdf(bdf_filename_out)
     return model
 
-#def _simplify_node_set_old(node_set: Optional[Union[list[int], list[NDArrayNint]]],
+#def _simplify_node_set_old(node_set: Optional[list[int] | list[NDArrayNint]]
                            #idtype: str='int32') -> Optional[list[NDArrayNint]]:
     #if node_set is None:
         #return
@@ -141,9 +141,9 @@ def bdf_equivalence_nodes(bdf_filename: str,
     # list of ndarrays
     #return node_set
 
-def _simplify_node_set(node_set: Optional[Union[list[int],
-                                                set[int],
-                                                list[NDArrayNint]]],
+def _simplify_node_set(node_set: Optional[list[int] |
+                                          set[int] |
+                                          list[NDArrayNint]],
                        idtype: str='int32') -> Optional[list[NDArrayNint]]:  # pragma: no cover
     """
     accepts multiple forms of the node_set parameter

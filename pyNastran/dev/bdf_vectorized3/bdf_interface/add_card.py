@@ -5601,8 +5601,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return param
 
     # -----------------------------------------------------------------------------------
-    def add_grid(self, nid: int, xyz: Union[None, list[float], NDArray3float],
-                 cp: int=0, cd: int=0, ps: int=0, seid: int=0, comment: str='') -> int:
+    def add_grid(self, nid: int, xyz: None | list[float] | NDArray3float,
+                 cp: int=0, cd: int=0, ps: int=0,
+                 seid: int=0, comment: str='') -> int:
         """
         Creates the GRID card
 
@@ -8277,7 +8278,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         fields = ['RSPINT', rid, grida, gridb, gr, unit, table_id]
         self.reject_card_lines('RSPINT', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_dti(self, name, fields, comment: str='') -> Union[DTI, DTI_UNITS]:
+    def add_dti(self, name, fields, comment: str='') -> DTI | DTI_UNITS:
         """Creates a DTI card"""
         if name == 'UNITS':
             dti = DTI_UNITS(name, fields, comment=comment)

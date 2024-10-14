@@ -3013,7 +3013,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 self._dmig_temp[name].append((card_obj, comment))
         return dmig
 
-    def _prepare_dmix(self, class_obj, add_method, card_obj, comment='') -> Union[DMI, DMIJ, DMIJI, DMIK]:
+    def _prepare_dmix(self, class_obj, add_method, card_obj,
+                      comment: str='') -> DMI | DMIJ | DMIJI | DMIK:
         """adds a DMI, DMIJ, DMIJI, or DMIK"""
         field2 = integer(card_obj, 2, 'flag')
         if field2 == 0:

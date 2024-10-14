@@ -907,7 +907,7 @@ class DRESP1(VectorizedBaseCard):
             response_type: str, property_type: str, region: str,
             atta: Optional[int | float | str],
             attb: Optional[int | float | str],
-            atti: list[Union[int, float, str]],
+            atti: list[int | float | str],
             validate: bool=True, comment: str='') -> int:
         """
         Creates a DRESP1 card.

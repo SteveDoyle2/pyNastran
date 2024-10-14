@@ -187,7 +187,9 @@ class UGRID_IO:
         if plot:
             self.gui._finish_results_io2(model_name, form, cases)
 
-    def _add_ugrid_nodes_to_grid(self, name, diff_node_ids, nodes):
+    def _add_ugrid_nodes_to_grid(self, name: str,
+                                 diff_node_ids: np.ndarray,
+                                 nodes: np.ndarray) -> None:
         """
         based on:
           _add_nastran_nodes_to_grid
@@ -214,7 +216,6 @@ class UGRID_IO:
                 #sphere_size = self._get_sphere_size(dim_max)
                 #elem.SetRadius(sphere_size)
                 #elem.SetCenter(points.GetPoint(nid))
-
             alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
         alt_grid.SetPoints(points)
 
@@ -259,17 +260,18 @@ class UGRID_IO:
         return form, cases, nids, eids
 
     def _fill_ugrid3d_case(self, base, cases, ID, nnodes, nelements, model, read_solids):
+        log = self.gui.log
         if os.path.exists(base):
             # base = 'C:/data/'
             # tag_filename = 'C:/data/.tags'
-            self.gui.log.info('mapbc_filename does not exist')
-            self.gui.log.info('tag_filename does not exist')
+            log.info('mapbc_filename does not exist')
+            log.info('tag_filename does not exist')
             tag_filename = None
             mapbc_filename = None
         else:
             tag_filename = base + '.tags'
             mapbc_filename = base.split('.')[0] + '.mapbc'
-            self.gui.log.info('mapbc_filename = %r' % mapbc_filename)
+            log.info('mapbc_filename = %r' % mapbc_filename)
 
         colormap = self.gui.settings.colormap
 
@@ -342,7 +344,7 @@ class UGRID_IO:
                 int_data[i, :] = [is_visc, is_recon, is_rebuild, is_fixed,
                                   is_source, is_trans, is_delete, nlayers]
                 float_data[i, :] = [bl_spacing, bl_thickness]
-                self.gui.log.info('data[%i] = %s' % (key, name))
+                log.info('data[%i] = %s' % (key, name))
 
             has_tag_data = True
             tag_form = []
@@ -395,7 +397,7 @@ class UGRID_IO:
 
             icase += 10
         elif tag_filename is not None:
-            self.gui.log.warning('tag_filename=%r could not be found' % tag_filename)
+            log.warning('tag_filename=%r could not be found' % tag_filename)
 
         if mapbc_filename is not None and os.path.exists(mapbc_filename) and not read_solids:
             has_mapbc_data = True
@@ -424,14 +426,12 @@ class UGRID_IO:
                                   location='centroid', scalar=mapbcs, colormap=colormap)
             cases[icase + 9] = (mapbc_res, (0, 'Map BC'))
         elif mapbc_filename is not None:
-            self.gui.log.warning('mapbc_filename=%r could not be found' % mapbc_filename)
-
+            log.warning('mapbc_filename=%r could not be found' % mapbc_filename)
 
         #norm_spacing = model.node_props[:, 0]
         #bl_thickness = model.node_props[:, 1]
         #cases[(ID, 1, 'normSpacing', 1, 'node', '%.3e', '')] = norm_spacing
         #cases[(ID, 2, 'BL_thick',    1, 'node', '%.3e', '')] = bl_thickness
-
         form = [
             ('Geometry', None, geometry_form),
         ]
@@ -443,10 +443,12 @@ class UGRID_IO:
         results_form = []
         if len(results_form):
             form.append(('Results', None, results_form))
-        self.gui.log.info(str(form))
+        log.info(str(form))
         return form, cases, nids, eids
 
-def get_ugrid_model(ugrid_filename: str, read_solids: bool, log: SimpleLogger):
+def get_ugrid_model(ugrid_filename: str,
+                    read_solids: bool,
+                    log: SimpleLogger) -> tuple[UGRID | UGRID2D_Reader, bool, bool]:
     """helper method for UGRID_IO"""
     if read_solids or is_binary_file(ugrid_filename):
         model = UGRID(log=log, debug=True, read_solids=read_solids)

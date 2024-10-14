@@ -1,4 +1,4 @@
-from typing import Union, Any
+from typing import Any
 from pyNastran.utils.numpy_utils import integer_types
 
 class RealMatrixCard:

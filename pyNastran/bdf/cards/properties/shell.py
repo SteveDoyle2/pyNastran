@@ -15,7 +15,7 @@ from __future__ import annotations
 import copy
 from itertools import count, zip_longest
 import warnings
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types, zip_strict
@@ -377,7 +377,7 @@ class CompositeShellProperty(Property):
             mid = self.mids[iply]
         return mid
 
-    def Material(self, iply: int) -> Union[MAT1, MAT8, MAT9]:
+    def Material(self, iply: int) -> MAT1 | MAT8 | MAT9:
         """
         Gets the material of the :math:`i^{th}` ply (not the ID unless
         it is not cross-referenced).
@@ -1250,7 +1250,7 @@ class PCOMP(CompositeShellProperty):
         return Ex, Ey, Gxy, nu_xy
 
     def get_Qbar_matrix(self,
-                        mid_ref: Union[MAT1, MAT8],
+                        mid_ref: MAT1 | MAT8,
                         theta: float=0.) -> np.ndarray:
         """theta must be in radians"""
         assert isinstance(theta, float_types), theta

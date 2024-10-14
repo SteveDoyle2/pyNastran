@@ -15,7 +15,7 @@ second moment of area on wikipedia
 """
 from __future__ import annotations
 from itertools import count
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from numpy import pi, array
 import numpy as np
 
@@ -3202,7 +3202,7 @@ class PBEND(LineProperty):
         assert isinstance(self.A, float), self.get_stats()
         return self.A * rho + self.nsm
 
-    def raw_fields(self) -> list[Union[str, float, int, None]]:
+    def raw_fields(self) -> list[str | float | int | None]:
         return self.repr_fields()
 
     def repr_fields(self):
@@ -3237,7 +3237,8 @@ class PBEND(LineProperty):
 
 
 def split_arbitrary_thickness_section(key: str,
-                                      value: Union[str, float, list[int]]) -> tuple[int, Union[float, list[int]]]:
+                                      value: str | float | list[int],
+                                      ) -> tuple[int, float | list[int]]:
     """
     Helper method for PBRSECT/PBMSECT
 

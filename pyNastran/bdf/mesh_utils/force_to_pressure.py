@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Union, Optional
+from typing import Optional
 
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf, BDF, FORCE, PLOAD4

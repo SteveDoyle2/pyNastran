@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Union, Optional, Any, TYPE_CHECKING
+from typing import Callable, Optional, Any, TYPE_CHECKING
 import h5py
 import pandas as pd
 if TYPE_CHECKING:  # pragma: no cover
@@ -14,8 +14,8 @@ def h5py_to_dataframe(group: h5py._hl.dataset.Dataset) -> pd.DataFrame:
         data[key] = group[key]
     return pd.DataFrame(data)
 
-def get_tree(h5_group: Union[h5py._hl.group.Group,
-                             h5py._hl.dataset.Dataset],
+def get_tree(h5_group: h5py._hl.group.Group |
+                       h5py._hl.dataset.Dataset,
              mydict: Optional[dict[str, str]]=None) -> dict[str, str]:
     """
     Dataset:

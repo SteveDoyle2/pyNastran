@@ -85,7 +85,7 @@ class PyDialog(QDialog):
                 self.closeEvent(event)
 
 
-def check_patran_syntax(cell: Union[QTextEdit, QLineEdit],
+def check_patran_syntax(cell: QTextEdit | QLineEdit,
                         pound=None) -> tuple[Optional[np.ndarray], bool]:
     if isinstance(cell, QLineEdit):
         values, is_passed = check_patran_syntax_qlineedit(cell, pound=pound)

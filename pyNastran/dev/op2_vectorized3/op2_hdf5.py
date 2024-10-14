@@ -18,10 +18,10 @@ else:  # pragma: no cover
 
 
 class Results(OP2):
-    def read_h5(self, h5_filename: Union[str, PurePath], combine=None):
+    def read_h5(self, h5_filename: str | PurePath, combine=None):
         read_h5_result(self, h5_filename, root_path='/')
 
 class ResultsGeom(Results, OP2Geom):
-    def read_h5(self, h5_filename: Union[str, PurePath], combine=None):
+    def read_h5(self, h5_filename: str | PurePath, combine=None):
         """TODO: should support geometry"""
         read_h5_geometry_result(self, h5_filename, root_path='/')

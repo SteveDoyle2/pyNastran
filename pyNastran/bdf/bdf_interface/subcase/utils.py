@@ -5,7 +5,7 @@ defines:
  - write_stress_type(key, options, value, spaces='')
 
 """
-from typing import Optional, Union, Any
+from typing import Optional, Any
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 

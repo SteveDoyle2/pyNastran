@@ -30,7 +30,7 @@ defines various methods to access high level BDF data:
 from __future__ import annotations
 from copy import deepcopy
 from collections import defaultdict
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 

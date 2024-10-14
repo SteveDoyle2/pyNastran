@@ -185,8 +185,8 @@ class FlutterResponse:
                  xysym: str, xzsym: str,
                  mach: float, density_ratio: float, method: str,
                  modes: list[int], results: Any,
-                 f06_units: Union[None, str, dict[str, str]]=None,
-                 out_units: Union[None, str, dict[str, str]]=None,
+                 f06_units: None | str | dict[str, str]=None,
+                 out_units: None | str | dict[str, str]=None,
                  make_alt: bool=False) -> None:
         """
         Parameters
@@ -1051,8 +1051,8 @@ class FlutterResponse:
                 str_values = (' %11.4E' % value for value in values)
                 veas_file.write(''.join(str_values) + '\n')
 
-    def _imodes(self, modes: Optional[Union[np.ndarray, slice[int],
-                                            tuple[int], list[int]]]) -> np.ndarray:
+    def _imodes(self, modes: Optional[np.ndarray, slice[int] |
+                                      tuple[int] | list[int]]) -> np.ndarray:
         """gets the imodes from the modes"""
         if modes is None:
             nmodes = self.results.shape[0]

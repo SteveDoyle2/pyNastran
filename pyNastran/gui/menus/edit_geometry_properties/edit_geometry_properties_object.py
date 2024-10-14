@@ -179,7 +179,7 @@ class EditGeometryPropertiesObject(BaseGui):
 
     def _update_ith_geometry_properties(
         self, namei: str,
-        group: Union[AltGeometry, CoordProperties],
+        group: AltGeometry | CoordProperties,
         lines: list[str],
         render: bool=True) -> None:
         """updates a geometry"""
@@ -379,8 +379,8 @@ class EditGeometryPropertiesObject(BaseGui):
         grid.Modified()
         #print('update2...')
 
-def map_group1_results_to_group2(group1: Union[CoordProperties, AltGeometry],
-                                 group2: Union[CoordProperties, AltGeometry, None]) -> bool:
+def map_group1_results_to_group2(group1: CoordProperties | AltGeometry,
+                                 group2: CoordProperties | AltGeometry | None) -> bool:
     """helper to also update main data instead of just the actors"""
     update_group2 = False
     if group2 is None:

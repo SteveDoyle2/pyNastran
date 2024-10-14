@@ -1746,7 +1746,8 @@ def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> Non
         print(msg)
         raise NotImplementedError(msg)
 
-def _convert_dvcrel1(dvcrel: Union[DVCREL1, DVCREL2], xyz_scale: float, mass_scale: float) -> float:
+def _convert_dvcrel1(dvcrel: DVCREL1 | DVCREL2,
+                     xyz_scale: float, mass_scale: float) -> float:
     """helper for ``_convert_optimization``"""
     element_type = dvcrel.element_type
     if element_type == 'CBUSH':

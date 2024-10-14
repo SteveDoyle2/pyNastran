@@ -1131,7 +1131,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             disable_set = set(cards)
         self.cards_to_read = self.cards_to_read.difference(disable_set)
 
-    def enable_cards(self, cards: Union[list[str], set[str]]) -> None:
+    def enable_cards(self, cards: list[str] | set[str]) -> None:
         """
         Method for setting the cards that will be processed
 

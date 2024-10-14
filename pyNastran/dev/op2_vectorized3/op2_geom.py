@@ -40,7 +40,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 #class OP2H5(OP2):
-    #def read_h5(self, h5_filename: Union[str, PurePath], combine=None):
+    #def read_h5(self, h5_filename: str | PurePath, combine=None):
         #from pyNastran2.op2.op2_interface.h5_pytables.h5_results import read_h5_result
         #read_h5_result(self, h5_filename, root_path='/')
 

@@ -1,4 +1,4 @@
-from typing import Union, Any
+from typing import Any
 from pyNastran.utils.numpy_utils import bytes_type
 from .subcase_base import CaseControlCard
 
@@ -235,7 +235,7 @@ class CheckCard(CaseControlCard):
     allowed_keys: set[str] = set([])
 
     # key:(type, allowed_values)
-    allowed_values: dict[str, Union[float, str]] = {}
+    allowed_values: dict[str, float | str] = {}
 
     # the allowed value for the key, options, value approach
     allowed_strings: set[str] = set([])

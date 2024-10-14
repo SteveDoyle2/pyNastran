@@ -25,7 +25,7 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 """
 from __future__ import annotations
 from itertools import count
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -1098,7 +1098,7 @@ class GRID(BaseCard):
         h5_file.create_dataset('ps', data=ps)
         h5_file.create_dataset('seid', data=seid)
 
-    def __init__(self, nid: int, xyz: Union[None, list[float], np.ndarray],
+    def __init__(self, nid: int, xyz: np.ndarray | list[float],
                  cp: int=0, cd: int=0, ps: str='', seid: int=0,
                  comment: str='') -> None:
         """
@@ -1671,7 +1671,7 @@ class POINT(BaseCard):
         return POINT(nid, xyz, cp=0, comment='')
 
     def __init__(self, nid: int,
-                 xyz: Union[list[float], np.ndarray],
+                 xyz: np.ndarray | list[float],
                  cp: int=0, comment: str='') -> None:
         """
         Creates the POINT card
@@ -1843,7 +1843,7 @@ class POINT(BaseCard):
         """Removes cross-reference links"""
         self.cp_ref = self.Cp()
 
-    def raw_fields(self) -> list[Union[str, int, float, None]]:
+    def raw_fields(self) -> list[str | int | float | None]:
         """
         Gets the fields in their unmodified form
 

@@ -26,7 +26,7 @@ import warnings
 from io import StringIO
 from itertools import count
 from collections import defaultdict
-from typing import Optional, Union, Any, cast
+from typing import Optional, Any, cast
 
 import numpy as np
 from cpylog import get_logger2, SimpleLogger

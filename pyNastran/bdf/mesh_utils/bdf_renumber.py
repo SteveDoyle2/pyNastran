@@ -10,7 +10,7 @@ defines:
 """
 from itertools import chain
 from io import StringIO, IOBase
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 

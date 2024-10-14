@@ -279,7 +279,7 @@ def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
     for element, etype in zip(elements_list, etypes_list):
         nelement, nnodes_per_element = element.shape
 
-        nnodesp1 = nnodes_per_element + 1  # TODO: was 4; for a tri???
+        nnodesp1 = nnodes_per_element + 1  # 4 for a tri
         cell_offset = np.arange(0, nelement, dtype='int32') * nnodesp1 + noffsets
         noffset = nelement * nnodesp1
 

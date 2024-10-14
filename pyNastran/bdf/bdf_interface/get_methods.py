@@ -377,10 +377,10 @@ class GetMethods(BDFAttributes):
     # LOADS
 
     def Load(self, sid: int, consider_load_combinations: bool=True,
-             msg: str='') -> list[Union[LOAD, GRAV, ACCEL, ACCEL1, SLOAD,
-                                        FORCE, FORCE1, FORCE2,
-                                        MOMENT, MOMENT1, MOMENT2,
-                                        PLOAD, PLOAD1, PLOAD2, PLOAD4]]:
+             msg: str='') -> list[LOAD | GRAV | ACCEL | ACCEL1 | SLOAD |
+                                  FORCE | FORCE1 | FORCE2 |
+                                  MOMENT | MOMENT1 | MOMENT2 |
+                                  PLOAD | PLOAD1 | PLOAD2 | PLOAD4]:
         """
         Gets an LOAD or FORCE/PLOAD4/etc.
 

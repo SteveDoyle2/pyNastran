@@ -1,6 +1,6 @@
 from __future__ import annotations
 import copy
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 import scipy.sparse as sci_sparse

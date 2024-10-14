@@ -703,9 +703,9 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         # tables
-        self.tables:   dict[int, Union[TABLES1, TABLEST, TABLEH1, TABLEHT]] = {}
-        self.tables_d: dict[int, Union[TABLED1, TABLED2, TABLED3, TABLED4]] = {}
-        self.tables_m: dict[int, Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]] = {}
+        self.tables:   dict[int, TABLES1 | TABLEST | TABLEH1 | TABLEHT] = {}
+        self.tables_d: dict[int, TABLED1 | TABLED2 | TABLED3 | TABLED4] = {}
+        self.tables_m: dict[int, TABLEM1 | TABLEM2 | TABLEM3 | TABLEM4] = {}
         self.tables_sdamping: dict[int, TABDMP1] = {}
 
         # matrices

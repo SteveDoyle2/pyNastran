@@ -579,7 +579,7 @@ def _export_coord_axes(nodes, bars, csv_filename: str):
                 out_file.write('BAR,%i,%i,%i\n' % bari)
 
 def _rotate_mcid(elem: ShellElement,
-                 pid_ref: Union[PCOMP, PCOMPG, PSHELL], iply: int,
+                 pid_ref: PCOMP | PCOMPG | PSHELL, iply: int,
                  imat: np.ndarray, jmat: np.ndarray, normal: np.ndarray,
                  consider_property_rotation: bool=True) -> tuple[np.ndarray, np.ndarray]:
     """

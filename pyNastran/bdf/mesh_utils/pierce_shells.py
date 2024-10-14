@@ -3,7 +3,7 @@ Defines:
  - pierce_shell_model(bdf_filename, xyz_points, tol=1.0)
 """
 from itertools import count
-from typing import Optional, Union, Any
+from typing import Optional, Any
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree

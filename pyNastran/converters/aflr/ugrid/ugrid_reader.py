@@ -584,7 +584,9 @@ class UGRID:
             assert hexas.min() >= 1, hexas.min()
 
     def write_ugrid(self, ugrid_filename_out: PathLike,
-                    check_shells=True, check_solids=True, check=True):
+                    check_shells: bool=True,
+                    check_solids: bool=True,
+                    check: bool=True):
         """writes a UGrid model"""
         outi = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename_out)
         unused_ndarray_float, float_fmt, unused_nfloat, endian, ugrid_filename = outi
@@ -659,45 +661,51 @@ class UGRID:
             sfmt = Struct(fmt)
             f_ugrid.write(sfmt.pack(*nodes.ravel()))
 
-            # TODO: speed up with numpy
-            if ntris:
-                # CTRIA3
-                fmt = endian + '%ii' % (ntris * 3)
+            if ntris:  # CTRIA3
+                ntotal = ntris * 3
+                #assert ntotal == tris.size
+                #f_ugrid.write(tris.ravel())
+                #f_ugrid.write(tris.T.astype('int32').ravel())
+                #f_ugrid.write(tris.ravel().tobytes())
+                #tris.tofile(f_ugrid)
+                fmt = endian + '%ii' % ntotal
                 sfmt = Struct(fmt)
                 f_ugrid.write(sfmt.pack(*tris.ravel()))
 
-            if nquads:
-                # QUAD4
+            if nquads:  # QUAD4
+                #quaddiii
                 fmt = endian + '%ii' % (nquads * 4)
                 sfmt = Struct(fmt)
                 f_ugrid.write(sfmt.pack(*quads.ravel()))
 
-            # PSHELL
-            if nshells:
+            if nshells:  # PSHELL
+                #shelllslss
                 fmt = endian + '%ii' % nshells
                 sfmt = Struct(fmt)
                 f_ugrid.write(sfmt.pack(*pids.ravel()))
 
             if ntets:
+                #tetssss
                 # CTETRA
                 fmt = endian + '%ii' % (ntets * 4)
                 sfmt = Struct(fmt)
                 f_ugrid.write(sfmt.pack(*tets.ravel()))
 
-            if npyramids:
-                # CPYRAM
+            if npyramids:  # CPYRAM
+                #pyrammm
                 fmt = endian + '%ii' % (npyramids * 5)
                 sfmt = Struct(fmt)
                 f_ugrid.write(sfmt.pack(*pyrams.ravel()))
 
-            if npentas:
-                # CPENTA
+            if npentas:  # CPENTA
+                #pennnta
                 fmt = endian + '%ii' % (npentas * 6)
                 sfmt = Struct(fmt)
                 f_ugrid.write(sfmt.pack(*pentas.ravel()))
 
             if nhexas:
                 # CHEXA
+                #hexxxa
                 fmt = endian + '%ii' % (nhexas * 8)
                 sfmt = Struct(fmt)
                 f_ugrid.write(sfmt.pack(*hexas.ravel()))

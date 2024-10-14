@@ -4,7 +4,7 @@ import copy
 from datetime import date
 from collections import defaultdict
 from itertools import count
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 import scipy as sp

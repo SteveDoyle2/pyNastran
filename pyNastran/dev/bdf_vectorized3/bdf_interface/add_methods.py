@@ -174,7 +174,7 @@ class AddMethods:
     # SOL 144 - static aero
 
     # SOL 145 - flutter
-    def _add_mkaero_object(self, mkaero: Union[MKAERO1, MKAERO2]) -> None:
+    def _add_mkaero_object(self, mkaero: MKAERO1 | MKAERO2) -> None:
         """adds an MKAERO1/MKAERO2 object"""
         self.model.mkaeros.append(mkaero)
 

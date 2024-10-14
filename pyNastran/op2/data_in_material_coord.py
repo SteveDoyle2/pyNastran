@@ -531,8 +531,8 @@ def _get_normal(v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
     return normals
 
 def _transform_shell_force(vec_name: str,
-                           vector: Union[RealPlateForceArray, RealPlateBilinearForceArray],
-                           new_vector: Union[RealPlateForceArray, RealPlateBilinearForceArray],
+                           vector:     RealPlateForceArray | RealPlateBilinearForceArray,
+                           new_vector: RealPlateForceArray | RealPlateBilinearForceArray,
                            eid_to_theta_rad: dict[int, float],
                            log: SimpleLogger):
     vec_eids = get_eids_from_op2_vector(vector)

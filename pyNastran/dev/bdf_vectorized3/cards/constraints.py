@@ -1144,4 +1144,4 @@ def spc_cards_to_nid_dof(spc_id: int,
     is_failed = False
     return is_failed, nids, comp
 
-SPCs = Union[SPC, SPC1]
+SPCs = SPC | SPC1

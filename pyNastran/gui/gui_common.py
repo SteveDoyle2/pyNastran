@@ -2305,7 +2305,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             return False
         obj, (i, resname) = self.result_cases[icase]
 
-        obj = cast(Union[GuiResult, DisplacementResults], obj)
+        obj = cast(GuiResult | DisplacementResults, obj)
         methods = obj.get_methods(i, resname)
 
         data = []

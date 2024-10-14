@@ -22,7 +22,7 @@ class QPushButtonColor(QPushButton):
             ##"border:1px solid rgb(255, 170, 255); "
             #"}")
 
-    def set_color(self, color: Union[ColorInt, ColorFloat]) -> None:
+    def set_color(self, color: ColorInt | ColorFloat) -> None:
         assert isinstance(color, (list, tuple)), color
         assert len(color) == 3, color
 
@@ -37,4 +37,3 @@ class QPushButtonColor(QPushButton):
             "background-color: rgb(%s, %s, %s);" % tuple(color_int) +
             #"border:1px solid rgb(255, 170, 255); "
             "}")
-

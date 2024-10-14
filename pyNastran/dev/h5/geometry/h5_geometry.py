@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING
 import numpy as np
 import h5py
 from ..h5_utils import get_tree, passer

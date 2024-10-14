@@ -23,7 +23,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 
 """
 from __future__ import annotations
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import cross, allclose
@@ -4892,7 +4892,7 @@ class CQUAD8(QuadShell):
         return area
 
     @property
-    def node_ids(self) -> list[Union[int, None]]:
+    def node_ids(self) -> list[int | None]:
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):

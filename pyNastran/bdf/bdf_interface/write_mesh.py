@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from io import IOBase
 from pathlib import PurePath
-from typing import Union, Optional, Any, cast, TYPE_CHECKING
+from typing import Optional, Any, cast, TYPE_CHECKING
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

@@ -1,5 +1,6 @@
 """Defines the GUI IO file for Tetegen."""
 import os
+from typing import Any
 
 import numpy as np
 
@@ -50,7 +51,7 @@ class TetgenIO:
             ntris = tris.shape[0]
         elif dimension_flag == 3:
             ntets = tets.shape[0]
-        else:
+        else:  # pragma: no cover
             raise RuntimeError()
         nelements = ntris + ntets
         self.gui.nelements = nelements
@@ -72,8 +73,8 @@ class TetgenIO:
         elif dimension_flag == 3:
             etype = 10  # vtkTetra().GetCellType()
             create_vtk_cells_of_constant_element_type(grid, tets, etype)
-        else:
-            raise RuntimeError('dimension_flag=%r; expected=[2, 3]' % dimension_flag)
+        else:  # pragma: no cover
+            raise RuntimeError(f'dimension_flag={dimension_flag}; expected=[2, 3]')
 
         grid.SetPoints(points)
         grid.Modified()
@@ -83,12 +84,14 @@ class TetgenIO:
         self.gui.scalar_bar_actor.Modified()
 
 
-        form, cases, node_ids, element_ids = self._fill_tetgen_case(nnodes, nelements)
+        form, cases, node_ids, element_ids = self._fill_tetgen_case(
+            nnodes, nelements)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
         self.gui._finish_results_io2(model_name, form, cases, reset_labels=True)
 
-    def _fill_tetgen_case(self, nnodes, nelements):
+    def _fill_tetgen_case(self, nnodes: int, nelements: int) -> tuple[Any, Any,
+                                                                      np.ndarray, np.ndarray]:
         subcase_id = 0
         self.gui.isubcase_name_map = {subcase_id : ('Tetgen', '')}
 

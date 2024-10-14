@@ -7,7 +7,7 @@ This file defines:
 from __future__ import annotations
 import os
 from collections import defaultdict
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
