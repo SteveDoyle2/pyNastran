@@ -5,7 +5,7 @@ defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 from __future__ import annotations
 from struct import Struct
 from functools import partial
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.errors import UnsupportedCard
@@ -3213,7 +3213,7 @@ class GEOM2:
         """VUQUAD4(11201,112,9940)"""
         return self._run_4nodes(CQUAD4, data, n)
 
-    def _run_cquad(self, element: Union[CQUAD, CQUADX], data: bytes, n: int) -> int:
+    def _run_cquad(self, element: CQUAD | CQUADX, data: bytes, n: int) -> int:
         """common method for CQUAD, CQUADX"""
         op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 11*4
@@ -3292,7 +3292,7 @@ class GEOM2:
         op2.card_count[element.type] = nelements
         return n
 
-    def _run_4nodes(self, element: Union[CQUAD4, CAABSF], data: bytes, n: int) -> int:
+    def _run_4nodes(self, element: CQUAD4 | CAABSF, data: bytes, n: int) -> int:
         """common method for CQUAD4, CQUADR"""
         op2: OP2Geom = self.op2
         nelements = (len(data) - n) // 24
@@ -3415,7 +3415,7 @@ class GEOM2:
         #op2.card_count[element.type] = nelements
         return n, elements
 
-    def _run_cquad4_nx_56(self, element: Union[CQUAD4, CQUADR],
+    def _run_cquad4_nx_56(self, element: CQUAD4 | CQUADR,
                           data: bytes, n: int) -> tuple[int, Any]:
         """
         common method for CQUAD4, CQUADR

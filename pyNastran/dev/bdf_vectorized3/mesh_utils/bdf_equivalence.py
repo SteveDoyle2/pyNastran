@@ -12,7 +12,7 @@ defines:
 from __future__ import annotations
 from pathlib import PurePath
 from io import StringIO
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.nptyping_interface import NDArrayNint, NDArrayN3float

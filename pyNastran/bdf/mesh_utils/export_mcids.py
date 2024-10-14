@@ -5,7 +5,7 @@ Defines:
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf, PCOMP, PCOMPG, PSHELL
 from pyNastran.bdf.cards.elements.shell import (

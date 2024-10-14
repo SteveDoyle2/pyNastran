@@ -9,7 +9,7 @@ This file defines functions related to the result updating that are VTK specific
 from __future__ import annotations
 import sys
 from collections import namedtuple
-from typing import Union, Callable, Optional, Any, TYPE_CHECKING
+from typing import Callable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore

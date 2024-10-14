@@ -2,7 +2,7 @@ from __future__ import annotations
 from collections import defaultdict
 from itertools import zip_longest
 import numpy as np
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran.bdf.cards.params import PARAM, MDLPRM
 from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK

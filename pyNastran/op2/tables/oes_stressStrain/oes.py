@@ -20,7 +20,7 @@ MODCON           OSTRMC        Modal contributions
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
@@ -2585,7 +2585,7 @@ class OES(OP2Common2):
             if auto_return:
                 return nelements * ntotal, None, None
 
-            obj: Union[RealShearStressArray, RealShearStrainArray] = op2.obj
+            obj: RealShearStressArray | RealShearStrainArray = op2.obj
             assert obj is not None
             if op2.use_vector and is_vectorized and op2.sort_method == 1:
                 n = nelements * ntotal
@@ -8295,7 +8295,7 @@ def oes_cshellnl_real_25(op2: OP2, data: bytes,
 
 
 def oes_composite_solid_nx_real_center(op2: OP2, data: bytes,
-                                       obj: Union[RandomCompositePlateStressArray, RandomCompositePlateStrainArray],
+                                       obj: RandomCompositePlateStressArray | RandomCompositePlateStrainArray,
                                        nelements: int, ntotal: int) -> int:
     n = 0
     size = op2.size
@@ -8321,7 +8321,7 @@ def oes_composite_solid_nx_real_center(op2: OP2, data: bytes,
     return n
 
 def oes_composite_solid_nx_real_172(op2: OP2, data: bytes,
-                                    obj: Union[RealSolidCompositeStressArray, RealSolidCompositeStrainArray],
+                                    obj: RealSolidCompositeStressArray | RealSolidCompositeStrainArray,
                                     nelements: int, ntotal: int) -> int:
     n = 0
     #size = op2.size
@@ -8437,7 +8437,7 @@ def oes_csolid_nonlinear_hyperelastic_real(op2: OP2, data: bytes,
     return n
 
 def oes_composite_shells_nx_random_7(op2: OP2, data: bytes,
-                                     obj: Union[RandomCompositePlateStressArray, RandomCompositePlateStrainArray],
+                                     obj: RandomCompositePlateStressArray | RandomCompositePlateStrainArray,
                                      nelements: int, ntotal: int) -> int:
     n = 0
     size = op2.size
@@ -8465,7 +8465,7 @@ def oes_composite_shells_nx_random_7(op2: OP2, data: bytes,
     return n
 
 def oes_cbend_complex_21(op2: OP2, data: bytes,
-                         obj: Union[ComplexBendStressArray, ComplexBendStrainArray],
+                         obj: ComplexBendStressArray | ComplexBendStrainArray,
                          nelements: int, ntotal: int, is_magnitude_phase: bool) -> int:
     n = 0
     #size = op2.size

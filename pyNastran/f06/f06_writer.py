@@ -11,7 +11,7 @@ import getpass
 from datetime import date
 from collections import defaultdict
 from traceback import print_exc
-from typing import Union, Optional, cast, TextIO, TYPE_CHECKING
+from typing import Optional, cast, TextIO, TYPE_CHECKING
 
 import numpy as np
 

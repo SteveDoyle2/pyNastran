@@ -9,7 +9,7 @@ defines methods for writing panair values:
  - fortran_value(value)
 
 """
-from typing import Union, Optional
+from typing import Optional
 
 def double(value: str, name: str) -> float:
     """casts to an float value"""
@@ -32,7 +32,7 @@ def fortran_value(value: float) -> str:
     return "%8.4E" % value
 
 def integer_or_blank(value: str, name: str,
-                     default: Optional[Union[float, int]]=None) -> Optional[Union[float, int]]:
+                     default: Optional[float | int]=None) -> Optional[float | int]:
     value = value.strip()
     if not value:
         return default

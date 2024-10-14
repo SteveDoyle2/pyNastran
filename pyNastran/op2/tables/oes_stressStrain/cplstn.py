@@ -1,6 +1,6 @@
 from __future__ import annotations
 from struct import Struct
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain_nx import (
     RealCPLSTRNPlateStressNXArray, RealCPLSTRNPlateStrainNXArray)
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from pyNastran.op2.op2 import OP2
 
 def oes_cplstn3_real_6(op2: OP2, data: bytes,
-                       obj: Union[RealCPLSTRNPlateStressNXArray, RealCPLSTRNPlateStrainNXArray],
+                       obj: RealCPLSTRNPlateStressNXArray | RealCPLSTRNPlateStrainNXArray,
                        nelements: int, ntotal: int, dt) -> int:
     n = 0
     nid = 0
@@ -28,7 +28,7 @@ def oes_cplstn3_real_6(op2: OP2, data: bytes,
     return n
 
 def oes_cplstn4_real_32(op2: OP2, data: bytes,
-                        obj: Union[RealCPLSTRNPlateStressNXArray, RealCPLSTRNPlateStrainNXArray],
+                        obj: RealCPLSTRNPlateStressNXArray | RealCPLSTRNPlateStrainNXArray,
                         nelements: int, ntotal: int, dt) -> int:
     n = 0
     name = 'CPLSTN4'
@@ -58,7 +58,7 @@ def oes_cplstn4_real_32(op2: OP2, data: bytes,
     return n
 
 def oes_cplstn6_real_26(op2: OP2, data: bytes,
-                        obj: Union[RealCPLSTRNPlateStressNXArray, RealCPLSTRNPlateStrainNXArray],
+                        obj: RealCPLSTRNPlateStressNXArray | RealCPLSTRNPlateStrainNXArray,
                         nelements: int, ntotal: int, dt) -> int:
     n = 0
     nnodes_cen = 4

@@ -5,7 +5,7 @@ import contextlib
 from math import ceil
 from functools import partial
 from collections import defaultdict
-from typing import Callable, Optional, Union, Any, cast
+from typing import Callable, Optional, Any, cast
 
 import numpy as np
 from cpylog import SimpleLogger

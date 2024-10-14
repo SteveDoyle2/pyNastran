@@ -446,7 +446,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     fop2_ascii.close()
     return total_case_count, table_names_found
 
-def _fix_subcase_id(key: Union[int, tuple[Any]], res: Any) -> None:
+def _fix_subcase_id(key: int | tuple[Any], res: Any) -> None:
     """
     The subcase id may be inconsistent between the op2 result object
     and the key. The key takes priority to make doing a load case

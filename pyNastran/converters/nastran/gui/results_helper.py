@@ -3,7 +3,7 @@
 from __future__ import annotations
 import os
 from collections import defaultdict
-from typing import Optional, Any, TYPE_CHECKING # Union,
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 #from numpy.linalg import norm  # type: ignore
@@ -42,7 +42,7 @@ if TYPE_CHECKING: # pragma: no cover
     #from pyNastran.op2.result_objects.design_response import Desvars
 
 #from pyNastran.converters.nastran.gui.types import
-#GuiResults = Union[GuiResult, GuiResultIDs, GridPointForceResult]
+#GuiResults = GuiResult | GuiResultIDs | GridPointForceResult
 
 Form = tuple[str, Optional[int], Any]
 FormDict = dict[tuple[Any, Any], Form]

@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Union, Any, BinaryIO, TYPE_CHECKING
+from typing import Any, BinaryIO, TYPE_CHECKING
 
 import numpy as np
 
@@ -19,7 +19,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, FLUTTER # , FLFACT, MKAERO2
     from pyNastran.op2.op2_geom import OP2Geom, BDF
 
-def write_edt(op2_file: BinaryIO, op2_ascii, model: Union[BDF, OP2Geom],
+def write_edt(op2_file: BinaryIO, op2_ascii, model: BDF | OP2Geom,
               endian: bytes=b'<', nastran_format: str='nx') -> None:
     """writes the EDT/EDTS table"""
     if not hasattr(model, 'loads'):  # OP2
@@ -149,7 +149,7 @@ def remove_unsupported_cards(card_dict: dict[str, Any],
             del card_dict[card_type]
             log.warning(f"removing {card_type} in OP2 writer because it's unsupported")
 
-def write_trim(model: Union[BDF, OP2Geom], name: str,
+def write_trim(model: BDF | OP2Geom, name: str,
                trim_ids: list[int], ncards: int,
                op2_file: BinaryIO, op2_ascii, endian: bytes, nastran_format: str='nx') -> int:
     """
@@ -204,7 +204,7 @@ def write_trim(model: Union[BDF, OP2Geom], name: str,
         all_data += data
     return nbytes
 
-def write_diverg(model: Union[BDF, OP2Geom], name: str,
+def write_diverg(model: BDF | OP2Geom, name: str,
                  diverg_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -251,7 +251,7 @@ def write_diverg(model: Union[BDF, OP2Geom], name: str,
     assert len(data) == nvalues, f'ndata={len(data)}; nvalues={nvalues}'
     return nbytes
 
-def write_caero1(model: Union[BDF, OP2Geom], name: str,
+def write_caero1(model: BDF | OP2Geom, name: str,
                  caero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -298,7 +298,7 @@ def write_caero1(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_caero2(model: Union[BDF, OP2Geom], name: str,
+def write_caero2(model: BDF | OP2Geom, name: str,
                  caero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -341,7 +341,7 @@ def write_caero2(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_caero3(model: Union[BDF, OP2Geom], name: str,
+def write_caero3(model: BDF | OP2Geom, name: str,
                  caero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -399,7 +399,7 @@ def write_caero3(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_caero4(model: Union[BDF, OP2Geom], name: str,
+def write_caero4(model: BDF | OP2Geom, name: str,
                  caero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -449,7 +449,7 @@ def write_caero4(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_caero5(model: Union[BDF, OP2Geom], name: str,
+def write_caero5(model: BDF | OP2Geom, name: str,
                  caero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -505,7 +505,7 @@ def write_caero5(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_paero1(model: Union[BDF, OP2Geom], name: str,
+def write_paero1(model: BDF | OP2Geom, name: str,
                  paero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -542,7 +542,7 @@ def write_paero1(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_paero2(model: Union[BDF, OP2Geom], name: str,
+def write_paero2(model: BDF | OP2Geom, name: str,
                  paero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -610,7 +610,7 @@ def write_paero2(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_paero5(model: Union[BDF, OP2Geom], name: str,
+def write_paero5(model: BDF | OP2Geom, name: str,
                  paero_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -669,7 +669,7 @@ def write_paero5(model: Union[BDF, OP2Geom], name: str,
     assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
     return nbytes
 
-def write_spline1(model: Union[BDF, OP2Geom], name: str,
+def write_spline1(model: BDF | OP2Geom, name: str,
                   spline_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -705,7 +705,7 @@ def write_spline1(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_spline2(model: Union[BDF, OP2Geom], name: str,
+def write_spline2(model: BDF | OP2Geom, name: str,
                   spline_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -746,7 +746,7 @@ def write_spline2(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_spline3(model: Union[BDF, OP2Geom], name: str,
+def write_spline3(model: BDF | OP2Geom, name: str,
                   spline_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:  # pragma: no cover
@@ -794,7 +794,7 @@ def write_spline3(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(msg)
     return nbytes
 
-def write_spline4(model: Union[BDF, OP2Geom], name: str,
+def write_spline4(model: BDF | OP2Geom, name: str,
                   spline_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -845,7 +845,7 @@ def write_spline4(model: Union[BDF, OP2Geom], name: str,
     return nbytes
 
 
-def write_aesurf(model: Union[BDF, OP2Geom], name: str,
+def write_aesurf(model: BDF | OP2Geom, name: str,
                  aesurf_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -916,7 +916,7 @@ def write_aesurf(model: Union[BDF, OP2Geom], name: str,
         op2_ascii.write(f'  AESURF data={data}; float_strs={float_strs}\n')
     return nbytes
 
-def write_aesurfs(model: Union[BDF, OP2Geom], name: str,
+def write_aesurfs(model: BDF | OP2Geom, name: str,
                   aesurfs_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -948,7 +948,7 @@ def write_aesurfs(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_aestat(model: Union[BDF, OP2Geom], name: str,
+def write_aestat(model: BDF | OP2Geom, name: str,
                  aestat_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -976,7 +976,7 @@ def write_aestat(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_flutter(model: Union[BDF, OP2Geom], name: str,
+def write_flutter(model: BDF | OP2Geom, name: str,
                   flutter_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -1048,7 +1048,7 @@ def _makero_temp(data, i: int, nloops: int):
         data_temp = data[i*8:i*8+8]
     return data_temp
 
-def write_mkaero1(model: Union[BDF, OP2Geom], name: str,
+def write_mkaero1(model: BDF | OP2Geom, name: str,
                   mkaero1s: list[MKAERO1], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -1134,7 +1134,7 @@ def write_mkaero1(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(spack.pack(*data))
     return nbytes
 
-def write_aero(model: Union[BDF, OP2Geom], name: str,
+def write_aero(model: BDF | OP2Geom, name: str,
                aero: list[AERO], ncards: int,
                op2_file: BinaryIO, op2_ascii, endian: bytes,
                nastran_format: str='nx') -> int:
@@ -1173,7 +1173,7 @@ def write_aero(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(spack.pack(*data))
     return nbytes
 
-def write_aeros(model: Union[BDF, OP2Geom], name: str,
+def write_aeros(model: BDF | OP2Geom, name: str,
                 aeros: list[AEROS], ncards: int,
                 op2_file: BinaryIO, op2_ascii, endian: bytes,
                 nastran_format: str='nx') -> int:
@@ -1201,7 +1201,7 @@ def write_aeros(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(spack.pack(*data))
     return nbytes
 
-def write_flfact(model: Union[BDF, OP2Geom], name: str,
+def write_flfact(model: BDF | OP2Geom, name: str,
                  flfact_ids, ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -1240,7 +1240,7 @@ def write_flfact(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_set1(model: Union[BDF, OP2Geom], name: str,
+def write_set1(model: BDF | OP2Geom, name: str,
                set_ids: list[int], ncards: int,
                op2_file: BinaryIO, op2_ascii, endian: bytes,
                nastran_format: str='nx') -> int:
@@ -1300,7 +1300,7 @@ def write_set1(model: Union[BDF, OP2Geom], name: str,
     assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
     return nbytes
 
-def write_set2(model: Union[BDF, OP2Geom], name: str,
+def write_set2(model: BDF | OP2Geom, name: str,
                set_ids: list[int], ncards: int,
                op2_file: BinaryIO, op2_ascii, endian: bytes,
                nastran_format: str = 'nx') -> int:
@@ -1319,7 +1319,7 @@ def write_set2(model: Union[BDF, OP2Geom], name: str,
         op2_ascii.write(f'  SET2 data={data}\n')
     return nbytes
 
-def write_set3(model: Union[BDF, OP2Geom], name: str,
+def write_set3(model: BDF | OP2Geom, name: str,
                set_ids: list[int], ncards: int,
                op2_file: BinaryIO, op2_ascii, endian: bytes,
                nastran_format: str='nx') -> int:
@@ -1386,7 +1386,7 @@ def write_set3(model: Union[BDF, OP2Geom], name: str,
     assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
     return nbytes
 
-def write_aelink(model: Union[BDF, OP2Geom], name: str,
+def write_aelink(model: BDF | OP2Geom, name: str,
                  aelink_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -1474,7 +1474,7 @@ def write_aelink(model: Union[BDF, OP2Geom], name: str,
     #assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
     return nbytes
 
-def write_monpnt1(model: Union[BDF, OP2Geom], name: str,
+def write_monpnt1(model: BDF | OP2Geom, name: str,
                   monpnt_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -1528,7 +1528,7 @@ def write_monpnt1(model: Union[BDF, OP2Geom], name: str,
         #all_data.extend(data)
     return nbytes
 
-def write_monpnt2(model: Union[BDF, OP2Geom], name: str,
+def write_monpnt2(model: BDF | OP2Geom, name: str,
                   monpnt_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -1627,7 +1627,7 @@ def write_monpnt2(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_monpnt3(model: Union[BDF, OP2Geom], name: str,
+def write_monpnt3(model: BDF | OP2Geom, name: str,
                   monpnt_ids: list[int], ncards: int,
                   op2_file: BinaryIO, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -1670,7 +1670,7 @@ def write_monpnt3(model: Union[BDF, OP2Geom], name: str,
     return nbytes
 
 
-def write_deform(model: Union[BDF, OP2Geom], name: str,
+def write_deform(model: BDF | OP2Geom, name: str,
                  loads: list[DEFORM], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -1698,7 +1698,7 @@ def write_deform(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_aefact(model: Union[BDF, OP2Geom], name: str,
+def write_aefact(model: BDF | OP2Geom, name: str,
                  aefact_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -1743,7 +1743,7 @@ def write_aefact(model: Union[BDF, OP2Geom], name: str,
     assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
     return nbytes
 
-def write_aelist(model: Union[BDF, OP2Geom], name: str,
+def write_aelist(model: BDF | OP2Geom, name: str,
                  aelist_ids: list[int], ncards: int,
                  op2_file: BinaryIO, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:

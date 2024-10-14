@@ -10,7 +10,7 @@ import sys
 import traceback
 from pickle import load, dump
 from collections import defaultdict
-from typing import List, Union, Optional
+from typing import Optional
 
 import numpy as np
 from cpylog import SimpleLogger, get_logger2, __version__ as CPYLOG_VERSION

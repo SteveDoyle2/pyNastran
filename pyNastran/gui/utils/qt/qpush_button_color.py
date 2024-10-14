@@ -1,4 +1,3 @@
-from typing import Union
 from qtpy import QtGui
 from qtpy.QtWidgets import QPushButton
 from .version import Background

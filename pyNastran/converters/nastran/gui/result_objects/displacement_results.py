@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from .vector_results import DispForceVectorResults
@@ -15,7 +15,7 @@ class DisplacementResults2(DispForceVectorResults):
                  subcase_id: int,
                  node_id: np.ndarray,
                  xyz: np.ndarray,
-                 dxyz: Union[RealTableArray, ComplexTableArray],
+                 dxyz: RealTableArray | ComplexTableArray,
                  title: str,
                  t123_offset: int,
                  dim_max: float=1.0,

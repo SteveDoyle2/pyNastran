@@ -12,7 +12,6 @@ defines:
 import os
 import sys
 from copy import deepcopy
-from typing import Union
 
 import numpy as np
 from numpy import (zeros, array, vstack, hstack, where,

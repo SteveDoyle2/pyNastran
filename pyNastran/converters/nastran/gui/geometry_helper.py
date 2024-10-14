@@ -6,7 +6,7 @@ this is no longer true...but should be
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import Union, cast, TYPE_CHECKING
+from typing import cast, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -31,10 +31,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, PBARL, PBEAML, CROD
 
 from pyNastran.bdf.cards.materials import (
-    MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11, MAT3D)
-StructuralMaterial = Union[MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11, MAT3D]
-ThermalMaterial = Union[MAT4, MAT5]
-Material = Union[MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11, MAT3D]
+    MAT1, MAT2, MAT3, MAT4, MAT5, MAT8,
+    MAT9, MAT10, MAT11, MAT3D)
+StructuralMaterial = (MAT1 | MAT2 | MAT3 | MAT8 |
+                      MAT9 | MAT10 | MAT11 | MAT3D)
+ThermalMaterial = MAT4 | MAT5
+Material = StructuralMaterial | ThermalMaterial
 
 
 from pyNastran.gui.qt_files.colors import BLUE_FLOAT
@@ -408,7 +410,7 @@ def get_material_arrays(model: BDF,
 
 def add_3d_bar_element(bar_type: str,
                        ptype: str,
-                       pid_ref: Union[PBARL, PBEAML],
+                       pid_ref: PBARL | PBEAML,
                        xyz1: NDArray3float,
                        xyz2: NDArray3float,
                        xform: NDArray33float,
@@ -698,4 +700,3 @@ def _rod_vector(elem: CROD, ihat: np.ndarray) -> np.ndarray:
     assert normi > 0., k2
     xform = np.vstack([ihat, j2, k2])
     return xform
-

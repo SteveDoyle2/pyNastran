@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table

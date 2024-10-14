@@ -6,7 +6,7 @@ import os
 import copy
 import itertools
 from io import StringIO
-from typing import TextIO, Iterable, Union, Optional, Any
+from typing import TextIO, Iterable, Optional, Any
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -130,7 +130,7 @@ class Tecplot(TecplotBinary):
                 zones_to_include=zones_to_include)
         return
 
-    def read_tecplot_ascii(self, tecplot_filename: Union[PathLike, StringIO],
+    def read_tecplot_ascii(self, tecplot_filename: PathLike | StringIO,
                            nnodes=None, nelements=None,
                            zones_to_exclude: Optional[list[int]]=None,
                            zones_to_include: Optional[list[int]] = None):

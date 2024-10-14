@@ -1,5 +1,4 @@
 import sys
-from typing import Union
 from struct import unpack
 from numpy import degrees, array, zeros, vstack, where
 from cpylog import get_logger2

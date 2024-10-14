@@ -3,7 +3,7 @@ defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.tables.geom.geom_common import GeomCommon

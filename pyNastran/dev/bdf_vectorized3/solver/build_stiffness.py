@@ -1,7 +1,7 @@
 from __future__ import annotations
 import copy
 from itertools import count
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.sparse._dok import dok_matrix
@@ -758,7 +758,7 @@ def _beami_stiffness(A: float, E: float, G: float, L: float,
     return K
 
 def Kbb_to_Kgg(model: BDF,
-               Kbb: Union[np.ndarray, csc_matrix],
+               Kbb: np.ndarray | csc_matrix,
                ngrid: int,
                ndof_per_grid: int,
                inplace=True) -> NDArrayNNfloat:

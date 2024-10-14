@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from itertools import zip_longest
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types

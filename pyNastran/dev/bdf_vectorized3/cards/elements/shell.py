@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import abstractmethod
 from itertools import zip_longest
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_field_8

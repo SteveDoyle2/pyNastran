@@ -1,6 +1,5 @@
 import os
 import sys
-from typing import Union
 
 import numpy as np
 from cpylog import get_logger2

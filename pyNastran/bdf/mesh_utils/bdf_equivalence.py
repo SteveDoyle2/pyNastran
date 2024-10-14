@@ -11,7 +11,7 @@ defines:
 """
 from __future__ import annotations
 from itertools import combinations
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 import scipy

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from itertools import zip_longest
 from collections import defaultdict
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 #from pyNastran.bdf.field_writer_8 import print_card_8
 #from pyNastran.utils.numpy_utils import integer_types # , cast_ints
@@ -511,8 +511,7 @@ class NSML(NSMi):
         return
 
 
-NSMs = Union[NSM, NSM1,
-             NSML, NSML1]
+NSMs = NSM | NSM1 |NSML | NSML1
 
 def alternate_values_in_list(pid_eid_str, values):
     pid_eid_value = []
@@ -686,5 +685,3 @@ class NSMADD(ADD):
         #idim = self.inode
         #spc.node_id = hslice_by_idim(i, idim, self.node_id)
         #return spc
-
-

@@ -3,7 +3,7 @@ from __future__ import annotations
 #from copy import deepcopy
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 #import numpy as np
 
@@ -19,7 +19,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.aero.dynamic_loads import GUST
     from pyNastran.op2.op2_geom import OP2Geom, BDF
 
-def write_dit(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
+def write_dit(op2_file, op2_ascii, model: BDF | OP2Geom,
               endian: bytes=b'<', nastran_format: str='nx') -> None:
     """writes the DIT/DITS table"""
     if not hasattr(model, 'loads'):  # OP2
@@ -103,7 +103,7 @@ def write_dit(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
             #del card_dict[card_type]
             #log.warning(f"removing {card_type} in OP2 writer because it's unsupported")
 
-def write_tabdmp1(model: Union[BDF, OP2Geom], name: str,
+def write_tabdmp1(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -141,7 +141,7 @@ def write_tabdmp1(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(data_bytes)
     return nbytes
 
-def write_tabrndg(model: Union[BDF, OP2Geom], name: str,
+def write_tabrndg(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -184,7 +184,7 @@ def write_tabrndg(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(data_bytes)
     return nbytes
 
-def write_tabled1(model: Union[BDF, OP2Geom], name: str,
+def write_tabled1(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -196,7 +196,7 @@ def write_tabled1(model: Union[BDF, OP2Geom], name: str,
         nastran_format=nastran_format)
     return nbytes
 
-def write_tablem1(model: Union[BDF, OP2Geom], name: str,
+def write_tablem1(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -208,7 +208,7 @@ def write_tablem1(model: Union[BDF, OP2Geom], name: str,
         nastran_format=nastran_format)
     return nbytes
 
-def write_tabled2(model: Union[BDF, OP2Geom], name: str,
+def write_tabled2(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -220,7 +220,7 @@ def write_tabled2(model: Union[BDF, OP2Geom], name: str,
         nastran_format=nastran_format)
     return nbytes
 
-def write_tablem2(model: Union[BDF, OP2Geom], name: str,
+def write_tablem2(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -232,7 +232,7 @@ def write_tablem2(model: Union[BDF, OP2Geom], name: str,
         nastran_format=nastran_format)
     return nbytes
 
-def write_tabled3(model: Union[BDF, OP2Geom], name: str,
+def write_tabled3(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -244,7 +244,7 @@ def write_tabled3(model: Union[BDF, OP2Geom], name: str,
         nastran_format=nastran_format)
     return nbytes
 
-def write_tablem3(model: Union[BDF, OP2Geom], name: str,
+def write_tablem3(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -256,7 +256,7 @@ def write_tablem3(model: Union[BDF, OP2Geom], name: str,
         nastran_format=nastran_format)
     return nbytes
 
-def write_tabled4(model: Union[BDF, OP2Geom], name: str,
+def write_tabled4(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -268,7 +268,7 @@ def write_tabled4(model: Union[BDF, OP2Geom], name: str,
         nastran_format=nastran_format)
     return nbytes
 
-def write_tablem4(model: Union[BDF, OP2Geom], name: str,
+def write_tablem4(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -280,7 +280,7 @@ def write_tablem4(model: Union[BDF, OP2Geom], name: str,
         nastran_format=nastran_format)
     return nbytes
 
-def _write_table1(model: Union[BDF, OP2Geom], name: str,
+def _write_table1(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   table_dict: dict[int, Any], table_name: str,
                   key: tuple[int, int, int],
@@ -339,7 +339,7 @@ def _write_table1(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(data_bytes)
     return nbytes
 
-def _write_table2(model: Union[BDF, OP2Geom], name: str,
+def _write_table2(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   table_dict: dict[int, Any], table_name: str,
                   key: tuple[int, int, int],
@@ -382,7 +382,7 @@ def _write_table2(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(data_bytes)
     return nbytes
 
-def _write_table3(model: Union[BDF, OP2Geom], name: str,
+def _write_table3(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   table_dict: dict[int, Any], table_name: str,
                   key: tuple[int, int, int],
@@ -429,7 +429,7 @@ def _write_table3(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(data_bytes)
     return nbytes
 
-def _write_table4(model: Union[BDF, OP2Geom], name: str,
+def _write_table4(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   table_dict: dict[int, Any], table_name: str,
                   key: tuple[int, int, int],
@@ -472,7 +472,7 @@ def _write_table4(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(data_bytes)
     return nbytes
 
-def write_tables1(model: Union[BDF, OP2Geom], name: str,
+def write_tables1(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -517,7 +517,7 @@ def write_tables1(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(data_bytes)
     return nbytes
 
-def write_tablest(model: Union[BDF, OP2Geom], name: str,
+def write_tablest(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -562,7 +562,7 @@ def write_tablest(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(data_bytes)
     return nbytes
 
-def write_tableh1(model: Union[BDF, OP2Geom], name: str,
+def write_tableh1(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -596,7 +596,7 @@ def write_tableh1(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(data_bytes)
     return nbytes
 
-def write_tableht(model: Union[BDF, OP2Geom], name: str,
+def write_tableht(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:  # pragma: no cover
@@ -609,7 +609,7 @@ def write_tableht(model: Union[BDF, OP2Geom], name: str,
         nastran_format=nastran_format)
     return nbytes
 
-def write_gust(model: Union[BDF, OP2Geom], name: str,
+def write_gust(model: BDF | OP2Geom, name: str,
                gust_ids: list[GUST], ncards: int,
                op2_file, op2_ascii, endian: bytes,
                nastran_format: str='nx') -> int:

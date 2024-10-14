@@ -3,7 +3,7 @@ from abc import abstractmethod
 from collections import defaultdict
 
 import numpy as np
-from typing import DefaultDict, Union, Optional, Any # , TYPE_CHECKING
+from typing import DefaultDict, Optional, Any
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.utils import safe_norm
@@ -37,7 +37,7 @@ class VectorResultsCommon(GuiResultCommon):
                  subcase_id: int,
                  title: str,
                  case,
-                 #dxyz: Union[RealTableArray, ComplexTableArray],
+                 #dxyz: RealTableArray | ComplexTableArray,
                  ntitles: int,
                  data_format: str='%g',
                  is_variable_data_format: bool=False,
@@ -420,7 +420,7 @@ class DispForceVectorResults(VectorResultsCommon):
                  subcase_id: int,
                  title: str,
                  node_id: np.ndarray,
-                 case: Union[RealTableArray, ComplexTableArray],
+                 case: RealTableArray | ComplexTableArray,
                  t123_offset: int,
                  methods_txyz_rxyz: list[str],
                  index_to_base_title_annotation: dict[int, dict[str, str]],

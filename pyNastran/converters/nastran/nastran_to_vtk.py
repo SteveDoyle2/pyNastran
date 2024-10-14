@@ -1,7 +1,7 @@
 """tests the NastranIO class"""
 from __future__ import annotations
 import os
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from vtkmodules.vtkCommonDataModel import vtkPointData, vtkCellData
 from vtkmodules.vtkCommonCore import vtkFloatArray

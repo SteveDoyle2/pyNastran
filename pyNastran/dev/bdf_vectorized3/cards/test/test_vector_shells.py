@@ -2,7 +2,6 @@
 import os
 from io import StringIO
 import unittest
-from typing import Union
 import numpy as np
 from numpy import array
 

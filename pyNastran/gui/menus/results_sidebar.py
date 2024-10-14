@@ -1,6 +1,6 @@
 from __future__ import annotations
 import sys
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 # kills the program when you hit Cntl+C from the command line
 import signal

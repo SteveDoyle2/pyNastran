@@ -16,7 +16,7 @@ defines:
 """
 from __future__ import annotations
 import numpy as np
-from typing import Union, cast, TYPE_CHECKING
+from typing import cast, TYPE_CHECKING
 
 try:
     import matplotlib.pyplot as plt
@@ -216,7 +216,7 @@ def smt_setup(model: BDF) -> tuple[NDArrayNint, NDArrayN2int, NDArrayN3float,
     eids, element_centroids_cid0 = get_element_centroids(model, fdtype='float64')
     return nids, nid_cd, xyz_cid0, icd_transform, eids, element_centroids_cid0
 
-def setup_coord_from_plane(model: Union[BDF, OP2Geom], xyz_cid0: NDArrayN3float,
+def setup_coord_from_plane(model: BDF | OP2Geom, xyz_cid0: NDArrayN3float,
                            p1: NDArray3float, p2: NDArray3float, p3: NDArray3float,
                            zaxis: NDArray3float,
                            method: str='Z-Axis Projection',

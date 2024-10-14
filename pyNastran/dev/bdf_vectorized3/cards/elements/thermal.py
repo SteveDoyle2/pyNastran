@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import zip_longest
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
@@ -917,7 +917,7 @@ class CHBDYP(ThermalElement):
         return
 
 
-def apply_bydor_default(chbdyx: Union[CHBDYE, CHBDYG, CHBDYP]) -> None:
+def apply_bydor_default(chbdyx: CHBDYE | CHBDYG | CHBDYP) -> None:
     card_type = chbdyx.type
     model = chbdyx.model
     data_temp_default = []

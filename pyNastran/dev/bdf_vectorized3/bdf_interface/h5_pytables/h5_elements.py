@@ -151,7 +151,7 @@ def _load_h5_conm2(model: BDF, data, element_id) -> CONM2:
     ])
     return elem
 
-def _load_h5_crod_ctube_cshear(elem: Union[CROD, CTUBE, CSHEAR], data, element_id):
+def _load_h5_crod_ctube_cshear(elem: CROD | CTUBE | CSHEAR, data, element_id):
     """
     array([(14, 3, [20, 24], 1), (15, 3, [21, 25], 1)],
       dtype=[('EID', '<i8'), ('PID', '<i8'), ('G', '<i8', (2,)), ('DOMAIN_ID', '<i8')])
@@ -309,7 +309,7 @@ def _load_h5_shell(elem: CQUAD4, element_id, data):
 
 
 def _read_celas1_cdamp1(name: str, group: h5py._hl.dataset.Dataset,
-                        elem: Union[CELAS1, CDAMP1]) -> None:
+                        elem: CELAS1 | CDAMP1) -> None:
     """
     ('EID', 'PID', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
     """
@@ -355,7 +355,7 @@ def _read_celas2(name: str, group: h5py._hl.dataset.Dataset,
     elem._save(element_id, nodes, components, k, ge, s)
 
 def _read_celas3_cdamp3(name: str, group: h5py._hl.dataset.Dataset,
-                        elem: Union[CELAS3, CDAMP3]) -> None:
+                        elem: CELAS3 | CDAMP3) -> None:
     assert len(group.dtype) == 5, (group.dtype, len(group.dtype))
     element_id = group['EID']
     property_id = group['PID']

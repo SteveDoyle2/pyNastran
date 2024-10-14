@@ -25,7 +25,7 @@ import copy
 from datetime import date
 from collections import defaultdict
 from itertools import count
-from typing import Union, TextIO, Any
+from typing import TextIO, Any
 
 import numpy as np
 import scipy as sp
@@ -846,7 +846,7 @@ class Solver:
     def _save_static_table(self, f06_file: TextIO,
                            subcase: Subcase, itime: int, ntimes: int,
                            node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,
-                           obj: Union[RealSPCForcesArray],
+                           obj: RealSPCForcesArray,
                            f06_request_name: str,
                            table_name: str, slot: dict[Any, RealSPCForcesArray],
                            ngrid: int, ndof_per_grid: int,

@@ -24,7 +24,7 @@ import warnings
 import traceback
 
 from typing import (
-    Sequence, Optional, Union, Any, TYPE_CHECKING)
+    Sequence, Optional, Any, TYPE_CHECKING)
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -4912,8 +4912,8 @@ def _bool(value):
     return True if value == 'true' else False
 
 
-#def _get_coords_to_update(coords: dict[int, Union[CORD1R, CORD1C, CORD1S,
-                                                  #CORD2R, CORD2C, CORD2S]],
+#def _get_coords_to_update(coords: dict[int, CORD1R | CORD1C | CORD1S |
+                                            #CORD2R | CORD2C | CORD2S],
                           #cps_to_check: list[int],
                           #cps_checked: list[int],
                           #nids_checked: list[int]) -> tuple[int, list[int], list[int], list[int]]:

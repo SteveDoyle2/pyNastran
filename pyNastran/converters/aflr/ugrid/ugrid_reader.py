@@ -8,7 +8,7 @@ import sys
 from struct import Struct, unpack
 from pathlib import PurePath
 from itertools import zip_longest
-from typing import Union, Optional
+from typing import Optional
 
 import numpy as np
 from cpylog import get_logger

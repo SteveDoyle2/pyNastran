@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from io import StringIO
 
 from pyNastran.bdf.field_writer import print_card_8, print_card_16

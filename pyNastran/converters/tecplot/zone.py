@@ -1,7 +1,7 @@
 from __future__ import annotations
 import copy
 from collections import defaultdict
-from typing import TextIO, Optional, Any, Union # , TYPE_CHECKING
+from typing import TextIO, Optional, Any # , TYPE_CHECKING
 
 import numpy as np
 from pyNastran.nptyping_interface import NDArrayN3int, NDArrayN4int # NDArrayN3float,
@@ -57,7 +57,7 @@ class CaseInsensitiveDictAlternates(dict):
         #log.info("GET %s['%s'] = %s" % str(dict.get(self, 'name_label')), str(key), str(val)))
         return val
 
-    def __setitem__(self, key: str, val: Union[int, float, str, list[str]]) -> None:
+    def __setitem__(self, key: str, val: int | float | str | list[str]) -> None:
         #log.info("SET %s['%s'] = %s" % str(dict.get(self, 'name_label')), str(key), str(val)))
         key_upper = key.upper()
         key2 = self._key_map.get(key_upper, key_upper)

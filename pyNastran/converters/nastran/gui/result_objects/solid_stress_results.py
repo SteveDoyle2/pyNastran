@@ -1,7 +1,7 @@
 from __future__ import annotations
 #from collections import defaultdict
 import numpy as np
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran.utils.mathematics import get_abs_max
 #from pyNastran.femutils.utils import abs_nan_min_max # , pivot_table,  # abs_min_max

@@ -17,7 +17,7 @@ FLUX             HOEF1         Element heat flux
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros
@@ -2953,7 +2953,7 @@ def oef_crod_imag_5(op2: OP2, data: bytes,
     return n
 
 def oef_celas_cdamp_imag_3(self, data: bytes,
-                           obj: Union[ComplexSpringForceArray, ComplexDamperForceArray],
+                           obj: ComplexSpringForceArray | ComplexDamperForceArray,
                            nelements: int, ntotal: int,
                            is_magnitude_phase: bool) -> int:
     op2 = self
@@ -3320,7 +3320,7 @@ def oef_shells_composite_real_9(self, data: bytes,
     return n
 
 def oef_cbush_real_7(self, data: bytes,
-                     obj: Union[RealCBushForceArray, RealCFastForceArrayMSC, RealCBearForceArray],
+                     obj: RealCBushForceArray | RealCFastForceArrayMSC | RealCBearForceArray,
                      nelements: int, ntotal: int, dt: Any) -> int:
     op2 = self
     n = 0
@@ -3340,7 +3340,7 @@ def oef_cbush_real_7(self, data: bytes,
     return n
 
 def oef_cbush_imag_13(self, data: bytes,
-                      obj: Union[ComplexCBushForceArray, ComplexCFastForceArrayMSC],
+                      obj: ComplexCBushForceArray | ComplexCFastForceArrayMSC,
                       nelements: int, ntotal: int,
                       is_magnitude_phase: bool) -> int:
     """
@@ -3432,7 +3432,7 @@ def oef_cvisc_imag_5(self, data: bytes,
     return n
 
 def oef_celas_cdamp_real_2(self, data: bytes,
-                           obj: Union[RealSpringForceArray, RealDamperForceArray],
+                           obj: RealSpringForceArray | RealDamperForceArray,
                            nelements: int, ntotal: int, dt: Any) -> int:
     op2 = self
     n = 0
@@ -3740,7 +3740,7 @@ def oef_cquad4_imag_17(self, data: bytes, ndata: int,
     return n
 
 def oef_cconeax_real_7(self, data: bytes,
-                       obj: Union[RealConeAxForceArray],
+                       obj: RealConeAxForceArray,
                        nelements: int, ntotal: int, dt: Any) -> int:
     op2 = self
     n = 0
@@ -3759,7 +3759,7 @@ def oef_cconeax_real_7(self, data: bytes,
     return n
 
 def oef_csolid_pressure_10(self, data: bytes,
-                           obj: Union[RealSolidPressureForceArray],
+                           obj: RealSolidPressureForceArray,
                            nelements: int, ntotal: int, dt: Any) -> int:
     op2 = self
     n = 0

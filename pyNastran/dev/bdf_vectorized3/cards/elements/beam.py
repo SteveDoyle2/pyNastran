@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import count, zip_longest
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import zip_strict, integer_types, float_types
@@ -382,7 +382,7 @@ class CBEAM(Element):
         return ~self.is_x
 
     @property
-    def all_properties(self) -> list[Union[PBEAM, PBEAML, PBCOMP]]:
+    def all_properties(self) -> list[PBEAM | PBEAML | PBCOMP]:
         model = self.model
         return [model.pbeam, model.pbeaml, model.pbcomp]
 

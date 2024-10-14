@@ -3,7 +3,7 @@
 import sys
 import os
 from struct import pack, unpack, Struct
-from typing import TextIO, BinaryIO, Optional, Union, cast
+from typing import TextIO, BinaryIO, Optional, cast
 
 import numpy as np
 from numpy import float32, float64, complex64, complex128
@@ -1905,7 +1905,7 @@ def _prepare_name_order(matrices: dict[str, Matrix], name_order) -> list[str]:
     return name_order
 
 def _write_form_matrix_helper(matrices: dict[str, Matrix],
-                              name: str) -> tuple[int, Union[np.ndarray, coo_matrix]]:
+                              name: str) -> tuple[int, np.ndarray | coo_matrix]:
     """Helper method for OP4 writing"""
     try:
         mat_form = matrices[name]

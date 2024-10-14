@@ -8,7 +8,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import Union, TextIO, Optional, Any, TYPE_CHECKING
+from typing import TextIO, Optional, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.converters.abaqus.elements import Elements
 if TYPE_CHECKING:  # pragma: no cover

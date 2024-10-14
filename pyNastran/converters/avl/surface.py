@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.cards.aero.utils import (
@@ -182,7 +182,7 @@ class Surface:
 
     def get_nodes_elements(self,
                            isurface: int,
-                           surfaces: list[Union[Surface, Body]],
+                           surfaces: list[Surface | Body],
                            dirname: str,
                            nodes: list[np.ndarray],
                            ipoint: int,
@@ -215,7 +215,7 @@ class Surface:
                   ipoint: int,
                   nodes: list[np.ndarray],
                   quad_elements: list[np.ndarray],
-                  surfaces: list[Union[Surface, Body]],
+                  surfaces: list[Surface | Body],
                   is_cs_list: list[np.ndarray],
                   yduplicate: float,
                   log: SimpleLogger) -> int:
@@ -322,7 +322,7 @@ def _section_get_nodes_elements(isurface: int, i: int,
                                 ipoint: int,
                                 nodes: list[np.ndarray],
                                 quad_elements: list[np.ndarray],
-                                surfaces: list[Union[Surface, Body]],
+                                surfaces: list[Surface | Body],
                                 is_cs_list: list[np.ndarray]):
     #print(section0)
     #print('*****************')
@@ -651,4 +651,3 @@ def interp_stations(y, unused_nspan,
     #print(x_final.shape)
     #print(xy_final.shape)
     return interpolated_stations
-

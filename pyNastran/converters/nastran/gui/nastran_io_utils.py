@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from collections import defaultdict
-from typing import Any, Union, Optional, cast, TYPE_CHECKING
+from typing import Any, Optional, cast, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm
 
@@ -2582,7 +2582,7 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
         exclude_results.add('grid_point_forces')
     return exclude_results
 
-def get_pcomp_nplies(properties: dict[int, Union[PCOMP, PCOMPG, PCOMPS, PCOMPLS]],
+def get_pcomp_nplies(properties: dict[int, PCOMP | PCOMPG | PCOMPS | PCOMPLS],
                      property_ids_pcomp: list[int]) -> int:
     """
     layer 0 will be defined as the total, so:

@@ -5,7 +5,7 @@ Defines a method to add a card that is faster than add_card.
 """
 import copy
 from itertools import count
-from typing import Optional, Union, Any
+from typing import Optional, Any
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types #, integer_string_types

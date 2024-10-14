@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 #import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttributes

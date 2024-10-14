@@ -15,10 +15,10 @@ import inspect
 import warnings
 from pathlib import PurePath
 #from abc import abstractmethod
-from typing import Optional, Union, Any
+from typing import Optional, Any
 import pyNastran
 
-PathLike = Union[str, PurePath]
+PathLike = str | PurePath
 
 
 def ipython_info() -> Optional[str]:

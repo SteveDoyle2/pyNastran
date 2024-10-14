@@ -1,6 +1,6 @@
 from __future__ import annotations
 import sys
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.femutils.utils import pivot_table, abs_min_max

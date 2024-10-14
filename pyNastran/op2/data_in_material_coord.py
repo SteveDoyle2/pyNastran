@@ -5,7 +5,7 @@ Defines:
 """
 from __future__ import annotations
 import copy
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import cos, sin, cross

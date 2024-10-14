@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 #from numpy import vstack, amax, amin, arange, ones, zeros, where
 

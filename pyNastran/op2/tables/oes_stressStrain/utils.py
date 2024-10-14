@@ -1,6 +1,6 @@
 from __future__ import annotations
 from struct import Struct
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
@@ -74,7 +74,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def oes_celas_real_2(op2: OP2, data: bytes,
-                     obj: Union[RealSpringStressArray, RealSpringStrainArray],
+                     obj: RealSpringStressArray | RealSpringStrainArray,
                      nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
     fmt1 = mapfmt(op2._endian + op2._analysis_code_fmt + b'f', op2.size)
@@ -99,7 +99,7 @@ def oes_celas_real_2(op2: OP2, data: bytes,
     return n
 
 
-def oes_celas_complex_3(op2: OP2, data: bytes, obj: Union[ComplexSpringStressArray, ComplexSpringStrainArray],
+def oes_celas_complex_3(op2: OP2, data: bytes, obj: ComplexSpringStressArray | ComplexSpringStrainArray,
                         nelements: int, ntotal: int,
                         dt, is_magnitude_phase: bool):
     n = 0
@@ -126,7 +126,7 @@ def oes_celas_complex_3(op2: OP2, data: bytes, obj: Union[ComplexSpringStressArr
 
 
 def oes_cquad4_33_complex_vm_17(op2: OP2, data: bytes,
-                                obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
+                                obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
                                 nelements: int, ntotal: int,
                                 is_magnitude_phase: bool) -> int:
     """
@@ -178,7 +178,7 @@ def oes_cquad4_33_complex_vm_17(op2: OP2, data: bytes,
 
 
 def oes_cbeam_real_111(op2: OP2, data: bytes,
-                       obj: Union[RealBeamStressArray, RealBeamStrainArray],
+                       obj: RealBeamStressArray | RealBeamStrainArray,
                        nelements: int, dt: Any) -> int:
     n = 0
     nnodes = 10  # 11-1
@@ -213,7 +213,8 @@ def oes_cbeam_real_111(op2: OP2, data: bytes,
     return n
 
 
-def oes_crod_real_5(op2: OP2, data: bytes, obj: Union[RealRodStressArray, RealRodStrainArray],
+def oes_crod_real_5(op2: OP2, data: bytes,
+                    obj: RealRodStressArray | RealRodStrainArray,
                     nelements: int, ntotal: int, dt) -> int:
     n = 0
     struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'4f', op2.size))
@@ -234,8 +235,10 @@ def oes_crod_real_5(op2: OP2, data: bytes, obj: Union[RealRodStressArray, RealRo
     return n
 
 
-def oes_crod_complex_5(op2: OP2, data: bytes, obj: Union[ComplexRodStressArray, ComplexRodStrainArray],
-                       nelements: int, ntotal: int, dt, is_magnitude_phase: bool) -> int:
+def oes_crod_complex_5(op2: OP2, data: bytes,
+                       obj: ComplexRodStressArray | ComplexRodStrainArray,
+                       nelements: int, ntotal: int, dt,
+                       is_magnitude_phase: bool) -> int:
     n = 0
     fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'4f', op2.size)
     struct1 = Struct(fmt)
@@ -260,7 +263,7 @@ def oes_crod_complex_5(op2: OP2, data: bytes, obj: Union[ComplexRodStressArray, 
 
 
 def oes_crod_random_3(op2: OP2, data: bytes, ndata: int,
-             obj: Union[RandomRodStressArray, RandomRodStrainArray],
+             obj: RandomRodStressArray | RandomRodStrainArray,
              nelements: int, ntotal: int) -> int:
     n = 0
     if op2.is_debug_file:
@@ -304,7 +307,7 @@ def oes_cbar100_real_10(op2: OP2, data: bytes, obj, nelements: int, ntotal: int,
 
 
 def oes_cbeam_complex_111(op2: OP2, data: bytes,
-                          obj: Union[ComplexBeamStressArray, ComplexBeamStrainArray],
+                          obj: ComplexBeamStressArray | ComplexBeamStrainArray,
                           nelements: int, nnodes: int,
                           is_magnitude_phase: bool) -> int:
     n = 0
@@ -374,7 +377,7 @@ def oes_cbeam_complex_111(op2: OP2, data: bytes,
 
 
 def oes_cbeam_random_67(op2: OP2, data: bytes,
-                        obj: Union[RandomBeamStressArray, RandomBeamStrainArray],
+                        obj: RandomBeamStressArray | RandomBeamStrainArray,
                         nelements: int, nnodes: int, dt: Any) -> int:
     n = 0
     n1 = 28 * op2.factor
@@ -409,7 +412,7 @@ def oes_cbeam_random_67(op2: OP2, data: bytes,
 
 def oes_cquad4_33_complex_15(op2: OP2,
                              data: bytes,
-                             obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
+                             obj: ComplexPlateStressArray | ComplexPlateStrainArray,
                              nelements: int, ntotal: int,
                              is_magnitude_phase: bool) -> int:
     """
@@ -470,7 +473,7 @@ def oes_cquad4_33_complex_15(op2: OP2,
 
 def oes_cquad4_random_vm_57(op2: OP2,
                             data: bytes,
-                            obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
+                            obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
                             nelements: int, ntotal: int, nnodes: int,
                             dt: Any) -> int:
     """
@@ -541,7 +544,7 @@ def oes_cquad4_random_vm_57(op2: OP2,
 
 def oes_cquad4_144_complex_77(op2: OP2,
                               data: bytes,
-                              obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
+                              obj: ComplexPlateStressArray | ComplexPlateStrainArray,
                               nelements: int, nnodes: int,
                               dt: Any,
                               is_magnitude_phase: bool) -> int:
@@ -625,7 +628,7 @@ def oes_cquad4_144_complex_77(op2: OP2,
 
 
 def oes_cquad4_complex_vm_87(op2: OP2, data: bytes,
-                             obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
+                             obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
                              nelements: int, nnodes: int,
                              is_magnitude_phase: bool) -> int:
     """
@@ -808,7 +811,7 @@ def oes_cquad4_complex_vm_87(op2: OP2, data: bytes,
 
 
 def oes_cquad4_33_random_9(op2: OP2, data: bytes,
-                           obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
+                           obj: RandomPlateStressArray | RandomPlateStrainArray,
                            nelements: int, ntotal: int) -> int:
     n = 0
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
@@ -837,7 +840,7 @@ def oes_cquad4_33_random_9(op2: OP2, data: bytes,
 
 
 def oes_ctria3_real_17(op2: OP2, data: bytes,
-                       obj: Union[RealPlateStressArray, RealPlateStrainArray],
+                       obj: RealPlateStressArray | RealPlateStrainArray,
                        ntotal: int, nelements: int, dt: Any) -> int:
     n = 0
     cen = 0  # 'CEN/3'
@@ -869,7 +872,7 @@ def oes_ctria3_real_17(op2: OP2, data: bytes,
 
 
 def oes_quad4_33_real_17(op2: OP2, data: bytes,
-                         obj: Union[RealPlateStressArray, RealPlateStrainArray],
+                         obj: RealPlateStressArray | RealPlateStrainArray,
                          ntotal: int, nelements: int, dt: Any) -> int:
     n = 0
     cen = 0 # CEN/4
@@ -904,7 +907,7 @@ def oes_quad4_33_real_17(op2: OP2, data: bytes,
 
 def oes_ctria3_complex_vm_17(op2: OP2,
                              data: bytes,
-                             obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
+                             obj: ComplexPlateVMStressArray | ComplexPlateVMStrainArray,
                              nelements: int, ntotal: int,
                              dt,
                              is_magnitude_phase: bool) -> int:
@@ -960,7 +963,7 @@ def oes_ctria3_complex_vm_17(op2: OP2,
 
 
 def oes_ctria3_random_9(op2: OP2, data: bytes,
-                        obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
+                        obj: RandomPlateStressArray | RandomPlateStrainArray,
                         nelements: int, ntotal: int) -> int:
     n = 0
     struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'8f')
@@ -990,7 +993,7 @@ def oes_ctria3_random_9(op2: OP2, data: bytes,
 
 
 def oes_cquad4_33_random_vm_11(op2: OP2, data: bytes,
-                               obj: Union[RandomPlateVMStressArray, RandomPlateVMStrainArray],
+                               obj: RandomPlateVMStressArray | RandomPlateVMStrainArray,
                                nelements: int, ntotal: int) -> int:
     struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'10f')
     cen = 0 # CEN/4
@@ -1020,7 +1023,7 @@ def oes_cquad4_33_random_vm_11(op2: OP2, data: bytes,
 
 
 def oes_ctria3_random_vm_11(op2: OP2, data: bytes,
-                            obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
+                            obj: RandomPlateStressArray | RandomPlateStrainArray,
                             nelements: int, ntotal: int) -> int:
     n = 0
     struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'10f')
@@ -1122,7 +1125,7 @@ def oes_cquad4_144_real(op2: OP2, data: bytes, ndata: int,
 
 
 def oes_cquad4_144_random(op2: OP2, data: bytes,
-                          obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
+                          obj: RandomPlateStressArray | RandomPlateStrainArray,
                           nelements: int, nnodes: int, ndata: int) -> int:
     n = 0
     center_format = op2._endian + op2._analysis_code_fmt + b'4s i8f'
@@ -1192,7 +1195,7 @@ def oes_cquad4_144_random(op2: OP2, data: bytes,
 
 
 def oes_cbar_real_16(op2: OP2, data: bytes,
-                     obj: Union[RealBarStressArray, RealBarStrainArray],
+                     obj: RealBarStressArray | RealBarStrainArray,
                      nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
     fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'15f', op2.size)
@@ -1259,7 +1262,7 @@ def oes_weldp_msc_real_8(op2: OP2, data: bytes,
 
 def oes_weldp_msc_complex_15(op2: OP2,
                              data: bytes,
-                             obj: Union[ComplexWeldStressArray, ComplexWeldStrainArray],
+                             obj: ComplexWeldStressArray | ComplexWeldStrainArray,
                              nelements: int, ntotal: int,
                              is_magnitude_phase: bool, dt: Any) -> int:
     n = 0
@@ -1333,7 +1336,7 @@ def oes_fastp_msc_real_7(op2: OP2, data: bytes,
 
 def oes_fastp_msc_complex_13(op2: OP2,
                              data: bytes,
-                             obj: Union[ComplexFastStressArray, ComplexFastStrainArray],
+                             obj: ComplexFastStressArray | ComplexFastStrainArray,
                              nelements: int, ntotal: int,
                              is_magnitude_phase: bool, dt: Any) -> int:
     n = 0
@@ -1373,7 +1376,7 @@ def oes_fastp_msc_complex_13(op2: OP2,
 
 
 def oes_cshear_real_4(op2: OP2, data: bytes,
-                      obj: Union[RealShearStressArray, RealShearStrainArray],
+                      obj: RealShearStressArray | RealShearStrainArray,
                       ntotal: int, nelements: int, dt: Any) -> int:
     n = 0
     struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'3f', op2.size))
@@ -1394,7 +1397,7 @@ def oes_cshear_real_4(op2: OP2, data: bytes,
 
 def oes_cshear_complex_5(op2: OP2,
                          data: bytes,
-                         obj: Union[ComplexShearStressArray, ComplexShearStrainArray],
+                         obj: ComplexShearStressArray | ComplexShearStrainArray,
                          nelements: int, ntotal: int,
                          is_magnitude_phase: bool) -> int:
     n = 0
@@ -1422,7 +1425,7 @@ def oes_cshear_complex_5(op2: OP2,
 
 def oes_cbar_complex_19(op2: OP2,
                         data: bytes,
-                        obj: Union[ComplexBarStressArray, ComplexBarStrainArray],
+                        obj: ComplexBarStressArray | ComplexBarStrainArray,
                         nelements: int, ntotal: int,
                         is_magnitude_phase: bool) -> int:
     n = 0
@@ -1470,7 +1473,7 @@ def oes_cbar_complex_19(op2: OP2,
 
 
 def oes_cbar_random_10(op2: OP2, data: bytes,
-                       obj: Union[RandomBarStressArray, RandomBarStrainArray],
+                       obj: RandomBarStressArray | RandomBarStrainArray,
                        nelements: int, ntotal: int) -> int:
     n = 0
     #print(op2.code_information())
@@ -1513,7 +1516,7 @@ def oes_cbar_random_10(op2: OP2, data: bytes,
 
 
 def oes_cbush_real_7(op2: OP2, data: bytes,
-                     obj: Union[RealBushStressArray, RealBushStrainArray],
+                     obj: RealBushStressArray | RealBushStrainArray,
                      nelements: int, ntotal: int, dt, debug: bool=False) -> int:
     n = 0
     struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'6f', op2.size))
@@ -1541,7 +1544,7 @@ def oes_cbush_real_7(op2: OP2, data: bytes,
 
 def oes_cbush_complex_13(op2: OP2,
                          data: bytes,
-                         obj: Union[ComplexCBushStressArray, ComplexCBushStrainArray],
+                         obj: ComplexCBushStressArray | ComplexCBushStrainArray,
                          nelements: int, ntotal: int,
                          is_magnitude_phase: bool) -> int:
     n = 0
@@ -1578,7 +1581,7 @@ def oes_cbush_complex_13(op2: OP2,
     return ntotal
 
 def oes_ctriax6_real_33(op2: OP2, data: bytes,
-                        obj: Union[RealTriaxStressArray, RealTriaxStrainArray],
+                        obj: RealTriaxStressArray | RealTriaxStrainArray,
                         nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
     ntotal1 = 36 * op2.factor
@@ -1665,7 +1668,7 @@ def oes_ctriax_complex_37(op2: OP2,
 
 
 def oes_csolid_real(op2: OP2, data: bytes,
-                    obj: Union[RealSolidStressArray, RealSolidStrainArray],
+                    obj: RealSolidStressArray | RealSolidStrainArray,
                     nelements: int, dt: Any,
                     element_name: str, nnodes_expected: int,
                     preline1: str, preline2: str) -> int:
@@ -1752,7 +1755,7 @@ def oes_csolid_real(op2: OP2, data: bytes,
 
 
 def oes_csolid_complex(op2: OP2, data: bytes,
-                       obj: Union[ComplexSolidStressArray, ComplexSolidStrainArray],
+                       obj: ComplexSolidStressArray | ComplexSolidStrainArray,
                        nelements: int, # nnodes: int,
                        element_name: str, nnodes_expected: int,
                        is_magnitude_phase: bool) -> int:
@@ -1811,7 +1814,7 @@ def oes_csolid_complex(op2: OP2, data: bytes,
 
 
 def oes_csolid_random(op2: OP2, data: bytes,
-                      obj: Union[RandomSolidStressArray, RandomSolidStrainArray],
+                      obj: RandomSolidStressArray | RandomSolidStrainArray,
                       nelements: int,
                       element_name: str, nnodes_expected: int,
                       preline1: str, preline2: str) -> int:
@@ -1873,7 +1876,7 @@ def oes_csolid_random(op2: OP2, data: bytes,
 
 
 def oes_comp_shell_real_11(op2: OP2, data: bytes, ndata: int,
-                           obj: Union[RealCompositePlateStressArray, RealCompositePlateStrainArray],
+                           obj: RealCompositePlateStressArray | RealCompositePlateStrainArray,
                            ntotal: int, nelements: int, etype: str, dt: Any) -> int:
     n = 0
     eid_old = 0
@@ -1986,7 +1989,7 @@ def oesrt_comp_shell_real_9(op2: OP2, data: bytes, ndata: int,
 
 
 def oes_cshear_random_3(op2: OP2, data: bytes,
-                        obj: Union[RandomShearStressArray, RandomShearStrainArray],
+                        obj: RandomShearStressArray | RandomShearStrainArray,
                         nelements: int, ntotal: int) -> int:
     n = 0
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
@@ -2007,7 +2010,7 @@ def oes_cshear_random_3(op2: OP2, data: bytes,
 
 
 def oes_cbend_real_21(op2: OP2, data: bytes,
-                      obj: Union[RealBendStressArray, RealBendStrainArray],
+                      obj: RealBendStressArray | RealBendStrainArray,
                       nelements: int, ntotal: int, dt) -> int:
     n = 0
     ntotali = 40 * op2.factor
@@ -2143,7 +2146,7 @@ def oes_csolid_composite_real(op2: OP2, data: bytes,
 
 def oes_shell_composite_complex_11(op2: OP2,
                                    data: bytes,
-                                   obj: Union[ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray],
+                                   obj: ComplexLayeredCompositeStressArray | ComplexLayeredCompositeStrainArray,
                                    ntotal: int, nelements: int, sort_method: int,
                                    dt: Any, is_magnitude_phase: bool) -> int:
     """OESCP, OESTRCP"""
@@ -2200,7 +2203,7 @@ def oes_shell_composite_complex_13(op2: OP2,
 
 def _oes_csolid2_real(op2: OP2, data: bytes,
                       n: int,
-                      obj: Union[RealSolidStressArrayNx, RealSolidStrainArrayNx],
+                      obj: RealSolidStressArrayNx | RealSolidStrainArrayNx,
                       nnodes_expected: int,
                       nelements: int,
                       element_name: str,

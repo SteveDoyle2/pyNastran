@@ -6,7 +6,7 @@ from __future__ import annotations
 from struct import Struct
 from itertools import count
 from functools import partial
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 #from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL

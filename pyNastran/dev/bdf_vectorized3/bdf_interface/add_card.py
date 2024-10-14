@@ -2,7 +2,7 @@ from __future__ import annotations
 import sys
 from itertools import count
 from collections import defaultdict
-from typing import Union, Optional, Any, cast, TYPE_CHECKING
+from typing import Optional, Any, cast, TYPE_CHECKING
 
 import numpy as np
 

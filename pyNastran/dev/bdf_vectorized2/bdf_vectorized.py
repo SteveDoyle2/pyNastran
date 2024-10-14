@@ -19,7 +19,7 @@ from pathlib import PurePath
 import traceback
 from collections import defaultdict
 from typing import (
-    Sequence, Optional, Union, Any, TYPE_CHECKING)
+    Sequence, Optional, Any, TYPE_CHECKING)
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore

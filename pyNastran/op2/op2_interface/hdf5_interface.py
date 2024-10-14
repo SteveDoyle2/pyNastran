@@ -10,7 +10,7 @@ defines:
  export_op2_to_hdf5_file(hdf5_file, op2_model)
 
 """
-from typing import Union, Optional, Any
+from typing import Optional, Any
 import numpy as np
 import h5py
 
@@ -1124,7 +1124,7 @@ def _load_grid_point_weight(h5_result):
     return obj
 
 def _load_eigenvalue(h5_result, encoding: str,
-                     log: SimpleLogger) -> Union[RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues]:
+                     log: SimpleLogger) -> RealEigenvalues | ComplexEigenvalues | BucklingEigenvalues:
     """Loads a RealEigenvalue"""
     class_name = _cast_str(h5_result.get('class_name'), encoding)
     table_name = '???'

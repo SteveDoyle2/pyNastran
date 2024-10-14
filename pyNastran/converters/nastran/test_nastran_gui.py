@@ -7,7 +7,6 @@ from copy import deepcopy
 import getpass
 from collections import defaultdict
 import unittest
-from typing import Union
 
 import numpy as np
 try:

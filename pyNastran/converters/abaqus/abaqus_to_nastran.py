@@ -6,7 +6,7 @@ import os
 import sys
 from itertools import count
 from collections import defaultdict
-from typing import Callable, Union, cast, Optional, TYPE_CHECKING
+from typing import Callable, cast, Optional, TYPE_CHECKING
 
 import numpy as np
 
@@ -866,7 +866,7 @@ def map_shell_property_ids(model: Abaqus, nastran_model: BDF,
         elem.theta_mcid = theta_mcid
 
 def get_eids_from_recursive_element_set(model: Abaqus,
-                                        element_set_name: str) -> Union[np.ndarray, str]:
+                                        element_set_name: str) -> np.ndarray | str:
     """returns None if we cant find a set of eids"""
     eids = model.element_sets[element_set_name]
     if isinstance(eids, str):
@@ -877,7 +877,7 @@ def _create_material(nastran_model: BDF,
                      mat: Material,
                      mid: int,
                      comment: str,
-                     is_solid: bool=None) -> Union[MAT1, MAT8]:
+                     is_solid: bool=None) -> MAT1 | MAT8:
     """creates a material"""
     assert isinstance(is_solid, bool), is_solid
     G = None

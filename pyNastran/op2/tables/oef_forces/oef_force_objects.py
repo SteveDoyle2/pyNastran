@@ -5,7 +5,6 @@ import copy
 import warnings
 from abc import abstractmethod
 import inspect
-from typing import Union
 
 import numpy as np
 from numpy import zeros, searchsorted, allclose

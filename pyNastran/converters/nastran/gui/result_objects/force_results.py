@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.femutils.utils import safe_norm
@@ -18,7 +18,7 @@ class ForceResults2(DispForceVectorResults):
                  subcase_id: int,
                  node_id: np.ndarray,
                  xyz: np.ndarray,
-                 case: Union[RealTableArray, ComplexTableArray],
+                 case: RealTableArray | ComplexTableArray,
                  title: str,
                  t123_offset: int,
                  methods_txyz_rxyz: list[str],

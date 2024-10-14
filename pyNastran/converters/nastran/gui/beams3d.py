@@ -1,7 +1,7 @@
 """creates 3d beams"""
 from __future__ import annotations
 from collections import defaultdict
-from typing import Union, Optional, cast, TYPE_CHECKING
+from typing import Optional, cast, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -52,7 +52,7 @@ if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import (
         BDF, CBAR, CBEAM) #, PBAR, PBARL, PBEAM, PBEAML
-BarProperty = Union[PBAR, PBARL, PBEAM, PBEAML]
+BarProperty = PBAR | PBARL | PBEAM | PBEAML
 
 def get_bar_nids(model: BDF,
                  bar_beam_eids: list[int]) -> tuple[list[int],
@@ -61,7 +61,7 @@ def get_bar_nids(model: BDF,
     nids_set = set([])
     nid_release_map_default = defaultdict(list)
     for eid in bar_beam_eids:
-        elem = model.elements[eid]  # type: Union[CBAR, CBEAM]
+        elem: CBAR | CBEAM = model.elements[eid]
         nid1, nid2 = elem.node_ids
         nids_set.update([nid1, nid2])
 
@@ -83,7 +83,7 @@ def get_beam_sections_map(model: BDF,
     int_offts = []
     missing_properties_set = set()
     for eid in bar_beam_eids:
-        elem: Union[CBAR, CBEAM] = model.elements[eid]
+        elem: CBAR | CBEAM = model.elements[eid]
         if isinstance(elem.offt, int):
             int_offts.append(eid)
             continue

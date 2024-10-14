@@ -1,7 +1,7 @@
 from __future__ import annotations
 from struct import pack, Struct
 from collections import defaultdict
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from pyNastran.bdf import MAX_INT, MAX_32_BIT_INT
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
@@ -99,7 +99,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
     #-------------------------------------
 
 
-def _build_loads_by_type(model: Union[BDF, OP2Geom]) -> dict[str, Any]:
+def _build_loads_by_type(model: BDF | OP2Geom) -> dict[str, Any]:
     loads_by_type = defaultdict(list)  # type: dict[str, Any]
     for unused_id, rigid_element in model.rigid_elements.items():
         loads_by_type[rigid_element.type].append(rigid_element)

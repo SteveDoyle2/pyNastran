@@ -13,7 +13,7 @@ import copy
 import traceback
 import warnings
 from itertools import count, chain
-from typing import Optional, Union, Any
+from typing import Optional, Any
 from io import StringIO
 
 import numpy as np

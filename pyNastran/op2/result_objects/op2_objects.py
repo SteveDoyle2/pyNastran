@@ -4,7 +4,7 @@ import copy
 import warnings
 from itertools import count
 from struct import pack
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from cpylog import SimpleLogger

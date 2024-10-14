@@ -4,8 +4,6 @@ defines:
  - fields_out = wipe_empty_fields(card)
 
 """
-from typing import Union
-
 
 def build_table_lines(fields, nstart: int=1, nend: int=0):
     """

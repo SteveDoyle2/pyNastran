@@ -1,7 +1,7 @@
 # pylint: disable=C0301,W0201
 from __future__ import annotations
 from struct import Struct
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.op2.op2_helper import polar_to_real_imag

@@ -1475,7 +1475,7 @@ CTETRA_FACE_MAPPER = {
 }
 
 
-def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA, CPYRAM],
+def get_solid_face_area(element_type: str, element: CTETRA | CHEXA | CPENTA | CPYRAM,
                         nids, xyz_cid0,
                         element_nodes,
                         g1: np.ndarray, g34: np.ndarray,

@@ -1,4 +1,3 @@
-from typing import Union
 import numpy as np
 from numpy import zeros, empty
 from cpylog import get_logger2

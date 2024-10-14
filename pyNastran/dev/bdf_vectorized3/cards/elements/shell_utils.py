@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from .solid_volume import volume_chexa, volume_cpenta
@@ -295,7 +295,7 @@ def shell_thickness(model: BDF,
                     tflag: np.ndarray,
                     T: np.ndarray,
                     property_id: np.ndarray,
-                    allowed_properties: list[Union[PCOMP, PSHELL, PLPLANE]]) -> np.ndarray:
+                    allowed_properties: list[PCOMP | PSHELL | PLPLANE]) -> np.ndarray:
     log = model.log
     allow_nan_thickness = model.allow_nan_thickness
     thickness = np.full(len(property_id), np.nan, dtype='float64')
@@ -408,7 +408,7 @@ def shell_thickness(model: BDF,
     return thickness
 
 def shell_total_thickness(property_id: np.ndarray,
-                          allowed_properties: list[Union[PCOMP, PSHELL, PLPLANE]],
+                          allowed_properties: list[PCOMP | PSHELL | PLPLANE],
                           ) -> np.ndarray:
     thickness = np.full(len(property_id), np.nan, dtype='float64')
     assert len(allowed_properties) > 0, allowed_properties
@@ -421,7 +421,7 @@ def shell_total_thickness(property_id: np.ndarray,
     return thickness
 
 def shell_nonstructural_mass(property_id: np.ndarray,
-                             allowed_properties: list[Union[PCOMP, PSHELL, PLPLANE]],
+                             allowed_properties: list[PCOMP | PSHELL | PLPLANE],
                              ) -> np.ndarray:
     nsm = np.full(len(property_id), np.nan, dtype='float64')
     assert len(allowed_properties) > 0, allowed_properties
@@ -437,7 +437,7 @@ def shell_mass_per_area(model: BDF,
                         tflag: np.ndarray,
                         T: np.ndarray,
                         property_id: np.ndarray,
-                        allowed_properties: list[Union[PCOMP, PSHELL, PLPLANE]],
+                        allowed_properties: list[PCOMP | PSHELL | PLPLANE],
                         ) -> np.ndarray:
     nelement = len(property_id)
     assert nelement > 0, property_id
@@ -529,7 +529,7 @@ def shell_mass_per_area_breakdown(model: BDF,
                                   tflag: np.ndarray,
                                   T: np.ndarray,
                                   property_id: np.ndarray,
-                                  allowed_properties: list[Union[PCOMP, PSHELL, PLPLANE]],
+                                  allowed_properties: list[PCOMP | PSHELL | PLPLANE],
                                   ) -> np.ndarray:
     """
     PCOMP:    [nsm, nan, nan, mass_per_area]

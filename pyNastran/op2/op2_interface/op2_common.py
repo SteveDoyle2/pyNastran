@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from struct import Struct, unpack
 from collections import namedtuple
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 

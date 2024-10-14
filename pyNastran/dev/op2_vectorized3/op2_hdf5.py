@@ -1,6 +1,5 @@
 from pathlib import PurePath
 import warnings
-from typing import Union
 
 try:
     import pandas

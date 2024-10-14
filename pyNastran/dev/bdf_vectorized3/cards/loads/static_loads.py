@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from itertools import zip_longest
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.base_card import expand_thru_by
@@ -1783,7 +1783,7 @@ class LOAD(LoadCombination):
     #def get_loads_by_load_id(self) -> dict[int, Loads]:
         #return get_loads_by_load_id(self)
 
-    def get_loads_by_load_id(load: Union[LOAD, LOADSET]) -> dict[int, Loads]:
+    def get_loads_by_load_id(load: LOAD | LOADSET) -> dict[int, Loads]:
         """
         Gets all the loads by load_id.
 
@@ -1948,7 +1948,7 @@ def get_reduced_static_load_from_load_id(model: BDF,
             reduced_loads.append((scale_factor, loadi))
     return reduced_loads
 
-def get_reduced_loads(load: Union[LOAD, LSEQ],
+def get_reduced_loads(load: LOAD | LSEQ,
                       remove_missing_loads: bool=False,
                       filter_zero_scale_factors: bool=False,
                       stop_on_failure: bool=True) -> dict[int, StaticLoad]:

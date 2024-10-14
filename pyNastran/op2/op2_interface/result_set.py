@@ -21,7 +21,7 @@ Defines:
 """
 import re
 from copy import deepcopy
-from typing import Union, Any
+from typing import Any
 from cpylog import SimpleLogger
 
 

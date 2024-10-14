@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.cards.aero.utils import (
@@ -91,7 +91,7 @@ class Body:
         return not np.array_equal(self.translate, np.zeros(3))
 
     def get_nodes_elements(self,
-                           isurface: int, surfaces: list[Union[Surface, Body]],
+                           isurface: int, surfaces: list[Surface | Body],
                            dirname: str,
                            nodes: list[np.ndarray], ipoint: int,
                            line_elements: list[np.ndarray],
@@ -129,7 +129,7 @@ def get_fuselage(dirname: str, isurface: int,
                  nodes: list[np.ndarray],
                  unused_line_elements: list[np.ndarray],
                  quad_elements: list[np.ndarray],
-                 surfaces: list[Union[Surface, Body]],
+                 surfaces: list[Surface | Body],
                  is_cs_list: list[np.ndarray],
                  ipoint: int):
     """
@@ -227,7 +227,7 @@ def get_fuselage_from_file(dirname: str,
                            surface: Body,
                            nodes: list[np.ndarray],
                            quad_elements: list[np.ndarray],
-                           surfaces: list[Union[Surface, Body]],
+                           surfaces: list[Surface | Body],
                            is_cs_list: list[np.ndarray],
                            ipoint: int,
                            nchord: int) -> tuple[int, int]:

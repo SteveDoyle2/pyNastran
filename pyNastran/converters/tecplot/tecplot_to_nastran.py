@@ -5,9 +5,10 @@ Defines:
 
 """
 from __future__ import annotations
-from typing import Union, Optional, TextIO, TYPE_CHECKING
+from typing import Optional, TextIO, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.bdf import BDF
+from pyNastran.utils import PathLike
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.tecplot.tecplot import Tecplot, Zone, read_tecplot
@@ -16,13 +17,13 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.result_objects.table_object import TableArray
 
 
-def tecplot_to_nastran_filename(tecplot_filename: Union[str, Tecplot], bdf_filename: str,
+def tecplot_to_nastran_filename(tecplot_filename: PathLike | Tecplot, bdf_filename: str,
                                 log: Optional[SimpleLogger]=None, debug: bool=True) -> BDF:
     """Converts a Tecplot file to Nastran."""
     return tecplot_to_nastran(tecplot_filename, bdf_filename, log=log, debug=debug)
 
 
-def tecplot_to_nastran(tecplot_filename: Union[str, Tecplot],
+def tecplot_to_nastran(tecplot_filename: PathLike | Tecplot,
                        bdf_filename: str,
                        log: Optional[SimpleLogger]=None,
                        debug: bool=True) -> Optional[BDF]:

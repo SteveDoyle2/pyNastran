@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable
 from vtkmodules.vtkRenderingCore import vtkActor
 from vtkmodules.vtkRenderingLOD import vtkLODActor
 

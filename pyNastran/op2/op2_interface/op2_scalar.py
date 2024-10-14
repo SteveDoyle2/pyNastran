@@ -44,7 +44,7 @@ Defines the sub-OP2 class.  This should never be called outside of the OP2 class
 import os
 from struct import Struct, unpack
 from collections import defaultdict
-from typing import Union, Optional, Callable, Any
+from typing import Optional, Callable, Any
 
 from numpy import array
 import numpy as np
@@ -2262,8 +2262,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
     def set_additional_result_tables_to_read(
         self,
         tables: dict[bytes,
-                     Union[bool,
-                           tuple[Callable, Callable]]]) -> None:
+                     bool | tuple[Callable, Callable]]) -> None:
         """
         Adds methods to read additional result tables.
         This is expected to really only be used for skipping
@@ -2326,7 +2325,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         #RESULT_TABLES.sort()
         #assert 'OESXRMS1' in RESULT_TABLES, RESULT_TABLES
 
-    def set_additional_matrices_to_read(self, matrices: Union[list[str], dict[str, bool]]):
+    def set_additional_matrices_to_read(self, matrices: list[str] | dict[str, bool]):
         """
         Matrices (e.g., KHH) can be sparse or dense.
 

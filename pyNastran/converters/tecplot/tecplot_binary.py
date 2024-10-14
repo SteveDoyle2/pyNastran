@@ -4,7 +4,7 @@ import sys
 from pathlib import PurePath
 from collections import namedtuple
 from struct import Struct, unpack, pack
-from typing import BinaryIO, Optional, Union, Any
+from typing import BinaryIO, Optional, Any
 
 import numpy as np
 from pyNastran.utils import print_bad_path
@@ -12,7 +12,7 @@ from pyNastran.converters.tecplot.zone import Zone, TecplotDict
 from pyNastran.utils import object_attributes, object_methods, object_stats
 
 from cpylog import get_logger2
-PathLike = Union[PurePath, str]
+PathLike = PurePath | str
 
 ZoneTuple = namedtuple('Zone', ['zone_name',
                                 'strand_id', 'solution_time',
@@ -721,7 +721,7 @@ def find_ints(file_obj: BinaryIO, n0: int) -> int: # pragma: no cover
 
 def _load_binary_data(file_obj: BinaryIO,
                       nvalues: int,
-                      data_fmt: Union[list[int], int, str]) -> tuple[np.ndarray, int]:
+                      data_fmt: list[int] | int | str) -> tuple[np.ndarray, int]:
     """
     Variable data format
     N=Total number of vars
@@ -792,7 +792,7 @@ def _data_fmt_ndatas_dtype(data_fmts: list[int]) -> tuple[np.ndarray, list[str]]
         dtypes.append(dtype)
     return ndatas, dtypes
 
-def _data_fmt_to_list(data_fmt: Union[str, int, list[int]]) -> list[int]:
+def _data_fmt_to_list(data_fmt: str | int | list[int]) -> list[int]:
     """
     puts the data in tecplot form
 

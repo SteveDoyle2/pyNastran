@@ -8,7 +8,7 @@ import traceback
 from itertools import chain
 from io import StringIO
 from collections import defaultdict
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22

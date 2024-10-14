@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import abstractmethod
 from itertools import count, zip_longest
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 #from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
@@ -54,7 +54,7 @@ if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.bdf_vectorized3.cards.grid import GRID
 
 
-def shell_materials(model: BDF) -> list[Union[MAT1, MAT8]]:
+def shell_materials(model: BDF) -> list[MAT1 | MAT8]:
     if model.is_thermal:
         return [model.mat4, model.mat5]
     return [model.mat1, model.mat2, model.mat8, model.mat9]
@@ -2964,4 +2964,3 @@ def get_mat_props_S(mid: np.ndarray):
     else:
         raise NotImplementedError(mid_ref.get_stats())
     return ei2, ei3
-

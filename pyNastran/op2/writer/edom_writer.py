@@ -2,7 +2,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Union, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from pyNastran.op2.tables.geom.edom import (
     DSCREEN_RTYPE_TO_INT, DRESP_FLAG_TO_RESP_MSC, DRESP_FLAG_TO_RESP_NX)
@@ -19,7 +19,7 @@ from pyNastran.utils.numpy_utils import integer_types, float_types
 DRESP_MSC_TO_FLAG = {value: key for key, value in DRESP_FLAG_TO_RESP_MSC.items()}
 DRESP_NX_TO_FLAG = {value: key for key, value in DRESP_FLAG_TO_RESP_NX.items()}
 
-def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
+def write_edom(op2_file, op2_ascii, model: BDF | OP2Geom,
                endian: bytes=b'<',
                nastran_format: str='nx') -> None:
     """writes the EDOM table"""
@@ -112,7 +112,7 @@ def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
     close_geom_table(op2_file, op2_ascii, itable)
     #-------------------------------------
 
-def write_dscreen(model: Union[BDF, OP2Geom], name: str,
+def write_dscreen(model: BDF | OP2Geom, name: str,
                   dscreens: list[Any], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -141,7 +141,7 @@ def write_dscreen(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_dresp1(model: Union[BDF, OP2Geom], name: str,
+def write_dresp1(model: BDF | OP2Geom, name: str,
                  dresp1_ids: list[int], ncards: int,
                  op2_file, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -468,7 +468,7 @@ def write_dresp1(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(data_bytesi)
     return nbytes
 
-def write_desvar(model: Union[BDF, OP2Geom], name: str,
+def write_desvar(model: BDF | OP2Geom, name: str,
                  desvar_ids: list[int], ncards: int,
                  op2_file, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -517,7 +517,7 @@ def write_desvar(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_dconstr(model: Union[BDF, OP2Geom], name: str,
+def write_dconstr(model: BDF | OP2Geom, name: str,
                   dconstrs: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
@@ -571,7 +571,7 @@ def write_dconstr(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
-def write_dvprel2(model: Union[BDF, OP2Geom], name: str,
+def write_dvprel2(model: BDF | OP2Geom, name: str,
                   dvprel_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx'):
@@ -655,7 +655,7 @@ def write_dvprel2(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def write_dvprel1(model: Union[BDF, OP2Geom], name: str,
+def write_dvprel1(model: BDF | OP2Geom, name: str,
                   dvprel_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx'):
@@ -753,7 +753,7 @@ def write_dvprel1(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def write_dvcrel1(model: Union[BDF, OP2Geom], name: str,
+def write_dvcrel1(model: BDF | OP2Geom, name: str,
                   dvcrel_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx'):
@@ -821,7 +821,7 @@ def write_dvcrel1(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
+def write_dvmrel1(model: BDF | OP2Geom, name: str,
                   dvmrel_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx'):
@@ -949,7 +949,7 @@ def _get_dvmrel_coeffs(dvmrel) -> tuple[float, float]:
         mp_max = 1e+20
     return mp_min, mp_max
 
-def write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
+def write_dvmrel2(model: BDF | OP2Geom, name: str,
                   dvmrel_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx'):
@@ -1022,7 +1022,7 @@ def write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
+def write_dvcrel2(model: BDF | OP2Geom, name: str,
                   dvcrel_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes,
                   nastran_format: str='nx'):
@@ -1080,7 +1080,8 @@ def write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: list[Any]) -> bytes:
+def _write_dvxrel2_flag(dvxrel2: DVPREL2 | DVMREL2,
+                        data: list[Any]) -> bytes:
     """writes the DVxREL2 flag table"""
     fmt = b''
     ndesvars = len(dvxrel2.dvids)
@@ -1097,7 +1098,7 @@ def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: list[Any]) -> by
     data.append(-1)
     return fmt
 
-def write_dtable(model: Union[BDF, OP2Geom], name: str,
+def write_dtable(model: BDF | OP2Geom, name: str,
                  dtables: list[DTABLE], ncards: int,
                  op2_file, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:
@@ -1139,7 +1140,7 @@ def write_dtable(model: Union[BDF, OP2Geom], name: str,
 
 
 
-def write_dvgrid(model: Union[BDF, OP2Geom], name: str,
+def write_dvgrid(model: BDF | OP2Geom, name: str,
                  dvgrid_ids: list[int], ncards: int,
                  op2_file, op2_ascii, endian: bytes,
                  nastran_format: str='nx') -> int:

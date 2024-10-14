@@ -1,4 +1,4 @@
-from typing import Union, Optional
+from typing import Optional
 from copy import deepcopy
 from pyNastran.gui.typing import ColorFloat, ColorInt
 

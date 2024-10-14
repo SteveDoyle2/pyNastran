@@ -1,5 +1,4 @@
 from itertools import count
-from typing import Union
 
 import numpy as np
 from pyNastran.utils.numpy_utils import zip_strict

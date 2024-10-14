@@ -4,7 +4,7 @@ defines readers for BDF objects in the OP2 GEOM4/GEOM4S table
 #pylint: disable=C0111,C0103,C1801
 from __future__ import annotations
 from struct import unpack, Struct
-from typing import Union, Type, TYPE_CHECKING
+from typing import Type, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBE2, RBE3, RROD
@@ -224,7 +224,8 @@ class GEOM4(GeomCommon):
         return self._read_xset1(data, n, 'ASET1', ASET1, self.op2._add_methods._add_aset_object)
 
     def _read_xset(self, data: bytes, n: int, card_name: str,
-                   cls: Type[Union[ASET, BSET, CSET, QSET, OMIT]], add_method) -> int:
+                   cls: Type[ASET | BSET | CSET | QSET | OMIT],
+                   add_method) -> int:
         """common method for ASET, QSET; not USET
 
         Word Name Type Description
@@ -247,7 +248,7 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_xset1(self, data: bytes, n: int, card_name: str,
-                    cls: Type[Union[ASET1, BSET1, CSET1, QSET1, OMIT1]], add_method, debug: bool=False):
+                    cls: Type[ASET1 | BSET1 | CSET1 | QSET1 | OMIT1], add_method, debug: bool=False):
         r"""
         common method for ASET1, QSET1; not USET1
 

@@ -1030,7 +1030,7 @@ class RealNonlinearBeamStressArray(RealNonlinearBeamArray, StressObject):
         #                '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         return msg
 
-def _filter_cbeam_blanks(obj: Union[RealBeamStressArray, RealBeamStrainArray]):
+def _filter_cbeam_blanks(obj: RealBeamStressArray | RealBeamStrainArray):
     i_nonzero = np.where((obj.element_node[:, 1] != 0) | (obj.xxb != 0.0))[0]
 
     ## TODO: fix slicing error...
@@ -1039,4 +1039,3 @@ def _filter_cbeam_blanks(obj: Union[RealBeamStressArray, RealBeamStrainArray]):
     obj.element = obj.element_node[:, 0]
     obj.xxb = obj.xxb[i_nonzero, 0]
     obj.nelement = len(obj.element)
-

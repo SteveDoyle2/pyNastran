@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import count
-from typing import Union, Iterable, Optional, Any, TYPE_CHECKING
+from typing import Iterable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 

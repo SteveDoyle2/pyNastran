@@ -1,10 +1,10 @@
 import os
 import subprocess
-from typing import Union, Optional
+from typing import Optional
 
 
 def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
-                keywords: Optional[Union[str, list[str], dict[str, str]]]=None,
+                keywords: Optional[str | list[str] | dict[str, str]]=None,
                 run: bool=True, run_in_bdf_dir: bool=True,
                 cleanup: bool=False) -> tuple[Optional[int], list[str]]:
     """
@@ -76,9 +76,8 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
         os.chdir(pwd)
     return return_code, call_args
 
-def _get_keywords_list(keywords: Optional[Union[str,
-                                                list[str],
-                                                dict[str, str]]]=None) -> list[str]:
+def _get_keywords_list(keywords: Optional[str | list[str] |
+                                          dict[str, str]]=None) -> list[str]:
     if keywords is None:
         keywords_list = ['scr=yes', 'bat=no', 'old=no', 'news=no', 'notify=no'] # 'mem=1024mb',
     elif isinstance(keywords, str):

@@ -2,7 +2,7 @@
 from __future__ import annotations
 import os
 #import traceback
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 

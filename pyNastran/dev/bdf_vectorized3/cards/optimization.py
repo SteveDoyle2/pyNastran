@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import zip_longest
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types

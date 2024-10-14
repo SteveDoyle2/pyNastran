@@ -12,7 +12,7 @@ Defines:
 from __future__ import annotations
 from pickle import dump
 from pathlib import PurePath
-from typing import Optional, Union, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
@@ -38,7 +38,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 
-def read_op2_geom(op2_filename: Optional[Union[str, PurePath]]=None,
+def read_op2_geom(op2_filename: Optional[str | PurePath]=None,
                   combine: bool=True,
                   subcases: Optional[list[int]]=None,
                   exclude_results: Optional[list[str]]=None,
@@ -310,7 +310,7 @@ class OP2Geom(BDF, OP2GeomCommon):
     def is_geometry(self) -> bool:
         return True
 
-    def read_op2(self, op2_filename: Optional[Union[str, PurePath]]=None, combine: bool=True,
+    def read_op2(self, op2_filename: Optional[str | PurePath]=None, combine: bool=True,
                  build_dataframe: Optional[bool]=False,
                  skip_undefined_matrices: bool=False,
                  encoding: Optional[str]=None):

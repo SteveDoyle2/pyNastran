@@ -2,7 +2,7 @@
 from __future__ import annotations
 from itertools import chain
 from collections import defaultdict
-from typing import Union, Optional, Iterable, Any, TYPE_CHECKING
+from typing import Optional, Iterable, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes

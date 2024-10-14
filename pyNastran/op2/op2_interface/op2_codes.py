@@ -1,4 +1,4 @@
-from typing import Union, Optional
+from typing import Optional
 from pyNastran.op2.op2_interface.function_codes import func7
 from pyNastran.op2.op2_interface.nx_tables import NX_ELEMENTS, NX_TABLE_CONTENT
 from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTENT
@@ -600,7 +600,7 @@ class Op2Codes:
         return table_name
 
     #----
-    def is_thermal(self) -> Union[bool, str]:
+    def is_thermal(self) -> bool | str:
         """is this result thermal solution?"""
         if self.thermal == 0:
             return False

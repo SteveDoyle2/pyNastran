@@ -1,7 +1,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from itertools import count
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -1973,8 +1973,8 @@ class CBARAO(Element):
         #self.scale = scale
         #self.x = np.unique(x).tolist()
 
-def apply_bar_default(bar: Union[CBAR, CBEAM],
-                      baror: Union[BAROR, BEAMOR]) -> None:
+def apply_bar_default(bar: CBAR | CBEAM,
+                      baror: BAROR | BEAMOR) -> None:
     model = bar.model
     data_temp_default = []
     PROPERTY_ID_DEFAULT = 0
