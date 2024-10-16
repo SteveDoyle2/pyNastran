@@ -116,8 +116,13 @@ class Fluent:
         self.element_id = element_id  # result element ids
         self.titles = titles
         self.results = results
-        self.quads = quads
-        self.tris = tris
+
+        self.quads = np.zeros((0, 6), dtype='int32')
+        self.tris = np.zeros((0, 5), dtype='int32')
+        if len(quads):
+            self.quads = quads
+        if len(tris):
+            self.tris = tris
 
         self.element_ids = element_ids
         self.region = region

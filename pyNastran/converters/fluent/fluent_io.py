@@ -35,7 +35,7 @@ class FluentIO:
 
         log = self.gui.log
         model = read_fluent(
-            fld_filename, auto_read_write_h5=False,
+            fld_filename, #auto_read_write_h5=False,
             log=log, debug=False)
         #self.model_type = model.model_type
 
@@ -46,20 +46,22 @@ class FluentIO:
         # support multiple results
         titles = model.titles
         results = model.results
-        if 1:
+        if 0:  # pragma: no cover
             element_id = model.element_ids
             region = model.region
             elements_list = model.elements_list
             nelement = len(element_id)
             is_list = True
-        else:  # pragma: no cover
+        else:
             is_list = False
             tris = model.tris
             quads = model.quads
+            #print(tris.shape, quads.shape)
+            assert tris.shape[1] == 5, tris.shape
+            assert quads.shape[1] == 6, quads.shape
 
             element_id = model.element_id #np.arange(1, nelement+1)
             assert np.array_equal(element_id, np.unique(element_id))
-            assert len(element_id) == len(region)
 
             # we reordered the tris/quads to be continuous to make them easier to add
             iquad = np.searchsorted(element_id, quads[:, 0])
@@ -70,6 +72,8 @@ class FluentIO:
 
             region = np.hstack([quads[:, 1], tris[:, 1]])
             results = np.vstack([quad_results, tri_results])
+            assert len(element_id) == len(region)
+
             nquad = len(quads)
             ntri = len(tris)
             nelement = nquad + ntri
@@ -98,7 +102,7 @@ class FluentIO:
         if is_list:
             _create_elements_list(ugrid, node_id, elements_list)
         else:
-            _create_elements(ugrid, node_id, model.quads, model.tris)
+            _create_elements(ugrid, node_id, model.tris, model.quads)
         log.info(f'created vtk elements')
 
         self.gui.nid_map = {}
@@ -127,7 +131,7 @@ class FluentIO:
 
 def _create_elements_list(ugrid: vtkUnstructuredGrid,
                           node_id: np.ndarray,
-                          elements_list: list[list[int]]):
+                          elements_list: list[list[int]]):  # pragma: no cover5
     assert np.array_equal(node_id, np.unique(node_id))
     assert node_id.min() >= 0, node_id.min()
     nid_to_index = {nid : i for i, nid in enumerate(node_id)}
@@ -154,7 +158,7 @@ def _create_elements_list(ugrid: vtkUnstructuredGrid,
             raise RuntimeError(face)
 
 def _create_elements(ugrid: vtkUnstructuredGrid,
-                     node_ids: np.ndarray,
+                     node_id: np.ndarray,
                      tris: np.ndarray,
                      quads: np.ndarray) -> None:
     cell_type_list = []
@@ -165,12 +169,24 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
     nelement_total = nquad + ntri
     cell_offset0 = 0
     n_nodes_list = []
+
+    assert tris.shape[1] == 5, tris.shape
+    assert quads.shape[1] == 6, quads.shape
+    tri_nodes = tris[:, 2:]
+    quad_nodes = quads[:, 2:]
+    assert tri_nodes.shape[1] == 3, tri_nodes.shape
+    assert quad_nodes.shape[1] == 4, quad_nodes.shape
+    assert node_id.min() >= 1, node_id.min()
+    all_nodes = np.unique(np.hstack([tri_nodes.ravel(), quad_nodes.ravel()]))
+    assert all_nodes.min() >= 1, all_nodes.min()
+    missing_nodes = np.setdiff1d(all_nodes, node_id)
+    assert len(missing_nodes) == 0, missing_nodes
     if nquad:
         #elem.GetCellType() = 9  # vtkQuad
         cell_type = 9
         dnode = 4
         cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
-            node_ids, quads[:, 2:],
+            node_id, quad_nodes,
             nquad, cell_type, cell_offset0, dnode)
         n_nodes_list.append(n_nodesi.ravel())
         cell_type_list.append(cell_typei)
@@ -181,7 +197,7 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
         cell_type = 5
         dnode = 3
         cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
-            node_ids, tris[:, 2:],
+            node_id, tri_nodes,
             ntri, cell_type, cell_offset0, dnode)
         n_nodes_list.append(n_nodesi.ravel())
         cell_type_list.append(cell_typei)

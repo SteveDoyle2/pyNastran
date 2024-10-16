@@ -13,11 +13,6 @@ def ugrid_to_fluent(ugrid_filename: PathLike) -> Fluent:
     ugrid_model = read_ugrid(ugrid_filename)
     fluent_model = Fluent(auto_read_write_h5=False)
 
-    # self.nodes = np.array([], dtype='float32')
-    # self.tris = np.array([], dtype='int32')
-    # self.quads = np.array([], dtype='int32')
-    # self.pids = np.array([], dtype='int32')
-
     # self.tets = np.array([], dtype='int32')
     # self.penta5s = np.array([], dtype='int32')
     # self.penta6s = np.array([], dtype='int32')
