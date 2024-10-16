@@ -23,6 +23,14 @@ class Fluent:
         self.auto_read_write_h5 = auto_read_write_h5
         self.log = get_logger2(log=log, debug=debug)
 
+        self.node_id = np.array([], dtype='int32')
+        self.xyz = np.zeros((0, 3), dtype='int32')
+        self.element_id = np.array([], dtype='int32')
+        self.quads = np.zeros((0, 6), dtype='int32')
+        self.tris = np.zeros((0, 5), dtype='int32')
+        self.titles = []
+        self.results = np.zeros((0, 0), dtype='float64')
+
     def _get_h5_filename(self, h5_filename: PathLike) -> str:
         if h5_filename == '':
             base, ext = os.path.splitext(self.fluent_filename)
@@ -121,6 +129,12 @@ class Fluent:
         #self.tri_pressure = tri_
 
     def write_fluent(self, fluent_filename: str) -> None:
+        assert len(self.node_id) > 0, self.node_id
+        assert len(self.node_id) == len(self.xyz)
+        assert self.tris.shape[1] == 5, self.tris.shape
+        assert self.quads.shape[1] == 6, self.quads.shape
+        assert len(self.element_id) > 0, self.element_id
+
         base, ext = os.path.splitext(fluent_filename)
         vrt_filename = base + '.vrt'
         daten_filename = base + '.daten'
@@ -229,6 +243,11 @@ def write_cell(vrt_filename: PathLike, quads: np.ndarray, tris: np.ndarray) -> N
     dim_fmt  = '%-8d %8s %8s %8d %8s\n'
     tri_fmt  = '%-8d %8s %8s %8s\n'
     quad_fmt = '%-8d %8s %8s %8s %8s\n'
+
+    ntri, ntri_col = tris.shape
+    nquad, nquad_col = quads.shape
+    assert ntri_col == 5, tris.shape
+    assert nquad_col == 6, quads.shape
     with open(vrt_filename, 'w') as cel_file:
         # row1 = [eid, dim, pid, 3, 4]
         # row2 = [eid, n1, n2, n3, n4]

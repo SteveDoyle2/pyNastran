@@ -34,68 +34,77 @@ class FluentIO:
             return
 
         log = self.gui.log
-        model = read_fluent(fld_filename, log=log, debug=False)
+        model = read_fluent(
+            fld_filename, auto_read_write_h5=False,
+            log=log, debug=False)
         #self.model_type = model.model_type
 
-        #self.node = node
+        node_id = model.node_id
         nodes = model.xyz
-        #self.element_id = element_id
-        tris = model.tris
-        quads = model.quads
+        nnodes = len(nodes)
 
         # support multiple results
         titles = model.titles
         results = model.results
+        if 1:
+            element_id = model.element_ids
+            region = model.region
+            elements_list = model.elements_list
+            nelement = len(element_id)
+            is_list = True
+        else:  # pragma: no cover
+            is_list = False
+            tris = model.tris
+            quads = model.quads
 
-        element_id = model.element_id #np.arange(1, nelement+1)
-        #assert np.array_equal(element_id, np.unique(element_id))
+            element_id = model.element_id #np.arange(1, nelement+1)
+            assert np.array_equal(element_id, np.unique(element_id))
+            assert len(element_id) == len(region)
 
-        # we reordered the tris/quads to be continuous to make them easier to add
-        iquad = np.searchsorted(element_id, quads[:, 0])
-        itri = np.searchsorted(element_id, tris[:, 0])
+            # we reordered the tris/quads to be continuous to make them easier to add
+            iquad = np.searchsorted(element_id, quads[:, 0])
+            itri = np.searchsorted(element_id, tris[:, 0])
 
-        quad_results = results[iquad, :]
-        tri_results = results[itri, :]
+            quad_results = results[iquad, :]
+            tri_results = results[itri, :]
 
-        region = np.hstack([quads[:, 1], tris[:, 1]])
-        results = np.vstack([quad_results, tri_results])
-        nquad = len(quads)
-        ntri = len(tris)
-        nelement = nquad + ntri
-        log.debug(f'results.shape = {results.shape}')
-
-        node_id = model.node_id
-        nnodes = len(nodes)
-        assert len(element_id) == len(region)
+            region = np.hstack([quads[:, 1], tris[:, 1]])
+            results = np.vstack([quad_results, tri_results])
+            nquad = len(quads)
+            ntri = len(tris)
+            nelement = nquad + ntri
+            log.debug(f'results.shape = {results.shape}')
 
         self.gui.nnodes = nnodes
         self.gui.nelements = nelement
 
         self.gui.log.info('nnodes=%s nelements=%s' % (self.gui.nnodes, self.gui.nelements))
-        grid = self.gui.grid
-        grid.Allocate(self.gui.nelements, 1000)
-
-        points = numpy_to_vtk_points(nodes)
-        _create_elements(grid, node_id, model.quads, model.tris)
-
-        assert len(element_id) == len(region)
-        log.info(f'created vtk points')
-        self.gui.nid_map = {}
-        #elem.SetNumberOfPoints(nnodes)
+        ugrid = self.gui.grid
+        ugrid.Allocate(self.gui.nelements, 1000)
 
         assert nodes is not None
+        points = numpy_to_vtk_points(nodes)
+        ugrid.SetPoints(points)
+        log.info(f'created vtk points')
+
         xmax, ymax, zmax = nodes.max(axis=0)
         xmin, ymin, zmin = nodes.min(axis=0)
-        self.gui.log.info('xmax=%s xmin=%s' % (xmax, xmin))
-        self.gui.log.info('ymax=%s ymin=%s' % (ymax, ymin))
-        self.gui.log.info('zmax=%s zmin=%s' % (zmax, zmin))
+        log.info('xmax=%s xmin=%s' % (xmax, xmin))
+        log.info('ymax=%s ymin=%s' % (ymax, ymin))
+        log.info('zmax=%s zmin=%s' % (zmax, zmin))
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.gui.create_global_axes(dim_max)
 
+        assert len(node_id) == len(np.unique(node_id))
+        if is_list:
+            _create_elements_list(ugrid, node_id, elements_list)
+        else:
+            _create_elements(ugrid, node_id, model.quads, model.tris)
         log.info(f'created vtk elements')
 
-        grid.SetPoints(points)
-        grid.Modified()
+        self.gui.nid_map = {}
+        self.gui.create_global_axes(dim_max)
+
+        ugrid.Modified()
 
         # loadSTLResults - regions/loads
         self.gui.scalar_bar_actor.VisibilityOff()
@@ -115,6 +124,34 @@ class FluentIO:
         log.debug(f'running _finish_results_io2')
         self.gui._finish_results_io2(model_name, form, cases)
         log.info(f'finished')
+
+def _create_elements_list(ugrid: vtkUnstructuredGrid,
+                          node_id: np.ndarray,
+                          elements_list: list[list[int]]):
+    assert np.array_equal(node_id, np.unique(node_id))
+    assert node_id.min() >= 0, node_id.min()
+    nid_to_index = {nid : i for i, nid in enumerate(node_id)}
+    #print(min(node_id), max(node_id))
+
+    for facei in elements_list:
+        face = np.array(facei, dtype='int32')  # cast str to int
+        if len(face) == 3:
+            elem = vtkTriangle()
+            epoints = elem.GetPointIds()
+            epoints.SetId(0, nid_to_index[face[0]])
+            epoints.SetId(1, nid_to_index[face[1]])
+            epoints.SetId(2, nid_to_index[face[2]])
+            ugrid.InsertNextCell(5, epoints)
+        elif len(face) == 4:
+            elem = vtkQuad()
+            epoints = elem.GetPointIds()
+            epoints.SetId(0, nid_to_index[face[0]])
+            epoints.SetId(1, nid_to_index[face[1]])
+            epoints.SetId(2, nid_to_index[face[2]])
+            epoints.SetId(3, nid_to_index[face[3]])
+            ugrid.InsertNextCell(9, epoints)
+        else:  # pragma: no cover
+            raise RuntimeError(face)
 
 def _create_elements(ugrid: vtkUnstructuredGrid,
                      node_ids: np.ndarray,

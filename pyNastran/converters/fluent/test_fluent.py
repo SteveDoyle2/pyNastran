@@ -13,6 +13,7 @@ from pyNastran.converters.fluent.fluent import Fluent, read_vrt, read_cell, read
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 from pyNastran.converters.fluent.fluent_to_tecplot import fluent_to_tecplot
 from pyNastran.converters.tecplot.tecplot import read_tecplot
+from pyNastran.converters.fluent.ugrid_to_fluent import ugrid_to_fluent_filename
 
 warnings.simplefilter('always')
 np.seterr(all='raise')
@@ -20,6 +21,7 @@ np.seterr(all='raise')
 PKG_PATH = pyNastran.__path__[0]
 BWB_PATH = Path(os.path.join(PKG_PATH, '..', 'models', 'bwb'))
 TEST_PATH = Path(os.path.join(PKG_PATH, 'converters', 'fluent'))
+UGRID_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models')
 
 
 class TestFluent(unittest.TestCase):
@@ -97,6 +99,12 @@ class TestFluent(unittest.TestCase):
 
         tecplot = fluent_to_tecplot(vrt_filename, tecplot_filename)
         #read_tecplot(tecplot_filename)  # TODO: fix tecplot parsing; the file is correct...
+
+    def test_ugrid3d_gui_box(self):
+        """simple UGRID3D box model"""
+        ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
+        fluent_filename = os.path.join(UGRID_PATH, 'box.vrt')
+        fluent_model = ugrid_to_fluent_filename(ugrid_filename, fluent_filename)
 
 def main():  # pragma: no cover
     import time
