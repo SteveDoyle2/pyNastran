@@ -28,12 +28,13 @@ class FluentIO:
 
     def load_fluent_geometry(self, fld_filename: str,
                              name: str='main', plot: bool=True):
+        gui = self.gui
         model_name = name
-        skip_reading = self.gui._remove_old_geometry(fld_filename)
+        skip_reading = gui._remove_old_geometry(fld_filename)
         if skip_reading:
             return
 
-        log = self.gui.log
+        log = gui.log
         model = read_fluent(
             fld_filename, #auto_read_write_h5=False,
             log=log, debug=False)
@@ -46,54 +47,54 @@ class FluentIO:
         # support multiple results
         titles = model.titles
         results = model.results
-        if 0:  # pragma: no cover
-            element_id = model.element_ids
-            region = model.region
-            elements_list = model.elements_list
-            nelement = len(element_id)
-            is_list = True
-        else:
-            is_list = False
-            tris = model.tris
-            quads = model.quads
 
-            tri_regions = tris[:, 1]
-            quad_regions = quads[:, 1]
+        tris = model.tris
+        quads = model.quads
 
-            # we reordered the tris/quads to be continuous to make them easier to add
-            iquad = np.searchsorted(model.element_id, quads[:, 0])
-            itri = np.searchsorted(model.element_id, tris[:, 0])
+        tri_regions = tris[:, 1]
+        quad_regions = quads[:, 1]
 
-            region_split = False
-            if region_split:
-                #regions_to_remove = [3]
-                regions_to_remove = []
-                regions_to_include = [7, 4]
-                is_remove = (len(regions_to_remove) == 0)
-                is_include = (len(regions_to_include) == 0)
-                assert (is_remove and not is_include) or (not is_remove and is_include)
-                if regions_to_remove:
-                    itri_regions = np.logical_and.reduce([(tri_regions != regioni) for regioni in regions_to_remove])
-                    iquad_regions = np.logical_and.reduce([(quad_regions != regioni) for regioni in regions_to_remove])
-                else:
-                    itri_regions = np.logical_or.reduce([(tri_regions == regioni) for regioni in regions_to_include])
-                    iquad_regions = np.logical_or.reduce([(quad_regions == regioni) for regioni in regions_to_include])
+        # we reordered the tris/quads to be continuous to make them easier to add
+        iquad = np.searchsorted(model.element_id, quads[:, 0])
+        itri = np.searchsorted(model.element_id, tris[:, 0])
 
-                quad_results = results[iquad, :][iquad_regions, :]
-                tri_results = results[itri, :][itri_regions, :]
-
-                tris = tris[itri_regions, :]
-                quads = quads[iquad_regions, :]
+        region_split = False
+        if region_split:
+            #regions_to_remove = [3]
+            regions_to_remove = []
+            regions_to_include = [7, 4]
+            is_remove = (len(regions_to_remove) == 0)
+            is_include = (len(regions_to_include) == 0)
+            assert (is_remove and not is_include) or (not is_remove and is_include)
+            if regions_to_remove:
+                itri_regions = np.logical_and.reduce([(tri_regions != regioni) for regioni in regions_to_remove])
+                iquad_regions = np.logical_and.reduce([(quad_regions != regioni) for regioni in regions_to_remove])
             else:
-                quad_results = results[iquad, :]
-                tri_results = results[itri, :]
+                itri_regions = np.logical_or.reduce([(tri_regions == regioni) for regioni in regions_to_include])
+                iquad_regions = np.logical_or.reduce([(quad_regions == regioni) for regioni in regions_to_include])
 
-        self.gui.nnodes = nnodes
-        self.gui.nelements = nelement
+            quad_results = results[iquad, :][iquad_regions, :]
+            tri_results = results[itri, :][itri_regions, :]
 
-        self.gui.log.info('nnodes=%s nelements=%s' % (self.gui.nnodes, self.gui.nelements))
+            tris = tris[itri_regions, :]
+            quads = quads[iquad_regions, :]
+            tri_eids = tris[:, 0]
+            quad_eids = quads[:, 0]
+            element_id = np.unique(np.hstack([quad_eids, tri_eids]))
+        else:
+            quad_results = results[iquad, :]
+            tri_results = results[itri, :]
+            element_id = model.element_id
+        region = np.hstack([quad_regions, tri_regions])
+        results = np.vstack([quad_results, tri_results])
+        nelement = len(element_id)
+
+        gui.nnodes = nnodes
+        gui.nelements = nelement
+
+        gui.log.info('nnodes=%s nelements=%s' % (gui.nnodes, gui.nelements))
         ugrid = self.gui.grid
-        ugrid.Allocate(self.gui.nelements, 1000)
+        ugrid.Allocate(gui.nelements, 1000)
 
         assert nodes is not None
         points = numpy_to_vtk_points(nodes)
@@ -102,69 +103,38 @@ class FluentIO:
 
         xmax, ymax, zmax = nodes.max(axis=0)
         xmin, ymin, zmin = nodes.min(axis=0)
-        log.info('xmax=%s xmin=%s' % (xmax, xmin))
-        log.info('ymax=%s ymin=%s' % (ymax, ymin))
-        log.info('zmax=%s zmin=%s' % (zmax, zmin))
+        gui.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        gui.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
 
         assert len(node_id) == len(np.unique(node_id))
-        if is_list:
-            _create_elements_list(ugrid, node_id, elements_list)
-        else:
-            _create_elements(ugrid, node_id, tris, quads)
+        _create_elements(ugrid, node_id, tris, quads)
         log.info(f'created vtk elements')
 
-        self.gui.nid_map = {}
-        self.gui.create_global_axes(dim_max)
+        gui.nid_map = {}
+        gui.create_global_axes(dim_max)
 
         ugrid.Modified()
 
         # loadSTLResults - regions/loads
-        self.gui.scalar_bar_actor.VisibilityOff()
-        self.gui.scalar_bar_actor.Modified()
+        gui.scalar_bar_actor.VisibilityOff()
+        gui.scalar_bar_actor.Modified()
 
         cases = {}
-        self.gui.isubcase_name_map = {}
+        gui.isubcase_name_map = {}
         ID = 1
 
-        self.gui.isubcase_name_map[ID] = ('Fluent', '')
+        gui.isubcase_name_map[ID] = ('Fluent', '')
         form, cases = _fill_fluent_case(
             cases, ID, node_id, element_id,
             region, results, titles)
 
-        self.gui.node_ids = node_id
-        self.gui.element_ids = element_id
+        gui.node_ids = node_id
+        gui.element_ids = element_id
         log.debug(f'running _finish_results_io2')
-        self.gui._finish_results_io2(model_name, form, cases)
+        gui._finish_results_io2(model_name, form, cases)
         log.info(f'finished')
-
-def _create_elements_list(ugrid: vtkUnstructuredGrid,
-                          node_id: np.ndarray,
-                          elements_list: list[list[int]]):  # pragma: no cover5
-    assert np.array_equal(node_id, np.unique(node_id))
-    assert node_id.min() >= 0, node_id.min()
-    nid_to_index = {nid : i for i, nid in enumerate(node_id)}
-    #print(min(node_id), max(node_id))
-
-    for facei in elements_list:
-        face = np.array(facei, dtype='int32')  # cast str to int
-        if len(face) == 3:
-            elem = vtkTriangle()
-            epoints = elem.GetPointIds()
-            epoints.SetId(0, nid_to_index[face[0]])
-            epoints.SetId(1, nid_to_index[face[1]])
-            epoints.SetId(2, nid_to_index[face[2]])
-            ugrid.InsertNextCell(5, epoints)
-        elif len(face) == 4:
-            elem = vtkQuad()
-            epoints = elem.GetPointIds()
-            epoints.SetId(0, nid_to_index[face[0]])
-            epoints.SetId(1, nid_to_index[face[1]])
-            epoints.SetId(2, nid_to_index[face[2]])
-            epoints.SetId(3, nid_to_index[face[3]])
-            ugrid.InsertNextCell(9, epoints)
-        else:  # pragma: no cover
-            raise RuntimeError(face)
 
 def _create_elements(ugrid: vtkUnstructuredGrid,
                      node_id: np.ndarray,

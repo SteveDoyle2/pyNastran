@@ -29,7 +29,7 @@ class FluentGui(FakeGUIMethods):
 class TestFluentGui(unittest.TestCase):
 
     def test_fluent_geometry_01(self):
-        """tests the ascii three plugs model"""
+        """tests the bwb model"""
         log = get_logger(level='warning', encoding='utf-8')
         #geometry_filename = MODEL_PATH / 'threePlugs.a.tri'
 
