@@ -56,28 +56,37 @@ class FluentIO:
             is_list = False
             tris = model.tris
             quads = model.quads
-            #print(tris.shape, quads.shape)
-            assert tris.shape[1] == 5, tris.shape
-            assert quads.shape[1] == 6, quads.shape
 
-            element_id = model.element_id #np.arange(1, nelement+1)
-            assert np.array_equal(element_id, np.unique(element_id))
+            tri_regions = tris[:, 1]
+            quad_regions = quads[:, 1]
 
             # we reordered the tris/quads to be continuous to make them easier to add
-            iquad = np.searchsorted(element_id, quads[:, 0])
-            itri = np.searchsorted(element_id, tris[:, 0])
+            iquad = np.searchsorted(model.element_id, quads[:, 0])
+            itri = np.searchsorted(model.element_id, tris[:, 0])
 
-            quad_results = results[iquad, :]
-            tri_results = results[itri, :]
+            region_split = False
+            if region_split:
+                #regions_to_remove = [3]
+                regions_to_remove = []
+                regions_to_include = [7, 4]
+                is_remove = (len(regions_to_remove) == 0)
+                is_include = (len(regions_to_include) == 0)
+                assert (is_remove and not is_include) or (not is_remove and is_include)
+                if regions_to_remove:
+                    itri_regions = np.logical_and.reduce([(tri_regions != regioni) for regioni in regions_to_remove])
+                    iquad_regions = np.logical_and.reduce([(quad_regions != regioni) for regioni in regions_to_remove])
+                else:
+                    itri_regions = np.logical_or.reduce([(tri_regions == regioni) for regioni in regions_to_include])
+                    iquad_regions = np.logical_or.reduce([(quad_regions == regioni) for regioni in regions_to_include])
 
-            region = np.hstack([quads[:, 1], tris[:, 1]])
-            results = np.vstack([quad_results, tri_results])
-            assert len(element_id) == len(region)
+                quad_results = results[iquad, :][iquad_regions, :]
+                tri_results = results[itri, :][itri_regions, :]
 
-            nquad = len(quads)
-            ntri = len(tris)
-            nelement = nquad + ntri
-            log.debug(f'results.shape = {results.shape}')
+                tris = tris[itri_regions, :]
+                quads = quads[iquad_regions, :]
+            else:
+                quad_results = results[iquad, :]
+                tri_results = results[itri, :]
 
         self.gui.nnodes = nnodes
         self.gui.nelements = nelement
@@ -102,7 +111,7 @@ class FluentIO:
         if is_list:
             _create_elements_list(ugrid, node_id, elements_list)
         else:
-            _create_elements(ugrid, node_id, model.tris, model.quads)
+            _create_elements(ugrid, node_id, tris, quads)
         log.info(f'created vtk elements')
 
         self.gui.nid_map = {}
