@@ -1594,14 +1594,60 @@ class CAERO1(BaseCard):
         #self._init_ids() #TODO: make this work here?
 
     def validate(self):
+        # we won't write the card if it's bad
+        try:
+            card_str = str(self)
+        except:
+            card_str = ''
+
         msg = ''
         is_failed = False
+        if not isinstance(self.igroup, int):
+            msg += 'igroup=%s and must be an integer\n' % self.igroup
+            is_failed = True
+        if not isinstance(self.cp, int):
+            msg += 'cp=%s and must be an integer\n' % self.cp
+            is_failed = True
+        if not isinstance(self.x12, float):
+            msg += 'x12=%s and must be a float\n' % self.x12
+            is_failed = True
+        if not isinstance(self.x12, float):
+            msg += 'x43=%s and must be a float\n' % self.x43
+            is_failed = True
+
         if not isinstance(self.p1, np.ndarray):
             msg += 'p1=%s and must be a numpy array\n' % self.p1
             is_failed = True
         if not isinstance(self.p4, np.ndarray):
-            msg += 'p1=%s and must be a numpy array\n' % self.p1
+            msg += 'p4=%s and must be a numpy array\n' % self.p4
             is_failed = True
+        if is_failed:
+            # types are borked, so don't print the card
+            msg += CAERO1_MSG
+            msg += self.get_stats()
+            raise ValueError(msg)
+
+        try:
+            if len(self.p1) != 3:
+                msg += 'p1=%s and must be a numpy array of length=3\n' % self.p1
+                is_failed = True
+            if len(self.p4) != 3:
+                msg += 'p4=%s and must be a numpy array of length=3\n' % self.p4
+                is_failed = True
+            if is_failed:
+                msg += CAERO1_MSG
+                msg += card_str
+                raise ValueError(msg)
+        except TypeError:
+            # len(self.p1)
+            # TypeError: len() of unsized object
+            is_failed = True
+
+        if is_failed:
+            msg += CAERO1_MSG
+            #msg += card_str:  # can't show this cause it's messed up due to bad types/length
+            msg += self.get_stats()
+            raise ValueError(msg)
 
         if self.x12 <= 0. and self.x43 <= 0.:
             msg += f'X12={self.x12} and X43={self.x43}; one must be greater than or equal to 0\n'
