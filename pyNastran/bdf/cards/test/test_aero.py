@@ -1262,16 +1262,22 @@ class TestAero(unittest.TestCase):
         caero1l = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
                          nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                          comment='caero1')
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             caero1l.validate()
+        caero1l.p1 = np.array([0., 0., 0.])
+        #with self.assertRaises(AssertionError):
+        caero1l.validate()
 
         p1 = [0., 0., 0.]
         p4 = [1., 2., 3., 4.]
         caero1m = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
                          nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                          comment='caero1')
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             caero1m.validate()
+        caero1m.p4 = np.array([0., 2., 3.])
+        # with self.assertRaises(AssertionError):
+        caero1m.validate()
 
         p4 = [1., 2., 3.]
         eid = 8
