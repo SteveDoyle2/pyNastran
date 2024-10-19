@@ -75,7 +75,10 @@ class CalculatorWindow(PyDialog):
 
     TODO: add key-frame support
     """
-    def __init__(self, data, win_parent=None, modules_form=None, fringe_cases=None, is_gui_parent=False):
+    def __init__(self, data,
+                 win_parent=None, modules_form=None,
+                 fringe_cases=None,
+                 is_gui_parent: bool=False):
         PyDialog.__init__(self, data, win_parent)
 
         # is the parent the gui?

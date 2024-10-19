@@ -72,7 +72,10 @@ class AnimationWindow(PyDialog):
 
     TODO: add key-frame support
     """
-    def __init__(self, data, win_parent=None, fringe_cases=None, is_gui_parent=False):
+    def __init__(self, data,
+                 win_parent=None,
+                 fringe_cases=None,
+                 is_gui: bool=False):
         PyDialog.__init__(self, data, win_parent)
 
         # is the parent the gui?
@@ -119,13 +122,19 @@ class AnimationWindow(PyDialog):
         self.create_layout()
         self.set_connections()
 
-        self.is_gui = False
+        self.is_gui = is_gui
         self.gui = None
-
-        if hasattr(self.win_parent, '_updated_legend'):
-            self.win_parent.is_animate_open = True
-            self.is_gui = True
-            self.gui: MainWindow = self.win_parent.win_parent
+        if is_gui:
+            if hasattr(self.win_parent, '_updated_legend'):
+                #self.win_parent.is_animate_open = True
+                self.is_gui = True
+                self.gui: MainWindow = self.win_parent.win_parent
+            elif hasattr(self.win_parent, 'result_cases'):
+                self.is_gui = True
+                self.gui: MainWindow = self.win_parent
+            else:  # pragma: no cover
+                raise RuntimeError(is_gui)
+            assert self.gui is not None, self.gui
 
         if 0:  # pragma: no cover
             icase_max = 1000
@@ -155,7 +164,7 @@ class AnimationWindow(PyDialog):
         self.icase_vector_delta_edit.setRange(1, icase_max)
         self.on_update_min_max_defaults()
 
-    def create_widgets(self):
+    def create_widgets(self) -> None:
         """creates the menu objects"""
         self.box_scale = QGroupBox('Animate Scale')
         self.box_time = QGroupBox('Animate Time')
@@ -518,7 +527,7 @@ class AnimationWindow(PyDialog):
         else:
             self.on_animate_scale(force=True)
 
-    def set_connections(self):
+    def set_connections(self) -> None:
         """creates the actions for the menu"""
         self.checkbox_vector.clicked.connect(self.on_checkbox_vector)
 
@@ -560,7 +569,7 @@ class AnimationWindow(PyDialog):
         self.on_animate_in_gui()
 
 
-    def on_time_checkbox_disp(self):
+    def on_time_checkbox_disp(self) -> None:
         is_enabled = self.time_checkbox_disp.isEnabled()
         if not is_enabled:
             return
@@ -571,7 +580,7 @@ class AnimationWindow(PyDialog):
             self.icase_disp_start_edit, self.icase_disp_end_edit,
             self.icase_disp_delta_edit], enable=enable)
 
-    def on_time_checkbox_fringe(self):
+    def on_time_checkbox_fringe(self) -> None:
         is_enabled = self.time_checkbox_disp.isEnabled()
         if not is_enabled:
             return
@@ -584,14 +593,14 @@ class AnimationWindow(PyDialog):
     def on_time_checkbox_vector(self):
         raise NotImplementedError()
 
-    def on_checkbox_vector(self):
+    def on_checkbox_vector(self) -> None:
         is_enabled = self.checkbox_vector.isEnabled()
         is_checked = self.checkbox_vector.isChecked()
         enable_edit = is_enabled and is_checked
         self.icase_vector_label.setEnabled(is_checked)
         self.icase_vector_edit.setEnabled(enable_edit)
 
-    def on_animate_in_gui(self):
+    def on_animate_in_gui(self) -> None:
         animate_in_gui = self.animate_in_gui_checkbox.isChecked()
         enable = not animate_in_gui
         if HIDE_WHEN_INACTIVE:
@@ -624,7 +633,7 @@ class AnimationWindow(PyDialog):
         self.step_button.setEnabled(enable)
         #wipe_button
 
-    def on_animate(self, value):
+    def on_animate(self, value) -> None:
         """
         animate pulldown
 
@@ -645,7 +654,7 @@ class AnimationWindow(PyDialog):
         else:  # pragma: no cover
             raise NotImplementedError(f'value = {value}')
 
-    def on_animate_time(self, force=False):
+    def on_animate_time(self, force: bool=False) -> None:
         """enables the secondary input"""
         #print('on_animate_time')
         if self._animate_type == 'scale' or force:
@@ -653,7 +662,7 @@ class AnimationWindow(PyDialog):
         self.set_grid_time(True, 'time')
         self._animate_type = 'time'
 
-    def on_animate_scale(self, force=False):
+    def on_animate_scale(self, force: bool=False) -> None:
         """enables the secondary input"""
         #print('on_animate_scale')
         self.set_grid_scale(True, 'scale')
@@ -661,7 +670,7 @@ class AnimationWindow(PyDialog):
             self.set_grid_time(False, 'scale')
         self._animate_type = 'scale'
 
-    def on_animate_phase(self, force=False):
+    def on_animate_phase(self, force: bool=False) -> None:
         """enables the secondary input"""
         #print('on_animate_phase')
         if self._animate_type == 'scale' or force:
@@ -670,7 +679,7 @@ class AnimationWindow(PyDialog):
             self.set_grid_time(False, 'phase')
         self._animate_type = 'phase'
 
-    def set_grid_scale(self, enabled=True, word=''):
+    def set_grid_scale(self, enabled: bool=True, word: str='') -> None:
         """enables/disables the secondary input"""
         #print('%s-set_grid_scale; enabled = %r' % (word, enabled))
         if HIDE_WHEN_INACTIVE:
@@ -694,7 +703,7 @@ class AnimationWindow(PyDialog):
         self.on_max_value_enable()
 
 
-    def set_grid_time(self, enabled=True, word=''):
+    def set_grid_time(self, enabled: bool=True, word: str='') -> None:
         """enables/disables the secondary input"""
         #print('%s-set_grid_time; enabled = %r' % (word, enabled))
         if HIDE_WHEN_INACTIVE:
@@ -784,7 +793,7 @@ class AnimationWindow(PyDialog):
         self.fps_edit.setEnabled(not enabled)
         self.fps_button.setEnabled(not enabled)
 
-    def on_min_value_enable(self):
+    def on_min_value_enable(self) -> None:
         """
         The min edit value box is enabled when we switch to time
         and the box is checked
@@ -794,7 +803,7 @@ class AnimationWindow(PyDialog):
         self.min_value_edit.setEnabled(is_min_enabled)
         self.min_value_button.setEnabled(is_min_enabled)
 
-    def on_max_value_enable(self):
+    def on_max_value_enable(self) -> None:
         """
         The max edit value box is enabled when we switch to time
         and the box is checked
@@ -804,7 +813,7 @@ class AnimationWindow(PyDialog):
         self.max_value_edit.setEnabled(is_max_enabled)
         self.max_value_button.setEnabled(is_max_enabled)
 
-    def on_update_min_max_defaults(self):
+    def on_update_min_max_defaults(self) -> None:
         """
         When the icase is changed, the min/max value default message is changed
         """
@@ -813,30 +822,31 @@ class AnimationWindow(PyDialog):
         self.min_value_button.setToolTip('Sets the min value to %g' % min_value)
         self.max_value_button.setToolTip('Sets the max value to %g' % max_value)
 
-    def on_min_value_default(self):
+    def on_min_value_default(self) -> None:
         """When min default icase is pressued, update the value"""
         icase = self.icase_disp_start_edit.value()
         min_value = self.get_min_max(icase)[0]
         self.min_value_edit.setText(str(min_value))
         self.min_value_edit.setStyleSheet(QLINEEDIT_GOOD)
 
-    def on_max_value_default(self):
+    def on_max_value_default(self) -> None:
         """When max default icase is pressued, update the value"""
         icase = self.icase_disp_start_edit.value()
         max_value = self.get_min_max(icase)[1]
         self.max_value_edit.setText(func_str_or_none(max_value))
         self.max_value_edit.setStyleSheet(QLINEEDIT_GOOD)
 
-    def on_browse_folder(self):
+    def on_browse_folder(self) -> None:
         """opens a folder dialog"""
-        dirname = getexistingdirectory(parent=self, caption='Select a Directory',
-                                       basedir='',
-                                       options=QFileDialog.ShowDirsOnly)
+        dirname = getexistingdirectory(
+            parent=self, caption='Select a Directory',
+            basedir='',
+            options=QFileDialog.ShowDirsOnly)
         if not dirname:
             return
         self.browse_folder_edit.setText(dirname)
 
-    def on_browse_csv(self):
+    def on_browse_csv(self) -> None:
         """opens a file dialog"""
         default_filename = ''
         file_types = 'Delimited Text (*.txt; *.dat; *.csv)'
@@ -846,11 +856,11 @@ class AnimationWindow(PyDialog):
             return
         self.csv_profile_browse_button.setText(fname)
 
-    def on_default_title(self):
+    def on_default_title(self) -> None:
         """sets the default gif name"""
         self.gif_edit.setText(self._default_title + '.gif')
 
-    def on_default_scale(self):
+    def on_default_scale(self) -> None:
         """sets the default displacement scale factor"""
         if self.is_gui:
             icase_disp = self.icase_disp_edit.value()
@@ -862,7 +872,7 @@ class AnimationWindow(PyDialog):
         self.scale_edit.setText(func_str_or_none(default_scale))
         self.scale_edit.setStyleSheet(QLINEEDIT_GOOD)
 
-    def on_default_arrow_scale(self):
+    def on_default_arrow_scale(self) -> None:
         """sets the default arrow scale factor"""
         if self.is_gui:
             icase_vector = self.icase_vector_edit.value()
@@ -873,19 +883,19 @@ class AnimationWindow(PyDialog):
         self.arrow_scale_edit.setText(func_str(default_arrow_scale))
         self.arrow_scale_edit.setStyleSheet(QLINEEDIT_GOOD)
 
-    def on_default_time(self):
+    def on_default_time(self) -> None:
         """sets the default gif time"""
         self.time_edit.setValue(self._default_time)
 
-    def on_default_fps(self):
+    def on_default_fps(self) -> None:
         """sets the default FPS"""
         self.fps_edit.setValue(self._default_fps)
 
-    def on_default_resolution(self):
+    def on_default_resolution(self) -> None:
         """sets the default image resolution scale factor"""
         self.resolution_edit.setValue(self._default_resolution)
 
-    def create_layout(self):
+    def create_layout(self) -> None:
         """displays the menu objects"""
         grid = QGridLayout()
         irow = 0
@@ -1106,25 +1116,26 @@ class AnimationWindow(PyDialog):
         else:
             self.setLayout(vbox)
 
-    def on_fringe(self, icase):
+    def on_fringe(self, icase: int) -> None:
         """sets the icase fringe"""
         self.icase_fringe_edit.setValue(icase)
 
-    def on_disp(self, icase):
+    def on_disp(self, icase: int) -> None:
         """sets the icase disp"""
         self.icase_disp_edit.setValue(icase)
 
-    def on_vector(self, icase):
+    def on_vector(self, icase: int) -> None:
         """sets the icase vector"""
         self.icase_vector_edit.setValue(icase)
 
-    def on_clear_results(self):
+    def on_clear_results(self) -> None:
         """sink for the right click menu"""
         pass
 
-    def on_step(self):
+    def on_step(self) -> None:
         """click the Step button"""
         passed, validate_out = self.on_validate()
+        #self.gui.log.warning(f'passed = {passed}')
         if passed:
             try:
                 self._make_gif(validate_out, istep=self.istep)
@@ -1134,7 +1145,7 @@ class AnimationWindow(PyDialog):
                 self.istep += 1
             self.wipe_button.setEnabled(True)
 
-    def on_wipe(self):
+    def on_wipe(self) -> None:
         """click the Wipe button"""
         passed, validate_out = self.on_validate(wipe=True)
         if passed:
@@ -1143,7 +1154,7 @@ class AnimationWindow(PyDialog):
             self.wipe_button.setEnabled(False)
             self.stop_button.setEnabled(False)
 
-    def on_stop(self):
+    def on_stop(self) -> None:
         """click the Stop button"""
         #passed, validate_out = self.on_validate()
         #if passed:
@@ -1155,7 +1166,7 @@ class AnimationWindow(PyDialog):
         self.stop_button.setEnabled(False)
 
 
-    def on_run(self):
+    def on_run(self) -> bool:
         """click the Run button"""
         self.istep = 0
         self.wipe_button.setEnabled(False)
@@ -1167,7 +1178,7 @@ class AnimationWindow(PyDialog):
         return passed
 
     def _make_gif(self, validate_out, istep=None,
-                  stop_animation: bool=False):
+                  stop_animation: bool=False) -> None:
         """interface for making the gif"""
         (icase_fringe, icase_disp, icase_vector, scale, time, fps, animate_in_gui,
          magnify, output_dir, gifbase,
@@ -1267,7 +1278,7 @@ class AnimationWindow(PyDialog):
         self.out_data['clicked_ok'] = True
         self.out_data['close'] = True
 
-    def get_min_max(self, icase):
+    def get_min_max(self, icase: int) -> tuple[float, float]:
         if self.is_gui:
             (obj, (i, resname)) = self.gui.result_cases[icase]
             min_value, max_value = obj.get_min_max(i, resname)
@@ -1275,7 +1286,10 @@ class AnimationWindow(PyDialog):
             return 0., 1.0
         return min_value, max_value
 
-    def on_validate(self, wipe=False):
+    def on_validate(self, wipe: bool=False) -> tuple[bool,
+            tuple[int, int, int,
+                  float, float, int, bool,
+                  int, str, str, float, float]]:
         """checks to see if the input is valid"""
         # requires no special validation
         icase_fringe, flag0 = check_int(self.icase_fringe_edit)
@@ -1317,7 +1331,7 @@ class AnimationWindow(PyDialog):
         return passed, (icase_fringe, icase_disp, icase_vector, scale, time, fps, animate_in_gui,
                         magnify, output_dir, gifbase, min_value, max_value)
 
-    #def on_ok(self):
+    #def on_ok(self) -> None:
         #"""click the OK button"""
         #passed = self.on_apply()
         #if passed:
@@ -1325,13 +1339,14 @@ class AnimationWindow(PyDialog):
             #self.close()
             ##self.destroy()
 
-    def on_cancel(self):
+    def on_cancel(self) -> None:
         """click the Cancel button"""
         self.on_stop()
         self.out_data['close'] = True
         self.close()
 
-def enable_disable_objects(qt_objects, enable=True):
+def enable_disable_objects(qt_objects: list[QSpinBox],
+                           enable: bool=True) -> None:
     for obj in qt_objects:
         obj.setEnabled(enable)
 
@@ -1400,7 +1415,7 @@ def main(): # pragma: no cover
         ],
     ]
     #[0, 1, 2, 3, 4, 5, 6, 7, 8]
-    main_window = AnimationWindow(data2, fringe_cases=form)
+    main_window = AnimationWindow(data2, fringe_cases=form, is_gui=False)
     main_window.show()
     # Enter the main loop
     app.exec_()

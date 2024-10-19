@@ -206,7 +206,7 @@ class LegendObject(BaseGui):
             self._animation_window = AnimationWindow(
                 data, win_parent=self.gui,
                 fringe_cases=self.gui.get_form(),
-                is_gui_parent=True,
+                is_gui=True,
             )
             self._animation_window.show()
             self._animation_window_shown = True
