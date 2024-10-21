@@ -108,7 +108,9 @@ CAERO_COLOR = YELLOW_FLOAT
 RBE_LINE_COLOR = LIGHT_GREEN_FLOAT
 DISPLACEMENT_MODEL_SCALE = 0.1
 
+NASTRAN_VERSIONS = ['Guess', 'MSC', 'NX', 'Optistruct']
 NASTRAN_COLOR_KEYS = ['nastran_caero_color', 'nastran_rbe_line_color']
+NASTRAN_STR_KEYS = ['nastran_version']
 NASTRAN_BOOL_KEYS = [
     'nastran_create_coords',
     'nastran_is_properties',
@@ -140,16 +142,54 @@ NASTRAN_BOOL_KEYS = [
     #'nastran_show_control_surfaces',
     #'nastran_show_conm',
 ]
+NASTRAN_BOOL_STR_KEYS = NASTRAN_BOOL_KEYS + NASTRAN_STR_KEYS
+
+class OtherSettings:
+    def __init__(self, parent):
+        """
+        Creates the OtherSettings object
+        """
+        self.parent = parent
+        self.reset_settings()
+
+    def reset_settings(self) -> None:
+        self.cart3d_fluent_include = ()
+        self.cart3d_fluent_remove = ()
+
+    def update(self, out_data: dict[str, Any]):
+        self.cart3d_fluent_include = out_data['cart3d_fluent_include']
+        self.cart3d_fluent_remove = out_data['cart3d_fluent_remove']
+
+    def save(self, settings: QSettings) -> None:
+        keys = object_attributes(self, mode='public', keys_to_skip=['parent'])
+        for key in keys:
+            #base, key2 = key.split('_', 1)
+            value = getattr(self, key)
+            print(f'other: key={key!r} value={value!r}')
+            settings.setValue(key, value)
+
+    def __repr__(self) -> str:
+        msg = '<OtherSettings>\n'
+        keys = object_attributes(self, mode='public', keys_to_skip=['parent'])
+        for key in keys:
+            #if key.startswith('nastran'):
+            #    raise RuntimeError(key)
+            value = getattr(self, key)
+            if isinstance(value, tuple):
+                value = str(value)
+            msg += '  %r = %r\n' % (key, value)
+        return msg
 
 class NastranSettings:
     def __init__(self, parent):
         """
-        Creates the Settings object
+        Creates the NastranSettings object
         """
         self.parent = parent
         self.reset_settings()
 
     def reset_settings(self):
+        self.version = 'Guess'
         self.is_element_quality = True
         self.is_properties = True
         self.is_3d_bars = True
@@ -216,6 +256,18 @@ class NastranSettings:
         #self.show_control_surfaces = True
         #self.show_conm = True
 
+    def save(self, settings: QSettings) -> None:
+        #print(nastran_settings)
+        for key in NASTRAN_BOOL_STR_KEYS:
+            base, key2 = key.split('_', 1)
+            value = getattr(self, key2)
+            settings.setValue(key, value)
+            #print(f'*key={key!r} key2={key2!r} value={value!r}')
+
+        for key in NASTRAN_COLOR_KEYS:
+            base, key2 = key.split('_', 1)
+            value = getattr(self, key2)
+            settings.setValue(key, value)
     def set_caero_color(self, color: ColorFloat, render: bool=True) -> None:
         """
         Set the CAEROx color
@@ -245,7 +297,6 @@ class NastranSettings:
         if render:
             parent.vtk_interactor.Render()
         parent.log_command('self.settings.nastran_settings.set_rbe_line_color(%s, %s, %s)' % color)
-
 
     def __repr__(self) -> str:
         msg = '<NastranSettings>\n'
@@ -279,6 +330,7 @@ class Settings:
 
         self.reset_settings(resize=True, reset_dim_max=True)
         self.nastran_settings = NastranSettings(parent)
+        self.other_settings = OtherSettings(parent)
 
     def reset_settings(self, resize: bool=True,
                        reset_dim_max: bool=True) -> None:
@@ -366,7 +418,7 @@ class Settings:
 
     def add_model_settings_to_dict(self, data: dict[str, Any]):
         nastran_settings = self.nastran_settings
-        for key in NASTRAN_BOOL_KEYS:
+        for key in NASTRAN_BOOL_STR_KEYS:
             base, key2 = key.split('_', 1)
             data[key] = getattr(nastran_settings, key2)
         for key in NASTRAN_COLOR_KEYS:
@@ -602,6 +654,7 @@ class Settings:
 
         self.recent_files = filter_recent_files(self.recent_files)
         self._load_nastran_settings(settings, setting_keys)
+        self._load_other_settings(settings, setting_keys)
 
         #w = screen_shape.width()
         #h = screen_shape.height()
@@ -641,13 +694,29 @@ class Settings:
         is_loaded = True
         return is_loaded
 
+    def _load_other_settings(self, settings: QSettings,
+                             setting_keys: list[str]) -> None:
+        other_settings: OtherSettings = self.other_settings
+        # self.cart3d_fluent_include = []
+        # self.cart3d_fluent_remove = []
+        for key in ['cart3d_fluent_include', 'cart3d_fluent_remove']:
+            print(f'other: key={key!r}')
+            default = getattr(other_settings, key)
+            print(f'  default={default!r}')
+            value = self._set_setting(
+                settings, setting_keys, [key],
+                default=default, save=False, auto_type=int)
+            print(f'  value={value!r}')
+            setattr(other_settings, key, tuple(value))
+
+
     def _load_nastran_settings(self, settings: QSettings,
                                setting_keys: list[str]) -> None:
         """
         loads the settings from 'nastran_displacement' (or similar)
         and save it to 'nastran_settings.displacement'
         """
-        nastran_settings = self.nastran_settings
+        nastran_settings: NastranSettings = self.nastran_settings
         #print('-----default------')
         #print(nastran_settings)
         for key in NASTRAN_BOOL_KEYS:
@@ -663,6 +732,13 @@ class Settings:
             #print(f'key={key!r} key2={key2!r} default={default!r} value={value!r}')
             setattr(nastran_settings, key2, value)
 
+        for key in NASTRAN_STR_KEYS:
+            base, key2 = key.split('_', 1)
+            default = getattr(nastran_settings, key2)
+            value = self._set_setting(settings, setting_keys, [key],
+                                      default, save=True, auto_type=str)
+            setattr(nastran_settings, key2, value)
+
         for key in NASTRAN_COLOR_KEYS:
             # nastran_is_properties -> nastran, is_properties
             base, key2 = key.split('_', 1)
@@ -676,7 +752,7 @@ class Settings:
             #print(f'key={key!r} key2={key2!r} default={default!r} value={value!r}')
             setattr(nastran_settings, key2, value)
 
-    def _set_setting(self, settings, setting_keys: list[str],
+    def _set_setting(self, settings: QSettings, setting_keys: list[str],
                      setting_names: list[str], default: Any,
                      save: bool=True, auto_type=None) -> Any:
         """
@@ -690,7 +766,8 @@ class Settings:
             setattr(self, set_name, value)
         return value
 
-    def save(self, settings, is_testing: bool=False) -> None:
+    def save(self, settings: QSettings,
+             is_testing: bool=False) -> None:
         """saves the settings"""
         #if not is_testing:
         parent = self.parent
@@ -765,17 +842,10 @@ class Settings:
 
         # format-specific
         nastran_settings = self.nastran_settings
-        #print(nastran_settings)
-        for key in NASTRAN_BOOL_KEYS:
-            base, key2 = key.split('_', 1)
-            value = getattr(nastran_settings, key2)
-            settings.setValue(key, value)
-            #print(f'*key={key!r} key2={key2!r} value={value!r}')
+        nastran_settings.save(settings)
 
-        for key in NASTRAN_COLOR_KEYS:
-            base, key2 = key.split('_', 1)
-            value = getattr(nastran_settings, key2)
-            settings.setValue(key, value)
+        other_settings = self.other_settings
+        other_settings.save(settings)
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
 

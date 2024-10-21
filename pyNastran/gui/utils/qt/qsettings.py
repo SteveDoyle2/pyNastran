@@ -3,9 +3,7 @@
 import os
 import json
 
-
 #from pyNastran.gui.qt_version import qt_int, qt_version
-
 from qtpy import QtCore
 from pyNastran.utils.numpy_utils import integer_types, float_types
 
@@ -17,6 +15,7 @@ class QSettingsLike2:
         'corner_text_color', 'annotation_color',
         'screen_shape', 'screen_position',
         'nastran_caero_color', 'nastran_rbe_line_color',
+        'cart3d_fluent_include', 'cart3d_fluent_remove',
     }
     def __init__(self):
         """
@@ -74,6 +73,7 @@ class QSettingsLike2:
     def setValue(self, key: str, value) -> None:
         assert isinstance(key, str), key
         self.data[key] = value
+
     def load_json(self) -> None:
         if os.path.exists(self._filename):
             with open(self._filename, 'r') as json_file:
@@ -94,7 +94,7 @@ class QSettingsLike2:
                 assert isinstance(value, tuple), (key, value)
                 data[key] = value
             else:  # pragma: no cover
-                raise NotImplementedError(key)
+                raise NotImplementedError(f'key={key!r} value={value!r}')
 
         with open(self._filename, 'w') as json_file:
             json.dump(data, json_file, indent=True)

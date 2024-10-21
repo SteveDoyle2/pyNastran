@@ -1,10 +1,16 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.gui.menus.preferences.preferences import PreferencesWindow
-from pyNastran.gui.gui_objects.settings import Settings, NASTRAN_BOOL_KEYS, NastranSettings
+from pyNastran.gui.gui_objects.settings import (
+    Settings, NASTRAN_BOOL_KEYS,
+    NastranSettings, OtherSettings)
 from pyNastran.gui.qt_files.base_gui import BaseGui
+if TYPE_CHECKING:
+    from pyNastran.gui.main_window import MainWindow
 
 
 class PreferencesObject(BaseGui):
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         #self.gui = gui
         super().__init__(gui)
         self._preferences_window_shown = False
@@ -26,11 +32,11 @@ class PreferencesObject(BaseGui):
         #if not hasattr(self, 'case_keys'):  # TODO: maybe include...
             #self.log_error('No model has been loaded.')
             #return
-
         camera = self.gui.GetCamera()
         min_clip, max_clip = camera.GetClippingRange()
         settings: Settings = self.gui.settings
         nastran_settings: NastranSettings = settings.nastran_settings
+        other_settings: OtherSettings = settings.other_settings
         data = {
             'font_size' : settings.font_size,
             'annotation_size' : settings.annotation_size, # int
@@ -53,6 +59,9 @@ class PreferencesObject(BaseGui):
             'highlight_color' : settings.highlight_color,
             'highlight_opacity' : settings.highlight_opacity,
             'highlight_point_size' : settings.highlight_point_size,
+
+            'cart3d_fluent_include': other_settings.cart3d_fluent_include,
+            'cart3d_fluent_remove': other_settings.cart3d_fluent_remove,
 
             'picker_size' : self.gui.element_picker_size,
             'dim_max' : settings.dim_max,

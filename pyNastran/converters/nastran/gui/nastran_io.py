@@ -2711,18 +2711,18 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #self.create_group_with_name(name, eids)
         #self.post_group_by_name(name)
 
-    def _load_nastran_results_str(self, results_filename: str, log) -> Optional[OP2]:
+    def _load_nastran_results_str(self, results_filename: str,
+                                  log: SimpleLogger) -> Optional[OP2]:
         print("trying to read...%s" % results_filename)
         ext = os.path.splitext(results_filename)[1].lower()
 
         gui: MainWindow = self.gui
+        settings: Settings = gui.settings
+        nastran_settings: NastranSettings = settings.nastran_settings
+
+        mode = get_nastran_format(self.model, nastran_settings)
         if ext == '.op2':
             op2_filename = results_filename
-            try:
-                mode = self.model.nastran_format
-            except AttributeError:
-                mode = None
-
             model = OP2(log=log, mode=mode, debug=True)
             model.IS_TESTING = False
             model.read_matpool = False
@@ -2752,7 +2752,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             gui.cycle_results_explicit()  # start at icase=0
             return None
         elif ext == '.h5' and IS_H5PY:
-            model = OP2(log=log, debug=True)
+            model = OP2(log=log, mode=mode, debug=True)
             model.read_matpool = False
             hdf5_filename = results_filename
             model.load_hdf5_filename(hdf5_filename, combine=False)
@@ -2764,16 +2764,16 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             #model.read_f06(op2_filename)
         else:
             #print("error...")
-            msg = 'extension=%r is not supported; filename=%r' % (ext, results_filename)
+            msg = f'extension={ext!r} is not supported; filename={results_filename!r}'
             raise NotImplementedError(msg)
         return model
 
     def _fill_op2_output(self, op2_filename: str,
                          cases: CasesDict,
                          model: OP2,
-                         form,
+                         form: list,
                          icase: int,
-                         log: SimpleLogger) -> Any:
+                         log: SimpleLogger) -> list:
         """
         SOL 101 (Static)
         ----------------
@@ -2945,7 +2945,7 @@ class NastranIO(NastranIO_):
         #self.stress = {}
         #self.strain = {}
 
-    def _cleanup_nastran_tools_and_menu_items(self):
+    def _cleanup_nastran_tools_and_menu_items(self) -> None:
         """
         hides the Nastran toolbar when loading another format
         """
@@ -2958,7 +2958,7 @@ class NastranIO(NastranIO_):
             self.nastran_toolbar.setVisible(False)
         self.actions['nastran'].setVisible(False)
 
-    def _create_nastran_tools_and_menu_items(self):
+    def _create_nastran_tools_and_menu_items(self) -> tuple:
         """
         creates the Nastran toolbar when loading a Nastran file
         """
@@ -3258,7 +3258,8 @@ def _build_materials(model: BDF,
                      pcomp: dict[str, np.ndarray],
                      pshell: dict[str, np.ndarray],
                      is_pshell_pcomp: tuple[bool, bool],
-                     cases, form0, icase: int) -> int:
+                     cases: dict[int, Any],
+                     form0, icase: int) -> int:
     """
     creates:
       - Thickness
@@ -3424,7 +3425,8 @@ def _add_material_mid_e11_e22(model: BDF, icase: int,
 
 def _build_optimization(model: BDF, pids: np.ndarray, upids: np.ndarray,
                         nelements: int,
-                        cases, form0, icase: int) -> int:
+                        cases: dict[int, Any],
+                        form0, icase: int) -> int:
     """
     Creates the optimization visualization.  Supports:
       - DVPREL1/2 shell thickness:
@@ -3774,6 +3776,15 @@ def set_acoustic_grid(gui: MainWindow,
 
     #for ac in model.acplnw.values():
         #asdf
+
+def get_nastran_format(model, nastran_settings: NastranSettings) -> str:
+    #mode = None
+    try:
+        mode = model.nastran_format
+    except AttributeError:
+        nastran_version = nastran_settings.version.lower()
+        mode = None if nastran_version == 'guess' else nastran_version
+    return mode
 
 class Case2D:
     def __init__(self, node_id: np.ndarray, data: np.ndarray):

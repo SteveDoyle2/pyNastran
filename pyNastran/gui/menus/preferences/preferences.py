@@ -18,11 +18,12 @@ from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox,
-    QTabWidget, QWidget,
+    QTabWidget, QWidget, QComboBox,
 )
 
 from pyNastran.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
+from pyNastran.gui.utils.qt.qcombobox import get_combo_box_text
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
@@ -46,7 +47,9 @@ from pyNastran.gui.gui_objects.settings import (
     COORD_SCALE_MIN, COORD_SCALE_MAX,
     MAGNIFY_MIN, MAGNIFY_MAX,
     ANNOTATION_SIZE_MIN, ANNOTATION_SIZE_MAX,
+    NASTRAN_VERSIONS,
 )
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.typing import ColorInt
@@ -99,6 +102,9 @@ class PreferencesWindow(PyDialog):
         #self._default_annotation_size = data['annotation_size'] # int
         #self.default_magnify = data['magnify']
 
+        self._cart3d_fluent_include = data['cart3d_fluent_include']
+        self._cart3d_fluent_remove = data['cart3d_fluent_remove']
+
         self._is_trackball_camera = data['is_trackball_camera']
         self._parallel_projection = data['use_parallel_projection']
         self._use_gradient_background = data['use_gradient_background'] # bool
@@ -138,6 +144,7 @@ class PreferencesWindow(PyDialog):
         #self._shear_moment_torque_color_int = data['shear_moment_torque_color']
         #self._shear_moment_torque_line_thickness = data['shear_moment_torque_line_thickness']
 
+        self._nastran_version = data['nastran_version']
         self._nastran_is_element_quality = data['nastran_is_element_quality']
         self._nastran_is_properties = data['nastran_is_properties']
         self._nastran_is_3d_bars = data['nastran_is_3d_bars']
@@ -347,6 +354,13 @@ class PreferencesWindow(PyDialog):
         self.magnify_edit.setToolTip('1: Standard resolution; >1: high quality')
 
         #-----------------------------------------------------------------------
+        self.nastran_version_label = QLabel('Version')
+        self.nastran_version_pulldown = QComboBox(self)
+        self.nastran_version_pulldown.addItems(NASTRAN_VERSIONS)
+        nastran_versions_lower = [version.lower() for version in NASTRAN_VERSIONS]
+        iversion = nastran_versions_lower.index(self._nastran_version.lower())
+        self.nastran_version_pulldown.setItemText(iversion, self._nastran_version)
+
         self.nastran_is_element_quality_checkbox = QCheckBox('Element Quality')
         self.nastran_is_element_quality_checkbox.setToolTip('Cacluate Aspect Ratio, Skew Angle, Max/Min Interior Angle, etc.')
         self.nastran_is_element_quality_checkbox.setChecked(self._nastran_is_element_quality)
@@ -595,6 +609,84 @@ class PreferencesWindow(PyDialog):
 
         #--------------------------------------------------
 
+        out = self._get_nastran_vboxs()
+        vbox_nastran, vbox_nastran_results, vbox_nastran_actors = out
+
+        #self.create_legend_widgets()
+        #grid2 = self.create_legend_layout()
+        ok_cancel_box = QHBoxLayout()
+        ok_cancel_box.addWidget(self.apply_button)
+        ok_cancel_box.addWidget(self.ok_button)
+        ok_cancel_box.addWidget(self.cancel_button)
+
+        if USE_TABS:
+            vbox = QVBoxLayout()
+            tabs = QTabWidget(self)
+            general_tab_widget = QWidget(self)
+            general_tab_widget.setLayout(grid)
+
+            vbox_nastran_tab = QVBoxLayout()
+            vbox_nastran_tab.addLayout(vbox_nastran)
+            vbox_nastran_tab.addLayout(vbox_nastran_results)
+            vbox_nastran_tab.addLayout(vbox_nastran_actors)
+            vbox_nastran_tab.addStretch()
+
+            vbox_other = self._get_grid_other()
+            vbox_fluent_cart3d = QVBoxLayout()
+            vbox_fluent_cart3d.addLayout(vbox_other)
+
+            vbox_other_tab = QVBoxLayout()
+            vbox_other_tab.addLayout(vbox_fluent_cart3d)
+            #vbox_other_tab.addLayout(vbox_nastran_results)
+            #vbox_other_tab.addLayout(vbox_nastran_actors)
+            vbox_other_tab.addStretch()
+
+            nastran_tab_widget = QWidget(self)
+            nastran_tab_widget.setLayout(vbox_nastran_tab)
+
+            other_tab_widget = QWidget(self)
+            other_tab_widget.setLayout(vbox_other_tab)
+
+            tabs.addTab(general_tab_widget, 'General')
+            tabs.addTab(nastran_tab_widget, 'Nastran')
+            tabs.addTab(other_tab_widget, 'Other')
+            vbox.addWidget(tabs)
+
+        else:
+            vbox = QVBoxLayout()
+            vbox.addLayout(grid)
+            vbox.addLayout(vbox_nastran)
+            vbox.addLayout(vbox_nastran_results)
+            vbox.addLayout(vbox_nastran_actors)
+        #vbox.addStretch()
+        #vbox.addLayout(grid2)
+        vbox.addStretch()
+
+        vbox.addWidget(self.reset_defaults_button)
+        vbox.addLayout(ok_cancel_box)
+        self.setLayout(vbox)
+
+    def _get_grid_other(self):
+        self.cart3d_fluent_label = QLabel('Cart3d/Fluent')
+        self.region_include_label = QLabel('Regions (Include):')
+        self.region_remove_label = QLabel('Regions (Remove):')
+        include_str = ' '.join(str(val) for val in self._cart3d_fluent_include)
+        remove_str = ' '.join(str(val) for val in self._cart3d_fluent_remove)
+        self.cart3d_fluent_regions_include = QLineEdit(include_str)
+        self.cart3d_fluent_regions_remove = QLineEdit(remove_str)
+
+        vbox_other = QGridLayout()
+        irow = 1
+        vbox_other.addWidget(self.cart3d_fluent_label, irow, 0)
+        irow += 1
+        vbox_other.addWidget(self.region_include_label, irow, 0)
+        vbox_other.addWidget(self.cart3d_fluent_regions_include, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.region_remove_label, irow, 0)
+        vbox_other.addWidget(self.cart3d_fluent_regions_remove, irow, 1)
+        return vbox_other
+
+    def _get_nastran_vboxs(self) -> tuple[QVBoxLayout, QVBoxLayout, QVBoxLayout]:
         grid_nastran = self._get_grid_nastran_layout()
         grid_nastran_results = self._get_grid_nastran_results_layout()
 
@@ -621,50 +713,15 @@ class PreferencesWindow(PyDialog):
         self.nastran_actors_label = QLabel('Nastran Actors:')
         vbox_nastran_actors.addWidget(self.nastran_actors_label)
         vbox_nastran_actors.addLayout(grid_nastran_actors)
-
-        #self.create_legend_widgets()
-        #grid2 = self.create_legend_layout()
-        ok_cancel_box = QHBoxLayout()
-        ok_cancel_box.addWidget(self.apply_button)
-        ok_cancel_box.addWidget(self.ok_button)
-        ok_cancel_box.addWidget(self.cancel_button)
-
-        if USE_TABS:
-            vbox = QVBoxLayout()
-            tabs = QTabWidget(self)
-            general_tab_widget = QWidget(self)
-            general_tab_widget.setLayout(grid)
-
-            vbox_nastran_tab = QVBoxLayout()
-            vbox_nastran_tab.addLayout(vbox_nastran)
-            vbox_nastran_tab.addLayout(vbox_nastran_results)
-            vbox_nastran_tab.addLayout(vbox_nastran_actors)
-            vbox_nastran_tab.addStretch()
-
-            nastran_tab_widget = QWidget(self)
-            nastran_tab_widget.setLayout(vbox_nastran_tab)
-
-            tabs.addTab(general_tab_widget, 'General')
-            tabs.addTab(nastran_tab_widget, 'Nastran')
-            vbox.addWidget(tabs)
-
-        else:
-            vbox = QVBoxLayout()
-            vbox.addLayout(grid)
-            vbox.addLayout(vbox_nastran)
-            vbox.addLayout(vbox_nastran_results)
-            vbox.addLayout(vbox_nastran_actors)
-        #vbox.addStretch()
-        #vbox.addLayout(grid2)
-        vbox.addStretch()
-
-        vbox.addWidget(self.reset_defaults_button)
-        vbox.addLayout(ok_cancel_box)
-        self.setLayout(vbox)
+        return vbox_nastran, vbox_nastran_results, vbox_nastran_actors
 
     def _get_grid_nastran_layout(self) -> QGridLayout:
         grid_nastran = QGridLayout()
         irow = 0
+
+        grid_nastran.addWidget(self.nastran_version_label, irow, 0)
+        grid_nastran.addWidget(self.nastran_version_pulldown, irow, 1)
+        irow += 1
 
         grid_nastran.addWidget(self.nastran_create_coords_checkbox, irow, 0)
         irow += 1
@@ -751,11 +808,15 @@ class PreferencesWindow(PyDialog):
         #self.nastran_rod_strain_checkbox = QCheckBox('Rod Strain')
         #self.nastran_bar_strain_checkbox = QCheckBox('Bar Strain')
         #self.nastran_beam_strain_checkbox = QCheckBox('Beam Strain')
-
         return grid_nastran
+
+    def _set_other_connections(self):
+        #self.cart3d_fluent_regions_include
+        pass
 
     def _set_nastran_connections(self):
         # format-specific
+        self.nastran_version_pulldown.currentIndexChanged.connect(self.on_nastran_version)
         self.nastran_is_element_quality_checkbox.clicked.connect(partial(on_nastran, self, 'is_element_quality'))
         self.nastran_is_properties_checkbox.clicked.connect(partial(on_nastran, self, 'is_properties'))
         self.nastran_is_3d_bars_checkbox.clicked.connect(partial(on_nastran, self, 'is_3d_bars'))
@@ -831,8 +892,8 @@ class PreferencesWindow(PyDialog):
 
         #------------------------------------
         self._set_nastran_connections()
+        self._set_other_connections()
         #------------------------------------
-
 
         self.reset_defaults_button.clicked.connect(self.on_reset_defaults)
         self.apply_button.clicked.connect(self.on_apply)
@@ -897,7 +958,6 @@ class PreferencesWindow(PyDialog):
             is_edges_visible = settings.is_edges_visible
             settings.reset_settings(resize=False, reset_dim_max=False)
 
-
             self.win_parent.on_set_edge_visibility(is_edges_black, render=False)
             self.win_parent.on_set_edge_visibility(is_edges_black, render=False)
 
@@ -915,6 +975,12 @@ class PreferencesWindow(PyDialog):
     def nastran_settings(self) -> NastranSettings:
         return self.settings.nastran_settings
 
+    def on_nastran_version(self) -> None:
+        version = get_combo_box_text(self.nastran_version_pulldown).lower()
+        #iversion = self.nastran_version_pulldown.currentIndex()
+        #version = NASTRAN_VERSIONS[iversion].lower()
+        self.nastran_settings.version = version
+
     #def on_nastran_is_shell_mcids2(self):
         #"""set the nastran properties preferences"""
         #is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
@@ -931,6 +997,7 @@ class PreferencesWindow(PyDialog):
         self.nastran_label.setFont(bold_font)
         self.nastran_results_label.setFont(bold_font)
         self.nastran_actors_label.setFont(bold_font)
+        self.cart3d_fluent_label.setFont(bold_font)
         if IS_SMT:
             self.shear_moment_torque_label.setFont(bold_font)
 
@@ -1181,13 +1248,23 @@ class PreferencesWindow(PyDialog):
         clipping_min_value, flag3 = check_float(self.clipping_min_edit)
         clipping_max_value, flag4 = check_float(self.clipping_max_edit)
 
-        if all([flag0, flag1, flag2, flag3, flag4]):
+        cart3d_fluent_include, flag5 = check_tuple_ints(self.cart3d_fluent_regions_include)
+        cart3d_fluent_remove, flag6 = check_tuple_ints(self.cart3d_fluent_regions_remove)
+        is_regions = len(cart3d_fluent_include) and len(cart3d_fluent_remove)
+        if is_regions and ([flag5, flag6]):
+            # error
+            self.cart3d_fluent_regions_include.setStyleSheet(QLINEEDIT_ERROR)
+            self.cart3d_fluent_regions_remove.setStyleSheet(QLINEEDIT_ERROR)
+
+        if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6]):
             self._annotation_size = annotation_size_value
             self._picker_size = picker_size_value
 
             self.out_data['font_size'] = int(font_size_value)
             self.out_data['min_clip'] = min(clipping_min_value, clipping_max_value)
             self.out_data['max_clip'] = max(clipping_min_value, clipping_max_value)
+            self.out_data['cart3d_fluent_include'] = cart3d_fluent_include
+            self.out_data['cart3d_fluent_remove'] = cart3d_fluent_remove
             self.out_data['clicked_ok'] = True
             return True
         return False
@@ -1197,6 +1274,7 @@ class PreferencesWindow(PyDialog):
 
         if (passed or force) and self.win_parent is not None:
             self.settings.on_set_font_size(self.out_data['font_size'])
+            self.settings.other_settings.update(self.out_data)
             #self.settings.set_annotation_size_color(self._annotation_size)
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
@@ -1280,7 +1358,20 @@ def check_label_float(cell) -> tuple[Optional[float], bool]:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         return None, False
 
-def on_nastran(self: PreferencesWindow, result_name: str) -> None:
+def check_tuple_ints(cell) -> tuple[tuple[int, ...], bool]:
+    text = cell.text()
+    text2 = text.replace(',', ' ').strip()
+    sline = text2.split()
+    try:
+        values = [int(value) for value in sline]
+        cell.setStyleSheet(QLINEEDIT_GOOD)
+        return tuple(values), True
+    except ValueError:
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return tuple(), False
+
+def on_nastran(self: PreferencesWindow,
+               result_name: str) -> None:
     """
     Auto-checks to verify result name is correct.
     Used for all Nastran settings, it's a lot less code.
@@ -1336,11 +1427,14 @@ def main():  # pragma: no cover
 
         'caero_color': (0.2, 0.7, 0.4),
         'rbe_line_color': (0.5, 0.6, 0.7),
+        'nastran_version' : 'MSC',
 
         'min_clip' : 0.,
         'max_clip' : 10,
 
         'dim_max' : 502.,
+        'cart3d_fluent_include': (),
+        'cart3d_fluent_remove': (3,),
 
     }
     for name in NASTRAN_BOOL_KEYS:
