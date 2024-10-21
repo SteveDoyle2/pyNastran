@@ -6,7 +6,8 @@ import numpy as np
 import vtkmodules
 from pyNastran.gui.vtk_interface import vtkTriangle, vtkQuad
 
-from pyNastran.converters.fluent.fluent import read_fluent
+from pyNastran.utils.convert import convert_pressure, convert_length
+from pyNastran.converters.fluent.fluent import read_fluent, Fluent
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
@@ -46,48 +47,20 @@ class FluentIO:
 
         # support multiple results
         titles = model.titles
-        results = model.results
 
-        tris = model.tris
-        quads = model.quads
+        regions_to_remove = [] #3
+        #regions_to_include = [7, 4]
+        regions_to_include = []
 
-        tri_regions = tris[:, 1]
-        quad_regions = quads[:, 1]
+        element_id, tris, quads, region, results = model.get_filtered_data(
+            regions_to_remove, regions_to_include)
 
-        # we reordered the tris/quads to be continuous to make them easier to add
-        iquad = np.searchsorted(model.element_id, quads[:, 0])
-        itri = np.searchsorted(model.element_id, tris[:, 0])
+        if 0:
+            nodes = convert_length(nodes, 'm', 'in')
+            results[:, 0] = convert_pressure(results[:, 0], 'Pa', 'psi')
 
-        region_split = False
-        if region_split:
-            #regions_to_remove = [3]
-            regions_to_remove = []
-            regions_to_include = [7, 4]
-            is_remove = (len(regions_to_remove) == 0)
-            is_include = (len(regions_to_include) == 0)
-            assert (is_remove and not is_include) or (not is_remove and is_include)
-            if regions_to_remove:
-                itri_regions = np.logical_and.reduce([(tri_regions != regioni) for regioni in regions_to_remove])
-                iquad_regions = np.logical_and.reduce([(quad_regions != regioni) for regioni in regions_to_remove])
-            else:
-                itri_regions = np.logical_or.reduce([(tri_regions == regioni) for regioni in regions_to_include])
-                iquad_regions = np.logical_or.reduce([(quad_regions == regioni) for regioni in regions_to_include])
-
-            quad_results = results[iquad, :][iquad_regions, :]
-            tri_results = results[itri, :][itri_regions, :]
-
-            tris = tris[itri_regions, :]
-            quads = quads[iquad_regions, :]
-            tri_eids = tris[:, 0]
-            quad_eids = quads[:, 0]
-            element_id = np.unique(np.hstack([quad_eids, tri_eids]))
-        else:
-            quad_results = results[iquad, :]
-            tri_results = results[itri, :]
-            element_id = model.element_id
-        region = np.hstack([quad_regions, tri_regions])
-        results = np.vstack([quad_results, tri_results])
         nelement = len(element_id)
+        assert len(element_id) == len(region), f'neids={len(element_id)} nregion={len(region)}'
 
         gui.nnodes = nnodes
         gui.nelements = nelement
