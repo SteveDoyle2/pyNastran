@@ -697,16 +697,13 @@ class Settings:
     def _load_other_settings(self, settings: QSettings,
                              setting_keys: list[str]) -> None:
         other_settings: OtherSettings = self.other_settings
-        # self.cart3d_fluent_include = []
-        # self.cart3d_fluent_remove = []
+        # self.cart3d_fluent_include = ()
+        # self.cart3d_fluent_remove = ()
         for key in ['cart3d_fluent_include', 'cart3d_fluent_remove']:
-            print(f'other: key={key!r}')
             default = getattr(other_settings, key)
-            print(f'  default={default!r}')
             value = self._set_setting(
                 settings, setting_keys, [key],
                 default=default, save=False, auto_type=int)
-            print(f'  value={value!r}')
             setattr(other_settings, key, tuple(value))
 
 
