@@ -166,6 +166,97 @@ class Fluent:
         results = np.vstack(results_list)
         write_daten(daten_filename, element_id, self.titles, results)
 
+
+    def get_area_centroid(model, tris: np.ndarray, quads: np.ndarray):
+        itri = np.searchsorted(model.node_id, tris[:, 2:])
+        print(itri.shape)
+        tri_xyz1 = model.xyz[itri[:, 0]]
+        tri_xyz2 = model.xyz[itri[:, 1]]
+        tri_xyz3 = model.xyz[itri[:, 2]]
+        tri_centroid = (tri_xyz1 + tri_xyz2 + tri_xyz3) / 3
+
+        tri_normal = np.cross(tri_xyz2 - tri_xyz1, tri_xyz3 - tri_xyz1)
+        tri_area = np.linalg.norm(tri_normal, axis=1)
+        tri_normal /= tri_area[:, np.newaxis]
+
+        iquad = np.searchsorted(model.node_id, quads[:, 2:], side='right')
+        xyz1 = model.xyz[iquad[:, 0]]
+        xyz2 = model.xyz[iquad[:, 1]]
+        xyz3 = model.xyz[iquad[:, 2]]
+        xyz4 = model.xyz[iquad[:, 3]]
+
+        quad_centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4
+        quad_axb = np.cross(xyz3 - xyz1, xyz4 - xyz2)
+        quad_area = np.linalg.norm(quad_axb, axis=1)
+        assert len(tri_centroid) == len(tri_area)
+        assert len(quad_centroid) == len(quad_area)
+        return tri_area, quad_area, tri_centroid, quad_centroid
+
+
+    def get_filtered_data(self,
+                          regions_to_remove: list[int],
+                          regions_to_include: list[int]) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                                  np.ndarray, np.ndarray]:
+        region_split = bool(len(regions_to_remove) + len(regions_to_include))
+        if region_split:
+            element_id, tris, quads, region, results = filter_by_region(
+                self, regions_to_remove, regions_to_include)
+        else:
+            tris = self.tris
+            quads = self.quads
+            tri_regions = tris[:, 1]
+            quad_regions = quads[:, 1]
+
+            # we reordered the tris/quads to be continuous to make them easier to add
+            iquad = np.searchsorted(self.element_id, quads[:, 0])
+            itri = np.searchsorted(self.element_id, tris[:, 0])
+            quad_results = self.results[iquad, :]
+            tri_results = self.results[itri, :]
+            element_id = self.element_id
+            region = np.hstack([quad_regions, tri_regions])
+            results = np.vstack([quad_results, tri_results])
+        return element_id, tris, quads, region, results
+
+def filter_by_region(model: Fluent,
+                     regions_to_remove: list[int],
+                     regions_to_include: list[int]) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                             np.ndarray, np.ndarray]:
+    tris = model.tris
+    quads = model.quads
+    results = model.results
+
+    tri_regions = tris[:, 1]
+    quad_regions = quads[:, 1]
+
+    # we reordered the tris/quads to be continuous to make them easier to add
+    iquad = np.searchsorted(model.element_id, quads[:, 0])
+    itri = np.searchsorted(model.element_id, tris[:, 0])
+    #-----------------------------
+    is_remove = (len(regions_to_remove) == 0)
+    is_include = (len(regions_to_include) == 0)
+    assert (is_remove and not is_include) or (not is_remove and is_include)
+    if regions_to_remove:
+        itri_regions = np.logical_and.reduce([(tri_regions != regioni) for regioni in regions_to_remove])
+        iquad_regions = np.logical_and.reduce([(quad_regions != regioni) for regioni in regions_to_remove])
+    else:
+        itri_regions = np.logical_or.reduce([(tri_regions == regioni) for regioni in regions_to_include])
+        iquad_regions = np.logical_or.reduce([(quad_regions == regioni) for regioni in regions_to_include])
+
+    quad_results = results[iquad, :][iquad_regions, :]
+    tri_results = results[itri, :][itri_regions, :]
+
+    tris = tris[itri_regions, :]
+    quads = quads[iquad_regions, :]
+    tri_eids = tris[:, 0]
+    quad_eids = quads[:, 0]
+    element_id = np.unique(np.hstack([quad_eids, tri_eids]))
+    tri_regions = tris[:, 1]
+    quad_regions = quads[:, 1]
+    region = np.hstack([quad_regions, tri_regions])
+    results = np.vstack([quad_results, tri_results])
+    return element_id, tris, quads, region, results
+
+
 def write_daten(daten_filename: PathLike,
                 element_id: np.ndarray, titles: np.ndarray,
                 results: np.ndarray) -> None:
