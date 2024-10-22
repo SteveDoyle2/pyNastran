@@ -166,30 +166,73 @@ class Fluent:
         results = np.vstack(results_list)
         write_daten(daten_filename, element_id, self.titles, results)
 
+    def get_area_centroid_normal(model, tris: np.ndarray, quads: np.ndarray):
+        tri_nodes = tris[:, 2:]
+        quad_nodes = quads[:, 2:]
 
-    def get_area_centroid(model, tris: np.ndarray, quads: np.ndarray):
-        itri = np.searchsorted(model.node_id, tris[:, 2:])
-        print(itri.shape)
+        utri_nodes = np.unique(tri_nodes.ravel())
+        uquad_nodes = np.unique(quad_nodes.ravel())
+        assert len(np.setdiff1d(uquad_nodes, model.node_id)) == 0
+        assert len(np.setdiff1d(utri_nodes, model.node_id)) == 0
+
+        itri = np.searchsorted(model.node_id, tri_nodes)
         tri_xyz1 = model.xyz[itri[:, 0]]
         tri_xyz2 = model.xyz[itri[:, 1]]
         tri_xyz3 = model.xyz[itri[:, 2]]
         tri_centroid = (tri_xyz1 + tri_xyz2 + tri_xyz3) / 3
 
         tri_normal = np.cross(tri_xyz2 - tri_xyz1, tri_xyz3 - tri_xyz1)
-        tri_area = np.linalg.norm(tri_normal, axis=1)
-        tri_normal /= tri_area[:, np.newaxis]
+        tri_areai = np.linalg.norm(tri_normal, axis=1)
+        tri_area = 0.5 * tri_areai
+        tri_normal /= tri_areai[:, np.newaxis]
 
-        iquad = np.searchsorted(model.node_id, quads[:, 2:], side='right')
+        iquad = np.searchsorted(model.node_id, quad_nodes)
         xyz1 = model.xyz[iquad[:, 0]]
         xyz2 = model.xyz[iquad[:, 1]]
         xyz3 = model.xyz[iquad[:, 2]]
         xyz4 = model.xyz[iquad[:, 3]]
 
         quad_centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4
-        quad_axb = np.cross(xyz3 - xyz1, xyz4 - xyz2)
-        quad_area = np.linalg.norm(quad_axb, axis=1)
-        assert len(tri_centroid) == len(tri_area)
-        assert len(quad_centroid) == len(quad_area)
+        quad_normal = np.cross(xyz3 - xyz1, xyz4 - xyz2)
+        quad_areai = np.linalg.norm(quad_normal, axis=1)
+        quad_area = 0.5 * quad_areai
+        quad_normal /= quad_areai[:, np.newaxis]
+        #assert len(tri_centroid) == len(tri_area)
+        #assert len(quad_centroid) == len(quad_area)
+        return tri_area, quad_area, tri_centroid, quad_centroid, tri_normal, quad_normal
+
+    def get_area_centroid(model, tris: np.ndarray, quads: np.ndarray):
+        tri_nodes = tris[:, 2:]
+        quad_nodes = quads[:, 2:]
+
+        utri_nodes = np.unique(tri_nodes.ravel())
+        uquad_nodes = np.unique(quad_nodes.ravel())
+        assert len(np.setdiff1d(uquad_nodes, model.node_id)) == 0
+        assert len(np.setdiff1d(utri_nodes, model.node_id)) == 0
+        #print(f'node range = [{model.node_id.min()},{model.node_id.max()}]')
+        itri = np.searchsorted(model.node_id, tri_nodes)
+        tri_xyz1 = model.xyz[itri[:, 0]]
+        tri_xyz2 = model.xyz[itri[:, 1]]
+        tri_xyz3 = model.xyz[itri[:, 2]]
+        tri_centroid = (tri_xyz1 + tri_xyz2 + tri_xyz3) / 3
+
+        tri_normal = np.cross(tri_xyz2 - tri_xyz1, tri_xyz3 - tri_xyz1)
+        tri_areai = np.linalg.norm(tri_normal, axis=1)
+        tri_area = 0.5 * tri_areai
+        tri_normal /= tri_area[:, np.newaxis]
+
+        iquad = np.searchsorted(model.node_id, quad_nodes)
+        xyz1 = model.xyz[iquad[:, 0]]
+        xyz2 = model.xyz[iquad[:, 1]]
+        xyz3 = model.xyz[iquad[:, 2]]
+        xyz4 = model.xyz[iquad[:, 3]]
+
+        quad_centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4
+        quad_normal = np.cross(xyz3 - xyz1, xyz4 - xyz2)
+        quad_areai = np.linalg.norm(quad_normal, axis=1)
+        quad_area = 0.5 * quad_areai
+        #assert len(tri_centroid) == len(tri_area)
+        #assert len(quad_centroid) == len(quad_area)
         return tri_area, quad_area, tri_centroid, quad_centroid
 
 
@@ -199,7 +242,7 @@ class Fluent:
                                                                   np.ndarray, np.ndarray]:
         region_split = bool(len(regions_to_remove) + len(regions_to_include))
         if region_split:
-            element_id, tris, quads, region, results = filter_by_region(
+            element_id, tris, quads, region, results, quad_results, tri_results = filter_by_region(
                 self, regions_to_remove, regions_to_include)
         else:
             tris = self.tris
@@ -215,7 +258,7 @@ class Fluent:
             element_id = self.element_id
             region = np.hstack([quad_regions, tri_regions])
             results = np.vstack([quad_results, tri_results])
-        return element_id, tris, quads, region, results
+        return element_id, tris, quads, region, results #, quad_results, tri_results
 
 def filter_by_region(model: Fluent,
                      regions_to_remove: list[int],
@@ -254,7 +297,7 @@ def filter_by_region(model: Fluent,
     quad_regions = quads[:, 1]
     region = np.hstack([quad_regions, tri_regions])
     results = np.vstack([quad_results, tri_results])
-    return element_id, tris, quads, region, results
+    return element_id, tris, quads, region, results, quad_results, tri_results
 
 
 def write_daten(daten_filename: PathLike,
