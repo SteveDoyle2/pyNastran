@@ -20,22 +20,28 @@ MSC_LONG_VERSION = [
 
 OPTISTRUCT_VERSIONS = [
     b'OS11XXXX', b'OS12.210', b'OS14.210',
-    b'OS2017', b'OS2017.1', b'OS2017.2',  # OS2017 not checked
-    b'OS2018', b'OS2018.1', b'OS2018.2',  # OS2018, OS2018.2 not checked
-    b'OS2019', b'OS2019.1', b'OS2019.2',  # 0S2019 checked
-    b'OS2020', b'OS2020.1',               # OS2020.2 removed
-    b'OS2021', b'OS2021.1', b'OS2021.2',  # OS2021 checked
-    b'OS2022', b'OS2022.1', b'OS2022.2', b'OS2022.3',  # OS2022.3 added
-    b'OS2023', b'OS2023.1',               # OS2023.2 removed
+    b'OS2017', b'OS2017.1', b'OS2017.2',          # OS2017 not checked
+    b'OS2018', b'OS2018.1', b'OS2018.2',          # OS2018, OS2018.2 not checked
+
+    # Version between 2019 and 2024.1 checked against Altair documentation
+    b'OS2019', b'OS2019.1', b'OS2019.2',               # OS2019 not tested
+    b'OS2019.1.1', b'OS2019.2.1', b'OS2019.2.2',       # Subversions in documentation, but not tested
+
+    b'OS2020', b'OS2020.1',                            # OS2020.2 removed
+    b'OS2020.1.1',                                     # Subversion in documentation, but not tested
+
+    b'OS2021', b'OS2021.1', b'OS2021.2',               # OS2021 not tested
+    b'OS2021.2.1',
+
+    b'OS2022', b'OS2022.1', b'OS2022.2', b'OS2022.3',  # OS2022.3 added, OS2022 not tested
+
+    b'OS2023', b'OS2023.1',                            # OS2023.2 removed, OS2023.1 not tested
+
     b'OS2024', b'OS2024.1', b'OS2024.2',  # OS2024.2 not checked
     b'OS2025', b'OS2025.1', b'OS2025.2',  # not checked
     b'OS2026', b'OS2026.1', b'OS2026.2',  # not checked
-
-    # SubVersions
-    b'OS2019.1.1', b'OS2019.2.1', b'OS2019.2.2',
-    b'OS2020.1.1',
-    b'OS2021.2.1',
 ]
+
 AUTODESK_VERSIONS = [
     b'NE  0824',  # this means NEi Nastran...
 ]
