@@ -51,12 +51,11 @@ from pyNastran.gui.vtk_interface import (
     vtkVertex, vtkLine, vtkQuad,
     vtkUnstructuredGrid,
 )
-#from pyNastran import is_release
-from pyNastran import __version__
+from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.nan import (
     isfinite, isfinite_and_greater_than, isfinite_and_nonzero,
-    isgreater_int)
+)
 from pyNastran.femutils.utils import duplicates, is_monotonic, safe_norm
 
 
@@ -159,7 +158,7 @@ DESIRED_RESULTS = [
     'cquad8_stress''cquad4_stress',
 
     'ctria3_composite_stress', 'ctria3_composite_stress',
-    'cquad8_composite_stress''cquad4_composite_stress',
+    'cquad8_composite_stress', 'cquad4_composite_stress',
 
     'cbar_stress', 'cbeam_stress',
     'crod_stress', 'conrod_stress', 'ctube_stress',
@@ -186,7 +185,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
     def __init__(self):
         super().__init__()
         self.clear_nastran()
-        self.make_spc_mpc_supports = True
         self.create_secondary_actors = True
         self.stop_on_failure = False
 
@@ -203,7 +201,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.icd_transform = {}
 
         self.dependents_nodes: set[int] = set([])
-        unused_node_ids = np.zeros((0, 2), dtype='int32')
+        #unused_node_ids = np.zeros((0, 2), dtype='int32')
         self.nid_release_map = {}
         self.xyz_cid0 = np.zeros((0, 3), dtype='float64')
         self.nnodes = 0
@@ -241,12 +239,13 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         return [data_geom, data_geom_pch]
         #return [data_geom, data_geom_pch, data_geom_results]
 
-    def load_nastran_geometry_and_results(self, op2_filename, name='main', plot=True):
+    def load_nastran_geometry_and_results(self, op2_filename: PathLike,
+                                          name: str='main', plot: bool=True):
         """loads geometry and results, so you don't have to double define the same BDF/OP2"""
         self.load_nastran_geometry(op2_filename, name='main', plot=False)
         self.load_nastran_results(self.model) # name='main', plot=True
 
-    def on_create_coord(self):
+    def on_create_coord(self) -> None:
         pass
 
     def on_update_geometry_properties_window(self, geometry_properties):
@@ -277,9 +276,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         gui.on_update_geometry_properties_override_dialog(geometry_properties)
 
     def toggle_conms(self) -> None:
-        """
-        Toggle the visibility of the CONMS
-        """
+        """Toggle the visibility of the CONMs"""
         name = 'conm2'
         gui: MainWindow = self.gui
         if name in gui.alt_grids:
@@ -587,7 +584,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.has_caero = has_caero
 
         #-----------------------------------------------------------------------
-        gui.log_info("nnodes=%d nelements=%d" % (self.nnodes, self.nelements))
+        gui.log_info(f'nnodes={self.nnodes:d} nelements={self.nelements:d}')
         msg = model.get_bdf_stats(return_type='string')
         gui.log_debug(msg)
         msg = model.get_bdf_stats(return_type='list')
@@ -641,8 +638,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                            self.create_secondary_actors)
 
         geometry_names = []
+        make_spc_mpc_supports = nastran_settings.is_constraints
         if self.create_secondary_actors:
-            if self.make_spc_mpc_supports and xref_nodes:
+            if make_spc_mpc_supports and xref_nodes:
                 geometry_names = self.set_spc_mpc_suport_grid(
                     model, nid_to_pid_map, idtype)
             set_acoustic_grid(gui, model, xyz_cid0, nid_cp_cd, nid_map)
@@ -752,7 +750,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                         zfighting_offset=zfighting_offset)
                     zfighting_offset += zfighting_offset0
 
-    def _set_subcases_unvectorized(self, model, form, cases, icase, xref_nodes, xref_loads):
+    def _set_subcases_unvectorized(self, model: BDF,
+                                   form,
+                                   cases: dict[int, Any],
+                                   icase: int,
+                                   xref_nodes: bool,
+                                   xref_loads: bool) -> None:
         """helper for ``load_nastran_geometry_unvectorized``"""
         gui: MainWindow = self.gui
         settings: Settings = gui.settings
@@ -776,7 +779,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 subtitle, options = subcase.get_parameter('SUBTITLE')
                 del options
 
-            load_str = 'Load Case=%i' % subcase_id if subtitle == '' else 'Load Case=%i; %s' % (
+            load_str = f'Load Case={subcase_id:d}' if subtitle == '' else 'Load Case=%i; %s' % (
                 subcase_id, subtitle)
             formi = (load_str, None, [])
             formii = formi[2]
@@ -1670,7 +1673,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             out_msg = store_warning(model.log, store_msg, stored_msg)
         return out_msg
 
-    def _add_nastran_spoints_to_grid(self, spoints, nid_map):
+    def _add_nastran_spoints_to_grid(self, spoints: list[int],
+                                     nid_map: dict[int, int]) -> None:
         """used to create SPOINTs"""
         if not spoints:  # pragma: no cover
             return
@@ -1765,9 +1769,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             j += 2
         alt_grid.SetPoints(points)
 
-    def _fill_suport(self, suport_id, unused_subcase_id, model):
+    def _fill_suport(self, suport_id: int, unused_subcase_id: int, model: BDF) -> str:
         """creates SUPORT and SUPORT1 nodes"""
-        suport_name = 'suport1_id=%i' % suport_id
+        suport_name = f'suport1_id={suport_id:d}'
         gui: MainWindow = self.gui
         gui.create_alternate_vtk_grid(
             suport_name, color=RED_FLOAT, line_width=5, opacity=1., point_size=4,
@@ -3567,7 +3571,7 @@ def _create_masses(gui: MainWindow,
 
     if not create_secondary_actors or nconm2 == 0:
         nconm2 = 0
-        return nconm2
+    return nconm2
 
     def update_conm2s_function(unused_nid_map: dict[int, int],
                                unused_ugrid: vtkUnstructuredGrid,
@@ -3576,7 +3580,7 @@ def _create_masses(gui: MainWindow,
         #if not create_secondary_actors:
             #return
         nastran_settings: NastranSettings = gui.settings.nastran_settings
-        if not nastran_settings.is_3d_bars_update:
+        if not nastran_settings.is_mass_update:
             return
         mass_grid = gui.alt_grids['conm2']
         update_mass_grid(model, mass_grid, points, node_ids, nodes)

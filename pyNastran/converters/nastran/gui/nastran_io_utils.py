@@ -2485,6 +2485,8 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
         exclude_results.add('velocities')
     if not nastran_settings.acceleration:
         exclude_results.add('accelerations')
+    if not nastran_settings.temperature:
+        exclude_results.add('temperatures')
 
     if not nastran_settings.spc_force:
         exclude_results.add('spc_forces')

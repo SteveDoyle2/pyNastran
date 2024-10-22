@@ -38,7 +38,7 @@ from pyNastran.gui.gui_objects.settings import (
     HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY, HIGHLIGHT_POINT_SIZE, HIGHLIGHT_LINE_WIDTH,
     SHEAR_MOMENT_TORQUE_COLOR, SHEAR_MOMENT_TORQUE_OPACITY, SHEAR_MOMENT_TORQUE_POINT_SIZE, SHEAR_MOMENT_TORQUE_LINE_WIDTH,
     OPACITY_MIN, OPACITY_MAX,
-    USE_PARALLEL_PROJECTION,
+    USE_PARALLEL_PROJECTION, IS_TRACKBALL_CAMERA,
     NASTRAN_BOOL_KEYS,
     POINT_SIZE_MIN, POINT_SIZE_MAX,
     COORD_TEXT_SCALE_MIN, COORD_TEXT_SCALE_MAX,
@@ -149,6 +149,8 @@ class PreferencesWindow(PyDialog):
         self._nastran_is_properties = data['nastran_is_properties']
         self._nastran_is_3d_bars = data['nastran_is_3d_bars']
         self._nastran_is_3d_bars_update = data['nastran_is_3d_bars_update']
+        self._nastran_is_mass_update = data['nastran_is_mass_update']
+        self._nastran_is_constraints = data['nastran_is_constraints']
         self._nastran_is_bar_axes = data['nastran_is_bar_axes']
         self._nastran_create_coords = data['nastran_create_coords']
         self._nastran_is_shell_mcids = data['nastran_is_shell_mcids']
@@ -171,10 +173,12 @@ class PreferencesWindow(PyDialog):
         self._nastran_velocity = data['nastran_velocity']
         self._nastran_acceleration = data['nastran_acceleration']
         self._nastran_eigenvector = data['nastran_eigenvector']
+        self._nastran_temperature = data['nastran_temperature']
 
         self._nastran_spc_force = data['nastran_spc_force']
         self._nastran_mpc_force = data['nastran_mpc_force']
         self._nastran_applied_load = data['nastran_applied_load']
+        self._nastran_heat_flux = data['nastran_heat_flux']
 
         self._nastran_force = data['nastran_force']
         self._nastran_grid_point_force = data['nastran_grid_point_force']
@@ -303,10 +307,16 @@ class PreferencesWindow(PyDialog):
         self.picker_size_edit.setToolTip('Sets the picker tolerance')
 
         self.parallel_projection_label = QLabel('Parallel Projection:')
-        self.parallel_projection_edit = QCheckBox()
-        self.parallel_projection_edit.setChecked(self._parallel_projection)
-        self.parallel_projection_edit.setToolTip('Checked: Typical engineering perspective\n'
-                                                 'Unchecked: Distort the model like a real camera')
+        self.parallel_projection_checkbox = QCheckBox()
+        self.parallel_projection_checkbox.setChecked(self._parallel_projection)
+        self.parallel_projection_checkbox.setToolTip('Checked: Typical engineering perspectivfe (default)\n'
+                                                     'Unchecked: Distort the model like a real camera')
+
+        self.trackball_camera_label = QLabel('Trackball Camera:')
+        self.trackball_camera_checkbox = QCheckBox()
+        self.trackball_camera_checkbox.setChecked(self._is_trackball_camera)
+        self.trackball_camera_checkbox.setToolTip('Checked: Trackball Camera (default)\n'
+                                                  'Unchecked: Joystick Camera (for 3d mice)')
 
         #-----------------------------------------------------------------------
         # Clipping Min
@@ -378,6 +388,15 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_3d_bars_update_checkbox.setToolTip('Update the 3D geometry (Bar/Beam cross-sections and CONMw) when deformations are applied')
         self.nastran_is_3d_bars_update_checkbox.setChecked(self._nastran_is_3d_bars_update)
 
+        self.nastran_is_mass_update_checkbox = QCheckBox('Update Masses')
+        self.nastran_is_mass_update_checkbox.setToolTip('Update the masses when nodes change')
+        self.nastran_is_mass_update_checkbox.setChecked(self._nastran_is_mass_update)
+
+        self.nastran_is_constraints_checkbox = QCheckBox('Constraints')
+        self.nastran_is_constraints_checkbox.setToolTip('Create actors for the constraints (SPC, MPC, SUPORT)')
+        self.nastran_is_constraints_checkbox.setChecked(self._nastran_is_constraints)
+
+
         self.nastran_is_shell_mcids_checkbox = QCheckBox('Shell MCIDs')
         self.nastran_is_shell_mcids_checkbox.setToolTip('Calculate the Material Coordinate Systems for Shells')
         self.nastran_is_shell_mcids_checkbox.setChecked(self._nastran_is_shell_mcids)
@@ -398,17 +417,21 @@ class PreferencesWindow(PyDialog):
             self.nastran_velocity_checkbox = QCheckBox('Velocity')
             self.nastran_acceleration_checkbox = QCheckBox('Acceleration')
             self.nastran_eigenvector_checkbox = QCheckBox('Eigenvector')
+            self.nastran_temperature_checkbox = QCheckBox('Temperature')
             self.nastran_displacement_checkbox.setChecked(self._nastran_displacement)
             self.nastran_velocity_checkbox.setChecked(self._nastran_velocity)
             self.nastran_acceleration_checkbox.setChecked(self._nastran_acceleration)
             self.nastran_eigenvector_checkbox.setChecked(self._nastran_eigenvector)
+            self.nastran_temperature_checkbox.setChecked(self._nastran_temperature)
 
             self.nastran_spc_force_checkbox = QCheckBox('SPC Force')
             self.nastran_mpc_force_checkbox = QCheckBox('MPC Force')
             self.nastran_applied_load_checkbox = QCheckBox('Applied Load')
+            self.nastran_heat_flux_checkbox = QCheckBox('Heat Flux')
             self.nastran_spc_force_checkbox.setChecked(self._nastran_spc_force)
             self.nastran_mpc_force_checkbox.setChecked(self._nastran_mpc_force)
             self.nastran_applied_load_checkbox.setChecked(self._nastran_applied_load)
+            self.nastran_heat_flux_checkbox.setChecked(self._nastran_heat_flux)
 
             self.nastran_force_checkbox = QCheckBox('Force')
             self.nastran_grid_point_force_checkbox = QCheckBox('Grid Point Force')
@@ -604,7 +627,11 @@ class PreferencesWindow(PyDialog):
         irow += 1
 
         grid.addWidget(self.parallel_projection_label, irow, 0)
-        grid.addWidget(self.parallel_projection_edit, irow, 1)
+        grid.addWidget(self.parallel_projection_checkbox, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.trackball_camera_label, irow, 0)
+        grid.addWidget(self.trackball_camera_checkbox, irow, 1)
         irow += 1
 
         #--------------------------------------------------
@@ -730,18 +757,18 @@ class PreferencesWindow(PyDialog):
         grid_nastran.addWidget(self.nastran_is_properties_checkbox, irow, 1)
         irow += 1
 
-        grid_nastran.addWidget(self.nastran_is_bar_axes_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_is_constraints_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_is_rbe_checkbox, irow, 1)
         irow += 1
 
         grid_nastran.addWidget(self.nastran_is_shell_mcids_checkbox, irow, 0)
         irow += 1
 
-        grid_nastran.addWidget(self.nastran_is_rbe_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_is_bar_axes_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_is_3d_bars_checkbox, irow, 1)
+        grid_nastran.addWidget(self.nastran_is_3d_bars_update_checkbox, irow, 2)
         irow += 1
-
-        grid_nastran.addWidget(self.nastran_is_3d_bars_checkbox, irow, 0)
-        grid_nastran.addWidget(self.nastran_is_3d_bars_update_checkbox, irow, 1)
-        irow += 1
+        grid_nastran.addWidget(self.nastran_is_mass_update_checkbox, irow, 0)
         return grid_nastran
 
     def _get_grid_nastran_results_layout(self) -> QGridLayout:
@@ -760,6 +787,10 @@ class PreferencesWindow(PyDialog):
         grid_nastran.addWidget(self.nastran_spc_force_checkbox, irow, 0)
         grid_nastran.addWidget(self.nastran_mpc_force_checkbox, irow, 1)
         grid_nastran.addWidget(self.nastran_applied_load_checkbox, irow, 2)
+        irow += 1
+
+        grid_nastran.addWidget(self.nastran_temperature_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_heat_flux_checkbox, irow, 1)
         irow += 1
 
         # ------------------------
@@ -821,10 +852,13 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_properties_checkbox.clicked.connect(partial(on_nastran, self, 'is_properties'))
         self.nastran_is_3d_bars_checkbox.clicked.connect(partial(on_nastran, self, 'is_3d_bars'))
         self.nastran_is_3d_bars_update_checkbox.clicked.connect(partial(on_nastran, self, 'is_3d_bars_update'))
+        self.nastran_is_mass_update_checkbox.clicked.connect(partial(on_nastran, self, 'is_mass_update'))
+
         self.nastran_is_bar_axes_checkbox.clicked.connect(partial(on_nastran, self, 'is_bar_axes'))
         self.nastran_create_coords_checkbox.clicked.connect(partial(on_nastran, self, 'create_coords'))
         self.nastran_is_shell_mcids_checkbox.clicked.connect(partial(on_nastran, self, 'is_shell_mcids'))
         self.nastran_is_rbe_checkbox.clicked.connect(partial(on_nastran, self, 'is_rbe'))
+        self.nastran_is_constraints_checkbox.clicked.connect(partial(on_nastran, self, 'is_constraints'))
 
         #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
         #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids2)
@@ -833,6 +867,7 @@ class PreferencesWindow(PyDialog):
         self.nastran_velocity_checkbox.clicked.connect(partial(on_nastran, self, 'acceleration'))
         self.nastran_acceleration_checkbox.clicked.connect(partial(on_nastran, self, 'acceleration'))
         self.nastran_eigenvector_checkbox.clicked.connect(partial(on_nastran, self, 'eigenvector'))
+        self.nastran_temperature_checkbox.clicked.connect(partial(on_nastran, self, 'temperature'))
 
         self.nastran_spc_force_checkbox.clicked.connect(partial(on_nastran, self, 'spc_force'))
         self.nastran_mpc_force_checkbox.clicked.connect(partial(on_nastran, self, 'mpc_force'))
@@ -873,7 +908,8 @@ class PreferencesWindow(PyDialog):
         self.picker_size_edit.valueChanged.connect(self.on_picker_size)
         self.picker_size_edit.editingFinished.connect(self.on_picker_size)
 
-        self.parallel_projection_edit.clicked.connect(self.on_parallel_projection)
+        self.parallel_projection_checkbox.clicked.connect(self.on_parallel_projection)
+        self.trackball_camera_checkbox.clicked.connect(self.on_trackball_camera)
 
         self.coord_scale_edit.valueChanged.connect(self.on_coord_scale)
         self.coord_scale_edit.editingFinished.connect(self.on_coord_scale)
@@ -916,7 +952,8 @@ class PreferencesWindow(PyDialog):
 
         self.highlight_opacity_edit.setValue(HIGHLIGHT_OPACITY)
         self.highlight_point_size_edit.setValue(HIGHLIGHT_POINT_SIZE)
-        self.parallel_projection_edit.setChecked(USE_PARALLEL_PROJECTION)
+        self.parallel_projection_checkbox.setChecked(USE_PARALLEL_PROJECTION)
+        self.trackball_camera_checkbox.setChecked(IS_TRACKBALL_CAMERA)
         #self.highlight_line_width_edit.setValue(HIGHLIGHT_LINE_WIDTH)
 
         self.background_color1_float = BACKGROUND_COLOR
@@ -1189,9 +1226,15 @@ class PreferencesWindow(PyDialog):
 
     def on_parallel_projection(self) -> None:
         """set the nastran properties preferences"""
-        is_checked = self.parallel_projection_edit.isChecked()
+        is_checked = self.parallel_projection_checkbox.isChecked()
         if self.win_parent is not None:
             self.settings.set_parallel_projection(is_checked)
+
+    def on_trackball_camera(self) -> None:
+        """set the nastran properties preferences"""
+        is_checked = self.trackball_camera_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.settings.set_trackball_camera(is_checked)
 
     def on_magnify(self, value=None) -> None:
         if value is None:
@@ -1402,7 +1445,7 @@ def main():  # pragma: no cover
     app = QApplication(sys.argv)
     #The Main window
     data = {
-        'font_size' : 8,
+        'font_size' : 9,
         'use_startup_directory': True,
         'use_gradient_background' : True,
         'background_color' : (0., 0., 0.), # black
@@ -1435,7 +1478,6 @@ def main():  # pragma: no cover
         'dim_max' : 502.,
         'cart3d_fluent_include': (),
         'cart3d_fluent_remove': (3,),
-
     }
     for name in NASTRAN_BOOL_KEYS:
         data[name] = True

@@ -39,6 +39,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from vtkmodules.vtkFiltersGeneral import vtkAxes
     from qtpy.QtCore import QSettings
     from pyNastran.gui.typing import ColorFloat
+    from pyNastran.gui.main_window import MainWindow
 
 from pyNastran.gui import (
     USE_OLD_SIDEBAR_OBJS_ as USE_OLD_SIDEBAR_OBJECTS,
@@ -117,11 +118,15 @@ NASTRAN_BOOL_KEYS = [
     'nastran_is_element_quality',
     'nastran_is_bar_axes',
     'nastran_is_3d_bars', 'nastran_is_3d_bars_update',
+    'nastran_is_mass_update',
+    'nastran_is_constraints',
     'nastran_is_shell_mcids',
     'nastran_is_rbe',
 
-    'nastran_displacement', 'nastran_velocity', 'nastran_acceleration', 'nastran_eigenvector',
-    'nastran_spc_force', 'nastran_mpc_force', 'nastran_applied_load',
+    'nastran_displacement', 'nastran_velocity',
+    'nastran_acceleration', 'nastran_eigenvector', 'nastran_temperature',
+    'nastran_spc_force', 'nastran_mpc_force',
+    'nastran_applied_load', 'nastran_heat_flux',
 
     'nastran_stress', 'nastran_plate_stress', 'nastran_composite_plate_stress',
     'nastran_strain', 'nastran_plate_strain', 'nastran_composite_plate_strain',
@@ -165,7 +170,7 @@ class OtherSettings:
         for key in keys:
             #base, key2 = key.split('_', 1)
             value = getattr(self, key)
-            print(f'other: key={key!r} value={value!r}')
+            #print(f'other: key={key!r} value={value!r}')
             settings.setValue(key, value)
 
     def __repr__(self) -> str:
@@ -194,6 +199,8 @@ class NastranSettings:
         self.is_properties = True
         self.is_3d_bars = True
         self.is_3d_bars_update = True
+        self.is_mass_update = True
+        self.is_constraints = True
         self.create_coords = True
         self.is_bar_axes = True
         self.is_shell_mcids = True
@@ -229,10 +236,12 @@ class NastranSettings:
         self.displacement = True
         self.velocity = True
         self.acceleration = True
+        self.temperature = True
 
         self.spc_force = True
         self.mpc_force = True
         self.applied_load = True
+        self.heat_flux = True
 
         #self.stress = True
         #self.stress = True
@@ -268,6 +277,7 @@ class NastranSettings:
             base, key2 = key.split('_', 1)
             value = getattr(self, key2)
             settings.setValue(key, value)
+
     def set_caero_color(self, color: ColorFloat, render: bool=True) -> None:
         """
         Set the CAEROx color
@@ -313,7 +323,7 @@ class NastranSettings:
 
 class Settings:
     """storage class for various settings"""
-    def __init__(self, parent):
+    def __init__(self, parent: MainWindow):
         """
         Creates the Settings object
 
@@ -1187,9 +1197,9 @@ class Settings:
 
     def set_trackball_camera(self, is_trackball_camera: bool,
                              render: bool=True) -> None:
-        """sets the parallel_projection flag"""
+        """sets the trackball_camera flag"""
         self.is_trackball_camera = is_trackball_camera
-        self.parent.mouse_settings.set_style()
+        self.parent.mouse_actions.set_style()
         if render:
             self.parent.vtk_interactor.Render()
 
