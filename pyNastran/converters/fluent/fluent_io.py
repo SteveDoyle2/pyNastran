@@ -1,4 +1,4 @@
-"""Defines the GUI IO file for STL."""
+"""Defines the GUI IO file for Fluent."""
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 import numpy as np
@@ -48,14 +48,22 @@ class FluentIO:
         # support multiple results
         titles = model.titles
 
-        regions_to_remove = [] #3
+        #regions_to_remove = [] #3
         #regions_to_include = [7, 4]
-        regions_to_include = []
+        #regions_to_include = []
+        regions_to_remove = self.gui.settings.other_settings.cart3d_fluent_remove
+        regions_to_include = self.gui.settings.other_settings.cart3d_fluent_include
 
         element_id, tris, quads, region, results = model.get_filtered_data(
             regions_to_remove, regions_to_include)
+        out = model.get_area_centroid_normal(tris, quads)
+        tri_area, quad_area, tri_centroid, quad_centroid, tri_normal, quad_normal = out
+        normal = np.vstack([quad_normal, tri_normal])
+        centroid = np.vstack([quad_centroid, tri_centroid])
+        area = np.hstack([quad_area, tri_area])
+        nnodes_array = np.hstack([quad_area*0+4, tri_area*0+3])
 
-        if 0:
+        if 1:
             nodes = convert_length(nodes, 'm', 'in')
             results[:, 0] = convert_pressure(results[:, 0], 'Pa', 'psi')
 
@@ -101,7 +109,8 @@ class FluentIO:
         gui.isubcase_name_map[ID] = ('Fluent', '')
         form, cases = _fill_fluent_case(
             cases, ID, node_id, element_id,
-            region, results, titles)
+            region, results, titles, normal,
+            nnodes_array)
 
         gui.node_ids = node_id
         gui.element_ids = element_id
@@ -169,13 +178,17 @@ def _fill_fluent_case(cases: dict[int, Any],
                       element_ids: np.ndarray,
                       region: np.ndarray,
                       results: np.ndarray,
-                      titles: np.ndarray) -> None:
+                      titles: np.ndarray,
+                      normal: np.ndarray,
+                      nnodes_array: np.ndarray,) -> None:
     """adds the sidebar results"""
     # reorg the ids
     #element_ids = np.unique(np.hstack([tris[:, 0], quads[:, 0]]))
     #colormap = 'jet'
     icase = 0
     itime = 0
+    colormap = 'jet'
+
     nid_res = GuiResult(ID, header='NodeID', title='NodeID',
                         location='node', scalar=node_ids)
     eid_res = GuiResult(ID, header='ElementID', title='ElementID',
@@ -183,17 +196,44 @@ def _fill_fluent_case(cases: dict[int, Any],
     region_res = GuiResult(ID, header='Region', title='Region',
                            location='centroid', scalar=region)
 
+    nxyz_res = NormalResult(0, 'Normals', 'Normals',
+                            nlabels=2, labelsize=5, ncolors=2,
+                            #colormap=colormap,
+                            data_format='%.1f',
+                            uname='NormalResult')
+    nx_res = GuiResult(ID, 'normal_x', 'NormalX', 'centroid', normal[:, 0],
+                       data_format='%.3f', colormap=colormap, uname='NormalX')
+    ny_res = GuiResult(ID, 'normal_y', 'NormalY', 'centroid', normal[:, 1],
+                       data_format='%.3f', colormap=colormap, uname='NormalY')
+    nz_res = GuiResult(ID, 'normal_z', 'NormalZ', 'centroid', normal[:, 2],
+                       data_format='%.3f', colormap=colormap, uname='NormalZ')
+
+    nnodes_res = GuiResult(ID, 'nnodes', 'Nnodes', 'centroid', nnodes_array,
+                       data_format='%.0f', colormap=colormap, uname='Nnodes')
+
     assert len(element_ids) == len(region), f'neids={len(element_ids)} nregion={len(region)}'
     cases[icase] = (nid_res, (itime, 'NodeID'))
     cases[icase + 1] = (eid_res, (itime, 'ElementID'))
     cases[icase + 2] = (region_res, (itime, 'Region'))
 
+    cases[icase + 3] = (nxyz_res, (itime, 'Normal'))
+    cases[icase + 4] = (nx_res, (itime, 'NormalX'))
+    cases[icase + 5] = (ny_res, (itime, 'NormalY'))
+    cases[icase + 6] = (nz_res, (itime, 'NormalZ'))
+    cases[icase + 7] = (nnodes_res, (itime, 'Nnodes'))
+
     form = [
         ('NodeID', icase, []),
         ('ElementID', icase + 1, []),
         ('Region', icase + 2, []),
+
+        ('Normal', icase + 3, []),
+        ('NormalX', icase + 4, []),
+        ('NormalY', icase + 5, []),
+        ('NormalZ', icase + 6, []),
+        ('Nnodes', icase + 7, []),
     ]
-    icase += 3
+    icase += 8
 
     for i, title in enumerate(titles[1:]):
         result = results[:, i]
@@ -204,5 +244,4 @@ def _fill_fluent_case(cases: dict[int, Any],
         formi = (title, icase, [])
         form.append(formi)
         icase += 1
-
     return form, cases
