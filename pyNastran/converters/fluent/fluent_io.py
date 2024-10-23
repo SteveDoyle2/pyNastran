@@ -43,7 +43,7 @@ class FluentIO:
 
         node_id = model.node_id
         nodes = model.xyz
-        nnodes = len(nodes)
+        assert len(node_id) == len(np.unique(node_id))
 
         # support multiple results
         titles = model.titles
@@ -59,21 +59,33 @@ class FluentIO:
         out = model.get_area_centroid_normal(tris, quads)
         tri_area, quad_area, tri_centroid, quad_centroid, tri_normal, quad_normal = out
         normal = np.vstack([quad_normal, tri_normal])
-        centroid = np.vstack([quad_centroid, tri_centroid])
-        area = np.hstack([quad_area, tri_area])
+        #centroid = np.vstack([quad_centroid, tri_centroid])
+        #area = np.hstack([quad_area, tri_area])
         nnodes_array = np.hstack([quad_area*0+4, tri_area*0+3])
+        del quad_centroid, tri_centroid, quad_area, tri_area
 
-        if 1:
+        used_node_id = np.unique(np.hstack([
+            tris[:, 2:].ravel(),
+            quads[:, 2:].ravel(),
+        ]))
+        if len(used_node_id) != len(node_id):
+            # filter unused nodes
+            inode_used = np.searchsorted(node_id, used_node_id)
+            node_id = node_id[inode_used]
+            nodes = nodes[inode_used, :]
+
+        if 0:
             nodes = convert_length(nodes, 'm', 'in')
             results[:, 0] = convert_pressure(results[:, 0], 'Pa', 'psi')
 
         nelement = len(element_id)
         assert len(element_id) == len(region), f'neids={len(element_id)} nregion={len(region)}'
 
+        nnodes = len(nodes)
         gui.nnodes = nnodes
         gui.nelements = nelement
 
-        gui.log.info('nnodes=%s nelements=%s' % (gui.nnodes, gui.nelements))
+        gui.log.info(f'nnodes={gui.nnodes:d} nelements={gui.nelements:d}')
         ugrid = self.gui.grid
         ugrid.Allocate(gui.nelements, 1000)
 
@@ -89,7 +101,6 @@ class FluentIO:
         gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
 
-        assert len(node_id) == len(np.unique(node_id))
         _create_elements(ugrid, node_id, tris, quads)
         log.info(f'created vtk elements')
 
@@ -114,9 +125,9 @@ class FluentIO:
 
         gui.node_ids = node_id
         gui.element_ids = element_id
-        log.debug(f'running _finish_results_io2')
+        #log.debug(f'running _finish_results_io2')
         gui._finish_results_io2(model_name, form, cases)
-        log.info(f'finished')
+        #log.info(f'finished')
 
 def _create_elements(ugrid: vtkUnstructuredGrid,
                      node_id: np.ndarray,
@@ -174,8 +185,8 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
 
 def _fill_fluent_case(cases: dict[int, Any],
                       ID: int,
-                      node_ids: np.ndarray,
-                      element_ids: np.ndarray,
+                      node_id: np.ndarray,
+                      element_id: np.ndarray,
                       region: np.ndarray,
                       results: np.ndarray,
                       titles: np.ndarray,
@@ -190,9 +201,9 @@ def _fill_fluent_case(cases: dict[int, Any],
     colormap = 'jet'
 
     nid_res = GuiResult(ID, header='NodeID', title='NodeID',
-                        location='node', scalar=node_ids)
+                        location='node', scalar=node_id)
     eid_res = GuiResult(ID, header='ElementID', title='ElementID',
-                        location='centroid', scalar=element_ids)
+                        location='centroid', scalar=element_id)
     region_res = GuiResult(ID, header='Region', title='Region',
                            location='centroid', scalar=region)
 
@@ -211,7 +222,7 @@ def _fill_fluent_case(cases: dict[int, Any],
     nnodes_res = GuiResult(ID, 'nnodes', 'Nnodes', 'centroid', nnodes_array,
                        data_format='%.0f', colormap=colormap, uname='Nnodes')
 
-    assert len(element_ids) == len(region), f'neids={len(element_ids)} nregion={len(region)}'
+    assert len(element_id) == len(region), f'neids={len(element_id)} nregion={len(region)}'
     cases[icase] = (nid_res, (itime, 'NodeID'))
     cases[icase + 1] = (eid_res, (itime, 'ElementID'))
     cases[icase + 2] = (region_res, (itime, 'Region'))
@@ -237,7 +248,7 @@ def _fill_fluent_case(cases: dict[int, Any],
 
     for i, title in enumerate(titles[1:]):
         result = results[:, i]
-        assert len(element_ids) == len(result)
+        assert len(element_id) == len(result)
         pressure_res = GuiResult(ID, header=title, title=title,
                                  location='centroid', scalar=result)
         cases[icase] = (pressure_res, (itime, title))

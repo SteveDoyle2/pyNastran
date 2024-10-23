@@ -1,9 +1,8 @@
 import os
-from pathlib import Path
-from typing import Any
+from typing import Optional
 
 import numpy as np
-from cpylog import SimpleLogger, get_logger2 # get_logger,
+from cpylog import SimpleLogger, get_logger2
 from pyNastran.utils import PathLike, print_bad_path
 
 class Fluent:
@@ -23,13 +22,40 @@ class Fluent:
         self.auto_read_write_h5 = auto_read_write_h5
         self.log = get_logger2(log=log, debug=debug)
 
+        # vrt
         self.node_id = np.array([], dtype='int32')
         self.xyz = np.zeros((0, 3), dtype='int32')
-        self.element_id = np.array([], dtype='int32')
+
+        # cel
         self.quads = np.zeros((0, 6), dtype='int32')
         self.tris = np.zeros((0, 5), dtype='int32')
-        self.titles = []
+
+        # daten
+        self.titles = np.zeros((0, ), dtype='|U8')
+        self.element_id = np.array([], dtype='int32')
         self.results = np.zeros((0, 0), dtype='float64')
+
+    @classmethod
+    def from_data(self,
+                  node_id: np.ndarray, xyz: np.ndarray,
+                  tris: np.ndarray, quads: np.ndarray,
+                  element_id: np.ndarray, titles: np.ndarray, results: np.ndarray,
+                  element_ids: np.ndarray, region: np.ndarray,
+                  auto_read_write_h5: bool=True,
+                 log=None, debug: bool=True):
+        model = Fluent(
+            auto_read_write_h5=auto_read_write_h5,
+            log=log, debug=debug)
+        model.node_id = node_id
+        model.xyz = xyz
+        model.element_id = element_id
+        model.quads = quads
+        model.tris = tris
+        model.titles = titles
+        model.results = results
+        model.element_ids = element_ids  # TODO: consider removing
+        model.region = region            # TODO: consider removing
+        return model
 
     def _get_h5_filename(self, h5_filename: PathLike) -> str:
         if h5_filename == '':
@@ -51,6 +77,7 @@ class Fluent:
         h5file = tables.open_file(h5_filename, 'w', driver='H5FD_CORE')
         names = ['node_id', 'xyz', 'element_id', 'titles', 'results',
                  'quads', 'tris', 'element_ids', 'region']
+        h5file.create_array(h5file.root, 'format', ['fluent'])
         for name in names:
             datai = getattr(self, name)
             h5file.create_array(h5file.root, name, datai)
@@ -75,6 +102,15 @@ class Fluent:
 
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
         h5file = tables.open_file(h5_filename, 'r', driver='H5FD_CORE')
+
+        try:
+            table = h5file.get_node('/format')
+            formati = table.read()
+            assert formati == [b'fluent'], f'format={formati!r}'
+        except Exception:
+            print('---error no format?---')
+            print(h5file)
+
         for name in names:
             table = h5file.get_node(f'/{name}')
             datai = table.read()
@@ -105,7 +141,7 @@ class Fluent:
         assert os.path.exists(daten_filename), print_bad_path(daten_filename)
         assert os.path.exists(cell_filename), print_bad_path(cell_filename)
 
-        (quads, tris), (element_ids, region, elements_list) = read_cell(cell_filename)
+        (quads, tris), (element_ids, region) = read_cell(cell_filename)
         node, xyz = read_vrt(vrt_filename)
         element_id, titles, results = read_daten(daten_filename, scale=1.0)
 
@@ -124,14 +160,11 @@ class Fluent:
         if len(tris):
             self.tris = tris
 
-        self.element_ids = element_ids
-        self.region = region
-        # TDOO: should be removed, but it's way easier to add to the gui
-        self.elements_list = elements_list
+        self.element_ids = element_ids  # TODO: consider removing
+        self.region = region            # TODO: consider removing
         if self.auto_read_write_h5:
             # fails if pytables isn't installed
             self.write_h5(h5_filename, require_write=False)
-        #self.tri_pressure = tri_
 
     def write_fluent(self, fluent_filename: str) -> None:
         assert len(self.node_id) > 0, self.node_id
@@ -145,7 +178,7 @@ class Fluent:
         daten_filename = base + '.daten'
         cell_filename = base + '.cel'
 
-        #(quads, tris), (element_ids, region, elements_list)
+        #(quads, tris), (element_ids, region)
         # node, xyz = read_vrt(vrt_filename)
         # element_id, titles, results = read_daten(daten_filename, scale=1.0)
         write_cell(cell_filename, self.quads, self.tris)
@@ -166,19 +199,24 @@ class Fluent:
         results = np.vstack(results_list)
         write_daten(daten_filename, element_id, self.titles, results)
 
-    def get_area_centroid_normal(model, tris: np.ndarray, quads: np.ndarray):
+    def get_area_centroid_normal(self, tris: np.ndarray,
+                                 quads: np.ndarray) -> tuple[np.ndarray, np.ndarray,
+                                                             np.ndarray, np.ndarray,
+                                                             np.ndarray, np.ndarray]:
         tri_nodes = tris[:, 2:]
         quad_nodes = quads[:, 2:]
+        assert tri_nodes.shape[1] == 3, tri_nodes.shape
+        assert quad_nodes.shape[1] == 4, quad_nodes.shape
 
         utri_nodes = np.unique(tri_nodes.ravel())
         uquad_nodes = np.unique(quad_nodes.ravel())
-        assert len(np.setdiff1d(uquad_nodes, model.node_id)) == 0
-        assert len(np.setdiff1d(utri_nodes, model.node_id)) == 0
+        assert len(np.setdiff1d(uquad_nodes, self.node_id)) == 0
+        assert len(np.setdiff1d(utri_nodes, self.node_id)) == 0
 
-        itri = np.searchsorted(model.node_id, tri_nodes)
-        tri_xyz1 = model.xyz[itri[:, 0]]
-        tri_xyz2 = model.xyz[itri[:, 1]]
-        tri_xyz3 = model.xyz[itri[:, 2]]
+        itri = np.searchsorted(self.node_id, tri_nodes)
+        tri_xyz1 = self.xyz[itri[:, 0]]
+        tri_xyz2 = self.xyz[itri[:, 1]]
+        tri_xyz3 = self.xyz[itri[:, 2]]
         tri_centroid = (tri_xyz1 + tri_xyz2 + tri_xyz3) / 3
 
         tri_normal = np.cross(tri_xyz2 - tri_xyz1, tri_xyz3 - tri_xyz1)
@@ -186,64 +224,55 @@ class Fluent:
         tri_area = 0.5 * tri_areai
         tri_normal /= tri_areai[:, np.newaxis]
 
-        iquad = np.searchsorted(model.node_id, quad_nodes)
-        xyz1 = model.xyz[iquad[:, 0]]
-        xyz2 = model.xyz[iquad[:, 1]]
-        xyz3 = model.xyz[iquad[:, 2]]
-        xyz4 = model.xyz[iquad[:, 3]]
+        iquad = np.searchsorted(self.node_id, quad_nodes)
+        xyz1 = self.xyz[iquad[:, 0]]
+        xyz2 = self.xyz[iquad[:, 1]]
+        xyz3 = self.xyz[iquad[:, 2]]
+        xyz4 = self.xyz[iquad[:, 3]]
 
         quad_centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4
         quad_normal = np.cross(xyz3 - xyz1, xyz4 - xyz2)
         quad_areai = np.linalg.norm(quad_normal, axis=1)
         quad_area = 0.5 * quad_areai
         quad_normal /= quad_areai[:, np.newaxis]
-        #assert len(tri_centroid) == len(tri_area)
-        #assert len(quad_centroid) == len(quad_area)
+        assert len(tri_centroid) == len(tri_area)
+        assert len(quad_centroid) == len(quad_area)
         return tri_area, quad_area, tri_centroid, quad_centroid, tri_normal, quad_normal
 
-    def get_area_centroid(model, tris: np.ndarray, quads: np.ndarray):
-        tri_nodes = tris[:, 2:]
-        quad_nodes = quads[:, 2:]
-
-        utri_nodes = np.unique(tri_nodes.ravel())
-        uquad_nodes = np.unique(quad_nodes.ravel())
-        assert len(np.setdiff1d(uquad_nodes, model.node_id)) == 0
-        assert len(np.setdiff1d(utri_nodes, model.node_id)) == 0
-        #print(f'node range = [{model.node_id.min()},{model.node_id.max()}]')
-        itri = np.searchsorted(model.node_id, tri_nodes)
-        tri_xyz1 = model.xyz[itri[:, 0]]
-        tri_xyz2 = model.xyz[itri[:, 1]]
-        tri_xyz3 = model.xyz[itri[:, 2]]
-        tri_centroid = (tri_xyz1 + tri_xyz2 + tri_xyz3) / 3
-
-        tri_normal = np.cross(tri_xyz2 - tri_xyz1, tri_xyz3 - tri_xyz1)
-        tri_areai = np.linalg.norm(tri_normal, axis=1)
-        tri_area = 0.5 * tri_areai
-        tri_normal /= tri_area[:, np.newaxis]
-
-        iquad = np.searchsorted(model.node_id, quad_nodes)
-        xyz1 = model.xyz[iquad[:, 0]]
-        xyz2 = model.xyz[iquad[:, 1]]
-        xyz3 = model.xyz[iquad[:, 2]]
-        xyz4 = model.xyz[iquad[:, 3]]
-
-        quad_centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4
-        quad_normal = np.cross(xyz3 - xyz1, xyz4 - xyz2)
-        quad_areai = np.linalg.norm(quad_normal, axis=1)
-        quad_area = 0.5 * quad_areai
-        #assert len(tri_centroid) == len(tri_area)
-        #assert len(quad_centroid) == len(quad_area)
+    def get_area_centroid(self, tris: np.ndarray,
+                          quads: np.ndarray) -> tuple[np.ndarray, np.ndarray,
+                                                      np.ndarray, np.ndarray]:
+        out = self.get_area_centroid_normal(tris, quads)
+        tri_area, quad_area, tri_centroid, quad_centroid, tri_normal, quad_normal = out
+        del tri_normal, quad_normal
         return tri_area, quad_area, tri_centroid, quad_centroid
 
 
     def get_filtered_data(self,
-                          regions_to_remove: list[int],
-                          regions_to_include: list[int]) -> tuple[np.ndarray, np.ndarray, np.ndarray,
-                                                                  np.ndarray, np.ndarray]:
+                          regions_to_remove: Optional[list[int]]=None,
+                          regions_to_include: Optional[list[int]]=None,
+                          ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                     np.ndarray, np.ndarray]:
+        if regions_to_remove is None:
+            regions_to_remove = []
+        if regions_to_include is None:
+            regions_to_include = []
         region_split = bool(len(regions_to_remove) + len(regions_to_include))
         if region_split:
             element_id, tris, quads, region, results, quad_results, tri_results = filter_by_region(
                 self, regions_to_remove, regions_to_include)
+            if 0:
+                element_ids = np.unique(np.hstack([
+                    quads[:, 0], tris[:, 0],
+                ]))
+                model2 = self.from_data(
+                    self.node_id, self.xyz,
+                    tris, quads,
+                    element_id, self.titles, results,
+                    element_ids, region,
+                    auto_read_write_h5=True,
+                    log=self.log)
+                assert isinstance(model2, Fluent)
         else:
             tris = self.tris
             quads = self.quads
@@ -301,7 +330,8 @@ def filter_by_region(model: Fluent,
 
 
 def write_daten(daten_filename: PathLike,
-                element_id: np.ndarray, titles: np.ndarray,
+                element_id: np.ndarray,
+                titles: np.ndarray,
                 results: np.ndarray) -> None:
     assert len(titles) > 1, titles
     titles = titles[1:]
@@ -408,7 +438,7 @@ def write_cell(vrt_filename: PathLike, quads: np.ndarray, tris: np.ndarray) -> N
     return
 
 def read_cell(cell_filename: PathLike) -> tuple[tuple[np.ndarray, np.ndarray],
-                                                tuple[Any]]:
+                                                tuple[np.ndarray, np.ndarray]]:
     """
 PROSTAR_CELL
      4000         0         0         0         0         0         0         0
@@ -424,7 +454,6 @@ PROSTAR_CELL
 
     element_ids_list = []
     regions_list = []
-    elements_list = []
 
     quad_list = []
     tri_list = []
@@ -432,9 +461,6 @@ PROSTAR_CELL
     while i < len(lines):
         sline1 = lines[i].strip().split()
         sline2 = lines[i+1].strip().split()
-        #print(sline1)
-        #print(sline2)
-        #print('---')
 
         idi1, *ids1 = sline1
         idi2, *ids2 = sline2
@@ -460,7 +486,6 @@ PROSTAR_CELL
         ids = [idi1, pid] + list(ids2)
         element_ids_list.append(idi1)
         regions_list.append(pid)
-        elements_list.append(ids2)
         if dim == 3:
             tri_list.append(ids)
         elif dim == 4:
@@ -478,50 +503,49 @@ PROSTAR_CELL
     if len(quad_list):
         assert quads.shape[1] == 2+4, (tris.shape, quads.shape)
 
-
     element_ids = np.array(element_ids_list, dtype='int32')
     regions = np.array(regions_list, dtype='int32')
-    return (quads, tris), (element_ids, regions, elements_list)
+    return (quads, tris), (element_ids, regions)
 
-def tri_split(xyz: np.ndarray,
-              tris: np.ndarray,
-              element_id: np.ndarray,
-              results: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+#def tri_split(xyz: np.ndarray,
+              #tris: np.ndarray,
+              #element_id: np.ndarray,
+              #results: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     # [eid, pid, n1, n2, n3]
-    eids = tris[:, 0]
-    n1 = tris[:, 2] - 1
-    n2 = tris[:, 3] - 1
-    n3 = tris[:, 4] - 1
-    xyz1 = xyz[n1, :]
-    xyz2 = xyz[n2, :]
-    xyz3 = xyz[n3, :]
-    tri_centroid = (xyz1 + xyz2 + xyz3) / 3
-    ieid = np.searchsorted(element_id, eids)
-    tri_pressure = results[ieid]
-    return tri_centroid, tri_pressure
+    #eids = tris[:, 0]
+    #n1 = tris[:, 2] - 1
+    #n2 = tris[:, 3] - 1
+    #n3 = tris[:, 4] - 1
+    #xyz1 = xyz[n1, :]
+    #xyz2 = xyz[n2, :]
+    #xyz3 = xyz[n3, :]
+    #tri_centroid = (xyz1 + xyz2 + xyz3) / 3
+    #ieid = np.searchsorted(element_id, eids)
+    #tri_pressure = results[ieid]
+    #return tri_centroid, tri_pressure
 
-def quad_split(xyz: np.ndarray,
-               quads: np.ndarray,
-               element_id: np.ndarray,
-               results: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    eids = quads[:, 0]
-    n1 = quads[:, 2] - 1
-    n2 = quads[:, 3] - 1
-    n3 = quads[:, 4] - 1
-    n4 = quads[:, 5] - 1
-    xyz1 = xyz[n1, :]
-    xyz2 = xyz[n2, :]
-    xyz3 = xyz[n3, :]
-    xyz4 = xyz[n4, :]
-    quad_centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4
-    ieid = np.searchsorted(element_id, eids)
-    quad_pressure = results[ieid]
-    return quad_centroid, quad_pressure
+#def quad_split(xyz: np.ndarray,
+               #quads: np.ndarray,
+               #element_id: np.ndarray,
+               #results: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    #eids = quads[:, 0]
+    #n1 = quads[:, 2] - 1
+    #n2 = quads[:, 3] - 1
+    #n3 = quads[:, 4] - 1
+    #n4 = quads[:, 5] - 1
+    #xyz1 = xyz[n1, :]
+    #xyz2 = xyz[n2, :]
+    #xyz3 = xyz[n3, :]
+    #xyz4 = xyz[n4, :]
+    #quad_centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4
+    #ieid = np.searchsorted(element_id, eids)
+    #quad_pressure = results[ieid]
+    #return quad_centroid, quad_pressure
 
 def read_fluent(fluent_filename: PathLike,
                 auto_read_write_h5: bool=True,
                 log=None, debug: bool=False) -> Fluent:
     model = Fluent(auto_read_write_h5=auto_read_write_h5,
-                   log=log)
+                   log=log, debug=debug)
     model.read_fluent(fluent_filename)
     return model

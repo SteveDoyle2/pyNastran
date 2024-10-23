@@ -3571,7 +3571,7 @@ def _create_masses(gui: MainWindow,
 
     if not create_secondary_actors or nconm2 == 0:
         nconm2 = 0
-    return nconm2
+        return nconm2
 
     def update_conm2s_function(unused_nid_map: dict[int, int],
                                unused_ugrid: vtkUnstructuredGrid,

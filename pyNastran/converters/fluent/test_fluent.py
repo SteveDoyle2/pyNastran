@@ -2,7 +2,6 @@ import io
 import os
 import unittest
 import warnings
-#import shutil
 from pathlib import Path
 
 import numpy as np
@@ -45,7 +44,7 @@ class TestFluent(unittest.TestCase):
              4000         0         0         0         0         0         0         0
                  1          3          3          3          4
                  1          1          2          3""")
-        (quads, tris), (element_ids, regions, elements_list) = read_cell(cell_filename)
+        (quads, tris), (element_ids, regions) = read_cell(cell_filename)
         assert len(quads) == 0, quads
         assert len(tris) == 1, tris
         assert np.array_equal(element_ids, [1]), element_ids
@@ -58,7 +57,7 @@ class TestFluent(unittest.TestCase):
              4000         0         0         0         0         0         0         0
                  1          3          4         100         4
                  1          1          2          3          4""")
-        (quads, tris), (element_ids, regions, elements_list) = read_cell(cell_filename)
+        (quads, tris), (element_ids, regions) = read_cell(cell_filename)
         assert len(quads) == 1, quads
         assert len(tris) == 0, tris
         assert np.array_equal(element_ids, [1]), element_ids
@@ -82,6 +81,8 @@ class TestFluent(unittest.TestCase):
         daten_filename = BWB_PATH / 'bwb_saero.daten'
         h5_filename = BWB_PATH / 'bwb_saero.h5'
         tecplot_filename = BWB_PATH / 'bwb_saero.plt'
+        if h5_filename.exists():
+            os.remove(h5_filename)
 
         #model = Fluent()
         #is_loaded = model.read_h5(h5_filename)
@@ -91,11 +92,14 @@ class TestFluent(unittest.TestCase):
 
         node_id, xyz = read_vrt(vrt_filename)
         assert len(xyz) == 10135, xyz.shape
-        (quads, tris), (element_ids, regions, elements_list) = read_cell(cel_filename)
+        (quads, tris), (element_ids, regions) = read_cell(cel_filename)
         element_id, titles, results = read_daten(daten_filename, scale=2.0)
         model = read_fluent(vrt_filename)
         model.write_fluent(vrt_filename2)
         model2 = read_fluent(vrt_filename2)
+        model2.get_filtered_data(
+            regions_to_include=[1101, 1501, 1601])
+        #print(np.unique(model2.region))
 
         tecplot = fluent_to_tecplot(vrt_filename, tecplot_filename)
         #read_tecplot(tecplot_filename)  # TODO: fix tecplot parsing; the file is correct...
@@ -105,6 +109,41 @@ class TestFluent(unittest.TestCase):
         ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
         fluent_filename = os.path.join(UGRID_PATH, 'box.vrt')
         fluent_model = ugrid_to_fluent_filename(ugrid_filename, fluent_filename)
+
+    def test_fluent_area(self):
+        model = Fluent()
+        model.node_id = np.array([1, 2, 3, 4])
+        model.xyz = np.array([
+            [0., 0., 0.],
+            [1., 0., 0.],
+            [1., 1., 0.],
+            [0., 1., 0.],
+        ])
+        model.tris = np.array([
+            [1, 10, 1, 2, 3],
+        ])
+        model.quads = np.array([
+            [2, 12, 1, 2, 3, 4],
+        ])
+        (tri_area, quad_area,
+         tri_centroid, quad_centroid,
+         tri_normal, quad_normal) = model.get_area_centroid_normal(
+            model.tris, model.quads)
+        assert np.allclose(tri_area[0], 0.5)
+        assert np.allclose(quad_area[0], 1.0)
+        assert np.allclose(tri_centroid, [2/3, 1/3, 0.]), tri_centroid
+        assert np.allclose(quad_centroid, [0.5, 0.5, 0.]), quad_centroid
+        assert np.allclose(tri_normal, [0., 0., 1.]), tri_normal
+        assert np.allclose(quad_normal, [0., 0., 1.]), quad_normal
+
+        (tri_area, quad_area,
+         tri_centroid, quad_centroid) = model.get_area_centroid(
+            model.tris, model.quads)
+        assert np.allclose(tri_area[0], 0.5)
+        assert np.allclose(quad_area[0], 1.0)
+        assert np.allclose(tri_centroid, [2/3, 1/3, 0.]), tri_centroid
+        assert np.allclose(quad_centroid, [0.5, 0.5, 0.]), quad_centroid
+
 
 def main():  # pragma: no cover
     import time

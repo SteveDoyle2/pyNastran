@@ -44,7 +44,9 @@ class TestFluentGui(unittest.TestCase):
         log = get_logger(level='warning', encoding='utf-8')
         test = FluentGui()
         test.log = log
-        test.on_load_geometry(vrt_filename, geometry_format='fluent', stop_on_failure=True)
+        test.on_load_geometry(
+            vrt_filename, geometry_format='fluent',
+            stop_on_failure=True)
 
     def test_fluent_gui_ugrid3d_gui_box(self):
         """simple UGRID3D box model"""
