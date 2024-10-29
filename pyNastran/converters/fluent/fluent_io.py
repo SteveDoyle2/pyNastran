@@ -99,19 +99,19 @@ class FluentIO:
         nelement = len(element_id)
         assert len(element_id) == len(region), f'neids={len(element_id)} nregion={len(region)}'
 
-        length_in_units = other_settings.units_model_in[0]
-        length_out_units = other_settings.length_units
-        if length_in_units != length_out_units:
+        units_length_in = other_settings.units_model_in[0]
+        units_length_out = other_settings.units_length
+        if units_length_in != 'unitless':
             nodes = convert_length(
-                nodes, length_in_units, length_out_units)
+                nodes, units_length_in, units_length_out)
 
-        pressure_in_units = other_settings.units_model_in[-1]
-        pressure_out_units = other_settings.pressure_units
-        if 0 and 'Pressure' in titles and (pressure_in_units != pressure_out_units):
+        units_pressure_in = other_settings.units_model_in[-1]
+        units_pressure_out = other_settings.units_pressure
+        if units_length_in != 'unitless' and 'Pressure' in titles:
             ipressure = titles.index('Pressure')
             results[:, ipressure] = convert_pressure(
                 results[:, ipressure],
-                pressure_in_units, pressure_out_units)
+                units_pressure_in, units_pressure_out)
 
         nnodes = len(nodes)
         gui.nnodes = nnodes
