@@ -2,6 +2,7 @@
 from typing import Optional
 import numpy as np
 
+from pyNastran.utils.convert import convert_length
 from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, # vtkRenderWindow, vtkRenderWindowInteractor,
     #vtkActor, vtkCamera,
@@ -625,3 +626,14 @@ class GuiVTKCommon(GuiQtCommon):
         self.log_command(f'self.map_element_centroid_to_node_fringe_result('
                          f'update_limits={update_limits}, show_msg={show_msg})')
         return is_passed
+
+    #------------------------
+    # other
+    def scale_length(self, xyz_cid0: np.ndarray) -> np.ndarray:
+        other_settings = self.settings.other_settings
+        units_length_in = other_settings.units_model_in[0]
+        units_length_out = other_settings.units_length
+        if units_length_in != 'unitless':
+            xyz_cid0 = convert_length(
+                xyz_cid0, units_length_in, units_length_out)
+        return xyz_cid0

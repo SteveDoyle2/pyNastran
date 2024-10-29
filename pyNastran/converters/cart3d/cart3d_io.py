@@ -110,6 +110,7 @@ class Cart3dIO:
         assert nodes is not None
         #nnodes = nodes.shape[0]
 
+        nodes = gui.scale_length(nodes)
         mmax = nodes.max(axis=0)
         mmin = nodes.min(axis=0)
         dim_max = (mmax - mmin).max()

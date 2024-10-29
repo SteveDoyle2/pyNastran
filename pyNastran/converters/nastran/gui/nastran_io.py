@@ -494,6 +494,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
          - load_nastran_geometry_unvectorized
         """
         gui: MainWindow = self.gui
+        xyz_cid0 = gui.scale_length(xyz_cid0)
         points = numpy_to_vtk_points(xyz_cid0)
         gui.grid.SetPoints(points)
 
@@ -997,9 +998,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         """
         gui: MainWindow = self.gui
-        points = vtkPoints()
-        points.SetNumberOfPoints(ncaeros_points)
-
+        xyzs = []
         max_cpoints = []
         min_cpoints = []
 
@@ -1021,10 +1020,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 point_ids.SetId(1, j + 1)
                 point_ids.SetId(2, j + 2)
                 point_ids.SetId(3, j + 3)
-                points.InsertPoint(j, *cpoints[0])
-                points.InsertPoint(j + 1, *cpoints[1])
-                points.InsertPoint(j + 2, *cpoints[2])
-                points.InsertPoint(j + 3, *cpoints[3])
+                xyzs.append(cpoints[0])
+                xyzs.append(cpoints[1])
+                xyzs.append(cpoints[2])
+                xyzs.append(cpoints[3])
                 caero_grid.InsertNextCell(elem.GetCellType(), point_ids)
                 j += 4
             elif isinstance(element, (CAERO2, BODY7)):
@@ -1041,8 +1040,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 #point_ids = elem.GetPointIds()
                 #point_ids.SetId(0, j)
                 #point_ids.SetId(1, j + 1)
-                #points.InsertPoint(j, *cpoints[0])
-                #points.InsertPoint(j + 1, *cpoints[1])
+                #xyzs.append(cpoints[0])
+                #xyzs.append(cpoints[1])
                 #j += 2
                 #caero_grid.InsertNextCell(elem.GetCellType(), point_ids)
 
@@ -1060,10 +1059,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     point_ids.SetId(3, j + 3)
                     n1, n2, n3, n4 = elemi
 
-                    points.InsertPoint(j, *xyz[n1])
-                    points.InsertPoint(j + 1, *xyz[n2])
-                    points.InsertPoint(j + 2, *xyz[n3])
-                    points.InsertPoint(j + 3, *xyz[n4])
+                    xyzs.append(xyz[n1])
+                    xyzs.append(xyz[n2])
+                    xyzs.append(xyz[n3])
+                    xyzs.append(xyz[n4])
 
                     #cpoints = element.get_points()
                     #cpoints[0][2] += zfighting_offset
@@ -1079,11 +1078,16 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         if ncaeros_points and len(max_cpoints):
             gui.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
             gui.log_info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
-        caero_grid.SetPoints(points)
+
+        xyz = np.array(xyzs)
+        xyz = gui.scale_length(xyz)
+        vtk_points = numpy_to_vtk_points(xyz, points=None, dtype='<f', deep=1)
+        caero_grid.SetPoints(vtk_points)
         #gui.alt_grids['caero']
         #edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
-    def set_caero_subpanel_grid(self, ncaero_sub_points: int, model: BDF) -> None:
+    def set_caero_subpanel_grid(self, ncaero_sub_points: int,
+                                model: BDF) -> None:
         """
         Sets the CAERO sub-panel geometry.
 
@@ -1103,6 +1107,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         quad_etype = 9
         create_vtk_cells_of_constant_element_type(grid, elements, quad_etype)
 
+        nodes = gui.scale_length(nodes)
         vtk_points = numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1)
         grid.SetPoints(vtk_points)
         return
@@ -3583,7 +3588,7 @@ def _create_masses(gui: MainWindow,
         if not nastran_settings.is_mass_update:
             return
         mass_grid = gui.alt_grids['conm2']
-        update_mass_grid(model, mass_grid, points, node_ids, nodes)
+        update_mass_grid(gui, model, mass_grid, points, node_ids, nodes)
         return
 
     gui.create_alternate_vtk_grid(
@@ -3592,19 +3597,21 @@ def _create_masses(gui: MainWindow,
         representation='point')
     return nconm2
 
-def update_mass_grid(model: BDF,
+def update_mass_grid(gui: MainWindow,
+                     model: BDF,
                      mass_grid: vtkUnstructuredGrid,
                      points: vtkPoints,
                      node_ids: np.ndarray,
                      nodes: np.ndarray) -> None:
     j2 = 0
+    xyzs = []
     for unused_eid, element in sorted(model.masses.items()):
         if isinstance(element, CONM2):
             nid = element.nid
             inid = np.searchsorted(node_ids, nid)
             xyz_nid = nodes[inid, :]
             centroid = element.offset(xyz_nid)
-            points.SetPoint(j2, *centroid)
+            xyzs.append(centroid)
 
         elif element.type in ('CMASS1', 'CMASS2'):
             n1, n2 = element.nodes
@@ -3618,7 +3625,7 @@ def update_mass_grid(model: BDF,
                 p2 = nodes[inid, :]
                 factor += 1.
             centroid = (p1 + p2) / factor
-            points.SetPoint(j2, *centroid)
+            xyzs.append(centroid)
 
             elem = vtkVertex()
             point_ids = elem.GetPointIds()
@@ -3628,6 +3635,9 @@ def update_mass_grid(model: BDF,
             continue
             #self.gui.log_info("skipping %s" % element.type)
         j2 += 1
+    xyz = np.array(xyzs)
+    xyz = gui.scale_length()
+    numpy_to_vtk_points(xyz, points=points)
     return
 
 def _get_geometry_properties_by_name(gui: MainWindow,
@@ -3673,8 +3683,7 @@ def _set_conm_grid(gui: MainWindow,
     if not create_secondary_actors:  # pramga: no cover
         return
     j = 0
-    points = vtkPoints()
-    points.SetNumberOfPoints(nconm2)
+    xyzs = []
 
     #sphere_size = self._get_sphere_size(dim_max)
     alt_grid = gui.alt_grids['conm2']
@@ -3685,7 +3694,7 @@ def _set_conm_grid(gui: MainWindow,
             #centroid_old = element.Centroid()
             #assert np.all(np.allclose(centroid_old, centroid)), 'centroid_old=%s new=%s' % (centroid_old, centroid)
             #d = norm(xyz - c)
-            points.InsertPoint(j, *centroid)
+            xyzs.append(centroid)
 
             #if 1:
             elem = vtkVertex()
@@ -3703,7 +3712,7 @@ def _set_conm_grid(gui: MainWindow,
             #n1 = element.G1()
             #n2 = element.G2()
             #print('n1=%s n2=%s centroid=%s' % (n1, n2, centroid))
-            points.InsertPoint(j, *centroid)
+            xyzs.append(centroid)
 
             elem = vtkVertex()
             point_ids = elem.GetPointIds()
@@ -3712,7 +3721,11 @@ def _set_conm_grid(gui: MainWindow,
             j += 1
         else:
             gui.log_info("skipping %s" % element.type)
-    alt_grid.SetPoints(points)
+
+    xyz = np.array(xyzs)
+    xyz = gui.scale_length(xyz)
+    vtk_points = numpy_to_vtk_points(xyz)
+    alt_grid.SetPoints(vtk_points)
 
 def _create_caero_actors(gui: MainWindow, ncaeros: int,
                          ncaeros_sub: int,

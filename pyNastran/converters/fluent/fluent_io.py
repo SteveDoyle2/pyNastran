@@ -6,7 +6,7 @@ import numpy as np
 import vtkmodules
 from pyNastran.gui.vtk_interface import vtkTriangle, vtkQuad
 
-from pyNastran.utils.convert import convert_pressure, convert_length
+from pyNastran.utils.convert import convert_pressure
 from pyNastran.converters.fluent.fluent import read_fluent, Fluent
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
@@ -99,15 +99,11 @@ class FluentIO:
         nelement = len(element_id)
         assert len(element_id) == len(region), f'neids={len(element_id)} nregion={len(region)}'
 
-        units_length_in = other_settings.units_model_in[0]
-        units_length_out = other_settings.units_length
-        if units_length_in != 'unitless':
-            nodes = convert_length(
-                nodes, units_length_in, units_length_out)
-
+        assert nodes is not None
+        nodes = gui.scale_length(nodes)
         units_pressure_in = other_settings.units_model_in[-1]
         units_pressure_out = other_settings.units_pressure
-        if units_length_in != 'unitless' and 'Pressure' in titles:
+        if units_pressure_in != '' and 'Pressure' in titles:
             ipressure = titles.index('Pressure')
             results[:, ipressure] = convert_pressure(
                 results[:, ipressure],
@@ -121,7 +117,6 @@ class FluentIO:
         ugrid = gui.grid
         ugrid.Allocate(gui.nelements, 1000)
 
-        assert nodes is not None
         points = numpy_to_vtk_points(nodes)
         ugrid.SetPoints(points)
         log.info(f'created vtk points')
