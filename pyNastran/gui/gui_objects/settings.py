@@ -149,6 +149,18 @@ NASTRAN_BOOL_KEYS = [
 ]
 NASTRAN_BOOL_STR_KEYS = NASTRAN_BOOL_KEYS + NASTRAN_STR_KEYS
 
+OTHER_STRING_KEYS = [
+    'units_length', 'units_force', 'units_moment',
+    'units_stress', 'units_pressure',
+    'units_displacement',
+    'units_velocity', 'units_acceleration',
+]
+OTHER_LIST_INT_KEYS = [
+    'cart3d_fluent_include', 'cart3d_fluent_remove',]
+OTHER_LIST_STR_KEYS = [
+    'units_model_in', ]
+
+
 class OtherSettings:
     def __init__(self, parent):
         """
@@ -160,17 +172,40 @@ class OtherSettings:
     def reset_settings(self) -> None:
         self.cart3d_fluent_include = ()
         self.cart3d_fluent_remove = ()
+        #('in', 'lbf', 's', 'psi')
+        self.units_model_in = ('unitless','','','')
+        self.units_length = 'in'
+        #self.units_area = 'in^2'
+        self.units_force = 'lbf'
+        self.units_moment = 'in-lbf'
+        self.units_stress = 'psi'
+        self.units_pressure = 'psi'
+        self.units_displacement = 'in'
+        self.units_velocity = 'in/s'
+        self.units_acceleration = 'in/s^2'
 
     def update(self, out_data: dict[str, Any]):
+        """from preferences"""
         self.cart3d_fluent_include = out_data['cart3d_fluent_include']
         self.cart3d_fluent_remove = out_data['cart3d_fluent_remove']
+        #self.units_model_in = out_data['units_model_in']
+        #self.units_length = out_data['units_length']
+        #self.units_area = out_data['units_area']
+        #self.units_force  = out_data['units_force']
+        #self.units_moment = out_data['units_moment']
+        #self.units_stress = out_data['units_stress']
+        #self.units_pressure = out_data['units_pressure']
+        #self.units_displacement = out_data['units_displacement']
+        #self.units_velocity = out_data['units_velocity']
+        #self.units_acceleration = out_data['units_acceleration']
 
     def save(self, settings: QSettings) -> None:
+        """save_json -> all keys"""
         keys = object_attributes(self, mode='public', keys_to_skip=['parent'])
         for key in keys:
             #base, key2 = key.split('_', 1)
             value = getattr(self, key)
-            #print(f'other: key={key!r} value={value!r}')
+            #print(f'save other: key={key!r} value={value!r}')
             settings.setValue(key, value)
 
     def __repr__(self) -> str:
@@ -709,11 +744,27 @@ class Settings:
         other_settings: OtherSettings = self.other_settings
         # self.cart3d_fluent_include = ()
         # self.cart3d_fluent_remove = ()
-        for key in ['cart3d_fluent_include', 'cart3d_fluent_remove']:
+        for key in OTHER_STRING_KEYS:
             default = getattr(other_settings, key)
             value = self._set_setting(
                 settings, setting_keys, [key],
+                default=default, save=False, auto_type=str)
+            setattr(other_settings, key, value)
+
+        for key in OTHER_LIST_INT_KEYS:
+            default = getattr(other_settings, key)
+            #print(key, default)
+            value = self._set_setting(
+                settings, setting_keys, [key],
                 default=default, save=False, auto_type=int)
+            setattr(other_settings, key, tuple(value))
+
+        for key in OTHER_LIST_STR_KEYS:
+            default = getattr(other_settings, key)
+            #print(key, default)
+            value = self._set_setting(
+                settings, setting_keys, [key],
+                default=default, save=False, auto_type=str)
             setattr(other_settings, key, tuple(value))
 
 

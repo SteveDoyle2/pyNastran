@@ -16,6 +16,7 @@ class QSettingsLike2:
         'screen_shape', 'screen_position',
         'nastran_caero_color', 'nastran_rbe_line_color',
         'cart3d_fluent_include', 'cart3d_fluent_remove',
+        'units_model_in',
     }
     def __init__(self):
         """

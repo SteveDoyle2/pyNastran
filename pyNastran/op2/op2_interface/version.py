@@ -116,6 +116,9 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str,
     #elif data[:20] == b'XXXXXXXX20141   0   ':
         #self.set_as_msc()
         #self.set_table_type()
+    elif version == b'ADINAOUT':
+        mode = 'adina'
+        #print('version_str = ',version_str)
     elif version == b'NASA95':
         mode = 'nasa95'
     else:  # pragma: no cover

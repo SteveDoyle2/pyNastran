@@ -1,9 +1,12 @@
 """various QComboBox tools"""
+from typing import Callable
 from pyNastran.gui.qt_version import qt_version
 from qtpy.QtWidgets import QComboBox
 
 
-def make_combo_box(items: list[str], initial_value: str) -> QComboBox:
+def make_combo_box(items: list[str],
+                   initial_value: str,
+                   func: Callable=None) -> QComboBox:
     """
     Makes a QComboBox, sets the items, and sets an initial value.
 
@@ -28,6 +31,8 @@ def make_combo_box(items: list[str], initial_value: str) -> QComboBox:
     if initial_value not in items:
         msg = 'initial_value=%r is not supported in %s' % (initial_value, items)
         raise RuntimeError(msg)
+    if func:
+        combo_box.currentIndexChanged.connect(func)
     return combo_box
 
 def update_combo_box(combo_box: QComboBox, new_items: list[str],
@@ -53,4 +58,3 @@ def set_combo_box_text(combo_box: QComboBox,
         combo_box.setCurrentIndex(j)
     else:
         combo_box.setCurrentText(value)
-

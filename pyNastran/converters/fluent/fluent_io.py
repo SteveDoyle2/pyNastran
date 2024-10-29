@@ -1,6 +1,6 @@
 """Defines the GUI IO file for Fluent."""
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, cast
 import numpy as np
 
 import vtkmodules
@@ -16,6 +16,8 @@ from pyNastran.gui.utils.vtk.vectorized_geometry import (
 if TYPE_CHECKING:
     from pyNastran.gui.main_window import MainWindow
     from vtk import vtkUnstructuredGrid
+    from pyNastran.gui.gui_objects.settings import (
+        OtherSettings)
 
 class FluentIO:
     def __init__(self, gui: MainWindow):
@@ -28,7 +30,8 @@ class FluentIO:
         return data
 
     def load_fluent_geometry(self, fld_filename: str,
-                             name: str='main', plot: bool=True):
+                             name: str='main',
+                             plot: bool=True):
         gui = self.gui
         model_name = name
         skip_reading = gui._remove_old_geometry(fld_filename)
@@ -36,28 +39,47 @@ class FluentIO:
             return
 
         log = gui.log
-        model = read_fluent(
-            fld_filename, #auto_read_write_h5=False,
-            log=log, debug=False)
+        other_settings: OtherSettings = gui.settings.other_settings
+
+        if isinstance(fld_filename, Fluent):
+            model = fld_filename
+        else:
+            model = read_fluent(
+                fld_filename, #auto_read_write_h5=False,
+                log=log, debug=False)
+        model = cast(Fluent, model)
         #self.model_type = model.model_type
 
         node_id = model.node_id
         nodes = model.xyz
         assert len(node_id) == len(np.unique(node_id))
 
-        # support multiple results
-        titles = model.titles
-
         #regions_to_remove = [] #3
         #regions_to_include = [7, 4]
         #regions_to_include = []
-        regions_to_remove = self.gui.settings.other_settings.cart3d_fluent_remove
-        regions_to_include = self.gui.settings.other_settings.cart3d_fluent_include
+        regions_to_remove = other_settings.cart3d_fluent_remove
+        regions_to_include = other_settings.cart3d_fluent_include
 
-        element_id, tris, quads, region, results = model.get_filtered_data(
-            regions_to_remove, regions_to_include)
+        model2 = model.get_filtered_data(
+            regions_to_remove, regions_to_include, return_model=True)
+        str(model2)
+
+        element_id = model2.element_id
+        assert len(element_id) > 0, element_id
+        assert len(element_id) == len(np.unique(element_id))
+        tris = model2.tris
+        quads = model2.quads
+        region = model2.region
+
+        # support multiple results
+        titles = model2.titles
+        results = model2.results
+        assert len(titles)-1 == results.shape[1], (len(titles), results.shape)
+
         out = model.get_area_centroid_normal(tris, quads)
-        tri_area, quad_area, tri_centroid, quad_centroid, tri_normal, quad_normal = out
+        (tri_area, quad_area,
+         tri_centroid, quad_centroid,
+         tri_normal, quad_normal) = out
         normal = np.vstack([quad_normal, tri_normal])
         #centroid = np.vstack([quad_centroid, tri_centroid])
         #area = np.hstack([quad_area, tri_area])
@@ -74,19 +96,29 @@ class FluentIO:
             node_id = node_id[inode_used]
             nodes = nodes[inode_used, :]
 
-        if 0:
-            nodes = convert_length(nodes, 'm', 'in')
-            results[:, 0] = convert_pressure(results[:, 0], 'Pa', 'psi')
-
         nelement = len(element_id)
         assert len(element_id) == len(region), f'neids={len(element_id)} nregion={len(region)}'
+
+        length_in_units = other_settings.units_model_in[0]
+        length_out_units = other_settings.length_units
+        if length_in_units != length_out_units:
+            nodes = convert_length(
+                nodes, length_in_units, length_out_units)
+
+        pressure_in_units = other_settings.units_model_in[-1]
+        pressure_out_units = other_settings.pressure_units
+        if 0 and 'Pressure' in titles and (pressure_in_units != pressure_out_units):
+            ipressure = titles.index('Pressure')
+            results[:, ipressure] = convert_pressure(
+                results[:, ipressure],
+                pressure_in_units, pressure_out_units)
 
         nnodes = len(nodes)
         gui.nnodes = nnodes
         gui.nelements = nelement
 
         gui.log.info(f'nnodes={gui.nnodes:d} nelements={gui.nelements:d}')
-        ugrid = self.gui.grid
+        ugrid = gui.grid
         ugrid.Allocate(gui.nelements, 1000)
 
         assert nodes is not None

@@ -7,6 +7,7 @@ from cpylog import get_logger
 import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 #from pyNastran.bdf.bdf import BDF
+from pyNastran.converters.fluent.fluent import Fluent
 from pyNastran.converters.fluent.fluent_io import FluentIO
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 from pyNastran.converters.fluent.ugrid_to_fluent import ugrid_to_fluent_filename
@@ -59,6 +60,31 @@ class TestFluentGui(unittest.TestCase):
         test.log = log
         test.on_load_geometry(
             fluent_filename, geometry_format='fluent', stop_on_failure=True)
+
+    def test_fluent_gui_missing_nodes(self):
+        model = Fluent()
+        model.node_id = np.array([1, 2, 3, 4])
+        model.xyz = np.array([
+            [0., 0., 0.],
+            [1., 0., 0.],
+            [1., 1., 0.],
+            [0., 1., 0.],
+        ])
+        model.tris = np.array([
+            [1, 10, 1, 2, 3],
+        ])
+        model.quads = np.array([
+            [2, 12, 1, 2, 3, 4],
+        ])
+        model.element_id = np.array([1, 2])
+        model.element_ids = np.array([1, 2])
+        model.titles = ['ShellID', 'Pi']
+        model.results = np.ones((len(model.element_id), 1)) * 3.14
+
+        log = get_logger(level='warning', encoding='utf-8')
+        test = FluentGui()
+        test.log = log
+        test.model.load_fluent_geometry(model)
 
 
 if __name__ == '__main__':  # pragma: no cover

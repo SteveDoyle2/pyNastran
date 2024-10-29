@@ -60,9 +60,6 @@ class PreferencesObject(BaseGui):
             'highlight_opacity' : settings.highlight_opacity,
             'highlight_point_size' : settings.highlight_point_size,
 
-            'cart3d_fluent_include': other_settings.cart3d_fluent_include,
-            'cart3d_fluent_remove': other_settings.cart3d_fluent_remove,
-
             'picker_size' : self.gui.element_picker_size,
             'dim_max' : settings.dim_max,
             'coord_scale' : settings.coord_scale,
@@ -72,6 +69,22 @@ class PreferencesObject(BaseGui):
 
             'min_clip' : min_clip,
             'max_clip' : max_clip,
+
+            #----------------------------------------
+            # other
+            'cart3d_fluent_include': other_settings.cart3d_fluent_include,
+            'cart3d_fluent_remove': other_settings.cart3d_fluent_remove,
+            'units_model_in': other_settings.units_model_in,
+            'units_length': other_settings.units_length,
+            #'units_area': other_settings.units_area,
+            'units_force': other_settings.units_force,
+            'units_moment': other_settings.units_moment,
+            'units_pressure': other_settings.units_pressure,
+            'units_stress': other_settings.units_stress,
+            'units_displacement': other_settings.units_displacement,
+            'units_velocity': other_settings.units_velocity,
+            'units_acceleration': other_settings.units_acceleration,
+            # ----------------------------------------
 
             'clicked_ok' : False,
             'close' : False,

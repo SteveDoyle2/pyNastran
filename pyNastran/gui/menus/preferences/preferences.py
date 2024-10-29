@@ -23,7 +23,7 @@ from qtpy.QtWidgets import (
 
 from pyNastran.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
-from pyNastran.gui.utils.qt.qcombobox import get_combo_box_text
+from pyNastran.gui.utils.qt.qcombobox import make_combo_box, get_combo_box_text
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.checks.qlineedit import QLINEEDIT_GOOD, QLINEEDIT_ERROR
 
@@ -57,6 +57,21 @@ if TYPE_CHECKING:  # pragma: no cover
 
 USE_TABS = True
 IS_SMT = False
+UNITS_MODEL_IN = [
+    'in-lbf-s', 'm-kg-s', 'unitless',
+]
+LENGTH_UNITS = ['in', 'ft', 'm', 'cm', 'mm']
+PRESSURE_UNITS = ['psi', 'ksi', 'Pa', 'MPa']
+STRESS_UNITS = PRESSURE_UNITS
+FORCE_UNITS = ['lbf', 'N', 'kN', 'MN', 'mN']
+MOMENT_UNITS = ['in-lbf', 'ft-lbf', 'N-m']
+AREA_UNITS = [f'{unit}^2' for unit in LENGTH_UNITS]
+
+DISPLAMCENT_UNITS = LENGTH_UNITS
+VELOCITY_UNITS = [f'{unit}/s' for unit in LENGTH_UNITS]
+ACCELERATION_UNITS = [f'{unit}/s^2' for unit in LENGTH_UNITS] + ['g']
+
+
 class PreferencesWindow(PyDialog):
     """
     +-------------+
@@ -104,6 +119,17 @@ class PreferencesWindow(PyDialog):
 
         self._cart3d_fluent_include = data['cart3d_fluent_include']
         self._cart3d_fluent_remove = data['cart3d_fluent_remove']
+
+        self._units_model_in = data['units_model_in']
+        self._units_length = data['units_length']
+        #self._units_area = data['units_area']
+        self._units_force = data['units_force']
+        self._units_moment = data['units_moment']
+        self._units_pressure = data['units_pressure']
+        self._units_stress = data['units_stress']
+        self._units_displacement = data['units_displacement']
+        self._units_velocity = data['units_velocity']
+        self._units_acceleration = data['units_acceleration']
 
         self._is_trackball_camera = data['is_trackball_camera']
         self._parallel_projection = data['use_parallel_projection']
@@ -362,8 +388,10 @@ class PreferencesWindow(PyDialog):
         self.magnify_edit.setMaximum(MAGNIFY_MAX)
         self.magnify_edit.setValue(self._magnify)
         self.magnify_edit.setToolTip('1: Standard resolution; >1: high quality')
+        self._set_widgets_nastran()
+        self._set_widgets_other()
 
-        #-----------------------------------------------------------------------
+    def _set_widgets_nastran(self):
         self.nastran_version_label = QLabel('Version')
         self.nastran_version_pulldown = QComboBox(self)
         self.nastran_version_pulldown.addItems(NASTRAN_VERSIONS)
@@ -485,6 +513,56 @@ class PreferencesWindow(PyDialog):
         self.apply_button = QPushButton('Apply')
         self.ok_button = QPushButton('OK')
         self.cancel_button = QPushButton('Cancel')
+
+    def _set_widgets_other(self):
+        self.cart3d_fluent_label = QLabel('Cart3d/Fluent')
+        self.region_include_label = QLabel('Regions (Include):')
+        self.region_remove_label = QLabel('Regions (Remove):')
+        include_str = ' '.join(str(val) for val in self._cart3d_fluent_include)
+        remove_str = ' '.join(str(val) for val in self._cart3d_fluent_remove)
+        self.cart3d_fluent_regions_include = QLineEdit(include_str)
+        self.cart3d_fluent_regions_remove = QLineEdit(remove_str)
+
+        self.units_label = QLabel('Units:')
+        self.model_in_label = QLabel('Input Units:')
+        self.length_label = QLabel('Length:')
+
+        self.stress_label = QLabel('Stress:')
+        self.pressure_label = QLabel('Pressure:')
+        self.force_label = QLabel('Force:')
+        self.moment_label = QLabel('Moment:')
+        self.displacement_label = QLabel('Displacement:')
+        self.velocity_label = QLabel('Velocity:')
+        self.acceleration_label = QLabel('Acceleration:')
+        self.length_pulldown = make_combo_box(LENGTH_UNITS, self._units_length, partial(self.on_unit, 'length'))
+        self.stress_pulldown = make_combo_box(STRESS_UNITS, self._units_stress, partial(self.on_unit, 'stress'))
+        self.pressure_pulldown = make_combo_box(PRESSURE_UNITS, self._units_pressure, partial(self.on_unit, 'pressure'))
+        #self.area_pulldown = make_combo_box(AREA_UNITS, self._units_area, partial(self.on_unit, 'area'))
+        self.force_pulldown = make_combo_box(FORCE_UNITS, self._units_force, partial(self.on_unit, 'force'))
+        self.moment_pulldown = make_combo_box(MOMENT_UNITS, self._units_moment, partial(self.on_unit, 'moment'))
+        self.displacement_pulldown = make_combo_box(DISPLAMCENT_UNITS, self._units_displacement, partial(self.on_unit, 'displacement'))
+        self.velocity_pulldown = make_combo_box(VELOCITY_UNITS, self._units_velocity, partial(self.on_unit, 'velocity'))
+        self.acceleration_pulldown = make_combo_box(ACCELERATION_UNITS, self._units_acceleration, partial(self.on_unit, 'acceleration'))
+
+        pulldowns = [
+            #self.area_labe, self.area_pulldown,
+            self.force_label, self.force_pulldown,
+            self.moment_label, self.moment_pulldown,
+            self.pressure_label, self.pressure_pulldown,
+            self.stress_label, self.stress_pulldown,
+            self.displacement_label, self.displacement_pulldown,
+            self.velocity_label, self.velocity_pulldown,
+            self.acceleration_label, self.acceleration_pulldown,
+        ]
+        for pulldown in pulldowns:
+            pulldown.setVisible(False)
+
+        #('in', 'lbf', 's', 'psi')
+        #self.units_model_in = ('unitless','','','')
+        self.units_model_label = QLabel('Model Units:')
+        units_model_in_str = '-'.join(self._units_model_in[:3]).rstrip('-')
+        self.units_model_pulldown = make_combo_box(UNITS_MODEL_IN, units_model_in_str,
+                                                   self.on_units_model_in)
 
     #def create_legend_widgets(self):
         #"""
@@ -694,14 +772,6 @@ class PreferencesWindow(PyDialog):
         self.setLayout(vbox)
 
     def _get_grid_other(self):
-        self.cart3d_fluent_label = QLabel('Cart3d/Fluent')
-        self.region_include_label = QLabel('Regions (Include):')
-        self.region_remove_label = QLabel('Regions (Remove):')
-        include_str = ' '.join(str(val) for val in self._cart3d_fluent_include)
-        remove_str = ' '.join(str(val) for val in self._cart3d_fluent_remove)
-        self.cart3d_fluent_regions_include = QLineEdit(include_str)
-        self.cart3d_fluent_regions_remove = QLineEdit(remove_str)
-
         vbox_other = QGridLayout()
         irow = 1
         vbox_other.addWidget(self.cart3d_fluent_label, irow, 0)
@@ -711,6 +781,38 @@ class PreferencesWindow(PyDialog):
         irow += 1
         vbox_other.addWidget(self.region_remove_label, irow, 0)
         vbox_other.addWidget(self.cart3d_fluent_regions_remove, irow, 1)
+
+
+        irow += 1
+        vbox_other.addWidget(self.units_label, irow, 0)
+        irow += 1
+        vbox_other.addWidget(self.units_model_label, irow, 0)
+        vbox_other.addWidget(self.units_model_pulldown, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.length_label, irow, 0)
+        vbox_other.addWidget(self.length_pulldown, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.stress_label, irow, 0)
+        vbox_other.addWidget(self.stress_pulldown, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.pressure_label, irow, 0)
+        vbox_other.addWidget(self.pressure_pulldown, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.force_label, irow, 0)
+        vbox_other.addWidget(self.force_pulldown, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.moment_label, irow, 0)
+        vbox_other.addWidget(self.moment_pulldown, irow, 1)
+
+        irow += 1
+        vbox_other.addWidget(self.displacement_label, irow, 0)
+        vbox_other.addWidget(self.displacement_pulldown, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.velocity_label, irow, 0)
+        vbox_other.addWidget(self.velocity_pulldown, irow, 1)
+        irow += 1
+        vbox_other.addWidget(self.acceleration_label, irow, 0)
+        vbox_other.addWidget(self.acceleration_pulldown, irow, 1)
         return vbox_other
 
     def _get_nastran_vboxs(self) -> tuple[QVBoxLayout, QVBoxLayout, QVBoxLayout]:
@@ -1004,6 +1106,27 @@ class PreferencesWindow(PyDialog):
             settings.set_background_color2(self.background_color2_float, render=True)
         self.on_apply()
 
+    def on_units_model_in(self):
+        text = get_combo_box_text(self.units_model_pulldown)
+        units_model_in_sline0 = text.split('-')
+        units_model_in_sline = [''] * 4
+        units_model_in_sline[:len(units_model_in_sline0)] = units_model_in_sline0
+        if self.win_parent is not None:
+            settings: Settings = self.settings
+            other_settings = settings.other_settings
+            assert len(units_model_in_sline) == len(other_settings.units_model_in)
+            #print(f'on_units_model_in: units_model_in_sline={units_model_in_sline}')
+            other_settings.units_model_in = tuple(units_model_in_sline)
+
+    def on_unit(self, name: str) -> None:
+        pulldown = getattr(self, f'{name}_pulldown')
+        text = get_combo_box_text(pulldown)
+        if self.win_parent is not None:
+            settings: Settings = self.settings
+            other_settings = settings.other_settings
+            setattr(other_settings, f'units_{name}', text)
+            #print(f'set units_{name} = {text}')
+
     @property
     def settings(self) -> Settings:
         return self.win_parent.settings
@@ -1031,13 +1154,16 @@ class PreferencesWindow(PyDialog):
         font = make_font(value, is_bold=False)
         self.setFont(font)
         bold_font = make_font(value, is_bold=True)
-        self.nastran_label.setFont(bold_font)
-        self.nastran_results_label.setFont(bold_font)
-        self.nastran_actors_label.setFont(bold_font)
-        self.cart3d_fluent_label.setFont(bold_font)
-        if IS_SMT:
-            self.shear_moment_torque_label.setFont(bold_font)
 
+        bold_labels = [
+            self.nastran_label, self.nastran_results_label,
+            self.nastran_actors_label,
+            self.cart3d_fluent_label, self.units_label,
+        ]
+        if IS_SMT:
+            bold_labels.append(self.shear_moment_torque_label)
+        for label in bold_labels:
+            label.setFont(bold_font)
 
     def on_annotation_size(self, value=None) -> None:
         """update the annotation size"""
@@ -1476,8 +1602,20 @@ def main():  # pragma: no cover
         'max_clip' : 10,
 
         'dim_max' : 502.,
+        #------------------------------------
+        #other
         'cart3d_fluent_include': (),
         'cart3d_fluent_remove': (3,),
+        'units_model_in': ('in', 'lbf', 's', 'psi'),
+        'units_length': 'in',
+        #'units_area': 'in^2',
+        'units_force': 'lbf',
+        'units_moment': 'in-lbf',
+        'units_pressure': 'psi',
+        'units_stress': 'psi',
+        'units_displacement': 'in',
+        'units_velocity': 'in/s',
+        'units_acceleration': 'in/s^2',
     }
     for name in NASTRAN_BOOL_KEYS:
         data[name] = True

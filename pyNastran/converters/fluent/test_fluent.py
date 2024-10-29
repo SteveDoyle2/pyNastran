@@ -44,7 +44,8 @@ class TestFluent(unittest.TestCase):
              4000         0         0         0         0         0         0         0
                  1          3          3          3          4
                  1          1          2          3""")
-        (quads, tris), (element_ids, regions) = read_cell(cell_filename)
+        (quads, tris), element_ids = read_cell(cell_filename)
+        regions = tris[:, 1]
         assert len(quads) == 0, quads
         assert len(tris) == 1, tris
         assert np.array_equal(element_ids, [1]), element_ids
@@ -57,9 +58,10 @@ class TestFluent(unittest.TestCase):
              4000         0         0         0         0         0         0         0
                  1          3          4         100         4
                  1          1          2          3          4""")
-        (quads, tris), (element_ids, regions) = read_cell(cell_filename)
+        (quads, tris), element_ids = read_cell(cell_filename)
         assert len(quads) == 1, quads
         assert len(tris) == 0, tris
+        regions = quads[:, 1]
         assert np.array_equal(element_ids, [1]), element_ids
         assert np.array_equal(regions, [100]), regions
 
@@ -92,7 +94,7 @@ class TestFluent(unittest.TestCase):
 
         node_id, xyz = read_vrt(vrt_filename)
         assert len(xyz) == 10135, xyz.shape
-        (quads, tris), (element_ids, regions) = read_cell(cel_filename)
+        (quads, tris), element_ids = read_cell(cel_filename)
         element_id, titles, results = read_daten(daten_filename, scale=2.0)
         model = read_fluent(vrt_filename)
         model.write_fluent(vrt_filename2)
