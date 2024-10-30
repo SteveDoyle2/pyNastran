@@ -438,6 +438,7 @@ class GuiResult(GuiResultCommon):
                  colormap: str='jet',
                  data_map: Any=None,
                  data_format: Optional[str]=None,
+                 scale_type: str='',
                  uname: str='GuiResult'):
         """
         Parameters
@@ -463,7 +464,7 @@ class GuiResult(GuiResultCommon):
 
         """
         GuiResultCommon.__init__(self)
-
+        self.scale_type = scale_type
         self.data_map = data_map
         self.subcase_id = subcase_id
         #assert self.subcase_id > 0, self.subcase_id

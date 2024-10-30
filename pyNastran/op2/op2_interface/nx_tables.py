@@ -15,7 +15,8 @@ NX_VERSIONS: list[str] = [
     #'2023.0', '2023.1', '2023.2',  #  not checked
     #'2024.0', '2024.1', '2024.2',  #  not checked
     '2206', '2206.5', '2212',
-    '2306', '2312',
+    '2306', '2306.5',
+    '2312',
 ]
 
 NX_ELEMENTS: dict[int, str] = {
@@ -606,6 +607,7 @@ NX_RESULT_TABLES: list[bytes] = [
     b'OSTRVM2',
 
     b'OES2C', b'OSTR2C',
+    b'OSTR1ELC',  # laminate ??? STRAIN, PLSTRN, THSTRN???
 
     # hasn't been validated
     b'OESPSD2C', b'OSTPSD2C',

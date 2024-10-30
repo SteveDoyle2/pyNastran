@@ -114,7 +114,8 @@ def get_elements_nelements_unvectorized(model: BDF) -> tuple[Any, int, list[dict
     return elements, nelements, superelements
 
 
-def build_offset_normals_dims(model: BDF, eid_map: dict[int, int], nelements: int):
+def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
+                              nelements: int):
     normals = np.full((nelements, 3), np.nan, dtype='float32')
     offset = np.full(nelements, np.nan, dtype='float32')
     xoffset = np.full(nelements, np.nan, dtype='float32')
