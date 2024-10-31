@@ -494,7 +494,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
          - load_nastran_geometry_unvectorized
         """
         gui: MainWindow = self.gui
-        xyz_cid0 = gui.scale_length(xyz_cid0)
         points = numpy_to_vtk_points(xyz_cid0)
         gui.grid.SetPoints(points)
 
@@ -603,6 +602,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         nid_cp_cd = None
         if gui.nnodes:
             xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, cid=0, fdtype='float32')
+            xyz_cid0 = gui.scale_length(xyz_cid0)
             dim_max = self._points_to_vtkpoints_coords(model, xyz_cid0)
         self.node_ids = nid_cp_cd[:, 0]
 
@@ -640,11 +640,13 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         geometry_names = []
         make_spc_mpc_supports = nastran_settings.is_constraints
+        make_acoustic = True
         if self.create_secondary_actors:
             if make_spc_mpc_supports and xref_nodes:
                 geometry_names = self.set_spc_mpc_suport_grid(
                     model, nid_to_pid_map, idtype)
-            set_acoustic_grid(gui, model, xyz_cid0, nid_cp_cd, nid_map)
+            if make_acoustic:
+                set_acoustic_grid(gui, model, xyz_cid0, nid_cp_cd, nid_map)
 
             if xref_nodes and nastran_settings.is_bar_axes:
                 icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
@@ -691,7 +693,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         else:
             gui._set_results([form], cases)
 
-    def update_caeros(self, obj):
+    def update_caeros(self, obj: BDF):
         """the update call for the ModifyMenu"""
         model: BDF = self.model
         xref_errors = {}
@@ -723,8 +725,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self._create_splines(model, box_id_to_caero_element_map, caero_points)
         gui: MainWindow = self.gui
         if 'caero' in gui.alt_grids:
-            self.set_caero_grid(ncaeros_points, model)
-            self.set_caero_subpanel_grid(ncaero_sub_points, model)
+            self.set_caero_grid(model)
+            self.set_caero_subpanel_grid(model)
             if has_control_surface:
                 cs_name = 'caero_control_surfaces'
                 self.set_caero_control_surface_grid(
@@ -985,14 +987,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 representation='surface')
         return out
 
-    def set_caero_grid(self, ncaeros_points: int, model: BDF) -> None:
+    def set_caero_grid(self, model: BDF) -> None:
         """
         Sets the CAERO panel geometry.
 
         Parameters
         ----------
-        ncaeros_points : int
-            number of points used by the 'caero' actor
         model : BDF()
             the bdf model
 
@@ -1059,23 +1059,22 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     point_ids.SetId(3, j + 3)
                     n1, n2, n3, n4 = elemi
 
-                    xyzs.append(xyz[n1])
-                    xyzs.append(xyz[n2])
-                    xyzs.append(xyz[n3])
-                    xyzs.append(xyz[n4])
+                    xyzs.append(xyz[n1, :])
+                    xyzs.append(xyz[n2, :])
+                    xyzs.append(xyz[n3, :])
+                    xyzs.append(xyz[n4, :])
 
                     #cpoints = element.get_points()
                     #cpoints[0][2] += zfighting_offset
                     #cpoints[1][2] += zfighting_offset
                     #max_cpoints.append(np.array(cpoints).max(axis=0))
                     #min_cpoints.append(np.array(cpoints).min(axis=0))
-
                     caero_grid.InsertNextCell(elem.GetCellType(), point_ids)
                     j += 4
             else:
-                gui.log_info("skipping %s" % element.type)
+                gui.log_info(f'skipping {element.type}')
 
-        if ncaeros_points and len(max_cpoints):
+        if len(xyzs) and len(max_cpoints):
             gui.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
             gui.log_info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
 
@@ -1086,15 +1085,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #gui.alt_grids['caero']
         #edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
-    def set_caero_subpanel_grid(self, ncaero_sub_points: int,
-                                model: BDF) -> None:
+    def set_caero_subpanel_grid(self, model: BDF) -> None:
         """
         Sets the CAERO sub-panel geometry.
 
         Parameters
         ----------
-        ncaero_sub_points : int
-            number of points used by the 'caero_subpanels' actor
         model : BDF()
             the bdf model
 
@@ -1180,7 +1176,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
             # points_name = spline_1000_structure_points
             points_name = '_'.join(sname)
-            log.error('deleting %r' % points_name)
+            log.error(f'deleting {points_name!r}')
 
             gui.remove_alt_grid(name, remove_geometry_property=True)
             gui.remove_alt_grid(points_name, remove_geometry_property=True)
@@ -3636,7 +3632,7 @@ def update_mass_grid(gui: MainWindow,
             #self.gui.log_info("skipping %s" % element.type)
         j2 += 1
     xyz = np.array(xyzs)
-    xyz = gui.scale_length()
+    xyz = gui.scale_length(xyz)
     numpy_to_vtk_points(xyz, points=points)
     return
 

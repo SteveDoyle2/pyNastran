@@ -52,7 +52,9 @@ from .bdf_interface.assign_type import (integer,
                                         integer_or_string, string)
 
 from pyNastran.bdf.bdf_interface.model_group import ModelGroup
-from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
+from .cards.elements.elements import (
+    CFAST, CGAP, CRAC2D, CRAC3D, GENEL,
+    PLOTEL, PLOTEL3, PLOTEL4)
 from .cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from .cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
 from .cards.cyclic import CYAX, CYJOIN
@@ -687,7 +689,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON',
 
             ## plotels
-            'PLOTEL',
+            'PLOTEL', 'PLOTEL3', 'PLOTEL4',
 
             ## properties
             'PMASS',
@@ -2719,6 +2721,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'DELAY' : (DELAY, add_methods._add_delay_object),
 
             'CYJOIN' : (CYJOIN, add_methods._add_cyjoin_object),
+
+            'PLOTEL3': (PLOTEL3, add_methods._add_plotel_object),
+            'PLOTEL4': (PLOTEL4, add_methods._add_plotel_object),
         }
 
         self._card_parser_prepare = {

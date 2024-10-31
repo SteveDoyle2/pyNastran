@@ -2609,7 +2609,8 @@ def get_pcomp_nplies(properties: dict[int, PCOMP | PCOMPG | PCOMPS | PCOMPLS],
     npliesi = max(npliesi, pcomp_nplies)
     return npliesi
 
-def build_superelement_model(model: BDF, cid: int=0, fdtype: str='float32'):
+def build_superelement_model(model: BDF, cid: int=0,
+                             fdtype: str='float32'):
     models = {0 : model}
     models.update(model.superelement_models)
     #nmodels = len(models)
@@ -2844,16 +2845,20 @@ def build_normals_quality(settings: Settings,
             if make_offset_normals_dim and np.any(np.isfinite(xoffset)):
                 offset_res = GuiResult(
                     0, header='Offset', title='Offset',
-                    location='centroid', scalar=offset, data_format='%g')
+                    location='centroid', scalar=offset, data_format='%g',
+                    scale_type='length')
                 offset_x_res = GuiResult(
                     0, header='OffsetX', title='OffsetX',
-                    location='centroid', scalar=xoffset, data_format='%g')
+                    location='centroid', scalar=xoffset, data_format='%g',
+                    scale_type='length')
                 offset_y_res = GuiResult(
                     0, header='OffsetY', title='OffsetY',
-                    location='centroid', scalar=yoffset, data_format='%g')
+                    location='centroid', scalar=yoffset, data_format='%g',
+                    scale_type='length')
                 offset_z_res = GuiResult(
                     0, header='OffsetZ', title='OffsetZ',
-                    location='centroid', scalar=zoffset, data_format='%g')
+                    location='centroid', scalar=zoffset, data_format='%g',
+                    scale_type='length')
 
                 cases[icase] = (offset_res, (0, 'Offset'))
                 cases[icase + 1] = (offset_x_res, (0, 'OffsetX'))
@@ -2887,13 +2892,16 @@ def build_normals_quality(settings: Settings,
         if make_xyz or is_testing:
             x_res = GuiResult(
                 0, header='X', title='X',
-                location='node', scalar=xyz_cid0[:, 0], data_format='%g')
+                location='node', scalar=xyz_cid0[:, 0], data_format='%g',
+                scale_type='length')
             y_res = GuiResult(
                 0, header='Y', title='Y',
-                location='node', scalar=xyz_cid0[:, 1], data_format='%g')
+                location='node', scalar=xyz_cid0[:, 1], data_format='%g',
+                scale_type='length')
             z_res = GuiResult(
                 0, header='Z', title='Z',
-                location='node', scalar=xyz_cid0[:, 2], data_format='%g')
+                location='node', scalar=xyz_cid0[:, 2], data_format='%g',
+                scale_type='length')
             cases[icase] = (x_res, (0, 'X'))
             cases[icase + 1] = (y_res, (0, 'Y'))
             cases[icase + 2] = (z_res, (0, 'Z'))
@@ -2970,9 +2978,9 @@ def _set_nid_to_pid_map_or_blank(nid_to_pid_map: dict[int, list[int]],
         if nid is not None:
             nid_to_pid_map[nid].append(pid)
 
-def get_caero_control_surface_grid(grid,
-                                   box_id_to_caero_element_map,
-                                   caero_points,
+def get_caero_control_surface_grid(grid: vtkUnstructuredGrid,
+                                   box_id_to_caero_element_map: dict[int, int],
+                                   caero_points: np.ndarray,
                                    boxes_to_show: list[int],
                                    log):
     j = 0
@@ -3010,7 +3018,7 @@ def get_caero_control_surface_grid(grid,
     elements = np.asarray(plot_elements, dtype='int32')
     return all_points, elements, centroids, areas
 
-def get_model_unvectorized(log,
+def get_model_unvectorized(log: SimpleLogger,
                            bdf_filename: str | BDF,
                            xref_loads: bool=True, is_h5py: bool=True):
     """Loads the BDF/OP2 geometry"""

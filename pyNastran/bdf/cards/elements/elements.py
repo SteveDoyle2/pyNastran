@@ -26,6 +26,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.cards.base_card import BDFCard
 
 
 class CFAST(Element):
@@ -853,13 +854,15 @@ class PLOTEL(BaseCard):
         return PLOTEL(eid, nodes, comment='')
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, encoding):
+    def export_to_hdf5(cls, h5_file, model: BDF, encoding: str):
         """exports the elements in a vectorized way"""
         #comments = []
         nodes = []
         eids = list(model.plotels.keys())
         for eid in eids:
             element = model.plotels[eid]
+            if element.type != 'PLOTEL':
+                continue
             #comments.append(element.comment)
             nodes.append(element.nodes)
         #h5_file.create_dataset('_comment', data=comments)
@@ -886,7 +889,7 @@ class PLOTEL(BaseCard):
         self.nodes_ref = None
 
     @classmethod
-    def add_card(cls, card, icard: int, comment=''):
+    def add_card(cls, card: BDFCard, icard: int, comment: str=''):
         """
         Adds a PLOTEL card from ``BDF.add_card(...)``
 
@@ -986,6 +989,320 @@ class PLOTEL(BaseCard):
         return self.comment + msg
 
 
+class PLOTEL3(BaseCard):
+    """
+    Defines a 3D dummy element used for plotting.
+    """
+    type = 'PLOTEL3'
+    _field_map = {
+        1: 'eid', 3:'g1', 4:'g2', 5:'g3',
+    }
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        nodes = [1, 2, 3]
+        return PLOTEL3(eid, nodes, comment='')
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model: BDF, encoding: str):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        nodes = []
+        eids = list(model.plotels.keys())
+        for eid in eids:
+            element = model.plotels[eid]
+            if element.type != 'PLOTEL3':
+                continue
+            #comments.append(element.comment)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('nodes', data=nodes)
+
+    def __init__(self, eid: int, nodes: list[int], comment: str=''):
+        """
+        Adds a PLOTEL3 card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int]
+            Unique GRID point IDs
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.eid = eid
+        self.nodes = nodes
+        self.nodes_ref = None
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment=''):
+        """
+        Adds a PLOTEL3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard: int
+            allows for two PLOTELs on a single line
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+            integer(card, 4, 'g3'),
+        ]
+        assert len(card) <= 5, f'len(PLOTEL3 card) = {len(card):d}\ncard={card}'
+        return PLOTEL3(eid, nodes, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment: str=''):
+        """
+        Adds a PLOTEL3 card from the OP2
+
+        Parameters
+        ----------
+        data : list[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = data[0]
+        nodes = list(data[1:])
+        return PLOTEL3(eid, nodes, comment=comment)
+
+    def _verify(self, xref):
+        pass
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = f', which is required by {self.type} eid={self.eid:d}'
+        self.nodes_ref = [
+            model.Node(self.nodes[0], msg=msg),
+            model.Node(self.nodes[1], msg=msg),
+            model.Node(self.nodes[2], msg=msg),
+        ]
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.nodes = self.node_ids
+        self.nodes_ref = None
+
+    @property
+    def node_ids(self) -> list[int]:
+        node_idsi = self.nodes
+        n1, n2, n3 = node_idsi
+        if not isinstance(n1, integer_types):
+            node_idsi[0] = n1.Nid()
+        if not isinstance(n2, integer_types):
+            node_idsi[1] = n2.Nid()
+        if not isinstance(n3, integer_types):
+            node_idsi[2] = n3.Nid()
+        return node_idsi
+
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
+
+    def raw_fields(self):
+        list_fields = ['PLOTEL3', self.eid] + self.node_ids
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        nodes = self.node_ids
+        fields = ['PLOTEL3', self.eid] + nodes
+        msg = print_card_8(fields)
+        return self.comment + msg
+
+
+class PLOTEL4(BaseCard):
+    """
+    Defines a 2D dummy element used for plotting.
+    """
+    type = 'PLOTEL4'
+    _field_map = {
+        1: 'eid', 3:'g1', 4:'g2', 5:'g3', 6:'g4',
+    }
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        nodes = [1, 2, 3, 4]
+        return PLOTEL4(eid, nodes, comment='')
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, encoding):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        nodes = []
+        eids = list(model.plotels.keys())
+        for eid in eids:
+            element = model.plotels[eid]
+            if element.type != 'PLOTEL4':
+                continue
+            #comments.append(element.comment)
+            nodes.append(element.nodes)
+        #h5_file.create_dataset('_comment', data=comments)
+        h5_file.create_dataset('eid', data=eids)
+        h5_file.create_dataset('nodes', data=nodes)
+
+    def __init__(self, eid: int, nodes: list[int], comment: str=''):
+        """
+        Adds a PLOTEL4 card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int, int, int]
+            Unique GRID point IDs
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.eid = eid
+        self.nodes = nodes
+        self.nodes_ref = None
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a PLOTEL4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard: int
+            allows for two PLOTELs on a single line
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+            integer(card, 4, 'g3'),
+            integer(card, 5, 'g4'),
+        ]
+        assert len(card) <= 6, f'len(PLOTEL4 card) = {len(card):d}\ncard={card}'
+        return PLOTEL4(eid, nodes, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment: str=''):
+        """
+        Adds a PLOTEL4 card from the OP2
+
+        Parameters
+        ----------
+        data : list[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = data[0]
+        nodes = list(data[1:])
+        return PLOTEL4(eid, nodes, comment=comment)
+
+    def _verify(self, xref):
+        pass
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = f', which is required by {self.type} eid={self.eid:d}'
+        self.nodes_ref = [
+            model.Node(self.nodes[0], msg=msg),
+            model.Node(self.nodes[1], msg=msg),
+            model.Node(self.nodes[2], msg=msg),
+            model.Node(self.nodes[3], msg=msg),
+        ]
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.nodes = self.node_ids
+        self.nodes_ref = None
+
+    @property
+    def node_ids(self) -> list[int]:
+        node_idsi = self.nodes
+        n1, n2, n3, n4 = node_idsi
+        if not isinstance(n1, integer_types):
+            node_idsi[0] = n1.Nid()
+        if not isinstance(n2, integer_types):
+            node_idsi[1] = n2.Nid()
+        if not isinstance(n3, integer_types):
+            node_idsi[2] = n3.Nid()
+        if not isinstance(n4, integer_types):
+            node_idsi[3] = n4.Nid()
+        return node_idsi
+
+    def get_edge_ids(self) -> list[tuple[int, int]]:
+        return [tuple(sorted(self.node_ids))]
+
+    def raw_fields(self):
+        list_fields = ['PLOTEL4', self.eid] + self.node_ids
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        nodes = self.node_ids
+        fields = ['PLOTEL4', self.eid] + nodes
+        print_card_8(fields)
+        return self.comment + msg
+
+
 class GENEL(BaseCard):
     """
     +-------+------+-----+------+------+------+------+-------+------+
@@ -1033,7 +1350,8 @@ class GENEL(BaseCard):
         z = None
         return GENEL(eid, ul, ud, k, z, s=None, comment='')
 
-    def __init__(self, eid, ul, ud, k, z, s=None, comment=''):
+    def __init__(self, eid: int, ul, ud, k, z,
+                 s=None, comment: str=''):
         """creates a GENEL card
 
         The required input is the {UL} list and the lower triangular
@@ -1062,7 +1380,7 @@ class GENEL(BaseCard):
         self.ul_nodes_ref = None
         self.ud_nodes_ref = None
 
-    def _finalize_hdf5(self, encoding):
+    def _finalize_hdf5(self, encoding: str):
         try:
             self.ul = np.array(self.ul, dtype='int32')#.reshape(len(self.ul) // 2, 2)
             self.ud = np.array(self.ud, dtype='int32')#.reshape(len(self.ud) // 2, 2)
@@ -1086,7 +1404,7 @@ class GENEL(BaseCard):
             self.s = np.array(self.s)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         eid = integer(card, 1, 'eid')
         card_fields = card.fields()
         ucard_fields = [field.upper() if field is not None else None
