@@ -1412,8 +1412,13 @@ class OES(OP2Common2):
         elif table_name_bytes in [b'OESMC1', b'OSTRMC1']:
             prefix = 'modal_contribution.'
         elif table_name_bytes in [b'OESC1']:
-            # NASA95
+            # NX
             prefix = 'stress.'
+        elif table_name_bytes in [b'OSTR1THC']:
+            # NX
+            prefix = 'thermal_strain.'
+        elif table_name_bytes == b'OSTR1ELC':
+            prefix = 'plastic_strain.'
         else:
             raise NotImplementedError(op2.table_name)
 
@@ -6093,7 +6098,7 @@ class OES(OP2Common2):
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal
 
-    def _oes_shells_composite(self, data, ndata, dt, is_magnitude_phase,
+    def _oes_shells_composite(self, data, ndata: int, dt, is_magnitude_phase: bool,
                               result_type: int, prefix: str, postfix: str) -> tuple[int, Any, Any]:
         """
         reads stress/strain for element type:
@@ -6105,7 +6110,7 @@ class OES(OP2Common2):
          - 233 : TRIARLC (CTRIAR-composite)
 
         """
-        op2 = self.op2  # type: OP2
+        op2: OP2 = self.op2
         table_name_bytes = op2.table_name
         assert isinstance(table_name_bytes, bytes), table_name_bytes
         n = 0

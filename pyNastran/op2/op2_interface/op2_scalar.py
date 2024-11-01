@@ -904,7 +904,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OESTRCP' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'composite ply strain'],  # strain - composite ply
 
             b'OSTR1PL'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 ply strains-plastic'],  # Table of ply strains-plastic in SORT1 format
-            b'OSTR1THC' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 ply strains-thermal'],
+            b'OSTR1THC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'shell ply strains-thermal'],
+            b'OSTR1ELC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'shell ply strains-plastic'],
             b'OSTR1CR'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 creep strain at Gauss points'],
             b'OSTR1EL'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 elastic strain in SORT1 format'],
             b'OSTR1TH'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of thermal strain; SORT1'],

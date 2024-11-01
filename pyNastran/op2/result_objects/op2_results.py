@@ -48,8 +48,10 @@ class Results:
         self.force = Force()
         self.thermal_load = ThermalLoad()
         self.stress = Stress('stress')
-        self.strain = Strain()
         self.stressa = Stress('stressa')
+        self.strain = Strain('strain')
+        self.thermal_strain = Strain('thermal_strain')
+        self.plastic_strain = Strain('plastic_strain')
 
         self.strain_energy = StrainEnergy()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
@@ -94,8 +96,10 @@ class Results:
             'thermal_load' : self.thermal_load,
             'strain_energy' : self.strain_energy,
             'stress': self.stress,
-            'strain': self.strain,
             'stressa': self.stressa,
+            'strain': self.strain,
+            'thermal_strain': self.thermal_strain,
+            'plastic_strain': self.plastic_strain,
             #self.ato,
             #self.psd,
             #self.rms,
@@ -117,7 +121,7 @@ class Results:
             self.acoustic,
             self.responses,
             self.force, self.thermal_load,
-            self.stress, self.strain,
+            self.stress, self.strain, self.thermal_strain, self.plastic_strain,
             self.stressa,
             self.strain_energy,
             self.ato, self.psd, self.rms, self.no, self.crm,
@@ -683,7 +687,8 @@ class Stress:
         return tables
 
 class Strain:
-    def __init__(self):
+    def __init__(self, word: str):
+        self.word = word
         # springs
         self.celas1_strain = {}
         self.celas2_strain = {}
@@ -790,7 +795,7 @@ class Strain:
 
         ]
         if include_class:
-            return ['strain.' + table for table in tables]
+            return [f'{self.word}.' + table for table in tables]
         return tables
 
 class StrainEnergy:
