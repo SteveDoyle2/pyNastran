@@ -1,0 +1,835 @@
+1
+ 
+ 
+ 
+ 
+                                                             
+                    Unpublished Work. © 2023 Siemens        
+                         All Rights Reserved.                
+                                                             
+               This software and related documentation are   
+                    proprietary to Siemens Industry          
+                             Software Inc.                   
+                                                             
+              Siemens and the Siemens logo are registered    
+             trademarks of Siemens Trademark GmbH & Co. KG.  
+            Simcenter is a trademark, or registered trademark
+                of Siemens Industry Software Inc. or its     
+             subsidiaries in the United States and in other  
+             countries.  Simcenter NASTRAN is a registered   
+               trademark of Siemens Industry Software Inc.   
+            All other trademarks, registered trademarks or   
+               service marks belong to their respective      
+                        holders.                             
+                                                             
+           LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED
+           - RIGHTS RESERVED UNDER THE COPYRIGHT LAWS OF THE 
+            UNITED STATES. This computer software and related
+               computer software documentation have been     
+            developed exclusively at private expense and are 
+           provided subject to the following rights:  If this
+               computer software and computer  software      
+            documentation qualify as "commercial items" (as  
+             that term is defined in FAR 2.101), their use,  
+            duplication or disclosure by the U.S. Government 
+           is subject to the protections and restrictions as 
+            set forth in the Siemens commercial license for  
+            software and/or documentation, as prescribed in  
+           FAR 12.212 and FAR 27.405(b)(2)(i) (for civilian  
+             agencies) and in DFARS 227.7202-1(a) and DFARS  
+           227.7202-3(a) (for the Department of Defense), or 
+           any successor or similar regulation, as applicable
+           or as amended from time to time.  If this computer
+           software and computer documentation do not qualify
+            as "commercial items", then they are "restricted 
+           computer software" and are provided with "restric-
+            tive rights", and their use, duplication or dis- 
+            closure by the U.S. Government is subject to the 
+            protections and restrictions as set forth in FAR 
+           27.404(b) and FAR 52-227-14 (for civilian agencies
+           ), and DFARS 227.7203-5(c) and DFARS 252.227-7014 
+           (for the Department of Defense), or any successor 
+           or similar regulation, as applicable or as amended
+           from time to time. Siemens Industry Software Inc. 
+           5800 Granite Parkway, Suite 600, Plano, TX 75024  
+ 
+
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *   Simcenter Nastran 2306.5000   * *
+                * *                                 * *
+                * *      VERSION - 23065.5029       * *
+                * *                                 * *
+                * *          AUG 25, 2023           * *
+                * *                                 * *
+                * *                                 * *
+                * *Intel64 Family 6 Model 154 Stepp * *
+                * *                                 * *
+                * *MODEL 12th Gen Intel(R) Core(TM) * *
+                * *                                 * *
+                * *           Windows 10            * *
+                * *                                 * *
+                * *       Compiled for X86-64       * *
+                * *                                 * *
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+1 
+  
+                      Welcome to Simcenter Nastran
+                      ----------------------------
+  
+  
+ This "news" information can be turned off by setting "news=no" in the runtime
+ configuration (RC) file.  The "news" keyword can be set in the system RC file
+ for global, or multi-user control, and in a local file for local control.
+ Individual jobs can be controlled by setting news to yes or no on the command
+ line.
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN BUFFSIZE=32769 $(C:/PROGRAM FILES/SIEMENS/NX2306/NXNASTRAN/CONF/NASTRAN.
+     NASTRAN BUFFPOOL=11674                                                          
+     NASTRAN DIAGA=128 DIAGB=0 $(C:/PROGRAM FILES/SIEMENS/NX2306/NXNASTRAN/CONF/NASTR
+     NASTRAN SYSTEM(442)=2 $(COMMAND LINE[5])                                        
+     NASTRAN REAL=4250271744 $(MEMORY LIMIT FOR MPI AND OTHER SPECIALIZED MODULES)   
+     $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$             
+     $*                                                                              
+     $*                    SIMCENTER V2306.0.0.7002 TRANSLATOR                       
+     $*                    FOR SIMCENTER NASTRAN VERSION 2306.0                      
+     $*                                                                              
+     $*             FEM FILE: C:\USERS\JAMESCOOK\DOCUMENTS\ANALYSIS\TRIAL\TRIAL_FEM1.
+     $*             SIM FILE: C:\USERS\JAMESCOOK\DOCUMENTS\ANALYSIS\TRIAL\TRIAL_FEM1_
+     $*        ANALYSIS TYPE: STRUCTURAL                                             
+     $*        SOLUTION NAME: TENSILE TEST                                           
+     $*        SOLUTION TYPE: SOL 101 LINEAR STATICS                                 
+     $*                                                                              
+     $*    SOLVER INPUT FILE: LAMINATE_ELSTRN_FIBER_CENTER_TEST.DAT                  
+     $*        CREATION DATE: 29-OCT-2024                                            
+     $*        CREATION TIME: 23:30:11                                               
+     $*             HOSTNAME: DESKTOP-17GJO0V                                        
+     $*      NASTRAN LICENSE: DESKTOP BUNDLE                                         
+     $*                                                                              
+     $*                UNITS: MM (MILLI-NEWTON)                                      
+     $*                      ... LENGTH : MM                                         
+     $*                      ... TIME   : SEC                                        
+     $*                      ... MASS   : KILOGRAM (KG)                              
+     $*                      ... TEMPERATURE : DEG CELSIUS                           
+     $*                      ... FORCE  : MILLI-NEWTON                               
+     $*                      ... THERMAL ENERGY : MN-MM (MICRO-JOULE)                
+     $*                                                                              
+     $*        SUBSET EXPORT: ON                                                     
+     $*                                                                              
+     $* IMPORTANT NOTE:                                                              
+     $*     THIS BANNER WAS GENERATED BY SIMCENTER AND ALTERING THIS                 
+     $*     INFORMATION MAY COMPROMISE THE PRE AND POST PROCESSING OF RESULTS        
+     $*                                                                              
+     $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$             
+     $*                                                                              
+     $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                           
+     $*                                                                              
+     $* FILE MANAGEMENT                                                              
+     $*                                                                              
+     $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                           
+     $*                                                                              
+     $*                                                                              
+     $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                           
+     $*                                                                              
+     $* EXECUTIVE CONTROL                                                            
+     $*                                                                              
+     $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                           
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     $*                                                                              
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE     3
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     ID,NASTRAN,LAMINATE_ELSTRN_FIBER_CENTER_TEST                                            
+     SOL 101                                                                                 
+     CEND                                                                                    
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      $*                                                                                      
+                  2      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                   
+                  3      $*                                                                                      
+                  4      $* CASE CONTROL                                                                         
+                  5      $*                                                                                      
+                  6      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                   
+                  7      $*                                                                                      
+                  8      ECHO = NONE                                                                             
+                  9      OUTPUT                                                                                  
+                 10      DISPLACEMENT(PRINT,REAL) = ALL                                                          
+                 11      ELSTRN(PRINT,FIBER,CENTER) = ALL                                                        
+                 12      FORCE(PRINT,REAL,CENTER) = ALL                                                          
+                 13      OTEMP(PRINT) = ALL                                                                      
+                 14      PLSTRN(PRINT) = ALL                                                                     
+                 15      SPCFORCES(PRINT,REAL) = ALL                                                             
+                 16      STRAIN(PRINT,REAL,VONMISES,FIBER,CENTER) = ALL                                          
+                 17      STRESS(PRINT,REAL,VONMISES,CENTER) = ALL                                                
+                 18      THSTRN(PRINT) = ALL                                                                     
+                 19      $*  STEP: SUBCASE - STATICS 1                                                           
+                 20      SUBCASE 1                                                                               
+                 21        LABEL = SUBCASE - STATICS 1                                                           
+                 22        LOAD = 17                                                                             
+                 23        SPC = 18                                                                              
+                 24      $*                                                                                      
+                 25      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                   
+                 26      $*                                                                                      
+                 27      $* BULK DATA                                                                            
+                 28      $*                                                                                      
+                 29      $*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                   
+                 30      $*                                                                                      
+                 31      BEGIN BULK                                                                              
+0                             INPUT BULK DATA ENTRY COUNT =          74
+0                       TOTAL COUNT=        48
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =        9
+ 
+ 
+                                   NUMBER OF CQUAD4   ELEMENTS =        4
+ 
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4109 (OUTPBN2)
+     THE LABEL IS NX2306.5 FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =        8 RECORDS.)
+     (TOTAL DATA WRITTEN FOR TAPE LABEL =       17 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK IBULK    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       20 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =      379 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     1775 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK ICASE    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102                33                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       20 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =      179 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      818 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK CASECC   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    103                 1                 0              1200                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =     1200 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     1226 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK PVT0     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                28                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       28 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       54 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GPL      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 9                 9                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       18 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       58 WORDS.)
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE     6
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GPDT     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102                 9                 7                 0                 1                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       90 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      116 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK EPT      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0               544                 0          67108864                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       66 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       34 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      172 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK MPT      WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101             16384               128                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       54 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       29 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      113 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM2    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0                 0                 0              8192                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       59 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       92 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM3    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102                 0                 0                64                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       24 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       57 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM4    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    103                 0                 0                 0               512                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       15 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       48 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK GEOM1    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    104                 0                 0                 8                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      102 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      135 WORDS.)
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE     7
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK BGPDT    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    105                 9                 0                54                 1                 0                 9
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      108 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      156 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK EQEXIN   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 9                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       18 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       66 WORDS.)
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE     8
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 7310 (VECPRN)
+     ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.
+     RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       1.000000E+05  0.000000E+00 -1.000000E+06     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  0.000000E+00  1.000000E+05  0.000000E+00 -1.000000E+06  0.000000E+00                             
+ *** USER INFORMATION MESSAGE - SINGULARITIES FOUND USING EIGENVALUE METHOD
+ ***       0 SINGULARITIES FOUND         0 SINGULARITIES ELIMINATED
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE     9
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     UNABLE TO EXECUTE METIS REORDERING BECAUSE THE MATRIX DENSITY IS TOO HIGH:  77 %.
+     DECOMP ORDERING METHOD CHOSEN: DEFAULT, ORDERING METHOD USED: MMD
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -3.9111181E-17          4.7752063E+01
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 7310 (VECPRN)
+     ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.
+     RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+0                                                  SPCFORCE RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX   -7.617018E-12     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----      -1.000000E+05  0.000000E+00  1.000000E+06     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       1.228505E-11     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS -7.617018E-12  0.000000E+00 -1.000000E+05  0.000000E+00  1.000000E+06  0.000000E+00                             
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OQG1     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0                72                29                24                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      253 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK BOUGV1   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0                72                29                24                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      253 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OEF1     WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                63                10                29                24                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      217 WORDS.)
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    11
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+                                             D I S P L A C E M E N T   V E C T O R
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G     -6.194415E-16   0.0            4.763643E-04   0.0           -2.519029E-17   0.0
+             2      G      2.520294E-05   0.0            4.780829E-04   0.0            4.454915E-07   0.0
+             3      G      0.0            0.0            0.0            0.0            0.0            0.0
+             4      G     -1.255585E-15   0.0            9.553896E-04   0.0           -2.549337E-17   0.0
+             5      G     -2.520294E-05   0.0            4.780829E-04   0.0           -4.454915E-07   0.0
+             6      G      1.797797E-05   0.0            9.546929E-04   0.0           -3.238367E-07   0.0
+             7      G      0.0            0.0            0.0            0.0            0.0            0.0
+             8      G      0.0            0.0            0.0            0.0            0.0            0.0
+             9      G     -1.797797E-05   0.0            9.546929E-04   0.0            3.238367E-07   0.0
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    12
+                                                                                                                                    
+0                                                                                                                                   
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    13
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             3      G     -1.174385E-10   0.0           -4.985578E+04   0.0            6.139416E-12   0.0
+             7      G     -1.010078E+03   0.0           -2.507211E+04   0.0           -1.248958E-01   0.0
+             8      G      1.010078E+03   0.0           -2.507211E+04   0.0            1.248958E-01   0.0
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    14
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+
+                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
+ 
+    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -
+      ID              FX            FY            FXY             MX            MY            MXY             QX            QY
+          1      -1.847048E+01  5.000000E+03  3.370735E+00    0.0           0.0           0.0             0.0           0.0
+          2      -1.847048E+01  5.000000E+03 -3.370735E+00    0.0           0.0           0.0             0.0           0.0
+          3       9.927668E+01  5.000000E+03  9.139977E+00    0.0           0.0           0.0             0.0           0.0
+          4       9.927668E+01  5.000000E+03 -9.139977E+00    0.0           0.0           0.0             0.0           0.0
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    15
+                                                                                                                                    
+0                                                                                                                                   
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    16
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+                    S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT      PLY STRESSES IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+         1        1 -9.80249E+00  2.55015E+03  1.72346E+00   0.0          0.0           89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         1        2  2.56602E+03 -8.90614E+00 -1.72346E+00   0.0          0.0           -0.04  2.56602E+03 -8.90730E+00  1.28746E+03
+         1        3 -9.80249E+00  2.55015E+03  1.72346E+00   0.0          0.0           89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         1        4  2.56602E+03 -8.90614E+00 -1.72346E+00   0.0          0.0           -0.04  2.56602E+03 -8.90730E+00  1.28746E+03
+         1        5 -9.80249E+00  2.55015E+03  1.72346E+00   0.0          0.0           89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         1        6 -9.80249E+00  2.55015E+03  1.72346E+00   0.0          0.0           89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         1        7  2.56602E+03 -8.90614E+00 -1.72346E+00   0.0          0.0           -0.04  2.56602E+03 -8.90730E+00  1.28746E+03
+         1        8 -9.80249E+00  2.55015E+03  1.72346E+00   0.0          0.0           89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         1        9  2.56602E+03 -8.90614E+00 -1.72346E+00   0.0          0.0           -0.04  2.56602E+03 -8.90730E+00  1.28746E+03
+         1       10 -9.80249E+00  2.55015E+03  1.72346E+00   0.0          0.0           89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         2        1 -9.80249E+00  2.55015E+03 -1.72346E+00   0.0          0.0          -89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         2        2  2.56602E+03 -8.90614E+00  1.72346E+00   0.0          0.0            0.04  2.56602E+03 -8.90730E+00  1.28746E+03
+         2        3 -9.80249E+00  2.55015E+03 -1.72346E+00   0.0          0.0          -89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         2        4  2.56602E+03 -8.90614E+00  1.72346E+00   0.0          0.0            0.04  2.56602E+03 -8.90730E+00  1.28746E+03
+         2        5 -9.80249E+00  2.55015E+03 -1.72346E+00   0.0          0.0          -89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         2        6 -9.80249E+00  2.55015E+03 -1.72346E+00   0.0          0.0          -89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         2        7  2.56602E+03 -8.90614E+00  1.72346E+00   0.0          0.0            0.04  2.56602E+03 -8.90730E+00  1.28746E+03
+         2        8 -9.80249E+00  2.55015E+03 -1.72346E+00   0.0          0.0          -89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         2        9  2.56602E+03 -8.90614E+00  1.72346E+00   0.0          0.0            0.04  2.56602E+03 -8.90730E+00  1.28746E+03
+         2       10 -9.80249E+00  2.55015E+03 -1.72346E+00   0.0          0.0          -89.96  2.55015E+03 -9.80365E+00  1.27998E+03
+         3        1  5.05509E+01  2.55016E+03  4.67327E+00   0.0          0.0           89.89  2.55017E+03  5.05421E+01  1.24981E+03
+         3        2  2.56601E+03  5.10740E+01 -4.67327E+00   0.0          0.0           -0.11  2.56602E+03  5.10654E+01  1.25748E+03
+         3        3  5.05509E+01  2.55016E+03  4.67327E+00   0.0          0.0           89.89  2.55017E+03  5.05421E+01  1.24981E+03
+         3        4  2.56601E+03  5.10740E+01 -4.67327E+00   0.0          0.0           -0.11  2.56602E+03  5.10654E+01  1.25748E+03
+         3        5  5.05509E+01  2.55016E+03  4.67327E+00   0.0          0.0           89.89  2.55017E+03  5.05421E+01  1.24981E+03
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    17
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+                    S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT      PLY STRESSES IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+         3        6  5.05509E+01  2.55016E+03  4.67327E+00   0.0          0.0           89.89  2.55017E+03  5.05421E+01  1.24981E+03
+         3        7  2.56601E+03  5.10740E+01 -4.67327E+00   0.0          0.0           -0.11  2.56602E+03  5.10654E+01  1.25748E+03
+         3        8  5.05509E+01  2.55016E+03  4.67327E+00   0.0          0.0           89.89  2.55017E+03  5.05421E+01  1.24981E+03
+         3        9  2.56601E+03  5.10740E+01 -4.67327E+00   0.0          0.0           -0.11  2.56602E+03  5.10654E+01  1.25748E+03
+         3       10  5.05509E+01  2.55016E+03  4.67327E+00   0.0          0.0           89.89  2.55017E+03  5.05421E+01  1.24981E+03
+         4        1  5.05509E+01  2.55016E+03 -4.67327E+00   0.0          0.0          -89.89  2.55017E+03  5.05421E+01  1.24981E+03
+         4        2  2.56601E+03  5.10740E+01  4.67327E+00   0.0          0.0            0.11  2.56602E+03  5.10654E+01  1.25748E+03
+         4        3  5.05509E+01  2.55016E+03 -4.67327E+00   0.0          0.0          -89.89  2.55017E+03  5.05421E+01  1.24981E+03
+         4        4  2.56601E+03  5.10740E+01  4.67327E+00   0.0          0.0            0.11  2.56602E+03  5.10654E+01  1.25748E+03
+         4        5  5.05509E+01  2.55016E+03 -4.67327E+00   0.0          0.0          -89.89  2.55017E+03  5.05421E+01  1.24981E+03
+         4        6  5.05509E+01  2.55016E+03 -4.67327E+00   0.0          0.0          -89.89  2.55017E+03  5.05421E+01  1.24981E+03
+         4        7  2.56601E+03  5.10740E+01  4.67327E+00   0.0          0.0            0.11  2.56602E+03  5.10654E+01  1.25748E+03
+         4        8  5.05509E+01  2.55016E+03 -4.67327E+00   0.0          0.0          -89.89  2.55017E+03  5.05421E+01  1.24981E+03
+         4        9  2.56601E+03  5.10740E+01  4.67327E+00   0.0          0.0            0.11  2.56602E+03  5.10654E+01  1.25748E+03
+         4       10  5.05509E+01  2.55016E+03 -4.67327E+00   0.0          0.0          -89.89  2.55017E+03  5.05421E+01  1.24981E+03
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    18
+                                                                                                                                    
+0                                                                                                                                   
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    19
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  FAILURE        PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG
+     ID      THEORY         ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES
+         1   TSAI-WU         1     -8.507105E-04      
+                                                                     0.000000E+00                                               
+                             2     -6.496566E-04      
+                                                                     0.000000E+00                                               
+                             3     -8.507105E-04      
+                                                                     0.000000E+00                                               
+                             4     -6.496566E-04      
+                                                                     0.000000E+00                                               
+                             5     -8.507105E-04      
+                                                                     0.000000E+00                                               
+                             6     -8.507105E-04      
+                                                                     0.000000E+00                                               
+                             7     -6.496566E-04      
+                                                                     0.000000E+00                                               
+                             8     -8.507105E-04      
+                                                                     0.000000E+00                                               
+                             9     -6.496566E-04      
+                                                                     0.000000E+00                                               
+                            10     -8.507105E-04      
+                                                                                                   8.507105E-04                 
+         2   TSAI-WU         1     -8.507105E-04      
+                                                                     0.000000E+00                                               
+                             2     -6.496566E-04      
+                                                                     0.000000E+00                                               
+                             3     -8.507105E-04      
+                                                                     0.000000E+00                                               
+                             4     -6.496566E-04      
+                                                                     0.000000E+00                                               
+                             5     -8.507105E-04      
+                                                                     0.000000E+00                                               
+                             6     -8.507105E-04      
+                                                                     0.000000E+00                                               
+                             7     -6.496566E-04      
+                                                                     0.000000E+00                                               
+                             8     -8.507105E-04      
+                                                                     0.000000E+00                                               
+                             9     -6.496566E-04      
+                                                                     0.000000E+00                                               
+                            10     -8.507105E-04      
+                                                                                                   8.507105E-04                 
+         3   TSAI-WU         1     -8.663857E-04      
+                                                                     0.000000E+00                                               
+                             2     -6.700730E-04      
+                                                                     0.000000E+00                                               
+                             3     -8.663857E-04      
+                                                                     0.000000E+00                                               
+                             4     -6.700730E-04      
+                                                                     0.000000E+00                                               
+                             5     -8.663857E-04      
+                                                                     0.000000E+00                                               
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    20
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  FAILURE        PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG
+     ID      THEORY         ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES
+                             6     -8.663857E-04      
+                                                                     0.000000E+00                                               
+                             7     -6.700730E-04      
+                                                                     0.000000E+00                                               
+                             8     -8.663857E-04      
+                                                                     0.000000E+00                                               
+                             9     -6.700730E-04      
+                                                                     0.000000E+00                                               
+                            10     -8.663857E-04      
+                                                                                                   8.663857E-04                 
+         4   TSAI-WU         1     -8.663857E-04      
+                                                                     0.000000E+00                                               
+                             2     -6.700730E-04      
+                                                                     0.000000E+00                                               
+                             3     -8.663857E-04      
+                                                                     0.000000E+00                                               
+                             4     -6.700730E-04      
+                                                                     0.000000E+00                                               
+                             5     -8.663857E-04      
+                                                                     0.000000E+00                                               
+                             6     -8.663857E-04      
+                                                                     0.000000E+00                                               
+                             7     -6.700730E-04      
+                                                                     0.000000E+00                                               
+                             8     -8.663857E-04      
+                                                                     0.000000E+00                                               
+                             9     -6.700730E-04      
+                                                                     0.000000E+00                                               
+                            10     -8.663857E-04      
+                                                                                                   8.663857E-04                 
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    21
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OES1C    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                 1                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      440 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      621 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OEFIT    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                 1                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      360 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      541 WORDS.)
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    22
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+                      S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT      PLY  STRAINS IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+         1        1 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        2  3.82254E-05 -2.15905E-06 -3.40093E-07   0.0          0.0           -0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        3 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        4  3.82254E-05 -2.15905E-06 -3.40093E-07   0.0          0.0           -0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        5 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        6 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        7  3.82254E-05 -2.15905E-06 -3.40093E-07   0.0          0.0           -0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        8 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        9  3.82254E-05 -2.15905E-06 -3.40093E-07   0.0          0.0           -0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         1       10 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        1 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        2  3.82254E-05 -2.15905E-06  3.40093E-07   0.0          0.0            0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        3 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        4  3.82254E-05 -2.15905E-06  3.40093E-07   0.0          0.0            0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        5 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        6 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        7  3.82254E-05 -2.15905E-06  3.40093E-07   0.0          0.0            0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        8 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        9  3.82254E-05 -2.15905E-06  3.40093E-07   0.0          0.0            0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         2       10 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         3        1 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        2  3.81779E-05 -1.26015E-06 -9.22186E-07   0.0          0.0           -0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        3 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        4  3.81779E-05 -1.26015E-06 -9.22186E-07   0.0          0.0           -0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        5 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    23
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+                      S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT      PLY  STRAINS IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+         3        6 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        7  3.81779E-05 -1.26015E-06 -9.22186E-07   0.0          0.0           -0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        8 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        9  3.81779E-05 -1.26015E-06 -9.22186E-07   0.0          0.0           -0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         3       10 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        1 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        2  3.81779E-05 -1.26015E-06  9.22186E-07   0.0          0.0            0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        3 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        4  3.81779E-05 -1.26015E-06  9.22186E-07   0.0          0.0            0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        5 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        6 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        7  3.81779E-05 -1.26015E-06  9.22186E-07   0.0          0.0            0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        8 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        9  3.81779E-05 -1.26015E-06  9.22186E-07   0.0          0.0            0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         4       10 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    24
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OSTR1C   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                63                10                29                24                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      440 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      621 WORDS.)
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    25
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+                     E L A S T I C   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )    
+   ELEMENT      PLY  STRAINS IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+         1        1 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        2  3.82254E-05 -2.15905E-06 -3.40093E-07   0.0          0.0           -0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        3 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        4  3.82254E-05 -2.15905E-06 -3.40093E-07   0.0          0.0           -0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        5 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        6 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        7  3.82254E-05 -2.15905E-06 -3.40093E-07   0.0          0.0           -0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        8 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         1        9  3.82254E-05 -2.15905E-06 -3.40093E-07   0.0          0.0           -0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         1       10 -2.15905E-06  3.82254E-05  3.40093E-07   0.0          0.0           89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        1 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        2  3.82254E-05 -2.15905E-06  3.40093E-07   0.0          0.0            0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        3 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        4  3.82254E-05 -2.15905E-06  3.40093E-07   0.0          0.0            0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        5 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        6 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        7  3.82254E-05 -2.15905E-06  3.40093E-07   0.0          0.0            0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        8 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         2        9  3.82254E-05 -2.15905E-06  3.40093E-07   0.0          0.0            0.24  3.82261E-05 -2.15976E-06  4.03859E-05
+         2       10 -2.15905E-06  3.82254E-05 -3.40093E-07   0.0          0.0          -89.76  3.82261E-05 -2.15976E-06  4.03859E-05
+         3        1 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        2  3.81779E-05 -1.26015E-06 -9.22186E-07   0.0          0.0           -0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        3 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        4  3.81779E-05 -1.26015E-06 -9.22186E-07   0.0          0.0           -0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        5 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    26
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+                     E L A S T I C   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )    
+   ELEMENT      PLY  STRAINS IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+         3        6 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        7  3.81779E-05 -1.26015E-06 -9.22186E-07   0.0          0.0           -0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        8 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         3        9  3.81779E-05 -1.26015E-06 -9.22186E-07   0.0          0.0           -0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         3       10 -1.26015E-06  3.81779E-05  9.22186E-07   0.0          0.0           89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        1 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        2  3.81779E-05 -1.26015E-06  9.22186E-07   0.0          0.0            0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        3 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        4  3.81779E-05 -1.26015E-06  9.22186E-07   0.0          0.0            0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        5 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        6 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        7  3.81779E-05 -1.26015E-06  9.22186E-07   0.0          0.0            0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        8 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+         4        9  3.81779E-05 -1.26015E-06  9.22186E-07   0.0          0.0            0.67  3.81833E-05 -1.26554E-06  3.94488E-05
+         4       10 -1.26015E-06  3.81779E-05 -9.22186E-07   0.0          0.0          -89.33  3.81833E-05 -1.26554E-06  3.94488E-05
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    27
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OSTR1ELC WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                63                10                29                24                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      440 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      621 WORDS.)
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    28
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+                     T H E R M A L   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )    
+   ELEMENT      PLY  STRAINS IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+         1        1  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         1        2  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         1        3  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         1        4  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         1        5  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         1        6  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         1        7  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         1        8  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         1        9  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         1       10  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         2        1  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         2        2  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         2        3  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         2        4  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         2        5  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         2        6  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         2        7  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         2        8  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         2        9  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         2       10  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         3        1  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         3        2  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         3        3  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         3        4  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         3        5  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    29
+                                                                                                                                    
+0     SUBCASE - STATICS 1                                                                                    SUBCASE 1              
+ 
+                     T H E R M A L   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )    
+   ELEMENT      PLY  STRAINS IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+         3        6  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         3        7  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         3        8  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         3        9  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         3       10  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         4        1  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         4        2  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         4        3  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         4        4  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         4        5  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         4        6  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         4        7  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         4        8  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         4        9  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+         4       10  0.0          0.0          0.0           0.0          0.0            0.00  0.0          0.0          0.0
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    30
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OSTR1THC WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                63                10                29                24                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      440 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      621 WORDS.)
+ *** USER INFORMATION MESSAGE 4110 (OUTPBN2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1                                                                           OCTOBER  29, 2024  SIMCENTER NASTRAN  8/25/23   PAGE    31
+                                                                                                                                    
+0                                                                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     28
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+1                                        * * * END OF JOB * * *
+ 
+ 

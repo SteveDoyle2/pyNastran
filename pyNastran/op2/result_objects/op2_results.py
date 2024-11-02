@@ -50,8 +50,9 @@ class Results:
         self.stress = Stress('stress')
         self.stressa = Stress('stressa')
         self.strain = Strain('strain')
-        self.thermal_strain = Strain('thermal_strain')
+        self.elastic_strain = Strain('elastic_strain')
         self.plastic_strain = Strain('plastic_strain')
+        self.thermal_strain = Strain('thermal_strain')
 
         self.strain_energy = StrainEnergy()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
@@ -98,8 +99,9 @@ class Results:
             'stress': self.stress,
             'stressa': self.stressa,
             'strain': self.strain,
-            'thermal_strain': self.thermal_strain,
+            'elastic_strain': self.elastic_strain,
             'plastic_strain': self.plastic_strain,
+            'thermal_strain': self.thermal_strain,
             #self.ato,
             #self.psd,
             #self.rms,
@@ -121,7 +123,8 @@ class Results:
             self.acoustic,
             self.responses,
             self.force, self.thermal_load,
-            self.stress, self.strain, self.thermal_strain, self.plastic_strain,
+            self.stress, self.strain,
+            self.elastic_strain, self.plastic_strain, self.thermal_strain,
             self.stressa,
             self.strain_energy,
             self.ato, self.psd, self.rms, self.no, self.crm,

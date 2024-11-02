@@ -1418,7 +1418,8 @@ class OES(OP2Common2):
             # NX
             prefix = 'thermal_strain.'
         elif table_name_bytes == b'OSTR1ELC':
-            prefix = 'plastic_strain.'
+            prefix = 'elastic_strain.'
+            #prefix = 'plastic_strain.'
         else:
             raise NotImplementedError(op2.table_name)
 

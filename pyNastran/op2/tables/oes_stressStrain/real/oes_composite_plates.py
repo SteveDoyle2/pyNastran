@@ -519,44 +519,36 @@ class RealCompositePlateArray(OES_Object):
                      '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
         if self.element_type == 95:  # CQUAD4
-            if self.is_strain:
-                msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
-            else:
-                msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
-        #elif self.element_type == 96:  # CQUAD8
+            etype_str = 'Q U A D 4'
+        #elif self.element_type == 96:  # CQUAD8 ???
             #nnodes_per_element = 1
         elif self.element_type == 97:  # CTRIA3
-            if self.is_strain:
-                msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
-            else:
-                msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
+            etype_str = 'T R I A 3'
         elif self.element_type == 96:  # QUAD8
             # good
-            if self.is_strain:
-                msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
-            else:
-                msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
-
+            etype_str = 'Q U A D 8'
         elif self.element_type == 98:  # CTRIA6
             # good
-            if self.is_strain:
-                msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
-            else:
-                msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
+            etype_str = 'T R I A 6'
         elif self.element_type == 233:  # CTRIAR linear
             # good
-            if self.is_strain:
-                msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )\n'] + words
-            else:
-                msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )\n'] + words
+            etype_str = 'T R I A R'
         elif self.element_type == 232:  # CQUADR linear
-            if self.is_strain:
-                msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )\n'] + words
-            else:
-                msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )\n'] + words
+            etype_str = 'Q U A D R'
         else:  # pragma: no cover
             msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
             raise NotImplementedError(msg)
+
+        if self.is_strain:
+            if self.table_name_str == 'OSTR1THC':
+                msg = [f'                     T H E R M A L   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
+            elif self.table_name_str == 'OSTR1ELC':
+                msg = [f'                     E L A S T I C   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
+                #msg = [f'                     P L A S T I C   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
+            else:
+                msg = [f'                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
+        else:
+            msg = [f'                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
 
         # write the f06
         ntimes = self.data.shape[0]
@@ -712,7 +704,7 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
 
 
 class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1, isubcase: int, dt):
         RealCompositePlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 

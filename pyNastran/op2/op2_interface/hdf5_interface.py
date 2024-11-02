@@ -674,8 +674,15 @@ TABLE_OBJ_MAP = {
     'strain.cquad8_composite_strain' : (RealCompositePlateStrainArray, ),
     'strain.cquadr_composite_strain' : (RealCompositePlateStrainArray, ),
 
-    'plastic_strain.cquad4_composite_strain': (RealCompositePlateStrainArray,),
-    'plastic_strain.ctria3_composite_strain': (RealCompositePlateStrainArray,),
+    'elastic_strain.cquad4_composite_strain': (RealCompositePlateStrainArray,),
+    'elastic_strain.ctria3_composite_strain': (RealCompositePlateStrainArray,),
+    #'strain.ctria6_composite_strain': (RealCompositePlateStrainArray,),
+    #'strain.ctriar_composite_strain': (RealCompositePlateStrainArray,),
+    #'strain.cquad8_composite_strain': (RealCompositePlateStrainArray,),
+    #'strain.cquadr_composite_strain': (RealCompositePlateStrainArray,),
+
+    #'plastic_strain.cquad4_composite_strain': (RealCompositePlateStrainArray,),
+    #'plastic_strain.ctria3_composite_strain': (RealCompositePlateStrainArray,),
     #'strain.ctria6_composite_strain': (RealCompositePlateStrainArray,),
     #'strain.ctriar_composite_strain': (RealCompositePlateStrainArray,),
     #'strain.cquad8_composite_strain': (RealCompositePlateStrainArray,),
