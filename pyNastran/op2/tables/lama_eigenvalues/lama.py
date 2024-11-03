@@ -13,6 +13,8 @@ from struct import Struct
 
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import (
     RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues)
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
@@ -64,19 +66,27 @@ class LAMA:
 
     def _read_complex_eigenvalue_4(self, data: bytes, ndata: int):
         """parses the Complex Eigenvalues Table 4 Data"""
-        op2 = self.op2
+        op2: OP2 = self.op2
         if op2.read_mode == 1:
             return ndata
 
-        ntotal = 24 # 4 * 6
-        nmodes = ndata // ntotal
         n = 0
+        ntotal = 24 * op2.factor # 4 * 6
+        nmodes = ndata // ntotal
+        if op2.table_name in [b'CLAMA']:
+            result_name = 'eigenvalues'
+        #elif op2.table_name == b'LAMAF':
+            #result_name = 'eigenvalues_fluid'
+        else:  # pragma: no cover
+            raise NotImplementedError(op2.table_name)
+
         #assert self.isubcase != 0, self.isubcase
         clama = ComplexEigenvalues(op2.title, op2.table_name, nmodes)
         #assert self.title not in self.eigenvalues, f'table={self.table_name_str} title={self.title} optimization_count={self._count}'
         op2.eigenvalues[op2.title] = clama
         #self.eigenvalues[self.isubcase] = clama
-        structi = Struct(op2._endian + b'ii4f')
+        fmt = mapfmt(op2._endian + b'ii4f', op2.size)
+        structi = Struct(fmt)
         for i in range(nmodes):
             edata = data[n:n+ntotal]
             out = structi.unpack(edata)
@@ -92,18 +102,26 @@ class LAMA:
 
     def _read_buckling_eigenvalue_4(self, data: bytes, ndata: int):
         """parses the Buckling Eigenvalues Table 4 Data"""
-        op2 = self.op2
+        op2: OP2 = self.op2
         # BLAMA - Buckling eigenvalue summary table
         # CLAMA - Complex eigenvalue summary table
         # LAMA - Normal modes eigenvalue summary table
         if op2.read_mode == 1:
             return ndata
 
-        ntotal = 28 # 4 * 7
-        nmodes = ndata // ntotal
         n = 0
+        ntotal = 28 * op2.factor # 4 * 7
+        nmodes = ndata // ntotal
         #assert self.isubcase != 0, self.isubcase
         blama = BucklingEigenvalues(op2.title, op2.table_name, nmodes)
+
+        if op2.table_name in [b'BLAMA']:
+            result_name = 'eigenvalues'
+        #elif op2.table_name == b'LAMAF':
+            #result_name = 'eigenvalues_fluid'
+        else:  # pragma: no cover
+            raise NotImplementedError(op2.table_name)
+
         #assert self.title not in self.eigenvalues, f'table={self.table_name_str} title={self.title} optimization_count={self._count}'
         op2.eigenvalues[op2.title] = blama
         #self.eigenvalues[self.isubcase] = lama
@@ -161,12 +179,13 @@ class LAMA:
 
     def _read_real_eigenvalue_4(self, data: bytes, ndata: int):
         """parses the Real Eigenvalues Table 4 Data"""
-        op2 = self.op2
+        op2: OP2 = self.op2
         if op2.read_mode == 1:
             return ndata
-        nmodes = ndata // 28
+
         n = 0
-        ntotal = 28
+        ntotal = 28 * op2.factor
+        nmodes = ndata // ntotal
         #assert self.isubcase != 0, self.isubcase
         lama = RealEigenvalues(op2.title, op2.table_name, nmodes=nmodes)
 

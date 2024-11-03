@@ -213,7 +213,7 @@ class F06Writer(OP2_F06_Common):
     def get_all_results(self) -> list[str]:
         all_results = [
             'stress', 'strain', 'stressa',
-            'elastic_strain', 'plastic_strain', 'thermal_strain',
+            'elastic_strain', 'plastic_strain', 'thermal_strain', 'creep_strain',
             'element_forces', 'constraint_forces', 'thermal_load',
             ] + self.get_table_types()
         return all_results

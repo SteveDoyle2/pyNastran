@@ -104,6 +104,59 @@ EXTSEOUT = [
 ]
 
 
+class CampbellData:
+    def __init__(self, solution: int,
+                 cddata_list: list[dict[int, np.ndarray]]):
+        print(f'solution = {solution:d}')
+        self.solution = solution
+        self.cddata_list: list[dict[int, np.ndarray]] = cddata_list
+
+    def get_stats(self, short: bool=False) -> list[str]:
+        msg = [
+            '  type=%s solution=%s\n' % (self.__class__.__name__, self.solution),
+            '  cddata_list\n'
+        ]
+        #self.plot()
+        return msg
+
+    def plot(self, ifig: int=1) -> None:
+        import matplotlib.pyplot as plt
+        for data in self.cddata_list:
+            # 1: 'RPM',
+            # 2: 'eigenfreq',
+            # 3: 'Lehr',
+            # 4: 'real_eig',
+            # 5: 'imag_eig',
+            # 6: 'whirl_dir',
+            # 7: 'converted_freq',
+            # 8: 'whirl_code',
+            rpm = data['RPM']
+            eigenfreq = data['eigenfreq']
+            Lehr = data['Lehr']
+            imag_eig = data['imag_eig']
+            converted_freq = data['converted_freq']
+            plt.figure(ifig)
+            plt.plot(rpm, eigenfreq)  # RPM vs. eigenfreq
+            # plt.grid(True)
+
+            plt.figure(ifig+1)
+            plt.plot(rpm, Lehr)  # RPM vs. Lehr
+            plt.grid(True)
+
+            real_eig = data['real_eig']
+            plt.figure(ifig+2)
+            plt.plot(rpm, real_eig)  # RPM vs. real_eig
+            plt.grid(True)
+
+            plt.figure(ifig+3)
+            plt.plot(rpm, imag_eig)  # RPM vs. imag_eig
+            plt.grid(True)
+
+            plt.figure(ifig+4)
+            plt.plot(rpm, converted_freq)  # RPM vs. converted_freq
+            plt.grid(True)
+
+
 class OP2Reader:
     """Stores methods that aren't useful to an end user"""
     def __init__(self, op2: OP2):
@@ -1928,8 +1981,8 @@ class OP2Reader:
                 1: 'RPM',
                 2: 'eigenfreq',
                 3: 'Lehr',
-                4: 'real eig',
-                5: 'imag eig',
+                4: 'real_eig',
+                5: 'imag_eig',
                 6: 'whirl_dir',
                 7: 'converted_freq',
                 8: 'whirl_code',
@@ -1939,11 +1992,13 @@ class OP2Reader:
                 nfields = self.get_marker1(rewind=True)
                 if nfields == 0:
                     break
-                data = self._read_record()
+
                 if op2.read_mode == 1:
+                    data = self._skip_record()
                     marker -= 1
                     continue
 
+                data = self._read_record()
                 ints = np.frombuffer(data, op2.idtype)
                 nints = len(ints)
                 floats = np.frombuffer(data, op2.fdtype) # .reshape(nints//7, 7)
@@ -1966,12 +2021,13 @@ class OP2Reader:
 
                 i = 0
                 data_out = {}
+                solution0 = -1
                 while i < nints:
                     nvalues = ints[i]
-                    #ncurves = ints[i+1]
+                    ncurves = ints[i+1]
                     keyword = ints[i+2]  # 10000+(SOLN*10)+DATTYP
                     base = keyword - 10000 # (SOLN*10)+DATTYP
-                    #solution = base // 10
+                    solution = base // 10
                     datatype = base % 10
                     assert datatype in [1, 2, 3, 4, 5, 6, 7, 8], datatype
                     values = floats[i+3:i+3+nvalues]
@@ -1980,38 +2036,21 @@ class OP2Reader:
                     datatype_str = dict_map[datatype]
                     #print(f'{nvalues}, {ncurves}, {solution}, {datatype}, {datatype_str:14s} {values}')
                     data_out[datatype_str] = values
+                    if solution0 == -1:
+                        solution0 = solution
+                    assert solution == solution0, (solution, solution0)
                     i += 3 + nvalues
                 marker -= 1
                 cddata_list.append(data_out)
-                #import matplotlib.pyplot as plt
-
-                #plt.figure(2)
-                #plt.plot(data_out[1], data_out[2]) # RPM vs. eigenfreq
-                #plt.grid(True)
-
-                #plt.figure(3)
-                #plt.plot(data_out[1], data_out[3]) # RPM vs. Lehr
-                #plt.grid(True)
-
-                #plt.figure(4)
-                #plt.plot(data_out[1], data_out[4]) # RPM vs. real_eig
-                #plt.grid(True)
-
-                #plt.figure(5)
-                #plt.plot(data_out[1], data_out[5]) # RPM vs. imag_eig
-                #plt.grid(True)
-
-                #plt.figure(7)
-                #plt.plot(data_out[1], data_out[7]) # RPM vs. converted_freq
-                #plt.grid(True)
 
             #print('------------------------------------')
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(f'CDDATA method={method}')
         if op2.read_mode == 2:
             #plt.grid(True)
             #plt.show()
-            self.op2.op2_results.cddata = cddata_list
+            cambell = CampbellData(solution, cddata_list)
+            self.op2.op2_results.cddata[solution] = cambell
         nfields = self.get_marker1(rewind=False)
 
     def read_stdisp(self):

@@ -1,5 +1,5 @@
 from math import sqrt
-from struct import pack
+from struct import Struct, pack
 from typing import TextIO
 
 import numpy as np
@@ -117,7 +117,6 @@ class RealEigenvalues(BaseScalarObject):
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -197,7 +196,6 @@ class RealEigenvalues(BaseScalarObject):
 
     def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
         import inspect
-        from struct import pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -381,7 +379,7 @@ class ComplexEigenvalues(BaseScalarObject):
     radians = eigi
     damping = atan2(eigi, eigr) * 2
     """
-    def __init__(self, title, table_name, nmodes):
+    def __init__(self, title: str, table_name: str, nmodes: int):
         BaseScalarObject.__init__(self)
         self.title = title
         self.table_name = table_name
@@ -471,11 +469,11 @@ class ComplexEigenvalues(BaseScalarObject):
         f06_file.write(''.join(msg))
         return page_num
 
-    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
-                  is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file, op2_ascii, itable: int,
+                  new_result, date,
+                  is_mag_phase: bool=False, endian: str='>'):
         """writes an OP2"""
         import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -536,7 +534,6 @@ class ComplexEigenvalues(BaseScalarObject):
             freq = self.cycles[imode]
             damping = self.damping[imode]
             data = [mode_num, extract_order, eigr, eigi, freq, damping]
-
 
             [eigr, eigi, freq, damping] = write_floats_13e([eigr, eigi, freq, damping])
             #            imode order      eigr     eigi          freq        damping
@@ -644,8 +641,10 @@ class ComplexEigenvalues(BaseScalarObject):
         op2_file.write(pack(fmt, *data))
 
     def __repr__(self):
-        msg = '%-7s %15s %15s %10s %10s %10s\n' % (
-            'RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')
+        table_name_str = self.table_name.decode('ascii')
+        msg = (f'ComplexEigenvalues[{self.title}]; {table_name_str}\n'
+               '%-7s %15s %15s %10s %10s %10s\n' % (
+            'RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping'))
         msg += '%-7s %15s %15s %10s\n' % ('', '', 'Real', 'Imaginary')
         for imode, unused_mode in enumerate(self.mode):
             extract_order = self.extraction_order[imode]
@@ -694,7 +693,7 @@ class BucklingEigenvalues(BaseScalarObject):
     def is_buckling(self):
         return True
 
-    def add_op2_line(self, data, imode):
+    def add_op2_line(self, data, imode: int) -> None:
         (root_num, extract_order, eigr, omega, freq, mass, stiff) = data
         self.mode[imode] = root_num
         self.extraction_order[imode] = extract_order

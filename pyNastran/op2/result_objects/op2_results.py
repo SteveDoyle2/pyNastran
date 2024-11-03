@@ -18,7 +18,7 @@ class Results:
         self.eqexin = None
         self.gpdt = None
         self.bgpdt = None
-        self.cddata = []
+        self.cddata = {}
         self.monitor1 = None
         self.monitor3 = None
         self.responses = Responses()
@@ -53,6 +53,7 @@ class Results:
         self.elastic_strain = Strain('elastic_strain')
         self.plastic_strain = Strain('plastic_strain')
         self.thermal_strain = Strain('thermal_strain')
+        self.creep_strain = Strain('creep_strain')
 
         self.strain_energy = StrainEnergy()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
@@ -102,6 +103,7 @@ class Results:
             'elastic_strain': self.elastic_strain,
             'plastic_strain': self.plastic_strain,
             'thermal_strain': self.thermal_strain,
+            'creep_strain': self.creep_strain,
             #self.ato,
             #self.psd,
             #self.rms,
@@ -124,7 +126,7 @@ class Results:
             self.responses,
             self.force, self.thermal_load,
             self.stress, self.strain,
-            self.elastic_strain, self.plastic_strain, self.thermal_strain,
+            self.elastic_strain, self.plastic_strain, self.thermal_strain, self.creep_strain,
             self.stressa,
             self.strain_energy,
             self.ato, self.psd, self.rms, self.no, self.crm,
@@ -159,6 +161,7 @@ class Results:
         """combines all the table_types from all objects and sub-objects"""
         base = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
+            'cddata',
             'separation_initial', 'separation_final',
             'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
             'bolt_results',

@@ -355,9 +355,13 @@ class Subcase:
             options.append('PSDF')
             self.add('STRAIN', 'ALL', options, 'STRESS-type')
 
-        elif table_name in ['OSTR1ELC']:
+        elif table_name in ['OSTR1CR', 'OSTR1CRC']:
+            self.add('CRSTRN', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OSTR1EL', 'OSTR1ELC']:
+            self.add('ELSTRN', 'ALL', options, 'STRESS-type')
+        elif table_name in ['OSTR1PL', 'OSTR1PLC']:
             self.add('PLSTRN', 'ALL', options, 'STRESS-type')
-        elif table_name in ['OSTR1THC']:
+        elif table_name in ['OSTR1TH', 'OSTR1THC']:
             self.add('THSTRN', 'ALL', options, 'STRESS-type')
 
         elif table_name in ['OEFIT', 'OEFITSTN']:

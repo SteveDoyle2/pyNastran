@@ -631,8 +631,10 @@ class OP2(OP2_Scalar, OP2Writer):
             del self.subcase
 
         result_types = self.get_table_types()
-        skip_results = ('params', 'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3',
-                        'cstm', 'trmbu', 'trmbd')
+        skip_results = (
+            'params', 'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3',
+             'cstm', 'trmbu', 'trmbd',
+        )
         for result_type in result_types:
             if result_type in skip_results or result_type.startswith('responses.'):
                 continue

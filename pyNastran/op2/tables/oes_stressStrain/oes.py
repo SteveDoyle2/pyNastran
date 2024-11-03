@@ -1411,16 +1411,17 @@ class OES(OP2Common2):
             prefix = 'RAPEATC.'
         elif table_name_bytes in [b'OESMC1', b'OSTRMC1']:
             prefix = 'modal_contribution.'
-        elif table_name_bytes in [b'OESC1']:
-            # NX
+        elif table_name_bytes in [b'OESC1']:  # NX
             prefix = 'stress.'
-        elif table_name_bytes in [b'OSTR1THC']:
-            # NX
-            prefix = 'thermal_strain.'
-        elif table_name_bytes == b'OSTR1ELC':
+        elif table_name_bytes in [b'OSTR1PL', b'OSTR1PLC']:  # NX
+            prefix = 'plastic_strain.'
+        elif table_name_bytes in [b'OSTR1EL', b'OSTR1ELC']:  # NX
             prefix = 'elastic_strain.'
-            #prefix = 'plastic_strain.'
-        else:
+        elif table_name_bytes in [b'OSTR1TH', b'OSTR1THC']:  # NX
+            prefix = 'thermal_strain.'
+        elif table_name_bytes in [b'OSTR1CR', b'OSTR1CRC']:  # NX
+            prefix = 'creep_strain.'
+        else:  # pragma: no cover
             raise NotImplementedError(op2.table_name)
 
         #if op2.analysis_code == 1:

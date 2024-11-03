@@ -544,7 +544,11 @@ class RealCompositePlateArray(OES_Object):
                 msg = [f'                     T H E R M A L   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
             elif self.table_name_str == 'OSTR1ELC':
                 msg = [f'                     E L A S T I C   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
-                #msg = [f'                     P L A S T I C   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
+            elif self.table_name_str == 'OSTR1PLC':
+                msg = [f'                     P L A S T I C   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
+            elif self.table_name_str == 'OSTR1CRC':
+                msg = [f'                     C R E E P   S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
+                creep_strain
             else:
                 msg = [f'                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( {etype_str} )\n'] + words
         else:

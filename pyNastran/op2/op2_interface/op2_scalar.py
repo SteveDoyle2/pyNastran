@@ -668,7 +668,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         }
 
         nasa95_tables = {
-        b'OESC1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'composite stress'],
+            b'OESC1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'composite stress'],
         }
 
         table_mapper_geometry = {
@@ -716,16 +716,16 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'GEOM3OLD' : [self._table_passer, self._table_passer, 'constraint cards (old)'],
             b'GEOM4OLD' : [self._table_passer, self._table_passer, 'load cards (old)'],
 
-            b'EPT' : [self._table_passer, self._table_passer, 'property cards'],  # elements
+            b'EPT'  : [self._table_passer, self._table_passer, 'property cards'],  # elements
             b'EPTS' : [self._table_passer, self._table_passer, 'property cards (superelement)'],  # elements - superelements
             b'EPTOLD' : [self._table_passer, self._table_passer, 'property cards (old)'],
 
-            b'MPT' : [self._table_passer, self._table_passer, 'material cards'],  # materials
+            b'MPT'  : [self._table_passer, self._table_passer, 'material cards'],  # materials
             b'MPTS' : [self._table_passer, self._table_passer, 'material cards (superelement)'],  # materials - superelements
 
-            b'DYNAMIC' : [self._table_passer, self._table_passer, 'dynamic cards'],
+            b'DYNAMIC'  : [self._table_passer, self._table_passer, 'dynamic cards'],
             b'DYNAMICS' : [self._table_passer, self._table_passer, 'dynamic cards (superelement)'],
-            b'DIT' : [self._table_passer, self._table_passer, 'TABLEx cards'],
+            b'DIT'  : [self._table_passer, self._table_passer, 'TABLEx cards'],
             b'DITS' : [self._table_passer, self._table_passer, 'TABLEx cards (superelement))'],
 
             # this comment may refer to CSTM?
@@ -736,11 +736,11 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # EDT - aero cards
             #       element deformation, aerodynamics, p-element, divergence analysis,
             #       and iterative solver input (includes SET1 entries)
-            b'EDT' : [self._table_passer, self._table_passer, 'aero cards'],
+            b'EDT'  : [self._table_passer, self._table_passer, 'aero cards'],
             b'EDTS' : [self._table_passer, self._table_passer, 'aero cards (superelement)'],
 
             # contact/glue
-            b'CONTACT' : [self._table_passer, self._table_passer, 'contact cards'],
+            b'CONTACT'  : [self._table_passer, self._table_passer, 'contact cards'],
             b'CONTACTS' : [self._table_passer, self._table_passer, 'contact cards (superelement)'],
 
             b'EDOM' : [self._table_passer, self._table_passer, 'optimization cards'],     # optimization
@@ -813,7 +813,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #b'RAECONS': [self._table_passer, self._table_passer], # temporary
 
             # strain energy
-            b'RANEATC' : [reader_onr._read_onr1_3, reader_onr._read_onr1_4, 'Strain Energy Equivalent Inertia Attachment mode'], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
+            b'RANEATC': [reader_onr._read_onr1_3, reader_onr._read_onr1_4, 'Strain Energy Equivalent Inertia Attachment mode'], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
             b'RANCONS': [reader_onr._read_onr1_3, reader_onr._read_onr1_4, 'Constraint mode element strain energy table'], # Constraint mode element strain energy table (ORGY1)
             #b'RANEATC': [self._table_passer, self._table_passer], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
             #b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
@@ -903,16 +903,18 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OSTR1C'  : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'composite strain'],  # strain - composite
             b'OESTRCP' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'composite ply strain'],  # strain - composite ply
 
-            b'OSTR1PL'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 ply strains-plastic'],  # Table of ply strains-plastic in SORT1 format
-            b'OSTR1THC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'shell ply strains-thermal'],
-            b'OSTR1ELC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'shell ply strains-plastic'],
-            b'OSTR1CR'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 creep strain at Gauss points'],
-            b'OSTR1EL'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 elastic strain in SORT1 format'],
-            b'OSTR1TH'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of thermal strain; SORT1'],
-            b'OSTR1ING' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 OES output table of initial strains at corner Gauss points in the basic coordinate system; SORT1'],
 
-            b'OSTR1CRC' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of composite creep strain; SORT1'],
-            b'OSTR1PLC' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of ply strains-plastic; SORT1'],
+            b'OSTR1EL':  [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'NX 2019.2 elastic strain in SORT1 format'],
+            b'OSTR1TH':  [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'NX 2019.2 Table of thermal strain; SORT1'],
+            b'OSTR1PLC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'NX 2019.2 Table of ply strains-plastic; SORT1'],
+            b'OSTR1CR':  [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'NX 2019.2 creep strain at Gauss points'],
+
+            b'OSTR1ELC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'NX 2019.2 shell ply strains-elastic'],
+            b'OSTR1PL' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'NX 2019.2 ply strains-plastic'],  # Table of ply strains-plastic in SORT1 format
+            b'OSTR1THC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'NX 2019.2 shell ply strains-thermal'],
+            b'OSTR1CRC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'NX 2019.2 composite creep strain; SORT1'],
+
+            b'OSTR1ING' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 OES output table of initial strains at corner Gauss points in the basic coordinate system; SORT1'],
             b'OSTR1ELG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of elastic strain at Gauss points; SORT1'],
             b'OSTR1THG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of thermal strain at Gauss points; SORT1'],
             b'OSTR1PLG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of plastic strain at Gauss points; SORT1'],
@@ -929,7 +931,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OESNLBR' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'Slideline stress'],
             b'OESNL1X' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'nonlinear stress?'],
 
-            b'OESNL2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'nonlinear stress?'],
+            b'OESNL2'   : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'nonlinear stress?'],
             b'OESNLXR2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'nonlinear stress'],
             b'OESNLBR2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'Slideline stress'],
             #b'OESNLXR2' : [self._table_passer, self._table_passer],
@@ -960,10 +962,10 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OUGF1' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'Acoustic pressures at microphone points'], # Acoustic pressures at microphone points in SORT1 format
             b'OUGF2' : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'Acoustic pressures at microphone points'], # Acoustic pressures at microphone points in SORT1 format
 
-            b'OUGV2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set displacements in nodal frame'],  # displacements in nodal frame
-            b'ROUGV2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set relative U in CD frame'],  # relative OUG
-            b'OUXY2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'h/d-set displacements'],  # Displacements in SORT2 format for h-set or d-set.
-            b'OUG1S'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'structural eigenvectors'],  # Displacements in SORT2 format for h-set or d-set.
+            b'OUGV2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set displacements in nodal frame'],  # displacements in nodal frame
+            b'ROUGV2' : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set relative U in CD frame'],  # relative OUG
+            b'OUXY2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'h/d-set displacements'],  # Displacements in SORT2 format for h-set or d-set.
+            b'OUG1S'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'structural eigenvectors'],  # Displacements in SORT2 format for h-set or d-set.
 
             #  scaled response spectra - ABS / NRL / SRSS
             b'OUPV1' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'ABS/NRL/SRSS displacement/velocity/acceleration'],    # displacement, velocity, acceleration
@@ -1006,10 +1008,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OES1MX' : [self._table_passer, self._table_passer, 'extreme values of stress'],
 
             #=======================
-
-            b'OBC1': (reader_obc.read_sort1_3, reader_obc.read_4, 'Contact pressures and tractions at grid points'),
-            b'OBG1': (reader_obc.read_sort1_3, reader_obc.read_4, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
-
             # contact
             b'OQGCF1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'contact force at grid point'], # Contact force at grid point.
             b'OQGCF2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'contact force at grid point'], # Contact force at grid point.
@@ -1025,6 +1023,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OBC2' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'], # Contact pressures and tractions at grid points.
 
             # Glue normal and tangential tractions at grid point in basic coordinate system
+            #b'OBG1': (reader_obc.read_sort1_3, reader_obc.read_4, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
             b'OBG1' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
             b'OBG2' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
 
@@ -1082,8 +1081,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'PVT' : [self._read_pvto_3, self._read_pvto_4, 'PARAM cards'], # PVT - Parameter Variable Table
             b'PVTS' : [self._read_pvto_3, self._read_pvto_4, 'PARAM cards'], # ???
             b'PVT0' : [self._read_pvto_3, self._read_pvto_4, 'PARAM cards'],  # user parameter value table
-            b'TOLD' : [self._table_passer, self._table_passer, '????'],
-
+            b'TOLD' : [self._table_passer, self._table_passer, '???'],
 
             b'AEDISP' : [self._table_passer, self._table_passer, '???'], # matrix?
             #b'TOLB2' : [self._table_passer, self._table_passer], # matrix?
