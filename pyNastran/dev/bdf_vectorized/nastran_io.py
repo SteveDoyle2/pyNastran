@@ -827,7 +827,7 @@ class NastranIO(NastranIO_xref):
             self.scalar_bar_actor.VisibilityOn()
             self.scalar_bar_actor.Modified()
 
-    def _plot_pressures(self, model, cases):
+    def _plot_pressures(self, model: BDF, cases):
         """
         pressure act normal to a shell (as opposed to anti-normal to a solid face)
         """
@@ -935,7 +935,8 @@ class NastranIO(NastranIO_xref):
             if loads[:, 2].min() != loads[:, 2].max():
                 cases[(subcase_id, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 2]
 
-    def load_nastran_results(self, op2_filename, dirname):
+    def load_nastran_results(self, op2_filename: str,
+                             dirname: str):
         """
         Loads the Nastran results into the GUI
         """
@@ -1001,25 +1002,26 @@ class NastranIO(NastranIO_xref):
 
     def fill_oug_oqg_case(self, cases, model, subcase_id):
         displacement_like = [
-            [model.displacements, 'Displacement'],
-            [model.velocities, 'Velocity'],
-            [model.accelerations, 'Acceleration'],
-            [model.spc_forces, 'SPC Forces'],
-            [model.mpc_forces, 'MPC Forces'],
+            [model.displacements, 'Displacement', ('displacement', '')],
+            [model.velocities, 'Velocity', ('velocity', '')],
+            [model.accelerations, 'Acceleration', ('acceleration', '')],
+            [model.spc_forces, 'SPC Forces', ('force', 'moment')],
+            [model.mpc_forces, 'MPC Forces', ('force', 'moment')],
 
             # untested
-            [model.load_vectors, 'Load Vectors'],
+            [model.load_vectors, 'Load Vectors', ('force', 'moment')],
             #[model.applied_loads, 'Applied Loads'],
-            [model.force_vectors, 'Force Vectors'],
+            [model.force_vectors, 'Force Vectors', ('force', 'moment')],
             #[model.gridPointForces, 'GridPointForces'],  # TODO: this is buggy...
         ]
         temperature_like = [
-            [model.temperatures, 'Temperature']
+            [model.temperatures, 'Temperature', ('temperature', ''')]
         ]
         nnodes = self.nNodes
 
         # size = 3
-        for (result, name) in displacement_like:
+        for (result, name, units) in displacement_like:
+            units_t, units_r = units
             if subcase_id in result:
                 case = result[subcase_id]
 

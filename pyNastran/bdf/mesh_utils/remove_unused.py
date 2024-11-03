@@ -266,11 +266,11 @@ def remove_unused(bdf_filename: str,
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())
 
-        elif card_type == 'PLOTEL':
+        elif card_type in {'PLOTEL', 'PLOTEL3', 'PLOTEL4'}:
             for eid in ids:
                 elem = model.plotels[eid]
                 nids_used.update(elem.node_ids)
-        elif card_type in ['PSOLID', 'PLSOLID', 'PIHEX']:
+        elif card_type in {'PSOLID', 'PLSOLID', 'PIHEX'}:
             for pid in ids:
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())
@@ -278,8 +278,8 @@ def remove_unused(bdf_filename: str,
             for pid in ids:
                 prop = model.properties[pid]
                 mids_thermal_used.add(prop.Mid())
-        elif card_type in ['PBAR', 'PBARL', 'PROD', 'PTUBE', 'PBEAM', 'PBEAML', 'PBEAM3',
-                           'PSHEAR', 'PRAC2D', 'PRAC3D', 'PBEND']:
+        elif card_type in {'PBAR', 'PBARL', 'PROD', 'PTUBE', 'PBEAM', 'PBEAML', 'PBEAM3',
+                           'PSHEAR', 'PRAC2D', 'PRAC3D', 'PBEND'}:
             for pid in ids:
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())
@@ -288,18 +288,18 @@ def remove_unused(bdf_filename: str,
                 prop = model.properties[pid]
                 mids = [mid for mid in prop.material_ids if mid is not None]
                 mids_used.update(mids)
-        elif card_type in ['PCOMP', 'PCOMPG']:
+        elif card_type in {'PCOMP', 'PCOMPG'}:
             for pid in ids:
                 prop = model.properties[pid]
                 mids = prop.material_ids
                 mids_used.update(mids)
-        elif card_type in ['PBCOMP']:
+        elif card_type == 'PBCOMP':
             for pid in ids:
                 prop = model.properties[pid]
                 mids = prop.Mids()
                 mids_used.add(prop.Mid())
                 mids_used.update(mids)
-        elif card_type in ['PCOMPS', 'PCOMPLS']:
+        elif card_type in {'PCOMPS', 'PCOMPLS'}:
             for pid in ids:
                 prop = model.properties[pid]
                 mids = prop.Mids()
@@ -315,7 +315,7 @@ def remove_unused(bdf_filename: str,
                 prop = model.properties[pid]
                 mids_used.update(mids)
 
-        elif card_type in ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON']:
+        elif card_type in {'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON'}:
             for eid in ids:
                 elem = model.rigid_elements[eid]
                 #print(elem.object_attributes())
@@ -323,7 +323,7 @@ def remove_unused(bdf_filename: str,
                 nids_used.update(elem.independent_nodes)
                 nids_used.update(elem.dependent_nodes)
 
-        elif card_type in ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'ACSRCE']:
+        elif card_type in {'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'ACSRCE'}:
             pass
         elif card_type in load_types:
             _store_loads(model, card_type, ids, nids_used, eids_used, cids_used)
@@ -346,7 +346,7 @@ def remove_unused(bdf_filename: str,
             for spcadds in model.spcadds.values():
                 for spcadd in spcadds:
                     spcs_used.update(spcadd.spc_ids)
-        elif card_type in ['SPC1', 'SPC', 'GMSPC', 'SPCAX']:
+        elif card_type in {'SPC1', 'SPC', 'GMSPC', 'SPCAX'}:
             for spcs in model.spcs.values():
                 for spc in spcs:
                     if spc.type in ['GMSPC', 'SPCAX']:
@@ -515,7 +515,7 @@ def remove_unused(bdf_filename: str,
                 tfs = model.transfer_functions[tf_id]
                 for transfer_function in tfs:
                     nids_used.update(transfer_function.nids)
-        elif card_type in ['NSM', 'NSM1', 'NSML', 'NSML1']:
+        elif card_type in {'NSM', 'NSM1', 'NSML', 'NSML1'}:
             _store_nsm(model, ids, pids_used)
 
         elif card_type in ['POINTAX', 'AXIC', 'RINGAX']:

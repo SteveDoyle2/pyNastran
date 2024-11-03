@@ -95,7 +95,10 @@ from pyNastran.op2.result_objects.stress_object import StressObject
 
 
 from pyNastran.gui.utils.vtk.vtk_utils import (
-    numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
+    numpy_to_vtk_points,
+    create_vtk_cells_of_constant_element_type,
+    create_vtk_cells_of_constant_element_types,
+)
 from pyNastran.gui.qt_files.colors import (
     RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
     YELLOW_FLOAT, ORANGE_FLOAT)
@@ -1572,7 +1575,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         create_vtk_cells_of_constant_element_type(grid, elements, etype)
         grid.SetPoints(points)
 
-    def _fill_dependent_independent(self, unused_mpc_id: int, model: BDF, lines,
+    def _fill_dependent_independent(self, unused_mpc_id: int,
+                                    model: BDF, lines,
                                     depname: str, indname: str, linename: str,
                                     idtype: str) -> list[str]:
         """creates the mpc actors"""
@@ -1612,8 +1616,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         mpc_names = [depname, indname, linename]
         return mpc_names
 
-    def _add_nastran_nodes_to_grid(self, name: str, node_ids: list[int],
-                                   model: BDF, msg: str, store_msg: bool=False):
+    def _add_nastran_nodes_to_grid(self, name: str,
+                                   node_ids: list[int],
+                                   model: BDF,
+                                   msg: str, store_msg: bool=False):
         """used to create MPC independent/dependent nodes"""
         nnodes = len(node_ids)
         stored_msg = []
@@ -1721,7 +1727,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         alt_grid.SetPoints(points)
 
     def _add_nastran_lines_to_grid(self, name: str,
-                                   lines,
+                                   lines: np.ndarray,
                                    model: BDF,
                                    nid_to_pid_map=None):
         """used to create MPC lines"""
@@ -1770,7 +1776,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             j += 2
         alt_grid.SetPoints(points)
 
-    def _fill_suport(self, suport_id: int, unused_subcase_id: int, model: BDF) -> str:
+    def _fill_suport(self, suport_id: int,
+                     unused_subcase_id: int,
+                     model: BDF) -> str:
         """creates SUPORT and SUPORT1 nodes"""
         suport_name = f'suport1_id={suport_id:d}'
         gui: MainWindow = self.gui
@@ -1966,18 +1974,83 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         if not nplotels:  # pragma: no cover
             return
         gui: MainWindow = self.gui
-        # sorting these don't matter, but why not?
-        #lines = [element.node_ids for unused_eid, element in sorted(model.plotels.items())]
-        lines = []
-        for unused_eid, element in sorted(model.plotels.items()):
-            node_ids = element.node_ids
-            lines.append(node_ids)
-        lines = np.array(lines, dtype='int32')
 
+        log = model.log
+        lines = []
+        tris = []
+        quads = []
+        for eid, element in sorted(model.plotels.items()):
+            etype = element.type
+            node_ids = element.node_ids
+            if etype == 'PLOTEL':
+                lines.append(node_ids)
+            elif etype == 'PLOTEL3':
+                tris.append(node_ids)
+                #n1, n2, n3 = node_ids
+                #lines.append([n1, n3])
+                #lines.append([n1, n2])
+                #lines.append([n2, n3])
+            elif etype == 'PLOTEL4':
+                quads.append(node_ids)
+            else:  # pragma: no cover
+                log.warning(f'skipping {etype} eid={eid}')
+
+        elements_list = []
+        etypes_list = []
+        if len(lines):
+            etypes_list.append('line')
+            elements_list.append(np.array(lines))
+        if len(tris):
+            etypes_list.append('tri3')
+            elements_list.append(np.array(tris))
+        if len(quads):
+            etypes_list.append('quad4')
+            elements_list.append(np.array(quads))
+
+        if len(lines) and (len(tris) or len(quads)):
+            representation = 'wire+surf'
+        elif len(lines):
+            representation = 'wire'
+        else:
+            representation = 'surface'
+
+        name = 'plotel'
+        color = RED_FLOAT
         gui.create_alternate_vtk_grid(
-            'plotel', color=RED_FLOAT, line_width=2, opacity=0.8,
-            point_size=5, representation='wire', is_visible=True)
-        self._add_nastran_lines_to_grid('plotel', lines, model)
+            name, color=color, line_width=2, opacity=0.8,
+            point_size=5, representation=representation, is_visible=True)
+
+        alt_grid: vtkUnstructuredGrid = gui.alt_grids[name]
+        if 1:
+            vtk_points: vtkPoints = alt_grid.GetPoints()
+
+            stacked_nids = np.hstack([
+                nids.ravel() for nids in elements_list])
+            unids = np.unique(stacked_nids)
+
+            nnodes = len(unids)
+            xyz_cid0 = np.zeros((nnodes, 3))
+            for inid, nid in enumerate(unids):
+                node = model.nodes[nid]
+                xyz_cid0[inid, :] = node.get_position()
+
+            elements_list2 = [np.searchsorted(unids, nids)
+                              for nids in elements_list]
+            print(xyz_cid0)
+            print(elements_list2)
+            create_vtk_cells_of_constant_element_types(
+                alt_grid, elements_list2, etypes_list)
+            #gui.follower_nodes[name] = unids
+
+            xyz_cid0 = gui.scale_length(xyz_cid0)
+            #vtk_points.SetNumberOfPoints(nnodes)
+            vtk_points = numpy_to_vtk_points(xyz_cid0, points=vtk_points)
+            alt_grid.SetPoints(vtk_points)
+        else:
+            lines = np.array(lines, dtype='int32')
+            self._add_nastran_lines_to_grid(name, lines, model)
+        #print(alt_grid)
+        #print(vtk_points)
 
     def _map_elements1_no_quality(self,
                                   model: BDF,

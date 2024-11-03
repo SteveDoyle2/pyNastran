@@ -475,12 +475,8 @@ class F06Writer(OP2_F06_Common):
             resi = getattr(results, key)
             if key == 'cddata':
                 f06.write(f'{key}:\n')
-                msg = ''
-                for isub, resii in enumerate(resi):
-                    for ii, resiii in resii.items():
-                        msg += f'{isub},{ii}: {resiii.tolist()}\n'
-                f06.write(msg)
-                print(msg)
+                for subcase, obj in resi.items():
+                    obj.write_f06(f06)
                 continue
 
             if resi is None or isinstance(resi, dict) and len(resi) == 0:

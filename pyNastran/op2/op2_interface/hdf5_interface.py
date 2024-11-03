@@ -19,6 +19,7 @@ import pyNastran
 from pyNastran.op2.op2 import OP2
 
 from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
+from pyNastran.op2.result_objects.campbell import CampbellData
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray, ComplexDisplacementArray
 from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray, ComplexVelocityArray
@@ -181,6 +182,7 @@ STRING_KEYS = [
     'label', 'pval_step', 'title']
 
 TABLE_OBJ_MAP = {
+    'cddata': (CampbellData,),
     'displacements' : (RealDisplacementArray, ComplexDisplacementArray),
     'no.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
     'ato.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
@@ -1519,6 +1521,9 @@ def load_op2_from_hdf5_file(model: OP2, h5_file,
                     h5_result = h5_subcase.get(result_name)
                     obj = _load_grid_point_weight(h5_result)
                     model.grid_point_weight[obj.superelement_adaptivity_index] = obj
+                elif result_name == 'cddata':
+                    #h5_result = h5_subcase.get(result_name)
+                    pass
 
                 elif result_name in TABLE_OBJ_KEYS:
                     if debug:

@@ -15,7 +15,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
 from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
-from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
+from pyNastran.bdf.cards.elements.elements import (
+    CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, PLOTEL3, PLOTEL4, GENEL)
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
 from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
@@ -6531,6 +6532,42 @@ class AddCards(AddCoords, AddContact, AddBolts,
 
         """
         elem = PLOTEL(eid, nodes, comment=comment)
+        self._add_methods._add_plotel_object(elem)
+        return elem
+
+    def add_plotel3(self, eid: int, nodes: list[int], comment: str='') -> PLOTEL3:
+        """
+        Adds a PLOTEL3 card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int, int]
+            Unique GRID point IDs
+        comment : str; default=''
+            a comment for the card
+
+        """
+        elem = PLOTEL3(eid, nodes, comment=comment)
+        self._add_methods._add_plotel_object(elem)
+        return elem
+
+    def add_plotel4(self, eid: int, nodes: list[int], comment: str='') -> PLOTEL4:
+        """
+        Adds a PLOTEL4 card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int, int, int]
+            Unique GRID point IDs
+        comment : str; default=''
+            a comment for the card
+
+        """
+        elem = PLOTEL4(eid, nodes, comment=comment)
         self._add_methods._add_plotel_object(elem)
         return elem
 

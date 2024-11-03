@@ -369,6 +369,12 @@ def _mirror_elements(model: BDF,
             if element.type == 'PLOTEL':
                 nodes = [node_id + nid_offset for node_id in nodes]
                 mirror_model.add_plotel(eid_mirror, nodes)
+            elif element.type == 'PLOTEL3':
+                nodes = [node_id + nid_offset for node_id in nodes]
+                mirror_model.add_plotel3(eid_mirror, nodes)
+            elif element.type == 'PLOTEL4':
+                nodes = [node_id + nid_offset for node_id in nodes]
+                mirror_model.add_plotel4(eid_mirror, nodes)
             else:  # pragma: no cover
                 mirror_model.log.warning('skipping:\n%s' % str(element))
 

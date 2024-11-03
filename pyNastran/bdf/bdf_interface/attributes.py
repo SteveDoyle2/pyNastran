@@ -25,7 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover
         # bar
         BAROR, BEAMOR,
         # plot
-        PLOTEL,
+        PLOTEL, PLOTEL3, PLOTEL4,
         # dynamic
         TSTEP, TSTEP1, TSTEPNL,
         NLPCI, NLPARM,
@@ -480,7 +480,7 @@ class BDFAttributes:
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements: dict[int, RBE1 | RBE2 | RBE3 | RBAR | RBAR1 | RJOINT] = {}
         #: stores PLOTELs
-        self.plotels: dict[int, PLOTEL] = {}
+        self.plotels: dict[int, PLOTEL | PLOTEL3 | PLOTEL4] = {}
 
         #: stores CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5
         self.masses: dict[int, CONM1 | CONM2 | CMASS1 | CMASS2 | CMASS3 | CMASS4 | CMASS5] = {}
@@ -861,7 +861,7 @@ class BDFAttributes:
             'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1'],
             'nsmadds' : ['NSMADD'],
             'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON'],
-            'plotels' : ['PLOTEL'],
+            'plotels' : ['PLOTEL', 'PLOTEL3', 'PLOTEL4'],
 
             'properties_mass' : ['PMASS'],
             #'properties_acoustic' : ['PACABS'],

@@ -383,6 +383,7 @@ class ComplexEigenvalues(BaseScalarObject):
         BaseScalarObject.__init__(self)
         self.title = title
         self.table_name = table_name
+        self.nmodes = nmodes
 
         self.mode = np.zeros(nmodes, dtype='int32')
         self.extraction_order = np.zeros(nmodes, dtype='int32')

@@ -111,7 +111,19 @@ if TYPE_CHECKING:  # pragma: no cover
 # VTK_BEZIER_WEDGE = 80
 # VTK_BEZIER_PYRAMID = 81
 
-ETYPES_EXPECTED_DICT = {
+ETYPE_STR_TO_ETYPE_INT = {
+    'vertex' : 1,
+    'line': 3,
+    'tri3': 5,
+    'quad4': 9,
+    'tetra4': 10,
+    'hexa8': 12,
+    'penta6': 13,
+    'pyram5': 14,
+    'tria6': 22,
+    'pyram13': 27,
+}
+ETYPE_INT_TO_NNODES = {
     # etype: nnodes
     1: 1, # vertex
     3: 2, # line
@@ -151,9 +163,9 @@ def numpy_to_vtk_points(nodes: np. ndarray,
     return points
 
 
-def _check_shape(etype: int,
+def _check_shape(etype: int | str,
                  elements: np.ndarray,
-                 nnodes_per_element: int) -> None:
+                 nnodes_per_element: int) -> int:
     """
     The following table lists the supported vtk types
 
@@ -173,21 +185,34 @@ def _check_shape(etype: int,
     27  vtkQuadraticPyramid
 
     """
-    if isinstance(etype, int):
+    etype_int = -1
+    if isinstance(etype, str):
         try:
-            nnodes = ETYPES_EXPECTED_DICT[etype]
-            assert nnodes_per_element == nnodes, elements.shape
+            etype_int = ETYPE_STR_TO_ETYPE_INT[etype]
+        except KeyError:
+            warnings.warn(f'no recommendation for etype={etype!r}; nnodes_per_element={nnodes_per_element}')
+            raise
+        nnodes = ETYPE_INT_TO_NNODES[etype_int]
+
+    elif isinstance(etype, int):
+        etype_int = etype
+        try:
+            nnodes = ETYPE_INT_TO_NNODES[etype_int]
         except KeyError:
             warnings.warn(f'no recommendation for etype={etype}; nnodes_per_element={nnodes_per_element}')
     else:  # pragma: no cover
         raise RuntimeError(etype)
+    assert nnodes_per_element == nnodes, elements.shape
+    return etype_int
 
 
 def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
                                               elements: np.ndarray,
-                                              etype: int) -> None:
+                                              etype: int | str) -> None:
     """
     Adding constant type elements is overly complicated.
+    See:
+     - create_vtk_cells_of_constant_element_types
 
     Parameters
     ----------
@@ -195,7 +220,7 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
         the unstructured grid
     elements : (nelements, nnodes_per_element) int ndarray
         the elements to add
-    etype : int
+    etype : int | str
         VTK cell type
         etype = 9  # vtkQuad().GetCellType()
 
@@ -206,7 +231,7 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
 
     """
     nelements, nnodes_per_element = elements.shape
-    _check_shape(etype, elements, nnodes_per_element)
+    etype_int = _check_shape(etype, elements, nnodes_per_element)
 
     # We were careful about how we defined the arrays, so the data
     # is contiguous when we ravel it.  Otherwise, you need to
@@ -236,7 +261,7 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
 
     # Cell types
     # 5 = vtkTriangle().GetCellType()
-    cell_types = np.full(nelements, etype, dtype='int8')
+    cell_types = np.full(nelements, etype_int, dtype='int8')
     vtk_cell_types = numpy_to_vtk(
         cell_types, deep=0,
         array_type=vtkUnsignedCharArray().GetDataType())
@@ -248,9 +273,9 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
 
 def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
                                                elements_list: list[np.ndarray],
-                                               etypes_list: list[int]) -> None:
+                                               etypes_list: list[int] | list[str]) -> None:
     """
-    Adding constant type elements is overly complicated enough as in
+    Adding constant type elements is overly complicated enough in
     ``create_vtk_cells_of_constant_element_type``.  Now we extend
     this to multiple element types.  They're all stacked in order.
 
@@ -260,7 +285,7 @@ def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
         elements : (nelements, nnodes_per_element) int ndarray
             the elements to add
     etypes_list : list[etype, ...]
-        etype : int
+        etype : int | str
             the VTK flag as defined in
             ``create_vtk_cells_of_constant_element_type``
 
@@ -276,14 +301,15 @@ def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
     elements_list2 = []
     nelements = 0
     noffsets = 0
-    for element, etype in zip(elements_list, etypes_list):
+    for element, etype_int_str in zip(elements_list, etypes_list):
         nelement, nnodes_per_element = element.shape
+        etype_int = _check_shape(etype_int_str, element, nnodes_per_element)
 
         nnodesp1 = nnodes_per_element + 1  # 4 for a tri
         cell_offset = np.arange(0, nelement, dtype='int32') * nnodesp1 + noffsets
         noffset = nelement * nnodesp1
 
-        cell_type = np.ones(nelement, dtype='int32') * etype
+        cell_type = np.ones(nelement, dtype='int32') * etype_int
         assert len(cell_offset) == nelement
 
         nnodesp1 = nnodes_per_element + 1

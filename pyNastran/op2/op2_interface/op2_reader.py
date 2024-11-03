@@ -59,6 +59,7 @@ from pyNastran.op2.result_objects.eqexin import EQEXIN
 from pyNastran.op2.result_objects.matrix_dict import MatrixDict
 from pyNastran.op2.result_objects.qualinfo import QualInfo
 from pyNastran.op2.result_objects.op2_results import CSTM
+from pyNastran.op2.result_objects.campbell import CampbellData
 from pyNastran.op2.op2_interface.msc_tables import MSC_GEOM_TABLES
 from pyNastran.op2.op2_interface.nx_tables import NX_GEOM_TABLES
 
@@ -102,59 +103,6 @@ EXTSEOUT = [
     'MGPFO', 'MEF1O', 'MQG1', 'MQG1O', 'MQMG1', 'MQMG1O',
     'MEF1',
 ]
-
-
-class CampbellData:
-    def __init__(self, solution: int,
-                 cddata_list: list[dict[int, np.ndarray]]):
-        print(f'solution = {solution:d}')
-        self.solution = solution
-        self.cddata_list: list[dict[int, np.ndarray]] = cddata_list
-
-    def get_stats(self, short: bool=False) -> list[str]:
-        msg = [
-            '  type=%s solution=%s\n' % (self.__class__.__name__, self.solution),
-            '  cddata_list\n'
-        ]
-        #self.plot()
-        return msg
-
-    def plot(self, ifig: int=1) -> None:
-        import matplotlib.pyplot as plt
-        for data in self.cddata_list:
-            # 1: 'RPM',
-            # 2: 'eigenfreq',
-            # 3: 'Lehr',
-            # 4: 'real_eig',
-            # 5: 'imag_eig',
-            # 6: 'whirl_dir',
-            # 7: 'converted_freq',
-            # 8: 'whirl_code',
-            rpm = data['RPM']
-            eigenfreq = data['eigenfreq']
-            Lehr = data['Lehr']
-            imag_eig = data['imag_eig']
-            converted_freq = data['converted_freq']
-            plt.figure(ifig)
-            plt.plot(rpm, eigenfreq)  # RPM vs. eigenfreq
-            # plt.grid(True)
-
-            plt.figure(ifig+1)
-            plt.plot(rpm, Lehr)  # RPM vs. Lehr
-            plt.grid(True)
-
-            real_eig = data['real_eig']
-            plt.figure(ifig+2)
-            plt.plot(rpm, real_eig)  # RPM vs. real_eig
-            plt.grid(True)
-
-            plt.figure(ifig+3)
-            plt.plot(rpm, imag_eig)  # RPM vs. imag_eig
-            plt.grid(True)
-
-            plt.figure(ifig+4)
-            plt.plot(rpm, converted_freq)  # RPM vs. converted_freq
-            plt.grid(True)
 
 
 class OP2Reader:
