@@ -108,7 +108,7 @@ class TestRenumber(unittest.TestCase):
         bdf_filename_out3 = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero3.out')
         model = bdf_renumber(bdf_filename, bdf_filename_out1, size=8,
                              is_double=False, starting_id_dict=None,
-                             round_ids=False, cards_to_skip=None, debug=False)
+                             round_ids=False, cards_to_skip=None, log=log)
 
         model = read_bdf(bdf_filename, log=log)
         bdf_renumber(model, bdf_filename_out2, size=16, is_double=False,

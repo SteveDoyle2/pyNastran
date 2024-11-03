@@ -967,14 +967,15 @@ class PLOTEL(BaseCard):
         self.nodes_ref = None
 
     @property
-    def node_ids(self):
-        node_idsi = self.nodes
+    def node_ids(self) -> list[int]:
+        node_idsi = self.nodes_ref
         n1, n2 = node_idsi
+        nodes = [n1, n2]
         if not isinstance(n1, integer_types):
-            node_idsi[0] = n1.Nid()
+            nodes[0] = n1.Nid()
         if not isinstance(n2, integer_types):
-            node_idsi[1] = n2.Nid()
-        return node_idsi
+            nodes[1] = n2.Nid()
+        return nodes
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -1120,15 +1121,16 @@ class PLOTEL3(BaseCard):
 
     @property
     def node_ids(self) -> list[int]:
-        node_idsi = self.nodes
+        node_idsi = self.nodes_ref
         n1, n2, n3 = node_idsi
+        nodes = [n1, n2, n3]
         if not isinstance(n1, integer_types):
-            node_idsi[0] = n1.Nid()
+            nodes[0] = n1.Nid()
         if not isinstance(n2, integer_types):
-            node_idsi[1] = n2.Nid()
+            nodes[1] = n2.Nid()
         if not isinstance(n3, integer_types):
-            node_idsi[2] = n3.Nid()
-        return node_idsi
+            nodes[2] = n3.Nid()
+        return nodes
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -1277,17 +1279,18 @@ class PLOTEL4(BaseCard):
 
     @property
     def node_ids(self) -> list[int]:
-        node_idsi = self.nodes
+        node_idsi = self.nodes_ref
         n1, n2, n3, n4 = node_idsi
+        nodes = [n1, n2, n3, n4]
         if not isinstance(n1, integer_types):
-            node_idsi[0] = n1.Nid()
+            nodes[0] = n1.Nid()
         if not isinstance(n2, integer_types):
-            node_idsi[1] = n2.Nid()
+            nodes[1] = n2.Nid()
         if not isinstance(n3, integer_types):
-            node_idsi[2] = n3.Nid()
+            nodes[2] = n3.Nid()
         if not isinstance(n4, integer_types):
-            node_idsi[3] = n4.Nid()
-        return node_idsi
+            nodes[3] = n4.Nid()
+        return nodes
 
     def get_edge_ids(self) -> list[tuple[int, int]]:
         return [tuple(sorted(self.node_ids))]
@@ -1299,7 +1302,7 @@ class PLOTEL4(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         fields = ['PLOTEL4', self.eid] + nodes
-        print_card_8(fields)
+        msg = print_card_8(fields)
         return self.comment + msg
 
 

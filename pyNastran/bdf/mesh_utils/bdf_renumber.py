@@ -8,23 +8,28 @@ defines:
                           log=None, debug=False)
 
 """
+from __future__ import annotations
 from itertools import chain
 from io import StringIO, IOBase
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
+from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
-
-def bdf_renumber(bdf_filename: str | BDF | StringIO,
+def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
                  bdf_filename_out: str,
-                 size=8, is_double=False,
-                 starting_id_dict=None, round_ids: bool=False,
+                 size: int=8, is_double: bool=False,
+                 starting_id_dict: Optional[dict[str, int]]=None,
+                 round_ids: bool=False,
                  cards_to_skip: Optional[list[str]]=None,
-                 log=None, debug=False) -> BDF:
+                 log: Optional[SimpleLogger]=None,
+                 debug: bool=False) -> BDF:
     """
     Renumbers a BDF
 
@@ -327,7 +332,7 @@ def bdf_renumber(bdf_filename: str | BDF | StringIO,
         elif key == 'tf_id':
             tf_id = int(value)
         else:
-            raise NotImplementedError('key=%r' % key)
+            raise NotImplementedError(f'key={key!r}')
 
     # just to make pylint be quiet
     str(
@@ -666,6 +671,7 @@ def get_renumber_starting_ids_from_model(model: BDF) -> dict[str, int]:
         max(model.elements),
         max(model.masses) if model.masses else 0,
         max(model.rigid_elements) if model.rigid_elements else 0,
+        max(model.plotels) if model.plotels else 0,
     ])
     pid_max = max([
         max(model.properties) if model.properties else 0,
@@ -745,9 +751,11 @@ def get_starting_ids_dict_from_mapper(model, mapper):
     return starting_id_dict2
 
 
-def superelement_renumber(bdf_filename, bdf_filename_out=None, size=8, is_double=False,
+def superelement_renumber(bdf_filename: PathLike | BDF,
+                          bdf_filename_out=None, size=8, is_double=False,
                           starting_id_dict=None, cards_to_skip=None,
-                          log=None, debug=False):
+                          log: Optional[SimpleLogger]=None,
+                          debug: bool=False):
     """
     Renumbers a superelement
 
@@ -917,7 +925,10 @@ def _get_bdf_model(bdf_filename, cards_to_skip=None, log=None, debug=False):
     return model
 
 
-def _update_nodes(model, starting_id_dict, nid, nid_map):
+def _update_nodes(model: BDF,
+                  starting_id_dict: dict[str, int],
+                  nid: int,
+                  nid_map: dict[int, int]) -> None:
     """updates the nodes"""
     if 'nid' in starting_id_dict and nid is not None:
         #spoints2 = arange(1, len(spoints) + 1)
@@ -929,8 +940,10 @@ def _update_nodes(model, starting_id_dict, nid, nid_map):
             node.nid = nid_new
 
 
-def _update_properties(model, starting_id_dict, pid,
-                       properties_map, properties_mass_map):
+def _update_properties(model: BDF,
+                       starting_id_dict: dict[str, int], pid: int,
+                       properties_map: dict[int, int],
+                       properties_mass_map: dict[int, int]) -> None:
     """updates the properties"""
     if 'pid' in starting_id_dict and pid is not None:
         # properties
@@ -957,8 +970,11 @@ def _update_properties(model, starting_id_dict, pid,
             pid += 1
 
 
-def _update_elements(model, starting_id_dict, eid,
-                     eid_map, mass_id_map, rigid_elements_map):
+def _update_elements(model: BDF,
+                     starting_id_dict: dict[str, int], eid: int,
+                     eid_map: dict[int, int],
+                     mass_id_map: dict[int, int],
+                     rigid_elements_map: dict[int, int]) -> None:
     """updates the elements"""
     if 'eid' in starting_id_dict and eid is not None:
         # elements
@@ -984,8 +1000,11 @@ def _update_elements(model, starting_id_dict, eid,
             #pass
 
 
-def _update_materials(unused_model, starting_id_dict, mid,
-                      mid_map, all_materials):
+def _update_materials(model: BDF,
+                      starting_id_dict: dict[str, int], mid: int,
+                      mid_map: dict[int, int],
+                      all_materials: list[Material]) -> None:
+    del model
     if 'mid' in starting_id_dict and mid is not None:
         #mid = 1
         for materials in all_materials:
@@ -995,8 +1014,9 @@ def _update_materials(unused_model, starting_id_dict, mid,
                 material.mid = mid
 
 
-def _update_spcs(model, starting_id_dict, spc_id,
-                 spc_map):
+def _update_spcs(model: BDF,
+                 starting_id_dict: dict[str, int], spc_id: int,
+                 spc_map: dict[int, int]) -> None:
     """updates the spcs"""
     if 'spc_id' in starting_id_dict and spc_id is not None:
         # spc
@@ -1021,8 +1041,8 @@ def _update_spcs(model, starting_id_dict, spc_id,
             spc_map[spc_id] = spc_id
 
 
-def _update_mpcs(model, starting_id_dict, mpc_id,
-                 mpc_map):
+def _update_mpcs(model: BDF, starting_id_dict: dict[str, int], mpc_id: int,
+                 mpc_map: dict[int, int]):
     """updates the mpcs"""
     if 'mpc_id' in starting_id_dict and mpc_id is not None:
         # mpc
@@ -1047,8 +1067,9 @@ def _update_mpcs(model, starting_id_dict, mpc_id,
             mpc_map[mpc_id] = mpc_id
 
 
-def _update_coords(model, starting_id_dict, cid,
-                   cid_map):
+def _update_coords(model: BDF,
+                   starting_id_dict: dict[str, int], cid: int,
+                   cid_map: dict[int, int]) -> None:
     """updates the coords"""
     if 'cid' in starting_id_dict and cid is not None:
         # coords
@@ -1061,7 +1082,8 @@ def _update_coords(model, starting_id_dict, cid,
             cid += 1
 
 
-def _update_case_control(model, mapper):
+def _update_case_control(model: BDF,
+                         mapper: dict[str, list[int]]) -> None:
     """
     Updates the case control deck; helper method for ``bdf_renumber``.
 
