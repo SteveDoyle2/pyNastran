@@ -968,6 +968,8 @@ class PLOTEL(BaseCard):
 
     @property
     def node_ids(self) -> list[int]:
+        if self.nodes_ref is None:
+            return self.nodes
         node_idsi = self.nodes_ref
         n1, n2 = node_idsi
         nodes = [n1, n2]
@@ -1121,6 +1123,8 @@ class PLOTEL3(BaseCard):
 
     @property
     def node_ids(self) -> list[int]:
+        if self.nodes_ref is None:
+            return self.nodes
         node_idsi = self.nodes_ref
         n1, n2, n3 = node_idsi
         nodes = [n1, n2, n3]
@@ -1279,6 +1283,8 @@ class PLOTEL4(BaseCard):
 
     @property
     def node_ids(self) -> list[int]:
+        if self.nodes_ref is None:
+            return self.nodes
         node_idsi = self.nodes_ref
         n1, n2, n3, n4 = node_idsi
         nodes = [n1, n2, n3, n4]
