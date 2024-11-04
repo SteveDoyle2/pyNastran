@@ -956,8 +956,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             list of panels used by each aero panel
 
         """
+        gui: MainWindow = self.gui
+        nastran_settings: NastranSettings = gui.settings.nastran_settings
+        is_aero = nastran_settings.is_aero
+
         # when caeros is empty, SPLINEx/AESURF cannot be defined
-        if not self.create_secondary_actors or len(model.caeros) == 0:
+        if not is_aero or len(model.caeros) == 0:
             caero_points = np.empty((0, 3))
             has_caero = False
             ncaeros = 0
@@ -978,7 +982,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             return out
 
         all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(model)
-        gui: MainWindow = self.gui
         if all_control_surface_name:
             gui.create_alternate_vtk_grid(
                 'caero_control_surfaces', color=PINK_FLOAT, line_width=5, opacity=1.0,
@@ -1149,7 +1152,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         """
         gui: MainWindow = self.gui
-        log = gui.log
+        log: SimpleLogger = gui.log
         boxes_to_show, stored_msg = check_for_missing_control_surface_boxes(
             name, cs_box_ids, box_id_to_caero_element_map, log,
             store_msg=store_msg)
@@ -2015,42 +2018,36 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             representation = 'surface'
 
         name = 'plotel'
-        color = RED_FLOAT
+        nastran_settings: NastranSettings = self.settings.nastran_settings
+        color = nastran_settings.plotel_color
         gui.create_alternate_vtk_grid(
             name, color=color, line_width=2, opacity=0.8,
-            point_size=5, representation=representation, is_visible=True)
+            point_size=5, representation=representation,
+            is_visible=True)
 
         alt_grid: vtkUnstructuredGrid = gui.alt_grids[name]
-        if 1:
-            vtk_points: vtkPoints = alt_grid.GetPoints()
+        vtk_points: vtkPoints = alt_grid.GetPoints()
 
-            stacked_nids = np.hstack([
-                nids.ravel() for nids in elements_list])
-            unids = np.unique(stacked_nids)
+        stacked_nids = np.hstack([
+            nids.ravel() for nids in elements_list])
+        unids = np.unique(stacked_nids)
 
-            nnodes = len(unids)
-            xyz_cid0 = np.zeros((nnodes, 3))
-            for inid, nid in enumerate(unids):
-                node = model.nodes[nid]
-                xyz_cid0[inid, :] = node.get_position()
+        nnodes = len(unids)
+        xyz_cid0 = np.zeros((nnodes, 3))
+        for inid, nid in enumerate(unids):
+            node = model.nodes[nid]
+            xyz_cid0[inid, :] = node.get_position()
 
-            elements_list2 = [np.searchsorted(unids, nids)
-                              for nids in elements_list]
-            print(xyz_cid0)
-            print(elements_list2)
-            create_vtk_cells_of_constant_element_types(
-                alt_grid, elements_list2, etypes_list)
-            #gui.follower_nodes[name] = unids
+        elements_list2 = [np.searchsorted(unids, nids)
+                          for nids in elements_list]
+        create_vtk_cells_of_constant_element_types(
+            alt_grid, elements_list2, etypes_list)
+        #gui.follower_nodes[name] = unids
 
-            xyz_cid0 = gui.scale_length(xyz_cid0)
-            #vtk_points.SetNumberOfPoints(nnodes)
-            vtk_points = numpy_to_vtk_points(xyz_cid0, points=vtk_points)
-            alt_grid.SetPoints(vtk_points)
-        else:
-            lines = np.array(lines, dtype='int32')
-            self._add_nastran_lines_to_grid(name, lines, model)
-        #print(alt_grid)
-        #print(vtk_points)
+        xyz_cid0 = gui.scale_length(xyz_cid0)
+        #vtk_points.SetNumberOfPoints(nnodes)
+        vtk_points = numpy_to_vtk_points(xyz_cid0, points=vtk_points)
+        alt_grid.SetPoints(vtk_points)
 
     def _map_elements1_no_quality(self,
                                   model: BDF,

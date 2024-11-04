@@ -44,6 +44,7 @@ class PreferencesObject(BaseGui):
 
             'caero_color' : nastran_settings.caero_color,
             'rbe_line_color': nastran_settings.rbe_line_color,
+            'plotel_color': nastran_settings.plotel_color,
 
             'use_startup_directory': settings.use_startup_directory,
 

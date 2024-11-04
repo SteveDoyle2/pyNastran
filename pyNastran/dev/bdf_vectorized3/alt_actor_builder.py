@@ -778,7 +778,6 @@ def create_caero(gui: MainWindow,
     _build_quads(gui, name,
                  aero_xyz, aero_elements,
                  line_width=5, color=YELLOW_FLOAT,
-                 #representation='wire+surf',
                  representation='wire',
                  is_visible=False)
     create_aesurf(gui, model,

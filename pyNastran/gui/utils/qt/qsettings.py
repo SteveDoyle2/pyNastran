@@ -15,6 +15,7 @@ class QSettingsLike2:
         'corner_text_color', 'annotation_color',
         'screen_shape', 'screen_position',
         'nastran_caero_color', 'nastran_rbe_line_color',
+        'nastran_plotel_color',
         'cart3d_fluent_include', 'cart3d_fluent_remove',
         'units_model_in',
     }

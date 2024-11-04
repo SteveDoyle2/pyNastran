@@ -164,6 +164,8 @@ class PreferencesWindow(PyDialog):
             data['caero_color'])
         self.rbe_line_color_float, self.rbe_line_color_int = check_color(
             data['rbe_line_color'])
+        self.plotel_color_float, self.plotel_color_int = check_color(
+            data['plotel_color'])
 
         #self._shear_moment_torque_opacity = data['shear_moment_torque_opacity']
         #self._shear_moment_torque_point_size = data['shear_moment_torque_point_size']
@@ -181,6 +183,7 @@ class PreferencesWindow(PyDialog):
         self._nastran_create_coords = data['nastran_create_coords']
         self._nastran_is_shell_mcids = data['nastran_is_shell_mcids']
         self._nastran_is_rbe = data['nastran_is_rbe']
+        self._nastran_is_aero = data['nastran_is_aero']
 
         self._nastran_stress = data['nastran_stress']
         self._nastran_plate_stress = data['nastran_plate_stress']
@@ -433,6 +436,10 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_rbe_checkbox.setToolTip('Create MPC/RBE2/RBE3 dependent and indepdent nodes and lines')
         self.nastran_is_rbe_checkbox.setChecked(self._nastran_is_rbe)
 
+        self.nastran_is_aero_checkbox = QCheckBox('Aero')
+        self.nastran_is_aero_checkbox.setToolTip('Create aero panel (CAERO/SPLINE/SET) visualization')
+        self.nastran_is_aero_checkbox.setChecked(self._nastran_is_aero)
+
         self.nastran_create_coords_checkbox = QCheckBox('Coords')
         self.nastran_create_coords_checkbox.setChecked(self._nastran_create_coords)
 
@@ -505,7 +512,11 @@ class PreferencesWindow(PyDialog):
 
         self.rbe_line_color_label = QLabel("Default RBE2/RBE3 line color:")
         self.rbe_line_color_edit = QPushButtonColor(self.rbe_line_color_int)
-        self.rbe_line_color_edit.setToolTip('Sets the color for the RBE2/RBE3 line colo')
+        self.rbe_line_color_edit.setToolTip('Sets the color for the RBE2/RBE3 lines')
+
+        self.plotel_color_label = QLabel("Default PLOTEL color:")
+        self.plotel_color_edit = QPushButtonColor(self.plotel_color_int)
+        self.plotel_color_edit.setToolTip('Sets the color for the PLOTELs')
 
         #-----------------------------------------------------------------------
         # closing
@@ -837,6 +848,9 @@ class PreferencesWindow(PyDialog):
         irow += 1
         grid_nastran_actors.addWidget(self.rbe_line_color_label, irow, 0)
         grid_nastran_actors.addWidget(self.rbe_line_color_edit, irow, 1)
+        irow += 1
+        grid_nastran_actors.addWidget(self.plotel_color_label, irow, 0)
+        grid_nastran_actors.addWidget(self.plotel_color_edit, irow, 1)
 
         vbox_nastran_actors = QVBoxLayout()
         self.nastran_actors_label = QLabel('Nastran Actors:')
@@ -864,6 +878,7 @@ class PreferencesWindow(PyDialog):
         irow += 1
 
         grid_nastran.addWidget(self.nastran_is_shell_mcids_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_is_aero_checkbox, irow, 1)
         irow += 1
 
         grid_nastran.addWidget(self.nastran_is_bar_axes_checkbox, irow, 0)
@@ -959,6 +974,7 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_bar_axes_checkbox.clicked.connect(partial(on_nastran, self, 'is_bar_axes'))
         self.nastran_create_coords_checkbox.clicked.connect(partial(on_nastran, self, 'create_coords'))
         self.nastran_is_shell_mcids_checkbox.clicked.connect(partial(on_nastran, self, 'is_shell_mcids'))
+        self.nastran_is_aero_checkbox.clicked.connect(partial(on_nastran, self, 'is_aero'))
         self.nastran_is_rbe_checkbox.clicked.connect(partial(on_nastran, self, 'is_rbe'))
         self.nastran_is_constraints_checkbox.clicked.connect(partial(on_nastran, self, 'is_constraints'))
 
@@ -985,6 +1001,7 @@ class PreferencesWindow(PyDialog):
         # colors
         self.caero_color_edit.clicked.connect(self.on_caero_color)
         self.rbe_line_color_edit.clicked.connect(self.on_rbe_line_color)
+        self.plotel_color_edit.clicked.connect(self.on_plotel_color)
 
     def set_connections(self):
         """creates the actions for the menu"""
@@ -1250,6 +1267,18 @@ class PreferencesWindow(PyDialog):
         if passed:
             self.rbe_line_color_int = rgb_color_ints
             self.rbe_line_color_float = rgb_color_floats
+
+    def on_plotel_color(self) -> None:
+        """ Choose an RBE color"""
+        title = "Choose a default PLOTEL line color"
+        rgb_color_ints = self.plotel_color_int
+        color_edit = self.plotel_color_edit
+        func_name = 'set_plotel_color'
+        passed, rgb_color_ints, rgb_color_floats = self._load_nastran_color(
+            title, color_edit, rgb_color_ints, func_name)
+        if passed:
+            self.plotel_color_int = rgb_color_ints
+            self.plotel_color_float = rgb_color_floats
 
     def on_highlight_color(self) -> None:
         """ Choose a highlight color"""
@@ -1596,6 +1625,7 @@ def main():  # pragma: no cover
 
         'caero_color': (0.2, 0.7, 0.4),
         'rbe_line_color': (0.5, 0.6, 0.7),
+        'plotel_color': (0.5, 0.6, 0.7),
         'nastran_version' : 'MSC',
 
         'min_clip' : 0.,

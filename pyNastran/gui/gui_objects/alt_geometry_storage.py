@@ -78,11 +78,8 @@ class AltGeometry:
                 valid_keys.sort()
                 raise RuntimeError('%r is not a valid representation\nvalid=[%s]' % (
                     representation, ', '.join(valid_keys)))
-
-        if line_width is None:
-            line_width = 1
-        if opacity is None:
-            opacity = 1.0
+        assert isinstance(line_width, int), line_width
+        assert isinstance(opacity, float), opacity
         if label_actors is None:
             label_actors = []
 

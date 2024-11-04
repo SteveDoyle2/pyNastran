@@ -33,6 +33,7 @@ from pyNastran.utils import object_attributes #, object_stats
 
 from pyNastran.gui.qt_files.colors import (
     BLACK_FLOAT, WHITE_FLOAT, GREY_FLOAT, ORANGE_FLOAT, HOT_PINK_FLOAT,
+    RED_FLOAT,
     YELLOW_FLOAT, LIGHT_GREEN_FLOAT,
 )
 if TYPE_CHECKING:  # pragma: no cover
@@ -105,12 +106,16 @@ MAGNIFY = 5
 MAGNIFY_MIN = 1
 MAGNIFY_MAX = 10
 
+PLOTEL_COLOR = RED_FLOAT
 CAERO_COLOR = YELLOW_FLOAT
 RBE_LINE_COLOR = LIGHT_GREEN_FLOAT
 DISPLACEMENT_MODEL_SCALE = 0.1
 
 NASTRAN_VERSIONS = ['Guess', 'MSC', 'NX', 'Optistruct']
-NASTRAN_COLOR_KEYS = ['nastran_caero_color', 'nastran_rbe_line_color']
+NASTRAN_COLOR_KEYS = [
+    'nastran_caero_color', 'nastran_rbe_line_color',
+    'nastran_plotel_color',
+]
 NASTRAN_STR_KEYS = ['nastran_version']
 NASTRAN_BOOL_KEYS = [
     'nastran_create_coords',
@@ -122,6 +127,7 @@ NASTRAN_BOOL_KEYS = [
     'nastran_is_constraints',
     'nastran_is_shell_mcids',
     'nastran_is_rbe',
+    'nastran_is_aero',
 
     'nastran_displacement', 'nastran_velocity',
     'nastran_acceleration', 'nastran_eigenvector', 'nastran_temperature',
@@ -240,6 +246,8 @@ class NastranSettings:
         self.is_bar_axes = True
         self.is_shell_mcids = True
         self.is_rbe = True
+        self.is_aero = True
+        self.is_plotel = True
 
         self.stress = True
         self.spring_stress = True
@@ -288,6 +296,7 @@ class NastranSettings:
         # colors
         self.caero_color = CAERO_COLOR
         self.rbe_line_color = RBE_LINE_COLOR
+        self.plotel_color = PLOTEL_COLOR
 
         # ------------------------------------------------------
 
@@ -342,6 +351,21 @@ class NastranSettings:
         if render:
             parent.vtk_interactor.Render()
         parent.log_command('self.settings.nastran_settings.set_rbe_line_color(%s, %s, %s)' % color)
+
+    def set_plotel_color(self, color: ColorFloat, render: bool=True) -> None:
+        """
+        Set the PLOTEL line color
+
+        Parameters
+        ----------
+        color : ColorFloat
+            RGB values as floats
+        """
+        self.plotel_color = color
+        parent = self.parent
+        if render:
+            parent.vtk_interactor.Render()
+        parent.log_command('self.settings.nastran_settings.set_plotel_color(%s, %s, %s)' % color)
 
     def __repr__(self) -> str:
         msg = '<NastranSettings>\n'
