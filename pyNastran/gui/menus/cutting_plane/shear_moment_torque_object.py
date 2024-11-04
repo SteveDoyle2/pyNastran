@@ -577,7 +577,8 @@ class ShearMomentTorqueObject(BaseGui):
         plane_color = settings.shear_moment_torque_color
         plane_opacity = settings.shear_moment_torque_opacity
         point_size = settings.shear_moment_torque_point_size
-        line_width = settings.shear_moment_torque_line_width
+        line_width = int(settings.shear_moment_torque_line_width)
+        assert isinstance(line_width, int), line_width
 
         # the plane actor defines the plane of the output results,
         # not the plane of the march direction
@@ -604,11 +605,12 @@ class ShearMomentTorqueObject(BaseGui):
                               color: ColorFloat,
                               opacity: float,
                               point_size: float,
-                              line_width: float) -> None:
+                              line_width: int) -> None:
         """
         Creates additional actors to represent the location of
         the cutting planes
         """
+        assert isinstance(line_width, int), line_width
         gui = self.gui
         nodes = xyz1[np.newaxis, :] + iaxis_march[np.newaxis, :] * stations[:, np.newaxis]
         irange = np.arange(len(stations)-1, dtype='int32')

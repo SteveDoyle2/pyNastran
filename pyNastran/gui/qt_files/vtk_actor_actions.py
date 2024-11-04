@@ -43,6 +43,7 @@ class VtkActorActions:
                       visible_in_geometry_properties: bool=True,
                       ) -> Optional[vtkUnstructuredGrid]:
         """Makes a line grid"""
+        assert isinstance(line_width, int), line_width
         etype = 3  # vtkLine().GetCellType()
         grid = self.create_grid_from_nodes_elements_etype(
             name, nodes, elements,  etype, color,
