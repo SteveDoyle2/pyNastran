@@ -1976,27 +1976,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         nplotels = len(model.plotels)
         if not nplotels:  # pragma: no cover
             return
-        gui: MainWindow = self.gui
 
-        log = model.log
-        lines = []
-        tris = []
-        quads = []
-        for eid, element in sorted(model.plotels.items()):
-            etype = element.type
-            node_ids = element.node_ids
-            if etype == 'PLOTEL':
-                lines.append(node_ids)
-            elif etype == 'PLOTEL3':
-                tris.append(node_ids)
-                #n1, n2, n3 = node_ids
-                #lines.append([n1, n3])
-                #lines.append([n1, n2])
-                #lines.append([n2, n3])
-            elif etype == 'PLOTEL4':
-                quads.append(node_ids)
-            else:  # pragma: no cover
-                log.warning(f'skipping {etype} eid={eid}')
+        gui: MainWindow = self.gui
+        nastran_settings: NastranSettings = gui.settings.nastran_settings
+        if not nastran_settings.is_plotel:
+            return
+
+        lines, tris, quads = plotels_to_groups(model)
+        color = nastran_settings.plotel_color
 
         elements_list = []
         etypes_list = []
@@ -2018,13 +2005,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             representation = 'surface'
 
         name = 'plotel'
-        nastran_settings: NastranSettings = self.settings.nastran_settings
-        color = nastran_settings.plotel_color
         gui.create_alternate_vtk_grid(
             name, color=color, line_width=2, opacity=0.8,
             point_size=5, representation=representation,
-            is_visible=True)
-
+            is_visible=False)
         alt_grid: vtkUnstructuredGrid = gui.alt_grids[name]
         vtk_points: vtkPoints = alt_grid.GetPoints()
 
@@ -2045,7 +2029,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #gui.follower_nodes[name] = unids
 
         xyz_cid0 = gui.scale_length(xyz_cid0)
-        #vtk_points.SetNumberOfPoints(nnodes)
         vtk_points = numpy_to_vtk_points(xyz_cid0, points=vtk_points)
         alt_grid.SetPoints(vtk_points)
 
@@ -3874,3 +3857,25 @@ class Case2D:
         nnode = len(node_id)
         self.node_gridtype = np.zeros((nnode, 2), dtype='int32')
         self.data = data.reshape(1, nnode, 3)
+
+
+def plotels_to_groups(model: BDF) -> tuple[
+                                       list[tuple[int, int, int]],
+                                       list[tuple[int, int, int]],
+                                       list[tuple[int, int, int, int]]]:
+    log = model.log
+    lines = []
+    tris = []
+    quads = []
+    for eid, element in sorted(model.plotels.items()):
+        etype = element.type
+        node_ids = element.node_ids
+        if etype == 'PLOTEL':
+            lines.append(node_ids)
+        elif etype == 'PLOTEL3':
+            tris.append(node_ids)
+        elif etype == 'PLOTEL4':
+            quads.append(node_ids)
+        else:  # pragma: no cover
+            log.warning(f'skipping {etype} eid={eid}')
+    return lines, tris, quads

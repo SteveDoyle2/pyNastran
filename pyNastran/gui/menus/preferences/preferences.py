@@ -184,6 +184,7 @@ class PreferencesWindow(PyDialog):
         self._nastran_is_shell_mcids = data['nastran_is_shell_mcids']
         self._nastran_is_rbe = data['nastran_is_rbe']
         self._nastran_is_aero = data['nastran_is_aero']
+        self._nastran_is_plotel = data['nastran_is_plotel']
 
         self._nastran_stress = data['nastran_stress']
         self._nastran_plate_stress = data['nastran_plate_stress']
@@ -439,6 +440,10 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_aero_checkbox = QCheckBox('Aero')
         self.nastran_is_aero_checkbox.setToolTip('Create aero panel (CAERO/SPLINE/SET) visualization')
         self.nastran_is_aero_checkbox.setChecked(self._nastran_is_aero)
+
+        self.nastran_is_plotel_checkbox = QCheckBox('PLOTELs')
+        self.nastran_is_plotel_checkbox.setToolTip('Create PLOTELs')
+        self.nastran_is_plotel_checkbox.setChecked(self._nastran_is_plotel)
 
         self.nastran_create_coords_checkbox = QCheckBox('Coords')
         self.nastran_create_coords_checkbox.setChecked(self._nastran_create_coords)
@@ -886,6 +891,7 @@ class PreferencesWindow(PyDialog):
         grid_nastran.addWidget(self.nastran_is_3d_bars_update_checkbox, irow, 2)
         irow += 1
         grid_nastran.addWidget(self.nastran_is_mass_update_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_is_plotel_checkbox, irow, 1)
         return grid_nastran
 
     def _get_grid_nastran_results_layout(self) -> QGridLayout:
@@ -975,6 +981,7 @@ class PreferencesWindow(PyDialog):
         self.nastran_create_coords_checkbox.clicked.connect(partial(on_nastran, self, 'create_coords'))
         self.nastran_is_shell_mcids_checkbox.clicked.connect(partial(on_nastran, self, 'is_shell_mcids'))
         self.nastran_is_aero_checkbox.clicked.connect(partial(on_nastran, self, 'is_aero'))
+        self.nastran_is_plotel_checkbox.clicked.connect(partial(on_nastran, self, 'is_plotel'))
         self.nastran_is_rbe_checkbox.clicked.connect(partial(on_nastran, self, 'is_rbe'))
         self.nastran_is_constraints_checkbox.clicked.connect(partial(on_nastran, self, 'is_constraints'))
 

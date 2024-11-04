@@ -128,6 +128,7 @@ NASTRAN_BOOL_KEYS = [
     'nastran_is_shell_mcids',
     'nastran_is_rbe',
     'nastran_is_aero',
+    'nastran_is_plotel',
 
     'nastran_displacement', 'nastran_velocity',
     'nastran_acceleration', 'nastran_eigenvector', 'nastran_temperature',
