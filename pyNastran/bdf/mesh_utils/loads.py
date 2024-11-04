@@ -426,7 +426,6 @@ def sum_forces_moments_elements(model: BDF,
 
     F = array([0., 0., 0.])
     M = array([0., 0., 0.])
-
     xyz = get_xyz_cid0_dict(model, xyz_cid0)
 
     unsupported_types = set()

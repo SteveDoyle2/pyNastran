@@ -124,10 +124,19 @@ except ModuleNotFoundError:  # pragma: no cover
 #    pass
 
 try:
-    from pyNastran.dev.bdf_vectorized3.nastran_io3 import Nastran3
-    CLASS_MAP['nastran3'] = Nastran3
-except ModuleNotFoundError:  # pragma: no cover
-    raise
+    import tables
+
+
+    IS_TABLES = True
+except ModuleNotFoundError:
+    IS_TABLES = False
+
+if IS_TABLES:
+    try:
+        from pyNastran.dev.bdf_vectorized3.nastran_io3 import Nastran3
+        CLASS_MAP['nastran3'] = Nastran3
+    except ModuleNotFoundError:  # pragma: no cover
+        raise
 
 try:
     from pyNastran.converters.fluent.fluent_io import FluentIO

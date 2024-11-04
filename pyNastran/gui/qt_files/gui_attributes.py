@@ -25,7 +25,7 @@ except ModuleNotFoundError:
 import pyNastran
 from pyNastran import DEV
 from pyNastran.gui.typing import ColorFloat, Format
-from pyNastran.gui.vtk_rendering_core import vtkPolyDataMapper
+from pyNastran.gui.vtk_rendering_core import vtkPolyDataMapper, vtkActor
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.gui_objects.settings import Settings, FONT_SIZE_MIN, FONT_SIZE_MAX, force_ranged
 
@@ -70,8 +70,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.menus.groups_modify.groups_modify import Group
     from pyNastran.gui.qt_files.scalar_bar import ScalarBar
-    from vtkmodules.vtkRenderingCore import vtkBillboardTextActor3D    #from vtkmodules.vtkFiltersGeneral import vtkAxes
+    from pyNastran.gui.vtk_rendering_core import vtkRenderWindow
+    from vtkmodules.vtkRenderingCore import vtkBillboardTextActor3D
+    #from vtkmodules.vtkFiltersGeneral import vtkAxes
     from vtkmodules.vtkCommonDataModel import vtkUnstructuredGrid, vtkPointData
+    from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+
 
     FollowerFunction = Callable[[dict[int, int], vtkUnstructuredGrid,
                                  vtkPointData, np.ndarray], None]
@@ -302,10 +306,10 @@ class GuiAttributes:
         self.model_data.groups = groups
 
     @property
-    def group_active(self):
+    def group_active(self) -> str:
         return self.model_data.group_active
     @group_active.setter
-    def group_active(self, group_active: str):
+    def group_active(self, group_active: str) -> None:
         self.model_data.group_active = group_active
 
     @property
@@ -323,17 +327,17 @@ class GuiAttributes:
         self.model_data.follower_functions = follower_functions
 
     @property
-    def label_actors(self):
+    def label_actors(self) -> list[vtkTextActor]:
         return self.model_data.label_actors
     @label_actors.setter
-    def label_actors(self, label_actors: list[Any]):
+    def label_actors(self, label_actors: list[vtkTextActor]) -> None:
         self.model_data.label_actors = label_actors
 
     @property
-    def label_ids(self):
+    def label_ids(self) -> list[int]:
         return self.model_data.label_ids
     @label_ids.setter
-    def label_ids(self, label_ids: list[int]):
+    def label_ids(self, label_ids: list[int]) -> None:
         self.model_data.label_ids = label_ids
 
     @property
@@ -344,10 +348,10 @@ class GuiAttributes:
         self.model_data.label_scale = label_scale
 
     @property
-    def result_cases(self):
+    def result_cases(self) -> dict[int, Any]:
         return self.model_data.result_cases
     @result_cases.setter
-    def result_cases(self, result_cases: dict[int, Any]):
+    def result_cases(self, result_cases: dict[int, Any]) -> None:
         self.model_data.result_cases = result_cases
 
     @property
@@ -423,58 +427,58 @@ class GuiAttributes:
             del self.geometry_actors[actor_name]
 
     @property
-    def grid(self):
+    def grid(self) -> vtkUnstructuredGrid:
         """gets the active grid"""
         #print('get grid; %r' % self.name)
         return self.main_grids[self.name]
 
     @grid.setter
-    def grid(self, grid):
+    def grid(self, grid: vtkUnstructuredGrid) -> None:
         """sets the active grid"""
         #print('set grid; %r' % self.name)
         self.main_grids[self.name] = grid
 
     @property
-    def grid_mapper(self):
+    def grid_mapper(self) -> vtkDataSetMapper:
         """gets the active grid_mapper"""
         return self.main_grid_mappers[self.name]
 
     @grid_mapper.setter
-    def grid_mapper(self, grid_mapper):
+    def grid_mapper(self, grid_mapper: vtkDataSetMapper) -> None:
         """sets the active grid_mapper"""
         self.main_grid_mappers[self.name] = grid_mapper
 
     @property
-    def geom_actor(self):
+    def geom_actor(self) -> vtkActor:
         """gets the active geom_actor"""
         return self.main_geometry_actors[self.name]
 
     @geom_actor.setter
-    def geom_actor(self, geom_actor):
+    def geom_actor(self, geom_actor: vtkActor) -> None:
         """sets the active geom_actor"""
         self.main_geometry_actors[self.name] = geom_actor
 
     #-------------------------------------------------------------------
     # edges
     @property
-    def edge_mapper(self):
+    def edge_mapper(self) -> vtkDataSetMapper:
         return self.main_edge_mappers[self.name]
 
     @edge_mapper.setter
-    def edge_mapper(self, edge_mapper):
+    def edge_mapper(self, edge_mapper: vtkDataSetMapper) -> None:
         self.main_edge_mappers[self.name] = edge_mapper
 
     @property
-    def edge_actor(self):
+    def edge_actor(self) -> vtkActor:
         """gets the active edge_actor"""
         return self.main_edge_actors[self.name]
 
     @edge_actor.setter
-    def edge_actor(self, edge_actor):
+    def edge_actor(self, edge_actor: vtkActor) -> None:
         """sets the active edge_actor"""
         self.main_edge_actors[self.name] = edge_actor
 
-    def set_glyph_scale_factor(self, scale):
+    def set_glyph_scale_factor(self, scale: float) -> None:
         """sets the glyph scale factor"""
         if scale == np.nan:
             self.log.error('cannot set loads scale factor because no 1D, 2D, or 3D elements exist')
@@ -483,17 +487,17 @@ class GuiAttributes:
         self.glyphs.SetScaleFactor(scale)
 
     @property
-    def nid_map(self):
+    def nid_map(self) -> dict[int, int]:
         """gets the node_id map"""
         return self.nid_maps[self.name]
 
     @nid_map.setter
-    def nid_map(self, nid_map):
+    def nid_map(self, nid_map: dict[int, int]) -> int:
         """sets the node_id map"""
         self.nid_maps[self.name] = nid_map
 
     @property
-    def eid_map(self):
+    def eid_map(self) -> dict[int, int]:
         """gets the element_id map"""
         try:
             return self.eid_maps[self.name]
@@ -502,7 +506,7 @@ class GuiAttributes:
             raise KeyError(msg)
 
     @eid_map.setter
-    def eid_map(self, eid_map):
+    def eid_map(self, eid_map: dict[int, int]) -> None:
         """sets the element_id map"""
         self.eid_maps[self.name] = eid_map
 
@@ -510,7 +514,7 @@ class GuiAttributes:
     def set_point_grid(self, name: str,
                        nodes: np.ndarray, elements: np.ndarray,
                        color: ColorFloat,
-                       point_size: int=5, opacity: int=1.,
+                       point_size: int=5, opacity: float=1.0,
                        add: bool=True) -> vtkUnstructuredGrid:
         """Makes a POINT grid"""
         self.create_alternate_vtk_grid(name, color=color, point_size=point_size,
@@ -943,7 +947,8 @@ class GuiAttributes:
         is_visible = axes_actor.GetVisibility()
         return is_visible
 
-    def set_corner_axis_visiblity(self, is_visible, render: bool=True) -> None:
+    def set_corner_axis_visiblity(self, is_visible: bool,
+                                  render: bool=True) -> None:
         """sets the visibility of the corner axis"""
         corner_axis = self.corner_axis
         axes_actor = corner_axis.GetOrientationMarker()
@@ -1625,7 +1630,7 @@ class GuiAttributes:
         """see ``set_camera_data`` for arguments"""
         return self.camera_obj.get_camera_data()
 
-    def on_set_camera(self, name: str, show_log=True):
+    def on_set_camera(self, name: str, show_log: bool=True):
         """see ``set_camera_data`` for arguments"""
         self.camera_obj.on_set_camera(name, show_log=show_log)
 
@@ -1670,10 +1675,11 @@ class GuiAttributes:
     def IS_GUI_TESTING(self) -> bool:
         return 'test_' in sys.argv[0]
     @property
-    def iren(self):
+    def iren(self) -> QVTKRenderWindowInteractor:
         return self.vtk_interactor
     @property
-    def render_window(self):
+
+    def render_window(self) -> vtkRenderWindow:
         return self.vtk_interactor.GetRenderWindow()
 
     #------------------------------
