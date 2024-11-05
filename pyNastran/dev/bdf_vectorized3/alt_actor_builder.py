@@ -11,6 +11,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.utils.vtk.vectorized_geometry import build_vtk_geometry
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type,
+    create_vtk_cells_of_constant_element_types,
     numpy_to_vtk_points)
 from pyNastran.gui.qt_files.colors import (
     RED_FLOAT, BLUE_FLOAT,
@@ -628,7 +629,54 @@ def _build_rbe2_vtk_lines(gui, elem: RBE2,
     name = f'RBE2 lines'
     _build_lines(gui, name, xyz_lines, node_lines, color=LIGHT_GREEN_FLOAT)
 
-def create_monpnt(gui: MainWindow,
+
+def create_plotels(gui: MainWindow,
+                   model: BDF,
+                   grid_id: np.ndarray,
+                   xyz_cid0: np.ndarray) -> None:
+    """creates the PLOTELs"""
+    nastran_settings: NastranSettings = gui.settings.nastran_settings
+    if not nastran_settings.is_plotel:
+        return
+    card_types = [
+        (model.plotel, 'line'),
+        (model.plotel3, 'tri3'),
+        (model.plotel4, 'quad4'),
+        (model.plotel6, 'tri6'),
+        (model.plotel8, 'quad8'),
+
+        (model.plottet, 'tet4'),
+        (model.plothex, 'hexa8'),
+        (model.plotpyr, 'pyram5'),
+        (model.plotpyr, 'penta6'),
+    ]
+    etypes = []
+    elements_list = []
+    for (card, etype) in card_types:
+        if len(card) == 0:
+            continue
+        inodes = np.searchsorted(grid_id, card.nodes)
+        elements_list.append(inodes)
+        etypes.append(etype)
+    if len(etypes) == 0:
+        return
+
+    stacked_ids = np.hstack([inode.ravel() for inode in elements_list])
+    uids = np.unique(stacked_ids)
+    xyzs = xyz_cid0[uids, :]
+    color = nastran_settings.plotel_color
+    name = 'plotel'
+    gui.create_alternate_vtk_grid(
+        name, color=color, linewidth=2, opacity=0.8,
+        representation='point', is_visible=False, is_pickable=False)
+
+    ugrid = gui.alt_grids[name]
+    create_vtk_cells_of_constant_element_types(ugrid, elements_list, etypes)
+    vtk_points = ugrid.GetPoints()
+    vtk_points = numpy_to_vtk_points(xyzs, points=vtk_points)
+    ugrid.SetPoints(vtk_points)
+
+    def create_monpnt(gui: MainWindow,
                   model: BDF,
                   grid_id: np.ndarray,
                   xyz_cid0: np.ndarray):

@@ -69,7 +69,8 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.radiation import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.bolt import (
     BOLT, BOLTLD, BOLTFOR, BOLTFRC, BOLTSEQ)
 from pyNastran.dev.bdf_vectorized3.cards.elements.plot import (
-    PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8)
+    PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8,
+    PLOTTET, PLOTHEX, PLOTPEN, PLOTPYR)
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
     CLOAD,
@@ -252,6 +253,10 @@ class BDFAttributes:
         self.plotel4 = PLOTEL4(self)
         self.plotel6 = PLOTEL6(self)
         self.plotel8 = PLOTEL8(self)
+        self.plottet = PLOTTET(self)
+        self.plothex = PLOTHEX(self)
+        self.plotpen = PLOTPEN(self)
+        self.plotpyr = PLOTPYR(self)
 
         # spring
         self.celas1 = CELAS1(self)
@@ -765,6 +770,8 @@ class BDFAttributes:
             self.plotel,
             self.plotel3, self.plotel4,
             self.plotel6, self.plotel8,
+            self.plottet, self.plotpen,
+            self.plotpyr, self.plothex,
         ]
         return elements
 

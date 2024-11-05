@@ -34,7 +34,7 @@ from .alt_actor_builder import (
     build_vtk_geometry,
     create_alt_conm2_grids, create_alt_rbe2_grids, create_alt_rbe3_grids,
     create_alt_spcs, create_alt_axes,
-    create_monpnt)
+    create_monpnt, create_plotels)
 from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
 from pyNastran.dev.op2_vectorized3.op2_hdf5 import Results
 from pyNastran.utils import PathLike
@@ -281,6 +281,7 @@ class Nastran3:
         create_alt_rbe3_grids(gui, model, node_id, xyz_cid0)
         create_alt_axes(self, gui, model, node_id, xyz_cid0)
         create_monpnt(gui, model, node_id, xyz_cid0)
+        create_plotels(gui, model, node_id, xyz_cid0)
 
         # add alternate actors
         gui._add_alt_actors(gui.alt_grids)

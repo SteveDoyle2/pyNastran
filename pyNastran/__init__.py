@@ -17,9 +17,9 @@ else:
     import sys
     import subprocess
     # this is still a requirement, but disabling it so readthedocs works
-    if sys.version_info < (3, 9):  # pragma: no cover
+    if sys.version_info < (3, 10):  # pragma: no cover
         IMAJOR, MINOR1, MINOR2 = sys.version_info[:3]
-        raise ImportError('Upgrade your Python to >= 3.9.0; version=(%s.%s.%s)' % (
+        raise ImportError('Upgrade your Python to >= 3.10.0; version=(%s.%s.%s)' % (
             IMAJOR, MINOR1, MINOR2))
 
     def get_git_revision_short_hash_date() -> tuple[str, tuple[str, str, str]]:
