@@ -4,13 +4,7 @@ import sys
 from setuptools import setup, find_packages
 
 import pyNastran
-from packages import check_python_version, update_version_file
-
-add_vtk_qt = True
-bdist = False
-if 'bdist_wheel' in sys.argv:
-    add_vtk_qt = False
-    bdist = True
+from packages import check_python_version
 
 check_python_version()
 packages = find_packages() + ['gui/icons/*.*']
@@ -28,7 +22,6 @@ for icon_file in icon_files:
 # for exclude_word in EXCLUDE_WORDS:
 #    packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
-#update_version_file()
 
 setup(
     name='pyNastran',

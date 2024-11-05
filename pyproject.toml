@@ -93,6 +93,10 @@ classifiers = [
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
 ]
+#include = [
+#    'gui/icons/*.png',
+#    "LICENSE.md",
+#]
 
 # Requirements: This is done differently by poetry!
 #colorama          0.4.6
