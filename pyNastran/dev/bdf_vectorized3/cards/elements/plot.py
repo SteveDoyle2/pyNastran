@@ -402,3 +402,188 @@ class PLOTEL8(PlotElement):
         self._save(element_id, nodes)
         self.cards = []
 
+
+class PLOTTET(PlotElement):
+    """
+    Defines a 3D dummy element used for plotting.
+
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
+    +=========+=====+=====+=====+=====+=====+=====+=====+
+    | PLOTTET | EID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+
+    """
+    @PlotElement.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 6), dtype='int32')
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """adds a PLOTEL6"""
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+            integer(card, 4, 'g3'),
+            integer(card, 5, 'g4'),
+        ]
+        assert len(card) <= 6, f'len(PLOTTET card) = {len(card):d}\ncard={card}'
+        self.cards.append((eid, nodes, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 4), dtype=idtype)
+
+        for icard, card_comment in enumerate(self.cards):
+            eid, nodesi, comment = card_comment
+            element_id[icard] = eid
+            nodes[icard, :] = nodesi
+        self._save(element_id, nodes)
+        self.cards = []
+
+class PLOTPYR(PlotElement):
+    """
+    Defines a 3D dummy element used for plotting.
+
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
+    +=========+=====+=====+=====+=====+=====+=====+=====+
+    | PLOTPYR | EID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+
+    """
+    @PlotElement.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 5), dtype='int32')
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """adds a PLOTEL6"""
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+            integer(card, 4, 'g3'),
+            integer(card, 5, 'g4'),
+            integer(card, 6, 'g5'),
+        ]
+        assert len(card) <= 7, f'len(PLOTPYR card) = {len(card):d}\ncard={card}'
+        self.cards.append((eid, nodes, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 6), dtype=idtype)
+
+        for icard, card_comment in enumerate(self.cards):
+            eid, nodesi, comment = card_comment
+            element_id[icard] = eid
+            nodes[icard, :] = nodesi
+        self._save(element_id, nodes)
+        self.cards = []
+
+class PLOTPEN(PlotElement):
+    """
+    Defines a 3D dummy element used for plotting.
+
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
+    +=========+=====+=====+=====+=====+=====+=====+=====+
+    | PLOTPEN | EID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+
+    """
+    @PlotElement.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 6), dtype='int32')
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """adds a PLOTEL6"""
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+            integer(card, 4, 'g3'),
+            integer(card, 5, 'g4'),
+            integer(card, 6, 'g5'),
+            integer(card, 7, 'g6'),
+        ]
+        assert len(card) <= 8, f'len(PLOTPEN card) = {len(card):d}\ncard={card}'
+        self.cards.append((eid, nodes, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 6), dtype=idtype)
+
+        for icard, card_comment in enumerate(self.cards):
+            eid, nodesi, comment = card_comment
+            element_id[icard] = eid
+            nodes[icard, :] = nodesi
+        self._save(element_id, nodes)
+        self.cards = []
+
+class PLOTHEX(PlotElement):
+    """
+    Defines a 3D dummy element used for plotting.
+
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
+    +=========+=====+=====+=====+=====+=====+=====+=====+
+    | PLOTHEX | EID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+    |         | G7  | G8  |     |     |     |     |     |
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+
+    """
+    @PlotElement.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 8), dtype='int32')
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """adds a PLOTEL8"""
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+            integer(card, 4, 'g3'),
+            integer(card, 5, 'g4'),
+            integer(card, 6, 'g5'),
+            integer(card, 7, 'g6'),
+            integer(card, 8, 'g7'),
+            integer(card, 9, 'g8'),
+        ]
+        assert len(card) <= 10, f'len(PLOTHEX card) = {len(card):d}\ncard={card}'
+        self.cards.append((eid, nodes, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 8), dtype=idtype)
+
+        for icard, card_comment in enumerate(self.cards):
+            eid, nodesi, comment = card_comment
+            element_id[icard] = eid
+            nodes[icard, :] = nodesi
+        self._save(element_id, nodes)
+        self.cards = []

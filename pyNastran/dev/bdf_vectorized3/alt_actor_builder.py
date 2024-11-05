@@ -676,7 +676,7 @@ def create_plotels(gui: MainWindow,
     vtk_points = numpy_to_vtk_points(xyzs, points=vtk_points)
     ugrid.SetPoints(vtk_points)
 
-    def create_monpnt(gui: MainWindow,
+def create_monpnt(gui: MainWindow,
                   model: BDF,
                   grid_id: np.ndarray,
                   xyz_cid0: np.ndarray):
