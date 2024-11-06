@@ -24,7 +24,7 @@ import warnings
 import traceback
 
 from typing import (
-    Sequence, Optional, Any, TYPE_CHECKING)
+    Sequence, Callable, Optional, Any, TYPE_CHECKING)
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -2683,18 +2683,18 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # mpcs
             'MPC': partial(self._prepare_card, self.mpc),
-            'MPCADD' : partial(self._prepare_card, self.mpcadd),
+            'MPCADD': partial(self._prepare_card, self.mpcadd),
 
             'SPC': partial(self._prepare_card, self.spc),
             'SPC1': partial(self._prepare_card, self.spc1),
-            'SPCADD' : partial(self._prepare_card, self.spcadd),
-            'SPCOFF' : partial(self._prepare_card_by_method, self.spcoff.add_set_card),
-            'SPCOFF1' : partial(self._prepare_card_by_method, self.spcoff.add_set1_card),
-            'BNDFIX' : partial(self._prepare_card_by_method, self.bndfix.add_set_card),
-            'BNDFIX1' : partial(self._prepare_card_by_method, self.bndfix.add_set1_card),
-            'BNDFREE' : partial(self._prepare_card_by_method, self.bndfree.add_set_card),
-            'BNDFREE1' : partial(self._prepare_card_by_method, self.bndfree.add_set1_card),
-            'BNDGRID' : partial(self._prepare_card_by_method, self.bndgrid.add_set1_card),
+            'SPCADD': partial(self._prepare_card, self.spcadd),
+            'SPCOFF': partial(self._prepare_card_by_method, self.spcoff.add_set_card),
+            'SPCOFF1': partial(self._prepare_card_by_method, self.spcoff.add_set1_card),
+            'BNDFIX': partial(self._prepare_card_by_method, self.bndfix.add_set_card),
+            'BNDFIX1': partial(self._prepare_card_by_method, self.bndfix.add_set1_card),
+            'BNDFREE': partial(self._prepare_card_by_method, self.bndfree.add_set_card),
+            'BNDFREE1': partial(self._prepare_card_by_method, self.bndfree.add_set1_card),
+            'BNDGRID': partial(self._prepare_card_by_method, self.bndgrid.add_set1_card),
 
             #'BNDFIX' : (Crash, None),
             #'BNDFIX1' : (Crash, None),
@@ -2703,32 +2703,32 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'ROTORG' : partial(self._prepare_card_by_method, self.rotorg.add_card),
 
             # nx-contact
-            'BSURF' : partial(self._prepare_card_by_method, self.bsurf.add_card),     # shell contact by element id
-            'BSURFS' : partial(self._prepare_card_by_method, self.bsurfs.add_card),   # solid contact by element id
-            'BCPROP' : partial(self._prepare_card_by_method, self.bcprop.add_card),   # shell contact by property id
-            'BCPROPS' : partial(self._prepare_card_by_method, self.bcprops.add_card), # solid contact by property id
+            'BSURF': partial(self._prepare_card_by_method, self.bsurf.add_card),     # shell contact by element id
+            'BSURFS': partial(self._prepare_card_by_method, self.bsurfs.add_card),   # solid contact by element id
+            'BCPROP': partial(self._prepare_card_by_method, self.bcprop.add_card),   # shell contact by property id
+            'BCPROPS': partial(self._prepare_card_by_method, self.bcprops.add_card), # solid contact by property id
             'BOUTPUT': partial(self._prepare_card_by_method, self.boutput.add_card),  # output for sideline contact
 
             # nx glue contact
-            'BGSET' : partial(self._prepare_card_by_method, self.bgset.add_card),     # glue set
-            'BGADD' : partial(self._prepare_card_by_method, self.bgadd.add_card),     # glue add set
-            'BEDGE' : partial(self._prepare_card, self.bedge),
+            'BGSET': partial(self._prepare_card_by_method, self.bgset.add_card),     # glue set
+            'BGADD': partial(self._prepare_card_by_method, self.bgadd.add_card),     # glue add set
+            'BEDGE': partial(self._prepare_card, self.bedge),
 
             # nx general contact
-            'BCTSET' : partial(self._prepare_card_by_method, self.bctset.add_card),
-            'BCTADD' : partial(self._prepare_card_by_method, self.bctadd.add_card),
+            'BCTSET': partial(self._prepare_card_by_method, self.bctset.add_card),
+            'BCTADD': partial(self._prepare_card_by_method, self.bctadd.add_card),
 
             # msc contact
-            'BCBODY' : partial(self._prepare_card, self.bcbody),
-            'BCBODY1' : partial(self._prepare_card, self.bcbody1),
+            'BCBODY': partial(self._prepare_card, self.bcbody),
+            'BCBODY1': partial(self._prepare_card, self.bcbody1),
 
             # ??? contact
-            #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
-            'BCONP' : partial(self._prepare_card, self.bconp),
-            'BFRIC' : partial(self._prepare_card, self.bfric),
-            'BLSEG' : partial(self._prepare_card, self.blseg),
-            'BCRPARA' : partial(self._prepare_card, self.bcrpara),
-            'BCTPARA' : (BCTPARA, add_methods._add_bctpara_object),
+            #'BCPARA': (BCPARA, add_methods._add_bcpara_object),
+            'BCONP': partial(self._prepare_card, self.bconp),
+            'BFRIC': partial(self._prepare_card, self.bfric),
+            'BLSEG': partial(self._prepare_card, self.blseg),
+            'BCRPARA': partial(self._prepare_card, self.bcrpara),
+            'BCTPARA': (BCTPARA, add_methods._add_bctpara_object),
 
             # cohesive zone
             'CIFQDX': (RuntimeCrash, None),

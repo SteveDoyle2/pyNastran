@@ -667,7 +667,7 @@ def create_plotels(gui: MainWindow,
     color = nastran_settings.plotel_color
     name = 'plotel'
     gui.create_alternate_vtk_grid(
-        name, color=color, linewidth=2, opacity=0.8,
+        name, color=color, line_width=2, opacity=0.8,
         representation='point', is_visible=False, is_pickable=False)
 
     ugrid = gui.alt_grids[name]
