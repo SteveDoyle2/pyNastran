@@ -48,7 +48,7 @@ class UnXrefMesh(SafeXrefMesh):
             point.uncross_reference()
 
     def _uncross_reference_coords(self) -> None:
-        """uncross references the CORDx objects"""
+        """uncross references the Coord objects"""
         for cid, coord in self.coords.items():
             if cid == 0:
                 continue

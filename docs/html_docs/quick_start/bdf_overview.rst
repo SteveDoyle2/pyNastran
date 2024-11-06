@@ -61,28 +61,28 @@ print information about the model
     >>> print(model.get_bdf_stats())
     ---BDF Statistics---
     SOL 101
-    
+
     bdf.loads[1]
       FORCE:   23
-    
+
     bdf.loads[2]
       LOAD:    1
-    
+
     bdf.params
       PARAM    : 2
-    
+
     bdf.nodes
       GRID     : 72
-    
+
     bdf.elements
       CTETRA   : 186
-    
+
     bdf.properties
       PSOLID   : 1
-    
+
     bdf.materials
       MAT1     : 1
-    
+
     bdf.coords
       CORD2R   : ???
 
@@ -189,7 +189,7 @@ SPOINTs
     >>> if model.spoints:
     >>>     f.write(model.spoints.write_card(size=8, is_double=False))
 
-CORDx
+Coord
 
 .. code-block:: python
 
@@ -432,7 +432,7 @@ convert to elements instead of element IDs
     >>>     element = model.Element(eid)
     >>>     elements.append(element)
     >>>     print(str(element).rstrip())
-    
+
     CBAR          13       1      15      19      0.      1.      0.
     $ Direct Text Input for Bulk Data
     $ Pset: "shell" will be imported as: "pshell.1"

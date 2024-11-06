@@ -101,7 +101,7 @@ from .cards.elements.thermal import BDYOR
 #from pyNastran.bdf.cards.constraints import SPCAX, SESUP, GMSPC
 #from .cards.coordinate_systems import (#CORD3G,
                                        #transform_coords_vectorized,
-                                       #CORDx)
+                                       #Coord)
 #from .cards.coordinate_systems.msgmesh import CGEN, GMCORD, GMLOAD
 from .cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
@@ -651,6 +651,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## plotels
             'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
+            'PLOTTET', 'PLOTHEX', 'PLOTPEN', 'PLOTPYR',
 
             ## properties
             'PMASS',
@@ -2355,6 +2356,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PLOTEL4': partial(self._prepare_card, self.plotel4),
             'PLOTEL6': partial(self._prepare_card, self.plotel6),
             'PLOTEL8': partial(self._prepare_card, self.plotel8),
+
+            'PLOTTET': partial(self._prepare_card, self.plottet),
+            'PLOTHEX': partial(self._prepare_card, self.plothex),
+            'PLOTPEN': partial(self._prepare_card, self.plotpen),
+            'PLOTPYR': partial(self._prepare_card, self.plotpyr),
 
             'GRID': partial(self._prepare_card, self.grid),
             'SPOINT': partial(self._prepare_card, self.spoint),

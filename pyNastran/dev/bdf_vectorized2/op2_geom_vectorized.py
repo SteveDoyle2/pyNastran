@@ -772,7 +772,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         pass
 
     def _add_coord_object(self, coord, allow_overwrites: bool=False) -> None:
-        """adds a CORDx object"""
+        """adds a Coord object"""
         key = coord.cid
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)
         if key in self.coords:

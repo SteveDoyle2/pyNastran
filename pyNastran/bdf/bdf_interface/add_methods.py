@@ -8,9 +8,10 @@ if TYPE_CHECKING:  # pragma: no cover
         CYAX, CYJOIN, AXIF,
         TOPVAR, MPCAX, CORD3G,
         SESUPORT, SEUSET, SEUSET1,
+        CAEROs, PAEROs, SPLINEs, FREQs,
     )
     from pyNastran.bdf.cards.bolt import BOLT, BOLTFOR, BOLTSEQ, BOLTLD
-    from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
+    from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTELs, GENEL
     #from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
     #from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
     #from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD
@@ -56,10 +57,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                                  MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                                  GMSPC)
-    from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
-                                                        CORD2R, CORD2C, CORD2S, #CORD3G,
-                                                        MATCID,
-                                                        )
+    from pyNastran.bdf.cards.coordinate_systems import (#CORD1R, CORD1C, CORD1S,
+                                                        #CORD2R, CORD2C, CORD2S, #CORD3G,
+                                                        MATCID, Coord)
     from pyNastran.bdf.cards.deqatn import DEQATN
     from pyNastran.bdf.cards.dynamic import (
         DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
@@ -68,10 +68,11 @@ if TYPE_CHECKING:  # pragma: no cover
         LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM,
         LOADCYN, LOADCYH)
     from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
-    from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
-                                                        FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                                        PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
-                                                        GMLOAD)
+    from pyNastran.bdf.cards.loads.static_loads import (
+        LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
+        FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+        PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
+        GMLOAD)
     from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
 
     from pyNastran.bdf.cards.materials import (#MAT1, MAT2, MAT3, MAT4, MAT5,
@@ -87,12 +88,14 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from pyNastran.bdf.cards.aero.aero import (
         AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
-        CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-        PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+        #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+        #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
         MONPNT1, MONPNT2, MONPNT3,
-        SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
+        #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
+    )
     from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
-    from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
+    from pyNastran.bdf.cards.aero.dynamic_loads import (
+        AERO, FLFACT, FLUTTER, GUST, GUST2, MKAERO1, MKAERO2)
     #from pyNastran.bdf.cards.aero.zona import (
         #ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
         #SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
@@ -143,8 +146,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.elements.acoustic import (
         PACABS, CAABSF, CHACAB, CHACBR,
         ACPLNW, AMLREG, ACMODL, MICPNT)
-    Coord = (CORD1R | CORD1C | CORD1S |
-             CORD2R | CORD2C | CORD2S)
     MaterialDependence = (
         MATT1 | MATT2 | MATT3 | MATT4 | MATT5 | MATT8 | MATT9 | MATT11 |
         MATS1 | MATDMG) # MATS3, MATS8
@@ -406,7 +407,7 @@ class AddMethods:
         self.model.csupext[key] = csupext
         self.model._type_to_id_map[csupext.type].append(key)
 
-    def _add_plotel_object(self, elem: PLOTEL,
+    def _add_plotel_object(self, elem: PLOTELs,
                            allow_overwrites: bool=False) -> None:
         """adds an PLOTEL object"""
         key = elem.eid
@@ -863,7 +864,7 @@ class AddMethods:
 
     def _add_coord_object(self, coord: Coord, # CORD3G
                           allow_overwrites: bool=False) -> None:
-        """adds a CORDx object"""
+        """adds a Coord object"""
         key = coord.cid
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)
         if key in self.model.coords:
@@ -1234,7 +1235,7 @@ class AddMethods:
         self.model.csschds[key] = csschd
         self.model._type_to_id_map[csschd.type].append(key)
 
-    def _add_caero_object(self, caero: CAERO1 | CAERO2 | CAERO3 | CAERO4 | CAERO5,
+    def _add_caero_object(self, caero: CAEROs,
                           allow_overwrites: bool=False) -> None:
         """adds an CAERO1/CAERO2/CAERO3/CAERO4/CAERO5 object"""
         key = caero.eid
@@ -1251,7 +1252,7 @@ class AddMethods:
         self.model.caeros[key] = caero
         self.model._type_to_id_map[caero.type].append(key)
 
-    def _add_paero_object(self, paero: PAERO1 | PAERO2 | PAERO3 | PAERO4 | PAERO5,
+    def _add_paero_object(self, paero: PAEROs,
                           allow_overwrites: bool=False) -> None:
         """adds an PAERO1/PAERO2/PAERO3/PAERO4/PAERO5 object"""
         key = paero.pid
@@ -1269,7 +1270,7 @@ class AddMethods:
         self.model.monitor_points.append(monitor_point)
         self.model._type_to_id_map[monitor_point.type].append(len(self.model.monitor_points) - 1)
 
-    def _add_spline_object(self, spline: SPLINE1 | SPLINE2 | SPLINE3 | SPLINE4 | SPLINE5,
+    def _add_spline_object(self, spline: SPLINEs,
                            allow_overwrites: bool=False) -> None:
         """adds an SPLINE1/SPLINE2/SPLINE3/SPLINE4/SPLINE5 object"""
         key = spline.eid
@@ -1279,7 +1280,7 @@ class AddMethods:
         self.model.splines[key] = spline
         self.model._type_to_id_map[spline.type].append(key)
 
-    def _add_gust_object(self, gust: GUST) -> None:
+    def _add_gust_object(self, gust: GUST | GUST2) -> None:
         """adds an GUST object"""
         key = gust.sid
         assert key not in self.model.gusts
@@ -1287,7 +1288,8 @@ class AddMethods:
         self.model.gusts[key] = gust
         self.model._type_to_id_map[gust.type].append(key)
 
-    def _add_trim_object(self, trim: TRIM | TRIM2, allow_overwrites: bool=False) -> None:
+    def _add_trim_object(self, trim: TRIM | TRIM2,
+                         allow_overwrites: bool=False) -> None:
         """adds an TRIM object"""
         key = trim.sid
         if not allow_overwrites:
@@ -1523,7 +1525,7 @@ class AddMethods:
             self.model.tstepnls[key] = tstepnl
             self.model._type_to_id_map[tstepnl.type].append(key)
 
-    def _add_freq_object(self, freq: FREQ | FREQ1 | FREQ2 | FREQ3 | FREQ4 | FREQ5) -> None:
+    def _add_freq_object(self, freq: FREQs) -> None:
         key = freq.sid
         assert key > 0
         if key in self.model.frequencies:

@@ -134,4 +134,3 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
             skipped_cards.append(card.type)
     if skipped_cards:
         model.log.warning(f'cant convert {skipped_cards}')
-

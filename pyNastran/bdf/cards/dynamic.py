@@ -2764,3 +2764,5 @@ class TIC(BaseCard):
             for nid, comp, u0, v0 in zip(node_ids, self.components, self.u0, self.v0):
                 msg += print_card_16(['TIC', self.sid, nid, comp, u0, v0])
         return msg
+
+FREQs = FREQ | FREQ1 | FREQ2 | FREQ3 | FREQ4 | FREQ5

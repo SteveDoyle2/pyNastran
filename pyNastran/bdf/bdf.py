@@ -48,13 +48,13 @@ from .cards.base_card import _format_comment
 from .cards.utils import wipe_empty_fields
 
 #from .write_path import write_include
-from .bdf_interface.assign_type import (integer,
-                                        integer_or_string, string)
+from .bdf_interface.assign_type import (
+    integer, integer_or_string, string)
 
 from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from .cards.elements.elements import (
     CFAST, CGAP, CRAC2D, CRAC3D, GENEL,
-    PLOTEL, PLOTEL3, PLOTEL4)
+    PLOTEL, PLOTEL3, PLOTEL4, PLOTELs)
 from .cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from .cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
 from .cards.cyclic import CYAX, CYJOIN
@@ -69,7 +69,7 @@ from .cards.elements.solid import (
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
-from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON, RigidElement
 from .cards.bolt import BOLT, BOLTLD, BOLTFOR, BOLTSEQ, BOLTFRC, BOLT_MSC
 
 from .cards.axisymmetric.axisymmetric import (
@@ -112,11 +112,11 @@ from .cards.coordinate_systems import (MATCID,
                                        CORD1R, CORD1C, CORD1S,
                                        CORD2R, CORD2C, CORD2S, #CORD3G,
                                        transform_coords_vectorized,
-                                       CORDx)
+                                       Coord)
 #from .cards.coordinate_systems.msgmesh import CGEN, GMCORD, GMLOAD
 from .cards.deqatn import DEQATN
 from .cards.dynamic import (
-    DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
+    DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5, FREQs,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from .cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
@@ -138,10 +138,10 @@ from .cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from .cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
 from .cards.aero.aero import (
     AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
-    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-    PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAEROs,
+    PAERO1, PAERO2, PAERO3, PAERO4, PAERO5, PAEROs,
     MONPNT1, MONPNT2, MONPNT3, MONDSP1,
-    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
+    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5, SPLINEs)
 from .cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from .cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from .cards.optimization import (
@@ -208,28 +208,32 @@ from .bdf_interface.pybdf import (
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
+SpringElement = CELAS1 | CELAS2 | CELAS3 | CELAS4
+DamperElement = CDAMP1 | CDAMP2 | CDAMP3 | CDAMP4 | CDAMP5
+ShellElement = CTRIA3 | CTRIA6 | CTRIAR | \
+               CQUAD4 | CQUAD8 | CQUADR | CQUAD
+SolidElement = CTETRA4 | CTETRA10 | CPENTA6 | CPENTA15 | \
+               CHEXA8 | CHEXA20 | CPYRAM5 | CPYRAM13
+
 Element = (
-    CELAS1 | CELAS2 | CELAS3 | CELAS4 |
-   CDAMP1 | CDAMP2 | CDAMP3 | CDAMP4 | CDAMP5 |
-   CVISC | CBUSH | CBUSH1D | CBUSH2D | CFAST | #CWELD
-   CGAP | GENEL | CCONEAX |
-   CROD | CTUBE | CONROD |
-   CBAR | CBEAM | CBEAM3 | CBEND | CSHEAR |
-   CTRIA3 | CTRIA6 | CTRIAR |
-   CQUAD4 | CQUAD8 | CQUADR | CQUAD |
-   CTRIAX | CTRIAX6 |
-   CQUADX | CQUADX4 | CQUADX8 |
-   CRAC2D | CRAC3D |
-   CPLSTN3 | CPLSTN4 | CPLSTN6 | CPLSTN8 |
-   CPLSTS3 | #CPLSTS4 | CPLSTS6 | CPLSTS8 |
-   CTETRA4 | CTETRA10 | CPENTA6 | CPENTA15 |
-   CHEXA8 | CHEXA20 | CPYRAM5 | CPYRAM13 |
-   CTRAX3 | CTRAX6 |
-   # thermal
-   CHBDYE |CHBDYG | CHBDYP |
-   # Nastran 95
-   CIHEX1 | CIHEX2 |
-   CHEXA1 | CHEXA2)
+    SpringElement | DamperElement |
+    CVISC | CBUSH | CBUSH1D | CBUSH2D | CFAST | #CWELD
+    CGAP | GENEL | CCONEAX |
+    CROD | CTUBE | CONROD |
+    CBAR | CBEAM | CBEAM3 | CBEND | CSHEAR |
+    ShellElement |
+    CTRIAX | CTRIAX6 |
+    CQUADX | CQUADX4 | CQUADX8 |
+    CRAC2D | CRAC3D |
+    CPLSTN3 | CPLSTN4 | CPLSTN6 | CPLSTN8 |
+    CPLSTS3 | #CPLSTS4 | CPLSTS6 | CPLSTS8 |
+    SolidElement |
+    CTRAX3 | CTRAX6 |
+    # thermal
+    CHBDYE | CHBDYG | CHBDYP |
+    # Nastran 95
+    CIHEX1 | CIHEX2 |
+    CHEXA1 | CHEXA2)
 Property = (
     PELAS | PELAST | PDAMP | PDAMPT | PDAMP5 | PMASS |
     PROD | PTUBE | PVISC |
@@ -247,12 +251,6 @@ Material = (
         MAT1 | MAT2 | MAT3 | MAT8 | MAT9 | MAT10 | MAT11 |
         MAT3D | EQUIV | MATG)
 ThermalMaterial = MAT4 | MAT5
-
-CAEROs = CAERO1 | CAERO2 | CAERO3 | CAERO4 | CAERO5
-PAEROs = PAERO1 | PAERO2 | PAERO3 | PAERO4 | PAERO5
-SPLINEs = SPLINE1 | SPLINE2 | SPLINE3 | SPLINE4 | SPLINE5
-RigidElement = RBAR | RBE1 | RBE2 | RBE3 | RBAR | RBAR1 | RROD | RSPLINE | RSSCON
-CORD = CORD1R | CORD1C | CORD1S | CORD2R | CORD2C | CORD2S
 
 REMOVED_CARDS = {
     'ADAPT',

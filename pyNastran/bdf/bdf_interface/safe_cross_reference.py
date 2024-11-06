@@ -559,7 +559,7 @@ class SafeXrefMesh(XrefMesh):
 
     def safe_coord(self, cid: int, ref_id: int, xref_errors: dict[str, tuple[int, int]], msg=''):
         """
-        Gets a CORDx card
+        Gets a Coord card
 
         Parameters
         ----------

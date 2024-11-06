@@ -26,7 +26,7 @@ Copyright \copyright\ Steve P. Doyle 2011-2015
      a different coordinate frame $cp$ for the reference coordinate frame
      (what the value is in the $x_1$, $x_2$, and $x_3$ fields) and for the
      analysis coordinate frame $aid$.
-     
+
      Node Specific Variable Names:
       - xyz (Raw location <$x_1$, $x_2$, $x_3$> in the BDF)
       - cp (reference coordinate system)
@@ -52,15 +52,14 @@ Copyright \copyright\ Steve P. Doyle 2011-2015
      Do these work?
       - node.update_position(bdf, array([1.,2.,3.]), cid=3) % change the location of the node
       - bdf.unresolve_grids(bdf2) % change the coordinate system back to the coordinate system in bdf2
-      
-        
-  \subsubsection{CORDx}
+
+
+  \subsubsection{Coord}
      A coordinate system may be defined by 3 points in any non-circular
      coordinate system or by 3 vectors.
-     
+
      Once cross-referenced a node may use it's node.Position(cid) method to
      determine the position in any frame defined by a coordinate system.
-  
+
   \subsubsection{asdf}
      asfd
-

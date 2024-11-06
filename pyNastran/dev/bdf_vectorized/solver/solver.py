@@ -106,7 +106,7 @@ class Solver(OP2):
       .. todo:: SETx not supported for output requests; ALL/NONE
 
     Bulk Data:
-      GRID,CORDx
+      GRID,Coord
        - Position
        - ps constraint
        .. todo:: analysis & output coordinate system != 0

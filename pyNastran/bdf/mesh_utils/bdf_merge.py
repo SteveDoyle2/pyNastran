@@ -69,7 +69,7 @@ def bdf_merge(bdf_filenames: list[str],
 
     Supports
       nodes:      GRID
-      coords:     CORDx
+      coords:     Coord
       elements:   CQUAD4, CTRIA3, CTETRA, CPENTA, CHEXA, CELASx, CBAR, CBEAM
                   CONM1, CONM2, CMASS
       properties: PSHELL, PCOMP, PSOLID, PMASS

@@ -8018,7 +8018,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             The coordinates in the CP coordinate system about which the
             loads are to be monitored.
             None : [0., 0., 0.]
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
            coordinate system of XYZ
         cd : int; default=None -> cp
             the coordinate system for load outputs
@@ -8060,7 +8060,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             The coordinates in the CP coordinate system about which the
             loads are to be monitored.
             None : [0., 0., 0.]
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
            int : coordinate system
         cd : int; default=None -> cp
             the coordinate system for load outputs

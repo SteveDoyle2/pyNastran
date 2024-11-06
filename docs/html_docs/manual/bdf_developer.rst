@@ -246,7 +246,7 @@ cross-referencing.
 
 Cross Referencing takes a CQUAD4 card and replaces the GRID references with actual
 GRID cards.  The GRID cards in turn reference two COORDx (CORD1R, CORD2R, CORD1C,
-COR2DC, CORD1S, CORD2S) cards, which also may reference two CORDx cards.
+COR2DC, CORD1S, CORD2S) cards, which also may reference two Coord cards.
 The CQUAD4 references a PSHELL or PCOMP card.  The PSHELL references a single
 MAT1 card, and as mentioned before the PCOMP card may reference one or more
 MAT1/MAT8 cards.  In order to calculate something simple like the mass of the

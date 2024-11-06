@@ -901,7 +901,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         self._parse_primary_file_header(bdf_filename)
 
-        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
+        self.log.debug(f'---starting BDF.read_bdf of {self.bdf_filename}---')
 
         #executive_control_lines, case_control_lines, \
             #bulk_data_lines = self.get_lines(self.bdf_filename, self.punch)

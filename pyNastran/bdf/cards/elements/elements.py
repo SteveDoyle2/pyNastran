@@ -1631,3 +1631,6 @@ def _read_genel_fields_until_char_blank(card_fields, istart):
             break
         new_fields.append(field)
     return new_fields, istart+i
+
+#PLOTTET | PLOTHEX | PLOTPEN | PLOTPYR
+PLOTELs = PLOTEL | PLOTEL3 | PLOTEL4

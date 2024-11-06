@@ -19,7 +19,7 @@ def print_card(fields, size=8, is_double=False):
     is_double : bool; default=False
         is the card double precision?
         Double precision applies to specific cards and turns
-        1.234E+5 into 1.234D+5.  Applies to GRID, CORDx only?
+        1.234E+5 into 1.234D+5.  Applies to GRID, Coord only?
 
     Returns
     -------
@@ -27,7 +27,7 @@ def print_card(fields, size=8, is_double=False):
         string representation of the card
 
     .. note:: be careful of using is_double on cards that aren't
-              GRID or CORDx
+              GRID or Coord
     """
     if size == 8:
         return print_card_8(fields)

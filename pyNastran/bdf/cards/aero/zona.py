@@ -9,7 +9,7 @@ All cards are BaseCard objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods
@@ -29,7 +29,7 @@ from pyNastran.bdf.cards.aero.static_loads import TRIM, AEROS
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO # MKAERO1,
 from pyNastran.bdf.cards.aero.utils import (
     elements_from_quad, points_elements_from_quad_points, create_ellipse)
-from pyNastran.bdf.cards.coordinate_systems import Coord
+from pyNastran.bdf.cards.coordinate_systems import CoordBase
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     import matplotlib
@@ -407,7 +407,7 @@ class ZONA:
         return msg
 
 
-class ACOORD(Coord):  # not done
+class ACOORD(CoordBase):  # not done
     """
     Defines a general coordinate system using three rotational angles as
     functions of coordinate values in the reference coordinate system.
@@ -446,7 +446,7 @@ class ACOORD(Coord):  # not done
             a comment for the card
 
         """
-        Coord.__init__(self)
+        CoordBase.__init__(self)
         if comment:
             self.comment = comment
         self.cid = cid
@@ -2423,9 +2423,9 @@ class CAERO7(BaseCard):
         distance along the flow direction from node 1 to node 2; (typically x, root chord)
     x43 : float
         distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-    cp : int, CORDx
+    cp : int, Coord
         int : coordinate system
-        CORDx : Coordinate object (xref)
+        Coord : Coordinate object (xref)
     nspan : int
         int > 0 : N spanwise boxes distributed evenly
         int = 0 : use lchord
@@ -2473,9 +2473,9 @@ class CAERO7(BaseCard):
             distance along the flow direction from node 1 to node 2; (typically x, root chord)
         x43 : float
             distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
+            Coord : Coordinate object (xref)
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
             int = 0 : use lchord

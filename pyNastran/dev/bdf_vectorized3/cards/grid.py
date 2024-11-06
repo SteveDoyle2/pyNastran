@@ -747,7 +747,7 @@ class GRID(VectorizedBaseCard):
             #nnodes = len(icp)
 
             icid = np.where(coord_ids == cp)[0]
-            assert len(icid) == 1, f'CORDx={cp} not found; referenced by CP field of GRID'
+            assert len(icid) == 1, f'Coord={cp} not found; referenced by CP field of GRID'
             #coord_type = np.asscalar(coord_types[icid])  #deprecated in numpy 1.16
             coord_type = coord_types[icid].item()
 

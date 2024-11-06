@@ -33,7 +33,7 @@ import numpy as np
 from numpy import arccos, sqrt, pi, cos, unique, cross, ndarray
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
-    from pyNastran.bdf.bdf import CORDx
+    from pyNastran.bdf.bdf import Coord
     from pyNastran.nptyping_interface import NDArrayN3float, NDArrayN2int, NDArrayNint, NDArray3float
 
 
@@ -355,7 +355,7 @@ def principal_3d(o11, o22, o33, o12, o23, o13):
 
 
 def transform_force(force_in_local,
-                    coord_out: CORDx, coords: dict[int, CORDx],
+                    coord_out: Coord, coords: dict[int, Coord],
                     nid_cd: int, unused_icd_transform):
     """
     Transforms force/moment from global to local and returns all the forces.
@@ -368,10 +368,10 @@ def transform_force(force_in_local,
         forces in the local frame
     coord_out : CORD()
         the desired local frame
-    coords : dict[int] = CORDx
+    coords : dict[int] = Coord
         all the coordinate systems
         key : int
-        value : CORDx
+        value : Coord
     nid_cd : (M, 2) int ndarray
         the (BDF.point_ids, cd) array
     icd_transform : dict[cd] = (Mi, ) int ndarray
@@ -411,7 +411,7 @@ def transform_force(force_in_local,
 
 
 def transform_force_moment(force_in_local, moment_in_local,
-                           coord_out: CORDx, coords: dict[int, CORDx],
+                           coord_out: Coord, coords: dict[int, Coord],
                            nid_cd: int, icd_transform: dict[int, ndarray],
                            xyz_cid0: ndarray,
                            summation_point_cid0: Optional[NDArray3float]=None,
@@ -426,12 +426,12 @@ def transform_force_moment(force_in_local, moment_in_local,
         forces in the local frame
     moment_in_local : (N, 3) ndarray
         moments in the local frame
-    coord_out : CORDx()
+    coord_out : Coord()
         the desired local frame
-    coords : dict[int] = CORDx
+    coords : dict[int] = Coord
         all the coordinate systems
         key : int
-        value : CORDx
+        value : Coord
     nid_cd : (M, 2) int ndarray
         the (BDF.point_ids, cd) array
     icd_transform : dict[cd] = (Mi, ) int ndarray
@@ -589,7 +589,7 @@ def transform_force_moment(force_in_local, moment_in_local,
     return force_out, moment_out
 
 def transform_force_moment_sum(force_in_local: NDArrayN3float, moment_in_local: NDArrayN3float,
-                               coord_out: CORDx, coords: dict[int, CORDx],
+                               coord_out: Coord, coords: dict[int, Coord],
                                nid_cd: NDArrayN2int, icd_transform: dict[int, NDArrayNint],
                                xyz_cid0, summation_point_cid0=None,
                                consider_rxf=True,
@@ -603,12 +603,12 @@ def transform_force_moment_sum(force_in_local: NDArrayN3float, moment_in_local: 
         forces in the local frame
     moment_in_local : (N, 3) ndarray
         moments in the local frame
-    coord_out : CORDx()
+    coord_out : Coord()
         the desired local frame
-    coords : dict[int] = CORDx
+    coords : dict[int] = Coord
         all the coordinate systems
         key : int
-        value : CORDx
+        value : Coord
     nid_cd : (M, 2) int ndarray
         the (BDF.point_ids, cd) array
     icd_transform : dict[cd] = (Mi, ) int ndarray

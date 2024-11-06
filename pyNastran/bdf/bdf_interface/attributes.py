@@ -38,6 +38,7 @@ if TYPE_CHECKING:  # pragma: no cover
         RINGAX, CYAX, AXIF, RINGFL, CYJOIN, AXIC,
         # shells
         SNORM,
+        Property,
         #CQUAD4, CQUAD8, CQUADR, CQUAD,
         #CTRIA3, CTRIA6, CTRIAR,
         # solids
@@ -50,14 +51,15 @@ if TYPE_CHECKING:  # pragma: no cover
         PHBDY,
         CONV, PCONV, PCONVM, #CONVM,
         RADCAV, RADMTX, VIEW, VIEW3D,
-        RADBC, #TEMPBC,
+        RADBC, RADSET, #TEMPBC,
         # aero
         MONPNT1, MONPNT2, MONPNT3,
         AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS, AESTAT,
         AERO, AEROS,
-        CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-        PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-        SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
+        CAEROs, PAEROs, SPLINEs,
+        #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+        #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+        #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
         FLUTTER, MKAERO1, MKAERO2, FLFACT,
         TRIM, TRIM2, GUST, GUST2, DIVERG, CSSCHD,
         # roter
@@ -80,7 +82,8 @@ if TYPE_CHECKING:  # pragma: no cover
         SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,
 
         CREEP,
-        MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11, MATCID,
+        MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11,
+        MATCID, MATHE, MATHP,
         #MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11,
         MATDMG,
         NXSTRAT,
@@ -89,24 +92,28 @@ if TYPE_CHECKING:  # pragma: no cover
 
         PMIC, ACPLNW, AMLREG, ACMODL, MICPNT, # MATPOR,
         SUPORT, SUPORT1,
-        BOLT, BOLTFOR, BOLTSEQ,
+        BOLT, BOLTFOR, BOLTSEQ, BOLTFRC, BOLTLD,
         PELAST, PDAMPT, PBUSHT, TIC,
-
-        CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S,
+        Coord,
+        #CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S,
+        RigidElement,
         RBE1, RBE2, RBE3, RBAR, RBAR1, RJOINT,
         DLOAD, ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2,
-        DAREA, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
+        DAREA, DPHASE, FREQs,
+        #FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
         QVECT,
         CMASS1, CMASS2, CMASS3, CMASS4, CONM1, CONM2,
         SET1, SET3,
         ASET, BSET, CSET, QSET, OMIT, USET,
         ASET1, BSET1, CSET1, QSET1, OMIT1, USET1,
         SPC, SPC1, SPCAX, SPCADD, SPCOFF, SPCOFF1, MPC, MPCADD,
+        # superelements
+        SEBSET, SEBSET1, SECSET, SECSET1,
+        SEQSET, SEQSET1, SEUSET, SEUSET1,
+        SESET, SESUPORT,
     )
     from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIAX
     from pyNastran.bdf.subcase import Subcase
-    Coord = CORD1R | CORD1C | CORD1S | \
-            CORD2R | CORD2C | CORD2S
 
 BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'nasa95', 'mystran'}
 
@@ -478,7 +485,7 @@ class BDFAttributes:
         self.normals: dict[int, SNORM] = {}
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
-        self.rigid_elements: dict[int, RBE1 | RBE2 | RBE3 | RBAR | RBAR1 | RJOINT] = {}
+        self.rigid_elements: dict[int, RigidElement] = {}
         #: stores PLOTELs
         self.plotels: dict[int, PLOTEL | PLOTEL3 | PLOTEL4] = {}
 
@@ -493,7 +500,7 @@ class BDFAttributes:
         self.nsmadds: dict[int, list[NSMADD]] = {}
 
         #: stores LOTS of properties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
-        self.properties: dict[int, Any] = {}
+        self.properties: dict[int, Property] = {}
 
         #: stores MAT1, MAT2, MAT3, MAT8, MAT10, MAT11
         self.materials: dict[int, MAT1 | MAT2 | MAT3 | MAT8 | MAT9 | MAT10 | MAT11] = {}
@@ -502,7 +509,7 @@ class BDFAttributes:
         self.thermal_materials: dict[int, MAT4 | MAT5] = {}
 
         #: defines the MATHE, MATHP
-        self.hyperelastic_materials: dict[int, Any] = {}
+        self.hyperelastic_materials: dict[int, MATHE | MATHP] = {}
 
         #: stores MATSx
         self.MATS1: dict[int, Any] = {}
@@ -540,14 +547,14 @@ class BDFAttributes:
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
-        self.coords: dict[int, Any] = {0 : coord}
+        self.coords: dict[int, Coord] = {0 : coord}
         self.MATCID: dict[int, MATCID] = {}
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
         self.suport: list[SUPORT] = []
         self.suport1: dict[int, SUPORT1] = {}
-        self.se_suport: list[Any] = []
+        self.se_suport: list[SESUPORT] = []
 
         #: stores SPC, SPC1, SPCAX, GMSPC
         self.spcs: dict[int, list[SPC | SPC1 | SPCAX]] = {}
@@ -568,7 +575,7 @@ class BDFAttributes:
         self.pelast: dict[int, PELAST] = {}
 
         #: frequencies
-        self.frequencies: dict[int, list[FREQ | FREQ1 | FREQ2 | FREQ3 | FREQ4 | FREQ5]] = {}
+        self.frequencies: dict[int, list[FREQs]] = {}
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
@@ -592,11 +599,11 @@ class BDFAttributes:
         self.usets: dict[str, USET | USET1] = {}
 
         #: SExSETy
-        self.se_bsets: list[Any] = []
-        self.se_csets: list[Any] = []
-        self.se_qsets: list[Any] = []
-        self.se_usets: dict[str, Any] = {}
-        self.se_sets: dict[str, Any] = {}
+        self.se_bsets: list[SEBSET | SEBSET1] = []
+        self.se_csets: list[SECSET | SECSET1] = []
+        self.se_qsets: list[SEQSET | SEQSET1] = []
+        self.se_usets: dict[str, SEUSET | SEUSET1] = {}
+        self.se_sets: dict[str, SESET] = {}
 
         # ----------------------------------------------------------------
         #: parametric
@@ -748,7 +755,7 @@ class BDFAttributes:
 
         # ------ SOL 146 ------
         #: stores GUST cards
-        self.gusts: dict[int, GUST] = {}
+        self.gusts: dict[int, GUST | GUST2] = {}
 
         # ------------------------- thermal defaults -------------------------
         # BCs
@@ -766,7 +773,7 @@ class BDFAttributes:
         self.views: dict[int, VIEW] = {}
         #: stores VIEW3D
         self.view3ds: dict[int, VIEW3D] = {}
-        self.radset = None
+        self.radset: Optional[RADSET] = None
         self.radcavs: dict[int, RADCAV] = {}
         self.radmtx: dict[int, RADMTX] = {}
 
@@ -806,8 +813,8 @@ class BDFAttributes:
         self.bolt: dict[int, BOLT] = {}
         self.boltseq: dict[int, BOLTSEQ] = {}
         self.boltfor: dict[int, BOLTFOR] = {}
-        self.boltfrc = {}
-        self.boltld = {}
+        self.boltfrc: dict[int, BOLTFRC] = {}
+        self.boltld: dict[int, BOLTLD] = {}
         # ---------------------------------------------------------------------
         self.model_groups: dict[int, ModelGroup] = {}
         self._type_to_id_map: dict[int, list[Any]] = defaultdict(list)
@@ -1068,7 +1075,7 @@ class BDFAttributes:
             'se_bsets' : ['SEBSET', 'SEBSET1'],
             'se_csets' : ['SECSET', 'SECSET1'],
             'se_qsets' : ['SEQSET', 'SEQSET1'],
-            'se_usets' : ['SEUSET', 'SEQSET1'],
+            'se_usets' : ['SEUSET', 'SEUSET1'],
             'se_sets' : ['SESET'],
             'radset' : ['RADSET'],
             'radcavs' : ['RADCAV', 'RADLST'],

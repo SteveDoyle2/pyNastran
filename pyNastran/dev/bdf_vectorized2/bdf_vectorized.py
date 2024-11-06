@@ -138,7 +138,7 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, S
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                     CORD2R, CORD2C, CORD2S, #CORD3G,
                                                     transform_coords_vectorized,
-                                                    CORDx)
+                                                    Coord)
 #from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD, GMLOAD
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (

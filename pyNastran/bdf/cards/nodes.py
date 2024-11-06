@@ -46,7 +46,7 @@ from pyNastran.bdf.field_writer_double import print_scientific_double, print_car
 #u = str
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
-    from pyNastran.bdf.cards.coordinate_systems import Coord, CORDx
+    from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.cards.base_card import Element
@@ -1416,17 +1416,17 @@ class GRID(BaseCard):
             return self.xyz
         # a matrix global->local matrix is found
         msg = ', which is required by GRID nid=%s' % (self.nid)
-        coord_b: CORDx = model.Coord(cid, msg=msg)
+        coord_b: Coord = model.Coord(cid, msg=msg)
         return self.get_position_wrt_coord_ref(coord_b)
 
-    def get_position_wrt_coord_ref(self, coord_out: CORDx) -> np.ndarray:
+    def get_position_wrt_coord_ref(self, coord_out: Coord) -> np.ndarray:
         """
         Gets the location of the GRID which started in some arbitrary
         system and returns it in the desired coordinate system
 
         Parameters
         ----------
-        coord_out : CORDx
+        coord_out : Coord
             the desired coordinate system
 
         Returns

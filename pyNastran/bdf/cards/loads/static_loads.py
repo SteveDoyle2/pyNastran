@@ -464,8 +464,8 @@ class GRAV(BaseCard):
         msg = ', which is required by GRAV sid=%s' % self.sid
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
-        # msg = "Couldn't find CORDx=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
+    def safe_cross_reference(self, model: BDF, xref_errors, debug: bool=True):
+        # msg = "Couldn't find Coord=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
         msg = ', which is required by GRAV sid=%s' % self.sid
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 

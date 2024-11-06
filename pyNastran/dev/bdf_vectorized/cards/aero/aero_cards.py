@@ -1492,9 +1492,9 @@ class CAERO1(BaseCard):
     x43 : float
         distance along the flow direction from node 4 to node 3; (typically x, tip chord)
 
-    cp : int, CORDx
+    cp : int, Coord
         int : coordinate system
-        CORDx : Coordinate object (xref)
+        Coord : Coordinate object (xref)
     nspan : int
         int > 0 : N spanwise boxes distributed evenly
         int = 0 : use lchord
@@ -1594,9 +1594,9 @@ class CAERO1(BaseCard):
             distance along the flow direction from node 1 to node 2; (typically x, root chord)
         x43 : float
             distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
+            Coord : Coordinate object (xref)
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
             int = 0 : use lchord
@@ -2065,9 +2065,9 @@ class CAERO2(BaseCard):
             xyz location of point 1 (forward position)
         x12 : float
             length of the CAERO2
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
+            Coord : Coordinate object (xref)
         nsb : int; default=0
             AEFACT id for defining the location of the slender body elements
         lsb : int; default=0
@@ -2583,9 +2583,9 @@ class CAERO4(BaseCard):
         x43 : float
             distance along the flow direction from node 4 to node 3
             (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
+            Coord : Coordinate object (xref)
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
             int = 0 : use lchord
@@ -2742,7 +2742,7 @@ class CAERO5(BaseCard):
             distance along the flow direction from node 1 to node 2; (typically x, root chord)
         x43 : float
             distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
             int : coordinate system
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
@@ -4028,7 +4028,7 @@ class MONPNT1(BaseCard):
             The coordinates in the CP coordinate system about which the
             loads are to be monitored.
             None : [0., 0., 0.]
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
            coordinate system of XYZ
         cd : int; default=None -> cp
             the coordinate system for load outputs

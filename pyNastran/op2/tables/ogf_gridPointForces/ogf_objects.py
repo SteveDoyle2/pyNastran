@@ -518,10 +518,10 @@ class RealGridPointForcesArray(GridPointForces):
             all the elements to consider
         coord_out : CORD2R()
             the output coordinate system
-        coords : dict[int] = CORDx
+        coords : dict[int] = Coord
             all the coordinate systems
             key : int
-            value : CORDx
+            value : Coord
         nid_cd : (Nnodes, 2) int ndarray
             the (BDF.point_ids, cd) array
         icd_transform : dict[cd] = (Nnodesi, ) int ndarray
@@ -621,10 +621,10 @@ class RealGridPointForcesArray(GridPointForces):
             all the elements to consider; must be sorted
         coord_out : CORD2R()
             the output coordinate system
-        coords : dict[int] = CORDx
+        coords : dict[int] = Coord
             all the coordinate systems
             key : int
-            value : CORDx
+            value : Coord
         nid_cd : (Nnodes, 2) int ndarray
             the (BDF.point_ids, cd) array
         icd_transform : dict[cd] = (Nnodesi, ) int ndarray
@@ -920,10 +920,10 @@ class RealGridPointForcesArray(GridPointForces):
             the mapping for nid_cd
         element_centroids_cid0 : (Nelements, 3) float ndarray
             an array of element centroids corresponding to eids
-        coords : dict[int] = CORDx
+        coords : dict[int] = Coord
             all the coordinate systems
             key : int
-            value : CORDx
+            value : Coord
         nid_cd : (Nnodes, 2) int ndarray
             the (BDF.point_ids, cd) array
         stations : (nstations, ) float ndarray

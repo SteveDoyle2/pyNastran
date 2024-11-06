@@ -144,7 +144,7 @@ class VectorizedBaseCard:
     def _slice_comment(self, new_obj: VectorizedBaseCard, i: np.ndarray) -> None:
         """
         only slices comments when ids are unique
-         - yes: GRID, CORDx, CBAR, PSHELL, MAT1, RBE2
+         - yes: GRID, Coord, CBAR, PSHELL, MAT1, RBE2
          - no:  MPC, SPC, SPC1, ASET, FREQ
         """
         if not self.comment:

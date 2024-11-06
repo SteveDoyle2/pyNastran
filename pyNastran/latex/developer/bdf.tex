@@ -174,7 +174,7 @@ Copyright \copyright\ Steve P. Doyle 2011-2015
  \subsection{{\tt shell.py}: Cross-Referencing the CQUAD4 Object}
      Previously, it was mentioned that the square plate model built with quads and triangles had a thickness and a material.  The nodes of the elements also have positions.  The nodes further be defined in a rectangular, cylindrical, or spherical coordinate system, so to get the mass of an element is actually quite involved.  Creating a function to access the mass becomes possible without passing the entire model object around to every function through the use of cross-referencing.
 
-     Cross Referencing takes a CQUAD4 card and replaces the GRID references with actual GRID cards.  The GRID cards in turn reference two COORDx (CORD1R, CORD2R, CORD1C, COR2DC, CORD1S, CORD2S) cards, which also may reference two CORDx cards.  The CQUAD4 references a PSHELL or PCOMP card.  The PSHELL references a single MAT1 card, and as mentioned before the PCOMP card may reference one or more MAT1/MAT8 cards.  In order to calculate something simple like the mass of the CQUAD4 requires the formula:
+     Cross Referencing takes a CQUAD4 card and replaces the GRID references with actual GRID cards.  The GRID cards in turn reference two COORDx (CORD1R, CORD2R, CORD1C, COR2DC, CORD1S, CORD2S) cards, which also may reference two Coord cards.  The CQUAD4 references a PSHELL or PCOMP card.  The PSHELL references a single MAT1 card, and as mentioned before the PCOMP card may reference one or more MAT1/MAT8 cards.  In order to calculate something simple like the mass of the CQUAD4 requires the formula:
 
      {\begin{equation} m=A \left( t\rho + \frac{nsm}{A} \right) \end{equation} } for a PSHELL or:
 
@@ -200,6 +200,3 @@ Copyright \copyright\ Steve P. Doyle 2011-2015
      `card = ['GRID', node_id, cp, x, y, z]`
      `msg = print_card_double(card)
      `print(msg)`
-
-
-

@@ -31,6 +31,7 @@ from pyNastran.bdf.mesh_utils.breakdowns import (
     get_mass_breakdown, get_area_breakdown, get_length_breakdown,
     get_volume_breakdown, get_thickness_breakdown,
     get_material_mass_breakdown_table, get_property_mass_breakdown_table)
+from pyNastran.bdf.mesh_utils.map_aero_model import map_aero_model
 
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
 from pyNastran.bdf.mesh_utils.cmd_line.bdf_merge import cmd_line_merge
@@ -49,6 +50,20 @@ DIRNAME = Path(os.path.dirname(__file__))
 
 
 class TestMeshUtilsCmdLine(unittest.TestCase):
+    def test_map_aero_model(self):
+        """tests ``map_aero_model``"""
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        bdf_filename_out = BWB_PATH / 'bwb_saero_mapped.bdf'
+        model_old = read_bdf(bdf_filename)
+        model_new = read_bdf(bdf_filename, xref=False)
+
+        # make the results garbage
+        for set1 in model_new.sets.values():
+            set1.ids = [-1]
+
+        map_aero_model(model_old, model_new, bdf_filename_out,
+                       remove_new_aero_cards=True)
+
     def test_bdf_stats(self):
         """tests ```bdf stats```"""
         bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'

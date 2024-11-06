@@ -1531,9 +1531,9 @@ class CAERO1(BaseCard):
             distance along the flow direction from node 1 to node 2; (typically x, root chord)
         x43 : float
             distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
+            Coord : Coordinate object (xref)
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
             int = 0 : use lchord
@@ -4069,7 +4069,7 @@ class MONPNT1(BaseCard):
             The coordinates in the CP coordinate system about which the
             loads are to be monitored.
             None : [0., 0., 0.]
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
            coordinate system of XYZ
         cd : int; default=None -> cp
             the coordinate system for load outputs
@@ -4543,7 +4543,7 @@ class MONDSP1(BaseCard):
             The coordinates in the CP coordinate system about which the
             loads are to be monitored.
             None : [0., 0., 0.]
-        cp : int, CORDx; default=0
+        cp : int, Coord; default=0
            coordinate system of XYZ
         cd : int; default=None -> cp
             the coordinate system for load outputs
@@ -7089,3 +7089,7 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], Any]:
     )
     #print(all_control_surface_name, caero_control_surface_names)
     return all_control_surface_name, caero_control_surface_names, out
+
+CAEROs = CAERO1 | CAERO2 | CAERO3 | CAERO4 | CAERO5
+PAEROs = PAERO1 | PAERO2 | PAERO3 | PAERO4 | PAERO5
+SPLINEs = SPLINE1 | SPLINE2 | SPLINE3 | SPLINE4 | SPLINE5

@@ -112,11 +112,11 @@ def normalize(v):
     return v / norm_v
 
 
-class Coord(BaseCard):
+class CoordBase(BaseCard):
     type = 'COORD'
 
     def __init__(self):
-        """Defines a general CORDxx object"""
+        """Defines a general Coord object"""
         #: have all the transformation matricies been determined
         self.is_resolved = False
         self.cid = None
@@ -827,7 +827,7 @@ class Coord(BaseCard):
         beta = self.beta()
         return self._transform_node_to_local_array(xyz, beta)
 
-    def transform_node_from_local_to_local(self, coord_to: CORDx,
+    def transform_node_from_local_to_local(self, coord_to: Coord,
                                            xyz: NDArray3float) -> NDArray3float:
         """
         Converts an xyz coordinate in an arbitrary system to a different one
@@ -839,7 +839,7 @@ class Coord(BaseCard):
         xyz_local = coord_to.transform_node_to_local(xyz_global)
         return xyz_local
 
-    def transform_node_from_local_to_local_array(self, coord_to: CORDx,
+    def transform_node_from_local_to_local_array(self, coord_to: Coord,
                                                  xyz: NDArray3float) -> NDArray3float:
         """
         Converts an xyz coordinate array in an arbitrary system to a different one
@@ -1071,7 +1071,7 @@ def define_coord_e123(model: BDF, cord2_type: str, cid: int,
                       xyplane=None, yzplane=None, xzplane=None, add=True):
     """
     Create a coordinate system based on a defined axis and point on the
-    plane.  This is the generalized version of the CORDx card.
+    plane.  This is the generalized version of the Coord card.
 
     Parameters
     ----------
@@ -1820,7 +1820,7 @@ class SphericalCoord:
         return global_to_basic_spherical(self, xyz_global, dtype='float64')
 
 
-class Cord2x(Coord):
+class Cord2x(CoordBase):
     """
     Parent class for:
      - CORD2R
@@ -1851,7 +1851,7 @@ class Cord2x(Coord):
 
         """
         assert isinstance(rid, integer_types), 'rid=%r type=%s' % (rid, type(rid))
-        Coord.__init__(self)
+        super().__init__()
         if comment:
             self.comment = comment
         self.cid = cid
@@ -2246,7 +2246,7 @@ class Cord2x(Coord):
         return self.rid
 
 
-class Cord1x(Coord):
+class Cord1x(CoordBase):
     """
     Parent class for:
      - CORD1R
@@ -2287,7 +2287,7 @@ class Cord1x(Coord):
 
 
         """
-        Coord.__init__(self)
+        super().__init__()
         if comment:
             self.comment = comment
 
@@ -2502,7 +2502,7 @@ class Cord1x(Coord):
         return self.comment + print_card_16(card)
 
 
-class CORD3G(Coord):
+class CORD3G(CoordBase):
     """
     Defines a general coordinate system using three rotational angles as
     functions of coordinate values in the reference coordinate system.
@@ -2545,7 +2545,7 @@ class CORD3G(Coord):
             a comment for the card
 
         """
-        Coord.__init__(self)
+        super().__init__()
         if comment:
             self.comment = comment
         self.cid = cid
@@ -3353,4 +3353,5 @@ def transform_spherical_to_rectangular(rtp: np.ndarray) -> np.ndarray:
     return xyz
 
 
-CORDx = CORD1R | CORD1C | CORD1S | CORD2R | CORD2C | CORD2S
+Coord = CORD1R | CORD1C | CORD1S | \
+        CORD2R | CORD2C | CORD2S
