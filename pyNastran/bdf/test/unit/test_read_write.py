@@ -20,10 +20,17 @@ MODEL_PATH = os.path.join(ROOT_PATH, '../', 'models')
 
 
 class TestReadWriteFiles(unittest.TestCase):
+    def test_read_include_dir_upper_lower_upper(self):
+        """tests weird include paths"""
+        log = SimpleLogger(level='info', encoding='utf-8')
+        bdf_filename = TEST_PATH / 'include_dir2' / 'level2' / 'file1.bdf'
+        model =read_bdf(bdf_filename, log=log)
+        assert len(model.nodes) == 5, model.nodes
+
     def test_read_include_dir_2_files(self):
         """tests a model that will write to multiple files"""
         log = SimpleLogger(level='info', encoding='utf-8')
-        full_path = os.path.join(TEST_PATH)
+        full_path = TEST_PATH
         model = BDF(log=log, debug=False)
         bdf_filename = 'test_include2.bdf'
         if not os.path.exists(bdf_filename):
@@ -36,7 +43,6 @@ class TestReadWriteFiles(unittest.TestCase):
         #for (ifile, iline), line in zip(ilines, all_lines):
             #print(ifile, iline, line.rstrip())
         #print(ilines)
-        #dd
 
         out_filenames = {}
         for filename in model.active_filenames:
@@ -185,10 +191,12 @@ class TestReadWrite(unittest.TestCase):
         for out_filename, is_enddata, write_flag in cases:
             out_filename = os.path.join(TEST_PATH, out_filename)
             bdf_filename_out = out_filename + '.out'
-            model2.write_bdf(out_filename=bdf_filename_out, interspersed=True, size=8,
-                             is_double=False, enddata=write_flag)
+            model2.write_bdf(
+                out_filename=bdf_filename_out,
+                interspersed=True, size=8,
+                is_double=False, enddata=write_flag)
 
-            with open(out_filename + '.out', 'r') as bdf_file:
+            with open(bdf_filename_out, 'r') as bdf_file:
                 data = bdf_file.read()
 
             if is_enddata:

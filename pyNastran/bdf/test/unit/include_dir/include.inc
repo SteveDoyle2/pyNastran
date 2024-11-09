@@ -50,4 +50,4 @@ GRID          24      0      0.      0.      2.       0
 GRID          25      0      1.      0.      2.       0
 GRID          26      0      1.      1.      2.       0
 CPENTA         9       4      21      22      23      24      25      26
-INCLUDE 'include_dir/include2.inc'
+INCLUDE 'include2.inc'

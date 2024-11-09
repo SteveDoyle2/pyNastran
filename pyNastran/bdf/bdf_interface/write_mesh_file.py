@@ -83,8 +83,8 @@ class WriteMeshs(WriteMesh):
         """
         assert isinstance(out_files_map, dict), out_files_map
         for key, value in out_files_map.items():
-            assert isinstance(key, str), type(key)
-            assert isinstance(value, str), type(value)
+            assert isinstance(key, PathLike), type(key)
+            assert isinstance(value, PathLike), type(value)
             # assert isinstance(key, PathLike), key
             # assert isinstance(value, PathLike), value
         #is_long_ids = False
@@ -786,8 +786,8 @@ def _map_filenames_to_ifile_filname_dict(out_filenames: dict[str, str],
     ifile_out_filenames = {}
     unused_out_filename0 = None
     for filename, new_filename in out_filenames.items():
-        assert isinstance(filename, str), 'filename=%r' % filename
-        assert isinstance(new_filename, str), 'new_filename=%r' % new_filename
+        assert isinstance(filename, PathLike), 'filename=%r' % filename
+        assert isinstance(new_filename, PathLike), 'new_filename=%r' % new_filename
         #print('filename = %r' % filename)
         abs_filename = os.path.abspath(filename)
         #print('abs_filename = %r' % abs_filename)
@@ -811,7 +811,9 @@ def _open_bdf_files(ifile_out_filenames, active_filenames, encoding):
     bdf_file0 = bdf_files[0]
     return bdf_files, bdf_file0
 
-def write_xpoints_file(bdf_files, cardtype, points, comment=''):
+def write_xpoints_file(bdf_files, cardtype: str,
+                       points: dict[int, Any],
+                       comment: str='') -> None:
     """writes SPOINTs/EPOINTs"""
     assert isinstance(points, dict), points
     for point_id, point in points.items():

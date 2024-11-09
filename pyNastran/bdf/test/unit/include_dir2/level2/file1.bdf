@@ -1,0 +1,5 @@
+$ pyNastran: punch=True
+GRID,1
+GRID,2
+GRID,3
+INCLUDE '../file2.inc'
