@@ -13,6 +13,7 @@ def filter_by_region(model: Fluent,
     tris = model.tris
     quads = model.quads
     results = model.results
+    assert len(model.element_id) > 0, model.element_id
 
     tri_regions = tris[:, 1]
     quad_regions = quads[:, 1]

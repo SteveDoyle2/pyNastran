@@ -17,7 +17,7 @@ PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = PKG_PATH /  '..' / 'models'
 BWB_PATH = MODEL_PATH / 'bwb'
 TEST_PATH = PKG_PATH / 'converters' / 'fluent'
-UGRID_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models')
+UGRID_PATH = PKG_PATH / 'converters' / 'aflr' / 'ugrid' / 'models'
 
 
 class FluentGui(FakeGUIMethods):
@@ -35,10 +35,10 @@ class TestFluentGui(unittest.TestCase):
         #geometry_filename = MODEL_PATH / 'threePlugs.a.tri'
 
         nastran_filename = BWB_PATH / 'bwb_saero.bdf'
-        vrt_filename2 = BWB_PATH / 'bwb_saero2.vrt'
+        #vrt_filename2 = BWB_PATH / 'bwb_saero2.vrt'
         vrt_filename = BWB_PATH / 'bwb_saero.vrt'
-        cel_filename = BWB_PATH / 'bwb_saero.cel'
-        daten_filename = BWB_PATH / 'bwb_saero.daten'
+        #cel_filename = BWB_PATH / 'bwb_saero.cel'
+        #daten_filename = BWB_PATH / 'bwb_saero.daten'
         tecplot_filename = BWB_PATH / 'bwb_saero.plt'
         nastran_to_fluent(nastran_filename, vrt_filename, log=log)
 
@@ -51,8 +51,8 @@ class TestFluentGui(unittest.TestCase):
 
     def test_fluent_gui_ugrid3d_gui_box(self):
         """simple UGRID3D box model"""
-        ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
-        fluent_filename = os.path.join(UGRID_PATH, 'box.vrt')
+        ugrid_filename = UGRID_PATH / 'box.b8.ugrid'
+        fluent_filename = UGRID_PATH / 'box.vrt'
         fluent_model = ugrid_to_fluent_filename(ugrid_filename, fluent_filename)
 
         log = get_logger(level='warning', encoding='utf-8')

@@ -137,6 +137,8 @@ class Fluent:
             else:
                 setattr(self, name, datai)
         h5file.close()
+        assert len(self.element_id) > 0, self.element_id
+        assert len(self.element_ids) > 0, self.element_ids
         is_loaded = True
         return is_loaded
 
@@ -177,6 +179,9 @@ class Fluent:
         # ids of the quad/tri elements in the order
         # respects interspersed quads/tris
         self.element_ids = element_ids  # TODO: consider removing
+
+        assert len(element_id) > 0, element_id
+        assert len(element_ids) > 0, element_ids
         if self.auto_read_write_h5:
             # fails if pytables isn't installed
             self.write_h5(h5_filename, require_write=False)
@@ -279,11 +284,20 @@ class Fluent:
         if regions_to_include is None:
             regions_to_include = []
         region_split = bool(len(regions_to_remove) + len(regions_to_include))
+        assert len(self.element_id) > 0
         if region_split:
             self.log.info(f'regions_to_remove={regions_to_remove}; '
                           f'regions_to_include={regions_to_include}')
             element_id, tris, quads, quad_results, tri_results = filter_by_region(
                 self, regions_to_remove, regions_to_include)
+            if len(element_id) == 0 and 0:
+                # error state to not crash gui
+                region_id = self.region[0]
+                self.log.warning(f'no elements remaining; including region_id={region_id}')
+                return self.get_filtered_data(
+                    regions_to_include=[region_id],
+                    return_model=return_model)
+            assert len(element_id) > 0, 'no elements remaining'
 
             model2 = self.from_data(
                 self.node_id, self.xyz,
@@ -309,6 +323,7 @@ class Fluent:
             region = self.region
             results = np.vstack([quad_results, tri_results])
             model2 = self
+            assert len(element_id) > 0, 'no elements remaining2'
         if return_model:
             return model2
         return element_id, tris, quads, region, results

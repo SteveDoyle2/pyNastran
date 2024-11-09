@@ -10,7 +10,7 @@ from pyNastran.utils.convert import convert_pressure
 from pyNastran.converters.fluent.fluent import read_fluent, Fluent
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
-    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
+    create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
 from pyNastran.gui.utils.vtk.vectorized_geometry import (
     create_offset_arrays, build_vtk_geometry)
 if TYPE_CHECKING:
@@ -180,8 +180,14 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
     assert all_nodes.min() >= 1, all_nodes.min()
     missing_nodes = np.setdiff1d(all_nodes, node_id)
     assert len(missing_nodes) == 0, missing_nodes
+
+    elements_list = []
+    etypes = []
     if nquad:
         #elem.GetCellType() = 9  # vtkQuad
+        iquad_nodes = np.searchsorted(node_id, quad_nodes)
+        elements_list.append(iquad_nodes)
+        etypes.append('quad4')
         cell_type = 9
         dnode = 4
         cell_offset0, n_nodesi, cell_typei, cell_offseti = create_offset_arrays(
@@ -192,6 +198,9 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
         cell_offset_list.append(cell_offseti)
 
     if ntri:
+        itri_nodes = np.searchsorted(node_id, tri_nodes)
+        etypes.append('tri3')
+        elements_list.append(itri_nodes)
         #elem.GetCellType() = 5  # vtkTriangle
         cell_type = 5
         dnode = 3
@@ -202,12 +211,16 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
         cell_type_list.append(cell_typei)
         cell_offset_list.append(cell_offseti)
 
-    n_nodes = np.hstack(n_nodes_list)
-    cell_type = np.hstack(cell_type_list)
-    cell_offset = np.hstack(cell_offset_list)
-    build_vtk_geometry(
-        nelement_total, ugrid,
-        n_nodes, cell_type, cell_offset)
+    if 0:  # pragma: no cover
+        n_nodes = np.hstack(n_nodes_list)
+        cell_type = np.hstack(cell_type_list)
+        cell_offset = np.hstack(cell_offset_list)
+        build_vtk_geometry(
+            nelement_total, ugrid,
+            n_nodes, cell_type, cell_offset)
+    else:
+        create_vtk_cells_of_constant_element_types(ugrid, elements_list, etypes)
+
     return
 
 def _fill_fluent_case(cases: dict[int, Any],

@@ -261,7 +261,7 @@ Other than some arrows, SPC Force and Displacement work the same way.
 Plate Stress / Strain
 =====================
 
-There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.  
+There are 5 nodes (N1-N4 + centroid) for each quad across two layers (top/bottom) for a total of 10 result locations per quad element.  This needs to be reduced down to multiple nodes or a single centroidal value.
 
 Centroidal stresses may be selected.  Note that **Nodal Combine** isn't going to do much if only Centroid is selected.
 
@@ -321,7 +321,7 @@ The typical way to plot solid stress/strain is with the **Mean** option.
 
 Nodal Combine
 -------------
-Nodal Combine "reduces" multiple layer results from different elements down into a single value at each node.  
+Nodal Combine "reduces" multiple layer results from different elements down into a single value at each node.
 
 The supported methods are:
  - Mean
@@ -859,17 +859,17 @@ Frequently Asked Questions
 **The legend font is way to big!**
 
 The legend is tricky cause of the wide range in the number of
-title characters preferences.  
+title characters preferences.
 
 It's defined in terms of a percentage of screen size and the font size is
 defined in terms of the title character (or number size), so it's tricky to
 to get a robust system.  However, you do have some control:
  - legend title:
    - resize the window to be shorter
-   - use the legend (View -> Modify Legend; Control+L) and add whitespace around the etitle
+   - use the legend (``View -> Modify Legend``; ``Control+L``) and add whitespace around the title
  - legend values:
    - resize the window to be narrower
-   - use the legend (View -> Modify Legend; Control+L) and change the number format
+   - use the legend (``View -> Modify Legend``; ``Control+L``) and change the number format
 
 
 **The coordinate system/origin font is waaaay too big!**
@@ -882,7 +882,7 @@ in the Preferences menu (``Control+P``).
 
 **I could not visualize the mesh edges within the results**
 
-Mesh edges press ``e`` for edges and ``b`` if you want to make them black.  
+Mesh edges press ``e`` for edges and ``b`` if you want to make them black.
 There are also pull downs on the view menu and the e option is on the toolbar (the black wireframe)
 
 **How do I clear a result?**
@@ -897,8 +897,8 @@ You can use ``K`` and ``L`` (lowercase) to "cycle" to different results.
 
 **How do I make the gif more responsive/smaller?**
 
-The GIF will be the same size as your screen (the part with the grey background), 
-so make your window smaller.  In general, 30 frame/second is going to look nice, 
+The GIF will be the same size as your screen (the part with the grey background),
+so make your window smaller.  In general, 30 frame/second is going to look nice,
 but you can even get away with 10 FPS if the picture is small.
 
 
@@ -908,7 +908,7 @@ Yeah...it does that.  It's not really designed around loading differet models.
 There are some objects that aren't deleted and it's tricky to do it right.  If
 you mess one up, it crashes.
 
-If you're just modifying a deck, you can use the "Reload Model" option.  
+If you're just modifying a deck, you can use the "Reload Model" option.
 It'll reload the geometry and be quite a bit faster than going through menus.
 That fails sometimes as well, but is more robust.
 
