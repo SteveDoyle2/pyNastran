@@ -148,7 +148,7 @@ class BDFInputPy:
     def __init__(self, read_includes: bool, dumplines: bool,
                  encoding: str, nastran_format: str='msc',
                  consider_superelements: bool=True,
-                 log: Any=None, debug: bool=False):
+                 log: SimpleLogger=None, debug: bool=False):
         """
         BDF reader class that only handles lines and not building cards or parsing cards
 
@@ -283,7 +283,8 @@ class BDFInputPy:
                 bulk_data_lines, bulk_data_ilines,
                 additional_deck_lines)
 
-    def _get_lines_zona(self, system_lines: list[str], bulk_data_lines: list[str],
+    def _get_lines_zona(self, system_lines: list[str],
+                        bulk_data_lines: list[str],
                         bulk_data_ilines: NDArrayN2int,
                         punch: bool) -> tuple[list[str], NDArrayN2int, list[str]]:
         """load and update the lines for ZONA"""
@@ -405,7 +406,7 @@ class BDFInputPy:
                 jline = ilines[i, 1]
                 dirnamei = os.path.dirname(self.active_filenames[jfile])
                 rootpathi = os.path.abspath(dirnamei)
-                if 0:  # pragma: no cover
+                if self.debug:  # pragma: no cover
                     print(f'jfile={jfile} jline={jline}')
                     print(f'-> rootpath = {rootpathi}')
                     print(f'-? include_dir = {self.include_dir}')

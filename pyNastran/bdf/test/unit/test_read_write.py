@@ -1,5 +1,6 @@
 import os
 import unittest
+from pathlib import Path
 from io import StringIO
 
 from cpylog import SimpleLogger
@@ -13,17 +14,20 @@ from pyNastran.bdf.bdf_interface.include_file import (
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf_interface.test.test_case_control_deck import compare_lines
 
-ROOT_PATH = pyNastran.__path__[0]
-TEST_PATH = os.path.join(ROOT_PATH, 'bdf', 'test', 'unit')
-MESH_UTILS_PATH = os.path.join(ROOT_PATH, 'bdf', 'mesh_utils', 'test')
-MODEL_PATH = os.path.join(ROOT_PATH, '../', 'models')
+ROOT_PATH = Path(pyNastran.__path__[0])
+TEST_PATH = ROOT_PATH / 'bdf' / 'test' / 'unit'
+MESH_UTILS_PATH = ROOT_PATH / 'bdf' / 'mesh_utils' / 'test'
+MODEL_PATH = ROOT_PATH / '..' / 'models'
 
 
 class TestReadWriteFiles(unittest.TestCase):
     def test_read_include_dir_upper_lower_upper(self):
-        """tests weird include paths"""
+        """
+        paths should be able to go down or up the file
+        chain relative to the local deck
+        """
         log = SimpleLogger(level='info', encoding='utf-8')
-        bdf_filename = TEST_PATH / 'include_dir2' / 'level2' / 'file1.bdf'
+        bdf_filename = os.path.join(TEST_PATH, 'include_dir2', 'level2', 'file1.bdf')
         model =read_bdf(bdf_filename, log=log)
         assert len(model.nodes) == 5, model.nodes
 
@@ -149,7 +153,7 @@ class TestReadWrite(unittest.TestCase):
         # fails correctly
         log = SimpleLogger(level='info', encoding='utf-8')
         model = BDF(log=log, debug=False)
-        bdf_name = os.path.join(TEST_PATH, 'test_include.bdf')
+        bdf_name = TEST_PATH / 'test_include.bdf'
         model.read_bdf(bdf_name, xref=True, punch=False)
         #self.assertRaises(IOError, model.read_bdf, bdf_name, xref=True, punch=False)
 
@@ -158,7 +162,7 @@ class TestReadWrite(unittest.TestCase):
         model2 = BDF(log=log, debug=False)
         bdf_filename = 'test_include.bdf'
         if not os.path.exists(bdf_filename):
-            bdf_filename = os.path.join(TEST_PATH, 'test_include.bdf')
+            bdf_filename = TEST_PATH / 'test_include.bdf'
         model2.read_bdf(bdf_filename, xref=True, punch=False)
 
     def test_read_include_dir_2(self):
@@ -167,7 +171,7 @@ class TestReadWrite(unittest.TestCase):
         model = BDF(log=log, debug=False)
         bdf_filename = 'test_include2.bdf'
         if not os.path.exists(bdf_filename):
-            bdf_filename = os.path.join(full_path, 'test_include2.bdf')
+            bdf_filename = full_path / 'test_include2.bdf'
             #print(full_path)
         #print(bdf_filename)
         model.read_bdf(bdf_filename, xref=True, punch=False)
@@ -180,7 +184,7 @@ class TestReadWrite(unittest.TestCase):
 
         bdf_filename = 'test_include.bdf'
         if not os.path.exists(bdf_filename):
-            bdf_filename = os.path.join(TEST_PATH, bdf_filename)
+            bdf_filename = TEST_PATH / bdf_filename
         model2.read_bdf(bdf_filename, xref=True, punch=False)
 
         cases = [
@@ -211,7 +215,7 @@ class TestReadWrite(unittest.TestCase):
         """
         log = SimpleLogger(level='info', encoding='utf-8')
         model2 = BDF(log=log, debug=False)
-        bdf_name = os.path.join(MESH_UTILS_PATH, 'test_mass.dat')
+        bdf_name = MESH_UTILS_PATH / 'test_mass.dat'
         model2.read_bdf(bdf_name, xref=True, punch=False)
 
         cases = [
@@ -512,18 +516,18 @@ class TestReadWrite(unittest.TestCase):
     def test_disable_cards(self):
         """tests disabling cards"""
         log = SimpleLogger(level='info', encoding='utf-8')
-        bdf_filename = os.path.join(ROOT_PATH, '..', 'models',
-                                    'solid_bending', 'solid_bending.bdf')
+        bdf_filename = (ROOT_PATH / '..' / 'models' /
+                        'solid_bending' / 'solid_bending.bdf')
         model = BDF(log=log, debug=False)
         model.disable_cards(['CTETRA'])
         model.read_bdf(bdf_filename)
         assert len(model.elements) == 0, len(model.elements)
 
     def test_solid_shell_bar_buckling(self):
-        bdf_filename = os.path.join(ROOT_PATH, '..', 'models',
-                                    'sol_101_elements', 'buckling_solid_shell_bar.bdf')
-        bdf_filename2 = os.path.join(ROOT_PATH, '..', 'models',
-                                     'sol_101_elements', 'buckling_solid_shell_bar2.bdf')
+        bdf_filename = (ROOT_PATH / '..' / 'models' /
+                        'sol_101_elements' / 'buckling_solid_shell_bar.bdf')
+        bdf_filename2 = (ROOT_PATH / '..' / 'models' /
+                         'sol_101_elements' / 'buckling_solid_shell_bar2.bdf')
         model = BDF(debug=False)
         model.read_bdf(bdf_filename)
         model.write_bdf(bdf_filename2)
@@ -603,23 +607,16 @@ class TestReadWrite(unittest.TestCase):
         #assert filename_out == PurePosixPath('\\\\nas\\dir2\\model.bdf'), 'filename_out=%r linux/mac' % filename_out
         #-----------------------------------------------------------------------
 
-
     def test_paths_sat(self):
         """runs through the various satellite includes on windows and linux"""
-        sat_path = os.path.abspath(os.path.join(MODEL_PATH, 'Satellite_V02'))
-        os.environ['Satellite_V02_base'] = sat_path
-        os.environ['Satellite_V02_bddm'] = os.path.join(sat_path, 'BULK', 'MATERIAUX')
-        os.environ['Satellite_V02_BULK'] = os.path.join(sat_path, 'BULK')
-        os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')
-
-        assert os.path.exists(sat_path), print_bad_path(sat_path)
-        assert os.path.exists(os.path.join(sat_path, 'BULK')
-                              ), print_bad_path(os.path.join(sat_path, 'BULK'))
-        assert os.path.exists(os.path.join(sat_path, 'BULK', 'MATERIAUX')
-                              ), print_bad_path(os.path.join(sat_path, 'BULK', 'MATERIAUX'))
-        assert os.path.exists(os.path.join(sat_path, 'INCLUDE')
-                              ), print_bad_path(os.path.join(sat_path, 'INCLUDE'))
-
+        sat_path = (MODEL_PATH / 'Satellite_V02').absolute()
+        paths = {
+            'Satellite_V02_base': sat_path,
+            'Satellite_V02_BULK': sat_path / 'BULK',
+            'Satellite_V02_bddm': sat_path / 'BULK' / 'MATERIAUX',
+            'Satellite_V02_INCLUDE': sat_path / 'INCLUDE',
+        }
+        set_path_keys(paths)
         pths = [
             "INCLUDE 'Satellite_V02_bddm:Satellite_V02_Materiaux.blk'",
             "INCLUDE 'Satellite_V02_BULK:CONM2/Satellite_V02_CONM2.blk'",
@@ -653,23 +650,56 @@ class TestReadWrite(unittest.TestCase):
         #Satellite_V02_INCLUDE = M:\ACA\Satellite_V02/BULK
         #split_filename_into_tokens
 
-    def test_paths_sat_02(self):
+    def test_paths_sat_02_relative_path(self):
         """the satellite model should work"""
-        sat_path = os.path.abspath(os.path.join(MODEL_PATH, 'Satellite_V02'))
-        os.environ['Satellite_V02_base'] = sat_path
-        os.environ['Satellite_V02_bddm'] = os.path.join(sat_path, 'BULK', 'MATERIAUX')
-        os.environ['Satellite_V02_BULK'] = os.path.join(sat_path, 'BULK')
-        os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')
-        bdf_filename = os.path.join(sat_path, 'JOBS', 'QS', 'satellite_V02_ACA_QS_SOL101_VarEnv.dat')
+        sat_path = (MODEL_PATH / 'Satellite_V02').absolute()
+        paths = {
+            'Satellite_V02_base': sat_path,
+            'Satellite_V02_BULK': sat_path / 'BULK',
+            'Satellite_V02_bddm': sat_path / 'BULK' / 'MATERIAUX',
+            'Satellite_V02_INCLUDE': sat_path / 'INCLUDE',
+        }
+        set_path_keys(paths)
+        bdf_filename = sat_path / 'JOBS' / 'QS' / 'relative_path.bdf'
+        reader = BDFInputPy(
+            read_includes=True, dumplines=False, encoding='ascii',
+            debug=True,
+        )
+        reader.use_new_parser = True
+        reader.get_lines(bdf_filename)
+
+        read_bdf(bdf_filename, debug=False)
+
+    def test_paths_sat_02_environment_variables(self):
+        """the satellite model should work"""
+        sat_path = (MODEL_PATH / 'Satellite_V02').absolute()
+        paths = {
+            'Satellite_V02_base': sat_path,
+            'Satellite_V02_BULK': sat_path / 'BULK',
+            'Satellite_V02_bddm': sat_path / 'BULK' / 'MATERIAUX',
+            'Satellite_V02_INCLUDE': sat_path / 'INCLUDE',
+        }
+        set_path_keys(paths)
+        bdf_filename = sat_path / 'JOBS' / 'QS' / 'environment_vars.bdf'
+        reader = BDFInputPy(
+            read_includes=True, dumplines=False, encoding='ascii',
+            debug=True,
+        )
+        reader.use_new_parser = True
+        reader.get_lines(bdf_filename)
+
         read_bdf(bdf_filename, debug=False)
 
     def test_two_envs(self):
         """fails for two environment variables"""
-        sat_path = os.path.abspath(os.path.join(MODEL_PATH, 'Satellite_V02'))
-        os.environ['Satellite_V02_base'] = sat_path
-        os.environ['Satellite_V02_bddm'] = os.path.join('BULK', 'MATERIAUX')
-        #os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')
-        #os.environ['Satellite_V02_BULK'] = os.path.join(sat_path, 'BULK')
+        sat_path = (MODEL_PATH / 'Satellite_V02').absolute()
+        paths = {
+            'Satellite_V02_base': sat_path,
+            #'Satellite_V02_BULK': sat_path / 'BULK',
+            'Satellite_V02_bddm': sat_path / 'BULK' / 'MATERIAUX',
+            #'Satellite_V02_INCLUDE': sat_path / 'INCLUDE',
+        }
+        set_path_keys(paths)
 
         pth = "INCLUDE 'Satellite_V02_base:Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"
         with self.assertRaises(SyntaxError):
@@ -681,11 +711,14 @@ class TestReadWrite(unittest.TestCase):
 
     def test_dollar_envs(self):
         """tests sane environment variables"""
-        sat_path = os.path.abspath(os.path.join(MODEL_PATH, 'Satellite_V02'))
-        os.environ['Satellite_V02_base'] = sat_path
-        os.environ['Satellite_V02_bddm'] = os.path.join('BULK', 'MATERIAUX')
-        #os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')
-        #os.environ['Satellite_V02_BULK'] = os.path.join(sat_path, 'BULK')
+        sat_path = (MODEL_PATH / 'Satellite_V02').absolute()
+        paths = {
+            'Satellite_V02_base': sat_path,
+            #'Satellite_V02_BULK': sat_path / 'BULK',
+            'Satellite_V02_bddm': sat_path / 'BULK' / 'MATERIAUX',
+            #'Satellite_V02_INCLUDE': sat_path / 'INCLUDE',
+        }
+        set_path_keys(paths)
 
         pth = "INCLUDE '%Satellite_V02_bddm%:Satellite_V02_Materiaux.blk'"
         pth2 = get_include_filename([pth], include_dir='', is_windows=True)
@@ -694,6 +727,12 @@ class TestReadWrite(unittest.TestCase):
         #pth = "INCLUDE '$Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"
         #pth2 = get_include_filename([pth], include_dir='', is_windows=False)
         #print(pth2)
+
+def set_path_keys(paths: dict[str, Path]) -> None:
+    for key, path in paths.items():
+        assert os.path.exists(path), print_bad_path(path)
+        os.environ[key] = str(path)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
