@@ -15,7 +15,7 @@ from typing import Optional
 import numpy as np
 from cpylog import SimpleLogger, get_logger2, __version__ as CPYLOG_VERSION
 
-from pyNastran.utils import object_attributes, check_path # _filename
+from pyNastran.utils import object_attributes, check_path
 from pyNastran.bdf.bdf_interface.utils import (
     to_fields, _parse_pynastran_header, parse_executive_control_deck)
 

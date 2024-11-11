@@ -24,7 +24,7 @@ from typing import Optional, Any
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
 
-from pyNastran.utils import PathLike, is_binary_file, _filename
+from pyNastran.utils import PathLike, is_binary_file
 from pyNastran.converters.cart3d.cart3d_reader_writer import (
     Cart3dReaderWriter, _write_cart3d_binary, _write_cart3d_ascii)
 

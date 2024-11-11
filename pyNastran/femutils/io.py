@@ -16,7 +16,7 @@ import numpy as np
 from numpy.lib._iotools import _is_string_like
 #from numpy.compat import asstr, asunicode
 
-from pyNastran.utils import is_file_obj, _filename
+from pyNastran.utils import is_file_obj
 
 __all__ = ['loadtxt_nice', 'savetxt_nice']
 
@@ -105,7 +105,7 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comments='#', dtype=np.fl
         lines = filename.getvalue().split('\n')[skiprows:]
         filename = None
     elif isinstance(filename, str):
-        with open(_filename(filename), 'r') as file_obj:
+        with open(filename, 'r') as file_obj:
             if skiprows:
                 lines = file_obj.readlines()[skiprows:]
             else:

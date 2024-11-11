@@ -22,7 +22,7 @@ from typing import TextIO, BinaryIO, Optional
 
 import numpy as np
 from cpylog import get_logger2, SimpleLogger
-from pyNastran.utils import _filename
+
 
 class Cart3dReaderWriter:
     """Cart3d IO class"""
@@ -107,7 +107,6 @@ class Cart3dReaderWriter:
     def _read_cart3d_ascii(self, cart3d_filename: str, encoding: str,
                            result_names=None) -> None:
         log = self.log
-        cart3d_filename = _filename(cart3d_filename)
         with open(cart3d_filename, 'r', encoding=self._encoding) as infile:
             try:
                 npoints, nelements, nresults = _read_header_ascii(infile)

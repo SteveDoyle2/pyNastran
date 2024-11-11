@@ -17,7 +17,6 @@ from typing import Any
 
 import numpy as np
 #import pyNastran
-from pyNastran.utils import _filename
 
 from pyNastran.femutils.io import loadtxt_nice
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -145,7 +144,7 @@ def load_deflection_csv(out_filename: str,
     if ext not in ['.csv', '.dat', '.txt']:
         raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
-    with open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
+    with open(out_filename, 'r', encoding=encoding) as file_obj:
         names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
 
         try:
@@ -199,7 +198,7 @@ def load_csv(out_filename, encoding='latin1'):
     if ext not in ['.csv', '.dat', '.txt']:
         raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
-    with open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
+    with open(out_filename, 'r', encoding=encoding) as file_obj:
         names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
         try:
             #A = loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
@@ -373,7 +372,7 @@ def load_user_geom(fname: str, log=None,
         bars = np.array([], dtype='int32')
         return grid_ids, xyz, bars, tris, quads
 
-    with open(_filename(fname), 'r', encoding=encoding) as user_geom:
+    with open(fname, 'r', encoding=encoding) as user_geom:
         lines = user_geom.readlines()
 
     grid_ids = []
