@@ -603,14 +603,18 @@ class TestReadWrite(unittest.TestCase):
             "INCLUDE 'Satellite_V02_INCLUDE:Satellite_V02_Panneau_Externe.dat'",
         ]
         for pth in pths:
-            pth2 = get_include_filename([pth], include_dirs='', is_windows=True)
+            print('-'*60)
+            pth2 = get_include_filename(
+                [pth], include_dirs='', is_windows=True, debug=True)
             #if not os.path.exists(pth2):
                 #msg = 'Invalid Path\nold:  %r\nnew:  %r' % (pth, pth2)
                 #msg += print_bad_path(pth2)
                 #raise RuntimeError(msg)
             #print('pth1 =', pth2)
 
-            pth2 = get_include_filename([pth], include_dirs='', is_windows=False)
+            print('-'*60)
+            pth2 = get_include_filename(
+                [pth], include_dirs='', is_windows=False, debug=True)
             #print('pth2 =', pth2, '\n')
         #filename_tokens = _split_to_tokens(r'\\nas3\dir1\dir2', is_windows=True)
 
@@ -689,7 +693,9 @@ class TestReadWrite(unittest.TestCase):
         set_path_keys(paths)
 
         pth = "INCLUDE '%Satellite_V02_bddm%:Satellite_V02_Materiaux.blk'"
-        pth2 = get_include_filename([pth], include_dirs='', is_windows=True)
+        pth2 = get_include_filename(
+            [pth], include_dirs=TEST_PATH,
+            is_windows=True, debug=True)
         #print(pth2)
 
         #pth = "INCLUDE '$Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"

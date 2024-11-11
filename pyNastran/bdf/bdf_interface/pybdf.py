@@ -294,6 +294,7 @@ class BDFInputPy:
                         punch: bool) -> tuple[list[str], NDArrayN2int, list[str]]:
         """load and update the lines for ZONA"""
         system_lines2 = []
+        log = self.log
         for system_line in system_lines:
             if system_line.upper().startswith('ASSIGN'):
                 split_system = system_line.split(',')
@@ -302,18 +303,18 @@ class BDFInputPy:
                 if header_upper.startswith('ASSIGN FEM'):
                     unused_fem, filename = header.split('=')
                     filename = filename.strip('"\'')
-                    self.log.debug('reading %s' % filename)
+                    log.debug(f'reading {filename}')
                     if filename.lower().endswith('.f06'):
                         filename = os.path.splitext(filename)[0] + '.bdf'
                     if not filename.endswith('.bdf'):
-                        raise RuntimeError('filename must end in bdf; %s' % filename)
-
+                        raise RuntimeError(f'filename must end in bdf; {filename}')
 
                     _main_lines = self.get_main_lines(filename)
                     make_ilines = bulk_data_ilines is not None
-                    _all_lines, _ilines = self.lines_to_deck_lines(
-                        _main_lines, make_ilines=make_ilines)
-                    _out = _lines_to_decks(_all_lines, _ilines, punch, self.log,
+                    all_lines, ilines = self.lines_to_deck_lines(_main_lines)
+                    if not make_ilines:
+                        ilines = None
+                    _out = _lines_to_decks(all_lines, ilines, punch, self.log,
                                            keep_enddata=False,
                                            consider_superelements=self.consider_superelements)
                     (

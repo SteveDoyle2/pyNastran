@@ -45,14 +45,14 @@ class TestPyBDF(unittest.TestCase):
             pybdf._open_file_checks(op2_filename, basename=False)
 
         with self.assertRaises(IOError):
-            pybdf._validate_open_file(bdf_filename, op2_filename, check=True)
+            pybdf._validate_open_file(op2_filename, check=True)
 
         with self.assertRaises(RuntimeError):
             _show_bad_file(pybdf, op2_filename, encoding, nlines_previous=10)
 
         #------------------------------------------------------
         with self.assertRaises(IOError):
-            pybdf._validate_open_file(bdf_filename, op2_filename, check=True)
+            pybdf._validate_open_file(op2_filename, check=True)
         with open(bdf_filename, 'w', encoding='utf8') as bdf_file:
             bdf_file.write('helló wörld from two\n')
 
@@ -68,7 +68,7 @@ class TestPyBDF(unittest.TestCase):
             pybdf._open_file_checks(bdf_dir, basename=False)
 
         with self.assertRaises(IOError):
-            pybdf._validate_open_file(bdf_filename, bdf_dir, check=True)
+            pybdf._validate_open_file(bdf_dir, check=True)
 
         os.remove('spike.op2')
         os.remove('spike.bdf')
