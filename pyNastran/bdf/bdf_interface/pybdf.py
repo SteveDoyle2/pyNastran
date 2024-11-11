@@ -236,7 +236,10 @@ class BDFInputPy:
                  ilines = None
 
         """
-        self.include_dir = os.path.dirname(bdf_filename)
+        self.include_dir = (
+            '' if isinstance(bdf_filename, StringIO) else
+            os.path.dirname(bdf_filename))
+
         main_lines = self.get_main_lines(bdf_filename)
         all_lines, ilines = self.lines_to_deck_lines(main_lines)
         if not make_ilines:

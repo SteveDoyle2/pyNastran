@@ -424,10 +424,6 @@ class TestReadWrite(unittest.TestCase):
         assert model.echo is False, model.echo
         #model.write_bdf('include5.out.bdf')
 
-        # os.remove('c.bdf')
-        # os.remove('executive_control.inc')
-        # os.remove('case_control.inc')
-
         self.assertEqual(len(model.nodes), 4)
         self.assertEqual(model.nnodes, 4, 'nnodes=%s' % model.nnodes)
 
@@ -454,7 +450,7 @@ class TestReadWrite(unittest.TestCase):
             '$NODES',
             'GRID      100000        43.91715    -29..8712984',
         ]
-        bdf_filename = 'out.bdf'
+        bdf_filename = TEST_PATH / 'out.bdf'
         with open(bdf_filename, 'r', encoding='ascii') as bdf_file:
             lines = bdf_file.readlines()
             compare_lines(self, lines, lines_expected, has_endline=False)
@@ -488,7 +484,8 @@ class TestReadWrite(unittest.TestCase):
         dumplines = False
         encoding = 'ascii'
         log = SimpleLogger(level='info', encoding='utf-8')
-        model = BDFInputPy(read_includes, dumplines, encoding, log=log, debug=False)
+        model = BDFInputPy(read_includes, dumplines, encoding,
+                           log=log, debug=False)
         model.active_filenames = ['fake.file']
         with self.assertRaises(IOError):
             model._open_file('fake.file')
@@ -503,7 +500,7 @@ class TestReadWrite(unittest.TestCase):
             'GRID    15000014       0      2.      1.      1.       0\n',
             'RBE2    1500002215000014  123456 1000177 1000178 1000186 1000187\n',
         ]
-        bdf_filename = 'xref_test.bdf'
+        bdf_filename = TEST_PATH / 'xref_test.bdf'
         log = SimpleLogger(level='info', encoding='utf-8')
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.writelines(lines)
