@@ -143,15 +143,15 @@ def print_bad_path(path: PathLike) -> str:
     msg = {True: 'passed', False: 'failed'}
     return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i) for i in res])
 
-def _filename(filename: str) -> str:
-    """
-    Prepends some magic data to a filename in order to have long filenames.
+#def _filename(filename: str) -> str:
+    #"""
+    #Prepends some magic data to a filename in order to have long filenames.
 
-    .. warning:: This might be Windows specific.
-    """
+    #.. warning:: This might be Windows specific.
+    #"""
     #if len(filename) > 255:
         #return '\\\\?\\' + filename
-    return filename
+    #return filename
 
 def __object_attr(obj: Any,
                   mode: str,
