@@ -38,6 +38,8 @@ def get_include_filename(card_lines: list[str],
     #print(f'card_lines = {card_lines}')
     if not isinstance(include_dirs, list):
         assert isinstance(include_dirs, PathLike), include_dirs
+        #if str(include_dirs) == '':
+            #include_dirs = os.getcwd()
         include_dirs = [include_dirs]
     if is_windows is None:
         is_windows = IS_WINDOWS
@@ -56,6 +58,7 @@ def get_include_filename(card_lines: list[str],
             #print(f'could not find {filename}')
     else:
         msg = f'Could not find INCLUDE line:\n{card_lines}\n'
+        msg += f'filename: {os.path.abspath(filename_raw)}\n'
         msg += f'include_dirs:\n - ' + '\n - '.join(include_dirs)
         raise IOError(msg)
     return filename

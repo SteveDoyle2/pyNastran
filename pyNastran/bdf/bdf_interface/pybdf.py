@@ -31,7 +31,7 @@ from typing import Optional, Any, cast
 import numpy as np
 from cpylog import get_logger2, SimpleLogger
 from pyNastran.nptyping_interface import NDArrayN2int
-from pyNastran.utils import print_bad_path, _filename
+from pyNastran.utils import print_bad_path
 
 from pyNastran.bdf import BULK_DATA_CARDS, CASE_BULK_CARDS
 from pyNastran.bdf.errors import AuxModelError, MissingDeckSections, SuperelementFlagError
