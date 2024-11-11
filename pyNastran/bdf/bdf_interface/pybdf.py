@@ -36,7 +36,7 @@ from pyNastran.utils import print_bad_path, _filename
 from pyNastran.bdf import BULK_DATA_CARDS, CASE_BULK_CARDS
 from pyNastran.bdf.errors import AuxModelError, MissingDeckSections, SuperelementFlagError
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
-from pyNastran.bdf.bdf_interface.include_file import get_include_filename
+from pyNastran.bdf.bdf_interface.include_file import get_include_filename, parse_include_lines
 
 
 # these allow spaces
@@ -179,6 +179,7 @@ class BDFInputPy:
         self.include_lines = defaultdict(list)
         self.read_includes: bool = read_includes
         # the list of files in the order they were opened
+        self.loaded_filenames: list[str] = []
         self.active_filenames: list[str] = []
         self.active_filename = None
 
@@ -235,6 +236,7 @@ class BDFInputPy:
                  ilines = None
 
         """
+        self.include_dir = os.path.dirname(bdf_filename)
         main_lines = self.get_main_lines(bdf_filename)
         all_lines, ilines = self.lines_to_deck_lines(main_lines)
         if not make_ilines:
@@ -374,8 +376,6 @@ class BDFInputPy:
         ----------
         lines : list[str]
             the lines from the main BDF
-        make_ilines : bool; default=True
-            flag for ilines
 
         Returns
         -------
@@ -404,26 +404,34 @@ class BDFInputPy:
 
                 jfile = ilines[i, 0]
                 jline = ilines[i, 1]
-                dirnamei = os.path.dirname(self.active_filenames[jfile])
-                rootpathi = os.path.abspath(dirnamei)
-                if self.debug:  # pragma: no cover
+                source_filename = os.path.abspath(self.loaded_filenames[jfile])
+                include_dir = os.path.abspath(os.path.dirname(source_filename))
+                if self.debug and 0:  # pragma: no cover
                     print(f'jfile={jfile} jline={jline}')
-                    print(f'-> rootpath = {rootpathi}')
-                    print(f'-? include_dir = {self.include_dir}')
-                include_dir = rootpathi
-
-                bdf_filename2 = get_include_filename(
-                    include_lines, include_dir=include_dir)  # TODO: was self.include_dir
-                #bdf_filenames.append(bdf_filename2)
-                # these are the lines associated with the 1st/2nd include file found
-                self.include_lines[jfile].append((include_lines, bdf_filename2))
-
+                    print(f'-> include_line = {line_upper}')
+                    print(f'-> source_file  = {source_filename}')
+                    print(f'-> include_dir   = {include_dir}')
+                    print(f'-? include_diri  = {self.include_dir}')
+                include_dirs = [include_dir]
+                if self.include_dir not in include_dirs:
+                    include_dirs.append(self.include_dir)
                 if self.read_includes:
+                    bdf_filename2 = get_include_filename(
+                        include_lines, include_dirs=include_dirs)
+
+                    # these are the lines associated with the 1st/2nd include file found
+                    self.include_lines[jfile].append((include_lines, bdf_filename2))
+
                     lines, nlines, ilines = self._update_include(
                         lines, nlines, ilines,
                         include_lines, bdf_filename2, i, j, ifile)
                     ifile += 1
                 else:
+                    bdf_filename2 = parse_include_lines(include_lines)
+
+                    # these are the lines associated with the 1st/2nd include file found
+                    self.include_lines[jfile].append((include_lines, bdf_filename2))
+
                     # remove the include lines
                     lines = lines[:i] + lines[j:]
                     if make_ilines:
@@ -615,7 +623,7 @@ class BDFInputPy:
                         crash_name = 'pyNastran_crash.bdf'
                         self._dump_file(crash_name, lines, i+1)
                         msg = 'There was an invalid filename found while parsing (index).\n'
-                        msg += 'Check the end of %r\n' % crash_name
+                        msg += f'Check the end of {crash_name!r}\n'
                         #msg += 'bdf_filename2 = %r\n' % bdf_filename
                         msg += 'include_lines = %s' % include_lines
                         raise IndexError(msg)
@@ -631,7 +639,8 @@ class BDFInputPy:
         #print(include_lines)
         return j, include_lines
 
-    def _open_file_checks(self, bdf_filename: str, basename: bool=False) -> None:
+    def _open_file_checks(self, bdf_filename: str,
+                          basename: bool=False) -> None:
         """
         Verifies that the BDF about to be opened:
            1.  Exists
@@ -652,37 +661,39 @@ class BDFInputPy:
         else:
             bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
 
+        log = self.log
         if not os.path.exists(bdf_filename_inc):
-            msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
-            msg += 'cwd: %r\n' % os.getcwd()
-            msg += 'include_dir: %r\n' % self.include_dir
+            msg = f'No such bdf_filename: {bdf_filename_inc!r}\n'
+            msg += f'cwd: {os.getcwd()!r}\n'
+            msg += f'include_dir: {self.include_dir!r}\n'
             msg += print_bad_path(bdf_filename_inc)
-            self.log.error(msg)
+            log.error(msg)
             raise IOError(msg)
         elif bdf_filename_inc.endswith('.op2'):
-            msg = 'Invalid filetype: bdf_filename=%r' % bdf_filename_inc
-            self.log.error(msg)
+            msg = f'Invalid filetype: bdf_filename={bdf_filename_inc!r}'
+            log.error(msg)
             raise IOError(msg)
         bdf_filename = bdf_filename_inc
 
         if bdf_filename in self.active_filenames:
             msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
                 % (bdf_filename, self.active_filenames)
-            self.log.error(msg)
+            log.error(msg)
             raise RuntimeError(msg)
         elif os.path.isdir(bdf_filename):
             current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
             msg = 'Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
                 bdf_filename_inc, current_filename)
-            self.log.error(msg)
+            log.error(msg)
             raise IOError(msg)
         elif not os.path.isfile(bdf_filename):
             msg = 'Not a file: bdf_filename=%r' % bdf_filename
-            self.log.error(msg)
+            log.error(msg)
             raise IOError(msg)
 
     def _open_file(self, bdf_filename: str | StringIO,
-                   basename: bool=False, check: bool=True, encoding: Optional[str]=None) -> Any:
+                   basename: bool=False, check: bool=True,
+                   encoding: Optional[str]=None) -> Any:
         """
         Opens a new bdf_filename with the proper encoding and include directory
 
@@ -708,18 +719,19 @@ class BDFInputPy:
         else:
             bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
 
-        self._validate_open_file(bdf_filename, bdf_filename_inc, check)
-
+        # bdf_filename
+        self._validate_open_file(bdf_filename_inc, check)
 
         self.log.debug('opening %r' % bdf_filename_inc)
         self.active_filenames.append(bdf_filename_inc)
+        self.loaded_filenames.append(bdf_filename_inc)
 
         #print('ENCODING - _open_file=%r' % self.encoding)
         #self._check_pynastran_header(lines)
         bdf_file = open(bdf_filename_inc, 'r', encoding=encoding)
         return bdf_file
 
-    def _validate_open_file(self, bdf_filename: str | StringIO,
+    def _validate_open_file(self,
                             bdf_filename_inc: str,
                             check: bool=True) -> None:
         """
@@ -730,8 +742,6 @@ class BDFInputPy:
 
         Parameters
         ----------
-        bdf_filename : str
-           the current bdf filename
         bdf_filename_inc : str
            the next bdf filename
         check : bool; default=True
@@ -2285,7 +2295,7 @@ def write_tag(begin_tags: list[tuple[str, int, str]]):
             word += f" LABEL='{label}'"
     return word
 
-def _dump_file(bdf_dump_filename: str,
+def _dump_file(bdf_filename: str,
                lines: list[str],
                i: int, encoding: Optional[str]) -> None:
     """
@@ -2293,7 +2303,7 @@ def _dump_file(bdf_dump_filename: str,
 
     Parameters
     ----------
-    bdf_dump_filename : str
+    bdf_filename : str
         the bdf filename to dump
     lines : list[str]
         the entire list of lines
@@ -2301,6 +2311,6 @@ def _dump_file(bdf_dump_filename: str,
         the last index to write
 
     """
-    with open(bdf_dump_filename, 'w', encoding=encoding) as crash_file:
+    with open(bdf_filename, 'w', encoding=encoding) as crash_file:
         for line in lines[:i]:
             crash_file.write(line)

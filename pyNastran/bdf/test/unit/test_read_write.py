@@ -277,102 +277,102 @@ class TestReadWrite(unittest.TestCase):
     def test_include_end(self):
         """tests multiple levels of includes"""
         log = SimpleLogger(level='info', encoding='utf-8')
-        with open('a.bdf', 'w') as bdf_file:
+        with open('include_end_a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
             bdf_file.write('GRID,1,,1.0\n')
-            bdf_file.write("INCLUDE 'b.bdf'\n\n")
+            bdf_file.write("INCLUDE 'include_end_b.bdf'\n\n")
 
-        with open('b.bdf', 'w') as bdf_file:
+        with open('include_end_b.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,2,,2.0\n')
-            bdf_file.write("INCLUDE 'c.bdf'\n\n")
+            bdf_file.write("INCLUDE 'include_end_c.bdf'\n\n")
 
-        with open('c.bdf', 'w') as bdf_file:
+        with open('include_end_c.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,3,,3.0\n\n')
             bdf_file.write("ENDDATA\n")
 
         model = BDF(log=log, debug=False)
-        model.read_bdf('a.bdf')
-        model.write_bdf('a.out.bdf')
+        model.read_bdf('include_end_a.bdf')
+        model.write_bdf('include_end_a.out.bdf')
 
         self.assertEqual(len(model.nodes), 3)
         self.assertEqual(model.nnodes, 3, 'nnodes=%s' % model.nnodes)
 
         model = BDF(log=log, debug=False)
-        lines, ilines = model.include_zip(bdf_filename='a.bdf', encoding=None)
+        lines, ilines = model.include_zip(bdf_filename='include_end_a.bdf', encoding=None)
         assert len(lines) == 11, len(lines)
 
-        os.remove('a.bdf')
-        os.remove('b.bdf')
-        os.remove('c.bdf')
-        os.remove('a.out.bdf')
+        os.remove('include_end_a.bdf')
+        os.remove('include_end_b.bdf')
+        os.remove('include_end_c.bdf')
+        os.remove('include_end_a.out.bdf')
 
     def test_include_end_02(self):
         """tests multiple levels of includes"""
         log = SimpleLogger(level='info', encoding='utf-8')
-        with open('a.bdf', 'w') as bdf_file:
+        with open('include_02_a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
             bdf_file.write('GRID,1,,1.0\n')
-            bdf_file.write("INCLUDE 'b.bdf'\n\n")
+            bdf_file.write("INCLUDE 'include_02_b.bdf'\n\n")
             bdf_file.write('GRID,4,,4.0\n')
 
-        with open('b.bdf', 'w') as bdf_file:
+        with open('include_02_b.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,2,,2.0\n')
-            bdf_file.write("INCLUDE 'c.bdf'\n\n")
+            bdf_file.write("INCLUDE 'include_02_c.bdf'\n\n")
             bdf_file.write('GRID,5,,5.0\n')
 
-        with open('c.bdf', 'w') as bdf_file:
+        with open('include_02_c.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,3,,3.0\n\n')
 
         model = BDF(log=log, debug=False)
-        model.read_bdf('a.bdf')
-        model.write_bdf('a.out.bdf')
+        model.read_bdf('include_02_a.bdf')
+        model.write_bdf('include_02_a.out.bdf')
 
-        os.remove('a.bdf')
-        os.remove('b.bdf')
-        os.remove('c.bdf')
-        os.remove('a.out.bdf')
+        os.remove('include_02_a.bdf')
+        os.remove('include_02_b.bdf')
+        os.remove('include_02_c.bdf')
+        os.remove('include_02_a.out.bdf')
         self.assertEqual(len(model.nodes), 5)
         self.assertEqual(model.nnodes, 5, 'nnodes=%s' % model.nnodes)
 
     def test_include_03(self):
         """tests executive/case control includes"""
         log = SimpleLogger(level='info', encoding='utf-8')
-        with open('a.bdf', 'w') as bdf_file:
-            bdf_file.write("INCLUDE 'executive_control.inc'\n\n")
+        with open('include_03_a.bdf', 'w') as bdf_file:
+            bdf_file.write("INCLUDE 'include_03_executive_control.inc'\n\n")
             bdf_file.write('CEND\n')
-            bdf_file.write("INCLUDE 'case_control.inc'\n\n")
+            bdf_file.write("INCLUDE 'include_03_case_control.inc'\n\n")
             bdf_file.write('BEGIN BULK\n')
             bdf_file.write('GRID,1,,1.0\n')
-            bdf_file.write("INCLUDE 'b.bdf'\n\n")
+            bdf_file.write("INCLUDE 'include_03_b.bdf'\n\n")
             bdf_file.write('GRID,4,,4.0\n')
 
-        with open('executive_control.inc', 'w') as bdf_file:
+        with open('include_03_executive_control.inc', 'w') as bdf_file:
             bdf_file.write('SOL = 103\n')
 
-        with open('case_control.inc', 'w') as bdf_file:
+        with open('include_03_case_control.inc', 'w') as bdf_file:
             bdf_file.write('DISP = ALL\n')
 
-        with open('b.bdf', 'w') as bdf_file:
+        with open('include_03_b.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,2,,2.0\n')
-            bdf_file.write("INCLUDE 'c.bdf'\n\n")
+            bdf_file.write("INCLUDE 'include_03_c.bdf'\n\n")
             bdf_file.write('GRID,5,,5.0\n')
 
-        with open('c.bdf', 'w') as bdf_file:
+        with open('include_03_c.bdf', 'w') as bdf_file:
             bdf_file.write('GRID,3,,3.0\n\n')
 
         model = BDF(log=log, debug=False)
-        model.read_bdf('a.bdf')
-        model.write_bdf('a.out.bdf')
+        model.read_bdf('include_03_a.bdf')
+        model.write_bdf('include_03_a.out.bdf')
 
-        os.remove('a.bdf')
-        os.remove('b.bdf')
-        os.remove('c.bdf')
-        os.remove('executive_control.inc')
-        os.remove('case_control.inc')
+        os.remove('include_03_a.bdf')
+        os.remove('include_03_b.bdf')
+        os.remove('include_03_c.bdf')
+        os.remove('include_03_executive_control.inc')
+        os.remove('include_03_case_control.inc')
 
-        os.remove('a.out.bdf')
+        os.remove('include_03_a.out.bdf')
         self.assertEqual(len(model.nodes), 5)
         self.assertEqual(model.nnodes, 5, 'nnodes=%s' % model.nnodes)
 
@@ -462,25 +462,25 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_stop(self):
         log = SimpleLogger(level='info', encoding='utf-8')
-        with open('a.bdf', 'w') as bdf_file:
+        with open('include_stop_a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
-            bdf_file.write("INCLUDE 'b.bdf'\n\n")
+            bdf_file.write("INCLUDE 'include_stop_b.bdf'\n\n")
             bdf_file.write('GRID,1,,1.0\n')
 
         model = BDF(log=log, debug=False)
         with self.assertRaises(IOError):
-            model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
+            model.read_bdf(bdf_filename='include_stop_a.bdf', xref=True, punch=False,
                            read_includes=True, encoding=None)
         with self.assertRaises(IOError):
-            read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
+            read_bdf(bdf_filename='include_stop_a.bdf', xref=True, punch=False,
                      encoding=None, log=log)
-        model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
+        model.read_bdf(bdf_filename='include_stop_a.bdf', xref=True, punch=False,
                        read_includes=False, encoding=None)
-        model.write_bdf('out.bdf')
-        os.remove('a.bdf')
-        os.remove('out.bdf')
-        os.remove('pyNastran_crash.bdf')
+        model.write_bdf('include_stop_out.bdf')
+        os.remove('include_stop_a.bdf')
+        os.remove('include_stop_out.bdf')
+        #os.remove('pyNastran_crash.bdf')
 
     def test_read_bad_01(self):
         """tests you can't read the same file twice"""
@@ -516,18 +516,15 @@ class TestReadWrite(unittest.TestCase):
     def test_disable_cards(self):
         """tests disabling cards"""
         log = SimpleLogger(level='info', encoding='utf-8')
-        bdf_filename = (ROOT_PATH / '..' / 'models' /
-                        'solid_bending' / 'solid_bending.bdf')
+        bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
         model = BDF(log=log, debug=False)
         model.disable_cards(['CTETRA'])
         model.read_bdf(bdf_filename)
         assert len(model.elements) == 0, len(model.elements)
 
     def test_solid_shell_bar_buckling(self):
-        bdf_filename = (ROOT_PATH / '..' / 'models' /
-                        'sol_101_elements' / 'buckling_solid_shell_bar.bdf')
-        bdf_filename2 = (ROOT_PATH / '..' / 'models' /
-                         'sol_101_elements' / 'buckling_solid_shell_bar2.bdf')
+        bdf_filename = MODEL_PATH / 'sol_101_elements' / 'buckling_solid_shell_bar.bdf'
+        bdf_filename2 = MODEL_PATH / 'sol_101_elements' / 'buckling_solid_shell_bar2.bdf'
         model = BDF(debug=False)
         model.read_bdf(bdf_filename)
         model.write_bdf(bdf_filename2)
@@ -633,14 +630,14 @@ class TestReadWrite(unittest.TestCase):
             "INCLUDE 'Satellite_V02_INCLUDE:Satellite_V02_Panneau_Externe.dat'",
         ]
         for pth in pths:
-            pth2 = get_include_filename([pth], include_dir='', is_windows=True)
+            pth2 = get_include_filename([pth], include_dirs='', is_windows=True)
             #if not os.path.exists(pth2):
                 #msg = 'Invalid Path\nold:  %r\nnew:  %r' % (pth, pth2)
                 #msg += print_bad_path(pth2)
                 #raise RuntimeError(msg)
             #print('pth1 =', pth2)
 
-            pth2 = get_include_filename([pth], include_dir='', is_windows=False)
+            pth2 = get_include_filename([pth], include_dirs='', is_windows=False)
             #print('pth2 =', pth2, '\n')
         #filename_tokens = _split_to_tokens(r'\\nas3\dir1\dir2', is_windows=True)
 
@@ -703,9 +700,9 @@ class TestReadWrite(unittest.TestCase):
 
         pth = "INCLUDE 'Satellite_V02_base:Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"
         with self.assertRaises(SyntaxError):
-            pth2 = get_include_filename([pth], include_dir=r'C:\dir\dir2', is_windows=True)
+            pth2 = get_include_filename([pth], include_dirs=r'C:\dir\dir2', is_windows=True)
         with self.assertRaises(SyntaxError):
-            pth2 = get_include_filename([pth], include_dir=r'C:\dir\dir2', is_windows=False)
+            pth2 = get_include_filename([pth], include_dirs=r'C:\dir\dir2', is_windows=False)
 
         #print('Path:\nold:  %r\nnew:  %r' % (pth, pth2))
 
@@ -721,7 +718,7 @@ class TestReadWrite(unittest.TestCase):
         set_path_keys(paths)
 
         pth = "INCLUDE '%Satellite_V02_bddm%:Satellite_V02_Materiaux.blk'"
-        pth2 = get_include_filename([pth], include_dir='', is_windows=True)
+        pth2 = get_include_filename([pth], include_dirs='', is_windows=True)
         #print(pth2)
 
         #pth = "INCLUDE '$Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"

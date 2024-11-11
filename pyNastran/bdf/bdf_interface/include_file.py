@@ -8,6 +8,7 @@ import ntpath
 import posixpath
 from typing import Optional, Any
 from pathlib import PurePosixPath, PureWindowsPath
+from pyNastran.utils import PathLike
 from pyNastran.bdf.errors import EnvironmentVariableError
 
 IS_WINDOWS = 'nt' in os.name
@@ -15,7 +16,8 @@ IS_WINDOWS = 'nt' in os.name
 #is_mac = 'darwin' in os.name
 
 
-def get_include_filename(card_lines: list[str], include_dir: str='',
+def get_include_filename(card_lines: list[str],
+                         include_dirs: list[str],
                          is_windows: Optional[bool]=None) -> str:
     """
     Parses an INCLUDE file split into multiple lines (as a list).
@@ -24,7 +26,7 @@ def get_include_filename(card_lines: list[str], include_dir: str='',
     ----------
     card_lines : list[str]
         the list of lines in the include card (all the lines!)
-    include_dir : str; default=''
+    include_dirs : list[str]
         the include directory
 
     Returns
@@ -33,9 +35,33 @@ def get_include_filename(card_lines: list[str], include_dir: str='',
         the INCLUDE filename
 
     """
+    #print(f'card_lines = {card_lines}')
+    if not isinstance(include_dirs, list):
+        assert isinstance(include_dirs, PathLike), include_dirs
+        include_dirs = [include_dirs]
     if is_windows is None:
         is_windows = IS_WINDOWS
 
+    filename_raw = parse_include_lines(card_lines)
+
+    for include_dir in include_dirs:
+        #print(f'filename_raw = {filename_raw}')
+        #print(f'dir = {include_dir}')
+        tokens = split_filename_into_tokens(include_dir, filename_raw, is_windows)
+        filename = str(tokens)
+        if os.path.exists(filename):
+            #print(f'found {filename}')
+            break
+        #else:
+            #print(f'could not find {filename}')
+    else:
+        msg = f'Could not find INCLUDE line:\n{card_lines}\n'
+        msg += f'include_dirs:\n - ' + '\n - '.join(include_dirs)
+        raise IOError(msg)
+    return filename
+
+def parse_include_lines(card_lines: list[str]) -> str:
+    """handles splitting out the INCLUDE lines"""
     card_lines2 = []
     for line in card_lines:
         line = line.strip('\t\r\n ')
@@ -72,10 +98,7 @@ def get_include_filename(card_lines: list[str], include_dir: str='',
     # '\Data Files' \subdir\thisfile
     #
     # -> C:\PROJECT\Data Files\SUBDIR\THISFILE
-    tokens = split_filename_into_tokens(include_dir, filename, is_windows)
-    filename = str(tokens)
     return filename
-
 
 def split_filename_into_tokens(include_dir: str, filename: str,
                                is_windows: bool) -> Any:
