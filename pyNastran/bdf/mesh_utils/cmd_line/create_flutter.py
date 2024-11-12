@@ -30,6 +30,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
 
     from docopt import docopt
     import pyNastran
+    options = '[-o OUT_BDF_FILENAME] [--size SIZE | --clean] [--sid SID]'
     msg = (
         'Usage:\n'
         # SWEEP_UNIT
@@ -37,14 +38,14 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
 
         # CONST_TYPE = mach
         #'  bdf flutter gui\n'
-        '  bdf flutter UNITS eas  EAS1  EAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
-        '  bdf flutter UNITS tas  TAS1  TAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
-        '  bdf flutter UNITS alt  ALT1  ALT2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
+        f'  bdf flutter UNITS eas  EAS1  EAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT {options}\n'
+        f'  bdf flutter UNITS tas  TAS1  TAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] {options}\n'
+        f'  bdf flutter UNITS alt  ALT1  ALT2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] {options}\n'
 
         # CONST_TYPE = alt
-        #'  bdf flutter UNITS eas  EAS1  EAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [-o OUT_BDF_FILENAME] [--size SIZE] [--clean]\n'
-        #'  bdf flutter UNITS tas  TAS1  TAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
-        '  bdf flutter UNITS mach MACH1 MACH2            N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
+        #'  bdf flutter UNITS eas  EAS1  EAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT {options}\n'
+        #'  bdf flutter UNITS tas  TAS1  TAS2  SWEEP_UNIT N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] {options}\n'
+        '  bdf flutter UNITS mach MACH1 MACH2            N CONST_TYPE CONST_VAL CONST_UNIT [--eas_limit EAS EAS_UNITS] {options}\n'
 
         '  bdf flutter -h | --help\n'
         '  bdf flutter -v | --version\n'
@@ -67,6 +68,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
         '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file (default=flutter_cards.inc)\n'
         ' --size SIZE                          size of the BDF (8/16; default=16)\n'
         ' --clean                              writes a BDF with at least 1 whitespace in an FLFACT field (for readability)\n'
+        ' --sid SID                            updates the flutter ID\n'
         '\n'
 
         'Info:\n'
@@ -74,9 +76,10 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
         "  -v, --version   show program's version number and exit\n"
         '\n'
         'Examples:\n'
-        '  bdf flutter english_in tas  .1  800. ft/s 101 alt 2500 m\n'
-        '  bdf flutter english_in mach .05 0.5       101 alt 2500\n'
-        '  bdf flutter english_in mach .05 0.5       101 alt 2500 m --eas_limit 300 knots --out flutter_cards_temp.inc --size 16\n'
+        '  bdf flutter english_in eas  1   800. knots 101 mach 0.8 na\n'
+        '  bdf flutter english_in tas  .1  800. ft/s  101 alt 2500 m\n'
+        '  bdf flutter english_in mach .05 0.5        101 alt 2500\n'
+        '  bdf flutter english_in mach .05 0.5        101 alt 2500 m --eas_limit 300 knots --out flutter_cards_temp.inc --size 16\n'
     )
     filter_no_args(msg, argv, quiet=quiet)
 
@@ -89,7 +92,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
         data = cmd_line_gui()
     else:
         argv = [str(arg) for arg in argv]
-        cmd = ' '.join(argv[1:])
+        cmd = 'bdf ' + ' '.join(argv[1:])
         data = docopt(msg, version=ver, argv=argv[1:])
 
     if not quiet:  # pragma: no cover
@@ -98,6 +101,10 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
     size = 16
     if data['--size']:
         size = _int(data, '--size')
+
+    sid = 1
+    if data['--sid']:
+        sid = _int(data, '--sid')
 
     units_out = data['UNITS']
     if units_out.lower() not in UNITS_MAP:  # pragma: no cover
@@ -157,6 +164,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
                    const_type, const_value, const_unit,
                    eas_limit=eas_limit, eas_units=eas_units,
                    units_out=units_out,
+                   sid=sid,
                    size=size, clean=clean,
                    bdf_filename_out=bdf_filename_out,
                    comment=cmd)
@@ -166,7 +174,8 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
 def create_flutter(log: SimpleLogger,
                    sweep_method: str, value1: float, value2: float, sweep_unit: str, npoints: int,
                    const_type: str, const_value: float, const_unit: str,
-                   eas_limit=1_000_000, eas_units: str='m/s',
+                   sid: int=1,
+                   eas_limit: float=1_000_000.0, eas_units: str='m/s',
                    units_out: str='si',
                    size: int=8,
                    clean: bool=False,
@@ -194,26 +203,33 @@ def create_flutter(log: SimpleLogger,
 
     sweep_unit = sweep_unit.lower()
     values = np.linspace(value1, value2, num=npoints)
+    dvalue1 = values[1] - values[0]
     if sweep_method == 'alt':
         assert sweep_unit in ALT_UNITS, f'sweep_unit={sweep_unit!r}; allowed={ALT_UNITS}'
         alts = convert_altitude(values, sweep_unit, alt_units)
+        unit2 = alt_units
 
     elif sweep_method == 'mach':
         machs = values
+        unit2 = 'na'
     elif sweep_method == 'eas':
         eass = values
         eas_units = sweep_unit
+        unit2 = eas_units
         #assert sweep_unit in VELOCITY_UNITS, f'sweep_unit={sweep_unit!r}; allowed={VELOCITY_UNITS}'
         #eass = convert_velocity(eass, sweep_unit, velocity_units)
 
     elif sweep_method == 'tas':
         assert sweep_unit in VELOCITY_UNITS, f'sweep_unit={sweep_unit!r}; allowed={VELOCITY_UNITS}'
         tass = convert_velocity(values, sweep_unit, velocity_units)
+        unit2 = velocity_units
     elif sweep_method == 'alt':
         assert sweep_unit in ALT_UNITS, f'sweep_unit={sweep_unit!r}; allowed={ALT_UNITS}'
         alts = convert_altitude(values, sweep_unit, alt_units)
+        unit2 = alt_units
     else:  # pragma: no cover
         raise NotImplementedError(sweep_method)
+    dvalue2 = values[1] - values[0]
 
     #------------------------------------------------------------------
     from pyNastran.bdf.bdf import BDF
@@ -221,7 +237,6 @@ def create_flutter(log: SimpleLogger,
     model.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
                             nxref_errors=100, stop_on_xref_error=False)
     flutter_method = 'PKNL'
-    sid = 1
 
     flfact_density = sid + 1
     flfact_mach = sid + 2
@@ -238,6 +253,7 @@ def create_flutter(log: SimpleLogger,
         eas_units = eas_units_default
 
     log.info(f'sweep_method={sweep_method!r}')
+    log.debug(f'  d{sweep_unit} = {dvalue1!r} {sweep_unit} = {dvalue2!r} {unit2}')
     log.debug(f'  alt_units={alt_units!r}')
     log.debug(f'  velocity_units={velocity_units!r}')
     log.debug(f'  density_units={density_units!r}')

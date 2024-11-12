@@ -2273,7 +2273,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #eids = np.arange(172)
         #eids = []
         #self.hide_elements_mask(eids)
-        if self.element_ids is None:
+        if self.element_ids is None or len(self.element_ids) == 0:
             self.element_ids = np.array([], dtype='int32')
             elements_pound = 1
         else:

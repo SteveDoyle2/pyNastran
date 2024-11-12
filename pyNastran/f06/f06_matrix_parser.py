@@ -89,7 +89,7 @@ def _read_f06_matrices(f06_file: TextIO,
             matrices['MHH'] = np.diag(Mhh[isort])
             matrices['BHH'] = np.diag(Bhh[isort])
             matrices['KHH'] = np.diag(Khh[isort])
-            del line_strip, Mhh, Bhh, Khh
+            del Mhh, Bhh, Khh
 
         if line.startswith('0    TABLE'):
             table_name, table, line, i = _read_table(f06_file, line, i, log)

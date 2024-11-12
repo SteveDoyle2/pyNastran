@@ -30,7 +30,7 @@ class NSMx(Property):
     #: Set points to either Property entries or Element entries.
     #: Properties are:
     valid_properties = [
-        'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
+        'PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D',
         'ELEMENT', 'PDUM8',
     ]
@@ -147,7 +147,7 @@ class NSMx(Property):
 class NSM1x(Property):
     """Common class for NSM1 and NSML1"""
     valid_properties = [
-        'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
+        'PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D',
         'ELEMENT',
     ]

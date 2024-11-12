@@ -607,7 +607,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, cid=0, fdtype='float32')
             xyz_cid0 = gui.scale_length(xyz_cid0)
             dim_max = self._points_to_vtkpoints_coords(model, xyz_cid0)
-        self.node_ids = nid_cp_cd[:, 0]
+            self.node_ids = nid_cp_cd[:, 0]
+        else:
+            self.node_ids = np.zeros(0, dtype='int32')
 
         #-----------------------------------------------------------------------
         nconm2 = _create_masses(
@@ -627,12 +629,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #-----------------------------------------------------------------------
         j = 0
         nid_map = gui.nid_map
-        idtype = nid_cp_cd.dtype
+        idtype = self.node_ids.dtype
+        self.element_ids = np.zeros(0, dtype='int32')
         nid_to_pid_map, icase, cases, form = self.map_elements(
             xyz_cid0, nid_cp_cd, nid_map, model, j, dim_max,
             plot=plot, xref_loads=xref_loads)
 
-        create_monpnt(self, model, xyz_cid0, nid_cp_cd)
+        if xyz_cid0 is not None:
+            create_monpnt(self, model, xyz_cid0, nid_cp_cd)
         self._create_aero(model, box_id_to_caero_element_map, cs_box_ids,
                           caero_points, ncaeros_points, ncaero_sub_points,
                           has_control_surface)
@@ -862,6 +866,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         # 3/5/7/... - spline points
         # 2/4/6/... - spline panels
         iaero = 2
+        nsplines = 0
+        all_structure_points_list = []
         for spline_id, spline in sorted(model.splines.items()):
             # SPLINE2 -> spline2
             # SPLINE3_ZONEA -> spline3
@@ -879,6 +885,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             else:
                 structure_points = setg_ref.get_ids()
 
+            all_structure_points_list.extend(structure_points)
+            nsplines += 1
             try:
                 aero_box_ids = spline.aero_element_ids
             except Exception:
@@ -914,6 +922,19 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 stored_msg.append(stored_msgi)
             if stored_msgi2:
                 stored_msg.append(stored_msgi2)
+
+        all_structure_points = np.unique(all_structure_points_list)
+        if nsplines > 1:
+            grid_name = 'all_spline_points'
+            gui.create_alternate_vtk_grid(
+                grid_name, color=BLUE_FLOAT, opacity=1.0, point_size=5,
+                representation='point', is_visible=False)
+            msg = f', which is required by {grid_name!r}'
+            stored_msgi = self._add_nastran_nodes_to_grid(
+                grid_name, all_structure_points, model, msg, store_msg=True)
+            if stored_msgi:
+                stored_msg.append(stored_msgi)
+
         if stored_msg:
             model.log.warning('\n' + '\n'.join(stored_msg))
 
