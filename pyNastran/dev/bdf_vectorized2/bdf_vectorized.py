@@ -1233,6 +1233,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          log=self.log, debug=self.debug)
         main_lines = obj.get_main_lines(self.bdf_filename)
         all_lines, ilines = obj.lines_to_deck_lines(main_lines, make_ilines=make_ilines)
+        if not make_ilines:
+            ilines = None
         self._set_pybdf_attributes(obj, save_file_structure=False)
         return all_lines, ilines
 

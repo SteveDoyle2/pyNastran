@@ -8,7 +8,7 @@ import ntpath
 import posixpath
 from typing import Optional
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from pyNastran.utils import PathLike
+from pyNastran.utils import print_bad_path, PathLike
 from pyNastran.bdf.errors import EnvironmentVariableError
 
 IS_WINDOWS = 'nt' in os.name
@@ -65,6 +65,7 @@ def get_include_filename(card_lines: list[str],
             break
         elif debug:
             print(f'could not find {filename}')
+            print(print_bad_path(filename))
     else:
     #if 1:
         msg = f'Could not find INCLUDE line:\n{card_lines}\n'
@@ -72,7 +73,7 @@ def get_include_filename(card_lines: list[str],
         msg += f'  include_dirs:\n - ' + '\n - '.join(str(val) for val in include_dirs)
         #if debug:
         msg += '  environment:'
-        for key, value in os.environ.items():
+        for key, value in sorted(os.environ.items()):
             msg += f'  {key}: {value!r}\n'
         #else:
             #msg += f'  environment_keys: {list(key for key in os.environ)}'
@@ -180,11 +181,11 @@ def split_tokens(tokens: tuple[str], is_windows: bool,
     for itoken, token in enumerate(tokens):
         # this is technically legal...
         #   INCLUDE '/testdir/dir1/dir2/*/myfile.dat'
-        assert '*' not in token, '* in path not supported; tokens={tokens}'
+        assert '*' not in token, f'* in path not supported; tokens={tokens}'
         if is_windows:
-            assert '$' not in token, '$ in path not supported; tokens={tokens}'
+            assert '$' not in token, f'$ in path not supported; tokens={tokens}'
         else:
-            assert '%' not in token, '%% in path not supported; tokens={tokens}'
+            assert '%' not in token, f'%% in path not supported; tokens={tokens}'
 
         if itoken == 0 and is_mac_linux and ':' in token:
             tokensi, stokens = split_drive_token(
@@ -228,8 +229,8 @@ def split_tokens(tokens: tuple[str], is_windows: bool,
                         environment_variables = list(os.environ.keys())
                         environment_variables.sort()
                         raise EnvironmentVariableError(
-                            f"Can't find environment variable={repr(env_var)}"
-                            f'\nenviron={environment_variables}\n'
+                            f"Can't find environment variable={repr(env_var)}\n"
+                            f'environ={environment_variables}\n'
                             f'which is required for {repr(tokens)}')
 
                     env_vari = os.path.expandvars('$' + env_var.strip('%'))

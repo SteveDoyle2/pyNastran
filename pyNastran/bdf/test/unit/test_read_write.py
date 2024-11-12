@@ -694,7 +694,7 @@ class TestReadWrite(unittest.TestCase):
 
         pth = "INCLUDE '%Satellite_V02_bddm%:Satellite_V02_Materiaux.blk'"
         pth2 = get_include_filename(
-            [pth], include_dirs=TEST_PATH,
+            [pth], include_dirs='',
             is_windows=True, debug=True)
         #print(pth2)
 
@@ -706,7 +706,7 @@ def set_path_keys(paths: dict[str, Path]) -> None:
     """sets environment variables"""
     for key, path in paths.items():
         assert os.path.exists(path), print_bad_path(path)
-        os.environ[key] = str(path)
+        os.environ[key] = os.path.abspath(path)
 
 
 if __name__ == '__main__':  # pragma: no cover
