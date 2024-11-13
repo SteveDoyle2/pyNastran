@@ -410,6 +410,10 @@ class Material(BaseCard):
         """dummy cross reference method for a Material"""
         pass
 
+    def safe_cross_reference(self, model: BDF,
+                             xref_errors: dict[str, Any]) -> None:
+        return self.cross_reference(model)
+
     def Mid(self) -> Any:
         """
         returns the material ID of an element

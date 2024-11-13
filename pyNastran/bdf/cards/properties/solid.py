@@ -140,6 +140,9 @@ class PLSOLID(Property):
         msg = ', which is required by PLSOLID pid=%s' % self.pid
         self.mid_ref = model.HyperelasticMaterial(self.mid, msg) # MATHP, MATHE
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        return self.cross_reference(model)
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.mid = self.Mid()
@@ -278,10 +281,10 @@ class PCOMPS(Property):
         """
         pass
 
-    def Mid(self, iply: int=0):
+    def Mid(self, iply: int=0) -> int:
         return self.mids[iply]
 
-    def Rho(self):
+    def Rho(self) -> float:
         """
         Returns the density
         """
@@ -292,14 +295,21 @@ class PCOMPS(Property):
         #print('rhot =', rhot)
         return rhot.mean()
 
-    def Mids(self):
+    def Mids(self) -> list[int]:
         return self.mids
 
     def cross_reference(self, model: BDF) -> None:
-        msg = ', which is required by PSOLID pid=%s' % self.pid
+        msg = ', which is required by PCOMPS pid=%s' % self.pid
         self.mids_ref = []
         for mid in self.mids:
             mid_ref = model.Material(mid, msg=msg)
+            self.mids_ref.append(mid_ref)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        msg = ', which is required by PCOMPS pid=%s' % self.pid
+        self.mids_ref = []
+        for mid in self.mids:
+            mid_ref = model.safe_material(mid, self.pid, xref_errors, msg=msg)
             self.mids_ref.append(mid_ref)
 
     def uncross_reference(self) -> None:
@@ -611,6 +621,7 @@ class PCOMPLS(Property):
         # this card has integers & strings, so it uses...
         return self.comment + print_card_8(card)
 
+
 class PSOLID(Property):
     """
     +--------+-----+-----+-------+-----+--------+---------+------+
@@ -636,8 +647,9 @@ class PSOLID(Property):
         return PSOLID(pid, mid, cordm=0, integ=None, stress=None,
                       isop=None, fctn='SMECH', comment='')
 
-    def __init__(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
-                 fctn='SMECH', comment=''):
+    def __init__(self, pid: int, mid: int, cordm: int=0,
+                 integ=None, stress=None, isop=None,
+                 fctn: str='SMECH', comment: str=''):
         """
         Creates a PSOLID card
 
@@ -723,7 +735,7 @@ class PSOLID(Property):
         self.mid_ref = None
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, pids):
+    def export_to_hdf5(cls, h5_file, model: BDF, pids: np.ndarray):
         """exports the properties in a vectorized way"""
         encoding = model._encoding
         #comments = []
@@ -790,7 +802,7 @@ class PSOLID(Property):
         h5_file.create_dataset('fctn', data=fctn)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PSOLID card from ``BDF.add_card(...)``
 
@@ -876,6 +888,11 @@ class PSOLID(Property):
         """cross reference method for a PSOLID"""
         msg = f', which is required by PSOLID pid={self.pid:d}'
         self.mid_ref = model.Material(self.mid, msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """cross reference method for a PSOLID"""
+        msg = f', which is required by PSOLID pid={self.pid:d}'
+        self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

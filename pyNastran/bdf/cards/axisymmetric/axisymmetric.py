@@ -705,6 +705,24 @@ class PCONEAX(Property):
         if self.mid3 > 0:
             self.mid3_ref = model.Material(self.mid3, msg=msg)
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = f', which is required by PCONEAX={self.pid}'
+        if self.mid1 > 0:
+            self.mid1_ref = model.safe_material(self.mid1, self.pid, xref_errors, msg=msg)
+        if self.mid2 > 0:
+            self.mid2_ref = model.safe_material(self.mid2, self.pid, xref_errors, msg=msg)
+        if self.mid3 > 0:
+            self.mid3_ref = model.safe_material(self.mid3, self.pid, xref_errors, msg=msg)
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.mid1 = self.Mid1()

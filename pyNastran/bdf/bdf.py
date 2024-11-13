@@ -617,6 +617,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # flag that allows for OpenMDAO-style optimization syntax to be used
         self._is_dynamic_syntax = False
 
+        # True:  relax strictness on card parser
+        # False: use strict parser (default)
+        self.is_lax_parser = False
+
         # lines that were rejected b/c they were for a card that isn't supported
         self.reject_lines: list[list[str]] = []
 
@@ -1455,7 +1459,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _parse_all_cards(self, bulk_data_lines: list[str], bulk_data_ilines: Any) -> None:
         """creates and loads all the cards the bulk data section"""
-        strict = True
         cards_list = []
         cards_dict = {}
         if self._is_cards_dict:
@@ -1477,7 +1480,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #card_name = card[0]
                 #if card_name == 'CBAR':
                     #print(card)
-        self._parse_cards(cards_list, cards_dict, card_count, strict=strict)
+        self._parse_cards(cards_list, cards_dict, card_count)
 
         if self.values_to_skip:
             for key, values in self.values_to_skip.items():
@@ -4299,8 +4302,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _parse_cards(self, cards_list: list[list[str]],
                      cards_dict: dict[str, list[str]],
-                     card_count: dict[str, int],
-                     strict: bool=True) -> None:
+                     card_count: dict[str, int]) -> None:
         """creates card objects and adds the parsed cards to the deck"""
         # we don't want replication markers in the card_count
         card_names_to_remove = (card_name for card_name in list(card_count.keys())
@@ -4314,13 +4316,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         if cards_list:
             # this is the block that actually runs
-            self._parse_cards_list(cards_list, strict=strict)
+            self._parse_cards_list(cards_list)
 
     def _parse_cards_dict(self, cards_dict: dict[str, list[str]]) -> None:
         """parses the cards that are in dictionary format"""
         if self.save_file_structure:
             raise NotImplementedError('save_file_structure=True is not supported\n%s' % (
                 list(cards_dict.keys())))
+        add_card = self.add_card_lax if self.is_lax_parser else self.add_card
 
         for card_name, cards in sorted(cards_dict.items()):
             try:
@@ -4337,13 +4340,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
             else:
                 for comment, card_lines, (ifile, unused_iline) in cards:
-                    self.add_card(card_lines, card_name, comment=comment, ifile=ifile,
-                                  is_list=False, has_none=False)
+                    add_card(card_lines, card_name, comment=comment, ifile=ifile,
+                             is_list=False, has_none=False)
 
-    def _parse_cards_list(self, cards_list: list[str], strict: bool=True):
+    def _parse_cards_list(self, cards_list: list[str]):
         """parses the cards that are in list format"""
-        add_card = self.add_card if strict else self.add_card_lax
-        del strict
+        add_card = self.add_card_lax if self.is_lax_parser else self.add_card
 
         save_file_structure = self.save_file_structure
         if save_file_structure:

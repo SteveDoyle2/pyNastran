@@ -4580,6 +4580,30 @@ class DVMREL2(DVXREL2):
 
         #assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
 
+
+    def cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        .. todo:: add support for DEQATN cards to finish DVMREL2 xref
+
+        """
+        msg = ', which is required by DVMREL2 oid=%r' % self.oid
+        if self.mat_type in self.allowed_materials:
+            self.mid_ref = model.safe_material(self.mid, self.oid, xref_errors, msg=msg)
+        else:
+            raise NotImplementedError('mat_type=%r is not supported' % self.mat_type)
+        self.dvids_ref = [model.safe_desvar(dvid, self.oid, xref_errors, msg) for dvid in self.dvids]
+        self.dequation_ref = model.DEQATN(self.dequation, msg=msg)
+        self._check_args()
+
+        #assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.mid = self.Mid()
@@ -4865,6 +4889,19 @@ class DVPREL1(DVXREL1):
         msg = ', which is required by DVPREL1 oid=%r' % self.oid
         self.pid_ref = self._get_property(model, self.pid, msg=msg)
         self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by DVPREL1 oid=%r' % self.oid
+        self.pid_ref = self._get_property(model, self.pid, msg=msg)
+        self.dvids_ref = [model.safe_desvar(dvid, self.oid, xref_errors, msg) for dvid in self.dvids]
 
     def _get_property(self, model: BDF, pid: int, msg: str=''):
         assert isinstance(self.pid, int), type(self.pid)

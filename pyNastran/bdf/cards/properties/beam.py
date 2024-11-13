@@ -190,14 +190,19 @@ class PBEAM(IntegratedLineProperty):
                      n1a=0., n2a=0., n1b=None, n2b=None,
                      comment='')
 
-    def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+    def __init__(self, pid: int, mid: int,
+                 xxb, so: str, area: float,
+                 i1: float, i2: float, i12: float, j: float,
+                 nsm=None,
                  c1=None, c2=None, d1=None, d2=None,
                  e1=None, e2=None, f1=None, f2=None,
-                 k1=1., k2=1., s1=0., s2=0.,
-                 nsia=0., nsib=None, cwa=0., cwb=None,
-                 m1a=0., m2a=0., m1b=None, m2b=None,
-                 n1a=0., n2a=0., n1b=None, n2b=None,
-                 comment=''):
+                 k1: float=1., k2: float=1.,
+                 s1: float=0., s2: float=0.,
+                 nsia: float=0., nsib=None,
+                 cwa: float=0., cwb=None,
+                 m1a: float=0., m2a: float=0., m1b=None, m2b=None,
+                 n1a: float=0., n2a: float=0., n1b=None, n2b=None,
+                 comment: str=''):
         """
         .. todo:: fix 0th entry of self.so, self.xxb
 
@@ -494,7 +499,7 @@ class PBEAM(IntegratedLineProperty):
                 raise ValueError(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBEAM card from ``BDF.add_card(...)``
 
@@ -780,6 +785,292 @@ class PBEAM(IntegratedLineProperty):
             comment=comment)
 
     @classmethod
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a PBEAM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        pid = integer(card, 1, 'property_id')
+        mid = integer(card, 2, 'material_id')
+
+        area0 = force_double(card, 3, 'Area')
+        i1a = force_double_or_blank(card, 4, 'I1', default=0.0)
+        i2a = force_double_or_blank(card, 5, 'I2', default=0.0)
+        i12a = force_double_or_blank(card, 6, 'I12', default=0.0)
+        ja = force_double_or_blank(card, 7, 'J', default=0.0)
+        nsma = force_double_or_blank(card, 8, 'nsm', default=0.0)
+        area = [area0]
+        i1 = [i1a]
+        i2 = [i2a]
+        i12 = [i12a]
+        j = [ja]
+        nsm = [nsma]
+
+        assert area[0] >= 0., 'PBEAM pid=%s area=%s' % (pid, area)
+        assert i1[0] >= 0., 'PBEAM pid=%s i1=%s' % (pid, i1)
+        assert i2[0] >= 0., 'PBEAM pid=%s i2=%s' % (pid, i2)
+
+        # we'll do a check for warping later; cwa/cwb -> j > 0.0
+        assert j[0] >= 0., 'PBEAM pid=%s j=%s' % (pid, j)
+
+        if i1a * i2a - i12a ** 2 <= 0.:
+            msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End A\n'
+            msg += 'i1=%s i2=%s i12=%s i1*i2-i12^2=%s'  % (i1a, i2a, i12a, i1a*i2a-i12a**2)
+            raise ValueError(msg)
+
+        # TODO: can you have a single lined PBEAM...I think so...
+        # the second line is blank, so all values would be None (End A)
+        # the NO xxb would be implicitly defined as 1.0
+        # the End B values would try to use End A values, but because they're not set,
+        # the defaults would get applied
+        # the final 2 lines will default
+        # finally, there would be no output at End A, but there would be output at End A.
+        ifield = 9
+        field9 = double_string_or_blank(card, 9, 'field9', default=0.0)
+        if isinstance(field9, float):
+            # C/D/E/F
+            c1a = force_double_or_blank(card, 9, 'c1', default=0.0)
+            c2a = force_double_or_blank(card, 10, 'c2', default=0.0)
+            d1a = force_double_or_blank(card, 11, 'd1', default=0.0)
+            d2a = force_double_or_blank(card, 12, 'd2', default=0.0)
+            e1a = force_double_or_blank(card, 13, 'e1', default=0.0)
+            e2a = force_double_or_blank(card, 14, 'e2', default=0.0)
+            f1a = force_double_or_blank(card, 15, 'f1', default=0.0)
+            f2a = force_double_or_blank(card, 16, 'f2', default=0.0)
+            c1 = [c1a]
+            c2 = [c2a]
+            d1 = [d1a]
+            d2 = [d2a]
+            e1 = [e1a]
+            e2 = [e2a]
+            f1 = [f1a]
+            f2 = [f2a]
+            so = ['YES']
+            ifield += 8 # 9 + 8 = 17
+        else:
+            c1a = c2a = d1a = d2a = e1a = e2a = f1a = f2a = 0.0
+            c1 = [None]
+            c2 = [None]
+            d1 = [None]
+            d2 = [None]
+            e1 = [None]
+            e2 = [None]
+            f1 = [None]
+            f2 = [None]
+            so = ['NO']
+            if field9 not in ['YES', 'YESA', 'NO']:
+                msg = ('field9=%r on the PBEAM pid=%s must be [YES, YESA, NO] '
+                       'because C/D/E/F at A is not specified' % field9)
+                raise ValueError(field9)
+        xxb = [0.]
+
+        irow = 0
+        nrows_max = 10
+        for irow in range(nrows_max):
+            nrepeated = irow + 1
+            SOi_k1 = double_string_or_blank(card, ifield, 'SO_%i/K1' % nrepeated)
+            if isinstance(SOi_k1, float) or SOi_k1 is None:
+                # we found K1
+                break
+            else:
+                soi = string(card, ifield, 'SO%i' % nrepeated)
+                xxbi = force_double(card, ifield + 1, 'x/xb%i' % nrepeated)
+                if xxbi == 1.0:
+                    # these have already been checked such that they're greater than 0
+                    # so when we interpolate, our values will be correct
+                    areai = force_double_or_blank(card, ifield + 2, 'Area%d' % nrepeated, default=area0)
+                    i1i = force_double_or_blank(card, ifield + 3, 'I1 %d' % nrepeated, default=i1a)
+                    i2i = force_double_or_blank(card, ifield + 4, 'I2 %d' % nrepeated, default=i2a)
+                    i12i = force_double_or_blank(card, ifield + 5, 'I12 %d' % nrepeated, default=i12a)
+                    ji = force_double_or_blank(card, ifield + 6, 'J%d' % nrepeated, default=ja)
+                    nsmi = force_double_or_blank(card, ifield + 7, 'nsm%d' % nrepeated, default=nsma)
+
+                    assert areai >= 0., areai
+                    assert i1i >= 0., i1i
+                    assert i2i >= 0., i2i
+
+                    # we'll do a check for warping later; cwa/cwb -> j > 0.0
+                    assert ji >= 0., ji
+                    if i1i * i2i - i12i ** 2 <= 0.:
+                        msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
+                        msg += 'xxb=1.0 i1=%s i2=%s i12=%s'  % (i1i, i2i, i12i)
+                        raise ValueError(msg)
+
+                else:
+                    # we'll go through and do linear interpolation afterwards
+                    areai = force_double_or_blank(card, ifield + 2, 'Area%d' % nrepeated, default=None)
+                    i1i = force_double_or_blank(card, ifield + 3, 'I1 %d' % nrepeated, default=None)
+                    i2i = force_double_or_blank(card, ifield + 4, 'I2 %d' % nrepeated, default=None)
+                    i12i = force_double_or_blank(card, ifield + 5, 'I12 %d' % nrepeated, default=None)
+                    ji = force_double_or_blank(card, ifield + 6, 'J%d' % nrepeated, default=None)
+                    nsmi = force_double_or_blank(card, ifield + 7, 'nsm%d' % nrepeated, default=None)
+
+                so.append(soi)
+                xxb.append(xxbi)
+                area.append(areai)
+                i1.append(i1i)
+                i2.append(i2i)
+                i12.append(i12i)
+                j.append(ji)
+                nsm.append(nsmi)
+
+                if soi == 'YES':
+                    c1i = force_double_or_blank(card, ifield + 8, 'c1 %i' % nrepeated, default=0.0)
+                    c2i = force_double_or_blank(card, ifield + 9, 'c2 %i' % nrepeated, default=0.0)
+                    d1i = force_double_or_blank(card, ifield + 10, 'd1 %i' % nrepeated, default=0.0)
+                    d2i = force_double_or_blank(card, ifield + 11, 'd2 %i' % nrepeated, default=0.0)
+                    e1i = force_double_or_blank(card, ifield + 12, 'e1 %i' % nrepeated, default=0.0)
+                    e2i = force_double_or_blank(card, ifield + 13, 'e2 %i' % nrepeated, default=0.0)
+                    f1i = force_double_or_blank(card, ifield + 14, 'f1 %i' % nrepeated, default=0.0)
+                    f2i = force_double_or_blank(card, ifield + 15, 'f2 %i' % nrepeated, default=0.0)
+                    ifield += 16
+                elif soi == 'YESA':
+                    c1i = c1a
+                    c2i = c2a
+                    d1i = d1a
+                    d2i = d2a
+                    e1i = e1a
+                    e2i = e2a
+                    f1i = f1a
+                    f2i = f2a
+                    ifield += 8
+                elif soi == 'NO':
+                    c1i = None
+                    c2i = None
+                    d1i = None
+                    d2i = None
+                    e1i = None
+                    e2i = None
+                    f1i = None
+                    f2i = None
+                    ifield += 8
+                else:
+                    raise RuntimeError(f'so={so!r} and not [YES, YESA, NO]')
+                c1.append(c1i)
+                c2.append(c2i)
+                d1.append(d1i)
+                d2.append(d2i)
+                e1.append(e1i)
+                e2.append(e2i)
+                f1.append(f1i)
+                f2.append(f2i)
+        if irow != 0:
+            assert min(xxb) == 0.0, 'pid=%s x/xb=%s' % (pid, xxb)
+            assert max(xxb) == 1.0, 'pid=%s x/xb=%s' % (pid, xxb)
+            assert len(xxb) == len(unique(xxb)), xxb
+
+        # calculate:
+        #    k1, k2, s1, s2
+        #    m1a, m2a, n1a, n2a, etc.
+
+        # footer fields
+        #: Shear stiffness factor K in K*A*G for plane 1.
+        k1 = force_double_or_blank(card, ifield, 'k1', default=1.0)
+        #: Shear stiffness factor K in K*A*G for plane 2.
+        k2 = force_double_or_blank(card, ifield + 1, 'k2', default=1.0)
+
+        #: Shear relief coefficient due to taper for plane 1.
+        s1 = force_double_or_blank(card, ifield + 2, 's1', default=0.0)
+        #: Shear relief coefficient due to taper for plane 2.
+        s2 = force_double_or_blank(card, ifield + 3, 's2', default=0.0)
+
+        #: non structural mass moment of inertia per unit length
+        #: about nsm center of gravity at Point A.
+        nsia = force_double_or_blank(card, ifield + 4, 'nsia', default=0.0)
+        #: non structural mass moment of inertia per unit length
+        #: about nsm center of gravity at Point B.
+        nsib = force_double_or_blank(card, ifield + 5, 'nsib', default=nsia)
+
+        #: warping coefficient for end A.
+        cwa = force_double_or_blank(card, ifield + 6, 'cwa', default=0.0)
+        #: warping coefficient for end B.
+        cwb = force_double_or_blank(card, ifield + 7, 'cwb', default=cwa)
+
+        #: y coordinate of center of gravity of
+        #: nonstructural mass for end A.
+        m1a = force_double_or_blank(card, ifield + 8, 'm1a', default=0.0)
+        #: z coordinate of center of gravity of
+        #: nonstructural mass for end A.
+        m2a = force_double_or_blank(card, ifield + 9, 'm2a', default=0.0)
+
+        #: y coordinate of center of gravity of
+        #: nonstructural mass for end B.
+        m1b = force_double_or_blank(card, ifield + 10, 'm1b', default=m1a)
+        #: z coordinate of center of gravity of
+        #: nonstructural mass for end B.
+        m2b = force_double_or_blank(card, ifield + 11, 'm2b', default=m2a)
+
+        #: y coordinate of neutral axis for end A.
+        n1a = force_double_or_blank(card, ifield + 12, 'n1a', default=0.0)
+        #: z coordinate of neutral axis for end A.
+        n2a = force_double_or_blank(card, ifield + 13, 'n2a', default=0.0)
+
+        #: y coordinate of neutral axis for end B.
+        n1b = force_double_or_blank(card, ifield + 14, 'n1a', default=n1a)
+        #: z coordinate of neutral axis for end B.
+        n2b = force_double_or_blank(card, ifield + 15, 'n2b', default=n2a)
+
+
+        ifield += 16
+        if len(card) > ifield:
+            msg = 'len(card)=%s is too long; max=%s\n' % (len(card), ifield)
+            msg += 'You probably have a empty line after the YESA/NO line.\n'
+            msg += 'The next line must have K1.\n'
+            msg += 'pid = %s\n' % pid
+            msg += 'mid = %s\n' % mid
+            msg += 's0 = %s\n' % so
+            msg += 'xxb = %s\n' % xxb
+
+            msg += 'A = %s\n' % area
+            msg += 'i1 = %s\n' % i1
+            msg += 'i2 = %s\n' % i2
+            msg += 'i12 = %s\n' % i12
+            msg += 'j = %s\n' % j
+            msg += 'nsm = %s\n\n' % nsm
+
+            msg += 'c1 = %s\n' % c1
+            msg += 'c2 = %s\n' % c2
+            msg += 'd1 = %s\n' % d1
+            msg += 'd2 = %s\n' % d2
+            msg += 'e1 = %s\n' % e1
+            msg += 'e2 = %s\n' % e2
+            msg += 'f1 = %s\n' % f1
+            msg += 'f2 = %s\n\n' % f2
+
+            msg += 'k1 = %s\n' % k1
+            msg += 'k2 = %s\n' % k2
+            msg += 's1 = %s\n' % s1
+            msg += 's2 = %s\n' % s2
+            msg += 'nsia = %s\n' % nsia
+            msg += 'nsib = %s\n\n' % nsib
+
+            msg += 'cwa = %s\n' % cwa
+            msg += 'cwb = %s\n' % cwb
+            msg += 'm1a = %s\n' % m1a
+            msg += 'm2a = %s\n' % m2a
+            msg += 'mb1 = %s\n' % m1b
+            msg += 'm2b = %s\n' % m2b
+            msg += 'n1a = %s\n' % n1a
+            msg += 'n2a = %s\n' % n2a
+            msg += 'n1b = %s\n' % n1b
+            msg += 'n2b = %s\n' % n2b
+            raise RuntimeError(msg)
+
+        return PBEAM(
+            pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+            c1, c2, d1, d2, e1, e2, f1, f2,
+            k1, k2, s1, s2,
+            nsia, nsib, cwa, cwb, m1a,
+            m2a, m1b, m2b, n1a, n2a, n1b, n2b,
+            comment=comment)
+
+    @classmethod
     def add_op2_data(cls, data, comment=''):
         """
         Adds a PBEAM card from the OP2
@@ -878,6 +1169,19 @@ class PBEAM(IntegratedLineProperty):
         #if model.sol != 600:
             #assert max(self.j) == 0.0, self.j
             #assert min(self.j) == 0.0, self.j
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PBEAM mid=%s' % self.mid
+        self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -1392,7 +1696,7 @@ class PBEAML(IntegratedLineProperty):
             self.nsm = np.asarray(self.nsm)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBEAML card from ``BDF.add_card(...)``
 
@@ -1484,6 +1788,106 @@ class PBEAML(IntegratedLineProperty):
             dims.append(dim)
 
             nsmi = double_or_blank(card, i, 'nsm_n=%i' % n, 0.0)
+            nsm.append(nsmi)
+            n += 1
+            i += 1
+        assert len(card) > 5, card
+        return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
+                      so=so, nsm=nsm, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a PBEAML card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        group = string_or_blank(card, 3, 'group', default='MSCBML0')
+        beam_type = string(card, 4, 'Type')
+
+        # determine the number of required dimensions on the PBEAM
+        ndim = cls.valid_types[beam_type]
+
+        #: dimension list
+        dims = []
+        dim = []
+
+        #: Section position
+        xxb = [0.]
+
+        #: Output flag
+        so = ['YES']  # station 0
+
+        #: non-structural mass :math:`nsm`
+        nsm = []
+
+        i = 9
+        n = 0
+
+        #n_so = (len(card) - 9) // (ndim + 2) #- 1
+        #n_extra = (len(card) - 9) % (ndim + 2)
+        xxbi = 0.0
+        while i < len(card):
+            if n > 0:
+                soi = string_or_blank(card, i, 'so_n=%d' % n, default='YES')
+                xxbi = force_double_or_blank(card, i + 1, 'xxb_n=%d' % n, default=1.0)
+                so.append(soi)
+                xxb.append(xxbi)
+                i += 2
+
+            # PBARL
+            # 9. For DBOX section, the default value for DIM5 to DIM10 are
+            #    based on the following rules:
+            #     a. DIM5, DIM6, DIM7 and DIM8 have a default value of
+            #        DIM4if not provided.
+            #     b. DIM9 and DIM10 have a default value of DIM6 if not
+            #        provided.
+
+            #If any of the fields NSM(B), DIMi(B) are blank on the
+            #continuation entry for End B, the values are set to the
+            #values given for end A. For the continuation entries that
+            #have values of X(j)/XB between 0.0 and 1.0 and use the
+            #default option (blank field), a linear interpolation between
+            #the values at ends A and B is performed to obtain the
+            #missing field.
+            dim = []
+            if beam_type == 'DBOX':
+                for ii in range(ndim):
+                    field_name = 'istation=%d; ndim=%d; dim%d' % (n, ndim, ii+1)
+                    if ii in [4, 5, 6, 7]:
+                        dim4 = dim[3]
+                        dimi = force_double_or_blank(card, i, field_name, default=dim4)
+                    elif ii in [8, 9]:
+                        dim6 = dim[5]
+                        dimi = force_double_or_blank(card, i, field_name, default=dim6)
+                    else:
+                        dimi = force_double(card, i, field_name)
+                    dim.append(dimi)
+                    i += 1
+            else:
+                for ii in range(ndim):
+                    field_name = 'istation=%s; ndim=%s; dim%d' % (n, ndim, ii+1)
+                    if xxbi == 0.0:
+                        dimi = force_double(card, i, field_name)
+                    elif xxbi == 1.0:
+                        dims0 = dims[0]
+                        dimi = force_double_or_blank(card, i, field_name, dims0[ii])
+                    else:
+                        ## TODO: use linear interpolation
+                        dimi = force_double(card, i, field_name)
+
+                    dim.append(dimi)
+                    i += 1
+            dims.append(dim)
+
+            nsmi = force_double_or_blank(card, i, 'nsm_n=%i' % n, 0.0)
             nsm.append(nsmi)
             n += 1
             i += 1
@@ -1603,6 +2007,24 @@ class PBEAML(IntegratedLineProperty):
         """
         msg = ', which is required by PBEAML mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        .. warning:: For structural problems, PBEAML entries must
+                     reference a MAT1 material entry
+        .. warning:: For heat-transfer problems, the MID must
+                     reference a MAT4 or MAT5 material entry.
+        .. todo:: What happens when there are 2 subcases?
+        """
+        msg = ', which is required by PBEAML mid=%s' % self.mid
+        self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -1993,6 +2415,28 @@ class PBMSECT(LineProperty):
                 brpi_ref.cross_reference_set(model, 'Point', msg=msg)
                 self.brps_ref[key] = brpi_ref
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by PBMSECT mid=%s' % self.mid
+        self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg=msg)
+
+        self.outp_ref = model.Set(self.outp)
+        self.outp_ref.cross_reference_set(model, 'Point', msg=msg)
+
+        self.brps_ref = {}
+        if len(self.brps):
+            for key, brpi in self.brps.items():
+                brpi_ref = model.Set(brpi, msg=msg)
+                brpi_ref.cross_reference_set(model, 'Point', msg=msg)
+                self.brps_ref[key] = brpi_ref
+
     def plot(self, model, figure_id=1, show=False):
         """
         Plots the beam section
@@ -2322,6 +2766,23 @@ class PBCOMP(LineProperty):
         msg = ', which is required by PBCOMP mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
         self.mids_ref = model.Materials(self.mids, msg=msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PBCOMP mid=%s' % self.mid
+        self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg=msg)
+        self.mids_ref = []
+        for mid in self.mids:
+            mat_ref = model.safe_material(mid, self.pid, xref_errors, msg=msg)
+            self.mids_ref.append(mat_ref)
 
     def Mids(self):
         if self.mids_ref is None:

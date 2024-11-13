@@ -39,6 +39,8 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
     integer_or_double, components_or_blank, parse_components_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type_force import (
+    force_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
@@ -1208,6 +1210,49 @@ class GRID(BaseCard):
             seid = 0
         return GRID(nid, xyz, cp, cd, ps, seid, comment=comment)
 
+    @classmethod
+    def add_card_lax(cls, card: BDFCard, comment: str='') -> GRID:
+        """
+        Adds a GRID card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        nfields = len(card)
+        #: Node ID
+        nid = integer(card, 1, 'nid')
+
+        #: Grid point coordinate system
+        cp = integer_or_blank(card, 2, 'cp', default=0)
+
+        #: node location in local frame
+        xyz = [
+            force_double_or_blank(card, 3, 'x1', default=0.0),
+            force_double_or_blank(card, 4, 'x2', default=0.0),
+            force_double_or_blank(card, 5, 'x3', default=0.0)]
+
+        if nfields > 6:
+            #: Analysis coordinate system
+            cd = integer_or_blank(card, 6, 'cd', default=0)
+
+            #: SPC constraint
+            ps = components_or_blank(card, 7, 'ps', default='')
+            #u(integer_or_blank(card, 7, 'ps', ''))
+
+            #: Superelement ID
+            seid = integer_or_blank(card, 8, 'seid', default=0)
+            assert len(card) <= 9, f'len(GRID card) = {len(card):d}\ncard={card}'
+        else:
+            cd = 0
+            ps = ''
+            seid = 0
+        return GRID(nid, xyz, cp, cd, ps, seid, comment=comment)
+
     def validate(self) -> None:
         assert isinstance(self.cp, integer_types), f'cp={self.cp:d}'
         assert self.nid > 0, f'nid={self.nid:d}'
@@ -1471,6 +1516,38 @@ class GRID(BaseCard):
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.cd != -1:
             self.cd_ref = model.Coord(self.cd, msg=msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors: dict[str, Any],
+                             grdset: Optional[Any]=None) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        grdset : GRDSET / None; default=None
+            a GRDSET if available (default=None)
+
+        .. note::  The gridset object will only update the fields that
+                   have not been set
+
+        """
+        if grdset:
+            # update using a grdset object
+            if not self.cp:
+                self.cp_ref = grdset.cp_ref
+            if not self.cd:
+                self.cd = grdset.cd
+                self.cd_ref = self.cd_ref
+            if not self.ps:
+                self.ps_ref = grdset.ps
+            if not self.seid:
+                self.seid_ref = grdset.seid
+        msg = ', which is required by GRID nid=%s' % (self.nid)
+        self.cp_ref = model.safe_coord(self.cp, self.nid, xref_errors, msg=msg)
+        if self.cd != -1:
+            self.cd_ref = model.safe_coord(self.cd, self.nid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

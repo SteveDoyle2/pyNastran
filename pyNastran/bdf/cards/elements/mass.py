@@ -22,16 +22,20 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type_force import (
+    force_double_or_blank)
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 def is_positive_semi_definite(A, tol=1e-8):
     """is the 3x3 matrix positive within tolerance"""
     vals = np.linalg.eigvalsh(A)
     return np.all(vals > -tol), vals
+
 
 class PointMassElement(Element):
     def __init__(self):
@@ -1203,7 +1207,7 @@ class CONM2(PointMassElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, eids):
+    def export_to_hdf5(cls, h5_file, model: BDF, eids):
         """exports the elements in a vectorized way"""
         unused_comments = []
         nid = []
@@ -1234,7 +1238,10 @@ class CONM2(PointMassElement):
         #self.X = np.asarray(X)
         #self.I = np.asarray(I)
 
-    def __init__(self, eid, nid, mass, cid=0, X=None, I=None, comment=''):
+    def __init__(self, eid: int, nid: int, mass: float,
+                 cid: int=0,
+                 X: Optional[list[int]]=None,
+                 I: Optional[list[int]]=None, comment: str=''):
         """
         Creates a CONM2 card
 
@@ -1317,7 +1324,7 @@ class CONM2(PointMassElement):
             warnings.warn(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CONM2 card from ``BDF.add_card(...)``
 
@@ -1347,6 +1354,41 @@ class CONM2(PointMassElement):
             double_or_blank(card, 12, 'I31', 0.0),
             double_or_blank(card, 13, 'I32', 0.0),
             double_or_blank(card, 14, 'I33', 0.0),
+        ]
+        assert len(card) <= 15, 'len(CONM2 card) = {len(card):d}\ncard={card}'
+        return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a CONM2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = integer(card, 1, 'eid')
+        nid = integer(card, 2, 'nid')
+        cid = integer_or_blank(card, 3, 'cid', default=0)
+        mass = force_double_or_blank(card, 4, 'mass', default=0.0)
+
+        X = [
+            force_double_or_blank(card, 5, 'x1', default=0.0),
+            force_double_or_blank(card, 6, 'x2', default=0.0),
+            force_double_or_blank(card, 7, 'x3', default=0.0),
+        ]
+
+        I = [
+            force_double_or_blank(card, 9, 'I11', default=0.0),
+            force_double_or_blank(card, 10, 'I21', default=0.0),
+            force_double_or_blank(card, 11, 'I22', default=0.0),
+            force_double_or_blank(card, 12, 'I31', default=0.0),
+            force_double_or_blank(card, 13, 'I32', default=0.0),
+            force_double_or_blank(card, 14, 'I33', default=0.0),
         ]
         assert len(card) <= 15, 'len(CONM2 card) = {len(card):d}\ncard={card}'
         return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)

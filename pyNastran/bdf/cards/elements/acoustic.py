@@ -1108,6 +1108,8 @@ class PMIC(Property):
 
     def cross_reference(self, model: BDF) -> None:
         pass
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        return self.cross_reference(model)
     def uncross_reference(self) -> None:
         return
 

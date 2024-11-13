@@ -132,6 +132,9 @@ class PELAS(SpringProperty):
         if self.pid in model.pelast:
             self.pelast_ref = model.pelast[self.pid]
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        return self.cross_reference(model)
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.pelast_ref = None
