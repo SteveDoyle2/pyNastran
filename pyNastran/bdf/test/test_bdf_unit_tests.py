@@ -80,8 +80,7 @@ class TestBDFUnit(Tester):
     def test_bdf_include5(self):
         """verify we get 5 include files if they are one after the other"""
         model = BDF(debug=False)
-        unit_dir = bdf_filename = os.path.join(TEST_PATH, 'unit')
-        bdf_filename = os.path.join(unit_dir, 'include5.bdf')
+        bdf_filename = TEST_PATH / 'unit' / 'include5.bdf'
         #bdf_filename_out = os.path.join(unit_dir, 'include5_out.bdf')
         model.read_bdf(bdf_filename, save_file_structure=False, read_includes=False)
 
@@ -757,7 +756,7 @@ class TestBDFUnit(Tester):
 
     def test_bdf_05(self):
         """checks testA.dat"""
-        bdf_filename = os.path.join(TEST_PATH, 'unit', 'testA.bdf')
+        bdf_filename = TEST_PATH / 'unit' / 'testA.bdf'
         (unused_fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=False,
             run_extract_bodies=False,

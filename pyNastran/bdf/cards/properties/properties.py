@@ -188,6 +188,20 @@ class PFAST(Property):
         if self.mcid != -1:
             self.mcid_ref = model.Coord(self.Mcid(), msg)
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PFAST pid=%s' % self.pid
+        if self.mcid != -1:
+            self.mcid_ref = model.safe_coord(self.Mcid(), self.pid, xref_errors, msg)
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         """Removes cross-reference links"""
@@ -398,6 +412,9 @@ class PGAP(Property):
     def cross_reference(self, model: BDF) -> None:
         pass
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        pass
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         pass
@@ -535,6 +552,18 @@ class PRAC2D(CrackProperty):
         msg = ', which is required by PRAC2D pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by PRAC2D pid=%s' % self.pid
+        self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg)  # MAT1, MAT2, MAT8
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.mid = self.Mid()
@@ -621,6 +650,18 @@ class PRAC3D(CrackProperty):
         """
         msg = ', which is required by PRAC3D pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)  # MAT1, MAT9
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by PRAC3D pid=%s' % self.pid
+        self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg)  # MAT1, MAT9
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

@@ -26,6 +26,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class MaterialDependence(BaseCard):
@@ -49,10 +50,17 @@ class MaterialDependenceThermal(MaterialDependence):
     def __init__(self):
         MaterialDependence.__init__(self)
 
-    def _xref_table(self, model, key, msg):
+    def _xref_table(self, model, key: str, msg):
         slot = getattr(self, key)
         if slot is not None:
-            setattr(self, key + '_ref', model.TableM(slot, msg + f' for {key}'))
+            mid_ref = model.TableM(slot, msg + f' for {key}')
+            setattr(self, key + '_ref', mid_ref)
+
+    def _safe_xref_table(self, model, key: str, xref_errors, msg):
+        slot = getattr(self, key)
+        if slot is not None and slot in model.tables_m:
+            mid_ref = model.safe_tablem(model, slot, self.mid, xref_errors, msg)
+            setattr(self, key + '_ref', mid_ref)
 
 class MATS1(MaterialDependence):
     """
@@ -655,6 +663,29 @@ class MATT1(MaterialDependenceThermal):
         self._xref_table(model, 'st_table', msg=msg)
         self._xref_table(model, 'sc_table', msg=msg)
         self._xref_table(model, 'ss_table', msg=msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by MATT1 mid=%s' % self.mid
+        self.mid_ref = model.safe_material(self.mid, self.mid, xref_errors, msg=msg)
+
+        self._safe_xref_table(model, 'e_table', msg=msg)
+        self._safe_xref_table(model, 'g_table', msg=msg)
+        self._safe_xref_table(model, 'nu_table', msg=msg)
+        self._safe_xref_table(model, 'rho_table', msg=msg)
+        self._safe_xref_table(model, 'a_table', msg=msg)
+        self._safe_xref_table(model, 'ge_table', msg=msg)
+        self._safe_xref_table(model, 'st_table', msg=msg)
+        self._safe_xref_table(model, 'sc_table', msg=msg)
+        self._safe_xref_table(model, 'ss_table', msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

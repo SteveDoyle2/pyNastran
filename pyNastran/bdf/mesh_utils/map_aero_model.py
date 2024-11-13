@@ -77,23 +77,19 @@ def map_aero_model(model_old: PathLike | BDF,
         model_new.aesurf = model_old.aesurf
         model_new.aesurfs = model_old.aesurfs
         model_new.aestats = model_old.aestats
+
         add_methods = model_new._add_methods
-        #print('npaero =', len(model_new.paeros))
         for paero_id, paero in model_old.paeros.items():
             paero.uncross_reference()
-            model_new.paeros[paero_id] = paero
             add_methods._add_paero_object(paero)
         for caero_id, caero in model_old.caeros.items():
             caero.uncross_reference()
-            model_new.caeros[caero_id] = caero
             add_methods._add_caero_object(caero)
         for spline_id, spline in model_old.splines.items():
             spline.uncross_reference()
-            model_new.splines[spline_id] = spline
             add_methods._add_spline_object(spline)
         for set_id, set1 in model_old.sets.items():
             set1.uncross_reference()
-            model_new.sets[set_id] = set1
             add_methods._add_set_object(set1)
             #print(set1.rstrip())
 

@@ -265,6 +265,7 @@ def run_bdf(folder: str, bdf_filename: str,
             encoding=None,
             size=8, is_double=False,
             hdf5=False,
+            is_lax_parser: bool=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False,
             limit_mesh_opt: bool=False,
@@ -361,6 +362,7 @@ def run_bdf(folder: str, bdf_filename: str,
         punch=punch, mesh_form=mesh_form,
         print_stats=print_stats, encoding=encoding,
         sum_load=sum_load, size=size, is_double=is_double,
+        is_lax_parser=is_lax_parser,
         stop=stop, nastran=nastran, post=post, hdf5=hdf5,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
@@ -395,6 +397,7 @@ def run_and_compare_fems(
         size: int=8,
         is_double: bool=False,
         save_file_structure: bool=False,
+        is_lax_parser: bool=False,
         stop: bool=False,
         nastran: str='',
         post: int=-1,
@@ -421,6 +424,9 @@ def run_and_compare_fems(
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDF(debug=debug, log=log)
+    if is_lax_parser:
+        fem1.log.warning('using lax card parser')
+        fem1.is_lax_parser = True
     fem1.use_new_deck_parser = True
     if version:
         map_version(fem1, version)
@@ -2099,6 +2105,8 @@ def test_bdf_argparse(argv=None):
                                help='skip loads calcuations (default=False)')
     parent_parser.add_argument('--skip_mass', action='store_true',
                                help='skip mass calcuations (default=False)')
+    parent_parser.add_argument('--lax', action='store_true',
+                               help='use the lax card parser (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
                                help='prints debug messages (default=False)')
     # --------------------------------------------------------------------------
@@ -2327,6 +2335,7 @@ def main(argv=None):
             run_mass=data['run_mass'],
             run_extract_bodies=False,
 
+            is_lax_parser=data['lax'],
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],
@@ -2376,6 +2385,7 @@ def main(argv=None):
             run_mass=data['run_mass'],
             run_extract_bodies=False,
 
+            is_lax_parser=data['lax'],
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],

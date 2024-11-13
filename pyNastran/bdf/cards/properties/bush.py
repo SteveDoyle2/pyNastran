@@ -34,6 +34,9 @@ class BushingProperty(Property):
     def cross_reference(self, model: BDF) -> None:
         pass
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        pass
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         pass

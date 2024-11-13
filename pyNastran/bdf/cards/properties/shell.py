@@ -1755,9 +1755,10 @@ class PLPLANE(Property):
     def _init_from_empty(cls):
         pid = 1
         mid = 1
-        return PLPLANE(pid, mid, cid=0, stress_strain_output_location='GRID', comment='')
+        return PLPLANE(pid, mid, cid=0)
 
-    def __init__(self, pid, mid, cid=0, stress_strain_output_location='GRID', comment=''):
+    def __init__(self, pid: int, mid: int, cid: int=0,
+                 stress_strain_output_location: str='GRID', comment: str=''):
         """
         Creates a PLPLANE card, which defines the properties of a fully
         nonlinear (i.e., large strain and large rotation) hyperelastic
@@ -1789,7 +1790,7 @@ class PLPLANE(Property):
         self.cid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PLPLANE card from ``BDF.add_card(...)``
 
@@ -1822,6 +1823,20 @@ class PLPLANE(Property):
         msg = ', which is required by PLPLANE pid=%s' % self.pid
         self.mid_ref = model.HyperelasticMaterial(self.mid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PLPLANE pid=%s' % self.pid
+        self.mid_ref = model.HyperelasticMaterial(self.mid, msg=msg)
+        self.cid_ref = model.safe_coord(self.cid, self.pid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

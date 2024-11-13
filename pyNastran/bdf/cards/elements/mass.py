@@ -20,6 +20,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
+from pyNastran.bdf.cards.nodes import GRID
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank)
 from pyNastran.bdf.bdf_interface.assign_type_force import (
@@ -489,7 +490,7 @@ class CMASS2(PointMassElement):
 
         """
         msg = ', which is required by CMASS2 eid=%s' % self.eid
-        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.nodes_ref = xref_cmass_nodes(self.nodes, model, msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         """
@@ -502,7 +503,7 @@ class CMASS2(PointMassElement):
 
         """
         msg = ', which is required by CMASS2 eid=%s' % self.eid
-        self.nodes_ref, missing_nodes = model.safe_empty_nodes(self.node_ids, msg=msg)
+        self.nodes_ref, missing_nodes = safe_xref_cmass_nodes(self.nodes, model, msg)
         if missing_nodes:
             model.log.warning(str(missing_nodes))
 
@@ -512,12 +513,13 @@ class CMASS2(PointMassElement):
         self.nodes_ref = None
 
     def G1(self):
-        if self.nodes_ref is not None and self.nodes_ref[0] is not None:
+        if self.nodes_ref is not None and isinstance(self.nodes_ref[0], GRID):
             return self.nodes_ref[0].nid
         return self.nodes[0]
 
     def G2(self):
-        if self.nodes_ref is not None and self.nodes_ref[1] is not None:
+        print(self.nodes_ref)
+        if self.nodes_ref is not None and isinstance(self.nodes_ref[1], GRID):
             return self.nodes_ref[1].nid
         return self.nodes[1]
 
@@ -1207,7 +1209,7 @@ class CONM2(PointMassElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model: BDF, eids):
+    def export_to_hdf5(cls, h5_file, model: BDF, eids: np.ndarray):
         """exports the elements in a vectorized way"""
         unused_comments = []
         nid = []
@@ -1675,3 +1677,28 @@ class CONM2(PointMassElement):
     def write_card_16(self, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_16(card)
+
+def xref_cmass_nodes(nodes: list[int], model: BDF, msg: str) -> list[Optional[int]]:
+    nodes_ref = []
+    for nid in nodes:
+        if nid is None:
+            node_ref = 0
+        else:
+            node_ref = model.Node(nid, msg=msg)
+        nodes_ref.append(node_ref)
+    return nodes_ref
+
+def safe_xref_cmass_nodes(nodes: list[int], model: BDF, msg: str) -> list[Optional[int]]:
+    nodes_ref = []
+    missing_nodes = set([])
+    for nid in nodes:
+        if nid in {0, None}:
+            node_ref = None
+        else:
+            try:
+                node_ref = model.Node(nid, msg=msg)
+            except KeyError:
+                node_ref = None
+                missing_nodes.add(nid)
+        nodes_ref.append(node_ref)
+    return nodes_ref, missing_nodes

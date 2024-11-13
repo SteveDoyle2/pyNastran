@@ -384,12 +384,12 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_05(self):
         log = SimpleLogger(level='info', encoding='utf-8')
-        with open('include5.bdf', 'w') as bdf_file:
+        with open('include_05.bdf', 'w') as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             bdf_file.write('$ pyNastran: dumplines=True\n')
-            bdf_file.write("INCLUDE 'include5b.inc'\n\n")
+            bdf_file.write("INCLUDE 'include_05b.inc'\n\n")
 
-        with open('include5b.inc', 'w') as bdf_file:
+        with open('include_05b.inc', 'w') as bdf_file:
             bdf_file.write('ECHOON\n')
             bdf_file.write('$ GRID comment\n')
             bdf_file.write('GRID,2,,2.0\n')
@@ -398,20 +398,20 @@ class TestReadWrite(unittest.TestCase):
             bdf_file.write('grid,4,,4.0\n')
             bdf_file.write('grid ,5,,5.0\n')
 
-        model = read_bdf('include5.bdf', log=log)
+        model = read_bdf('include_05.bdf', log=log)
         assert model.echo is False, model.echo
         #model.write_bdf('include5.out.bdf')
 
         self.assertEqual(len(model.nodes), 4)
         self.assertEqual(model.nnodes, 4, 'nnodes=%s' % model.nnodes)
 
-        model2 = read_bdf(bdf_filename='include5.bdf', xref=True, punch=False,
+        model2 = read_bdf(bdf_filename='include_05.bdf', xref=True, punch=False,
                           log=log, encoding=None)
         self.assertEqual(len(model2.nodes), 4)
         self.assertEqual(model2.nnodes, 4, 'nnodes=%s' % model.nnodes)
-        os.remove('include5.bdf')
-        #os.remove('include5.out.bdf')
-        os.remove('include5b.inc')
+        os.remove('include_05.bdf')
+        #os.remove('include_05.out.bdf')
+        os.remove('include_05b.inc')
         os.remove('pyNastran_dump.bdf')
 
 

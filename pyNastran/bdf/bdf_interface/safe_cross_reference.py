@@ -55,7 +55,7 @@ class SafeXrefMesh(XrefMesh):
             return
         self.log.debug("Safe Cross Referencing%s..." % word)
         if xref_nodes:
-            self._cross_reference_nodes()
+            self._safe_cross_reference_nodes()
             self._cross_reference_coordinates()
 
         if xref_elements:
@@ -63,9 +63,9 @@ class SafeXrefMesh(XrefMesh):
         if xref_properties:
             self._safe_cross_reference_properties()
         if xref_masses:
-            self._cross_reference_masses()
+            self._safe_cross_reference_masses()
         if xref_materials:
-            self._cross_reference_materials()
+            self._safe_cross_reference_materials()
 
         if xref_sets:
             self._cross_reference_sets()
@@ -237,6 +237,46 @@ class SafeXrefMesh(XrefMesh):
             #'AESTAT',   ## aestats
             #'AESURF',  ## aesurfs
 
+    def _safe_cross_reference_nodes(self) -> None:
+        """Links the nodes to coordinate systems"""
+        xref_errors = defaultdict(list)
+        grdset = self.grdset
+        for node in self.nodes.values():
+            node.safe_cross_reference(self, xref_errors, grdset)
+
+        for point in self.points.values():
+            try:
+                point.cross_reference(self)
+            except Exception:
+                self.log.error("Couldn't cross reference POINT.\n%s" % (str(point)))
+                raise
+
+        # SPOINTs, EPOINTs don't need xref
+
+        # GRDPNT for mass calculations
+        #if model.has_key()
+        #for param_key, param in self.params:
+            #if
+        self._show_safe_xref_errors('nodes', xref_errors)
+
+    def _safe_cross_reference_masses(self) -> None:
+        """
+        Links the mass to nodes, properties (and materials depending on
+        the card).
+        """
+        xref_errors = defaultdict(list)
+        for mass in self.masses.values():
+            try:
+                mass.safe_cross_reference(self, xref_errors)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                self._store_xref_error(error, mass)
+
+        for prop in self.properties_mass.values():
+            try:
+                prop.safe_cross_reference(self, xref_errors)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                self._store_xref_error(error, prop)
+
     def _safe_cross_reference_elements(self) -> None:
         """
         Links the elements to nodes, properties (and materials depending on
@@ -259,14 +299,9 @@ class SafeXrefMesh(XrefMesh):
                 missing_safe_xref.add(elem.type)
 
         for elem in self.rigid_elements.values():
-            #if hasattr(elem, 'safe_cross_reference'):
             elem.safe_cross_reference(self, xref_errors)
-            #else:
-                #missing_safe_xref.add(elem.type)
-                #elem.cross_reference(self)
 
         self._show_safe_xref_errors('elements', xref_errors)
-
         if missing_safe_xref:
             self.log.warning('These cards dont support safe_xref; %s' %
                              str(list(missing_safe_xref)))
@@ -285,6 +320,55 @@ class SafeXrefMesh(XrefMesh):
                     prop.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                     self._store_xref_error(error, prop)
+
+    def _safe_cross_reference_materials(self) -> None:
+        """
+        Links the materials to materials (e.g. MAT1, CREEP)
+        often this is a pass statement
+        """
+        xref_errors = defaultdict(list)
+        missing_safe_xref = set()
+        for mat in self.materials.values():  # MAT1
+            if hasattr(mat, 'safe_cross_reference'):
+                try:
+                    mat.safe_cross_reference(self, xref_errors)
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                    self._store_xref_error(error, mat)
+            else:
+                missing_safe_xref.add(mat.type)
+                try:
+                    mat.cross_reference(self)
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                    self._store_xref_error(error, mat)
+
+        for mat in self.creep_materials.values():  # CREEP
+            try:
+                mat.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                self._store_xref_error(error, mat)
+
+        # CREEP - depends on MAT1
+        data = [self.MATS1, self.MATS3, self.MATS8,
+                self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,
+                self.MATT8, self.MATT9, self.MATT11]
+        for material_deps in data:
+            for mat in material_deps.values():
+                if hasattr(mat, 'safe_cross_reference'):
+                    try:
+                        mat.safe_cross_reference(self, xref_errors)
+                    except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                        self._store_xref_error(error, mat)
+                else:
+                    missing_safe_xref.add(mat.type)
+                    try:
+                        mat.cross_reference(self)
+                    except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                        self._store_xref_error(error, mat)
+
+        self._show_safe_xref_errors('materials', xref_errors)
+        if missing_safe_xref:
+            self.log.warning('These cards dont support safe_xref; %s' %
+                             str(list(missing_safe_xref)))
 
     def _show_safe_xref_errors(self, elements_word: str, xref_errors: bool) -> None:
         """helper method to show errors"""
@@ -375,7 +459,7 @@ class SafeXrefMesh(XrefMesh):
 
         for unused_key, dvprel in self.dvprels.items():
             if hasattr(dvprel, 'safe_cross_reference'):
-                dvprel.safe_cross_reference(self)
+                dvprel.safe_cross_reference(self, xref_errors)
             else:  # pragma: no cover
                 dvprel.cross_reference(self)
 
@@ -385,7 +469,8 @@ class SafeXrefMesh(XrefMesh):
         for unused_key, topvar in self.topvar.items():
             topvar.safe_cross_reference(self)
 
-    def safe_empty_nodes(self, nids: list[int], msg: str='') -> tuple[list[GRID], list[int]]:
+    def safe_empty_nodes(self, nids: list[int],
+                         msg: str='') -> tuple[list[GRID], list[int]]:
         """safe xref version of self.Nodes(nid, msg='')"""
         nodes = []
         missing_nodes = []
@@ -446,7 +531,8 @@ class SafeXrefMesh(XrefMesh):
             elements.append(element)
         return elements, msgi
 
-    def safe_element(self, eid: int, ref_id: int, xref_errors, msg: str='') -> ELement:
+    def safe_element(self, eid: int, ref_id: int, xref_errors: dict[str, Any],
+                     msg: str='') -> ELement:
         """
         Gets an element card
 
@@ -501,7 +587,8 @@ class SafeXrefMesh(XrefMesh):
             #raise KeyError(msg)
         return elements
 
-    def safe_property(self, pid: int, ref_id: int, xref_errors, msg: str='') -> Property:
+    def safe_property(self, pid: int, ref_id: int, xref_errors,
+                      msg: str='') -> Property:
         """
         Parameters
         ----------
@@ -538,7 +625,8 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['pid'].append((ref_id, pid))
         return pid_ref
 
-    def safe_material(self, mid: int, ref_id: int, xref_errors, msg=''):
+    def safe_material(self, mid: int, ref_id: int,
+                      xref_errors, msg=''):
         """
         Gets a material card
 
@@ -557,7 +645,8 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['mid'].append((ref_id, mid))
         return mid_ref
 
-    def safe_coord(self, cid: int, ref_id: int, xref_errors: dict[str, tuple[int, int]], msg=''):
+    def safe_coord(self, cid: int, ref_id: int,
+                   xref_errors: dict[str, tuple[int, int]], msg: str=''):
         """
         Gets a Coord card
 
@@ -576,7 +665,8 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['cid'].append((ref_id, cid))
         return cid_ref
 
-    def safe_paero(self, paero_id, ref_id, xref_errors, msg=''):
+    def safe_paero(self, paero_id: int, ref_id: int,
+                   xref_errors: dict[str, Any], msg: str=''):
         """
         Gets a PAEROx card
 
@@ -598,7 +688,8 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['paero'].append((ref_id, paero_id))
         return paero_ref
 
-    def safe_aefact(self, aefact_id, ref_id, xref_errors, msg=''):
+    def safe_aefact(self, aefact_id: int, ref_id: int,
+                    xref_errors: dict[str, Any], msg: str=''):
         """
         Gets an AEFACT card
 
@@ -616,7 +707,8 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['aefact'].append((ref_id, aefact_id))
         return aefact_ref
 
-    def safe_aelist(self, aelist_id, ref_id, xref_errors, msg=''):
+    def safe_aelist(self, aelist_id: int, ref_id: int,
+                    xref_errors: dict[str, Any], msg: str=''):
         """
         Gets an AELIST card
 
@@ -633,7 +725,8 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['aelist'].append((ref_id, aelist_id))
         return aefact_ref
 
-    def safe_caero(self, caero_id, ref_id, xref_errors, msg=''):
+    def safe_caero(self, caero_id: int, ref_id: int,
+                   xref_errors: dict[str, Any], msg: str=''):
         try:
             caero_ref = self.CAero(caero_id, msg=msg)
         except KeyError:
@@ -641,7 +734,8 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['caero'].append((ref_id, caero_id))
         return caero_ref
 
-    def safe_tabled(self, tabled_id, ref_id, xref_errors, msg=''):
+    def safe_tabled(self, tabled_id: int, ref_id: int,
+                    xref_errors: dict[str, Any], msg: str=''):
         """
         Parameters
         ----------
@@ -655,7 +749,28 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['tabled'].append((ref_id, tabled_id))
         return tabled_ref
 
-    def safe_tableh(self, tableh_id, ref_id, xref_errors, msg=''):
+    def safe_tablem(self, table_id: int, ref_id: int,
+                    xref_errors: dict[str, tuple[int, int]], msg: str=''):
+        """
+        Gets a Table card
+
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an node and element references a coord)
+
+        """
+        try:
+            table_ref = self.TableM(table_id, msg=msg)
+        except KeyError:
+            table_ref = None
+            # msgi = 'cant find cid=%s%s' % (cid, msg)
+            # self.log.error(msgi)
+            xref_errors['tablem'].append((ref_id, table_id))
+        return table_ref
+
+    def safe_tableh(self, tableh_id: int, ref_id: int,
+                    xref_errors: dict[str, Any], msg: str=''):
         """
         Parameters
         ----------
@@ -668,3 +783,18 @@ class SafeXrefMesh(XrefMesh):
             tableh_ref = None
             xref_errors['tableh'].append((ref_id, tableh_id))
         return tableh_ref
+
+    def safe_desvar(self, desvar_id: int, ref_id: int,
+                    xref_errors: dict[str, Any], msg: str=''):
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an DVPREL1 eid references a DESVAR)
+        """
+        try:
+            desvar_ref = self.Desvar(desvar_id, msg=msg)
+        except KeyError:
+            desvar_ref = None
+            xref_errors['desvar'].append((ref_id, desvar_id))
+        return desvar_ref
