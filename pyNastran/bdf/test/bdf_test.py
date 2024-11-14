@@ -35,8 +35,8 @@ def remove_marc_files(filenames):
     # return names
 
 def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
-        sum_load: bool=True, sum_mass: bool=True, xref: bool=True,
-        crash_cards=None):
+        sum_load: bool=True, sum_mass: bool=True, run_mcids: bool=True,
+        xref: bool=True, crash_cards=None):
     """Runs the full BDF test suite"""
     if crash_cards is None:
         crash_cards = []
@@ -100,13 +100,18 @@ def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
     debug = False
     size = [8]
     is_double = [False]
+    is_lax_parser = [True]
     post = -1
     failed_files = run_lots_of_files(
         files, debug=debug, xref=xref,
         check=check,
         nastran=nastran,
         size=size, is_double=is_double, post=post,
+        is_lax_parser=is_lax_parser,
         sum_load=sum_load, run_mass=sum_mass,
+        run_mcids=run_mcids,
+        run_export_caero=True,
+        run_skin_solids=False,
         encoding='latin1', crash_cards=crash_cards,
         dev=True, pickle_obj=True)
     ntotal = len(files)
@@ -126,8 +131,9 @@ def main():
     ver = str(pyNastran.__version__)
 
     #is_release = False
+    skips = '[--skip_loads] [--skip_mass] [--skip_mcid]'
     msg = (
-        'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-x] [-c C] [--safe] [--skip_loads] [--skip_mass]\n'
+        f'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-x] [-c C] [--safe] {skips}\n'
         '        bdf_test -h | --help\n'
         '        bdf_test -v | --version\n'
         '\n'
@@ -137,13 +143,14 @@ def main():
         '  -r, --regenerate     Resets the tests\n'
         '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN,EGRID)\n'
         '  -n, --run_nastran    Runs Nastran\n'
-        '  --skip_loads         Disables static/dynamic loads sum\n'
-        '  --skip_mass          Disables mass sum\n'
         '  -s S, --size S       Sets the field size\n'
         '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
         '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
         '                       (default=False -> on)\n'
-        '  --safe               Use safe cross-reference (default=False)\n' % ver
+        '  --safe               Use safe cross-reference (default=False)\n'
+        '  --skip_loads         Disables static/dynamic loads sum\n'
+        '  --skip_mass          Disables mass sum\n'
+        '  --skip_mcid          Disables MCID checks\n' % ver
     )
     if len(sys.argv) == 0:
         sys.exit(msg)
@@ -154,6 +161,7 @@ def main():
     run_nastran = data['--run_nastran']
     sum_load = not data['--skip_loads']
     sum_mass = not data['--skip_mass']
+    run_mcids = not data['--skip_mcid']
     xref = not data['--xref']
 
     crash_cards = []
@@ -161,6 +169,7 @@ def main():
         crash_cards = data['--crash_cards'].split(',')
     run(regenerate=regenerate, run_nastran=run_nastran,
         sum_load=sum_load, sum_mass=sum_mass,
+        run_mcids=run_mcids,
         xref=xref, crash_cards=crash_cards)
 
 if __name__ == '__main__':  # pragma: no cover

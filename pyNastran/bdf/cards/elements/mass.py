@@ -518,7 +518,6 @@ class CMASS2(PointMassElement):
         return self.nodes[0]
 
     def G2(self):
-        print(self.nodes_ref)
         if self.nodes_ref is not None and isinstance(self.nodes_ref[1], GRID):
             return self.nodes_ref[1].nid
         return self.nodes[1]

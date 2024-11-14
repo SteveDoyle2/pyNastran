@@ -145,8 +145,8 @@ def _write_subcases_loads(model: BDF,
     isubcase, loads, subcases = _write_dmi(model, aero_eid_map)
     del aero_eid_map
 
-    for name, dmi in model.dmij.items():
-        data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
+    for name, dmij in model.dmij.items():
+        data, rows, cols = dmij.get_matrix(is_sparse=False, apply_symmetry=True)
         log.info(f'{name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
@@ -165,24 +165,26 @@ def _write_subcases_loads(model: BDF,
                 f'  LOAD = {isubcase}\n')
             loads += f'$ {subtitle}\n'
             loads += '$ PLOAD2 SID P EID1\n'
-            raise NotImplementedError(msg)
+            # aero_eid_map[isubpanel_ieid] = caero_eid + isubpanel_eid
+            # raise NotImplementedError(msg)
             for irow, value in zip(rows, data):
                 row = rows[irow]   # row = (1000,3)
-                eid = row[0]
+                idi = row[0]
+                eid = aero_eid_map[idi]
                 loads += f'PLOAD2,{isubcase},{value[0]},{eid}\n'
             isubcase += 1
         else:  # pragma: no cover
             raise NotImplementedError(msg)
 
-    for name, dmi in model.dmiji.items():
-        data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
+    for name, dmiji in model.dmiji.items():
+        data, rows, cols = dmiji.get_matrix(is_sparse=False, apply_symmetry=True)
         log.info(f'{name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
         raise NotImplementedError(msg)
 
-    for name, dmi in model.dmik.items():
-        data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
+    for name, dmik in model.dmik.items():
+        data, rows, cols = dmik.get_matrix(is_sparse=False, apply_symmetry=True)
         log.info(f'{name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)

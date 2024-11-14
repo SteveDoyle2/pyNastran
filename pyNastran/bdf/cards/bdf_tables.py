@@ -2115,3 +2115,6 @@ def read_table_float_int(card: BDFCard, table_id: int,
     string(card, nfields, 'ENDT')
     x, y = make_xy(table_id, table_type, xy)
     return x, y
+
+TABLEDs = TABLED1 | TABLED2 | TABLED3 | TABLED4 | TABLED5
+TABLEMs = TABLEM1 | TABLEM2 | TABLEM3 | TABLEM4

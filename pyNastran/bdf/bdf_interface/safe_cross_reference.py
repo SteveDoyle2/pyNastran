@@ -12,7 +12,9 @@ import numpy as np
 from numpy import zeros, argsort, arange, array_equal
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
 if TYPE_CHECKING:
-    from pyNastran.bdf.bdf import Element, Property #, GRID
+    from pyNastran.bdf.bdf import (
+        Element, Property, Material, PAEROs, CAEROs, Coord,
+        AEFACT, AELIST, TABLEDs, TABLEMs)
     from pyNastran.bdf.cards.nodes import GRID
 
 class SafeXrefMesh(XrefMesh):
@@ -532,7 +534,7 @@ class SafeXrefMesh(XrefMesh):
         return elements, msgi
 
     def safe_element(self, eid: int, ref_id: int, xref_errors: dict[str, Any],
-                     msg: str='') -> ELement:
+                     msg: str='') -> Element:
         """
         Gets an element card
 
@@ -626,7 +628,7 @@ class SafeXrefMesh(XrefMesh):
         return pid_ref
 
     def safe_material(self, mid: int, ref_id: int,
-                      xref_errors, msg=''):
+                      xref_errors, msg='') -> Material:
         """
         Gets a material card
 
@@ -646,7 +648,7 @@ class SafeXrefMesh(XrefMesh):
         return mid_ref
 
     def safe_coord(self, cid: int, ref_id: int,
-                   xref_errors: dict[str, tuple[int, int]], msg: str=''):
+                   xref_errors: dict[str, tuple[int, int]], msg: str='') -> Coord:
         """
         Gets a Coord card
 
@@ -666,7 +668,7 @@ class SafeXrefMesh(XrefMesh):
         return cid_ref
 
     def safe_paero(self, paero_id: int, ref_id: int,
-                   xref_errors: dict[str, Any], msg: str=''):
+                   xref_errors: dict[str, Any], msg: str='') -> PAEROs:
         """
         Gets a PAEROx card
 
@@ -689,7 +691,7 @@ class SafeXrefMesh(XrefMesh):
         return paero_ref
 
     def safe_aefact(self, aefact_id: int, ref_id: int,
-                    xref_errors: dict[str, Any], msg: str=''):
+                    xref_errors: dict[str, Any], msg: str='') -> AEFACT:
         """
         Gets an AEFACT card
 
@@ -708,7 +710,7 @@ class SafeXrefMesh(XrefMesh):
         return aefact_ref
 
     def safe_aelist(self, aelist_id: int, ref_id: int,
-                    xref_errors: dict[str, Any], msg: str=''):
+                    xref_errors: dict[str, Any], msg: str='') -> AELIST:
         """
         Gets an AELIST card
 
@@ -726,7 +728,7 @@ class SafeXrefMesh(XrefMesh):
         return aefact_ref
 
     def safe_caero(self, caero_id: int, ref_id: int,
-                   xref_errors: dict[str, Any], msg: str=''):
+                   xref_errors: dict[str, Any], msg: str='') -> CAEROs:
         try:
             caero_ref = self.CAero(caero_id, msg=msg)
         except KeyError:
@@ -735,7 +737,7 @@ class SafeXrefMesh(XrefMesh):
         return caero_ref
 
     def safe_tabled(self, tabled_id: int, ref_id: int,
-                    xref_errors: dict[str, Any], msg: str=''):
+                    xref_errors: dict[str, Any], msg: str='') -> TABLEDs:
         """
         Parameters
         ----------
@@ -750,7 +752,7 @@ class SafeXrefMesh(XrefMesh):
         return tabled_ref
 
     def safe_tablem(self, table_id: int, ref_id: int,
-                    xref_errors: dict[str, tuple[int, int]], msg: str=''):
+                    xref_errors: dict[str, tuple[int, int]], msg: str='') -> TABLEMs:
         """
         Gets a Table card
 
@@ -785,7 +787,7 @@ class SafeXrefMesh(XrefMesh):
         return tableh_ref
 
     def safe_desvar(self, desvar_id: int, ref_id: int,
-                    xref_errors: dict[str, Any], msg: str=''):
+                    xref_errors: dict[str, Any], msg: str='') -> DESVAR:
         """
         Parameters
         ----------

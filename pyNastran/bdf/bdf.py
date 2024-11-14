@@ -180,7 +180,7 @@ from .cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
                                TABRND1, TABRNDG,
-                               DTABLE)
+                               DTABLE, TABLEDs, TABLEMs)
 from .cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
     BCTPARM, BGADD, BGSET, BCBODY)
