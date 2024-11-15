@@ -147,7 +147,9 @@ def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
         return fvalue
     elif isinstance(svalue, str):
         try:
-            fvalue = float(svalue)
+            # if it casts as an integer, it's not typed right
+            ivalue = int(svalue)
+            fvalue = float(ivalue)
             warnings.warn('%s = %r (field #%s) on card must be a float or blank (not an integer) -> %s.\n'
                           'card=%s' % (fieldname, svalue, ifield, fvalue, card))
             return fvalue
