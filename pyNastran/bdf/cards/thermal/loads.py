@@ -2,19 +2,21 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.thermal.thermal import ThermalCard
-from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import expand_thru, expand_thru_by, BaseCard
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
     integer_double_or_blank, string, fields)
+from pyNastran.bdf.bdf_interface.assign_type_force import (
+    force_double)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 #class ThermalLoadDefault(ThermalCard):
@@ -1563,7 +1565,7 @@ class TEMPD(BaseCard):
         temperatures = {1 : 1.0}
         return TEMPD(sid, temperatures, comment='')
 
-    def __init__(self, sid, temperature, comment=''):
+    def __init__(self, sid: int, temperature: float, comment: str=''):
         """
         Creates a TEMPD card
 
@@ -1584,7 +1586,7 @@ class TEMPD(BaseCard):
         self.temperature = temperature
 
     @classmethod
-    def add_card(cls, card, icard=0, comment=''):
+    def add_card(cls, card: BDFCard, icard: int=0, comment: str=''):
         """
         Adds a TEMPD card from ``BDF.add_card(...)``
 
@@ -1603,6 +1605,28 @@ class TEMPD(BaseCard):
         i = 2 * icard
         sid = integer(card, i + 1, 'sid')
         temperature = double(card, i + 2, 'temp')
+        return TEMPD(sid, temperature, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card: BDFCard, icard: int=0, comment: str=''):
+        """
+        Adds a TEMPD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard : int; default=0
+            sid to be parsed
+        comment : str; default=''
+            a comment for the card
+
+        """
+        nfields = len(card) - 1
+        assert nfields % 2 == 0, 'card=%s' % card
+        i = 2 * icard
+        sid = integer(card, i + 1, 'sid')
+        temperature = force_double(card, i + 2, 'temp')
         return TEMPD(sid, temperature, comment=comment)
 
     @classmethod

@@ -44,7 +44,8 @@ def _force_integer(svalue: str) -> int:
             return avalue
 
 
-def force_double(card: BDFCard, ifield: int, fieldname: str, end: str='') -> float:
+def force_double(card: BDFCard, ifield: int, fieldname: str,
+                 end: str='') -> float:
     """see ``double``"""
     svalue = card.field(ifield)
 
@@ -146,8 +147,7 @@ def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
         return fvalue
     elif isinstance(svalue, str):
         try:
-            ivalue = int(svalue)
-            fvalue = float(ivalue)
+            fvalue = float(svalue)
             warnings.warn('%s = %r (field #%s) on card must be a float or blank (not an integer) -> %s.\n'
                           'card=%s' % (fieldname, svalue, ifield, fvalue, card))
             return fvalue

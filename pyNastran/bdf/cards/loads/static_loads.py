@@ -30,9 +30,12 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by #  _node_ids,
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
     integer_or_string, fields, integer_string_or_blank, integer_or_double)
+from pyNastran.bdf.bdf_interface.assign_type_force import (
+    force_double, force_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import (
     print_card_16, print_float_16, set_string16_blank_if_default)
@@ -329,6 +332,7 @@ class CLOAD(LoadCombination):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
 class GRAV(BaseCard):
     """
     Defines acceleration vectors for gravity or other acceleration loading.
@@ -351,7 +355,8 @@ class GRAV(BaseCard):
         N = [1., 1., 1.]
         return GRAV(sid, scale, N, cid=0, mb=0, comment='')
 
-    def __init__(self, sid, scale, N, cid=0, mb=0, comment=''):
+    def __init__(self, sid: int, scale: float, N: np.ndarray,
+                 cid: int=0, mb: int=0, comment: str=''):
         """
         Creates an GRAV card
 
@@ -404,7 +409,7 @@ class GRAV(BaseCard):
             raise TypeError(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDF, comment: str=''):
         """
         Adds a GRAV card from ``BDF.add_card(...)``
 
@@ -417,12 +422,35 @@ class GRAV(BaseCard):
 
         """
         sid = integer(card, 1, 'sid')
-        cid = integer_or_blank(card, 2, 'cid', 0)
+        cid = integer_or_blank(card, 2, 'cid', default=0)
         scale = double(card, 3, 'scale')
-        N = array([double_or_blank(card, 4, 'N1', 0.0),
-                   double_or_blank(card, 5, 'N2', 0.0),
-                   double_or_blank(card, 6, 'N3', 0.0)])
-        mb = integer_or_blank(card, 7, 'mb', 0)
+        N = array([double_or_blank(card, 4, 'N1', default=0.0),
+                   double_or_blank(card, 5, 'N2', default=0.0),
+                   double_or_blank(card, 6, 'N3', default=0.0)])
+        mb = integer_or_blank(card, 7, 'mb', default=0)
+        assert len(card) <= 8, f'len(GRAV card) = {len(card):d}\ncard={card}'
+        return GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card: BDF, comment: str=''):
+        """
+        Adds a GRAV card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        cid = integer_or_blank(card, 2, 'cid', default=0)
+        scale = force_double(card, 3, 'scale')
+        N = array([force_double_or_blank(card, 4, 'N1', default=0.0),
+                   force_double_or_blank(card, 5, 'N2', default=0.0),
+                   force_double_or_blank(card, 6, 'N3', default=0.0)])
+        mb = integer_or_blank(card, 7, 'mb', default=0)
         assert len(card) <= 8, f'len(GRAV card) = {len(card):d}\ncard={card}'
         return GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
 

@@ -30,7 +30,10 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, string_or_blank, integer_or_string)
+    integer, integer_or_blank, double_or_blank,
+    string_or_blank, integer_or_string)
+from pyNastran.bdf.bdf_interface.assign_type_force import (
+    force_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -1827,7 +1830,10 @@ class Cord2x(CoordBase):
      - CORD2C
      - CORD2S
     """
-    def __init__(self, cid: int, origin, zaxis, xzplane, rid: int=0, setup: bool=True, comment: str=''):
+    def __init__(self, cid: int, origin: np.ndarray,
+                 zaxis: np.ndarray,
+                 xzplane: np.ndarray,
+                 rid: int=0, setup: bool=True, comment: str=''):
         """
         This method emulates the CORD2x card.
 
@@ -1892,7 +1898,7 @@ class Cord2x(CoordBase):
         return new_coood
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, cids):
+    def export_to_hdf5(cls, h5_file, model: BDF, cids: np.ndarray):
         """exports the coords in a vectorized way"""
         comments = []
         rid = []
@@ -2096,28 +2102,57 @@ class Cord2x(CoordBase):
         return cls(cid, e1, e2, e3, rid=rid, setup=False, comment=comment)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """Defines the CORD2x class"""
         #: coordinate system ID
         cid = integer(card, 1, 'cid')
         #: reference coordinate system ID
-        rid = integer_or_blank(card, 2, 'rid', 0)
+        rid = integer_or_blank(card, 2, 'rid', default=0)
 
         #: origin in a point relative to the rid coordinate system
-        origin = np.array([double_or_blank(card, 3, 'e1x', 0.0),
-                           double_or_blank(card, 4, 'e1y', 0.0),
-                           double_or_blank(card, 5, 'e1z', 0.0)],
+        origin = np.array([double_or_blank(card, 3, 'e1x', default=0.0),
+                           double_or_blank(card, 4, 'e1y', default=0.0),
+                           double_or_blank(card, 5, 'e1z', default=0.0)],
                           dtype='float64')
         #: z-axis in a point relative to the rid coordinate system
-        zaxis = np.array([double_or_blank(card, 6, 'e2x', 0.0),
-                          double_or_blank(card, 7, 'e2y', 0.0),
-                          double_or_blank(card, 8, 'e2z', 0.0)],
+        zaxis = np.array([double_or_blank(card, 6, 'e2x', default=0.0),
+                          double_or_blank(card, 7, 'e2y', default=0.0),
+                          double_or_blank(card, 8, 'e2z', default=0.0)],
                          dtype='float64')
         #: a point on the xz-plane relative to the rid coordinate system
-        xzplane = np.array([double_or_blank(card, 9, 'e3x', 0.0),
-                            double_or_blank(card, 10, 'e3y', 0.0),
-                            double_or_blank(card, 11, 'e3z', 0.0)],
+        xzplane = np.array([double_or_blank(card, 9, 'e3x', default=0.0),
+                            double_or_blank(card, 10, 'e3y', default=0.0),
+                            double_or_blank(card, 11, 'e3z', default=0.0)],
                            dtype='float64')
+        return cls(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
+        #self._finish_setup()
+
+    @classmethod
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
+        """Defines the CORD2x class"""
+        #: coordinate system ID
+        cid = integer(card, 1, 'cid')
+        #: reference coordinate system ID
+        rid = integer_or_blank(card, 2, 'rid', default=0)
+
+        #: origin in a point relative to the rid coordinate system
+        origin = np.array([
+            force_double_or_blank(card, 3, 'e1x', default=0.0),
+            force_double_or_blank(card, 4, 'e1y', default=0.0),
+            force_double_or_blank(card, 5, 'e1z', default=0.0)],
+            dtype='float64')
+        #: z-axis in a point relative to the rid coordinate system
+        zaxis = np.array([
+            force_double_or_blank(card, 6, 'e2x', default=0.0),
+            force_double_or_blank(card, 7, 'e2y', default=0.0),
+            force_double_or_blank(card, 8, 'e2z', default=0.0)],
+            dtype='float64')
+        #: a point on the xz-plane relative to the rid coordinate system
+        xzplane = np.array([
+            force_double_or_blank(card, 9, 'e3x', default=0.0),
+            force_double_or_blank(card, 10, 'e3y', default=0.0),
+            force_double_or_blank(card, 11, 'e3z', default=0.0)],
+            dtype='float64')
         return cls(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
         #self._finish_setup()
 

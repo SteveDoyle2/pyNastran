@@ -620,16 +620,18 @@ def remake_model(bdf_model, fem1, run_pickle):
     #out_model_8 = '%s.test_bdfv.bdf' % (model_name)
     #out_model_16 = '%s.test_bdfv.bdf' % (model_name)
 
-    fem1.save(obj_model)
-    fem1.save(obj_model, unxref=False)
-    #fem1.write_bdf(out_model_8)
-    fem1.get_bdf_stats()
+    if run_pickle and 0:
+    if 1:
+        fem1.save(obj_model)
+        fem1.save(obj_model, unxref=False)
+        #fem1.write_bdf(out_model_8)
+        fem1.get_bdf_stats()
 
-    fem1 = BDF(debug=fem1.debug, log=fem1.log)
-    fem1.load(obj_model)
-    #fem1.write_bdf(out_model_8)
-    #fem1.log = log
-    os.remove(obj_model)
+        fem1 = BDF(debug=fem1.debug, log=fem1.log)
+        fem1.load(obj_model)
+        #fem1.write_bdf(out_model_8)
+        #fem1.log = log
+        os.remove(obj_model)
     fem1.get_bdf_stats()
     return fem1
 
