@@ -7,18 +7,18 @@ In this demo, we’ll show off test_bdf
 
     from IPython.display import HTML as html_print
     from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck
-    
+
 
 .. code:: ipython3
 
     model = BDF()
-    
+
     # add_grid(nid, xyz, cp=0, cd=0, ps='', seid=0)
     model.add_grid(1, [0., 0., 0.])
     model.add_grid(2, [1., 0., 0.])
     model.add_grid(3, [1., 1., 0.])
     model.add_grid(4, [0., 1., 0.])
-    
+
     eid = 10
     pid = 100
     mid = 1000
@@ -27,31 +27,31 @@ In this demo, we’ll show off test_bdf
     model.add_cbar(eid+1, pid, [2, 3], [0., 0., 1.], None, offt='GGG')
     model.add_cbar(eid+2, pid, [3, 4], [0., 0., 1.], None, offt='GGG')
     model.add_cbar(eid+3, pid, [4, 1], [0., 0., 1.], None, offt='GGG')
-    
+
     eid_cquad4 = 15
     pid_pshell = 101
     # add_pshell(pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
-    #            mid3=None, tst=0.833333, 
+    #            mid3=None, tst=0.833333,
     #            nsm=0.0, z1=None, z2=None, mid4=None)
     model.add_pshell(pid_pshell, mid1=mid, t=0.1, mid2=mid, mid3=mid)
     model.add_cquad4(eid_cquad4, pid_pshell, [1, 2, 3, 4])
-    
+
     dim = [3., 3., 1., 1.] # TODO: should be [1., 2., 3., 4.]
     # add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0.0)
     pbarl = model.add_pbarl(pid, mid, 'BOX', dim, nsm=0.0)
     pbarl.validate()
-    
+
     E = 3.e7
     G = None
     nu = 0.3
     mat = model.add_mat1(mid, E, G, nu)
-    
+
     spc_id = 1
     nids = 1
     # add_spc1(conid, components, nodes
     model.add_spc1(spc_id, 123456, nids)
-    
-    
+
+
     dresp_id = 100
     label = 'resp1'
     response_type = 'STRESS'
@@ -63,26 +63,26 @@ In this demo, we’ll show off test_bdf
     atti = [pid_pshell]
     # add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
     model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
-    
+
     dresp_id += 1
     atta = 17 # von mises lower surface stress
     model.add_dresp1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
-    
+
     # add_dconstr(oid, dresp_id, lid=-1e+20, uid=1e+20, lowfq=0.0, highfq=1e+20)
     dconstr_id = 10000
     model.add_dconstr(dconstr_id, dresp_id, lid=-35000., uid=35000.)
-    
+
     dresp_id += 1
     dresp = model.add_dresp1(dresp_id, 'WT', 'WEIGHT', None, None, None, None, None)
     dresp.validate()
-    
+
     oid = 1000
     dvids = 1
     coeffs = 1.
     # add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
     #             p_min=None, p_max=1e+20, c0=0.0)
     model.add_dvprel1(oid, 'PSHELL', pid_pshell, 'T', dvids, coeffs)
-    
+
     # add_desvar(desvar_id, label, xinit, xlb=-1e+20, xub=1e+20,
     #            delx=None, ddval=None)
     model.add_desvar(1, 'DIM1', 0.1, xlb=1e-5)
@@ -90,26 +90,26 @@ In this demo, we’ll show off test_bdf
     model.add_desvar(3, 'DIM3', 0.3, xlb=1e-5)
     model.add_desvar(4, 'DIM4', 0.4, xlb=1e-5)
     model.add_desvar(5, 'DV5', 0.1, xlb=1e-5)
-    
+
     #model.add_dlink(6)
-    
+
     eid = 10 # TODO: remove
     load_id = 1
     # add_pload4(sid, eids, pressures, g1=None, g34=None,
     #            cid=0, nvector=None, surf_or_line='SURF', line_load_dir='NORM')
-    pload4 = model.add_pload4(load_id, [eid_cquad4], [1., None, None, None], 
+    pload4 = model.add_pload4(load_id, [eid_cquad4], [1., None, None, None],
                               comment=' load')
     #print(pload4.get_stats())
-    
+
     eid = 10 # TODO: should be 100
     scale = 'LE' # TODO: should be 100.
     # add_pload1(sid, eid, load_type, scale, x1, p1, x2=None, p2=None)
     model.add_pload1(load_id, eid, 'FZ', scale, 0., 1.)  # TODO: change atti to None
-    
+
     # add_eigrl(sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None, shfscl=None,
     #           norm=None, options=None, values=None)
     eigrl = model.add_eigrl(42, nd=42)
-    
+
     model.sol = 103  # start=103
     cc = CaseControlDeck([
         'DESOBJ = 102',  # DRESP1
@@ -124,7 +124,7 @@ In this demo, we’ll show off test_bdf
     #print(cc)
     model.case_control_deck = cc
     model.validate()
-    
+
     # rerun between each change
     # 1. change SOL=103 -> SOL=144
     model.sol = 144
@@ -147,10 +147,10 @@ In this demo, we’ll show off test_bdf
 .. parsed-literal::
 
     TRIM          42      .8    100.       Z     2.5
-    
+
     {42: TRIM          42      .8    100.       Z     2.5
     }
-    
+
 
 
 .. raw:: html
@@ -219,7 +219,7 @@ In this demo, we’ll show off test_bdf
     DVPREL1     1000  PSHELL     101       T
                    1      1.
     ----------------------------------------------------------------------------------------------------
-    
+
 
 .. parsed-literal::
 
@@ -232,7 +232,7 @@ In this demo, we’ll show off test_bdf
     c:\python37\lib\site-packages\IPython\utils\_process_win32.py:131: ResourceWarning: unclosed file <_io.BufferedReader name=7>
       return process_handler(cmd, _system_body)
     ResourceWarning: Enable tracemalloc to get the object allocation traceback
-    
+
 
 .. code:: ipython3
 
@@ -252,7 +252,7 @@ In this demo, we’ll show off test_bdf
 
     debug = False
     bdf_model = junk.bdf
-    
+
 
 
 .. raw:: html
@@ -286,7 +286,7 @@ In this demo, we’ll show off test_bdf
         LOAD = 1
         METHOD = 42
         SPC = 1
-    
+
     </text>
 
 
@@ -301,47 +301,47 @@ In this demo, we’ll show off test_bdf
           1 from pyNastran.bdf.test.test_bdf import run_bdf as test_bdf
           2 model.write_bdf('junk.bdf')
     ----> 3 test_bdf('.', 'junk.bdf')
-    
 
-    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in run_bdf(folder, bdf_filename, debug, xref, check, punch, mesh_form, is_folder, print_stats, encoding, sum_load, size, is_double, hdf5, stop, nastran, post, dynamic_vars, quiet, dumplines, dictsort, run_extract_bodies, run_skin_solids, save_file_structure, nerrors, dev, crash_cards, safe_xref, pickle_obj, stop_on_failure, log)
-        342         pickle_obj=pickle_obj,
+
+    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in run_bdf(folder, bdf_filename, debug, xref, check, punch, mesh_form, is_folder, print_stats, encoding, sum_load, size, is_double, hdf5, stop, nastran, post, dynamic_vars, quiet, dumplines, dictsort, run_extract_bodies, run_skin_solids, save_file_structure, nerrors, dev, crash_cards, safe_xref, run_pickle, stop_on_failure, log)
+        342         run_pickle=run_pickle,
         343         stop_on_failure=stop_on_failure,
     --> 344         log=log,
         345     )
         346     return fem1, fem2, diff_cards
-    
 
-    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in run_and_compare_fems(bdf_model, out_model, debug, xref, check, punch, mesh_form, print_stats, encoding, sum_load, size, is_double, save_file_structure, stop, nastran, post, hdf5, dynamic_vars, quiet, dumplines, dictsort, nerrors, dev, crash_cards, safe_xref, run_extract_bodies, run_skin_solids, pickle_obj, stop_on_failure, log)
+
+    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in run_and_compare_fems(bdf_model, out_model, debug, xref, check, punch, mesh_form, print_stats, encoding, sum_load, size, is_double, save_file_structure, stop, nastran, post, hdf5, dynamic_vars, quiet, dumplines, dictsort, nerrors, dev, crash_cards, safe_xref, run_extract_bodies, run_skin_solids, run_pickle, stop_on_failure, log)
         412                         encoding=encoding, debug=debug, quiet=quiet,
         413                         ierror=ierror, nerrors=nerrors,
     --> 414                         stop_on_failure=stop_on_failure, log=log)
-        415 
+        415
         416         diff_cards = compare(fem1, fem2, xref=xref, check=check,
-    
+
 
     c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form, safe_xref, encoding, debug, quiet, stop_on_failure, ierror, nerrors, log)
         878                 fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
         879                 ierror=ierror, nerrors=nerrors,
     --> 880                 stop_on_failure=stop_on_failure)
-        881 
+        881
         882     if mesh_form is not None:
-    
+
 
     c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, unused_sol_200_map, stop_on_failure, ierror, nerrors)
         922         ierror = check_case(
         923             sol_base, subcase, fem2, p0, isubcase, subcases,
     --> 924             ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
         925     return ierror
-        926 
-    
+        926
+
 
     c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in check_case(sol, subcase, fem2, p0, isubcase, subcases, ierror, nerrors, stop_on_failure)
-       1106 
+       1106
        1107     elif sol == 144:
     -> 1108         ierror = _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors)
        1109     elif sol == 145:
        1110         ierror = _check_flutter_case(fem2, log, sol, subcase, ierror, nerrors)
-    
+
 
     c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors)
        1161             sol, subcase)
@@ -349,7 +349,7 @@ In this demo, we’ll show off test_bdf
     -> 1163         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
        1164     if fem2.aeros is None:
        1165         msg = 'An AEROS card is required for STATIC AERO - SOL %i; AEROS=%s' % (sol, fem2.aeros)
-    
+
 
     c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in stop_if_max_error(msg, error, ierror, nerrors)
         954     """if the error count is greater than nerrors, stop"""
@@ -357,7 +357,7 @@ In this demo, we’ll show off test_bdf
     --> 956         raise error(msg)
         957     ierror += 1
         958     return ierror
-    
+
 
     RuntimeError: A TRIM or DIVERG card is required for STATIC AERO - SOL 144
     SUBCASE 1
@@ -367,5 +367,3 @@ In this demo, we’ll show off test_bdf
         LOAD = 1
         METHOD = 42
         SPC = 1
-    
-

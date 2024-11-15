@@ -109,7 +109,7 @@ class TestBDFUnit(Tester):
         ]
         run_lots_of_files(filenames, folder='', debug=None, xref=True, check=True, punch=False,
                           nastran='', encoding=None, size=None, is_double=None, post=None,
-                          sum_load=True, dev=True, crash_cards=None, pickle_obj=True,
+                          sum_load=True, dev=True, crash_cards=None, run_pickle=True,
                           write_hdf5=True, quiet=True)
 
     def test_forces_moments_ctria3(self):

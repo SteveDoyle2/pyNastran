@@ -102,7 +102,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
                                      nastran=nastran,
                                      size=size, is_double=is_double, post=post,
                                      encoding='latin1', crash_cards=crash_cards,
-                                     dev=True, pickle_obj=True)
+                                     dev=True, run_pickle=True)
     ntotal = len(files)
     nfailed = len(failed_files)
     npassed = ntotal - nfailed

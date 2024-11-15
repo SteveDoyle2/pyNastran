@@ -87,7 +87,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       run_skin_solids: bool=True,
                       dev: bool=True,
                       crash_cards: Optional[list[str]]=None,
-                      pickle_obj: bool=True, quiet: bool=False) -> list[str]:
+                      run_pickle: bool=True, quiet: bool=False) -> list[str]:
     """
     Runs multiple BDFs
 
@@ -126,7 +126,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
         False : doesn't crash; useful for running many tests
     crash_cards : list[str, str, ...]
         list of cards that are invalid and automatically crash the run
-    pickle_obj : bool; default=True
+    run_pickle : bool; default=True
         tests pickling
 
     Usage
@@ -212,7 +212,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                         dev=dev,
                         crash_cards=crash_cards,
                         limit_mesh_opt=True,
-                        pickle_obj=pickle_obj,
+                        run_pickle=run_pickle,
                         hdf5=write_hdf5, quiet=quiet, log=log)
                     del fem1
                     del fem2
@@ -291,7 +291,7 @@ def run_bdf(folder: str, bdf_filename: str,
             run_export_caero: bool=True,
             save_file_structure: bool=False,
             nerrors=0, dev: bool=False, crash_cards=None,
-            safe_xref: bool=False, pickle_obj: bool=False,
+            safe_xref: bool=False, run_pickle: bool=False,
             version: Optional[str]=None,
             validate_case_control: bool=True,
             stop_on_failure: bool=True, log=None, name: str=''):
@@ -352,7 +352,7 @@ def run_bdf(folder: str, bdf_filename: str,
     dev : bool; default=False
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
-    pickle_obj : bool; default=True
+    run_pickle : bool; default=True
         tests pickling
 
     """
@@ -391,7 +391,7 @@ def run_bdf(folder: str, bdf_filename: str,
         run_mass=run_mass,
         run_mcid=run_mcid,
         save_file_structure=save_file_structure,
-        pickle_obj=pickle_obj,
+        run_pickle=run_pickle,
         validate_case_control=validate_case_control,
         stop_on_failure=stop_on_failure,
         log=log,
@@ -433,7 +433,7 @@ def run_and_compare_fems(
         run_export_caero: bool=True,
         run_mass: bool=True,
         run_mcid: bool=True,
-        pickle_obj: bool=False,
+        run_pickle: bool=False,
         validate_case_control: bool=True,
         stop_on_failure: bool=True,
         log: Optional[SimpleLogger]=None,
@@ -476,7 +476,7 @@ def run_and_compare_fems(
             hdf5=hdf5,
             encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
             limit_mesh_opt=limit_mesh_opt,
-            pickle_obj=pickle_obj, stop=stop, name=name)
+            run_pickle=run_pickle, stop=stop, name=name)
 
         if stop:
             if not quiet:
@@ -652,7 +652,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              encoding: Optional[str]=None,
              crash_cards: Optional[list[str]]=None,
              limit_mesh_opt: bool=False,
-             safe_xref: bool=True, pickle_obj: bool=False, stop: bool=False,
+             safe_xref: bool=True, run_pickle: bool=False, stop: bool=False,
              name: str='') -> BDF:
     """
     Reads/writes the BDF
@@ -725,6 +725,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
 
             if limit_mesh_opt:
                 limit_mesh_optimization(fem1)
+
             if xref:
                 if run_extract_bodies:
                     log.info('fem1-run_extract_bodies')
@@ -749,17 +750,17 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
                 _fem_xref_methods_check(fem1, run_mcid=run_mcid)
 
                 fem1._xref = True
-                if fem1._nastran_format not in ['optistruct', 'mystran']:
-                    log.info(f'fem1.bdf_filename = {fem1.bdf_filename}')
-                    log.info('trying read_bdf from the raw filename')
-                    read_bdf(fem1.bdf_filename, encoding=encoding, xref=False,
-                             debug=fem1.debug, log=fem1.log)
+                #if fem1._nastran_format not in ['optistruct', 'mystran']:
+                    #log.info(f'fem1.bdf_filename = {fem1.bdf_filename}')
+                    #log.info('trying read_bdf from the raw filename')
+                    #read_bdf(fem1.bdf_filename, encoding=encoding, xref=False,
+                             #debug=fem1.debug, log=fem1.log)
                 if safe_xref:
                     fem1.safe_cross_reference()
                 elif xref:
                     fem1.cross_reference()
 
-                fem1 = remake_model(bdf_filename, fem1, pickle_obj)
+                fem1 = remake_model(bdf_filename, fem1, run_pickle)
                 #fem1.geom_check(geom_check=True, xref=True)
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
@@ -883,31 +884,31 @@ def _fem_xref_methods_check(fem1: BDF,run_mcid: bool) -> None:
                      export_xaxis=True, export_yaxis=False, iply=0, log=None, debug=False)
         export_mcids_all(fem1)
 
-def remake_model(bdf_model: str, fem1: BDF, pickle_obj: bool) -> BDF:
+def remake_model(bdf_model: str, fem1: BDF, run_pickle: bool) -> BDF:
     """reloads the model if we're testing pickling"""
-    remake = pickle_obj
-    if remake:
-        #log = fem1.log
-        model_name = os.path.splitext(bdf_model)[0]
-        obj_model = f'{model_name}.test_bdf.obj'
-        #out_model_8 = '%s.test_bdf.bdf' % (model_name)
-        #out_model_16 = '%s.test_bdf.bdf' % (model_name)
+    if not run_pickle:
+        return fem1
+    #log = fem1.log
+    model_name = os.path.splitext(bdf_model)[0]
+    obj_model = f'{model_name}.test_bdf.obj'
+    #out_model_8 = '%s.test_bdf.bdf' % (model_name)
+    #out_model_16 = '%s.test_bdf.bdf' % (model_name)
 
-        fem1.save(obj_model)
-        fem1.save(obj_model, unxref=False)
-        #fem1.write_bdf(out_model_8)
-        fem1.get_bdf_stats()
+    fem1.save(obj_model)
+    fem1.save(obj_model, unxref=False)
+    #fem1.write_bdf(out_model_8)
+    fem1.get_bdf_stats()
 
-        fem1 = BDF(debug=fem1.debug, log=fem1.log)
-        fem1.load(obj_model)
-        #fem1.write_bdf(out_model_8)
-        #fem1.log = log
-        os.remove(obj_model)
-        fem1.get_bdf_stats()
+    fem1 = BDF(debug=fem1.debug, log=fem1.log)
+    fem1.load(obj_model)
+    #fem1.write_bdf(out_model_8)
+    #fem1.log = log
+    os.remove(obj_model)
+    fem1.get_bdf_stats()
 
-        fem1.cross_reference()
-        #fem1.get_bdf_stats()
-        fem1._xref = True
+    fem1.cross_reference()
+    #fem1.get_bdf_stats()
+    fem1._xref = True
     return fem1
 
 def check_for_cd_frame(fem1: BDF) -> None:
@@ -2366,7 +2367,7 @@ def main(argv=None):
             nerrors=data['nerrors'],
             encoding=data['encoding'],
             crash_cards=crash_cards,
-            pickle_obj=data['pickle'],
+            run_pickle=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
             version=data['version'],
@@ -2416,7 +2417,7 @@ def main(argv=None):
             nerrors=data['nerrors'],
             encoding=data['encoding'],
             crash_cards=crash_cards,
-            pickle_obj=data['pickle'],
+            run_pickle=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
             version=data['version'],

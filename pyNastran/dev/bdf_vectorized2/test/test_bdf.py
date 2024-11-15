@@ -40,7 +40,7 @@ class DisabledCardError(RuntimeError):
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                       punch=False, cid=None, nastran='', encoding=None,
                       size=None, is_double=None, post=None, sum_load=True, dev=True,
-                      crash_cards=None, pickle_obj=True):
+                      crash_cards=None, run_pickle=True):
     """
     Runs multiple BDFs
 
@@ -79,7 +79,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         False : doesn't crash; useful for running many tests
     crash_cards : list[str, str, ...]
         list of cards that are invalid and automatically crash the run
-    pickle_obj : bool; default=True
+    run_pickle : bool; default=True
         tests pickling
 
     Examples
@@ -146,7 +146,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                                                   nerrors=0,
                                                   post=post, sum_load=sum_load, dev=dev,
                                                   crash_cards=crash_cards,
-                                                  run_extract_bodies=False, pickle_obj=pickle_obj)
+                                                  run_extract_bodies=False, run_pickle=run_pickle)
                 del fem1
                 del fem2
             diff_cards += diff_cards
@@ -194,7 +194,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
-            nerrors=0, dev=False, crash_cards=None, safe_xref=True, pickle_obj=False, safe=False,
+            nerrors=0, dev=False, crash_cards=None, safe_xref=True, run_pickle=False, safe=False,
             stop_on_failure=True):
     """
     Runs a single BDF
@@ -251,7 +251,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     dev : bool; default=False
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
-    pickle_obj : bool; default=True
+    run_pickle : bool; default=True
         tests pickling
     """
     if not quiet:
@@ -281,7 +281,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
         nerrors=nerrors, dev=dev, crash_cards=crash_cards,
         safe_xref=safe_xref,
-        run_extract_bodies=run_extract_bodies, pickle_obj=pickle_obj,
+        run_extract_bodies=run_extract_bodies, run_pickle=run_pickle,
         stop_on_failure=stop_on_failure,
     )
     return fem1, fem2, diff_cards
@@ -294,7 +294,7 @@ def run_and_compare_fems(
         stop=False, nastran='', post=-1, dynamic_vars=None,
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
-        safe_xref=True, run_extract_bodies=False, pickle_obj=False,
+        safe_xref=True, run_extract_bodies=False, run_pickle=False,
         stop_on_failure=True,
     ):
     """runs two fem models and compares them"""
@@ -322,7 +322,7 @@ def run_and_compare_fems(
                         size, is_double,
                         run_extract_bodies=run_extract_bodies,
                         encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
-                        pickle_obj=pickle_obj, stop=stop)
+                        run_pickle=run_pickle, stop=stop)
         if stop:
             if not quiet:
                 print('card_count:')
@@ -469,7 +469,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
 
 def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double,
              run_extract_bodies=False, encoding=None, crash_cards=None, safe_xref=True,
-             pickle_obj=False, stop=False):
+             run_pickle=False, stop=False):
     """
     Reads/writes the BDF
 
@@ -562,7 +562,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 read_bdf(fem1.bdf_filename, encoding=encoding,
                          debug=fem1.debug, log=fem1.log)
 
-                fem1 = remake_model(bdf_model, fem1, pickle_obj)
+                fem1 = remake_model(bdf_model, fem1, run_pickle)
                 #fem1.geom_check(geom_check=True, xref=True)
     except Exception:
         print("failed reading %r" % bdf_model)
@@ -609,27 +609,28 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     return fem1
 
 
-def remake_model(bdf_model, fem1, pickle_obj):
+def remake_model(bdf_model, fem1, run_pickle):
     """reloads the model if we're testing pickling"""
-    remake = pickle_obj
-    if remake:
-        #log = fem1.log
-        model_name = os.path.splitext(bdf_model)[0]
-        obj_model = f'{model_name}.test_bdfv.obj'
-        #out_model_8 = '%s.test_bdfv.bdf' % (model_name)
-        #out_model_16 = '%s.test_bdfv.bdf' % (model_name)
+    if not run_pickle:
+        return fem1
 
-        fem1.save(obj_model)
-        fem1.save(obj_model, unxref=False)
-        #fem1.write_bdf(out_model_8)
-        fem1.get_bdf_stats()
+    #log = fem1.log
+    model_name = os.path.splitext(bdf_model)[0]
+    obj_model = f'{model_name}.test_bdfv.obj'
+    #out_model_8 = '%s.test_bdfv.bdf' % (model_name)
+    #out_model_16 = '%s.test_bdfv.bdf' % (model_name)
 
-        fem1 = BDF(debug=fem1.debug, log=fem1.log)
-        fem1.load(obj_model)
-        #fem1.write_bdf(out_model_8)
-        #fem1.log = log
-        os.remove(obj_model)
-        fem1.get_bdf_stats()
+    fem1.save(obj_model)
+    fem1.save(obj_model, unxref=False)
+    #fem1.write_bdf(out_model_8)
+    fem1.get_bdf_stats()
+
+    fem1 = BDF(debug=fem1.debug, log=fem1.log)
+    fem1.load(obj_model)
+    #fem1.write_bdf(out_model_8)
+    #fem1.log = log
+    os.remove(obj_model)
+    fem1.get_bdf_stats()
     return fem1
 
 def check_for_cd_frame(fem1):
@@ -1082,7 +1083,7 @@ def main():
             encoding=data['--encoding'],
             crash_cards=crash_cards,
             run_extract_bodies=False,
-            pickle_obj=data['--pickle'],
+            run_pickle=data['--pickle'],
             safe_xref=data['--safe'],
             print_stats=True,
             stop_on_failure=False,
@@ -1126,7 +1127,7 @@ def main():
             encoding=data['--encoding'],
             crash_cards=crash_cards,
             run_extract_bodies=False,
-            pickle_obj=data['--pickle'],
+            run_pickle=data['--pickle'],
             safe_xref=data['--safe'],
             print_stats=True,
             stop_on_failure=False,

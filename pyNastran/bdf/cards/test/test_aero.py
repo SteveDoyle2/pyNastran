@@ -2950,7 +2950,7 @@ class TestAero(unittest.TestCase):
                 post=-1, dynamic_vars=None, quiet=True,
                 dumplines=False, dictsort=False,
                 run_extract_bodies=True, nerrors=0, dev=True,
-                crash_cards=None, pickle_obj=True)
+                crash_cards=None, run_pickle=True)
 
     def test_rotord(self):
         """tests the ROTORD"""

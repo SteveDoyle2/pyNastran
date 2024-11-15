@@ -3193,7 +3193,7 @@ class TestAero(unittest.TestCase):
                 run_extract_bodies=run_extract_bodies,
                 run_equivalence=run_equivalence,
                 nerrors=0, dev=True,
-                crash_cards=None, pickle_obj=True)
+                crash_cards=None, run_pickle=True)
 
     def _test_rotord(self):
         """tests the ROTORD"""

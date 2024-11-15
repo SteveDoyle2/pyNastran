@@ -113,7 +113,7 @@ def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
         run_export_caero=True,
         run_skin_solids=False,
         encoding='latin1', crash_cards=crash_cards,
-        dev=True, pickle_obj=True)
+        dev=True, run_pickle=True)
     ntotal = len(files)
     nfailed = len(failed_files)
     npassed = ntotal - nfailed
