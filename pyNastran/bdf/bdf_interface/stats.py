@@ -147,6 +147,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'rsolmap_to_str', 'nastran_format', 'nid_map', 'bdf_filename',
         'initial_superelement_models',
         'type_slot_str', 'dict_of_vars', 'code_block',
+        'xref_obj',
 
         # handled below
         'mpcadds', 'mpcs', 'spcadds', 'spcs',

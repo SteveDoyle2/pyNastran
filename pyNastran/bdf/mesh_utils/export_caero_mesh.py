@@ -49,7 +49,7 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
     aero_eid_map = {}
     #if is_subpanel_model:
     isubpanel_ieid = 0
-    model._cross_reference_aero()
+    model.xref_obj.cross_reference_aero()
     for caero_eid, caero in sorted(model.caeros.items()):
         if caero.type == 'CAERO2':
             model.log.warning('CAERO2 will probably cause issues...put it at the max id')

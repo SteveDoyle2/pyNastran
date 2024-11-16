@@ -29,7 +29,7 @@ dict_attrs = [
     #'_type_to_slot_map',
 ]
 
-def load_bdf_from_hdf5_file(h5_file, model):
+def load_bdf_from_hdf5_file(h5_file, model: BDF):
     """
     Loads an h5 file object into an OP2 object
 
@@ -241,6 +241,7 @@ def load_bdf_from_hdf5_file(h5_file, model):
     cards_to_read = _cast(h5_file['cards_to_read'])
     cards_to_read = [key.decode(encoding) for key in cards_to_read]
     model.cards_to_read = set(list(cards_to_read))
+    model.xref_obj.model = model
 
 def _load_minor_attributes(unused_key: str, group, model: BDF,
                            encoding: str) -> None:

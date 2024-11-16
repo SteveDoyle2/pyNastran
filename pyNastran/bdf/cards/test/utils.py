@@ -179,7 +179,8 @@ def attach_displacement_to_bdf_model(model: BDF) -> OP2Geom:
     op2_geom_model.displacements[isubcase] = disp
     return op2_geom_model
 
-def _run_hdf5(model2, log, run_save_load_hdf5=True):
+def _run_hdf5(model2: BDF, log: SimpleLogger,
+              run_save_load_hdf5: bool=True):
     """helper method"""
     if run_save_load_hdf5 and IS_H5PY:
         hdf5_filename = 'test.h5'
@@ -275,14 +276,14 @@ def _normals_eid_map(model: BDF, nelements: int,
         ieid += 1
     return normals, eids, eid_map
 
-def _cross_reference(model, xref):
+def _cross_reference(model: BDF, xref: bool | str):
     """helper method for ``_cross_reference``"""
     if xref in [True, 'standard']:
         model.cross_reference()
     elif xref in ['safe']:
         model.safe_cross_reference()
 
-def cross_reference(model, xref):
+def cross_reference(model: BDF, xref: bool):
     """validate we're doing xref right"""
     _cross_reference(model, xref)
     model.pop_xref_errors()
@@ -294,7 +295,7 @@ def cross_reference(model, xref):
     model.pop_xref_errors()
 
 
-def renumber(bdf_filename, log):
+def renumber(bdf_filename: str, log: SimpleLogger):
     bdf_filename_out = 'junk.bdf'
     #model3_copy = deepcopy(model3)
     #model3.cross_reference()

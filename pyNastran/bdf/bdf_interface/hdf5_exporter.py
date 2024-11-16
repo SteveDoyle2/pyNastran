@@ -156,8 +156,8 @@ LIST_KEYS = [
 
     # maybe...
     #'_duplicate_coords', '_duplicate_elements', '_duplicate_masses', '_duplicate_materials',
-    '_duplicate_nodes', '_duplicate_properties',
-    '_duplicate_thermal_materials', '_stored_parse_errors',
+    #'_duplicate_nodes', '_duplicate_properties',
+    #'_duplicate_thermal_materials', '_stored_parse_errors',
     #'_stored_xref_errors',
     #'units', 'xyz_limits',
 

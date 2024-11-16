@@ -1144,8 +1144,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #self.log.debug('done loading!')
         for model in self.superelement_models.values():
             model.log = self.log
+        self.xref_obj.model = self
 
-    def replace_cards(self, replace_model) -> None:
+    def replace_cards(self, replace_model: BDF) -> None:
         """
         Replaces the common cards from the current (self) model from the
         ones in the new replace_model.  The intention is that you're
@@ -1259,11 +1260,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         """
         assert isinstance(nparse_errors, int), type(nparse_errors)
-        assert isinstance(nxref_errors, int), type(nxref_errors)
         self._nparse_errors = nparse_errors
-        self._nxref_errors = nxref_errors
-        self._stop_on_parsing_error = stop_on_parsing_error
-        self._stop_on_xref_error = stop_on_xref_error
+        self.xref_obj.set_error_storage(
+            nparse_errors=nparse_errors,
+            stop_on_parsing_error=stop_on_parsing_error,
+            nxref_errors=nxref_errors,
+            stop_on_xref_error=stop_on_xref_error)
 
     def validate(self) -> None:
         """runs some checks on the input data beyond just type checking"""
@@ -1629,11 +1631,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             if is_error:
                 msg = 'There are duplicate cards.\n\n' + msg
 
-            if self._stop_on_xref_error:
+            if self.xref_obj._stop_on_xref_error:
                 msg += 'There are parsing errors.\n\n'
                 for (card, an_error) in self._stored_parse_errors:
                     msg += '%scard=%s\n' % (an_error[0], card)
-                    msg += 'xref error: %s\n\n'% an_error[0]
+                    msg += 'xref error: %s\n\n' % an_error[0]
                     is_error = True
 
             if is_error:
@@ -1642,21 +1644,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def pop_xref_errors(self) -> None:
         """raises an error if there are cross-reference errors"""
-        is_error = False
-        if self._stop_on_xref_error:
-            if self._ixref_errors == 1 and self._nxref_errors == 0:
-                raise
-            if self._stored_xref_errors:
-                filename_note = ''
-                if self.bdf_filename and not isinstance(self.bdf_filename, StringIO):
-                    filename_note = f' in {os.path.abspath(self.bdf_filename)!r}'
-                msg = f'There are cross-reference errors{filename_note}.\n\n'
-                for (card, an_error) in self._stored_xref_errors:
-                    msg += '%scard=%s\n' % (an_error[0], card)
-                    is_error = True
-
-                if is_error and self._stop_on_xref_error:
-                    raise CrossReferenceError(msg.rstrip())
+        self.xref_obj.pop_xref_errors()
 
     def get_bdf_cards(self, bulk_data_lines: list[str],
                       bulk_data_ilines: Optional[Any]=None) -> tuple[Any, Any, Any]:
@@ -2143,7 +2131,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 """dummy init"""
                 pass
             @classmethod
-            def add_card(cls, card, comment=''):
+            def add_card(cls, card: BDFCard, comment: str=''):
                 """the method that forces the crash"""
                 #raise CardParseSyntaxError(card)
                 msg = _format_comment(comment) + str(card)
@@ -2155,7 +2143,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #"""dummy init"""
                 #pass
             #@classmethod
-            #def add_card(cls, card, comment=''):
+            #def add_card(cls, card: BDFCard, comment: str=''):
                 #"""the method that forces the crash"""
                 ##raise CardParseSyntaxError(card)
                 #msg = _format_comment(comment) + str(card)

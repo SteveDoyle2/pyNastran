@@ -750,6 +750,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
                 _fem_xref_methods_check(fem1, run_mcid=run_mcid)
 
                 fem1._xref = True
+                #what was this for???
                 #if fem1._nastran_format not in ['optistruct', 'mystran']:
                     #log.info(f'fem1.bdf_filename = {fem1.bdf_filename}')
                     #log.info('trying read_bdf from the raw filename')
@@ -2115,9 +2116,9 @@ def test_bdf_argparse(argv=None):
             version, action='store_true',
             help=help_msg)
 
-    parent_parser.add_argument(
-        '-L', '--loads', action='store_false',
-        help='Disables forces/moments summation for the different subcases (default=True)')
+    #parent_parser.add_argument(
+       #'-L', '--loads', action='store_false',
+        #help='Disables forces/moments summation for the different subcases (default=True)')
 
     parent_parser.add_argument('-e', '--nerrors', default=100, type=int,
                                help='Allow for cross-reference errors (default=100)')
@@ -2264,7 +2265,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '                 card is fully not supported (default=False)\n'
         '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
-        '  --loads        Disables forces/moments summation for the different subcases (default=True)\n'
+        #'  --loads        Disables forces/moments summation for the different subcases (default=True)\n'
         #'  --filter       Filters unused cards\n'
 
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'

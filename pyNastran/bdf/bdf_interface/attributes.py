@@ -6,6 +6,7 @@ from numpy import array
 #from pyNastran.bdf.cards.superelements import SEEXCLD  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods, deprecated
+from pyNastran.bdf.bdf_interface.cross_reference_obj import CrossReference
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
@@ -25,7 +26,8 @@ if TYPE_CHECKING:  # pragma: no cover
         # bar
         BAROR, BEAMOR,
         # plot
-        PLOTEL, PLOTEL3, PLOTEL4,
+        #PLOTEL, PLOTEL3, PLOTEL4,
+        PLOTELs,
         # dynamic
         TSTEP, TSTEP1, TSTEPNL,
         NLPCI, NLPARM,
@@ -311,8 +313,7 @@ class BDFAttributes:
 
     def reset_errors(self) -> None:
         """removes the errors from the model"""
-        self._ixref_errors = 0
-        self._stored_xref_errors = []
+        self.xref_obj.reset_errors()
 
     def __init_attributes(self) -> None:
         """
@@ -323,7 +324,7 @@ class BDFAttributes:
         References:
           1.  http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
         """
-        self.reset_errors()
+        self.xref_obj = CrossReference(self)
         self.bdf_filename = None
         self.punch = None
         self._encoding = None
@@ -487,7 +488,7 @@ class BDFAttributes:
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements: dict[int, RigidElement] = {}
         #: stores PLOTELs
-        self.plotels: dict[int, PLOTEL | PLOTEL3 | PLOTEL4] = {}
+        self.plotels: dict[int, PLOTELs] = {}
 
         #: stores CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5
         self.masses: dict[int, CONM1 | CONM2 | CMASS1 | CMASS2 | CMASS3 | CMASS4 | CMASS5] = {}

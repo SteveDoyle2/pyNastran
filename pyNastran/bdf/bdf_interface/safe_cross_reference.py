@@ -5,7 +5,6 @@ Safe cross-referencing skips failed xref's
 
 """
 from __future__ import annotations
-from collections import defaultdict
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
@@ -13,9 +12,12 @@ from numpy import zeros, argsort, arange, array_equal
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import (
+        BDF,
         Element, Property, Material, PAEROs, CAEROs, Coord,
         AEFACT, AELIST, TABLEDs, TABLEMs)
     from pyNastran.bdf.cards.nodes import GRID
+    from pyNastran.bdf.bdf_interface.cross_reference_obj import CrossReference
+
 
 class SafeXrefMesh(XrefMesh):
     """
@@ -55,37 +57,36 @@ class SafeXrefMesh(XrefMesh):
         """
         if not xref:
             return
-        self.log.debug("Safe Cross Referencing%s..." % word)
+        self.log.debug('Safe Cross Referencing{word}...')
+
+        xref_obj: CrossReference = self.xref_obj
         if xref_nodes:
-            self._safe_cross_reference_nodes()
-            self._cross_reference_coordinates()
-
+            xref_obj.safe_cross_reference_nodes()
+            xref_obj.cross_reference_coordinates()
         if xref_elements:
-            self._safe_cross_reference_elements()
+            xref_obj.safe_cross_reference_elements()
         if xref_properties:
-            self._safe_cross_reference_properties()
+            xref_obj.safe_cross_reference_properties()
         if xref_masses:
-            self._safe_cross_reference_masses()
+            xref_obj.safe_cross_reference_masses()
         if xref_materials:
-            self._safe_cross_reference_materials()
+            xref_obj.safe_cross_reference_materials()
 
         if xref_sets:
-            self._cross_reference_sets()
+            xref_obj.cross_reference_sets()
         if xref_aero:
-            self._safe_cross_reference_aero()
+            xref_obj.safe_cross_reference_aero()
         if xref_constraints:
-            self._safe_cross_reference_constraints()
+            xref_obj.safe_cross_reference_constraints()
         if xref_loads:
-            self._safe_cross_reference_loads()
-        if xref_sets:
-            self._cross_reference_sets()
+            xref_obj.safe_cross_reference_loads()
         if xref_optimization:
-            self._safe_cross_reference_optimization()
+            xref_obj.safe_cross_reference_optimization()
         if xref_nodes_with_elements:
-            self._cross_reference_nodes_with_elements()
+            xref_obj.cross_reference_nodes_with_elements()
 
-        self._safe_cross_reference_contact()
-        self._safe_cross_reference_superelements(create_superelement_geometry)
+        xref_obj.safe_cross_reference_contact()
+        xref_obj.safe_cross_reference_superelements(create_superelement_geometry)
 
         self.pop_xref_errors()
         for superelement_tuple, superelement in sorted(self.superelement_models.items()):
@@ -106,370 +107,6 @@ class SafeXrefMesh(XrefMesh):
                 xref_constraints=xref_constraints, xref_aero=xref_aero,
                 xref_sets=xref_sets, xref_optimization=xref_optimization,
                 word=word)
-
-    def _safe_cross_reference_constraints(self) -> None:
-        """
-        Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
-        SUPORT1, SESUPORT cards.
-        """
-        for spcadds in self.spcadds.values():
-            for spcadd in spcadds:
-                spcadd.safe_cross_reference(self)
-        for spcs in self.spcs.values():
-            for spc in spcs:
-                spc.safe_cross_reference(self)
-        for spcoffs in self.spcoffs.values():
-            for spcoff in spcoffs:
-                spcoff.safe_cross_reference(self)
-
-        for mpcadds in self.mpcadds.values():
-            for mpcadd in mpcadds:
-                mpcadd.safe_cross_reference(self)
-        for mpcs in self.mpcs.values():
-            for mpc in mpcs:
-                mpc.safe_cross_reference(self)
-
-        for suport in self.suport:
-            suport.safe_cross_reference(self)
-
-        for unused_suport1_id, suport1 in self.suport1.items():
-            suport1.safe_cross_reference(self)
-
-        for se_suport in self.se_suport:
-            se_suport.safe_cross_reference(self)
-
-    def _safe_cross_reference_aero(self) -> None:
-        """
-        Links up all the aero cards
-          - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARM, AESTAT, AESURF, AESURFS
-        """
-        self.zona.safe_cross_reference()
-        xref_errors = defaultdict(list)
-        for caero in self.caeros.values():
-            caero.safe_cross_reference(self, xref_errors)
-        self._show_safe_xref_errors('caeros', xref_errors)
-
-        xref_errors = defaultdict(list)
-        for paero in self.paeros.values():
-            paero.safe_cross_reference(self, xref_errors)
-        self._show_safe_xref_errors('paeros', xref_errors)
-
-        for trim in self.trims.values():
-            trim.safe_cross_reference(self)
-        self._show_safe_xref_errors('trims', xref_errors)
-
-        xref_errors = defaultdict(list)
-        for csschd in self.csschds.values():
-            csschd.safe_cross_reference(self, xref_errors)
-        self._show_safe_xref_errors('csschds', xref_errors)
-
-        xref_errors = defaultdict(list)
-        for spline in self.splines.values():
-            spline.safe_cross_reference(self, xref_errors)
-        self._show_safe_xref_errors('splines', xref_errors)
-
-        for aecomp in self.aecomps.values():
-            aecomp.safe_cross_reference(self)
-
-        for aelist in self.aelists.values():
-            aelist.safe_cross_reference(self)
-
-        for aeparam in self.aeparams.values():
-            aeparam.safe_cross_reference(self)
-
-        #for aestat in self.aestats):
-            #aestat.safe_cross_reference(self)
-
-        for aelinks in self.aelinks.values():
-            for aelink in aelinks:
-                aelink.cross_reference(self)
-
-        xref_errors = defaultdict(list)
-        for aesurf in self.aesurf.values():
-            aesurf.safe_cross_reference(self, xref_errors)
-        self._show_safe_xref_errors('aesurf', xref_errors)
-
-        for aesurfs in self.aesurfs.values():
-            aesurfs.safe_cross_reference(self)
-
-        for flutter in self.flutters.values():
-            flutter.safe_cross_reference(self)
-
-        xref_errors = defaultdict(list)
-        for monitor_point in self.monitor_points:
-            monitor_point.safe_cross_reference(self, xref_errors)
-        self._show_safe_xref_errors('monitor_points', xref_errors)
-
-        if self.aero:
-            xref_errors = defaultdict(list)
-            self.aero.safe_cross_reference(self, xref_errors)
-            self._show_safe_xref_errors('aero', xref_errors)
-        if self.aeros:
-            xref_errors = defaultdict(list)
-            self.aeros.safe_cross_reference(self, xref_errors)
-            self._show_safe_xref_errors('aeros', xref_errors)
-
-        if 0:  # only support CAERO1
-            ncaeros = len(self.caeros)
-            if ncaeros > 1:
-                # we don't need to check the ncaeros=1 case
-                i = 0
-                min_maxs = zeros((ncaeros, 2), dtype='int32')
-                for unused_eid, caero in sorted(self.caeros.items()):
-                    min_maxs[i, :] = caero.min_max_eid
-                    i += 1
-                isort = argsort(min_maxs.ravel())
-                expected = arange(ncaeros * 2, dtype='int32')
-                if not array_equal(isort, expected):
-                    msg = 'CAERO element ids are inconsistent\n'
-                    msg += 'isort = %s' % str(isort)
-                    raise RuntimeError(msg)
-
-            #'AERO',     ## aero
-            #'AEROS',    ## aeros
-            #'GUST',     ## gusts
-            #'FLUTTER',  ## flutters
-            #'FLFACT',   ## flfacts
-            #'MKAERO1', 'MKAERO2',  ## mkaeros
-            #'AECOMP',   ## aecomps
-            #'AEFACT',   ## aefacts
-            #'AELINK',   ## aelinks
-            #'AELIST',   ## aelists
-            #'AEPARM',  ## aeparams
-            #'AESTAT',   ## aestats
-            #'AESURF',  ## aesurfs
-
-    def _safe_cross_reference_nodes(self) -> None:
-        """Links the nodes to coordinate systems"""
-        xref_errors = defaultdict(list)
-        grdset = self.grdset
-        for node in self.nodes.values():
-            node.safe_cross_reference(self, xref_errors, grdset)
-
-        for point in self.points.values():
-            try:
-                point.cross_reference(self)
-            except Exception:
-                self.log.error("Couldn't cross reference POINT.\n%s" % (str(point)))
-                raise
-
-        # SPOINTs, EPOINTs don't need xref
-
-        # GRDPNT for mass calculations
-        #if model.has_key()
-        #for param_key, param in self.params:
-            #if
-        self._show_safe_xref_errors('nodes', xref_errors)
-
-    def _safe_cross_reference_masses(self) -> None:
-        """
-        Links the mass to nodes, properties (and materials depending on
-        the card).
-        """
-        xref_errors = defaultdict(list)
-        for mass in self.masses.values():
-            try:
-                mass.safe_cross_reference(self, xref_errors)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._store_xref_error(error, mass)
-
-        for prop in self.properties_mass.values():
-            try:
-                prop.safe_cross_reference(self, xref_errors)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._store_xref_error(error, prop)
-
-    def _safe_cross_reference_elements(self) -> None:
-        """
-        Links the elements to nodes, properties (and materials depending on
-        the card).
-        """
-        xref_errors = defaultdict(list)
-        missing_safe_xref = set()
-        for elem in self.elements.values():
-            if hasattr(elem, 'safe_cross_reference'):
-                elem.safe_cross_reference(self, xref_errors)
-            else:
-                elem.cross_reference(self)
-                missing_safe_xref.add(elem.type)
-
-        for elem in self.masses.values():
-            if hasattr(elem, 'safe_cross_reference'):
-                elem.safe_cross_reference(self, xref_errors)
-            else:
-                elem.cross_reference(self)
-                missing_safe_xref.add(elem.type)
-
-        for elem in self.rigid_elements.values():
-            elem.safe_cross_reference(self, xref_errors)
-
-        self._show_safe_xref_errors('elements', xref_errors)
-        if missing_safe_xref:
-            self.log.warning('These cards dont support safe_xref; %s' %
-                             str(list(missing_safe_xref)))
-
-    def _safe_cross_reference_properties(self) -> None:
-        """Links the properties to materials"""
-        xref_errors = {}
-        for prop in self.properties.values():
-            if hasattr(prop, 'safe_cross_reference'):
-                try:
-                    prop.safe_cross_reference(self, xref_errors)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                    self._store_xref_error(error, prop)
-            else:
-                try:
-                    prop.cross_reference(self)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                    self._store_xref_error(error, prop)
-
-    def _safe_cross_reference_materials(self) -> None:
-        """
-        Links the materials to materials (e.g. MAT1, CREEP)
-        often this is a pass statement
-        """
-        xref_errors = defaultdict(list)
-        missing_safe_xref = set()
-        for mat in self.materials.values():  # MAT1
-            if hasattr(mat, 'safe_cross_reference'):
-                try:
-                    mat.safe_cross_reference(self, xref_errors)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                    self._store_xref_error(error, mat)
-            else:
-                missing_safe_xref.add(mat.type)
-                try:
-                    mat.cross_reference(self)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                    self._store_xref_error(error, mat)
-
-        for mat in self.creep_materials.values():  # CREEP
-            try:
-                mat.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                self._store_xref_error(error, mat)
-
-        # CREEP - depends on MAT1
-        data = [self.MATS1, self.MATS3, self.MATS8,
-                self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,
-                self.MATT8, self.MATT9, self.MATT11]
-        for material_deps in data:
-            for mat in material_deps.values():
-                if hasattr(mat, 'safe_cross_reference'):
-                    try:
-                        mat.safe_cross_reference(self, xref_errors)
-                    except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                        self._store_xref_error(error, mat)
-                else:
-                    missing_safe_xref.add(mat.type)
-                    try:
-                        mat.cross_reference(self)
-                    except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                        self._store_xref_error(error, mat)
-
-        self._show_safe_xref_errors('materials', xref_errors)
-        if missing_safe_xref:
-            self.log.warning('These cards dont support safe_xref; %s' %
-                             str(list(missing_safe_xref)))
-
-    def _show_safe_xref_errors(self, elements_word: str, xref_errors: bool) -> None:
-        """helper method to show errors"""
-        if xref_errors:
-            msg = 'Failed to safe xref %s\n' % elements_word
-            for key, eids_pids in sorted(xref_errors.items()):
-                eids = [eid_pid[0] for eid_pid in eids_pids]
-                eids.sort()
-                pids = [eid_pid[1] for eid_pid in eids_pids]
-                try:
-                    upids = np.unique(pids).tolist()
-                except TypeError:
-                    print(msg)
-                    print('key = %s' % key)
-                    print(' - keys   = %s' % eids)
-                    print(' - values = %s' % pids)
-                    print("Make sure you don't have Nones in the values")
-                    raise
-                msg += 'missing %r for %s = %s\n' % (key, elements_word, eids)
-                msg += '%s = %s\n' % (key, upids)
-            self.log.warning(msg.rstrip())
-
-    def _safe_cross_reference_loads(self) -> None:
-        """
-        Links the loads to nodes, coordinate systems, and other loads.
-        """
-        xref_errors = defaultdict(list)
-        for unused_lid, load_combinations in self.load_combinations.items():
-            for load_combination in load_combinations:
-                try:
-                    load_combination.safe_cross_reference(self, xref_errors)
-                except TypeError:  # pragma: no cover
-                    print(load_combination)
-                    raise
-        self._show_safe_xref_errors('loads', xref_errors)
-
-        for unused_lid, loads in self.loads.items():
-            for load in loads:
-                load.safe_cross_reference(self, xref_errors)
-        self._show_safe_xref_errors('loads', xref_errors)
-
-        for unused_lid, sid in self.dloads.items():
-            for load in sid:
-                load.safe_cross_reference(self, xref_errors)
-
-        for unused_lid, sid in self.dload_entries.items():
-            for load in sid:
-                load.safe_cross_reference(self, xref_errors)
-
-        for unused_key, darea in self.dareas.items():
-            darea.safe_cross_reference(self, xref_errors)
-
-        for unused_key, dphase in self.dphases.items():
-            dphase.safe_cross_reference(self, xref_errors)
-
-        for unused_key, tic in self.tics.items():
-            tic.safe_cross_reference(self, xref_errors)
-
-    def _safe_cross_reference_optimization(self) -> None:
-        """cross references the optimization objects"""
-        #self._cross_reference_optimization()
-        #return
-        xref_errors = defaultdict(list)
-        for unused_key, deqatn in self.dequations.items():
-            deqatn.safe_cross_reference(self)
-
-        for unused_key, dresp in self.dresps.items():
-            dresp.safe_cross_reference(self, xref_errors)
-
-        for unused_key, dconstrs in self.dconstrs.items():
-            for dconstr in dconstrs:
-                if hasattr(dconstr, 'safe_cross_reference'):
-                    dconstr.safe_cross_reference(self)
-                else:  # pragma: no cover
-                    dconstr.cross_reference(self)
-
-        for unused_key, dvcrel in self.dvcrels.items():
-            if hasattr(dvcrel, 'safe_cross_reference'):
-                dvcrel.safe_cross_reference(self)
-            else:  # pragma: no cover
-                dvcrel.cross_reference(self)
-
-        for unused_key, dvmrel in self.dvmrels.items():
-            if hasattr(dvmrel, 'safe_cross_reference'):
-                dvmrel.safe_cross_reference(self)
-            else:  # pragma: no cover
-                dvmrel.cross_reference(self)
-
-        for unused_key, dvprel in self.dvprels.items():
-            if hasattr(dvprel, 'safe_cross_reference'):
-                dvprel.safe_cross_reference(self, xref_errors)
-            else:  # pragma: no cover
-                dvprel.cross_reference(self)
-
-        for unused_key, desvar in self.desvars.items():
-            desvar.safe_cross_reference(self)
-
-        for unused_key, topvar in self.topvar.items():
-            topvar.safe_cross_reference(self)
 
     def safe_empty_nodes(self, nids: list[int],
                          msg: str='') -> tuple[list[GRID], list[int]]:
@@ -641,6 +278,26 @@ class SafeXrefMesh(XrefMesh):
         """
         try:
             mid_ref = self.Material(mid, msg=msg)
+        except KeyError:
+            mid_ref = None
+            #self.log.error('cant find Material=%s%s' % (mid, msg))
+            xref_errors['mid'].append((ref_id, mid))
+        return mid_ref
+
+    def safe_hyperelastic_material(self, mid: int, ref_id: int,
+                                   xref_errors, msg='') -> Material:
+        """
+        Gets a material card
+
+        Parameters
+        ----------
+        mid : int
+            the material_id
+        ref_id : int
+            the referencing value (e.g., an property references a material, so use self.pid)
+        """
+        try:
+            mid_ref = self.HyperelasticMaterial(mid, msg=msg)
         except KeyError:
             mid_ref = None
             #self.log.error('cant find Material=%s%s' % (mid, msg))
