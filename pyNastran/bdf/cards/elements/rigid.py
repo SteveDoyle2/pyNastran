@@ -1336,7 +1336,7 @@ class RBE3(RigidElementBase):
         self.pid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RBE3 card from ``BDF.add_card(...)``
 

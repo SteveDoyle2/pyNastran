@@ -2252,7 +2252,7 @@ class PLOAD2(Load):
         self.eids_ref = None
 
     @classmethod
-    def add_card(cls, card, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PLOAD2 card from ``BDF.add_card(...)``
 

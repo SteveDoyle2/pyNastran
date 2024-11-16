@@ -53,7 +53,7 @@ class BOLT_MSC(BaseCard):
         #self.nids_ref = None
 
     @classmethod
-    def add_card(cls, card, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         bolt_id = integer(card, 1, 'bolt_id')
         gridc = integer(card, 2, 'gridc')
         top = string(card, 9, 'top')
@@ -195,7 +195,7 @@ class BOLT(BaseCard):
         self.nids_ref = None
 
     @classmethod
-    def add_card(cls, card, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         bolt_id = integer(card, 1, 'bolt_id')
         element_type = integer(card, 2, 'element_type')
         assert element_type in {1, 2, 3}, element_type
@@ -326,7 +326,7 @@ class BOLTSEQ(BaseCard):
         self.n_incs = n_incs
 
     @classmethod
-    def add_card(cls, card, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         sid = integer(card, 1, 'sid')
         ifield = 9
         s_nos = []
@@ -421,7 +421,7 @@ class BOLTFOR(BaseCard):
         assert len(bolt_ids) > 0, bolt_ids
 
     @classmethod
-    def add_card(cls, card, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         sid = integer(card, 1, 'sid')
         load_value = double(card, 2, 'load')
         fields = card[3:9]

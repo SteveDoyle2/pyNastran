@@ -455,7 +455,7 @@ class ACOORD(CoordBase):  # not done
         self.theta = theta
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a ACOORD card from ``BDF.add_card(...)``
 
@@ -624,7 +624,7 @@ class AESURFZ(BaseCard):
         self.aero_element_ids = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AESURF card from ``BDF.add_card(...)``
 
@@ -892,7 +892,7 @@ class AEROZ(Aero):
         self.rcsid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AEROZ card from ``BDF.add_card(...)``
 
@@ -1123,7 +1123,7 @@ class MKAEROZ(BaseCard):
         self.print_flag = print_flag
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         sid = integer(card, 1, 'IDMK')
         mach = double(card, 2, 'MACH')
         method = integer(card, 3, 'METHOD')

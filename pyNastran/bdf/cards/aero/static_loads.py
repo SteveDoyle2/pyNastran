@@ -185,7 +185,7 @@ class AEROS(Aero):
         self.rcsid_ref = model.safe_coord(self.rcsid, None, xref_errors, msg=msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AEROS card from ``BDF.add_card(...)``
 
@@ -1111,7 +1111,7 @@ class TRIM2(TRIM):
         TRIM.__init__(self, sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
 
     @classmethod
-    def add_card(cls, card, comment=''):  # TODO: not done...
+    def add_card(cls, card: BDFCard, comment: str=''):  # TODO: not done...
         """
         Adds a TRIM2 card from ``BDF.add_card(...)``
 

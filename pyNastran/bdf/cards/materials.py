@@ -3413,9 +3413,12 @@ class MATHE(HyperelasticMaterial):
                      mooney, sussbat, aboyce, gent,
                      rho=0., texp=0., tref=0., ge=0., comment='')
 
-    def __init__(self, mid, model, bulk, mus, alphas, betas,
-                 mooney, sussbat, aboyce, gent,
-                 rho=0., texp=0., tref=0., ge=0., comment=''):
+    def __init__(self, mid: int, model: str, bulk: float,
+                 mus: list[float], alphas: list[float], betas: list[float],
+                 mooney: list[float], sussbat: list[float],
+                 aboyce: list[float], gent: list[float],
+                 rho: float=0., texp: float=0.,
+                 tref: float=0., ge: float=0., comment: str=''):
         HyperelasticMaterial.__init__(self)
         if comment:
             self.comment = comment
@@ -3447,7 +3450,7 @@ class MATHE(HyperelasticMaterial):
     def validate(self):
         #assert model in ['OGDEN', 'FOAM', 'MOONEY', 'SUSSBAT', 'ABOYCE', 'GENT'], f'model={model!r}'
         if self.model not in ['MOONEY', 'OGDEN', 'FOAM', 'ABOYCE', 'SUSSBAT', 'ABOYCE', 'GENT']:
-            msg = "model=%r not in [MOONEY, OGDEN, FOAM, ABOYCE, SUSSBAT, ABOYCE, GENT]" % self.model
+            msg = f'model={self.model!r} not in [MOONEY, OGDEN, FOAM, ABOYCE, SUSSBAT, ABOYCE, GENT]'
             raise ValueError(msg)
         if self.model == 'MOONEY':
             #mooney = [ # floats
@@ -3458,7 +3461,7 @@ class MATHE(HyperelasticMaterial):
             assert len(self.mooney) == 9, self.mooney
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a MATHE card from ``BDF.add_card(...)``
 

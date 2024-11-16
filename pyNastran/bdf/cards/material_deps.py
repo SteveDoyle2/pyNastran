@@ -854,20 +854,20 @@ class MATT2(MaterialDependenceThermal):
         self.ss_table_ref = None
 
     def validate(self):
-        assert self.g11_table is None or self.g11_table > 0
-        assert self.g12_table is None or self.g12_table > 0
-        assert self.g13_table is None or self.g13_table > 0
-        assert self.g22_table is None or self.g22_table > 0
-        assert self.g23_table is None or self.g23_table > 0
-        assert self.g33_table is None or self.g33_table > 0
-        assert self.rho_table is None or self.rho_table > 0
-        assert self.a1_table is None or self.a1_table > 0
-        assert self.a2_table is None or self.a2_table > 0
-        assert self.a3_table is None or self.a3_table > 0
-        assert self.ge_table is None or self.ge_table > 0
-        assert self.st_table is None or self.st_table > 0
-        assert self.sc_table is None or self.sc_table > 0
-        assert self.ss_table is None or self.ss_table > 0
+        assert self.g11_table is None or self.g11_table > 0, self.g11_table
+        assert self.g12_table is None or self.g12_table > 0, self.g12_table
+        assert self.g13_table is None or self.g13_table > 0, self.g13_table
+        assert self.g22_table is None or self.g22_table > 0, self.g22_table
+        assert self.g23_table is None or self.g23_table > 0, self.g23_table
+        assert self.g33_table is None or self.g33_table > 0, self.g33_table
+        assert self.rho_table is None or self.rho_table > 0, self.rho_table
+        assert self.a1_table is None or self.a1_table > 0, self.a1_table
+        assert self.a2_table is None or self.a2_table > 0, self.a2_table
+        assert self.a3_table is None or self.a3_table > 0, self.a3_table
+        assert self.ge_table is None or self.ge_table > 0, self.ge_table
+        assert self.st_table is None or self.st_table > 0, self.st_table
+        assert self.sc_table is None or self.sc_table > 0, self.sc_table
+        assert self.ss_table is None or self.ss_table > 0, self.ss_table
 
     @classmethod
     def add_card(cls, card, comment=''):

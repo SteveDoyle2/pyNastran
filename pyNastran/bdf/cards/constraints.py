@@ -104,7 +104,7 @@ class SUPORT1(Constraint):
         self.nodes_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SUPORT1 card from ``BDF.add_card(...)``
 
@@ -736,7 +736,7 @@ class SPC(Constraint):
             assert isinstance(enforcedi, float), self.enforced
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an SPC card from ``BDF.add_card(...)``
 
@@ -887,7 +887,7 @@ class GMSPC(Constraint):
         self.entity_id = entity_id
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a GMSPC card from ``BDF.add_card(...)``
 
@@ -992,7 +992,7 @@ class SPCAX(Constraint):
         self.enforced = enforced
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPCAX card from ``BDF.add_card(...)``
 
@@ -1105,7 +1105,7 @@ class SPC1(Constraint):
         assert len(self.nodes) > 0, self.get_stats()
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPC1 card from ``BDF.add_card(...)``
 
@@ -1231,7 +1231,7 @@ class SPCOFF(Constraint):
             assert isinstance(comp, str), self.components
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPCOFF card from ``BDF.add_card(...)``
 

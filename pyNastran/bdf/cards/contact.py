@@ -157,7 +157,7 @@ class BLSEG(BaseCard):
         self.nodes_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BLSEG card from ``BDF.add_card(...)``
 
@@ -678,7 +678,7 @@ class BSURF(BaseCard):
         self.eids = eids
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BSURF card from ``BDF.add_card(...)``
 
@@ -755,7 +755,7 @@ class BSURFS(BaseCard):
         self.g3s = g3s
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BSURFS card from ``BDF.add_card(...)``
 
@@ -1051,7 +1051,7 @@ class BCPARA(BaseCard):
         self.params = params
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BCPARA card from ``BDF.add_card(...)``
 
@@ -1360,7 +1360,7 @@ class BCTPARM(BaseCard):
             self.params[key] = value
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BCTPARM card from ``BDF.add_card(...)``
 
@@ -1518,7 +1518,7 @@ class BCTPARA(BaseCard):
         self.params = params
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BCTPARA card from ``BDF.add_card(...)``
 
@@ -1648,7 +1648,7 @@ class BCTADD(BaseCard):
         self.contact_sets = contact_sets
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BCTADD card from ``BDF.add_card(...)``
 
@@ -1712,7 +1712,7 @@ class BGADD(BaseCard):
         self.contact_sets = contact_sets
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BGADD card from ``BDF.add_card(...)``
 

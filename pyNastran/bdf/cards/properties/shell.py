@@ -1835,7 +1835,7 @@ class PLPLANE(Property):
 
         """
         msg = ', which is required by PLPLANE pid=%s' % self.pid
-        self.mid_ref = model.HyperelasticMaterial(self.mid, msg=msg)
+        self.mid_ref = model.safe_hyperelastic_material(self.mid, self.pid, xref_errors, msg=msg)
         self.cid_ref = model.safe_coord(self.cid, self.pid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:

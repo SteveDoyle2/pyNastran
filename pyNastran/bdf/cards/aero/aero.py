@@ -392,7 +392,7 @@ class AEFACT(BaseCard):
         self.fractions = np.asarray(fractions, dtype='float64')
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AEFACT card from ``BDF.add_card(...)``
 
@@ -710,7 +710,7 @@ class AELIST(BaseCard):
         self.elements.sort()
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AELIST card from ``BDF.add_card(...)``
 
@@ -1857,6 +1857,7 @@ class CAERO1(BaseCard):
         msg = f', which is required by CAERO1 eid={self.eid}'
         self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
+        model.log
         if model.sol in [144, 145, 146, 200]:
             self.ascid_ref = model.Acsid(msg=msg)
         else:

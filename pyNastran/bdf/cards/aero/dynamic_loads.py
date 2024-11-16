@@ -216,7 +216,7 @@ class AERO(Aero):
         self.acsid_ref = model.safe_coord(self.acsid, None, xref_errors, msg=msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AERO card from ``BDF.add_card(...)``
 
@@ -415,7 +415,7 @@ class FLFACT(BaseCard):
             raise ValueError('FLFACT sid=%s is empty; factors=%s' % (self.sid, str(self.factors)))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an FLFACT card from ``BDF.add_card(...)``
 
@@ -654,7 +654,7 @@ class FLUTTER(BaseCard):
             raise ValueError(msg + str(self))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FLUTTER card from ``BDF.add_card(...)``
 
@@ -1186,7 +1186,7 @@ class GUST(BaseCard):
         self.V = V
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a GUST card from ``BDF.add_card(...)``
 

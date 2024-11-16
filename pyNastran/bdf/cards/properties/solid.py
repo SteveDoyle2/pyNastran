@@ -141,7 +141,8 @@ class PLSOLID(Property):
         self.mid_ref = model.HyperelasticMaterial(self.mid, msg) # MATHP, MATHE
 
     def safe_cross_reference(self, model: BDF, xref_errors) -> None:
-        return self.cross_reference(model)
+        msg = ', which is required by PLSOLID pid=%s' % self.pid
+        self.mid_ref = model.safe_hyperelastic_material(self.mid, self.pid, xref_errors, msg) # MATHP, MATHE
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
