@@ -548,8 +548,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             disable_set = set(cards)
         self.cards_to_read = self.cards_to_read.difference(disable_set)
 
-    def set_error_storage(self, nparse_errors=100, stop_on_parsing_error=True,
-                          nxref_errors=100, stop_on_xref_error=True):
+    def set_error_storage(self, nparse_errors: int=100,
+                          stop_on_parsing_error: bool=True,
+                          nxref_errors: int=100,
+                          stop_on_xref_error: bool=True):
         """
         Catch parsing errors and store them up to print them out all at once
         (not all errors are caught).
@@ -569,12 +571,18 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             should an error be raised if there
             are cross-reference errors (default=True)
         """
+        self.xref_obj.set_error_storage(
+            nparse_errors=nparse_errors,
+            stop_on_parsing_error=stop_on_parsing_error,
+            nxref_errors=nxref_errors,
+            stop_on_xref_error=stop_on_xref_error,
+        )
         assert isinstance(nparse_errors, int), type(nparse_errors)
-        assert isinstance(nxref_errors, int), type(nxref_errors)
+        #assert isinstance(nxref_errors, int), type(nxref_errors)
         self._nparse_errors = nparse_errors
-        self._nxref_errors = nxref_errors
+        #self._nxref_errors = nxref_errors
         self._stop_on_parsing_error = stop_on_parsing_error
-        self._stop_on_xref_error = stop_on_xref_error
+        #self._stop_on_xref_error = stop_on_xref_error
 
     def validate(self):
         """runs some checks on the input data beyond just type checking"""
@@ -1020,6 +1028,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
     def pop_parse_errors(self):
         """raises an error if there are parsing errors"""
+        xref_obj = self.xref_obj
         if self._stop_on_parsing_error:
             if self._iparse_errors == 1 and self._nparse_errors == 0:
                 raise
@@ -1107,7 +1116,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             if is_error:
                 msg = 'There are duplicate cards.\n\n' + msg
 
-            if self._stop_on_xref_error:
+            if xref_obj._stop_on_xref_error:
                 msg += 'There are parsing errors.\n\n'
                 for (card, an_error) in self._stored_parse_errors:
                     msg += '%scard=%s\n' % (an_error[0], card)
@@ -1120,18 +1129,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
     def pop_xref_errors(self):
         """raises an error if there are cross-reference errors"""
-        is_error = False
-        if self._stop_on_xref_error:
-            if self._ixref_errors == 1 and self._nxref_errors == 0:
-                raise
-            if self._stored_xref_errors:
-                msg = 'There are cross-reference errors.\n\n'
-                for (card, an_error) in self._stored_xref_errors:
-                    msg += '%scard=%s\n' % (an_error[0], card)
-                    is_error = True
-
-                if is_error and self._stop_on_xref_error:
-                    raise CrossReferenceError(msg.rstrip())
+        self.xref_obj.pop_xref_errors()
 
     def get_bdf_cards(self, bulk_data_lines):
         """Parses the BDF lines into a list of card_lines"""

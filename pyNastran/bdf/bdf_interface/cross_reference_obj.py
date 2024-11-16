@@ -182,7 +182,6 @@ class CrossReference:
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARM, AESTAT, AESURF, AESURFS
         """
         model = self.model
-        print(model)
         model.log
         model.zona.cross_reference()
         for caero in model.caeros.values():

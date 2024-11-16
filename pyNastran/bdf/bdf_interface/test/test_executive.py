@@ -23,7 +23,7 @@ class TestExecutive(unittest.TestCase):
         model.read_bdf(bdf_filename=bdf_file, validate=True, xref=True,
                        punch=False, read_includes=True, save_file_structure=False, encoding=None)
         assert len(model.nodes) == 1, model.nodes
-        print(model)
+        #print(model)
 
 if __name__ == '__main__':
     unittest.main()

@@ -57,9 +57,8 @@ def run_filenames(fnames, log):
             print('')
             raise
             continue
-        print(model)
+        str(model)
         model.write_tecplot('junk.plt', res_types=None, adjust_nids=True)
 
 if __name__ == '__main__':  # pragma: no cover
     main()
-
