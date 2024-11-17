@@ -200,14 +200,6 @@ class XrefMesh(BDFAttributes):
                 xref_sets=xref_sets, xref_optimization=xref_optimization,
                 word=word)
 
-    def _uncross_reference_contact(self) -> None:
-        """uncross references the contact objects"""
-        model: BDF = self
-        for blseg in model.blseg.values():
-            blseg.uncross_reference()
-        for bconp in model.bconp.values():
-            bconp.uncross_reference()
-
     def _create_superelement_from_sebulk(self, sebulk,
                                          seid: int, rseid: int) -> None:
         """helper for sebulk"""

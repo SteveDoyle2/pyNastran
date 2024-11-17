@@ -711,3 +711,5 @@ class PMASS(Property):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+NSMs = NSM | NSM1 | NSML | NSML1

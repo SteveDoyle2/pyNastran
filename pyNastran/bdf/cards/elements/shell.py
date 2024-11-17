@@ -742,7 +742,7 @@ class CTRIA3(TriShell):
 
         """
         msg = f', which is required by CTRIA3 eid={self.eid:d}'
-        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.nodes_ref = model.safe_nodes(self.nodes, self.eid, xref_errors, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
@@ -989,7 +989,7 @@ class CPLSTx3(TriShell):
 
         """
         msg = f', which is required by {self.type} eid={self.eid}'
-        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.nodes_ref = model.safe_nodes(self.node_ids, self.eid, xref_errors, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -1633,7 +1633,7 @@ class CTRIAR(TriShell):
 
         """
         msg = ', which is required by CTRIAR eid=%s' % self.eid
-        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.nodes_ref = model.safe_nodes(self.nodes, self.eid, xref_errors, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
@@ -2125,7 +2125,7 @@ class CSHEAR(QuadShell):
 
         """
         msg = ', which is required by CSHEAR eid=%s' % self.eid
-        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.nodes_ref = model.safe_nodes(self.node_ids, self.eid, xref_errors, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -2502,7 +2502,7 @@ class CQUAD4(QuadShell):
 
         """
         msg = ', which is required by CQUAD4 eid=%s' % self.eid
-        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.nodes_ref = model.safe_nodes(self.nodes, self.eid, xref_errors, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
@@ -3035,7 +3035,7 @@ class CPLSTx4(QuadShell):
 
         """
         msg = f', which is required by {self.type} eid={self.eid}'
-        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.nodes_ref = model.safe_nodes(self.node_ids, self.eid, xref_errors, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -3212,7 +3212,7 @@ class CPLSTS4(CPLSTx4):
 
         """
         msg = ', which is required by CPLSTS4 eid=%s' % self.eid
-        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.nodes_ref = model.safe_nodes(self.node_ids, self.eid, xref_errors, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -4253,7 +4253,7 @@ class CPLSTS3(TriShell):
 
         """
         msg = ', which is required by CPLSTS3 eid=%s' % self.eid
-        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.nodes_ref = model.safe_nodes(self.node_ids, self.eid, xref_errors, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:

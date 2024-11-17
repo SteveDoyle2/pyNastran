@@ -5,7 +5,7 @@ Safe cross-referencing skips failed xref's
 
 """
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Callable, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import zeros, argsort, arange, array_equal
@@ -157,19 +157,6 @@ class SafeXrefMesh(XrefMesh):
             msgi += 'Could not find POINTs %s%s\n' % (', '.join(error_points), msg)
         return points, msgi
 
-    def safe_get_elements(self, eids: list[int], msg: str=''):
-        """safe xref version of self.Elements(eid, msg='')"""
-        elements = []
-        msgi = ''
-        for eid in eids:
-            try:
-                element = self.Element(eid)
-            except KeyError:
-                element = eid
-                msgi += msg % eid
-            elements.append(element)
-        return elements, msgi
-
     def safe_element(self, eid: int, ref_id: int, xref_errors: dict[str, Any],
                      msg: str='') -> Element:
         """
@@ -186,13 +173,36 @@ class SafeXrefMesh(XrefMesh):
         self.safe_element(eid, ref_id, xref_errors)
 
         """
-        try:
-            eid_ref = self.Element(eid, msg=msg)
-        except KeyError:
-            eid_ref = None
-            #self.log.error('cant find Element=%s%s' % (mid, msg))
-            xref_errors['eid'].append((ref_id, eid))
-        return eid_ref
+        return _safe_attr(self, eid, ref_id, xref_errors,
+                          func=self.Element, word='eid', msg=msg)
+
+    def safe_nodes(self, nids: list[int], ref_id: int,
+                   xref_errors: dict[str, tuple[int, int]],
+                   msg: str='') -> list[Element]:
+        """
+        Gets an series of GRIDs/SPOINTs/EPOINTs
+
+        Parameters
+        ----------
+        ref_id: int
+            typically an element_id
+
+        """
+        return _safe_attrs(self, nids, ref_id, xref_errors,
+                          func=self.Node, word='nid', msg=msg)
+
+    def safe_get_elements(self, eids: list[int], msg: str=''):
+        """safe xref version of self.Elements(eid, msg='')"""
+        elements = []
+        msgi = ''
+        for eid in eids:
+            try:
+                element = self.Element(eid)
+            except KeyError:
+                element = eid
+                msgi += msg % eid
+            elements.append(element)
+        return elements, msgi
 
     def safe_elements(self, eids: list[int], ref_id: int,
                       xref_errors: dict[str, tuple[int, int]],
@@ -209,22 +219,23 @@ class SafeXrefMesh(XrefMesh):
             typically a load_id
 
         """
-        elements = []
-        bad_eids = []
-        for eid in eids:
-            try:
-                # elements.append(self.safe_element(eid, ref_id, xref_errors, msg))
-                elements.append(self.Element(eid, msg))
-            except KeyError:
-                bad_eids.append(eid)
-                elements.append(None)
-                xref_errors['eid'].append((ref_id, eid))
-        #if bad_eids:
-            #msg = 'eids=%s not found%s.  Allowed elements=%s' % (
-                #bad_eids, msg, _unique_keys(self.elements.keys())))
-            #self.log.error(msg)
-            #raise KeyError(msg)
-        return elements
+        return _safe_attrs(self, eids, ref_id, xref_errors,
+                          func=self.Element, word='eid', msg=msg)
+    def safe_node(self, nid: int, ref_id: int, xref_errors,
+                  msg: str='') -> Property:
+        """
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., an element references a property)
+
+        ref_id = 10 # CQUAD4
+        nid = 42
+        xref_errors = {'nid' : []}
+        self.safe_node(pid, ref_id, xref_errors)
+        """
+        return _safe_attr(self, nid, ref_id, xref_errors,
+                          func=self.Node, word='nid', msg=msg)
 
     def safe_property(self, pid: int, ref_id: int, xref_errors,
                       msg: str='') -> Property:
@@ -239,13 +250,8 @@ class SafeXrefMesh(XrefMesh):
         xref_errors = {'pid' : []}
         self.safe_property(pid, ref_id, xref_errors)
         """
-        try:
-            pid_ref = self.Property(pid, msg=msg)
-        except KeyError:
-            pid_ref = None
-            #self.log.error('cant find Property=%s%s' % (mid, msg))
-            xref_errors['pid'].append((ref_id, pid))
-        return pid_ref
+        return _safe_attr(self, pid, ref_id, xref_errors,
+                          func=self.Property, word='pid', msg=msg)
 
     def safe_property_mass(self, pid, ref_id, xref_errors, msg=''):
         """
@@ -256,13 +262,8 @@ class SafeXrefMesh(XrefMesh):
         ref_id : int
             the referencing value (e.g., an element references a property)
         """
-        try:
-            pid_ref = self.PropertyMass(pid, msg=msg)
-        except KeyError:
-            pid_ref = None
-            #self.log.error('cant find Property=%s%s' % (mid, msg))
-            xref_errors['pid'].append((ref_id, pid))
-        return pid_ref
+        return _safe_attr(self, pid, ref_id, xref_errors,
+                          func=self.PropertyMass, word='pid', msg=msg)
 
     def safe_material(self, mid: int, ref_id: int,
                       xref_errors, msg='') -> Material:
@@ -276,13 +277,8 @@ class SafeXrefMesh(XrefMesh):
         ref_id : int
             the referencing value (e.g., an property references a material, so use self.pid)
         """
-        try:
-            mid_ref = self.Material(mid, msg=msg)
-        except KeyError:
-            mid_ref = None
-            #self.log.error('cant find Material=%s%s' % (mid, msg))
-            xref_errors['mid'].append((ref_id, mid))
-        return mid_ref
+        return _safe_attr(self, mid, ref_id, xref_errors,
+                          func=self.Material, word='mid', msg=msg)
 
     def safe_hyperelastic_material(self, mid: int, ref_id: int,
                                    xref_errors, msg='') -> Material:
@@ -296,13 +292,8 @@ class SafeXrefMesh(XrefMesh):
         ref_id : int
             the referencing value (e.g., an property references a material, so use self.pid)
         """
-        try:
-            mid_ref = self.HyperelasticMaterial(mid, msg=msg)
-        except KeyError:
-            mid_ref = None
-            #self.log.error('cant find Material=%s%s' % (mid, msg))
-            xref_errors['mid'].append((ref_id, mid))
-        return mid_ref
+        return _safe_attr(self, mid, ref_id, xref_errors,
+                          func=self.HyperelasticMaterial, word='mid', msg=msg)
 
     def safe_coord(self, cid: int, ref_id: int,
                    xref_errors: dict[str, tuple[int, int]], msg: str='') -> Coord:
@@ -315,14 +306,8 @@ class SafeXrefMesh(XrefMesh):
             the referencing value (e.g., an node and element references a coord)
 
         """
-        try:
-            cid_ref = self.Coord(cid, msg=msg)
-        except KeyError:
-            cid_ref = None
-            #msgi = 'cant find cid=%s%s' % (cid, msg)
-            #self.log.error(msgi)
-            xref_errors['cid'].append((ref_id, cid))
-        return cid_ref
+        return _safe_attr(self, cid, ref_id, xref_errors,
+                          func=self.Coord, word='cid', msg=msg)
 
     def safe_paero(self, paero_id: int, ref_id: int,
                    xref_errors: dict[str, Any], msg: str='') -> PAEROs:
@@ -340,12 +325,8 @@ class SafeXrefMesh(XrefMesh):
         self.safe_element(pid, ref_id, xref_errors)
 
         """
-        try:
-            paero_ref = self.PAero(paero_id, msg=msg)
-        except KeyError:
-            paero_ref = None
-            xref_errors['paero'].append((ref_id, paero_id))
-        return paero_ref
+        return _safe_attr(self, paero_id, ref_id, xref_errors,
+                          func=self.PAero, word='paero', msg=msg)
 
     def safe_aefact(self, aefact_id: int, ref_id: int,
                     xref_errors: dict[str, Any], msg: str='') -> AEFACT:
@@ -358,13 +339,8 @@ class SafeXrefMesh(XrefMesh):
             the referencing value (e.g., an CAERO eid references a AEFACT)
 
         """
-        try:
-            aefact_ref = self.AEFact(aefact_id, msg=msg)
-        except KeyError:
-            aefact_ref = None
-            #self.log.error('cant find AFEACT=%s%s' % (aefact_id, msg))
-            xref_errors['aefact'].append((ref_id, aefact_id))
-        return aefact_ref
+        return _safe_attr(self, aefact_id, ref_id, xref_errors,
+                          func=self.AEFact, word='aefact', msg=msg)
 
     def safe_aelist(self, aelist_id: int, ref_id: int,
                     xref_errors: dict[str, Any], msg: str='') -> AELIST:
@@ -377,21 +353,14 @@ class SafeXrefMesh(XrefMesh):
             the referencing value (e.g., an AESURF eid references a AELIST)
 
         """
-        try:
-            aefact_ref = self.AELIST(aelist_id, msg=msg)
-        except KeyError:
-            aefact_ref = None
-            xref_errors['aelist'].append((ref_id, aelist_id))
+        return _safe_attr(self, aelist_id, ref_id, xref_errors,
+                          func=self.AELIST, word='aelist', msg=msg)
         return aefact_ref
 
     def safe_caero(self, caero_id: int, ref_id: int,
                    xref_errors: dict[str, Any], msg: str='') -> CAEROs:
-        try:
-            caero_ref = self.CAero(caero_id, msg=msg)
-        except KeyError:
-            caero_ref = None
-            xref_errors['caero'].append((ref_id, caero_id))
-        return caero_ref
+        return _safe_attr(self, caero_id, ref_id, xref_errors,
+                          func=self.TableD, word='caero', msg=msg)
 
     def safe_tabled(self, tabled_id: int, ref_id: int,
                     xref_errors: dict[str, Any], msg: str='') -> TABLEDs:
@@ -401,14 +370,10 @@ class SafeXrefMesh(XrefMesh):
         ref_id : int
             the referencing value (e.g., an TLOAD1 eid references a TABLED1)
         """
-        try:
-            tabled_ref = self.TableD(tabled_id, msg=msg)
-        except KeyError:
-            tabled_ref = None
-            xref_errors['tabled'].append((ref_id, tabled_id))
-        return tabled_ref
+        return _safe_attr(self, tabled_id, ref_id, xref_errors,
+                          func=self.TableD, word='tabled', msg=msg)
 
-    def safe_tablem(self, table_id: int, ref_id: int,
+    def safe_tablem(self, tablem_id: int, ref_id: int,
                     xref_errors: dict[str, tuple[int, int]], msg: str='') -> TABLEMs:
         """
         Gets a Table card
@@ -419,14 +384,8 @@ class SafeXrefMesh(XrefMesh):
             the referencing value (e.g., an node and element references a coord)
 
         """
-        try:
-            table_ref = self.TableM(table_id, msg=msg)
-        except KeyError:
-            table_ref = None
-            # msgi = 'cant find cid=%s%s' % (cid, msg)
-            # self.log.error(msgi)
-            xref_errors['tablem'].append((ref_id, table_id))
-        return table_ref
+        return _safe_attr(self, tablem_id, ref_id, xref_errors,
+                          func=self.TableM, word='tablem', msg=msg)
 
     def safe_tableh(self, tableh_id: int, ref_id: int,
                     xref_errors: dict[str, Any], msg: str=''):
@@ -436,12 +395,8 @@ class SafeXrefMesh(XrefMesh):
         ref_id : int
             the referencing value (e.g., an MATT1 eid references a TABLEH1)
         """
-        try:
-            tableh_ref = self.TableH(tableh_id, msg=msg)
-        except KeyError:
-            tableh_ref = None
-            xref_errors['tableh'].append((ref_id, tableh_id))
-        return tableh_ref
+        return _safe_attr(self, tableh_id, ref_id, xref_errors,
+                          func=self.TableH, word='tableh', msg=msg)
 
     def safe_desvar(self, desvar_id: int, ref_id: int,
                     xref_errors: dict[str, Any], msg: str='') -> DESVAR:
@@ -451,9 +406,38 @@ class SafeXrefMesh(XrefMesh):
         ref_id : int
             the referencing value (e.g., an DVPREL1 eid references a DESVAR)
         """
+        return _safe_attr(self, desvar_id, ref_id, xref_errors,
+                          func=self.Desvar, word='desvar', msg=msg)
+
+def _safe_attr(model: BDF, idi: int, ref_id: int,
+               xref_errors: dict[str, Any],
+               func: Callable,
+               word: str, msg: str):
+    try:
+        id_ref = func(idi, msg=msg)
+    except KeyError:
+        id_ref = None
+        # self.log.error('cant find Property=%s%s' % (mid, msg))
+        xref_errors[word].append((ref_id, idi))
+    return id_ref
+
+def _safe_attrs(model: BDF, ids: list[int], ref_id: int,
+                xref_errors: dict[str, Any],
+                func: Callable,
+                word: str, msg: str):
+    elements = []
+    bad_eids = []
+    for eid in ids:
         try:
-            desvar_ref = self.Desvar(desvar_id, msg=msg)
+            # elements.append(self.safe_element(eid, ref_id, xref_errors, msg))
+            elements.append(func(eid, msg))
         except KeyError:
-            desvar_ref = None
-            xref_errors['desvar'].append((ref_id, desvar_id))
-        return desvar_ref
+            bad_eids.append(eid)
+            elements.append(None)
+            xref_errors[word].append((ref_id, eid))
+    #if bad_eids:
+        #msg = 'eids=%s not found%s.  Allowed elements=%s' % (
+            #bad_eids, msg, _unique_keys(self.elements.keys())))
+        #self.log.error(msg)
+        #raise KeyError(msg)
+    return elements

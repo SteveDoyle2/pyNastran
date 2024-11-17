@@ -2729,7 +2729,8 @@ class PLOAD4(Load):
         if self.eids:
             self.eids_ref = model.Elements(self.eids, msg=msg)
 
-    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors,
+                             debug: bool=True):
         msg = ', which is required by PLOAD4 sid=%s' % self.sid
         #self.eid = model.Element(self.eid, msg=msg)
         if self.cid is not None:

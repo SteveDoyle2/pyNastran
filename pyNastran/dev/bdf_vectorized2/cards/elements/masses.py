@@ -251,7 +251,7 @@ class CONM2v(RodElement):
             double_or_blank(card, 13, 'I32', 0.0),
             double_or_blank(card, 14, 'I33', 0.0),
         ]
-        assert len(card) <= 15, 'len(CONM2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 15, f'len(CONM2 card) = {len(card):d}\ncard={card}'
         self.add(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -492,4 +492,3 @@ class CTUBEv(RodElement):
                 self.nids = np.array(self._nids, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
             self._eid = []
-

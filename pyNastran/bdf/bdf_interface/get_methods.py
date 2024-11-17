@@ -141,7 +141,8 @@ class GetMethods(BDFAttributes):
                 msg += 'epoints=%s\n' % _unique_keys(self.epoints)
             raise KeyError(msg)
 
-    def EmptyNodes(self, nids: list[int], msg: str='') -> list[Optional[GRID | SPOINT | EPOINT]]:
+    def EmptyNodes(self, nids: list[int],
+                   msg: str='') -> list[Optional[GRID | SPOINT | EPOINT]]:
         """
         Returns a series of node objects given a list of IDs
 

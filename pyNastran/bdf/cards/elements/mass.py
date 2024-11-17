@@ -646,7 +646,7 @@ class CMASS3(PointMassElement):
         return self.nodes[1]
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         return [self.S1(), self.S2()]
 
     def cross_reference(self, model: BDF) -> None:
@@ -663,7 +663,7 @@ class CMASS3(PointMassElement):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model: BDF) -> None:
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1360,7 +1360,7 @@ class CONM2(PointMassElement):
             double_or_blank(card, 13, 'I32', 0.0),
             double_or_blank(card, 14, 'I33', 0.0),
         ]
-        assert len(card) <= 15, 'len(CONM2 card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 15, f'len(CONM2 card) = {len(card):d}\ncard={card}'
         return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
     @classmethod
@@ -1395,7 +1395,7 @@ class CONM2(PointMassElement):
             force_double_or_blank(card, 13, 'I32', default=0.0),
             force_double_or_blank(card, 14, 'I33', default=0.0),
         ]
-        assert len(card) <= 15, 'len(CONM2 card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 15, f'len(CONM2 card) = {len(card):d}\ncard={card}'
         return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
     @classmethod

@@ -104,7 +104,7 @@ from .cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
 from .cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from .cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
-from .cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
+from .cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD, NSMs
 from .cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                 MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                 GMSPC)

@@ -15,7 +15,8 @@ from pyNastran.bdf.cards.aero.zona import ZONA
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.model_group import ModelGroup
     from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11
-    from pyNastran.bdf import (
+    from pyNastran.bdf.bdf import (
+        Element, Property,
         # BDF,
         CaseControlDeck,
         #params,
@@ -25,22 +26,23 @@ if TYPE_CHECKING:  # pragma: no cover
         GRDSET, SEQGP, GRIDB,
         # bar
         BAROR, BEAMOR,
+        CBARAO, CBEAMAO,
         # plot
         #PLOTEL, PLOTEL3, PLOTEL4,
         PLOTELs,
         # dynamic
         TSTEP, TSTEP1, TSTEPNL,
         NLPCI, NLPARM,
+        TABRNDG,
         TABLES1,
-        TABLED1, TABLED2, TABLED3, TABLED4,
-        TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+        TABLEDs, #TABLED1, TABLED2, TABLED3, TABLED4,
+        TABLEMs, #TABLEM1, TABLEM2, TABLEM3, TABLEM4,
         TABDMP1,
         TF, DELAY, #DPHASE,
         # axisymmetric
         RINGAX, CYAX, AXIF, RINGFL, CYJOIN, AXIC,
         # shells
         SNORM,
-        Property,
         #CQUAD4, CQUAD8, CQUADR, CQUAD,
         #CTRIA3, CTRIA6, CTRIAR,
         # solids
@@ -85,12 +87,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
         CREEP,
         MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11,
+        MATS1, MATS3, MATS8,
         MATCID, MATHE, MATHP,
         #MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11,
         MATDMG,
         NXSTRAT,
         PMASS, CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
-        NSMADD,
+        NSMs, NSMADD,
 
         PMIC, ACPLNW, AMLREG, ACMODL, MICPNT, # MATPOR,
         SUPORT, SUPORT1,
@@ -99,11 +102,11 @@ if TYPE_CHECKING:  # pragma: no cover
         Coord,
         #CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S,
         RigidElement,
-        RBE1, RBE2, RBE3, RBAR, RBAR1, RJOINT,
+        #RBE1, RBE2, RBE3, RBAR, RBAR1, RJOINT,
         DLOAD, ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2,
         DAREA, DPHASE, FREQs,
         #FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
-        QVECT,
+        LOAD, QVECT,
         CMASS1, CMASS2, CMASS3, CMASS4, CONM1, CONM2,
         SET1, SET3,
         ASET, BSET, CSET, QSET, OMIT, USET,
@@ -114,7 +117,8 @@ if TYPE_CHECKING:  # pragma: no cover
         SEQSET, SEQSET1, SEUSET, SEUSET1,
         SESET, SESUPORT,
     )
-    from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIAX
+    from pyNastran.bdf.cards.dmig import (
+        DMIG, DMI, DMIJ, DMIK, DMIJI, DMIAX, DTI, DTI_UNITS)
     from pyNastran.bdf.subcase import Subcase
 
 BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'nasa95', 'mystran'}
@@ -136,7 +140,7 @@ class BDFAttributes:
         self.save_file_structure = False
         self.is_superelements = False
         self.set_as_msc()
-        self.units = []  # type: list[str]
+        self.units: list[str] = []
 
     def set_as_msc(self):
         self._nastran_format = 'msc'
@@ -277,11 +281,11 @@ class BDFAttributes:
         """
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip: list[str] = []
+        #my_keys_to_skip: list[str] = []
 
         my_keys_to_skip = [
             #'case_control_deck',
-            'log', #'mpcObject', 'spcObject',
+            'log',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'ncoords', 'nelements', 'nproperties',
@@ -309,7 +313,7 @@ class BDFAttributes:
 
         self.nodes = {}
         self.loads: dict[int, list[Any]] = {}
-        self.load_combinations: dict[int, list[Any]] = {}
+        self.load_combinations: dict[int, list[LOAD]] = {}
 
     def reset_errors(self) -> None:
         """removes the errors from the model"""
@@ -474,10 +478,10 @@ class BDFAttributes:
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
-        self.elements: dict[int, Any] = {}
+        self.elements: dict[int, Element] = {}
 
         #: stores CBARAO, CBEAMAO
-        self.ao_element_flags: dict[int, Any] = {}
+        self.ao_element_flags: dict[int, CBARAO | CBEAMAO] = {}
         #: stores BAROR
         self.baror: Optional[BAROR] = None
         #: stores BEAMOR
@@ -496,7 +500,7 @@ class BDFAttributes:
         self.properties_mass: dict[int, PMASS] = {}
 
         #: stores NSM, NSM1, NSML, NSML1
-        self.nsms: dict[int, list[Any]] = {}
+        self.nsms: dict[int, list[NSMs]] = {}
         #: stores NSMADD
         self.nsmadds: dict[int, list[NSMADD]] = {}
 
@@ -513,9 +517,9 @@ class BDFAttributes:
         self.hyperelastic_materials: dict[int, MATHE | MATHP] = {}
 
         #: stores MATSx
-        self.MATS1: dict[int, Any] = {}
-        self.MATS3: dict[int, Any] = {}
-        self.MATS8: dict[int, Any] = {}
+        self.MATS1: dict[int, MATS1] = {}
+        self.MATS3: dict[int, MATS3] = {}
+        self.MATS8: dict[int, MATS8] = {}
 
         #: stores MATTx
         self.MATT1: dict[int, MATT1] = {}
@@ -586,7 +590,7 @@ class BDFAttributes:
         self.dmiji: dict[str, DMIJI] = {}
         self.dmik: dict[str, DMIK] = {}
         self.dmiax: dict[str, DMIAX] = {}
-        self.dti: dict[str, Any] = {}
+        self.dti: dict[str, DTI | DTI_UNITS] = {}
         self._dmig_temp: dict[str, list[str]] = defaultdict(list)
 
         # ----------------------------------------------------------------
@@ -621,13 +625,13 @@ class BDFAttributes:
         self.tables: dict[int, TABLES1] = {}
 
         # TABLEDx
-        self.tables_d: dict[int, TABLED1 | TABLED2 | TABLED3 | TABLED4] = {}
+        self.tables_d: dict[int, TABLEDs] = {}
 
         # TABLEMx
-        self.tables_m: dict[int, TABLEM1 | TABLEM2 | TABLEM3 | TABLEM4] = {}
+        self.tables_m: dict[int, TABLEMs] = {}
 
         #: random_tables
-        self.random_tables: dict[int, Any] = {}
+        self.random_tables: dict[int, TABRNDG] = {}
         #: TABDMP1
         self.tables_sdamping: dict[int, TABDMP1] = {}
 
