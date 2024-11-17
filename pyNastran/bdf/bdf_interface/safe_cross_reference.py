@@ -62,7 +62,7 @@ class SafeXrefMesh(XrefMesh):
         xref_obj: CrossReference = self.xref_obj
         if xref_nodes:
             xref_obj.safe_cross_reference_nodes()
-            xref_obj.cross_reference_coordinates()
+            xref_obj.safe_cross_reference_coordinates()
         if xref_elements:
             xref_obj.safe_cross_reference_elements()
         if xref_properties:
@@ -73,7 +73,7 @@ class SafeXrefMesh(XrefMesh):
             xref_obj.safe_cross_reference_materials()
 
         if xref_sets:
-            xref_obj.cross_reference_sets()
+            xref_obj.safe_cross_reference_sets()
         if xref_aero:
             xref_obj.safe_cross_reference_aero()
         if xref_constraints:

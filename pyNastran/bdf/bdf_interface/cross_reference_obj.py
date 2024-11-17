@@ -147,35 +147,56 @@ class CrossReference:
         for se_suport in model.se_suport:
             se_suport.safe_cross_reference(model)
 
-
     def cross_reference_sets(self) -> None:
         """cross references the SET objects"""
         model = self.model
-        for set_obj in model.asets:
-            set_obj.cross_reference(model)
-        for set_obj in model.omits:
-            set_obj.cross_reference(model)
-        for set_obj in model.bsets:
-            set_obj.cross_reference(model)
-        for set_obj in model.csets:
-            set_obj.cross_reference(model)
-        for set_obj in model.qsets:
-            set_obj.cross_reference(model)
+        set_lists = [
+            model.asets, model.bsets, model.csets, model.omits,
+            model.qsets,
+            # superelements
+            model.se_bsets, model.se_csets,
+            model.se_qsets,
+        ]
+        set_dicts = [model.se_sets, model.se_usets,]
+        names = 'abcoq1234'
+        for name, set_list in zip(names, set_lists):
+            assert isinstance(set_list, list), (name, set_list)
+            for set_obj in set_list:
+                set_obj.cross_reference(model)
+
+        for set_dict in set_dicts:
+            assert isinstance(set_dict, dict), set_dict
+            for set_obj in set_dict:
+                set_obj.cross_reference(model)
+
         for unused_name, set_objs in model.usets.items():
             for set_obj in set_objs:
                 set_obj.cross_reference(model)
 
-        # superelements
-        for unused_key, set_obj in model.se_sets.items():
-            set_obj.cross_reference(model)
-        for set_obj in model.se_bsets:
-            set_obj.cross_reference(model)
-        for set_obj in model.se_csets:
-            set_obj.cross_reference(model)
-        for set_obj in model.se_qsets:
-            set_obj.cross_reference(model)
-        for set_obj in model.se_usets:
-            set_obj.cross_reference(model)
+    def safe_cross_reference_sets(self) -> None:
+        """cross references the SET objects"""
+        model = self.model
+        set_lists = [
+            model.asets, model.bsets, model.csets, model.omits,
+            model.qsets,
+            # superelements
+            model.se_bsets, model.se_csets,
+            model.se_qsets,
+        ]
+        set_dicts = [model.se_sets, model.se_usets,]
+        for set_list in set_lists:
+            assert isinstance(set_list, list), set_list
+            for set_obj in set_list:
+                set_obj.safe_cross_reference(model)
+
+        for set_dict in set_dicts:
+            assert isinstance(set_dict, dict), set_dict
+            for set_obj in set_dict:
+                set_obj.cross_reference(model)
+
+        for unused_name, set_objs in model.usets.items():
+            for set_obj in set_objs:
+                set_obj.safe_cross_reference(model)
 
     def cross_reference_aero(self, check_caero_element_ids: bool=False) -> None:
         """
@@ -376,6 +397,22 @@ class CrossReference:
         model = self.model
         for coord in model.coords.values():
             coord.cross_reference(model)
+
+        for coord in model.coords.values():
+            coord.setup()
+
+    def safe_cross_reference_coordinates(self) -> None:
+        """
+        Links up all the coordinate cards to other coordinate cards and nodes
+         - CORD1R, CORD1C, CORD1S
+         - CORD2R, CORD2C, CORD2S
+        """
+        # CORD2x: links the rid to coordinate systems
+        # CORD1x: links g1,g2,g3 to grid points
+        model = self.model
+        xref_errors = {}
+        for coord in model.coords.values():
+            coord.safe_cross_reference(model, xref_errors)
 
         for coord in model.coords.values():
             coord.setup()

@@ -53,6 +53,7 @@ def get_include_filename(card_lines: list[str],
 
     filename_raw = parse_include_lines(card_lines)
 
+    ninclude_dirs = len(include_dirs)
     for include_dir in include_dirs:
         #print(f'filename_raw = {filename_raw}')
         #print(f'dir = {include_dir}')
@@ -66,14 +67,26 @@ def get_include_filename(card_lines: list[str],
         elif debug:
             print(f'could not find {filename}')
             print(print_bad_path(filename))
+        if ninclude_dirs == 1:
+            break
     else:
     #if 1:
         msg = f'Could not find INCLUDE line:\n{card_lines}\n'
         msg += f'  filename: {os.path.abspath(filename_raw)}\n'
-        msg += f'  include_dirs:\n - ' + '\n - '.join(str(val) for val in include_dirs)
+        msg += f'  include_dirs:\n - ' + '\n - '.join(repr(val) for val in include_dirs) + '\n'
         #if debug:
         msg += '  environment:'
+        skip_keys = [
+            'LESSOPEN', 'LOGNAME', 'LS_COLORS',
+            'MAIL', 'NAME', 'XDG_SESSION_CLASS', 'XDG_DATA_DIRS',
+            'XDG_RUNTIME_DIR', 'XDG_SESSION_ID', 'XDG_SESSION_TYPE', 'DISPLAY',
+            'LANG', 'HOSTTYPE', 'MOTD_SHOWN', 'DEBUGINFOD_URLS', 'DISPLAY', 'USER',
+            'TERM', 'WSL_DISTRO_NAME', 'WSL_INTEROP', 'WT_PROFILE_ID', 'WT_SESSION',
+            'WSL2_GUI_APPS_ENABLED', 'WAYLAND_DISPLAY', 'PULSE_SERVER',
+        ]
         for key, value in sorted(os.environ.items()):
+            if key in skip_keys:
+                continue
             msg += f'  {key}: {value!r}\n'
         #else:
             #msg += f'  environment_keys: {list(key for key in os.environ)}'

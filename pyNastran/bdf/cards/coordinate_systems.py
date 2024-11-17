@@ -22,10 +22,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
-if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping_interface import NDArray3float
-    from pyNastran.bdf.bdf import BDF
-    from typing import Optional
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -43,7 +39,11 @@ from pyNastran.femutils.coord_transforms import (
     rtz_to_xyz_array, rtp_to_xyz_array, # xxx to xyz transforms
     #rtz_to_rtp_array, rtp_to_rtz_array, # rtp/rtz and rtz/rtp transforms
 )
-
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping_interface import NDArray3float
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    from typing import Optional
 
 def global_to_basic_rectangular(coord, unused_xyz_global, dtype='float64'):
     coord_transform = coord.local_to_global
@@ -2139,20 +2139,20 @@ class Cord2x(CoordBase):
         origin = np.array([
             force_double_or_blank(card, 3, 'e1x', default=0.0),
             force_double_or_blank(card, 4, 'e1y', default=0.0),
-            force_double_or_blank(card, 5, 'e1z', default=0.0)],
-            dtype='float64')
+            force_double_or_blank(card, 5, 'e1z', default=0.0),
+        ], dtype='float64')
         #: z-axis in a point relative to the rid coordinate system
         zaxis = np.array([
             force_double_or_blank(card, 6, 'e2x', default=0.0),
             force_double_or_blank(card, 7, 'e2y', default=0.0),
-            force_double_or_blank(card, 8, 'e2z', default=0.0)],
-            dtype='float64')
+            force_double_or_blank(card, 8, 'e2z', default=0.0),
+        ],dtype='float64')
         #: a point on the xz-plane relative to the rid coordinate system
         xzplane = np.array([
             force_double_or_blank(card, 9, 'e3x', default=0.0),
             force_double_or_blank(card, 10, 'e3y', default=0.0),
-            force_double_or_blank(card, 11, 'e3z', default=0.0)],
-            dtype='float64')
+            force_double_or_blank(card, 11, 'e3z', default=0.0),
+        ], dtype='float64')
         return cls(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
         #self._finish_setup()
 
@@ -2267,6 +2267,24 @@ class Cord2x(CoordBase):
             msg = ', which is required by %s cid=%s' % (self.type, self.cid)
             self.rid_ref = model.Coord(self.rid, msg=msg)
 
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross-links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        .. warning:: Doesn't set rid to the coordinate system if it's in the
+                    global.  This isn't a problem.  It's meant to speed up the
+                    code in order to resolve extra coordinate systems.
+
+        """
+        if self.Rid() != 0:
+            msg = ', which is required by %s cid=%s' % (self.type, self.cid)
+            self.rid_ref = model.safe_coord(self.rid, self.cid, xref_errors, msg=msg)
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         if self.rid == 0:
@@ -2274,7 +2292,7 @@ class Cord2x(CoordBase):
         self.rid = self.Rid()
         self.rid_ref = None
 
-    def Rid(self):
+    def Rid(self) -> int:
         """Gets the reference coordinate system self.rid"""
         if self.rid_ref is not None:
             return self.rid_ref.cid
@@ -2291,7 +2309,7 @@ class Cord1x(CoordBase):
     rid = 0  # used only for transform to global
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, cids):
+    def export_to_hdf5(cls, h5_file, model: BDF, cids: np.ndarray):
         """exports the coords in a vectorized way"""
         unused_comments = []
         nodes = []
@@ -2457,6 +2475,24 @@ class Cord1x(CoordBase):
         self.g2_ref = model.Node(self.g2, msg=msg)
         #: grid point 3
         self.g3_ref = model.Node(self.g3, msg=msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by %s cid=%s' % (self.type, self.cid)
+        #: grid point 1
+        self.g1_ref = model.safe_node(self.g1, self.cid, xref_errors, msg=msg)
+        #: grid point 2
+        self.g2_ref = model.safe_node(self.g2, self.cid, xref_errors, msg=msg)
+        #: grid point 3
+        self.g3_ref = model.safe_node(self.g3, self.cid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
