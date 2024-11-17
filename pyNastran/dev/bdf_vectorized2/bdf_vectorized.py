@@ -1554,7 +1554,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def pop_xref_errors(self) -> None:
         """raises an error if there are cross-reference errors"""
-        xref_obj.pop_xref_errors()
+        self.xref_obj.pop_xref_errors()
 
     def get_bdf_cards(self, bulk_data_lines: list[str],
                       bulk_data_ilines: Optional[Any]=None) -> tuple[Any, Any, Any]:

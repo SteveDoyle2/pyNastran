@@ -172,7 +172,7 @@ class CDAMP1(DamperElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CDAMP1 card from ``BDF.add_card(...)``
 

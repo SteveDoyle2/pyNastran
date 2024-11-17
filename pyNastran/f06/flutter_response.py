@@ -906,7 +906,7 @@ class FlutterResponse:
             #damp_axes.plot(vel[iplot], damping[iplot], symbols[i], label='Mode %i' % mode)
             #freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
             #print(color, symbol, linestyle)
-            label = f'Mode {mode:d}; freq={freq[0]:.3g}'
+            label = f'Mode {mode:d}; freq={freq[0]:.2g}'
             damp_axes.plot(vel, damping, color=color, marker=symbol, linestyle=linestyle, label=label)
             freq_axes.plot(vel, freq, color=color, marker=symbol, linestyle=linestyle)
 

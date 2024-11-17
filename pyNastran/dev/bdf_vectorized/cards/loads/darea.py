@@ -21,7 +21,7 @@ from pyNastran.dev.bdf_vectorized.cards.vectorized_card import VectorizedCard
     #def parse(self, card_obj, icard=0, comment=''):
         #card = (1, 2., icard)
         #return card, comment
-    #def add_card(self, card, comment=''):
+    #def add_card(self, card: BDFCard, comment: str=''):
         #return
 
 class DAREA(VectorizedCard):

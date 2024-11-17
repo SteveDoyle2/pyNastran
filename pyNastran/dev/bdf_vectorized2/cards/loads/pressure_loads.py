@@ -6,8 +6,10 @@ defines:
  - PLOAD4v
 
 """
+from __future__ import annotations
 from collections import defaultdict
 from itertools import count
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -21,7 +23,8 @@ from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
 from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.dev.bdf_vectorized2.cards.loads.loads import BaseLoad
-
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 class PLOADv(BaseLoad):
     """
