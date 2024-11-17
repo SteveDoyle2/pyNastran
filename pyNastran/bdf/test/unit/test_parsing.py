@@ -40,10 +40,10 @@ class TestBDFParsing(unittest.TestCase):
         out = test_bdf_argparse(argv=args)
         #print(out)
 
-        args = ['test_bdf', 'fem.bdf', '-xcdL']
+        args = ['test_bdf', 'fem.bdf', '-xcd', '--skip_loads']
         out = test_bdf_argparse(argv=args)
 
-        args = ['test_bdf', 'fem.bdf', '-xclL']
+        args = ['test_bdf', 'fem.bdf', '-xcl', '--skip_loads']
         out = test_bdf_argparse(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--encoding', 'latin1']

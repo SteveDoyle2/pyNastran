@@ -7,7 +7,7 @@ from pyNastran.gui.arg_handling import get_inputs
 
 class GuiParsing(unittest.TestCase):
     """tests parsing of the pyNastranGUI command line"""
-    def test_parse_1(self):
+    def test_gui_parse_1(self):
         """tests parsing of the pyNastranGUI command line"""
         keys_to_remove = ['noupdate', 'log', 'test', 'geomscript', 'postscript', 'qt',
                           'plugin', 'is_groups', 'groups', 'user_geom', 'user_points', 'debug']
@@ -62,7 +62,7 @@ class GuiParsing(unittest.TestCase):
         os.remove('fem.op2')
         os.remove('fem.tri')
 
-    def test_parse_2(self):
+    def test_gui_parse_2(self):
         """tests parsing of the pyNastranGUI command line"""
         with open('fem.bdf', 'w') as unused_bdf_file:
             pass
@@ -93,7 +93,7 @@ class GuiParsing(unittest.TestCase):
         os.remove('fem.bdf')
 
 
-    def test_parse_3(self):
+    def test_gui_parse_3(self):
         """tests parsing of the pyNastranGUI command line"""
         with open('fem.bdf', 'w') as unused_bdf_file:
             pass
@@ -127,7 +127,7 @@ class GuiParsing(unittest.TestCase):
         os.remove('myscript.py')
 
 
-def remove_args(dicti, *keys_to_remove):
+def remove_args(dicti: dict, *keys_to_remove) -> None:
     """removes keys from a dictionary to declutter the comparison"""
     for key in keys_to_remove:
         if key in dicti:
