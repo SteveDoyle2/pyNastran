@@ -38,7 +38,7 @@ class PCOMP(Property):
         #self._cards = []
         #self._comments = []
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         prop = PCOMPi.add_card(card, comment=comment)
         self.properties[prop.pid] = prop
         #self._cards.append(card)

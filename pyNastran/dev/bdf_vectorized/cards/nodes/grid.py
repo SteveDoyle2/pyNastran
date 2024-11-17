@@ -80,7 +80,7 @@ class GRDSET:
         #: Superelement ID
         self.seid = 0
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         self.comment = comment
         self.n = 1
         self.cp = integer_or_blank(card, 2, 'cp', 0)
@@ -138,7 +138,7 @@ class GRID(VectorizedCard):
         #return f(*args, **kwargs)
 
     #@size_check
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         cp0 = self.model.grdset.cp
         cd0 = self.model.grdset.cd
         ps0 = self.model.grdset.ps
@@ -430,4 +430,3 @@ def _index_to_nslice(i, n):
     else:
         n = len(i)
     return i, n
-

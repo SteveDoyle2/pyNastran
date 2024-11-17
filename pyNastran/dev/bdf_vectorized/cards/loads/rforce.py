@@ -71,7 +71,7 @@ class RFORCE:
         self.mb = zeros(ncards, 'int32')
         self.idrf = zeros(ncards, 'int32')
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         self._cards.append(card)
         self._comments.append(comment)
 

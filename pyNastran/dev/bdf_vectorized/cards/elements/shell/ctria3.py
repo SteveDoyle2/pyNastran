@@ -31,7 +31,7 @@ class CTRIA3(ShellElement):
                 #self.element_id = array([], dtype='int32')
                 #self.property_id = array([], dtype='int32')
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'element_id')
         self.property_id[i] = integer(card, 2, 'property_id')

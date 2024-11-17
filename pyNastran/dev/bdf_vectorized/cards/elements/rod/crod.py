@@ -37,7 +37,7 @@ class CROD(RodElement):
             #: Node IDs
             self.node_ids = zeros((ncards, 2), 'int32')
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         #self.model.log.debug('  adding CROD')
         i = self.i
         eid = integer(card, 1, 'element_id')

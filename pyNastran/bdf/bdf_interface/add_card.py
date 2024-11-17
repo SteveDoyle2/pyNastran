@@ -3767,11 +3767,11 @@ class AddMaterial:
         self._add_methods._add_material_dependence_object(mat)
         return mat
 
-    def add_matcid(self, cid: int, form: int,
-                   eids = None,
-                   start: Optional[int] = None,
-                   thru: Optional[int] = None,
-                   by: Optional[int] = None,
+    def add_matcid(self, cid: int,
+                   eids: list[int]=None,
+                   start: Optional[int]=None,
+                   thru: Optional[int]=None,
+                   by: int=1,
                    comment: str='') -> MATCID:
         """
         Creates the MATCID card, which defines the Material Coordinate
@@ -3788,9 +3788,6 @@ class AddMaterial:
         ----------
         cid : int
             coordinate system id
-        form: int
-            integer indicating the format alternative (for reference,
-            see the 4 different formats below)
         eids : array[int, ...]
             Array of element identification numbers
         start: int
@@ -3833,7 +3830,7 @@ class AddMaterial:
             +--------+-------+--------+-------+-------+------+------+------+------+
         """
 
-        matcid = MATCID(cid, form, eids, start, thru, by, comment=comment)
+        matcid = MATCID(cid, eids, start, thru, by, comment=comment)
         self._add_methods._add_matcid_object(matcid)
         return matcid
 

@@ -25,7 +25,7 @@ class PSHEAR(Property):
             self.f1 = zeros(ncards, float_fmt)
             self.f2 = zeros(ncards, float_fmt)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
         self.property_id[i] = integer(card, 1, 'pid')
         self.material_id[i] = integer(card, 2, 'mid')

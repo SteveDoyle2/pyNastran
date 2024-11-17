@@ -66,7 +66,7 @@ class CBAR(Element):
             self.wa = zeros((ncards, 3), dtype=float_fmt)
             self.wb = zeros((ncards, 3), dtype=float_fmt)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
 
         if 0 and self.model.cbaror.n > 0:

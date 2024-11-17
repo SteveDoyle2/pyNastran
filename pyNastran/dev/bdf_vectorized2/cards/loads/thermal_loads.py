@@ -58,7 +58,7 @@ class TEMPv(BaseLoad):
         self._nid += nodes
         self._temperatures += temperatures
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a TEMP card from ``BDF.add_card(...)``
 
@@ -160,7 +160,7 @@ class TEMPDv(BaseLoad):
         self._sid += sid
         self._temperatures += temperatures
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a TEMP card from ``BDF.add_card(...)``
 

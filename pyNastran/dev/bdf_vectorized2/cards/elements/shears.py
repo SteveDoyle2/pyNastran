@@ -131,7 +131,7 @@ class CSHEARv(ShearElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CSHEAR card from ``BDF.add_card(...)``
 
@@ -236,4 +236,3 @@ class Shears:
 
     def __repr__(self):
         return self.repr_indent(indent='')
-

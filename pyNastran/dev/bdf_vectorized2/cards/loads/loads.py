@@ -283,7 +283,7 @@ class FORCEv(BaseLoad):
         self._mag.append(mag)
         self._xyz.append(xyz)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a FORCE card from ``BDF.add_card(...)``
 
@@ -418,7 +418,7 @@ class FORCE1v(BaseLoad):
         self._mag.append(mag)
         self._g12.append([g1, g2])
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a FORCE1 card from ``BDF.add_card(...)``
 
@@ -543,7 +543,7 @@ class FORCE2v(BaseLoad):
         self._mag.append(mag)
         self._g1234.append([g1, g2, g3, g4])
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a FORCE2 card from ``BDF.add_card(...)``
 
@@ -677,7 +677,7 @@ class MOMENTv(BaseLoad):
         self._mag.append(mag)
         self._xyz.append(xyz)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a MOMENT card from ``BDF.add_card(...)``
 

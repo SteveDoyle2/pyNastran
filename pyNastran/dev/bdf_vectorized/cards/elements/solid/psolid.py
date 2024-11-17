@@ -39,7 +39,7 @@ class PSOLID(Property):
             self.isop = zeros(ncards, dtype='|U8')
             self.fctn = zeros(ncards, dtype='|U8')
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
         self.property_id[i] = integer(card, 1, 'pid')
         self.material_id[i] = integer(card, 2, 'mid')
@@ -184,4 +184,3 @@ class PSOLID(Property):
         self.write_card(f)
         #print f
         return f.getvalue()
-

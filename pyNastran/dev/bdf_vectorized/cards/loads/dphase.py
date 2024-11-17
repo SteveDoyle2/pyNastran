@@ -62,7 +62,7 @@ class DPHASE(VectorizedCard):
             #return f
         #raise RuntimeError('len(i) = 0')
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')

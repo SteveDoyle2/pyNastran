@@ -35,7 +35,7 @@ class PTUBE(Property):
         self.t = zeros(ncards, float_fmt)
         self.nsm = zeros(ncards, float_fmt)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         self.model.log.debug('n=%s i=%s' % (self.n, self.i))
         i = self.i
         self.property_id[i] = integer(card, 1, 'property_id')

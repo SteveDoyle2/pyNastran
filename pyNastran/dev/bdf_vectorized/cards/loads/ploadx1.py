@@ -48,7 +48,7 @@ class PLOADX1:
     def __rmul__(self, value):
         return self.__mul__(value)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         self._cards.append(card)
         self._comments.append(comment)
 

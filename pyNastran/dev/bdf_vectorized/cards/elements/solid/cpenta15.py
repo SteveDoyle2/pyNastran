@@ -22,7 +22,7 @@ class CPENTA15(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
 
         #comment = self._comments[i]

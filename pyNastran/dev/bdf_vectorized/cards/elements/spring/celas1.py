@@ -33,7 +33,7 @@ class CELAS1(SpringElement):
             #: component number
             self.components = zeros((ncards, 2), 'int32')
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
         self.property_id[i] = integer_or_blank(card, 2, 'pid', self.element_id[i])

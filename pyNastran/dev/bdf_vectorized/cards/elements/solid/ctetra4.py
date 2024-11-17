@@ -38,7 +38,7 @@ class CTETRA4(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
 
         eid = integer(card, 1, 'element_id')
@@ -565,4 +565,3 @@ class CTETRA4(SolidElement):
                         bdf_file.write(self._comments[eid])
                     data = [eid, pid] + list(n)
                     bdf_file.write(msg % tuple(data))
-

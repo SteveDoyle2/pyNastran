@@ -606,9 +606,9 @@ class WriteMesh(BDFAttributes):
         """Writes the MATCID cards in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
 
-        if len(self.MATCID):
+        if len(self.matcid):
             bdf_file.write('$MATCID\n')
-        for (cid, matcids) in sorted(self.MATCID.items()):
+        for (cid, matcids) in sorted(self.matcid.items()):
             for matcid in matcids:
                 try:
                     bdf_file.write(matcid.write_card(size, is_double))

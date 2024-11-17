@@ -65,7 +65,7 @@ class PBAR(Property):
             self.i12 = zeros(ncards, float_fmt)
 
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
 
         self.property_id[i] = integer(card, 1, 'property_id')

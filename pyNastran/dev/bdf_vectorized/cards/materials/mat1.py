@@ -57,7 +57,7 @@ class MAT1(Material):
             self.mcsid = np.zeros(ncards, 'int32')
             self.n = ncards
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         assert self.n > 0, 'self.n=%s self.i=%s' % (self.n, self.i)
         i = self.i
         #self.model.log.debug('i=%s' % i)

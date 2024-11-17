@@ -70,7 +70,7 @@ class CBEAM(Element):
             self.sa = zeros(ncards, 'int32')
             self.sb = zeros(ncards, 'int32')
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
         eid = integer(card, 1, 'element_id')
         self.element_id[i] = eid

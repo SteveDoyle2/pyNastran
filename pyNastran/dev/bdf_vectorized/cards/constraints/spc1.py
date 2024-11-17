@@ -57,7 +57,7 @@ class SPC1:
         self.constraint_id = constraint_id
         self.components[dofs] += node_ids
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         #if comment:
             # self.comment = comment
         constraint_id = integer(card, 1, 'conid')

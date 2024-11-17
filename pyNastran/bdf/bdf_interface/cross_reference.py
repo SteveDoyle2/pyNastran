@@ -73,7 +73,7 @@ from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.cross_reference_obj import CrossReference
 

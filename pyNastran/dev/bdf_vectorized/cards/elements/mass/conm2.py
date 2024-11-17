@@ -37,7 +37,7 @@ class CONM2(VectorizedCard):
             self.x = zeros((ncards, 3), float_fmt)
             self.I = zeros((ncards, 6), float_fmt)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         eid = integer(card, 1, 'element_id')
         if comment:
             self.set_comment(eid, comment)

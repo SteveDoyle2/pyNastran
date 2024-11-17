@@ -75,7 +75,7 @@ class MATHP(Material):
             self.tabd = zeros(ncards, dtype='int32')
             self.n = ncards
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
         if comment:
             self.set_comment(mid, comment)

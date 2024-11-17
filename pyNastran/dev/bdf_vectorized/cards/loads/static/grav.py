@@ -74,7 +74,7 @@ class GRAV(VectorizedLoad):
             self.N = zeros((ncards, 3), float_fmt)
             self.mb = zeros(ncards, 'int32')
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         #self._cards.append(card)
         #self._comments.append(comment)
         i = self.i
@@ -132,4 +132,3 @@ class GRAV(VectorizedLoad):
 
     def get_load_ids(self):
         return np.unique(self.load_id)
-

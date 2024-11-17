@@ -42,7 +42,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5',
         'MATT8', 'MATT9', 'MATT11',
         'MATS1', 'MATS3', 'MATS8',
-        'MATCID', 'MATDMG',
+        'matcid', 'MATDMG',
 
         # axisysmmetric
         'ringaxs', 'ringfl',

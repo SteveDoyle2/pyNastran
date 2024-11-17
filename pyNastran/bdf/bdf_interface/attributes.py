@@ -90,7 +90,7 @@ if TYPE_CHECKING:  # pragma: no cover
         MATS1, MATS3, MATS8,
         MATCID, MATHE, MATHP,
         #MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11,
-        MATDMG,
+        MATDMG, MATCID,
         NXSTRAT,
         PMASS, CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
         NSMs, NSMADD,
@@ -533,6 +533,8 @@ class BDFAttributes:
         self.MATDMG: dict[int, MATDMG] = {}
         self.nxstrats: dict[int, NXSTRAT] = {}
 
+        self.matcid: dict[int, MATCID] = {}
+
         #: stores the CREEP card
         self.creep_materials: dict[int, CREEP] = {}
 
@@ -553,7 +555,7 @@ class BDFAttributes:
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
         self.coords: dict[int, Coord] = {0 : coord}
-        self.MATCID: dict[int, MATCID] = {}
+        self.matcid: dict[int, MATCID] = {}
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s

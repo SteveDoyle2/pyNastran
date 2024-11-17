@@ -530,6 +530,33 @@ class TestMaterials(unittest.TestCase):
         save_load_deck(model, xref='standard', punch=True,
                        run_remove_unused=False)
 
+    def test_mat11_02(self):
+        model = BDF()
+        mid = 1
+        e1 = e2 = e3 = 1000.
+        nu12 = nu13 = nu23 = 0.3
+        g12 = g13 = g23 = 3000.
+        model.add_mat11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23)
+        tid = 42
+        x = [1., 2.]
+        y = [3., 4.]
+        model.add_matt11(mid, e1_table=tid)
+        model.add_tablem1(tid, x, y)
+        save_load_deck(model, xref='standard', punch=True,
+                       run_remove_unused=False)
+
+    def test_matcid_01(self):
+        """tests MATCID"""
+        model = BDF()
+        cid = 0
+        eids = [1, 2, 3]
+        model.add_matcid(cid, eids)
+        model.add_matcid(cid, eids=None, start=1, thru=2)
+        model.add_matcid(cid, eids=None, start=1, thru=2, by=1)
+        model.add_matcid(cid, eids=None, start=1, thru=-1)
+        save_load_deck(model, xref='standard', punch=True,
+                       run_remove_unused=False)
+
     def test_mat3d(self):
         """tests MAT3D"""
         log = get_logger(level='warning')

@@ -49,7 +49,7 @@ class AEROS(VectorizedCard):
             self.symXZ = zeros(ncards, dtype='int32')
             self.symXY = zeros(ncards, dtype='int32')
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         if comment:
             self.comment = comment
         i = self.i

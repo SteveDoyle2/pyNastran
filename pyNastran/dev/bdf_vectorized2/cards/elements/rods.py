@@ -184,7 +184,7 @@ class CONRODv(RodElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CONROD card from ``BDF.add_card(...)``
 
@@ -299,7 +299,7 @@ class CRODv(RodElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CROD card from ``BDF.add_card(...)``
 
@@ -392,7 +392,7 @@ class CTUBEv(RodElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CTUBE card from ``BDF.add_card(...)``
 

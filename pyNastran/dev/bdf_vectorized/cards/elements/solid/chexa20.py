@@ -21,7 +21,7 @@ class CHEXA20(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
         eid = integer(card, 1, 'element_id')
         if comment:
@@ -331,4 +331,3 @@ class CHEXA20(SolidElement):
                         n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
                         n[10], n[11], n[12], n[13], n[14], n[15], n[16], n[17], n[18], n[19]]
                 bdf_file.write(print_card_8(card))
-

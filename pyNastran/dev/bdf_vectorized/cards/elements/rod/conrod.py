@@ -67,7 +67,7 @@ class CONROD(RodElement):
             self.c = np.zeros(ncards, float_fmt)
             self.nsm = np.zeros(ncards, float_fmt)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         self.model.log.debug('  adding CONROD')
         i = self.i
         eid = integer(card, 1, 'element_id')

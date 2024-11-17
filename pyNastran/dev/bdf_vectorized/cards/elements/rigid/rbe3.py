@@ -98,7 +98,7 @@ class RBE3:
         self.gmi = {}
 
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         #self.model.log.debug('RBE2.add')
         i = self.i
         #if comment:

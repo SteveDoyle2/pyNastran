@@ -147,7 +147,7 @@ class RLOAD1(VectorizedLoad):
     #def __rmul__(self, value):
         #return self.__mul__(value)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')

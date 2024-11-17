@@ -75,7 +75,7 @@ class PLOADv(BaseLoad):
         self._pressure.append(pressure)
         self._nids.append(nids)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a PLOAD card from ``BDF.add_card(...)``
 
@@ -212,7 +212,7 @@ class PLOAD1v(BaseLoad):
         self._p12.append((p1, p2))
         self._x12.append((x1, x2))
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a PLOAD1 card from ``BDF.add_card(...)``
 
@@ -327,7 +327,7 @@ class PLOAD2v(BaseLoad):
         self._pressure.append(pressure)
         self._eid.append(eids)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a PLOAD2 card from ``BDF.add_card(...)``
 
@@ -490,7 +490,7 @@ class PLOAD4v(BaseLoad):
         self._surf_or_line.append(surf_or_line)
         self._line_load_dir.append(line_load_dir)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a PLOAD4 card from ``BDF.add_card(...)``
 

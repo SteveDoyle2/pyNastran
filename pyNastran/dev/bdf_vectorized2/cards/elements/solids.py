@@ -220,7 +220,7 @@ class CTETRA4v(SolidElement):
     card_name = 'CTETRA'
     nnodes = 4
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CTETRA4 card from ``BDF.add_card(...)``
 
@@ -269,7 +269,7 @@ class CTETRA10v(SolidElement):
     nnodes = 10
     nrequired = 4
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CTETRA10 card from ``BDF.add_card(...)``
 
@@ -331,7 +331,7 @@ class CPENTA6v(SolidElement):
     card_name = 'CPENTA'
     nnodes = 6
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CPENTA6 card from ``BDF.add_card(...)``
 
@@ -383,7 +383,7 @@ class CPENTA15v(SolidElement):
     nnodes = 15
     nrequired = 6
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CPENTA15 card from ``BDF.add_card(...)``
 
@@ -442,7 +442,7 @@ class CHEXA8v(SolidElement):
     card_name = 'CHEXA'
     nnodes = 8
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CHEXA8 card from ``BDF.add_card(...)``
 
@@ -497,7 +497,7 @@ class CHEXA20v(SolidElement):
     nnodes = 20
     nrequired = 8
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CHEXA20 card from ``BDF.add_card(...)``
 

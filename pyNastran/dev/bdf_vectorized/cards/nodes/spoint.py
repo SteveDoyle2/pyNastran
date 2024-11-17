@@ -18,7 +18,7 @@ class SPOINT:
     def allocate(self, card_count):
         pass
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         fields = []
         for i in range(1, len(card)):
             field = integer_or_string(card, i, 'ID%i' % i)

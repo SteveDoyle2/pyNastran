@@ -43,7 +43,7 @@ class AERO(VectorizedCard):
             self.symXZ = zeros(ncards, dtype='int32')
             self.symXY = zeros(ncards, dtype='int32')
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
         if comment:
             self.comment = comment

@@ -478,13 +478,13 @@ class CrossReference:
         for mass in model.masses.values():
             try:
                 mass.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, mass)
 
         for prop in model.properties_mass.values():
             try:
                 prop.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, prop)
 
     def safe_cross_reference_masses(self) -> None:
@@ -497,13 +497,13 @@ class CrossReference:
         for mass in model.masses.values():
             try:
                 mass.safe_cross_reference(model, xref_errors)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, mass)
 
         for prop in model.properties_mass.values():
             try:
                 prop.safe_cross_reference(model, xref_errors)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, prop)
 
     def cross_reference_elements(self) -> None:
@@ -515,13 +515,13 @@ class CrossReference:
         for elem in model.elements.values():
             try:
                 elem.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, elem)
 
         for elem in model.masses.values():
             try:
                 elem.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, elem)
 
     def safe_cross_reference_elements(self) -> None:
@@ -559,13 +559,13 @@ class CrossReference:
         for elem in model.rigid_elements.values():
             try:
                 elem.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, elem)
 
         for elem in model.plotels.values():
             try:
                 elem.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, elem)
 
     def cross_reference_properties(self) -> None:
@@ -574,7 +574,7 @@ class CrossReference:
         for prop in model.properties.values():
             try:
                 prop.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, prop)
 
     def safe_cross_reference_properties(self) -> None:
@@ -585,12 +585,12 @@ class CrossReference:
             if hasattr(prop, 'safe_cross_reference'):
                 try:
                     prop.safe_cross_reference(model, xref_errors)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                     self._store_xref_error(error, prop)
             else:
                 try:
                     prop.cross_reference(model)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                     self._store_xref_error(error, prop)
 
     def cross_reference_materials(self) -> None:
@@ -602,13 +602,13 @@ class CrossReference:
         for mat in model.materials.values():  # MAT1
             try:
                 mat.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, mat)
 
         for mat in model.creep_materials.values():  # CREEP
             try:
                 mat.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, mat)
 
         # CREEP - depends on MAT1
@@ -619,7 +619,7 @@ class CrossReference:
             for mat in material_deps.values():
                 try:
                     mat.cross_reference(model)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                     self._store_xref_error(error, mat)
 
     def safe_cross_reference_materials(self) -> None:
@@ -631,22 +631,22 @@ class CrossReference:
         xref_errors = defaultdict(list)
         missing_safe_xref = set()
         for mat in model.materials.values():  # MAT1
-            if hasattr(mat, 'safe_cross_reference'):
-                try:
-                    mat.safe_cross_reference(model, xref_errors)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                    self._store_xref_error(error, mat)
-            else:
-                missing_safe_xref.add(mat.type)
-                try:
-                    mat.cross_reference(model)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                    self._store_xref_error(error, mat)
+            #if hasattr(mat, 'safe_cross_reference'):
+            try:
+                mat.safe_cross_reference(model, xref_errors)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
+                self._store_xref_error(error, mat)
+            # else:
+            #     missing_safe_xref.add(mat.type)
+            #     try:
+            #         mat.cross_reference(model)
+            #     except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
+            #         self._store_xref_error(error, mat)
 
         for mat in model.creep_materials.values():  # CREEP
             try:
                 mat.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, mat)
 
         # CREEP - depends on MAT1
@@ -655,17 +655,17 @@ class CrossReference:
                 model.MATT8, model.MATT9, model.MATT11]
         for material_deps in data:
             for mat in material_deps.values():
-                if hasattr(mat, 'safe_cross_reference'):
-                    try:
-                        mat.safe_cross_reference(model, xref_errors)
-                    except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                        self._store_xref_error(error, mat)
-                else:
-                    missing_safe_xref.add(mat.type)
-                    try:
-                        mat.cross_reference(model)
-                    except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
-                        self._store_xref_error(error, mat)
+                #if hasattr(mat, 'safe_cross_reference'):
+                try:
+                    mat.safe_cross_reference(model, xref_errors)
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
+                    self._store_xref_error(error, mat)
+                # else:
+                #     missing_safe_xref.add(mat.type)
+                #     try:
+                #         mat.cross_reference(model)
+                #     except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
+                #         self._store_xref_error(error, mat)
 
         self._show_safe_xref_errors('materials', xref_errors)
         if missing_safe_xref:
@@ -700,14 +700,14 @@ class CrossReference:
             for load_combination in load_combinations:
                 try:
                     load_combination.cross_reference(model)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                     self._store_xref_error(error, load_combination)
 
         for (unused_lid, loads) in model.loads.items():
             for load in loads:
                 try:
                     load.cross_reference(model)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                     self._store_xref_error(error, load)
 
         for (unused_lid, sid) in model.dloads.items():
@@ -715,7 +715,7 @@ class CrossReference:
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
                     load.cross_reference(model)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                     self._ixref_errors += 1
                     var = traceback.format_exception_only(type(error), error)
                     self._stored_xref_errors.append((load, var))
@@ -727,26 +727,26 @@ class CrossReference:
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
                     load.cross_reference(model)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                     #raise
                     self._store_xref_error(error, load)
 
         for unused_key, darea in model.dareas.items():
             try:
                 darea.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, darea)
 
         for unused_key, tic in model.tics.items():
             try:
                 tic.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, tic)
 
         for unused_key, dphase in model.dphases.items():
             try:
                 dphase.cross_reference(model)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, dphase)
 
     def safe_cross_reference_loads(self) -> None:

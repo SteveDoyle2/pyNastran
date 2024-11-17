@@ -81,7 +81,7 @@ class PSHELL(Property):
             self.z1 = zeros(ncards, float_fmt)
             self.z2 = zeros(ncards, float_fmt)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         pid = integer(card, 1, 'property_id')
         if comment:
             self.set_comment(pid, comment)

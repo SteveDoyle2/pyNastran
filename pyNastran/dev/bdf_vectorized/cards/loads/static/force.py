@@ -65,7 +65,7 @@ class FORCE(VectorizedLoad):
     def __rmul__(self, value):
         return self.__mul__(value)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         #self._comments.append(comment)
         i = self.i
         self.load_id[i] = integer(card, 1, 'sid')

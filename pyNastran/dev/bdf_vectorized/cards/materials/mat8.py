@@ -53,7 +53,7 @@ class MAT8(Material):
             self.F12 = zeros(ncards, dtype=float_fmt)
             self.strn = zeros(ncards, dtype=float_fmt)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         i = self.i
 
         mid = integer(card, 1, 'mid')

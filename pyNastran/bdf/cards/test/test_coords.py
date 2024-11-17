@@ -1121,13 +1121,13 @@ class TestCoords(unittest.TestCase):
 
         # Assert all CIDs in MATCID
         for cid in cids:
-            self.assertIn(cid, model.MATCID)
+            self.assertIn(cid, model.matcid)
 
         # Assert 4 CIDs in MATCID
-        self.assertEqual(len(list(model.MATCID.keys())), 4)
+        self.assertEqual(len(list(model.matcid.keys())), 4)
 
         # Assert elements in MATCIDs
-        for cid, matcids in model.MATCID.items():
+        for cid, matcids in model.matcid.items():
             self.assertEqual(len(matcids), 1)
             matcid = matcids[0]
             self.assertEqual(matcid.Cid(), cid)

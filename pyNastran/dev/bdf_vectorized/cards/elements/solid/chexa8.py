@@ -73,7 +73,7 @@ class CHEXA8(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         #self.model.log.debug('chexa8-add')
         i = self.i
         #comment = self._comments[i]
