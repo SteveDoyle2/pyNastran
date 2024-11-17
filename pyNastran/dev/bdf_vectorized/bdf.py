@@ -15,7 +15,7 @@ from typing import Optional
 import numpy as np
 from cpylog import SimpleLogger, get_logger2, __version__ as CPYLOG_VERSION
 
-from pyNastran.utils import object_attributes, check_path
+from pyNastran.utils import object_attributes, check_path, PathLike
 from pyNastran.bdf.bdf_interface.utils import (
     to_fields, _parse_pynastran_header, parse_executive_control_deck)
 
@@ -969,7 +969,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         self.active_filename = obj.active_filename
         self.include_dir = obj.include_dir
 
-    def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
+    def _read_bdf_helper(self, bdf_filename: Optional[PathLike],
+                         encoding: Optional[str],
+                         punch: bool, read_includes: bool):
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)

@@ -178,7 +178,7 @@ class XrefMesh(BDFAttributes):
         if xref_optimization:
             xref_obj.cross_reference_optimization()
         if xref_nodes_with_elements:
-            self.cross_reference_nodes_with_elements()
+            xref_obj.cross_reference_nodes_with_elements()
         xref_obj.cross_reference_contact()
         xref_obj.cross_reference_superelements()
         #self.case_control_deck.cross_reference(self)

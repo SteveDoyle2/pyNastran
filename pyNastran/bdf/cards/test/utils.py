@@ -84,7 +84,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
         log_error = SimpleLogger(level='error', encoding='utf-8')
         test_bdf(folder, 'model2.bdf', stop_on_failure=True,
                  punch=punch,
-                 quiet=True, log=log_error)
+                 quiet=True, log=log_error, is_lax_parser=True)
         os.remove('model2.test_bdf.bdf')
 
     nelements = len(model2.elements) + len(model2.masses)
@@ -180,7 +180,7 @@ def attach_displacement_to_bdf_model(model: BDF) -> OP2Geom:
     return op2_geom_model
 
 def _run_hdf5(model2: BDF, log: SimpleLogger,
-              run_save_load_hdf5: bool=True):
+              run_save_load_hdf5: bool=True) -> None:
     """helper method"""
     if run_save_load_hdf5 and IS_H5PY:
         hdf5_filename = 'test.h5'
@@ -201,7 +201,8 @@ def _run_hdf5(model2: BDF, log: SimpleLogger,
                 log.error(msg)
         os.remove(hdf5_filename)
 
-def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):
+def _run_mass_properties(model2: BDF, nnodes: int, nelements: int,
+                         run_mass_properties: bool=True) -> None:
     """helper method"""
     if not(run_mass_properties and nelements):
         return
@@ -226,7 +227,7 @@ def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):
     #assert np.allclose(mass1, mass3), 'mass1=%s mass3=%s' % (mass1, mass3)
     #assert np.allclose(cg1, cg3), 'mass=%s\ncg1=%s cg3=%s' % (mass1, cg1, cg3)
 
-def _run_loads(model, nelements: int, run_loads=True):
+def _run_loads(model: BDF, nelements: int, run_loads: bool=True) -> None:
     """helper method"""
     if not run_loads:
         return
@@ -261,9 +262,9 @@ def _run_loads(model, nelements: int, run_loads=True):
         del model.case_control_deck
 
 def _normals_eid_map(model: BDF, nelements: int,
-                     fdtype='float64') -> tuple[np.ndarray,
-                                                list[int],
-                                                dict[int, int]]:
+                     fdtype: str='float64') -> tuple[np.ndarray,
+                                                     list[int],
+                                                     dict[int, int]]:
     ieid = 0
     eids = []
     eid_map = {}
@@ -276,14 +277,15 @@ def _normals_eid_map(model: BDF, nelements: int,
         ieid += 1
     return normals, eids, eid_map
 
-def _cross_reference(model: BDF, xref: bool | str):
+def _cross_reference(model: BDF, xref: bool | str) -> None:
     """helper method for ``_cross_reference``"""
     if xref in [True, 'standard']:
         model.cross_reference()
+        model.safe_cross_reference()
     elif xref in ['safe']:
         model.safe_cross_reference()
 
-def cross_reference(model: BDF, xref: bool):
+def cross_reference(model: BDF, xref: bool) -> None:
     """validate we're doing xref right"""
     _cross_reference(model, xref)
     model.pop_xref_errors()
@@ -295,7 +297,7 @@ def cross_reference(model: BDF, xref: bool):
     model.pop_xref_errors()
 
 
-def renumber(bdf_filename: str, log: SimpleLogger):
+def renumber(bdf_filename: str, log: SimpleLogger) -> None:
     bdf_filename_out = 'junk.bdf'
     #model3_copy = deepcopy(model3)
     #model3.cross_reference()
@@ -306,7 +308,7 @@ def renumber(bdf_filename: str, log: SimpleLogger):
     model4.read_bdf(bdf_filename_out)
     os.remove('junk.bdf')
 
-def get_matrices(model: BDF):
+def get_matrices(model: BDF) -> None:
     """tests the ``get_matrix`` method for every type of matrix"""
     dicts = ChainMap(model.dmig, model.dmij, model.dmiji, model.dmik,
                      model.dmi, model.dmiax)

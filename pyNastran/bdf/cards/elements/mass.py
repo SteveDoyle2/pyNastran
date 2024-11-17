@@ -566,7 +566,8 @@ class CMASS3(PointMassElement):
         nids = [1, 2]
         return CMASS3(eid, pid, nids, comment='')
 
-    def __init__(self, eid: int, pid: int, nids: list[int], comment: str=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 comment: str=''):
         """
         Creates a CMASS3 card
 
@@ -593,7 +594,7 @@ class CMASS3(PointMassElement):
         self.pid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CMASS3 card from ``BDF.add_card(...)``
 
@@ -661,6 +662,9 @@ class CMASS3(PointMassElement):
         msg = ', which is required by CMASS3 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model: BDF) -> None:
+        self.cross_reference(model)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

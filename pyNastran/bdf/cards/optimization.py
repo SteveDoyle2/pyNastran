@@ -876,11 +876,11 @@ class DESVAR(OptConstraint):
             msg = ', which is required by DESVAR desvar_id=%r' % self.desvar_id
             self.ddval_ref = model.DDVal(self.ddval, msg=msg)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model, xref_errors):
         try:
             self.cross_reference(model)
         except KeyError:
-            self.log.warning('cant cross reference DESVAR {self.desvar_id} with DDVAL {self.ddval}')
+            self.log.warning(f'cant cross reference DESVAR {self.desvar_id} with DDVAL {self.ddval}')
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -4581,7 +4581,7 @@ class DVMREL2(DVXREL2):
         #assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
 
 
-    def cross_reference(self, model: BDF, xref_errors) -> None:
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

@@ -303,7 +303,7 @@ class DEQATN(BaseCard):  # needs work...
         self.dtable_ref = self.dtable
         self._setup_equation()
 
-    def safe_cross_reference(self, model: BDF) -> None:
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:

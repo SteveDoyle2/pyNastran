@@ -3,17 +3,19 @@ import os
 import traceback
 from io import StringIO
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import cast, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.errors import CrossReferenceError
+from pyNastran.bdf.cards.deqatn import DEQATN
+from pyNastran.bdf.cards.optimization import DESVAR, DCONSTR
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF, GRID
 
 
 class CrossReference:
     def __init__(self, model: BDF) -> None:
-        self.model = model
+        self.model: BDF = model
         model.log
         self.reset_errors()
 
@@ -48,11 +50,11 @@ class CrossReference:
             are cross-reference errors (default=True)
 
         """
-        assert isinstance(nparse_errors, int), type(nparse_errors)
+        #assert isinstance(nparse_errors, int), type(nparse_errors)
         assert isinstance(nxref_errors, int), type(nxref_errors)
-        self._nparse_errors = nparse_errors
+        #self._nparse_errors = nparse_errors
         self._nxref_errors = nxref_errors
-        self._stop_on_parsing_error = stop_on_parsing_error
+        #self._stop_on_parsing_error = stop_on_parsing_error
         self._stop_on_xref_error = stop_on_xref_error
 
     def pop_xref_errors(self) -> None:
@@ -166,7 +168,7 @@ class CrossReference:
 
         for set_dict in set_dicts:
             assert isinstance(set_dict, dict), set_dict
-            for set_obj in set_dict:
+            for set_obj in set_dict.values():
                 set_obj.cross_reference(model)
 
         for unused_name, set_objs in model.usets.items():
@@ -187,16 +189,16 @@ class CrossReference:
         for set_list in set_lists:
             assert isinstance(set_list, list), set_list
             for set_obj in set_list:
-                set_obj.safe_cross_reference(model)
+                set_obj.cross_reference(model)
 
         for set_dict in set_dicts:
             assert isinstance(set_dict, dict), set_dict
-            for set_obj in set_dict:
+            for set_obj in set_dict.values():
                 set_obj.cross_reference(model)
 
         for unused_name, set_objs in model.usets.items():
             for set_obj in set_objs:
-                set_obj.safe_cross_reference(model)
+                set_obj.cross_reference(model)
 
     def cross_reference_aero(self, check_caero_element_ids: bool=False) -> None:
         """
@@ -825,27 +827,29 @@ class CrossReference:
         model = self.model
         xref_errors = defaultdict(list)
         for unused_key, deqatn in model.dequations.items():
-            deqatn.safe_cross_reference(model)
+            deqatn = cast(DEQATN, deqatn)
+            deqatn.safe_cross_reference(model, xref_errors)
 
         for unused_key, dresp in model.dresps.items():
             dresp.safe_cross_reference(model, xref_errors)
 
         for unused_key, dconstrs in model.dconstrs.items():
             for dconstr in dconstrs:
+                dconstr = cast(DCONSTR, dconstr)
                 if hasattr(dconstr, 'safe_cross_reference'):
-                    dconstr.safe_cross_reference(model)
+                    dconstr.safe_cross_reference(model, xref_errors)
                 else:  # pragma: no cover
                     dconstr.cross_reference(model)
 
         for unused_key, dvcrel in model.dvcrels.items():
             if hasattr(dvcrel, 'safe_cross_reference'):
-                dvcrel.safe_cross_reference(model)
+                dvcrel.safe_cross_reference(model, xref_errors)
             else:  # pragma: no cover
                 dvcrel.cross_reference(model)
 
         for unused_key, dvmrel in model.dvmrels.items():
             if hasattr(dvmrel, 'safe_cross_reference'):
-                dvmrel.safe_cross_reference(model)
+                dvmrel.safe_cross_reference(model, xref_errors)
             else:  # pragma: no cover
                 dvmrel.cross_reference(model)
 
@@ -856,10 +860,11 @@ class CrossReference:
                 dvprel.cross_reference(model)
 
         for unused_key, desvar in model.desvars.items():
-            desvar.safe_cross_reference(model)
+            desvar = cast(DESVAR, desvar)
+            desvar.safe_cross_reference(model, xref_errors)
 
         for unused_key, topvar in model.topvar.items():
-            topvar.safe_cross_reference(model)
+            topvar.safe_cross_reference(model, xref_errors)
 
     def cross_reference_bolts(self) -> None:
         model = self.model

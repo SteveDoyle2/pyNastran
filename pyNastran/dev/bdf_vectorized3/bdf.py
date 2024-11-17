@@ -1489,8 +1489,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                     del dict_values[value]
             # TODO: redo get_card_ids_by_card_types & card_count
 
-    def _read_bdf_helper(self, bdf_filename: Optional[PathLike], encoding: str,
-                         punch: bool, read_includes: bool):
+    def _read_bdf_helper(self, bdf_filename: Optional[PathLike],
+                         encoding: str,
+                         punch: bool,
+                         read_includes: bool):
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)

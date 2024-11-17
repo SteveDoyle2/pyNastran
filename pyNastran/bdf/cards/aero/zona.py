@@ -428,7 +428,9 @@ class ACOORD(CoordBase):  # not done
     def rid(self):
         return None
 
-    def __init__(self, cid, origin, delta, theta, comment=''):
+    def __init__(self, cid: int,
+                 origin: np.ndarray, delta: np.ndarray, theta: np.ndarray,
+                 comment: str=''):
         """
         Defines the CORD3G card
 
@@ -493,6 +495,9 @@ class ACOORD(CoordBase):  # not done
 
         """
         pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
