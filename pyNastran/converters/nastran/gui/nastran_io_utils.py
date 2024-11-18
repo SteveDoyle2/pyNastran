@@ -3049,6 +3049,7 @@ def get_model_unvectorized(log: SimpleLogger,
         model.load(obj_filename=bdf_filename)
     else:  # read the bdf/punch
         model = BDF(log=log, debug=True)
+        model.is_lax_parser = True
         #model.set_error_storage(nparse_errors=0,
         #                        stop_on_parsing_error=True,
         #                        nxref_errors=0,
