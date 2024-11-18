@@ -1302,7 +1302,7 @@ class MATCID(BaseCard):
     def __init__(self, cid: int,
                  eids=None,
                  start: Optional[int]=None,
-                 thru: Optional[int]=None,
+                 end: Optional[int]=None,
                  by: Optional[int]=1,
                  comment: str=''):
         """
@@ -1326,7 +1326,7 @@ class MATCID(BaseCard):
             Array of element identification numbers
         start: int
             used in format alternative 2 and 3, indicates starting eID
-        thru : int
+        end : int
             used in format alternative 2 and 3
         by : int; default=1
             used in format alternative 3
@@ -1367,18 +1367,18 @@ class MATCID(BaseCard):
             self.comment = comment
         self.cid = cid
         if eids is not None:
-            assert eids is not None, f'eids={eids}, start={start}, thru={thru}, by={by}'
-            assert start is None and thru is None and (by is None or by == 1), f'eids={eids}, start={start}, thru={thru}, by={by}'
+            assert eids is not None, f'eids={eids}, start={start}, end={end}, by={by}'
+            assert start is None and end is None and (by is None or by == 1), f'eids={eids}, start={start}, end={end}, by={by}'
         else:
             assert eids is None, f'cid={cid}, eids={eids}'
-            assert isinstance(start, int) and isinstance(thru, int) and isinstance(by, int), f'cid={cid}, start={start} thru={thru} by={by}'
+            assert isinstance(start, int) and isinstance(end, int) and isinstance(by, int), f'cid={cid}, start={start} end={end} by={by}'
         self.start = start
-        self.thru = thru
+        self.end = end
         self.by = by
         self.eids = eids
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Material Coordinate System for Solid Elements
 
@@ -1430,23 +1430,23 @@ class MATCID(BaseCard):
         if field2 == 'ALL':
             eids = None
             start = 1
-            thru = -1
-            return cls(cid, eids, start, thru, by, comment=comment)
+            end = -1
+            return cls(cid, eids, start, end, by, comment=comment)
 
         assert field2 > 0, f'{field2}'
         n_fields = len(card)
-        field3 = integer_or_string(card, 3, 'pos3')
-        if isinstance(field3, str):  # THRU
+        thru_eid2 = integer_or_string(card, 3, 'THRU/eid2')
+        if isinstance(thru_eid2, str):  # THRU
             eids = None
-            assert field3 == 'THRU', f'{field3}'
+            assert thru_eid2 == 'THRU', f'{thru_eid2}'
             start = integer(card, 2, 'start')
-            thru = integer(card, 4, 'thru')
-            assert thru > start, f'start={start}, thru={thru}'
+            end = integer(card, 4, 'end')
+            assert end > start, f'start={start}, end={end}'
 
             if n_fields > 5:  # BY
                 by = integer_or_blank(card, 6, 'by', default=1)
                 assert by > 0, f'{by}'
-            return cls(cid, eids, start, thru, by, comment=comment)
+            return cls(cid, eids, start, end, by, comment=comment)
         else:  # Multiple eIDs referenced without using THRU / BY
             eids = np.empty([n_fields - 2], dtype=int)
             for i in range(2, n_fields):
@@ -1478,11 +1478,11 @@ class MATCID(BaseCard):
         assert self.cid is not None, self.cid
         if self.eids is not None:
             list_fields = ['MATCID', self.cid] + list(self.eids)
-        elif self.start == 1 and self.thru == -1 and self.by == 1:
+        elif self.start == 1 and self.end == -1 and self.by == 1:
             list_fields = ['MATCID', self.cid, 'ALL']
         else:
-            assert self.start is not None and self.start > 0, (self.start, self.thru, self.by)
-            list_fields = ['MATCID', self.cid, self.start, 'THRU', self.thru]
+            assert self.start is not None and self.start > 0, (self.start, self.end, self.by)
+            list_fields = ['MATCID', self.cid, self.start, 'THRU', self.end]
             if self.by != 1:
                 list_fields.extend(['BY', self.by])
         return list_fields

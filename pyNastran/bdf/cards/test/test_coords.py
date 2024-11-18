@@ -1108,11 +1108,12 @@ class TestCoords(unittest.TestCase):
              1.135, 0.089237, 0.9324],
 
             # MATCID Variants
+            # cids = [7, 8, 9, 10]
             ['MATCID', cids[0], 7, 8, 9, 10, 11, 12, 13, 14],  # Manual
             ['MATCID', cids[1], 7, 'THRU', 14],  # Using 'THRU'
             ['MATCID', cids[2], 7, 'THRU', 14, 'BY', 1],  # Using 'BY'
             ['MATCID', cids[3], 'ALL'],  # Using 'ALL'
-            ]
+        ]
 
         model = BDF(debug=False)
         for fields in cards:
@@ -1132,38 +1133,35 @@ class TestCoords(unittest.TestCase):
             matcid = matcids[0]
             self.assertEqual(matcid.Cid(), cid)
 
-            self.assertIn(matcid.form, [1, 2, 3, 4])
-
-            if matcid.form == 1:
+            if matcid.cid == 7:
                 self.assertEqual(matcid.Cid(), 7)
                 self.assertTrue((matcid.eids == np.array([7, 8, 9, 10, 11, 12, 13, 14], dtype=int)).all())
                 self.assertIsNone(matcid.start)
-                self.assertIsNone(matcid.thru)
-                self.assertIsNone(matcid.by)
-
-            elif matcid.form == 2:
-                self.assertEqual(matcid.Cid(), 8)
-                self.assertEqual(matcid.start, 7)
-                self.assertEqual(matcid.thru, 14)
-
-                self.assertIsNone(matcid.eids)
-                self.assertIsNone(matcid.by)
-
-            elif matcid.form == 3:
-                self.assertEqual(matcid.Cid(), 9)
-                self.assertEqual(matcid.start, 7)
-                self.assertEqual(matcid.thru, 14)
+                self.assertIsNone(matcid.end)
                 self.assertEqual(matcid.by, 1)
 
+            elif matcid.cid == 8:
+                self.assertEqual(matcid.Cid(), 8)
+                self.assertEqual(matcid.start, 7)
+                self.assertEqual(matcid.end, 14)
+
+                self.assertIsNone(matcid.eids)
+                self.assertEqual(matcid.by, 1)
+                # self.assertIsNone(matcid.by)
+
+            elif matcid.cid == 9:
+                self.assertEqual(matcid.Cid(), 9)
+                self.assertEqual(matcid.start, 7)
+                self.assertEqual(matcid.end, 14)
+                self.assertEqual(matcid.by, 1)
                 self.assertIsNone(matcid.eids)
 
-            else:  # matcid == 4
+            else:  # cid == 10
                 self.assertEqual(matcid.Cid(), 10)
-
                 self.assertIsNone(matcid.eids)
-                self.assertIsNone(matcid.start)
-                self.assertIsNone(matcid.thru)
-                self.assertIsNone(matcid.by)
+                self.assertEqual(matcid.start, 1)
+                self.assertEqual(matcid.end, -1)
+                self.assertEqual(matcid.by, 1)
 
 def make_tri(model):
     model.add_grid(1, [0., 0., 0.])
