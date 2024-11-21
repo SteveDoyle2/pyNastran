@@ -117,11 +117,30 @@ class AnimationWindow(PyDialog):
             #'Animate Frequency Sweep'
         #]
 
+        icase_max = self.get_icase_max(is_gui)
         self.setWindowTitle('Animate Model')
-        self.create_widgets()
+        self.create_widgets(icase_max)
         self.create_layout()
         self.set_connections()
 
+        # self.icase_fringe_edit.setRange(1, icase_max)
+        # self.icase_disp_edit.setRange(1, icase_max)
+        # self.icase_vector_edit.setRange(1, icase_max)
+
+        self.icase_fringe_start_edit.setRange(0, icase_max)
+        self.icase_fringe_end_edit.setRange(0, icase_max)
+        self.icase_fringe_delta_edit.setRange(1, icase_max)
+
+        self.icase_disp_start_edit.setRange(0, icase_max)
+        self.icase_disp_end_edit.setRange(0, icase_max)
+        self.icase_disp_delta_edit.setRange(1, icase_max)
+
+        self.icase_vector_start_edit.setRange(0, icase_max)
+        self.icase_vector_end_edit.setRange(0, icase_max)
+        self.icase_vector_delta_edit.setRange(1, icase_max)
+        self.on_update_min_max_defaults()
+
+    def get_icase_max(self, is_gui: bool) -> int:
         self.is_gui = is_gui
         self.gui = None
         if is_gui:
@@ -146,25 +165,9 @@ class AnimationWindow(PyDialog):
             icase_max = 1000
             if self.is_gui:
                 icase_max = max(self.gui.result_cases)
+        return icase_max
 
-        self.icase_fringe_edit.setRange(0, icase_max)
-        self.icase_disp_edit.setRange(1, icase_max)
-        self.icase_vector_edit.setRange(1, icase_max)
-
-        self.icase_fringe_start_edit.setRange(0, icase_max)
-        self.icase_fringe_end_edit.setRange(0, icase_max)
-        self.icase_fringe_delta_edit.setRange(1, icase_max)
-
-        self.icase_disp_start_edit.setRange(0, icase_max)
-        self.icase_disp_end_edit.setRange(0, icase_max)
-        self.icase_disp_delta_edit.setRange(1, icase_max)
-
-        self.icase_vector_start_edit.setRange(0, icase_max)
-        self.icase_vector_end_edit.setRange(0, icase_max)
-        self.icase_vector_delta_edit.setRange(1, icase_max)
-        self.on_update_min_max_defaults()
-
-    def create_widgets(self) -> None:
+    def create_widgets(self, icase_max: int) -> None:
         """creates the menu objects"""
         self.box_scale = QGroupBox('Animate Scale')
         self.box_time = QGroupBox('Animate Time')
@@ -178,12 +181,13 @@ class AnimationWindow(PyDialog):
         self.icase_fringe_edit = QSpinBox(self)
         #self.icase_fringe_edit.setRange(0, icase_max)
         self.icase_fringe_edit.setSingleStep(1)
-        if self._icase_fringe is not None:
-            self.icase_fringe_edit.setValue(self._icase_fringe)
         self.icase_fringe_edit.setToolTip(
             'Case Number for the Scale/Phase Animation Type.\n'
             'Defaults to the result you had shown when you clicked "Create Animation".\n'
             'iCase can be seen by clicking "Apply" on a result.')
+        self.icase_fringe_edit.setRange(0, icase_max)
+        if self._icase_fringe is not None:
+            self.icase_fringe_edit.setValue(self._icase_fringe)
 
         self.checkbox_disp = QCheckBox('Animate')
         self.checkbox_disp.setToolTip('Animate the displacement')
@@ -193,7 +197,7 @@ class AnimationWindow(PyDialog):
 
         self.icase_disp_label = QLabel("iCase (Disp):")
         self.icase_disp_edit = QSpinBox(self)
-        #self.icase_disp_edit.setRange(1, icase_max)
+        self.icase_disp_edit.setRange(0, icase_max)
         self.icase_disp_edit.setSingleStep(1)
         if self._icase_disp is not None:
             self.icase_disp_edit.setValue(self._icase_disp)
@@ -206,7 +210,7 @@ class AnimationWindow(PyDialog):
 
         self.icase_vector_label = QLabel("iCase (Vector):")
         self.icase_vector_edit = QSpinBox(self)
-        #self.icase_vector_edit.setRange(1, icase_max)
+        self.icase_vector_edit.setRange(0, icase_max)
         self.icase_vector_edit.setSingleStep(1)
         if self._icase_vector is not None:
             self.icase_vector_edit.setValue(self._icase_vector)
