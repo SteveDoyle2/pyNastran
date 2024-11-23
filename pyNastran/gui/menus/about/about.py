@@ -229,12 +229,21 @@ def get_packages() -> dict[str, str]:
     if 'pyside' in qt_name.lower():
         del packages['QScintilla2']
 
-    for name in ['setuptools', 'matplotlib', 'pandas', 'h5py', 'tables', 'imageio', 'PIL', 'pygments']:
+    pkgs = [
+        'setuptools', 'matplotlib', 'pandas', 'h5py', 'tables',
+        'imageio', 'PIL', 'pygments']
+    for name in pkgs:
         try:
             module = importlib.import_module(name, package=None)
         except ImportError:
             continue
-        packages[name] = module.__version__
+
+        try:
+            pkg_version = module.__version__
+        except AttributeError:
+            continue
+        packages[name] = pkg_version
+
     return packages
 
 def get_version() -> dict[str, str]:

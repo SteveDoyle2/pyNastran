@@ -1,17 +1,40 @@
+Packages
+--------
+>>> pip install pyqt5 vtk imageio py-splash
+
+Last Built on:
+ - Python 3.11.9, 2024/11/23 (get the dev version)
+
 Windows
 -------
-1.  Use 32-bit or 64-bit Python 3.7
+1.  Use 64-bit Python 3.10+
 2.  Verify the gui works by typing:
     >>> pyNastranGUI
-3.  Download pyInstaller -> http://www.pyinstaller.org/
-    - pyInstaller 3.1 (https://github.com/pyinstaller/pyinstaller/releases/download/v3.1/PyInstaller-3.1.zip)
+3.  Download pyInstaller -> https://github.com/pyinstaller/pyinstaller
+    - Get the dev version from github
 4.  Extract pyInstaller
 5.  Go into the pyInstaller directory and run setup.py
-6.  In pyInstaller/building/toc_conversion.py; line 135, change:
-       OLD : os.makedirs(workpath)
-       NEW : if not os.path.exists(workpath):
-                 os.makedirs(workpath)
-7.  Go into pyNastran/dev and run:
+6.  DEPRECATED: In pyInstaller/building/toc_conversion.py; line 135, change:
+       OLD: os.makedirs(workpath)
+       NEW: if not os.path.exists(workpath):
+                os.makedirs(workpath)
+7.  In pyInstaller/archive/writers.py; line 138, skip the __pycache__ directory:
+       OLD:
+            # Write entries' data and collect TOC entries
+            toc = []
+            for entry in entries:
+                toc_entry = self._write_entry(fp, entry)
+                toc.append(toc_entry)
+       NEW:
+            # Write entries' data and collect TOC entries
+            toc = []
+            for entry in entries:
+                dest_name, src_name, compress, typecode = entry
+                if '__pycache__' in dest_name:
+                    continue
+                toc_entry = self._write_entry(fp, entry)
+                toc.append(toc_entry)
+8.  Go into pyNastran/dev and run:
     >>> pyinstaller pyNastranGUI.spec
 
 

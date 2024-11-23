@@ -26,7 +26,7 @@ IS_RELEASE = True
 USE_TODAY = True
 IS_ONEDIR = False # True=onedir; False=onefile
 
-MAKE_SPLASH = False # requires tk
+MAKE_SPLASH = True # requires tk
 BUILD_EXE = True
 BUILD_COLLECT = False
 

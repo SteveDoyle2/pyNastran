@@ -171,8 +171,17 @@ class MainWindow(GuiCommon, NastranIO):
         self.setup_controls()
         self.setup_post(inputs)
 
-        if is_pynastrangui_exe and '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
-            import pyi_splash
+        if 0:  # pragma: no cover
+            print(f'is_pynastrangui_exe = {is_pynastrangui_exe}')
+            if is_pynastrangui_exe:
+                print(f'os.environ = {os.environ}')
+                print('_PYIBoot_SPLASH', '_PYIBoot_SPLASH' in os.environ)
+                if '_PYIBoot_SPLASH' in os.environ:
+                    is_pysplash = importlib.util.find_spec("pyi_splash")
+                    print(f'is_pysplash', is_pysplash)
+
+        if is_pynastrangui_exe: # and '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
+            import pyi_splash   # pip install py-splash
             # Update the text on the splash screen
             pyi_splash.update_text("PyInstaller is a great software!")
             #pyi_splash.update_text("Second time's a charm!")
