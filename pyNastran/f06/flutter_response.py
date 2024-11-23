@@ -464,7 +464,7 @@ class FlutterResponse:
         See ``plot_root_locus`` for arguments
         """
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
-        ylabel = 'Viscous Damping'
+        ylabel = 'Structural Damping'
         iy = self.idamping
         scatter = True
         self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
@@ -753,7 +753,7 @@ class FlutterResponse:
         assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
 
-        ylabel1 = r'Viscous Damping; $g = 2 \gamma $'
+        ylabel1 = r'Structural Damping; $g = 2 \gamma $'
         ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
 
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
@@ -771,8 +771,8 @@ class FlutterResponse:
                         **kwargs)
 
     def plot_kfreq_damping2(self, modes=None,
-                            fig=None,
-                            xlim=None, ylim=None,
+                            fig=None, axes1=None, axes2=None,
+                            xlim=None, ylim1=None,  ylim2=None,
                             show: bool=True, clear: bool=False,
                             close: bool=False, legend: bool=True,
                             png_filename=None,
@@ -784,17 +784,18 @@ class FlutterResponse:
 
         """
         xlabel = r'KFreq [rad]; $ \omega c / (2 V)$'
-        ylabel1 = r'Viscous Damping; $g = 2 \gamma $'
+        ylabel1 = r'Structural Damping; $g = 2 \gamma $'
         ylabel2 = 'Frequency [Hz]'
         ix = self.ikfreq
         iy1 = self.idamping
         iy2 = self.ifreq
         scatter = True
         self._plot_x_y2(ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
-                        modes=modes, fig=fig, xlim=xlim, ylim=ylim,
+                        modes=modes,
+                        fig=fig, axes1=axes1, axes2=axes2,
+                        xlim=xlim, ylim1=ylim1, ylim2=ylim2,
                         show=show, clear=clear, close=close,
-                        legend=legend,
-                        png_filename=png_filename,
+                        legend=legend, png_filename=png_filename,
                         **kwargs)
 
     def fix(self):
@@ -846,6 +847,7 @@ class FlutterResponse:
                    vd_limit=None, damping_limit=None,
                    nopoints: bool=False, noline: bool=False,
                    ncol: int=0,
+                   freq_tol: float=-1.0,
                    png_filename=None, show: bool=False):
         """
         Make a V-g and V-f plot
@@ -890,13 +892,21 @@ class FlutterResponse:
         #plot_type = ['tas', 'eas', 'alt', 'kfreq', '1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach']
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
 
+        jcolor = 0
         for i, imode, mode in zip(count(), imodes, modes):
-            color = colors[i]
-            symbol = symbols[i]
+            color = colors[jcolor]
+            symbol = symbols[jcolor]
 
             vel = self.results[imode, :, ix].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
+
+            if freq.max() - freq.min() <= freq_tol:
+                color = 'gray'
+                jcolor -= 1
+            jcolor += 1
+            linestyle2 = '--' if color == 'gray' else linestyle
+            symbol2 = '' if color == 'gray' else symbol
 
             #iplot = np.where(freq > 0.0)
             #damp_axes.plot(vel, damping, symbols[i], label='Mode %i' % mode)
@@ -906,13 +916,13 @@ class FlutterResponse:
             #damp_axes.plot(vel[iplot], damping[iplot], symbols[i], label='Mode %i' % mode)
             #freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
             #print(color, symbol, linestyle)
-            label = f'Mode {mode:d}; freq={freq[0]:.2g}'
-            damp_axes.plot(vel, damping, color=color, marker=symbol, linestyle=linestyle, label=label)
-            freq_axes.plot(vel, freq, color=color, marker=symbol, linestyle=linestyle)
+            label = _get_mode_freq_label(mode, freq[0])
+            damp_axes.plot(vel, damping, color=color, marker=symbol2, linestyle=linestyle2, label=label)
+            freq_axes.plot(vel, freq, color=color, marker=symbol2, linestyle=linestyle2)
 
         damp_axes.set_xlabel(xlabel)
         freq_axes.set_xlabel(xlabel)
-        damp_axes.set_ylabel(r'Viscous Damping; $g = 2 \gamma $')
+        damp_axes.set_ylabel(r'Structural Damping; $g = 2 \gamma $')
         freq_axes.set_ybound(lower=0.)
 
         damp_axes.grid(True)
@@ -1243,7 +1253,7 @@ class FlutterResponse:
             xlabel = r'Eigenvalue (Imaginary); $\omega$'
         elif plot_type in ['damp', 'damping']:
             ix = self.idamping
-            xlabel = r'Viscous Damping; $g = 2 \gamma $'
+            xlabel = r'Structural Damping; $g = 2 \gamma $'
         else:  # pramga: no cover
             raise NotImplementedError("plot_type=%r not in ['tas', 'eas', 'alt', 'kfreq', "
                                       "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']")
@@ -1393,9 +1403,9 @@ def _add_damping_limit(plot_type: str,
     #damp_label = f'Damping={damping_limit*100:.1f}'
     #plt.axhline(y=1.0, color="black", linestyle="--")
     damp_axes.axhline(y=0., color='k', linestyle='--', linewidth=linewidth,
-                      label=f'Viscous Damping=0%')
+                      label=f'Structural Damping=0%')
     damp_axes.axhline(y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
-                      label=f'Abs Viscous Damping={damping_limit*100:.1f}%')
+                      label=f'Abs Structural Damping={damping_limit*100:.1f}%')
 
 
 def _add_vd_limit(plot_type: str,
@@ -1508,3 +1518,16 @@ def _symbols_colors_from_nlines(colors: list[str], symbols: list[str],
         ksymbol = int(np.ceil(nlines / nsymbols))
         symbols = symbols * ksymbol
     return symbols, colors
+
+
+def _get_mode_freq_label(mode: int, freq: float) -> str:
+    # write tiny numbers
+    if abs(freq) > 1.0:
+        # don't write big numbers in scientific
+        freq_num = f'{freq:.2f}'
+    else:
+        freq_num = f'{freq:.3g}'
+        # strip silly scientific notation
+        freq_num = freq_num.replace('-0', '-').replace('-0', '-').replace('+0', '+')
+    label = f'Mode {mode:d}; freq={freq_num}'
+    return label

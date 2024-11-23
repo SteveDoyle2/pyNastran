@@ -40,6 +40,12 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
     if argv is None:  # pragma: no cover
         argv = sys.argv
+
+    if '--gui' in argv:
+        from pyNastran.f06.gui_flutter import main as gui_flutter
+        gui_flutter()
+        return
+
     msg = (
         USAGE_145 +
         '  f06 plot_145 -h | --help\n'
@@ -185,6 +191,8 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     export_f06 = data['--f06']
     export_csv = data['--export_csv']
     export_zona = data['--export_zona']
+
+    base = os.path.splitext(os.path.basename(f06_filename))[0]
     export_f06_filename = None if export_f06 is False else 'nastran.f06'
     export_zona_filename = None if export_zona is False else 'nastran.zona'
     export_veas_filename = None if export_zona is False else 'nastran.veas'
@@ -192,10 +200,10 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     # TODO: need a new parameter
     export_csv_filename = None if export_csv is None else base + '.plot_145_subcase_%d.csv'
 
-    vg_filename = None if export_zona is None else 'vg_subcase_%d.png'
-    vg_vf_filename = None if export_zona is None else 'vg_vf_subcase_%d.png'
-    kfreq_damping_filename = None if export_zona is None else 'kfreq_damping_subcase_%d.png'
-    root_locus_filename = None if export_zona is None else 'root_locus_subcase_%d.png'
+    vg_filename = None if export_zona is None else f'vg_{base}_subcase_%d.png'
+    vg_vf_filename = None if export_zona is None else f'vg_vf_{base}_subcase_%d.png'
+    kfreq_damping_filename = None if export_zona is None else f'kfreq_damping_{base}_subcase_%d.png'
+    root_locus_filename = None if export_zona is None else f'root_locus_{base}_subcase_%d.png'
     if not plot:
         return
 
