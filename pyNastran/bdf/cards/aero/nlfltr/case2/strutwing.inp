@@ -1,0 +1,245 @@
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                              $
+$                        STRUTWNG.INP                                          $
+$                                                                              $
+$ STRUT-BRACED WING SUBJECTED TO DISCRETE GUST AT 2.5G AND -1 G CONDITIONS.    $
+$                                                                              $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ BUCKLED.F06 CONTAINS THE MSC/NASTRAN MODAL RESULTS OF THE STRUT-BUCKLED      $
+$ STRUTURE. THE MODE SHAPES ARE USED AS THE GENERALIZED COORDINAES BECAUSE     $
+$ THEY CAN BETTER REPRESENT DEFORMATIONS OF THE NOMINAL,STRUT & WING-BUCKLED   $
+$ STRUCTURES.                                                                  $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN FEM =buckled.f06,PRINT=0,FORM=MSC,BOUND=SYM,SUPORT=3    
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  BUCKLED.MGH CONTAINS THE [MGG][PHI] MATRIX USED TO COMPUTE THE GRAVITY LOADS$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN MATRIX =buckled.mgh,MNAME=SMGH,PRINT=0
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  NOMINAL.KGG CONTAINS THE G-SET STIFFNESS MATRIX OF THE NOMINAL STRUCTIRE.   $
+$  IT IS ALSO USED TO GENERATE THE [SKGH] MATRIX.                              $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN MATRIX =nominal.kgg,MNAME=NOMKGG,PRINT=0
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  WBUCKLED.KGG CONTAINS THE G-SET STIFFNESS MATRIX OF THE WING-BUCKLED        $
+$  STRUCTURE.                                                                  $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN MATRIX =wbuckled.kgg,MNAME=WBUCKGG,PRINT=0
+GENGUST
+$
+DOUBLE
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  SUBAC50 TO MOVE AERODYNAMIC CENTER ON EACH BOX FROM DEFAULT 25% CHORD       $
+$  O 50% CHORD                                                                 $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+SUBAC50
+$
+CEND                                                                            
+$Begin Case Control Section
+TITLE= Non-Linear Flutter of the Wing + Strut Configuration   
+ECHO = SORT    
+SUBCASE = 1  
+      SUBTITLE= Trim at 2.5G, U=650 fps,M=0.53
+      LABEL= 2 Nonlinear Parameters: Axial Forces along wing & strut
+      NLFLTR = 10
+SUBCASE = 2  
+      SUBTITLE= Trim at -1.G, U=650 fps,M=0.53
+      LABEL= 2 Nonlinear Parameters: Axial Forces along wing & strut
+      NLFLTR = 20
+BEGIN BULK
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ DEFINES: [SKGH]=[NOMKGG][SPHI].  [SKGH] IS USED TO COMPUTE THE AXIAL FORCES  $
+$ ALONG THE STRUT AND THE WING FOR DEFINING THE TWO NONLINEAR PARAMETERS       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ALTER   1       FEM     SKGH            1.      NOMKGG  *       SPHI
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ DEFINES: LOCALLY LINEAR SYSTEM OF THE POST-WING-BUCKLED STRUCTURE.           $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLSYSM  300     NO                                               
+        NO      YES     1.      BASE                    1.       WBUCKGG
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ DEFINES: LOCALLY LINEAR SYSTEM OF THE NOMINAL STRUCTURE                      $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLSYSM  400     NO                                               
+        NO      YES     1.      BASE                    1.       NOMKGG
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ DEFINES: LOCALLY LINEAR SYSTEM OF THE POST-STRUT-BUCKLED STRUCTURE.          $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLSYSM  600     NO                                               
+        NO      NO      1.      BASE                    1.       BASE   
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                              $
+$                        SUBCASE 1 : TRIM AT 2.5 G                             $
+$                                                                              $
+$     FOR NONLINEAR PARAMETER A: FORCET1 AT GRID 1                             $
+$                                =WING AXIAL BUCKLING FORCE  (2.1E+06 LBF)     $
+$      FORCET1 AT GRID 1 < 2.1E+06 CORRESPONDS TO NOMINAL STRUCTURE            $
+$                                  (NLSYSM ID= 400)                            $
+$      FORCET1 AT GRID 1 > 2.1E+06 CORRESPONDS TO POST-WING-BUCKLED STRUCTURE  $
+$                                  (NLSYSM ID= 300)                            $
+$                                                                              $
+$     FOR NONLINEAR PARAMETER B: FORCET1 AT GRID 8001                          $
+$                                =STRUT AXIAL BUCKLING FORCE  (1.26E+05 LBF)   $
+$      FORCET1 AT GRID 8001<1.26+05 CORRESPONDS TO NOMINAL STRUCTURE           $
+$      FORCET1 AT GRID 8001>1.26+05 CORRESPONDS TO POST-STRUT-BUCKLED STRUCTURE$
+$                                  (NLSYSM ID= 600)                            $
+$                                                                              $
+$ NOTE: FORCES ALONG T1 AT GRIDS 1 AND 8001 ARE COMPUTED USING [SKGH] MATRIX   $
+$                                                                              $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLFLTR  10      0       101     1       10      33      1       1   
+        4       FORCET1 1       1.                                 
+        4       FORCET1 8001    1.                                
+        LINEAR        0.+1.26+05+1.26+05+1.26+06                 
+        0.           400     400     600     600                
+        +2.10+06     400     400     600     600               
+        +2.10+06     300     300     600     600              
+        +2.10+07     300     300     600     600             
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ DEFINE ALPHA AND H TO BE THE TWO AIRFRAME STATES                             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLDSTAT 10      10   
+        ALPHA   0.      H       0.
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ DEFINE 2.5 G TRIM CONDITION. ALPHA=7.155 IS OBTAINED BY TRIM ANALYSIS        $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLDTRIM 10      32.2    2.5             MODALG25        
+        ALPHA   7.155      
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ MATRIX MODALG25 CONTAINS THE MODAL SOLUTION OF THE 2.5 G TRIM CONDITION      $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+DMI     MODALG250       2       2               DMIL          15       1
+DMIL    MODALG25                       1               1+0.000000000E+00+CONT   
++CONT   -5.789515686E+01-1.399510765E+01+6.287665367E+00+1.841790962E+01+CONT
++CONT   +3.751965165E-01+9.434514642E-01+1.309653568E+01+9.744488001E-01+CONT
++CONT   -1.976884723E+00-1.346108317E-01+3.507952988E-01+4.009834304E-02+CONT
++CONT   +2.326263905E+00+2.984036505E-01
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                             * GUST LOAD *                                    $
+$ 1-COS DISCRETE GUST WITH ONE SECOND DELAY. Wg=50Ft/S, Wg/(AIRSPEED)=0.07692  $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+DGUST   33      OMCOS   1.4444  +.07692    -650.      0.    0.01
+MLDTIME 1       0.      10.      0.001  5       -1      
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ OUTPUT TRANSIENT REPONSES ON FILE STRUTWNGG2.XLS FOR SUBCASE 1               $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLDPRNT 1       STRUTWNGG2.XLS  TABLE   TIME                
+        FORCET1 1       FORCET1 8001    GRIDGT3 63      GRIDGT3 43    
+        GRIDXT1 8035    GRIDXT1 8041    
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ STORE ANIMATION OF THE STRUCTURAL DEFORMATION ON FILE STRUTWNGG2.PLT         $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+PLTTIME 100     10      0.      10.     20      NORIGID TECPLOT
+        STRUTWNGG2.PLT
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                              $
+$                        SUBCASE 2 : TRIM AT -1.0 G                            $
+$                                                                              $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLFLTR  20      0       101     1       20      33      1       2   
+        4       FORCET1 1       1.                                 
+        4       FORCET1 8001    1.                                
+        LINEAR        0.+1.26+05+1.26+05+1.26+06                 
+        0.           400     400     600     600                
+        +2.10+06     400     400     600     600               
+        +2.10+06     300     300     600     600              
+        +2.10+07     300     300     600     600             
+$ DEFINE ALPHA AND H TO BE THE TWO AIRFRAME STATES
+MLDSTAT 20      20    
+        ALPHA   0.      H       0.
+$ DEFINE -1.0G TRIM CONDITION. ALPHA=-2.86199 IS OBTAINED BY TRIM ANALYSIS
+MLDTRIM 20      32.2    -1.             MODALGN1        
+        ALPHA   -2.86199   
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ MATRIX MODALGN1 CONTAINS THE MODAL SOLUTION OF THE -1.0 G TRIM CONDITION     $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+DMI     MODALGN10       2       2               DMIL          15       1
+DMIL    MODALGN1                       1               1+0.000000000E+00+CONT   
++CONT   +2.315807152E+01+5.598048210E+00-2.515070677E+00-7.367168903E+00+CONT
++CONT   -1.500793993E-01-3.773847222E-01-5.238612175E+00-3.897801042E-01+CONT
++CONT   +7.907548547E-01+5.384410545E-02-1.403182447E-01-1.603935659E-02+CONT
++CONT   -9.305058122E-01-1.193614081E-01
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ OUTPUT TRANSIENT REPONSES ON FILE STRUTWNGN1.XLS FOR SUBCASE 2               $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLDPRNT 2       STRUTWNGN1.XLS  TABLE   TIME                
+        FORCET1 1       FORCET1 8001    GRIDGT3 63      GRIDGT3 43    
+        GRIDXT1 8035    GRIDXT1 8041    
+$ STORE ANIMATION OF THE STRUCTURAL DEFORMATION ON FILE STRUTWNGN1.PLT
+PLTTIME 200     20      0.      10.     20      NORIGID TECPLOT
+        STRUTWNGN1.PLT
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+FLUTTER 101     SYM     22      15                        
+FIXMDEN 22      101     2.377E-3SLUG    FT      1.68                         
+        650.          
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$
+$ ROGER'S METHOD FOR RATIONAL AERODYNAMIC APPROXIMATION                  
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+MINSTAT 1       122             30                                  
+APCONST 30      1       -1      -1      1       1       1       1       
+AEROLAG 122     8
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$
+$                 * AERO PARAMETERS / FLIGHT CONDITIONS *               
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$
+AEROZ   0       YES     NO      SLUG    FT      32.31   108.45  1.      +A      
++A      0.      0.      0.
+MKAEROZ 101     0.53                                                 
+        0.02    0.5     1.0     1.5     2.0     2.5      3.0     3.5      
+        4.0     4.5     5.0                
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$
+$                 * AERODYNAMIC MODEL *               
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$
+CAERO7  1000    WINGIB          17      15                              +CA1
++CA1    0.      0.      0.      32.31   0       0                       +CA2
++CA2    49.45145 74.4996 0.     14.7653 0       0
+SPLINE2     4501            4501     170                     70
+SET1         170       1    THRU      50                  
+PANLST3     4501  WINGIB       
+CORD2R  70              13.9588 0.      0.0577  13.9588 0.      9.0577  +CRD1
++CRD1   23.9588 -5.5983 0.0577    
+$                                                                       $
+$
+CAERO7  1600    WINGOB          7       8                               +CA1
++CA1    49.45145 74.4996 0.     14.7653 0       0                       +CA2
++CA2    71.9871 108.45  0.      6.77    0       0
+SPLINE2     4502            4502     172                     70
+SET1         172      40    THRU      63                  
+PANLST3     4502  WINGOB       
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$                                                                              $
+CAERO7  2000    STRUT           16      4                               +CA1
++CA1    27.8889 0.      -20.33  6.616   0       0                       +CA2
++CA2    53.5558 74.4996 -3.1678 6.616   0       0
+$
+SPLINE2     4506        4506     270                    75                     
+SET1         270    8001    8005    8035    8041   8010    8020   8030 
+PANLST3     4506   STRUT       
+CORD2R  75              30.2045   0.0000-20.33  29.4950 -2.05924 -10.33 +CRD1
++CRD1   40.2045 -3.44524 -20.33    
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$
+CAERO7  3000    OFFSET           4      4                               +CA1
++CA1    53.5558 74.4996  0.0226 6.616   0       0                       +CA2
++CA2    53.5558 74.4996 -3.1678 6.616   0       0
+$
+SPLINE3     5501                    5501     370                     
+SET1         370    8041      43      44      42    8035                       
+PANLST3     5501  OFFSET       
+ENDDATA

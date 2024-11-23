@@ -1,0 +1,385 @@
+$ ********************************************************************* $
+$                                                                       $
+$                       M144CLOS.INP                                    $
+$                                                                       $
+$ ********************************************************************* $
+$ ha144ds.f06 IS THE SYMMETRIC MODAL ANALYSIS OUTPUT FILE OF MSC/NASTRAN$
+$ IT HAS THREE RIGID BODY MODES DEFINED BY SUPORT=-135.                  $
+$                                                                       $
+ASSIGN FEM=ha144ds.f06,PRINT=0,FORM=MSC,BOUND=SYM,SUPORT=-135
+ASSIGN MATRIX=ha144ds.mgh,PRINT=0,FORM=FORMAT,MNAME=SMGH
+$                                                                       $
+$ ABCD.DAT CONTAINS THE A,B,C, AND D MATRICES OF THE FEEDBACK MIMO SYSTEM
+ASSIGN MATRIX=abcd.dat,MNAME=ABCD
+CEND                                                                            
+$Begin Case Control Section
+TITLE= HA144D FORWARD SWEEP WING FOR TRANSIENT MANUEVER LOADS ANALYSIS.
+ECHO = SORT    
+SUBCASE = 1  
+        SUBTITLE=ASE OPEN-LOOP ANALYSIS AT M=0.9 
+        LABEL=TO COMPUTE THE FLUTTER OF THE OPEN-LOOP SYSTEM
+        ASE=100
+SUBCASE = 2  
+        SUBTITLE=ASE CLOSED-LOOP ANALYSIS AT M=0.9 
+        LABEL=TO COMPUTE THE FLUTTER OF THE CLOSED-LOOP SYSTEM
+        ASE=200
+SUBCASE = 3  
+        SUBTITLE=SYMMETRIC MANUVER OF THE CLOSED-LOOP SYSTEM 
+        LABEL=STATE-SPACE APPROACH                                     
+        MLOADS=100
+SUBCASE = 4  
+        SUBTITLE=SYMMETRIC MANUVER OF THE CLOSED-LOOP SYSTEM 
+        LABEL=FREQUENCY DOMAIN APPROACH                                
+        MLOADS=200
+BEGIN BULK
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                         SUBCASE 1                                     $
+$                         ASE = 100                                     $
+$ OPEN-LOOP ASE ANALYSIS TO OBTAIN THE INSTABILITY BOUNDARY.            $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$---1--><--2---><--3---><--4---><--5---><--6---><--7---><--8---><--9--->
+$       SETID   IDCON   IDFLT   IDGUST  RAAID   MARID         
+ASE     100             100             140     
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                         SUBCASE 2                                     $
+$                         ASE = 200                                     $
+$ CLOSED-LOOP ASE ANALYSIS TO OBTAIN THE INSTABILITY BOUNDARY.          $
+$ CONTROL SYSTEM IS DEFINED BY THE ASECOND=2 BULK DAT CARD.             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASE     200     2       100             140      
+$                                                                        $
+$..  1 |..   2 |..   3 |..   4 |..   5 |..   6 |..   7 |..   8 |..   9 |..  10  |  
+$        SETID  SYM     FIX     NMODE   TABDMP  MLIST   CONMLST FLTSEN
+FLUTTER 100     SYM     100                     100        
+SET1    100     1
+$
+FIXMDEN 100     90      0.002376SLUG    FT      1.0                     +F1
++F1     1000.   1200.   1400.   1500.   1700.   1800.   1900.   2000.
+$                                                                       $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                         SUBCASE 3                                     $
+$                        MLOADS = 100                                   $
+$ SYMMETRIC TRANSIENT MANEUVER AT MACH=0.9 V=1500 FT/SEC, Q=2673 PSF    $
+$ CLOSED-LOOP SYSTEM SBJECTED TO PILOT's INPUT TO CANARD                $
+$ TRANSFORMED TO FOUR AIRFRAME STATES;  H, ALPHA, Q AND THETA           $
+$ INITIAL ALPHA=-0.19573  AND CANARD=-.33415 DEG (COMPUTED BY TRIM )    $   
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$---1--><--2---><--3---><--4---><--5---><--6---><--7---><--8---><--9--->
+$$$$$$$ SID     CONID   FLTID   RAAID   STATES  COMMAND TIME    MLDPRN
+MLOADS  100     2       10      140             100     100     100
+                0.01
+MLOADS  200     2       10                      100     100     200
+                0.01
+$-----------------------------------------------------------------------
+$ SIMULATION FROM T=-2. TO T=2.0 SEC WITH DT=0.002.                     $
+$ PRINT=-1 TO MINIMIZE THE OUTPUT                                       $
+$$$$$$$ IDTIME  TSTART  TEND    DT      OUTDT   PRINT   METHOD
+MLDTIME 100     -2.0    5.      .0001   20      -1
+$-----------------------------------------------------------------------
+$ PILOT COMMAND DIRECTLY APPLIED TO EXTINP=100 THAT REMAINS CONSTANT    $
+$ (1.118 DEG) UP TO T=.1 SEC. THIS IS TO   DAMP OUT THE STRUCTURAL      $
+$ OSCILLATION DUE TO THE INITIAL ALPHA                                  $
+$                                                                       $
+$$$$$$$ SETID                                                        
+MLDCOMD 100                                                             +M2
+$$$$$$$ EXTINP  IDTAB   
++M2     100     100                    
+$ ----------------------------------------------------------------------
+$ EXTINP DEFINES EXTERNAL INPUT TO CJUNCT BULK DATA CARD (ID=500)
+EXTINP  100             500     2       TEFLAP2
+$-----------------------------------------------------------------------
+$$$$$$$ TID     XAXIS   YAXIS
+TABLED1 100                                                             +TAB1
+$$$$$$$ XI      YI
++TAB1   -2.0    0.      .1      0.      .16     .05236  .66     .05236  +TAB2
++TAB2   .78     -.05236 1.28    -.05236 1.34    0.      100.    0.
+$-----------------------------------------------------------------------
+$                                                                       $
+$ tHREE PARAMETERS ARE PRINTED OUT NO FILE "HA144MD.PLT"                $
+$ (1) THE ACCELERATION OF THE FEM GRID POINT WITH ID=90                 $
+$ (2) STRESSES AT CBAR=110. MODAL STRESSES IMPORTED BY DMI=CBAR110      $
+$ (3) THE COMPONENT LOADS OF LOADMOD=101 (WING BENDING MOMENT)          $
+$     USING MODE DISPLACEMENT METOD (MD).                               $
+$ ONE PARAMETER ARE PRINTED OUT NO FILE "HA144SOF.PLT"                  $
+$ (1) THE COMPONENT LOADS OF LOADMOD=101 (WING BENDING MOMENT)          $
+$     USING SUMMATION OF FORCE METHOD (SOF) WHERE THE TIME-DOMAIN       $
+$     AERODYNAMIC FORCES ARE COMPUTED USING INVERSE FOURIER TRANSFORM.  $
+$ ONE PARAMETER ARE PRINTED OUT NO FILE "HA144RFA.PLT"                  $
+$ (1) THE COMPONENT LOADS OF LOADMOD=101 (WING BENDING MOMENT)          $
+$     USING SUMMATION OF FORCE METHOD (SOF) WHERE THE TIME-DOMAIN       $
+$     AERODYNAMIC FORCES ARE COMPUTED USING RATIONAL FUNCTION           $
+$     APPROXIMATION (RFA) METHOD.                                       $
+$ NOTE THAT THE WING BENDING MOMENT ARE COMPUTED BY THREE METHOD NAMELY $
+$ MD, SOF, AND RFA FOR COMPARISON.                                      $
+$                                                                       $
+$-----------------------------------------------------------------------
+$$$$$$$ IDPRNT     FILENM       FORM
+MLDPRNT 100     STATEMD.PLT     TABLE                                   +MP1
+$$$$$$$ LABEL   IKEY    LABEL   IKEY    LABEL   IKEY    LABEL   IKEY
++MP1    GRIDGT3 90      DMI     CBAR110 LOADMOD 101     
+MLDPRNT 100     STATESOF.PLT    TABLE                           YES     +MP1
+$$$$$$$ LABEL   IKEY    LABEL   IKEY    LABEL   IKEY    LABEL   IKEY
++MP1    LOADMOD 101    
+MLDPRNT 100     STATERFA.PLT    TABLE                           RFA     +MP1
+$$$$$$$ LABEL   IKEY    LABEL   IKEY    LABEL   IKEY    LABEL   IKEY
++MP1    LOADMOD 101    
+$$$$$$$ IDPRNT     FILENM       FORM
+MLDPRNT 200     FREQUMD.PLT     TABLE                                   +MP1
+$$$$$$$ LABEL   IKEY    LABEL   IKEY    LABEL   IKEY    LABEL   IKEY
++MP1    GRIDGT3 90      DMI     CBAR110 LOADMOD 101     
+MLDPRNT 200     FREQUSOF.PLT    TABLE                           YES     +MP1
+$$$$$$$ LABEL   IKEY    LABEL   IKEY    LABEL   IKEY    LABEL   IKEY
++MP1    LOADMOD 101    
+LOADMOD 101     XMOMENT 0       1100    1101
+SET1    1101    110     111     112     120     121     122
+$-----------------------------------------------------------------------
+$ PLTTIME CARD FOR POST-PROCESSING OF THE MLOADS ANALYSIS
+$$$$$$$ IDPLT   IDMLD   TS      TE      NDT     TYPE    FORM    SCALE
+PLTTIME 110     100     .1      1.3     10      ELAS    TECPLOT 100.    +PLT1
++PLT1   ELASTIC.PLT
+PLTTIME 120     100     .1      1.3     10      FORCE   NASTRAN 1.0     +PLT1
++PLT1   NASTRAN.NAS
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+DMI     CBAR110       0       2       2         DMIL    21      2
+DMIL            CBAR110               1               4 -6.394756E+06 
+        -1.152244E+07   -5.749906E+07   9.741695E+06    5.092602E+06  
+        -6.526524E+07   -1.760658E+07   4.305552E+07    -4.120752E+08 
+        -3.025869E+08   -8.581570E+07   -7.733596E+08   5.866129E+07    
+        9.951519E+07    -8.239151E+08   -4.086227E+08   2.106677E+09   
+        -1.473281E+07 
+$                                                                       $
+$ THE SECOND COLUMN                                                     $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+DMIL            CBAR110               2               4 -4.407347E+06
+        -6.496776E+06   -3.895416E+07   1.265445E+07    -4.436399E+06  
+        2.878260E+07    2.542621E+07    -2.668230E+07   1.063493E+08  
+        -1.609337E+07   2.604834E+08    5.830810E+08    -2.010839E+06   
+        -6.087351E+08   1.211331E+09    7.617252E+08    -2.937442E+09    
+        1.729023E+07 
+$                                                                       $
+$ Minimum state method                                                  $
+$                                                                       $
+MINSTAT 140     122     80      30      
+AEROLAG 122     4       -0.2    -0.35   -0.65   -0.85    
+$       SID     DA0     DA1     DA2     NRP     NCP     FR(1)   FC(1)   $
+APCONST 30      1       -1      -1      1       1       1       1       +APC
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ RBRED IS USED TO CLEANUP THE RIGID BODY SUBMATRIX IN A0 AND A1 RESULTING
+$ FROM THE RATIONAL AERODYNAMIC APPROXIMATION.
+$ THERE ARE ONLY TWO RIGID BODY MODES WITH COMPONENTS=35 BECAUSE THE
+$ FIRST RIGID BODY MODE IS DELETED BY THE MLIST ENTRY OF THE FLUTTER
+$ BULK DATA CARD.
+$ NOTE THAT THE GRID POINT 90 IS THE SUPORT POINT IN THE FEM MODEL.
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+RBRED   100     100     35      90
+RBRED   200     200     35      90
+$                                                                       $
+$ FLUTTER BULK DATA CARD TO DEFINE THE AEROELASTC SYSTEM                $
+$ THE FIRST RIGID BODY MODE (FOR-AFT MODE) IS DELETED BY MLIST ENTRY    $
+$                                                                       $
+$..  1 |..   2 |..   3 |..   4 |..   5 |..   6 |..   7 |..   8 |..   9 |..  10  |  
+$        SETID  SYM     FIX     NMODE   TABDMP  MLIST   CONMLST FLTSEN
+FLUTTER 10      SYM     10                      100        
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10$
+FIXMDEN 10      90      0.002376SLUG    FT      1.0                     +F1
++F1     1300.            
+$-----------------------------------------------------------------------
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                 * AERO PARAMETERS / FLIGHT CONDITIONS *               $
+$ THE FOLLOWING BULK DATA CARDS ARE NEARLY IDENTICAL TO THE HA144D.INP  $
+$ OF THE TRIM TESTCASES.                                                $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$
+$       ACSID   XZSYM   FLIP    FMMUNIT FMLUNIT REFC    REFB    REFS    +ABC
+AEROZ   0       YES     NO      SLUG    FT      10.     40.     400.    +A      
+$+ABC   REFX    REFY    REFZ
++A      15.000  0.      0.
+$
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 90      0.90    0       0       SAVE    $900                    +AEROMK 
++AEROMK 0.05    .1      .2      .3      .4      .5      .6      .7      +MK1    
++MK1    .8      .9      -1.0    -1.1    -1.2    -1.3    -1.5    -3.0
+EXTFILE 900     HA144DMLD.090
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$ FORWARD SWEPT WING - 4 x 8 AERO BOXES EVENLY CUT                      $
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  1100    WING            9       5       0               1101    +CA1
+$       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
++CA1    25.     0.      0.      10.     0       0                       +CA2
+$       XRT     YRT     ZRT     TCH     LTCHD   ATTCHT                  $
++CA2    13.4529920.     0.      10.     0       0
+$                                                                       $
+$ A PAFOIL7 CARD IS USED TO DEFINE THE A 0.1 DEG INCIDENCE ANGLE,       $
+$ BUT WITH NO THICKNESS.                                                $
+$       ID      ITAX    ITHR    ICAMR   RADR    ITHT    ICAMT   RADT    $
+PAFOIL7 1101    1102    1103    1104    0.0     1103    1104    0.0
+AEFACT  1102    0.0     50.0    100.0
+AEFACT  1103    0.0     0.0     0.0
+$ AEFACT TO DESCRIBE THE AIRFOIL CAMBER (0.1 DEG INCIDENCE)             $
+AEFACT  1104    0.0     -0.1553 -0.3107
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                        * CANARD MACROELEMENT *                        $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  1000    CANARD          3       5       0               2101    +CA1
++CA1    10.     0.0     0.0     10.     0       0                       +CA2
++CA2    10.     5.0     0.0     10.     0       0
+PAFOIL7 2101    2102    2103    2104    0.0     2103    2104    0.0
+AEFACT  2102    0.0     50.0    100.0
+AEFACT  2103    0.0     0.0     0.0
+$ AEFACT TO DESCRIBE THE AIRFOIL CAMBER (1.007 DEG INCIDENCE)           $
+AEFACT  2104    0.0     -0.8789 -1.7577
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                        * FIN MACROELEMENT *                           $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  3100    FIN     0       5       5                               +CA101
++CA101  30.7735 0.      10.     10.0                                    +CA102
++CA102  25.     0.0     0.0     10.                     
+$                                                                       $
+$ INFINITE PLATE SPLINE METHOD FOR FIN.                                 $
+$                                                                       $
+SPLINE1 3100    FIN             3100    3100    0.0  
+PANLST3 3100    FIN                     
+$       SID     G1      G2      ETC                                     $
+SET1    3100    100     311     310     312                         
+$                                                     
+$                                                                       $
+$ GENERATES PLOT FILE FOR AEROMODEL.                                    $
+$                                                                       $
+PLTAERO 310     NO              TECPLOT HA144AERO.PLT
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                  * SPLINE INPUT *                                     $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$ THE BEAM SPLINE METHOD IS USED TO SPLINE THE WING AERO                $
+$ BOXES TO THE WING STRUCTURE GRIDS.  THE SETK BULK DATA CARD REFERS    $
+$ TO THE GRID POINTS SPECIFIED IN THE SET1 (SID=1105) BULK DATA CARD.   $
+$                                                                       $
+$       EID     MODEL   SETK    SETG    DZ      EPS     CID             $
+SPLINE2 1601    WING    1100    1105    0.0             2
+SET1    1105    100     110     120     
+$                                                                       $
+$ CORD2R = 2 DEFINES THE BEAM SPLINE AXIS.                              $
+$                                                                       $
+CORD2R  2       0       30.     0.      0.      30.     0.0     10.     +CRD2
+$       C1      C2      C3                                              $
++CRD2   38.66025+5.0    0.0    
+$                                                                       $
+$ PANLST3 DEFINES THE WING AERO BOX ID'S THAT ARE REFERRED TO BY SPLINE2$
+$       SETID   MACROID BOX1    BOX2                                    $
+PANLST3 1100    WING                    
+$                                                                       $
+$ SINCE THERE IS NO STRUCTURAL GRID ON THE CANARD, ATTACH METHOD IS USED$
+$ TO ATTACH THE CANARD TO GRID 90                                       $
+$                                                                       $
+$       EID     MODEL   SETK    REFGRID 
+ATTACH  1501    CANARD  1000    90     
+$                                                                       $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$ THREE CONTROL SURFACES ARE USED FOR VARIOUS TRIM CAES:                $
+$ (1) WHOLE CANARD AS A SYMMETRIC CONTROL SURFACE. HINGE LINE: CORD2R=1 $
+$ (2) TEFLAP1 AS A SYMMETRIC CONTROL SURFACE.                           $
+$     HINGE LINE: COED2R=110. AEROBOX IDS=1119,1123,1127, AND 1131.     $
+$ (3) TEFALP2 AS A SYMMETRIC CONTROL SURFACE                            $
+$     HINGE LINE: COED2R=120. AEROBOX IDS=1103,1107,1111, AND 1115.     $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$       LABEL   TYPE    CID     SETK    SETG
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10$
+AESURFZ CANARD  SYM     1       1000            1003
+AESURFZ TEFLAP1 SYM     110     2000            1005
+AESURFZ TEFLAP2 SYM     120     2001            1006
+$
+$                                                                       $
+PANLST3 1000    CANARD    
+PANLST2 2000    1100    1119    1123    1127    1131 
+PANLST2 2001    1100    1103    1107    1111    1115 
+$       CID     RID     A1      A2      A3      B1      B2      B3      $
+CORD2R  1       0       12.5    0.0     0.0     12.5    0.0     10.0    +CRD2
+$       C1      C2      C3                                              $
++CRD2   20.0    0.0     10.0
+$
+$       CID     RID     A1      A2      A3      B1      B2      B3      $
+CORD2R  110     0       26.7265 10.     0.      26.7265 10.     -10.    +CRD2
+$       C1      C2      C3                                              $
++CRD2   36.7265 15.7735 0.0 
+$                                                                       $
+$       CID     RID     A1      A2      A3      B1      B2      B3      $
+CORD2R  120     0       21.7265 10.     0.      21.7265 10.     -10.    +CRD2
+$       C1      C2      C3                                              $
++CRD2   31.7265 15.7735 0.0 
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ ACTUATOR TRANSFER FUNCTIONS                                           $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ACTU    1003    17463.  3136578.217.395 
+ACTU    1005    6751689.66157.39259.97 
+ACTU    1006    8.635E0677891.0 274.04
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ CONTROL SYSTEM DEFINITION                                             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASECONT 2       1010    100     331             481
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ CONTROO SURFACES FOR INPUT                                            $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+SURFSET 1010    CANARD  TEFLAP1 TEFLAP2
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ SENSOR DEFINITIONS                                                    $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+SENSET  100     101     102     103 
+$
+ASESNSR 101     1       121     3
+ASESNSR 102     1       122     3
+ASESNSR 103     1       112     3
+$
+TFSET   331     330     500
+CNCTSET 481     471     472     473     671     672     673     674
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ DIRECT MATRIX INPUT FOR MIMO SYSTEM                                   $
+$ ABCD IS A MATRIX IMPORTED BY THE ASSIGN MATRIX EXECUTIVE COMMAND      $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MIMOSS  330     38      3       3       ABCD
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  SENSOR CONNECTION                                                    $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+CONCT   471     101     1       330     1
+CONCT   472     102     1       330     2
+CONCT   473     103     1       330     3
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  ACTUATOR CONNECTION                                                    $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+CONCT   671     330     1       1003    1
+CONCT   672     330     2       1005    1
+CONCT   673     330     3       500     1
+CONCT   674     500     1       1006    1
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ CJUNCT COMBINES THE COMMANDS FROM THE PILOT INPUT COMMAND (EXTINP=100)$
+$ AND THE COMMAND FROM THE MIMO CONTROLLER AND PROVIDES A INPUT COMMAND $
+$ TO THE ACTUATOR OF THE CONTROL SURFACE TEFLAP2.                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+CJUNCT  500     2       1       1.      1.
+$
+ENDDATA

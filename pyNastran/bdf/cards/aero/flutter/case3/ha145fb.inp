@@ -1,0 +1,138 @@
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$              Z A E R O    I N P U T    (HA145FB.INP)                  $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                      
+$ THIS EXAMPLE DEMONSTRATES A SINGLE WING, LOW SUPERSONIC FLUTTER CASE 
+$ WITH AND WITHOUT THICKNESS EFFECTS. K AND G FLUTTER SOLUTION METHODS 
+$ ARE USED.                                     
+$
+$Begin Executive Control Section
+ASSIGN FEM=ha145fb.f06, PRINT=0,FORM=MSC,BOUND=SYM                               
+DIAG 1                                                                 
+CEND                                                                            
+$Begin Case Control Section
+TITLE= LOW SUPERSONIC FLUTTER ANALYSIS (15 DEGREE SWEPTBACK WING)                                                 
+ECHO = SORT                                                                       
+SUBCASE = 1  
+        SUBTITLE=ZONA7 METHOD (WITHOUT THICKNESS EFFECTS)                                                   
+        LABEL=MACH NUMBER = 1.3, NON-MATCH POINT FLUTTER ANALYSIS
+        FLUTTER=100
+SUBCASE = 2  
+        SUBTITLE=ZONA7U METHOD (WITH THICKNESS EFFECTS)                                                   
+        LABEL=MACH NUMBER = 1.3, NON-MATCH POINT FLUTTER ANALYSIS
+        FLUTTER=200
+BEGIN BULK
+$
+$                 * AERO PARAMETERS / FLIGHT CONDITIONS *               
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|$                                                                       $                                                                       $
+$
+$       ACSID   XZSYM   FLIP    FMMUNIT FMLUNIT REFC    REFB    REFS    +ABC
+AEROZ   0       YES     NO      SLIN    IN      2.07055 11.0502 22.8800 +A      
+$+ABC   REFX    REFY    REFZ
++A      0.5176  0.      0.
+$                                                                       $
+$ TWO MKAEROZ BULK DATA CARDS ARE USED. THE FIRST MKAEROZ ACTIVATES THE $
+$ LINEAR METHOD (ZONA7) AND THE SECOND THE NONLINEAR METHOD (ZONA7U).   $
+$ EACH MKAEROZ CARD IS REFERENCED BY A FLUTTER CARD VIA FIXMDEN CARDS.  $ 
+$
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 80      1.3     0       0       SAVE    HA145FB_AIC7    0       +MK1
+$       FREQ1   FREQ2   ETC                                             $
++MK1    0.02    0.04    0.05    0.06    0.07    0.08    0.09    0.10     
+$
+MKAEROZ 90      1.3     2       0       SAVE    HA145FB_AIC7U   0       +MK1
++MK1    0.02    0.04    0.05    0.06    0.07    0.08    0.09    0.10                                                               
+$
+$                        * WING MACROELEMENT *                          $
+$                                                                       $
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  101     WING    0       11      9                       100     +CA101
+$       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
++CA101  .0      .0      .0      2.07055 0       0                       +CA102
+$       XTL     YTL     ZTL     TCH     LTCHD   ATTCHT                  $
++CA102  1.48044 5.52510 0.0     2.07055 0       0
+$
+$ THE PAFOIL7 CARD IS USED TO DEFINE THE AIRFOIL THICKNESS ALLOWING     $
+$ FOR THE INPUT OF HALF THICKNESS, CAMBER AND LEADING EDGE RADII AT     $
+$ THE WING ROOT AND TIP.  THICKNESS AND CAMBER DISTRIBUTIONS BETWEEN    $
+$ THE WING ROOT AND TIP ARE INTERPOLATED. FOR THIS CASE, A 2% THICK     $
+$ HEXAGONAL AIRFOIL SECTION IS DEFINED. A NEGATIVE VALUE OF ITAX        $
+$ REQUESTS THAT A LINEAR INTERPOLATION BE USED FOR THICKNESS AND        $
+$ CAMBER DISTRIBUTIONS (POSITIVE VALUE IS FOR CUBIC INTERPOLATION).     $
+$ THICKNESS AND CAMBER DISTRIBUTIONS ARE USED ONLY FOR SUPERSONIC       $
+$ THICKNESS EFFECTS (ZONA7U).   
+$                                                                       $
+$       ID      ITAX    ITHR    ICAMR   RADR    ITHT    ICAMT    RADT
+PAFOIL7 100     -101    102     103     0.0     102     103      0.0
+$
+$       SID     D1      D2      ETC
+AEFACT  101     0.0     12.5    87.5    100.
+AEFACT  102     0.0     1.0     1.0     0.0
+AEFACT  103     0.0     0.0     0.0     0.0
+$
+$                  * SURFACE SPLINE FIT ON THE WING *                   $
+$                                                                       $
+$       EID     MODEL   CP      SETK    SETG    DZ      EPS             $
+SPLINE1 100     WING            101     100     0.0
+$                                                                       $
+$       SETID   MACROID BOX1    BOX2    ETC                             $
+PANLST2 101     101     101     THRU    180
+$                                                                       $
+$       SID     G1      G2      ETC                                     $
+SET1    100     2       4       6       8       9       11      13      +S1
++S1     15      18      20      22      24      25      27      29      +S2
++S2     31      34      36      38      40
+$                                                                       $
+$                * NON-MATCHED POINT FLUTTER ANALYSIS *                 
+$                                                                       $
+$ THE FLUTTER BULK DATA CARDS EMPLOY THE K AND G FLUTTER SOLUTION       $
+$ METHODS.  EACH FLUTTER CARD REFERS TO A DIFFERENT MKAEROZ BULK DATA   $
+$ CARD.  THE FIRST FLUTTER CASE REFERS TO AN MKAEROZ CARD WITH AN IDMK  $
+$ OF 80 (WING WITHOUT THICKNESS CASE - ZONA7 AERODYNAMICS).  THE        $
+$ SECOND FLUTTER CASE REFERS TO AN MKAEROZ CARD WITH IDMK = 90          $
+$ (WING WITH THICKNESS CASE - ZONA7U AERODYNAMICS).                     $
+
+$       SETID   SYM     FIX     NMODE   TABDAMP MLIST   CONMLST   
+FLUTTER 100     SYM     100     0       10                                
+$
+FLUTTER 200     SYM     200     0       10                                                                        
+TABDMP1 10      G                                                       +TAB1
++TAB1   0.0     0.01    1000.   0.01
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10$
+$       SETID   IDMK    DEN     FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMDEN 100     80      0.236-07SLIN    IN      12.00   0       -2      +FL1
+$       V1      V2      V3      ETC                                     $
++FL1    14000.  15000.  16000.  16500.  17000.  17200.  17400.  17600.  +FL2
++FL2    18000.  18500.  19000.  19200.  19400.  19600.  20000.  20500.              
+$                                                                       $
+FIXMDEN 200     90      0.236-07SLIN    IN      12.00   0       -2      +FL1
++FL1    14000.  15000.  16000.  16500.  17000.  17200.  17400.  17600.  +FL2
++FL2    18000.  18500.  19000.  19200.  19400.  19600.  20000.  20500.              
+
+$                        * PLOT AERO MODEL BY PLTAERO *                 $
+$                                                                       $
+PLTAERO 11      YES     0       TECPLOT AERO1.PLT    
+$                                                                       $
+$                        * PLOT MODAL DATA BY PLTMODE *                 $
+$                                                                       $
+PLTMODE 10      SYM     1               .3      TECPLOT MODE1.PLT     
+PLTMODE 20      SYM     2               .3      PATRAN  MODE2.PLT    
+$                                                                       $
+$                        * PLOT CP BY PLTCP *                           $
+$                                                                       $
+PLTCP   30      SYM     80      5       1       TECPLOT CP7.PLT
+PLTCP   31      SYM     90      5       1       TECPLOT CP7U.PLT                                                                        
+$
+$                         * PLOT FLUTTER MODE BY PLTFLUT *              $
+$                                                                       $
+PLTFLUT 10      100     1       8       .3      TECPLOT FLUT7.PLT
+PLTFLUT 11      200     1       8       .3      TECPLOT FLUT7U.PLT
+$
+$                           * V-G PLOT *                                $
+$
+PLTVG   11      100             V                VG7.PLT
+PLTVG   12      200             V                VG7U.PLT                                                                       $
+ENDDATA

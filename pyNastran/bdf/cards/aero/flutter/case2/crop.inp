@@ -1,0 +1,203 @@
+ASSIGN FEM='crop.f06',PRINT=0,FORM=MSC,BOUND=SYM                               
+CEND                                                                            
+TITLE= SAMPLE WING-BODY FLUTTER DEMO CASE                                                 
+ECHO = SORT                                                                       
+SUBCASE = 1  
+        SUBTITLE=ZONA6 & ZONA7 METHODS                                                  
+        LABEL= MATCH POINT ANALYSIS AT SEA LEVEL FROM M=0.7 TO M=1.2
+        FLUTTER=100
+BEGIN BULK
+$-----------------------------------------------------------------------$
+$                                                                       $
+$                 * AERO PARAMETERS / FEM MODEL UNITS *                 $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       ACSID   XZSYM   FLIP    FMMUNIT FMLUNIT REFC    REFB    REFS    $
+AEROZ   10      YES     YES     SLIN    IN      100.0   200.    10500.  +AERO
+$       REFX    REFY    REFZ
++AERO   33.333  0.      0.
+$                                                                       $
+$ SINCE THE FEM MODEL IS LOCATED ALONG THE Y-AXIS AND LEFT HAND SIDE OF $
+$ THE PILOT, THE COORDINATE SYSTEM CORD2R IS TO TRANSFORM THE FEM MODEL $
+$ FROM FEM SYSTEM TO THE AERODYNAMIC SYSTEM ( FLOW IS ALONG THE X-AXIS).$
+$ FILP=YES IN THE AEROZ BULK DATA CARD WILL FURTHER FLIP THE FEM MODEL  $
+$ FROM LHS TO RHS SO THAT IT MATCHES THE AERODYNAMIC MODEL FOR SPLINE.  $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       CID     RID     A1      A2      A3      B1      B2      B3      $
+CORD2R  10              0.      0.      0.      0.      0.      1.      +C1
+$       C1      C2      C3                                              $
++C1     0.      1.0     0.
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$                 * GEOMETRY INPUT OF WING AND FUSELAGE *               $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$                        * WING MACROELEMENT *                          $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  101     WING            6       6                               +CA1
+$       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
++CA1    0.0     30.0    0.0     100.0   0       201                     +CA2
+$       XTL     YTL     ZTL     TCH     LTCHD   ATTCHT                  $
++CA2    50.0    100.0   0.0     50.0    0       0     
+$                                                                       $
+$                        * BODY MACROELEMENT *                          $
+$                            ( FUSELAGE )                               $
+$                                                                       $
+$ TWO BODY7 BULK DATA CARDS ARE USED TO DEFINE THE FUSELAGE BODY7       $
+$ MACROELEMENTS.  EACH BODY7 COORDINATES ARE BASED ON A LOCAL COORDINATE$
+$ SYSTEM SPECIFIED BY THE ACCORD BULK DATA ENTRIES.  THE BODY-OF-       $
+$ REVOLUTION TYPE OF INPUT IS USED FOR THE FUSELAGE. TO SPECIFY THE     $
+$ CROSS-SECTIONAL RADIUS AND CAMBER (SEGMESH BULK DATA CARD).           $
+$                                                                       $
+$ COORDINATE SYSTEM FOR FUSELAGE                                        $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       ID      XORIGN  YORIGN  ZORIGN  DELTA   THETA                   $
+ACOORD  20      -100.   0.0     0.0     0.0     0.0
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       BID     LABEL   IPBODY7 ACOORD  NSEG    IDMESH1 IDMESH2 ETC     $
+BODY7   201     FUSELAGE        20      1       201
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       IDMESH  NAXIS   NRAD                                            $
+SEGMESH 201     11      5                                               +SE1
+$       ITYPE   X1      CAM1    YR1     ZR1     IDY1    IDZ1            $
++SE1    1       0.0     0.0     0.0                                     +SE2
++SE2    1       20.0    0.0     17.0                                    +SE3
++SE3    1       40.0    0.0     25.0                                    +SE4
++SE4    1       60.0    0.0     28.0                                    +SE5
++SE5    1       80.0    0.0     29.5                                    +SE6 
++SE6    1       100.0   0.0     30.0                                    +SE7 
++SE7    1       120.0   0.0     30.0                                    +SE8 
++SE8    1       140.0   0.0     30.0                                    +SE9 
++SE9    1       160.0   0.0     30.0                                    +SE10
++SE10   1       180.0   0.0     30.0                                    +SE11
++SE11   1       200.0   0.0     30.0                                    
+$                                                                       $
+$ GENERATE TECPLOT FILE FOR AERODYNAMIC MODEL                           $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   FEMGRID OFFSET  FORM       FILENM       CELL    VCT     $
+PLTAERO 10                      TECPLOT    PLTAERO.PLT          YES
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$              * SPLINE FROM FEM GRIDS TO AERODYNAMIC BOXES *           $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$                  * SURFACE SPLINE FIT ON THE WING *                   $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       EID     MODEL   CP      SETK    SETG    DZ      EPS             $
+SPLINE1 101     WING            102     103     0.0     0.01
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   MACROID BOX1    BOX2    ETC                             $
+PANLST2 102     101     101     THRU    125 
+$                                                                       $
+$ NOTE THAT SET1 CONTAINS A FREE FORMAT INPUT FOR DEMONSTRATION PURPOSE.$
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SID     G1      G2      ETC                                     $
+SET1    103     10101   10102   10103   10104   10201   10202   10203    +S1
++S1,10204,10301,10302,10303,10304,10401,10402,10403,+S2
++S2     10404
+$                                                                       $
+$               * ASSUME FUSELAGE NO MOTION.  USE SPLINE0 *             $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       EID     MODEL   CP      SETK                                    $
+SPLINE0 102     FUSELAGE        112                          
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   MACROID BOX1    BOX2    ETC                             $
+PANLST2 112     201     201     THRU    240 
+$                                                                       $
+$                        * PLOT MODAL DATA BY PLTMODE *                 $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+PLTMODE 10      SYM     1               .3      TECPLOT MODE1.PLT     
+PLTMODE 20      SYM     2               .3      PATRAN  MODE2.PLT    
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$ LINEAR METHODS (ZONA6 & ZONA7 ) ARE SPECIFIED IN THE MKAEROZ BULK DATA$
+$ CARDS TO COMPUTE THE AIC'S AT MACH NUMBERS FROM 0.7 TO 1.2.  THESE    $
+$ AIC'S ARE USED TO PERFORM THE MATCH POINT FLUTTER ANALYSIS BY FIXHATM $
+$ AT SEA LEVEL.                                                         $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+MKAEROZ 70      0.7     0               SAVE    SAMPLE70        0       +MK1
+$       FREQ1   FREQ2   ETC                                             $
++MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2
++MK2    0.8     0.9     1.0
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+MKAEROZ 80      0.8     0               SAVE    SAMPLE80        0       +MK1
+$       FREQ1   FREQ2   ETC                                             $
++MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2
++MK2    0.8     0.9     1.0
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+MKAEROZ 90      0.9     0               SAVE    SAMPLE90        0       +MK1
+$       FREQ1   FREQ2   ETC                                             $
++MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2
++MK2    0.8     0.9     1.0
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+MKAEROZ 95      0.95    0               SAVE    SAMPLE95        0       +MK1
+$       FREQ1   FREQ2   ETC                                             $
++MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2
++MK2    0.8     0.9     1.0
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+MKAEROZ 105     1.05    0               SAVE    SAMPLE105       0       +MK1
+$       FREQ1   FREQ2   ETC                                             $
++MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2
++MK2    0.8     0.9     1.0
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+MKAEROZ 110     1.10    0               SAVE    SAMPLE110       0       +MK1
+$       FREQ1   FREQ2   ETC                                             $
++MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2
++MK2    0.8     0.9     1.0
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+MKAEROZ 120     1.20    0               SAVE    SAMPLE120       0       +MK1
+$       FREQ1   FREQ2   ETC                                             $
++MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2
++MK2    0.8     0.9     1.0
+$                                                                       $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                        * FLUTTER ANALYSIS *                           $
+$ FIXHATM IS TO SIMULATE THE FLIGHT FLUTTER TEST WHERE THE AIRCRAFT     $
+$ FLIES AT SEA LEVEL FROM M=0.7 TO M=1.2. NOTE THAT LENGTH UNIT IS IN FT$
+$ WHEREAS THE LENGTH UNIT OF AERO & FEM MODELS ARE IN INCH.             $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST FLTSEN  $
+FLUTTER 100     SYM     100     0       0       0       0       0       
+$                                                                       $
+$ * MATCHED POINT FLUTTER ANALYSIS USING STANDARD ATMOSPHERE TABLE *    $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   ALT     IDATM   FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXHATM 100     0.0     0       SLUG    FT      1.0     0       5       +FIX1
+$       IDMK1   IDMK2   IDMK3   ETC                                     $
++FIX1   70      80      90      95      105     110     120               
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+PLTVG   11      100             M               PLTVG.100
+$                                                                       $
+ENDDATA
