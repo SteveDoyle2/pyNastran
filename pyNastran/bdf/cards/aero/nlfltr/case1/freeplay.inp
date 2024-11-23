@@ -1,0 +1,260 @@
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ 3 D.O.F TYPICAL AIRFOIL SECTION WITH FREEPLAY                                $
+$ REFERENCE: M.D. CONNER, D.M. TANG, E.H. DOWELL AND L.N. VIRGIN               $
+$            " NONLINEAR BEHAVIOR OF A TYPICAL AIRFOIL SECTION WITH CONTROL    $
+$            SURFACE FREEPLAY: A NUMERICAL AND EXPERIMENTAL STUDY"             $
+$            JOURNAL OF FLUIDS AND STURCTURES, 1997, 11, 89-109                $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ IMPORT MODE SHAPES AND STRUCTURAL GRID POINTS FOR SPLINE  IN FREE FORMAT     $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN FEM=freeplay.fre,FORM=FREE,BOUND=SYM
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ IMPORT GENERALIZED MASS MATRIX (SMHH) TO REPLACE THAT IN freeplay.fre        $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN MATRIX = genmass.mat ,MNAME=SMHH
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ IMPORT GENERALIZED STIFFNESS (SKHH) MATRIX TO REPLACE THAT IN freeplay.fre   $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN MATRIX = genstiff.mat ,MNAME=SKHH
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ IMPORT GENERALIZED DAMPING (CCHH) MATRIX REFERRED TO BY THE FLUTTF BULK DATA $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN MATRIX = damping.mat ,MNAME=CCHH
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ IMPORT SMGH MATRIX FOR INERTIAL COUPLING OF THE CONTROL SURFACE              $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN MATRIX = flapmass.mgh ,MNAME=SMGH
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ IMPORT STIFFNESS AT HINGE (KHINGE) REFERRED BY NLSYSM BULK DATA FOR FREEPLAY $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN MATRIX = kbeta.mat ,MNAME=KHINGE
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ IMPORT (+ AND -)*Kbeta*(freeplay) TERM FOR THE OFFSET MOMENTS IN NLSYSM      $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ASSIGN MATRIX = restorem.mat ,MNAME=KDELTAM
+ASSIGN MATRIX = restorep.mat ,MNAME=KDELTAP
+CEND                                                                            
+$Begin Case Control Section
+TITLE= 2D AIRFOIL (MODELED BY HIGH ASPECT RAIO WING) AT M=0.0 
+ECHO = SORT    
+SUBCASE = 1  
+        SUBTITLE= TRANSIENT RESPONSE OF 3 D.O.F. AIFOIL WITH FREEPLAY
+        LABEL= U=0.27UF, UF= 23.9 M/S
+        NLFLTR = 1
+SUBCASE = 2  
+        SUBTITLE= TRANSIENT RESPONSE OF 3 D.O.F. AIFOIL WITH FREEPLAY
+        LABEL= U=0.4309UF, UF= 23.9 M/S
+        NLFLTR = 2
+SUBCASE = 3  
+        SUBTITLE= TRANSIENT RESPONSE OF 3 D.O.F. AIFOIL WITH FREEPLAY
+        LABEL= U=0.73UF, UF= 23.9 M/S
+        NLFLTR = 3
+BEGIN BULK
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ DEFINE ONE NONLINEAR PRAAMETER: BETA= FLAP D.O.F - PITCH D.O.F.              $
+$ WHERE: FLAP D.O.F. = GRIDXR2 AT GRID 2, PITCH D.O.F. = GRIDXR2 AT GRID 1     $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ RESTROING MOMENT DIAGRAM FOR FREEPLAY EFFECTS                                $
+$                                   TORQUE       .                             $
+$                                     |        .                               $
+$                                     |      .                                 $
+$                               -.037 |    .  NLSYSM=100                       $
+$                   ______________....|....__________________ BETA             $
+$                               . NLSYSM=111                                   $
+$                   NLSYSM=101.       |  +.037(RAD)                            $
+$                           .         |                                        $
+$                         .           |                                        $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                              $
+$                        SUBCASE 1:  U=6.453 M/S                               $
+$                                                                              $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLFLTR  1       0       101     1       0       33      1       1       +NL1
++NL1    6       GRIDXR2 2       1.      GRIDXR2 1       -1.     NONE    +NL2
++NL2    1                                                               +NL3
++NL3    LINEAR  0.                                                      +NL4
++NL4    -100.   101                                                     +NL5
++NL5    -0.037  101                                                     +NL6
++NL6    -0.037  111                                                     +NL7
++NL7    +0.037  111                                                     +NL8
++NL8    +0.037  100                                                     +NL9
++NL9    +100.   100                                                       
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  OUTPUT TIME RESPONSE FOR PLUNGE ( T3 AT GRID 1), FLAP ( R2 AT GRID2)        $
+$  AND PITCH (R2 AT GRID 1) D.O.F. ON FILE freeplayu27.dat                     $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLDPRNT 1       freeplayu27.dat TABLE   TIME                            +PR1
++PR1    GRIDXT3 1       GRIDXR2 2       GRIDXR2 1   
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  DENSITY = 1.225 Kg/M**3 AIRSPEED=6.453 M/S                                  $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+FLUTTER 101     SYM     101                
+FIXMDEN 101     90      1.2250  N/      M       1.0     101                
+        6.453                                                             
+FLUTTF  101     NO      0.              1.      CCHH    
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                              $
+$                        SUBCASE 2:  U=11.711 M/S                              $
+$                                                                              $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLFLTR  2       0       102     1       0       33      1       2       +NL1
++NL1    6       GRIDXR2 2       1.      GRIDXR2 1       -1.     NONE    +NL2
++NL2    1                                                               +NL3
++NL3    LINEAR  0.                                                      +NL4
++NL4    -100.   101                                                     +NL5
++NL5    -0.037  101                                                     +NL6
++NL6    -0.037  111                                                     +NL7
++NL7    +0.037  111                                                     +NL8
++NL8    +0.037  100                                                     +NL9
++NL9    +100.   100                                                       
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  OUTPUT TIME RESPONSE FOR PLUNGE ( T3 AT GRID 1), FLAP ( R2 AT GRID2)        $
+$  AND PITCH (R2 AT GRID 1) D.O.F. ON FILE freeplayu43.dat                     $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLDPRNT 2       freeplayu43.dat TABLE   TIME                            +PR1
++PR1    GRIDXT3 1       GRIDXR2 2       GRIDXR2 1   
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  DENSITY = 1.225 Kg/M**3 AIRSPEED=10.3   M/S                                 $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+FLUTTER 102     SYM     102                
+FIXMDEN 102     90      1.2250  N/      M       1.0     101                
+        10.3                                                              
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                              $
+$                        SUBCASE 3:  U=17.686 M/S                              $
+$                                                                              $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLFLTR  3       0       103     1       0       33      1       3       +NL1
++NL1    6       GRIDXR2 2       1.      GRIDXR2 1       -1.     NONE    +NL2
++NL2    1                                                               +NL3
++NL3    LINEAR  0.                                                      +NL4
++NL4    -100.   101                                                     +NL5
++NL5    -0.037  101                                                     +NL6
++NL6    -0.037  111                                                     +NL7
++NL7    +0.037  111                                                     +NL8
++NL8    +0.037  100                                                     +NL9
++NL9    +100.   100                                                       
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  OUTPUT TIME RESPONSE FOR PLUNGE ( T3 AT GRID 1), FLAP ( R2 AT GRID2)        $
+$  AND PITCH (R2 AT GRID 1) D.O.F. ON FILE freeplayu73.dat                     $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLDPRNT 3       freeplayu73.dat TABLE   TIME                            +PR1
++PR1    GRIDXT3 1       GRIDXR2 2       GRIDXR2 1   
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  DENSITY = 1.225 Kg/M**3 AIRSPEED=17.686 M/S                                 $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+FLUTTER 103     SYM     103                
+FIXMDEN 103     90      1.2250  N/      M       1.0     101                
+        17.686                                                            
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                              $
+$ DEFINES THREE PIECEWISE LINEAR SYSTEM: NLSYSM=100 ,101, AND 111              $
+$                                                                              $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ PIECEWISE LINEAR SYSTEM AT BETA > 0.037                                      $
+$ MASS=[SMHH], STIFFNESS=[SKHH], DAMPING=[CCHH], OFFSET MEMENT=[KDELTAP]       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLSYSM  100     NO                                               KDELTAP+NS1
++NS1    YES     NO      0.              0.              0.
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ PIECEWISE LINEAR SYSTEM AT BETA < -.037                                      $
+$ MASS=[SMHH], STIFFNESS=[SKHH], DAMPING=[CCHH], OFFSET MEMENT=[KDELTAM]       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLSYSM  101     NO                                               KDELTAM+NS1
++NS1    YES     NO      0.              0.              0.
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ PIECEWISE LINEAR SYSTEM AT 0.037 > BETA > -.037 ( IN FREEPLAY REGION )       $
+$ MASS=[SMHH], STIFFNESS=[SKHH]-[KHINGE], DAMPING=[CCHH]                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+NLSYSM  111     NO                                                      +NS1
++NS1    YES     NO      0.              0.              -.999999 KHINGE
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ PILOT INPUT COMMAND TO FLAP AS THE INITIAL DISTURBANCE                       $
+$ ONE CYCLE OF FLAP OSCILLATION WITH AMPLITUDE SPECIFIED BY TABLED1 BULK DATA  $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLDCOMD 33
+        99      88
+TABLED1 88      LINEAR  LINEAR  NO      NO
+              0.      0.   0.005 .030907    0.01 .058779   0.015 .080902
+            0.02 0.09511   0.025     0.1    0.03 0.09511   0.035 .080902
+            0.04 .058779   0.045 .030907    0.05      0.   0.055-.030907    
+            0.06-.058779   0.065-.080902    0.07-0.09511   0.075    -0.1
+            0.08-0.09511   0.085-.080902    0.09-.058779   0.095-.030907
+            0.1       0.
+EXTINP        99            2102       1    FLAP
+AESURFZ     FLAP     SYM            2100    2101    2102
+SET1        2101       2
+ACTU        2102
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ TOTAL TIME INTEGRATION T=0 TO T=50. SEC WITH TIME STEP=0.0001                $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLDTIME 1       0.      5.0     0.0001  10      -1   
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ ROGER'S METHOD FOR RATIONAL AERODYNAMIC APPROXIMATION                        $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MINSTAT 1       122             30                      97             
+SET1    97      9       THRU    14
+AEROLAG 122     8
+APCONST 30      1       -1      -1      1       1       1       1    
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$          * AERO PARAMETERS / MACH NUMBER AND REDUCED FREQUENCIES             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$
+$       ACSID   XZSYM   FLIP    FMMUNIT FMLUNIT REFC    REFB    REFS    +ABC
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+AEROZ   0       YES     NO            N/       M    .254      1.        +A      
+$+ABC   REFX    REFY    REFZ
++A      0.0     0.      0.
+$
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 90      0.00    0       0       SAVE    AERO2.dbb               +AE
++AE     0.0     0.02    0.05    0.1     0.2     0.3     .4       .5     
+        .6      .7      .8      .9      1.      1.1     1.2      1.3  
+        1.5     2.      2.5     3.0     
+$                                                                       $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                        * WING MACROELEMENTS *                         $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  1       WING            14      41      100                     +CA1
+$       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
++CA1    -0.127  0.0     0.      0.254   0       0                       +CA2
+$       XRT     YRT     ZRT     TCH     LTCHD   ATTCHT                  $
++CA2    -0.127  100.    0.      0.254   0       0
+AEFACT  100     0.      0.1     0.5     1.0     3.0     6.0      10.0   +AE1
++AE1    15.0    22.     30.     40.     55.0    75.     100.                    $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                           SPLINE INPUT                                $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                              WING                                     $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ATTACH  1601    WING    1100    1                           
+PANLST1 1100    1       1       510                         
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                          CONTROL SURFACE                              $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+ATTACH  1701    WING    2100    2                           
+PANLST1 2100    1       31      520                 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$     CPFACT TO ZERO-OUT CP ON ALL STRIPS EXCEPT THE WING ROOT STRIP    $
+$     THIS GIVES A 2D CP ON WING ROOT WITH WIDTH=0.1*10.=1.0            $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+CPFACT  90      90      SYM     ALL     FEM     ALL     0.0       0.0   +CP1
++CP1    1        
+CPFACT  94      90      SYM     ALL     AESURFZ ALL     0.0       0.0   +CP1
++CP1    1        
+PANLST1 1       1       41      520  
+$
+CPFACT  92      90      SYM     ALL     FEM     ALL     10.     0.0     +CP1
++CP1    2        
+CPFACT  95      90      SYM     ALL     AESURFZ ALL     10.     0.0     +CP1
++CP1    2        
+PANLST1 2       1       1       40  
+ENDDATA
