@@ -1,0 +1,228 @@
+$ ********************************************************************* $
+$                                                                       $
+$                      KUSSNER.INP                                      $
+$                                                                       $
+$ ********************************************************************* $
+$                                                                       $
+$ KUSSNER.FRE CONTAINS ONLY ONE FEM GRID WITH A PLUNGE D.O.F            $
+$ ONE MODE ONLY. GENERALIZED MASS = 0.00125, NATURAL FREQUENCY=0.0      $
+$                                                                       $
+ASSIGN FEM=kussner.fre,FORM=FREE,BOUND=SYM,SUPORT=3
+GENGUST
+CEND                                                                            
+$Begin Case Control Section
+TITLE= 2D AIRFOIL (MODELED BY HIGH ASPECT RAIO WING) AT M=0.0 V=100 & Q=1.
+ECHO = SORT    
+SUBCASE = 1  
+        SUBTITLE= ZERO GUST INPUT BUT WITH ALPHA(T=0)=1.               
+        LABEL= VALIDATION WITH WAGNER'S FUNCTION FOR LIFT TIME HISTORY.
+        GLOADS=1
+SUBCASE = 2  
+        SUBTITLE=SHARP-EDGED GUST. MASS RATIO=5.0 BY HYBRID APPROACH    
+        LABEL= VALIDATION WITH KUSSNER'S SOLUTION FOR VERTICAL ACCELERATION.
+        GLOADS=2   
+SUBCASE = 3  
+        SUBTITLE=SHARP-EDGED GUST. MASS RATIO=15.0 BY HYBRID APPROACH     
+        LABEL= VALIDATION WITH KUSSNER'S SOLUTION FOR VERTICAL ACCELERATION.
+        GLOADS=3   
+SUBCASE = 4  
+        SUBTITLE=SHARP-EDGED GUST. MASS RATIO=100. BY HYBRID APPROACH   
+        LABEL= VALIDATION WITH KUSSNER'S SOLUTION FOR VERTICAL ACCELERATION.
+        GLOADS=4   
+SUBCASE = 5  
+        SUBTITLE=SAME AS SUBCASE 2.BUT USING FREQUENCY DOMAIN APPROACH       
+        LABEL= VALIDATION WITH KUSSNER'S SOLUTION FOR VERTICAL ACCELERATION.
+        GLOADS=5   
+SUBCASE = 6  
+        SUBTITLE=SAME AS SUBCASE 3.BUT USING FREQUENCY DOMAIN APPROACH       
+        LABEL= VALIDATION WITH KUSSNER'S SOLUTION FOR VERTICAL ACCELERATION.
+        GLOADS=6   
+SUBCASE = 7  
+        SUBTITLE=SAME AS SUBCASE 4.BUT USING FREQUENCY DOMAIN APPROACH       
+        LABEL= VALIDATION WITH KUSSNER'S SOLUTION FOR VERTICAL ACCELERATION.
+        GLOADS=7   
+BEGIN BULK
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        SUBCASE 1                                       $
+$ MLDSTAT SPECIFIES INITIAL VALUE OF ALPHA=1. RAD/SEC                    $
+$ DGUST   REFERS TO TABLED1 WHICH HAS ZERO GUST PROFILE                  $
+$ FLUTTER REFERS TO CONMLST FOR ADDING 9.99874 MASS TO THE BASELINE MASS $
+$         (0.0012566 IN THE KUSSNER.FRE FILE) GIVING TOTAL MASS=10.      $
+$ MLDPRNT STORES ACCELERATION AT GRID 1 IN FILE KUSSNER1.PLT             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+GLOADS  1               1       140     1       1       100     1   
+MLDSTAT 1       0                                                       +M1
++M1     H       0.      ALPHA   1.    
+DGUST   1       TABLE   1       1.0     -1.0    9.0     1.0       
+TABLED1 1                                                               +TAB1
++TAB1   0.      0.      100.    0. 
+MLDTIME 100     0.0     .2000   0.001   5       -1     
+MLDPRNT 1       KUSSNER1.PLT    TABLE                                   +MP1
++MP1    GRIDGT3 1 
+FLUTTER 1       SYM     10              0                1 
+CONMLST 1                                                               +C1
++C1     7956.982100
+CONM1   100     1               0.      0.      0.       0.      0.     +CONM1
++CONM1  .0012566
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        SUBCASE 2                                       $
+$ NO MLDSTAT IS USED SO THAT ALL INITIAL CONDITIONS ARE ZERO             $
+$ DGUST DEFINES A SHARP-EDGED GUST WITH MAX FREQUENCY BEING THE HIGHEST  $
+$       FREQUENCY IN THE MKAEROZ FOR INVERSE FOURIER TRANSFORM           $
+$ NO CONMLST IS USED SO THAT MASS RATIO=5                                $
+$ MLDPRNT STORES ACCELERATION AT GRID 1 IN FILE KUSSNER2.PLT             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+GLOADS  2               2       140     0       100     100     2   
+        SAVE    UNFORM  FREQQHJ.DAT
+DGUST   100     STEP    1       1.0     -1.0    160.    0.001     
+FLUTTER 2       SYM     10              0               0 
+MLDPRNT 2       KUSSNER2.PLT    TABLE                                   +MP1
++MP1    GRIDGT3 1 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        SUBCASE 3                                       $
+$ DGUST DEFINES A SHARP-EDGED GUST WITH MAX FREQUENCY BEING THE HIGHEST  $
+$       FREQUENCY IN THE MKAEROZ FOR INVERSE FOURIER TRANSFORM           $
+$ FLUTTER REFERS TO CONMLST FOR ADDING .002513 MASS TO THE BASELINE MASS $
+$         (0.0012566 IN THE KUSSNER.FRE FILE) GIVING MASS RATIO=15       $
+$ MLDPRNT STORES ACCELERATION AT GRID 1 IN FILE KUSSNER3.PLT             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+GLOADS  3               3       140     0       100     100     3   
+        ACQU    UNFORM  FREQQHJ.DAT
+FLUTTER 3       SYM     10              0               3 
+CONMLST 3                                                               +C1
++C1     2.0     100
+MLDPRNT 3       KUSSNER3.PLT    TABLE                                   +MP1
++MP1    GRIDGT3 1 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        SUBCASE 4                                       $
+$ DGUST DEFINES A SHARP-EDGED GUST WITH MAX FREQUENCY BEING THE HIGHEST  $
+$       FREQUENCY IN THE MKAEROZ FOR INVERSE FOURIER TRANSFORM           $
+$ FLUTTER REFERS TO CONMLST FOR ADDING .023875 MASS TO THE BASELINE MASS $
+$         (0.0012566 IN THE KUSSNER.FRE FILE) GIVING MASS RATIO=100      $
+$ MLDPRNT STORES ACCELERATION AT GRID 1 IN FILE KUSSNER4.PLT             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+GLOADS  4               4       140     0       100     100     4   
+        ACQU    UNFORM  FREQQHJ.DAT
+FLUTTER 4       SYM     10              0               4 
+CONMLST 4                                                               +C1
++C1     19.     100
+MLDPRNT 4       KUSSNER4.PLT    TABLE                                   +MP1
++MP1    GRIDGT3 1 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        SUBCASE 5                                       $
+$ SAME AS SUBACSE 2 EXCEPT USING THE FREQUENCY DOMAIN APPROACH        T  $
+$ MLDPRNT STORES ACCELERATION AT GRID 1 IN FILE KUSSNER5.PLT             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+GLOADS  5               2               0       100     100     5   
+        ACQU    UNFORM  FREQQHJ.DAT
+MLDPRNT 5       KUSSNER5.PLT    TABLE                                   +MP1
++MP1    GRIDGT3 1 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        SUBCASE 6                                       $
+$ SAME AS SUBACSE 3 EXCEPT USING THE FREQUENCY DOMAIN APPROACH        T  $
+$ MLDPRNT STORES ACCELERATION AT GRID 1 IN FILE KUSSNER6.PLT             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+GLOADS  6               3               0       100     100     6   
+        ACQU    UNFORM  FREQQHJ.DAT
+MLDPRNT 6       KUSSNER6.PLT    TABLE                                   +MP1
++MP1    GRIDGT3 1 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        SUBCASE 7                                       $
+$ SAME AS SUBACSE 4 EXCEPT USING THE FREQUENCY DOMAIN APPROACH        T  $
+$ MLDPRNT STORES ACCELERATION AT GRID 1 IN FILE KUSSNER7.PLT             $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+GLOADS  7               4               0       100     100     7   
+        ACQU    UNFORM  FREQQHJ.DAT
+MLDPRNT 7       KUSSNER7.PLT    TABLE                                   +MP1
++MP1    GRIDGT3 1 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ ROGER'S METHOD FOR RATIONAL AERODYNAMIC APPROXIMATION                  $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MINSTAT 140     122             30                      97             
+SET1    97      10      THRU    28
+AEROLAG 122     8       -.001   -.04    -.10    -.2     -.4     -.45    +A1
++A1     -.5     -1.0
+APCONST 30      1       -1      -1      1       1       1       1       +APC
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$  AIR DENSITY=0.0002, VELOCITY=100.                                     $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+FIXMDEN 10      90      .0002   SLUG    FT      1.0                     +F1
++F1     100.0        
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                 * AERO PARAMETERS / FLIGHT CONDITIONS *                $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$
+$       ACSID   XZSYM   FLIP    FMMUNIT FMLUNIT REFC    REFB    REFS    +ABC
+AEROZ   0       YES     NO      SLUG    FT      2.0                     +A      
+$+ABC   REFX    REFY    REFZ
++A      0.0     0.      0.
+$
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 90      0.00    0       0       SAVE     KUSSNER.AIC             +AE
++AE     0.00    0.04    .1      .2      .3       .4      .45     .5      +K1
++K1     .55     .6      .65     .7      .8      .9       1.0     1.2     +K2
++K2     1.6     2.0     2.5     3.0     3.5     4.0      5.0     6.0     +K3
++K3     7.0     8.0     9.0     10.0
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$    28 OUTPUT4 BLK DATA CARDS TO EXPORT THE QHG MATRICES FOR EACH K     $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+OUTPUT4 QHGS0101QHGS0101.DAT
+OUTPUT4 QHGS0102QHGS0102.DAT
+OUTPUT4 QHGS0103QHGS0103.DAT
+OUTPUT4 QHGS0104QHGS0104.DAT
+OUTPUT4 QHGS0105QHGS0105.DAT
+OUTPUT4 QHGS0106QHGS0106.DAT
+OUTPUT4 QHGS0107QHGS0107.DAT
+OUTPUT4 QHGS0108QHGS0108.DAT
+OUTPUT4 QHGS0109QHGS0109.DAT
+OUTPUT4 QHGS0110QHGS0110.DAT
+OUTPUT4 QHGS0111QHGS0111.DAT
+OUTPUT4 QHGS0112QHGS0112.DAT
+OUTPUT4 QHGS0113QHGS0113.DAT
+OUTPUT4 QHGS0114QHGS0114.DAT
+OUTPUT4 QHGS0115QHGS0115.DAT
+OUTPUT4 QHGS0116QHGS0116.DAT
+OUTPUT4 QHGS0117QHGS0117.DAT
+OUTPUT4 QHGS0118QHGS0118.DAT
+OUTPUT4 QHGS0119QHGS0119.DAT
+OUTPUT4 QHGS0120QHGS0120.DAT
+OUTPUT4 QHGS0121QHGS0121.DAT
+OUTPUT4 QHGS0122QHGS0122.DAT
+OUTPUT4 QHGS0123QHGS0123.DAT
+OUTPUT4 QHGS0124QHGS0124.DAT
+OUTPUT4 QHGS0125QHGS0125.DAT
+OUTPUT4 QHGS0126QHGS0126.DAT
+OUTPUT4 QHGS0127QHGS0127.DAT
+OUTPUT4 QHGS0128QHGS0128.DAT
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                        * WING MACROELEMENTS *                         $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  1       WING            14      41      100                     +CA1
+$       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
++CA1    -1.0    0.0     0.      2.0     0       0                       +CA2
+$       XRT     YRT     ZRT     TCH     LTCHD   ATTCHT                  $
++CA2    -1.0    100.    0.      2.0     0       0
+AEFACT  100     0.      0.1     0.5     1.0     3.0     6.0      10.0   +AE1
++AE1    15.0    22.     30.     40.     55.0    75.     100.                    $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                    SPLINE INPUT                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$       EID     MODEL   SETK    SETG    DZ      EPS     CID             $
+ATTACH  1601    WING    1100    1                           
+PANLST3 1100    WING                         
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$     CPFACT TO ZERO-OUT CP ON ALL STRIPS EXCEPT THE WING ROOT STRIP    $
+$     THIS GIVES A 2D CP ON WING ROOT WITH AREA=0.1*2=0.2               $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+CPFACT  90      90      SYM     ALL     FEM     ALL     0.0       0.0   +CP1
++CP1    1        
+CPFACT  91      90      SYM     ALL     GUST    ALL     0.0       0.0   +CP1
++CP1    1        
+PANLST1 1       1       41      520  
+ENDDATA

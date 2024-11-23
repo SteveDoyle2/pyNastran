@@ -1,0 +1,387 @@
+$ ********************************************************************* $
+$                                                                       $
+$                      M144OPEN.INP                                     $
+$                                                                       $
+$ ********************************************************************* $
+$                                                                       $
+$ HA144DS.F06 IS THE SYMMETRIC MODAL ANALYSIS OUTPUT FILE OF MSC/NASTRAN$
+$ IT HAS THREE RIGID BODY MODES DEFINED BY SUPORT=-135.                 $
+$ WHERE THE NEGATIVE SIGN TRIGGERS THE PROGRAM TO REPLACE THE NASTRAN   $
+$ COMPUTED RIGID BODY MODES BY THE PROGRAM COMPUTED RIGID BODY MODES.   $
+$ NOTE THAT THE ROTATION CENTER OF THE PROGRAM COMPUTED RIGID BODY MODES$
+$ IS AT THE AERODYNAMIC MOMENT CENTER SPECIFIED IN THE AEROZ BULK DATA  $
+$ CARD.                                                                 $
+$                                                                       $
+$ ********************************************************************* $
+$                                                                       $
+ASSIGN FEM=ha144ds.f06,PRINT=0,FORM=MSC,BOUND=SYM,SUPORT=-135
+$                                                                       $
+$ HA144DS.MGH IS [MGG][PHI] FOR INERTIAL COUPLING OF THE CONTROL SURFACE$
+$                                                                       $
+ASSIGN MATRIX=ha144ds.mgh,PRINT=0,FORM=FORMAT,MNAME=SMGH
+CEND                                                                            
+$Begin Case Control Section
+TITLE= HA144D FORWARD SWEEP WING FOR TRANSIENT MANUEVER LOADS ANALYSIS.
+ECHO = SORT    
+SUBCASE = 1  
+        SUBTITLE=SYMMETRIC BOUNDARY CONDITION AT MACH=0.9 AND Q=1200 PSF
+        LABEL=TRIM ANALYSIS FOR THE INITIAL VALUES OF AIRFRAME STATES
+        TRIM=100
+SUBCASE = 2  
+        SUBTITLE=OPEN-LOOP SYSTEM AT V=1005 FT/SEC, Q=1200 PSF          
+        LABEL=BY STATE-SPACE APPROACH                   
+        MLOADS=100
+SUBCASE = 3  
+        SUBTITLE=OPEN-LOOP SYSTEM AT V=1005 FT/SEC, Q=1200 PSF          
+        LABEL=BY FREQUENCY-DOMAIN APPROACH                   
+        MLOADS=200
+BEGIN BULK
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                         TRIM = 100                                    $
+$ SYMMETRIC ONE G TRIM AT MACH=0.9 Q=1200. PSF                          $
+$ TWO TRIM D.O.F'S: NZ=1.0, QDOT=0.0                                    $
+$ TWO TRIM VARIABLES: CANARD=FREE, ALPHA=FREE                           $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$---1--><--2---><--3---><--4---><--5---><--6---><--7---><--8---><--9--->
+TRIM    100     90      1200.   0       0       2.27607 0.0     .0310559+T1 
+$
+$$$$$$$$WTMASS  WEIGHT  IXX     IXY     IYY     IXZ     IYZ     IZZ
+$---1--><--2---><--3---><--4---><--5---><--6---><--7---><--8---><--9--->
++T1     .031081 16100.  502484.40.0     1811849.-7555.340.0     2309364.+T2 
+$
+$$$$$$$$TRNACC  NX      NY      NZ      PDOT    QDOT    RDOT    LOADSET
+$---1--><--2---><--3---><--4---><--5---><--6---><--7---><--8---><--9--->
++T2     G       NONE    NONE    1.0     NONE    0.0     NONE    107     +T3
+$
+$$$$$$$$IDVAR    VAL    ETC..
+$---1--><--2---><--3---><--4---><--5---><--6---><--7---><--8---><--9--->
++T3     800     FREE    600     FREE     500     1.0
+$
+TRIMVAR 500     THKCAM  -40.    +40.
+TRIMVAR 600     CANARD  -40.    +40.
+TRIMVAR 800     ALPHA   -50.    +50.   
+$                                                                       $
+$ SET1=107 IS REFERRED TO BY LOADSET ENTRY IN TRIM=100 TO OUTPUT THE    $
+$ VALUES OF A SET OF TRIM FUNCTIONS (TRIMFNC BULK DATA CARDS)           $
+$
+SET1    107     20      30  
+$
+$ TRIMFNC=20 REFERS TO THE WING ROOT BENDING MOMENT BY  LOADMOD.        $
+$ FEM GRID POINTS ON THE WING ARE 110 111 112 120 121 122               $
+$                                                                       $
+TRIMFNC 20      FEM     LOADMOD1RHS     101             WINGROOT.BENDING
+LOADMOD 101     XMOMENT 0       1100    1101
+SET1    1101    110     111     112     120     121     122
+$                                                                       $
+$ TRIMFNC=30 REFERS TO THE MODAL STRESS AT THE CBAR ELEMENT=110 OF      $
+$ THE FEM MODEL. THE MODAL STRESSES ARE OBTAINED BY ACTIVATING          $
+$ STRESS=ALL IN THE NATRAN ANALYSIS. THESE STRESSES ARE INPUT BY DMI=   $
+$ CBAR110 AND DMI=ABAR110 FOR THE SYMMETRC AND ANTI-SYMMETRIC MODAL     $
+$ DATA, RESPECTIVELY.                                                   $
+$                                                                       $
+TRIMFNC 30      MODAL   DMI     RHS     CBAR110         STRESS.CBAR.110 
+$-----------------------------------------------------------------------
+$                                                                       $
+$ IMPORT SA1 MODAL STRESS AT CBAR 110 OF SYMMETRIC MODES BY DMI IN      $
+$ THE FIRST COLUMN                                                      $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+DMI     CBAR110       0       2       2         DMIL    21      2
+DMIL            CBAR110               1               4 -6.394756E+06 
+        -1.152244E+07   -5.749906E+07   9.741695E+06    5.092602E+06  
+        -6.526524E+07   -1.760658E+07   4.305552E+07    -4.120752E+08 
+        -3.025869E+08   -8.581570E+07   -7.733596E+08   5.866129E+07    
+        9.951519E+07    -8.239151E+08   -4.086227E+08   2.106677E+09   
+        -1.473281E+07 
+$                                                                       $
+$ IMPORT SB1 MODAL STRESS AT CBAR 110 OF SYMMETRIC MODES BY DMI IN      $
+$ THE SECOND COLUMN                                                     $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+DMIL            CBAR110               2               4 -4.407347E+06
+        -6.496776E+06   -3.895416E+07   1.265445E+07    -4.436399E+06  
+        2.878260E+07    2.542621E+07    -2.668230E+07   1.063493E+08  
+        -1.609337E+07   2.604834E+08    5.830810E+08    -2.010839E+06   
+        -6.087351E+08   1.211331E+09    7.617252E+08    -2.937442E+09    
+        1.729023E+07 
+$                                                                       $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        MLOADS = 100                                   $
+$                      STATE-SPACE APPROACH                             $
+$ SYMMETRIC TRANSIENT MANEUVER AT MACH=0.9 Q=1200. PSF                  $
+$ THREE RIGID BODY FEM MODES AND 19 ELASTIC MODES                       $
+$ TRANSFORMED TO FOUR AIRFRAME STATES; H, ALPHA, Q AND THETA            $
+$ INITIAL ALPHA=THETA=3.123-03 RAD.                                     $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$---1--><--2---><--3---><--4---><--5---><--6---><--7---><--8---><--9--->
+$$$$$$$ SID     CONID   FLTID   RAAID   STATES  COMMAND TIME    MLDPRN
+MLOADS  100             10      140     100     100     100     100
+$               .01
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                        MLOADS = 200                                   $
+$                     FREQUENCY-DOMAIN APPROACH                         $
+$ SYMMETRIC TRANSIENT MANEUVER AT MACH=0.9 Q=1200. PSF                  $
+$ THREE RIGID BODY FEM MODES AND 19 ELASTIC MODES                       $
+$ TRANSFORMED TO FOUR AIRFRAME STATES; H, ALPHA, Q AND THETA            $
+$ MLDTRIM CARD IS AUTOMATICALLY DEACTIVATED.                            $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLOADS  200             10              100     100     100     200
+$               .01
+$-----------------------------------------------------------------------
+$$$$$$$ IDSTAT  IDTRIM  TRNSFM  ARR     BRR   
+MLDSTAT 100     100                                                     +M1
+$$$$$$$ STATE   INITIAL STATE   INITIAL STATE   INITIAL STATE   INITIAL
++M1     ALPHA   -4.31-05Q       0.      THETA   -4.31-05H       0.0
+$-----------------------------------------------------------------------
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$         MLDTRIM FOR INITIAL TRIM CONDITON.                            $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+MLDTRIM 100     32.2    1.0     YES     SMODAL                          +MA
++MA     CANARD  0.13534                     
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ THE FOLLOWING DMI CARD CONTAINS THE MODAL COORDINATE SOLUTION OBTAINED$
+$ FROM THE TRIM ANALYSIS (SUBCASE=1).  IT IS NOT ACTIVATE UNLESS THE    $
+$ "MODAL" ENTRY OF THE MLDTRIM CARD REFERS TO IT.                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+DMI     SMODAL  0       2       2               DMIL          21       1
+DMIL              SMODAL               1               1+0.000000000E+00+CONT   
++CONT   +0.000000000E+00+0.000000000E+00+2.856125496E-02-1.363411779E-03+CONT
++CONT   -1.431321948E-06+5.007548025E-04+3.715205821E-04+1.363121410E-04+CONT
++CONT   -1.889304804E-05-1.056841356E-04+1.495294697E-07-1.119527369E-07+CONT
++CONT   +1.751260825E-08+4.534674858E-08-5.835625871E-06-2.101469221E-07+CONT
++CONT   -2.253457332E-08+3.422850270E-08+5.781124912E-08-1.987887899E-08
+
+
+$-----------------------------------------------------------------------
+$ SIMULATION FROM T=-2. TO T=2.0 SEC WITH DT=0.002.                     $
+$ PRINT=-1 TO MINIMIZE THE OUTPUT                                       $
+$$$$$$$ IDTIME  TSTART  TEND    DT      OUTDT   PRINT   METHOD
+MLDTIME 100     -2.0    5.      .00001  200     -1
+$-----------------------------------------------------------------------
+$ PILOT COMMAND DIRECTLY APPLIED TO THE ACTUATOR THAT IS ATTACHED TO THE$
+$ CANARD. THIS IS SPECIFIED BY THE EXTINP BULK DATA CARD (EXTINP=100).  $
+$ CANARD IS DEFINED BY AN AESURFZ CARD WITH ACTID =100.        
+$-----------------------------------------------------------------------
+$                                                                       $
+$$$$$$$ SETID                                                         
+MLDCOMD 100                                                             +M2
+$$$$$$$ EXTINP  IDTAB   
++M2     100     100                    
+EXTINP  100             100     1       CANARD
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$ ONE CONTROL SURFACE: CANARD WITH ACUATOR TRANSFER FUNCTION=           $
+$                      1.45E12/(S**3+3400.25*S**2+3.827E8+1.45E12)      $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$       LABEL   TYPE    CID     SETK    SETG
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10$
+AESURFZ CANARD  SYM     1       1000            100 
+$       CID     RID     A1      A2      A3      B1      B2      B3      $
+CORD2R  1       0       12.5    0.0     0.0     12.5    0.0     10.0    +CRD2
+$       C1      C2      C3                                              $
++CRD2   20.0    0.0     10.0
+ACTU    100     1.456E123.827E8 34002.5
+$                                                                       $
+$-----------------------------------------------------------------------
+$ TIME HISTORY OF THE PILOT INPUT COMMAND IS DEFINED BY THE TABLED1     $
+$ BULK DATA (REFERRED TO BY THE MLDCOMD BULK DATA CARD).                $
+$-----------------------------------------------------------------------
+$$$$$$$ TID     XAXIS   YAXIS
+TABLED1 100                                                             +TAB1
+$$$$$$$ XI      YI
++TAB1   -2.0    0.      .1      0.      .16     .05236  .66     .05236  +TAB2
++TAB2   .78     -.05236 1.28    -.05236 1.34    0.      100.    0.
+$-----------------------------------------------------------------------
+$                                                                       $
+$ SIX PARAMETERS ARE PRINTED OUT NO FILE "HA144MD.PLT"                  $
+$ (1) AIRFRAMR STATE ALPHA                                              $
+$ (2) AIRFRAMR STATE Q                                                  $
+$ (3) AIRFRAMR STATE THETA                                              $
+$ (4) THE ACCELERATION OF THE FEM GRID POINT WITH ID=90                 $
+$ (5) STRESSES AT CBAR=110. MODAL STRESSES IMPORTED BY DMI=CBAR110      $
+$ (6) THE COMPONENT LOADS OF LOADMOD=101 (WING BENDING MOMENT)          $
+$     USING MODE DISPLACEMENT METOD (MD).                               $
+$ ONE PARAMETER ARE PRINTED OUT NO FILE "HA144SOF.PLT"                  $
+$ (1) THE COMPONENT LOADS OF LOADMOD=101 (WING BENDING MOMENT)          $
+$     USING SUMMATION OF FORCE METHOD (SOF) WHERE THE TIEM-DOMAIN       $
+$     AERODYNAMIC FORCES ARE COMPUTED USING INVERSE FOURIER TRANSFORM.  $
+$ ONE PARAMETER ARE PRINTED OUT NO FILE "HA144RFA.PLT"                  $
+$ (1) THE COMPONENT LOADS OF LOADMOD=101 (WING BENDING MOMENT)          $
+$     USING SUMMATION OF FORCE METHOD (SOF) WHERE THE TIEM-DOMAIN       $
+$     AERODYNAMIC FORCES ARE COMPUTED USING RATIONAL FUNCTION           $
+$     APPROXIMATION (RFA) METHOD.                                       $
+$ NOTE THAT THE WING BENDING MOMENT ARE COMPUTED BY THREE METHOD NAMELY $
+$ MD, SOF, AND RFA FOR COMPARISON.                                      $
+$                                                                       $
+$-----------------------------------------------------------------------
+$$$$$$$ IDPRNT     FILENM       FORM
+MLDPRNT 100     STATEMD.PLT     TABLE                                   +MP1
+$$$$$$$ LABEL   IKEY    LABEL   IKEY    LABEL   IKEY    LABEL   IKEY
++MP1    STATE   ALPHA   STATE   Q       STATE   THETA   GRIDGT3 90      +MP2
++MP2    DMI     CBAR110 LOADMOD 101     
+MLDPRNT 100     STATESOF.PLT    TABLE                           YES     +MP1
+$$$$$$$ LABEL   IKEY    LABEL   IKEY    LABEL   IKEY    LABEL   IKEY
++MP1    LOADMOD 101    
+MLDPRNT 100     STATERFA.PLT    TABLE                           RFA     +MP1
+$$$$$$$ LABEL   IKEY    LABEL   IKEY    LABEL   IKEY    LABEL   IKEY
++MP1    LOADMOD 101    
+$$$$$$$ IDPRNT     FILENM       FORM
+MLDPRNT 200     FREQUMD.PLT     TABLE                                   +MP1
+$$$$$$$ LABEL   IKEY    LABEL   IKEY    LABEL   IKEY    LABEL   IKEY
++MP1    STATE   ALPHA   STATE   Q       STATE   THETA   GRIDGT3 90      +MP2
++MP2    DMI     CBAR110 LOADMOD 101     
+MLDPRNT 200     FREQUSOF.PLT    TABLE                           YES     +MP1
+$$$$$$$ LABEL   IKEY    LABEL   IKEY    LABEL   IKEY    LABEL   IKEY
++MP1    LOADMOD 101    
+$-----------------------------------------------------------------------
+$ PLTTIME CARD FOR POST-PROCESSING OF THE MLOADS ANALYSIS
+$$$$$$$ IDPLT   IDMLD   TS      TE      NDT     TYPE    FORM    SCALE
+PLTTIME 110     100     .1      1.3     10      ELAS    TECPLOT 100.    +PLT1
++PLT1   ELASTIC.PLT
+PLTTIME 120     100     .1      1.3     10      FORCESOFNASTRAN 1.0     +PLT1
++PLT1   NASTRAN.NAS
+$                                                                       $
+$ Minimum state method                                                  $
+$ SET ITMAX=-80 FOR 80 ITERATIONS WHERE tHE NEGATIVE SIGN IS TO KEEP    $
+$ THE RFA FOR QHH UNAFFECTED BY THE RFA FOR QHC AND QLH                 $
+$                                                                       $
+MINSTAT 140     122      80     30      
+$AEROLAG 122     4       -0.2    -0.35   -0.65   -0.85    
+AEROLAG 122     4       0.0                              
+$       SID     DA0     DA1     DA2     NRP     NCP     FR(1)   FC(1)   $
+APCONST 30      1       -1      -1      1       1       1       1
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ RBRED IS USED TO CLEANUP THE RIGID BODY SUBMATRIX IN A0 AND A1 RESULTING
+$ FROM THE RATIONAL AERODYNAMIC APPROXIMATION.
+$ THERE ARE ONLY TWO RIGID BODY MODES WITH COMPONENTS=35 BECAUSE THE
+$ FIRST RIGID BODY MODE IS DELETED BY THE MLIST ENTRY OF THE FLUTTER
+$ BULK DATA CARD.
+$ NOTE THAT THE GRID POINT 90 IS THE SUPORT POINT IN THE FEM MODEL.
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+RBRED   100     100     35      90
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$ FLUTTER BULK DATA CARD TO DEFINE THE AEROELASTC SYSTEM                $
+$ THE FIRST RIGID BODY MODE (FOR-AFT MODE) IS DELETED BY MLIST ENTRY    $
+$                                                                       $
+$..  1 |..   2 |..   3 |..   4 |..   5 |..   6 |..   7 |..   8 |..   9 |..  10  |  
+$        SETID  SYM     FIX     NMODE   TABDMP  MLIST   CONMLST FLTSEN
+FLUTTER 10      SYM     10                      100        
+SET1    100     1
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10$
+FIXMDEN 10      90      0.002376SLUG    FT      1.0                     +F1
++F1     1005.   1200.
+         
+$-----------------------------------------------------------------------
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                 * AERO PARAMETERS / FLIGHT CONDITIONS *               $
+$ THE FOLLOWING BULK DATA CARDS ARE NEARLY IDENTICAL TO THE HA144D.INP  $
+$ OF THE TRIM TESTCASES.                                                $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$
+$       ACSID   XZSYM   FLIP    FMMUNIT FMLUNIT REFC    REFB    REFS    +ABC
+AEROZ   0       YES     NO      SLUG    FT      10.     40.     400.    +A      
+$+ABC   REFX    REFY    REFZ
++A      15.000  0.      0.
+$
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 90      0.90    0       0       SAVE    HA144DMLD.090           +AEROMK 
++AEROMK 0.05    .1      .2      .3      .4      .5      .6      .7      +MK1    
++MK1    .8      .9      -1.0    -1.1    -1.2    -1.3    -1.5    -3.0
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                        * WING MACROELEMENTS *                         $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$ FORWARD SWEPT WING - 4 x 8 AERO BOXES EVENLY CUT                      $
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  1100    WING            9       5       0               1101    +CA1
+$       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
++CA1    25.     0.      0.      10.     0       0                       +CA2
+$       XRT     YRT     ZRT     TCH     LTCHD   ATTCHT                  $
++CA2    13.4529920.     0.      10.     0       0
+$                                                                       $
+$ A PAFOIL7 CARD IS USED TO DEFINE THE A 0.1 DEG INCIDENCE ANGLE,       $
+$ BUT WITH NO THICKNESS.                                                $
+$       ID      ITAX    ITHR    ICAMR   RADR    ITHT    ICAMT   RADT    $
+PAFOIL7 1101    1102    1103    1104    0.0     1103    1104    0.0
+AEFACT  1102    0.0     50.0    100.0
+AEFACT  1103    0.0     0.0     0.0
+$ AEFACT TO DESCRIBE THE AIRFOIL CAMBER (0.1 DEG INCIDENCE)             $
+AEFACT  1104    0.0     -0.1553 -0.3107
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                        * CANARD MACROELEMENT *                        $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  1000    CANARD          3       5       0               2101    +CA1
++CA1    10.     0.0     0.0     10.     0       0                       +CA2
++CA2    10.     5.0     0.0     10.     0       0
+PAFOIL7 2101    2102    2103    2104    0.0     2103    2104    0.0
+AEFACT  2102    0.0     50.0    100.0
+AEFACT  2103    0.0     0.0     0.0
+$ AEFACT TO DESCRIBE THE AIRFOIL CAMBER (1.007 DEG INCIDENCE)           $
+AEFACT  2104    0.0     -0.8789 -1.7577
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                        * FIN MACROELEMENT *                           $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  3100    FIN     0       5       5                               +CA101
++CA101  30.7735 0.      10.     10.0                                    +CA102
++CA102  25.     0.0     0.0     10.                     
+$                                                                       $
+$ GENERATES PLOT FILE FOR AEROMODEL.                                    $
+$                                                                       $
+PLTAERO 310     NO              TECPLOT HA144AERO.PLT
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$                  * SPLINE INPUT *                                     $
+$                                                                       $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$                                                                       $
+$ THE BEAM SPLINE METHOD IS USED TO SPLINE THE WING AERO                $
+$ BOXES TO THE WING STRUCTURE GRIDS.  THE SETK BULK DATA CARD REFERS    $
+$ TO THE GRID POINTS SPECIFIED IN THE SET1 (SID=1105) BULK DATA CARD.   $
+$                                                                       $
+$       EID     MODEL   SETK    SETG    DZ      EPS     CID             $
+SPLINE2 1601    WING    1100    1105    0.0             2
+SET1    1105    100     110     120     
+$                                                                       $
+$ CORD2R = 2 DEFINES THE BEAM SPLINE AXIS.                              $
+$                                                                       $
+CORD2R  2       0       30.     0.      0.      30.     0.0     10.     +CRD2
+$       C1      C2      C3                                              $
++CRD2   38.66025+5.0    0.0    
+$                                                                       $
+$ PANLST1 DEFINES THE WING AERO BOX ID'S THAT ARE REFERRED TO BY SPLINE2$
+$       SETID   MACROID BOX1    BOX2                                    $
+PANLST1 1100    1100    1100    1131
+$                                                                       $
+$ SINCE THERE IS NO STRUCTURAL GRID ON THE CANARD, ATTACH METHOD IS USED$
+$ TO ATTACH THE CANARD TO GRID 90                                       $
+$                                                                       $
+$       EID     MODEL   SETK    REFGRID 
+ATTACH  1501    CANARD  1000    90     
+$                                                                       $
+PANLST3 1000    CANARD    
+$                                                                       $
+$ INFINITE PLATE SPLINE METHOD FOR FIN.                                 $
+$                                                                       $
+SPLINE1 3100    FIN             3100    3100    0.0  
+PANLST3 3100    FIN                     
+$       SID     G1      G2      ETC                                     $
+SET1    3100    100     311     310     312                         
+$                                                                       $
+ENDDATA

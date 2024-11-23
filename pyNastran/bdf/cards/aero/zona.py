@@ -22,6 +22,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
     filename_or_blank, string_or_blank, double_or_string, blank,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import (
+    force_double_or_blank,
+)
 from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO2, # PAERO1,
                                            SPLINE1, AESURF, AELIST, # SPLINE2, SPLINE3,
                                            AELINK, AEFACT)
@@ -32,6 +35,7 @@ from pyNastran.bdf.cards.aero.utils import (
 from pyNastran.bdf.cards.coordinate_systems import CoordBase
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface import BDFCard
     import matplotlib
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
 
@@ -176,6 +180,7 @@ class ZONA:
         card_parser['SPLINE2'] = (SPLINE2_ZONA, add_methods._add_spline_object)
         card_parser['SPLINE3'] = (SPLINE3_ZONA, add_methods._add_spline_object)
         card_parser['PANLST1'] = (PANLST1, self._add_panlst_object)
+        card_parser['PANLST2'] = (PANLST2, self._add_panlst_object)
         card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
         card_parser['PAFOIL7'] = (PAFOIL7, self._add_pafoil_object)
         card_parser['MKAEROZ'] = (MKAEROZ, self._add_mkaeroz_object)
@@ -185,12 +190,12 @@ class ZONA:
         card_parser['TRIMVAR'] = (TRIMVAR, self._add_trimvar_object)
         card_parser['TRIMLNK'] = (TRIMLNK, self._add_trimlnk_object)
         cards = [
-            'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST1', 'PANLST3', 'PAFOIL7',
+            'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST1', 'PANLST2', 'PANLST3', 'PAFOIL7',
             'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
             'TRIMVAR', 'TRIMLNK', 'FLUTTER']
         self.model.cards_to_read.update(set(cards))
 
-    def _add_panlst_object(self, panlst: PANLST1 |PANLST3) -> None:
+    def _add_panlst_object(self, panlst: PANLST1 | PANLST2 | PANLST3) -> None:
         """adds an PANLST1/PANLST2/PANLST3 object"""
         assert panlst.eid not in self.panlsts
         assert panlst.eid > 0
@@ -476,7 +481,8 @@ class ACOORD(CoordBase):  # not done
         origin = [origin_x, origin_y, origin_z]
         delta = double(card, 5, 'delta')
         theta = double(card, 6, 'theta')
-        assert len(card) <= 7, f'len(ACOORD card) = {len(card):d}\ncard={card}'
+        dunno = double(card, 6, 'dunno')
+        assert len(card) <= 8, f'len(ACOORD card) = {len(card):d}\ncard={card}'
         return ACOORD(cid, origin, delta, theta, comment=comment)
 
     def setup(self):
@@ -1257,6 +1263,95 @@ class PANLST1(Spline):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+class PANLST2(Spline):
+    """
+    Defines a set of aerodynamic boxes by the LABEL entry in CAERO7 or BODY7
+    bulk data cards.
+
+    +---------+------+-------+-------+------+------+----+-----+-------+
+    |    1    |  2   |   3   |   4   |  5   |   6  |  7 |  8  |   9   |
+    +=========+======+=======+=======+======+======+====+=====+=======+
+    | SPLINE1 | EID  | MODEL |  CP   | SETK | SETG | DZ | EPS |       |
+    +---------+------+-------+-------+------+------+----+-----+-------+
+    | SPLINE1 | 100  |       |       |  1   |  10  | 0. |     |       |
+    +---------+------+-------+-------+------+------+----+-----+-------+
+
+    +---------+-------+---------+------+------+------+----+-----+-------+
+    |    1    |   2   |    3    |   4  |  5   |   6  |  7 |  8  |   9   |
+    +=========+=======+=========+======+======+======+====+=====+=======+
+    | PANLST1 | SETID | MACROID | BOX1 | BOX2 |      |    |     |       |
+    +---------+-------+---------+------+------+------+----+-----+-------+
+    | PANLST1 |  100  |   111   |  111 |  118 |      |    |     |       |
+    +---------+-------+---------+------+------+------+----+-----+-------+
+
+    PANLST1 is referred to by SPLINEi, ATTACH, LOADMOD, CPFACT, JETFRC, and/or
+    AESURFZ bulk data card.
+    """
+    type = 'PANLST2'
+
+    def __init__(self, eid, macro_id, box1, box2, comment=''):
+        """
+        Creates a PANLST1 card
+
+        Parameters
+        ----------
+        eid : int
+            spline id
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # https://www.zonatech.com/Documentation/ZAERO_9.2_Users_3rd_Ed.pdf
+        Spline.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.eid = eid
+        self.macro_id = macro_id # points to CAERO7 / BODY7
+        self.box1 = box1
+        self.box2 = box2
+        self.aero_element_ids = []
+        self.caero_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a PANLST3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # SETID   MACROID BOX1    BOX2    ETC
+        print(card)
+        eid = integer(card, 1, 'eid')
+        macro_id = integer(card, 2, 'macro_id')
+        box1 = integer(card, 3, 'box1')
+        thru = string(card, 4, 'thru')
+        assert thru == 'THRU', thru
+        box2 = integer(card, 5, 'box2')
+        assert len(card) == 6, f'len(PANLST2 card) = {len(card):d}\ncard={card}'
+        return PANLST2(eid, macro_id, box1, box2, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        msg = ', which is required by PANLST1 eid=%s' % self.eid
+        self.caero_ref = model.CAero(self.macro_id, msg=msg)
+        self.aero_element_ids = np.arange(self.box1, self.box2)
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        self.cross_reference(model)
+
+    def raw_fields(self):
+        list_fields = ['PANLST2', self.eid, self.macro_id, self.box1, 'THRU', self.box2]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
 class PANLST3(Spline):
     """
@@ -3624,9 +3719,9 @@ class FLUTTER_ZONA(Spline):
         sym = string(card, 2, 'sym')
         fix = integer(card, 3, 'fix')
         nmode = integer(card, 4, 'nmode')
-        tabdmp = integer(card, 5, 'tabdmp')
-        mlist = integer(card, 6, 'mlist')
-        conmlst = integer(card, 7, 'conmlst')
+        tabdmp = integer_or_blank(card, 5, 'tabdmp', default=0)
+        mlist = integer_or_blank(card, 6, 'mlist')
+        conmlst = integer_or_blank(card, 7, 'conmlst')
         nkstep = integer_or_blank(card, 8, 'nkstep', 25)
         assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
         return FLUTTER_ZONA(sid, sym, fix, nmode, tabdmp, mlist, conmlst, nkstep,
@@ -3669,10 +3764,9 @@ class FLUTTER_ZONA(Spline):
         raise NotImplementedError()
 
     def raw_fields(self):
-        raise NotImplementedError('FLUTTER - raw_fields')
-        #list_fields = ['FLUTTER', self.sid, self.sym, self.fix, self.nmode,
-                       #self.tabdmp, self.mlist, self.conmlst, self.nkstep]
-        #return list_fields
+        list_fields = ['FLUTTER', self.sid, self.sym, self.fix, self.nmode,
+                       self.tabdmp, self.mlist, self.conmlst, self.nkstep]
+        return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
@@ -3754,8 +3848,32 @@ class SPLINE1_ZONA(Spline):
 
         panlst = integer(card, 4, 'panlst/setk')
         setg = integer(card, 5, 'setg')
-        dz = blank(card, 6, 'dz')
-        eps = double_or_blank(card, 6, 'eps', 0.01)
+        dz = double_or_blank(card, 6, 'dz', default=0.0)
+        eps = double_or_blank(card, 6, 'eps', default=0.01)
+        return SPLINE1_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
+                            comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """
+        Adds a SPLINE1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = integer(card, 1, 'eid')
+        model = string_or_blank(card, 2, 'model')
+        cp = blank(card, 3, 'cp')
+
+        panlst = integer(card, 4, 'panlst/setk')
+        setg = integer(card, 5, 'setg')
+        dz = force_double_or_blank(card, 6, 'dz', default=0.0)
+        eps = force_double_or_blank(card, 6, 'eps', default=0.01)
         return SPLINE1_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
                             comment=comment)
 
