@@ -453,11 +453,12 @@ class FlutterResponse:
         return factor, units
 
     def plot_vg(self, fig=None, modes=None,
-                plot_type='tas',
+                plot_type: str='tas',
                 xlim=None, ylim_damping=None,
                 ncol: int=0,
-                clear=False, legend=True,
-                png_filename=None, show=True, **kwargs):
+                clear: bool=False, legend: bool=True,
+                freq_tol: float=-1.0,
+                png_filename=None, show: bool=True, **kwargs):
         """
         Make a V-g plot
 
@@ -471,6 +472,7 @@ class FlutterResponse:
                        modes=modes, fig=fig, xlim=xlim, ylim=ylim_damping,
                        ncol=ncol,
                        show=show, clear=clear, legend=legend,
+                       freq_tol=freq_tol,
                        png_filename=png_filename,
                        **kwargs)
 
@@ -484,10 +486,11 @@ class FlutterResponse:
 
     def plot_root_locus(self, modes=None,
                         fig=None, axes=None,
-                        xlim=None, ylim=None,
+                        eigr_lim=None, eigi_lim=None,
                         ncol: int=0,
                         show: bool=True, clear: bool=False,
                         close: bool=False, legend: bool=True,
+                        freq_tol: float=-1.0,
                         png_filename=None,
                         **kwargs):
         """
@@ -501,9 +504,9 @@ class FlutterResponse:
             the figure object
         axes : plt.Axes
             the axes object
-        xlim : list[float/None, float/None]
+        eigr_lim : list[float/None, float/None]
             the x plot limits
-        ylim : list[float/None, float/None]
+        eigi_lim : list[float/None, float/None]
             the y plot limits
         show : bool; default=True
             show the plot
@@ -532,9 +535,10 @@ class FlutterResponse:
         iy = self.ieigi
         scatter = True
         self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
-                       modes=modes, fig=fig, axes=axes, xlim=xlim, ylim=ylim,
+                       modes=modes, fig=fig, axes=axes, xlim=eigr_lim, ylim=eigi_lim,
                        ncol=ncol,
                        show=show, clear=clear, close=close, legend=legend,
+                       freq_tol=freq_tol,
                        png_filename=png_filename,
                        **kwargs)
 
@@ -547,6 +551,7 @@ class FlutterResponse:
                   ncol: int=0,
                   show: bool=True, clear: bool=False,
                   close: bool=False, legend: bool=True,
+                  freq_tol: float=-1.0,
                   png_filename=None,
                   **kwargs):
         """builds the plot"""
@@ -557,6 +562,9 @@ class FlutterResponse:
         modes, imodes = _get_modes_imodes(self.modes, modes)
         nmodes = len(modes)
         ncol = _update_ncol(nmodes, ncol)
+        print(f'plot_xy: modes  = {modes}')
+        print(f'plot_xy: imodes = {imodes}')
+        print(f'plot_xy: ncol   = {ncol}')
 
         if fig is None:
             fig = plt.figure()
@@ -565,24 +573,30 @@ class FlutterResponse:
         symbols, colors = self._get_symbols_colors_from_modes(modes)
         linestyle = 'None' if self.noline else '-'
 
+        jcolor = 0
         for i, imode, mode in zip(count(), imodes, modes):
-            symbol = symbols[i]
-            color = colors[i]
+            symbol = symbols[jcolor]
+            color = colors[jcolor]
             freq = self.results[imode, :, self.ifreq].ravel()
             xs = self.results[imode, :, ix].ravel()
             ys = self.results[imode, :, iy].ravel()
+            jcolor, color2, linestyle2, symbol2 = _increment_jcolor(
+                jcolor, color, linestyle, symbol,
+                freq, freq_tol=freq_tol)
+            print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
 
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
+            label = _get_mode_freq_label(mode, freq[0])
             line = axes.plot(xs[iplot], ys[iplot],
-                             color=color, marker=symbol, label=f'Mode {mode:d}',
-                             linestyle=linestyle, markersize=0)
+                             color=color2, marker=symbol2, label=label,
+                             linestyle=linestyle2, markersize=0)
 
             if scatter:
                 scatteri = np.linspace(.75, 50., len(xs))
                 #assert symbol[2] == '-', symbol
                 #axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=symbol[0], marker=symbol[1])
-                axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=color, marker=symbol)
+                axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=color, marker=symbol2)
 
         axes.grid(True)
         #axes.set_xlabel(xlabel  + '; _plot_x_y')
@@ -611,13 +625,17 @@ class FlutterResponse:
             plt.close()
         return axes
 
-    def _plot_x_y2(self, ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter, modes=None,
+    def _plot_x_y2(self, ix: int, iy1: int, iy2: int,
+                   xlabel: str, ylabel1: str, ylabel2: str,
+                   scatter: bool,
+                   modes=None,
                    fig=None, axes1=None, axes2=None,
                    xlim=None, ylim1=None, ylim2=None,
                    nopoints: bool=False, noline: bool=False,
                    ncol: int=0,
                    show: bool=True, clear: bool=False,
                    close: bool=False, legend: bool=True,
+                   freq_tol: float=-1.0,
                    png_filename=None,
                    **kwargs):
         """
@@ -664,41 +682,47 @@ class FlutterResponse:
         #showpoints = not nopoints
 
         legend_elements = []
+        jcolor = 0
         for i, imode, mode in zip(count(), imodes, modes):
-            symbol = symbols[i]
-            color = colors[i]
+            symbol = symbols[jcolor]
+            color = colors[jcolor]
 
             freq = self.results[imode, :, self.ifreq].ravel()
             xs = self.results[imode, :, ix].ravel()
             y1s = self.results[imode, :, iy1].ravel()
             y2s = self.results[imode, :, iy2].ravel()
+            jcolor, color2, linestyle2, symbol2 = _increment_jcolor(
+                jcolor, color, linestyle, symbol,
+                freq, freq_tol=freq_tol)
 
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
 
             # plot the line
-            label = 'Mode %i' % mode
-            legend_element = Line2D([0], [0], color=color, marker=symbol, label=label, linestyle=linestyle)
+            label = _get_mode_freq_label(mode, freq[0])
+            legend_element = Line2D([0], [0], color=color2, marker=symbol2, label=label, linestyle=linestyle2)
             if nopoints:
-                symbol = 'None'
+                symbol2 = 'None'
+
+            print(f'scatter={scatter}; color={color2}; linestyle={linestyle2!r} symbol={symbol2!r}; markersize={markersize}')
             if scatter:
                 scatteri = np.linspace(.75, 50., len(xs))
                 #assert symbol[2] == '-', symbol
                 axes1.scatter(xs[iplot], y1s[iplot],
-                              s=scatteri, color=color, marker=symbol)
+                              s=scatteri, color=color2, marker=symbol2)
                 axes2.scatter(xs[iplot], y2s[iplot],
-                              s=scatteri, color=color, marker=symbol)
+                              s=scatteri, color=color2, marker=symbol2)
 
                 # Draw the line
-                axes1.plot(xs[iplot], y1s[iplot], marker=symbol, label=label,
-                           color=color, markersize=markersize, linestyle=linestyle)
-                axes2.plot(xs[iplot], y2s[iplot], marker=symbol,
-                           color=color, markersize=markersize, linestyle=linestyle)
+                axes1.plot(xs[iplot], y1s[iplot], marker=symbol2, label=label,
+                           color=color2, markersize=markersize, linestyle=linestyle2)
+                axes2.plot(xs[iplot], y2s[iplot], marker=symbol2,
+                           color=color2, markersize=markersize, linestyle=linestyle2)
             else:
-                axes1.plot(xs[iplot], y1s[iplot], marker=symbol, label=label,
-                           color=color, markersize=markersize, linestyle=linestyle)
-                axes2.plot(xs[iplot], y2s[iplot], marker=symbol,
-                           color=color, markersize=markersize, linestyle=linestyle)
+                axes1.plot(xs[iplot], y1s[iplot], marker=symbol2, label=label,
+                           color=color2, markersize=markersize, linestyle=linestyle2)
+                axes2.plot(xs[iplot], y2s[iplot], marker=symbol2,
+                           color=color2, markersize=markersize, linestyle=linestyle2)
             legend_elements.append(legend_element)
 
         axes1.grid(True)
@@ -735,15 +759,17 @@ class FlutterResponse:
             plt.close()
 
     def plot_kfreq_damping(self, modes=None,
-                           plot_type='tas',
+                           plot_type: str='tas',
                            fig=None, damp_axes=None, freq_axes=None,
                            xlim=None,
-                           show=True, clear=False, close=False, legend=True,
-                           png_filename=None,
                            ylim_damping=None,
                            ylim_kfreq=None,
+                           show: bool=True, clear: bool=False,
+                           close: bool=False, legend: bool=True,
+                           freq_tol: float=-1.0,
+                           png_filename=None,
                            vd_limit=None, damping_limit=None,
-                           nopoints=False, noline=False,
+                           nopoints: bool=False, noline: bool=False,
                            **kwargs):
         """
         Plots a kfreq vs. damping curve
@@ -767,14 +793,16 @@ class FlutterResponse:
                         nopoints=nopoints, noline=noline,
                         show=show, clear=clear, close=close,
                         legend=legend,
+                        freq_tol=freq_tol,
                         png_filename=png_filename,
                         **kwargs)
 
     def plot_kfreq_damping2(self, modes=None,
-                            fig=None, axes1=None, axes2=None,
-                            xlim=None, ylim1=None,  ylim2=None,
+                            fig=None, damp_axes=None, freq_axes=None,
+                            xlim=None, ylim_damping=None, ylim_freq=None,
                             show: bool=True, clear: bool=False,
                             close: bool=False, legend: bool=True,
+                            freq_tol: float=-1.0,
                             png_filename=None,
                             **kwargs):
         """
@@ -792,10 +820,12 @@ class FlutterResponse:
         scatter = True
         self._plot_x_y2(ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
                         modes=modes,
-                        fig=fig, axes1=axes1, axes2=axes2,
-                        xlim=xlim, ylim1=ylim1, ylim2=ylim2,
+                        fig=fig, axes1=damp_axes, axes2=freq_axes,
+                        xlim=xlim, ylim1=ylim_damping, ylim2=ylim_freq,
                         show=show, clear=clear, close=close,
-                        legend=legend, png_filename=png_filename,
+                        legend=legend,
+                        freq_tol=freq_tol,
+                        png_filename=png_filename,
                         **kwargs)
 
     def fix(self):
@@ -901,13 +931,9 @@ class FlutterResponse:
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
 
-            if freq.max() - freq.min() <= freq_tol:
-                color = 'gray'
-                jcolor -= 1
-            jcolor += 1
-            linestyle2 = '--' if color == 'gray' else linestyle
-            symbol2 = '' if color == 'gray' else symbol
-
+            jcolor, color, linestyle2, symbol2 = _increment_jcolor(
+                jcolor, color, linestyle, symbol,
+                freq, freq_tol)
             #iplot = np.where(freq > 0.0)
             #damp_axes.plot(vel, damping, symbols[i], label='Mode %i' % mode)
             #freq_axes.plot(vel, freq, symbols[i])
@@ -939,7 +965,7 @@ class FlutterResponse:
         if ylim_freq is not None:
             freq_axes.set_ylim(ylim_freq)
 
-        title = 'Subcase %i' % self.subcase
+        title = f'Subcase {self.subcase}'
         if png_filename:
             title += '\n%s' % png_filename
 
@@ -1255,7 +1281,7 @@ class FlutterResponse:
             ix = self.idamping
             xlabel = r'Structural Damping; $g = 2 \gamma $'
         else:  # pramga: no cover
-            raise NotImplementedError("plot_type=%r not in ['tas', 'eas', 'alt', 'kfreq', "
+            raise NotImplementedError(f"plot_type={plot_type!r} not in ['tas', 'eas', 'alt', 'kfreq', "
                                       "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']")
         return ix, xlabel
 
@@ -1531,3 +1557,37 @@ def _get_mode_freq_label(mode: int, freq: float) -> str:
         freq_num = freq_num.replace('-0', '-').replace('-0', '-').replace('+0', '+')
     label = f'Mode {mode:d}; freq={freq_num}'
     return label
+
+
+def _increment_jcolor(jcolor: int, color: str,
+                      linestyle: str, symbol: str,
+                      freq: np.ndarray,
+                      freq_tol: float=-1.0) -> tuple[int, str, str, str]:
+    """
+    Filters a line if it doesn't change by more than freq_tol.
+    Changes the line color and removes the symbol.
+
+    Parameters
+    ----------
+    linestyle: str
+        '-', '--', 'None'
+    freq: np.ndarray
+        the frequency data
+    freq_tol: float; default=-1.0
+        -1.0: no filtering (default)
+        >0.0: filter is active
+
+    Returns
+    -------
+    linestyle2: str
+        the updated style
+    """
+    is_filered = False
+    if freq.max() - freq.min() <= freq_tol:
+        color = 'gray'
+        is_filered = True
+        jcolor -= 1
+    jcolor += 1
+    linestyle2 = '--' if is_filered else linestyle
+    symbol2 = '' if is_filered else symbol
+    return jcolor, color, linestyle2, symbol2

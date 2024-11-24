@@ -30,7 +30,7 @@ from pyNastran.utils.numpy_utils import float_types
 def make_flutter_response(f06_filename: str,
                           f06_units=None, out_units=None,
                           make_alt: bool=False,
-                          log: Optional[SimpleLogger]=None) -> list[FlutterResponse]:
+                          log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
     """
     Creates the FlutterResponse object
 
