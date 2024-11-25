@@ -5,8 +5,6 @@ from functools import wraps
 from pathlib import Path
 from typing import Callable, Optional, Any
 
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QRadioButton
 ICON_PATH = Path('')
 try:
     import json5 as json
@@ -28,26 +26,23 @@ from qtpy.QtWidgets import (
     QCheckBox, QListWidgetItem, QAbstractItemView,
     QListWidget,
 )
-from qtpy.QtGui import QColor, QIcon
-
-QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'  # ; font-weight: bold
-QLINEEDIT_RED = 'QLineEdit {background-color: red;}'  # ; font-weight: bold
+from qtpy.QtGui import QIcon
+QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
+QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 
 from cpylog import SimpleLogger
-import pyNastran
-from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
-from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
+#import pyNastran
+from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
-from pyNastran.f06.flutter_response import FlutterResponse
+from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import make_flutter_response
 
-PKG_PATH = os.path.dirname(pyNastran.__file__)
-#F06_FILENAME = os.path.join(PKG_PATH, '..', 'models', 'aero', '2_mode_flutter', '0012_flutter.f06')
+#PKG_PATH = os.path.dirname(pyNastran.__file__)
 
 
-X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'alt', 'kfreq']
+X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', '1/kfreq']
 PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
 UNITS_IN = ['english_in', 'english_kt', 'english_ft',
             'si', 'si_mm']
@@ -77,29 +72,34 @@ class Action:
         return str(ICON_PATH / self.ico)
 
 class MainWindow(LoggableGui):
-    def __init__(self):
+    def __init__(self, f06_filename: str=''):
         super().__init__(html_logging=False)
         self.use_dock_widgets = False
         self.qactions = {}
         self.nrecent_files_max = 9
-        self.subcase = 0
-        self.selected_modes = []
-        self.freq_tol = -1.0
         self.recent_files = []
         self.save_filename = HOME_FILENAME
-        self.f06_filename = ''
         self.is_valid = False
+
         self.data = {}
+        self.f06_filename = ''
+        self.subcase = 0
         self.plot_type = 'eas'
         self.freq_lim = [None, None]
         self.damping_lim = [None, None]
         self.kfreq_lim = [None, None]
+        self.eigr_lim = [None, None]
+        self.eigi_lim = [None, None]
         self.responses = {}
         self.modes = []
+        self.selected_modes = []
+        self.freq_tol = -1.0
 
         self.setup_widgets()
         self.setup_layout()
         self.on_load_settings()
+        if f06_filename:
+            self.f06_filename_edit.setText(f06_filename)
 
         self.setup_toolbar()
         self._update_recent_files_actions()
@@ -127,12 +127,12 @@ class MainWindow(LoggableGui):
 
         self.menubar = self.menuBar()
         self.file_menu = self.menubar.addMenu('File')
-        self.help_menu = self.menubar.addMenu('Help')
+        #self.help_menu = self.menubar.addMenu('Help')
 
         help_actions = []
         menus_dict = {
             'File': (self.file_menu, file_actions),
-            'Help': (self.help_menu, help_actions),
+            #'Help': (self.help_menu, help_actions),
         }
         build_menus(menus_dict, actions)
         #self.file_menu.addAction(actions['file_load'])
@@ -148,7 +148,7 @@ class MainWindow(LoggableGui):
 
     def _build_recent_file_actions(self, actions_input: dict[str, Action]) -> list[str]:
         recent_files = []
-        current_directory = os.getcwd()
+        #current_directory = os.getcwd()
         #for ifile, abs_path in enumerate(self.recent_files):
             #pth = os.path.relpath(abs_path, current_directory)
             # func = partial(self.set_f06, abs_path)
@@ -187,7 +187,7 @@ class MainWindow(LoggableGui):
 
     # @dontcrash
     def on_file_exit(self):
-        print('on_file_exit')
+        #print('on_file_exit')
         if hasattr(self, 'on_file_save') and hasattr(self, 'save_filename'):
             self.on_file_save()
 
@@ -215,7 +215,7 @@ class MainWindow(LoggableGui):
     def _save(self, json_filename: str):
         is_valid = self.validate()
         self.log.info(f'self.data = {self.data}')
-        if json_filename == '':
+        if json_filename == '' or len(self.data) == 0:
             return
         #print(f'json_filename={json_filename!r} wildcard={wildcard!r}')
         #print(f'self.data = {self.data}')
@@ -247,7 +247,7 @@ class MainWindow(LoggableGui):
         ]
         for key, index, line_edit in line_edits:
             if key not in data:
-                print(f'apply_settings: skipping key={key!r}')
+                #print(f'apply_settings: skipping key={key!r}')
                 continue
             values = data[key]
             if index != -1:
@@ -260,8 +260,8 @@ class MainWindow(LoggableGui):
             else:
                 str_value = str(value)
 
-            print('type(value) =', type(value))
-            print(f'{key+":":<10} values={values}[{index!r}]={value!r} -> {str_value!r}')
+            #print('type(value) =', type(value))
+            #print(f'{key+":":<10} values={values}[{index!r}]={value!r} -> {str_value!r}')
             line_edit.setText(str_value)
 
         pulldown_edits = [
@@ -278,8 +278,8 @@ class MainWindow(LoggableGui):
         self.recent_files = []
         for fname in data['recent_files']:
             abs_path = os.path.abspath(fname)
-            if fname not in self.recent_files:
-                self.recent_files.append(fname)
+            if abs_path not in self.recent_files:
+                self.recent_files.append(abs_path)
 
     def on_browse_f06(self) -> None:
         title = 'Load Nastran Flutter File'
@@ -310,20 +310,20 @@ class MainWindow(LoggableGui):
         #return wildcard_level, fname
         self._set_window_title()
 
-    def _set_window_title(self):
+    def _set_window_title(self) -> None:
         if self.save_filename == '':
             self.setWindowTitle('Flutter Plot')
         else:
             self.setWindowTitle(f'Flutter Plot: {self.save_filename}')
 
-    def setup_widgets(self):
+    def setup_widgets(self) -> None:
         self.f06_filename_label = QLabel('F06 Filename:')
         self.f06_filename_edit = QLineEdit('')
         # self.f06_filename_edit.setText(F06_FILENAME)
         self.f06_filename_browse = QPushButton('Browse...')
         # self.f06_filename_edit.setDisabled(True)
-        self.f06_filename_browse.setDisabled(True)
-        self.f06_filename_browse.setVisible(False)
+        #self.f06_filename_browse.setDisabled(True)
+        #self.f06_filename_browse.setVisible(False)
 
         self.show_points_checkbox = QCheckBox('Show Points')
         self.show_lines_checkbox = QCheckBox('Show Lines')
@@ -356,8 +356,9 @@ class MainWindow(LoggableGui):
         self.eigi_lim_edit_max = QFloatEdit()
 
         #--------------------------------------------
-        self.freq_tol_label = QLabel('Freq Tol (Hz):')
-        self.freq_tol_edit = QLineEdit()
+        self.freq_tol_label = QLabel('dFreq Tol (Hz):')
+        self.freq_tol_edit = QFloatEdit()
+        self.freq_tol_edit.setToolTip("Filters modes that don't change by more than some amount")
 
         self.subcase_label = QLabel('Subcase:')
         self.subcase_edit = QComboBox()
@@ -372,6 +373,7 @@ class MainWindow(LoggableGui):
         self.x_plot_type_label = QLabel('X-Axis Plot Type:')
         self.x_plot_type_pulldown = QComboBox(self)
         self.x_plot_type_pulldown.addItems(X_PLOT_TYPES)
+        self.x_plot_type_pulldown.setToolTip('sets the x-axis')
 
         self.plot_type_label = QLabel('Plot Type:')
         self.plot_type_pulldown = QComboBox(self)
@@ -410,19 +412,11 @@ class MainWindow(LoggableGui):
         show_xlim = False
         show_freq = False
         show_damp = False
-        show_kfreq = False
         show_root_locus = False
 
-        PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
+        #PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
         assert plot_type in PLOT_TYPES, plot_type
 
-        # if 'root-locus' in plot_type:
-        #     plot_root_locus = True
-        # else:
-        #     if 'x-' in plot_type:
-        #         show_xlim = True
-        #     if 'damp' in plot_type:
-        #         plot_damp = True
         if x_plot_type == 'kfreq':
             show_kfreq = True
         else:
@@ -442,6 +436,9 @@ class MainWindow(LoggableGui):
             show_kfreq = False
         else:  # pragma: no cover
             raise RuntimeError(f'plot_type={plot_type!r}')
+
+        self.x_plot_type_label.setVisible(not show_root_locus)
+        self.x_plot_type_pulldown.setVisible(not show_root_locus)
 
         self.xlim_label.setVisible(show_xlim)
         self.xlim_edit_min.setVisible(show_xlim)
@@ -467,18 +464,19 @@ class MainWindow(LoggableGui):
         self.eigi_lim_edit_min.setVisible(show_root_locus)
         self.eigi_lim_edit_max.setVisible(show_root_locus)
 
-    def setup_layout(self):
+    def setup_layout(self) -> None:
         hbox = QHBoxLayout()
         hbox.addWidget(self.f06_filename_label)
         hbox.addWidget(self.f06_filename_edit)
+        hbox.addWidget(self.f06_filename_browse)
 
         grid = QGridLayout()
         irow = 0
 
         # grid.addWidget(self.f06_filename_label, irow, 0)
         # grid.addWidget(self.f06_filename_edit, irow, 1)
-        grid.addWidget(self.f06_filename_browse, irow, 2)
-        irow += 1
+        # grid.addWidget(self.f06_filename_browse, irow, 2)
+        # irow += 1
 
         grid.addWidget(self.units_in_label, irow, 0)
         grid.addWidget(self.units_in_pulldown, irow, 1)
@@ -578,7 +576,7 @@ class MainWindow(LoggableGui):
         widget.setLayout(vbox2)
         self.setCentralWidget(widget)
 
-    def setup_connections(self):
+    def setup_connections(self) -> None:
         self.f06_load_button.clicked.connect(self.on_load_f06)
         self.x_plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
         self.plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
@@ -588,7 +586,7 @@ class MainWindow(LoggableGui):
         self.ok_button.clicked.connect(self.on_ok)
 
     # @dontcrash
-    def on_load_f06(self):
+    def on_load_f06(self) -> None:
         f06_filename = os.path.abspath(self.f06_filename_edit.text())
         if not os.path.exists(f06_filename) or not os.path.isfile(f06_filename):
             self.f06_filename_edit.setStyleSheet(QLINEEDIT_RED)
@@ -598,7 +596,6 @@ class MainWindow(LoggableGui):
         self.f06_filename = f06_filename
         f06_units = self.units_in_pulldown.currentText()
         out_units = self.units_out_pulldown.currentText()
-        print(f06_units, out_units)
         try:
             self.responses: FlutterResponse = make_flutter_response(
                 f06_filename,
@@ -627,7 +624,7 @@ class MainWindow(LoggableGui):
         self._update_recent_files_actions()
         self._save(self.save_filename)
 
-    def _update_recent_files_actions(self):
+    def _update_recent_files_actions(self) -> None:
         current_directory = os.getcwd()
         for ifile in range(self.nrecent_files_max):
             name = f'file_{ifile}'
@@ -639,14 +636,17 @@ class MainWindow(LoggableGui):
 
             action: QAction = self.qactions[name]
             active_text = action.text()
-            relative_fname = os.path.relpath(fname, current_directory)
 
             if show != action.isVisible():
                 action.setVisible(show)
 
             if show and active_text != fname:
                 # only update text if it's visible
-                action.setText(relative_fname)
+                relative_fname = os.path.relpath(fname, current_directory)
+                text = fname
+                if len(relative_fname) < len(fname):
+                    text = relative_fname
+                action.setText(text)
 
     def on_subcase(self) -> None:
         subcase, is_subcase_valid = self._get_subcase()
@@ -683,7 +683,7 @@ class MainWindow(LoggableGui):
         self.plot(self.modes)
 
     # @dontcrash
-    def on_ok(self):
+    def on_ok(self) -> None:
         is_valid = self.validate()
         if not is_valid:
             return
@@ -713,8 +713,6 @@ class MainWindow(LoggableGui):
         self.log.info(f'plot_type = {plot_type}\n')
         noline = not self.show_lines_checkbox.isChecked()
         nopoints = not self.show_points_checkbox.isChecked()
-        # self.log.info(f'noline = {noline}\n')
-        # self.log.info(f'nopoints = {nopoints}\n')
 
         freq_tol = self.freq_tol
         self.log.info(f'freq_tol = {freq_tol}\n')
@@ -728,6 +726,8 @@ class MainWindow(LoggableGui):
         ylim_freq = self.freq_lim
         damping_limit = None  # % damping
 
+        # changing directory so we don't make a long filename
+        # in teh plot header
         dirname = os.path.abspath(os.path.dirname(self.f06_filename))
         basename = os.path.basename(self.f06_filename)
 
@@ -764,6 +764,7 @@ class MainWindow(LoggableGui):
                 #xlabel: eas
                 #ylabel1 = r'Structural Damping; $g = 2 \gamma $'
                 #ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
+                #print('plot_kfreq_damping')
                 response.plot_kfreq_damping(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     modes=modes, plot_type=x_plot_type,
@@ -774,6 +775,8 @@ class MainWindow(LoggableGui):
                     png_filename=png_filename,
                 )
             else:
+                assert plot_type in 'x-damp-kfreq', plot_type
+                #print('plot_vg_vf')
                 response.plot_vg_vf(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     plot_type=x_plot_type,
@@ -790,9 +793,9 @@ class MainWindow(LoggableGui):
             #raise
         os.chdir(current_directory)
 
-    def get_xlim(self) -> tuple[Any, Any, Any, Any, Any, Any,
+    def get_xlim(self) -> tuple[Limit, Limit, Limit,
+                                Limit, Limit, Limit,
                                 Optional[float], bool]:
-        #default_xlim = [None, None]
         xlim_min, is_passed1 = get_float_or_none(self.xlim_edit_min)
         xlim_max, is_passed2 = get_float_or_none(self.xlim_edit_max)
         damp_lim_min, is_passed3 = get_float_or_none(self.damp_lim_edit_min)
@@ -808,7 +811,7 @@ class MainWindow(LoggableGui):
         eigi_lim_min, is_passed11 = get_float_or_none(self.eigi_lim_edit_min)
         eigi_lim_max, is_passed12 = get_float_or_none(self.eigi_lim_edit_max)
         freq_tol, is_passed13 = get_float_or_none(self.freq_tol_edit)
-        if is_passed5 and freq_tol is None:
+        if is_passed13 and freq_tol is None:
             freq_tol = -1.0
         xlim = [xlim_min, xlim_max]
         damp_lim = [damp_lim_min, damp_lim_max]
@@ -825,7 +828,7 @@ class MainWindow(LoggableGui):
         ]
         is_passed = all(is_passed_flags)
         #print(f'is_passed_flags = {is_passed_flags}')
-        print(f'freq_tol = {freq_tol}')
+        #print(f'freq_tol = {freq_tol}')
         out = (
             xlim, damp_lim, freq_lim, kfreq_lim,
             eigr_lim, eigi_lim, freq_tol, is_passed,
@@ -944,10 +947,10 @@ def build_actions(self, actions_input: dict[str, Action]) -> dict[str, QAction]:
         #action.setCheckable()
         #action.setShortcut(QKeySequence(name))
         if tip:
-            print(f'  found tip for {name}')
+            #print(f'  found tip for {name}')
             action.setStatusTip(tip)
         if func:
-            print(f'  found func for {name}')
+            #print(f'  found func for {name}')
             action.triggered.connect(func)
         actions[name] = action
     return actions
@@ -1007,7 +1010,7 @@ def _set_modes_table(modes_widget: QListWidget, modes: list[int]):
         modes_widget.addItem(mode)
 
 
-def main():  # pragma: no cover
+def main(f06_filename: str='') -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
@@ -1019,7 +1022,7 @@ def main():  # pragma: no cover
     app = QApplication(sys.argv)
     # The Main window
 
-    main_window = MainWindow()
+    main_window = MainWindow(f06_filename)
     main_window.show()
     # Enter the main loop
     app.exec_()

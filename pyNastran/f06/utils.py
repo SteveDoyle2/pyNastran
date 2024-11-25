@@ -41,8 +41,12 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    if '--gui' in argv:
+    is_gui = '--gui' in argv
+    if is_gui:
+        argv.remove('--gui')
         from pyNastran.f06.gui_flutter import main as gui_flutter
+
+    if len(argv) == 2 and is_gui:
         gui_flutter()
         return
 
@@ -115,6 +119,9 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     if f06_filename.lower().endswith(('.bdf', '.op2')):
         f06_filename = base + '.f06'
 
+    if is_gui:
+        gui_flutter(f06_filename)
+        return
     modes = split_int_colon(data['--modes'], start_value=1)
 
     xlim = [None, None]
