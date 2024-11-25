@@ -31,6 +31,7 @@ from pyNastran.gui.default_controls import CONTROLS
 from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments
 from pyNastran.gui.menus.python_console import QSCINTILLA_VERSION
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
+QLayout = QVBoxLayout | QHBoxLayout | QGridLayout
 
 
 def get_qt_license(qt_namei: str) -> str:
@@ -102,7 +103,6 @@ class AboutWindow(PyDialog):
 
     def create_widgets(self, show_tol: bool) -> None:
         """creates the display window"""
-        #-----------------------------------------------------------------------
         # closing
         self.update_button = QPushButton('Check for Updates')
         self.ok_button = QPushButton('OK')
@@ -153,7 +153,7 @@ class AboutWindow(PyDialog):
         #hint.setWidth(hint.width() * 1.1)
         #self.setFixedSize(hint)
 
-    def set_connections(self):
+    def set_connections(self) -> None:
         #"""creates the actions for the menu"""
         #self.method_pulldown.currentIndexChanged.connect(self.on_method)
         #self.zaxis_method_pulldown.currentIndexChanged.connect(self.on_zaxis_method)
@@ -172,7 +172,7 @@ class AboutWindow(PyDialog):
         font = make_font(value, is_bold=False)
         self.setFont(font)
 
-    def on_update(self):
+    def on_update(self) -> None:
         """check for a newer version"""
         is_newer = False
         if self.win_parent is not None:
@@ -181,20 +181,20 @@ class AboutWindow(PyDialog):
             self.update_button.setDisabled(True)
             QMessageBox.about(self, 'About pyNastran GUI', 'PyNastran GUI is already up to date')
 
-    def on_website(self, event):
+    def on_website(self, event) -> None:
         """opens the website"""
         if self.win_parent is None:
             return
         self.win_parent.open_website()
 
-    def on_ok(self):
+    def on_ok(self) -> None:
         """closes the window"""
         #passed = self.on_apply()
         #if passed:
         self.close()
         #self.destroy()
 
-    def on_cancel(self):
+    def on_cancel(self) -> None:
         self.out_data['close'] = True
         self.close()
 
@@ -243,7 +243,6 @@ def get_packages() -> dict[str, str]:
         except AttributeError:
             continue
         packages[name] = pkg_version
-
     return packages
 
 def get_version() -> dict[str, str]:
@@ -289,22 +288,20 @@ def get_version() -> dict[str, str]:
         version_data[key.title()] = str(value)
     return version_data
 
-def _version_tab(ok_cancel_box):
+def _version_tab(ok_cancel_box: QHBoxLayout) -> QWidget:
     """makes the version tab"""
     version_data = get_version()
 
     grid = grid_from_dict(version_data)
-
     hbox = layout_to_hlayout(grid)
     vbox = layout_to_vlayout(hbox)
 
     #---------------------
     version_tab = QWidget()
     version_tab.setLayout(vbox)
-
     return version_tab
 
-def _package_tab():
+def _package_tab() -> QWidget:
     """makes the packages tab"""
     packages = get_packages()
     grid = grid_from_dict(packages)
@@ -316,7 +313,7 @@ def _package_tab():
     package_tab.setLayout(vbox)
     return package_tab
 
-def grid_from_dict(mydict):
+def grid_from_dict(mydict: dict[str, str]) -> QGridLayout:
     irow = 0
     grid = QGridLayout()
     for key, valuei in mydict.items():
@@ -330,7 +327,7 @@ def grid_from_dict(mydict):
         irow += 1
     return grid
 
-def _credits_tab():
+def _credits_tab() -> QWidget:
     """creates the credits tab"""
     scroll_area = QScrollArea()
     scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -349,7 +346,7 @@ def _credits_tab():
     package_tab.setLayout(vbox)
     return package_tab
 
-def _shortcuts_tab():
+def _shortcuts_tab() -> QWidget:
     """creates the credits tab"""
     #scroll_area = QScrollArea()
     #scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -409,13 +406,13 @@ def get_shortcuts() -> tuple[dict[str, str], dict[str, str]]:
         for unused_key, shortcut_msg in CONTROLS.items()}
     return mouse_shortcuts, keyboard_shortcuts
 
-def layout_to_vlayout(layout):
+def layout_to_vlayout(layout: QLayout) -> QVBoxLayout:
     vbox = QVBoxLayout()
     vbox.addLayout(layout)
     vbox.addStretch()
     return vbox
 
-def layout_to_hlayout(layout):
+def layout_to_hlayout(layout: QLayout) -> QHBoxLayout:
     hbox = QHBoxLayout()
     hbox.addLayout(layout)
     hbox.addStretch()

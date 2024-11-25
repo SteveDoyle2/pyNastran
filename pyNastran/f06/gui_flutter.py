@@ -44,10 +44,7 @@ from pyNastran.f06.flutter_response import FlutterResponse
 from pyNastran.f06.parse_flutter import make_flutter_response
 
 PKG_PATH = os.path.dirname(pyNastran.__file__)
-F06_FILENAME = os.path.join(PKG_PATH, '..', 'models', 'aero', '2_mode_flutter', '0012_flutter.f06')
-
-QT_RED = QColor('red')
-QT_WHITE = QColor('white')
+#F06_FILENAME = os.path.join(PKG_PATH, '..', 'models', 'aero', '2_mode_flutter', '0012_flutter.f06')
 
 
 X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'alt', 'kfreq']
@@ -88,7 +85,7 @@ class MainWindow(LoggableGui):
         self.subcase = 0
         self.selected_modes = []
         self.freq_tol = -1.0
-        self.recent_files = [F06_FILENAME]
+        self.recent_files = []
         self.save_filename = HOME_FILENAME
         self.f06_filename = ''
         self.is_valid = False
@@ -277,7 +274,12 @@ class MainWindow(LoggableGui):
             value = data[key]
             index = values.index(value)
             pulldown_edit.setCurrentIndex(index)
-        self.recent_files = data['recent_files']
+
+        self.recent_files = []
+        for fname in data['recent_files']:
+            abs_path = os.path.abspath(fname)
+            if fname not in self.recent_files:
+                self.recent_files.append(fname)
 
     def on_browse_f06(self) -> None:
         title = 'Load Nastran Flutter File'
@@ -578,6 +580,7 @@ class MainWindow(LoggableGui):
 
     def setup_connections(self):
         self.f06_load_button.clicked.connect(self.on_load_f06)
+        self.x_plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
         self.plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
         self.subcase_edit.currentIndexChanged.connect(self.on_subcase)
         self.f06_filename_browse.clicked.connect(self.on_browse_f06)
@@ -742,17 +745,11 @@ class MainWindow(LoggableGui):
             freq_axes = fig.add_subplot(gridspeci[1, :3], sharex=damp_axes)
 
         response = self.responses[self.subcase]
+        response.noline = noline
+        response.nopoints = nopoints
+        response.log = self.log
+        #print('trying plots...')
         try:
-            # if plot_type == 'x-damp-freq':
-            #     show_xlim = True
-            #     show_damp = True
-            #     show_xlim = True
-            # if plot_type == 'x-damp-kfreq':
-            #     # kfreq-damp-kfreq not handled
-            #     show_xlim = True
-            #     show_damp = True
-            #     show_kfreq = True
-
             if plot_type == 'root-locus':
                 axes = fig.add_subplot(111)
                 response.plot_root_locus(
@@ -767,8 +764,6 @@ class MainWindow(LoggableGui):
                 #xlabel: eas
                 #ylabel1 = r'Structural Damping; $g = 2 \gamma $'
                 #ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
-                #damp_axes.autoscale_view()
-                #freq_axes.autoscale_view()
                 response.plot_kfreq_damping(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     modes=modes, plot_type=x_plot_type,
@@ -778,19 +773,6 @@ class MainWindow(LoggableGui):
                     legend=True,
                     png_filename=png_filename,
                 )
-            # elif plot_type == 'x-damp-freq':
-            #     # xlabel = r'KFreq [rad]; $ \omega c / (2 V)$'
-            #     # ylabel1 = r'Structural Damping; $g = 2 \gamma $'
-            #     # ylabel2 = 'Frequency [Hz]'
-            #     response.plot_kfreq_damping2(
-            #         fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
-            #         modes=modes,
-            #         xlim=xlim_kfreq, ylim_damping=ylim_damping, ylim_freq=ylim_freq,
-            #         freq_tol=freq_tol,
-            #         show=True, clear=False, close=False,
-            #         legend=True,
-            #         png_filename=png_filename,
-            #     )
             else:
                 response.plot_vg_vf(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
@@ -800,15 +782,13 @@ class MainWindow(LoggableGui):
                     freq_tol=freq_tol,
                     show=True, clear=False, close=False,
                     legend=True,
-                    noline=noline, nopoints=nopoints,
                     vd_limit=None, damping_limit=damping_limit,
                     png_filename=png_filename,
                 )
         except Exception as e:
             self.log.error(str(e))
+            #raise
         os.chdir(current_directory)
-        #self.get_xlim()
-        str(self.xlim)
 
     def get_xlim(self) -> tuple[Any, Any, Any, Any, Any, Any,
                                 Optional[float], bool]:

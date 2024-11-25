@@ -168,14 +168,13 @@ class FlutterResponse:
             resp.plot_vg_vf(fig=None, damp_axes=None, freq_axes=None, modes=None, plot_type='eas',
                              legend=True, xlim=None,
                             ylim_damping=None, ylim_freq=None, vd_limit=None,
-                            damping_limit=None, nopoints=False, noline=False,
+                            damping_limit=None,
                             clear=False, close=False,
                             ncol=ncol, png_filename=None, show=False)
             resp.plot_kfreq_damping(modes=None, plot_type='tas', fig=None, damp_axes=None, freq_axes=None,
                                     xlim=None, ncol=ncol, legend=True,
                                     show=False, clear=False, close=False, png_filename=None,
-                                    ylim_damping=None, ylim_kfreq=None, vd_limit=None, damping_limit=None,
-                                    nopoints=False, noline=False)
+                                    ylim_damping=None, ylim_kfreq=None, vd_limit=None, damping_limit=None)
             resp.plot_kfreq_damping2(modes=None, fig=None, xlim=None, ylim=None,
                                      show=True, clear=False, close=False,
                                      ncol=ncol, legend=True, png_filename=None)
@@ -331,6 +330,7 @@ class FlutterResponse:
             #for color in colors:
                 #symbol_list.append('%s-%s' % (shape, color))
         self.noline = False
+        self.nopoints = False
         self._symbols: list[str] = []
         self._colors: list[str] = []
         self.generate_symbols()
@@ -490,6 +490,7 @@ class FlutterResponse:
                         ncol: int=0,
                         show: bool=True, clear: bool=False,
                         close: bool=False, legend: bool=True,
+                        #noline: bool=False, nopoints: bool=False,
                         freq_tol: float=-1.0,
                         png_filename=None,
                         **kwargs):
@@ -534,8 +535,10 @@ class FlutterResponse:
         ix = self.ieigr
         iy = self.ieigi
         scatter = True
+        #print(kwargs)
         self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
-                       modes=modes, fig=fig, axes=axes, xlim=eigr_lim, ylim=eigi_lim,
+                       modes=modes, fig=fig, axes=axes,
+                       xlim=eigr_lim, ylim=eigi_lim,
                        ncol=ncol,
                        show=show, clear=clear, close=close, legend=legend,
                        freq_tol=freq_tol,
@@ -602,10 +605,8 @@ class FlutterResponse:
         #axes.set_xlabel(xlabel  + '; _plot_x_y')
         axes.set_xlabel(xlabel)
         axes.set_ylabel(ylabel)
-        if xlim:
-            axes.set_xlim(xlim)
-        if ylim:
-            axes.set_ylim(ylim)
+        set_xlim(axes, xlim)
+        set_ylim(axes, ylim)
 
         title = 'Subcase %i' % self.subcase
         if png_filename:
@@ -631,7 +632,6 @@ class FlutterResponse:
                    modes=None,
                    fig=None, axes1=None, axes2=None,
                    xlim=None, ylim1=None, ylim2=None,
-                   nopoints: bool=False, noline: bool=False,
                    ncol: int=0,
                    show: bool=True, clear: bool=False,
                    close: bool=False, legend: bool=True,
@@ -660,26 +660,24 @@ class FlutterResponse:
             gridspeci = gridspec.GridSpec(2, 4)
             axes1 = fig.add_subplot(gridspeci[0, :3])
             axes2 = fig.add_subplot(gridspeci[1, :3], sharex=axes1)
+        #else:
+            #$self.log.info('got a fig')
 
-        if xlim:
-            axes1.set_xlim(xlim)
-        if ylim1:
-            axes1.set_ylim(ylim1)
-        if ylim2:
-            axes2.set_ylim(ylim2)
+        set_xlim(axes1, xlim)
+        set_xlim(axes2, xlim)
+        set_ylim(axes1, ylim1)
+        set_ylim(axes2, ylim2)
 
         symbols, colors = self._get_symbols_colors_from_modes(modes)
-
-        linestyle = 'None' if noline else '-'
-        if nopoints:  # and noline is False:
+        #self.log.debug(f'symbols={symbols}')
+        #self.log.debug(f'colors={colors}')
+        linestyle = 'None' if self.noline else '-'
+        if self.nopoints:  # and noline is False:
             scatter = False
 
         markersize = None
-        if noline:
+        if self.noline:
             markersize = 0
-
-        #showline = not noline
-        #showpoints = not nopoints
 
         legend_elements = []
         jcolor = 0
@@ -701,10 +699,13 @@ class FlutterResponse:
             # plot the line
             label = _get_mode_freq_label(mode, freq[0])
             legend_element = Line2D([0], [0], color=color2, marker=symbol2, label=label, linestyle=linestyle2)
-            if nopoints:
+            if self.nopoints:
                 symbol2 = 'None'
 
-            print(f'scatter={scatter}; color={color2}; linestyle={linestyle2!r} symbol={symbol2!r}; markersize={markersize}')
+            # self.log.info(f'scatter={scatter}; color={color2}; linestyle={linestyle2!r} symbol={symbol2!r}; markersize={markersize}')
+            # self.log.info(f'xs={xs[iplot]}')
+            # self.log.info(f'y1s={y1s[iplot]}')
+            # self.log.info(f'y2s={y2s[iplot]}')
             if scatter:
                 scatteri = np.linspace(.75, 50., len(xs))
                 #assert symbol[2] == '-', symbol
@@ -769,7 +770,6 @@ class FlutterResponse:
                            freq_tol: float=-1.0,
                            png_filename=None,
                            vd_limit=None, damping_limit=None,
-                           nopoints: bool=False, noline: bool=False,
                            **kwargs):
         """
         Plots a kfreq vs. damping curve
@@ -786,11 +786,10 @@ class FlutterResponse:
         iy1 = self.idamping
         iy2 = self.ikfreq
         scatter = True
-
+        #print(f"plot_kfreq_damping; plot_type={plot_type}")
         self._plot_x_y2(ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
                         modes=modes, fig=fig, axes1=damp_axes, axes2=freq_axes,
                         xlim=xlim, ylim1=ylim_damping, ylim2=ylim_kfreq,
-                        nopoints=nopoints, noline=noline,
                         show=show, clear=clear, close=close,
                         legend=legend,
                         freq_tol=freq_tol,
@@ -868,6 +867,8 @@ class FlutterResponse:
         """
         nmodes = len(modes)
         symbols, colors = _symbols_colors_from_nlines(self._colors, self._symbols, nmodes)
+        if self.nopoints:
+            symbols = ['None'] * len(symbols)
         return symbols, colors
 
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None,
@@ -875,7 +876,6 @@ class FlutterResponse:
                    clear: bool=False, close: bool=False, legend: bool=True,
                    xlim=None, ylim_damping=None, ylim_freq=None,
                    vd_limit=None, damping_limit=None,
-                   nopoints: bool=False, noline: bool=False,
                    ncol: int=0,
                    freq_tol: float=-1.0,
                    png_filename=None, show: bool=False):
@@ -914,10 +914,7 @@ class FlutterResponse:
         #self._set_xy_limits(xlim, ylim)
         modes, imodes = _get_modes_imodes(self.modes, modes)
         symbols, colors = self._get_symbols_colors_from_modes(modes)
-
-        if nopoints:
-            symbols = ['None'] * len(symbols)
-        linestyle = 'None' if noline else '-'
+        linestyle = 'None' if self.noline else '-'
 
         #plot_type = ['tas', 'eas', 'alt', 'kfreq', '1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach']
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
@@ -952,18 +949,13 @@ class FlutterResponse:
         freq_axes.set_ybound(lower=0.)
 
         damp_axes.grid(True)
-        if xlim is not None:
-            damp_axes.set_xlim(xlim)
-        if ylim_damping is not None:
-            damp_axes.set_ylim(ylim_damping)
-
+        set_xlim(damp_axes, xlim)
+        set_ylim(damp_axes, ylim_damping)
         freq_axes.set_ylabel('Frequency [Hz]')
         freq_axes.grid(True)
 
-        if xlim is not None:
-            freq_axes.set_xlim(xlim)
-        if ylim_freq is not None:
-            freq_axes.set_ylim(ylim_freq)
+        set_xlim(freq_axes, xlim)
+        set_ylim(freq_axes, ylim_freq)
 
         title = f'Subcase {self.subcase}'
         if png_filename:
@@ -1591,3 +1583,16 @@ def _increment_jcolor(jcolor: int, color: str,
     linestyle2 = '--' if is_filered else linestyle
     symbol2 = '' if is_filered else symbol
     return jcolor, color, linestyle2, symbol2
+
+Limit = tuple[Optional[float], Optional[float]] | None
+def set_xlim(axes: plt.Axes, xlim: Limit) -> None:
+    if xlim == [None, None]:# or xlim == (None, None):
+        xlim = None
+    if xlim is None:
+        axes.set_xlim(xlim)
+
+def set_ylim(axes: plt.Axes, ylim: Limit) -> None:
+    if ylim == [None, None]:# or ylim == (None, None):
+        ylim = None
+    if ylim is not None:
+        axes.set_ylim(ylim)

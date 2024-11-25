@@ -486,6 +486,8 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                show: bool=True, clear: bool=False, close: bool=False,
                                log: Optional[SimpleLogger]=None):
         #_remove_neutrinos(flutter, log)
+        flutter.nopoints = nopoints
+        flutter.noline = noline
         if plot_vg:
             filenamei = None if vg_filename is None else (vg_filename % subcase)
             flutter.plot_vg(modes=modes,
@@ -501,7 +503,6 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                xlim=xlim,
                                ylim_damping=ylim_damping, ylim_freq=ylim_freq,
                                vd_limit=vd_limit, damping_limit=damping_limit,
-                               nopoints=nopoints, noline=noline,
                                ncol=ncol,
                                legend=legend,
                                png_filename=filenamei, show=False, clear=clear, close=close)
@@ -509,7 +510,7 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
             filenamei = None if root_locus_filename is None else (root_locus_filename % subcase)
             flutter.plot_root_locus(modes=modes,
                                     fig=None, axes=None,
-                                    xlim=None, ylim=None,
+                                    eigr_lim=None, eigi_lim=None,
                                     ncol=ncol,
                                     clear=clear, legend=True,
                                     png_filename=filenamei,
@@ -522,7 +523,6 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                        ylim_damping=ylim_damping,
                                        ylim_kfreq=ylim_kfreq,
                                        vd_limit=vd_limit, damping_limit=damping_limit,
-                                       nopoints=nopoints, noline=noline,
                                        ncol=ncol,
                                        png_filename=filenamei, show=False, clear=clear, close=close)
 
