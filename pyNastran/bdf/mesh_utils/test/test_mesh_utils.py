@@ -165,7 +165,7 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
                 cmd_line(argv=['bdf', cmd], quiet=True)
 
     def test_export_caero_mesh_caero1_wkk(self):
-        model = BDF()
+        model = BDF(debug=None)
         model.bdf_filename = 'test'
         p1 = [0., 0., 0.]
         p4 = [0., 1., 0.]
@@ -191,7 +191,9 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
                       tin, tout, nrows, ncols,
                       GCj, GCi,
                       Real, Complex=None, comment='wkk')
-        #argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf', '--pid', 'caero', '--subpanels']
+
+        real_array = np.ones((len(Real), 1))
+        #model.add_dense_dmi(name+'2', real_array, form, validate=True)
         export_caero_mesh(model, is_subpanel_model=True, )
         save_load_deck(model, run_remove_unused=False)
 

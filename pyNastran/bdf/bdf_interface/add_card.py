@@ -9048,7 +9048,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_dmi_object(dmi)
         return dmi
 
-    def add_dmi(self, name: str, form: int, tin: int, tout: int, nrows: int, ncols: int,
+    def add_dmi(self, name: str, form: int, tin: int, tout: int,
+                nrows: int, ncols: int,
                 GCj, GCi,
                 Real, Complex=None, comment: str='') -> DMI:
         """Creates a DMI card
@@ -9099,7 +9100,11 @@ class AddCards(AddCoords, AddContact, AddBolts,
         else:  # pragma: no cover
             raise NotImplementedError(str_form)
 
-        GCi = np.repeat(list(range(1, nrows+1)), ncols, axis=0).reshape(nrows, ncols)
+        # ncols = 2
+        GC = np.repeat(list(range(1, nrows+1)), ncols, axis=0)
+        # print('GC =', GC)
+        GCi = GC.reshape(nrows, ncols)
+        # print('GCi =', GCi)
         GCj = GCi.T.flatten()
         GCi = GCi.flatten()
 
@@ -9115,7 +9120,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
             dmi.validate()
         return dmi
 
-    def add_dmiax(self, name, matrix_form, tin, tout, ncols,
+    def add_dmiax(self, name: str, matrix_form: int,
+                  tin: int, tout: int, ncols: int,
                   GCNj, GCNi, Real, Complex=None, comment='') -> DMIAX:
         """Creates a DMIAX card"""
         dmiax = DMIAX(name, matrix_form, tin, tout, ncols,

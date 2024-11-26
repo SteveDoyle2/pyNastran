@@ -2747,9 +2747,15 @@ def get_dmi_matrix(matrix: DMI,
         # rectangular
         nrows = matrix.nrows
         ncols = matrix.ncols
-
-        M = coo_matrix((data, (GCi, GCj)),
-                       shape=(nrows, ncols), dtype=dtype)
+        try:
+            M = coo_matrix((data, (GCi, GCj)),
+                           shape=(nrows, ncols), dtype=dtype)
+        except ValueError:
+            print(f'nrows, cols = ({nrows}, {ncols})')
+            print('data = ', data)
+            print('GCi = ', GCi)
+            print('GCj = ', GCj)
+            raise
     else:
         nrows = matrix.nrows
         ncols = matrix.ncols
