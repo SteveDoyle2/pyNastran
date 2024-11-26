@@ -264,11 +264,9 @@ class FlutterResponse:
             self.xysym = xysym
             self.xzsym = xzsym
             self.density_ratio = density_ratio
-            #print('mach=%s' % mach)
 
         self.method = method
         self.modes = np.asarray(modes, dtype='int32')
-
         self.ikfreq = 0
         self.ikfreq_inv = 1
 
@@ -279,15 +277,9 @@ class FlutterResponse:
             self.ifreq = 4
             self.ieigr = 5
             self.ieigi = 6
-            self.results = results
 
-            kvel = self._get_unit_factor('velocity')[0]
-
-            # (imode, istep, iresult)
-            results[:, :, self.ivelocity] *= kvel
             # velocity is the target
             self.names = ['kfreq', '1/kfreq', 'velocity', 'damping', 'freq', 'eigr', 'eigi']
-
         elif self.method == 'PKNL':
             # velocity is the target
             self.names = ['kfreq', '1/kfreq', 'density', 'velocity', 'damping',
@@ -304,9 +296,11 @@ class FlutterResponse:
             self.ieas = 9
             self.iq = 10
             self.ialt = 11
-            self.set_pknl_results(results)
         else:  # pragma: no cover
             raise NotImplementedError(method)
+
+        self.results = results
+        self.convert_units(self.f06_units, self.out_units)
 
         # c - cyan
         # b - black
@@ -335,8 +329,28 @@ class FlutterResponse:
         self._colors: list[str] = []
         self.generate_symbols()
 
-    def set_pknl_results(self, results: np.ndarray):
-        density_units_in = self.f06_units['density']
+    def convert_units(self,
+                      in_units: Optional[str | dict[str, str]],
+                      out_units: Optional[str | dict[str, str]]) -> None:
+        in_units2 = get_flutter_units(in_units)
+        out_units2 = get_flutter_units(out_units)
+        results = self.results
+        if self.method in ['PK', 'KE']:
+            kvel = _get_unit_factor(in_units2, out_units2, 'velocity')[0]
+            # (imode, istep, iresult)
+            results[:, :, self.ivelocity] *= kvel
+        elif self.method == 'PKNL':
+            results = self._set_pknl_results(in_units2, out_units2, results)
+        else:  # pragma: no cover
+            raise NotImplementedError(self.method)
+        self.results = results
+
+    def _set_pknl_results(self,
+                          in_units: dict[str, str],
+                          out_units: dict[str, str],
+                          results: np.ndarray) -> np.ndarray:
+        assert results.shape[2] in [9, 11, 12], results.shape
+        density_units_in = in_units['density']
 
         # in/s
         vel = results[:, :, self.ivelocity]#.ravel()
@@ -352,19 +366,22 @@ class FlutterResponse:
         #eas  = (2 * q / rho_ref)**0.5
 
         # eas = V * sqrt(rho / rhoSL)
-        keas = self._get_unit_factor('eas')[0]
+        keas = _get_unit_factor(
+            in_units, out_units, 'eas')[0]
         eas = vel * np.sqrt(rho / rho_ref) * keas
         #density_units2 = self.out_units['density']
 
-        altitude_units = self.out_units['altitude']
+        altitude_units = out_units['altitude']
 
         #print('density_units_in=%r density_units2=%r' % (density_units_in, density_units2))
         kdensityi = convert_density(1., density_units_in, 'slug/ft^3')
-        kvel = self._get_unit_factor('velocity')[0]
-        kdensity = self._get_unit_factor('density')[0]
-        kpressure = self._get_unit_factor('dynamic_pressure')[0]
+        kvel = _get_unit_factor(in_units, out_units, 'velocity')[0]
+        kdensity = _get_unit_factor(in_units, out_units, 'density')[0]
+        kpressure = _get_unit_factor(in_units, out_units, 'dynamic_pressure')[0]
 
         vel *= kvel
+        resultsi = results[:, :, :9]
+        assert resultsi.shape[2] == 9, resultsi.shape
         if self.make_alt:
             rho_in_slug_ft3 = rho * kdensityi
             alt_ft = [get_alt_for_density(densityi, density_units='slug/ft^3',
@@ -375,15 +392,15 @@ class FlutterResponse:
             alt = np.array(alt_ft, dtype='float64').reshape(vel.shape) * ft_to_alt_unit
 
             rho *= kdensity
-            results2 = np.dstack([results, eas, q * kpressure, alt])
+            results2 = np.dstack([resultsi, eas, q * kpressure, alt])
         else:
             #kpressure = 1.
             rho *= kdensity
-            results2 = np.dstack([results, eas, q * kpressure])
+            results2 = np.dstack([resultsi, eas, q * kpressure])
 
         results2[:, :, self.idensity] = rho
         results2[:, :, self.ivelocity] = vel
-        self.results = results2
+        return results2
 
     def generate_symbols(self, colors=None, symbols=None, imethod: int=0):
         """
@@ -427,38 +444,13 @@ class FlutterResponse:
     def set_plot_options(self, noline: bool=False) -> None:
         self.noline = noline
 
-    def _get_unit_factor(self, name: str) -> tuple[float, str]:
-        if not self.f06_units or not self.out_units:
-            msg = 'name=%r f06_units=%s out_units=%s' % (name, self.f06_units, self.out_units)
-            raise RuntimeError(msg)
-        unit_f06 = self.f06_units[name]
-        unit_out = self.out_units[name]
-
-        #print('name=%s unit_f06=%r unit_out=%r' % (name, unit_f06, unit_out))
-        if name in ['velocity', 'eas']:
-            factor = convert_velocity(1., unit_f06, unit_out)
-        elif name == 'altitude':
-            factor = convert_altitude(1., unit_f06, unit_out)
-        elif name == 'density':
-            factor = convert_density(1., unit_f06, unit_out)
-        elif name in ['pressure', 'dynamic_pressure']:
-            factor = convert_pressure(1., unit_f06, unit_out)
-        else:  # pragma: no cover
-            raise NotImplementedError(name)
-
-        if self.out_units is not None:
-            units = self.out_units[name]
-        else:
-            units = 'units'
-        return factor, units
-
     def plot_vg(self, fig=None, modes=None,
                 plot_type: str='tas',
                 xlim=None, ylim_damping=None,
                 ncol: int=0,
                 clear: bool=False, legend: bool=True,
                 freq_tol: float=-1.0,
-                png_filename=None, show: bool=True, **kwargs):
+                png_filename=None, show: bool=True, **legend_kwargs):
         """
         Make a V-g plot
 
@@ -474,7 +466,7 @@ class FlutterResponse:
                        show=show, clear=clear, legend=legend,
                        freq_tol=freq_tol,
                        png_filename=png_filename,
-                       **kwargs)
+                       **legend_kwargs)
 
     #@property
     #def flutter_speed(self, modes=None):
@@ -493,7 +485,7 @@ class FlutterResponse:
                         #noline: bool=False, nopoints: bool=False,
                         freq_tol: float=-1.0,
                         png_filename=None,
-                        **kwargs):
+                        **legend_kwargs):
         """
         Plots a root locus
 
@@ -535,7 +527,6 @@ class FlutterResponse:
         ix = self.ieigr
         iy = self.ieigi
         scatter = True
-        #print(kwargs)
         self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
                        modes=modes, fig=fig, axes=axes,
                        xlim=eigr_lim, ylim=eigi_lim,
@@ -543,7 +534,7 @@ class FlutterResponse:
                        show=show, clear=clear, close=close, legend=legend,
                        freq_tol=freq_tol,
                        png_filename=png_filename,
-                       **kwargs)
+                       **legend_kwargs)
 
     def _plot_x_y(self, ix: int, iy: int,
                   xlabel: str, ylabel: str,
@@ -556,18 +547,17 @@ class FlutterResponse:
                   close: bool=False, legend: bool=True,
                   freq_tol: float=-1.0,
                   png_filename=None,
-                  **kwargs):
+                  **legend_kwargs):
         """builds the plot"""
         self.fix()
-        if kwargs is None:
-            kwargs = {}
+        legend_kwargs = get_legend_kwargs(legend_kwargs)
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
         nmodes = len(modes)
         ncol = _update_ncol(nmodes, ncol)
-        print(f'plot_xy: modes  = {modes}')
-        print(f'plot_xy: imodes = {imodes}')
-        print(f'plot_xy: ncol   = {ncol}')
+        #print(f'plot_xy: modes  = {modes}')
+        #print(f'plot_xy: imodes = {imodes}')
+        #print(f'plot_xy: ncol   = {ncol}')
 
         if fig is None:
             fig = plt.figure()
@@ -586,7 +576,7 @@ class FlutterResponse:
             jcolor, color2, linestyle2, symbol2 = _increment_jcolor(
                 jcolor, color, linestyle, symbol,
                 freq, freq_tol=freq_tol)
-            print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
+            #print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
 
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
@@ -608,13 +598,13 @@ class FlutterResponse:
         set_xlim(axes, xlim)
         set_ylim(axes, ylim)
 
-        title = 'Subcase %i' % self.subcase
+        title = f'Subcase {self.subcase:d}'
         if png_filename:
             title += '\n%s' % png_filename
         fig.suptitle(title)
         if legend:
             # bbox_to_anchor=(1.125, 1.), ncol=ncol,
-            axes.legend(**kwargs)
+            axes.legend(**legend_kwargs)
 
         if show:
             plt.show()
@@ -637,7 +627,7 @@ class FlutterResponse:
                    close: bool=False, legend: bool=True,
                    freq_tol: float=-1.0,
                    png_filename=None,
-                   **kwargs):
+                   **legend_kwargs):
         """
         Builds the plot
 
@@ -648,8 +638,7 @@ class FlutterResponse:
 
         """
         self.fix()
-        if kwargs is None:
-            kwargs = {}
+        legend_kwargs = get_legend_kwargs(legend_kwargs)
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
         nmodes = len(modes)
@@ -740,11 +729,11 @@ class FlutterResponse:
             title += '\n%s' % png_filename
         fig.suptitle(title)
         if legend:
-            legend_kwargs = {}
-            for key, value in kwargs.items():
-                if key in {'ylim'}:
-                    continue
-                legend_kwargs[key] = value
+            #legend_kwargs = {}
+            #for key, value in legend_kwargs.items():
+                #if key in {'ylim'}:
+                    #continue
+                #legend_kwargs[key] = value
 
             axes1.legend(handles=legend_elements, **legend_kwargs)              # TODO: switch to figure...
             #axes1.legend(handles=legend_elements, ncol=ncol, **legend_kwargs)  # TODO: switch to figure...
@@ -857,7 +846,8 @@ class FlutterResponse:
         # 4. find the critical mode
         # 5. ???
 
-    def _get_symbols_colors_from_modes(self, modes: np.ndarray) -> tuple[list[str], list[str]]:
+    def _get_symbols_colors_from_modes(self, modes: np.ndarray,
+                                       ) -> tuple[list[str], list[str]]:
         """
         We need to make sure we have a symbol and color for each mode,
         even if we repeat them.
@@ -988,7 +978,8 @@ class FlutterResponse:
         if close:
             plt.close()
 
-    def export_to_csv(self, csv_filename: str, modes: Optional[list[int]]=None) -> None:
+    def export_to_csv(self, csv_filename: str,
+                      modes: Optional[list[int]]=None) -> None:
         """
         Exports a ZONA .veas file
 
@@ -1448,7 +1439,7 @@ def _add_vd_limit(plot_type: str,
                       linewidth=linewidth)
 
 
-def get_flutter_units(units: Optional[str | dict[str, str]]) -> Optional[str | dict[str, str]]:
+def get_flutter_units(units: Optional[str | dict[str, str]]) -> dict[str, str]:
     """gets the units"""
     if units is None:
         units = 'english_in'
@@ -1468,29 +1459,35 @@ def get_flutter_units(units: Optional[str | dict[str, str]]) -> Optional[str | d
         # units should be consistent
         # what's going on with altitude having inconsistent units?
         if units == 'si':
-            units = {'velocity': 'm/s', 'density': 'kg/m^3',
-                     'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'm/s'}
+            units_dict = {
+                'velocity': 'm/s', 'density': 'kg/m^3',
+                'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'm/s'}
         elif units == 'si_mm':
-            units = {'velocity': 'mm/s', 'density': 'Mg/mm^3',
-                     'altitude': 'm', 'dynamic_pressure': 'MPa', 'eas': 'mm/s'}
+            units_dict = {
+                'velocity': 'mm/s', 'density': 'Mg/mm^3',
+                'altitude': 'm', 'dynamic_pressure': 'MPa', 'eas': 'mm/s'}
         #elif units == 'si_cmgs':
             #units = {'velocity': 'cm/s', 'density': 'g/cm^3',
                      #'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'cm/s'}
         elif units == 'english_in':
-            units = {'velocity': 'in/s', 'density': 'slinch/in^3',
-                     'altitude': 'ft', 'dynamic_pressure': 'psi', 'eas': 'in/s'}
+            units_dict = {
+                'velocity': 'in/s', 'density': 'slinch/in^3',
+                'altitude': 'ft', 'dynamic_pressure': 'psi', 'eas': 'in/s'}
         elif units == 'english_ft':
-            units = {'velocity': 'ft/s', 'density': 'slug/ft^3',
-                     'altitude': 'ft', 'dynamic_pressure': 'psf', 'eas': 'ft/s'}
+            units_dict = {
+                'velocity': 'ft/s', 'density': 'slug/ft^3',
+                'altitude': 'ft', 'dynamic_pressure': 'psf', 'eas': 'ft/s'}
         elif units == 'english_kt':
-            units = {'velocity': 'knots', 'density': 'slug/ft^3',
-                     'altitude': 'ft', 'dynamic_pressure': 'psf', 'eas': 'knots'}
+            units_dict = {
+                'velocity': 'knots', 'density': 'slug/ft^3',
+                'altitude': 'ft', 'dynamic_pressure': 'psf', 'eas': 'knots'}
         else:  # pragma: no cover
             raise NotImplementedError(f'units={units!r} must be in [si, si_mm, '
                                       'english_in, english_ft, english_kt]')
     else:  # pragma: no cover
         assert isinstance(units, dict), f'units={units!r}'
-    return units
+        units_dict = units
+    return units_dict
 
 def _apply_subcase_to_filename(filename: str, subcase: int) -> str:
     """helper for filename management"""
@@ -1586,13 +1583,53 @@ def _increment_jcolor(jcolor: int, color: str,
 
 Limit = tuple[Optional[float], Optional[float]] | None
 def set_xlim(axes: plt.Axes, xlim: Limit) -> None:
+    #print(f'xlim = {xlim}')
     if xlim == [None, None]:# or xlim == (None, None):
         xlim = None
-    if xlim is None:
+    if xlim is not None:
         axes.set_xlim(xlim)
 
 def set_ylim(axes: plt.Axes, ylim: Limit) -> None:
+    #print(f'ylim = {ylim}')
     if ylim == [None, None]:# or ylim == (None, None):
         ylim = None
     if ylim is not None:
         axes.set_ylim(ylim)
+
+
+def _get_unit_factor(in_units, out_units,
+                     name: str) -> tuple[float, str]:
+    if not in_units or not out_units:
+        msg = 'name=%r f06_units=%s out_units=%s' % (name, in_units, out_units)
+        raise RuntimeError(msg)
+    unit_f06 = in_units[name]
+    unit_out = out_units[name]
+
+    #print('name=%s unit_f06=%r unit_out=%r' % (name, unit_f06, unit_out))
+    if name in ['velocity', 'eas']:
+        factor = convert_velocity(1., unit_f06, unit_out)
+    elif name == 'altitude':
+        factor = convert_altitude(1., unit_f06, unit_out)
+    elif name == 'density':
+        factor = convert_density(1., unit_f06, unit_out)
+    elif name in ['pressure', 'dynamic_pressure']:
+        factor = convert_pressure(1., unit_f06, unit_out)
+    else:  # pragma: no cover
+        raise NotImplementedError(name)
+
+    if out_units is not None:
+        units = out_units[name]
+    else:
+        units = 'units'
+    return factor, units
+
+def get_legend_kwargs(legend_kwargs: Optional[dict[str, Any]],
+                      ) -> dict[str, Any]:
+    if legend_kwargs is None:
+        legend_kwargs = {}
+    assert isinstance(legend_kwargs, dict), legend_kwargs
+
+    legend_kwargs_check = ['loc', 'fancybox', 'framealpha']
+    for key in legend_kwargs:
+        assert key in legend_kwargs_check, key
+    return legend_kwargs

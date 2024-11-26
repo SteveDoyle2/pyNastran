@@ -130,13 +130,13 @@ def make_flutter_response(f06_filename: str,
                     nblank += 1
                 if nblank == 100:
                     print(line.strip())
-                    log.warning('breaking on nblank=100 a')
+                    log.warning('breaking on nblank=100')
                     break
 
             if '* * * END OF JOB * * *' in line:
                 break
             if nblank == 100:
-                log.warning('breaking on nblank=100 b')
+                log.warning('breaking on nblank=100')
                 break
             if 'FLUTTER  SUMMARY' in line:
                 found_flutter_summary = True

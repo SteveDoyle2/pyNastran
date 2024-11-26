@@ -258,11 +258,12 @@ def _setup_faces(bdf_filename: str | BDF) -> tuple[np.ndarray, np.ndarray,
     return nids, xyz_cid0, faces, face_eids
 
 def cut_face_model_by_coord(bdf_filename: str | BDF, coord: CORD2R, tol: float,
-                            nodal_result, plane_atol=1e-5, skip_cleanup=True,
+                            nodal_result: np.ndarray,
+                            plane_atol: float=1e-5, skip_cleanup: bool=True,
                             csv_filename=None,
-                            plane_bdf_filename='plane_face.bdf',
-                            plane_bdf_filename2='plane_face2.bdf',
-                            plane_bdf_offset=0.):
+                            plane_bdf_filename: str='plane_face.bdf',
+                            plane_bdf_filename2: str='plane_face2.bdf',
+                            plane_bdf_offset: float=0.0):
     """
     Cuts a Nastran model with a cutting plane
 
@@ -302,7 +303,8 @@ def cut_face_model_by_coord(bdf_filename: str | BDF, coord: CORD2R, tol: float,
     return unique_geometry_array, unique_results_array, rods_array
 
 
-def export_face_cut(csv_filename: str, geometry_arrays, results_arrays,
+def export_face_cut(csv_filename: str, geometry_arrays: np.ndarray,
+                    results_arrays: np.ndarray,
                     header: str='') -> None:
     """
     Writes a face cut file of the format:

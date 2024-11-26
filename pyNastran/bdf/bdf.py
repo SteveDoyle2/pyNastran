@@ -1106,7 +1106,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #del self.case_control_deck
         #self.uncross_reference()
         #import types
-        self.log.info(f'loading  BDF obj {obj_filename}')
+        self.log.info(f'loading BDF obj {obj_filename}')
         with open(obj_filename, 'rb') as obj_file:
             obj = load(obj_file)
 

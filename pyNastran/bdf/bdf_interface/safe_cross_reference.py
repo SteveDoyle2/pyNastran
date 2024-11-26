@@ -57,7 +57,7 @@ class SafeXrefMesh(XrefMesh):
         """
         if not xref:
             return
-        self.log.debug('Safe Cross Referencing{word}...')
+        self.log.debug(f'Safe Cross Referencing{word}...')
 
         xref_obj: CrossReference = self.xref_obj
         if xref_nodes:

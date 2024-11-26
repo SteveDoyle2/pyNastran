@@ -24,7 +24,7 @@ from qtpy.QtWidgets import (
     QHBoxLayout, QPushButton, QGridLayout,
     QAction,
     QCheckBox, QListWidgetItem, QAbstractItemView,
-    QListWidget,
+    QListWidget, QSpinBox,
 )
 from qtpy.QtGui import QIcon
 QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
@@ -39,8 +39,6 @@ from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import make_flutter_response
 
-#PKG_PATH = os.path.dirname(pyNastran.__file__)
-
 
 X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', '1/kfreq']
 PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
@@ -49,7 +47,6 @@ UNITS_IN = ['english_in', 'english_kt', 'english_ft',
 UNITS_OUT = UNITS_IN
 HOME_DIRNAME = os.path.expanduser('~')
 HOME_FILENAME = os.path.join(HOME_DIRNAME, 'plot_flutter.json')
-
 
 #FONT_SIZE = 12
 
@@ -74,6 +71,11 @@ class Action:
 class MainWindow(LoggableGui):
     def __init__(self, f06_filename: str=''):
         super().__init__(html_logging=False)
+        self.font_size = 10
+        self._units_in = ''
+        self._units_out = ''
+        self.units_in = ''
+        self.units_out = ''
         self.use_dock_widgets = False
         self.qactions = {}
         self.nrecent_files_max = 9
@@ -105,6 +107,7 @@ class MainWindow(LoggableGui):
         self._update_recent_files_actions()
         self.setup_connections()
         self._set_window_title()
+        self.on_font_size()
 
     def setup_toolbar(self):
         #frame = QFrame(self)
@@ -141,10 +144,6 @@ class MainWindow(LoggableGui):
         #self.toolbar = self.addToolBar('Show toolbar')
         #self.toolbar.setObjectName('main_toolbar')
         self.statusbar = self.statusBar()
-
-        font_size = 12
-        font = make_font(font_size, is_bold=False)
-        self.setFont(font)
 
     def _build_recent_file_actions(self, actions_input: dict[str, Action]) -> list[str]:
         recent_files = []
@@ -200,13 +199,12 @@ class MainWindow(LoggableGui):
     def on_file_save_as(self) -> None:
         # if 0:
         #     #print('on_file_save')
-        #     title = 'Save Case File'
         #     qt_wildcard = '*.json'
         #     basedir = str(DIRNAME)
         #     json_filename, wildcard = getsavefilename(
         #         self, caption=title, basedir=basedir,
         #         filters=qt_wildcard,
-        #         #options=QFileDialog.setLabelText('case.json'),
+        #         #options=QFileDialog.setLabelText('data.json'),
         #     )
         #     self.log.info(f'json_filename={json_filename!r} wildcard={wildcard!r}')
         json_filename = self.save_filename
@@ -228,6 +226,25 @@ class MainWindow(LoggableGui):
 
     def _apply_settings(self, data: dict[str, Any]) -> None:
         #selected_cases = data['selected_cases']
+        if 'font_size' in data:
+            self.font_size = data['font_size']
+            self.font_size_edit.setValue(data['font_size'])
+
+        checkboxs = [
+            ('show_points', self.show_points_checkbox),
+            ('show_lines', self.show_lines_checkbox),
+            ('export_to_f06', self.export_f06_checkbox),
+            ('export_to_csv', self.export_csv_checkbox),
+            ('export_to_zona', self.export_zona_checkbox),
+        ]
+        # attrs aren't stored
+        for (key, checkbox) in checkboxs:
+            if key not in data:
+                continue
+            val = data[key]
+            assert isinstance(val, bool), (key, val)
+            checkbox.setChecked(val)
+
         line_edits = [
             ('xlim', 0, self.xlim_edit_min),
             ('xlim', 1, self.xlim_edit_max),
@@ -282,13 +299,12 @@ class MainWindow(LoggableGui):
                 self.recent_files.append(abs_path)
 
     def on_browse_f06(self) -> None:
-        title = 'Load Nastran Flutter File'
+        """pops a dialgo to select the f06 file"""
+        title = 'Load Nastran Flutter F06 File'
         qt_wildcard = 'F06 File (*.f06)'
-        wx_wildcard = ''
-        from pyNastran.utils.gui_io import load_file_dialog
-        fname, wildcard_level = load_file_dialog(
-            title, wx_wildcard, qt_wildcard,
-            dirname='')
+        basedir = ''
+        fname, wildcard_level = getopenfilename(
+            self, caption=title, basedir=basedir, filters=qt_wildcard,)
         self.f06_filename_edit.setText(fname)
 
     # @dontcrash
@@ -317,6 +333,10 @@ class MainWindow(LoggableGui):
             self.setWindowTitle(f'Flutter Plot: {self.save_filename}')
 
     def setup_widgets(self) -> None:
+        self.font_size_label = QLabel('Font Size')
+        self.font_size_edit = QSpinBox()
+        self.font_size_edit.setValue(self.font_size)
+
         self.f06_filename_label = QLabel('F06 Filename:')
         self.f06_filename_edit = QLineEdit('')
         # self.f06_filename_edit.setText(F06_FILENAME)
@@ -329,6 +349,13 @@ class MainWindow(LoggableGui):
         self.show_lines_checkbox = QCheckBox('Show Lines')
         self.show_points_checkbox.setChecked(True)
         self.show_lines_checkbox.setChecked(True)
+
+        self.export_csv_checkbox = QCheckBox('Export CSV')
+        self.export_f06_checkbox = QCheckBox('Export F06')
+        self.export_zona_checkbox = QCheckBox('Export Zona')
+        self.export_csv_checkbox.setChecked(True)
+        self.export_f06_checkbox.setChecked(True)
+        self.export_zona_checkbox.setChecked(True)
 
         self.xlim_label = QLabel('X Limits:')
         self.xlim_edit_min = QFloatEdit('0')
@@ -478,6 +505,10 @@ class MainWindow(LoggableGui):
         # grid.addWidget(self.f06_filename_browse, irow, 2)
         # irow += 1
 
+        grid.addWidget(self.font_size_label, irow, 0)
+        grid.addWidget(self.font_size_edit, irow, 1)
+        irow += 1
+
         grid.addWidget(self.units_in_label, irow, 0)
         grid.addWidget(self.units_in_pulldown, irow, 1)
         irow += 1
@@ -543,19 +574,28 @@ class MainWindow(LoggableGui):
         self.output_directory_browse.setDisabled(True)
         irow += 1
 
-        radio_hbox = QHBoxLayout()
-        radio_hbox.addWidget(self.show_points_checkbox)
-        radio_hbox.addWidget(self.show_lines_checkbox)
-        radio_hbox.addStretch(1)
+        jrow = 0
+        grid_check = QGridLayout()
+        grid_check.addWidget(self.show_points_checkbox, jrow, 0)
+        grid_check.addWidget(self.show_lines_checkbox, jrow, 1)
+        jrow += 1
+        grid_check.addWidget(self.export_csv_checkbox, jrow, 0)
+        grid_check.addWidget(self.export_f06_checkbox, jrow, 1)
+        grid_check.addWidget(self.export_zona_checkbox, jrow, 2)
+        jrow += 1
 
         ok_cancel_hbox = QHBoxLayout()
         ok_cancel_hbox.addWidget(self.f06_load_button)
         ok_cancel_hbox.addWidget(self.ok_button)
 
+        hbox_check = QHBoxLayout()
+        hbox_check.addLayout(grid_check)
+        hbox_check.addStretch(1)
+
         vbox = QVBoxLayout()
         vbox.addLayout(hbox)
         vbox.addLayout(grid)
-        vbox.addLayout(radio_hbox)
+        vbox.addLayout(hbox_check)
         vbox.addStretch(1)
         vbox.addLayout(ok_cancel_hbox)
 
@@ -582,8 +622,14 @@ class MainWindow(LoggableGui):
         self.plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
         self.subcase_edit.currentIndexChanged.connect(self.on_subcase)
         self.f06_filename_browse.clicked.connect(self.on_browse_f06)
+        self.font_size_edit.valueChanged.connect(self.on_font_size)
         #self.modes_widget.itemSelectionChanged.connect(self.on_modes)
         self.ok_button.clicked.connect(self.on_ok)
+
+    def on_font_size(self) -> None:
+        self.font_size = self.font_size_edit.value()
+        font = make_font(self.font_size, is_bold=False)
+        self.setFont(font)
 
     # @dontcrash
     def on_load_f06(self) -> None:
@@ -610,6 +656,8 @@ class MainWindow(LoggableGui):
         if len(subcases) == 0:
             self.log.error('No subcases found')
             return
+        self._units_in = f06_units
+        self._units_out = out_units
         self.add_recent_file(f06_filename)
         self.update_subcases(subcases)
 
@@ -711,6 +759,11 @@ class MainWindow(LoggableGui):
         x_plot_type = self.x_plot_type
         plot_type = self.plot_type
         self.log.info(f'plot_type = {plot_type}\n')
+
+        export_to_csv = self.export_csv_checkbox.isChecked()
+        export_to_f06 = self.export_f06_checkbox.isChecked()
+        export_to_zona = self.export_zona_checkbox.isChecked()
+
         noline = not self.show_lines_checkbox.isChecked()
         nopoints = not self.show_points_checkbox.isChecked()
 
@@ -732,7 +785,6 @@ class MainWindow(LoggableGui):
         basename = os.path.basename(self.f06_filename)
 
         base = os.path.splitext(basename)[0]
-        png_filename = base + '.png'
         current_directory = os.getcwd()
         sys.stdout.flush()
         os.chdir(dirname)
@@ -745,12 +797,22 @@ class MainWindow(LoggableGui):
             freq_axes = fig.add_subplot(gridspeci[1, :3], sharex=damp_axes)
 
         response = self.responses[self.subcase]
+
+        # you can change the output units without reloading
+        if self._units_in != self.units_in or self._units_out != self.units_out:
+            # go back to the nominal units
+            # _units_in was corrected to units_in
+            # and then we go to units_out
+            response.convert_units(self._units_out, self._units_in)
+            response.convert_units(self.units_in, self.units_out)
+
         response.noline = noline
         response.nopoints = nopoints
         response.log = self.log
         #print('trying plots...')
         try:
             if plot_type == 'root-locus':
+                png_filename = base + '_root-locus.png'
                 axes = fig.add_subplot(111)
                 response.plot_root_locus(
                     fig=fig, axes=axes,
@@ -765,6 +827,7 @@ class MainWindow(LoggableGui):
                 #ylabel1 = r'Structural Damping; $g = 2 \gamma $'
                 #ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
                 #print('plot_kfreq_damping')
+                png_filename = base + f'_{x_plot_type}-damp-kfreq.png'
                 response.plot_kfreq_damping(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     modes=modes, plot_type=x_plot_type,
@@ -775,8 +838,9 @@ class MainWindow(LoggableGui):
                     png_filename=png_filename,
                 )
             else:
-                assert plot_type in 'x-damp-kfreq', plot_type
+                assert plot_type in 'x-damp-freq', plot_type
                 #print('plot_vg_vf')
+                png_filename = base + f'_{x_plot_type}-damp-freq.png'
                 response.plot_vg_vf(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     plot_type=x_plot_type,
@@ -790,8 +854,23 @@ class MainWindow(LoggableGui):
                 )
         except Exception as e:
             self.log.error(str(e))
-            #raise
+            raise
+
+        base2 = os.path.splitext(png_filename)[0]
+        csv_filename = base2 + '.export.csv'
+        veas_filename = base2 + '.export.veas'
+        f06_filename = base2 + '.export.f06'
+        if export_to_csv:
+            self.log.debug(f'writing {csv_filename}')
+            response.export_to_csv(csv_filename, modes=modes)
+        if export_to_zona:
+            self.log.debug(f'writing {veas_filename}')
+            response.export_to_veas(veas_filename, modes=modes)
+        if export_to_f06:
+            self.log.debug(f'writing {f06_filename}')
+            response.export_to_f06(f06_filename, modes=modes)
         os.chdir(current_directory)
+        self.log.info(f'saved {png_filename}')
 
     def get_xlim(self) -> tuple[Limit, Limit, Limit,
                                 Limit, Limit, Limit,
@@ -810,8 +889,8 @@ class MainWindow(LoggableGui):
         eigr_lim_max, is_passed10 = get_float_or_none(self.eigr_lim_edit_max)
         eigi_lim_min, is_passed11 = get_float_or_none(self.eigi_lim_edit_min)
         eigi_lim_max, is_passed12 = get_float_or_none(self.eigi_lim_edit_max)
-        freq_tol, is_passed13 = get_float_or_none(self.freq_tol_edit)
-        if is_passed13 and freq_tol is None:
+        freq_tol, is_passed_tol = get_float_or_none(self.freq_tol_edit)
+        if is_passed_tol and freq_tol is None:
             freq_tol = -1.0
         xlim = [xlim_min, xlim_max]
         damp_lim = [damp_lim_min, damp_lim_max]
@@ -824,7 +903,7 @@ class MainWindow(LoggableGui):
             is_passed1, is_passed2, is_passed3, is_passed4,
             is_passed5, is_passed6, is_passed7, is_passed8,
             is_passed9, is_passed10, is_passed11, is_passed12,
-            is_passed13,
+            is_passed_tol,
         ]
         is_passed = all(is_passed_flags)
         #print(f'is_passed_flags = {is_passed_flags}')
@@ -865,8 +944,17 @@ class MainWindow(LoggableGui):
         units_in = self.units_in_pulldown.currentText()
         units_out = self.units_out_pulldown.currentText()
         output_directory = self.output_directory_edit.text()
+
+        export_to_csv = self.export_csv_checkbox.isChecked()
+        export_to_f06 = self.export_f06_checkbox.isChecked()
+        export_to_zona = self.export_zona_checkbox.isChecked()
         data = {
+            'export_to_csv': export_to_csv,
+            'export_to_f06': export_to_f06,
+            'export_to_zona': export_to_zona,
+
             'recent_files': self.recent_files,
+            'font_size': self.font_size,
             'subcase': subcase,
             #'modes': modes,
             'selected_modes': selected_modes,
@@ -883,6 +971,8 @@ class MainWindow(LoggableGui):
             'units_out': units_out,
             'freq_tol': freq_tol,
         }
+        self.units_in = units_in
+        self.units_out = units_out
         is_passed = all([is_valid_xlim, is_subcase_valid])
         if is_passed:
             self.data = data

@@ -487,7 +487,8 @@ def _interpolate_bar_to_node(eid_new, nid_new, mid, area, J, fbdf,
     eid_new += 1
     return eid_new, nid_new
 
-def export_edge_cut(csv_filename, result_array, header='x, y, z, Cp'):
+def export_edge_cut(csv_filename: str, result_array: np.ndarray,
+                    header: str='x, y, z, Cp'):
     """
     Writes a face cut file of the format:
 
