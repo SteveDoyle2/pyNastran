@@ -1572,8 +1572,8 @@ class RBE3(RigidElementBase):
         self.Gijs_ref = []
         for Gij in self.Gijs:
             nodes, msgi = model.safe_empty_nodes(Gij, msg=msg)
-            if msgi:
-                model.log.warning(msgi)
+            #if msgi:
+                #model.log.warning(msgi)
             self.Gijs_ref.append(nodes)
 
     def uncross_reference(self) -> None:

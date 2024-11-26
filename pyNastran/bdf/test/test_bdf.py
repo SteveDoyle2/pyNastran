@@ -2130,6 +2130,8 @@ def test_bdf_argparse(argv=None):
                                help='skip loads calcuations (default=False)')
     parent_parser.add_argument('--skip_mass', action='store_true',
                                help='skip mass calcuations (default=False)')
+    parent_parser.add_argument('--skip_aero', action='store_true',
+                               help='skip the processing of the caero mesh (default=False)')
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
@@ -2290,6 +2292,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --mystran     Assume Mystran\n'
         '  --skip_loads   skip the loads summation calculations (default=False)\n'
         '  --skip_mass    skip the mass properties calculations (default=False)\n'
+        '  --skip_aero    skip the processing of the caero mesh (default=False)\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2320,6 +2323,7 @@ def main(argv=None):
     #data['run_nominal'] = not data['skip_nominal']
     data['run_loads'] = not data['skip_loads']
     data['run_mass'] = not data['skip_mass']
+    data['run_export_caero'] = not data['skip_aero']
 
     is_double = False
     if data['double']:
@@ -2358,6 +2362,7 @@ def main(argv=None):
             #run_nominal=data['run_nominal'],
             #run_loads=data['run_loads'],
             run_mass=data['run_mass'],
+            run_export_caero=data['run_export_caero'],
             run_extract_bodies=False,
 
             is_lax_parser=data['lax'],
@@ -2408,6 +2413,7 @@ def main(argv=None):
             is_double=is_double,
             sum_load=data['run_loads'],
             run_mass=data['run_mass'],
+            run_export_caero=data['run_export_caero'],
             run_extract_bodies=False,
 
             is_lax_parser=data['lax'],

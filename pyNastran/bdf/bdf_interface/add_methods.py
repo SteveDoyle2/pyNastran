@@ -246,16 +246,22 @@ class AddMethods:
         """adds a GRID card"""
         key = node.nid
         model = self.model
-        if key in model.nodes and not allow_overwrites:
-            if not node == model.nodes[key]:
-                assert node.nid not in model.nodes, 'nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, model.nodes[key], node)
-            else:
-                #print('GRID was duplicated...nid=%s; node=\n%s' % (key, node))
-                pass
-        else:
-            assert key > 0, 'nid=%s node=%s' % (key, node)
+        #allow_overwrites = True
+
+        assert key > 0, 'nid=%s node=%s' % (key, node)
+        if key not in model.nodes:
             model.nodes[key] = node
             model._type_to_id_map[node.type].append(key)
+        elif node == model.nodes[key]:
+            pass
+        elif allow_overwrites:
+            model.log.warning(f'replacing node:\n{model.nodes[key]}with:\n{node}')
+            model.nodes[key] = node
+
+            # already handled
+            #model._type_to_id_map[node.type].append(key)
+        else:
+            raise RuntimeError('nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, model.nodes[key], node))
 
     def _add_gridb_object(self, node: GRIDB, allow_overwrites: bool=False) -> None:
         """adds a GRIDB card"""

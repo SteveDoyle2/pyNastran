@@ -1133,7 +1133,8 @@ class SET1(Set):
             raise NotImplementedError("xref_type=%r and must be ['Node', 'Point']" % xref_type)
         self.xref_type = xref_type
 
-    def safe_cross_reference(self, model: BDF, xref_type, msg='', allow_empty_nodes=False):
+    def safe_cross_reference(self, model: BDF, xref_type, msg='',
+                             allow_empty_nodes=False):
         """
         Cross links the card so referenced cards can be extracted directly
 
