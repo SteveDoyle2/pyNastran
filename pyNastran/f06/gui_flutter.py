@@ -1,7 +1,7 @@
 import os
 import sys
 import warnings
-from functools import wraps
+#from functools import wraps
 from pathlib import Path
 from typing import Callable, Optional, Any
 
@@ -12,12 +12,12 @@ except ModuleNotFoundError:
     warnings.warn('couldnt find json5, using json')
     import json
 from functools import partial
-import numpy as np
+#import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from qtpy import QtCore
-from qtpy.compat import getopenfilename, getsavefilename
+from qtpy.compat import getopenfilename #, getsavefilename
 from qtpy.QtWidgets import (
     QLabel, QWidget,
     QApplication, QMenu, QVBoxLayout, QLineEdit, QComboBox,
@@ -72,6 +72,8 @@ class MainWindow(LoggableGui):
     def __init__(self, f06_filename: str=''):
         super().__init__(html_logging=False)
         self.font_size = 10
+        self.show_lines = True
+        self.show_points = True
         self._units_in = ''
         self._units_out = ''
         self.units_in = ''
@@ -86,7 +88,14 @@ class MainWindow(LoggableGui):
         self.data = {}
         self.f06_filename = ''
         self.subcase = 0
-        self.plot_type = 'eas'
+        self.x_plot_type = 'eas'
+        self.plot_type = 'x-damp-freq'
+        self.eas_lim = []
+        #self.tas_lim = []
+        #self.alt_lim = []
+        #self.q_lim = []
+        #self.rho_lim = []
+        #self.x_lim = []
         self.freq_lim = [None, None]
         self.damping_lim = [None, None]
         self.kfreq_lim = [None, None]
@@ -148,10 +157,6 @@ class MainWindow(LoggableGui):
 
     def _build_recent_file_actions(self, actions_input: dict[str, Action]) -> list[str]:
         recent_files = []
-        #current_directory = os.getcwd()
-        #for ifile, abs_path in enumerate(self.recent_files):
-            #pth = os.path.relpath(abs_path, current_directory)
-            # func = partial(self.set_f06, abs_path)
         nfiles = len(self.recent_files)
         for ifile in range(self.nrecent_files_max):
             name = f'file_{ifile}'
@@ -187,7 +192,6 @@ class MainWindow(LoggableGui):
 
     # @dontcrash
     def on_file_exit(self):
-        #print('on_file_exit')
         if hasattr(self, 'on_file_save') and hasattr(self, 'save_filename'):
             self.on_file_save()
 
@@ -226,7 +230,6 @@ class MainWindow(LoggableGui):
         self._set_window_title()
 
     def _apply_settings(self, data: dict[str, Any]) -> None:
-        #selected_cases = data['selected_cases']
         if 'font_size' in data:
             self.font_size = data['font_size']
             self.font_size_edit.setValue(data['font_size'])
@@ -246,22 +249,24 @@ class MainWindow(LoggableGui):
             assert isinstance(val, bool), (key, val)
             checkbox.setChecked(val)
 
+        min_max_line_edits = [
+            ('eas_lim', self.eas_lim_edit_min, self.eas_lim_edit_max),
+            ('xlim', self.xlim_edit_min, self.xlim_edit_max),
+            ('damp_lim', self.damp_lim_edit_min, self.damp_lim_edit_max),
+            ('freq_lim', self.freq_lim_edit_min, self.freq_lim_edit_max),
+            ('kfreq_lim', self.kfreq_lim_edit_min, self.kfreq_lim_edit_max),
+        ]
+        for key, line_edit_min, line_edit_max in min_max_line_edits:
+            if key not in data:
+                #print(f'apply_settings: skipping key={key!r}')
+                continue
+            values = data[key]
+            value0 = _to_str(values[0])
+            value1 = _to_str(values[1])
+            line_edit_min.setText(value0)
+            line_edit_max.setText(value1)
+
         line_edits = [
-            ('eas_lim', 0, self.eas_lim_edit_min),
-            ('eas_lim', 1, self.eas_lim_edit_max),
-
-            ('xlim', 0, self.xlim_edit_min),
-            ('xlim', 1, self.xlim_edit_max),
-
-            ('damp_lim', 0, self.damp_lim_edit_min),
-            ('damp_lim', 1, self.damp_lim_edit_max),
-
-            ('freq_lim', 0, self.freq_lim_edit_min),
-            ('freq_lim', 1, self.freq_lim_edit_max),
-
-            ('kfreq_lim', 0, self.kfreq_lim_edit_min),
-            ('kfreq_lim', 1, self.kfreq_lim_edit_max),
-
             ('recent_files', 0, self.f06_filename_edit),
             ('freq_tol', -1, self.freq_tol_edit),
             ('freq_tol_remove', -1, self.freq_tol_remove_edit),
@@ -277,10 +282,7 @@ class MainWindow(LoggableGui):
             else:
                 value = values
 
-            if value is None:
-                str_value = ''
-            else:
-                str_value = str(value)
+            str_value = _to_str(value)
 
             #print('type(value) =', type(value))
             #print(f'{key+":":<10} values={values}[{index!r}]={value!r} -> {str_value!r}')
@@ -983,7 +985,7 @@ class MainWindow(LoggableGui):
         )
         return out
 
-    def get_selected_modes(self) -> list[str]:
+    def get_selected_modes(self) -> list[int]:
         mode_strs = get_selected_items_flat(self.modes_widget)
         modes = [int(mode_str.split(' ')[1]) for mode_str in mode_strs]
         #self.log.info(f'modes = {modes}')
@@ -1170,6 +1172,13 @@ def get_float_or_none(line_edit: QLineEdit) -> tuple[Optional[float], bool]:
             is_passed = False
     return value, is_passed
 
+
+def _to_str(value: Optional[int | float]) -> str:
+    if value is None:
+        str_value = ''
+    else:
+        str_value = str(value)
+    return str_value
 
 def main(f06_filename: str='') -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
