@@ -15,6 +15,7 @@ All rigid elements are RigidElement and Element objects.
 """
 from __future__ import annotations
 from itertools import count
+import warnings
 from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
@@ -1335,6 +1336,12 @@ class RBE3(RigidElementBase):
         self.nodes_ref = None
         self.pid_ref = None
 
+        for comp, nids in zip(comps, Gijs):
+            assert isinstance(comp, str), ('RBE3 comps', comp, nids)
+        for comp, nid in zip(Cmi, Gmi):
+            assert isinstance(comp, str), ('RBE3 Cmi', comp, nid)
+
+
     def validate(self):
         """
         refgrid / refc : int
@@ -1369,14 +1376,16 @@ class RBE3(RigidElementBase):
                 if grid_comp in grid_components:
                     bad_grid_components.add(grid_comp)
                 grid_components.add(grid_comp)
+
         for comp, nid in zip(self.Cmi, self.Gmi):
+            assert isinstance(comp, str), (comp, nids)
             grid_comp = (nid, comp)
             if grid_comp in grid_components:
                 bad_grid_components.add(grid_comp)
             grid_components.add(grid_comp)
-        
+
         if len(bad_grid_components):
-            raise RuntimeError(f'RBE3 eid={self.eid}; duplicate grid_components = {bad_grid_components}')
+            warnings.warn(f'RBE3 eid={self.eid}; duplicate grid_components = {bad_grid_components}')
         #print('Gmi =', self.Gmi)
         #print('Cmi =', self.Cmi)
         #print('Cmi =', self.Cmi)
@@ -1500,8 +1509,11 @@ class RBE3(RigidElementBase):
             tref = 0.0
         else:
             eid, refgrid, refc, weights, comps, gijs, gmi, cmi, alpha, tref = data
-        return RBE3(eid, refgrid, refc, weights, comps, gijs,
-                    Gmi=gmi, Cmi=cmi, alpha=alpha, tref=tref, comment=comment)
+
+        comps2 = [str(comp) for comp in comps]
+        cmi2 = [str(comp) for comp in cmi]
+        return RBE3(eid, refgrid, refc, weights, comps2, gijs,
+                    Gmi=gmi, Cmi=cmi2, alpha=alpha, tref=tref, comment=comment)
 
     @property
     def wt_cg_groups(self) -> list[tuple[float, str, int]]:

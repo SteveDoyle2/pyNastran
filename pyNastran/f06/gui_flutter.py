@@ -174,7 +174,7 @@ class MainWindow(LoggableGui):
         self.modes_widget = QListWidget(self)
         self.modes_widget.setMaximumWidth(100)
         self.modes_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        _set_modes_table(self.modes_widget, [0])
+        self._set_modes_table(self.modes_widget, [0])
 
     # def dontcrash(func):
     #     @wraps(func)
@@ -213,7 +213,7 @@ class MainWindow(LoggableGui):
 
     def _save(self, json_filename: str):
         is_valid = self.validate()
-        self.log.info(f'self.data = {self.data}')
+        #self.log.info(f'self.data = {self.data}')
         if json_filename == '' or len(self.data) == 0:
             return
         #print(f'json_filename={json_filename!r} wildcard={wildcard!r}')
@@ -247,6 +247,9 @@ class MainWindow(LoggableGui):
             checkbox.setChecked(val)
 
         line_edits = [
+            ('eas_lim', 0, self.eas_lim_edit_min),
+            ('eas_lim', 1, self.eas_lim_edit_max),
+
             ('xlim', 0, self.xlim_edit_min),
             ('xlim', 1, self.xlim_edit_max),
 
@@ -359,6 +362,10 @@ class MainWindow(LoggableGui):
         self.export_f06_checkbox.setChecked(True)
         self.export_zona_checkbox.setChecked(True)
 
+        self.eas_lim_label = QLabel('EAS Limits:')
+        self.eas_lim_edit_min = QFloatEdit('0')
+        self.eas_lim_edit_max = QFloatEdit()
+
         self.xlim_label = QLabel('X Limits:')
         self.xlim_edit_min = QFloatEdit('0')
         self.xlim_edit_max = QFloatEdit()
@@ -444,6 +451,7 @@ class MainWindow(LoggableGui):
         x_plot_type = self.x_plot_type_pulldown.currentText()
         plot_type = self.plot_type_pulldown.currentText()
 
+        show_eas_lim = False
         show_xlim = False
         show_freq = False
         show_damp = False
@@ -472,8 +480,17 @@ class MainWindow(LoggableGui):
         else:  # pragma: no cover
             raise RuntimeError(f'plot_type={plot_type!r}')
 
+        if show_xlim:
+            if 'eas' == x_plot_type:
+                show_eas_lim = True
+                show_xlim = False
+
         self.x_plot_type_label.setVisible(not show_root_locus)
         self.x_plot_type_pulldown.setVisible(not show_root_locus)
+
+        self.eas_lim_label.setVisible(show_eas_lim)
+        self.eas_lim_edit_min.setVisible(show_eas_lim)
+        self.eas_lim_edit_max.setVisible(show_eas_lim)
 
         self.xlim_label.setVisible(show_xlim)
         self.xlim_edit_min.setVisible(show_xlim)
@@ -538,6 +555,11 @@ class MainWindow(LoggableGui):
 
         #--------------------------------------------------
         # x-axis
+        grid.addWidget(self.eas_lim_label, irow, 0)
+        grid.addWidget(self.eas_lim_edit_min, irow, 1)
+        grid.addWidget(self.eas_lim_edit_max, irow, 2)
+        irow += 1
+
         grid.addWidget(self.xlim_label, irow, 0)
         grid.addWidget(self.xlim_edit_min, irow, 1)
         grid.addWidget(self.xlim_edit_max, irow, 2)
@@ -635,6 +657,8 @@ class MainWindow(LoggableGui):
         self.f06_filename_browse.clicked.connect(self.on_browse_f06)
         self.font_size_edit.valueChanged.connect(self.on_font_size)
         #self.modes_widget.itemSelectionChanged.connect(self.on_modes)
+        # self.modes_widget.itemClicked.connect(self.on_modes)
+        # self.modes_widget.currentRowChanged.connect(self.on_modes)
         self.ok_button.clicked.connect(self.on_ok)
 
     def on_font_size(self) -> None:
@@ -732,16 +756,29 @@ class MainWindow(LoggableGui):
 
     def update_modes_table(self, modes: list[int]) -> None:
         self.modes = modes
-        _set_modes_table(self.modes_widget, modes)
+        self._set_modes_table(self.modes_widget, modes)
         self.log.info(f'modes = {self.modes}')
 
     def on_modes(self) -> None:
-        self.validate()
-        if not self.is_valid:
-            return
-        self.plot(self.modes)
+        self.on_ok()
+        # self.validate()
+        # self.plot(self.modes)
 
     # @dontcrash
+    def _set_modes_table(self, modes_widget: QListWidget,
+                         modes: list[int]):
+        modes_widget.clear()
+        for imode in modes:
+            mode = QListWidgetItem(f"Mode {imode}")
+            # mode.itemClicked.connect(self._on_update_mode)
+            mode.setSelected(True)
+            modes_widget.addItem(mode)
+
+    def _on_update_mode(self):
+        if not self.is_valid:
+            self.validate()
+        self.plot()
+
     def on_ok(self) -> None:
         is_valid = self.validate()
         if not is_valid:
@@ -775,17 +812,21 @@ class MainWindow(LoggableGui):
         export_to_f06 = self.export_f06_checkbox.isChecked()
         export_to_zona = self.export_zona_checkbox.isChecked()
 
-        noline = not self.show_lines_checkbox.isChecked()
-        nopoints = not self.show_points_checkbox.isChecked()
+        noline = not self.show_lines
+        nopoints = not self.show_points
 
         freq_tol = self.freq_tol
         freq_tol_remove = self.freq_tol_remove
         self.log.info(f'freq_tol = {freq_tol}\n')
         if noline and nopoints:
-            noline = True
+            noline = False
             nopoints = True
 
-        xlim = self.xlim
+        if x_plot_type == 'eas':
+            xlim = self.eas_lim
+        else:
+            xlim = self.xlim
+
         xlim_kfreq = self.kfreq_lim
         ylim_damping = self.ydamp_lim
         ylim_freq = self.freq_lim
@@ -884,24 +925,32 @@ class MainWindow(LoggableGui):
         os.chdir(current_directory)
         self.log.info(f'saved {png_filename}')
 
-    def get_xlim(self) -> tuple[Limit, Limit, Limit,
+    def get_xlim(self) -> tuple[Limit, Limit, Limit, Limit,
                                 Limit, Limit, Limit,
                                 Optional[float],
                                 Optional[float], bool]:
-        xlim_min, is_passed1 = get_float_or_none(self.xlim_edit_min)
-        xlim_max, is_passed2 = get_float_or_none(self.xlim_edit_max)
-        damp_lim_min, is_passed3 = get_float_or_none(self.damp_lim_edit_min)
-        damp_lim_max, is_passed4 = get_float_or_none(self.damp_lim_edit_max)
+        eas_lim_min, is_passed1 = get_float_or_none(self.eas_lim_edit_min)
+        eas_lim_max, is_passed2 = get_float_or_none(self.eas_lim_edit_max)
+        xlim_min, is_passed3 = get_float_or_none(self.xlim_edit_min)
+        xlim_max, is_passed4 = get_float_or_none(self.xlim_edit_max)
 
-        freq_lim_min, is_passed5 = get_float_or_none(self.freq_lim_edit_min)
-        freq_lim_max, is_passed6 = get_float_or_none(self.freq_lim_edit_max)
-        kfreq_lim_min, is_passed7 = get_float_or_none(self.kfreq_lim_edit_min)
-        kfreq_lim_max, is_passed8 = get_float_or_none(self.kfreq_lim_edit_max)
+        is_passed_x = all([is_passed1, is_passed2,
+                           is_passed3, is_passed4])
+        damp_lim_min, is_passed_damp1 = get_float_or_none(self.damp_lim_edit_min)
+        damp_lim_max, is_passed_damp2 = get_float_or_none(self.damp_lim_edit_max)
 
-        eigr_lim_min, is_passed9 = get_float_or_none(self.eigr_lim_edit_min)
-        eigr_lim_max, is_passed10 = get_float_or_none(self.eigr_lim_edit_max)
-        eigi_lim_min, is_passed11 = get_float_or_none(self.eigi_lim_edit_min)
-        eigi_lim_max, is_passed12 = get_float_or_none(self.eigi_lim_edit_max)
+        freq_lim_min, is_passed_freq1 = get_float_or_none(self.freq_lim_edit_min)
+        freq_lim_max, is_passed_freq2 = get_float_or_none(self.freq_lim_edit_max)
+        kfreq_lim_min, is_passed_kfreq1 = get_float_or_none(self.kfreq_lim_edit_min)
+        kfreq_lim_max, is_passed_kfreq2 = get_float_or_none(self.kfreq_lim_edit_max)
+
+        eigr_lim_min, is_passed_eigr1 = get_float_or_none(self.eigr_lim_edit_min)
+        eigr_lim_max, is_passed_eigr2 = get_float_or_none(self.eigr_lim_edit_max)
+        eigi_lim_min, is_passed_eigi1 = get_float_or_none(self.eigi_lim_edit_min)
+        eigi_lim_max, is_passed_eigi2 = get_float_or_none(self.eigi_lim_edit_max)
+        is_passed_eig = all([is_passed_eigr1, is_passed_eigr2,
+                             is_passed_eigi1, is_passed_eigi2])
+
         freq_tol, is_passed_tol1 = get_float_or_none(self.freq_tol_edit)
         freq_tol_remove, is_passed_tol2 = get_float_or_none(self.freq_tol_remove_edit)
         if is_passed_tol1 and freq_tol is None:
@@ -909,6 +958,7 @@ class MainWindow(LoggableGui):
         if is_passed_tol2 and freq_tol_remove is None:
             freq_tol_remove = -1.0
 
+        eas_lim= [eas_lim_min, eas_lim_max]
         xlim = [xlim_min, xlim_max]
         damp_lim = [damp_lim_min, damp_lim_max]
         freq_lim = [freq_lim_min, freq_lim_max]
@@ -917,16 +967,18 @@ class MainWindow(LoggableGui):
         eigi_lim = [eigi_lim_min, eigi_lim_max]
         #self.log.info(f'XLim = {xlim}')
         is_passed_flags = [
-            is_passed1, is_passed2, is_passed3, is_passed4,
-            is_passed5, is_passed6, is_passed7, is_passed8,
-            is_passed9, is_passed10, is_passed11, is_passed12,
-            is_passed_tol,
+            is_passed_x,
+            is_passed_damp1, is_passed_damp2,
+            is_passed_freq1, is_passed_freq2,
+            is_passed_kfreq1, is_passed_kfreq2,
+            is_passed_eig,
+            is_passed_tol1, is_passed_tol2,
         ]
         is_passed = all(is_passed_flags)
         #print(f'is_passed_flags = {is_passed_flags}')
         #print(f'freq_tol = {freq_tol}')
         out = (
-            xlim, damp_lim, freq_lim, kfreq_lim,
+            eas_lim, xlim, damp_lim, freq_lim, kfreq_lim,
             eigr_lim, eigi_lim, freq_tol, freq_tol_remove, is_passed,
         )
         return out
@@ -934,11 +986,12 @@ class MainWindow(LoggableGui):
     def get_selected_modes(self) -> list[str]:
         mode_strs = get_selected_items_flat(self.modes_widget)
         modes = [int(mode_str.split(' ')[1]) for mode_str in mode_strs]
-        self.log.info(f'modes = {modes}')
+        #self.log.info(f'modes = {modes}')
         return modes
 
     def validate(self) -> bool:
-        (xlim, ydamp_lim, freq_lim, kfreq_lim,
+        (eas_lim, xlim,
+         ydamp_lim, freq_lim, kfreq_lim,
          eigr_lim, eigi_lim,
          freq_tol, freq_tol_remove, is_valid_xlim) = self.get_xlim()
 
@@ -948,6 +1001,7 @@ class MainWindow(LoggableGui):
         selected_modes = self.get_selected_modes()
         self.subcase = subcase
         self.selected_modes = selected_modes
+        self.eas_lim = eas_lim
         self.xlim = xlim
         self.ydamp_lim = ydamp_lim
         self.kfreq_lim = kfreq_lim
@@ -963,10 +1017,15 @@ class MainWindow(LoggableGui):
         units_out = self.units_out_pulldown.currentText()
         output_directory = self.output_directory_edit.text()
 
+        self.show_lines = self.show_lines_checkbox.isChecked()
+        self.show_points = self.show_points_checkbox.isChecked()
+
         export_to_csv = self.export_csv_checkbox.isChecked()
         export_to_f06 = self.export_f06_checkbox.isChecked()
         export_to_zona = self.export_zona_checkbox.isChecked()
         data = {
+            'show_points': self.show_points,
+            'show_lines': self.show_lines,
             'export_to_csv': export_to_csv,
             'export_to_f06': export_to_f06,
             'export_to_zona': export_to_zona,
@@ -979,6 +1038,7 @@ class MainWindow(LoggableGui):
             'x_plot_type': self.x_plot_type,
             'plot_type': self.plot_type,
             'xlim': xlim,
+            'eas_lim': eas_lim,
             'damp_lim': ydamp_lim,
             'freq_lim': freq_lim,
             'kfreq_lim': kfreq_lim,
@@ -1000,7 +1060,7 @@ class MainWindow(LoggableGui):
             #self.data = data
             # is_valid = validate_json(self.data, self.log)
             #if is_valid != is_passed:
-            self.log.info(f'passed data:\n{str(self.data)}')
+            #self.log.info(f'passed data:\n{str(self.data)}')
         else:
             del data['recent_files']
             self.log.error(f'failed data:\n{str(data)}')
@@ -1068,7 +1128,7 @@ def build_actions(self, actions_input: dict[str, Action]) -> dict[str, QAction]:
 def validate_json(data: dict[str, Any],
                   log: SimpleLogger) -> bool:
     is_valid = True
-    log.warning(f'keys = {list(data.keys())}')
+    #log.warning(f'keys = {list(data.keys())}')
     key_allowed_values = [
         ('units_in', UNITS_IN),
         ('units_out', UNITS_OUT),
@@ -1109,14 +1169,6 @@ def get_float_or_none(line_edit: QLineEdit) -> tuple[Optional[float], bool]:
             value = None
             is_passed = False
     return value, is_passed
-
-
-def _set_modes_table(modes_widget: QListWidget, modes: list[int]):
-    modes_widget.clear()
-    for imode in modes:
-        mode = QListWidgetItem(f"Mode {imode}")
-        mode.setSelected(True)
-        modes_widget.addItem(mode)
 
 
 def main(f06_filename: str='') -> None:  # pragma: no cover

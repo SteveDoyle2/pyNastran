@@ -676,6 +676,7 @@ class ScalarObject(BaseScalarObject):
                 column_values.append(times)
                 eigr = np.array(self.eigrs)
                 eigi = np.array(self.eigis)
+                damping = np.zeros(len(eigr), dtype=eigr.dtype)
                 if 0:  # pragma: no cover
                     # is this correct for a vibration response?
                     denom = np.sqrt(eigr ** 2 + eigi ** 2)
@@ -691,7 +692,7 @@ class ScalarObject(BaseScalarObject):
                     # freq = eigi/(2*pi)
                     # zeta = 2*eigr/eigi
                     #frequency = eigi / (2 * np.pi)
-                    inonzero = np.where(eigr != 0)[0]
+                    inonzero = np.where(eigi != 0)[0]
                     if len(inonzero):
                         damping[inonzero] = 2 * eigr[inonzero] / eigi[inonzero]
                     column_names.append('Damping')

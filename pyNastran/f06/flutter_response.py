@@ -16,7 +16,7 @@ from pyNastran.utils.atmosphere import (
     get_alt_for_density, atm_density,
     convert_altitude, convert_velocity, convert_density, convert_pressure,
 )
-from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils import object_attributes, object_methods, PathLike
 from pyNastran.utils.numpy_utils import float_types
 
 if TYPE_CHECKING and IS_MATPLOTLIB:  # pragma: no cover
@@ -978,7 +978,7 @@ class FlutterResponse:
         if close:
             plt.close()
 
-    def export_to_csv(self, csv_filename: str,
+    def export_to_csv(self, csv_filename: PathLike,
                       modes: Optional[list[int]]=None) -> None:
         """
         Exports a ZONA .veas file
@@ -1027,7 +1027,8 @@ class FlutterResponse:
             #    damping = self.results[:, i, self.idamping]
             #    asdf
 
-    def export_to_veas(self, veas_filename: str, modes: Optional[list[int]]=None) -> None:
+    def export_to_veas(self, veas_filename: PathLike,
+                       modes: Optional[list[int]]=None) -> None:
         """
         Exports a ZONA .veas file
 
@@ -1097,7 +1098,7 @@ class FlutterResponse:
             nmodes = max(modes)
         return modes, nmodes
 
-    def export_to_f06(self, f06_filename: str,
+    def export_to_f06(self, f06_filename: PathLike,
                       modes: Optional[list[int]]=None,
                       page_stamp: Optional[str]=None,
                       page_num: int=1) -> int:
@@ -1136,7 +1137,7 @@ class FlutterResponse:
             page_num += 1
         return page_num
 
-    def export_to_zona(self, zona_filename: str,
+    def export_to_zona(self, zona_filename: PathLike,
                        modes: Optional[list[int]]=None,
                        xlim: Optional[list[float]]=None,
                        plot_type: str='tas',

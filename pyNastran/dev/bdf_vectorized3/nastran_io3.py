@@ -1497,7 +1497,7 @@ def get_case_headers(case) -> tuple[bool, list[str]]:
             # eig = omega*zeta + omega*1j = eigr + eigi*1j
             # freq = eigi/(2*pi)
             # zeta = 2*eigr/eigi
-            frequency = eigi / (2 * np.pi)
+            abs_freqs = abs(eigi) / (2 * np.pi)
             inonzero = np.where(eigi != 0)[0]
             if len(inonzero):
                 damping[inonzero] = 2 * eigr[inonzero] / eigi[inonzero]
