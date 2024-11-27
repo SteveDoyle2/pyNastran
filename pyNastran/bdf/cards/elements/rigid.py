@@ -1335,6 +1335,52 @@ class RBE3(RigidElementBase):
         self.nodes_ref = None
         self.pid_ref = None
 
+    def validate(self):
+        """
+        refgrid / refc : int
+            dependent node/component
+        comps : list[str]
+            independent components
+            len(comps) = len(weights)
+        GiJs : varies
+            independent nodes
+            list[list[int]]:
+                allows for different nodes for the different weights
+                len(GiJs) = len(weights)
+            list[int, ..., int]:
+                intended for a single weight
+                This will be expanded into list[list[int]]
+        Gmi : list[int]; default=None -> []
+            dependent nodes / UM Set
+        Cmi : list[str]; default=None -> []
+            dependent components / UM Set
+
+        Returns
+        -------
+
+        """
+        grid_components = set([(self.refgrid, self.refc),])
+        bad_grid_components = set()
+        for comp, nids in zip(self.comps, self.Gijs):
+            assert isinstance(comp, str), (comp, nids)
+            assert isinstance(nids, list), (comp, nids)
+            for nid in nids:
+                grid_comp = (nid, comp)
+                if grid_comp in grid_components:
+                    bad_grid_components.add(grid_comp)
+                grid_components.add(grid_comp)
+        for comp, nid in zip(self.Cmi, self.Gmi):
+            grid_comp = (nid, comp)
+            if grid_comp in grid_components:
+                bad_grid_components.add(grid_comp)
+            grid_components.add(grid_comp)
+        
+        if len(bad_grid_components):
+            raise RuntimeError(f'RBE3 eid={self.eid}; duplicate grid_components = {bad_grid_components}')
+        #print('Gmi =', self.Gmi)
+        #print('Cmi =', self.Cmi)
+        #print('Cmi =', self.Cmi)
+
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         """

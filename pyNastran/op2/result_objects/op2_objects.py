@@ -676,14 +676,26 @@ class ScalarObject(BaseScalarObject):
                 column_values.append(times)
                 eigr = np.array(self.eigrs)
                 eigi = np.array(self.eigis)
-                denom = np.sqrt(eigr ** 2 + eigi ** 2)
-                damping = np.zeros(len(eigr), dtype=eigr.dtype)
-                inonzero = np.where(denom != 0)[0]
-                if len(inonzero):
-                    damping[inonzero] = -eigr[inonzero] / denom[inonzero]
-                column_names.append('Damping')
-                column_values.append(damping)
-                #calculate_damping
+                if 0:  # pragma: no cover
+                    # is this correct for a vibration response?
+                    denom = np.sqrt(eigr ** 2 + eigi ** 2)
+                    damping = np.zeros(len(eigr), dtype=eigr.dtype)
+                    inonzero = np.where(denom != 0)[0]
+                    if len(inonzero):
+                        damping[inonzero] = -eigr[inonzero] / denom[inonzero]
+                    column_names.append('Damping')
+                    column_values.append(damping)
+                else:
+                    # flutter
+                    # eig = omega*zeta + omega*1j = eigr + eigi*1j
+                    # freq = eigi/(2*pi)
+                    # zeta = 2*eigr/eigi
+                    #frequency = eigi / (2 * np.pi)
+                    inonzero = np.where(eigr != 0)[0]
+                    if len(inonzero):
+                        damping[inonzero] = 2 * eigr[inonzero] / eigi[inonzero]
+                    column_names.append('Damping')
+                    column_values.append(damping)
             elif name in ['mode_cycle']:
                 continue
                 #column_names.append('mode_cycle(Freq?)')

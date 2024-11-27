@@ -389,12 +389,19 @@ def _get_nastran_header(case: Any,
         header += '; freq = %s Hz' % func_str(case.cycles[itime])
     elif hasattr(case, 'eigis'):
         eigi = case.eigis[itime]
-        cycle = np.abs(eigi) / (2. * np.pi)
-        header += '; freq = %s Hz' % func_str(cycle)
-    elif hasattr(case, 'eigns'):  #  eign is not eigr; it's more like eigi
+        eigr = case.eigrs[itime]
+        #cycle = np.abs(eigi) / (2. * np.pi)
+
+        # flutter
+        omega = eigi
+        freq = abs(omega) / (2 * np.pi)  # omega = 2*pi*freq
+        damping = 0.0 if eigi == 0.0 else 2*eigr/eigi
+        header += '; freq = %s Hz; g=%s' % (func_str(freq), func_str(damping))
+    elif hasattr(case, 'eigns'):
+        # eign is not eigr; it's more like eigi
         eigi = case.eigns[itime] #  but |eigi| = sqrt(|eign|)
         freq = np.sqrt(np.abs(eigi))
-        cycle = freq / (2. * np.pi)
+        #cycle = freq / (2. * np.pi)
         header += '; freq = %s Hz' % func_str(freq)
     elif hasattr(case, 'freqs'):
         header += '; freq = %s Hz' % func_str(case.freqs[itime])

@@ -1478,22 +1478,32 @@ def get_case_headers(case) -> tuple[bool, list[str]]:
         #cycle = freq = eigi / (2*pi)
         #radians = eigi
         scale_per_time = False
-        eigrs = case.eigrs
-        eigis = case.eigis
-        eigrs[eigrs == -0.] = 0.
-        eigis[eigis == -0.] = 0.
+        eigr = case.eigrs
+        eigi = case.eigis
+        eigr[eigr == -0.] = 0.
+        eigi[eigi == -0.] = 0.
 
-        denom = np.sqrt(eigrs ** 2 + eigis ** 2)
-        damping = np.zeros(len(eigrs), dtype=eigrs.dtype)
-        inonzero = np.where(denom != 0)[0]
-        if len(inonzero):
-            damping[inonzero] = -eigrs[inonzero] / denom[inonzero]
+        damping = np.zeros(len(eigr), dtype=eigr.dtype)
+        if 0:
+            denom = np.sqrt(eigr ** 2 + eigi ** 2)
+            inonzero = np.where(denom != 0)[0]
+            if len(inonzero):
+                damping[inonzero] = -eigr[inonzero] / denom[inonzero]
 
-        ## not sure
-        abs_freqs = np.sqrt(np.abs(eigis)) / (2 * np.pi)
+            ## not sure
+            abs_freqs = np.sqrt(np.abs(eigi)) / (2 * np.pi)
+        else:
+            # flutter
+            # eig = omega*zeta + omega*1j = eigr + eigi*1j
+            # freq = eigi/(2*pi)
+            # zeta = 2*eigr/eigi
+            frequency = eigi / (2 * np.pi)
+            inonzero = np.where(eigi != 0)[0]
+            if len(inonzero):
+                damping[inonzero] = 2 * eigr[inonzero] / eigi[inonzero]
 
-        for mode, eigr, eigi, freq, damping, in zip(case.modes, eigrs, eigis, abs_freqs, damping):
-            header_names.append(f'mode={mode} eigr={eigr:g} eigi={eigi:g} f={freq:g} Hz ζ={damping:g}')
+        for mode, eigri, eigii, freq, damping, in zip(case.modes, eigr, eigi, abs_freqs, damping):
+            header_names.append(f'mode={mode} eigr={eigri:g} eigi={eigii:g} f={freq:g} Hz ζ={damping:g}')
     else:
         raise RuntimeError(case.analysis_code)
     return scale_per_time, header_names

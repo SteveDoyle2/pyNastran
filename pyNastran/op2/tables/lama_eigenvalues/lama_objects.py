@@ -390,7 +390,6 @@ class ComplexEigenvalues(BaseScalarObject):
         self.eigenvalues = np.zeros(nmodes, dtype='complex64')
         self.cycles = np.zeros(nmodes, dtype='float32')
         self.damping = np.zeros(nmodes, dtype='float32')
-
         self.data_frame = None
 
     def __eq__(self, table):  # pragma: no cover

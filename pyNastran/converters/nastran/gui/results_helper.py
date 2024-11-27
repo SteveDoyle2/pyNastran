@@ -1425,7 +1425,7 @@ def _fill_nastran_displacements(cases: Cases, model: OP2,
     return icase
 
 def _fill_nastran_ith_displacement(result, resname: str,
-                                   deflects: bool, t123_offset,
+                                   deflects: bool, t123_offset: int,
                                    cases: Cases, model: OP2,
                                    key: NastranKey,
                                    icase: int,

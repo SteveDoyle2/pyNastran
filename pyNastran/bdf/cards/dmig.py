@@ -1781,6 +1781,7 @@ class DMI(NastranMatrix):
     +------+-------+------+------+---------+----------+-----------+-----------+------+
     |      |  I2   | etc. |      |         |          |           |           |      |
     +------+-------+------+------+---------+----------+-----------+-----------+------+
+
     """
     type = 'DMI'
     _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type',
@@ -1807,6 +1808,32 @@ class DMI(NastranMatrix):
     def __init__(self, name: str, matrix_form: int, tin: int, tout: int,
                  nrows: int, ncols: int,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
+        """
+
+        Parameters
+        ----------
+        name : str
+            The name of the matrix
+        matrix_form : str | int
+            The shape of the matrix
+        tin / tout : int
+            The matrix input precision
+        nrows / ncols : int
+            The number of rows and columns
+        GCj : list[int]
+            list of column ids
+        GCi : list[int]
+            list of row ids
+        Real : list[float]
+            The real values
+        Complex : Optional[list[float]]
+            The complex values (if the matrix is complex)
+        comment : str; default=''
+            The comment for the card
+        finalize : bool; default=True
+            Finish creating the card (set to True if user)
+
+        """
         #NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
                                #GCj, GCi, Real, Complex, comment='')
         if comment:
@@ -1878,7 +1905,7 @@ class DMI(NastranMatrix):
             self.finalize()
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DMI card from ``BDF.add_card(...)``
 

@@ -96,6 +96,7 @@ class MainWindow(LoggableGui):
         self.modes = []
         self.selected_modes = []
         self.freq_tol = -1.0
+        self.freq_tol_remove = -1.0
 
         self.setup_widgets()
         self.setup_layout()
@@ -260,6 +261,7 @@ class MainWindow(LoggableGui):
 
             ('recent_files', 0, self.f06_filename_edit),
             ('freq_tol', -1, self.freq_tol_edit),
+            ('freq_tol_remove', -1, self.freq_tol_remove_edit),
             ('output_directory', -1, self.output_directory_edit),
         ]
         for key, index, line_edit in line_edits:
@@ -383,9 +385,15 @@ class MainWindow(LoggableGui):
         self.eigi_lim_edit_max = QFloatEdit()
 
         #--------------------------------------------
-        self.freq_tol_label = QLabel('dFreq Tol (Hz):')
+        self.freq_tol_label = QLabel('dFreq Tol (Hz) Dash:')
         self.freq_tol_edit = QFloatEdit()
-        self.freq_tol_edit.setToolTip("Filters modes that don't change by more than some amount")
+        self.freq_tol_edit.setToolTip("Applies a dotted line for modes that don't change by more than some amount")
+
+        self.freq_tol_remove_label = QLabel('dFreq Tol (Hz) Hide:')
+        self.freq_tol_remove_edit = QFloatEdit()
+        self.freq_tol_remove_edit.setToolTip("Completely remove modes that don't change by more than some amount")
+        self.freq_tol_remove_label.setVisible(False)
+        self.freq_tol_remove_edit.setVisible(False)
 
         self.subcase_label = QLabel('Subcase:')
         self.subcase_edit = QComboBox()
@@ -564,6 +572,9 @@ class MainWindow(LoggableGui):
         #------------------------------------------
         grid.addWidget(self.freq_tol_label, irow, 0)
         grid.addWidget(self.freq_tol_edit, irow, 1)
+        irow += 1
+        grid.addWidget(self.freq_tol_remove_label, irow, 0)
+        grid.addWidget(self.freq_tol_remove_edit, irow, 1)
         irow += 1
 
         grid.addWidget(self.output_directory_label, irow, 0)
@@ -768,6 +779,7 @@ class MainWindow(LoggableGui):
         nopoints = not self.show_points_checkbox.isChecked()
 
         freq_tol = self.freq_tol
+        freq_tol_remove = self.freq_tol_remove
         self.log.info(f'freq_tol = {freq_tol}\n')
         if noline and nopoints:
             noline = True
@@ -874,6 +886,7 @@ class MainWindow(LoggableGui):
 
     def get_xlim(self) -> tuple[Limit, Limit, Limit,
                                 Limit, Limit, Limit,
+                                Optional[float],
                                 Optional[float], bool]:
         xlim_min, is_passed1 = get_float_or_none(self.xlim_edit_min)
         xlim_max, is_passed2 = get_float_or_none(self.xlim_edit_max)
@@ -889,9 +902,13 @@ class MainWindow(LoggableGui):
         eigr_lim_max, is_passed10 = get_float_or_none(self.eigr_lim_edit_max)
         eigi_lim_min, is_passed11 = get_float_or_none(self.eigi_lim_edit_min)
         eigi_lim_max, is_passed12 = get_float_or_none(self.eigi_lim_edit_max)
-        freq_tol, is_passed_tol = get_float_or_none(self.freq_tol_edit)
-        if is_passed_tol and freq_tol is None:
+        freq_tol, is_passed_tol1 = get_float_or_none(self.freq_tol_edit)
+        freq_tol_remove, is_passed_tol2 = get_float_or_none(self.freq_tol_remove_edit)
+        if is_passed_tol1 and freq_tol is None:
             freq_tol = -1.0
+        if is_passed_tol2 and freq_tol_remove is None:
+            freq_tol_remove = -1.0
+
         xlim = [xlim_min, xlim_max]
         damp_lim = [damp_lim_min, damp_lim_max]
         freq_lim = [freq_lim_min, freq_lim_max]
@@ -910,7 +927,7 @@ class MainWindow(LoggableGui):
         #print(f'freq_tol = {freq_tol}')
         out = (
             xlim, damp_lim, freq_lim, kfreq_lim,
-            eigr_lim, eigi_lim, freq_tol, is_passed,
+            eigr_lim, eigi_lim, freq_tol, freq_tol_remove, is_passed,
         )
         return out
 
@@ -923,7 +940,7 @@ class MainWindow(LoggableGui):
     def validate(self) -> bool:
         (xlim, ydamp_lim, freq_lim, kfreq_lim,
          eigr_lim, eigi_lim,
-         freq_tol, is_valid_xlim) = self.get_xlim()
+         freq_tol, freq_tol_remove, is_valid_xlim) = self.get_xlim()
 
         subcase, is_subcase_valid = self._get_subcase()
         #if subcase == -1:
@@ -938,6 +955,7 @@ class MainWindow(LoggableGui):
         self.eigi_lim = eigi_lim
         self.eigr_lim = eigr_lim
         self.freq_tol = freq_tol
+        self.freq_tol_remove = freq_tol_remove
 
         self.x_plot_type = self.x_plot_type_pulldown.currentText()
         self.plot_type = self.plot_type_pulldown.currentText()
@@ -970,6 +988,7 @@ class MainWindow(LoggableGui):
             'units_in': units_in,
             'units_out': units_out,
             'freq_tol': freq_tol,
+            'freq_tol_remove': freq_tol_remove,
         }
         self.units_in = units_in
         self.units_out = units_out
