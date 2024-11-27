@@ -553,7 +553,8 @@ def get_coords_box(ncuts: int) -> tuple[list[float], list[CORD2R]]:  # pragma: n
         coords.append(coord)
     return dys, coords
 
-def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLogger,
+def cut_and_plot_moi(bdf_filename: str,
+                     normal_plane: np.ndarray, log: SimpleLogger,
                      dys: list[float],
                      coords: list[CORD2R],
                      ytol: float=2.0,

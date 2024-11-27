@@ -8,6 +8,7 @@ from itertools import count
 from typing import Optional, Any
 import numpy as np
 
+from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types #, integer_string_types
 from pyNastran.nptyping_interface import NDArray3float, NDArray66float
 from pyNastran.bdf.field_writer import print_card_
@@ -8932,7 +8933,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self.reject_lines.append(lines)
         #self.reject_card_lines('dummy', lines, show_log=True)
 
-    def add_include_file(self, include_filename: str,
+    def add_include_file(self, include_filename: PathLike,
                          is_windows: Optional[bool]=None) -> None:
         lines = write_include(include_filename, is_windows=is_windows).rstrip().split('\n')
         self.reject_lines.append(lines)

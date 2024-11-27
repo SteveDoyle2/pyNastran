@@ -1007,7 +1007,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         attrs = self.object_attributes(mode='both', keys_to_skip=None)
         return attrs
 
-    def export_hdf5_filename(self, hdf5_filename: str) -> None:
+    def export_hdf5_filename(self, hdf5_filename: PathLike) -> None:
         """
         Converts the BDF objects into hdf5 object
 
@@ -1044,7 +1044,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         from pyNastran.bdf.bdf_interface.hdf5_exporter import export_bdf_to_hdf5_file
         export_bdf_to_hdf5_file(hdf5_file, self)
 
-    def load_hdf5_filename(self, hdf5_filename: str) -> None:
+    def load_hdf5_filename(self, hdf5_filename: PathLike) -> None:
         """
         Loads a BDF object from an hdf5 filename
 
@@ -1080,7 +1080,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.uncross_reference()
         return dumps(self)
 
-    def save(self, obj_filename: str='model.obj', unxref: bool=True) -> None:
+    def save(self, obj_filename: PathLike='model.obj',
+             unxref: bool=True) -> None:
         """Saves a pickleable object"""
         #del self.log
         #del self._card_parser, self._card_parser_prepare
@@ -1098,7 +1099,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         with open(obj_filename, 'wb') as obj_file:
             dump(self, obj_file)
 
-    def load(self, obj_filename: str='model.obj') -> None:
+    def load(self, obj_filename: PathLike='model.obj') -> None:
         """Loads a pickleable object"""
         #del self.log
         #lines = print(self.case_control_deck)
@@ -4419,7 +4420,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #return False
         #return True
 
-    def _parse_primary_file_header(self, bdf_filename: str | StringIO) -> None:
+    def _parse_primary_file_header(self, bdf_filename: PathLike | StringIO) -> None:
         """
         Extract encoding, nastran_format, and punch from the primary BDF.
 

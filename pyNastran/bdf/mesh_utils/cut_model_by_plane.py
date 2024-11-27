@@ -22,6 +22,7 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.cards.coordinate_systems import Coord, xyz_to_rtz_array, rtz_to_xyz_array
 
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.utils import PathLike
     from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.nptyping_interface import NDArrayNint, NDArray3float, NDArrayNfloat
@@ -221,7 +222,7 @@ def get_stations(model: BDF,
 
     return xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, x_stations_march
 
-def _setup_faces(bdf_filename: str | BDF) -> tuple[np.ndarray, np.ndarray,
+def _setup_faces(bdf_filename: PathLike | BDF) -> tuple[np.ndarray, np.ndarray,
                                                          list[tuple[int, int, int]], list[int]]:
     """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
@@ -257,12 +258,12 @@ def _setup_faces(bdf_filename: str | BDF) -> tuple[np.ndarray, np.ndarray,
     #edge_to_eid_map = out['edge_to_eid_map']
     return nids, xyz_cid0, faces, face_eids
 
-def cut_face_model_by_coord(bdf_filename: str | BDF, coord: CORD2R, tol: float,
+def cut_face_model_by_coord(bdf_filename: PathLike | BDF, coord: CORD2R, tol: float,
                             nodal_result: np.ndarray,
                             plane_atol: float=1e-5, skip_cleanup: bool=True,
                             csv_filename=None,
-                            plane_bdf_filename: str='plane_face.bdf',
-                            plane_bdf_filename2: str='plane_face2.bdf',
+                            plane_bdf_filename: PathLike='plane_face.bdf',
+                            plane_bdf_filename2: PathLike='plane_face2.bdf',
                             plane_bdf_offset: float=0.0):
     """
     Cuts a Nastran model with a cutting plane
@@ -303,7 +304,7 @@ def cut_face_model_by_coord(bdf_filename: str | BDF, coord: CORD2R, tol: float,
     return unique_geometry_array, unique_results_array, rods_array
 
 
-def export_face_cut(csv_filename: str, geometry_arrays: np.ndarray,
+def export_face_cut(csv_filename: PathLike, geometry_arrays: np.ndarray,
                     results_arrays: np.ndarray,
                     header: str='') -> None:
     """
@@ -509,8 +510,8 @@ def _cut_face_model_by_coord(nids, xyz_cid0: np.ndarray,
                              faces, face_eids,
                              coord: Coord, tol: float,
                              nodal_result, plane_atol: float=1e-5, skip_cleanup: bool=True,
-                             plane_bdf_filename: str='plane_face.bdf',
-                             plane_bdf_filename2: str='plane_face2.bdf',
+                             plane_bdf_filename: PathLike='plane_face.bdf',
+                             plane_bdf_filename2: PathLike='plane_face2.bdf',
                              plane_bdf_offset: float=0.) -> tuple[Any, Any, Any]:
     """
     Cuts a Nastran model with a cutting plane
@@ -628,8 +629,8 @@ def slice_faces(nodes, xyz_cid0: np.ndarray, xyz_cid: np.ndarray,
                 coord: Coord, # CORD2R,
                 plane_atol: float=1e-5,
                 skip_cleanup: bool=True,
-                plane_bdf_filename: str='plane_face.bdf',
-                plane_bdf_filename2: str='plane_face2.bdf',
+                plane_bdf_filename: PathLike='plane_face.bdf',
+                plane_bdf_filename2: PathLike='plane_face2.bdf',
                 plane_bdf_offset: float=0.):
     """
     Slices the shell elements
@@ -1398,7 +1399,7 @@ def calculate_area_moi(model: BDF, rods, normal_plane, thetas,
         )
     return dxi, dyi, total_area, Isum, ExIsum, avg_centroid
 
-def _write_moi_file(moi_filename: str, eid_filename: str,
+def _write_moi_file(moi_filename: PathLike, eid_filename: PathLike,
                     eids, n1, n2, xyz1, xyz2, length, thickness, area,
                     centroid, avg_centroid, I, E) -> None:
     eidi = 1

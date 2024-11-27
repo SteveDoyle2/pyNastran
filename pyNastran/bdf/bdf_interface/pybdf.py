@@ -31,7 +31,7 @@ from typing import Optional, Any, cast
 import numpy as np
 from cpylog import get_logger2, SimpleLogger
 from pyNastran.nptyping_interface import NDArrayN2int
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import print_bad_path, PathLike
 
 from pyNastran.bdf import BULK_DATA_CARDS, CASE_BULK_CARDS
 from pyNastran.bdf.errors import AuxModelError, MissingDeckSections, SuperelementFlagError
@@ -188,7 +188,7 @@ class BDFInputPy:
         self.log = get_logger2(log, debug)
         self.use_new_parser: bool = False
 
-    def get_lines(self, bdf_filename: str | StringIO,
+    def get_lines(self, bdf_filename: PathLike | StringIO,
                   punch: Optional[bool]=False,
                   make_ilines: bool=True) -> tuple[list[str], list[str], list[str],
                                                    list[str], Optional[np.ndarray],
@@ -337,7 +337,7 @@ class BDFInputPy:
         system_lines = system_lines
         return bulk_data_lines, bulk_data_ilines, system_lines
 
-    def get_main_lines(self, bdf_filename: str | StringIO) -> list[str]:
+    def get_main_lines(self, bdf_filename: PathLike | StringIO) -> list[str]:
         """
         Opens the bdf and extracts the lines
 
@@ -845,7 +845,8 @@ def _is_case_control_line(text: str) -> bool:
     return False
 
 
-def _check_pynastran_encoding(bdf_filename: str | StringIO, encoding: str) -> str:
+def _check_pynastran_encoding(bdf_filename: PathLike | StringIO,
+                              encoding: str) -> str:
     """updates the $pyNastran: key=value variables"""
     line = '$pyNastran: punch=False'
     #line_temp = u'é à è ê'.encode('utf8').decode('ascii')

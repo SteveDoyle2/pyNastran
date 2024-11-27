@@ -7,6 +7,7 @@ import inspect
 import numpy as np
 from cpylog import SimpleLogger
 
+from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf, DMIAX
 from pyNastran.bdf.mesh_utils.delete_bad_elements import element_quality
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
@@ -297,7 +298,7 @@ def cross_reference(model: BDF, xref: bool) -> None:
     model.pop_xref_errors()
 
 
-def renumber(bdf_filename: str, log: SimpleLogger) -> None:
+def renumber(bdf_filename: PathLike, log: SimpleLogger) -> None:
     bdf_filename_out = 'junk.bdf'
     #model3_copy = deepcopy(model3)
     #model3.cross_reference()

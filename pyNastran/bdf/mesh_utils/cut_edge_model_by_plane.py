@@ -15,14 +15,15 @@ defines:
 from io import StringIO
 from typing import Optional, Any
 import numpy as np
+from pyNastran.utils import PathLike
 from pyNastran.nptyping_interface import NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float
-from pyNastran.bdf.cards.coordinate_systems import CORD2R
+from pyNastran.bdf.cards.coordinate_systems import CORD2R, Coord
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 
 
-def cut_edge_model_by_coord(bdf_filename: str,
-                            coord,
+def cut_edge_model_by_coord(bdf_filename: PathLike,
+                            coord: Coord,
                             tol: float,
                             nodal_result,
                             plane_atol: float=1e-5,
@@ -75,7 +76,7 @@ def cut_edge_model_by_coord(bdf_filename: str,
         #nodal_result, plane_atol=plane_atol)
     #return local_points_array, global_points_array, result_array
 
-def _setup_edges(bdf_filename: str) -> tuple[NDArrayNint, NDArrayN3float, NDArrayN2int]:
+def _setup_edges(bdf_filename: PathLike) -> tuple[NDArrayNint, NDArrayN3float, NDArrayN2int]:
     """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
     out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')

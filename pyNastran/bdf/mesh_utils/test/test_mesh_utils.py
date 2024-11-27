@@ -218,25 +218,30 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         Real = [np.radians(5.)]
         model.add_dmi_w2gj(tin, tin, nrows, GCj, GCi, Real)
         #print(model.caeros)
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_subpanels.bdf', '--pid', 'aesurf', '--subpanels']
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_subpanels.bdf',
+                '--pid', 'aesurf', '--subpanels']
         cmd_line(argv=argv, quiet=True)
 
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf.bdf', '--pid', 'aesurf']
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf.bdf',
+                '--pid', 'aesurf']
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.caero.bdf', '--pid', 'caero']
         cmd_line(argv=argv, quiet=True)
 
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.paero.bdf', '--pid', 'paero']
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.paero.bdf',
+                '--pid', 'paero']
         cmd_line(argv=argv, quiet=True)
 
     def test_export_caero_mesh_w2gj(self):
         path = MODEL_PATH / 'aero'
         bdf_filename = str(path / 'cpmopt.bdf')
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf', '--pid', 'caero', '--subpanels']
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf',
+                '--pid', 'caero', '--subpanels']
         cmd_line(argv=argv, quiet=True)
 
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf', '--pid', 'caero']
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf',
+                '--pid', 'caero']
         cmd_line(argv=argv, quiet=True)
 
     def test_export_caero_mesh(self):
@@ -249,23 +254,25 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
             cmd_line(argv=argv[:2], quiet=True)
         cmd_line(argv=argv, quiet=True)
 
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_aesurf.bdf', '--subpanels',
-                '--pid', 'aesurf']
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_aesurf.bdf',
+                '--subpanels', '--pid', 'aesurf']
         cmd_line(argv=argv, quiet=True)
 
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_caero.bdf', '--subpanels',
-                '--pid', 'caero']
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_caero.bdf',
+                '--subpanels', '--pid', 'caero']
         cmd_line(argv=argv, quiet=True)
 
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_paero.bdf', '--subpanels',
-                '--pid', 'paero']
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_paero.bdf',
+                '--subpanels', '--pid', 'paero']
         cmd_line(argv=argv, quiet=True)
 
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero.bdf', '--subpanels']
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero.bdf',
+                '--subpanels']
         cmd_line(argv=argv, quiet=True)
 
         #bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]
-        argv = ['bdf', 'mirror', 'caero.bdf', '-o', 'caero2.bdf', '--plane', 'xz', '--tol', '1e-5']
+        argv = ['bdf', 'mirror', 'caero.bdf', '-o', 'caero2.bdf',
+                '--plane', 'xz', '--tol', '1e-5']
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'equivalence', 'caero2.bdf', '0.001', '-o', 'caero3.bdf']

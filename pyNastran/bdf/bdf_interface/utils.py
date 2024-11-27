@@ -9,9 +9,9 @@ from io import StringIO
 from collections import defaultdict
 from typing import Optional, Any, TYPE_CHECKING
 
-#import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.utils import PathLike
     from pyNastran.bdf.bdf import BDF
 
 _REMOVED_LINES = [
@@ -409,7 +409,7 @@ def _parse_pynastran_header(line: str) -> tuple[Optional[str], Optional[str]]:
     #return lines2
 
 
-def print_filename(filename: str, relpath: bool=True) -> str:
+def print_filename(filename: PathLike, relpath: bool=True) -> str:
     """
     Takes a path such as C:/work/fem.bdf and locates the file using
     relative paths.  If it's on another drive, the path is not modified.

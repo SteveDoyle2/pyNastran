@@ -9,10 +9,12 @@ from typing import TextIO, TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.utils import PathLike
     from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.field_writer_8 import print_card_8
 
-def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
+def export_caero_mesh(model: BDF,
+                      caero_bdf_filename: PathLike='caero.bdf',
                       is_subpanel_model: bool=True,
                       pid_method: str='aesurf',
                       write_panel_xyz: bool=True) -> None:

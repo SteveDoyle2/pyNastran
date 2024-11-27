@@ -25,6 +25,7 @@ except ModuleNotFoundError:
 if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
     from cpylog import SimpleLogger
+    from pyNastran.utils import PathLike
     from pyNastran.bdf.bdf import BDF, DESVAR
 
 
@@ -1418,7 +1419,8 @@ def _delete_optimization_data(model: BDF,
     return properties_to_write, materials_to_write, desvars
 
 
-def write_optimization_include(model: BDF, pch_include_filename: str, size: int=8) -> None:
+def write_optimization_include(model: BDF, pch_include_filename: PathLike,
+                               size: int=8) -> None:
     """writes an optimization deck"""
     properties_to_write, materials_to_write, desvars = delete_optimization_data(
         model)

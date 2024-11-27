@@ -8,8 +8,9 @@ This file defines:
         enddata=None, close=True, plane='xz')
 
 """
+from __future__ import annotations
 from copy import deepcopy
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.nptyping_interface import NDArray33float
@@ -22,9 +23,11 @@ from pyNastran.bdf.cards.aero.aero import CAERO1, SPLINE1
 from pyNastran.bdf.cards.bdf_sets import SET1 #, SET3
 from pyNastran.bdf.bdf import BDF, MPC
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
+if TYPE_CHECKING:
+    from pyNastran.utils import PathLike
 
 
-def bdf_mirror_plane(bdf_filename: str | BDF,
+def bdf_mirror_plane(bdf_filename: PathLike | BDF,
                      plane: NDArray33float, mirror_model=None,
                      log=None, debug: bool=True, use_nid_offset: bool=True):
     """mirrors a model about an arbitrary plane"""
@@ -40,7 +43,7 @@ def bdf_mirror_plane(bdf_filename: str | BDF,
     return model, mirror_model, nid_offset, eid_offset
 
 
-def bdf_mirror(bdf_filename: str | BDF,
+def bdf_mirror(bdf_filename: PathLike | BDF,
                plane: str='xz', log=None, debug: bool=True):
     """
     Mirrors the model about the symmetry plane
@@ -74,7 +77,7 @@ def bdf_mirror(bdf_filename: str | BDF,
     _mirror_aero(model, mirror_model, nid_offset, plane=plane)
     return model, nid_offset, eid_offset
 
-def write_bdf_symmetric(bdf_filename: str | BDF,
+def write_bdf_symmetric(bdf_filename: PathLike | BDF,
                         out_filename=None, encoding=None,
                         size: int=8, is_double: bool=False,
                         enddata: Optional[bool]=None, close: bool=True,
@@ -177,7 +180,8 @@ def _mirror_nodes(model: BDF,
 
     return nid_offset, plane
 
-def _mirror_nodes_plane(model: BDF, mirror_model: BDF, plane: NDArray33float,
+def _mirror_nodes_plane(model: BDF, mirror_model: BDF,
+                        plane: NDArray33float,
                         use_nid_offset: bool=True) -> tuple[int, str]:
     """
     Mirrors the GRIDs about an arbitrary plane

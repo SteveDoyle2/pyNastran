@@ -24,10 +24,11 @@ except ModuleNotFoundError:  # pragma: no cover
 
 from cpylog import get_logger2, SimpleLogger
 from pyNastran.f06.flutter_response import FlutterResponse, get_flutter_units
+from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import float_types
 
 
-def make_flutter_response(f06_filename: str,
+def make_flutter_response(f06_filename: PathLike,
                           f06_units=None, out_units=None,
                           make_alt: bool=False,
                           log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
@@ -264,7 +265,7 @@ def make_flutter_response(f06_filename: str,
         flutters[subcase] = flutter
     return flutters
 
-def plot_flutter_f06(f06_filename: str,
+def plot_flutter_f06(f06_filename: PathLike,
                      f06_units: Optional[dict[str, str]]=None,
                      out_units: Optional[dict[str, str]]=None,
                      make_alt: bool=False,

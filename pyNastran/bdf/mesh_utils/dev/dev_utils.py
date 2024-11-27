@@ -21,6 +21,7 @@ import numpy as np
 
 from numpy.linalg import norm  # type: ignore
 
+from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.nodes import GRID
 from pyNastran.bdf.cards.elements.shell import CQUAD4
@@ -370,7 +371,8 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     return model, groups
 
 
-def split_model_by_material_id(bdf_filename: str, bdf_filename_base: str,
+def split_model_by_material_id(bdf_filename: PathLike,
+                               bdf_filename_base: PathLike,
                                encoding: Optional[str]=None,
                                size: int=8, is_double: bool=False):
     """

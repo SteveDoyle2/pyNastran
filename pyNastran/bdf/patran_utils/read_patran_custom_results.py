@@ -6,7 +6,7 @@ defines:
 import os
 from collections import defaultdict
 import numpy as np
-from pyNastran.utils import check_path
+from pyNastran.utils import check_path, PathLike
 
 
 def read_patran_format(patran_fmt_filename):
@@ -126,7 +126,7 @@ def read_patran(patran_filename, fdtype='float64', idtype='int32'):
     return data_dict
 
 
-def load_patran_nod(nod_filename: str,
+def load_patran_nod(nod_filename: PathLike,
                     node_ids: np.ndarray) -> tuple[dict[str, np.ndarray],
                                                    dict[str, str],
                                                    list[str]]:

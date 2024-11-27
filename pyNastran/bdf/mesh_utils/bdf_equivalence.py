@@ -25,10 +25,11 @@ from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import GRID
+    from pyNastran.utils import PathLike
 
 
-def bdf_equivalence_nodes(bdf_filename: str,
-                          bdf_filename_out: Optional[str],
+def bdf_equivalence_nodes(bdf_filename: PathLike,
+                          bdf_filename_out: Optional[PathLike],
                           tol: float,
                           renumber_nodes: bool=False, neq_max: int=4, xref: bool=True,
                           node_set: Optional[list[int] | NDArrayNint]=None,
@@ -185,7 +186,7 @@ def _simplify_node_set(node_set: Optional[list[int] |
     # list of ndarrays
     return node_set_list
 
-def _bdf_equivalence_nodes(bdf_filename: str, tol: float,
+def _bdf_equivalence_nodes(bdf_filename: PathLike, tol: float,
                            renumber_nodes: bool=False, neq_max: int=4, xref: bool=True,
                            node_set: Optional[list[NDArrayNint]]=None,
                            log: Optional[SimpleLogger]=None,

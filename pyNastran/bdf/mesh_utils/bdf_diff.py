@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 import numpy as np
+from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import read_bdf, BDF, CaseControlDeck, Subcase
 
 scalar_obj_keys: list[str] = [
@@ -76,9 +77,9 @@ dict_int_list_obj_attrs: list[str] = [
 ]
 
 
-def get_diff_bdfs(bdf_filename1: str, bdf_filename2: str,
-                  added_bdf_filename: str='',
-                  removed_bdf_filename: str='',
+def get_diff_bdfs(bdf_filename1: PathLike, bdf_filename2: PathLike,
+                  added_bdf_filename: PathLike='',
+                  removed_bdf_filename: PathLike='',
                   ) -> tuple[bool, bool, BDF, BDF]:
     """
     diffs two bdfs

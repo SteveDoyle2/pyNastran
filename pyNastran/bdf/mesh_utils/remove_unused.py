@@ -6,9 +6,10 @@ defines some methods for cleaning up a model
 """
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.utils import PathLike
 #from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
-def remove_unused(bdf_filename: str,
+def remove_unused(bdf_filename: PathLike,
                   remove_nids: bool=True, remove_cids: bool=True,
                   remove_pids: bool=True, remove_mids: bool=True,
                   remove_spcs: bool=True, remove_mpcs: bool=True,

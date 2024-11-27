@@ -4,10 +4,11 @@ defines:
        bdf_filename, pin_flags_filename=None, bdf_filename_out=None)
 
 """
+from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import read_bdf
 
 
-def split_cbars_by_pin_flag(bdf_filename: str,
+def split_cbars_by_pin_flag(bdf_filename: PathLike,
                             pin_flags_filename=None, bdf_filename_out=None,
                             punch: bool=False,
                             debug: bool=False):
