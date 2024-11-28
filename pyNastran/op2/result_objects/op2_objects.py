@@ -659,13 +659,13 @@ class ScalarObject(BaseScalarObject):
                 # Convert eigenvalues to frequencies
                 # TODO: add damping header
             elif name in ['eign']:
-                abs_freqs = np.sqrt(np.abs(self.eigns)) / (2 * np.pi)
+                omega_radians, abs_freqs = real_modes_to_omega_freq(self.eigns)
                 column_names.append('Freq')
                 column_values.append(abs_freqs)
                 column_names.append('Eigenvalue')
                 column_values.append(times)
                 column_names.append('Radians')
-                column_values.append(abs_freqs * 2 * np.pi)
+                column_values.append(omega_radians)
 
             elif name in ['eigr']:
                 column_names.append('EigenvalueReal')
@@ -676,27 +676,9 @@ class ScalarObject(BaseScalarObject):
                 column_values.append(times)
                 eigr = np.array(self.eigrs)
                 eigi = np.array(self.eigis)
-                damping = np.zeros(len(eigr), dtype=eigr.dtype)
-                if 0:  # pragma: no cover
-                    # is this correct for a vibration response?
-                    denom = np.sqrt(eigr ** 2 + eigi ** 2)
-                    damping = np.zeros(len(eigr), dtype=eigr.dtype)
-                    inonzero = np.where(denom != 0)[0]
-                    if len(inonzero):
-                        damping[inonzero] = -eigr[inonzero] / denom[inonzero]
-                    column_names.append('Damping')
-                    column_values.append(damping)
-                else:
-                    # flutter
-                    # eig = omega*zeta + omega*1j = eigr + eigi*1j
-                    # freq = eigi/(2*pi)
-                    # zeta = 2*eigr/eigi
-                    #frequency = eigi / (2 * np.pi)
-                    inonzero = np.where(eigi != 0)[0]
-                    if len(inonzero):
-                        damping[inonzero] = 2 * eigr[inonzero] / eigi[inonzero]
-                    column_names.append('Damping')
-                    column_values.append(damping)
+                damping, frequncy = complex_damping_frequency(eigr, eigi)
+                column_names.append('Damping')
+                column_values.append(damping)
             elif name in ['mode_cycle']:
                 continue
                 #column_names.append('mode_cycle(Freq?)')
@@ -747,6 +729,41 @@ class ScalarObject(BaseScalarObject):
             pass
         _write_table_header(op2_file, fascii, date, self.table_name, subtable_name,
                             include_date=include_date)
+
+
+def real_modes_to_omega_freq(eigns: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    omega is also called radians
+    cycles is also called frequency
+    """
+    omega_radians = np.sqrt(np.abs(eigns))
+    abs_freqs = omega_radians / (2 * np.pi)
+    return omega_radians, abs_freqs
+
+def complex_damping_frequency(eigr: np.ndarray,
+                              eigi: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """eigenvalue = eigr + eigi*1j"""
+    eigr[eigr == -0.] = 0.
+    eigi[eigi == -0.] = 0.
+    damping = np.zeros(len(eigr), dtype=eigr.dtype)
+    if 0:
+        denom = np.sqrt(eigr ** 2 + eigi ** 2)
+        inonzero = np.where(denom != 0)[0]
+        if len(inonzero):
+            damping[inonzero] = -eigr[inonzero] / denom[inonzero]
+
+        ## not sure
+        abs_freqs = np.sqrt(np.abs(eigi)) / (2 * np.pi)
+    else:
+        # flutter
+        # eig = omega*zeta + omega*1j = eigr + eigi*1j
+        # freq = eigi/(2*pi)
+        # zeta = 2*eigr/eigi
+        abs_freqs = abs(eigi) / (2 * np.pi)
+        inonzero = np.where(eigi != 0)[0]
+        if len(inonzero):
+            damping[inonzero] = 2 * eigr[inonzero] / eigi[inonzero]
+    return damping, abs_freqs
 
 def _write_table_header(op2_file, fascii,
                         date: Date,

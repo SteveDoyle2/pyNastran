@@ -6,8 +6,13 @@ import numpy as np
 from pyNastran.femutils.utils import pivot_table, abs_min_max
 
 from pyNastran.utils.locale import func_str
+from pyNastran.op2.result_objects.op2_objects import (
+    real_modes_to_omega_freq, complex_damping_frequency)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
+
+
+from pyNastran.gui.gui_objects.types import HeaderDict
 from pyNastran.op2.op2_interface.types import KeyMap, KeysMap, NastranKey
 if TYPE_CHECKING: # pragma: no cover
     from cpylog import SimpleLogger
@@ -66,9 +71,11 @@ class StressObject:
 
     def set_composite_stress_old(self,
                                  key: int, itime: int,
-                                 oxx: Any, oyy: Any, txy: Any, tyz: Any, txz: Any,
-                                 max_principal: Any, min_principal: Any, ovm: Any,
-                                 is_element_on: Any, header_dict: dict[Any, Any]) -> str:
+                                 oxx: np.ndarray, oyy: np.ndarray,
+                                 txy: np.ndarray, tyz: np.nditer, txz: np.ndarray,
+                                 max_principal: np.ndarray, min_principal: np.ndarray,
+                                 ovm: np.ndarray, is_element_on: np.ndarray,
+                                 header_dict: HeaderDict) -> str:
         for element_type, composite_data in self.composite_data_dict.items():
             try:
                 element_layer, unused_ueids, data2, vm_word, unused_ntimes, headers = composite_data[key]
@@ -100,7 +107,7 @@ class StressObject:
 
     def set_composite_stress_by_layer(self,
                                       key: int, itime: int, nelements: int,
-                                      header_dict: dict[Any, Any]) -> str:
+                                      header_dict: HeaderDict) -> str:
         """get all the ply stresses/strains"""
         nlayers = 0
         nelements2 = 0
@@ -388,20 +395,15 @@ def _get_nastran_header(case: Any,
     elif hasattr(case, 'cycles'):
         header += '; freq = %s Hz' % func_str(case.cycles[itime])
     elif hasattr(case, 'eigis'):
-        eigi = case.eigis[itime]
-        eigr = case.eigrs[itime]
-        #cycle = np.abs(eigi) / (2. * np.pi)
-
-        # flutter
-        omega = eigi
-        freq = abs(omega) / (2 * np.pi)  # omega = 2*pi*freq
-        damping = 0.0 if eigi == 0.0 else 2*eigr/eigi
+        eigi = case.eigis
+        eigr = case.eigrs
+        dampings, freqs = complex_damping_frequency(eigr, eigi)
+        damping = dampings[itime]
+        freq = freqs[itime]
         header += '; freq = %s Hz; g=%s' % (func_str(freq), func_str(damping))
     elif hasattr(case, 'eigns'):
-        # eign is not eigr; it's more like eigi
-        eigi = case.eigns[itime] #  but |eigi| = sqrt(|eign|)
-        freq = np.sqrt(np.abs(eigi))
-        #cycle = freq / (2. * np.pi)
+        unused_omegas, freqs = real_modes_to_omega_freq(case.eigns)
+        freq = freqs[itime]
         header += '; freq = %s Hz' % func_str(freq)
     elif hasattr(case, 'freqs'):
         header += '; freq = %s Hz' % func_str(case.freqs[itime])
@@ -438,13 +440,15 @@ def _get_nastran_header(case: Any,
 
 
 def get_rod_stress_strain(model: OP2,
-                          key,
+                          key: str,
                           is_stress: bool,
                           vm_word: str,
                           itime: int,
-                          oxx, txy,
-                          max_principal, min_principal, ovm, is_element_on,
-                          eids, header_dict, keys_map: KeysMap,
+                          oxx: np.ndarray, txy: np.ndarray,
+                          max_principal: np.ndarray, min_principal: np.ndarray,
+                          ovm: np.ndarray, is_element_on: np.ndarray,
+                          eids: np.ndarray, header_dict: HeaderDict,
+                          keys_map: KeysMap,
                           log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
@@ -519,9 +523,10 @@ def get_rod_stress_strain(model: OP2,
 
 def get_bar_stress_strain(model: OP2, key,
                           is_stress: bool, vm_word: str, itime: int,
-                          oxx,
-                          max_principal, min_principal, ovm, is_element_on,
-                          eids, header_dict,
+                          oxx: np.ndarray,
+                          max_principal: np.ndarray, min_principal: np.ndarray,
+                          ovm: np.ndarray, is_element_on: np.ndarray,
+                          eids: np.ndarray, header_dict: HeaderDict,
                           keys_map: KeysMap,
                           log: SimpleLogger) -> str:
     """helper method for _fill_op2_time_centroidal_stress"""

@@ -24,39 +24,10 @@ from pyNastran.utils import print_bad_path, check_path
 from pyNastran.utils.dev import get_files_of_type
 from pyNastran.op2.test.op2_test import get_failed_files
 
-FORMAT_TO_EXTENSION = {
-    #'abaqus' : ['.inp'],
-    'h5nastran' : ['.h5'],
-    'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch', '.dat'],
-    'stl' : ['.stl'],
-    'cart3d' : ['.tri', '.triq'],
-    'tecplot' : ['.plt', '.dat'],
-    'ugrid' : ['.ugrid'],
-    #'plot3d' : ['.p3d', '.p3da'],
-    'surf' : ['.surf'],
-    'lawgs' : ['.wgs'],
-    'shabp' : ['.mk5'],
-    'fast' : ['.cogsg'],
-    'usm3d' : ['.cogsg', '.front'],
-    'bedge' : ['.bedge'],
-    'su2' : ['.su2'],
-    'tetgen' : ['.smesh', '.ele'],
-    'avus' : ['.grd'],
-    'avl' : ['.avl'],
-    'vrml' : ['.wrl'],
-    'fld' : ['.fld'],
-    'fluent': ['.vrt', '.cel', '.daten'],
-
-    # no duplicates are allowed
-    #'panair' : ['.inp'],
-    #'abaqus' : ['.inp'],
-}
-
-EXTENSION_TO_OUPUT_FORMATS = {
-    'nastran' : ['.op2'],
-    'shabp' : ['.out'],
-    #'usm3d' : ['.out'],
-}
+from pyNastran.gui.arg_handling import (
+    INPUT_FORMAT_TO_EXTENSION, OUTPUT_FORMAT_TO_EXTENSION)
+INPUT_FORMAT_TO_EXTENSION['nastran].append('.dat')
+#INPUT_FORMAT_TO_EXTENSION['tecplot].append('.dat')
 
 
 #pkg_path = pyNastran.__path__[0]
@@ -166,7 +137,7 @@ def run_docopt(argv=None):
                 raise RuntimeError(msg)
             if not os.path.isdir(dirname):
                 raise RuntimeError(f'dirname={dirname!r} is not a directory')
-            extensions = FORMAT_TO_EXTENSION[formati]
+            extensions = INPUT_FORMAT_TO_EXTENSION[formati]
             input_filenames = [
                 get_files_of_type(
                     dirname, extension=extension,
@@ -190,7 +161,9 @@ def run_docopt(argv=None):
         if data['--format']:
             formati = data['--format'].lower()
         else:
-            formati = determine_format(input_filename)
+            print('output_filenames = ', output_filenames)
+            formati = determine_format(
+                input_filename, output_filenames=output_filenames)
             print('formati', formati)
     #assert formati == 'nastran', 'format=%r' % formati
 

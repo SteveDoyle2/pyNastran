@@ -46,7 +46,6 @@ if TYPE_CHECKING: # pragma: no cover
 
 Form = tuple[str, Optional[int], Any]
 FormDict = dict[tuple[Any, Any], Form]
-HeaderDict = dict[tuple[Any, Any], str]
 Case = tuple[GuiResult, tuple[int, str]]
 Cases = dict[int, Case]
 #CRASH = True
@@ -80,7 +79,6 @@ class NastranGuiResults(NastranGuiAttributes):
                                            grid_point_forces, nnodes)
 
         itime = 0
-
         cases[icase] = (nastran_res, (itime, 'Grid Point Forces'))
         formii: Form = ('Grid Point Forces', icase, [])
         form_dict[(key, itime)].append(formii)
@@ -91,7 +89,6 @@ class NastranGuiResults(NastranGuiAttributes):
         keys_map[key] = KeyMap(case.subtitle, case.label,
                                case.superelement_adaptivity_index,
                                case.pval_step)
-
         icase += 1
         return icase
 
@@ -513,7 +510,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                         key: tuple[Any, int], icase: int, itime: int,
                                         form_dict: dict[Any, Any],
                                         #form_dict: dict[tuple[Any, int], Any],
-                                        header_dict: dict[Any, Any],
+                                        header_dict: HeaderDict,
                                         keys_map: dict[Any, Any],
                                         log: SimpleLogger,
                                         stop_on_failure: bool) -> int:

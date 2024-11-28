@@ -23,7 +23,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     #LIGHT_GREEN_FLOAT, # GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
     #YELLOW_FLOAT, ORANGE_FLOAT,
 #)
-
+from pyNastran.op2.result_objects.op2_objects import (
+    real_modes_to_omega_freq, complex_damping_frequency)
 
 from pyNastran.gui.utils.vtk.vectorized_geometry import (
     create_offset_arrays)
@@ -1331,7 +1332,7 @@ def _load_stress_strain(element_cards: list,
                     # RealComplatePlateStressArray
                     #[o11, o22, t12, t1z, t2z, angle, major, minor, max_shear]
                     continue
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError(result)
                 ielement0 = nelement0 + np.searchsorted(model_element_id, result_eids)
                 oxx[ielement0] = oxxi
@@ -1475,33 +1476,10 @@ def get_case_headers(case) -> tuple[bool, list[str]]:
         for time in case.dts:
             header_names.append(f'time={time:g} sec')
     elif case.analysis_code == 9:  # complex modes
-        #cycle = freq = eigi / (2*pi)
-        #radians = eigi
         scale_per_time = False
         eigr = case.eigrs
         eigi = case.eigis
-        eigr[eigr == -0.] = 0.
-        eigi[eigi == -0.] = 0.
-
-        damping = np.zeros(len(eigr), dtype=eigr.dtype)
-        if 0:
-            denom = np.sqrt(eigr ** 2 + eigi ** 2)
-            inonzero = np.where(denom != 0)[0]
-            if len(inonzero):
-                damping[inonzero] = -eigr[inonzero] / denom[inonzero]
-
-            ## not sure
-            abs_freqs = np.sqrt(np.abs(eigi)) / (2 * np.pi)
-        else:
-            # flutter
-            # eig = omega*zeta + omega*1j = eigr + eigi*1j
-            # freq = eigi/(2*pi)
-            # zeta = 2*eigr/eigi
-            abs_freqs = abs(eigi) / (2 * np.pi)
-            inonzero = np.where(eigi != 0)[0]
-            if len(inonzero):
-                damping[inonzero] = 2 * eigr[inonzero] / eigi[inonzero]
-
+        damping, abs_freqs = complex_damping_frequency(eigr, eigi)
         for mode, eigri, eigii, freq, damping, in zip(case.modes, eigr, eigi, abs_freqs, damping):
             header_names.append(f'mode={mode} eigr={eigri:g} eigi={eigii:g} f={freq:g} Hz ζ={damping:g}')
     else:

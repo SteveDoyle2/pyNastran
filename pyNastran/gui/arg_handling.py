@@ -10,23 +10,30 @@ from pyNastran.utils.arg_handling import argparse_to_dict, swap_key, update_mess
 
 #from gui.formats import format_string
 
-if sys.version_info < (3, 7):  # pragma: no cover
-    sys.exit("requires Python 3.7+...")
+if sys.version_info < (3, 10):  # pragma: no cover
+    sys.exit("requires Python 3.10+...")
 
+# load in multiple files at once (tecplot, stl)
 SUPPORT_MULTIMODEL = False
 
 # True: --groups flag
 # False: --nogroups flag
 GROUPS_DEFAULT = True
-FORMAT_TO_EXTENSION = {
+
+OUTPUT_FORMAT_TO_EXTENSION = {
+    'nastran': ['.op2'],
+    'cart3d': ['.triq'],
+    'shabp': ['.out'],
+}
+INPUT_FORMAT_TO_EXTENSION = {
     # an extension should not be added to this list if it is shared with another type
-    'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'],
+    'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'], # '.dat'
     'h5nastran' : ['.h5'],
     #'nastran2' : ['.bdf', '.ecd', '.nas',],
 
     'stl' : ['.stl'],
     'cart3d' : ['.tri', '.triq'],
-    'tecplot' : ['.plt'],
+    'tecplot' : ['.plt'],  # .dat
     'ugrid' : ['.ugrid'],
     'plot3d' : ['.p3d', '.p3da'],
     'surf' : ['.surf'],
@@ -43,7 +50,11 @@ FORMAT_TO_EXTENSION = {
     'vtk' : ['.vtk', '.vtu'],
     'fld' : ['.fld'],
     'fluent' : ['.vrt', '.cel', '.daten'],
-    #'abaqus' : []
+    #'abaqus' : ['.inp'],
+    # 'plot3d' : ['.p3d', '.p3da'],
+
+    #'fast': ['.cogsg'],
+    'avus': ['.grd'],
 
     # no duplicate extensions are allowed; use the explicit --format option
     #'ugrid3d' : ['.ugrid'],
@@ -53,12 +64,19 @@ FORMAT_TO_EXTENSION = {
 
 
 def determine_format(input_filename: str,
+                     output_filenames: Optional[list[str]]=None,
                      allowed_formats: Optional[list[str]]=None) -> str:
     """
     Tries to map the input filename to an extension.
 
     .. note :: this function will not support generic extensions (e.g. .inp, .dat)
     """
+    if output_filenames is None:
+        output_filenames = []
+
+    out_exts = [os.path.splitext(fname)[1] for fname in output_filenames]
+    out_ext = '' if len(out_exts) == 0 else out_exts[0]
+
     if allowed_formats is None:
         # used to include None...
         allowed_formats = [
@@ -72,15 +90,19 @@ def determine_format(input_filename: str,
             allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran', 'nastran2', 'nastran3'])
     print(f'allowed_formats = {allowed_formats}')
 
-    ext = os.path.splitext(input_filename)[1].lower()
-    extension_to_format = {val : key for key, value in FORMAT_TO_EXTENSION.items()
-                           for val in value}
-    try:
-        formati = extension_to_format[ext]
-    except KeyError:
+    in_ext = os.path.splitext(input_filename)[1].lower()
+    in_extension_to_format = {val : key for key, value in INPUT_FORMAT_TO_EXTENSION.items()
+                              for val in value}
+    out_extension_to_format = {val : key for key, value in OUTPUT_FORMAT_TO_EXTENSION.items()
+                               for val in value}
+    if in_ext in in_extension_to_format:
+        formati = in_extension_to_format[in_ext]
+    elif out_ext in out_extension_to_format:
+        formati = out_extension_to_format[out_ext]
+    else:
         #print('allowed_formats =', allowed_formats)
         msg = 'format=%r was not found\nSpecify the format as [%s]' % (
-            ext, ', '.join(allowed_formats))
+            in_ext, ', '.join(allowed_formats))
         raise TypeError(msg)
     return formati
 
@@ -136,7 +158,7 @@ def run_argparse(argv: list[str]) -> dict[str, str]:
     #msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
 
     dev = ''
-    dev_list = []  # list[str]
+    dev_list: list[str] = []
     if not pyNastran.is_pynastrangui_exe:
         #dev = ' [--noupdate] [--test] [--qt Qt] [--plugin]'
         dev_list = ['--noupdate', '--test', '--qt', '--plugin']
@@ -374,7 +396,7 @@ def _update_argparse_argdict(argdict):
     plugin = False
     if 'plugin' in argdict and argdict['plugin']:
         plugin = True
-    input_formats = _update_format(argdict, input_filenames)
+    input_formats = _update_format(argdict, input_filenames, output_filenames)
 
     if not plugin:
         _validate_format(input_formats)
@@ -415,7 +437,7 @@ def _update_argparse_argdict(argdict):
             formats = [formats]
         nformats = len(formats)
         if nformats == 1 and ninput_files > 1:
-            formats = formats * ninput_files
+            formats *= ninput_files
         argdict['format'] = formats
         if nformats != ninput_files:
             msg = (
@@ -433,14 +455,16 @@ def _set_groups_key(argdict: dict[str, str]):
         argdict['is_groups'] = argdict['groups']
 
 def _update_format(argdict: dict[str, Any],
-                   input_filenames: list[str]) -> list[str]:
+                   input_filenames: list[str],
+                   output_filenames: list[str]) -> list[str]:
     formats: Optional[list[str]] = argdict['format']
 
     input_formats: list[str] = []
     if input_filenames and formats is None:
         for input_filenamei in input_filenames:
             if isinstance(input_filenamei, str):
-                formati = determine_format(input_filenamei)
+                formati = determine_format(input_filenamei,
+                                           output_filenames=output_filenames)
             else:  # pragma: no cover
                 raise TypeError('input_filenamei=%s type=%s' % (
                     input_filenamei, type(input_filenamei)))
@@ -459,7 +483,8 @@ def _update_format(argdict: dict[str, Any],
 def _validate_format(input_formats: list[str]) -> None:
     # None is for custom geometry
     allowed_formats = [
-        'nastran', 'stl', 'cart3d', 'fld', 'fluent', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
+        'nastran', 'stl', 'cart3d', 'fld', 'fluent', 'tecplot',
+        'ugrid', 'ugrid3d', 'panair',
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',

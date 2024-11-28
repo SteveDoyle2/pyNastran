@@ -3149,7 +3149,7 @@ def jsonify(comment_lower: str) -> str:
 
 def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
                        keys_map: KeysMap,
-                       header_dict: dict[tuple[str, int], str],
+                       header_dict: HeaderDict,
                        form, form_results, form_resultsi,
                        disp_dict, stress_dict, strain_dict, force_dict,
                        strain_energy_dict, gpstress_dict,
