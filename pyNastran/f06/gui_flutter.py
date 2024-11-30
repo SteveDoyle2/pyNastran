@@ -40,7 +40,7 @@ from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import make_flutter_response
 
 
-X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', '1/kfreq']
+X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq']
 PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
 UNITS_IN = ['english_in', 'english_kt', 'english_ft',
             'si', 'si_mm']
@@ -91,7 +91,8 @@ class MainWindow(LoggableGui):
         self.x_plot_type = 'eas'
         self.plot_type = 'x-damp-freq'
         self.eas_lim = []
-        #self.tas_lim = []
+        self.tas_lim = []
+        self.mach_lim = []
         #self.alt_lim = []
         #self.q_lim = []
         #self.rho_lim = []
@@ -251,6 +252,8 @@ class MainWindow(LoggableGui):
 
         min_max_line_edits = [
             ('eas_lim', self.eas_lim_edit_min, self.eas_lim_edit_max),
+            ('tas_lim', self.tas_lim_edit_min, self.tas_lim_edit_max),
+            ('mach_lim', self.mach_lim_edit_min, self.mach_lim_edit_max),
             ('xlim', self.xlim_edit_min, self.xlim_edit_max),
             ('damp_lim', self.damp_lim_edit_min, self.damp_lim_edit_max),
             ('freq_lim', self.freq_lim_edit_min, self.freq_lim_edit_max),
@@ -369,6 +372,14 @@ class MainWindow(LoggableGui):
         self.eas_lim_edit_min = QFloatEdit('0')
         self.eas_lim_edit_max = QFloatEdit()
 
+        self.tas_lim_label = QLabel('TAS Limits:')
+        self.tas_lim_edit_min = QFloatEdit('0')
+        self.tas_lim_edit_max = QFloatEdit()
+
+        self.mach_lim_label = QLabel('Mach Limits:')
+        self.mach_lim_edit_min = QFloatEdit()
+        self.mach_lim_edit_max = QFloatEdit()
+
         self.xlim_label = QLabel('X Limits:')
         self.xlim_edit_min = QFloatEdit('0')
         self.xlim_edit_max = QFloatEdit()
@@ -455,6 +466,8 @@ class MainWindow(LoggableGui):
         plot_type = self.plot_type_pulldown.currentText()
 
         show_eas_lim = False
+        show_tas_lim = False
+        show_mach_lim = False
         show_xlim = False
         show_freq = False
         show_damp = False
@@ -487,6 +500,12 @@ class MainWindow(LoggableGui):
             if 'eas' == x_plot_type:
                 show_eas_lim = True
                 show_xlim = False
+            elif 'tas' == x_plot_type:
+                show_tas_lim = True
+                show_xlim = False
+            elif 'mach' == x_plot_type:
+                show_mach_lim = True
+                show_xlim = False
 
         self.x_plot_type_label.setVisible(not show_root_locus)
         self.x_plot_type_pulldown.setVisible(not show_root_locus)
@@ -494,6 +513,14 @@ class MainWindow(LoggableGui):
         self.eas_lim_label.setVisible(show_eas_lim)
         self.eas_lim_edit_min.setVisible(show_eas_lim)
         self.eas_lim_edit_max.setVisible(show_eas_lim)
+
+        self.tas_lim_label.setVisible(show_tas_lim)
+        self.tas_lim_edit_min.setVisible(show_tas_lim)
+        self.tas_lim_edit_max.setVisible(show_tas_lim)
+
+        self.mach_lim_label.setVisible(show_mach_lim)
+        self.mach_lim_edit_min.setVisible(show_mach_lim)
+        self.mach_lim_edit_max.setVisible(show_mach_lim)
 
         self.xlim_label.setVisible(show_xlim)
         self.xlim_edit_min.setVisible(show_xlim)
@@ -561,6 +588,16 @@ class MainWindow(LoggableGui):
         grid.addWidget(self.eas_lim_label, irow, 0)
         grid.addWidget(self.eas_lim_edit_min, irow, 1)
         grid.addWidget(self.eas_lim_edit_max, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.tas_lim_label, irow, 0)
+        grid.addWidget(self.tas_lim_edit_min, irow, 1)
+        grid.addWidget(self.tas_lim_edit_max, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.mach_lim_label, irow, 0)
+        grid.addWidget(self.mach_lim_edit_min, irow, 1)
+        grid.addWidget(self.mach_lim_edit_max, irow, 2)
         irow += 1
 
         grid.addWidget(self.xlim_label, irow, 0)
@@ -827,6 +864,14 @@ class MainWindow(LoggableGui):
 
         if x_plot_type == 'eas':
             xlim = self.eas_lim
+        elif x_plot_type == 'tas':
+            xlim = self.tas_lim
+        elif x_plot_type == 'mach':
+            xlim = self.mach_lim
+        # elif x_plot_type == 'alt':
+        #     xlim = self.alt_lim
+        # elif x_plot_type == 'q':
+        #     xlim = self.q_lim
         else:
             xlim = self.xlim
 
@@ -926,19 +971,25 @@ class MainWindow(LoggableGui):
         self.log.info(f'saved {png_filename}')
 
     def get_xlim(self) -> tuple[Limit, Limit, Limit, Limit,
-                                Limit, Limit, Limit,
+                                Limit, Limit, Limit, Limit, Limit,
                                 Optional[float],
                                 Optional[float], bool]:
         eas_lim_min, is_passed1 = get_float_or_none(self.eas_lim_edit_min)
         eas_lim_max, is_passed2 = get_float_or_none(self.eas_lim_edit_max)
-        xlim_min, is_passed3 = get_float_or_none(self.xlim_edit_min)
-        xlim_max, is_passed4 = get_float_or_none(self.xlim_edit_max)
+        tas_lim_min, is_passed3 = get_float_or_none(self.tas_lim_edit_min)
+        tas_lim_max, is_passed4 = get_float_or_none(self.tas_lim_edit_max)
+        mach_lim_min, is_passed5 = get_float_or_none(self.mach_lim_edit_min)
+        mach_lim_max, is_passed6 = get_float_or_none(self.mach_lim_edit_max)
+        xlim_min, is_passed7 = get_float_or_none(self.xlim_edit_min)
+        xlim_max, is_passed8 = get_float_or_none(self.xlim_edit_max)
 
         is_passed_x = all([is_passed1, is_passed2,
-                           is_passed3, is_passed4])
+                           is_passed3, is_passed4,
+                           is_passed5, is_passed6,
+                           is_passed7, is_passed8])
+
         damp_lim_min, is_passed_damp1 = get_float_or_none(self.damp_lim_edit_min)
         damp_lim_max, is_passed_damp2 = get_float_or_none(self.damp_lim_edit_max)
-
         freq_lim_min, is_passed_freq1 = get_float_or_none(self.freq_lim_edit_min)
         freq_lim_max, is_passed_freq2 = get_float_or_none(self.freq_lim_edit_max)
         kfreq_lim_min, is_passed_kfreq1 = get_float_or_none(self.kfreq_lim_edit_min)
@@ -958,7 +1009,9 @@ class MainWindow(LoggableGui):
         if is_passed_tol2 and freq_tol_remove is None:
             freq_tol_remove = -1.0
 
-        eas_lim= [eas_lim_min, eas_lim_max]
+        eas_lim = [eas_lim_min, eas_lim_max]
+        tas_lim = [tas_lim_min, tas_lim_max]
+        mach_lim = [mach_lim_min, mach_lim_max]
         xlim = [xlim_min, xlim_max]
         damp_lim = [damp_lim_min, damp_lim_max]
         freq_lim = [freq_lim_min, freq_lim_max]
@@ -978,7 +1031,8 @@ class MainWindow(LoggableGui):
         #print(f'is_passed_flags = {is_passed_flags}')
         #print(f'freq_tol = {freq_tol}')
         out = (
-            eas_lim, xlim, damp_lim, freq_lim, kfreq_lim,
+            eas_lim, tas_lim, mach_lim, xlim,
+            damp_lim, freq_lim, kfreq_lim,
             eigr_lim, eigi_lim, freq_tol, freq_tol_remove, is_passed,
         )
         return out
@@ -990,7 +1044,7 @@ class MainWindow(LoggableGui):
         return modes
 
     def validate(self) -> bool:
-        (eas_lim, xlim,
+        (eas_lim, tas_lim, mach_lim, xlim,
          ydamp_lim, freq_lim, kfreq_lim,
          eigr_lim, eigi_lim,
          freq_tol, freq_tol_remove, is_valid_xlim) = self.get_xlim()
@@ -1002,6 +1056,8 @@ class MainWindow(LoggableGui):
         self.subcase = subcase
         self.selected_modes = selected_modes
         self.eas_lim = eas_lim
+        self.tas_lim = tas_lim
+        self.mach_lim = mach_lim
         self.xlim = xlim
         self.ydamp_lim = ydamp_lim
         self.kfreq_lim = kfreq_lim
@@ -1039,6 +1095,8 @@ class MainWindow(LoggableGui):
             'plot_type': self.plot_type,
             'xlim': xlim,
             'eas_lim': eas_lim,
+            'tas_lim': tas_lim,
+            'mach_lim': mach_lim,
             'damp_lim': ydamp_lim,
             'freq_lim': freq_lim,
             'kfreq_lim': kfreq_lim,

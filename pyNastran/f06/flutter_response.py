@@ -1,4 +1,5 @@
 from __future__ import annotations
+from copy import deepcopy
 from itertools import count
 from typing import Iterable, Optional, Any, TYPE_CHECKING
 
@@ -79,7 +80,8 @@ class FlutterResponse:
     @classmethod
     def from_nx(cls, method: str, fdata: np.ndarray,
                 subcase_id: int=1, cref: float=1.0,
-                is_xysym: bool=False, is_xzsym: bool=False):
+                is_xysym: bool=False, is_xzsym: bool=False,
+                f06_units: dict[str, str]=None):
         """
         Parameters
         ----------
@@ -96,6 +98,8 @@ class FlutterResponse:
             is the model symmetric about the xz plane?
 
         """
+        if f06_units is None:
+            f06_units = get_flutter_units('english_in')
         b = cref / 2.0
         configuration = 'AEROSG2D' #  TODO: what is this?
         xysym = '???'
@@ -139,7 +143,7 @@ class FlutterResponse:
         results[:, :, [2, 3, 4, 5, 6]] = fdata[:, :, [0, 1, 2, 3, 4]]
         modes = np.arange(nmodes, dtype='int32') + 1
 
-        f06_units = get_flutter_units('english_in')
+        #f06_units = get_flutter_units('english_in')
         #{
             #'altitude': 'ft',
             #'density': 'slinch/in^3',
@@ -148,7 +152,8 @@ class FlutterResponse:
             #'dynamic_pressure': 'psi',
         #}
         #out_units = get_flutter_units('english_kt')
-        out_units = get_flutter_units('english_in')
+        #out_units = get_flutter_units('english_in')
+        out_units = deepcopy(f06_units)
         #{
             #'altitude': 'ft',
             #'density': 'slug/ft^3',
@@ -158,7 +163,8 @@ class FlutterResponse:
         #}
         resp = FlutterResponse(
             subcase_id, configuration, xysym, xzsym, mach, density_ratio,
-            method, modes, results, f06_units=f06_units, out_units=out_units)
+            method, modes, results, f06_units=f06_units, out_units=out_units,
+            make_alt=False)
         if 0:  # pragma: no cover
             resp.plot_root_locus(modes=None, fig=None, axes=None, xlim=None, ylim=None,
                                  ncol=ncol, show=False,
@@ -183,7 +189,8 @@ class FlutterResponse:
                  mach: float, density_ratio: float, method: str,
                  modes: list[int], results: Any,
                  f06_units: None | str | dict[str, str]=None,
-                 out_units: None | str | dict[str, str]=None) -> None:
+                 out_units: None | str | dict[str, str]=None,
+                 make_alt: bool=True) -> None:
         """
         Parameters
         ----------
@@ -243,6 +250,7 @@ class FlutterResponse:
         """
         self.f06_units = f06_units
         self.out_units = out_units
+        self.make_alt = make_alt
         required_keys = ['altitude', 'velocity', 'eas', 'density', 'dynamic_pressure']
         if f06_units is None and out_units is None:
             pass
@@ -406,12 +414,14 @@ class FlutterResponse:
         assert resultsi.shape[2] == 9, resultsi.shape
 
         rho_in_slug_ft3 = rho * kdensityi
-        alt_ft = [get_alt_for_density(densityi, density_units='slug/ft^3',
-                                      alt_units='ft', nmax=20)
-                  for densityi in rho_in_slug_ft3.ravel()]
-
         ft_to_alt_unit = convert_altitude(1., 'ft', altitude_units)
-        alt = np.array(alt_ft, dtype='float64').reshape(vel.shape) * ft_to_alt_unit
+        if self.make_alt:
+            alt_ft = [get_alt_for_density(densityi, density_units='slug/ft^3',
+                                          alt_units='ft', nmax=20)
+                      for densityi in rho_in_slug_ft3.ravel()]
+            alt = np.array(alt_ft, dtype='float64').reshape(vel.shape) * ft_to_alt_unit
+        else:
+            alt = np.full(vel.shape, np.nan, dtype=vel.dtype)
 
         rho *= kdensity
         results2 = np.dstack([resultsi, eas, q * kpressure, alt])
