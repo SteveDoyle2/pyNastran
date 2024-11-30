@@ -192,8 +192,31 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
                       GCj, GCi,
                       Real, Complex=None, comment='wkk')
 
+    def test_export_caero_mesh_caero1_wkk2(self):
+        model = BDF(debug=None)
+        model.bdf_filename = 'test'
+        p1 = [0., 0., 0.]
+        p4 = [0., 1., 0.]
+        eid = 10
+        pid = 11
+        igroup = 1
+        model.add_caero1(eid, pid, igroup,
+                   p1=p1, x12=1.0,
+                   p4=p4, x43=1.0,
+                   nspan=2,
+                   nchord=2)
+        model.add_paero1(pid)
+        model.add_aero(velocity=0., cref=1.0, rho_ref=1.0)
+        name = 'WKK'
+        form = 'rectangular'
+        tin = tout = 1
+        # nrows = 8
+        # ncols = 1
+        # GCj = [1, 1, 1, 1, 1, 1, 1, 1]
+        # GCi = [1, 2, 3, 4, 5, 6, 7, 8]
+        Real = [1., 2., 3., 4., 5., 6., 7., 8.]
         real_array = np.ones((len(Real), 1))
-        #model.add_dense_dmi(name+'2', real_array, form, validate=True)
+        model.add_dense_dmi(name, real_array, form, validate=True)
         export_caero_mesh(model, is_subpanel_model=True, )
         save_load_deck(model, run_remove_unused=False)
 

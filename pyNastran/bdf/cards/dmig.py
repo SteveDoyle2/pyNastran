@@ -480,6 +480,10 @@ class NastranMatrix(BaseCard):
             setattr(result, key, deepcopy(value, memo))
         return result
 
+    @property
+    def matrix_form_str(self) -> str:
+        return DMI_MATRIX_MAP[self.matrix_form]
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -496,7 +500,7 @@ class NastranMatrix(BaseCard):
         name = string(card, 1, 'name')
         #zero
 
-        matrix_form = integer(card, 3, 'ifo')
+        matrix_form = integer(card, 3, 'ifo/matrix_form')
         tin = integer(card, 4, 'tin')
         tout = integer_or_blank(card, 5, 'tout', default=0)
         polar = integer_or_blank(card, 6, 'polar', default=0)
@@ -2265,7 +2269,9 @@ class DMI(NastranMatrix):
         .. warning:: is_sparse=True WILL fail
 
         """
-        return get_dmi_matrix(self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
+        mat, rows, cols = get_dmi_matrix(
+            self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
+        return mat, rows, cols
 
     def write_card_16(self):
         """writes the card in single precision"""
@@ -2770,27 +2776,41 @@ def get_dmi_matrix(matrix: DMI,
     else:
         data = matrix.Real
 
-    if ifo in {2, 9}:
+    matrix_form_str = matrix.matrix_form_str
+    if matrix_form_str in {'rectangular', 'identity'}:  # 2, 9
         # rectangular
         nrows = matrix.nrows
         ncols = matrix.ncols
-        try:
-            M = coo_matrix((data, (GCi, GCj)),
-                           shape=(nrows, ncols), dtype=dtype)
-        except ValueError:
-            print(f'nrows, cols = ({nrows}, {ncols})')
-            print('data = ', data)
-            print('GCi = ', GCi)
-            print('GCj = ', GCj)
-            raise
-    else:
+        M = _set_matrix(nrows, ncols,
+                        data, GCi, GCj,
+                        dtype)
+    elif matrix_form_str == 'diagonal':
+        nrows = max(matrix.nrows, matrix.ncols)
+        assert matrix.ncols == 1, (matrix.nrows, matrix.ncols)
+        GCj = np.zeros(len(GCi), dtype=GCi.dtype)
+        ncols = 1
+        M = _set_matrix(nrows, ncols,
+                        data, GCi, GCj,
+                        dtype)
+    elif matrix_form_str == 'square':
         nrows = matrix.nrows
         ncols = matrix.ncols
-        if ifo == 6:
+        assert nrows == ncols, (nrows, ncols)
+        M = _set_matrix(nrows, ncols,
+                        data, GCi, GCj,
+                        dtype)
+    else:
+        raise RuntimeError(matrix_form_str)
+        nrows = matrix.nrows
+        ncols = matrix.ncols
+        if matrix_form_str == 'symmetric':
             nrows = max(nrows, ncols)
             ncols = nrows
-        M = coo_matrix((data, (GCi, GCj)),
-                       shape=(nrows, ncols), dtype=dtype)
+            #matrix_form_str = 'square'
+        M = _set_matrix(nrows, ncols,
+                        data, GCi, GCj,
+                        dtype)
+
     if not is_sparse:
         M = M.toarray()
     #else:
@@ -2848,6 +2868,21 @@ def get_matrix(self: DMIG,
             assert isinstance(M, np.ndarray), type(M)
     return M, rows_reversed, cols_reversed
 
+
+def _set_matrix(nrows: int, ncols: int,
+                data: np.ndarray,
+                GCi: np.ndarray, GCj: np.ndarray,
+                dtype: str) -> coo_matrix:
+    try:
+        matrixi = coo_matrix((data, (GCi, GCj)),
+                             shape=(nrows, ncols), dtype=dtype)
+    except ValueError:
+        print(f'nrows, cols = ({nrows}, {ncols})')
+        print('data = ', data)
+        print('GCi = ', GCi)
+        print('GCj = ', GCj)
+        raise
+    return matrixi
 
 def _export_dmig_to_hdf5(h5_file, model: BDF, dict_obj, encoding: str) -> None:
     """export dmigs, dmij, dmiji, dmik, dmi"""

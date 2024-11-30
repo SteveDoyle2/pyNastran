@@ -1,7 +1,7 @@
 """helper for setup.py"""
 import os
 import sys
-from typing import List
+from pyNastran.utils.version_utils import int_version, str_version
 
 EXCLUDE_WORDS = [
     'pyNastran.f06.dev',
@@ -41,32 +41,6 @@ def check_python_version() -> None:
     if sys.version_info < (3, 10, 0):  # 3.10.4 used
         sys.exit('Upgrade your Python to 3.10+; version=(%s.%s.%s)' % (
             imajor, minor1, minor2))
-
-def int_version(name: str, version: str) -> List[int]:
-    """splits the version into a tuple of integers"""
-    sversion = version.split('-')[0]
-    #numpy
-    #scipy
-    #matplotlib
-    #qtpy
-    #vtk
-    #cpylog
-    #pyNastran
-    if 'rc' not in name:
-        # it's gotta be something...
-        # matplotlib3.1rc1
-        sversion = sversion.split('rc')[0]
-
-    try:
-        return [int(val) for val in sversion.split('.')]
-    except ValueError:
-        raise SyntaxError('cannot determine version for %s %s' % (name, sversion))
-
-
-def str_version(version: str) -> str:
-    """converts a tuple of integers to a version number"""
-    return '.'.join(str(versioni) for versioni in version)
-
 
 def update_version_file():
     """
