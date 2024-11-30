@@ -106,6 +106,8 @@ class MainWindow(LoggableGui):
         self.selected_modes = []
         self.freq_tol = -1.0
         self.freq_tol_remove = -1.0
+        self.vf = -1.0
+        self.vl = -1.0
 
         self.setup_widgets()
         self.setup_layout()
@@ -270,6 +272,8 @@ class MainWindow(LoggableGui):
             ('recent_files', 0, self.f06_filename_edit),
             ('freq_tol', -1, self.freq_tol_edit),
             ('freq_tol_remove', -1, self.freq_tol_remove_edit),
+            ('vl', -1, self.VL_edit),
+            ('vf', -1, self.VF_edit),
             ('output_directory', -1, self.output_directory_edit),
         ]
         for key, index, line_edit in line_edits:
@@ -304,12 +308,13 @@ class MainWindow(LoggableGui):
             abs_path = os.path.abspath(fname)
             if abs_path not in self.recent_files:
                 self.recent_files.append(abs_path)
+        self.f06_filename = self.recent_files[0]
 
     def on_browse_f06(self) -> None:
         """pops a dialgo to select the f06 file"""
         title = 'Load Nastran Flutter F06 File'
         qt_wildcard = 'F06 File (*.f06)'
-        basedir = ''
+        basedir = os.path.dirname(self.f06_filename)
         fname, wildcard_level = getopenfilename(
             self, caption=title, basedir=basedir, filters=qt_wildcard,)
         self.f06_filename_edit.setText(fname)
@@ -327,8 +332,9 @@ class MainWindow(LoggableGui):
                 data = json.load(json_file)
             is_valid = validate_json(data, self.log)
             self._apply_settings(data)
-        except Exception:
-            self.log.error(f'failed to load {json_filename}')
+        except Exception as e:
+            self.log.error(f'failed to load {json_filename}\n{str(e)}')
+            #raise
             return
         self.log.info(f'finished loading {json_filename!r}')
         #return wildcard_level, fname
@@ -444,6 +450,12 @@ class MainWindow(LoggableGui):
         self.output_directory_browse = QPushButton('Browse...', self)
         self.output_directory_edit.setDisabled(True)
         self.output_directory_browse.setDisabled(True)
+
+        self.VL_label = QLabel('VL, Limit:')
+        self.VL_edit = QFloatEdit('')
+        self.VF_label = QLabel('VF, Flutter:')
+        self.VF_edit = QFloatEdit('')
+
 
         self.f06_load_button = QPushButton('Load F06', self)
         self.ok_button = QPushButton('Run', self)
@@ -608,6 +620,14 @@ class MainWindow(LoggableGui):
         self.output_directory_label.setDisabled(True)
         self.output_directory_edit.setDisabled(True)
         self.output_directory_browse.setDisabled(True)
+        irow += 1
+
+        grid.addWidget(self.VL_label, irow, 0)
+        grid.addWidget(self.VL_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.VF_label, irow, 0)
+        grid.addWidget(self.VF_edit, irow, 1)
         irow += 1
 
         jrow = 0
@@ -825,8 +845,20 @@ class MainWindow(LoggableGui):
             noline = False
             nopoints = True
 
+        v_lines = []
         if x_plot_type == 'eas':
             xlim = self.eas_lim
+            if self.vf:
+                # name, velocity, color, linestyle
+                v_lines.append(('VF', self.vf, 'r', '-'))
+            # if self.vd:
+            #     # name, velocity, color, linestyle
+            #     x_limits.append(('VD', self.vd, 'k', '--'))
+            #     x_limits.append(('1.15*VD', 1.15*self.vd, 'k', '-'))
+            if self.vl:
+                # name, velocity, color, linestyle
+                v_lines.append(('VL', self.vl, 'k', '--'))
+                v_lines.append(('1.15*VL', 1.15*self.vl, 'k', '-'))
         else:
             xlim = self.xlim
 
@@ -902,7 +934,10 @@ class MainWindow(LoggableGui):
                     freq_tol=freq_tol,
                     show=True, clear=False, close=False,
                     legend=True,
-                    vd_limit=None, damping_limit=damping_limit,
+                    v_lines=v_lines,
+                    #vl_limit=vl,
+                    #vd_limit=vd,
+                    damping_limit=damping_limit,
                     png_filename=png_filename,
                 )
         except Exception as e:
@@ -927,8 +962,8 @@ class MainWindow(LoggableGui):
 
     def get_xlim(self) -> tuple[Limit, Limit, Limit, Limit,
                                 Limit, Limit, Limit,
-                                Optional[float],
-                                Optional[float], bool]:
+                                Optional[float], Optional[float],
+                                Optional[float], Optional[float], bool]:
         eas_lim_min, is_passed1 = get_float_or_none(self.eas_lim_edit_min)
         eas_lim_max, is_passed2 = get_float_or_none(self.eas_lim_edit_max)
         xlim_min, is_passed3 = get_float_or_none(self.xlim_edit_min)
@@ -958,6 +993,13 @@ class MainWindow(LoggableGui):
         if is_passed_tol2 and freq_tol_remove is None:
             freq_tol_remove = -1.0
 
+        vl, is_passed_vl = get_float_or_none(self.VL_edit)
+        vf, is_passed_vf = get_float_or_none(self.VF_edit)
+        if is_passed_vl and vl is None:
+            vl = -1.0
+        if is_passed_vf and vf is None:
+            vf = -1.0
+
         eas_lim= [eas_lim_min, eas_lim_max]
         xlim = [xlim_min, xlim_max]
         damp_lim = [damp_lim_min, damp_lim_max]
@@ -973,13 +1015,15 @@ class MainWindow(LoggableGui):
             is_passed_kfreq1, is_passed_kfreq2,
             is_passed_eig,
             is_passed_tol1, is_passed_tol2,
+            is_passed_vl, is_passed_vf,
         ]
         is_passed = all(is_passed_flags)
         #print(f'is_passed_flags = {is_passed_flags}')
         #print(f'freq_tol = {freq_tol}')
         out = (
             eas_lim, xlim, damp_lim, freq_lim, kfreq_lim,
-            eigr_lim, eigi_lim, freq_tol, freq_tol_remove, is_passed,
+            eigr_lim, eigi_lim, freq_tol, freq_tol_remove,
+            vl, vf, is_passed,
         )
         return out
 
@@ -993,7 +1037,8 @@ class MainWindow(LoggableGui):
         (eas_lim, xlim,
          ydamp_lim, freq_lim, kfreq_lim,
          eigr_lim, eigi_lim,
-         freq_tol, freq_tol_remove, is_valid_xlim) = self.get_xlim()
+         freq_tol, freq_tol_remove,
+         vl, vf, is_valid_xlim) = self.get_xlim()
 
         subcase, is_subcase_valid = self._get_subcase()
         #if subcase == -1:
@@ -1010,6 +1055,8 @@ class MainWindow(LoggableGui):
         self.eigr_lim = eigr_lim
         self.freq_tol = freq_tol
         self.freq_tol_remove = freq_tol_remove
+        self.vl = vl
+        self.vf = vf
 
         self.x_plot_type = self.x_plot_type_pulldown.currentText()
         self.plot_type = self.plot_type_pulldown.currentText()
@@ -1049,6 +1096,8 @@ class MainWindow(LoggableGui):
             'units_out': units_out,
             'freq_tol': freq_tol,
             'freq_tol_remove': freq_tol_remove,
+            'vl': vl,
+            'vf': vf,
         }
         self.units_in = units_in
         self.units_out = units_out

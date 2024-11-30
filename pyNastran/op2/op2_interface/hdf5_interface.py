@@ -18,6 +18,9 @@ from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.op2.op2 import OP2
 
+from pyNastran.utils.version_utils import int_version
+NUMPY_VERSION = tuple(int_version('numpy', np.__version__))
+
 from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 from pyNastran.op2.result_objects.campbell import CampbellData
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues
@@ -153,11 +156,18 @@ def _cast(h5_result_attr):
         return None
 
     if len(h5_result_attr.shape) == 0:
-        out = np.asarray(h5_result_attr, copy=True).tolist()
+        out = _asarray(h5_result_attr, copy=True).tolist()
         return out
-    out = np.asarray(h5_result_attr, copy=True, like=None)
+    out = _asarray(h5_result_attr, copy=True, like=None)
     #assert not isinstance(out, str), out
     return out
+
+
+def _asarray(h5_array, copy=False, **kwargs) -> np.ndarray:
+    if NUMPY_VERSION >= (2, ):
+        return np.asarray(h5_array, copy=copy, **kwargs)
+    return np.asarray(h5_array, **kwargs)
+
 
 def _cast_str(h5_result_attr, encoding: str) -> list[str]:
     """converts the h5py type back into the OP2 type"""
@@ -165,13 +175,13 @@ def _cast_str(h5_result_attr, encoding: str) -> list[str]:
         return None
 
     if len(h5_result_attr.shape) == 0:
-        out = np.asarray(h5_result_attr, copy=True, like=None).tolist()
+        out = _asarray(h5_result_attr, copy=True, like=None).tolist()
         if isinstance(out, bytes):
             out = out.decode(encoding)
         return out
         #raise NotImplementedError(h5_result_attr.dtype)
     else:
-        out = np.asarray(h5_result_attr, copy=True)
+        out = _asarray(h5_result_attr, copy=True)
     out2 = [outi.decode(encoding) if isinstance(outi, bytes) else outi
             for outi in out]
     return out2

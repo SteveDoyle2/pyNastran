@@ -137,6 +137,7 @@ def export_caero_mesh(model: BDF,
 def _write_subcases_loads(model: BDF,
                           aero_eid_map: dict[int, int],
                           is_subpanel_model: bool) -> tuple[str, str]:
+    """writes the DMI, DMIJ, DMIK cards to a series of load cases"""
     nsubpanels = len(aero_eid_map)
     if len(model.dmi) == 0 and len(model.dmij) == 0 and len(model.dmik) == 0 and len(model.dmiji) == 0:
         loads = ''
@@ -268,13 +269,16 @@ def _write_subcases_loads(model: BDF,
 
 def _write_dmi(model: BDF,
                aero_eid_map: dict[int, int]) -> tuple[int, str, str]:
+    """writes the DMI cards to a series of load cases"""
     isubcase = 1
     loads = ''
     subcases = ''
     log = model.log
     for name, dmi in model.dmi.items():
+        form_str = dmi.matrix_form_str
         data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
-        log.info(f'{name}: shape={data.shape}')
+        log.info(f'{name}: shape={data.shape}; form_str={form_str}')
+
         if name == 'WTFACT':
             # square matrix of (neids,neids) that has values on only? the diagonal
             subcases += (
@@ -326,35 +330,61 @@ def _write_dmi(model: BDF,
                 loads += f'PLOAD2,{isubcase},{value},{eid}\n'
         elif name == 'WKK':
             # column matrix of (neids*2,1)
-            assert data.shape[1] == 1, f'name={name}; shape={data.shape}'  # (112,1)
 
-            subcases += (
-                f'SUBCASE {isubcase}\n'
-                f'  SUBTITLE = DMI {name} - FORCE\n'
-                f'  LOAD = {isubcase}\n')
+            matrix_form_str = dmi.matrix_form_str
+            if matrix_form_str == 'diagonal':
+                pass
+            elif matrix_form_str == 'square':
+                pass
+            else:
+                matrix_form_str = 'column'
+                assert data.shape[1] == 1, f'name={name}; shape={data.shape}'  # (112,1)
 
-            nrows = data.shape[0] // 2
-            data = data.reshape(nrows, 2)
-            # TODO: assume first column is forces & second column is moments...verify
-            loads += f'$ {name} - FORCE\n'
-            loads += '$ PLOAD2 SID P EID1\n'
-            for ieid, value in enumerate(data[:, 0].ravel()):
-                eid = aero_eid_map[ieid]
-                loads += f'PLOAD2,{isubcase},{value},{eid}\n'
-            isubcase += 1
+            if matrix_form_str in {'diagonal', 'column'}:
+                assert data.shape[1] == 1, f'name={name}; shape={data.shape}'  # (112,1)
+                nrows = data.shape[0] // 2
+                data = data.reshape(nrows, 2)
+                force_correction = data[:, 0]
+                moment_correction = data[:, 1]
+                corrections = [
+                    ('FORCE', force_correction),
+                    ('MOMENT', moment_correction),
+                ]
+            elif matrix_form_str == 'square':
+                assert data.shape[0] == data.shape[1]
+                force = data[::2,::2]
+                moment = data[1::2, 1::2]
+                force_correction_row = force.sum(axis=0)
+                force_correction_col = force.sum(axis=1)
+                moment_correction_row = moment.sum(axis=0)
+                moment_correction_col = moment.sum(axis=1)
 
-            subcases += (
-                f'SUBCASE {isubcase}\n'
-                f'  SUBTITLE = DMI {name} - MOMENT\n'
-                f'  LOAD = {isubcase}\n')
-            loads += f'$ {name} - MOMENT\n'
-            loads += '$ PLOAD2 SID P EID1\n'
-            for ieid, value in enumerate(data[:, 1].ravel()):
-                eid = aero_eid_map[ieid]
-                loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+                corrections = [
+                    ('FORCE_ROW', force_correction_row),
+                    ('FORCE_COL', force_correction_col),
+                    ('MOMENT_ROW', moment_correction_row),
+                    ('MOMENT_COL', moment_correction_col),
+                ]
+            else:  # pragma: no cover
+                raise NotImplementedError(matrix_form_str)
+
+            for result_name, correction_column in corrections:
+                #print(result_name, isubcase)
+                subcases += (
+                    f'SUBCASE {isubcase}\n'
+                    f'  SUBTITLE = DMI {name} - {result_name}\n'
+                    f'  LOAD = {isubcase}\n')
+
+                loads += f'$ {name} - {result_name}\n'
+                loads += '$ PLOAD2 SID P EID1\n'
+                for ieid, value in enumerate(correction_column.ravel()):
+                    eid = aero_eid_map[ieid]
+                    loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+                isubcase += 1
         else:  # pragma: no cover
-            msg = f'{name}:\n'
+            msg = f'{name} matrix_form_str={matrix_form_str}:\n'
             msg += str(data)
+            #continue
             raise NotImplementedError(msg)
         isubcase += 1
     return isubcase, loads, subcases
@@ -410,6 +440,7 @@ def _get_subpanel_property(model: BDF, caero_id: int, eid: int,
 
 def _write_properties(model: BDF, bdf_file: TextIO,
                       pid_method: str='aesurf') -> None:
+    """writes the PSHELL with a different comment depending on the pid_method flag"""
     if pid_method == 'aesurf':
         _write_aesurf_properties(model, bdf_file)
     elif pid_method == 'paero':
@@ -427,6 +458,7 @@ def _write_properties(model: BDF, bdf_file: TextIO,
 
 
 def _write_aesurf_properties(model: BDF, bdf_file: TextIO) -> None:
+    """the AESURF ID will be the PSHELL ID"""
     aesurf_mid = 1
     for aesurf_id, aesurf in model.aesurf.items():
         #cid = aesurf.cid1

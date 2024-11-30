@@ -395,8 +395,8 @@ def _get_nastran_header(case: Any,
     elif hasattr(case, 'cycles'):
         header += '; freq = %s Hz' % func_str(case.cycles[itime])
     elif hasattr(case, 'eigis'):
-        eigi = case.eigis
-        eigr = case.eigrs
+        eigi = np.array(case.eigis)
+        eigr = np.array(case.eigrs)
         dampings, freqs = complex_damping_frequency(eigr, eigi)
         damping = dampings[itime]
         freq = freqs[itime]

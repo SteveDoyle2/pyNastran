@@ -22,6 +22,10 @@ from pyNastran.utils.numpy_utils import float_types
 if TYPE_CHECKING and IS_MATPLOTLIB:  # pragma: no cover
     from matplotlib.axes import Axes
 
+Color = str
+LINESTYLES = ['-', '--', '-.', ':', 'None', ' ', '',
+              'solid', 'dashed', 'dashdot', 'dotted']
+
 
 class FlutterResponse:
     """storage object for single subcase SOL 145 results"""
@@ -883,7 +887,10 @@ class FlutterResponse:
                    plot_type: str='tas',
                    clear: bool=False, close: bool=False, legend: bool=True,
                    xlim=None, ylim_damping=None, ylim_freq=None,
-                   vd_limit=None, damping_limit=None,
+                   #vl_limit=None,
+                   vd_limit=None,
+                   v_lines: list[tuple[str, float, Color, str]]=None,
+                   damping_limit=None,
                    ncol: int=0,
                    freq_tol: float=-1.0,
                    png_filename=None, show: bool=False):
@@ -910,6 +917,9 @@ class FlutterResponse:
             show/don't show the plot
 
         """
+        if v_lines is None:
+            v_lines = []
+        #assert vl_limit is None or isinstance(vl_limit, float_types), vl_limit
         assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
         #self.fix()
@@ -973,7 +983,21 @@ class FlutterResponse:
         #plt.suptitle(title)
 
         _add_damping_limit(plot_type, damp_axes, damping_limit)
-        _add_vd_limit(plot_type, damp_axes, freq_axes, vd_limit)
+        #_add_vd_limit(plot_type, damp_axes, freq_axes, vl_limit)
+
+        for v_line in v_lines:
+            name, velocity, vcolor, linestyle = v_line
+            _add_limit(plot_type, damp_axes, freq_axes, name, velocity,
+                       color=vcolor, linestyle=linestyle)
+            #_add_limit(plot_type, damp_axes, freq_axes, '1.15*VL', 1.15, vl_limit)
+        # if name_vd_limit:
+        #     name, vl_limit = name_vl_limit
+        #     _add_limit(plot_type, damp_axes, freq_axes, 'VD', 1, vd_limit)
+        #     _add_limit(plot_type, damp_axes, freq_axes, '1.15*VD', 1.15, vd_limit)
+        # if name_vf_limit:
+        #     name, vl_limit = name_vl_limit
+        #     _add_limit(plot_type, damp_axes, freq_axes, 'VD', 1, vd_limit)
+        #     _add_limit(plot_type, damp_axes, freq_axes, '1.15*VD', 1.15, vd_limit)
 
         nmodes = len(modes)
         ncol = _update_ncol(nmodes, ncol)
@@ -1436,25 +1460,25 @@ def _add_damping_limit(plot_type: str,
                       label=f'Abs Structural Damping={damping_limit*100:.1f}%')
 
 
-def _add_vd_limit(plot_type: str,
-                  damp_axes: Axes, freq_axes: Axes,
-                  vd_limit: Optional[float],
-                  #linestyle: str='--',
-                  linewidth: int=2) -> None:
-    if vd_limit is None or plot_type not in {'tas', 'eas'}:
+def _add_limit(plot_type: str,
+               damp_axes: Axes, freq_axes: Axes,
+               name: str,
+               velocity: float,
+               linestyle: str='--',
+               color: str='k',
+               linewidth: int=2) -> None:
+    if plot_type not in {'tas', 'eas'}:
         return
+    assert linestyle in LINESTYLES, (name, linestyle)
     # ax.text(0, vd_limit, 'Damping Limit')
-    label1 = f'Vd={vd_limit:.1f}'
-    damp_axes.axvline(x=vd_limit, color='k', linestyle='--',
-                      linewidth=linewidth, label=label1)
-    freq_axes.axvline(x=vd_limit, color='k', linestyle='--',
-                      linewidth=linewidth)
 
-    vd_limit_115 = 1.15 * vd_limit
-    label2 = f'1.15 Vd={vd_limit_115:.1f}'
-    damp_axes.axvline(x=vd_limit_115, color='k', linestyle='-',
-                      linewidth=linewidth, label=label2)
-    freq_axes.axvline(x=vd_limit_115, color='k', linestyle='-',
+    if velocity == int(velocity):
+        label = f'{name}={velocity:.0f}'
+    else:
+        label = f'{name}={velocity:.1f}'
+    damp_axes.axvline(x=velocity, color=color, linestyle=linestyle,
+                      linewidth=linewidth, label=label)
+    freq_axes.axvline(x=velocity, color=color, linestyle=linestyle,
                       linewidth=linewidth)
 
 

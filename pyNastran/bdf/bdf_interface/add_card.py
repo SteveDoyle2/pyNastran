@@ -9102,13 +9102,10 @@ class AddCards(AddCoords, AddContact, AddBolts,
             raise NotImplementedError(str_form)
 
         # ncols = 2
-        GC = np.repeat(list(range(1, nrows+1)), ncols, axis=0)
-        # print('GC =', GC)
-        GCi = GC.reshape(nrows, ncols)
-        # print('GCi =', GCi)
-        GCj = GCi.T.flatten()
-        GCi = GCi.flatten()
-
+        GCi = np.repeat(list(range(1, nrows+1)), ncols, axis=0).reshape(nrows, ncols).flatten()
+        GCj = np.repeat(list(range(1, ncols+1)), nrows, axis=0).reshape(nrows, ncols).flatten()
+        #self.log.warning(f'GCi = {GCi}')
+        #self.log.warning(f'GCj = {GCj}')
 
         Real = myarray.real.flatten()
         Complex = None
