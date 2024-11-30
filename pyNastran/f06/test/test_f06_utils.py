@@ -3,6 +3,7 @@ tests:
  - plot sol_145
 """
 import os
+from pathlib import Path
 import unittest
 
 import numpy as np
@@ -42,8 +43,9 @@ from pyNastran.op2.op2 import OP2
 
 
 DIRNAME = os.path.dirname(__file__)
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / '..' / 'models'
+AERO_PATH = MODEL_PATH / 'aero'
 
 
 class TestF06Flutter(unittest.TestCase):
@@ -78,7 +80,7 @@ class TestF06Flutter(unittest.TestCase):
     def test_f06_pt145(self):
         """tests read_f06_trim"""
         log = get_logger2(log=None, debug=None, encoding='utf-8')
-        f06_filename = os.path.join(MODEL_PATH, 'aero', 'pt145.f06')
+        f06_filename = AERO_PATH / 'pt145.f06'
         #trim_results = read_f06_trim(f06_filename,
         #                             log=None, nlines_max=1_000_000, debug=None)
         #assert len(trim_results.aero_force.keys()) == 0
@@ -86,14 +88,14 @@ class TestF06Flutter(unittest.TestCase):
         #assert len(trim_results.controller_state.keys()) == 0
         #assert len(trim_results.trim_variables.keys()) == 0
         #assert len(trim_results.structural_monitor_loads.keys()) == 4
-        argv = ['f06', 'plot_145', f06_filename, '--tas',
+        argv = ['f06', 'plot_145', str(f06_filename), '--tas',
                 '--out_units', 'english_in']
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB,
                               show=False, log=log)
 
     def test_plot_flutter_bah(self):
         """tests plot_flutter_f06"""
-        f06_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.f06')
+        f06_filename = AERO_PATH / 'bah_plane' / 'bah_plane.f06'
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         flutters = plot_flutter_f06(
             f06_filename, show=False, close=True,
@@ -114,10 +116,10 @@ class TestF06Flutter(unittest.TestCase):
 
         has issues with writing the subcase...
         """
-        f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
+        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         plot_flutter_f06(
-            f06_filename, make_alt=True,
+            f06_filename,
             modes=[2],
             plot_type='alt',
             f06_units='si', out_units='english_ft',
@@ -129,7 +131,7 @@ class TestF06Flutter(unittest.TestCase):
 
         flutters = plot_flutter_f06(
             f06_filename,
-            f06_units=None, out_units=None,
+            f06_units='si', out_units=None,
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
             export_csv_filename='nastran.csv',
@@ -258,8 +260,8 @@ class TestF06Flutter(unittest.TestCase):
 
     def test_cmd_line_plot_flutter_0012(self):
         log = get_logger2(log=None, debug=None, encoding='utf-8')
-        f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
-        argv = ['f06', 'plot_145', f06_filename, '--eas',
+        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
+        argv = ['f06', 'plot_145', str(f06_filename), '--eas',
                 '--in_units', 'si', '--out_units', 'english_in',
                 '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv', '--ncol', '2']
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
@@ -268,16 +270,16 @@ class TestF06Flutter(unittest.TestCase):
     def test_cmd_line_plot_flutter_no_input_0012(self):
         """no input???"""
         log = get_logger2(log=None, debug=None, encoding='utf-8')
-        f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
-        argv = ['f06', 'plot_145', f06_filename, '--eas',
+        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
+        argv = ['f06', 'plot_145', str(f06_filename), '--eas',
                 '--out_units', 'english_in']
         flutters = cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 
     def test_fix_modes_0012(self):
         log = SimpleLogger(level='warning')
-        f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
-        flutter = make_flutter_response(f06_filename, log=log)[1]
+        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
+        flutter = make_flutter_response(f06_filename, f06_units='si', log=log)[1]
         fix_modes_2024(flutter)
 
     def test_fix_modes_constant(self):

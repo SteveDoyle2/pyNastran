@@ -9,7 +9,6 @@ from pyNastran.utils import check_path
 from pyNastran.utils.arg_handling import argparse_to_dict, swap_key, update_message
 
 #from gui.formats import format_string
-
 if sys.version_info < (3, 10):  # pragma: no cover
     sys.exit("requires Python 3.10+...")
 
@@ -26,7 +25,8 @@ OUTPUT_FORMAT_TO_EXTENSION = {
     'shabp': ['.out'],
 }
 INPUT_FORMAT_TO_EXTENSION = {
-    # an extension should not be added to this list if it is shared with another type
+    # an extension should not be added to this list if it is
+    # shared with another type
     'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'], # '.dat'
     'h5nastran' : ['.h5'],
     #'nastran2' : ['.bdf', '.ecd', '.nas',],
@@ -353,7 +353,8 @@ def run_argparse(argv: list[str]) -> dict[str, str]:
     _update_argparse_argdict(argdict)
     return argdict
 
-def _add_inputs_outputs(positional_inputs, optional_inputs, word='input'):
+def _add_inputs_outputs(positional_inputs, optional_inputs,
+                        word: str='input') -> list[str]:
     input_filenames = []
     if isinstance(optional_inputs, str):
         input_filenames.append(optional_inputs)
@@ -372,7 +373,7 @@ def _add_inputs_outputs(positional_inputs, optional_inputs, word='input'):
         input_filenames += [positional_inputs]
     return input_filenames
 
-def _update_argparse_argdict(argdict):
+def _update_argparse_argdict(argdict: dict[str, Any]) -> dict[str, Any]:
     """converts to the pyNastranGUI argument format"""
     argdict['debug'] = not argdict['quiet']
     del argdict['quiet']
@@ -448,7 +449,7 @@ def _update_argparse_argdict(argdict):
             raise RuntimeError(msg)
     return argdict
 
-def _set_groups_key(argdict: dict[str, str]):
+def _set_groups_key(argdict: dict[str, str]) -> None:
     if not GROUPS_DEFAULT:
         swap_key(argdict, 'nogroups', 'is_groups')
     else:

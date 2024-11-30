@@ -313,6 +313,7 @@ class MainWindow(LoggableGui):
         fname, wildcard_level = getopenfilename(
             self, caption=title, basedir=basedir, filters=qt_wildcard,)
         self.f06_filename_edit.setText(fname)
+        self.ok_button.setEnabled(False)
 
     # @dontcrash
     def on_load_settings(self) -> None:
@@ -676,14 +677,12 @@ class MainWindow(LoggableGui):
             self.log.error(f"can't find {f06_filename}")
             return
         self.f06_filename_edit.setStyleSheet(QLINEEDIT_WHITE)
-        self.f06_filename = f06_filename
         f06_units = self.units_in_pulldown.currentText()
         out_units = self.units_out_pulldown.currentText()
         try:
             self.responses: FlutterResponse = make_flutter_response(
                 f06_filename,
                 f06_units=f06_units, out_units=out_units,
-                make_alt=True,
                 log=self.log)
         except Exception as e:
             self.log.error(str(e))
@@ -693,6 +692,7 @@ class MainWindow(LoggableGui):
         if len(subcases) == 0:
             self.log.error('No subcases found')
             return
+        self.f06_filename = f06_filename
         self._units_in = f06_units
         self._units_out = out_units
         self.add_recent_file(f06_filename)
@@ -759,6 +759,7 @@ class MainWindow(LoggableGui):
     def update_modes_table(self, modes: list[int]) -> None:
         self.modes = modes
         self._set_modes_table(self.modes_widget, modes)
+        self.ok_button.setEnabled(True)
         self.log.info(f'modes = {self.modes}')
 
     def on_modes(self) -> None:
@@ -854,12 +855,9 @@ class MainWindow(LoggableGui):
         response = self.responses[self.subcase]
 
         # you can change the output units without reloading
-        if self._units_in != self.units_in or self._units_out != self.units_out:
-            # go back to the nominal units
-            # _units_in was corrected to units_in
-            # and then we go to units_out
-            response.convert_units(self._units_out, self._units_in)
-            response.convert_units(self.units_in, self.units_out)
+        if self._units_out != self.units_out:
+            response.convert_units(self.units_out)
+            self._units_out  = self.units_out
 
         response.noline = noline
         response.nopoints = nopoints
@@ -920,7 +918,7 @@ class MainWindow(LoggableGui):
             response.export_to_csv(csv_filename, modes=modes)
         if export_to_zona:
             self.log.debug(f'writing {veas_filename}')
-            response.export_to_veas(veas_filename, modes=modes)
+            response.export_to_veas(veas_filename, modes=modes, xlim=None)
         if export_to_f06:
             self.log.debug(f'writing {f06_filename}')
             response.export_to_f06(f06_filename, modes=modes)

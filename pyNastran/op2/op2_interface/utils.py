@@ -45,10 +45,10 @@ def reshape_bytes_block_size(name_bytes: bytes, size: int=4) -> str:
 
     Example
     -------
-    >>> reshape_bytes_block_size('1234567 ', size=4)
-    '1234567'
-    >>> reshape_bytes_block_size('1234    567     ', size=8)
-    '1234567'
+    >>> reshape_bytes_block_size(b'1234567 ', size=4)
+    b'1234567'
+    >>> reshape_bytes_block_size(b'1234    567     ', size=8)
+    b'1234567'
     """
     if size == 4:
         name_str = name_bytes.decode('latin1').rstrip()
@@ -63,10 +63,10 @@ def reshape_bytes_block_strip(name_bytes: bytes, size: int=4) -> str:
 
     Example
     -------
-    >>> reshape_bytes_block_strip('1234567 ', size=4)
-    '1234567'
-    >>> reshape_bytes_block_strip('1234    567     ', size=8)
-    '1234567'
+    >>> reshape_bytes_block_strip(b'1234567 ', size=4)
+    b'1234567'
+    >>> reshape_bytes_block_strip(b'1234    567     ', size=8)
+    b'1234567'
     """
     if size == 4:
         name_str = name_bytes.decode('latin1').strip()
@@ -170,8 +170,9 @@ def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
                 superelement_adaptivity_index = f'SUPERELEMENT {value1},{value2}'
     return superelement_adaptivity_index
 
-def update_subtitle_with_adaptivity_index(subtitle: str, superelement_adaptivity_index: str,
-                                          adpativity_index: str) -> str:
+def update_subtitle_with_adaptivity_index(subtitle: str,
+                                          superelement_adaptivity_index: str,
+                                          adpativity_index: str) -> tuple[str, str]:
     """
     Parameters
     ----------

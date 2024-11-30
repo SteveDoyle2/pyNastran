@@ -43,7 +43,6 @@ class FlutterResponse:
         #imach  : 3
         #iq     : 10
         #ivelocity : 4
-        #make_alt : False
         #method : 'PKNL'
         #modes  : array([1, 2])
         #names  : ['kfreq', '1/kfreq', 'density', 'velocity', 'damping', 'freq', 'eigr', 'eigi', 'eas', 'q', 'alt']
@@ -74,7 +73,6 @@ class FlutterResponse:
             #ieigr  : 5
             #ifreq  : 4
             #mach   : 0.0
-            #make_alt : False
         )
         return msg
 
@@ -185,8 +183,7 @@ class FlutterResponse:
                  mach: float, density_ratio: float, method: str,
                  modes: list[int], results: Any,
                  f06_units: None | str | dict[str, str]=None,
-                 out_units: None | str | dict[str, str]=None,
-                 make_alt: bool=False) -> None:
+                 out_units: None | str | dict[str, str]=None) -> None:
         """
         Parameters
         ----------
@@ -244,7 +241,6 @@ class FlutterResponse:
             unused
 
         """
-        self.make_alt = make_alt
         self.f06_units = f06_units
         self.out_units = out_units
         required_keys = ['altitude', 'velocity', 'eas', 'density', 'dynamic_pressure']
@@ -300,7 +296,7 @@ class FlutterResponse:
             raise NotImplementedError(method)
 
         self.results = results
-        self.convert_units(self.f06_units, self.out_units)
+        self._set_data(self.f06_units, self.out_units)
 
         # c - cyan
         # b - black
@@ -329,9 +325,9 @@ class FlutterResponse:
         self._colors: list[str] = []
         self.generate_symbols()
 
-    def convert_units(self,
-                      in_units: Optional[str | dict[str, str]],
-                      out_units: Optional[str | dict[str, str]]) -> None:
+    def _set_data(self,
+                  in_units: Optional[str | dict[str, str]],
+                  out_units: Optional[str | dict[str, str]]) -> None:
         in_units2 = get_flutter_units(in_units)
         out_units2 = get_flutter_units(out_units)
         results = self.results
@@ -344,6 +340,27 @@ class FlutterResponse:
         else:  # pragma: no cover
             raise NotImplementedError(self.method)
         self.results = results
+
+    def convert_units(self, out_units: Optional[str | dict[str, str]]) -> None:
+
+        out_units2 = get_flutter_units(out_units)
+        kvel = _get_unit_factor(self.out_units, out_units2, 'velocity')[0]
+        keas = _get_unit_factor(self.out_units, out_units2, 'eas')[0]
+        kdensity = _get_unit_factor(self.out_units, out_units2, 'density')[0]
+        kpressure = _get_unit_factor(self.out_units, out_units2, 'dynamic_pressure')[0]
+        kalt = _get_unit_factor(self.out_units, out_units2, 'altitude')[0]
+
+        self.results[:, :, self.ivelocity] *= kvel
+        if self.method in ['PK', 'KE']:
+            pass
+        elif self.method == 'PKNL':
+            self.results[:, :, self.idensity] *= kdensity
+            self.results[:, :, self.iq] *= kpressure
+            self.results[:, :, self.ieas] *= keas
+            self.results[:, :, self.ialt] *= kalt
+        else:  # pragma: no cover
+            raise NotImplementedError(self.method)
+        self.out_units = out_units2
 
     def _set_pknl_results(self,
                           in_units: dict[str, str],
@@ -362,12 +379,17 @@ class FlutterResponse:
         rho_ref = atm_density(0., R=1716., alt_units='ft',
                               density_units=density_units_in)
 
-        q = 0.5 * rho * vel**2
-        #eas  = (2 * q / rho_ref)**0.5
+        rho_units_in = in_units['density']
+        vel_units_in = in_units['velocity']
+        q_units_in = in_units['dynamic_pressure']
+        if _is_q_units_consistent(rho_units_in, vel_units_in, q_units_in):
+            q = 0.5 * rho * vel**2
+        else:  # pragma: no cover
+            raise NotImplementedError((rho_units_in, vel_units_in, q_units_in))
 
+        #eas  = (2 * q / rho_ref)**0.5
         # eas = V * sqrt(rho / rhoSL)
-        keas = _get_unit_factor(
-            in_units, out_units, 'eas')[0]
+        keas = _get_unit_factor(in_units, out_units, 'eas')[0]
         eas = vel * np.sqrt(rho / rho_ref) * keas
         #density_units2 = self.out_units['density']
 
@@ -382,21 +404,17 @@ class FlutterResponse:
         vel *= kvel
         resultsi = results[:, :, :9]
         assert resultsi.shape[2] == 9, resultsi.shape
-        if self.make_alt:
-            rho_in_slug_ft3 = rho * kdensityi
-            alt_ft = [get_alt_for_density(densityi, density_units='slug/ft^3',
-                                          alt_units='ft', nmax=20)
-                      for densityi in rho_in_slug_ft3.ravel()]
 
-            ft_to_alt_unit = convert_altitude(1., 'ft', altitude_units)
-            alt = np.array(alt_ft, dtype='float64').reshape(vel.shape) * ft_to_alt_unit
+        rho_in_slug_ft3 = rho * kdensityi
+        alt_ft = [get_alt_for_density(densityi, density_units='slug/ft^3',
+                                      alt_units='ft', nmax=20)
+                  for densityi in rho_in_slug_ft3.ravel()]
 
-            rho *= kdensity
-            results2 = np.dstack([resultsi, eas, q * kpressure, alt])
-        else:
-            #kpressure = 1.
-            rho *= kdensity
-            results2 = np.dstack([resultsi, eas, q * kpressure])
+        ft_to_alt_unit = convert_altitude(1., 'ft', altitude_units)
+        alt = np.array(alt_ft, dtype='float64').reshape(vel.shape) * ft_to_alt_unit
+
+        rho *= kdensity
+        results2 = np.dstack([resultsi, eas, q * kpressure, alt])
 
         results2[:, :, self.idensity] = rho
         results2[:, :, self.ivelocity] = vel
@@ -1584,24 +1602,23 @@ def _increment_jcolor(jcolor: int, color: str,
 
 Limit = tuple[Optional[float], Optional[float]] | None
 def set_xlim(axes: plt.Axes, xlim: Limit) -> None:
-    #print(f'xlim = {xlim}')
     if xlim == [None, None]:# or xlim == (None, None):
         xlim = None
     if xlim is not None:
         axes.set_xlim(xlim)
 
 def set_ylim(axes: plt.Axes, ylim: Limit) -> None:
-    #print(f'ylim = {ylim}')
     if ylim == [None, None]:# or ylim == (None, None):
         ylim = None
     if ylim is not None:
         axes.set_ylim(ylim)
 
 
-def _get_unit_factor(in_units, out_units,
+def _get_unit_factor(in_units: dict[str, str],
+                     out_units: dict[str, str],
                      name: str) -> tuple[float, str]:
     if not in_units or not out_units:
-        msg = 'name=%r f06_units=%s out_units=%s' % (name, in_units, out_units)
+        msg = f'name={name!r} in_units={in_units} out_units={out_units}'
         raise RuntimeError(msg)
     unit_f06 = in_units[name]
     unit_out = out_units[name]
@@ -1634,3 +1651,14 @@ def get_legend_kwargs(legend_kwargs: Optional[dict[str, Any]],
     for key in legend_kwargs:
         assert key in legend_kwargs_check, key
     return legend_kwargs
+
+def _is_q_units_consistent(rho_units: str, vel_units: str,
+                           q_units: str) -> bool:
+    units = [
+        ('kg/m^3', 'm/s', 'Pa'),
+        ('Mg/mm^3', 'mm/s', 'MPa'),
+        ('slug/ft^3', 'ft/s', 'psf'),
+        ('slinch/in^3', 'in/s', 'psi'),
+    ]
+    is_consistent = (rho_units, vel_units, q_units) in units
+    return is_consistent

@@ -30,7 +30,6 @@ from pyNastran.utils.numpy_utils import float_types
 
 def make_flutter_response(f06_filename: PathLike,
                           f06_units=None, out_units=None,
-                          make_alt: bool=False,
                           log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
     """
     Creates the FlutterResponse object
@@ -105,8 +104,7 @@ def make_flutter_response(f06_filename: PathLike,
                     flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                               mach, density_ratio, method,
                                               modes, results,
-                                              f06_units=f06_units, out_units=out_units,
-                                              make_alt=make_alt)
+                                              f06_units=f06_units, out_units=out_units)
                     #_remove_neutrinos(flutter, log)
                     flutters[subcase] = flutter
                     modes = []
@@ -260,15 +258,13 @@ def make_flutter_response(f06_filename: PathLike,
         flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                   mach, density_ratio, method,
                                   modes, results,
-                                  f06_units=f06_units, out_units=out_units,
-                                  make_alt=make_alt)
+                                  f06_units=f06_units, out_units=out_units)
         flutters[subcase] = flutter
     return flutters
 
 def plot_flutter_f06(f06_filename: PathLike,
                      f06_units: Optional[dict[str, str]]=None,
                      out_units: Optional[dict[str, str]]=None,
-                     make_alt: bool=False,
                      plot_type: str='tas',
                      modes: Optional[list[int]]=None,
                      plot_vg: bool=False,
@@ -366,11 +362,8 @@ def plot_flutter_f06(f06_filename: PathLike,
     """
     assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
-    if plot_type == 'alt':
-        make_alt = True
-
     flutters = make_flutter_response(
-        f06_filename, f06_units=f06_units, out_units=out_units, make_alt=make_alt, log=log)
+        f06_filename, f06_units=f06_units, out_units=out_units, log=log)
 
     if plot:
         make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
