@@ -37,7 +37,7 @@ from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
-from pyNastran.f06.parse_flutter import make_flutter_response
+from pyNastran.f06.parse_flutter import make_flutter_response, get_flutter_units
 
 
 X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq']
@@ -80,7 +80,7 @@ class MainWindow(LoggableGui):
         self.units_out = ''
         self.use_dock_widgets = False
         self.qactions = {}
-        self.nrecent_files_max = 9
+        self.nrecent_files_max = 20
         self.recent_files = []
         self.save_filename = HOME_FILENAME
         self.is_valid = False
@@ -487,6 +487,7 @@ class MainWindow(LoggableGui):
 
         #PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
         assert plot_type in PLOT_TYPES, plot_type
+        self.on_units_out()
 
         if x_plot_type == 'kfreq':
             show_kfreq = True
@@ -720,6 +721,19 @@ class MainWindow(LoggableGui):
         # self.modes_widget.itemClicked.connect(self.on_modes)
         # self.modes_widget.currentRowChanged.connect(self.on_modes)
         self.ok_button.clicked.connect(self.on_ok)
+        self.units_out_pulldown.currentIndexChanged.connect(self.on_units_out)
+
+    def on_units_out(self):
+        units_out = self.units_out_pulldown.currentText()
+        units_out_dict = get_flutter_units(units_out)
+
+        tas_units = units_out_dict['velocity']
+        eas_units = units_out_dict['eas']
+        self.tas_lim_label.setText(f'TAS Limits ({tas_units}):')
+
+        self.eas_lim_label.setText(f'EAS Limits ({eas_units}):')
+        self.VL_label.setText(f'VL Limit ({eas_units}):')
+        self.VF_label.setText(f'VF, Flutter ({eas_units}):')
 
     def on_font_size(self) -> None:
         self.font_size = self.font_size_edit.value()
