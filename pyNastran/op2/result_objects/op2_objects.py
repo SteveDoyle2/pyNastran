@@ -627,6 +627,7 @@ class ScalarObject(BaseScalarObject):
         column_values = []
 
         data_names = self.data_code['data_names']
+        #print(f'data_names = {data_names}')
         for name in data_names:
             #if name == primary_name:
             #times = self.da
