@@ -63,14 +63,20 @@ class OUG:
     def factor(self) -> int:
         return self.op2.factor
 
-    def update_mode_cycle(self, name):
+    def update_mode_cycle(self, name: str):
         op2 = self.op2
-        value = getattr(op2, name)
-        if value == 0.0:
-            #print('table_name=%r mode=%s eigr=%s' % (op2.table_name, op2.mode, op2.eigr))
-            value = np.sqrt(np.abs(op2.eign)) / (2. * np.pi)
-            setattr(op2, name, value)
-            op2.data_code[name] = value
+        assert name == 'mode_cycle', name
+        #value = getattr(op2, name)
+        if op2.eign != 0.0:
+            #print('table_name=%r mode=%s eign=%g mode_cycle=%g' % (
+                #op2.table_name, op2.mode, op2.eign, op2.mode_cycle))
+            omega = np.sqrt(np.abs(op2.eign))
+
+            cycles = omega / (2. * np.pi)
+            setattr(op2, name, cycles)
+            setattr(op2, 'omega', omega)
+            op2.data_code['omega'] = omega
+            op2.data_code[name] = cycles
 
     def _read_oug1_3(self, data: bytes, ndata: int):
         """reads table 3 (the header table)"""

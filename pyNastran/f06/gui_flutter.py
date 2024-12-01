@@ -754,6 +754,7 @@ class MainWindow(LoggableGui):
         self._units_out = out_units
         self.add_recent_file(f06_filename)
         self.update_subcases(subcases)
+        self.ok_button.setEnabled(True)
 
     def add_recent_file(self, f06_filename: str) -> None:
         path = os.path.abspath(f06_filename)
