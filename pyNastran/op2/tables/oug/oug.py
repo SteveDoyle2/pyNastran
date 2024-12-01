@@ -65,7 +65,7 @@ class OUG:
 
     def update_mode_cycle(self, name: str):
         op2 = self.op2
-        assert name == 'mode_cycle', name
+        assert name in {'mode_cycle', 'cycle'}, name
         #value = getattr(op2, name)
         if op2.eign != 0.0:
             #print('table_name=%r mode=%s eign=%g mode_cycle=%g' % (
