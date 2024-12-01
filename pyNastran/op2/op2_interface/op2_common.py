@@ -415,7 +415,8 @@ class OP2Common(Op2Codes, F06Writer):
             raise IndexError(msg)
         return value
 
-    def apply_data_code_value(self, name: str, value: int | float | str) -> None:
+    def apply_data_code_value(self, name: str,
+                              value: int | float | str | list[str]) -> None:
         self.data_code[name] = value
 
     def setNullNonlinearFactor(self) -> None:
@@ -2478,7 +2479,7 @@ def parse_fba_subcase(title: str, subtitle: str, label: str,
                 comp_grid_1, comp_num_1 = label_num.split('/')
             except ValueError:
                 log.error(f'label={label!r}')
-                log.error(f'label2={label2!r}')
+                #log.error(f'label2={label2!r}')
                 log.error(f'label_num={label_num!r}')
                 log.error(f'unit={unit!r}')
                 log.error(f'label_num={label_num!r}')

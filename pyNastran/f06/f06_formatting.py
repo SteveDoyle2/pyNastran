@@ -158,24 +158,25 @@ def _eigenvalue_header(obj, header, itime: int, ntimes: int, dt):
             dt_line = ' %14s = %12.5E\n' % (name, dt)
         #elif isinstance(dt, np.complex):
             #dt_line = ' %14s = %12.5E %12.5Ej\n' % (name, dt.real, dt.imag)
-        else:
+        else:  # praga: no cover
             raise NotImplementedError(type(dt))
             #dt_line = ' %14s = %12.5E %12.5Ej\n' % (name, dt.real, dt.imag)
         header[1] = dt_line
         codes = getattr(obj, name + 's')
         if not len(codes) == ntimes:
-            msg = (f'{name}s in {obj.__class__.__name__} the wrong size; '
+            class_name = obj.__class__.__name__
+            msg = (f'{name}s in {class_name} the wrong size; '
                    f'ntimes={ntimes}; {name}s={codes}\n')
             atts = object_attributes(obj)
             msg += f'names={atts}\n'
             msg += f'data_names={obj.data_names}\n'
             raise IndexError(msg)
 
-        if hasattr(obj, 'eigr'):
+        if hasattr(obj, 'eign'):
             try:
-                eigenvalue_real = obj.eigrs[itime]
+                eigenvalue_real = obj.eigns[itime]
             except IndexError:
-                msg = 'eigrs[%s] not found; ntimes=%s; eigrs=%s' % (itime, ntimes, obj.eigrs)
+                msg = f'eigns[{itime}] not found; ntimes={ntimes}; eigns={obj.eigns}'
                 msg += 'names=%s' % object_attributes(obj)
                 raise IndexError(msg)
             eigr_line = ' %14s = %12.6E\n' % ('EIGENVALUE', eigenvalue_real)

@@ -357,7 +357,8 @@ class Op2Codes:
                     fmts = ('int32', 'int64')
                 else:
                     assert name in {'freq', 'dt', 'time',
-                                    'lsdvmn', 'lftsfq', 'loadFactor', 'load_step', 'loadID', 'thresh'}, name + self.object_stats() # 'eigr', 'eign'
+                                    'lsdvmn', 'lftsfq', 'load_factor',
+                                    'load_step', 'loadID', 'thresh'}, name + self.object_stats() # 'eigr', 'eign'
                     fmts = ('float32', 'float64')
 
         elif self.analysis_code in [1, 7, 11]:

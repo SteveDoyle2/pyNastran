@@ -390,7 +390,7 @@ class TestOP2Writer(unittest.TestCase):
                             ##include_results='eigenvectors',
                             ##include_results=['crod_stress', 'cbar_stress'],
                             ##include_results=['crod_force', 'cbar_force'],
-                            ##include_results='element_forces',
+                            ##include_results='force',
                             ##include_results='stress',
                             #)
         #print(op2.get_op2_stats(short=True))

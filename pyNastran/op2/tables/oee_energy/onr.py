@@ -115,7 +115,7 @@ class ONR:
         MODCON           OSTRMC        Modal contributions
         """
         op2 = self.op2
-        prefix = ''
+        #prefix = ''
         postfix = ''
         if op2.table_name in [b'ONRGY1', b'ONRGY2', b'ONRGY']:
             prefix = 'strain_energy.'
@@ -127,7 +127,7 @@ class ONR:
             op2.format_code = 1
             op2.sort_bits[0] = 0 # real
             prefix = 'RANCONS.'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(op2.table_name)
         op2.data_code['sort_bits'] = op2.sort_bits
         op2.data_code['nonlinear_factor'] = op2.nonlinear_factor
@@ -140,10 +140,10 @@ class ONR:
         op2 = self.op2
         op2._analysis_code_fmt = b'i'
         op2.words = [
-            'aCode',       'tCode',    'eTotal',       'isubcase',
+            'aCode',       'tCode',    'etotal',       'isubcase',
             '???',         '???',      'element_name', 'load_set',
-            'format_code', 'num_wide', 'cvalres',      'setID',
-            'setID',       'eigenReal', 'eigenImag',   'rmssf',
+            'format_code', 'num_wide', 'cvalres',      'set_id',
+            'eign',        'eigr',     'eigi',         'rmssf',
             'etotpos',     'etotneg',  'thresh',       '???',
             '???',         '???',      '???',      '???',
             '???', 'Title', 'subtitle', 'label']
@@ -173,13 +173,13 @@ class ONR:
         op2.set_id = op2.add_data_parameter(data, 'set_id', b'i', 13, False)
 
         #: Natural eigenvalue - real part
-        op2.eigen_real = op2.add_data_parameter(data, 'eigen_real', b'f', 14, False)
+        #op2.eigen_real = op2.add_data_parameter(data, 'eigen_real', b'f', 14, False)
 
         #: Natural eigenvalue - imaginary part
-        op2.eigen_imag = op2.add_data_parameter(data, 'eigen_imag', b'f', 15, False)
+        #op2.eigen_imag = op2.add_data_parameter(data, 'eigen_imag', b'f', 15, False)
 
         #: Natural frequency
-        op2.freq = op2.add_data_parameter(data, 'freq', b'f', 16, False)
+        #op2.freq = op2.add_data_parameter(data, 'freq', b'f', 16, False)
 
         #: RMS and CRMS scale factor - NX
         op2.rmssf = op2.add_data_parameter(data, 'rmssf', b'f', 17)
@@ -203,15 +203,13 @@ class ONR:
             op2.setNullNonlinearFactor()
         elif op2.analysis_code == 2:  # real eigenvalues
             op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)  ## mode number
-            #op2.mode_cycle1 = op2.add_data_parameter(data, 'mode', b'i', 7)
-            #op2.mode_cycle2 = op2.add_data_parameter(data, 'mode', b'f', 7)
-            #print('mode = ', op2.mode)
-            #print('mode_cycle1 = ', op2.mode_cycle1)
-            #print('mode_cycle2 = ', op2.mode_cycle2)
+            op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
+            op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'f', 7, False) # radians
             #self.show_data(data)
-            #op2.cycle = 0.
-            #self.reader_oug.update_mode_cycle('cycle')
-            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'freq'])
+            #print(f'mode={op2.mode} eign={op2.eign} mode_cycle={op2.mode_cycle}')
+            op2._op2_readers.reader_oug.update_mode_cycle('mode_cycle')
+            #print(f'{op2.isubcase}: mode={op2.mode} eign={op2.eign:g} mode_cycle={op2.mode_cycle:g}')
+            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
             #print("mode(5)=%s eign(6)=%s mode_cycle(7)=%s" % (
                 #op2.mode, self.eign, op2.mode_cycle))
         #elif op2.analysis_code == 3: # differential stiffness
@@ -232,14 +230,12 @@ class ONR:
             op2.data_names = op2.apply_data_code_value('data_names', ['mode'])
         elif op2.analysis_code == 9:  # complex eigenvalues
             op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)  ## mode number
-            op2.eigr = op2.eigen_real
-            op2.eigi = op2.eigen_imag
-            op2.data_code['eigr'] = op2.eigr
-            op2.data_code['eigi'] = op2.eigi
+            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 14, False)
+            op2.eigi = op2.add_data_parameter(data, 'eigi', b'f', 15, False)
             op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif op2.analysis_code == 10:  # nonlinear statics
-            self.loadFactor = op2.add_data_parameter(data, 'loadFactor', b'f', 5)  ## load factor
-            op2.data_names = op2.apply_data_code_value('data_names', ['loadFactor'])
+            self.load_factor = op2.add_data_parameter(data, 'load_factor', b'f', 5)  ## load factor
+            op2.data_names = op2.apply_data_code_value('data_names', ['load_factor'])
         #elif op2.analysis_code == 11: # old geometric nonlinear statics
             #op2.data_names = op2.apply_data_code_value('data_names',['lsdvmn'])
         elif op2.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
@@ -257,7 +253,7 @@ class ONR:
         op2._read_title(data)
         op2._write_debug_bits()
 
-    def _onr_element_name(self, data: bytes) -> str:
+    def _onr_element_name(self, data: bytes) -> None:
         op2 = self.op2
         #field_num = 6
         #datai = data[4 * (field_num - 1) : 4 * (field_num + 1)]
@@ -293,12 +289,12 @@ class ONR:
         op2.nonlinear_factor = np.nan
         op2.is_table_1 = False
         op2.is_table_2 = True
-        unused_three = op2.parse_approach_code(data)
+        op2.parse_approach_code(data)
         op2.words = [
-            'aCode',       'tCode',    'eTotal',       'isubcase',
+            'aCode',       'tCode',    'etotal',       'isubcase',
             '???',         '???',      'element_name', 'load_set',
-            'format_code', 'num_wide', 'cvalres',      'setID',
-            'setID',       'eigenReal', 'eigenImag',   'rmssf',
+            'format_code', 'num_wide', 'cvalres',      'set_id',
+            'eign',        'eigr',     'eigi',         'rmssf',
             'etotpos',     'etotneg',  'thresh',       '???',
             '???',         '???',      '???',      '???',
             '???', 'Title', 'subtitle', 'label']
@@ -357,11 +353,10 @@ class ONR:
             op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
             op2._analysis_code_fmt = b'i'
             ## real eigenvalue
-            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
-            ## mode or cycle .. todo:: confused on the type - F1???
+            op2.eigr = op2.add_data_parameter(data, 'eign', b'f', 6, False)
             op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
             op2.data_names = op2.apply_data_code_value('data_names',
-                                                       ['node_id', 'eigr', 'mode_cycle'])
+                                                       ['node_id', 'eign', 'mode_cycle'])
             op2.apply_data_code_value('analysis_method', 'mode')
         #elif op2.analysis_code == 3: # differential stiffness
             #op2.lsdvmn = self.get_values(data, b'i', 5) ## load set number
@@ -623,7 +618,7 @@ class ONR:
 
         elif op2.format_code == 1 and op2.num_wide == 6:  ## TODO: figure this out...
             ntotal = 24
-            nnodes = ndata // ntotal
+            nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, RealStrainEnergyArray)
 
@@ -656,8 +651,8 @@ class ONR:
                 obj.ielement = ielement2
             else:
                 struct1 = Struct(op2._endian + b'i8s3f')
-                for unused_i in range(nnodes):
-                    edata = data[n:n+24]
+                for unused_i in range(nelements):  # TODO: is this nnodes?
+                    edata = data[n:n+ntotal]
                     out = struct1.unpack(edata)
                     (word, energy, percent, density) = out  # TODO: this has to be wrong...
                     word = word.strip()
@@ -665,7 +660,7 @@ class ONR:
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     #eid = op2.obj.add_new_eid_sort1(out)
                     if op2.is_debug_file:
-                        op2.binary_debug.write('  eid=%s; %s\n' % (eid, str(out)))
+                        op2.binary_debug.write('  word=%s; %s\n' % (word, str(out)))
                     obj.add_sort1(dt, word, energy, percent, density)
                     n += ntotal
         elif op2.format_code in [2, 3] and op2.num_wide == 4:
@@ -782,7 +777,7 @@ def real_strain_energy_4(op2: OP2,
         assert eid_device == 0, eid_device
         if sort_method == 1:
             eid = eid_device // 10
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(sort_method)
             #eid = op2.nonlinear_factor
             #dt = eid_device
@@ -822,6 +817,7 @@ def complex_strain_energy_4(op2: OP2, data: bytes, sort_method: int,
         word = word.strip()
         if op2.is_debug_file:
             op2.binary_debug.write('  eid/word=%r; %s\n' % (word, str(out)))
+        #dt, eid, energyr, energyi, percenti, densityi
         obj.add_sort1(dt, word, energy, percent, density)
         n += ntotal
     return n

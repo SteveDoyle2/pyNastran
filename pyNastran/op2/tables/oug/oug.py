@@ -63,7 +63,7 @@ class OUG:
     def factor(self) -> int:
         return self.op2.factor
 
-    def update_mode_cycle(self, name: str):
+    def update_mode_cycle(self, name: str) -> None:
         op2 = self.op2
         assert name in {'mode_cycle', 'cycle'}, name
         value = getattr(op2, name)
@@ -246,13 +246,14 @@ class OUG:
             #op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
             op2._analysis_code_fmt = b'i'
             # real eigenvalue
-            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2.eigr = op2.add_data_parameter(data, 'eign', b'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
             # float - C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mftank.op2
              # mode or cycle .. todo:: confused on the type - F1???
             op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'i', 7, False)
             #op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
-            op2.data_names = op2.apply_data_code_value('data_names', ['node_id', 'eigr', 'mode_cycle'])
+            op2.update_mode_cycle('mode_cycle')
+            op2.data_names = op2.apply_data_code_value('data_names', ['node_id', 'eign', 'mode_cycle'])
             op2.apply_data_code_value('analysis_method', 'mode')
         #elif op2.analysis_code == 3: # differential stiffness
             #op2.lsdvmn = self.get_values(data, b'i', 5) ## load set number

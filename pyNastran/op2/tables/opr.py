@@ -238,6 +238,7 @@ class OPR:
              # mode or cycle .. todo:: confused on the type - F1???
             op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'i', 7, False)
             #op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
+            self.update_mode_cycle('mode_cycle')
             op2.data_names = op2.apply_data_code_value('data_names', ['node_id', 'eigr', 'mode_cycle'])
             op2.apply_data_code_value('analysis_method', 'mode')
         #elif op2.analysis_code == 3: # differential stiffness

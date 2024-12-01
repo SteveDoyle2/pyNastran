@@ -27,7 +27,7 @@ class RealStrainEnergyArray(BaseElement):
                  13   1.582968E+07        1.6124            1.055312E+02
                  14   6.576075E+07        6.6982            3.288037E+02
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt):
+    def __init__(self, data_code, is_sort1: bool, isubcase: int, dt):
         self.element_type = None
         self.element_name = None
         BaseElement.__init__(self, data_code, isubcase)
@@ -595,7 +595,8 @@ class RealStrainEnergyArray(BaseElement):
             break
         return page_num - 1
 
-    def write_op2(self, op2_file, op2_ascii, itable: int, new_result, date,
+    def write_op2(self, op2_file, op2_ascii, itable: int,
+                  new_result, date,
                   is_mag_phase: bool=False, endian: str='>'):
         """writes an OP2"""
         import inspect
@@ -674,7 +675,8 @@ class RealStrainEnergyArray(BaseElement):
             new_result = False
         return itable
 
-    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
+    def _write_table_3(self, op2_file, op2_ascii, new_result,
+                       itable, itime): #itable=-3, itime=0):
         import inspect
         from struct import pack
         frame = inspect.currentframe()

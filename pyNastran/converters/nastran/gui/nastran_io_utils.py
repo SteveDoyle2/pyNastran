@@ -2505,7 +2505,7 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
     #---------------------------------------------------------------------------
     flag = 'force'
     if not nastran_settings.force:
-        exclude_results.add('element_forces')
+        exclude_results.add(flag)
 
     if not nastran_settings.spring_force:
         names = {f'force.{name}_{flag}' for name in spring_types}

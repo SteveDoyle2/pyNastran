@@ -458,7 +458,7 @@ class OEF:
     def _read_oef1_thermal(self, data: bytes, ndata: int):
         """Table 4 parser for OEF1 thermal table"""
         op2 = self.op2
-        if op2._results.is_not_saved('element_forces'):
+        if op2._results.is_not_saved('force'):
             return ndata
         prefix, postfix = self.get_oef_prefix_postfix()
 
@@ -934,7 +934,7 @@ class OEF:
     def _read_oef1_loads_nasa95(self, data: bytes, ndata: int):
         """Reads the OEF1 table for NASA 95 Nastran"""
         op2 = self.op2
-        if op2._results.is_not_saved('element_forces'):
+        if op2._results.is_not_saved('forces'):
             return ndata
 
         prefix, postfix = self.get_oef_prefix_postfix()
@@ -1015,7 +1015,7 @@ class OEF:
         """Reads the OEF1 table; stores the element forces/heat flux."""
         op2 = self.op2
         #self._apply_oef_ato_crm_psd_rms_no('') # TODO: just testing
-        if op2._results.is_not_saved('element_forces'):
+        if op2._results.is_not_saved('forces'):
             return ndata
 
         prefix, postfix = self.get_oef_prefix_postfix()

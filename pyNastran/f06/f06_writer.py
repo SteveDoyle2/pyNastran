@@ -214,7 +214,7 @@ class F06Writer(OP2_F06_Common):
         all_results = [
             'stress', 'strain', 'stressa',
             'elastic_strain', 'plastic_strain', 'thermal_strain', 'creep_strain',
-            'element_forces', 'constraint_forces', 'thermal_load',
+            'force', 'constraint_forces', 'thermal_load',
             ] + self.get_table_types()
         return all_results
 
@@ -251,7 +251,7 @@ class F06Writer(OP2_F06_Common):
             elif result in ('spc_forces', 'mpc_forces', 'constraint_forces'):
                 self._results.add('constraint_forces')
             elif 'force' in result.lower():  # could use more validation...
-                self._results.add('element_forces')
+                self._results.add('force')
             # thermalLoad_VU_3D, thermalLoad_1D, conv_thermal_load, thermalLoad_2D_3D
             self._results.add(result)
             #assert 'displacements' not in self._results.saved, result

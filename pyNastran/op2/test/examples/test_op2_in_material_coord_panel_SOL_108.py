@@ -80,7 +80,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
             op2 = read_op2(
                 op2_filename,
                 debug=False, log=log,
-                exclude_results=['element_forces', 'strain'],
+                exclude_results=['force', 'strain'],
             )
             op2_new = data_in_material_coord(bdf, op2)
 
@@ -122,7 +122,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
             op2 = read_op2(
                 op2_filename,
                 debug=False, log=log,
-                exclude_results=['element_forces', 'stress'],
+                exclude_results=['force', 'stress'],
             )
             op2_new = data_in_material_coord(bdf, op2)
 

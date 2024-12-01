@@ -460,6 +460,7 @@ class OES(OP2Common2):
             op2._analysis_code_fmt = b'i'
             op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
             op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
+            op2._op2_readers.reader_oug.update_mode_cycle('cycle')
             op2.data_names = op2.apply_data_code_value('data_names', ['element_id', 'eign', 'mode_cycle'])
         elif op2.analysis_code == 5:   # frequency
             op2._analysis_code_fmt = b'f'

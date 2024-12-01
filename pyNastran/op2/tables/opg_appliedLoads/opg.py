@@ -197,11 +197,12 @@ class OPG:
             op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
             op2._analysis_code_fmt = b'i'
             ## real eigenvalue
-            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2.eigr = op2.add_data_parameter(data, 'eign', b'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
             op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
+            op2._op2_readers.reader_oug.update_mode_cycle('mode_cycle')
             op2.data_names = op2.apply_data_code_value('data_names',
-                                                         ['node_id', 'eigr', 'mode_cycle'])
+                                                         ['node_id', 'eign', 'mode_cycle'])
             op2.apply_data_code_value('analysis_method', 'mode')
         #elif op2.analysis_code == 3: # differential stiffness
             #op2.lsdvmn = self.get_values(data, b'i', 5) ## load set number
