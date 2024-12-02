@@ -846,7 +846,8 @@ class GuiAttributes:
 
     def on_update_legend(self,
                          title: str='Title',
-                         min_value: float=0., max_value: float=1.,
+                         min_value: float=0.0, max_value: float=1.0,
+                         filter_value: Optional[float]=None,
                          scale: float=0.0, phase: float=0.0,
                          arrow_scale: float=1.,
                          data_format: str='%.0f',
@@ -871,6 +872,7 @@ class GuiAttributes:
         """
         self.legend_obj.on_update_legend(
             title=title, min_value=min_value, max_value=max_value,
+            filter_value=filter_value,
             scale=scale, phase=phase,
             arrow_scale=arrow_scale,
             data_format=data_format,

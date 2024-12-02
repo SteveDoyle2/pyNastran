@@ -482,6 +482,7 @@ class TestNastranGUI(unittest.TestCase):
         test.on_rcycle_results()
         test.on_update_legend(
             title='Title', min_value=0., max_value=1.,
+            filter_value=1.,
             scale=0.0, phase=0.0,
             arrow_scale=1.,
             data_format='%.0f',
@@ -490,6 +491,7 @@ class TestNastranGUI(unittest.TestCase):
             is_shown=True, render=True)
         test.on_update_legend(
             title='Title', min_value=0., max_value=1.,
+            filter_value=None,
             scale=0.0, phase=0.0,
             arrow_scale=1.,
             data_format='%.0f',

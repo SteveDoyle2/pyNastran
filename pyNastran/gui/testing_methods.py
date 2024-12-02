@@ -207,7 +207,8 @@ class FakeGUIMethods(GuiVTKCommon):
         #pass
 
     def update_legend(self, icase_fringe, icase_disp, icase_vector,
-                      name, min_value, max_value, data_format, scale, phase,
+                      name, min_value, max_value, filter_value,
+                      data_format, scale, phase,
                       arrow_scale,
                       nlabels, labelsize, ncolors, colormap,
                       use_fringe_internal=False, use_disp_internal=False,

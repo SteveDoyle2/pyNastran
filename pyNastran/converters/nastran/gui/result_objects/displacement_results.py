@@ -177,14 +177,11 @@ class DisplacementResults2(DispForceVectorResults):
         """
         assert self.dim == 3, self.dim
         assert len(self.xyz.shape) == 2, self.xyz.shape
-        if self.is_real:
-            dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
-            deflected_xyz = self.xyz + scale * dxyz
-        else:
-            assert isinstance(itime, int), (itime, phase)
-            assert isinstance(phase, float), (itime, phase)
-            dxyz = self._get_complex_displacements_by_phase(itime, res_name, phase)
-            deflected_xyz = self.xyz + scale * dxyz
+
+        assert isinstance(itime, int), (itime, phase)
+        assert isinstance(phase, float), (itime, phase)
+        dxyz = self._get_complex_displacements_by_phase(itime, res_name, phase)
+        deflected_xyz = self.xyz + scale * dxyz
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return self.xyz, deflected_xyz
 
@@ -199,8 +196,11 @@ class DisplacementResults2(DispForceVectorResults):
         assert dxyz.ndim == 2, dxyz
 
         theta = np.radians(phase)
-        dxyz = dxyz.real * np.cos(theta) + dxyz.imag * np.sin(theta)
-        return dxyz
+        if self.is_real:
+            dxyz_out = dxyz * np.cos(theta)
+        else:
+            dxyz_out = dxyz.real * np.cos(theta) + dxyz.imag * np.sin(theta)
+        return dxyz_out
 
     def __repr__(self) -> str:
         """defines str(self)"""

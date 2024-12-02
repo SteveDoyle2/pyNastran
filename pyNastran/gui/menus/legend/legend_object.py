@@ -76,8 +76,9 @@ class LegendObject(BaseGui):
         (is_method_array,
          legend_title, scalar_bar, defaults_scalar_bar,
          data_format, default_format,
-         default_title, min_value, max_value,
-         default_min, default_max) = self.get_legend_fringe(gui.icase_fringe)
+         default_title, min_value, max_value, filter_value,
+         default_min, default_max, default_filter_value,
+         ) = self.get_legend_fringe(gui.icase_fringe)
 
         nlabels, labelsize, ncolors, colormap = scalar_bar
         default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
@@ -90,7 +91,6 @@ class LegendObject(BaseGui):
         #arrow_scale = None
         #default_arrow_scale = None
 
-
         data = {
             'font_size' : self.settings.font_size,
             #'icase' : self.icase,
@@ -100,14 +100,16 @@ class LegendObject(BaseGui):
             'title' : legend_title,
             'min_value' : min_value,
             'max_value' : max_value,
+            'filter_value': filter_value,
 
             'scale' : scale,
             'arrow_scale' : arrow_scale,
             'phase' : phase,
             'format' : data_format,
 
-            'default_min' : default_min,
-            'default_max' : default_max,
+            'default_min': default_min,
+            'default_max': default_max,
+            'default_filter_value': default_filter_value,
             'default_title' : default_title,
             'default_scale' : default_scale,
             'default_arrow_scale' : default_arrow_scale,
@@ -161,8 +163,9 @@ class LegendObject(BaseGui):
         (is_method_array,
          legend_title, scalar_bar, defaults_scalar_bar,
          data_format, default_format,
-         default_title, min_value, max_value,
-         default_min, default_max) = self.get_legend_fringe(gui.icase_fringe)
+         default_title, min_value, max_value, filter_value,
+         default_min, default_max, default_filter_value,
+         ) = self.get_legend_fringe(gui.icase_fringe)
 
         # set the title as the default
         if is_method_array and legend_title == default_title:
@@ -230,6 +233,7 @@ class LegendObject(BaseGui):
                       title: str,
                       min_value: Optional[float],
                       max_value: Optional[float],
+                      filter_value: Optional[float],
                       data_format: str,
                       scale: Optional[float],
                       phase: Optional[float],
@@ -304,8 +308,8 @@ class LegendObject(BaseGui):
             is_method_array,
             _legend_title, scalar_bar, defaults_scalar_bar,
             data_format, default_format, default_title,
-            _min_value, _max_value,
-            default_min, default_max) = out
+            _min_value, _max_value, _filter_value,
+            default_min, default_max, default_filter_value) = out
         if is_method_array and title == default_title:
             title = ''
 
@@ -314,6 +318,7 @@ class LegendObject(BaseGui):
         if use_fringe_internal:
             min_value = _min_value
             max_value = _max_value
+            filter_value = _filter_value
             unused_legend_title = _legend_title
             labelsize = _labelsize
             ncolors = _ncolors
@@ -350,7 +355,6 @@ class LegendObject(BaseGui):
             #default_scale = _default_scale
             #default_phase = _default_phase
 
-
         _arrow_scale, default_arrow_scale = self.get_legend_vector(icase_vector)
         if use_vector_internal:
             arrow_scale = _arrow_scale
@@ -359,12 +363,14 @@ class LegendObject(BaseGui):
         #assert isinstance(scale, float), 'scale=%s' % scale
         self._legend_window.update_legend(
             icase_fringe, icase_disp, icase_vector,
-            title, min_value, max_value, data_format,
+            title, min_value, max_value, filter_value,
+            data_format,
             nlabels, labelsize, ncolors, colormap, is_fringe,
             scale, phase,
             arrow_scale,
 
-            default_title, default_min, default_max, default_format,
+            default_title, default_min, default_max, default_filter_value,
+            default_format,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
             default_scale, default_phase,
@@ -378,6 +384,7 @@ class LegendObject(BaseGui):
         title = data['title']
         min_value = data['min_value']
         max_value = data['max_value']
+        filter_value = data['filter_value']
         scale = data['scale']
         phase = data['phase']
         arrow_scale = data['arrow_scale']
@@ -395,6 +402,7 @@ class LegendObject(BaseGui):
         self.on_update_legend(
             title=title,
             min_value=min_value, max_value=max_value,
+            filter_value=filter_value,
             scale=scale, phase=phase,
             arrow_scale=arrow_scale,
             data_format=data_format,
@@ -409,6 +417,7 @@ class LegendObject(BaseGui):
                          title: str='Title',
                          min_value: float=0.,
                          max_value: float=1.,
+                         filter_value: Optional[float]=None,
                          scale: float=0.0,
                          phase: float=0.0,
                          arrow_scale: float=1.,
@@ -430,6 +439,7 @@ class LegendObject(BaseGui):
 
         TODO: speed up by using existing values to skip update steps
         """
+        assert isinstance(title, str), title
         nlabels = None if nlabels == -1 else nlabels
         labelsize = None if labelsize == -1 else labelsize
         ncolors = None if ncolors == -1 else ncolors
@@ -568,7 +578,8 @@ class LegendObject(BaseGui):
             gui.Render()
 
         msg = (
-            f'self.on_update_legend(title={title!r}, min_value={min_value}, max_value={max_value},\n'
+            f'self.on_update_legend(title={title!r}, '
+            f'min_value={min_value}, max_value={max_value}, filter_value={filter_value},\n'
             f'                      scale={scale}, phase={phase},\n'
             f'                      data_format={data_format!r}, is_low_to_high={is_low_to_high}, '
             f'is_discrete={is_discrete},\n'
@@ -590,6 +601,7 @@ class LegendObject(BaseGui):
         legend_title = None
         min_value = None
         max_value = None
+        filter_value = None
         data_format = None
         scalar_bar = (None, None, None, None)
         defaults_scalar_bar = (None, None, None, None)
@@ -624,13 +636,15 @@ class LegendObject(BaseGui):
             default_min, default_max = obj.get_default_min_max(i, res_name)
             default_format = obj.get_default_data_format(i, res_name)
 
+        filter_value = None
+        default_filter_value = None
         out = (
             is_method_array,
             legend_title,
             scalar_bar, defaults_scalar_bar,
             data_format, default_format,
-            default_title, min_value, max_value,
-            default_min, default_max)
+            default_title, min_value, max_value, filter_value,
+            default_min, default_max, default_filter_value)
         return out
 
     def get_legend_disp(self, icase_disp: Optional[int],

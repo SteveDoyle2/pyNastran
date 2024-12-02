@@ -528,7 +528,6 @@ class GuiQtCommon(GuiAttributes):
         location = data.location
         min_value = data.min_value
         max_value = data.max_value
-        #norm_value = data.norm_value
         data_format = data.data_format
         scale = data.scale
         methods = data.methods
@@ -570,9 +569,11 @@ class GuiQtCommon(GuiAttributes):
         phase = 0.0
         arrow_scale = 0.0
         if update_legend_window:
+            filter_value = None
             self.legend_obj.update_legend(
                 icase_fringe, icase_disp, icase_vector,
-                legend_title, min_value, max_value, data_format, scale, phase,
+                legend_title, min_value, max_value, filter_value,
+                data_format, scale, phase,
                 arrow_scale,
                 nlabels, labelsize, ncolors, colormap,
                 use_disp_internal=True, use_vector_internal=True)
@@ -809,9 +810,11 @@ class GuiQtCommon(GuiAttributes):
         phase = None
         arrow_scale = None
         if update_legend_window:
+            filter_value = None
             self.legend_obj.update_legend(
                 icase_fringe, icase_disp, icase_vector,
-                legend_title, min_value, max_value, data_format, scale, phase,
+                legend_title, min_value, max_value, filter_value,
+                data_format, scale, phase,
                 arrow_scale,
                 nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
                 use_disp_internal=True, use_vector_internal=True,
@@ -1210,9 +1213,11 @@ class GuiQtCommon(GuiAttributes):
                 imax=imax, max_value=max_value,
             )
 
+        filter_value = None
         self.legend_obj.update_legend(
             icase_fringe, icase_disp, icase_vector,
-            legend_title, min_value, max_value, data_format, scale, phase,
+            legend_title, min_value, max_value, filter_value,
+            data_format, scale, phase,
             arrow_scale,
             nlabels, labelsize, ncolors, colormap,
             use_fringe_internal=True,
@@ -1293,7 +1298,8 @@ class GuiQtCommon(GuiAttributes):
         #icase_fringe = icase
         #self.legend_obj.update_legend(
             #icase_fringe, icase_disp, icase_vector,
-            #legend_title, min_value, max_value, data_format, scale, phase,
+            #legend_title, min_value, max_value, filter_value,
+            #data_format, scale, phase,
             #nlabels, labelsize, ncolors, colormap, external_call=False)
         self.hide_legend()
         self.scalar_bar.is_shown = False

@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import annotations
 import os
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from qtpy import QtCore
 from qtpy.QtGui import QFont
@@ -57,7 +57,9 @@ class LegendPropertiesWindow(PyDialog):
     +-----------------------+
     """
 
-    def __init__(self, data, win_parent=None, show_animation_button=True):
+    def __init__(self, data: dict[str, Any],
+                 win_parent=None,
+                 show_animation_button: bool=True):
         PyDialog.__init__(self, data, win_parent)
         self.is_gui = win_parent is not None
 
@@ -82,6 +84,7 @@ class LegendPropertiesWindow(PyDialog):
         self._default_title = data['title']
         self._default_min = data['min_value']
         self._default_max = data['max_value']
+        self._default_filter_value = data['filter_value']
 
         self._default_scale = data['default_scale']
         self._scale = data['scale']
@@ -147,9 +150,14 @@ class LegendPropertiesWindow(PyDialog):
         if self._nlabels in {None, -1}:
             self._nlabels = ''
 
-    def update_legend(self, icase_fringe, icase_disp, icase_vector,
+    def update_legend(self,
+                      icase_fringe: int,
+                      icase_disp: int,
+                      icase_vector: int,
                       title: str,
-                      min_value, max_value, data_format: str,
+                      min_value: float, max_value: float,
+                      filter_value: Optional[float],
+                      data_format: str,
                       nlabels: int, labelsize: int,
                       ncolors: int, colormap: str,
                       is_fringe: bool,
@@ -158,6 +166,7 @@ class LegendPropertiesWindow(PyDialog):
 
                       default_title: str,
                       default_min_value, default_max_value,
+                      default_filter_value: Optional[float],
                       default_data_format: str,
                       default_nlabels: int, default_labelsize: int,
                       default_ncolors: int, default_colormap: str,
@@ -222,6 +231,7 @@ class LegendPropertiesWindow(PyDialog):
             self._default_title = default_title
             self._default_min = default_min_value
             self._default_max = default_max_value
+            self._default_filter_value = default_filter_value
             self._default_format = default_data_format
             #self._default_is_low_to_high = is_low_to_high
             self._default_is_discrete = True
@@ -296,6 +306,9 @@ class LegendPropertiesWindow(PyDialog):
             self.max_edit.setText(func_str_or_none(max_value))
             self.max_edit.setStyleSheet(QLINEEDIT_GOOD)
 
+            self.filter_value_edit.setText(func_str_or_none(filter_value))
+            self.filter_value_edit.setStyleSheet(QLINEEDIT_GOOD)
+
             self.format_edit.setText(str(data_format))
             self.format_edit.setStyleSheet(QLINEEDIT_GOOD)
 
@@ -363,38 +376,19 @@ class LegendPropertiesWindow(PyDialog):
         self.title_edit.setVisible(show_title)
         self.title_button.setVisible(show_title)
 
-        self.max_label.setVisible(enable)
-        self.min_label.setVisible(enable)
-        self.max_edit.setVisible(enable)
-        self.min_edit.setVisible(enable)
-        self.max_button.setVisible(enable)
-        self.min_button.setVisible(enable)
-
-        self.show_radio.setVisible(enable)
-        self.hide_radio.setVisible(enable)
-        self.low_to_high_radio.setVisible(enable)
-        self.high_to_low_radio.setVisible(enable)
-
-        self.format_label.setVisible(enable)
-        self.format_edit.setVisible(enable)
-        self.format_edit.setVisible(enable)
-        self.format_button.setVisible(enable)
-
-        self.nlabels_label.setVisible(enable)
-        self.nlabels_edit.setVisible(enable)
-        self.nlabels_button.setVisible(enable)
-
-        self.ncolors_label.setVisible(enable)
-        self.ncolors_edit.setVisible(enable)
-        self.ncolors_button.setVisible(enable)
-
-        self.grid2_title.setVisible(enable)
-        self.vertical_radio.setVisible(enable)
-        self.horizontal_radio.setVisible(enable)
-
-        self.colormap_label.setVisible(enable)
-        self.colormap_edit.setVisible(enable)
-        self.colormap_button.setVisible(enable)
+        objs = [
+            self.max_label, self.max_edit, self.max_button,
+            self.min_label, self.min_edit, self.min_button,
+            self.show_radio, self.hide_radio,
+            self.low_to_high_radio, self.high_to_low_radio,
+            self.format_label, self.format_edit, self.format_button,
+            self.nlabels_label, self.nlabels_edit, self.nlabels_button,
+            self.ncolors_label, self.ncolors_edit, self.ncolors_button,
+            self.grid2_title, self.vertical_radio, self.horizontal_radio,
+            self.colormap_label, self.colormap_edit, self.colormap_button,
+        ]
+        for obj in objs:
+            obj.setVisible(enable)
 
     def create_widgets(self, show_animation_button: bool=True) -> None:
         """creates the menu objects"""
@@ -412,6 +406,13 @@ class LegendPropertiesWindow(PyDialog):
         self.max_label = QLabel("Max:")
         self.max_edit = QFloatEdit(func_str_or_none(self._default_max))
         self.max_button = QPushButton("Default")
+
+        # Filter
+        self.filter_value_label = QLabel("Filter:")
+        self.filter_value_edit = QFloatEdit(func_str_or_none(self._default_max))
+        self.filter_value_button = QPushButton("Default")
+        for obj in [self.filter_value_label, self.filter_value_edit, self.filter_value_button]:
+            obj.setVisible(False)
 
         #---------------------------------------
         # Format
@@ -516,36 +517,19 @@ class LegendPropertiesWindow(PyDialog):
             self.title_button.setVisible(False)
 
         if not self._is_fringe:
-            self.max_label.hide()
-            self.min_label.hide()
-            self.max_edit.hide()
-            self.min_edit.hide()
-            self.max_button.hide()
-            self.min_button.hide()
-
-            self.format_label.hide()
-            self.format_edit.hide()
-            self.format_button.hide()
-
-            self.nlabels_label.hide()
-            self.nlabels_edit.hide()
-            self.nlabels_button.hide()
-
-            self.ncolors_label.hide()
-            self.ncolors_edit.hide()
-            self.ncolors_button.hide()
-
-            self.grid2_title.hide()
-            self.vertical_radio.hide()
-            self.horizontal_radio.hide()
-            self.show_radio.hide()
-            self.hide_radio.hide()
-            self.low_to_high_radio.hide()
-            self.high_to_low_radio.hide()
-
-            self.colormap_label.hide()
-            self.colormap_edit.hide()
-            self.colormap_button.hide()
+            objs = [
+                self.max_label, self.max_edit, self.max_button,
+                self.min_label, self.min_edit, self.min_button,
+                self.show_radio, self.hide_radio,
+                self.low_to_high_radio, self.high_to_low_radio,
+                self.format_label, self.format_edit, self.format_button,
+                self.nlabels_label, self.nlabels_edit, self.nlabels_button,
+                self.ncolors_label, self.ncolors_edit, self.ncolors_button,
+                self.grid2_title, self.vertical_radio, self.horizontal_radio,
+                self.colormap_label, self.colormap_edit, self.colormap_button,
+            ]
+            for obj in objs:
+                obj.hide()
 
         self.animate_button = QPushButton('Create Animation')
         self.animate_button.setVisible(show_animation_button)
@@ -566,49 +550,66 @@ class LegendPropertiesWindow(PyDialog):
     def create_layout(self) -> None:
         """displays the menu objects"""
         grid = QGridLayout()
-        grid.addWidget(self.title_label, 0, 0)
-        grid.addWidget(self.title_edit, 0, 1)
-        grid.addWidget(self.title_button, 0, 2)
+        irow = 0
+        grid.addWidget(self.title_label, irow, 0)
+        grid.addWidget(self.title_edit, irow, 1)
+        grid.addWidget(self.title_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.min_label, 1, 0)
-        grid.addWidget(self.min_edit, 1, 1)
-        grid.addWidget(self.min_button, 1, 2)
+        grid.addWidget(self.min_label, irow, 0)
+        grid.addWidget(self.min_edit, irow, 1)
+        grid.addWidget(self.min_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.max_label, 2, 0)
-        grid.addWidget(self.max_edit, 2, 1)
-        grid.addWidget(self.max_button, 2, 2)
+        grid.addWidget(self.max_label, irow, 0)
+        grid.addWidget(self.max_edit, irow, 1)
+        grid.addWidget(self.max_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.format_label, 3, 0)
-        grid.addWidget(self.format_edit, 3, 1)
-        grid.addWidget(self.format_button, 3, 2)
+        grid.addWidget(self.filter_value_label, irow, 0)
+        grid.addWidget(self.filter_value_edit, irow, 1)
+        grid.addWidget(self.filter_value_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.scale_label, 4, 0)
-        grid.addWidget(self.scale_edit, 4, 1)
-        grid.addWidget(self.scale_button, 4, 2)
+        grid.addWidget(self.format_label, irow, 0)
+        grid.addWidget(self.format_edit, irow, 1)
+        grid.addWidget(self.format_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.phase_label, 6, 0)
-        grid.addWidget(self.phase_edit, 6, 1)
-        grid.addWidget(self.phase_button, 6, 2)
+        grid.addWidget(self.scale_label, irow, 0)
+        grid.addWidget(self.scale_edit, irow, 1)
+        grid.addWidget(self.scale_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.arrow_scale_label, 5, 0)
-        grid.addWidget(self.arrow_scale_edit, 5, 1)
-        grid.addWidget(self.arrow_scale_button, 5, 2)
+        grid.addWidget(self.phase_label, irow, 0)
+        grid.addWidget(self.phase_edit, irow, 1)
+        grid.addWidget(self.phase_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.nlabels_label, 7, 0)
-        grid.addWidget(self.nlabels_edit, 7, 1)
-        grid.addWidget(self.nlabels_button, 7, 2)
+        grid.addWidget(self.arrow_scale_label, irow, 0)
+        grid.addWidget(self.arrow_scale_edit, irow, 1)
+        grid.addWidget(self.arrow_scale_button, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.nlabels_label, irow, 0)
+        grid.addWidget(self.nlabels_edit, irow, 1)
+        grid.addWidget(self.nlabels_button, irow, 2)
+        irow += 1
 
         #grid.addWidget(self.labelsize_label, 6, 0)
         #grid.addWidget(self.labelsize_edit, 6, 1)
         #grid.addWidget(self.labelsize_button, 6, 2)
+        #irow += 1
 
-        grid.addWidget(self.ncolors_label, 8, 0)
-        grid.addWidget(self.ncolors_edit, 8, 1)
-        grid.addWidget(self.ncolors_button, 8, 2)
+        grid.addWidget(self.ncolors_label, irow, 0)
+        grid.addWidget(self.ncolors_edit, irow, 1)
+        grid.addWidget(self.ncolors_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.colormap_label, 9, 0)
-        grid.addWidget(self.colormap_edit, 9, 1)
-        grid.addWidget(self.colormap_button, 9, 2)
+        grid.addWidget(self.colormap_label, irow, 0)
+        grid.addWidget(self.colormap_edit, irow, 1)
+        grid.addWidget(self.colormap_button, irow, 2)
+        irow += 1
 
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
@@ -629,7 +630,6 @@ class LegendPropertiesWindow(PyDialog):
 
         grid2.addWidget(self.animate_button, 3, 1)
 
-
         #grid2.setSpacing(0)
 
         vbox = QVBoxLayout()
@@ -646,6 +646,7 @@ class LegendPropertiesWindow(PyDialog):
         self.title_button.clicked.connect(self.on_default_title)
         self.min_button.clicked.connect(self.on_default_min)
         self.max_button.clicked.connect(self.on_default_max)
+        self.filter_value_button.clicked.connect(self.on_default_filter_value)
         self.format_button.clicked.connect(self.on_default_format)
         self.scale_button.clicked.connect(self.on_default_scale)
         self.arrow_scale_button.clicked.connect(self.on_default_arrow_scale)
@@ -740,6 +741,11 @@ class LegendPropertiesWindow(PyDialog):
         self.max_edit.setText(func_str_or_none(self._default_max))
         self.max_edit.setStyleSheet(QLINEEDIT_GOOD)
 
+    def on_default_filter_value(self):
+        """action when user clicks 'Default' for filter value"""
+        self.filter_value_edit.setText(func_str_or_none(self._default_filter_value))
+        self.filter_value_edit.setStyleSheet(QLINEEDIT_GOOD)
+
     def on_default_format(self):
         """action when user clicks 'Default' for the number format"""
         self.format_edit.setText(func_str_or_none(self._default_format))
@@ -794,22 +800,22 @@ class LegendPropertiesWindow(PyDialog):
         self.vertical_radio.setEnabled(is_shown)
         self.horizontal_radio.setEnabled(is_shown)
 
-    def show_legend(self):
+    def show_legend(self) -> None:
         """shows the legend"""
         self._set_legend(True)
 
-    def hide_legend(self):
+    def hide_legend(self) -> None:
         """hides the legend"""
         self._set_legend(False)
 
-    def _set_legend(self, is_shown):
+    def _set_legend(self, is_shown: bool) -> None:
         """shows/hides the legend"""
         self.show_radio.setChecked(is_shown)
         self.hide_radio.setChecked(not is_shown)
         #if self.is_gui:
             #self.win_parent.scalar_bar_actor.SetVisibility(is_shown)
 
-    def on_validate(self):
+    def on_validate(self) -> bool:
         """checks to see if the ``on_apply`` method can be called"""
         show_title = self._icase_fringe is not None
         flag_title = True
@@ -823,14 +829,15 @@ class LegendPropertiesWindow(PyDialog):
         if self._icase_fringe is not None:
             min_value, flag1 = check_float(self.min_edit)
             max_value, flag2 = check_float(self.max_edit)
-            format_value, flag3 = check_format(self.format_edit)
+            filter_value, flag3 = check_float(self.filter_value_edit)
+            format_value, flag_fmt = check_format(self.format_edit)
             nlabels, flag4 = check_positive_int_or_blank(self.nlabels_edit)
             ncolors, flag5 = check_positive_int_or_blank(self.ncolors_edit)
             labelsize, flag6 = check_positive_int_or_blank(self.labelsize_edit)
             colormap = str(self.colormap_edit.currentText())
-            if flag3 and 'i' in format_value:
+            if flag_fmt and 'i' in format_value:
                 format_value = '%i'
-            flag_fringe = all([flag1, flag2, flag3, flag4, flag5, flag6])
+            flag_fringe = all([flag1, flag2, flag3, flag4, flag5, flag6, flag_fmt])
 
         flag_disp = True
         scale = phase = None
@@ -849,6 +856,7 @@ class LegendPropertiesWindow(PyDialog):
             self.out_data['title'] = title_value
             self.out_data['min_value'] = min_value
             self.out_data['max_value'] = max_value
+            self.out_data['filter_value'] = filter_value
             self.out_data['format'] = format_value
             self.out_data['scale'] = scale
             self.out_data['phase'] = phase
@@ -936,6 +944,7 @@ def main(): # pragma: no cover
         'title' : 'asdf',
         'min_value' : 0.,
         'max_value' : 10,
+        'filter_value': None,
         'scale' : 1e-12,
         'default_scale' : 1.0,
 
