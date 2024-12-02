@@ -425,8 +425,8 @@ def _get_nastran_header(case: Any,
     elif hasattr(case, 'loadIDs'):
         step = case.loadIDs[itime]
         header += '; step = %s' % func_str(step)
-    elif hasattr(case, 'loadFactors'):
-        step = case.loadFactors[itime]
+    elif hasattr(case, 'load_factors'):
+        step = case.load_factors[itime]
         header += '; step = %s' % func_str(step)
     elif hasattr(case, 'load_steps'):
         step = case.load_steps[itime]

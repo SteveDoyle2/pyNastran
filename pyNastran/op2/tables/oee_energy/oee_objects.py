@@ -790,7 +790,7 @@ class RealStrainEnergyArray(BaseElement):
             #ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
             assert isinstance(field5, integer_types), type(field5)
         elif self.analysis_code == 10:  # nonlinear statics
-            field5 = self.loadFactors[itime]
+            field5 = self.load_factors[itime]
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step
         #elif self.analysis_code == 11:  # old geometric nonlinear statics
             #field5 = self.loadIDs[itime] # load set number

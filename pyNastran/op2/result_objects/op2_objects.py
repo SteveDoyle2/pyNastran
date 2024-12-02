@@ -699,7 +699,7 @@ class ScalarObject(BaseScalarObject):
             elif name in ['dt', 'time']:
                 column_names.append('Time')
                 column_values.append(times)
-            elif name in ['lftsfq', 'lsdvmn', 'load_step', 'loadID', 'loadFactor', 'loadIDs']:
+            elif name in ['lftsfq', 'lsdvmn', 'load_step', 'loadID', 'load_factor', 'loadIDs']:
                 column_names.append('LoadStep')
                 column_values.append(times)
             elif name == 'node_id':
