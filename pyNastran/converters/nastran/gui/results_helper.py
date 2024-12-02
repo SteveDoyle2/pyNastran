@@ -11,7 +11,8 @@ import numpy as np
 from pyNastran.femutils.utils import safe_norm
 from pyNastran.gui.gui_objects.gui_result import GuiResult, GuiResultIDs
 from pyNastran.gui.gui_objects.displacements import (
-    DisplacementResults, ForceTableResults) #, TransientElementResults
+    #DisplacementResults,
+    ForceTableResults) #, TransientElementResults
 from pyNastran.op2.result_objects.stress_object import (
     _get_nastran_header,
     get_rod_stress_strain,
@@ -1467,20 +1468,14 @@ def _fill_nastran_ith_displacement(result, resname: str,
         3: {'title': 'M_', 'corner': 'M_'},
     }
     if deflects:
-        if use_new_sidebar_objects:
-            nastran_res2 = DisplacementResults2(
-                subcase_idi, node_ids, xyz_cid0, case,
-                title=resname,
-                t123_offset=t123_offset,
-                dim_max=dim_max,
-                data_format='%g', nlabels=None, labelsize=None,
-                ncolors=None, colormap='', set_max_min=False,
-                uname=resname)
-        if use_old_sidebar_objects:
-            nastran_res = DisplacementResults(subcase_idi, titles, headers,
-                                              xyz_cid0, t123, tnorm,
-                                              scales,
-                                              uname=resname)
+        nastran_res2 = DisplacementResults2(
+            subcase_idi, node_ids, xyz_cid0, case,
+            title=resname,
+            t123_offset=t123_offset,
+            dim_max=dim_max,
+            data_format='%g', nlabels=None, labelsize=None,
+            ncolors=None, colormap='', set_max_min=False,
+            uname=resname)
 
         for itime in range(ntimes):
             # mode = 2; freq = 75.9575 Hz
@@ -1491,27 +1486,11 @@ def _fill_nastran_ith_displacement(result, resname: str,
                                    case.superelement_adaptivity_index,
                                    case.pval_step)
 
-            if use_old_sidebar_objects:
-                tnorm_abs_max = get_tnorm_abs_max(case, t123, tnorm, itime)
-                scale = dim_max
-                if tnorm_abs_max > 0.0:
-                    scale = dim_max / tnorm_abs_max * 0.10
-                scales.append(scale)
-                titles.append(title1)
-                headers.append(f'{title1}: {header}')
-
-                # fill the case
-                cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
-                formii: Form = (title1, icase, [])
-                form_dict[(key, itime)].append(formii)
-                icase += 1
-
-            if use_new_sidebar_objects:
-                headers2.append(header)
-                cases[icase] = (nastran_res2, (itime, title1))  # do I keep this???
-                formii: Form = (title1, icase, [])
-                form_dict[(key, itime)].append(formii)
-                icase += 1
+            headers2.append(header)
+            cases[icase] = (nastran_res2, (itime, title1))  # do I keep this???
+            formii: Form = (title1, icase, [])
+            form_dict[(key, itime)].append(formii)
+            icase += 1
 
         #if name == 'Displacement':
             # Displacement; itime=361 time=3.61 tnorm=1.46723
@@ -1519,24 +1498,18 @@ def _fill_nastran_ith_displacement(result, resname: str,
             #pass
     else:
         dim_max = 1.0
-        if use_old_sidebar_objects:
-            nastran_res = ForceTableResults(subcase_idi, titles, headers,
-                                            t123, tnorm,
-                                            scales, #deflects=deflects,
-                                            uname=resname)
 
         methods_txyz_rxyz = ['Fx', 'Fy', 'Fz', 'Mx', 'My', 'Mz']
-        if use_new_sidebar_objects:
-            nastran_res2 = ForceResults2(
-                subcase_idi, node_ids, xyz_cid0, case,
-                title=resname,
-                t123_offset=t123_offset,
-                methods_txyz_rxyz=methods_txyz_rxyz,
-                index_to_base_title_annotation=force_index_to_base_title_annotation,
-                dim_max=dim_max,
-                data_format='%g', nlabels=None, labelsize=None,
-                ncolors=None, colormap='', set_max_min=False,
-                uname=resname)
+        nastran_res2 = ForceResults2(
+            subcase_idi, node_ids, xyz_cid0, case,
+            title=resname,
+            t123_offset=t123_offset,
+            methods_txyz_rxyz=methods_txyz_rxyz,
+            index_to_base_title_annotation=force_index_to_base_title_annotation,
+            dim_max=dim_max,
+            data_format='%g', nlabels=None, labelsize=None,
+            ncolors=None, colormap='', set_max_min=False,
+            uname=resname)
         for itime in range(ntimes):
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
@@ -1547,27 +1520,12 @@ def _fill_nastran_ith_displacement(result, resname: str,
 
             #tnorm_abs_max = get_tnorm_abs_max(case, t123, tnorm, itime)
             #tnorm_abs_max = tnorm.max()
-            if use_old_sidebar_objects:
-                scale = 1.
-                scales.append(scale)
-                titles.append(title1)
-                headers.append(f'{title1}: {header}')
-                # fill data
-                cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
-                formii = (title1, icase, [])
-                form_dict[(key, itime)].append(formii)
-                icase += 1
-
-            if use_new_sidebar_objects:
-                headers2.append(header)
-                cases[icase] = (nastran_res2, (itime, title1))  # do I keep this???
-                formii: Form = (title1, icase, [])
-                form_dict[(key, itime)].append(formii)
-                icase += 1
-    if use_old_sidebar_objects:
-        nastran_res.save_defaults()
-    if use_new_sidebar_objects:
-        nastran_res2.headers = headers2
+            headers2.append(header)
+            cases[icase] = (nastran_res2, (itime, title1))  # do I keep this???
+            formii: Form = (title1, icase, [])
+            form_dict[(key, itime)].append(formii)
+            icase += 1
+    nastran_res2.headers = headers2
     return icase
 
 def _fill_nastran_temperatures(cases: Cases, model: OP2,

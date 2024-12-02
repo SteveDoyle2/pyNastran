@@ -1015,7 +1015,7 @@ class OEF:
         """Reads the OEF1 table; stores the element forces/heat flux."""
         op2 = self.op2
         #self._apply_oef_ato_crm_psd_rms_no('') # TODO: just testing
-        if op2._results.is_not_saved('forces'):
+        if op2._results.is_not_saved('force'):
             return ndata
 
         prefix, postfix = self.get_oef_prefix_postfix()

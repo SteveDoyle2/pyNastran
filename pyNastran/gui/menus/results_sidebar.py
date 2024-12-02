@@ -30,6 +30,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 SHOW_NAME_MAIN = False
 SHOW_CASE_SPINNER = False
+SPINNER_READ_ONLY = 'QSpinBox {background-color: lightblue;}'
 
 SkippableSpinBox = QSpinBox
 #class SkippableSpinBox(QSpinBox):
@@ -382,6 +383,9 @@ class ResultsSidebar(QWidget):
                 self.vector_checkbox.setChecked(is_checked_vector)
 
     def hide_dev(self):
+        #self.case_spinner_label
+        #self.case_spinner.setReadOnly(True)
+        self.case_spinner.setStyleSheet(SPINNER_READ_ONLY)
         objs = [
             self.case_spinner_label, self.case_spinner,
             self.deflection_label, self.deflection_edit,
@@ -721,6 +725,11 @@ class ResultsSidebar(QWidget):
         else:
             index_list_b = [0]
             self.update_vtk_window(keys_a, index_list_b)
+
+        #self._update_case = False
+        #self.case_spinner.setValue(icase)
+        #self._update_case = True
+        #self.case_spinner.setValue(icase)
 
     def update_vtk_window(self,
                           key_a: int,

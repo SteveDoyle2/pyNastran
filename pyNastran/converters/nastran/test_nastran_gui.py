@@ -42,7 +42,9 @@ from pyNastran.converters.nastran.gui.stress import get_composite_sort
 from pyNastran.gui.qt_files.gui_attributes import IS_CUTTING_PLANE
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult, GridPointForceResult
-from pyNastran.gui.gui_objects.displacements import DisplacementResults, ForceTableResults, ElementalTableResults
+from pyNastran.gui.gui_objects.displacements import (
+    #DisplacementResults,
+    ForceTableResults, ElementalTableResults)
 
 from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
 from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
@@ -52,7 +54,7 @@ from pyNastran.converters.nastran.gui.result_objects.composite_stress_results im
 from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 
-RED = (1., 0., 0.)
+RED_FLOAT = (1., 0., 0.)
 
 
 class NastranGUI(NastranIO, FakeGUIMethods):
@@ -138,7 +140,8 @@ class NastranGUI(NastranIO, FakeGUIMethods):
                 res.get_annotation(itime, res_name)
             elif isinstance(res, GridPointForceResult):
                 pass
-            elif isinstance(res, (DisplacementResults, ForceTableResults)): # ElementalTableResults
+            elif isinstance(res, ForceTableResults):
+                # DisplacementResults, , ElementalTableResults
                 res.get_annotation(itime, res_name)
                 res.get_arrow_scale(itime, res_name)
                 #res.get_case_flag(itime, res_name)
@@ -312,7 +315,7 @@ class TestNastranGUI(unittest.TestCase):
         test.settings.update_coord_scale(coord_scale=None, render=True)
         test.settings.set_background_color_to_white(render=True)
 
-        color = RED
+        color = RED_FLOAT
         opacity = 0.4
         test.settings.set_background_color(color, render=True)
         test.settings.set_background_color2(color, render=True)
@@ -822,8 +825,8 @@ class TestNastranGUI(unittest.TestCase):
 
     def test_beam_modes_01(self):
         """CBAR/CBEAM - PARAM,POST,-1"""
-        bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')
-        op2_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes_m1.op2')
+        bdf_filename = MODEL_PATH / 'beam_modes' / 'beam_modes.dat'
+        op2_filename = MODEL_PATH / 'beam_modes' / 'beam_modes_m1.op2'
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
@@ -1045,7 +1048,7 @@ class TestNastranGUI(unittest.TestCase):
                 #nplate_force=0
             )
             assert nresults == 85, (len(test.result_cases), nresults) #  -95
-            asdf
+            raise RuntimeError(nresults)
 
         test.group_actions.create_groups_by_property_id()
         test.group_actions.create_groups_by_visible_result(nlimit=50)
@@ -1981,6 +1984,7 @@ def get_nreal_nresults(test,
     if not nastran_settings.strain_energy:
         nstrain_energy = 0
     ntables = (
+        # *2 is for translation/rotation
         nspc_force + nmpc_force + nload_vectors +
         ndisplacement + neigenvectors) * 2
 

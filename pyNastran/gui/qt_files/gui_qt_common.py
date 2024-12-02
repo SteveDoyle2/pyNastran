@@ -204,6 +204,8 @@ class GuiQtCommon(GuiAttributes):
 
     def on_clear_results(self, show_msg: bool=True) -> None:
         """clears the model of all results"""
+        if self.icase == -1:
+            return
         (obj, (i, resname)) = self.result_cases[self.icase]
         unused_location = obj.get_location(i, resname)
 

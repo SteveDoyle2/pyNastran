@@ -60,10 +60,10 @@ def save_nastran_results(gui: NastranGUI,
                                       point_data, cell_data, log)
             continue
 
-        elif isinstance(case, DisplacementResults):
-            _save_displacement_results(icase, case, key, index_name, used_titles,
-                                       point_data, cell_data, log)
-            continue
+        # elif isinstance(case, DisplacementResults):
+        #     _save_displacement_results(icase, case, key, index_name, used_titles,
+        #                                point_data, cell_data, log)
+        #     continue
 
         elif isinstance(case, SimpleTableResults):
             _save_simple_table_results(icase, case, key, index_name, used_titles,

@@ -26,8 +26,8 @@ from pyNastran.op2.test.op2_test import get_failed_files
 
 from pyNastran.gui.arg_handling import (
     INPUT_FORMAT_TO_EXTENSION, OUTPUT_FORMAT_TO_EXTENSION)
-INPUT_FORMAT_TO_EXTENSION['nastran].append('.dat')
-#INPUT_FORMAT_TO_EXTENSION['tecplot].append('.dat')
+INPUT_FORMAT_TO_EXTENSION['nastran'].append('.dat')
+#INPUT_FORMAT_TO_EXTENSION['tecplot'].append('.dat')
 
 
 #pkg_path = pyNastran.__path__[0]
