@@ -199,7 +199,7 @@ class LAMA:
         #assert self.title not in slot, f'{result_name}: table={self.table_name_str} title={self.title!r} optimization_count={self._count}'
         slot[op2.title] = lama
 
-        structi = Struct(op2._endian + b'ii5f')
+        structi = Struct(op2._endian + mapfmt(b'ii5f', op2.size))
         for i in range(nmodes):
             edata = data[n:n+ntotal]
             out = structi.unpack(edata)

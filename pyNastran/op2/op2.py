@@ -878,6 +878,7 @@ class OP2(OP2_Scalar, OP2Writer):
                             value = (analysis_codei, sort_methodi, counti,
                                      isuperelmemnt_adaptivity_index, pval_step, ogs)
 
+                    isubcasei = int(isubcasei)
                     if value not in self.subcase_key[isubcasei]:
                         #print('isubcase=%s value=%s' % (isubcasei, value))
                         self.subcase_key[isubcasei].append(value)
