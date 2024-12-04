@@ -18,7 +18,7 @@ def fluent_to_tecplot(fluent_filename: PathLike,
     log = fluent_model.log
     node_id = fluent_model.node_id
     xyz = fluent_model.xyz
-    element_id = fluent_model.element_id
+    result_element_id = fluent_model.result_element_id
     titles = fluent_model.titles
     results = fluent_model.results
     quads = fluent_model.quads  # eid, pid, n1, n2, n3, n4
@@ -51,7 +51,7 @@ def fluent_to_tecplot(fluent_filename: PathLike,
         jtri_nodes = np.searchsorted(unodes, tri_nodes)
         #-------------
 
-        ires_tri = np.searchsorted(element_id, tri_eids)
+        ires_tri = np.searchsorted(result_element_id, tri_eids)
         res_tri = results[ires_tri, :]
         assert res_tri.ndim == 2, res_tri.shape
         res_tri = np.column_stack((tri_regions, res_tri))
@@ -84,7 +84,7 @@ def fluent_to_tecplot(fluent_filename: PathLike,
         jquad_nodes = np.searchsorted(unodes, quad_nodes)
         #-------------
 
-        ires_quad = np.searchsorted(element_id, quad_eids)
+        ires_quad = np.searchsorted(result_element_id, quad_eids)
         res_quad = results[ires_quad, :]
         assert res_quad.ndim == 2, res_quad.shape
         res_quad = np.column_stack((quad_regions, res_quad))

@@ -48,6 +48,7 @@ class FluentIO:
                 fld_filename, #auto_read_write_h5=False,
                 log=log, debug=False)
         model = cast(Fluent, model)
+        assert len(model.result_element_id) > 0, str(model)
         #self.model_type = model.model_type
 
         node_id = model.node_id
@@ -60,20 +61,28 @@ class FluentIO:
         regions_to_remove = other_settings.cart3d_fluent_remove
         regions_to_include = other_settings.cart3d_fluent_include
 
+        assert len(model.result_element_id) > 0
         model2 = model.get_filtered_data(
             regions_to_remove, regions_to_include, return_model=True)
         str(model2)
 
-        element_id = model2.element_id
-        assert len(element_id) > 0, element_id
-        assert len(element_id) == len(np.unique(element_id))
+        result_element_id = model2.result_element_id
+        assert len(result_element_id) > 0, result_element_id
+        assert len(result_element_id) == len(np.unique(result_element_id))
         tris = model2.tris
         quads = model2.quads
         region = model2.region
 
         # support multiple results
         titles = model2.titles
-        results = model2.results
+        if 0:
+            results = model2.results
+        else:
+            iquad = np.searchsorted(model2.result_element_id, quads[:, 0])
+            itri = np.searchsorted(model2.result_element_id, tris[:, 0])
+            quad_results = model2.results[iquad, :]
+            tri_results = model2.results[itri, :]
+            results = np.vstack([quad_results, tri_results])
         assert len(titles)-1 == results.shape[1], (len(titles), results.shape)
 
         out = model.get_area_centroid_normal(tris, quads)
@@ -96,8 +105,8 @@ class FluentIO:
             node_id = node_id[inode_used]
             nodes = nodes[inode_used, :]
 
-        nelement = len(element_id)
-        assert len(element_id) == len(region), f'neids={len(element_id)} nregion={len(region)}'
+        nelement = len(result_element_id)
+        assert len(result_element_id) == len(region), f'neids={len(result_element_id)} nregion={len(region)}'
 
         assert nodes is not None
         nodes = gui.scale_length(nodes)
@@ -146,12 +155,12 @@ class FluentIO:
 
         gui.isubcase_name_map[ID] = ('Fluent', '')
         form, cases = _fill_fluent_case(
-            cases, ID, node_id, element_id,
+            cases, ID, node_id, result_element_id,
             region, results, titles, normal,
             nnodes_array)
 
         gui.node_ids = node_id
-        gui.element_ids = element_id
+        gui.element_ids = result_element_id
         #log.debug(f'running _finish_results_io2')
         gui._finish_results_io2(model_name, form, cases)
         #log.info(f'finished')
@@ -260,7 +269,7 @@ def _fill_fluent_case(cases: dict[int, Any],
                        data_format='%.3f', colormap=colormap, uname='NormalZ')
 
     nnodes_res = GuiResult(ID, 'nnodes', 'Nnodes', 'centroid', nnodes_array,
-                       data_format='%.0f', colormap=colormap, uname='Nnodes')
+                           data_format='%.0f', colormap=colormap, uname='Nnodes')
 
     assert len(element_id) == len(region), f'neids={len(element_id)} nregion={len(region)}'
     cases[icase] = (nid_res, (itime, 'NodeID'))

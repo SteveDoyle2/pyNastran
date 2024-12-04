@@ -44,7 +44,7 @@ def ugrid_to_fluent(ugrid_filename: PathLike) -> Fluent:
 
     fluent_model.node_id = np.arange(1, nnodes+1)
     fluent_model.xyz = ugrid_model.nodes
-    fluent_model.element_id = element_id
+    fluent_model.result_element_id = element_id
     fluent_model.titles = ['ShellID', 'PropertyID']
     fluent_model.results = property_id.reshape((neids, 1))
     return fluent_model
