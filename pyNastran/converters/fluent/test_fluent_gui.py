@@ -53,6 +53,9 @@ class TestFluentGui(unittest.TestCase):
         """simple UGRID3D box model"""
         ugrid_filename = UGRID_PATH / 'box.b8.ugrid'
         fluent_filename = UGRID_PATH / 'box.vrt'
+        h5_filename = UGRID_PATH / 'box.h5'
+        if h5_filename.exists():
+            os.remove(h5_filename)
         fluent_model = ugrid_to_fluent_filename(ugrid_filename, fluent_filename)
 
         log = get_logger(level='warning', encoding='utf-8')
@@ -76,10 +79,10 @@ class TestFluentGui(unittest.TestCase):
         model.quads = np.array([
             [2, 12, 1, 2, 3, 4],
         ])
-        model.element_id = np.array([1, 2])
+        model.result_element_id = np.array([1, 2])
         model.element_ids = np.array([1, 2])
         model.titles = ['ShellID', 'Pi']
-        model.results = np.ones((len(model.element_id), 1)) * 3.14
+        model.results = np.ones((len(model.result_element_id), 1)) * 3.14
 
         log = get_logger(level='warning', encoding='utf-8')
         test = FluentGui()

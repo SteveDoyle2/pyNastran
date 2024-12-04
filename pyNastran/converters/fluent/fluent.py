@@ -37,17 +37,21 @@ class Fluent:
 
         # daten
         self.titles = np.zeros((0, ), dtype='|U8')
-        self.element_id = np.array([], dtype='int32')
+        self.result_element_id = np.array([], dtype='int32')
         self.results = np.zeros((0, 0), dtype='float64')
 
         # TODO: may be removed
         self.element_ids = np.array([], dtype='int32')
 
+    @property
+    def element_id(self) -> np.ndarray:
+        return self.result_element_id
+
     @classmethod
     def from_data(self,
                   node_id: np.ndarray, xyz: np.ndarray,
                   tris: np.ndarray, quads: np.ndarray,
-                  element_id: np.ndarray, titles: np.ndarray,
+                  result_element_id: np.ndarray, titles: np.ndarray,
                   quad_results: np.ndarray, tri_results: np.ndarray,
                   auto_read_write_h5: bool=True,
                   log=None, debug: bool=True):
@@ -55,10 +59,10 @@ class Fluent:
             auto_read_write_h5=auto_read_write_h5,
             log=log, debug=debug)
         assert len(node_id) > 0
-        assert len(element_id) > 0
+        assert len(result_element_id) > 0
         model.node_id = node_id
         model.xyz = xyz
-        model.element_id = element_id
+        model.result_element_id = result_element_id
         model.quads = quads
         model.tris = tris
         model.titles = titles
@@ -88,7 +92,8 @@ class Fluent:
         h5_filename = self._get_h5_filename(h5_filename)
 
         h5file = tables.open_file(h5_filename, 'w', driver='H5FD_CORE')
-        names = ['node_id', 'xyz', 'element_id', 'titles', 'results',
+        names = ['node_id', 'xyz',
+                 'titles', 'results', 'result_element_id', #'element_id',
                  'quads', 'tris', 'element_ids']
         h5file.create_array(h5file.root, 'format', ['fluent'])
         for name in names:
@@ -110,7 +115,8 @@ class Fluent:
                 raise
             return is_loaded
         names = [
-            'node_id', 'xyz', 'element_id', 'titles', 'results',
+            'node_id', 'xyz',
+            'titles', 'results', 'result_element_id', #'element_id',
             'quads', 'tris', 'element_ids',
         ]
         h5_filename = self._get_h5_filename(h5_filename)
@@ -137,7 +143,7 @@ class Fluent:
             else:
                 setattr(self, name, datai)
         h5file.close()
-        assert len(self.element_id) > 0, self.element_id
+        assert len(self.result_element_id) > 0, self.result_element_id
         assert len(self.element_ids) > 0, self.element_ids
         is_loaded = True
         return is_loaded
@@ -151,6 +157,7 @@ class Fluent:
         self.fluent_filename = fluent_filename
         if self.auto_read_write_h5 and os.path.exists(h5_filename):
             # fails if pytables isn't installed
+            self.log.debug(f'reading fluent {h5_filename}')
             is_loaded = self.read_h5(h5_filename, require_load=False)
             if is_loaded:
                 return
@@ -160,12 +167,12 @@ class Fluent:
 
         (quads, tris), element_ids = read_cell(cell_filename)
         node, xyz = read_vrt(vrt_filename)
-        element_id, titles, results = read_daten(daten_filename, scale=1.0)
+        result_element_id, titles, results = read_daten(daten_filename, scale=1.0)
 
         self.node_id = node
         self.xyz = xyz
-        self.element_id = element_id  # result element ids
 
+        self.result_element_id = result_element_id
         self.titles = titles
         self.results = results
 
@@ -180,7 +187,7 @@ class Fluent:
         # respects interspersed quads/tris
         self.element_ids = element_ids  # TODO: consider removing
 
-        assert len(element_id) > 0, element_id
+        assert len(result_element_id) > 0, result_element_id
         assert len(element_ids) > 0, element_ids
         if self.auto_read_write_h5:
             # fails if pytables isn't installed
@@ -191,7 +198,7 @@ class Fluent:
         assert len(self.node_id) == len(self.xyz)
         assert self.tris.shape[1] == 5, self.tris.shape
         assert self.quads.shape[1] == 6, self.quads.shape
-        assert len(self.element_id) > 0, self.element_id
+        assert len(self.result_element_id) > 0, self.result_element_id
 
         base, ext = os.path.splitext(fluent_filename)
         vrt_filename = base + '.vrt'
@@ -200,24 +207,24 @@ class Fluent:
 
         #(quads, tris), (element_ids, region)
         # node, xyz = read_vrt(vrt_filename)
-        # element_id, titles, results = read_daten(daten_filename, scale=1.0)
+        # result_element_id, titles, results = read_daten(daten_filename, scale=1.0)
         write_cell(cell_filename, self.quads, self.tris)
         write_vrt(vrt_filename, self.node_id, self.xyz)
 
-        elements_list = []
+        results_elements_list = []
         results_list = []
         if len(self.tris):
-            itri = np.searchsorted(self.element_id, self.tris[:, 0])
-            elements_list.append(self.element_id[itri])
+            itri = np.searchsorted(self.result_element_id, self.tris[:, 0])
+            results_elements_list.append(self.result_element_id[itri])
             results_list.append(self.results[itri, :])
 
         if len(self.quads):
-            iquad = np.searchsorted(self.element_id, self.quads[:, 0])
-            elements_list.append(self.element_id[iquad])
+            iquad = np.searchsorted(self.result_element_id, self.quads[:, 0])
+            results_elements_list.append(self.result_element_id[iquad])
             results_list.append(self.results[iquad, :])
-        element_id = np.hstack(elements_list)
+        result_element_id = np.hstack(results_elements_list)
         results = np.vstack(results_list)
-        write_daten(daten_filename, element_id, self.titles, results)
+        write_daten(daten_filename, result_element_id, self.titles, results)
 
     def get_area_centroid_normal(self, tris: np.ndarray,
                                  quads: np.ndarray) -> tuple[np.ndarray, np.ndarray,
@@ -279,54 +286,64 @@ class Fluent:
                           #deepcopy: bool=True,
                           ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                      np.ndarray, np.ndarray]:
+        assert np.array_equal(self.result_element_id, np.unique(self.result_element_id))
         if regions_to_remove is None:
             regions_to_remove = []
         if regions_to_include is None:
             regions_to_include = []
         region_split = bool(len(regions_to_remove) + len(regions_to_include))
-        assert len(self.element_id) > 0
+        assert len(self.result_element_id) > 0
         if region_split:
             self.log.info(f'regions_to_remove={regions_to_remove}; '
                           f'regions_to_include={regions_to_include}')
-            element_id, tris, quads, quad_results, tri_results = filter_by_region(
+            result_element_id, tris, quads, quad_results, tri_results = filter_by_region(
                 self, regions_to_remove, regions_to_include)
-            if len(element_id) == 0 and 0:
+            assert np.array_equal(result_element_id, np.unique(result_element_id))
+            if len(result_element_id) == 0 and 0:
                 # error state to not crash gui
                 region_id = self.region[0]
                 self.log.warning(f'no elements remaining; including region_id={region_id}')
                 return self.get_filtered_data(
                     regions_to_include=[region_id],
                     return_model=return_model)
-            assert len(element_id) > 0, 'no elements remaining'
+            assert len(result_element_id) > 0, 'no elements remaining'
 
             model2 = self.from_data(
                 self.node_id, self.xyz,
                 tris, quads,
-                element_id, self.titles,
+                result_element_id, self.titles,
                 quad_results, tri_results,
                 auto_read_write_h5=True,
                 log=self.log)
             assert isinstance(model2, Fluent)
             str(model2)
+            assert len(model2.result_element_id) > 0
             region = model2.region
             results = model2.results
         else:
+            self.log.debug('no filtering of regions')
             tris = self.tris
             quads = self.quads
 
             # we reordered the tris/quads to be continuous to make them easier to add
-            iquad = np.searchsorted(self.element_id, quads[:, 0])
-            itri = np.searchsorted(self.element_id, tris[:, 0])
+            assert np.array_equal(quads[:, 0], np.unique(quads[:, 0]))
+            assert np.array_equal(tris[:, 0], np.unique(tris[:, 0]))
+
+            iquad = np.searchsorted(self.result_element_id, quads[:, 0])
+            itri = np.searchsorted(self.result_element_id, tris[:, 0])
             quad_results = self.results[iquad, :]
             tri_results = self.results[itri, :]
-            element_id = self.element_id
+            result_element_id = self.result_element_id
+            assert np.array_equal(result_element_id, np.unique(result_element_id))
+
             region = self.region
             results = np.vstack([quad_results, tri_results])
-            model2 = self
-            assert len(element_id) > 0, 'no elements remaining2'
+            self.results = results
+            assert len(result_element_id) > 0, 'no elements remaining2'
+            assert len(self.result_element_id) > 0
         if return_model:
             return model2
-        return element_id, tris, quads, region, results
+        return result_element_id, tris, quads, region, results
 
     @property
     def region(self) -> np.ndarray:
@@ -341,7 +358,7 @@ class Fluent:
             'Fluent:\n'
             f' - node_id = {self.node_id}\n'
             f' - xyz =\n{self.xyz}\n'
-            f' - element_id = {self.element_id}\n'
+            f' - result_element_id = {self.result_element_id}\n'
             f' - quads = {self.quads}\n'
             f' - tris  = {self.tris}\n'
             f' - titles = {self.titles}\n'

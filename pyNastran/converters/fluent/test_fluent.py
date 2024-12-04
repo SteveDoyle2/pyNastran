@@ -5,7 +5,7 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-#from cpylog import get_logger
+from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.converters.fluent.fluent import Fluent, read_vrt, read_cell, read_daten, read_fluent
@@ -82,21 +82,25 @@ class TestFluent(unittest.TestCase):
         cel_filename = BWB_PATH / 'bwb_saero.cel'
         daten_filename = BWB_PATH / 'bwb_saero.daten'
         h5_filename = BWB_PATH / 'bwb_saero.h5'
+        h5_filename2 = BWB_PATH / 'bwb_saero2.h5'
         tecplot_filename = BWB_PATH / 'bwb_saero.plt'
         if h5_filename.exists():
             os.remove(h5_filename)
+        if h5_filename2.exists():
+            os.remove(h5_filename2)
 
         #model = Fluent()
         #is_loaded = model.read_h5(h5_filename)
         #assert is_loaded is True, h5_filename
 
-        nastran_to_fluent(nastran_filename, vrt_filename)
+        log = SimpleLogger('debug')
+        nastran_to_fluent(nastran_filename, vrt_filename, log=log)
 
         node_id, xyz = read_vrt(vrt_filename)
         assert len(xyz) == 10135, xyz.shape
         (quads, tris), element_ids = read_cell(cel_filename)
         element_id, titles, results = read_daten(daten_filename, scale=2.0)
-        model = read_fluent(vrt_filename)
+        model = read_fluent(vrt_filename, log=log)
         model.write_fluent(vrt_filename2)
         model2 = read_fluent(vrt_filename2)
         model2.get_filtered_data(

@@ -13,14 +13,14 @@ def filter_by_region(model: Fluent,
     tris = model.tris
     quads = model.quads
     results = model.results
-    assert len(model.element_id) > 0, model.element_id
+    assert len(model.result_element_id) > 0, model.result_element_id
 
     tri_regions = tris[:, 1]
     quad_regions = quads[:, 1]
 
     # we reordered the tris/quads to be continuous to make them easier to add
-    iquad = np.searchsorted(model.element_id, quads[:, 0])
-    itri = np.searchsorted(model.element_id, tris[:, 0])
+    iquad = np.searchsorted(model.result_element_id, quads[:, 0])
+    itri = np.searchsorted(model.result_element_id, tris[:, 0])
     #-----------------------------
     is_remove = (len(regions_to_remove) == 0)
     is_include = (len(regions_to_include) == 0)
