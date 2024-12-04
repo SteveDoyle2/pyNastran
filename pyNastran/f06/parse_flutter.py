@@ -104,7 +104,8 @@ def make_flutter_response(f06_filename: PathLike,
                     flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                               mach, density_ratio, method,
                                               modes, results,
-                                              f06_units=f06_units, out_units=out_units)
+                                              in_units=f06_units)
+                    flutter.set_out_units(out_units)
                     #_remove_neutrinos(flutter, log)
                     flutters[subcase] = flutter
                     modes = []
@@ -258,7 +259,8 @@ def make_flutter_response(f06_filename: PathLike,
         flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                   mach, density_ratio, method,
                                   modes, results,
-                                  f06_units=f06_units, out_units=out_units)
+                                  in_units=f06_units)
+        flutter.set_out_units(out_units)
         flutters[subcase] = flutter
     return flutters
 

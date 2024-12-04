@@ -31,7 +31,6 @@ QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 
 from cpylog import SimpleLogger
-#import pyNastran
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
@@ -355,12 +354,8 @@ class MainWindow(LoggableGui):
         self.font_size_edit.setValue(self.font_size)
 
         self.f06_filename_label = QLabel('F06 Filename:')
-        self.f06_filename_edit = QLineEdit('')
-        # self.f06_filename_edit.setText(F06_FILENAME)
+        self.f06_filename_edit = QLineEdit()
         self.f06_filename_browse = QPushButton('Browse...')
-        # self.f06_filename_edit.setDisabled(True)
-        #self.f06_filename_browse.setDisabled(True)
-        #self.f06_filename_browse.setVisible(False)
 
         self.show_points_checkbox = QCheckBox('Show Points')
         self.show_lines_checkbox = QCheckBox('Show Lines')
@@ -567,12 +562,6 @@ class MainWindow(LoggableGui):
 
         grid = QGridLayout()
         irow = 0
-
-        # grid.addWidget(self.f06_filename_label, irow, 0)
-        # grid.addWidget(self.f06_filename_edit, irow, 1)
-        # grid.addWidget(self.f06_filename_browse, irow, 2)
-        # irow += 1
-
         grid.addWidget(self.font_size_label, irow, 0)
         grid.addWidget(self.font_size_edit, irow, 1)
         irow += 1
@@ -750,14 +739,10 @@ class MainWindow(LoggableGui):
         self.f06_filename_edit.setStyleSheet(QLINEEDIT_WHITE)
         f06_units = self.units_in_pulldown.currentText()
         out_units = self.units_out_pulldown.currentText()
-        try:
-            self.responses: FlutterResponse = make_flutter_response(
-                f06_filename,
-                f06_units=f06_units, out_units=out_units,
-                log=self.log)
-        except Exception as e:
-            self.log.error(str(e))
-            return
+
+        self.responses = load_f06_op2(
+            f06_filename, self.log,
+            f06_units, out_units)
 
         subcases = list(self.responses.keys())
         if len(subcases) == 0:
@@ -1300,6 +1285,40 @@ def _to_str(value: Optional[int | float]) -> str:
     else:
         str_value = str(value)
     return str_value
+
+def load_f06_op2(f06_filename: str, log: SimpleLogger,
+                 f06_units: str,
+                 out_units: str) -> list[FlutterResponse]:
+    responses = []
+    ext = os.path.splitext(f06_filename)[1].lower()
+    if ext == '.f06':
+        try:
+            responses: FlutterResponse = make_flutter_response(
+                f06_filename,
+                f06_units=f06_units, out_units=out_units,
+                log=log)
+        except Exception as e:
+            log.error(str(e))
+            return responses
+    elif ext == '.op2':
+        from pyNastran.op2.op2 import OP2
+        model = OP2(log=log)
+        results_to_include = ['eigenvectors']
+        model.set_results(results_to_include)
+        try:
+            model.read_op2(build_dataframe=False)
+        except Exception as e:
+            log.error(str(e))
+            return responses
+        responses = model.op2_results.vg_vf_response
+        if len(responses) == 0:
+            log.error('Could not find OVG table in op2')
+    else:
+        log.error('Could not find OVG table in op2')
+        raise RuntimeError
+
+    return responses
+
 
 def main(f06_filename: str='') -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line

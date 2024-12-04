@@ -151,7 +151,7 @@ class OP2Reader:
             b'DESTAB' :  (partial(read_destab, self), 'creates op2_results.responses.desvars'),
 
             #b'MEFF' : self.read_meff,
-            b'OVG': (partial(read_ovg, self), 'aeroelastic velocity'),
+            b'OVG': (partial(read_ovg, self), 'aeroelastic velocity; creates op2_results.vg_vf_responses'),
 
             b'INTMOD' : (self.read_intmod, '???'),
             b'HISADD' : (partial(read_hisadd, self), 'optimization history; op2_results.responses.convergence_data'),
@@ -4293,14 +4293,17 @@ def read_ovg(op2_reader: OP2Reader) -> None:
         cref = aero.cref
         is_xysym = aero.is_symmetric_xy
         is_xzsym = aero.is_symmetric_xz
-    op2.in_units = {
-        'density': 'slinch/in^3', 'velocity': 'in/s',
-        'altitude': 'ft', 'eas': 'in/s', 'dynamic_pressure': 'psi',
-    }
-    resp = FlutterResponse.from_nx(method, fdata2,
-                                   subcase_id=subcase_id, cref=cref,
-                                   is_xysym=is_xysym, is_xzsym=is_xzsym,
-                                   f06_units=op2.in_units)
+
+    if not hasattr(op2, 'in_units'):
+        op2.in_units = {
+            'density': 'slinch/in^3', 'velocity': 'in/s',
+            'altitude': 'ft', 'eas': 'in/s', 'dynamic_pressure': 'psi',
+        }
+    resp = FlutterResponse.from_nx(
+        method, fdata2,
+        subcase_id=subcase_id, cref=cref,
+        is_xysym=is_xysym, is_xzsym=is_xzsym,
+        f06_units=op2.in_units)
 
     op2.op2_results.vg_vf_response[subcase_id] = resp
     return

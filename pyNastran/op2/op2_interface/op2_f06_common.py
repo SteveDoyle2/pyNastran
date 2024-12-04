@@ -1,6 +1,6 @@
 from __future__ import annotations
 import getpass
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from numpy import unique, int32, int64
 
 from pyNastran import is_release
@@ -1753,7 +1753,7 @@ class OP2_F06_Common:
     #def get_f06_stats(self):
         #return self.get_op2_stats()
 
-    def get_op2_stats(self, short=False):
+    def get_op2_stats(self, short: bool=False) -> str:
         """
         Gets info about the contents of the different attributes of the
         OP2 class.
@@ -1801,7 +1801,7 @@ class Op2F06Attributes(OP2_F06_Common):
         OP2_F06_Common.__init__(self)
 
 
-def _get_op2_stats(model: OP2, short=False):
+def _get_op2_stats(model: OP2, short: bool=False) -> str:
     """see OP2.get_op2_stats(...)"""
     msg = []
     #msg += model.op2_results.responses.get_stats(short=short)
@@ -1938,7 +1938,11 @@ def _get_op2_stats_full(model: OP2, table_types: list[str],
             continue
 
         table_type_print = 'op2_results.' + table_type if '.' in table_type else table_type
-        if table_type == 'superelement_tables':
+        op2_result_tables = [
+            #'vg_vf_response',
+            'superelement_tables',
+        ]
+        if table_type in op2_result_tables:
             for key in table:
                 msg.append(f'{table_type_print}[{key}]\n')
             continue

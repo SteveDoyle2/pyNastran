@@ -1,4 +1,5 @@
-from typing import Any
+from __future__ import annotations
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.op2_interface.random_results import (
@@ -11,6 +12,9 @@ from pyNastran.op2.op2_interface.random_results import (
     PSDObjects,
 )
 from pyNastran.op2.result_objects.design_response import Responses
+if TYPE_CHECKING:
+    from pyNastran.f06.flutter_response import FlutterResponse
+
 
 class Results:
     """storage object for even more op2_results (see op2.op2_results)"""
@@ -87,7 +91,7 @@ class Results:
         self.cstm = None
         self.trmbd = {}
         self.trmbu = {}
-        self.vg_vf_response = {}
+        self.vg_vf_response: dict[int, FlutterResponse] = {}
         self.superelement_tables = {}
 
     def _get_sum_objects_map(self):
@@ -138,6 +142,11 @@ class Results:
             self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC, self.RAREATC, self.RAQEATC,
 
             self.srss, self.abs, self.nrl,
+            # no dicts
+            #self.cstm, self.trmbd, self.trmbu,
+            #self.vg_vf_response,
+            #self.superelement_tables,
+
         ]
         return sum_objs
 
@@ -149,6 +158,7 @@ class Results:
             'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
             'superelement_tables',
             'cstm', 'trmbu', 'trmbd',
+            'vg_vf_response',
         ]
         base_objs_map = {}
         for base_name in base_names:
@@ -166,7 +176,9 @@ class Results:
             'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
             'bolt_results',
             'superelement_tables',
-            'cstm', 'trmbu', 'trmbd',
+            # no dicts?
+            #'cstm', 'trmbu', 'trmbd',
+            'vg_vf_response',
         ]
         sum_objs = self._get_sum_objects()
         for objs in sum_objs:

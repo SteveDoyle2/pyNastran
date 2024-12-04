@@ -35,7 +35,7 @@ class FlutterResponse:
         #from pyNastran.utils import object_stats
         #print(object_stats(self))
         #configuration : 'AEROSG2D'
-        #f06_units : {'velocity': 'm/s', 'density': 'kg/m^3', 'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'm/s'}
+        #in_units : {'velocity': 'm/s', 'density': 'kg/m^3', 'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'm/s'}
         #ialt   : 11
         #idamping : 5
         #idensity : 2
@@ -62,7 +62,7 @@ class FlutterResponse:
             'FlutterResponse:\n'
             f'subcase= {self.subcase:d}\n'
             f'{xyz_sym}'
-            f'f06_units  = {self.f06_units}\n'
+            f'in_units   = {self.in_units}\n'
             f'out_units  = {self.out_units}\n'
             f'names  = {self.names}; n={len(self.names)}\n\n'
             f'method  = {self.method!r}\n'
@@ -81,11 +81,14 @@ class FlutterResponse:
         )
         return msg
 
+    def get_stats(self) -> str:
+        return f'FlutterResponse(isubcase={self.subcase})'
+
     @classmethod
     def from_nx(cls, method: str, fdata: np.ndarray,
                 subcase_id: int=1, cref: float=1.0,
                 is_xysym: bool=False, is_xzsym: bool=False,
-                f06_units: dict[str, str]=None):
+                in_units: dict[str, str]=None):
         """
         Parameters
         ----------
@@ -102,8 +105,8 @@ class FlutterResponse:
             is the model symmetric about the xz plane?
 
         """
-        if f06_units is None:
-            f06_units = get_flutter_units('english_in')
+        if in_units is None:
+            in_units = get_flutter_units('english_in')
         b = cref / 2.0
         configuration = 'AEROSG2D' #  TODO: what is this?
         xysym = '???'
@@ -147,27 +150,9 @@ class FlutterResponse:
         results[:, :, [2, 3, 4, 5, 6]] = fdata[:, :, [0, 1, 2, 3, 4]]
         modes = np.arange(nmodes, dtype='int32') + 1
 
-        #f06_units = get_flutter_units('english_in')
-        #{
-            #'altitude': 'ft',
-            #'density': 'slinch/in^3',
-            #'velocity': 'in/s',
-            #'eas': 'in/s',
-            #'dynamic_pressure': 'psi',
-        #}
-        #out_units = get_flutter_units('english_kt')
-        #out_units = get_flutter_units('english_in')
-        out_units = deepcopy(f06_units)
-        #{
-            #'altitude': 'ft',
-            #'density': 'slug/ft^3',
-            #'velocity': 'knots',
-            #'eas': 'knots',
-            #'dynamic_pressure': 'psf',
-        #}
         resp = FlutterResponse(
             subcase_id, configuration, xysym, xzsym, mach, density_ratio,
-            method, modes, results, f06_units=f06_units, out_units=out_units,
+            method, modes, results, in_units=in_units,
             make_alt=False)
         if 0:  # pragma: no cover
             resp.plot_root_locus(modes=None, fig=None, axes=None, xlim=None, ylim=None,
@@ -192,8 +177,7 @@ class FlutterResponse:
                  xysym: str, xzsym: str,
                  mach: float, density_ratio: float, method: str,
                  modes: list[int], results: Any,
-                 f06_units: None | str | dict[str, str]=None,
-                 out_units: None | str | dict[str, str]=None,
+                 in_units: None | str | dict[str, str]=None,
                  make_alt: bool=True) -> None:
         """
         Parameters
@@ -218,13 +202,13 @@ class FlutterResponse:
         (e.g. units on Mach don't do anything).
         All allowable fields are shown below.
 
-        f06_units : dict[str] = str (default=None -> no units conversion)
+        in_units : dict[str] = str (default=None -> no units conversion)
             The units to read from the F06.
             PK method:
-                f06_units = {'velocity' : 'in/s'}
+                in_units = {'velocity' : 'in/s'}
                 The velocity units are the units for the FLFACT card in the BDF
             PKNL method:
-                f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3', 'altitude' : 'ft', 'dynamic_pressure': 'psi'}
+                in_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3', 'altitude' : 'ft', 'dynamic_pressure': 'psi'}
                 The velocity/density units are the units for the FLFACT card in the BDF
 
         out_units dict[str] = str (default=None -> no units conversion)
@@ -252,18 +236,10 @@ class FlutterResponse:
             unused
 
         """
-        self.f06_units = f06_units
-        self.out_units = out_units
+        self.in_units = in_units
+        self.out_units = ''
         self.make_alt = make_alt
-        required_keys = ['altitude', 'velocity', 'eas', 'density', 'dynamic_pressure']
-        if f06_units is None and out_units is None:
-            pass
-        else:
-            for key in required_keys:
-                assert key in f06_units, 'key=%r not in f06_units=%s' % (key, f06_units)
-                assert key in out_units, 'key=%r not in out_units=%s' % (key, out_units)
-            for key in f06_units:
-                assert key in required_keys, 'key=%r not in required_keys=%s' % (key, required_keys)
+        in_units = get_flutter_units(in_units)
 
         self.subcase = subcase
         self.configuration = configuration
@@ -307,8 +283,16 @@ class FlutterResponse:
         else:  # pragma: no cover
             raise NotImplementedError(method)
 
-        self.results = results
-        self._set_data(self.f06_units, self.out_units)
+        #-------------------------------------------
+        in_units2 = get_flutter_units(in_units)
+        if self.method in ['PK', 'KE']:
+            pass
+        elif self.method == 'PKNL':
+            results = self._set_pknl_results(in_units2, results)
+        else:  # pragma: no cover
+            raise NotImplementedError(self.method)
+        self.results_in = results
+        self.results = self.results_in
 
         # c - cyan
         # b - black
@@ -337,46 +321,34 @@ class FlutterResponse:
         self._colors: list[str] = []
         self.generate_symbols()
 
-    def _set_data(self,
-                  in_units: Optional[str | dict[str, str]],
-                  out_units: Optional[str | dict[str, str]]) -> None:
-        in_units2 = get_flutter_units(in_units)
-        out_units2 = get_flutter_units(out_units)
-        results = self.results
-        if self.method in ['PK', 'KE']:
-            kvel = _get_unit_factor(in_units2, out_units2, 'velocity')[0]
-            # (imode, istep, iresult)
-            results[:, :, self.ivelocity] *= kvel
-        elif self.method == 'PKNL':
-            results = self._set_pknl_results(in_units2, out_units2, results)
-        else:  # pragma: no cover
-            raise NotImplementedError(self.method)
-        self.results = results
+    def set_out_units(self, out_units: str | dict[str, str]) -> None:
+        self.convert_units(out_units)
 
     def convert_units(self, out_units: Optional[str | dict[str, str]]) -> None:
+        results = self.results_in.copy()
+        out_units_dict = get_flutter_units(out_units)
+        kvel = _get_unit_factor(self.in_units, out_units_dict, 'velocity')[0]
+        keas = _get_unit_factor(self.in_units, out_units_dict, 'eas')[0]
+        kdensity = _get_unit_factor(self.in_units, out_units_dict, 'density')[0]
+        kpressure = _get_unit_factor(self.in_units, out_units_dict, 'dynamic_pressure')[0]
+        kalt = _get_unit_factor(self.in_units, out_units_dict, 'altitude')[0]
 
-        out_units2 = get_flutter_units(out_units)
-        kvel = _get_unit_factor(self.out_units, out_units2, 'velocity')[0]
-        keas = _get_unit_factor(self.out_units, out_units2, 'eas')[0]
-        kdensity = _get_unit_factor(self.out_units, out_units2, 'density')[0]
-        kpressure = _get_unit_factor(self.out_units, out_units2, 'dynamic_pressure')[0]
-        kalt = _get_unit_factor(self.out_units, out_units2, 'altitude')[0]
-
-        self.results[:, :, self.ivelocity] *= kvel
+        # (imode, istep, iresult)
+        results[:, :, self.ivelocity] *= kvel
         if self.method in ['PK', 'KE']:
             pass
         elif self.method == 'PKNL':
-            self.results[:, :, self.idensity] *= kdensity
-            self.results[:, :, self.iq] *= kpressure
-            self.results[:, :, self.ieas] *= keas
-            self.results[:, :, self.ialt] *= kalt
+            results[:, :, self.idensity] *= kdensity
+            results[:, :, self.iq] *= kpressure
+            results[:, :, self.ieas] *= keas
+            results[:, :, self.ialt] *= kalt
         else:  # pragma: no cover
             raise NotImplementedError(self.method)
-        self.out_units = out_units2
+        self.out_units = out_units_dict
+        self.results = results
 
     def _set_pknl_results(self,
                           in_units: dict[str, str],
-                          out_units: dict[str, str],
                           results: np.ndarray) -> np.ndarray:
         assert results.shape[2] in [9, 11, 12], results.shape
         density_units_in = in_units['density']
@@ -391,29 +363,22 @@ class FlutterResponse:
         rho_ref = atm_density(0., R=1716., alt_units='ft',
                               density_units=density_units_in)
 
-        rho_units_in = in_units['density']
         vel_units_in = in_units['velocity']
         q_units_in = in_units['dynamic_pressure']
-        if _is_q_units_consistent(rho_units_in, vel_units_in, q_units_in):
+        if _is_q_units_consistent(density_units_in, vel_units_in, q_units_in):
             q = 0.5 * rho * vel**2
         else:  # pragma: no cover
-            raise NotImplementedError((rho_units_in, vel_units_in, q_units_in))
+            raise NotImplementedError((density_units_in, vel_units_in, q_units_in))
 
         #eas  = (2 * q / rho_ref)**0.5
         # eas = V * sqrt(rho / rhoSL)
-        keas = _get_unit_factor(in_units, out_units, 'eas')[0]
-        eas = vel * np.sqrt(rho / rho_ref) * keas
-        #density_units2 = self.out_units['density']
+        eas = vel * np.sqrt(rho / rho_ref)
 
-        altitude_units = out_units['altitude']
+        altitude_units = in_units['altitude']
 
         #print('density_units_in=%r density_units2=%r' % (density_units_in, density_units2))
         kdensityi = convert_density(1., density_units_in, 'slug/ft^3')
-        kvel = _get_unit_factor(in_units, out_units, 'velocity')[0]
-        kdensity = _get_unit_factor(in_units, out_units, 'density')[0]
-        kpressure = _get_unit_factor(in_units, out_units, 'dynamic_pressure')[0]
 
-        vel *= kvel
         resultsi = results[:, :, :9]
         assert resultsi.shape[2] == 9, resultsi.shape
 
@@ -427,11 +392,8 @@ class FlutterResponse:
         else:
             alt = np.full(vel.shape, np.nan, dtype=vel.dtype)
 
-        rho *= kdensity
-        results2 = np.dstack([resultsi, eas, q * kpressure, alt])
-
-        results2[:, :, self.idensity] = rho
-        results2[:, :, self.ivelocity] = vel
+        results2 = np.dstack([resultsi, eas, q, alt])
+        #results2[:, :, self.idensity] = rho
         return results2
 
     def generate_symbols(self, colors=None, symbols=None, imethod: int=0):
@@ -1304,7 +1266,7 @@ class FlutterResponse:
         elif plot_type == 'freq':
             ix = self.ifreq
             xlabel = 'Frequency [Hz]'
-        elif plot_type in ['1/kfreq', 'ikfreq']:
+        elif plot_type in ['1/kfreq', 'ikfreq', 'inv_kfreq', 'kfreq_inv']:
             ix = self.ikfreq_inv
             xlabel = r'1/KFreq [1/rad]; $2V / (\omega c) $'
         elif plot_type == 'eigr':
@@ -1539,6 +1501,9 @@ def get_flutter_units(units: Optional[str | dict[str, str]]) -> dict[str, str]:
                                       'english_in, english_ft, english_kt]')
     else:  # pragma: no cover
         assert isinstance(units, dict), f'units={units!r}'
+        required_keys = ['altitude', 'velocity', 'eas', 'density', 'dynamic_pressure']
+        for key in required_keys:
+            assert key in units, 'key=%r not in units=%s' % (key, units)
         units_dict = units
     return units_dict
 
