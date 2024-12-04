@@ -333,7 +333,10 @@ class OP2(OP2_Scalar, OP2Writer):
             return True
 
         # does this ever hit?
-        if not any(word in aname for word in ['Array', 'Eigenvalues', 'GridPointWeight', 'TRMBU', 'TRMBD']):
+        skip_names = [
+            'Array', 'Eigenvalues', 'GridPointWeight', 'TRMBU', 'TRMBD',
+            'FlutterResponse']
+        if not any(word in aname for word in skip_names):
             msg = f'{aname} is not an Array ... assume equal'
             self.log.warning(msg)
             raise NotImplementedError(f'{aname} __eq__')
@@ -691,7 +694,7 @@ class OP2(OP2_Scalar, OP2Writer):
         skip_pandas = (
             'params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds',
             'monitor1', 'monitor3', 'superelement_tables',
-            'cstm', 'trmbu', 'trmbd')
+            'cstm', 'trmbu', 'trmbd', 'vg_vf_response')
         for result_type in result_types:
             if result_type in skip_pandas or result_type.startswith('responses.'):
                 #self.log.debug('skipping %s' % result_type)

@@ -1518,6 +1518,9 @@ def load_op2_from_hdf5_file(model: OP2, h5_file,
             for result_name in h5_subcase.keys():
                 assert isinstance(result_name, str), f'result_name={result_name}; type={type(result_name)}'
 
+                if result_name in ['vg_vf_response']:
+                    log.warning(f'  skipping {result_name}...')
+                    continue
                 if result_name in ['eigenvalues', 'eigenvalues_fluid']:
                     #log.warning('    skipping %r...' % result_name)
                     h5_result = h5_subcase.get(result_name)

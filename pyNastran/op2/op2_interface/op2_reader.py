@@ -4303,7 +4303,7 @@ def read_ovg(op2_reader: OP2Reader) -> None:
         method, fdata2,
         subcase_id=subcase_id, cref=cref,
         is_xysym=is_xysym, is_xzsym=is_xzsym,
-        f06_units=op2.in_units)
+        in_units=op2.in_units)
 
     op2.op2_results.vg_vf_response[subcase_id] = resp
     return

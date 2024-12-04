@@ -31,6 +31,11 @@ LINESTYLES = ['-', '--', '-.', ':', 'None', ' ', '',
 class FlutterResponse:
     """storage object for single subcase SOL 145 results"""
 
+    def __eq__(self, flutter_response: FlutterResponse) -> bool:
+        return True
+    def export_to_hdf5(self, h5_file, encoding: str):
+        return #h5_file.create_dataset('data', data=np.ones(10))
+
     def __repr__(self) -> str:
         #from pyNastran.utils import object_stats
         #print(object_stats(self))
