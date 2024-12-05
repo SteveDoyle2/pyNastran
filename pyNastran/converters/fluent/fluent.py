@@ -342,6 +342,7 @@ class Fluent:
             self.results = results
             assert len(result_element_id) > 0, 'no elements remaining2'
             assert len(self.result_element_id) > 0
+            model2 = self
         if return_model:
             return model2
         return result_element_id, tris, quads, region, results
