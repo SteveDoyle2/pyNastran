@@ -1040,7 +1040,9 @@ class OP2(OP2_Scalar, OP2Writer):
                             raise IndexError(msg)
                         #if not subcasei == isubcase:
                             #continue
-                        if case_key not in subcase_key2[subcasei]:
+                        subcase_key2s = list(subcase_key2)
+                        is_new_key = _inlist_int_tuple(case_key, subcase_key2[subcasei])
+                        if not is_new_key:
                             subcase_key2[isubcase].append(case_key)
         self.subcase_key = subcase_key2
         #print('subcase_key = %s' % self.subcase_key)
@@ -1079,7 +1081,7 @@ class OP2(OP2_Scalar, OP2Writer):
         keys = []
         table_types = self.get_table_types()
         skip_tables = ['gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds',
-                       'monitor1', 'monitor3', 'cstm']
+                       'monitor1', 'monitor3', 'cstm', 'vg_vf_response']
         for table_type in sorted(table_types):
             if table_type in skip_tables or table_type.startswith('responses.'):
                 continue
@@ -1120,7 +1122,11 @@ class OP2(OP2_Scalar, OP2Writer):
 
         used_keys = set([])
         for key in keys:
-            #print('key = %s' % str(key))
+            try:
+                len(key)  # vg_vf_response uses a single integer
+            except TypeError:
+                self.log.error('key = %s' % str(key))
+                raise
             if len(key) == 6:
                 isubcase, analysis_code, sort_method, count, superelement_adaptivity_index, pval_step = key
                 used_key = (isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step)
@@ -1331,6 +1337,8 @@ class OP2(OP2_Scalar, OP2Writer):
 
 def _inlist(case_key: int, keys: list[Any]) -> bool:
     """
+    Fixes numpy deprecation warning
+
     case_key not in subcase_key2[isubcase])
     """
     if len(keys) == 0:
@@ -1347,6 +1355,33 @@ def _inlist(case_key: int, keys: list[Any]) -> bool:
             return True
     return found_case_key
 
+def _inlist_int_tuple(case_key: int | tuple,
+                      keys: list[Any]) -> bool:
+    """
+    Fixes numpy deprecation warning
+
+    found_case_key = case_key not in subcase_key2[isubcase])
+    """
+    if len(keys) == 0:
+        return False
+    #assert isinstance(case_key, integer_types), case_key
+    assert isinstance(keys, list), keys
+    #print(type(case_key))
+    found_case_key = False
+    if isinstance(case_key, integer_types):
+        for key in keys:
+            if isinstance(key, tuple):
+                continue
+            if key == case_key:
+                return True
+    else:
+        assert isinstance(case_key, tuple), case_key
+        for key in keys:
+            if isinstance(key, integer_types):
+                continue
+            if key == case_key:
+                return True
+    return found_case_key
 
 def read_op2(op2_filename: Optional[str]=None,
              load_geometry: bool=False,
