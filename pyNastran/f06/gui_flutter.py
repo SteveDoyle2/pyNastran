@@ -1288,8 +1288,8 @@ def _to_str(value: Optional[int | float]) -> str:
 
 def load_f06_op2(f06_filename: str, log: SimpleLogger,
                  f06_units: str,
-                 out_units: str) -> list[FlutterResponse]:
-    responses = []
+                 out_units: str) -> dict[int, FlutterResponse]:
+    responses = {}
     ext = os.path.splitext(f06_filename)[1].lower()
     if ext == '.f06':
         try:
@@ -1301,7 +1301,12 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
             log.error(str(e))
             return responses
     elif ext == '.op2':
-        from pyNastran.op2.op2 import OP2
+        try:
+            from pyNastran.op2.op2 import OP2
+        except ImportError as e:
+            log.error(str(e))
+            return responses
+
         model = OP2(log=log)
         results_to_include = ['eigenvectors']
         model.set_results(results_to_include)
