@@ -335,6 +335,7 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
         op2.get_op2_stats(short=True)
         op2.object_attributes()
         op2.object_methods()
+        op2.get_key_order()
         if not quiet:
             print(f'---stats for {op2_filename}---')
             print(op2.get_op2_stats(short=short_stats))

@@ -73,8 +73,13 @@ def determine_format(input_filename: str,
     """
     if output_filenames is None:
         output_filenames = []
+    assert None not in output_filenames, output_filenames
 
-    out_exts = [os.path.splitext(fname)[1] for fname in output_filenames]
+    try:
+        out_exts = [os.path.splitext(fname)[1] for fname in output_filenames]
+    except TypeError:
+        print(f'output_filenames = {output_filenames}')
+        raise
     out_ext = '' if len(out_exts) == 0 else out_exts[0]
 
     if allowed_formats is None:
