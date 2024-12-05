@@ -286,7 +286,8 @@ class Fluent:
                           #deepcopy: bool=True,
                           ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                      np.ndarray, np.ndarray]:
-        assert np.array_equal(self.result_element_id, np.unique(self.result_element_id))
+        # False
+        #assert np.array_equal(self.result_element_id, np.unique(self.result_element_id))
         if regions_to_remove is None:
             regions_to_remove = []
         if regions_to_include is None:

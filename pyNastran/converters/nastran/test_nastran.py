@@ -53,8 +53,8 @@ class TestNastranGUIObjects(unittest.TestCase):
          - DisplacementResults2
          - ForceResults2
         """
-        bdf_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.op2')
+        bdf_filename = MODEL_PATH / 'aero' / '2_mode_flutter' / '0012_flutter.bdf'
+        op2_filename = MODEL_PATH / 'aero' / '2_mode_flutter' / '0012_flutter.op2'
         model = read_bdf(bdf_filename, debug=False)
 
         out = model.get_displacement_index_xyz_cp_cd()
