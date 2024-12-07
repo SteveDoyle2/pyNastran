@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import annotations
 import os
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -1306,6 +1306,9 @@ class AnimationWindow(PyDialog):
         scale, flag1 = check_float(self.scale_edit)
         time, flag2 = check_float(self.time_edit)
         fps, flag3 = check_float(self.fps_edit)
+        self.time = time
+        self.fps = fps
+        self._set_settings()
 
         min_value = max_value = None
         flag4 = flag5 = True
@@ -1343,8 +1346,27 @@ class AnimationWindow(PyDialog):
             #self.close()
             ##self.destroy()
 
+    def settings(self) -> dict[str, Any]:
+        if self.is_gui:
+            out = self.win_parent.settings
+        else:
+            out = {}
+        return out
+
+    def _set_settings(self) -> None:
+        if not self.is_gui:
+            return
+        time, flag2 = check_float(self.time_edit)
+        fps, flag3 = check_float(self.fps_edit)
+        if flag2 and flag3:
+            self._default_time = time
+            self._default_fps = fps
+            self.settings.animation_time = time
+            self.settings.animation_frame_rate = fps
+
     def on_cancel(self) -> None:
         """click the Cancel button"""
+        self._set_settings()
         self.on_stop()
         self.out_data['close'] = True
         self.close()
@@ -1370,36 +1392,36 @@ def main(): # pragma: no cover
 
     #from pyNastran.gui.menus.legend.animation import AnimationWindow
     data2 = {
-        'font_size' : 8,
-        'icase_fringe' : 1,
-        'icase_disp' : 2,
-        'icase_vector' : 3,
+        'font_size': 8,
+        'icase_fringe': 1,
+        'icase_disp': 2,
+        'icase_vector': 3,
 
-        'title' : 'cat',
-        'time' : 2,
-        'frames/sec' : 30,
-        'resolution' : 1,
-        'iframe' : 0,
-        'is_scale' : False,
-        'dirname' : os.getcwd(),
-        'scale' : 2.0,
-        'default_scale' : 10,
+        'title': 'cat',
+        'time': 2,
+        'frames/sec': 30,
+        'resolution': 1,
+        'iframe': 0,
+        'is_scale': False,
+        'dirname': os.getcwd(),
+        'scale': 2.0,
+        'default_scale': 10,
 
-        'arrow_scale' : 3.0,
-        'default_arrow_scale' : 30,
+        'arrow_scale': 3.0,
+        'default_arrow_scale': 30,
 
-        #'phase' : 0.,
-        'phase' : None,
-        'default_phase' : 120.,
-        #'default_phase' : None,
+        #'phase': 0.,
+        'phase': None,
+        'default_phase': 120.,
+        #'default_phase': None,
 
-        #'start_time' : 0.,
-        #'end_time' : 0.,
-        'default_time' : 0.,
-        'icase_start' : 10,
-        'icase_delta' : 3,
-        'stress_min' : 0.,
-        'stress_max' : 1000.,
+        #'start_time': 0.,
+        #'end_time': 0.,
+        'default_time': 0.,
+        'icase_start': 10,
+        'icase_delta': 3,
+        'stress_min': 0.,
+        'stress_max': 1000.,
     }
     data2['phase'] = 0.  # uncomment for phase
 
@@ -1425,5 +1447,5 @@ def main(): # pragma: no cover
     app.exec_()
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     main()

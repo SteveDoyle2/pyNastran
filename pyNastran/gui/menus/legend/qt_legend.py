@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import annotations
 import os
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from qtpy import QtCore
 from qtpy.QtGui import QFont
@@ -129,6 +129,16 @@ class LegendPropertiesWindow(PyDialog):
         self.create_layout()
         self.set_connections()
         self.set_font_size(data['font_size'])
+
+    @property
+    def settings(self) -> dict[str, Any]:
+        if not self.is_gui:
+            data = {
+                'animation_frame_rate': 30,
+                'animation_time': 2.0,
+            }
+            return data
+        return self.win_parent.settings
 
     def _update_defaults_to_blank(self):
         """Changes the default (None) to a blank string"""
@@ -700,28 +710,29 @@ class LegendPropertiesWindow(PyDialog):
         if not flag1:
             scale = self._scale
 
+        settings = self.settings
         data = {
-            'font_size' : self.out_data['font_size'],
-            'icase_fringe' : self._icase_fringe,
-            'icase_disp' : self._icase_disp,
-            'icase_vector' : self._icase_vector,
-            'title' : title,
-            'time' : 2,
-            'frames/sec' : 30,
-            'resolution' : 1,
-            'iframe' : 0,
-            'scale' : scale,
-            'default_scale' : self._default_scale,
+            'font_size': self.out_data['font_size'],
+            'icase_fringe': self._icase_fringe,
+            'icase_disp': self._icase_disp,
+            'icase_vector': self._icase_vector,
+            'title': title,
+            'time': settings.animation_time,
+            'frames/sec': settings.animation_frame_rate,
+            'resolution': 1,
+            'iframe': 0,
+            'scale': scale,
+            'default_scale': self._default_scale,
 
-            'arrow_scale' : scale,
-            'default_arrow_scale' : self._default_arrow_scale,
+            'arrow_scale': scale,
+            'default_arrow_scale': self._default_arrow_scale,
 
-            'is_scale' : self._default_phase is None,
-            'phase' : self._phase,
-            'default_phase' : self._default_phase,
-            'dirname' : os.path.abspath(os.getcwd()),
-            'clicked_ok' : False,
-            'close' : False,
+            'is_scale': self._default_phase is None,
+            'phase': self._phase,
+            'default_phase': self._default_phase,
+            'dirname': os.path.abspath(os.getcwd()),
+            'clicked_ok': False,
+            'close': False,
         }
         self.win_parent.legend_obj.set_animation_window(data)
 
@@ -935,45 +946,45 @@ def main(): # pragma: no cover
     app = QApplication(sys.argv)
     #The Main window
     data1 = {
-        'icase_fringe' : 1,
-        'icase_disp' : 62,
-        'icase_vector' : 3,
+        'icase_fringe': 1,
+        'icase_disp': 62,
+        'icase_vector': 3,
         'is_fringe': True,  # False=normals or no fringe
 
-        'font_size' : 8,
-        'title' : 'asdf',
-        'min_value' : 0.,
-        'max_value' : 10,
+        'font_size': 8,
+        'title': 'asdf',
+        'min_value': 0.,
+        'max_value': 10,
         'filter_value': None,
-        'scale' : 1e-12,
-        'default_scale' : 1.0,
+        'scale': 1e-12,
+        'default_scale': 1.0,
 
-        'arrow_scale' : 2e-2,
-        'default_arrow_scale' : 2.0,
+        'arrow_scale': 2e-2,
+        'default_arrow_scale': 2.0,
 
-        'phase' : 0.0,
-        #'default_phase' : 180.0,
-        'default_phase' : None,
+        'phase': 0.0,
+        #'default_phase': 180.0,
+        'default_phase': None,
 
-        'nlabels' : 11,
-        'default_nlabels' : 11,
+        'nlabels': 11,
+        'default_nlabels': 11,
 
-        'labelsize' : 12,
-        'default_labelsize' : 12,
+        'labelsize': 12,
+        'default_labelsize': 12,
 
-        'ncolors' : 13,
-        'default_ncolors' : 13,
+        'ncolors': 13,
+        'default_ncolors': 13,
 
-        'colormap' : 'jet',
-        'default_colormap' : 'jet',
+        'colormap': 'jet',
+        'default_colormap': 'jet',
 
-        'default_format' : '%s',
-        'format' : '%g',
+        'default_format': '%s',
+        'format': '%g',
 
         'is_low_to_high': True,
-        'is_discrete' : False,
-        'is_horizontal' : False,
-        'is_shown' : True,
+        'is_discrete': False,
+        'is_horizontal': False,
+        'is_shown': True,
     }
     main_window = LegendPropertiesWindow(data1)
 
@@ -981,5 +992,6 @@ def main(): # pragma: no cover
     # Enter the main loop
     app.exec_()
 
-if __name__ == "__main__": # pragma: no cover
+
+if __name__ == "__main__":  # pragma: no cover
     main()
