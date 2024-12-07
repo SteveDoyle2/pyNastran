@@ -180,17 +180,17 @@ class LegendObject(BaseGui):
         arrow_scale, default_arrow_scale = self.get_legend_vector(gui.icase_vector)
 
         data = {
-            'font_size' : self.settings.font_size,
-            'icase_fringe' : gui.icase_fringe,
-            'icase_disp' : gui.icase_disp,
-            'icase_vector' : gui.icase_vector,
-            'title' : legend_title,
-            'time' : 2,
-            'frames/sec' : 30,
-            'resolution' : 1,
-            'iframe' : 0,
-            'scale' : scale,
-            'default_scale' : default_scale,
+            'font_size': self.settings.font_size,
+            'icase_fringe': gui.icase_fringe,
+            'icase_disp': gui.icase_disp,
+            'icase_vector': gui.icase_vector,
+            'title': legend_title,
+            'time': self.settings.animation_time,
+            'frames/sec': self.settings.animation_frame_rate,
+            'resolution': 1,
+            'iframe': 0,
+            'scale': scale,
+            'default_scale': default_scale,
 
             'arrow_scale' : arrow_scale,
             'default_arrow_scale' : default_arrow_scale,

@@ -106,6 +106,9 @@ MAGNIFY = 5
 MAGNIFY_MIN = 1
 MAGNIFY_MAX = 10
 
+ANIMATION_FRAME_RATE = 30
+ANIMATION_TIME = 2.0
+
 PLOTEL_COLOR = RED_FLOAT
 CAERO_COLOR = YELLOW_FLOAT
 RBE_LINE_COLOR = LIGHT_GREEN_FLOAT
@@ -469,6 +472,9 @@ class Settings:
         self.coord_text_scale = COORD_TEXT_SCALE  # float
         self.coord_linewidth = 2.0
 
+        self.animation_frame_rate = ANIMATION_FRAME_RATE
+        self.animation_time = ANIMATION_TIME
+
         # string
         self.colormap = 'jet' # 'viridis'
 
@@ -683,6 +689,12 @@ class Settings:
             self.shear_moment_torque_line_width,
             min_value=LINE_WIDTH_MIN, max_value=LINE_WIDTH_MAX)
 
+        # animation
+        self._set_setting(settings, setting_keys, ['animation_time'],
+                          default=ANIMATION_TIME, save=True, auto_type=float)
+        self._set_setting(settings, setting_keys, ['animation_frame_rate'],
+                          default=ANIMATION_FRAME_RATE, save=True, auto_type=int)
+
         # displacement_model_scale - unused
         self._set_setting(settings, setting_keys, ['displacement_model_scale'],
                           default=DISPLACEMENT_MODEL_SCALE, save=True, auto_type=float)
@@ -892,6 +904,8 @@ class Settings:
 
         # float
         settings.setValue('displacement_model_scale', self.displacement_model_scale)
+        settings.setValue('animation_time', self.animation_time),
+        settings.setValue('animation_frame_rate', self.animation_frame_rate),
 
         # logging
         settings.setValue('show_info', self.show_info)

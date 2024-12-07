@@ -1,9 +1,11 @@
 import os
 import subprocess
 from typing import Optional
+from pyNastran.utils import PathLike
 
 
-def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
+def run_nastran(bdf_filename: PathLike,
+                nastran_cmd: PathLike='nastran',
                 keywords: Optional[str | list[str] | dict[str, str]]=None,
                 run: bool=True, run_in_bdf_dir: bool=True,
                 cleanup: bool=False) -> tuple[Optional[int], list[str]]:
@@ -55,7 +57,8 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
 
     assert os.path.exists(bdf_filename), bdf_filename
     #assert os.path.exists(nastran_cmd), nastran_cmd
-    call_args = [nastran_cmd, str(bdf_filename)] + keywords_list
+    nastran_cmd_str = str(nastran_cmd)
+    call_args = [nastran_cmd_str, str(bdf_filename)] + keywords_list
     return_code = None
     if run:
         return_code = subprocess.call(call_args)
