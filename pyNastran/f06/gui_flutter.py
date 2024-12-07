@@ -1,9 +1,11 @@
+from __future__ import annotations
 import os
 import sys
 import warnings
+import traceback
 #from functools import wraps
 from pathlib import Path
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, Any, TYPE_CHECKING
 
 ICON_PATH = Path('')
 try:
@@ -12,7 +14,6 @@ except ModuleNotFoundError:
     warnings.warn('couldnt find json5, using json')
     import json
 from functools import partial
-#import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 
@@ -37,7 +38,8 @@ from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import make_flutter_response, get_flutter_units
-
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
 X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq']
 PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
@@ -67,7 +69,7 @@ class Action:
             return self.ico
         return str(ICON_PATH / self.ico)
 
-class MainWindow(LoggableGui):
+class FlutterGui(LoggableGui):
     def __init__(self, f06_filename: str=''):
         super().__init__(html_logging=False)
         self.font_size = 10
@@ -131,7 +133,7 @@ class MainWindow(LoggableGui):
             'file_exit': Action(name='exit', text='Exit...', icon='exit2.jpg', func=self.on_file_exit),
         }
         recent_files = self._build_recent_file_actions(actions_input)
-        actions = build_actions(self, actions_input)
+        actions = build_actions(self, actions_input, load_icon=False)
         self.qactions = actions
 
         file_actions = [
@@ -255,7 +257,11 @@ class MainWindow(LoggableGui):
             ('eas_lim', self.eas_lim_edit_min, self.eas_lim_edit_max),
             ('tas_lim', self.tas_lim_edit_min, self.tas_lim_edit_max),
             ('mach_lim', self.mach_lim_edit_min, self.mach_lim_edit_max),
+            ('alt_lim', self.alt_lim_edit_min, self.alt_lim_edit_max),
+            ('q_lim', self.q_lim_edit_min, self.q_lim_edit_max),
+            ('rho_lim', self.rho_lim_edit_min, self.rho_lim_edit_max),
             ('xlim', self.xlim_edit_min, self.xlim_edit_max),
+
             ('damp_lim', self.damp_lim_edit_min, self.damp_lim_edit_max),
             ('freq_lim', self.freq_lim_edit_min, self.freq_lim_edit_max),
             ('kfreq_lim', self.kfreq_lim_edit_min, self.kfreq_lim_edit_max),
@@ -381,6 +387,18 @@ class MainWindow(LoggableGui):
         self.mach_lim_edit_min = QFloatEdit()
         self.mach_lim_edit_max = QFloatEdit()
 
+        self.alt_lim_label = QLabel('Alt Limits:')
+        self.alt_lim_edit_min = QFloatEdit()
+        self.alt_lim_edit_max = QFloatEdit()
+
+        self.q_lim_label = QLabel('Q Limits:')
+        self.q_lim_edit_min = QFloatEdit()
+        self.q_lim_edit_max = QFloatEdit()
+
+        self.rho_lim_label = QLabel('Rho Limits:')
+        self.rho_lim_edit_min = QFloatEdit('0')
+        self.rho_lim_edit_max = QFloatEdit()
+
         self.xlim_label = QLabel('X Limits:')
         self.xlim_edit_min = QFloatEdit('0')
         self.xlim_edit_max = QFloatEdit()
@@ -465,6 +483,9 @@ class MainWindow(LoggableGui):
 
         self.f06_load_button = QPushButton('Load F06', self)
         self.ok_button = QPushButton('Run', self)
+
+
+        self.button = QPushButton("Open New Window", self)
         self.setup_modes()
         self.on_plot_type()
 
@@ -475,6 +496,10 @@ class MainWindow(LoggableGui):
         show_eas_lim = False
         show_tas_lim = False
         show_mach_lim = False
+        show_alt_lim = False
+        show_q_lim = False
+        show_rho_lim = False
+
         show_xlim = False
         show_freq = False
         show_damp = False
@@ -514,6 +539,16 @@ class MainWindow(LoggableGui):
             elif 'mach' == x_plot_type:
                 show_mach_lim = True
                 show_xlim = False
+            elif 'alt' == x_plot_type:
+                show_alt_lim = True
+                show_xlim = False
+            elif 'q' == x_plot_type:
+                show_q_lim = True
+                show_xlim = False
+            elif 'rho' == x_plot_type:
+                show_rho_lim = True
+                show_xlim = False
+        #assert show_xlim is False, show_xlim
 
         self.x_plot_type_label.setVisible(not show_root_locus)
         self.x_plot_type_pulldown.setVisible(not show_root_locus)
@@ -529,6 +564,18 @@ class MainWindow(LoggableGui):
         self.mach_lim_label.setVisible(show_mach_lim)
         self.mach_lim_edit_min.setVisible(show_mach_lim)
         self.mach_lim_edit_max.setVisible(show_mach_lim)
+
+        self.alt_lim_label.setVisible(show_alt_lim)
+        self.alt_lim_edit_min.setVisible(show_alt_lim)
+        self.alt_lim_edit_max.setVisible(show_alt_lim)
+
+        self.q_lim_label.setVisible(show_q_lim)
+        self.q_lim_edit_min.setVisible(show_q_lim)
+        self.q_lim_edit_max.setVisible(show_q_lim)
+
+        self.rho_lim_label.setVisible(show_rho_lim)
+        self.rho_lim_edit_min.setVisible(show_rho_lim)
+        self.rho_lim_edit_max.setVisible(show_rho_lim)
 
         self.xlim_label.setVisible(show_xlim)
         self.xlim_edit_min.setVisible(show_xlim)
@@ -600,6 +647,21 @@ class MainWindow(LoggableGui):
         grid.addWidget(self.mach_lim_label, irow, 0)
         grid.addWidget(self.mach_lim_edit_min, irow, 1)
         grid.addWidget(self.mach_lim_edit_max, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.alt_lim_label, irow, 0)
+        grid.addWidget(self.alt_lim_edit_min, irow, 1)
+        grid.addWidget(self.alt_lim_edit_max, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.q_lim_label, irow, 0)
+        grid.addWidget(self.q_lim_edit_min, irow, 1)
+        grid.addWidget(self.q_lim_edit_max, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.rho_lim_label, irow, 0)
+        grid.addWidget(self.rho_lim_edit_min, irow, 1)
+        grid.addWidget(self.rho_lim_edit_max, irow, 2)
         irow += 1
 
         grid.addWidget(self.xlim_label, irow, 0)
@@ -681,7 +743,7 @@ class MainWindow(LoggableGui):
         vbox.addLayout(hbox_check)
         vbox.addStretch(1)
         vbox.addLayout(ok_cancel_hbox)
-
+        vbox.addWidget(self.button)
         #log_widget = ApplicationLogWidget(self)
 
         log_widget = self.setup_logging()
@@ -712,15 +774,23 @@ class MainWindow(LoggableGui):
         self.ok_button.clicked.connect(self.on_ok)
         self.units_out_pulldown.currentIndexChanged.connect(self.on_units_out)
 
+        self.button.clicked.connect(self.on_open_new_window)
+
     def on_units_out(self):
         units_out = self.units_out_pulldown.currentText()
         units_out_dict = get_flutter_units(units_out)
 
         tas_units = units_out_dict['velocity']
         eas_units = units_out_dict['eas']
+        alt_units = units_out_dict['altitude']
+        q_units = units_out_dict['dynamic_pressure']
+        rho_units = units_out_dict['density']
         self.tas_lim_label.setText(f'TAS Limits ({tas_units}):')
 
         self.eas_lim_label.setText(f'EAS Limits ({eas_units}):')
+        self.alt_lim_label.setText(f'Alt Limits ({alt_units}):')
+        self.rho_lim_label.setText(f'Rho Limits ({rho_units}):')
+        self.q_lim_label.setText(f'Q Limits ({q_units}):')
         self.VL_label.setText(f'VL Limit ({eas_units}):')
         self.VF_label.setText(f'VF, Flutter ({eas_units}):')
 
@@ -740,7 +810,7 @@ class MainWindow(LoggableGui):
         f06_units = self.units_in_pulldown.currentText()
         out_units = self.units_out_pulldown.currentText()
 
-        self.responses = load_f06_op2(
+        model, self.responses = load_f06_op2(
             f06_filename, self.log,
             f06_units, out_units)
 
@@ -888,11 +958,13 @@ class MainWindow(LoggableGui):
             xlim = self.tas_lim
         elif x_plot_type == 'mach':
             xlim = self.mach_lim
-        # elif x_plot_type == 'alt':
-        #     xlim = self.alt_lim
-        # elif x_plot_type == 'q':
-        #     xlim = self.q_lim
-        else:
+        elif x_plot_type == 'alt':
+            xlim = self.alt_lim
+        elif x_plot_type == 'q':
+            xlim = self.q_lim
+        else:  # pragma: no cover
+            self.log.error(f'x_plot_type={x_plot_type!r} is not supported')
+            #raise RuntimeError(x_plot_type)
             xlim = self.xlim
 
         v_lines = []
@@ -972,6 +1044,10 @@ class MainWindow(LoggableGui):
                 assert plot_type in 'x-damp-freq', plot_type
                 #print('plot_vg_vf')
                 png_filename = base + f'_{x_plot_type}-damp-freq.png'
+                #self.log.info(f'png_filename={png_filename!r}')
+                #self.log.info(f'modes={modes!r}')
+                #self.log.info(f'freq_tol={freq_tol!r}')
+                #self.log.info(f'v_lines={v_lines!r}')
                 response.plot_vg_vf(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     plot_type=x_plot_type,
@@ -987,7 +1063,10 @@ class MainWindow(LoggableGui):
                     png_filename=png_filename,
                 )
         except Exception as e:
+            self.log.error(f'plot_type={plot_type}')
             self.log.error(str(e))
+            print(traceback.print_tb())
+            print(traceback.print_exception())
             raise
 
         base2 = os.path.splitext(png_filename)[0]
@@ -1010,19 +1089,29 @@ class MainWindow(LoggableGui):
                                 Limit, Limit, Limit, Limit, Limit,
                                 Optional[float], Optional[float],
                                 Optional[float], Optional[float], bool]:
-        eas_lim_min, is_passed1 = get_float_or_none(self.eas_lim_edit_min)
-        eas_lim_max, is_passed2 = get_float_or_none(self.eas_lim_edit_max)
-        tas_lim_min, is_passed3 = get_float_or_none(self.tas_lim_edit_min)
-        tas_lim_max, is_passed4 = get_float_or_none(self.tas_lim_edit_max)
-        mach_lim_min, is_passed5 = get_float_or_none(self.mach_lim_edit_min)
-        mach_lim_max, is_passed6 = get_float_or_none(self.mach_lim_edit_max)
-        xlim_min, is_passed7 = get_float_or_none(self.xlim_edit_min)
-        xlim_max, is_passed8 = get_float_or_none(self.xlim_edit_max)
+        eas_lim_min, is_passed1a = get_float_or_none(self.eas_lim_edit_min)
+        eas_lim_max, is_passed1b = get_float_or_none(self.eas_lim_edit_max)
+        tas_lim_min, is_passed2a = get_float_or_none(self.tas_lim_edit_min)
+        tas_lim_max, is_passed2b = get_float_or_none(self.tas_lim_edit_max)
+        mach_lim_min, is_passed3a = get_float_or_none(self.mach_lim_edit_min)
+        mach_lim_max, is_passed3b = get_float_or_none(self.mach_lim_edit_max)
+        alt_lim_min, is_passed4a = get_float_or_none(self.alt_lim_edit_min)
+        alt_lim_max, is_passed4b = get_float_or_none(self.alt_lim_edit_max)
+        q_lim_min, is_passed5a = get_float_or_none(self.q_lim_edit_min)
+        q_lim_max, is_passed5b = get_float_or_none(self.q_lim_edit_max)
+        rho_lim_min, is_passed6a = get_float_or_none(self.rho_lim_edit_min)
+        rho_lim_max, is_passed6b = get_float_or_none(self.rho_lim_edit_max)
+        xlim_min, is_passed7a = get_float_or_none(self.xlim_edit_min)
+        xlim_max, is_passed7b = get_float_or_none(self.xlim_edit_max)
 
-        is_passed_x = all([is_passed1, is_passed2,
-                           is_passed3, is_passed4,
-                           is_passed5, is_passed6,
-                           is_passed7, is_passed8])
+        is_passed_x = all([is_passed1a, is_passed1b,
+                           is_passed2a, is_passed2b,
+                           is_passed3a, is_passed3b,
+                           is_passed4a, is_passed4b,
+                           is_passed5a, is_passed5b,
+                           is_passed6a, is_passed6b,
+                           is_passed7a, is_passed7a,
+                           ])
 
         damp_lim_min, is_passed_damp1 = get_float_or_none(self.damp_lim_edit_min)
         damp_lim_max, is_passed_damp2 = get_float_or_none(self.damp_lim_edit_max)
@@ -1048,7 +1137,11 @@ class MainWindow(LoggableGui):
         eas_lim = [eas_lim_min, eas_lim_max]
         tas_lim = [tas_lim_min, tas_lim_max]
         mach_lim = [mach_lim_min, mach_lim_max]
+        alt_lim = [alt_lim_min, alt_lim_max]
+        q_lim = [q_lim_min, q_lim_max]
+        rho_lim = [rho_lim_min, rho_lim_max]
         xlim = [xlim_min, xlim_max]
+
         vl, is_passed_vl = get_float_or_none(self.VL_edit)
         vf, is_passed_vf = get_float_or_none(self.VF_edit)
         if is_passed_vl and vl is None:
@@ -1075,7 +1168,7 @@ class MainWindow(LoggableGui):
         #print(f'is_passed_flags = {is_passed_flags}')
         #print(f'freq_tol = {freq_tol}')
         out = (
-            eas_lim, tas_lim, mach_lim, xlim,
+            eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim, xlim,
             damp_lim, freq_lim, kfreq_lim,
             eigr_lim, eigi_lim, freq_tol, freq_tol_remove,
             vl, vf, is_passed,
@@ -1089,7 +1182,7 @@ class MainWindow(LoggableGui):
         return modes
 
     def validate(self) -> bool:
-        (eas_lim, tas_lim, mach_lim, xlim,
+        (eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim, xlim,
          ydamp_lim, freq_lim, kfreq_lim,
          eigr_lim, eigi_lim,
          freq_tol, freq_tol_remove,
@@ -1104,6 +1197,9 @@ class MainWindow(LoggableGui):
         self.eas_lim = eas_lim
         self.tas_lim = tas_lim
         self.mach_lim = mach_lim
+        self.alt_lim = alt_lim
+        self.q_lim = q_lim
+        self.rho_lim = rho_lim
         self.xlim = xlim
         self.ydamp_lim = ydamp_lim
         self.kfreq_lim = kfreq_lim
@@ -1141,10 +1237,14 @@ class MainWindow(LoggableGui):
             'selected_modes': selected_modes,
             'x_plot_type': self.x_plot_type,
             'plot_type': self.plot_type,
-            'xlim': xlim,
             'eas_lim': eas_lim,
             'tas_lim': tas_lim,
             'mach_lim': mach_lim,
+            'alt_lim': alt_lim,
+            'q_lim': q_lim,
+            'rho_lim': rho_lim,
+            'xlim': xlim,
+
             'damp_lim': ydamp_lim,
             'freq_lim': freq_lim,
             'kfreq_lim': kfreq_lim,
@@ -1174,6 +1274,9 @@ class MainWindow(LoggableGui):
             self.log.error(f'failed data:\n{str(data)}')
         return is_passed
 
+    def on_open_new_window(self):
+        self.new_window = NewWindow()
+        self.new_window.show()
 
 def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
     items = list_widget.selectedItems()
@@ -1182,6 +1285,11 @@ def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
         text = item.text()
         texts.append(text)
     return texts
+
+class NewWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("New Window")
 
 def build_menus(menus_dict: dict[str, tuple[QMenu, list[str]]],
                 actions: dict[str, QAction]) -> None:
@@ -1198,7 +1306,8 @@ def build_menus(menus_dict: dict[str, tuple[QMenu, list[str]]],
             #print('menu = ', menu)
             #print('action = ', action)
 
-def build_actions(self, actions_input: dict[str, Action]) -> dict[str, QAction]:
+def build_actions(self, actions_input: dict[str, Action],
+                  load_icon: bool=True) -> dict[str, QAction]:
     actions = {}
     tip = ''
     for name, action_inputi in actions_input.items():
@@ -1208,7 +1317,7 @@ def build_actions(self, actions_input: dict[str, Action]) -> dict[str, QAction]:
         txt = action_inputi.text
         show = action_inputi.show
 
-        if icon_path and 0:
+        if icon_path and load_icon:
             ico = QIcon(icon_path)
             #print('icon_path = ', icon_path)
             assert os.path.exists(icon_path), icon_path
@@ -1287,42 +1396,55 @@ def _to_str(value: Optional[int | float]) -> str:
     return str_value
 
 def load_f06_op2(f06_filename: str, log: SimpleLogger,
-                 f06_units: str,
-                 out_units: str) -> dict[int, FlutterResponse]:
+                 in_units: str,
+                 out_units: str) -> tuple[OP2, dict[int, FlutterResponse]]:
+    if not os.path.exists(f06_filename):
+        log.error(f'Cant find {f06_filename}')
+        return
+
+    model = None
     responses = {}
+    in_units_dict = get_flutter_units(in_units)
+    out_units_dict = get_flutter_units(out_units)
     ext = os.path.splitext(f06_filename)[1].lower()
     if ext == '.f06':
         try:
             responses: FlutterResponse = make_flutter_response(
                 f06_filename,
-                f06_units=f06_units, out_units=out_units,
+                f06_units=in_units_dict,
+                out_units=out_units_dict,
                 log=log)
         except Exception as e:
             log.error(str(e))
-            return responses
+            return model, responses
     elif ext == '.op2':
         try:
             from pyNastran.op2.op2 import OP2
         except ImportError as e:
             log.error(str(e))
-            return responses
+            return model, responses
 
+        assert isinstance(in_units_dict, dict), in_units_dict
         model = OP2(log=log)
-        results_to_include = ['eigenvectors']
+        model.in_units = in_units_dict
+        results_to_include = ['eigenvectors', 'vg_vf_response']
         model.set_results(results_to_include)
         try:
-            model.read_op2(build_dataframe=False)
+            model.read_op2(f06_filename, build_dataframe=False)
+            responses = model.op2_results.vg_vf_response
+            if len(responses) == 0:
+                log.error('Could not find OVG table in op2')
         except Exception as e:
             log.error(str(e))
-            return responses
-        responses = model.op2_results.vg_vf_response
-        if len(responses) == 0:
-            log.error('Could not find OVG table in op2')
+            return model, responses
     else:
         log.error('Could not find OVG table in op2')
         raise RuntimeError
 
-    return responses
+    for response in responses.values():
+        response.convert_units(out_units_dict)
+
+    return model, responses
 
 
 def main(f06_filename: str='') -> None:  # pragma: no cover
@@ -1337,7 +1459,7 @@ def main(f06_filename: str='') -> None:  # pragma: no cover
     app = QApplication(sys.argv)
     # The Main window
 
-    main_window = MainWindow(f06_filename)
+    main_window = FlutterGui(f06_filename)
     main_window.show()
     # Enter the main loop
     app.exec_()

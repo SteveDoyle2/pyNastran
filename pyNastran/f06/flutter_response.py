@@ -1242,6 +1242,8 @@ class FlutterResponse:
     def _plot_type_to_ix_xlabel(self, plot_type: str) -> tuple[int, str]:
         """helper method for ``plot_vg_vf``"""
         plot_type = plot_type.lower()
+        print(f'plot_type={plot_type!r} out_units={self.out_units!r}')
+        assert isinstance(self.out_units, dict), f'out_units={self.out_units!r}'
         if plot_type == 'tas':
             ix = self.ivelocity
             velocity_units = self.out_units['velocity']
