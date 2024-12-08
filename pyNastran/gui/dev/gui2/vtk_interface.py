@@ -11,6 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.dev.gui2.gui2 import MainWindow2
     from vtkmodules.vtkInteractionStyle import vtkInteractor
+    from pyNastran.gui.gui_objects.settings import Settings
 
 
 class ScalarBar:
@@ -28,7 +29,6 @@ class VtkInterface:
     def __init__(self, gui: MainWindow2, parent):
         self.gui = gui
         self.scalar_bar_actor = ScalarBar()
-
 
         self.vtk_interactor = QVTKRenderWindowInteractor(parent=parent)
         self.set_style_as_trackball()
