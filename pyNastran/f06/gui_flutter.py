@@ -27,6 +27,12 @@ from qtpy.QtWidgets import (
     QCheckBox, QListWidgetItem, QAbstractItemView,
     QListWidget, QSpinBox,
 )
+from qtpy.QtWidgets import (
+    QMessageBox,
+    QMainWindow, QDockWidget, QFrame, QToolBar,
+    QToolButton, QMenuBar,
+)
+
 from qtpy.QtGui import QIcon
 QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
@@ -50,6 +56,11 @@ HOME_DIRNAME = os.path.expanduser('~')
 HOME_FILENAME = os.path.join(HOME_DIRNAME, 'plot_flutter.json')
 
 #FONT_SIZE = 12
+import pyNastran
+PKG_PATH = Path(pyNastran.__path__[0])
+AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
+assert os.path.exists(AERO_PATH), AERO_PATH
+BDF_FILENAME = AERO_PATH / 'flutter_bug' / 'msc' / 'wing_b1.bdf'
 
 class Action:
     def __init__(self, name: str, text: str, icon: str='',
@@ -122,6 +133,7 @@ class FlutterGui(LoggableGui):
         self.setup_connections()
         self._set_window_title()
         self.on_font_size()
+        self.on_open_new_window()
 
     def setup_toolbar(self):
         #frame = QFrame(self)
@@ -1275,6 +1287,13 @@ class FlutterGui(LoggableGui):
         return is_passed
 
     def on_open_new_window(self):
+        return
+        try:
+            from pyNastran.f06.gui_flutter_vtk import NewWindow
+        except ImportError as e:
+            self.log.error(str(e))
+            self.log.error('cant open window')
+            return
         self.new_window = NewWindow()
         self.new_window.show()
 
@@ -1285,11 +1304,6 @@ def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
         text = item.text()
         texts.append(text)
     return texts
-
-class NewWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("New Window")
 
 def build_menus(menus_dict: dict[str, tuple[QMenu, list[str]]],
                 actions: dict[str, QAction]) -> None:

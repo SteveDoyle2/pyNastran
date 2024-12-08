@@ -212,7 +212,8 @@ class MainWindow2(QMainWindow):
             )
         self.log = log
 
-    def _logg_msg(self, log_type: str, filename: str, lineno: int, msg: str) -> None:
+    def _logg_msg(self, log_type: str, filename: str,
+                  lineno: int, msg: str) -> None:
         """
         Add message to log widget trying to choose right color for it.
 

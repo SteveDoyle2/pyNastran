@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from numpy.lib import recfunctions as rfn  # random numpy package to merge arrays...
 try:
+    import tables
     from tables import open_file, Group, Node, File
 except ImportError:
     print('pytables was not found; no h5 support.  Run ">>> pip install tables"\n'
