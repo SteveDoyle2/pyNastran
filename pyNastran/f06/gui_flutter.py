@@ -3,7 +3,6 @@ import os
 import sys
 import warnings
 import traceback
-#from functools import wraps
 from pathlib import Path
 from typing import Callable, Optional, Any, TYPE_CHECKING
 
@@ -27,11 +26,11 @@ from qtpy.QtWidgets import (
     QCheckBox, QListWidgetItem, QAbstractItemView,
     QListWidget, QSpinBox,
 )
-from qtpy.QtWidgets import (
-    QMessageBox,
-    QMainWindow, QDockWidget, QFrame, QToolBar,
-    QToolButton, QMenuBar,
-)
+# from qtpy.QtWidgets import (
+#     QMessageBox,
+#     QMainWindow, QDockWidget, QFrame, QToolBar,
+#     QToolButton, QMenuBar,
+# )
 
 from qtpy.QtGui import QIcon
 QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
@@ -58,9 +57,7 @@ HOME_FILENAME = os.path.join(HOME_DIRNAME, 'plot_flutter.json')
 #FONT_SIZE = 12
 import pyNastran
 PKG_PATH = Path(pyNastran.__path__[0])
-AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
-assert os.path.exists(AERO_PATH), AERO_PATH
-BDF_FILENAME = AERO_PATH / 'flutter_bug' / 'msc' / 'wing_b1.bdf'
+BDF_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.bdf'
 
 class Action:
     def __init__(self, name: str, text: str, icon: str='',
@@ -1287,14 +1284,14 @@ class FlutterGui(LoggableGui):
         return is_passed
 
     def on_open_new_window(self):
-        return
+        #return
         try:
             from pyNastran.f06.gui_flutter_vtk import NewWindow
         except ImportError as e:
             self.log.error(str(e))
             self.log.error('cant open window')
             return
-        self.new_window = NewWindow()
+        self.new_window = NewWindow(BDF_FILENAME)
         self.new_window.show()
 
 def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
@@ -1453,7 +1450,7 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
             return model, responses
     else:
         log.error('Could not find OVG table in op2')
-        raise RuntimeError
+        return model, responses
 
     for response in responses.values():
         response.convert_units(out_units_dict)

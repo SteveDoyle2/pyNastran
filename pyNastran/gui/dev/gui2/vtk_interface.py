@@ -52,6 +52,9 @@ class VtkInterface:
     def log(self) -> SimpleLogger:
         return self.gui.log
 
+    @property
+    def iren(self) -> QVTKRenderWindowInteractor:
+        return self.gui.iren
     def set_style(self):
         #self.mouse_actions.set_style_as_trackball()
         self.mouse_actions.set_style_as_joystick()
