@@ -1346,6 +1346,7 @@ class AnimationWindow(PyDialog):
             #self.close()
             ##self.destroy()
 
+    @property
     def settings(self) -> dict[str, Any]:
         if self.is_gui:
             out = self.win_parent.settings

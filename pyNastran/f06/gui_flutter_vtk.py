@@ -8,6 +8,7 @@ from qtpy.QtWidgets import (
     QMainWindow, QDockWidget, QFrame, QToolBar,
 )
 
+from pyNastran.utils import PathLike
 from pyNastran.dev.bdf_vectorized3.nastran_io3 import Nastran3
 from pyNastran.gui.vtk_rendering_core import (
     vtkActor, vtkDataSetMapper, vtkRenderer,
@@ -32,16 +33,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
-#RED_FLOAT = (1.0, 0., 0.)
+#PKG_PATH = Path(pyNastran.__path__[0])
 
-PKG_PATH = Path(pyNastran.__path__[0])
-#AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
-#assert os.path.exists(AERO_PATH), AERO_PATH
-#BDF_FILENAME = AERO_PATH / 'flutter_bug' / 'msc' / 'wing_b1.bdf'
-
-class NewWindow(QMainWindow): # was QFame
-    def __init__(self, bdf_filename: str):
+class VtkWindow(QMainWindow):
+    def __init__(self, parent: QMainWindow,
+                 bdf_filename: str, op2_filename: str=''):
         super().__init__()
+        self.gui = parent
         self.run_vtk = True
         self.eid_maps = {}
         self.nid_maps = {}
@@ -58,38 +56,19 @@ class NewWindow(QMainWindow): # was QFame
         self.view_actions = ViewActions(self)
         self.tool_actions = ToolActions(self)
 
-        self.setWindowTitle("New Window")
+        title = f'FlutterGui - {bdf_filename}'
+        if op2_filename:
+            title += f' - {op2_filename}'
+        self.setWindowTitle(title)
 
-        if 1:
-            self.vtk_frame = QFrame(self)
+        #---------------------------------------------------
+        self.vtk_frame = QFrame(self)
 
-            self.vtk_interface = VtkInterface(self, self.vtk_frame)
+        self.vtk_interface = VtkInterface(self, self.vtk_frame)
 
-            # put the vtk_interactor inside the vtk_frame
-            self.set_vtk_frame_style()
-            renderer = self.vtk_interface.rend
-        else:
-            # Setup renderer
-            renderer = vtkRenderer()
-
-            # Setup render window
-            render_window = vtkRenderWindow()
-            render_window.AddRenderer(renderer)
-
-            # Setup render window interactor
-            #render_window_interactor = vtkRenderWindowInteractor()
-            render_window_interactor = QVTKRenderWindowInteractor(parent=self)
-
-            # Render and start interaction
-            render_window_interactor.SetRenderWindow(render_window)
-            #render_window_interactor.Initialize()
-
-            render_window_interactor.Start()
-            #self.iren = render_window_interactor
-            self.vtk_interactor = render_window_interactor
-            self.setCentralWidget(render_window_interactor)
-            self.set_style_as_trackball(render_window_interactor)
-            self.rend = renderer
+        # put the vtk_interactor inside the vtk_frame
+        self.set_vtk_frame_style()
+        renderer = self.vtk_interface.rend
 
         # put the corner axis into the renderer
         self.tool_actions.create_corner_axis()
@@ -101,23 +80,42 @@ class NewWindow(QMainWindow): # was QFame
         geom_actor = vtkActor()
         geom_actor.SetMapper(grid_mapper)
 
+        camera = renderer.GetActiveCamera()
+        if self.settings.use_parallel_projection:
+            camera.ParallelProjectionOn()
+
         renderer.SetBackground(*self.settings.background_color)
         renderer.AddActor(geom_actor)
         # if make_glyphs:
         # renderer.AddActor(arrow_actor)
-        renderer.ResetCamera()
 
         #self.setCentralWidget(self.vtk_frame)
-        #self.setMinimumSize(400, 400)
         self.grid = ugrid
-
-        #assert BDF_FILENAME.exists(), BDF_FILENAME
-        bdf_filename = str(bdf_filename)
-        analysis = Nastran3(self)
-        analysis.load_nastran3_geometry(bdf_filename)
+        self._load_model(bdf_filename, op2_filename)
+        renderer.ResetCamera()
 
         # Render again to set the correct view
         self.render()
+
+    def _load_model(self, bdf_filename: PathLike,
+                   op2_filename: PathLike='') -> None:
+        bdf_filename = str(bdf_filename)
+        analysis = Nastran3(self)
+        analysis.save_results_model = True
+        self.is_geom = True
+        analysis.load_nastran3_geometry(bdf_filename)
+        self.is_geom = False
+        if os.path.exists(op2_filename):
+            analysis.load_nastran3_results(op2_filename)
+
+
+        if len(analysis.model.eigenvectors) == 0:
+            self.gui.mode2_pulldown.clear()
+            return
+        print('analysis.model.eigenvectors =', analysis.model.eigenvectors)
+        for key, case in analysis.model.eigenvectors.items():
+            print(key)
+        asdf
 
     def set_style_as_trackball(self, vtk_interactor) -> None:
         """sets the default rotation style"""
@@ -136,7 +134,6 @@ class NewWindow(QMainWindow): # was QFame
         vtk_frame.setFrameStyle(QFrame.NoFrame | QFrame.Plain)
         # this is our main, 'central' widget
         self.setCentralWidget(self.vtk_frame)
-        #print('build_vtk_frame')
 
     # @property
     # def vtk_interactor(self) -> QVTKRenderWindowInteractor:
@@ -158,9 +155,9 @@ class NewWindow(QMainWindow): # was QFame
         self.vtk_interactor.GetRenderWindow().Render()
 
     def log_info(self, msg: str) -> None:
-        print(msg)
+        self.gui.log_info(msg)
     def log_debug(self, msg: str) -> None:
-        print(msg)
+        self.gui.log_debug(msg)
     def create_global_axes(self, dim_max: float):
         return
     def _add_alt_actors(self,
@@ -190,7 +187,14 @@ class NewWindow(QMainWindow): # was QFame
 
     def get_new_icase(self):
         return 0
-    def _finish_results_io2(self, name, form, cases):
+    def get_form(self) -> list:
+        return []
+    def _finish_results_io2(self, name: str, form: list, cases: dict[int, Any]):
+        if self.is_geom:
+            self.result_cases = {}
+            return
+        for case_id, case in cases.items():
+            print(case)
         pass
     def create_alternate_vtk_grid(self, name: str,
                                   color: ColorInt=None,

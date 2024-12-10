@@ -57,7 +57,11 @@ HOME_FILENAME = os.path.join(HOME_DIRNAME, 'plot_flutter.json')
 #FONT_SIZE = 12
 import pyNastran
 PKG_PATH = Path(pyNastran.__path__[0])
-BDF_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.bdf'
+AERO_PATH = PKG_PATH / '..' / 'models' / 'aero' / 'flutter_bug'
+BDF_FILENAME = AERO_PATH / 'nx' / 'wing_b1.bdf'
+OP2_FILENAME = AERO_PATH / 'wing_b1.op2'
+#BDF_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.bdf'
+#OP2_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.op2'
 
 class Action:
     def __init__(self, name: str, text: str, icon: str='',
@@ -494,7 +498,11 @@ class FlutterGui(LoggableGui):
         self.ok_button = QPushButton('Run', self)
 
 
-        self.button = QPushButton("Open New Window", self)
+        self.gui_button = QPushButton("Open GUI", self)
+        self.solution_type_label = QLabel('Solution Type:')
+        self.solution_type_pulldown = QComboBox(self)
+        self.mode2_label = QLabel('Mode:')
+        self.mode2_pulldown = QComboBox(self)
         self.setup_modes()
         self.on_plot_type()
 
@@ -746,13 +754,16 @@ class FlutterGui(LoggableGui):
         hbox_check.addLayout(grid_check)
         hbox_check.addStretch(1)
 
+        grid_modes = self._grid_modes()
+
         vbox = QVBoxLayout()
         vbox.addLayout(hbox)
         vbox.addLayout(grid)
         vbox.addLayout(hbox_check)
         vbox.addStretch(1)
         vbox.addLayout(ok_cancel_hbox)
-        vbox.addWidget(self.button)
+        vbox.addWidget(self.gui_button)
+        vbox.addLayout(grid_modes)
         #log_widget = ApplicationLogWidget(self)
 
         log_widget = self.setup_logging()
@@ -770,6 +781,20 @@ class FlutterGui(LoggableGui):
         widget.setLayout(vbox2)
         self.setCentralWidget(widget)
 
+    def _grid_modes(self) -> QGridLayout:
+        irow = 0
+        grid_modes = QGridLayout()
+        grid_modes.addWidget(self.solution_type_label, irow, 0)
+        grid_modes.addWidget(self.solution_type_pulldown, irow, 1)
+        self.solution_type_pulldown.addItems(['Real Modes', 'Complex Modes'])
+        irow += 1
+
+        grid_modes.addWidget(self.mode2_label, irow, 0)
+        grid_modes.addWidget(self.mode2_pulldown, irow, 1)
+        # self.solution_type_pulldown.addItems(['Real Modes', 'Complex Modes'])
+        irow += 1
+        return grid_modes
+
     def setup_connections(self) -> None:
         self.f06_load_button.clicked.connect(self.on_load_f06)
         self.x_plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
@@ -783,7 +808,7 @@ class FlutterGui(LoggableGui):
         self.ok_button.clicked.connect(self.on_ok)
         self.units_out_pulldown.currentIndexChanged.connect(self.on_units_out)
 
-        self.button.clicked.connect(self.on_open_new_window)
+        self.gui_button.clicked.connect(self.on_open_new_window)
 
     def on_units_out(self):
         units_out = self.units_out_pulldown.currentText()
@@ -1286,13 +1311,19 @@ class FlutterGui(LoggableGui):
     def on_open_new_window(self):
         #return
         try:
-            from pyNastran.f06.gui_flutter_vtk import NewWindow
+            from pyNastran.f06.gui_flutter_vtk import VtkWindow
         except ImportError as e:
             self.log.error(str(e))
             self.log.error('cant open window')
             return
-        self.new_window = NewWindow(BDF_FILENAME)
+        self.new_window = VtkWindow(self, BDF_FILENAME, OP2_FILENAME)
         self.new_window.show()
+
+    def log_info(self, msg: str) -> None:
+        print(msg)
+    def log_debug(self, msg: str) -> None:
+        print(msg)
+
 
 def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
     items = list_widget.selectedItems()
