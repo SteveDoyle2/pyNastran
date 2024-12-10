@@ -8,6 +8,7 @@ from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 #import vtkmodules
 
+from pyNastran.utils import PathLike
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 #from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
@@ -36,9 +37,10 @@ from .alt_actor_builder import (
     create_alt_conm2_grids, create_alt_rbe2_grids, create_alt_rbe3_grids,
     create_alt_spcs, create_alt_axes,
     create_monpnt, create_plotels)
-from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
-from pyNastran.dev.op2_vectorized3.op2_hdf5 import Results
-from pyNastran.utils import PathLike
+IS_TABLES = False
+if IS_TABLES:
+    from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
+    from pyNastran.dev.op2_vectorized3.op2_hdf5 import Results
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.main_window import MainWindow
@@ -53,6 +55,7 @@ class Nastran3:
     def __init__(self, gui: MainWindow):
         self.gui = gui
         self.data_map = None
+        self.save_results_model = False
         self.model = BDF(debug=True, log=None, mode='msc')
         #self.model.is_lax_parser = True
 
@@ -79,6 +82,7 @@ class Nastran3:
 
     def load_op2_results(self, op2_filename: PathLike, plot: bool=True) -> None:
         """loads results from an op2 file"""
+        from pyNastran.op2.op2 import OP2
         assert isinstance(op2_filename, (str, PurePath)), op2_filename
         model = OP2(debug=True, log=None, mode='msc')
         model.read_matpool = False
@@ -124,6 +128,7 @@ class Nastran3:
     def load_nastran3_results(self, results_filename: PathLike,
                               name: str='main', plot: bool=True) -> vtkUnstructuredGrid:
         """loads geometry from a op2/h5 file"""
+        results_filename = str(results_filename)
         results_filename_lower = results_filename.lower()
         if results_filename_lower.endswith('.op2'):
             return self.load_op2_results(results_filename)
@@ -217,6 +222,8 @@ class Nastran3:
                     #)
                    #]])
 
+        if self.save_results_model:
+            self.model = model
         return icase
 
     def load_h5_geometry(self, h5_filename: PathLike,
@@ -1244,8 +1251,8 @@ def _load_stress_strain(element_cards: list,
 
         elif etype in {'CBAR'}:
             for result in results_cases:
-                if result.is_complex:
-                    continue
+                # if result.is_complex:
+                continue
                 # element does not has duplicate ids for A/B side
                 ielement0 = nelement0 + np.searchsorted(model_element_id, result.element)
                 # data is long
@@ -1271,8 +1278,11 @@ def _load_stress_strain(element_cards: list,
                 omaxi = np.column_stack([
                     stressi[irange, 5],   # omax
                     stressi[irange, 12],  # omax
-                ]).max(axis=1)
-                assert len(omaxi) == len(ielement0)
+                ]) #.max(axis=1)
+                print(omaxi.shape)
+                omaxi = omaxi.max(axis=1)
+                print(omaxi.shape)
+                assert len(omaxi) == len(ielement0), f'len(omaxi)={len(omaxi)}; len(ielement0)={len(ielement0)}'
                 omini = np.column_stack([
                     stressi[irange, 6],   # omin
                     stressi[irange, 13],  # omin
