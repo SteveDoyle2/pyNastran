@@ -35,13 +35,14 @@ from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 #RED_FLOAT = (1.0, 0., 0.)
 
 PKG_PATH = Path(pyNastran.__path__[0])
-AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
-assert os.path.exists(AERO_PATH), AERO_PATH
-BDF_FILENAME = AERO_PATH / 'flutter_bug' / 'msc' / 'wing_b1.bdf'
+#AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
+#assert os.path.exists(AERO_PATH), AERO_PATH
+#BDF_FILENAME = AERO_PATH / 'flutter_bug' / 'msc' / 'wing_b1.bdf'
 
 class NewWindow(QMainWindow): # was QFame
-    def __init__(self):
+    def __init__(self, bdf_filename: str):
         super().__init__()
+        self.run_vtk = True
         self.eid_maps = {}
         self.nid_maps = {}
         self.alt_grids = {}
@@ -59,7 +60,7 @@ class NewWindow(QMainWindow): # was QFame
 
         self.setWindowTitle("New Window")
 
-        if 0:
+        if 1:
             self.vtk_frame = QFrame(self)
 
             self.vtk_interface = VtkInterface(self, self.vtk_frame)
@@ -84,10 +85,14 @@ class NewWindow(QMainWindow): # was QFame
             #render_window_interactor.Initialize()
 
             render_window_interactor.Start()
-            self.iren = render_window_interactor
+            #self.iren = render_window_interactor
             self.vtk_interactor = render_window_interactor
             self.setCentralWidget(render_window_interactor)
             self.set_style_as_trackball(render_window_interactor)
+            self.rend = renderer
+
+        # put the corner axis into the renderer
+        self.tool_actions.create_corner_axis()
 
         grid_mapper = vtkDataSetMapper()
         ugrid = vtkUnstructuredGrid()
@@ -105,12 +110,14 @@ class NewWindow(QMainWindow): # was QFame
         #self.setCentralWidget(self.vtk_frame)
         #self.setMinimumSize(400, 400)
         self.grid = ugrid
-        self.rend = renderer
 
-        assert BDF_FILENAME.exists(), BDF_FILENAME
-        bdf_filename = str(BDF_FILENAME)
+        #assert BDF_FILENAME.exists(), BDF_FILENAME
+        bdf_filename = str(bdf_filename)
         analysis = Nastran3(self)
         analysis.load_nastran3_geometry(bdf_filename)
+
+        # Render again to set the correct view
+        self.render()
 
     def set_style_as_trackball(self, vtk_interactor) -> None:
         """sets the default rotation style"""
@@ -134,6 +141,21 @@ class NewWindow(QMainWindow): # was QFame
     # @property
     # def vtk_interactor(self) -> QVTKRenderWindowInteractor:
     #     return self.vtk_interface.vtk_interactor
+
+    @property
+    def vtk_interactor(self) -> QVTKRenderWindowInteractor:
+        return self.vtk_interface.vtk_interactor
+    @property
+    def rend(self) -> vtkRenderer:
+        return self.vtk_interface.rend
+    @property
+    def iren(self) -> QVTKRenderWindowInteractor:
+        return self.vtk_interface.vtk_interactor
+    @property
+    def render_window(self) -> vtkRenderWindow:
+        return self.vtk_interactor.GetRenderWindow()
+    def render(self) -> None:
+        self.vtk_interactor.GetRenderWindow().Render()
 
     def log_info(self, msg: str) -> None:
         print(msg)
