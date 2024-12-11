@@ -30,7 +30,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
 
     from docopt import docopt
     import pyNastran
-    options = '[-o OUT_BDF_FILENAME] [--size SIZE | --clean] [--sid SID]'
+    options = '[-o OUT_BDF_FILENAME] [--size SIZE | --clean] [--sid SID] [--rhoref]'
     msg = (
         'Usage:\n'
         # SWEEP_UNIT
@@ -110,6 +110,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
     if units_out.lower() not in UNITS_MAP:  # pragma: no cover
         raise NotImplementedError(units_out)
 
+    rhoref_flag = data['--rhoref']
     npoints = _int(data, 'N')
     clean = data['--clean']
     assert clean in [True, False], clean
@@ -164,6 +165,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
                    const_type, const_value, const_unit,
                    eas_limit=eas_limit, eas_units=eas_units,
                    units_out=units_out,
+                   rhoref_flag=rhoref_flag,
                    sid=sid,
                    size=size, clean=clean,
                    bdf_filename_out=bdf_filename_out,
@@ -177,6 +179,7 @@ def create_flutter(log: SimpleLogger,
                    sid: int=1,
                    eas_limit: float=1_000_000.0, eas_units: str='m/s',
                    units_out: str='si',
+                   rhoref_flag: bool=False,
                    size: int=8,
                    clean: bool=False,
                    bdf_filename_out: str='flutter_cards.inc',
@@ -361,6 +364,16 @@ def create_flutter(log: SimpleLogger,
             eas_units=eas_units)
     else:  # pragma: no cover
         raise NotImplementedError((sweep_method, const_type))
+
+    if rhoref_flag:
+        from pyNastran.utils.atmosphere import atm_density
+        rho0 = atm_density(alt=0., density_units=density_units)
+        cref = 1.0
+        velocity = 0.0
+        model.add_aero(velocity, cref, rho0)
+        flfact = model.flfacts[flfact_density]
+        # print(flfact.get_stats())
+        flfact.factors /= rho0
 
     model.punch = True
     flutter.comment = comment

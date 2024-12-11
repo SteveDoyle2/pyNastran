@@ -2006,7 +2006,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 raise RuntimeError(msg)
             if card_name in ['SUBCASE ', 'CEND']:
                 raise RuntimeError('No executive/case control deck was defined.')
-            self.log.info('    rejecting card_name = %s' % card_name)
+            self.log.info(f'    rejecting card_name = {card_name}')
+            if len(card_name) <= 3:
+                self.log.error(f'    card_lines = {card_lines}')
         self.increase_card_count(card_name)
         self.rejects.append([comment] + card_lines)
 

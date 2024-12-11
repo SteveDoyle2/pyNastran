@@ -158,6 +158,7 @@ class FlutterResponse:
         resp = FlutterResponse(
             subcase_id, configuration, xysym, xzsym, mach, density_ratio,
             method, modes, results, in_units=in_units,
+            use_rhoref=False,
             make_alt=False)
         if 0:  # pragma: no cover
             resp.plot_root_locus(modes=None, fig=None, axes=None, xlim=None, ylim=None,
@@ -183,6 +184,7 @@ class FlutterResponse:
                  mach: float, density_ratio: float, method: str,
                  modes: list[int], results: Any,
                  in_units: None | str | dict[str, str]=None,
+                 use_rhoref: bool=False,
                  make_alt: bool=True) -> None:
         """
         Parameters
@@ -200,6 +202,10 @@ class FlutterResponse:
             method = PKNL
                 list[list[float] * 9] * nmodes
                 kfreq, 1/kfreq, density, mach, velocity, damping, freq, eigr, eigi
+        use_rhoref: bool; default=False
+            False: assume the density in the table is absolute density
+            True: assume the density should be defined by sea level density,
+                  so density is a density ratio
 
         Units
         -----
@@ -244,7 +250,7 @@ class FlutterResponse:
         self.in_units = in_units
         self.out_units = ''
         self.make_alt = make_alt
-        in_units = get_flutter_units(in_units)
+        in_units_dict = get_flutter_units(in_units)
 
         self.subcase = subcase
         self.configuration = configuration
@@ -285,15 +291,24 @@ class FlutterResponse:
             self.ieas = 9
             self.iq = 10
             self.ialt = 11
+            #flutter.results[:, :, flutter.idensity] *= 1.146e-7
+            #print(f'use_rhoref = {use_rhoref}')
+            if use_rhoref:
+                rhoref = atm_density(alt=0, density_units=in_units_dict['density'])
+                print(f'applying rhoref={rhoref}')
+                results[:, :, self.idensity] *= rhoref
+            # print('rho2', results[0, :, self.idensity])
+            # print('vel2', results[0, :, self.ivelocity])
+            # print('mach2', results[0, :, self.imach])
+
         else:  # pragma: no cover
             raise NotImplementedError(method)
 
         #-------------------------------------------
-        in_units2 = get_flutter_units(in_units)
         if self.method in ['PK', 'KE']:
             pass
         elif self.method == 'PKNL':
-            results = self._set_pknl_results(in_units2, results)
+            results = self._set_pknl_results(in_units_dict, results)
         else:  # pragma: no cover
             raise NotImplementedError(self.method)
         self.results_in = results
@@ -378,6 +393,9 @@ class FlutterResponse:
         #eas  = (2 * q / rho_ref)**0.5
         # eas = V * sqrt(rho / rhoSL)
         eas = vel * np.sqrt(rho / rho_ref)
+        #print('vel = ', vel)
+        #print('rho = ', rho)
+        #print('rho_ref = ', rho_ref)
 
         altitude_units = in_units['altitude']
 
@@ -920,6 +938,11 @@ class FlutterResponse:
             symbol = symbols[jcolor]
 
             vel = self.results[imode, :, ix].ravel()
+
+            #print('rho_in*** = ', self.results_in[imode, :, self.idensity].ravel().tolist())
+            #print('vel_in*** = ', self.results_in[imode, :, self.ivelocity].ravel().tolist())
+            #print('eas*** = ', self.results[imode, :, self.ieas].ravel().tolist())
+
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
 
@@ -1376,7 +1399,7 @@ def _get_modes_imodes(all_modes, modes):
 
 def _asarray(results, allow_fix_kfreq: bool=True):
     """casts the results array"""
-    allow_fix_kfreq = False
+    allow_fix_kfreq = True
     if not allow_fix_kfreq:
         results = np.asarray(results, dtype='float64')
         return results

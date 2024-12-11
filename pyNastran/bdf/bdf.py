@@ -2816,7 +2816,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 for line in card_lines:
                     print(line)
             elif show_log:
-                self.log.info(f'    rejecting card_name = {card_name!r}')
+                self.log.info(f'    rejecting card_name = {card_name}')
+                if len(card_name) <= 3:
+                    self.log.error(f'    card_lines = {card_lines}')
             assert isinstance(show_log, bool), show_log
         self.increase_card_count(card_name)
         self.reject_lines.append([_format_comment(comment)] + card_lines)
