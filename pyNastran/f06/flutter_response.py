@@ -185,7 +185,9 @@ class FlutterResponse:
                  modes: list[int], results: Any,
                  in_units: None | str | dict[str, str]=None,
                  use_rhoref: bool=False,
-                 make_alt: bool=True) -> None:
+                 make_alt: bool=True,
+                 eigenvector: Optional[np.ndarray]=None,
+                 eigr_eigi_velocity: Optional[np.ndarray]=None) -> None:
         """
         Parameters
         ----------
@@ -247,6 +249,13 @@ class FlutterResponse:
             unused
 
         """
+        if eigr_eigi_velocity is None:
+            eigr_eigi_velocity = np.array((0,3), dtype='float64')
+        if eigenvector is None:
+            eigenvector = np.array([], dtype='complex128')
+        self.eigenvector = eigenvector
+        self.eigr_eigi_velocity = eigr_eigi_velocity
+
         self.in_units = in_units
         self.out_units = ''
         self.make_alt = make_alt
@@ -1265,7 +1274,7 @@ class FlutterResponse:
     def _plot_type_to_ix_xlabel(self, plot_type: str) -> tuple[int, str]:
         """helper method for ``plot_vg_vf``"""
         plot_type = plot_type.lower()
-        print(f'plot_type={plot_type!r} out_units={self.out_units!r}')
+        #print(f'plot_type={plot_type!r} out_units={self.out_units!r}')
         assert isinstance(self.out_units, dict), f'out_units={self.out_units!r}'
         if plot_type == 'tas':
             ix = self.ivelocity

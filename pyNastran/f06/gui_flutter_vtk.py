@@ -18,6 +18,7 @@ from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowIn
 
 import pyNastran
 
+from pyNastran.gui.gui_objects.settings import NastranSettings
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.gui_objects.settings import Settings
@@ -81,6 +82,7 @@ class VtkWindow(QMainWindow):
         geom_actor.SetMapper(grid_mapper)
 
         camera = renderer.GetActiveCamera()
+        self._update_settings()
         if self.settings.use_parallel_projection:
             camera.ParallelProjectionOn()
 
@@ -96,6 +98,14 @@ class VtkWindow(QMainWindow):
 
         # Render again to set the correct view
         self.render()
+
+    def _update_settings(self):
+        """we took the pyNastranGUI settings and are hacking on them"""
+        nastran_settings: NastranSettings = self.settings.nastran_settings
+        nastran_settings.is_bar_axes = False
+        nastran_settings.is_shell_mcids = False
+        nastran_settings.is_element_quality = False
+        return
 
     def _load_model(self, bdf_filename: PathLike,
                    op2_filename: PathLike='') -> None:

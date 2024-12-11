@@ -76,12 +76,12 @@ def export_caero_mesh(model: BDF,
 
         for caero_eid, caero in sorted(model.caeros.items()):
             #assert caero_eid != 1, 'CAERO eid=1 is reserved for non-flaps'
+            scaero = str(caero).rstrip().split('\n')
             if is_subpanel_model:
                 if caero.type == 'CAERO2':
                     _write_caero2_subpanel(bdf_file, caero)
                     continue
 
-                scaero = str(caero).rstrip().split('\n')
                 bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
                 if caero.lspan_ref:
                     aefact_chord = str(caero.lspan_ref).rstrip().split('\n')
