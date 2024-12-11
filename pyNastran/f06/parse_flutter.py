@@ -77,7 +77,13 @@ def make_flutter_response(f06_filename: PathLike,
     mach = None
     density_ratio = None
     method = None
+    methodi = ''
     found_flutter_summary = False
+    ieigenvector = -1
+    eigenvectors = []
+    eigenvectors_array = None
+    eigr_eigi_velocity_list = []
+    eigr_eigi_velocity = None
 
     log.info('f06_filename = %r' % f06_filename)
     with open(f06_filename, 'r') as f06_file:
@@ -86,7 +92,10 @@ def make_flutter_response(f06_filename: PathLike,
             line = f06_file.readline()
             iline += 1
             #log.debug('line%ia = %r' % (iline, line))
-            while 'SUBCASE ' not in line and 'FLUTTER  SUMMARY' not in line:
+
+            while ('SUBCASE ' not in line and
+                   'FLUTTER  SUMMARY' not in line and
+                   'EIGENVECTOR FROM THE' not in line):
                 line = f06_file.readline()
                 iline += 1
                 if not line:
@@ -99,8 +108,11 @@ def make_flutter_response(f06_filename: PathLike,
             #if 'FLUTTER  SUMMARY' in line:
                 #found_flutter_summary = True
 
-            #log.debug('line%ib = %r' % (iline, line))
+            #log.debug(f'line[{iline}] = {line!r}')
             if 'SUBCASE' in line[109:]:
+                ieigenvector = -1
+                eigenvectors = []
+                eigenvector_data_list = []
                 sline = line.strip().split()
                 isubcase = sline.index('SUBCASE')
                 new_subcase = int(sline[isubcase + 1])
@@ -111,8 +123,10 @@ def make_flutter_response(f06_filename: PathLike,
                     flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                               mach, density_ratio, method,
                                               modes, results,
+                                              in_units=f06_units,
                                               use_rhoref=use_rhoref,
-                                              in_units=f06_units)
+                                              eigenvector=eigenvectors_array,
+                                              eigr_eigi_velocity=eigr_eigi_velocity)
                     flutter.set_out_units(out_units)
                     #_remove_neutrinos(flutter, log)
                     flutters[subcase] = flutter
@@ -130,6 +144,51 @@ def make_flutter_response(f06_filename: PathLike,
                 line = f06_file.readline()
                 #log.debug('i=%s %s' % (iline, line.strip().replace('   ', ' ')))
 
+                if 'EIGENVECTOR FROM THE' in line:
+                    #'                                               EIGENVECTOR FROM THE  PKNL METHOD
+                    #'   EIGENVALUE =    -9.88553E-02    1.71977E+01       VELOCITY =     1.52383E+02
+                    #'
+                    #'   EIGENVECTOR
+                    #'                    1.00000E+00    0.00000E+00
+                    #'                   -3.81052E-03   -6.17235E-04
+                    ieigenvector += 1
+                    # 'EIGENVECTOR FROM THE  PKNL METHOD'
+                    #print(line)
+                    methodi = line.split('EIGENVECTOR FROM THE')[1].split('METHOD')[0].strip()
+                    #print(f'imode={ieigenvector+1}; methodi={methodi!r}')
+                    line = f06_file.readline()
+                    iline += 1
+
+                    assert 'VELOCITY' in line, line
+                    #'   EIGENVALUE =    -9.88553E-02    1.71977E+01       VELOCITY =     1.52383E+02
+                    eig_value, velocity_str = line.split('VELOCITY =')
+                    eigr_str, eigi_str = eig_value.strip().split('EIGENVALUE =')[1].split()
+                    velocity = float(velocity_str)
+                    eigr = float(eigr_str)
+                    eigi = float(eigi_str)
+                    #print(f'eigr,eigi,velo = {eigr}, {eigi}, {velocity}')
+                    eigr_eigi_velocity_list.append((eigr, eigi, velocity))
+
+                    while 'EIGENVECTOR' not in line:
+                        line = f06_file.readline()
+                        iline += 1
+                    line = f06_file.readline()
+                    iline += 1
+
+                    spline_point_complex_eigenvector_slines = []
+                    sline = line.split()
+                    while len(sline) == 2:
+                        # print('***', iline, line, sline)
+                        spline_point_complex_eigenvector_slines.append(sline)
+                        line = f06_file.readline()
+                        iline += 1
+                        sline = line.split()
+                    real_imag = np.array(spline_point_complex_eigenvector_slines, dtype='float64')
+                    #eigenvector = real_imag[:, 0].flatten() + 1j*real_imag[:, 1].flatten()
+                    nspline_points = len(spline_point_complex_eigenvector_slines)
+                    eigenvector = (real_imag[:, 0] + real_imag[:, 1] * 1j).reshape(nspline_points, 1)
+                    eigenvectors.append(eigenvector)
+
                 if '* * * END OF JOB * * *' in line:
                     last_line = None
                     break
@@ -146,6 +205,7 @@ def make_flutter_response(f06_filename: PathLike,
             if nblank == 100:
                 log.warning('breaking on nblank=100')
                 break
+
             if 'FLUTTER  SUMMARY' in line:
                 found_flutter_summary = True
 
@@ -180,6 +240,16 @@ def make_flutter_response(f06_filename: PathLike,
             method = point_sline[-1]  # 13 for PN, 5 for PK
 
             #log.debug(point_sline)
+            if methodi:
+                assert methodi == method, f'methodi={methodi!r}; method={method!r}'
+
+            if len(eigenvectors):
+                eigr_eigi_velocity = np.array(eigr_eigi_velocity_list, dtype='float64') # eigr, eigi, velo
+                eigenvectors_array = np.column_stack(eigenvectors)
+                eigenvectors = []
+                eigr_eigi_velocity_list = []
+                #print(f'eigr_eigi_velocity:\n{eigr_eigi_velocity}')
+
             if method == 'PK':
                 mach = float(point_sline[6])
                 density_ratio = float(point_sline[10])
@@ -247,7 +317,8 @@ def make_flutter_response(f06_filename: PathLike,
                     'PAGE' not in sline and
                     'INFORMATION' not in sline and
                     'EIGENVALUE' not in sline and
-                    'USER' not in sline
+                    'USER' not in sline and
+                    '^^^' not in sline
                 )
                 if is_line:
                     #print('sline = %s' % sline)
@@ -267,8 +338,10 @@ def make_flutter_response(f06_filename: PathLike,
         flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                   mach, density_ratio, method,
                                   modes, results,
+                                  in_units=f06_units,
                                   use_rhoref=use_rhoref,
-                                  in_units=f06_units)
+                                  eigenvector=eigenvectors_array,
+                                  eigr_eigi_velocity=eigr_eigi_velocity)
         flutter.set_out_units(out_units)
         flutters[subcase] = flutter
     return flutters
