@@ -10,7 +10,7 @@ import numpy as np
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.utils import PathLike
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, CAERO2
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 def export_caero_mesh(model: BDF,
@@ -51,7 +51,7 @@ def export_caero_mesh(model: BDF,
     aero_eid_map = {}
     #if is_subpanel_model:
     isubpanel_ieid = 0
-    model.xref_obj.cross_reference_aero()
+    model.xref_obj.safe_cross_reference_aero()
     for caero_eid, caero in sorted(model.caeros.items()):
         if caero.type == 'CAERO2':
             model.log.warning('CAERO2 will probably cause issues...put it at the max id')
@@ -76,12 +76,19 @@ def export_caero_mesh(model: BDF,
 
         for caero_eid, caero in sorted(model.caeros.items()):
             #assert caero_eid != 1, 'CAERO eid=1 is reserved for non-flaps'
-            scaero = str(caero).rstrip().split('\n')
             if is_subpanel_model:
                 if caero.type == 'CAERO2':
+                    _write_caero2_subpanel(bdf_file, caero)
                     continue
 
+                scaero = str(caero).rstrip().split('\n')
                 bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
+                if caero.lspan_ref:
+                    aefact_chord = str(caero.lspan_ref).rstrip().split('\n')
+                    bdf_file.write('$ ' + '\n$ '.join(aefact_chord) + '\n')
+                if caero.lchord_ref:
+                    aefact_span = str(caero.lchord_ref).rstrip().split('\n')
+                    bdf_file.write('$ ' + '\n$ '.join(aefact_span) + '\n')
 
                 #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
                 points, elements = caero.panel_points_elements()
@@ -133,6 +140,21 @@ def export_caero_mesh(model: BDF,
         bdf_file.write(f'MAT1,{mid},{E},,{nu},{rho}\n')
         bdf_file.write('ENDDATA\n')
     return
+
+
+def _write_caero2_subpanel(bdf_file: TextIO, caero: CAERO2):
+    scaero = str(caero).rstrip().split('\n')
+    bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
+    if caero.lsb_ref:
+        aefact_lsb = str(caero.aefact_lsb).rstrip().split('\n')
+        bdf_file.write('$ ' + '\n$ '.join(aefact_lsb) + '\n')
+    if caero.lint_ref:
+         aefact_lint = str(caero.lint_ref).rstrip().split('\n')
+         bdf_file.write('$ ' + '\n$ '.join(aefact_lint) + '\n')
+    #points, elements = caero.panel_points_elements()
+    #raise NotImplementedError('caero2')
+    return
+
 
 def _write_subcases_loads(model: BDF,
                           aero_eid_map: dict[int, int],

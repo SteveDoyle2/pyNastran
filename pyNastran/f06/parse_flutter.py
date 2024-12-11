@@ -30,6 +30,7 @@ from pyNastran.utils.numpy_utils import float_types
 
 def make_flutter_response(f06_filename: PathLike,
                           f06_units=None, out_units=None,
+                          use_rhoref: bool=False,
                           log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
     """
     Creates the FlutterResponse object
@@ -43,6 +44,12 @@ def make_flutter_response(f06_filename: PathLike,
     out_units : dict[name]=unit; default=None
         out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
                      'altitude' : 'ft', 'dynamic_pressure' : 'psf'}
+    use_rhoref: bool; default=False
+        False: assume the density in the table is absolute density
+        True: assume the density should be defined by sea level density,
+              so density is a density ratio
+
+
     Returns
     -------
     flutters : dict
@@ -104,6 +111,7 @@ def make_flutter_response(f06_filename: PathLike,
                     flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                               mach, density_ratio, method,
                                               modes, results,
+                                              use_rhoref=use_rhoref,
                                               in_units=f06_units)
                     flutter.set_out_units(out_units)
                     #_remove_neutrinos(flutter, log)
@@ -259,6 +267,7 @@ def make_flutter_response(f06_filename: PathLike,
         flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                   mach, density_ratio, method,
                                   modes, results,
+                                  use_rhoref=use_rhoref,
                                   in_units=f06_units)
         flutter.set_out_units(out_units)
         flutters[subcase] = flutter
@@ -364,8 +373,10 @@ def plot_flutter_f06(f06_filename: PathLike,
     """
     assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
+    use_rhoref = False
     flutters = make_flutter_response(
-        f06_filename, f06_units=f06_units, out_units=out_units, log=log)
+        f06_filename, f06_units=f06_units, out_units=out_units,
+        use_rhoref=use_rhoref, log=log)
 
     if plot:
         make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,

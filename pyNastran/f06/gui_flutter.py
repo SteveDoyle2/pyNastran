@@ -252,6 +252,7 @@ class FlutterGui(LoggableGui):
             self.font_size_edit.setValue(data['font_size'])
 
         checkboxs = [
+            ('use_rhoref', self.use_rhoref_checkbox),
             ('show_points', self.show_points_checkbox),
             ('show_lines', self.show_lines_checkbox),
             ('export_to_f06', self.export_f06_checkbox),
@@ -375,6 +376,16 @@ class FlutterGui(LoggableGui):
         self.f06_filename_label = QLabel('F06 Filename:')
         self.f06_filename_edit = QLineEdit()
         self.f06_filename_browse = QPushButton('Browse...')
+
+        self.use_rhoref_checkbox = QCheckBox('Use Sea Level Rho Ref')
+        self.use_rhoref_checkbox.setChecked(False)
+
+        self.log_xscale_checkbox = QCheckBox('Log Scale x')
+        self.log_yscale1_checkbox = QCheckBox('Log Scale y1')
+        self.log_yscale2_checkbox = QCheckBox('Log Scale y2')
+        self.log_xscale_checkbox.setChecked(False)
+        self.log_yscale1_checkbox.setChecked(False)
+        self.log_yscale2_checkbox.setChecked(False)
 
         self.show_points_checkbox = QCheckBox('Show Points')
         self.show_lines_checkbox = QCheckBox('Show Lines')
@@ -624,10 +635,18 @@ class FlutterGui(LoggableGui):
         hbox.addWidget(self.f06_filename_edit)
         hbox.addWidget(self.f06_filename_browse)
 
+
+        grid0 = QHBoxLayout()
+        grid0.addWidget(self.font_size_label)
+        grid0.addWidget(self.font_size_edit)
+        grid0.addStretch()
+        # grid0 = QGridLayout()
+        # grid0.addWidget(self.font_size_label, 0, 0)
+        # grid0.addWidget(self.font_size_edit, 0, 1)
+
         grid = QGridLayout()
         irow = 0
-        grid.addWidget(self.font_size_label, irow, 0)
-        grid.addWidget(self.font_size_edit, irow, 1)
+        grid.addWidget(self.use_rhoref_checkbox, irow, 0)
         irow += 1
 
         grid.addWidget(self.units_in_label, irow, 0)
@@ -738,6 +757,11 @@ class FlutterGui(LoggableGui):
 
         jrow = 0
         grid_check = QGridLayout()
+        grid_check.addWidget(self.log_xscale_checkbox, jrow, 0)
+        grid_check.addWidget(self.log_yscale1_checkbox, jrow, 1)
+        grid_check.addWidget(self.log_yscale2_checkbox, jrow, 2)
+        jrow += 1
+
         grid_check.addWidget(self.show_points_checkbox, jrow, 0)
         grid_check.addWidget(self.show_lines_checkbox, jrow, 1)
         jrow += 1
@@ -757,6 +781,7 @@ class FlutterGui(LoggableGui):
         grid_modes = self._grid_modes()
 
         vbox = QVBoxLayout()
+        vbox.addLayout(grid0)
         vbox.addLayout(hbox)
         vbox.addLayout(grid)
         vbox.addLayout(hbox_check)
@@ -844,9 +869,12 @@ class FlutterGui(LoggableGui):
         f06_units = self.units_in_pulldown.currentText()
         out_units = self.units_out_pulldown.currentText()
 
+        self.use_rhoref = self.use_rhoref_checkbox.isChecked()
         model, self.responses = load_f06_op2(
             f06_filename, self.log,
-            f06_units, out_units)
+            f06_units, out_units,
+            self.use_rhoref,
+        )
 
         subcases = list(self.responses.keys())
         if len(subcases) == 0:
@@ -1047,6 +1075,11 @@ class FlutterGui(LoggableGui):
         response.nopoints = nopoints
         response.log = self.log
         #print('trying plots...')
+
+        log_scale_x = self.data['log_scale_x']
+        log_scale_y1 = self.data['log_scale_y1']
+        log_scale_y2 = self.data['log_scale_y2']
+        print(f'log_scale_x={log_scale_x}; log_scale_y1={log_scale_y1}; log_scale_y2={log_scale_y2}')
         try:
             if plot_type == 'root-locus':
                 png_filename = base + '_root-locus.png'
@@ -1074,6 +1107,7 @@ class FlutterGui(LoggableGui):
                     legend=True,
                     png_filename=png_filename,
                 )
+                update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
             else:
                 assert plot_type in 'x-damp-freq', plot_type
                 #print('plot_vg_vf')
@@ -1096,6 +1130,7 @@ class FlutterGui(LoggableGui):
                     damping_limit=damping_limit,
                     png_filename=png_filename,
                 )
+                update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
         except Exception as e:
             self.log.error(f'plot_type={plot_type}')
             self.log.error(str(e))
@@ -1253,11 +1288,17 @@ class FlutterGui(LoggableGui):
 
         self.show_lines = self.show_lines_checkbox.isChecked()
         self.show_points = self.show_points_checkbox.isChecked()
+        self.use_rhoref = self.use_rhoref_checkbox.isChecked()
 
         export_to_csv = self.export_csv_checkbox.isChecked()
         export_to_f06 = self.export_f06_checkbox.isChecked()
         export_to_zona = self.export_zona_checkbox.isChecked()
+
         data = {
+            'log_scale_x': self.log_xscale_checkbox.isChecked(),
+            'log_scale_y1': self.log_yscale1_checkbox.isChecked(),
+            'log_scale_y2': self.log_yscale2_checkbox.isChecked(),
+            'use_rhoref': self.use_rhoref,
             'show_points': self.show_points,
             'show_lines': self.show_lines,
             'export_to_csv': export_to_csv,
@@ -1309,7 +1350,7 @@ class FlutterGui(LoggableGui):
         return is_passed
 
     def on_open_new_window(self):
-        #return
+        return
         try:
             from pyNastran.f06.gui_flutter_vtk import VtkWindow
         except ImportError as e:
@@ -1412,7 +1453,9 @@ def validate_json(data: dict[str, Any],
 def get_float_or_none(line_edit: QLineEdit) -> tuple[Optional[float], bool]:
     # is_passed = False
     if not line_edit.isVisible():
-        value = None
+        # just echo it back...who cares if it's wrong
+        value = line_edit.text().strip()
+        #value = None
         is_passed = True
         return value, is_passed
 
@@ -1439,7 +1482,8 @@ def _to_str(value: Optional[int | float]) -> str:
 
 def load_f06_op2(f06_filename: str, log: SimpleLogger,
                  in_units: str,
-                 out_units: str) -> tuple[OP2, dict[int, FlutterResponse]]:
+                 out_units: str,
+                 use_rhoref: bool) -> tuple[OP2, dict[int, FlutterResponse]]:
     if not os.path.exists(f06_filename):
         log.error(f'Cant find {f06_filename}')
         return
@@ -1449,15 +1493,19 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
     in_units_dict = get_flutter_units(in_units)
     out_units_dict = get_flutter_units(out_units)
     ext = os.path.splitext(f06_filename)[1].lower()
+    print(f'use_rhoref={use_rhoref}')
+    assert use_rhoref == True, use_rhoref
     if ext == '.f06':
         try:
             responses: FlutterResponse = make_flutter_response(
                 f06_filename,
                 f06_units=in_units_dict,
                 out_units=out_units_dict,
+                use_rhoref=use_rhoref,
                 log=log)
         except Exception as e:
             log.error(str(e))
+            raise
             return model, responses
     elif ext == '.op2':
         try:
@@ -1488,6 +1536,19 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
 
     return model, responses
 
+def update_ylog_style(fig: plt.Figure,
+                      log_scale_x: bool,
+                      log_scale_y1: bool,
+                      log_scale_y2: bool) -> None:
+    ax_list = fig.axes
+    xscale = 'log' if log_scale_x else 'linear'
+    yscale1 = 'log' if log_scale_y1 else 'linear'
+    yscale2 = 'log' if log_scale_y2 else 'linear'
+    ax_list[0].set_xscale(xscale)
+    ax_list[1].set_xscale(xscale)
+
+    ax_list[0].set_yscale(yscale1)
+    ax_list[1].set_yscale(yscale2)
 
 def main(f06_filename: str='') -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line

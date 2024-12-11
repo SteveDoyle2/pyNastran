@@ -84,6 +84,63 @@ class WriteMesh(BDFAttributes):
             size = 16
         return is_long_ids, size
 
+    def _reorganize_sets(self) -> None:
+        for set_id, set_obj in self.sets.items():
+            assert isinstance(set_obj.ids, list), set_obj.get_stats()
+            set_obj.ids.sort()
+
+    def apply_wtmass(self) -> None:
+        self._reorganize_sets()
+        if 'WTMASS' not in self.params:
+            return
+        wtmass = self.params['WTMASS'].values[0]
+        assert isinstance(wtmass, float), wtmass
+        if wtmass == 1.0:
+            return
+        self.params['WTMASS'].values[0] = 1.0
+
+        is_error = False
+        for sid, nsms in self.nsms.items():
+            for nsm in nsms:
+                nsm.value *= wtmass
+
+        for mid, mat in self.materials.items():
+            try:
+                mat.rho *= wtmass
+            except:
+                print(prop.get_stats())
+                is_error = True
+
+        for eid, elem in self.masses.items():
+            try:
+                if elem.type == 'CONM2':
+                    elem.mass *= wtmass
+                    elem.I *= wtmass
+                else:
+                    raise NotImplementedError(elem.get_stats())
+            except:
+                print(elem.get_stats())
+
+        skip_properties = {'PSOLID'}
+        for pid, prop in self.properties.items():
+            prop_type = prop.type
+            if prop_type in skip_properties:
+                continue
+
+            if prop_type == 'PBUSH':
+                if prop.mass is not None:
+                    prop.mass *= wtmass
+
+            else:
+                try:
+                    prop.nsm *= wtmass
+                except:
+                    print(prop.get_stats())
+                    is_error = True
+        if is_error:
+            raise RuntimeError('stopping...')
+
+
     def write_bdf(self, out_filename: Optional[str | StringIO]=None,
                   encoding: Optional[str]=None,
                   size: int=8,
@@ -144,6 +201,7 @@ class WriteMesh(BDFAttributes):
             assert isinstance(encoding, str), encoding
             bdf_file = open(out_filename, 'w', encoding=encoding)
         self._write_header(bdf_file, encoding, write_header=write_header)
+        #self.apply_wtmass()
 
 
         if self.superelement_models:
