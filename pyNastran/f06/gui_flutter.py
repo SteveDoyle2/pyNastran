@@ -1494,7 +1494,6 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
     out_units_dict = get_flutter_units(out_units)
     ext = os.path.splitext(f06_filename)[1].lower()
     print(f'use_rhoref={use_rhoref}')
-    assert use_rhoref == True, use_rhoref
     if ext == '.f06':
         try:
             responses: FlutterResponse = make_flutter_response(

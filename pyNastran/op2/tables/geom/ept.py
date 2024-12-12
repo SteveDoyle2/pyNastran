@@ -752,7 +752,7 @@ class EPT:
             #data = (4, ELEMENT, 2.1, 1, 3301, -1, -2)
             assert ints[i1] == -2, ints[i1]
             sid = ints[i0]
-            nsm_type = data[n0+(i0+1)*size:n0+(i0+2)*size].decode('latin1').rstrip()
+            nsm_type = data[n0+(i0+1)*size:n0+(i0+3)*size].decode('latin1').rstrip()
             value = float(floats[i0+3])
             #print(f'sid={sid} nsm_type={nsm_type} value={value}')
 
@@ -786,8 +786,8 @@ class EPT:
                 else:
                     raise NotImplementedError(spec_opt)
 
-            if nsm_type == 'ELEM':
-                nsm_type = 'ELEMENT'
+            #if nsm_type == 'ELEM':
+            #    nsm_type = 'ELEMENT'
             #for pid_eid in pid_eids:
             #nsml = op2.add_nsml1(sid, nsm_type, pid_eids, [value])
             assert len(pid_eids) > 0, pid_eids
