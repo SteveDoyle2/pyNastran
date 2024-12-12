@@ -159,11 +159,17 @@ def make_flutter_response(f06_filename: PathLike,
                     line = f06_file.readline()
                     iline += 1
 
-                    assert 'VELOCITY' in line, line
-                    #'   EIGENVALUE =    -9.88553E-02    1.71977E+01       VELOCITY =     1.52383E+02
-                    eig_value, velocity_str = line.split('VELOCITY =')
-                    eigr_str, eigi_str = eig_value.strip().split('EIGENVALUE =')[1].split()
-                    velocity = float(velocity_str)
+                    if methodi == 'PKNL':
+                        assert 'VELOCITY' in line, line
+                        #'   EIGENVALUE =    -9.88553E-02    1.71977E+01       VELOCITY =     1.52383E+02
+                        eig_value, velocity_str = line.split('VELOCITY =')
+                        eigr_str, eigi_str = eig_value.strip().split('EIGENVALUE =')[1].split()
+                        velocity = float(velocity_str)
+                    elif methodi == 'PK':
+                        eigr_str, eigi_str = line.strip().split('EIGENVALUE =')[1].split()
+                        velocity = np.nan
+                    else:  # pragma: no cover
+                        raise RuntimeError(f'methodi={methodi}')
                     eigr = float(eigr_str)
                     eigi = float(eigi_str)
                     #print(f'eigr,eigi,velo = {eigr}, {eigi}, {velocity}')
@@ -240,8 +246,8 @@ def make_flutter_response(f06_filename: PathLike,
             method = point_sline[-1]  # 13 for PN, 5 for PK
 
             #log.debug(point_sline)
-            if methodi:
-                assert methodi == method, f'methodi={methodi!r}; method={method!r}'
+            #if methodi:  # true for MSC, but not NX
+                #assert methodi == method, f'methodi={methodi!r}; method={method!r}'
 
             if len(eigenvectors):
                 eigr_eigi_velocity = np.array(eigr_eigi_velocity_list, dtype='float64') # eigr, eigi, velo
