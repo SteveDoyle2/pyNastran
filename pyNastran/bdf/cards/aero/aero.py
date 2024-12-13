@@ -6057,9 +6057,9 @@ class SPLINE2(Spline):
         try:
             self.setg_ref = model.Set(self.Set(), msg=msg)
             if self.setg_ref.type == 'SET2':
-                self.setg_ref.cross_reference_set(model, 'MACRO', msg=msg)
+                self.setg_ref.safe_cross_reference(model, 'MACRO', msg=msg)
             else:
-                self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+                self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
 
                 nnodes = len(self.setg_ref.ids)
                 if nnodes < 2:
@@ -6080,20 +6080,20 @@ class SPLINE2(Spline):
         self.setg_ref = None
 
     @property
-    def aero_element_ids(self):
+    def aero_element_ids(self) -> np.ndarray:
         return np.arange(self.box1, self.box2 + 1)
 
-    def Cid(self):
-        if self.setg_ref is not None:
+    def Cid(self) -> int:
+        if self.cid_ref is not None:
             return self.cid_ref.cid
         return self.cid
 
-    def CAero(self):
-        if self.setg_ref is not None:
+    def CAero(self) -> int:
+        if self.caero_ref is not None:
             return self.caero_ref.eid
         return self.caero
 
-    def Set(self):
+    def Set(self) -> int:
         if self.setg_ref is not None:
             return self.setg_ref.sid
         return self.setg

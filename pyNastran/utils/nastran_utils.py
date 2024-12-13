@@ -59,6 +59,7 @@ def run_nastran(bdf_filename: PathLike,
     #assert os.path.exists(nastran_cmd), nastran_cmd
     nastran_cmd_str = str(nastran_cmd)
     call_args = [nastran_cmd_str, str(bdf_filename)] + keywords_list
+    #print(f'call_args = {call_args}')
     return_code = None
     if run:
         return_code = subprocess.call(call_args)
