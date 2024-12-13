@@ -83,12 +83,16 @@ def export_caero_mesh(model: BDF,
                     continue
 
                 bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
-                if caero.lspan_ref:
-                    aefact_chord = str(caero.lspan_ref).rstrip().split('\n')
-                    bdf_file.write('$ ' + '\n$ '.join(aefact_chord) + '\n')
-                if caero.lchord_ref:
-                    aefact_span = str(caero.lchord_ref).rstrip().split('\n')
-                    bdf_file.write('$ ' + '\n$ '.join(aefact_span) + '\n')
+                if hasattr(caero, 'lspan'):
+                    assert caero.type in {'CAERO1', 'CAERO4', 'CAERO5'}, caero
+                    if caero.lspan_ref:
+                        aefact_chord = str(caero.lspan_ref).rstrip().split('\n')
+                        bdf_file.write('$ ' + '\n$ '.join(aefact_chord) + '\n')
+                if hasattr(caero, 'lchord'):
+                    assert caero.type in {'CAERO1', }, caero
+                    if caero.lchord_ref:
+                        aefact_span = str(caero.lchord_ref).rstrip().split('\n')
+                        bdf_file.write('$ ' + '\n$ '.join(aefact_span) + '\n')
 
                 #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
                 points, elements = caero.panel_points_elements()
@@ -146,7 +150,7 @@ def _write_caero2_subpanel(bdf_file: TextIO, caero: CAERO2):
     scaero = str(caero).rstrip().split('\n')
     bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
     if caero.lsb_ref:
-        aefact_lsb = str(caero.aefact_lsb).rstrip().split('\n')
+        aefact_lsb = str(caero.lsb_ref).rstrip().split('\n')
         bdf_file.write('$ ' + '\n$ '.join(aefact_lsb) + '\n')
     if caero.lint_ref:
          aefact_lint = str(caero.lint_ref).rstrip().split('\n')
