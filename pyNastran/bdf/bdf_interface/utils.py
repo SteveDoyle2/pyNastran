@@ -6,6 +6,7 @@ Defines various utilities for BDF parsing including:
 from __future__ import annotations
 import os
 from io import StringIO
+import warnings
 from collections import defaultdict
 from typing import Optional, Any, TYPE_CHECKING
 
@@ -150,6 +151,65 @@ def _expand_2_values_name(line1: str) -> list[str]:
 
     return fields
 
+def _to_fields_set1(card_lines: list[str], card_name: str) -> list[str]:
+    fields = []
+    throw_length_warning = False
+    for iline, line in enumerate(card_lines):
+        if '\t' in line:
+            line = expand_tabs(line)
+        print(f'line = {line}')
+        line = line.rstrip('\n\r,')
+        print(f'line2 = {line}')
+        if '*' in line:  # large field
+            if ',' in line:  # csv
+                new_fields = line.split(',') #[:5]
+                new_fields = [field.strip() for field in new_fields if field.strip()]
+                if iline > 0:
+                    new_fields = [''] + new_fields
+                assert len(new_fields) <= 5, new_fields
+                #for unused_i in range(5 - len(new_fields)):
+                    #new_fields.append('')
+                assert len(new_fields) == 5, new_fields
+            else:  # standard
+                new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
+                              line[56:72]]
+                end = line[72:].rstrip('+ ')
+                assert len(end) == 0, line
+        else:  # small field
+            length_max = 9 #if iline == 0 else 8
+            if ',' in line:  # csv
+                new_fields = line.split(',') #[:9]
+                new_fields = [field.strip() for field in new_fields if field.strip()]
+                if iline > 0:
+                    new_fields = [''] + new_fields
+                if len(new_fields) >= length_max:
+                    throw_length_warning = True
+                for unused_i in range(9 - len(new_fields)):
+                    new_fields.append('')
+                #assert len(new_fields) == 9, f'{new_fields}; {len(new_fields)}'
+            else:  # standard
+                new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
+                              line[32:40], line[40:48], line[48:56], line[56:64],
+                              line[64:72]]
+                end = line[72:].rstrip('+ ')
+                assert len(end) == 0, line
+
+        # if ',' in line:
+        #     sline = line.split(',')
+        # elif '*' in line:
+        #     sline = line.split()
+        # else:
+        #     sline = line.split()
+        #
+        # sline2 = [field.strip() for field in sline if field.strip()]
+        # for field in sline2:
+        #     assert len(field) < 8, fields
+        #
+        # print(sline2)
+        fields += new_fields
+    warnings.warn(f'SET1 was too long; {fields}')
+    return fields
+
 def to_fields(card_lines: list[str], card_name: str) -> list[str]:
     """
     Converts a series of lines in a card into string versions of the field.
@@ -189,6 +249,8 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
         return _to_fields_amlreg(card_lines)
     elif card_name == 'MICPNT':
         return _to_fields_micpnt(card_lines)
+    #elif card_name == 'SET1':
+        #return _to_fields_set1(card_lines, card_name)
 
     # first line
     line = card_lines[0].rstrip()

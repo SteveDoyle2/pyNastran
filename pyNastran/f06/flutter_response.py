@@ -4,7 +4,8 @@ from itertools import count
 from typing import Iterable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
-
+import scipy
+import scipy.interpolate
 try:
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
@@ -470,6 +471,37 @@ class FlutterResponse:
     def set_plot_options(self, noline: bool=False) -> None:
         self.noline = noline
 
+    def plot_complex_modes(self):
+        fig2 = plt.figure(2)
+        fig2.clear()
+        axes = fig2.subplots(nrows=2, ncols=2)
+        assert axes.shape == (2, 2), axes.shape
+        ax11 = axes[0, 0]
+        ax12 = axes[1, 0]
+
+        ax21 = axes[1, 0]
+        ax22 = axes[1, 1]
+        #print(self.eigenvector)
+        nmodes1, nmodes2 = self.eigenvector.shape
+        nmodes = max(nmodes1, nmodes2)
+
+        for imode1 in range(nmodes1):
+            ax11.plot(self.eigenvector[imode1, :].real, label=f'iMode1={imode1+1}')
+            ax12.plot(self.eigenvector[imode1, :].imag, label=f'iMode1={imode1+1}')
+
+        for imode2 in range(nmodes2):
+            ax21.plot(self.eigenvector[:, imode2].real, label=f'iMode2={imode2+1}')
+            ax22.plot(self.eigenvector[:, imode2].imag, label=f'iMode2={imode2+1}')
+        plt.legend()
+
+        ax11.set_ylabel('Real')
+        ax12.set_ylabel('Imaginary')
+        for ax in axes.ravel():
+            ax.grid(True)
+            ax.set_xlim([0, nmodes])
+        # ax2.set_ylim([0, nmodes])
+        plt.show()
+
     def plot_vg(self, fig=None, modes=None,
                 plot_type: str='tas',
                 xlim=None, ylim_damping=None,
@@ -495,8 +527,32 @@ class FlutterResponse:
                        **legend_kwargs)
 
     #@property
-    #def flutter_speed(self, modes=None):
-        #"""gets the flutter speed"""
+    def flutter_speed(self, modes=None,
+                      dfreq: float=-1.0,
+                      #ddamp: float=-1.0,
+                      damping_range: Limit=None,
+                      velocity_range: Limit=None):
+        """gets the flutter speed"""
+        if damping_range is None:
+            damping_range = [None, None]
+        if velocity_range is None:
+            velocity_range = [None, None]
+
+        is_damping_range = damping_range[0] is not None or damping_range[1] is not None
+        is_velocity_range = velocity_range[0] is not None or velocity_range[1] is not None
+        modes, imodes = _get_modes_imodes(self.modes, modes)
+        freq = self.results[:, :, self.ifreq]
+        damp = self.results[:, :, self.idamping]
+        eas = self.results[:, :, self.ieas]
+
+        if dfreq > 0. and is_damping_range:
+            raise NotImplementedError('dfreq > 0. and ddamp > 0.')
+        elif is_damping_range:
+            for imode in imodes:
+                dampi = self.results[imode, :, self.idamping].ravel()
+                easi = self.results[imode, :, self.ieas].ravel()
+                scipy.interpolate.interp1d(easi, dampi, kind='cubic')
+
         #if modes is None:
             #modes = self.modes
         #else:

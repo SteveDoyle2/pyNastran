@@ -35,6 +35,7 @@ from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.free_faces import write_skin_solid_faces
 from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
 
+from pyNastran.bdf.test.run_jobs import cmd_line_run_jobs
 from .cmd_line.bdf_diff import cmd_line_diff
 from .cmd_line.bdf_merge import cmd_line_merge
 from .cmd_line.bdf_equivalence import cmd_line_equivalence
@@ -1389,6 +1390,7 @@ CMD_MAPS = {
     'export_mcids': cmd_line_export_mcids,
     'remove_unused': cmd_line_remove_unused,
     'split_cbars_by_pin_flags': cmd_line_split_cbars_by_pin_flag,
+    'run_jobs': cmd_line_run_jobs,
 
     'export_caero_mesh': cmd_line_export_caero_mesh,
     'transform': cmd_line_transform,
@@ -1439,6 +1441,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--subpanels] [--pid PID]\n'
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [-p PIN_FLAGS_CSV_FILENAME]\n'
         '  bdf stats                       IN_BDF_FILENAME [--punch]\n'
+        '  bdf run_jobs                    BDF_FILENAME_DIRNAME [--exe NASTRAN_PATH] [--cleanup]\n'
     )
 
     if dev:
@@ -1467,6 +1470,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf export_caero_mesh  -h | --help\n'
         '  bdf split_cbars_by_pin_flags    -h | --help\n'
         '  bdf stats                       -h | --help\n'
+        '  bdf run_jobs                    -h | --help\n'
     )
     if dev:
         msg += (

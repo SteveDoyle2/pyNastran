@@ -4976,7 +4976,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True,
     """
     model = BDF(log=log, debug=debug, mode=mode)
     if read_cards and skip_cards:
-        msg = 'read_cards=%s skip_cards=%s cannot be used at the same time'
+        msg = f'read_cards={read_cards} skip_cards={skip_cards} cannot be used at the same time'
         raise NotImplementedError(msg)
     if skip_cards:
         model.disable_cards(skip_cards)
@@ -4999,31 +4999,6 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True,
         #methods_to_remove = [
             #'_process_card', 'read_bdf', 'disable_cards', 'set_dynamic_syntax',
             #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
-
-            #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
-            #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
-            #'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
-            #'add_DIVERG',
-            #'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
-            #'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
-            #'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
-            #'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
-            #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
-            #'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
-            #'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
-            #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_tempd', 'add_TF', 'add_TRIM',
-            #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
-
-            #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
-            #'add_constraint_MPC', 'add_constraint_MPCADD',
-            #'add_constraint_SPC', 'add_constraint_SPCADD',
-            #'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper',
-            #'add_dload', '_add_dload_entry', 'add_element', 'add_hyperelastic_material',
-            #'add_load', 'add_mass', 'add_material_dependence', 'add_method', 'add_node',
-            #'add_plotel', 'add_property', 'add_property_mass', 'add_random_table',
-            #'add_rigid_element', 'add_structural_material', 'add_suport', 'add_suport1',
-            #'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element',
-            #'add_thermal_load', 'add_thermal_material',
 
             #'set_as_msc',
             #'set_as_nx',
@@ -5119,8 +5094,7 @@ def _bool(value) -> bool:
     return True if value == 'true' else False
 
 
-def _get_coords_to_update(coords: dict[int, CORD1R | CORD1C | CORD1S |
-                                            CORD2R | CORD2C | CORD2S],
+def _get_coords_to_update(coords: dict[int, Coord],
                           cps_to_check: list[int],
                           cps_checked: list[int],
                           nids_checked: list[int]) -> tuple[int, list[int], list[int], list[int]]:
