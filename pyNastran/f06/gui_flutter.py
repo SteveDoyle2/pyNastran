@@ -120,6 +120,7 @@ class FlutterGui(LoggableGui):
         self.selected_modes = []
         self.freq_tol = -1.0
         self.freq_tol_remove = -1.0
+        self.damping = -1.0
         self.vf = -1.0
         self.vl = -1.0
 
@@ -296,6 +297,7 @@ class FlutterGui(LoggableGui):
             ('freq_tol_remove', -1, self.freq_tol_remove_edit),
             ('vl', -1, self.VL_edit),
             ('vf', -1, self.VF_edit),
+            ('damping', -1, self.damping_edit),
             ('output_directory', -1, self.output_directory_edit),
         ]
         for key, index, line_edit in line_edits:
@@ -503,6 +505,8 @@ class FlutterGui(LoggableGui):
         self.VL_edit = QFloatEdit('')
         self.VF_label = QLabel('VF, Flutter:')
         self.VF_edit = QFloatEdit('')
+        self.damping_label = QLabel('Damping, g:')
+        self.damping_edit = QFloatEdit('')
 
 
         self.f06_load_button = QPushButton('Load F06', self)
@@ -753,6 +757,10 @@ class FlutterGui(LoggableGui):
 
         grid.addWidget(self.VF_label, irow, 0)
         grid.addWidget(self.VF_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.damping_label, irow, 0)
+        grid.addWidget(self.damping_edit, irow, 1)
         irow += 1
 
         jrow = 0
@@ -1045,7 +1053,7 @@ class FlutterGui(LoggableGui):
         xlim_kfreq = self.kfreq_lim
         ylim_damping = self.ydamp_lim
         ylim_freq = self.freq_lim
-        damping_limit = None  # % damping
+        damping_limit = self.damping  # % damping
 
         # changing directory so we don't make a long filename
         # in teh plot header
@@ -1213,10 +1221,13 @@ class FlutterGui(LoggableGui):
 
         vl, is_passed_vl = get_float_or_none(self.VL_edit)
         vf, is_passed_vf = get_float_or_none(self.VF_edit)
+        damping, is_passed_damping = get_float_or_none(self.damping_edit)
         if is_passed_vl and vl is None:
             vl = -1.0
         if is_passed_vf and vf is None:
             vf = -1.0
+        if is_passed_damping and damping is None:
+            damping = -1.0
 
         damp_lim = [damp_lim_min, damp_lim_max]
         freq_lim = [freq_lim_min, freq_lim_max]
@@ -1231,7 +1242,7 @@ class FlutterGui(LoggableGui):
             is_passed_kfreq1, is_passed_kfreq2,
             is_passed_eig,
             is_passed_tol1, is_passed_tol2,
-            is_passed_vl, is_passed_vf,
+            is_passed_vl, is_passed_vf, is_passed_damping,
         ]
         is_passed = all(is_passed_flags)
         #print(f'is_passed_flags = {is_passed_flags}')
@@ -1240,7 +1251,7 @@ class FlutterGui(LoggableGui):
             eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim, xlim,
             damp_lim, freq_lim, kfreq_lim,
             eigr_lim, eigi_lim, freq_tol, freq_tol_remove,
-            vl, vf, is_passed,
+            vl, vf, damping, is_passed,
         )
         return out
 
@@ -1255,7 +1266,7 @@ class FlutterGui(LoggableGui):
          ydamp_lim, freq_lim, kfreq_lim,
          eigr_lim, eigi_lim,
          freq_tol, freq_tol_remove,
-         vl, vf, is_valid_xlim) = self.get_xlim()
+         vl, vf, damping, is_valid_xlim) = self.get_xlim()
 
         subcase, is_subcase_valid = self._get_subcase()
         #if subcase == -1:
@@ -1279,6 +1290,7 @@ class FlutterGui(LoggableGui):
         self.freq_tol_remove = freq_tol_remove
         self.vl = vl
         self.vf = vf
+        self.damping = damping
 
         self.x_plot_type = self.x_plot_type_pulldown.currentText()
         self.plot_type = self.plot_type_pulldown.currentText()
@@ -1332,6 +1344,7 @@ class FlutterGui(LoggableGui):
             'freq_tol_remove': freq_tol_remove,
             'vl': vl,
             'vf': vf,
+            'damping': damping,
         }
         self.units_in = units_in
         self.units_out = units_out

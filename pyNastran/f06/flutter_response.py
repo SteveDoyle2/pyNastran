@@ -540,23 +540,59 @@ class FlutterResponse:
 
         is_damping_range = damping_range[0] is not None or damping_range[1] is not None
         is_velocity_range = velocity_range[0] is not None or velocity_range[1] is not None
+
+    def get_flutter_crossings(self, modes=None, eas_range=None,
+                              freq_round: int=2,
+                              eas_round: int=3) -> dict[int, float, float, str]:
+        if eas_range is None:
+            eas_range = [None, None]
+        eas_min0, eas_max0 = eas_range
         modes, imodes = _get_modes_imodes(self.modes, modes)
         freq = self.results[:, :, self.ifreq]
         damp = self.results[:, :, self.idamping]
         eas = self.results[:, :, self.ieas]
+        xunit = self.out_units['eas']
 
-        if dfreq > 0. and is_damping_range:
-            raise NotImplementedError('dfreq > 0. and ddamp > 0.')
-        elif is_damping_range:
-            for imode in imodes:
-                dampi = self.results[imode, :, self.idamping].ravel()
-                easi = self.results[imode, :, self.ieas].ravel()
-                scipy.interpolate.interp1d(easi, dampi, kind='cubic')
+        # if dfreq > 0. and is_damping_range:
+        #     raise NotImplementedError('dfreq > 0. and ddamp > 0.')
+        # elif is_damping_range:
+        xcrossing_dict = {}
+        for imode in imodes:
+            dampi = self.results[imode, :, self.idamping].flatten()
+            if dampi.max() < 0.00:
+                continue
+            easi = self.results[imode, :, self.ieas].flatten()
+            freqi = self.results[imode, :, self.ifreq].flatten()
 
-        #if modes is None:
-            #modes = self.modes
-        #else:
-            #modes = np.asarray(modes)
+            eas_max = easi[-1]
+            #damp_sign_change = (np.sign(dampi[1:]) == np.sign(dampi[:-1]))
+
+            #a = [1, 2, 1, 1, -3, -4, 7, 8, 9, 10, -2, 1, -3, 5, 6, 7, -10]
+            #idamp0 = get_zero_crossings(easi, dampi)[0]
+            #idamp3 = get_zero_crossings(easi, dampi - 0.03)[0]
+            #eas0b = easi[idamp0]
+            #eas3b = easi[idamp3]
+
+            eas0, freq0 = get_zero_crossings(easi, freqi, dampi)
+            eas3, freq3 = get_zero_crossings(easi, freqi, dampi - 0.03)
+            #out_str = f'  {imode}: 0%={eas0:.1f} 3%={eas3:.1f} [{xunit}]'
+
+            mode = imode + 1
+            in_range = True
+            eas0, freq0 = check_range(eas_min0, eas_max0, freq0, eas0)
+            eas3, freq3 = check_range(eas_min0, eas_max0, freq3, eas3)
+            if np.isnan(eas0) and np.isnan(eas3):
+                continue
+            # if eas_min is not None and eas_:
+            #     eas_min = min(eas_min, eas0)
+            # if eas_max is not None:
+            #     eas_max = min(eas_min, eas3)
+            freq0 = round(freq0, freq_round)
+            freq3 = round(freq3, freq_round)
+            eas0 = round(eas0, eas_round)
+            eas3 = round(eas3, eas_round)
+            xcrossing_dict[mode] = [freq0, eas0, freq3, eas3]
+        return xcrossing_dict
 
     def plot_root_locus(self, modes=None,
                         fig=None, axes=None,
@@ -998,6 +1034,8 @@ class FlutterResponse:
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
 
         jcolor = 0
+        imodes_crossing = []
+        xcrossing_dict = self.get_flutter_crossings(modes=modes)
         for i, imode, mode in zip(count(), imodes, modes):
             color = colors[jcolor]
             symbol = symbols[jcolor]
@@ -1014,6 +1052,9 @@ class FlutterResponse:
             jcolor, color, linestyle2, symbol2 = _increment_jcolor(
                 jcolor, color, linestyle, symbol,
                 freq, freq_tol)
+            if color != 'gray':
+                imodes_crossing.append(imode)
+
             #iplot = np.where(freq > 0.0)
             #damp_axes.plot(vel, damping, symbols[i], label='Mode %i' % mode)
             #freq_axes.plot(vel, freq, symbols[i])
@@ -1025,6 +1066,27 @@ class FlutterResponse:
             label = _get_mode_freq_label(mode, freq[0])
             damp_axes.plot(vel, damping, color=color, marker=symbol2, linestyle=linestyle2, label=label)
             freq_axes.plot(vel, freq, color=color, marker=symbol2, linestyle=linestyle2)
+
+        jcolor = 0
+        xunit = self.out_units['eas']
+        # TODO: fix the colors...
+        for i, imode, mode in zip(count(), imodes, modes):
+            if imode not in imodes_crossing:
+                continue
+            if mode not in xcrossing_dict:
+                continue
+            color = colors[jcolor]
+            symbol2 = symbols[jcolor]
+            freq0, eas0, freq3, eas3 = xcrossing_dict[mode]
+            # freq = self.results[imode, :, self.ifreq].ravel()
+            # jcolor, color, linestyle2, symbol2 = _increment_jcolor(
+            #     jcolor, color, linestyle, symbol,
+            #     freq, freq_tol)
+            jcolor += 1
+            if not np.isnan(eas0):
+                damp_axes.plot(eas0, 0., color=color, marker=symbol2, linestyle='', label=f'  {mode}: 0%={eas0:.1f} [{xunit}]; f={freq0:.2f} [Hz]')
+            if not np.isnan(eas3):
+                damp_axes.plot(eas3, 0.03, color=color, marker=symbol2, linestyle='', label=f'  {mode}: 3%={eas3:.1f} [{xunit}]; f={freq3:.2f} [Hz]')
 
         damp_axes.set_xlabel(xlabel)
         freq_axes.set_xlabel(xlabel)
@@ -1462,6 +1524,36 @@ def _get_modes_imodes(all_modes, modes):
     return modes, imodes
 
 
+def get_zero_crossings(x: np.ndarray, freq, y: np.ndarray) -> np.ndarray:
+    """https://stackoverflow.com/questions/3843017/efficiently-detect-sign-changes-in-python
+
+    Haven't tested this yet...
+    """
+    # zero_crossings = np.where(np.diff(np.sign(y)))[0]
+    zero_crossings = np.where(np.diff(np.sign(y) >= 0))[0]
+    # zero_crossings = np.where(np.diff(np.signbit(y)))[0]
+    #assert len(zero_crossings) == 1, zero_crossings
+    if len(zero_crossings) == 0:
+        return np.nan, np.nan
+
+    iy = zero_crossings[0]
+    yii = y[iy]
+    if yii < 0:
+        x0 = x[iy]
+        x1 = x[iy+1]
+        y0 = y[iy]
+        y1 = y[iy + 1]
+        #y2 = (y1-y0) / (x1-x0) * (x-x0) + y0
+        x2 = (x1-x0) / (y1-y0) * (0.-y0) + x0
+
+        f0 = freq[iy]
+        f1 = freq[iy+1]
+        f2 = (f1-f0) / (y1-y0) * (0.-y0) + f0
+    else:
+        return np.nan, np.nan
+    return x2, f2
+
+
 def _asarray(results, allow_fix_kfreq: bool=True):
     """casts the results array"""
     allow_fix_kfreq = True
@@ -1756,3 +1848,21 @@ def _is_q_units_consistent(rho_units: str, vel_units: str,
     ]
     is_consistent = (rho_units, vel_units, q_units) in units
     return is_consistent
+
+
+def check_range(eas_min0: float, eas_max0: float, freq: float, eas: float) -> tuple[float, float]:
+    if np.isnan(eas):
+        return eas, freq
+    if eas_min0 is not None and eas_max0 is not None:
+        if not (eas_min0 <= eas <= eas_max0):
+            eas = np.nan
+            freq = np.nan
+    elif eas_min0 is not None:
+        if not (eas_min0 <= eas):
+            eas = np.nan
+            freq = np.nan
+    elif eas_max0 is not None:
+        if not (eas <= eas_max0):
+            eas = np.nan
+            freq = np.nan
+    return eas, freq

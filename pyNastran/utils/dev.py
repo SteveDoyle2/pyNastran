@@ -9,6 +9,7 @@ import os
 from typing import Any
 
 import numpy as np
+from pyNastran.utils import PathLike
 
 
 def get_files_of_type(dirname: str, extension: str='.txt',
@@ -38,9 +39,14 @@ def get_files_of_type(dirname: str, extension: str='.txt',
         list of all the files with a given extension in the specified directory
 
     """
-    filenames2 = []  # type: list[str]
+    filenames2: list[str] = []
     if not os.path.exists(dirname):
         return filenames2
+
+    if not isinstance(dirname, PathLike):
+        raise TypeError('dirname must be a PathLike object')
+    if not isinstance(extension, str):
+        raise TypeError(f'extension={extension!r} must be a str')
 
     filenames = os.listdir(dirname)
     if skip_folder_file in filenames:

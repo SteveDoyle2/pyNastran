@@ -298,6 +298,7 @@ def split_int_colon(modes: str, nmax: int=1000,
     """
     modes2 = []
     if modes is not None:
+        assert isinstance(modes, str), modes
         smodes = modes.strip().split(',')
         for mode in smodes:
             mode = mode.strip()
