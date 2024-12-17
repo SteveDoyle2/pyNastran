@@ -70,6 +70,8 @@ def run_nastran(bdf_filename: PathLike,
             base + '.f04',
             base + '.log',
             base + '.plt',
+            base + '.mon1',
+            base + '.mon2',
         ]
         for fname in fnames:
             if os.path.exists(fname):

@@ -572,17 +572,17 @@ class FlutterResponse:
 
             is_nan_case = False
             crossings = []
-            for damping_target, damping_required in damping_required:
-                if dampi.max() < damping_required:
+            for damping_targeti, damping_requiredi in damping_required:
+                if dampi.max() < damping_requiredi:
                     continue
-                eas0, freq0 = get_zero_crossings(easi, freqi, dampi - damping_target)
+                eas0, freq0 = get_zero_crossings(easi, freqi, dampi - damping_targeti)
                 eas0, freq0 = check_range(eas_min0, eas_max0, freq0, eas0)
                 if np.isnan(eas0):
                     is_nan_case = True
                     continue
                 freq0 = round(freq0, freq_round)
                 eas0 = round(eas0, eas_round)
-                crossings.append((damping_target, float(freq0), float(eas0)))
+                crossings.append((damping_targeti, float(freq0), float(eas0)))
             if is_nan_case:
                 continue
 

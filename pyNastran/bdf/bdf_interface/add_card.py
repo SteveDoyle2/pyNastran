@@ -5610,7 +5610,7 @@ class AddOptimization:
 
     def add_dresp2(self, dresp_id: int, label: str,
                    dequation: int | str,
-                   region: int, params,
+                   region: int, params: dict[tuple[int, str], list[int]],
                    method: str='MIN', c1: float=1., c2: float=0.005, c3: float=10.,
                    validate: bool=True, comment: str='') -> DRESP2:
         """
