@@ -27,7 +27,7 @@ if TYPE_CHECKING and IS_MATPLOTLIB:  # pragma: no cover
 Color = str
 LINESTYLES = ['-', '--', '-.', ':', 'None', ' ', '',
               'solid', 'dashed', 'dashdot', 'dotted']
-
+Crossing = tuple[float, float, float]
 
 class FlutterResponse:
     """storage object for single subcase SOL 145 results"""
@@ -541,17 +541,23 @@ class FlutterResponse:
         is_damping_range = damping_range[0] is not None or damping_range[1] is not None
         is_velocity_range = velocity_range[0] is not None or velocity_range[1] is not None
 
-    def get_flutter_crossings(self, modes=None, eas_range=None,
+    def get_flutter_crossings(self,
+                              damping_required: Optional[list[tuple[float, float]]]=None,
+                              modes=None, eas_range=None,
                               freq_round: int=2,
-                              eas_round: int=3) -> dict[int, float, float, str]:
+                              eas_round: int=3,
+                              ) -> dict[int, list[Crossing]]:
+        if damping_required is None:
+            damping_required = [
+                (0.00, 0.03),
+                (0.03, 0.04),
+            ]
+
         if eas_range is None:
             eas_range = [None, None]
         eas_min0, eas_max0 = eas_range
         modes, imodes = _get_modes_imodes(self.modes, modes)
-        freq = self.results[:, :, self.ifreq]
-        damp = self.results[:, :, self.idamping]
-        eas = self.results[:, :, self.ieas]
-        xunit = self.out_units['eas']
+        min_damping = _get_min_damping(damping_required)
 
         # if dfreq > 0. and is_damping_range:
         #     raise NotImplementedError('dfreq > 0. and ddamp > 0.')
@@ -559,39 +565,29 @@ class FlutterResponse:
         xcrossing_dict = {}
         for imode in imodes:
             dampi = self.results[imode, :, self.idamping].flatten()
-            if dampi.max() < 0.00:
+            if dampi.max() < min_damping:
                 continue
             easi = self.results[imode, :, self.ieas].flatten()
             freqi = self.results[imode, :, self.ifreq].flatten()
 
-            eas_max = easi[-1]
-            #damp_sign_change = (np.sign(dampi[1:]) == np.sign(dampi[:-1]))
-
-            #a = [1, 2, 1, 1, -3, -4, 7, 8, 9, 10, -2, 1, -3, 5, 6, 7, -10]
-            #idamp0 = get_zero_crossings(easi, dampi)[0]
-            #idamp3 = get_zero_crossings(easi, dampi - 0.03)[0]
-            #eas0b = easi[idamp0]
-            #eas3b = easi[idamp3]
-
-            eas0, freq0 = get_zero_crossings(easi, freqi, dampi)
-            eas3, freq3 = get_zero_crossings(easi, freqi, dampi - 0.03)
-            #out_str = f'  {imode}: 0%={eas0:.1f} 3%={eas3:.1f} [{xunit}]'
+            is_nan_case = False
+            crossings = []
+            for damping_target, damping_required in damping_required:
+                if dampi.max() < damping_required:
+                    continue
+                eas0, freq0 = get_zero_crossings(easi, freqi, dampi - damping_target)
+                eas0, freq0 = check_range(eas_min0, eas_max0, freq0, eas0)
+                if np.isnan(eas0):
+                    is_nan_case = True
+                    continue
+                freq0 = round(freq0, freq_round)
+                eas0 = round(eas0, eas_round)
+                crossings.append((damping_target, float(freq0), float(eas0)))
+            if is_nan_case:
+                continue
 
             mode = imode + 1
-            in_range = True
-            eas0, freq0 = check_range(eas_min0, eas_max0, freq0, eas0)
-            eas3, freq3 = check_range(eas_min0, eas_max0, freq3, eas3)
-            if np.isnan(eas0) and np.isnan(eas3):
-                continue
-            # if eas_min is not None and eas_:
-            #     eas_min = min(eas_min, eas0)
-            # if eas_max is not None:
-            #     eas_max = min(eas_min, eas3)
-            freq0 = round(freq0, freq_round)
-            freq3 = round(freq3, freq_round)
-            eas0 = round(eas0, eas_round)
-            eas3 = round(eas3, eas_round)
-            xcrossing_dict[mode] = [freq0, eas0, freq3, eas3]
+            xcrossing_dict[mode] = crossings
         return xcrossing_dict
 
     def plot_root_locus(self, modes=None,
@@ -1035,17 +1031,21 @@ class FlutterResponse:
 
         jcolor = 0
         imodes_crossing = []
-        xcrossing_dict = self.get_flutter_crossings(modes=modes)
+        xcrossing_dict = {}
+
+        damping_required = [
+            (0.00, 0.03),
+            (0.03, 0.04),
+        ]
+        if hasattr(self, 'ieas') and plot_type == 'eas':
+            xcrossing_dict = self.get_flutter_crossings(
+                damping_required=damping_required, modes=modes)
+
         for i, imode, mode in zip(count(), imodes, modes):
             color = colors[jcolor]
             symbol = symbols[jcolor]
 
             vel = self.results[imode, :, ix].ravel()
-
-            #print('rho_in*** = ', self.results_in[imode, :, self.idensity].ravel().tolist())
-            #print('vel_in*** = ', self.results_in[imode, :, self.ivelocity].ravel().tolist())
-            #print('eas*** = ', self.results[imode, :, self.ieas].ravel().tolist())
-
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
 
@@ -1066,27 +1066,10 @@ class FlutterResponse:
             label = _get_mode_freq_label(mode, freq[0])
             damp_axes.plot(vel, damping, color=color, marker=symbol2, linestyle=linestyle2, label=label)
             freq_axes.plot(vel, freq, color=color, marker=symbol2, linestyle=linestyle2)
-
-        jcolor = 0
-        xunit = self.out_units['eas']
-        # TODO: fix the colors...
-        for i, imode, mode in zip(count(), imodes, modes):
-            if imode not in imodes_crossing:
-                continue
-            if mode not in xcrossing_dict:
-                continue
-            color = colors[jcolor]
-            symbol2 = symbols[jcolor]
-            freq0, eas0, freq3, eas3 = xcrossing_dict[mode]
-            # freq = self.results[imode, :, self.ifreq].ravel()
-            # jcolor, color, linestyle2, symbol2 = _increment_jcolor(
-            #     jcolor, color, linestyle, symbol,
-            #     freq, freq_tol)
-            jcolor += 1
-            if not np.isnan(eas0):
-                damp_axes.plot(eas0, 0., color=color, marker=symbol2, linestyle='', label=f'  {mode}: 0%={eas0:.1f} [{xunit}]; f={freq0:.2f} [Hz]')
-            if not np.isnan(eas3):
-                damp_axes.plot(eas3, 0.03, color=color, marker=symbol2, linestyle='', label=f'  {mode}: 3%={eas3:.1f} [{xunit}]; f={freq3:.2f} [Hz]')
+        self._plot_crossings(
+            damp_axes, damping_required,
+            imodes, modes,
+            imodes_crossing, xcrossing_dict, colors, symbols)
 
         damp_axes.set_xlabel(xlabel)
         freq_axes.set_xlabel(xlabel)
@@ -1146,6 +1129,43 @@ class FlutterResponse:
             fig.clear()
         if close:
             plt.close()
+
+    def _plot_crossings(self,
+                        damp_axes: plt.Axes,
+                        damping_required: list[tuple[float, float]],
+                        imodes: np.ndarray,
+                        modes: np.ndarray,
+                        imodes_crossing: np.ndarray,
+                        xcrossing_dict: dict[int, list[Crossing]],
+                        colors: list[str],
+                        symbols: list[str]) -> None:
+        assert isinstance(xcrossing_dict, dict), xcrossing_dict
+        if len(xcrossing_dict) == 0:
+            return
+        jcolor = 0
+        xunit = self.out_units['eas']
+        # TODO: fix the colors...
+        for i, imode, mode in zip(count(), imodes, modes):
+            if imode not in imodes_crossing:
+                continue
+            if mode not in xcrossing_dict:
+                continue
+            color = colors[jcolor]
+            symbol2 = symbols[jcolor]
+            #(freq0, eas0), (freq3, eas3) = xcrossing_dict[mode]
+            # freq = self.results[imode, :, self.ifreq].ravel()
+            # jcolor, color, linestyle2, symbol2 = _increment_jcolor(
+            #     jcolor, color, linestyle, symbol,
+            #     freq, freq_tol)
+            for case in xcrossing_dict[mode]:
+                damping0, freq0, eas0 = case
+                if np.isnan(eas0):
+                    continue
+                damping_str = f'{damping0*100:.0f}%'
+                label = f'  {mode}: {damping_str}={eas0:.1f} [{xunit}]; f={freq0:.2f} [Hz]'
+                damp_axes.plot(eas0, damping0, color=color,
+                               marker=symbol2, linestyle='', label=label)
+            jcolor += 1
 
     def export_to_csv(self, csv_filename: PathLike,
                       modes: Optional[list[int]]=None) -> None:
@@ -1606,9 +1626,9 @@ def _asarray(results, allow_fix_kfreq: bool=True):
 
 
 def _add_damping_limit(plot_type: str,
-                      damp_axes: Axes,
-                      damping_limit: Optional[float],
-                      linewidth: int=2) -> None:
+                       damp_axes: Axes,
+                       damping_limit: Optional[float],
+                       linewidth: int=2) -> None:
     if damping_limit is None:
         return
     #damp_label = f'Damping={damping_limit*100:.1f}'
@@ -1850,7 +1870,13 @@ def _is_q_units_consistent(rho_units: str, vel_units: str,
     return is_consistent
 
 
-def check_range(eas_min0: float, eas_max0: float, freq: float, eas: float) -> tuple[float, float]:
+def check_range(eas_min0: float, eas_max0: float,
+                freq: float, eas: float) -> tuple[float, float]:
+    """
+    Flutter is only valid if it's between eas_min0 and eas_max0.  In
+    other words, why does it matter if flutter is outside the flight
+    envelope?
+    """
     if np.isnan(eas):
         return eas, freq
     if eas_min0 is not None and eas_max0 is not None:
@@ -1866,3 +1892,21 @@ def check_range(eas_min0: float, eas_max0: float, freq: float, eas: float) -> tu
             eas = np.nan
             freq = np.nan
     return eas, freq
+
+def _get_min_damping(damping_required: list[tuple[float, float]]) -> float:
+    """
+    Get min required damping for 0% and 3%, such that flutter exists.
+    The goal of this is to filter all points that are below 4% to
+    limit identifying an excessive number of flutter crossings.
+
+    damping_required = [
+        (0.00, 0.01),
+        (0.03, 0.04),
+    ]
+    damping = _get_min_damping(damping_required)
+    >>> 0.04
+    """
+    min_damping = damping_required[0][1]
+    for dampingi, requiredi in damping_required[1:]:
+        min_damping = min(min_damping, requiredi)
+    return min_damping

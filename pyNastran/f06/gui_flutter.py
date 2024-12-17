@@ -1363,7 +1363,7 @@ class FlutterGui(LoggableGui):
         return is_passed
 
     def on_open_new_window(self):
-        return
+        #return
         try:
             from pyNastran.f06.gui_flutter_vtk import VtkWindow
         except ImportError as e:
