@@ -514,7 +514,7 @@ class FlutterResponse:
 
         See ``plot_root_locus`` for arguments
         """
-        ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
+        ix, xlabel, unused_xunit = self._plot_type_to_ix_xlabel(plot_type)
         ylabel = 'Structural Damping'
         iy = self.idamping
         scatter = True
@@ -885,7 +885,7 @@ class FlutterResponse:
         ylabel1 = r'Structural Damping; $g = 2 \gamma $'
         ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
 
-        ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
+        ix, xlabel, unused_xunit = self._plot_type_to_ix_xlabel(plot_type)
         iy1 = self.idamping
         iy2 = self.ikfreq
         scatter = True
@@ -961,7 +961,7 @@ class FlutterResponse:
         # 5. ???
 
     def _get_symbols_colors_from_modes(self, modes: np.ndarray,
-                                       ) -> tuple[list[str], list[str]]:
+                                       nopoints: Optional[bool]=None) -> tuple[list[str], list[str]]:
         """
         We need to make sure we have a symbol and color for each mode,
         even if we repeat them.
@@ -969,9 +969,11 @@ class FlutterResponse:
         For the colors, calculate how many more we need N = ceil(nmodes/ncolors)
         and just duplicate colors N times.
         """
+        if nopoints is None:
+            nopoints = self.nopoints
         nmodes = len(modes)
         symbols, colors = _symbols_colors_from_nlines(self._colors, self._symbols, nmodes)
-        if self.nopoints:
+        if nopoints:
             symbols = ['None'] * len(symbols)
         return symbols, colors
 
@@ -1024,10 +1026,11 @@ class FlutterResponse:
         #self._set_xy_limits(xlim, ylim)
         modes, imodes = _get_modes_imodes(self.modes, modes)
         symbols, colors = self._get_symbols_colors_from_modes(modes)
+        symbols_show, colors_show = self._get_symbols_colors_from_modes(modes, nopoints=False)
         linestyle = 'None' if self.noline else '-'
 
         #plot_type = ['tas', 'eas', 'alt', 'kfreq', '1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach']
-        ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
+        ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
 
         jcolor = 0
         imodes_crossing = []
@@ -1069,7 +1072,8 @@ class FlutterResponse:
         self._plot_crossings(
             damp_axes, damping_required,
             imodes, modes,
-            imodes_crossing, xcrossing_dict, colors, symbols)
+            imodes_crossing, xcrossing_dict,
+            colors_show, symbols_show)
 
         damp_axes.set_xlabel(xlabel)
         freq_axes.set_xlabel(xlabel)
@@ -1097,8 +1101,9 @@ class FlutterResponse:
 
         for v_line in v_lines:
             name, velocity, vcolor, linestyle = v_line
-            _add_limit(plot_type, damp_axes, freq_axes, name, velocity,
-                       color=vcolor, linestyle=linestyle)
+            _add_vlimit(plot_type, damp_axes, freq_axes,
+                        name, velocity, xunit,
+                        color=vcolor, linestyle=linestyle)
             #_add_limit(plot_type, damp_axes, freq_axes, '1.15*VL', 1.15, vl_limit)
         # if name_vd_limit:
         #     name, vl_limit = name_vl_limit
@@ -1409,7 +1414,7 @@ class FlutterResponse:
             zona_file.write(msg)
         return msg
 
-    def _plot_type_to_ix_xlabel(self, plot_type: str) -> tuple[int, str]:
+    def _plot_type_to_ix_xlabel(self, plot_type: str) -> tuple[int, str, str]:
         """helper method for ``plot_vg_vf``"""
         plot_type = plot_type.lower()
         #print(f'plot_type={plot_type!r} out_units={self.out_units!r}')
@@ -1418,47 +1423,59 @@ class FlutterResponse:
             ix = self.ivelocity
             velocity_units = self.out_units['velocity']
             xlabel = f'Velocity [{velocity_units}]'
+            xunit = velocity_units
         elif plot_type == 'eas':
             ix = self.ieas
             velocity_units = self.out_units['eas']
             xlabel = f'Equivalent Airspeed [{velocity_units}]'
+            xunit = velocity_units
         elif plot_type == 'alt':
             ix = self.ialt
             alt_units = self.out_units['altitude']
             xlabel = f'Altitude [{alt_units}]'
+            xunit = alt_units
         elif plot_type == 'kfreq':
             ix = self.ikfreq
             xlabel = r'Reduced Frequency [rad]; $\omega c / (2V) $'
+            xunit = 'rad'
         elif plot_type == 'rho':
             ix = self.idensity
             density_units = self.out_units['density']
             xlabel = f'Density [{density_units}]'
+            xunit = density_units
         elif plot_type == 'q':
             ix = self.iq
             pressure_unit = self.out_units['dynamic_pressure']
             xlabel = f'Dynamic Pressure [{pressure_unit}]'
+            xunit = pressure_unit
         elif plot_type == 'mach':
             ix = self.imach
             xlabel = 'Mach'
+            xunit = ''
         elif plot_type == 'freq':
             ix = self.ifreq
             xlabel = 'Frequency [Hz]'
+            xunit = 'Hz'
         elif plot_type in ['1/kfreq', 'ikfreq', 'inv_kfreq', 'kfreq_inv']:
             ix = self.ikfreq_inv
             xlabel = r'1/KFreq [1/rad]; $2V / (\omega c) $'
+            xunit = '1/rad'
         elif plot_type == 'eigr':
             ix = self.ieigr
             xlabel = r'Eigenvalue (Real); $\omega \gamma$'
+            xunit = 'rad'
         elif plot_type == 'eigi':
             ix = self.ieigi
             xlabel = r'Eigenvalue (Imaginary); $\omega$'
+            xunit = 'rad'
         elif plot_type in ['damp', 'damping']:
             ix = self.idamping
             xlabel = r'Structural Damping; $g = 2 \gamma $'
+            xunit = 'g'
         else:  # pramga: no cover
             raise NotImplementedError(f"plot_type={plot_type!r} not in ['tas', 'eas', 'alt', 'kfreq', "
                                       "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']")
-        return ix, xlabel
+        return ix, xlabel, xunit
 
     def object_attributes(self, mode: str='public', keys_to_skip=None,
                           filter_properties: bool=False):
@@ -1636,25 +1653,26 @@ def _add_damping_limit(plot_type: str,
     damp_axes.axhline(y=0., color='k', linestyle='--', linewidth=linewidth,
                       label=f'Structural Damping=0%')
     damp_axes.axhline(y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
-                      label=f'Abs Structural Damping={damping_limit*100:.1f}%')
+                      label=f'Abs Structural Damping={damping_limit*100:.0f}%')
 
 
-def _add_limit(plot_type: str,
-               damp_axes: Axes, freq_axes: Axes,
-               name: str,
-               velocity: float,
-               linestyle: str='--',
-               color: str='k',
-               linewidth: int=2) -> None:
+def _add_vlimit(plot_type: str,
+                damp_axes: Axes, freq_axes: Axes,
+                name: str,
+                velocity: float,
+                xunit: str,
+                linestyle: str='--',
+                color: str='k',
+                linewidth: int=2) -> None:
     if plot_type not in {'tas', 'eas'}:
         return
     assert linestyle in LINESTYLES, (name, linestyle)
     # ax.text(0, vd_limit, 'Damping Limit')
 
     if velocity == int(velocity):
-        label = f'{name}={velocity:.0f}'
+        label = f'{name}={velocity:.0f} [{xunit}]'
     else:
-        label = f'{name}={velocity:.1f}'
+        label = f'{name}={velocity:.1f} [{xunit}]'
     damp_axes.axvline(x=velocity, color=color, linestyle=linestyle,
                       linewidth=linewidth, label=label)
     freq_axes.axvline(x=velocity, color=color, linestyle=linestyle,

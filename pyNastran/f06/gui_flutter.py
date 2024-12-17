@@ -852,13 +852,13 @@ class FlutterGui(LoggableGui):
         alt_units = units_out_dict['altitude']
         q_units = units_out_dict['dynamic_pressure']
         rho_units = units_out_dict['density']
-        self.tas_lim_label.setText(f'TAS Limits ({tas_units}):')
 
+        self.tas_lim_label.setText(f'TAS Limits ({tas_units}):')
         self.eas_lim_label.setText(f'EAS Limits ({eas_units}):')
         self.alt_lim_label.setText(f'Alt Limits ({alt_units}):')
         self.rho_lim_label.setText(f'Rho Limits ({rho_units}):')
         self.q_lim_label.setText(f'Q Limits ({q_units}):')
-        self.VL_label.setText(f'VL Limit ({eas_units}):')
+        self.VL_label.setText(f'VL, Limit ({eas_units}):')
         self.VF_label.setText(f'VF, Flutter ({eas_units}):')
 
     def on_font_size(self) -> None:
@@ -1037,15 +1037,16 @@ class FlutterGui(LoggableGui):
             #raise RuntimeError(x_plot_type)
             xlim = self.xlim
 
+        assert xlim[0] != '' and xlim[1] != '', (xlim, x_plot_type)
         v_lines = []
-        if self.vf:
+        if self.vf > 0.:
             # name, velocity, color, linestyle
             v_lines.append(('VF', self.vf, 'r', '-'))
         # if self.vd:
         #     # name, velocity, color, linestyle
         #     x_limits.append(('VD', self.vd, 'k', '--'))
         #     x_limits.append(('1.15*VD', 1.15*self.vd, 'k', '-'))
-        if self.vl:
+        if self.vl > 0.:
             # name, velocity, color, linestyle
             v_lines.append(('VL', self.vl, 'k', '--'))
             v_lines.append(('1.15*VL', 1.15*self.vl, 'k', '-'))
@@ -1245,7 +1246,8 @@ class FlutterGui(LoggableGui):
             is_passed_vl, is_passed_vf, is_passed_damping,
         ]
         is_passed = all(is_passed_flags)
-        #print(f'is_passed_flags = {is_passed_flags}')
+        # if not is_passed:
+        # self.log.warning(f'is_passed_flags = {is_passed_flags}')
         #print(f'freq_tol = {freq_tol}')
         out = (
             eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim, xlim,
