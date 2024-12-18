@@ -251,9 +251,14 @@ class FlutterResponse:
 
         """
         if eigr_eigi_velocity is None:
-            eigr_eigi_velocity = np.array((0,3), dtype='float64')
+            eigr_eigi_velocity = np.zeros((0,3), dtype='float64')
         if eigenvector is None:
             eigenvector = np.array([], dtype='complex128')
+        else:
+            assert eigenvector.ndim == 2, eigenvector.shape
+
+        assert eigr_eigi_velocity.ndim == 2, eigr_eigi_velocity
+        assert eigr_eigi_velocity.shape[1] == 3, eigr_eigi_velocity
         self.eigenvector = eigenvector
         self.eigr_eigi_velocity = eigr_eigi_velocity
 
@@ -649,6 +654,138 @@ class FlutterResponse:
                        freq_tol=freq_tol,
                        png_filename=png_filename,
                        **legend_kwargs)
+
+    def plot_modal_participation(self, modes=None,
+                                 fig=None, axes=None,
+                                 #eigr_lim=None, eigi_lim=None,
+                                 ncol: int=0,
+                                 show: bool=True, clear: bool=False,
+                                 close: bool=False, legend: bool=True,
+                                 #noline: bool=False, nopoints: bool=False,
+                                 freq_tol: float=-1.0,
+                                 png_filename=None,
+                                 **legend_kwargs):
+        """
+        Plots a root locus
+
+        Parameters
+        ----------
+        modes : list[int] / int ndarray; (default=None -> all)
+            the modes; typically 1 to N
+        fig : plt.Figure
+            the figure object
+        axes : plt.Axes
+            the axes object
+        eigr_lim : list[float/None, float/None]
+            the x plot limits
+        eigi_lim : list[float/None, float/None]
+            the y plot limits
+        show : bool; default=True
+            show the plot
+        clear : bool; default=False
+            clear the plot
+        legend : bool; default=True
+            show the legend
+        kwargs : dict; default=None
+           key : various matplotlib parameters
+           value : depends
+
+        Legend kwargs
+        -------------
+        loc : str
+           'best'
+        fancybox : bool; default=False
+           makes the box look cool
+        framealpha : float; 0.0 <= alpha <= 1.0
+            1.0 - no transparency / opaque
+            0.0 - fully transparent
+
+        """
+        modes, imodes = _get_modes_imodes(self.modes, modes)
+        legend_kwargs = get_legend_kwargs(legend_kwargs)
+        if fig is None:
+            fig = plt.figure()
+            axes = fig.add_subplot(111)
+
+        xlabel = r'Eigenvalue (Real); $\omega \zeta$'
+        ylabel = r'Eigenvalue (Imaginary); $\omega$'
+        # ix = self.ieigr
+        # iy = self.ieigi
+        # scatter = True
+
+        ivel = 0
+        imode = 1
+        #print(f'eigr_eigi_velocity.shape: {self.eigr_eigi_velocity.shape}')
+        #print(f'eigenvector.shape: {self.eigenvector.shape}')
+        #print(f'eigr_eigi_velocity:\n{self.eigr_eigi_velocity}')
+
+        # MSC
+        #eigr_eigi_velocity:
+        #[[-9.88553e-02  1.71977e+01  1.52383e+02]
+        # [-1.71903e-01  6.60547e+01  1.52383e+02]]
+        eigr_eigi_velocity = self.eigr_eigi_velocity[ivel, :]
+        eigri, eigii, velocityi = eigr_eigi_velocity
+
+        omega_damping = eigri
+        omega = eigii
+
+        #xlabel = r'Eigenvalue (Real); $\omega \gamma$'
+        #xlabel = r'Eigenvalue (Imaginary); $\omega$'
+        freq = omega / (2 * np.pi)
+        damping_g = 2 * omega_damping / omega
+        title = f'Modal Participation Factors of Mode {imode+1}\n'
+        title += f'omega={omega:.2f}; freq={freq:.2f} Hz; g={damping_g:.4g}'
+        if np.isfinite(velocityi):
+            title += f' V={velocityi:.1f}'
+        #print(title)
+        axes.set_title(title)
+        axes.grid(True)
+        axes.set_xlabel(xlabel)
+        axes.set_ylabel(ylabel)
+
+        #print(f'eigr_eigi_velocity:\n{self.eigr_eigi_velocity}')
+        #print(f'eigenvector:\n{self.eigenvector}')
+
+        eig = self.eigenvector[imodes, :]
+        eigr = eig.real
+        eigi = eig.imag
+        # abs_eigr = np.linalg.norm(eigr)
+        # abs_eigi = np.linalg.norm(eigi)
+        # if abs_eigr == 0.0:
+        #     abs_eigr = 1.0
+        # if abs_eigi == 0.0:
+        #     abs_eigi = 1.0
+
+        # don't normalize
+        abs_eigr = 1.0
+        abs_eigi = 1.0
+
+        reals = eigr / abs_eigr
+        imags = eigi / abs_eigi
+        for i, imodei, mode in zip(count(), imodes, modes):
+            #real = self.eigenvector[imode1, :].real, label=f'iMode1={imode1+1}')
+            reali = reals[i, imode]
+            imagi = imags[i, imode]
+            text = str(mode)
+            axes.scatter(reali, imagi, label=f'Mode {mode}')
+            #print(f'{i}: {reali}, {imagi}, {text!r}')
+            axes.text(reali, imagi, text, ha='center', va='center')
+
+        if legend:
+            # bbox_to_anchor=(1.125, 1.), ncol=ncol,
+            axes.legend(**legend_kwargs)
+
+        if show:
+            plt.show()
+        if png_filename:
+            plt.savefig(png_filename)
+        if clear:
+            fig.clear()
+        if close:
+            plt.close()
+    # for imode1 in range(nmodes1):
+        #     ax11.plot(self.eigenvector[imode1, :].real, label=f'iMode1={imode1+1}')
+        #     ax12.plot(self.eigenvector[imode1, :].imag, label=f'iMode1={imode1+1}')
 
     def _plot_x_y(self, ix: int, iy: int,
                   xlabel: str, ylabel: str,
@@ -1191,7 +1328,7 @@ class FlutterResponse:
         '  1,       0.0000E+00,  0.0000E+00,  0.0000E+00,  0.0000E+00'
         '  2,       4.9374E-01, -1.6398E-03, -5.4768E-04, -2.3136E-04'
         """
-        imodes = self._imodes(modes)
+        imodes = _imodes(self.results.shape, modes)
         assert len(imodes) > 0, imodes
         headers = ['ipoint']
         for name in self.names:
@@ -1240,7 +1377,7 @@ class FlutterResponse:
         '  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  1.4277E+01  7.7705E+01  8.8016E+01  2.2346E+02  2.4656E+02  3.2366E+02  4.5518E+02  4.9613E+02  6.7245E+02  7.3197E+02  8.0646E+02  0.0000E+00'
         '  4.9374E-01 -1.6398E-03 -5.4768E-04 -2.3136E-04 -3.5776E-04 -6.2358E-05 -3.0348E-04 -7.7492E-05 -2.0301E-05 -1.7733E-04 -9.2383E-05 -1.2849E-05 -2.8854E-05  4.9374E-01  1.4272E+01  7.7726E+01  8.8010E+01  2.2347E+02  2.4655E+02  3.2364E+02  4.5516E+02  4.9612E+02  6.7245E+02  7.3195E+02  8.0646E+02  0.0000E+00'
         """
-        modes, nmodes = self._modes_nmodes(modes)
+        modes, nmodes = _modes_nmodes(self.results.shape, modes)
 
         damping_modes = []
         omega_modes = []
@@ -1266,32 +1403,6 @@ class FlutterResponse:
                 str_values = (' %11.4E' % value for value in values)
                 veas_file.write(''.join(str_values) + '\n')
 
-    def _imodes(self, modes: Optional[np.ndarray, slice[int] |
-                                      tuple[int] | list[int]]) -> np.ndarray:
-        """gets the imodes from the modes"""
-        if modes is None:
-            nmodes = self.results.shape[0]
-            imodes = range(nmodes)
-        elif isinstance(modes, slice):
-            nmodes = self.results.shape[0]
-            all_modes = np.arange(0, nmodes, dtype='int32')
-            imodes = all_modes[modes]
-        elif isinstance(modes, (list, tuple)):
-            modes = np.array(modes, dtype='int32')
-            imodes = modes - 1
-        else:
-            imodes = modes - 1
-        return imodes
-
-    def _modes_nmodes(self, modes: Optional[Iterable[int]]) -> tuple[Iterable[int], int]:
-        """gets the modes and nmodes"""
-        if modes is None:
-            nmodes = self.results.shape[0]
-            modes = range(1, nmodes + 1)
-        else:
-            nmodes = max(modes)
-        return modes, nmodes
-
     def export_to_f06(self, f06_filename: PathLike,
                       modes: Optional[list[int]]=None,
                       page_stamp: Optional[str]=None,
@@ -1307,7 +1418,7 @@ class FlutterResponse:
                            modes: Optional[list[int]]=None,
                            page_stamp: Optional[str]=None,
                            page_num: int=1) -> int:
-        imodes = self._imodes(modes)
+        imodes = _imodes(self.results.shape, modes)
         if page_stamp is None:
             page_stamp = 'PAGE %i'
         for imode in imodes:
@@ -1355,7 +1466,7 @@ class FlutterResponse:
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
         #unused_legend_items = ['Mode %i' % mode for mode in modes]
-        ix, unused_xlabel = self._plot_type_to_ix_xlabel(plot_type)
+        ix, unused_xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
 
         # these are the required damping levels to plot
         msg = ''
@@ -1532,7 +1643,38 @@ class FlutterResponse:
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip)
 
 
-def _get_modes_imodes(all_modes, modes):
+def _imodes(results_shape: tuple[int, int],
+            modes: Optional[np.ndarray, slice[int] |
+                                        tuple[int] | list[int]]) -> np.ndarray:
+    """gets the imodes from the modes"""
+    if modes is None:
+        nmodes = results_shape[0]
+        imodes = range(nmodes)
+    elif isinstance(modes, slice):
+        nmodes = results_shape[0]
+        all_modes = np.arange(0, nmodes, dtype='int32')
+        imodes = all_modes[modes]
+    elif isinstance(modes, (list, tuple)):
+        modes = np.array(modes, dtype='int32')
+        imodes = modes - 1
+    else:
+        imodes = modes - 1
+    return imodes
+
+
+def _modes_nmodes(results_shape: tuple[int, int],
+                  modes: Optional[Iterable[int]]) -> tuple[Iterable[int], int]:
+    """gets the modes and nmodes"""
+    if modes is None:
+        nmodes = results_shape[0]
+        modes = range(1, nmodes + 1)
+    else:
+        nmodes = max(modes)
+    return modes, nmodes
+
+
+def _get_modes_imodes(all_modes: np.ndaray,
+                      modes: Optional[slice | np.ndarray]):
     """gets the index of the modes to plot"""
     if modes is None:
         modes = all_modes

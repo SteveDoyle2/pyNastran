@@ -249,6 +249,7 @@ def make_flutter_response(f06_filename: PathLike,
 
             if len(eigenvectors):
                 eigr_eigi_velocity = np.array(eigr_eigi_velocity_list, dtype='float64') # eigr, eigi, velo
+                assert eigr_eigi_velocity.ndim == 2, eigr_eigi_velocity
                 eigenvectors_array = np.column_stack(eigenvectors)
                 eigenvectors = []
                 eigr_eigi_velocity_list = []
@@ -599,6 +600,14 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                     clear=clear, legend=True,
                                     png_filename=filenamei,
                                     show=False, close=close)
+            if flutter.eigr_eigi_velocity is not None:
+                flutter.plot_modal_participation(modes=modes,
+                                                 fig=None, axes=None,
+                                                 freq_tol=-1.0,
+                                                 ncol=ncol,
+                                                 clear=clear, legend=True,
+                                                 png_filename=None,
+                                                 show=False, close=close)
 
         if plot_kfreq_damping:
             filenamei = None if kfreq_damping_filename is None else (kfreq_damping_filename % subcase)

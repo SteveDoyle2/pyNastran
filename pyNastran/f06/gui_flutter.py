@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     from pyNastran.op2.op2 import OP2
 
 X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq']
-PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
+PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation']
 UNITS_IN = ['english_in', 'english_kt', 'english_ft',
             'si', 'si_mm']
 UNITS_OUT = UNITS_IN
@@ -487,6 +487,7 @@ class FlutterGui(LoggableGui):
         self.units_in_pulldown.setToolTip(units_msg)
         iunits_in = UNITS_IN.index('english_in')
         self.units_in_pulldown.setCurrentIndex(iunits_in)
+        self.units_in_pulldown.setToolTip('Sets the units for the F06/OP2; set when loaded')
 
         self.units_out_label = QLabel('Units Out:')
         self.units_out_pulldown = QComboBox()
@@ -494,6 +495,7 @@ class FlutterGui(LoggableGui):
         self.units_out_pulldown.setToolTip(units_msg)
         iunits_out = UNITS_IN.index('english_kt')
         self.units_out_pulldown.setCurrentIndex(iunits_out)
+        self.units_out_pulldown.setToolTip('Sets the units for the plot; may be updated')
 
         self.output_directory_label = QLabel('Output Directory:')
         self.output_directory_edit = QLineEdit('', self)
@@ -503,11 +505,15 @@ class FlutterGui(LoggableGui):
 
         self.VL_label = QLabel('VL, Limit:')
         self.VL_edit = QFloatEdit('')
+        self.VL_edit.setToolTip('Makes a vertical line for VL')
+
         self.VF_label = QLabel('VF, Flutter:')
         self.VF_edit = QFloatEdit('')
+        self.VF_edit.setToolTip('Makes a vertical line for VF')
+
         self.damping_label = QLabel('Damping, g:')
         self.damping_edit = QFloatEdit('')
-
+        self.damping_edit.setToolTip('Enables the flutter crossing (e.g., 0.03 for 3%)')
 
         self.f06_load_button = QPushButton('Load F06', self)
         self.ok_button = QPushButton('Run', self)
@@ -536,6 +542,7 @@ class FlutterGui(LoggableGui):
         show_freq = False
         show_damp = False
         show_root_locus = False
+        show_modal_participation = False
 
         #PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
         assert plot_type in PLOT_TYPES, plot_type
@@ -557,6 +564,9 @@ class FlutterGui(LoggableGui):
             show_kfreq = True
         elif plot_type == 'root-locus':
             show_root_locus = True
+            show_kfreq = False
+        elif plot_type == 'modal-participation':
+            show_modal_participation = True
             show_kfreq = False
         else:  # pragma: no cover
             raise RuntimeError(f'plot_type={plot_type!r}')
@@ -582,8 +592,10 @@ class FlutterGui(LoggableGui):
                 show_xlim = False
         #assert show_xlim is False, show_xlim
 
-        self.x_plot_type_label.setVisible(not show_root_locus)
-        self.x_plot_type_pulldown.setVisible(not show_root_locus)
+        show_eigenvalue = show_root_locus or show_modal_participation
+        show_xaxis = not show_eigenvalue
+        self.x_plot_type_label.setVisible(show_xaxis)
+        self.x_plot_type_pulldown.setVisible(show_xaxis)
 
         self.eas_lim_label.setVisible(show_eas_lim)
         self.eas_lim_edit_min.setVisible(show_eas_lim)
@@ -1068,7 +1080,7 @@ class FlutterGui(LoggableGui):
 
         fig = plt.figure(1)
         fig.clear()
-        if plot_type != 'root-locus':
+        if plot_type not in {'root-locus', 'modal-participation'}:
             gridspeci = gridspec.GridSpec(2, 4)
             damp_axes = fig.add_subplot(gridspeci[0, :3])
             freq_axes = fig.add_subplot(gridspeci[1, :3], sharex=damp_axes)
@@ -1096,6 +1108,17 @@ class FlutterGui(LoggableGui):
                 response.plot_root_locus(
                     fig=fig, axes=axes,
                     modes=modes, eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
+                    freq_tol=freq_tol,
+                    show=True, clear=False, close=False,
+                    legend=True,
+                    png_filename=png_filename,
+                )
+            if plot_type == 'modal-participation':
+                png_filename = base + '_modal-participation.png'
+                axes = fig.add_subplot(111)
+                response.plot_modal_participation(
+                    fig=fig, axes=axes,
+                    modes=modes, #eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
                     freq_tol=freq_tol,
                     show=True, clear=False, close=False,
                     legend=True,
@@ -1247,7 +1270,7 @@ class FlutterGui(LoggableGui):
         ]
         is_passed = all(is_passed_flags)
         # if not is_passed:
-        # self.log.warning(f'is_passed_flags = {is_passed_flags}')
+        #self.log.warning(f'is_passed_flags = {is_passed_flags}')
         #print(f'freq_tol = {freq_tol}')
         out = (
             eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim, xlim,
@@ -1308,6 +1331,21 @@ class FlutterGui(LoggableGui):
         export_to_f06 = self.export_f06_checkbox.isChecked()
         export_to_zona = self.export_zona_checkbox.isChecked()
 
+        subcases = list(self.responses)
+        subcase0 = subcases[0]
+        response = self.responses[subcase0]
+
+        failed_modal_partipation = (
+            (self.plot_type == 'modal-participation') and
+            ((response.eigr_eigi_velocity is None) or
+             (response.eigenvector is None))
+        )
+        is_passed_modal_partipation = not failed_modal_partipation
+        # (
+        #     (self.plot_type == 'modal-participation') and
+        #     (response.eigr_eigi_velocity is not None)
+        # ) or (self.plot_type != 'modal-participation'))
+
         data = {
             'log_scale_x': self.log_xscale_checkbox.isChecked(),
             'log_scale_y1': self.log_yscale1_checkbox.isChecked(),
@@ -1350,7 +1388,8 @@ class FlutterGui(LoggableGui):
         }
         self.units_in = units_in
         self.units_out = units_out
-        is_passed = all([is_valid_xlim, is_subcase_valid])
+        is_passed = all([is_valid_xlim, is_subcase_valid, is_passed_modal_partipation])
+        #self.log.warning(f'is_passed_modal_partipation = {is_passed_modal_partipation}')
         if is_passed:
             self.data = data
             #self.xlim = xlim
@@ -1365,7 +1404,7 @@ class FlutterGui(LoggableGui):
         return is_passed
 
     def on_open_new_window(self):
-        #return
+        return
         try:
             from pyNastran.f06.gui_flutter_vtk import VtkWindow
         except ImportError as e:
@@ -1519,7 +1558,7 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
                 log=log)
         except Exception as e:
             log.error(str(e))
-            raise
+            #raise
             return model, responses
     elif ext == '.op2':
         try:
