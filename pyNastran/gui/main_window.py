@@ -123,6 +123,7 @@ class MainWindow(GuiCommon, NastranIO):
 
         fmt_order += [
             'abaqus',
+            'astros',
             'avus',
             'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr
             'cart3d',  # results

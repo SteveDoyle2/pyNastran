@@ -115,6 +115,12 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     pass
 
+try:
+    from pyNastran.converters.astros.astros_io import AstrosIO
+    CLASS_MAP['astros'] = AstrosIO
+except ModuleNotFoundError:
+    pass
+
 #---------------------------------------------------------------------
 # pynastrangui-1.4.0-dev includes obj, but not others below line
 #try:
