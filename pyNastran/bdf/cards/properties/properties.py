@@ -77,7 +77,7 @@ class PFAST(Property):
             diameter of the fastener
         kt1, kt2, kt3 : float
             stiffness values in directions 1-3
-        mcid : int; default=01
+        mcid : int; default=-1
             specifies the element stiffness coordinate system
         mflag : int; default=0
             0-absolute; 1-relative

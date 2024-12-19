@@ -360,7 +360,7 @@ class SafeXrefMesh(XrefMesh):
     def safe_caero(self, caero_id: int, ref_id: int,
                    xref_errors: dict[str, Any], msg: str='') -> CAEROs:
         return _safe_attr(self, caero_id, ref_id, xref_errors,
-                          func=self.TableD, word='caero', msg=msg)
+                          func=self.CAero, word='caero', msg=msg)
 
     def safe_tabled(self, tabled_id: int, ref_id: int,
                     xref_errors: dict[str, Any], msg: str='') -> TABLEDs:

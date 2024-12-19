@@ -1948,7 +1948,7 @@ class CAERO1(BaseCard):
 
         """
         nchord, nspan = self.shape
-        return [self.eid, self.eid + nchord * nspan]
+        return [self.eid, self.eid + nchord * nspan - 1]
 
     def get_leading_edge_points(self):
         """gets the leading edge points"""
@@ -6919,10 +6919,10 @@ def get_caero_points(model: BDF,
             if caero.type in ('CAERO1', 'CAERO4', 'CAERO5', 'CAERO7'):
                 box_ids = caero.box_ids
                 assert box_ids.min() > 0, box_ids
-                nboxes = len(box_ids.ravel())
-                if nboxes > 1000:
-                    print('skipping nboxes=%s for:\n%s' % (nboxes, str(caero)))
-                    continue
+                # nboxes = len(box_ids.ravel())
+                # if nboxes > 1000:
+                #     print('skipping nboxes=%s for:\n%s' % (nboxes, str(caero)))
+                #     continue
 
                 ncaeros_sub += 1
                 pointsi, elementsi = caero.panel_points_elements()
