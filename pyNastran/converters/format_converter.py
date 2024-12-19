@@ -19,7 +19,7 @@ def process_nastran(bdf_filename: str, fmt2: str, fname2: str,
     """
     Converts Nastran to STL/Cart3d/Tecplot/UGRID3d
     """
-    assert fmt2 in ['stl', 'cart3d', 'tecplot', 'ugrid', 'nastran', 'abaqus'], 'format2=%s' % fmt2
+    assert fmt2 in ['stl', 'cart3d', 'tecplot', 'ugrid', 'nastran', 'abaqus', 'astros'], 'format2=%s' % fmt2
     if data is None:
         data = {'--scale': 1.0,}
 
@@ -56,11 +56,33 @@ def process_nastran(bdf_filename: str, fmt2: str, fname2: str,
     elif fmt2 == 'abaqus':
         from pyNastran.converters.nastran.nastran_to_abaqus import nastran_to_abaqus
         nastran_to_abaqus(model, fname2)
+    elif fmt2 == 'astros':
+        from pyNastran.converters.nastran.nastran_to_astros import nastran_to_astros
+        nastran_to_astros(model, fname2)
     elif fmt2 == 'nastran':
         model.write_bdf(fname2, size=16)
     else:
         raise NotImplementedError(f'fmt2={fmt2!r} is not supported by process_nastran')
 
+def process_astros(astros_filename: str, fmt2: str, fname2: str, 
+                    log: SimpleLogger,
+                    data: dict[str, Any],
+                    quiet: bool=False) -> None:
+    """Converts Astros to Nastran"""
+    assert fmt2 in ['nastran'], f'format2={fmt2!r}'
+    encoding = None
+    if 'ENCODING' in data:
+        encoding = data['ENCODING']
+    
+    from pyNastran.converters.astros.astros import read_astros
+    model = read_astros(astros_filename, encoding=encoding, log=log)
+
+    if fmt2 == 'nastran':
+        from pyNastran.converters.astros.astros_to_nastran import astros_to_nastran_filename
+        nastran_model = astros_to_nastran_filename(model, fname2, log=log)
+    else:
+        raise NotImplementedError(f'fmt2={fmt2!r} is not supported by process_astros; use nastran')
+    return nastran_model
 
 def process_abaqus(abaqus_filename: str, fmt2: str, fname2: str,
                    log: SimpleLogger,
@@ -305,6 +327,8 @@ def run_format_converter(fmt1: str, fname1: str,
     """Runs the format converter"""
     if fmt1 == 'nastran':
         process_nastran(fname1, fmt2, fname2, log, data=data, quiet=quiet)
+    elif fmt1 == 'astros':
+        process_astros(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt1 == 'cart3d':
         process_cart3d(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt1 == 'stl':

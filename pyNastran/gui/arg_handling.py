@@ -27,8 +27,9 @@ OUTPUT_FORMAT_TO_EXTENSION = {
 INPUT_FORMAT_TO_EXTENSION = {
     # an extension should not be added to this list if it is
     # shared with another type
-    'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'], # '.dat'
+    'nastran' : ['.ecd', '.nas', '.op2', '.pch'], # '.dat', '.bdf'
     'h5nastran' : ['.h5'],
+    #'astros' : ['.in'],
     #'nastran2' : ['.bdf', '.ecd', '.nas',],
 
     'stl' : ['.stl'],
@@ -89,7 +90,7 @@ def determine_format(input_filename: str,
             #'plot3d',
             'surf', 'lawgs', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen',
-            'avl', 'vtk',
+            'avl', 'vtk', 'astros', 
         ]
         if DEV:
             allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran', 'nastran2', 'nastran3'])
@@ -143,6 +144,22 @@ def get_inputs(print_inputs: bool=False,
         'log' : None,
         'test' : False,
     }
+    # inputs = {
+    #     # 'format' : 'nastran', # input_format
+    #     # 'input' : ['/Users/kehleram/Documents/GIT/pynastran/models/wingbox/wingbox_stitched_together-000.bdf'], # input_filename
+    #     # 'output' : None, # output_filename
+    #     'format' : 'astros', # input_format
+    #     'input' : ['/Users/kehleram/Documents/GIT/pynastran/models/Astros/VORTECS_0.dat'], # input_filename
+    #     'output' : None, # output_filename
+    #     'debug' : True, # debug
+    #     'geomscript' : None, # geom_script
+    #     'postscript' : None, # post_script
+    #     'user_points' : None, # user_points
+    #     'user_geom' : None, # user_geom
+    #     'is_groups' : not GROUPS_DEFAULT,
+    #     'log' : None,
+    #     'test' : False,
+    # }
     return inputs
 
 def run_argparse(argv: list[str]) -> dict[str, str]:
@@ -197,7 +214,7 @@ def run_argparse(argv: list[str]) -> dict[str, str]:
         '\n'
         'Primary Options:\n'
         # plot3d,
-        '  -f FORMAT, --format FORMAT  format type (avus, bedge, cart3d, lawgs, nastran,\n'
+        '  -f FORMAT, --format FORMAT  format type (astros, avus, bedge, cart3d, lawgs, nastran,\n'
         '                                  panair, stl, surf, tetgen, usm3d, ugrid, ugrid3d)\n'
         '  -i INPUT, --input INPUT     path to input file\n'
         '  -o OUTPUT, --output OUTPUT  path to output file\n'
@@ -494,7 +511,7 @@ def _validate_format(input_formats: list[str]) -> None:
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
-        'avl', 'vtk',
+        'avl', 'vtk', 'astros', 
         None,  # I think None is for the null case
     ]
 
