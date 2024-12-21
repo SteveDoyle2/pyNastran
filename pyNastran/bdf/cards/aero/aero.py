@@ -1937,7 +1937,7 @@ class CAERO1(BaseCard):
         #self._init_ids(model)
 
     @property
-    def min_max_eid(self):
+    def min_max_eid(self) -> list[int]:
         """
         Gets the min and max element ids of the CAERO card
 

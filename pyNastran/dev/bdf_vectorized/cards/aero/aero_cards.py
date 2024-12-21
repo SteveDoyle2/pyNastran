@@ -1820,7 +1820,7 @@ class CAERO1(BaseCard):
             self.lspan = aefact_map[self.lspan]
         #self._init_ids(model)
 
-    def min_max_eid(self, model):
+    def min_max_eid(self, model: BDF) -> list[int]:
         """
         Gets the min and max element ids of the CAERO card
 
