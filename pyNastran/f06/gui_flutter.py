@@ -23,7 +23,8 @@ from qtpy.QtWidgets import (
     QApplication, QMenu, QVBoxLayout, QLineEdit, QComboBox,
     QHBoxLayout, QPushButton, QGridLayout,
     QAction,
-    QCheckBox, QListWidgetItem, QAbstractItemView,
+    QCheckBox, QRadioButton,
+    QListWidgetItem, QAbstractItemView,
     QListWidget, QSpinBox,
 )
 # from qtpy.QtWidgets import (
@@ -85,8 +86,11 @@ class FlutterGui(LoggableGui):
     def __init__(self, f06_filename: str=''):
         super().__init__(html_logging=False)
         self.font_size = 10
+        self.plot_font_size = 10
         self.show_lines = True
         self.show_points = True
+        self.show_mode_number = False
+        self.point_spacing = 0
         self._units_in = ''
         self._units_out = ''
         self.units_in = ''
@@ -252,9 +256,21 @@ class FlutterGui(LoggableGui):
             self.font_size = data['font_size']
             self.font_size_edit.setValue(data['font_size'])
 
+        radios = [
+            # ('show_points', self.show_points_radio),
+            # ('show_mode_num', self.show_mode_num_radio),
+        ]
+        for (key, checkbox) in radios:
+            if key not in data:
+                continue
+            val = data[key]
+            assert isinstance(val, bool), (key, val)
+            checkbox.setChecked(val)
+
         checkboxs = [
             ('use_rhoref', self.use_rhoref_checkbox),
             ('show_points', self.show_points_checkbox),
+            ('show_mode_number', self.show_mode_number_checkbox),
             ('show_lines', self.show_lines_checkbox),
             ('export_to_f06', self.export_f06_checkbox),
             ('export_to_csv', self.export_csv_checkbox),
@@ -375,6 +391,10 @@ class FlutterGui(LoggableGui):
         self.font_size_edit = QSpinBox()
         self.font_size_edit.setValue(self.font_size)
 
+        self.plot_font_size_label = QLabel('Plot Font Size')
+        self.plot_font_size_edit = QSpinBox()
+        self.plot_font_size_edit.setValue(self.plot_font_size)
+
         self.f06_filename_label = QLabel('F06 Filename:')
         self.f06_filename_edit = QLineEdit()
         self.f06_filename_browse = QPushButton('Browse...')
@@ -390,9 +410,18 @@ class FlutterGui(LoggableGui):
         self.log_yscale2_checkbox.setChecked(False)
 
         self.show_points_checkbox = QCheckBox('Show Points')
+        self.show_mode_number_checkbox = QCheckBox('Show Mode Number')
+        self.point_spacing_label = QLabel('Point Spacing')
+        self.point_spacing_spinner = QSpinBox()
         self.show_lines_checkbox = QCheckBox('Show Lines')
         self.show_points_checkbox.setChecked(True)
         self.show_lines_checkbox.setChecked(True)
+        self.show_points_checkbox.setToolTip('The points are symbols')
+        self.show_mode_number_checkbox.setToolTip('The points are the mode number')
+        self.point_spacing_spinner.setToolTip('Skip Every Nth Point; 0=Plot All')
+        self.point_spacing_spinner.setValue(0)
+        self.point_spacing_spinner.setMinimum(0)
+        self.point_spacing_spinner.setMaximum(10)
 
         self.export_csv_checkbox = QCheckBox('Export CSV')
         self.export_f06_checkbox = QCheckBox('Export F06')
@@ -651,14 +680,16 @@ class FlutterGui(LoggableGui):
         hbox.addWidget(self.f06_filename_edit)
         hbox.addWidget(self.f06_filename_browse)
 
+        grid0 = QGridLayout()
+        zrow = 0
+        grid0.addWidget(self.font_size_label, zrow, 0)
+        grid0.addWidget(self.font_size_edit, zrow, 1)
+        zrow += 1
 
-        grid0 = QHBoxLayout()
-        grid0.addWidget(self.font_size_label)
-        grid0.addWidget(self.font_size_edit)
-        grid0.addStretch()
-        # grid0 = QGridLayout()
-        # grid0.addWidget(self.font_size_label, 0, 0)
-        # grid0.addWidget(self.font_size_edit, 0, 1)
+        grid0.addWidget(self.plot_font_size_label, zrow, 0)
+        grid0.addWidget(self.plot_font_size_edit, zrow, 1)
+        zrow += 1
+        grid0.setColumnStretch(grid0.columnCount(), 1)
 
         grid = QGridLayout()
         irow = 0
@@ -783,7 +814,12 @@ class FlutterGui(LoggableGui):
         jrow += 1
 
         grid_check.addWidget(self.show_points_checkbox, jrow, 0)
-        grid_check.addWidget(self.show_lines_checkbox, jrow, 1)
+        grid_check.addWidget(self.show_mode_number_checkbox, jrow, 1)
+        jrow += 1
+        grid_check.addWidget(self.point_spacing_label, jrow, 0)
+        grid_check.addWidget(self.point_spacing_spinner, jrow, 1)
+        jrow += 1
+        grid_check.addWidget(self.show_lines_checkbox, jrow, 0)
         jrow += 1
         grid_check.addWidget(self.export_csv_checkbox, jrow, 0)
         grid_check.addWidget(self.export_f06_checkbox, jrow, 1)
@@ -847,6 +883,7 @@ class FlutterGui(LoggableGui):
         self.subcase_edit.currentIndexChanged.connect(self.on_subcase)
         self.f06_filename_browse.clicked.connect(self.on_browse_f06)
         self.font_size_edit.valueChanged.connect(self.on_font_size)
+        self.plot_font_size_edit.valueChanged.connect(self.on_plot_font_size)
         #self.modes_widget.itemSelectionChanged.connect(self.on_modes)
         # self.modes_widget.itemClicked.connect(self.on_modes)
         # self.modes_widget.currentRowChanged.connect(self.on_modes)
@@ -877,6 +914,9 @@ class FlutterGui(LoggableGui):
         self.font_size = self.font_size_edit.value()
         font = make_font(self.font_size, is_bold=False)
         self.setFont(font)
+
+    def on_plot_font_size(self) -> None:
+        self.plot_font_size = self.plot_font_size_edit.value()
 
     # @dontcrash
     def on_load_f06(self) -> None:
@@ -1093,7 +1133,9 @@ class FlutterGui(LoggableGui):
             self._units_out  = self.units_out
 
         response.noline = noline
-        response.nopoints = nopoints
+        response.set_symbol_settings(
+            nopoints, self.show_mode_number, self.point_spacing)
+        response.set_font_settings(self.plot_font_size)
         response.log = self.log
         #print('trying plots...')
 
@@ -1325,6 +1367,8 @@ class FlutterGui(LoggableGui):
 
         self.show_lines = self.show_lines_checkbox.isChecked()
         self.show_points = self.show_points_checkbox.isChecked()
+        self.show_mode_number = self.show_mode_number_checkbox.isChecked()
+        self.point_spacing = self.point_spacing_spinner.value()
         self.use_rhoref = self.use_rhoref_checkbox.isChecked()
 
         export_to_csv = self.export_csv_checkbox.isChecked()
@@ -1352,6 +1396,8 @@ class FlutterGui(LoggableGui):
             'log_scale_y2': self.log_yscale2_checkbox.isChecked(),
             'use_rhoref': self.use_rhoref,
             'show_points': self.show_points,
+            'show_mode_number': self.show_mode_number,
+            'point_spacing': self.point_spacing,
             'show_lines': self.show_lines,
             'export_to_csv': export_to_csv,
             'export_to_f06': export_to_f06,
@@ -1359,6 +1405,8 @@ class FlutterGui(LoggableGui):
 
             'recent_files': self.recent_files,
             'font_size': self.font_size,
+            'plot_font_size': self.plot_font_size,
+            'point_spacing': self.point_spacing,
             'subcase': subcase,
             #'modes': modes,
             'selected_modes': selected_modes,

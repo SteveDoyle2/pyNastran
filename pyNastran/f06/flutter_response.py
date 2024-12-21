@@ -355,6 +355,19 @@ class FlutterResponse:
         self._symbols: list[str] = []
         self._colors: list[str] = []
         self.generate_symbols()
+        self.set_symbol_settings()
+        self.set_font_settings()
+
+    def set_symbol_settings(self, nopoints: bool=False,
+                            show_mode_number: bool=False,
+                            point_spacing: int=0) -> None:
+        self.nopoints = nopoints
+        self.show_mode_number = show_mode_number
+        self.point_spacing = point_spacing
+
+    def set_font_settings(self, font_size: int=13) -> None:
+        # TODO: split label, title, tic_marks, legend
+        self.font_size = font_size
 
     def set_out_units(self, out_units: str | dict[str, str]) -> None:
         self.convert_units(out_units)
@@ -434,7 +447,8 @@ class FlutterResponse:
         #results2[:, :, self.idensity] = rho
         return results2
 
-    def generate_symbols(self, colors=None, symbols=None, imethod: int=0):
+    def generate_symbols(self, colors=None, symbols=None,
+                         imethod: int=0):
         """
         This symbol list is taken from a series of "good" colors (e.g. not yellow)
         and easily distinguishable shapes.  Far more combinations that is necessary
@@ -499,8 +513,8 @@ class FlutterResponse:
             ax22.plot(self.eigenvector[:, imode2].imag, label=f'iMode2={imode2+1}')
         plt.legend()
 
-        ax11.set_ylabel('Real')
-        ax12.set_ylabel('Imaginary')
+        ax11.set_ylabel('Real', fontsize=self.font_size)
+        ax12.set_ylabel('Imaginary', fontsize=self.font_size)
         for ax in axes.ravel():
             ax.grid(True)
             ax.set_xlim([0, nmodes])
@@ -702,7 +716,7 @@ class FlutterResponse:
 
         """
         modes, imodes = _get_modes_imodes(self.modes, modes)
-        legend_kwargs = get_legend_kwargs(legend_kwargs)
+        legend_kwargs = get_legend_kwargs(self.font_size, legend_kwargs)
         if fig is None:
             fig = plt.figure()
             axes = fig.add_subplot(111)
@@ -738,10 +752,11 @@ class FlutterResponse:
         if np.isfinite(velocityi):
             title += f' V={velocityi:.1f}'
         #print(title)
-        axes.set_title(title)
+        axes.set_title(title, fontsize=self.font_size)
         axes.grid(True)
-        axes.set_xlabel(xlabel)
-        axes.set_ylabel(ylabel)
+        axes.set_xlabel(xlabel, fontsize=self.font_size)
+        axes.set_ylabel(ylabel, fontsize=self.font_size)
+        axes.tick_params(axis='both', which='major', labelsize=self.font_size)
 
         #print(f'eigr_eigi_velocity:\n{self.eigr_eigi_velocity}')
         #print(f'eigenvector:\n{self.eigenvector}')
@@ -799,9 +814,13 @@ class FlutterResponse:
                   freq_tol: float=-1.0,
                   png_filename=None,
                   **legend_kwargs):
-        """builds the plot"""
+        """
+        builds the plot for:
+         - Vg
+         - root-locus
+        """
         self.fix()
-        legend_kwargs = get_legend_kwargs(legend_kwargs)
+        legend_kwargs = get_legend_kwargs(self.font_size, legend_kwargs)
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
         nmodes = len(modes)
@@ -824,9 +843,10 @@ class FlutterResponse:
             freq = self.results[imode, :, self.ifreq].ravel()
             xs = self.results[imode, :, ix].ravel()
             ys = self.results[imode, :, iy].ravel()
-            jcolor, color2, linestyle2, symbol2 = _increment_jcolor(
-                jcolor, color, linestyle, symbol,
-                freq, freq_tol=freq_tol)
+            jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
+                mode, jcolor, color, linestyle, symbol,
+                freq, freq_tol=freq_tol,
+                show_mode_number=self.show_mode_number)
             #print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
 
             iplot = np.where(freq != np.nan)
@@ -843,9 +863,10 @@ class FlutterResponse:
                 axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=color, marker=symbol2)
 
         axes.grid(True)
-        #axes.set_xlabel(xlabel  + '; _plot_x_y')
-        axes.set_xlabel(xlabel)
-        axes.set_ylabel(ylabel)
+        #axes.set_xlabel(xlabel  + '; _plot_x_y', fontsize=self.font_size)
+        axes.set_xlabel(xlabel, fontsize=self.font_size)
+        axes.set_ylabel(ylabel, fontsize=self.font_size)
+        axes.tick_params(axis='both', which='major', labelsize=self.font_size)
         set_xlim(axes, xlim)
         set_ylim(axes, ylim)
 
@@ -889,7 +910,8 @@ class FlutterResponse:
 
         """
         self.fix()
-        legend_kwargs = get_legend_kwargs(legend_kwargs)
+        legend_kwargs = get_legend_kwargs(self.font_size,
+                                          legend_kwargs)
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
         nmodes = len(modes)
@@ -929,9 +951,10 @@ class FlutterResponse:
             xs = self.results[imode, :, ix].ravel()
             y1s = self.results[imode, :, iy1].ravel()
             y2s = self.results[imode, :, iy2].ravel()
-            jcolor, color2, linestyle2, symbol2 = _increment_jcolor(
-                jcolor, color, linestyle, symbol,
-                freq, freq_tol=freq_tol)
+            jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
+                mode, jcolor, color, linestyle, symbol,
+                freq, freq_tol=freq_tol,
+                show_mode_number=self.show_mode_number)
 
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
@@ -960,20 +983,28 @@ class FlutterResponse:
                 axes2.plot(xs[iplot], y2s[iplot], marker=symbol2,
                            color=color2, markersize=markersize, linestyle=linestyle2)
             else:
-                axes1.plot(xs[iplot], y1s[iplot], marker=symbol2, label=label,
-                           color=color2, markersize=markersize, linestyle=linestyle2)
-                axes2.plot(xs[iplot], y2s[iplot], marker=symbol2,
-                           color=color2, markersize=markersize, linestyle=linestyle2)
+                _plot_two_axes(
+                    axes1, axes2,
+                    xs[iplot], y1s[iplot], y2s[iplot],
+                    color, symbol2, linestyle, label, texti,
+                    self.point_spacing, markersize=markersize,
+                )
+                # axes1.plot(xs[iplot], y1s[iplot], marker=symbol2, label=label,
+                #            color=color2, markersize=markersize, linestyle=linestyle2)
+                # axes2.plot(xs[iplot], y2s[iplot], marker=symbol2,
+                #            color=color2, markersize=markersize, linestyle=linestyle2)
             legend_elements.append(legend_element)
 
         axes1.grid(True)
-        axes1.set_xlabel(xlabel)
-        #axes1.set_xlabel(xlabel + '; _plot_x_y2')
-        axes1.set_ylabel(ylabel1)
+        axes1.set_xlabel(xlabel, fontsize=self.font_size)
+        #axes1.set_xlabel(xlabel + '; _plot_x_y2', fontsize=self.font_size)
+        axes1.set_ylabel(ylabel1, fontsize=self.font_size)
 
         axes2.grid(True)
-        axes2.set_xlabel(xlabel)
-        axes2.set_ylabel(ylabel2)
+        axes2.set_xlabel(xlabel, fontsize=self.font_size)
+        axes2.set_ylabel(ylabel2, fontsize=self.font_size)
+        axes1.tick_params(axis='both', which='major', labelsize=self.font_size)
+        axes2.tick_params(axis='both', which='major', labelsize=self.font_size)
 
         title = f'Subcase {self.subcase:d}'
         if png_filename:
@@ -1189,9 +1220,10 @@ class FlutterResponse:
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
 
-            jcolor, color, linestyle2, symbol2 = _increment_jcolor(
-                jcolor, color, linestyle, symbol,
-                freq, freq_tol)
+            jcolor, color, linestyle2, symbol2, texti = _increment_jcolor(
+                mode, jcolor, color, linestyle, symbol,
+                freq, freq_tol=freq_tol,
+                show_mode_number=self.show_mode_number)
             if color != 'gray':
                 imodes_crossing.append(imode)
 
@@ -1204,33 +1236,43 @@ class FlutterResponse:
             #freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
             #print(color, symbol, linestyle)
             label = _get_mode_freq_label(mode, freq[0])
-            damp_axes.plot(vel, damping, color=color, marker=symbol2, linestyle=linestyle2, label=label)
-            freq_axes.plot(vel, freq, color=color, marker=symbol2, linestyle=linestyle2)
+            # _plot_axes(damp_axes,
+            #            vel, damping,
+            #            color, symbol2, linestyle2,
+            #            label, texti)
+            _plot_two_axes(damp_axes, freq_axes,
+                           vel, damping, freq,
+                           color, symbol2, linestyle2,
+                           label, texti,
+                           self.point_spacing, markersize=None)
+
         self._plot_crossings(
             damp_axes, damping_required,
             imodes, modes,
             imodes_crossing, xcrossing_dict,
             colors_show, symbols_show)
 
-        damp_axes.set_xlabel(xlabel)
-        freq_axes.set_xlabel(xlabel)
-        damp_axes.set_ylabel(r'Structural Damping; $g = 2 \gamma $')
+        damp_axes.set_xlabel(xlabel, size=self.font_size)
+        freq_axes.set_xlabel(xlabel, size=self.font_size)
+        damp_axes.set_ylabel(r'Structural Damping; $g = 2 \gamma $', fontsize=self.font_size)
         freq_axes.set_ybound(lower=0.)
 
         damp_axes.grid(True)
         set_xlim(damp_axes, xlim)
         set_ylim(damp_axes, ylim_damping)
-        freq_axes.set_ylabel('Frequency [Hz]')
+        freq_axes.set_ylabel('Frequency [Hz]', fontsize=self.font_size)
         freq_axes.grid(True)
 
         set_xlim(freq_axes, xlim)
         set_ylim(freq_axes, ylim_freq)
+        freq_axes.tick_params(axis='both', which='major', labelsize=self.font_size)
+        damp_axes.tick_params(axis='both', which='major', labelsize=self.font_size)
 
         title = f'Subcase {self.subcase}'
         if png_filename:
             title += '\n%s' % png_filename
 
-        damp_axes.set_title(title)
+        damp_axes.set_title(title, fontsize=self.font_size)
         #plt.suptitle(title)
 
         _add_damping_limit(plot_type, damp_axes, damping_limit)
@@ -1680,8 +1722,8 @@ def _get_modes_imodes(all_modes: np.ndaray,
         modes = all_modes
     elif isinstance(modes, slice):
         start = modes.start
-        if modes.stop is None:
-            stop = len(all_modes) + 1
+        #if modes.stop is None:
+            #stop = len(all_modes) + 1
         stop = modes.stop
         step = modes.step
         if step is None:
@@ -1703,7 +1745,9 @@ def _get_modes_imodes(all_modes: np.ndaray,
     return modes, imodes
 
 
-def get_zero_crossings(x: np.ndarray, freq, y: np.ndarray) -> np.ndarray:
+def get_zero_crossings(x: np.ndarray,
+                       freq: np.ndarray,
+                       y: np.ndarray) -> np.ndarray:
     """https://stackoverflow.com/questions/3843017/efficiently-detect-sign-changes-in-python
 
     Haven't tested this yet...
@@ -1933,10 +1977,13 @@ def _get_mode_freq_label(mode: int, freq: float) -> str:
     return label
 
 
-def _increment_jcolor(jcolor: int, color: str,
+def _increment_jcolor(mode: int,
+                      jcolor: int, color: str,
                       linestyle: str, symbol: str,
                       freq: np.ndarray,
-                      freq_tol: float=-1.0) -> tuple[int, str, str, str]:
+                      freq_tol: float=-1.0,
+                      show_mode_number: bool=False,
+                      ) -> tuple[int, str, str, str, str]:
     """
     Filters a line if it doesn't change by more than freq_tol.
     Changes the line color and removes the symbol.
@@ -1961,10 +2008,15 @@ def _increment_jcolor(jcolor: int, color: str,
         color = 'gray'
         is_filered = True
         jcolor -= 1
-    jcolor += 1
     linestyle2 = '--' if is_filered else linestyle
     symbol2 = '' if is_filered else symbol
-    return jcolor, color, linestyle2, symbol2
+
+    text = ''
+    if show_mode_number and symbol2:
+        symbol2 = ''
+        text = str(mode)
+    jcolor += 1
+    return jcolor, color, linestyle2, symbol2, text
 
 Limit = tuple[Optional[float], Optional[float]] | None
 def set_xlim(axes: plt.Axes, xlim: Limit) -> None:
@@ -2007,7 +2059,8 @@ def _get_unit_factor(in_units: dict[str, str],
         units = 'units'
     return factor, units
 
-def get_legend_kwargs(legend_kwargs: Optional[dict[str, Any]],
+def get_legend_kwargs(font_size: int,
+                      legend_kwargs: Optional[dict[str, Any]],
                       ) -> dict[str, Any]:
     if legend_kwargs is None:
         legend_kwargs = {}
@@ -2016,6 +2069,12 @@ def get_legend_kwargs(legend_kwargs: Optional[dict[str, Any]],
     legend_kwargs_check = ['loc', 'fancybox', 'framealpha']
     for key in legend_kwargs:
         assert key in legend_kwargs_check, key
+
+    #if 'prop' not in legend_kwargs:
+        #legend_kwargs['prop'] = {'size': font_size}
+    #if 'fontsize' not in legend_kwargs:
+        #legend_kwargs['font_size']: font_size
+
     return legend_kwargs
 
 def _is_q_units_consistent(rho_units: str, vel_units: str,
@@ -2070,3 +2129,55 @@ def _get_min_damping(damping_required: list[tuple[float, float]]) -> float:
     for dampingi, requiredi in damping_required[1:]:
         min_damping = min(min_damping, requiredi)
     return min_damping
+
+
+# def _plot_axes(damp_axes: plt.Axes,
+#                vel: np.ndarray, damping: np.ndarray,
+#                color: str, symbol: str, linestyle: str,
+#                label: str, text: str,
+#                point_spacing: int) -> None:
+#     point_spacing2 = None if point_spacing == 0 else point_spacing + 1
+#     vel2 = vel[::point_spacing2]
+#     damping2 = damping[::point_spacing2]
+#     if point_spacing2 is None:
+#         damp_axes.plot(vel, damping, color=color, marker=symbol, linestyle=linestyle, label=label)
+#     elif symbol or text:
+#         damp_axes.plot(vel, damping, color=color, linestyle=linestyle, label=label)
+#         if symbol:
+#             damp_axes.scatter(vel2, damping2, color=color, marker=symbol, label=label)
+#     else:  # pragma: no cover
+#         raise NotImplementedError(f'point_spacing={point_spacing}; symbol={symbol!r}; text={text!r}')
+#     if text:
+#         for xi, y1i, y2i in zip(vel2, damping2):
+#             damp_axes.text(xi, y1i, text, color=color)
+
+def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
+                   vel: np.ndarray, damping: np.ndarray, freq: np.ndarray,
+                   color: str, symbol: str, linestyle: str,
+                   label: str, text: str,
+                   point_spacing: int, markersize=None) -> None:
+    #point_spacing2 = None if point_spacing == 0 else point_spacing + 1
+    point_spacing2 = point_spacing + 1
+    vel2 = vel[::point_spacing2]
+    damping2 = damping[::point_spacing2]
+    freq2 = freq[::point_spacing2]
+    # assert len(vel2) > 0, point_spacing
+    # assert len(damping2) > 0, point_spacing
+    # assert len(freq2) > 0, point_spacing
+    # print('point_spacing = ', point_spacing)
+    # print(f'symbol, text = {symbol!r}, {text!r}')
+    if point_spacing2 is None:
+        damp_axes.plot(vel, damping, color=color, marker=symbol, markersize=markersize, linestyle=linestyle, label=label)
+        freq_axes.plot(vel, freq, color=color, marker=symbol, markersize=markersize, linestyle=linestyle)
+    elif symbol or text or linestyle:
+        damp_axes.plot(vel, damping, color=color, linestyle=linestyle, label=label)
+        freq_axes.plot(vel, freq, color=color, linestyle=linestyle)
+        if symbol:
+            damp_axes.scatter(vel2, damping2, color=color, marker=symbol, s=markersize, label=label)
+            freq_axes.scatter(vel2, freq2, color=color, marker=symbol, s=markersize, )
+    #else:  # pragma: no cover
+    #    raise NotImplementedError(f'point_spacing={point_spacing}; symbol={symbol!r}; text={text!r}')
+    if text:
+        for xi, y1i, y2i in zip(vel2, damping2, freq2):
+            damp_axes.text(xi, y1i, text, color=color)
+            freq_axes.text(xi, y2i, text, color=color)
