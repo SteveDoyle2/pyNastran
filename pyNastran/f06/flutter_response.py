@@ -1,5 +1,6 @@
 from __future__ import annotations
 from copy import deepcopy
+import warnings
 from itertools import count
 from typing import Iterable, Optional, Any, TYPE_CHECKING
 
@@ -670,6 +671,7 @@ class FlutterResponse:
                        **legend_kwargs)
 
     def plot_modal_participation(self, modes=None,
+                                 mag_tol: float=-1.0,
                                  fig=None, axes=None,
                                  #eigr_lim=None, eigi_lim=None,
                                  ncol: int=0,
@@ -680,7 +682,7 @@ class FlutterResponse:
                                  png_filename=None,
                                  **legend_kwargs):
         """
-        Plots a root locus
+        Plots the modal participations factors
 
         Parameters
         ----------
@@ -690,6 +692,9 @@ class FlutterResponse:
             the figure object
         axes : plt.Axes
             the axes object
+        mag_tol: float; default=-1.0
+            filters eigenvectors that have a magnitude less than a target
+            <= 0.0 is ineffective
         eigr_lim : list[float/None, float/None]
             the x plot limits
         eigi_lim : list[float/None, float/None]
@@ -715,6 +720,10 @@ class FlutterResponse:
             0.0 - fully transparent
 
         """
+        if not isinstance(mag_tol, float_types):
+            warnings.warn(f'mag_tol={mag_tol!r} is not a float; default=-1.0')
+            mag_tol = -1.0
+        assert isinstance(mag_tol, float_types), mag_tol
         modes, imodes = _get_modes_imodes(self.modes, modes)
         legend_kwargs = get_legend_kwargs(self.font_size, legend_kwargs)
         if fig is None:
@@ -746,7 +755,12 @@ class FlutterResponse:
         #xlabel = r'Eigenvalue (Real); $\omega \gamma$'
         #xlabel = r'Eigenvalue (Imaginary); $\omega$'
         freq = omega / (2 * np.pi)
-        damping_g = 2 * omega_damping / omega
+
+        # filter division by 0
+        damping_g = np.zeros(omega.shape, dtype=omega.dtype)
+        iomega = (omega != 0.0)
+        damping_g[iomega] = 2 * omega_damping[iomega] / omega[iomega]
+
         title = f'Modal Participation Factors of Mode {imode+1}\n'
         title += f'omega={omega:.2f}; freq={freq:.2f} Hz; g={damping_g:.4g}'
         if np.isfinite(velocityi):
@@ -764,16 +778,31 @@ class FlutterResponse:
         eig = self.eigenvector[imodes, :]
         eigr = eig.real
         eigi = eig.imag
-        # abs_eigr = np.linalg.norm(eigr)
-        # abs_eigi = np.linalg.norm(eigi)
-        # if abs_eigr == 0.0:
-        #     abs_eigr = 1.0
-        # if abs_eigi == 0.0:
-        #     abs_eigi = 1.0
+        #abs_eigr = np.linalg.norm(eigr)
+        #abs_eigi = np.linalg.norm(eigi)
+        #if abs_eigr == 0.0:
+        #    abs_eigr = 1.0
+        #if abs_eigi == 0.0:
+        #    abs_eigi = 1.0
+        mag = np.sqrt(eigr**2 + eigi**2)
+        print(f'eigr = {eigr}')
+        print(f'mag = {mag}')
+        mag_max = mag.max(axis=1)      # TODO: is this right?
+        print(f'mag_max = {mag_max}')
+        mag /= mag_max[:, np.newaxis]  # TODO: is this right?
+        print(f'mag2 = {mag}')
+        print(f'mag_tol = {mag_tol!r}')
+        ifilter0 = (mag > mag_tol)
+        print(f'ifilter0 = {ifilter0}')
+        ifilter = np.any(ifilter0, axis=1)  # TODO: is this right?
+        print(f'ifilter = {ifilter}')
 
         # don't normalize
         abs_eigr = 1.0
         abs_eigi = 1.0
+
+        # reals = eigr / abs_eigr
+        # imags = eigi / abs_eigi
 
         reals = eigr / abs_eigr
         imags = eigi / abs_eigi
@@ -783,8 +812,9 @@ class FlutterResponse:
             imagi = imags[i, imode]
             text = str(mode)
             axes.scatter(reali, imagi, label=f'Mode {mode}')
-            #print(f'{i}: {reali}, {imagi}, {text!r}')
-            axes.text(reali, imagi, text, ha='center', va='center')
+            print(f'{i}: {reali}, {imagi}, {text!r}')
+            axes.text(reali, imagi, text, ha='center', va='center',
+                      fontsize=self.font_size)
 
         if legend:
             # bbox_to_anchor=(1.125, 1.), ncol=ncol,
@@ -2072,8 +2102,8 @@ def get_legend_kwargs(font_size: int,
 
     #if 'prop' not in legend_kwargs:
         #legend_kwargs['prop'] = {'size': font_size}
-    #if 'fontsize' not in legend_kwargs:
-        #legend_kwargs['font_size']: font_size
+    if 'fontsize' not in legend_kwargs:
+        legend_kwargs['fontsize'] = font_size
 
     return legend_kwargs
 
