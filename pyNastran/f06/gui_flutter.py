@@ -124,6 +124,7 @@ class FlutterGui(LoggableGui):
         self.selected_modes = []
         self.freq_tol = -1.0
         self.freq_tol_remove = -1.0
+        self.mag_tol = -1.0
         self.damping = -1.0
         self.vf = -1.0
         self.vl = -1.0
@@ -272,6 +273,7 @@ class FlutterGui(LoggableGui):
             ('show_points', self.show_points_checkbox),
             ('show_mode_number', self.show_mode_number_checkbox),
             ('show_lines', self.show_lines_checkbox),
+            ('export_to_png', self.export_png_checkbox),
             ('export_to_f06', self.export_f06_checkbox),
             ('export_to_csv', self.export_csv_checkbox),
             ('export_to_zona', self.export_zona_checkbox),
@@ -311,6 +313,7 @@ class FlutterGui(LoggableGui):
             ('recent_files', 0, self.f06_filename_edit),
             ('freq_tol', -1, self.freq_tol_edit),
             ('freq_tol_remove', -1, self.freq_tol_remove_edit),
+            ('mag_tol', -1, self.mag_tol_edit),
             ('vl', -1, self.VL_edit),
             ('vf', -1, self.VF_edit),
             ('damping', -1, self.damping_edit),
@@ -423,9 +426,11 @@ class FlutterGui(LoggableGui):
         self.point_spacing_spinner.setMinimum(0)
         self.point_spacing_spinner.setMaximum(10)
 
+        self.export_png_checkbox = QCheckBox('Export PNG')
         self.export_csv_checkbox = QCheckBox('Export CSV')
         self.export_f06_checkbox = QCheckBox('Export F06')
         self.export_zona_checkbox = QCheckBox('Export Zona')
+        self.export_png_checkbox.setChecked(True)
         self.export_csv_checkbox.setChecked(True)
         self.export_f06_checkbox.setChecked(True)
         self.export_zona_checkbox.setChecked(True)
@@ -483,6 +488,10 @@ class FlutterGui(LoggableGui):
         self.freq_tol_label = QLabel('dFreq Tol (Hz) Dash:')
         self.freq_tol_edit = QFloatEdit()
         self.freq_tol_edit.setToolTip("Applies a dotted line for modes that don't change by more than some amount")
+
+        self.mag_tol_label = QLabel('Magnitude Tol:')
+        self.mag_tol_edit = QFloatEdit()
+        self.mag_tol_edit.setToolTip("Filters modal participation factors based on magnitude")
 
         self.freq_tol_remove_label = QLabel('dFreq Tol (Hz) Hide:')
         self.freq_tol_remove_edit = QFloatEdit()
@@ -593,10 +602,10 @@ class FlutterGui(LoggableGui):
             show_kfreq = True
         elif plot_type == 'root-locus':
             show_root_locus = True
-            show_kfreq = False
+            #show_kfreq = False
         elif plot_type == 'modal-participation':
             show_modal_participation = True
-            show_kfreq = False
+            #show_kfreq = False
         else:  # pragma: no cover
             raise RuntimeError(f'plot_type={plot_type!r}')
 
@@ -619,12 +628,16 @@ class FlutterGui(LoggableGui):
             elif 'rho' == x_plot_type:
                 show_rho_lim = True
                 show_xlim = False
+        print(f'x_plot_type={x_plot_type} show_damp={show_damp}; show_xlim={show_xlim}')
         #assert show_xlim is False, show_xlim
 
         show_eigenvalue = show_root_locus or show_modal_participation
         show_xaxis = not show_eigenvalue
+
         self.x_plot_type_label.setVisible(show_xaxis)
         self.x_plot_type_pulldown.setVisible(show_xaxis)
+        self.freq_tol_label.setVisible(show_xaxis)
+        self.freq_tol_edit.setVisible(show_xaxis)
 
         self.eas_lim_label.setVisible(show_eas_lim)
         self.eas_lim_edit_min.setVisible(show_eas_lim)
@@ -657,6 +670,8 @@ class FlutterGui(LoggableGui):
         self.damp_lim_label.setVisible(show_damp)
         self.damp_lim_edit_min.setVisible(show_damp)
         self.damp_lim_edit_max.setVisible(show_damp)
+        self.damping_label.setVisible(show_xlim)
+        self.damping_edit.setVisible(show_xlim)
 
         self.freq_lim_label.setVisible(show_freq)
         self.freq_lim_edit_min.setVisible(show_freq)
@@ -673,6 +688,18 @@ class FlutterGui(LoggableGui):
         self.eigi_lim_label.setVisible(show_root_locus)
         self.eigi_lim_edit_min.setVisible(show_root_locus)
         self.eigi_lim_edit_max.setVisible(show_root_locus)
+
+        self.VL_label.setVisible(show_xlim)
+        self.VL_edit.setVisible(show_xlim)
+        self.VF_label.setVisible(show_xlim)
+        self.VF_edit.setVisible(show_xlim)
+
+        self.mag_tol_label.setVisible(show_modal_participation)
+        self.mag_tol_edit.setVisible(show_modal_participation)
+        self.point_spacing_label.setVisible(not show_modal_participation)
+        self.point_spacing_spinner.setVisible(not show_modal_participation)
+        self.show_mode_number_checkbox.setVisible(not show_modal_participation)
+        self.show_lines_checkbox.setVisible(not show_modal_participation)
 
     def setup_layout(self) -> None:
         hbox = QHBoxLayout()
@@ -785,6 +812,9 @@ class FlutterGui(LoggableGui):
         grid.addWidget(self.freq_tol_remove_label, irow, 0)
         grid.addWidget(self.freq_tol_remove_edit, irow, 1)
         irow += 1
+        grid.addWidget(self.mag_tol_label, irow, 0)
+        grid.addWidget(self.mag_tol_edit, irow, 1)
+        irow += 1
 
         grid.addWidget(self.output_directory_label, irow, 0)
         grid.addWidget(self.output_directory_edit, irow, 1)
@@ -820,6 +850,8 @@ class FlutterGui(LoggableGui):
         grid_check.addWidget(self.point_spacing_spinner, jrow, 1)
         jrow += 1
         grid_check.addWidget(self.show_lines_checkbox, jrow, 0)
+        jrow += 1
+        grid_check.addWidget(self.export_png_checkbox, jrow, 0)
         jrow += 1
         grid_check.addWidget(self.export_csv_checkbox, jrow, 0)
         grid_check.addWidget(self.export_f06_checkbox, jrow, 1)
@@ -1060,6 +1092,7 @@ class FlutterGui(LoggableGui):
         plot_type = self.plot_type
         self.log.info(f'plot_type = {plot_type}\n')
 
+        export_to_png = self.export_png_checkbox.isChecked()
         export_to_csv = self.export_csv_checkbox.isChecked()
         export_to_f06 = self.export_f06_checkbox.isChecked()
         export_to_zona = self.export_zona_checkbox.isChecked()
@@ -1069,6 +1102,7 @@ class FlutterGui(LoggableGui):
 
         freq_tol = self.freq_tol
         freq_tol_remove = self.freq_tol_remove
+        mag_tol = self.mag_tol
         self.log.info(f'freq_tol = {freq_tol}\n')
         if noline and nopoints:
             noline = False
@@ -1089,20 +1123,27 @@ class FlutterGui(LoggableGui):
             #raise RuntimeError(x_plot_type)
             xlim = self.xlim
 
+        #self.log.info(f'xlim={xlim}\n')
         assert xlim[0] != '' and xlim[1] != '', (xlim, x_plot_type)
         v_lines = []
-        if self.vf > 0.:
+        #self.log.info(f'vf={self.vf!r}; vl={self.vl!r}\n')
+        if isinstance(self.vf, float) and self.vf > 0.:
             # name, velocity, color, linestyle
             v_lines.append(('VF', self.vf, 'r', '-'))
         # if self.vd:
         #     # name, velocity, color, linestyle
         #     x_limits.append(('VD', self.vd, 'k', '--'))
         #     x_limits.append(('1.15*VD', 1.15*self.vd, 'k', '-'))
-        if self.vl > 0.:
+        if isinstance(self.vl, float) and self.vl > 0.:
             # name, velocity, color, linestyle
             v_lines.append(('VL', self.vl, 'k', '--'))
             v_lines.append(('1.15*VL', 1.15*self.vl, 'k', '-'))
 
+        #self.log.info(f'v_lines={v_lines}\n')
+        #self.log.info(f'kfreq_lim={self.kfreq_lim}\n')
+        #self.log.info(f'ydamp_lim={self.ydamp_lim}\n')
+        #self.log.info(f'freq_lim={self.freq_lim}\n')
+        #self.log.info(f'damping={self.damping}\n')
         xlim_kfreq = self.kfreq_lim
         ylim_damping = self.ydamp_lim
         ylim_freq = self.freq_lim
@@ -1110,6 +1151,7 @@ class FlutterGui(LoggableGui):
 
         # changing directory so we don't make a long filename
         # in teh plot header
+        #self.log.info(f'damping_limit = {damping_limit}\n')
         dirname = os.path.abspath(os.path.dirname(self.f06_filename))
         basename = os.path.basename(self.f06_filename)
 
@@ -1120,6 +1162,7 @@ class FlutterGui(LoggableGui):
 
         fig = plt.figure(1)
         fig.clear()
+        self.log.info(f'cleared plot\n')
         if plot_type not in {'root-locus', 'modal-participation'}:
             gridspeci = gridspec.GridSpec(2, 4)
             damp_axes = fig.add_subplot(gridspeci[0, :3])
@@ -1139,13 +1182,17 @@ class FlutterGui(LoggableGui):
         response.log = self.log
         #print('trying plots...')
 
+        self.log.info(f'getting logs\n')
         log_scale_x = self.data['log_scale_x']
         log_scale_y1 = self.data['log_scale_y1']
         log_scale_y2 = self.data['log_scale_y2']
         print(f'log_scale_x={log_scale_x}; log_scale_y1={log_scale_y1}; log_scale_y2={log_scale_y2}')
+        print(f'export_to_png={export_to_png}')
+        export_to_png = False
         try:
             if plot_type == 'root-locus':
-                png_filename = base + '_root-locus.png'
+                png_filename0 = base + '_root-locus.png'
+                png_filename = png_filename0 if export_to_png else None
                 axes = fig.add_subplot(111)
                 response.plot_root_locus(
                     fig=fig, axes=axes,
@@ -1156,12 +1203,14 @@ class FlutterGui(LoggableGui):
                     png_filename=png_filename,
                 )
             if plot_type == 'modal-participation':
-                png_filename = base + '_modal-participation.png'
+                png_filename0 = base + '_modal-participation.png'
+                png_filename = png_filename0 if export_to_png else None
                 axes = fig.add_subplot(111)
                 response.plot_modal_participation(
                     fig=fig, axes=axes,
                     modes=modes, #eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
                     freq_tol=freq_tol,
+                    mag_tol=mag_tol,
                     show=True, clear=False, close=False,
                     legend=True,
                     png_filename=png_filename,
@@ -1171,7 +1220,8 @@ class FlutterGui(LoggableGui):
                 #ylabel1 = r'Structural Damping; $g = 2 \gamma $'
                 #ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
                 #print('plot_kfreq_damping')
-                png_filename = base + f'_{x_plot_type}-damp-kfreq.png'
+                png_filename0 = base + f'_{x_plot_type}-damp-kfreq.png'
+                png_filename = png_filename0 if export_to_png else None
                 response.plot_kfreq_damping(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     modes=modes, plot_type=x_plot_type,
@@ -1185,7 +1235,8 @@ class FlutterGui(LoggableGui):
             else:
                 assert plot_type in 'x-damp-freq', plot_type
                 #print('plot_vg_vf')
-                png_filename = base + f'_{x_plot_type}-damp-freq.png'
+                png_filename0 = base + f'_{x_plot_type}-damp-freq.png'
+                png_filename = png_filename0 if export_to_png else None
                 #self.log.info(f'png_filename={png_filename!r}')
                 #self.log.info(f'modes={modes!r}')
                 #self.log.info(f'freq_tol={freq_tol!r}')
@@ -1205,14 +1256,14 @@ class FlutterGui(LoggableGui):
                     png_filename=png_filename,
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             self.log.error(f'plot_type={plot_type}')
             self.log.error(str(e))
             print(traceback.print_tb())
             print(traceback.print_exception())
             raise
 
-        base2 = os.path.splitext(png_filename)[0]
+        base2 = os.path.splitext(png_filename0)[0]
         csv_filename = base2 + '.export.csv'
         veas_filename = base2 + '.export.veas'
         f06_filename = base2 + '.export.f06'
@@ -1272,10 +1323,13 @@ class FlutterGui(LoggableGui):
 
         freq_tol, is_passed_tol1 = get_float_or_none(self.freq_tol_edit)
         freq_tol_remove, is_passed_tol2 = get_float_or_none(self.freq_tol_remove_edit)
+        mag_tol, is_passed_tol3 = get_float_or_none(self.mag_tol_edit)
         if is_passed_tol1 and freq_tol is None:
             freq_tol = -1.0
         if is_passed_tol2 and freq_tol_remove is None:
             freq_tol_remove = -1.0
+        if is_passed_tol3 and mag_tol is None:
+            mag_tol = -1.0
 
         eas_lim = [eas_lim_min, eas_lim_max]
         tas_lim = [tas_lim_min, tas_lim_max]
@@ -1307,7 +1361,7 @@ class FlutterGui(LoggableGui):
             is_passed_freq1, is_passed_freq2,
             is_passed_kfreq1, is_passed_kfreq2,
             is_passed_eig,
-            is_passed_tol1, is_passed_tol2,
+            is_passed_tol1, is_passed_tol2, is_passed_tol3,
             is_passed_vl, is_passed_vf, is_passed_damping,
         ]
         is_passed = all(is_passed_flags)
@@ -1317,7 +1371,8 @@ class FlutterGui(LoggableGui):
         out = (
             eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim, xlim,
             damp_lim, freq_lim, kfreq_lim,
-            eigr_lim, eigi_lim, freq_tol, freq_tol_remove,
+            eigr_lim, eigi_lim,
+            freq_tol, freq_tol_remove, mag_tol,
             vl, vf, damping, is_passed,
         )
         return out
@@ -1332,13 +1387,15 @@ class FlutterGui(LoggableGui):
         (eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim, xlim,
          ydamp_lim, freq_lim, kfreq_lim,
          eigr_lim, eigi_lim,
-         freq_tol, freq_tol_remove,
+         freq_tol, freq_tol_remove, mag_tol,
          vl, vf, damping, is_valid_xlim) = self.get_xlim()
 
+        selected_modes = []
         subcase, is_subcase_valid = self._get_subcase()
-        #if subcase == -1:
-            #return False
-        selected_modes = self.get_selected_modes()
+        self.log.warning(f'subcase={subcase}; is_subcase_valid={is_subcase_valid}')
+        if is_subcase_valid:
+            selected_modes = self.get_selected_modes()
+
         self.subcase = subcase
         self.selected_modes = selected_modes
         self.eas_lim = eas_lim
@@ -1355,6 +1412,7 @@ class FlutterGui(LoggableGui):
         self.eigr_lim = eigr_lim
         self.freq_tol = freq_tol
         self.freq_tol_remove = freq_tol_remove
+        self.mag_tol = mag_tol
         self.vl = vl
         self.vf = vf
         self.damping = damping
@@ -1371,20 +1429,23 @@ class FlutterGui(LoggableGui):
         self.point_spacing = self.point_spacing_spinner.value()
         self.use_rhoref = self.use_rhoref_checkbox.isChecked()
 
+        export_to_png = self.export_png_checkbox.isChecked()
         export_to_csv = self.export_csv_checkbox.isChecked()
         export_to_f06 = self.export_f06_checkbox.isChecked()
         export_to_zona = self.export_zona_checkbox.isChecked()
 
+        is_passed_modal_partipation = False
         subcases = list(self.responses)
-        subcase0 = subcases[0]
-        response = self.responses[subcase0]
+        if len(subcases):
+            subcase0 = subcases[0]
+            response = self.responses[subcase0]
 
-        failed_modal_partipation = (
-            (self.plot_type == 'modal-participation') and
-            ((response.eigr_eigi_velocity is None) or
-             (response.eigenvector is None))
-        )
-        is_passed_modal_partipation = not failed_modal_partipation
+            failed_modal_partipation = (
+                (self.plot_type == 'modal-participation') and
+                ((response.eigr_eigi_velocity is None) or
+                 (response.eigenvector is None))
+            )
+            is_passed_modal_partipation = not failed_modal_partipation
         # (
         #     (self.plot_type == 'modal-participation') and
         #     (response.eigr_eigi_velocity is not None)
@@ -1399,6 +1460,7 @@ class FlutterGui(LoggableGui):
             'show_mode_number': self.show_mode_number,
             'point_spacing': self.point_spacing,
             'show_lines': self.show_lines,
+            'export_to_png': export_to_png,
             'export_to_csv': export_to_csv,
             'export_to_f06': export_to_f06,
             'export_to_zona': export_to_zona,
