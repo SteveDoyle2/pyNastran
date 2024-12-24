@@ -13,6 +13,7 @@ except ModuleNotFoundError:
     warnings.warn('couldnt find json5, using json')
     import json
 from functools import partial
+import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 
@@ -23,7 +24,7 @@ from qtpy.QtWidgets import (
     QApplication, QMenu, QVBoxLayout, QLineEdit, QComboBox,
     QHBoxLayout, QPushButton, QGridLayout,
     QAction,
-    QCheckBox, QRadioButton,
+    QCheckBox, #QRadioButton,
     QListWidgetItem, QAbstractItemView,
     QListWidget, QSpinBox,
 )
@@ -110,9 +111,9 @@ class FlutterGui(LoggableGui):
         self.eas_lim = []
         self.tas_lim = []
         self.mach_lim = []
-        #self.alt_lim = []
-        #self.q_lim = []
-        #self.rho_lim = []
+        self.alt_lim = []
+        self.q_lim = []
+        self.rho_lim = []
         #self.x_lim = []
         self.freq_lim = [None, None]
         self.damping_lim = [None, None]
@@ -140,6 +141,7 @@ class FlutterGui(LoggableGui):
         self.setup_connections()
         self._set_window_title()
         self.on_font_size()
+        self.on_plot_type()
         self.on_open_new_window()
 
     def setup_toolbar(self):
@@ -200,9 +202,9 @@ class FlutterGui(LoggableGui):
 
     def setup_modes(self):
         self.modes_widget = QListWidget(self)
-        self.modes_widget.setMaximumWidth(100)
+        self.modes_widget.setMaximumWidth(200)  # was 100 when no freq
         self.modes_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self._set_modes_table(self.modes_widget, [0])
+        self._set_modes_table(self.modes_widget, [0], [0.])
 
     # def dontcrash(func):
     #     @wraps(func)
@@ -222,6 +224,7 @@ class FlutterGui(LoggableGui):
         if self.save_filename == '' or not os.path.exists(self.save_filename):
             self.on_file_save_as()
         else:
+            #self.log.warning('on_file_save; _save')
             self._save(self.save_filename)
 
     def on_file_save_as(self) -> None:
@@ -236,9 +239,11 @@ class FlutterGui(LoggableGui):
         #     )
         #     self.log.info(f'json_filename={json_filename!r} wildcard={wildcard!r}')
         json_filename = self.save_filename
+        #self.log.warning('on_file_save_as; _save')
         self._save(json_filename)
 
     def _save(self, json_filename: str):
+        #self.log.warning('_save')
         is_valid = self.validate()
         #self.log.info(f'self.data = {self.data}')
         if json_filename == '' or len(self.data) == 0:
@@ -257,16 +262,26 @@ class FlutterGui(LoggableGui):
             self.font_size = data['font_size']
             self.font_size_edit.setValue(data['font_size'])
 
-        radios = [
-            # ('show_points', self.show_points_radio),
-            # ('show_mode_num', self.show_mode_num_radio),
+        # radios = [
+        #     ('show_points', self.show_points_radio),
+        #     ('show_mode_num', self.show_mode_num_radio),
+        # ]
+        # for (key, checkbox) in radios:
+        #     if key not in data:
+        #         continue
+        #     val = data[key]
+        #     assert isinstance(val, bool), (key, val)
+        #     checkbox.setChecked(val)
+
+        spinners = [
+             ('plot_font_size', self.plot_font_size_edit),
         ]
-        for (key, checkbox) in radios:
+        for (key, spinner) in spinners:
             if key not in data:
                 continue
             val = data[key]
-            assert isinstance(val, bool), (key, val)
-            checkbox.setChecked(val)
+            assert isinstance(val, int), (key, val)
+            spinner.setValue(val)
 
         checkboxs = [
             ('use_rhoref', self.use_rhoref_checkbox),
@@ -402,7 +417,7 @@ class FlutterGui(LoggableGui):
         self.f06_filename_edit = QLineEdit()
         self.f06_filename_browse = QPushButton('Browse...')
 
-        self.use_rhoref_checkbox = QCheckBox('Use Sea Level Rho Ref')
+        self.use_rhoref_checkbox = QCheckBox('Sea Level Rho Ref')
         self.use_rhoref_checkbox.setChecked(False)
 
         self.log_xscale_checkbox = QCheckBox('Log Scale x')
@@ -553,11 +568,21 @@ class FlutterGui(LoggableGui):
         self.damping_edit = QFloatEdit('')
         self.damping_edit.setToolTip('Enables the flutter crossing (e.g., 0.03 for 3%)')
 
+        self.mode_label = QLabel('Mode:')
+        self.mode_edit = QSpinBox()
+        self.mode_edit.setMinimum(1)
+        #self.mode_edit.SetValue(3)
+        self.mode_edit.setToolTip('Sets the mode')
+
+        self.velocity_label = QLabel('Velocity Point:')
+        self.velocity_edit = QComboBox()
+        self.velocity_edit.setToolTip('Sets the velocity (input units)')
+
         self.f06_load_button = QPushButton('Load F06', self)
         self.ok_button = QPushButton('Run', self)
 
 
-        self.gui_button = QPushButton("Open GUI", self)
+        self.gui_button = QPushButton('Open GUI', self)
         self.solution_type_label = QLabel('Solution Type:')
         self.solution_type_pulldown = QComboBox(self)
         self.mode2_label = QLabel('Mode:')
@@ -633,11 +658,13 @@ class FlutterGui(LoggableGui):
 
         show_eigenvalue = show_root_locus or show_modal_participation
         show_xaxis = not show_eigenvalue
+        show_freq_tol = show_xaxis or show_root_locus
+        show_crossing = show_xaxis
 
         self.x_plot_type_label.setVisible(show_xaxis)
         self.x_plot_type_pulldown.setVisible(show_xaxis)
-        self.freq_tol_label.setVisible(show_xaxis)
-        self.freq_tol_edit.setVisible(show_xaxis)
+        self.freq_tol_label.setVisible(show_freq_tol)
+        self.freq_tol_edit.setVisible(show_freq_tol)
 
         self.eas_lim_label.setVisible(show_eas_lim)
         self.eas_lim_edit_min.setVisible(show_eas_lim)
@@ -670,8 +697,8 @@ class FlutterGui(LoggableGui):
         self.damp_lim_label.setVisible(show_damp)
         self.damp_lim_edit_min.setVisible(show_damp)
         self.damp_lim_edit_max.setVisible(show_damp)
-        self.damping_label.setVisible(show_xlim)
-        self.damping_edit.setVisible(show_xlim)
+        self.damping_label.setVisible(show_crossing)
+        self.damping_edit.setVisible(show_crossing)
 
         self.freq_lim_label.setVisible(show_freq)
         self.freq_lim_edit_min.setVisible(show_freq)
@@ -694,12 +721,19 @@ class FlutterGui(LoggableGui):
         self.VF_label.setVisible(show_xlim)
         self.VF_edit.setVisible(show_xlim)
 
-        self.mag_tol_label.setVisible(show_modal_participation)
-        self.mag_tol_edit.setVisible(show_modal_participation)
-        self.point_spacing_label.setVisible(not show_modal_participation)
-        self.point_spacing_spinner.setVisible(not show_modal_participation)
-        self.show_mode_number_checkbox.setVisible(not show_modal_participation)
-        self.show_lines_checkbox.setVisible(not show_modal_participation)
+        show_items = [
+            (show_modal_participation, (
+                self.mode_label, self.mode_edit,
+                self.velocity_label, self.velocity_edit,
+                self.mag_tol_label, self.mag_tol_edit)),
+            (not show_modal_participation, (
+                self.point_spacing_label, self.point_spacing_spinner,
+                self.show_mode_number_checkbox,
+                self.show_lines_checkbox,)),
+        ]
+        for show_hide, items in show_items:
+            for item in items:
+                item.setVisible(show_hide)
 
     def setup_layout(self) -> None:
         hbox = QHBoxLayout()
@@ -720,11 +754,9 @@ class FlutterGui(LoggableGui):
 
         grid = QGridLayout()
         irow = 0
-        grid.addWidget(self.use_rhoref_checkbox, irow, 0)
-        irow += 1
-
         grid.addWidget(self.units_in_label, irow, 0)
         grid.addWidget(self.units_in_pulldown, irow, 1)
+        grid.addWidget(self.use_rhoref_checkbox, irow, 2)
         irow += 1
 
         grid.addWidget(self.units_out_label, irow, 0)
@@ -812,6 +844,12 @@ class FlutterGui(LoggableGui):
         grid.addWidget(self.freq_tol_remove_label, irow, 0)
         grid.addWidget(self.freq_tol_remove_edit, irow, 1)
         irow += 1
+        grid.addWidget(self.mode_label, irow, 0)
+        grid.addWidget(self.mode_edit, irow, 1)
+        irow += 1
+        grid.addWidget(self.velocity_label, irow, 0)
+        grid.addWidget(self.velocity_edit, irow, 1)
+        irow += 1
         grid.addWidget(self.mag_tol_label, irow, 0)
         grid.addWidget(self.mag_tol_edit, irow, 1)
         irow += 1
@@ -822,6 +860,10 @@ class FlutterGui(LoggableGui):
         self.output_directory_label.setDisabled(True)
         self.output_directory_edit.setDisabled(True)
         self.output_directory_browse.setDisabled(True)
+
+        self.output_directory_label.setVisible(False)
+        self.output_directory_edit.setVisible(False)
+        self.output_directory_browse.setVisible(False)
         irow += 1
 
         grid.addWidget(self.VL_label, irow, 0)
@@ -972,6 +1014,7 @@ class FlutterGui(LoggableGui):
         if len(subcases) == 0:
             self.log.error('No subcases found')
             return
+        #self.log.info(f'on_load_f06: subcases={subcases}')
         self.f06_filename = f06_filename
         self._units_in = f06_units
         self._units_out = out_units
@@ -988,7 +1031,10 @@ class FlutterGui(LoggableGui):
             self.recent_files = self.recent_files[:self.nrecent_files_max]
 
         self._update_recent_files_actions()
-        self._save(self.save_filename)
+        is_valid = self.validate()
+        if is_valid:
+            self.log.warning('add_recent_file; save')
+            self._save(self.save_filename)
 
     def _update_recent_files_actions(self) -> None:
         current_directory = os.getcwd()
@@ -1018,28 +1064,50 @@ class FlutterGui(LoggableGui):
         subcase, is_subcase_valid = self._get_subcase()
         if not is_subcase_valid:
             return
-        self.update_modes_table(self.responses[subcase].modes)
+        response: FlutterResponse = self.responses[subcase]
+        #self.log.info(f'on_subcase; response.results.shape={response.results.shape}')
+        freqs = response.results[:, 0, response.ifreq].ravel()
+        self._update_modal_participation_velocity(response)
+        #self.log.info(f'on_subcase; freqs={freqs}')
+        self.update_modes_table(response.modes, freqs)
+
+    def _update_modal_participation_velocity(self, response: FlutterResponse) -> None:
+        nvelocity = len(response.eigr_eigi_velocity)
+        self.velocity_edit.clear()
+        if nvelocity:
+            velocity = response.eigr_eigi_velocity[:, -1]
+            if np.all(np.isfinite(velocity)):
+                items = [f'V{ipoint+1}={vel}' for ipoint, vel in enumerate(velocity)]
+            else:
+                items = [f'V{ipoint+1}' for ipoint in range(nvelocity)]
+            self.velocity_edit.addItems(items)
 
     def _get_subcase(self) -> tuple[int, bool]:
         subcase_str = self.subcase_edit.currentText()
+        #self.log.info(f'_get_subcase: subcase_str={subcase_str!r}')
         subcase_sline = subcase_str.split()
+        #self.log.info(f'_get_subcase: subcase_sline={subcase_sline}')
         try:
             subcase = int(subcase_sline[1])
             is_valid = True
         except IndexError:
-            self.log.error(f'failed parsing subcase={subcase_str}; subcase_sline={subcase_sline}')
+            self.log.error(f'failed parsing subcase={subcase_str!r}; subcase_sline={subcase_sline}')
             subcase = -1
             is_valid = False
+        self.log.info(f'_get_subcase: subcase={subcase}; is_valid={is_valid}')
         return subcase, is_valid
 
     def update_subcases(self, subcases: list[int]) -> None:
-        self.subcase_edit.clear()
         subcases_text = [f'Subcase {isubcase}' for isubcase in subcases]
+        self.log.info(f'update_subcases={subcases_text}')
+        self.subcase_edit.clear()
+        #self.log.info(f'update_subcases setting...')
         self.subcase_edit.addItems(subcases_text)
 
-    def update_modes_table(self, modes: list[int]) -> None:
+    def update_modes_table(self, modes: list[int],
+                           freqs: list[float]) -> None:
         self.modes = modes
-        self._set_modes_table(self.modes_widget, modes)
+        self._set_modes_table(self.modes_widget, modes, freqs)
         self.ok_button.setEnabled(True)
         self.log.info(f'modes = {self.modes}')
 
@@ -1050,20 +1118,22 @@ class FlutterGui(LoggableGui):
 
     # @dontcrash
     def _set_modes_table(self, modes_widget: QListWidget,
-                         modes: list[int]):
+                         modes: list[int], freqs: list[float]):
         modes_widget.clear()
-        for imode in modes:
-            mode = QListWidgetItem(f"Mode {imode}")
+        for imode, freq in zip(modes, freqs):
+            mode = QListWidgetItem(f'Mode {imode}; f={freq:.2f}')
             # mode.itemClicked.connect(self._on_update_mode)
             mode.setSelected(True)
             modes_widget.addItem(mode)
 
     def _on_update_mode(self):
         if not self.is_valid:
+            #self.log.warning('_on_update_mode')
             self.validate()
         self.plot()
 
     def on_ok(self) -> None:
+        #self.log.warning('on_ok')
         is_valid = self.validate()
         if not is_valid:
             return
@@ -1076,6 +1146,7 @@ class FlutterGui(LoggableGui):
         self.log.info(f'is_valid = {is_valid}\n')
         self.is_valid = True
         self.plot(modes)
+        #self.log.warning('on_ok; _save')
         self._save(self.save_filename)
 
     # @dontcrash
@@ -1194,6 +1265,8 @@ class FlutterGui(LoggableGui):
                 png_filename0 = base + '_root-locus.png'
                 png_filename = png_filename0 if export_to_png else None
                 axes = fig.add_subplot(111)
+                #self.log.info(f'modes={modes}; eigr_lim={self.eigr_lim}; eigi_lim={self.eigi_lim}; freq_tol={freq_tol}')
+                #self.log.info(f'png_filename={png_filename}')
                 response.plot_root_locus(
                     fig=fig, axes=axes,
                     modes=modes, eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
@@ -1202,7 +1275,7 @@ class FlutterGui(LoggableGui):
                     legend=True,
                     png_filename=png_filename,
                 )
-            if plot_type == 'modal-participation':
+            elif plot_type == 'modal-participation':
                 png_filename0 = base + '_modal-participation.png'
                 png_filename = png_filename0 if export_to_png else None
                 axes = fig.add_subplot(111)
@@ -1379,11 +1452,14 @@ class FlutterGui(LoggableGui):
 
     def get_selected_modes(self) -> list[int]:
         mode_strs = get_selected_items_flat(self.modes_widget)
-        modes = [int(mode_str.split(' ')[1]) for mode_str in mode_strs]
-        #self.log.info(f'modes = {modes}')
+        #self.log.info(f'mode_strs = {mode_strs}')
+        modes = [int(mode_str.split(';')[0].split(' ')[1])
+                 for mode_str in mode_strs]
+        self.log.info(f'modes = {modes}')
         return modes
 
     def validate(self) -> bool:
+        #self.log.warning('validate')
         (eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim, xlim,
          ydamp_lim, freq_lim, kfreq_lim,
          eigr_lim, eigi_lim,
@@ -1423,6 +1499,7 @@ class FlutterGui(LoggableGui):
         units_out = self.units_out_pulldown.currentText()
         output_directory = self.output_directory_edit.text()
 
+        self.plot_font_size = self.plot_font_size_edit.value()
         self.show_lines = self.show_lines_checkbox.isChecked()
         self.show_points = self.show_points_checkbox.isChecked()
         self.show_mode_number = self.show_mode_number_checkbox.isChecked()
@@ -1437,6 +1514,7 @@ class FlutterGui(LoggableGui):
         is_passed_modal_partipation = False
         subcases = list(self.responses)
         if len(subcases):
+            self.log.info(f'subcases={subcases}')
             subcase0 = subcases[0]
             response = self.responses[subcase0]
 
@@ -1450,7 +1528,6 @@ class FlutterGui(LoggableGui):
         #     (self.plot_type == 'modal-participation') and
         #     (response.eigr_eigi_velocity is not None)
         # ) or (self.plot_type != 'modal-participation'))
-
         data = {
             'log_scale_x': self.log_xscale_checkbox.isChecked(),
             'log_scale_y1': self.log_yscale1_checkbox.isChecked(),
@@ -1492,6 +1569,7 @@ class FlutterGui(LoggableGui):
             'units_out': units_out,
             'freq_tol': freq_tol,
             'freq_tol_remove': freq_tol_remove,
+            'mag_tol': mag_tol,
             'vl': vl,
             'vf': vf,
             'damping': damping,
@@ -1499,7 +1577,6 @@ class FlutterGui(LoggableGui):
         self.units_in = units_in
         self.units_out = units_out
         is_passed = all([is_valid_xlim, is_subcase_valid, is_passed_modal_partipation])
-        #self.log.warning(f'is_passed_modal_partipation = {is_passed_modal_partipation}')
         if is_passed:
             self.data = data
             #self.xlim = xlim
@@ -1510,7 +1587,13 @@ class FlutterGui(LoggableGui):
             #self.log.info(f'passed data:\n{str(self.data)}')
         else:
             del data['recent_files']
-            self.log.error(f'failed data:\n{str(data)}')
+            self.log.error(
+                f'is_valid_xlim = {is_valid_xlim}\n'
+                f'is_subcase_valid = {is_subcase_valid}\n'
+                f'is_passed_modal_partipation = {is_passed_modal_partipation}\n'
+                f'failed data:\n{str(data)}'
+            )
+            #self.log.error(f'failed data:\n{str(data)}')
         return is_passed
 
     def on_open_new_window(self):
@@ -1614,12 +1697,17 @@ def validate_json(data: dict[str, Any],
             data[key] = default_value
     return is_valid
 
-def get_float_or_none(line_edit: QLineEdit) -> tuple[Optional[float], bool]:
+def get_float_or_none(line_edit: QLineEdit) -> tuple[Optional[float | str], bool]:
     # is_passed = False
     if not line_edit.isVisible():
         # just echo it back...who cares if it's wrong
-        value = line_edit.text().strip()
+        text = line_edit.text().strip()
+        #try:
+            #value = float(text)
+        #except ValueError:
+            #value = text
         #value = None
+        value = text
         is_passed = True
         return value, is_passed
 
@@ -1731,5 +1819,48 @@ def main(f06_filename: str='') -> None:  # pragma: no cover
     app.exec_()
 
 
+def _reshape_eigenvectors(eigenvectors=None) -> np.ndarray:
+    if eigenvectors is None:
+        eigenvectors = np.array([
+            [1, 2, 3, 4, 5, 6, 7, 8],
+            [10, 20, 30, 40, 50, 60, 70, 80],
+        ])
+        eigr_eigi_vel = np.array([
+            [1, 10, 100],
+            [2, 20, 200],
+            [3, 30, 300],
+            [4, 40, 400],
+            [5, 50, 500],
+            [6, 60, 600],
+            [7, 70, 700],
+            [8, 80, 800],
+        ]).T
+    nmodes, nmodes_nvel = eigenvectors.shape
+    nvel = nmodes_nvel // nmodes
+    assert nvel > 0, nvel
+    print(f'nmodes={nmodes}; nvel={nvel}')
+
+    i = 0
+    eigenvectors2 = np.zeros((nmodes, nmodes, nvel))
+    for ivel in range(nvel):
+        for imode in range(nmodes):
+            eigenvectors2[:, imode, ivel] = eigenvectors[:, i]
+            i += 1
+
+    eigenvectors3 = eigenvectors.reshape(nmodes, nvel, nmodes).swapaxes(1, 2)
+    assert eigenvectors2.shape == eigenvectors3.shape, (eigenvectors2.shape, eigenvectors3.shape)
+    assert np.allclose(eigenvectors2, eigenvectors3)
+    # print(data3[:, :, 0])
+    # print(data3[:, :, 1])
+    # print(data3[:, :, 2])
+    # print(data3[:, :, 3])
+    for ivel in range(nvel):
+        print(f'ivel={ivel}')
+        print(eigenvectors2[:, :, ivel])
+        assert np.allclose(eigenvectors2[:, :, ivel], eigenvectors3[:, :, ivel])
+    #asdf
+    return eigenvectors3
+
 if __name__ == '__main__':
+    _reshape_eigenvectors()
     main()

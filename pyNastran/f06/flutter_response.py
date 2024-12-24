@@ -656,6 +656,7 @@ class FlutterResponse:
             0.0 - fully transparent
 
         """
+        assert isinstance(freq_tol, float_types), freq_tol
         xlabel = r'Eigenvalue (Real); $\omega \zeta$'
         ylabel = r'Eigenvalue (Imaginary); $\omega$'
         ix = self.ieigr
@@ -762,7 +763,7 @@ class FlutterResponse:
         damping_g[iomega] = 2 * omega_damping[iomega] / omega[iomega]
 
         title = f'Modal Participation Factors of Mode {imode+1}\n'
-        title += f'omega={omega:.2f}; freq={freq:.2f} Hz; g={damping_g:.4g}'
+        title += rf'$\omega$={omega:.2f}; freq={freq:.2f} Hz; g={damping_g:.3g}'
         if np.isfinite(velocityi):
             title += f' V={velocityi:.1f}'
         #print(title)
@@ -787,14 +788,23 @@ class FlutterResponse:
         mag = np.sqrt(eigr**2 + eigi**2)
         print(f'eigr = {eigr}')
         print(f'mag = {mag}')
-        mag_max = mag.max(axis=1)      # TODO: is this right?
+
+        # TODO: is this the right axis?
+        mag_max = mag.max(axis=1)
         print(f'mag_max = {mag_max}')
-        mag /= mag_max[:, np.newaxis]  # TODO: is this right?
+
+        # normalize the magnitude, so it's a percentage
+        # TODO: is this the right axis?
+        mag /= mag_max[:, np.newaxis]
         print(f'mag2 = {mag}')
         print(f'mag_tol = {mag_tol!r}')
+
+        # filter out row (or col) for points that are
+        # too close to 0
         ifilter0 = (mag > mag_tol)
         print(f'ifilter0 = {ifilter0}')
-        ifilter = np.any(ifilter0, axis=1)  # TODO: is this right?
+        # TODO: is this the right axis?
+        ifilter = np.any(ifilter0, axis=1)
         print(f'ifilter = {ifilter}')
 
         # don't normalize
@@ -811,7 +821,7 @@ class FlutterResponse:
             reali = reals[i, imode]
             imagi = imags[i, imode]
             text = str(mode)
-            axes.scatter(reali, imagi, label=f'Mode {mode}')
+            axes.scatter(reali, imagi, label=f'Mode {mode}', alpha=0.7)
             print(f'{i}: {reali}, {imagi}, {text!r}')
             axes.text(reali, imagi, text, ha='center', va='center',
                       fontsize=self.font_size)
@@ -850,14 +860,15 @@ class FlutterResponse:
          - root-locus
         """
         self.fix()
+        print('plot_xy')
         legend_kwargs = get_legend_kwargs(self.font_size, legend_kwargs)
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
         nmodes = len(modes)
         ncol = _update_ncol(nmodes, ncol)
-        #print(f'plot_xy: modes  = {modes}')
-        #print(f'plot_xy: imodes = {imodes}')
-        #print(f'plot_xy: ncol   = {ncol}')
+        print(f'plot_xy: modes  = {modes}')
+        print(f'plot_xy: imodes = {imodes}')
+        print(f'plot_xy: ncol   = {ncol}')
 
         if fig is None:
             fig = plt.figure()
@@ -867,21 +878,26 @@ class FlutterResponse:
         linestyle = 'None' if self.noline else '-'
 
         jcolor = 0
+        print('starting plot part; jcolor=0')
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[jcolor]
             color = colors[jcolor]
             freq = self.results[imode, :, self.ifreq].ravel()
             xs = self.results[imode, :, ix].ravel()
             ys = self.results[imode, :, iy].ravel()
+            print('freq, xs, ys')
             jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
                 freq, freq_tol=freq_tol,
                 show_mode_number=self.show_mode_number)
-            #print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
+            print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
 
+            print(f'freq={freq}')
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
             label = _get_mode_freq_label(mode, freq[0])
+            print(f'iplot={iplot}')
+            assert len(xs[iplot]) > 0
             line = axes.plot(xs[iplot], ys[iplot],
                              color=color2, marker=symbol2, label=label,
                              linestyle=linestyle2, markersize=0)
@@ -892,6 +908,7 @@ class FlutterResponse:
                 #axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=symbol[0], marker=symbol[1])
                 axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=color, marker=symbol2)
 
+        print(f'setting grid...')
         axes.grid(True)
         #axes.set_xlabel(xlabel  + '; _plot_x_y', fontsize=self.font_size)
         axes.set_xlabel(xlabel, fontsize=self.font_size)
@@ -903,19 +920,14 @@ class FlutterResponse:
         title = f'Subcase {self.subcase:d}'
         if png_filename:
             title += '\n%s' % png_filename
+        print(f'title={title!r}')
         fig.suptitle(title)
         if legend:
             # bbox_to_anchor=(1.125, 1.), ncol=ncol,
             axes.legend(**legend_kwargs)
 
-        if show:
-            plt.show()
-        if png_filename:
-            plt.savefig(png_filename)
-        if clear:
-            fig.clear()
-        if close:
-            plt.close()
+        _show_save_clear_close(
+            fig, show, png_filename, clear, close)
         return axes
 
     def _plot_x_y2(self, ix: int, iy1: int, iy2: int,
@@ -1051,14 +1063,8 @@ class FlutterResponse:
             #axes1.legend(handles=legend_elements, ncol=ncol, **legend_kwargs)  # TODO: switch to figure...
             #fig.legend(handles=legend_elements, ncol=ncol, **legend_kwargs)
 
-        if show:
-            plt.show()
-        if png_filename:
-            plt.savefig(png_filename)
-        if clear:
-            fig.clear()
-        if close:
-            plt.close()
+        _show_save_clear_close(
+            fig, show, png_filename, clear, close)
 
     def plot_kfreq_damping(self, modes=None,
                            plot_type: str='tas',
@@ -1335,14 +1341,8 @@ class FlutterResponse:
             #fig.subplots_adjust(hspace=0.25)
             #fig.subplots_adjust(hspace=.5)
 
-        if show:
-            plt.show()
-        if png_filename:
-            plt.savefig(png_filename)
-        if clear:
-            fig.clear()
-        if close:
-            plt.close()
+        _show_save_clear_close(
+            fig, show, png_filename, clear, close)
 
     def _plot_crossings(self,
                         damp_axes: plt.Axes,
@@ -2033,6 +2033,10 @@ def _increment_jcolor(mode: int,
     linestyle2: str
         the updated style
     """
+    #print(f'freq = {freq}')
+    #print(f'freq_tol = {freq_tol!r}')
+    assert isinstance(freq, np.ndarray), freq
+    assert isinstance(freq_tol, float_types), freq_tol
     is_filered = False
     if freq.max() - freq.min() <= freq_tol:
         color = 'gray'
@@ -2211,3 +2215,18 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
         for xi, y1i, y2i in zip(vel2, damping2, freq2):
             damp_axes.text(xi, y1i, text, color=color)
             freq_axes.text(xi, y2i, text, color=color)
+
+def _show_save_clear_close(fig: plt.Figure,
+                           show: bool,
+                           png_filename: Optional[str],
+                           clear: bool,
+                           close: bool) -> None:
+    print('_show_save_clear_close')
+    if show:
+        plt.show()
+    if png_filename:
+        plt.savefig(png_filename)
+    if clear:
+        fig.clear()
+    if close:
+        plt.close()
