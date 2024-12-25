@@ -470,7 +470,7 @@ class TestReadWrite(unittest.TestCase):
         with self.assertRaises(IOError):
             model._open_file('fake.file')
 
-    def test_read_bad_02(self):
+    def test_read_bad_02_bulk_only(self):
         """tests when users don't add punch=True to read_bdf(...)"""
         lines = [
             'GRID     1000177       0      1.      0.      0.       0\n',
@@ -484,10 +484,16 @@ class TestReadWrite(unittest.TestCase):
         log = SimpleLogger(level='info', encoding='utf-8')
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.writelines(lines)
+
+        model_old = BDF(log=log, mode='msc', debug=True)
+        model_old.use_new_deck_parser = False
         with self.assertRaises(RuntimeError):
-            read_bdf(bdf_filename, validate=False, xref=False,
-                     punch=False, encoding=None,
-                     log=log, debug=True, mode='msc')
+            model_old.read_bdf(bdf_filename, validate=False, xref=False,
+                               punch=False, encoding=None)
+
+        model_new = BDF(log=log, mode='msc', debug=True)
+        model_new.read_bdf(bdf_filename, validate=False, xref=False,
+                           punch=False, encoding=None)
         os.remove(bdf_filename)
 
     def test_disable_cards(self):

@@ -443,8 +443,8 @@ def run_and_compare_fems(
     fem1 = BDF(debug=debug, log=log)
     if is_lax_parser:
         fem1.log.warning('using lax card parser')
-        fem1.is_lax_parser = True
-    fem1.use_new_deck_parser = True
+        fem1.is_strict_card_parser = False
+    #fem1.use_new_deck_parser = True
     if version:
         map_version(fem1, version)
     fem1.dumplines = dumplines
@@ -979,7 +979,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
     assert isinstance(ierror, int), ierror
 
     fem2 = BDF(debug=debug, log=log)
-    fem2.use_new_deck_parser = True
+    #fem2.use_new_deck_parser = True
     if not quiet:
         fem2.log.info('starting fem2')
     sys.stdout.flush()

@@ -1327,7 +1327,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
          executive_control_lines,
          case_control_lines,
          bulk_data_lines, bulk_data_ilines,
-         additional_deck_lines) = out
+         additional_deck_lines, additional_deck_lines) = out
         self._set_pybdf_attributes(obj, save_file_structure)
 
         self.system_command_lines = system_lines
@@ -4620,7 +4620,7 @@ class BDF(BDF_):
                  log: Optional[SimpleLogger]=None,
                  mode: str='msc'):
         BDF_.__init__(self, debug=debug, log=log, mode=mode)
-        self.use_new_deck_parser = False
+        self.use_new_deck_parser = True
         #super(BDF, self).__init__(debug=debug, log=log, mode=mode)
         #self._grids_temp = []
 

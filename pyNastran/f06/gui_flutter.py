@@ -12,7 +12,6 @@ try:
 except ModuleNotFoundError:
     warnings.warn('couldnt find json5, using json')
     import json
-from functools import partial
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -33,8 +32,7 @@ from qtpy.QtWidgets import (
 #     QMainWindow, QDockWidget, QFrame, QToolBar,
 #     QToolButton, QMenuBar,
 # )
-
-from qtpy.QtGui import QIcon
+#from qtpy.QtGui import QIcon
 QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 
@@ -43,6 +41,8 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
+from pyNastran.f06.dev.actions_builder import Actions, Action
+from pyNastran.f06.dev.flutter_preferences import FlutterPreferencesDialog
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import make_flutter_response, get_flutter_units
 if TYPE_CHECKING:
@@ -59,29 +59,20 @@ HOME_FILENAME = os.path.join(HOME_DIRNAME, 'plot_flutter.json')
 #FONT_SIZE = 12
 import pyNastran
 PKG_PATH = Path(pyNastran.__path__[0])
-AERO_PATH = PKG_PATH / '..' / 'models' / 'aero' / 'flutter_bug'
-BDF_FILENAME = AERO_PATH / 'nx' / 'wing_b1.bdf'
-OP2_FILENAME = AERO_PATH / 'wing_b1.op2'
+
+AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
+if 0:
+    BASE_PATH = AERO_PATH / 'flutter_bug'
+    BDF_FILENAME = BASE_PATH / 'nx' / 'wing_b1.bdf'
+    OP2_FILENAME = BASE_PATH / 'wing_b1.op2'
+else:
+    BASE_PATH = AERO_PATH / '2_mode_flutter'
+    BDF_FILENAME = BASE_PATH / '0012_flutter.bdf'
+    OP2_FILENAME = BASE_PATH / '0012_flutter.op2'
+
 #BDF_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.bdf'
 #OP2_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.op2'
 
-class Action:
-    def __init__(self, name: str, text: str, icon: str='',
-                 func=Callable, show: bool=True):
-        self.name = name
-        self.text = text
-        self.ico = icon
-        self.func = func
-        self.show = show
-
-    def __repr__(self) -> str:
-        return f'Action(name={self.name}, text={self.text}'
-
-    @property
-    def icon_path(self) -> str:
-        if self.ico == '':
-            return self.ico
-        return str(ICON_PATH / self.ico)
 
 class FlutterGui(LoggableGui):
     def __init__(self, f06_filename: str=''):
@@ -129,6 +120,10 @@ class FlutterGui(LoggableGui):
         self.damping = -1.0
         self.vf = -1.0
         self.vl = -1.0
+        self.export_to_png = True
+        self.export_to_csv = False
+        self.export_to_f06 = False
+        self.export_to_zona = False
 
         self.setup_widgets()
         self.setup_layout()
@@ -146,54 +141,44 @@ class FlutterGui(LoggableGui):
 
     def setup_toolbar(self):
         #frame = QFrame(self)
-
-        actions_input = {
+        actions_dict = {
             #'file_load': Action(name='file_load', text='Load...', func=self.on_file_load, icon='folder.png'),
             #'file_save': Action(name='file_save', text='Save...', func=self.on_file_save, icon='save.png'),
             #'file_save_as': Action(name='file_save_as', text='Save As...', func=self.on_file_save_as),
-            'file_exit': Action(name='exit', text='Exit...', icon='exit2.jpg', func=self.on_file_exit),
+            'file_exit':       Action(name='exit', text='Exit...', icon='exit2.jpg', func=self.on_file_exit),
+            'export_settings': Action(name='Export Settings', text='Export Settings...', icon='preferences.jpg',
+                                      shortcut='Ctrl+P',func=self.on_export_settings),
         }
-        recent_files = self._build_recent_file_actions(actions_input)
-        actions = build_actions(self, actions_input, load_icon=False)
-        self.qactions = actions
+        actions_input = Actions(ICON_PATH, actions_dict) # , load_icon=False
+        recent_files = actions_input.build_recent_file_qactions(
+            self, self.recent_files, self.set_f06)
+        self.qactions = actions_input.build_qactions(self)
 
         file_actions = [
             #'file_load',
             # 'file_save', 'file_save_as',
             ] + recent_files + [
             'file_exit']
+        view_actions = ['export_settings']
 
         self.menubar = self.menuBar()
         self.file_menu = self.menubar.addMenu('File')
+        self.view_menu = self.menubar.addMenu('View')
         #self.help_menu = self.menubar.addMenu('Help')
 
         help_actions = []
         menus_dict = {
             'File': (self.file_menu, file_actions),
+            'View': (self.view_menu, view_actions),
             #'Help': (self.help_menu, help_actions),
         }
-        build_menus(menus_dict, actions)
+        build_menus(menus_dict, self.qactions)
         #self.file_menu.addAction(actions['file_load'])
         #self.file_menu.addAction(actions['exit'])
 
         #self.toolbar = self.addToolBar('Show toolbar')
         #self.toolbar.setObjectName('main_toolbar')
         self.statusbar = self.statusBar()
-
-    def _build_recent_file_actions(self, actions_input: dict[str, Action]) -> list[str]:
-        recent_files = []
-        nfiles = len(self.recent_files)
-        for ifile in range(self.nrecent_files_max):
-            name = f'file_{ifile}'
-            pth = name
-            func = partial(self.set_f06, ifile)
-            show = (ifile <= nfiles)
-            actions_input[name] = Action(name=name, text=pth, func=func, show=show)
-            recent_files.append(name)
-
-        if len(recent_files):
-            recent_files.append('') # dash line
-        return recent_files
 
     def set_f06(self, ifile: int) -> None:
         f06_filename = self.recent_files[ifile]
@@ -216,6 +201,20 @@ class FlutterGui(LoggableGui):
     #     return wrapper
 
     # @dontcrash
+    def on_export_settings(self):
+        data = {
+            'font_size': self.font_size,
+            'plot_font_size': self.plot_font_size,
+
+            'export_to_png': self.export_to_png,
+            'export_to_csv': self.export_to_csv,
+            'export_to_f06': self.export_to_f06,
+            'export_to_zona': self.export_to_zona,
+        }
+        # TODO: clicking the menu pops a second copy of the window
+        window = FlutterPreferencesDialog(data, win_parent=self)
+        window.show()
+
     def on_file_exit(self):
         if hasattr(self, 'on_file_save') and hasattr(self, 'save_filename'):
             self.on_file_save()
@@ -258,13 +257,9 @@ class FlutterGui(LoggableGui):
         self._set_window_title()
 
     def _apply_settings(self, data: dict[str, Any]) -> None:
-        if 'font_size' in data:
-            self.font_size = data['font_size']
-            self.font_size_edit.setValue(data['font_size'])
-
+        font_size0 = self.font_size
         # radios = [
         #     ('show_points', self.show_points_radio),
-        #     ('show_mode_num', self.show_mode_num_radio),
         # ]
         # for (key, checkbox) in radios:
         #     if key not in data:
@@ -274,7 +269,7 @@ class FlutterGui(LoggableGui):
         #     checkbox.setChecked(val)
 
         spinners = [
-             ('plot_font_size', self.plot_font_size_edit),
+             #('plot_font_size', self.plot_font_size_edit),
         ]
         for (key, spinner) in spinners:
             if key not in data:
@@ -283,15 +278,27 @@ class FlutterGui(LoggableGui):
             assert isinstance(val, int), (key, val)
             spinner.setValue(val)
 
+        type_names = [
+            (int,  ('font_size', 'plot_font_size',)),
+            (bool, ('export_to_png',
+                    'export_to_f06', 'export_to_csv', 'export_to_zona')),
+        ]
+        for value_type, keys in type_names:
+            for key in keys:
+                if key not in data:
+                    print(f'skipping {key!r}')
+                    assert len(key) > 1, keys
+                    continue
+                value = data[key]
+                assert isinstance(value, value_type), (key, value, value_type)
+                assert hasattr(self, key), (key, value)
+                setattr(self, key, value)
+
         checkboxs = [
             ('use_rhoref', self.use_rhoref_checkbox),
             ('show_points', self.show_points_checkbox),
             ('show_mode_number', self.show_mode_number_checkbox),
             ('show_lines', self.show_lines_checkbox),
-            ('export_to_png', self.export_png_checkbox),
-            ('export_to_f06', self.export_f06_checkbox),
-            ('export_to_csv', self.export_csv_checkbox),
-            ('export_to_zona', self.export_zona_checkbox),
         ]
         # attrs aren't stored
         for (key, checkbox) in checkboxs:
@@ -367,6 +374,8 @@ class FlutterGui(LoggableGui):
             if abs_path not in self.recent_files:
                 self.recent_files.append(abs_path)
         self.f06_filename = self.recent_files[0]
+        if self.font_size != font_size0:
+            self.on_set_font_size(self.font_size)
 
     def on_browse_f06(self) -> None:
         """pops a dialgo to select the f06 file"""
@@ -405,14 +414,6 @@ class FlutterGui(LoggableGui):
             self.setWindowTitle(f'Flutter Plot: {self.save_filename}')
 
     def setup_widgets(self) -> None:
-        self.font_size_label = QLabel('Font Size')
-        self.font_size_edit = QSpinBox()
-        self.font_size_edit.setValue(self.font_size)
-
-        self.plot_font_size_label = QLabel('Plot Font Size')
-        self.plot_font_size_edit = QSpinBox()
-        self.plot_font_size_edit.setValue(self.plot_font_size)
-
         self.f06_filename_label = QLabel('F06 Filename:')
         self.f06_filename_edit = QLineEdit()
         self.f06_filename_browse = QPushButton('Browse...')
@@ -440,15 +441,6 @@ class FlutterGui(LoggableGui):
         self.point_spacing_spinner.setValue(0)
         self.point_spacing_spinner.setMinimum(0)
         self.point_spacing_spinner.setMaximum(10)
-
-        self.export_png_checkbox = QCheckBox('Export PNG')
-        self.export_csv_checkbox = QCheckBox('Export CSV')
-        self.export_f06_checkbox = QCheckBox('Export F06')
-        self.export_zona_checkbox = QCheckBox('Export Zona')
-        self.export_png_checkbox.setChecked(True)
-        self.export_csv_checkbox.setChecked(True)
-        self.export_f06_checkbox.setChecked(True)
-        self.export_zona_checkbox.setChecked(True)
 
         self.eas_lim_label = QLabel('EAS Limits:')
         self.eas_lim_edit_min = QFloatEdit('0')
@@ -501,15 +493,15 @@ class FlutterGui(LoggableGui):
 
         #--------------------------------------------
         self.freq_tol_label = QLabel('dFreq Tol (Hz) Dash:')
-        self.freq_tol_edit = QFloatEdit()
+        self.freq_tol_edit = QFloatEdit('-1.0')
         self.freq_tol_edit.setToolTip("Applies a dotted line for modes that don't change by more than some amount")
 
         self.mag_tol_label = QLabel('Magnitude Tol:')
-        self.mag_tol_edit = QFloatEdit()
+        self.mag_tol_edit = QFloatEdit('-1.0')
         self.mag_tol_edit.setToolTip("Filters modal participation factors based on magnitude")
 
         self.freq_tol_remove_label = QLabel('dFreq Tol (Hz) Hide:')
-        self.freq_tol_remove_edit = QFloatEdit()
+        self.freq_tol_remove_edit = QFloatEdit('-1.0')
         self.freq_tol_remove_edit.setToolTip("Completely remove modes that don't change by more than some amount")
         self.freq_tol_remove_label.setVisible(False)
         self.freq_tol_remove_edit.setVisible(False)
@@ -653,7 +645,7 @@ class FlutterGui(LoggableGui):
             elif 'rho' == x_plot_type:
                 show_rho_lim = True
                 show_xlim = False
-        print(f'x_plot_type={x_plot_type} show_damp={show_damp}; show_xlim={show_xlim}')
+        #print(f'x_plot_type={x_plot_type} show_damp={show_damp}; show_xlim={show_xlim}')
         #assert show_xlim is False, show_xlim
 
         show_eigenvalue = show_root_locus or show_modal_participation
@@ -729,7 +721,10 @@ class FlutterGui(LoggableGui):
             (not show_modal_participation, (
                 self.point_spacing_label, self.point_spacing_spinner,
                 self.show_mode_number_checkbox,
-                self.show_lines_checkbox,)),
+                self.show_lines_checkbox,
+                self.log_xscale_checkbox,
+                self.log_yscale1_checkbox, self.log_yscale2_checkbox,
+            ),),
         ]
         for show_hide, items in show_items:
             for item in items:
@@ -740,17 +735,6 @@ class FlutterGui(LoggableGui):
         hbox.addWidget(self.f06_filename_label)
         hbox.addWidget(self.f06_filename_edit)
         hbox.addWidget(self.f06_filename_browse)
-
-        grid0 = QGridLayout()
-        zrow = 0
-        grid0.addWidget(self.font_size_label, zrow, 0)
-        grid0.addWidget(self.font_size_edit, zrow, 1)
-        zrow += 1
-
-        grid0.addWidget(self.plot_font_size_label, zrow, 0)
-        grid0.addWidget(self.plot_font_size_edit, zrow, 1)
-        zrow += 1
-        grid0.setColumnStretch(grid0.columnCount(), 1)
 
         grid = QGridLayout()
         irow = 0
@@ -893,12 +877,6 @@ class FlutterGui(LoggableGui):
         jrow += 1
         grid_check.addWidget(self.show_lines_checkbox, jrow, 0)
         jrow += 1
-        grid_check.addWidget(self.export_png_checkbox, jrow, 0)
-        jrow += 1
-        grid_check.addWidget(self.export_csv_checkbox, jrow, 0)
-        grid_check.addWidget(self.export_f06_checkbox, jrow, 1)
-        grid_check.addWidget(self.export_zona_checkbox, jrow, 2)
-        jrow += 1
 
         ok_cancel_hbox = QHBoxLayout()
         ok_cancel_hbox.addWidget(self.f06_load_button)
@@ -911,7 +889,6 @@ class FlutterGui(LoggableGui):
         grid_modes = self._grid_modes()
 
         vbox = QVBoxLayout()
-        vbox.addLayout(grid0)
         vbox.addLayout(hbox)
         vbox.addLayout(grid)
         vbox.addLayout(hbox_check)
@@ -956,8 +933,6 @@ class FlutterGui(LoggableGui):
         self.plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
         self.subcase_edit.currentIndexChanged.connect(self.on_subcase)
         self.f06_filename_browse.clicked.connect(self.on_browse_f06)
-        self.font_size_edit.valueChanged.connect(self.on_font_size)
-        self.plot_font_size_edit.valueChanged.connect(self.on_plot_font_size)
         #self.modes_widget.itemSelectionChanged.connect(self.on_modes)
         # self.modes_widget.itemClicked.connect(self.on_modes)
         # self.modes_widget.currentRowChanged.connect(self.on_modes)
@@ -985,12 +960,13 @@ class FlutterGui(LoggableGui):
         self.VF_label.setText(f'VF, Flutter ({eas_units}):')
 
     def on_font_size(self) -> None:
-        self.font_size = self.font_size_edit.value()
-        font = make_font(self.font_size, is_bold=False)
-        self.setFont(font)
+        #font_size = self.font_size_edit.value()
+        self.on_set_font_size(self.font_size)
 
-    def on_plot_font_size(self) -> None:
-        self.plot_font_size = self.plot_font_size_edit.value()
+    def on_set_font_size(self, font_size: int) -> None:
+        self.font_size = font_size
+        font = make_font(font_size, is_bold=False)
+        self.setFont(font)
 
     # @dontcrash
     def on_load_f06(self) -> None:
@@ -1163,11 +1139,6 @@ class FlutterGui(LoggableGui):
         plot_type = self.plot_type
         self.log.info(f'plot_type = {plot_type}\n')
 
-        export_to_png = self.export_png_checkbox.isChecked()
-        export_to_csv = self.export_csv_checkbox.isChecked()
-        export_to_f06 = self.export_f06_checkbox.isChecked()
-        export_to_zona = self.export_zona_checkbox.isChecked()
-
         noline = not self.show_lines
         nopoints = not self.show_points
 
@@ -1258,12 +1229,15 @@ class FlutterGui(LoggableGui):
         log_scale_y1 = self.data['log_scale_y1']
         log_scale_y2 = self.data['log_scale_y2']
         print(f'log_scale_x={log_scale_x}; log_scale_y1={log_scale_y1}; log_scale_y2={log_scale_y2}')
-        print(f'export_to_png={export_to_png}')
-        export_to_png = False
+        print(f'export_to_png={self.export_to_png}')
+
+        self.export_to_png = False
+        png_filename0, png_filename = _get_png_filename(
+            base, x_plot_type, plot_type,
+            self.export_to_png)
+        print(f'png_filename={png_filename}')
         try:
             if plot_type == 'root-locus':
-                png_filename0 = base + '_root-locus.png'
-                png_filename = png_filename0 if export_to_png else None
                 axes = fig.add_subplot(111)
                 #self.log.info(f'modes={modes}; eigr_lim={self.eigr_lim}; eigi_lim={self.eigi_lim}; freq_tol={freq_tol}')
                 #self.log.info(f'png_filename={png_filename}')
@@ -1276,8 +1250,6 @@ class FlutterGui(LoggableGui):
                     png_filename=png_filename,
                 )
             elif plot_type == 'modal-participation':
-                png_filename0 = base + '_modal-participation.png'
-                png_filename = png_filename0 if export_to_png else None
                 axes = fig.add_subplot(111)
                 response.plot_modal_participation(
                     fig=fig, axes=axes,
@@ -1293,8 +1265,6 @@ class FlutterGui(LoggableGui):
                 #ylabel1 = r'Structural Damping; $g = 2 \gamma $'
                 #ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
                 #print('plot_kfreq_damping')
-                png_filename0 = base + f'_{x_plot_type}-damp-kfreq.png'
-                png_filename = png_filename0 if export_to_png else None
                 response.plot_kfreq_damping(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     modes=modes, plot_type=x_plot_type,
@@ -1308,8 +1278,6 @@ class FlutterGui(LoggableGui):
             else:
                 assert plot_type in 'x-damp-freq', plot_type
                 #print('plot_vg_vf')
-                png_filename0 = base + f'_{x_plot_type}-damp-freq.png'
-                png_filename = png_filename0 if export_to_png else None
                 #self.log.info(f'png_filename={png_filename!r}')
                 #self.log.info(f'modes={modes!r}')
                 #self.log.info(f'freq_tol={freq_tol!r}')
@@ -1340,13 +1308,13 @@ class FlutterGui(LoggableGui):
         csv_filename = base2 + '.export.csv'
         veas_filename = base2 + '.export.veas'
         f06_filename = base2 + '.export.f06'
-        if export_to_csv:
+        if self.export_to_csv:
             self.log.debug(f'writing {csv_filename}')
             response.export_to_csv(csv_filename, modes=modes)
-        if export_to_zona:
+        if self.export_to_zona:
             self.log.debug(f'writing {veas_filename}')
             response.export_to_veas(veas_filename, modes=modes, xlim=None)
-        if export_to_f06:
+        if self.export_to_f06:
             self.log.debug(f'writing {f06_filename}')
             response.export_to_f06(f06_filename, modes=modes)
         os.chdir(current_directory)
@@ -1499,17 +1467,11 @@ class FlutterGui(LoggableGui):
         units_out = self.units_out_pulldown.currentText()
         output_directory = self.output_directory_edit.text()
 
-        self.plot_font_size = self.plot_font_size_edit.value()
         self.show_lines = self.show_lines_checkbox.isChecked()
         self.show_points = self.show_points_checkbox.isChecked()
         self.show_mode_number = self.show_mode_number_checkbox.isChecked()
         self.point_spacing = self.point_spacing_spinner.value()
         self.use_rhoref = self.use_rhoref_checkbox.isChecked()
-
-        export_to_png = self.export_png_checkbox.isChecked()
-        export_to_csv = self.export_csv_checkbox.isChecked()
-        export_to_f06 = self.export_f06_checkbox.isChecked()
-        export_to_zona = self.export_zona_checkbox.isChecked()
 
         is_passed_modal_partipation = False
         subcases = list(self.responses)
@@ -1537,10 +1499,10 @@ class FlutterGui(LoggableGui):
             'show_mode_number': self.show_mode_number,
             'point_spacing': self.point_spacing,
             'show_lines': self.show_lines,
-            'export_to_png': export_to_png,
-            'export_to_csv': export_to_csv,
-            'export_to_f06': export_to_f06,
-            'export_to_zona': export_to_zona,
+            'export_to_png': self.export_to_png,
+            'export_to_csv': self.export_to_csv,
+            'export_to_f06': self.export_to_f06,
+            'export_to_zona': self.export_to_zona,
 
             'recent_files': self.recent_files,
             'font_size': self.font_size,
@@ -1635,42 +1597,6 @@ def build_menus(menus_dict: dict[str, tuple[QMenu, list[str]]],
             menu.addAction(action)
             #print('menu = ', menu)
             #print('action = ', action)
-
-def build_actions(self, actions_input: dict[str, Action],
-                  load_icon: bool=True) -> dict[str, QAction]:
-    actions = {}
-    tip = ''
-    for name, action_inputi in actions_input.items():
-        assert isinstance(action_inputi, Action), action_inputi
-        func = action_inputi.func
-        icon_path = action_inputi.icon_path
-        txt = action_inputi.text
-        show = action_inputi.show
-
-        if icon_path and load_icon:
-            ico = QIcon(icon_path)
-            #print('icon_path = ', icon_path)
-            assert os.path.exists(icon_path), icon_path
-            action = QAction(txt, self)
-            action.setIcon(ico)
-        else:
-            action = QAction(txt, self)
-
-        if not show:
-            action.setVisible(show)
-        #action.setText(name)
-        #action.setIcon()
-        #action.setCheckable()
-        #action.setShortcut(QKeySequence(name))
-        if tip:
-            #print(f'  found tip for {name}')
-            action.setStatusTip(tip)
-        if func:
-            #print(f'  found func for {name}')
-            action.triggered.connect(func)
-        actions[name] = action
-    return actions
-
 
 def validate_json(data: dict[str, Any],
                   log: SimpleLogger) -> bool:
@@ -1819,6 +1745,27 @@ def main(f06_filename: str='') -> None:  # pragma: no cover
     app.exec_()
 
 
+def _get_png_filename(base: str, x_plot_type: str, plot_type: str,
+                      export_to_png: bool) -> tuple[str, Optional[str]]:
+    assert isinstance(base, str), base
+    assert isinstance(x_plot_type, str), x_plot_type
+    assert isinstance(plot_type, str), plot_type
+    assert isinstance(export_to_png, bool), export_to_png
+    if 'x-' in plot_type:
+        # png_filename0 = base + f'_{x_plot_type}-damp-kfreq.png'
+        # png_filename0 = base + f'_{x_plot_type}-damp-freq.png'
+        plot_type2 = plot_type.replace('x-', x_plot_type + '-')
+        png_filename0 = base + f'_{plot_type2}.png'
+    else:
+        #png_filename0 = base + '_root-locus.png'
+        #png_filename0 = base + '_modal-participation.png'
+        png_filename0 = base + f'_{plot_type}.png'
+    #print(f'png_filename0 = {png_filename0}')
+    png_filename = png_filename0 if export_to_png else None
+    #print(f'png_filename = {png_filename}')
+    return png_filename0, png_filename
+
+
 def _reshape_eigenvectors(eigenvectors=None) -> np.ndarray:
     if eigenvectors is None:
         eigenvectors = np.array([
@@ -1858,9 +1805,16 @@ def _reshape_eigenvectors(eigenvectors=None) -> np.ndarray:
         print(f'ivel={ivel}')
         print(eigenvectors2[:, :, ivel])
         assert np.allclose(eigenvectors2[:, :, ivel], eigenvectors3[:, :, ivel])
+
+    # we want the rows
+    ivel = 0
+    imode = 1
+    mpf = eigenvectors[:, imode, ivel]
+    #eig.scale(mpf)
     #asdf
     return eigenvectors3
 
+
 if __name__ == '__main__':
-    _reshape_eigenvectors()
+    #_reshape_eigenvectors()
     main()

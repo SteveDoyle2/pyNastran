@@ -979,7 +979,7 @@ class RBE3(RigidElement):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         eid = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
         refgrid = integer(card, 3, 'refgrid')

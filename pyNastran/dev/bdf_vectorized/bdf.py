@@ -919,7 +919,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         #system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
         (system_lines, executive_control_lines, case_control_lines,
          bulk_data_lines, bulk_data_ilines,
-         additional_deck_lines) = out
+         additional_deck_lines, additional_deck_ilines) = out
         self._set_pybdf_attributes(obj)
 
 

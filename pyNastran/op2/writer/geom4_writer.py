@@ -8,10 +8,11 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, USET, RBE1, RBE2, RBE3, RBAR
     from pyNastran.op2.op2_geom import OP2Geom
 
-def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: str='nx') -> None:
+def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<',
+                nastran_format: str='nx') -> None:
     if not hasattr(obj, 'rigid_elements'):
         return
     loads_by_type = _build_loads_by_type(obj)
@@ -29,11 +30,12 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
 
         # sets
         #'CSET1',
-        'USET', 'USET1',
+        'USET1',
     }
     # not defined in DMAP
     not_defined_cards = {'RBAR1'}
     supported_cards = {
+        'USET',
         'SUPORT', 'SUPORT1', # suport
 
         # sets
@@ -212,6 +214,10 @@ def write_card(op2_file, op2_ascii, card_type: str, cards, endian: bytes,
     elif card_type == 'SPC':
         nbytes = _write_spc(card_type, cards, ncards, op2_file, op2_ascii, endian,
                             log, nastran_format=nastran_format)
+    elif card_type == 'USET':
+        nbytes = _write_uset(card_type, cards, ncards, op2_file, op2_ascii, endian,
+                             log, nastran_format=nastran_format)
+
     #elif card_type == 'TEMPD':
         #key = (5641, 65, 98)
         #nfields = 6
@@ -304,7 +310,40 @@ def _write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
         raise RuntimeError(f'nastran_format={nastran_format} not msc, nx')
     return nbytes
 
-def _write_rbe1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+def _write_uset(card_type: str, cards: list[USET],
+                ncards: int, op2_file, op2_ascii,
+                endian: bytes, log, nastran_format: str='nx') -> int:
+    """writes a USET"""
+    key = (2010, 20, 193)
+    max_uset_id = max([uset.sid for uset in cards])
+    max_nid = max([max(uset.node_ids) for uset in cards])
+    if max_uset_id > MAX_32_BIT_INT:
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max max_uset_id={max_uset_id}')
+    if max_nid > MAX_32_BIT_INT:
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max USET nid={max_nid}')
+
+    data: list[int | float] = []
+    # USET(2010,20,193)
+    #
+    # 1 SID   I    Set identification number
+    # 2 ID    I    Grid or scalar point identification number
+    # 3 C     I    Component numbers
+    for uset in cards:
+        # (sid, id, component) = out
+        sid = uset.sid
+        node_ids = uset.node_ids
+        for nid, component in zip(node_ids, uset.components):
+            datai = [sid, nid, int(component)]
+        op2_ascii.write('  USET data=%s\n' % str(datai))
+        data += datai
+    nfields = len(data)
+    nbytes = write_header_nvalues(card_type, nfields, key, op2_file, op2_ascii)
+    fmt = endian + b'3i' * (nfields // 3)
+    op2_file.write(pack(fmt, *data))
+    return nbytes
+
+def _write_rbe1(card_type: str, cards: list[RBE1],
+                unused_ncards: int, op2_file, op2_ascii,
                 endian: bytes) -> int:
     """
     RBE1(6801,68,294) - Record 23
@@ -355,7 +394,8 @@ def _write_rbe1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     del fields, fmt
     return nbytes
 
-def _write_rbe2(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+def _write_rbe2(card_type: str, cards: list[RBE2],
+                unused_ncards: int, op2_file, op2_ascii,
                 endian: bytes) -> int:
     """
     RBE2(6901,69,295) - Record 24
@@ -402,7 +442,8 @@ def _write_rbe2(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     op2_file.write(pack(fmt, *fields))
     return nbytes
 
-def _write_rbe3(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+def _write_rbe3(card_type: str, cards: list[RBE3],
+                unused_ncards: int, op2_file, op2_ascii,
                 endian: bytes) -> int:
     """
     1 EID   I Element identification number
@@ -454,7 +495,8 @@ def _write_rbe3(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     del fields, fmt
     return nbytes
 
-def _write_rbar(card_type: str, cards, ncards: int, op2_file, op2_ascii,
+def _write_rbar(card_type: str, cards: list[RBAR],
+                ncards: int, op2_file, op2_ascii,
                 endian: bytes, nastran_format: str='nx') -> int:
     """writes an RBAR"""
     # MSC

@@ -650,8 +650,8 @@ class TestNastranGUI(unittest.TestCase):
         assert out.shape == e1_e2.shape
 
     def test_solid_shell_bar_03(self):
-        bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'buckling_solid_shell_bar.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'buckling_solid_shell_bar.op2')
+        bdf_filename = MODEL_PATH / 'sol_101_elements' / 'buckling_solid_shell_bar.bdf'
+        op2_filename = MODEL_PATH / 'sol_101_elements' / 'buckling_solid_shell_bar.op2'
 
         test = NastranGUI()
         test.stop_on_failure = True
@@ -1418,10 +1418,32 @@ class TestNastranGUI(unittest.TestCase):
         test.settings.nastran_is_properties = False
         test.load_nastran_geometry(op2_filename)
 
+    def test_gui_elements_missing_pcomp_subcase(self):
+        op2_filename = MODEL_PATH / 'bugs' / 'flat_plate_pcomp_test' / 'flat_plate_tip_loads_mixed_2cases.op2'
+        test = NastranGUI()
+        #test.stop_on_failure = False
+        test.load_nastran_geometry(op2_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 0, len(test.result_cases)
+        elif USE_OLD_SIDEBAR_OBJS:
+            assert len(test.result_cases) == 0, len(test.result_cases)
+        else:
+            assert USE_NEW_SIDEBAR_OBJS
+            assert len(test.result_cases) == 58, len(test.result_cases)
+
+        test.load_nastran_results(op2_filename)
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 0, len(test.result_cases)
+        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 116, len(test.result_cases) # old terms
+        else:
+            assert USE_OLD_SIDEBAR_OBJS
+            assert len(test.result_cases) == 0, len(test.result_cases)
+
     def test_gui_elements_03(self):
         """tests a large number of elements and results in SOL 103-modes"""
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
+        op2_filename = MODEL_PATH / 'elements' / 'modes_elements.op2'
         test = NastranGUI()
         #test.stop_on_failure = False
         test.load_nastran_geometry(op2_filename)
@@ -1434,6 +1456,12 @@ class TestNastranGUI(unittest.TestCase):
             assert len(test.result_cases) == 56, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
+
+        #junk_filename = r'C:\NASA\m4\formats\git\pyNastran\models\bwb\old.txt'
+        #junk_filename = r'C:\NASA\m4\formats\git\pyNastran\models\bwb\new.txt'
+        #with open(junk_filename, 'w') as fobj:
+            #for key, value in test.result_cases.items():
+                #fobj.write(f'{key}: {value}\n')
 
         if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 672, len(test.result_cases)

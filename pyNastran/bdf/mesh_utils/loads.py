@@ -652,20 +652,20 @@ def _bar_eq_pload1(model: BDF,
         #print('    1-x1 =', 1-x1)
         #print('    deltaL =', deltaL)
         if load.Type == 'FX' and x1 == x2:
-            force_dir = array([1., 0., 0.])
+            force_dir = np.array([1., 0., 0.])
         elif load.Type == 'FY' and x1 == x2:
-            force_dir = array([0., 1., 0.])
+            force_dir = np.array([0., 1., 0.])
         elif load.Type == 'FZ' and x1 == x2:
-            force_dir = array([0., 0., 1.])
+            force_dir = np.array([0., 0., 1.])
         F += p1 * force_dir
-        M += cross(r - p, F)
+        M += np.cross(r - p, F)
     elif load.Type in ['MX', 'MY', 'MZ']:
         if load.Type == 'MX' and x1 == x2:
-            moment_dir = array([1., 0., 0.])
+            moment_dir = np.array([1., 0., 0.])
         elif load.Type == 'MY' and x1 == x2:
-            moment_dir = array([0., 1., 0.])
+            moment_dir = np.array([0., 1., 0.])
         elif load.Type == 'MZ' and x1 == x2:
-            moment_dir = array([0., 0., 1.])
+            moment_dir = np.array([0., 0., 1.])
         M += p1 * moment_dir
     elif load.Type in ['FXE', 'FYE', 'FZE']:
         r = (1 - x1) * n1 + x1 * n2
@@ -692,7 +692,7 @@ def _bar_eq_pload1(model: BDF,
             msg += 'force_dir = %s\n' % force_dir
             msg += 'load = \n%s' % str(load)
             raise FloatingPointError(msg)
-        M += cross(r - p, F)
+        M += np.cross(r - p, F)
         del force_dir
 
     elif load.Type in ['MXE', 'MYE', 'MZE']:

@@ -735,7 +735,7 @@ class CHBDYP(ThermalElement):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=-1)
         surface_type = string_or_blank(card, 3, 'Type', default='')
@@ -1062,7 +1062,7 @@ class PHBDY(VectorizedBaseCard):
             a comment for the card
 
         """
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         pid = integer(card, 1, 'pid')
         af = fdouble_or_blank(card, 2, 'af', default=np.nan)
         d1 = fdouble_or_blank(card, 3, 'd1', default=np.nan)
@@ -1325,7 +1325,7 @@ class PCONV(VectorizedBaseCard):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         pconv_id = integer(card, 1, 'pconv_id')
         mid = integer_or_blank(card, 2, 'mid')
         form = integer_or_blank(card, 3, 'form', default=0)
@@ -1574,7 +1574,7 @@ class CONVM(VectorizedBaseCard):
             a comment for the card
 
         """
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         eid = integer(card, 1, 'eid')
         pconvm = integer(card, 2, 'pconvm')
         film_node = integer_or_blank(card, 3, 'film_node', default=0)
@@ -1747,8 +1747,8 @@ class PCONVM(VectorizedBaseCard):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble = force_double if self.model.is_lax_parser else double
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble = double if self.model.is_strict_card_parser else force_double
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         pconvm_id = integer(card, 1, 'pconid')
         mid = integer(card, 2, 'mid')
         form = integer_or_blank(card, 3, 'form', default=0)

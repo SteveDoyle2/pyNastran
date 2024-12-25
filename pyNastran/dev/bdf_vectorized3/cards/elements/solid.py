@@ -1586,7 +1586,7 @@ class PCOMPLS(Property):
         comment : str; default=''
             a comment for the card
         """
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         pid = integer(card, 1, 'pid')
         direct = integer_or_blank(card, 2, 'direct', default=1)
         cordm = integer_or_blank(card, 3, 'cordm', default=0)

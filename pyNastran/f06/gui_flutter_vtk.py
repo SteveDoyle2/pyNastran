@@ -41,6 +41,7 @@ class VtkWindow(QMainWindow):
                  bdf_filename: str, op2_filename: str=''):
         super().__init__()
         self.gui = parent
+        self.log = parent.log
         self.run_vtk = True
         self.eid_maps = {}
         self.nid_maps = {}
@@ -122,9 +123,36 @@ class VtkWindow(QMainWindow):
         if len(analysis.model.eigenvectors) == 0:
             self.gui.mode2_pulldown.clear()
             return
-        print('analysis.model.eigenvectors =', analysis.model.eigenvectors)
-        for key, case in analysis.model.eigenvectors.items():
+        eigs = analysis.model.eigenvectors
+        self.log.info(f'analysis.model.eigenvectors = {eigs}')
+
+        #(1, 2, 1, 0, 0, '', '')
+        #(1, 9, 1, 0, 0, '', '')
+        #(subcase, flag, 1, 0, 0, '', '')
+        subcase_dict = {}
+        for key, case in eigs.items():
+            subcase = key[0]
+            flag = key[1]
+            if subcase not in subcase_dict:
+                subcase_dict[subcase] = {}
+            if flag not in subcase_dict[subcase]:
+                subcase_dict[subcase][flag] = (key, case)
             print(key)
+
+        subcase_dict2 = {}
+        for subcase, flag_dict in subcase_dict.items():
+            if 2 in flag_dict and 9 in flag_dict:
+                subcase_dict2[subcase] = flag_dict
+            else:
+                keys = list(flag_dict.keys())
+                self.log.info(f'skipping flag_dict because 2/9 not in keys; keys={keys}')
+        print(subcase_dict2)
+        subcase = 1
+        subcases = list(self.gui.responses)
+        self.log.info(f'subcases = {subcases}')
+        response = self.gui.responses[subcase]
+        eigenvector_mpfs = response.eigenvectors
+        self.log.info(f'eigenvector_mpfs = {eigenvector_mpfs}')
         asdf
 
     def set_style_as_trackball(self, vtk_interactor) -> None:

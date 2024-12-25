@@ -882,7 +882,7 @@ class PLOAD4(Load):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
         p1 = fdouble_or_blank(card, 3, 'p1', default=0.0)

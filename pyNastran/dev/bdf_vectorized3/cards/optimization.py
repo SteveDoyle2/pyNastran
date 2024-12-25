@@ -241,8 +241,8 @@ class DESVAR(VectorizedBaseCard):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble = force_double if self.model.is_lax_parser else double
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble = double if self.model.is_strict_card_parser else force_double
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
 
         desvar_id = integer(card, 1, 'desvar_id')
         label = string(card, 2, 'label')
@@ -449,8 +449,8 @@ class DDVAL(VectorizedBaseCard):
             a comment for the card
 
         """
-        #fdouble = force_double if self.model.is_lax_parser else double
-        #fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        #fdouble = double if self.model.is_strict_card_parser else force_double
+        #fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         oid = integer(card, 1, 'oid')
         n = 1
         ddvals = []
@@ -473,7 +473,7 @@ class DDVAL(VectorizedBaseCard):
             ddval_idi, values, comment = card
             ddval_id[icard] = ddval_idi
 
-            if not self.model.is_lax_parser:
+            if self.model.is_strict_card_parser:
                 for ddval in values:
                     assert not isinstance(ddval, integer_types), f'DDVALs id={ddval_idi} have integer fields={values}'
             values2 = expand_thru_by(values, require_int=False)
@@ -1004,7 +1004,7 @@ class DRESP1(VectorizedBaseCard):
             a comment for the card
 
         """
-        fdouble = force_double if self.model.is_lax_parser else double
+        fdouble = double if self.model.is_strict_card_parser else force_double
         dresp_id = integer(card, 1, 'dresp_id')
         label = string(card, 2, 'label')
         #label = loose_string(card, 2, 'label')

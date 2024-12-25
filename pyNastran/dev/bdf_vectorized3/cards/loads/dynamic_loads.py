@@ -2772,7 +2772,7 @@ class RANDPS(VectorizedBaseCard):
         sid = integer(card, 1, 'sid')
         j = integer(card, 2, 'j')
         k = integer(card, 3, 'k')
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         x = fdouble_or_blank(card, 4, 'x', default=0.0)
         y = fdouble_or_blank(card, 5, 'y', default=0.0)
         tabrnd1_id = integer_or_blank(card, 6, 'tid', default=0)

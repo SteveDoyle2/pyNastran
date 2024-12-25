@@ -1,0 +1,236 @@
+$pyNastran: version=msc
+$pyNastran: punch=False
+$pyNastran: encoding=utf-8
+$pyNastran: nnodes=50
+$pyNastran: nelements=36
+$EXECUTIVE CONTROL DECK
+$*
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* FILE MANAGEMENT
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+INIT MASTER(S)
+ASSIGN MASTER='junk.MASTER',DELETE, TEMP
+ASSIGN DBALL='junk.DBALL',DELETE, TEMP
+ASSIGN SCR   ='scratch.SCR', DELETE
+ASSIGN SCRA  ='scratch.SCRA', DELETE
+INIT DBALL logical=(DBALL(100GB))
+INIT SCRATCH, logical=(SCR(100GB)), SCR300=(SCRA(100GB))
+NASTRAN BUFFSIZE=     65537
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* EXECUTIVE CONTROL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+ID,NASTRAN,Flat_plate tip loads
+SOL 101
+CEND
+$CASE CONTROL DECK
+DISPLACEMENT(PRINT,PLOT) = ALL
+ECHO = UNSORT
+SPC = 1
+SPCFORCES = ALL
+TITLE = Load cases
+SUBCASE 1
+    LABEL = tip center load
+    LOAD = 5
+    STRESS(PRINT,PLOT) = ALL
+SUBCASE 2
+    LABEL = tip LEish load
+    LOAD = 6
+    STRESS(PRINT,PLOT) = ALL
+BEGIN BULK
+$PARAMS
+PARAM     GRDPNT       0
+PARAM      K6ROT    100.
+PARAM   MAXRATIO    1.+7
+PARAM       POST      -2
+PARAM    UNITSYS  LBF-IN
+PARAM     WTMASS .002588
+$NODES
+$Nodes
+GRID           1              0.      0.      0.
+GRID           2              0.10.66667      0.
+GRID           3              0.21.33333      0.
+GRID           4              0.     32.      0.
+GRID           5              0.42.66667      0.
+GRID           6              0.53.33333      0.
+GRID           7              0.     64.      0.
+GRID           8              0.74.66667      0.
+GRID           9              0.85.33333      0.
+GRID          10              0.     96.      0.
+GRID          11              9.      0.      0.
+GRID          12              9.10.66667      0.
+GRID          13              9.21.33333      0.
+GRID          14              9.     32.      0.
+GRID          15              9.42.66667      0.
+GRID          16              9.53.33333      0.
+GRID          17              9.     64.      0.
+GRID          18              9.74.66667      0.
+GRID          19              9.85.33333      0.
+GRID          20              9.     96.      0.
+GRID          21             18.      0.      0.
+GRID          22             18.10.66667      0.
+GRID          23             18.21.33333      0.
+GRID          24             18.     32.      0.
+GRID          25             18.42.66667      0.
+GRID          26             18.53.33333      0.
+GRID          27             18.     64.      0.
+GRID          28             18.74.66667      0.
+GRID          29             18.85.33333      0.
+GRID          30             18.     96.      0.
+GRID          31             27.      0.      0.
+GRID          32             27.10.66667      0.
+GRID          33             27.21.33333      0.
+GRID          34             27.     32.      0.
+GRID          35             27.42.66667      0.
+GRID          36             27.53.33333      0.
+GRID          37             27.     64.      0.
+GRID          38             27.74.66667      0.
+GRID          39             27.85.33333      0.
+GRID          40             27.     96.      0.
+GRID          41             36.      0.      0.
+GRID          42             36.10.66667      0.
+GRID          43             36.21.33333      0.
+GRID          44             36.     32.      0.
+GRID          45             36.42.66667      0.
+GRID          46             36.53.33333      0.
+GRID          47             36.     64.      0.
+GRID          48             36.74.66667      0.
+GRID          49             36.85.33333      0.
+GRID          50             36.     96.      0.
+$ELEMENTS
+$Upper skin panels
+CQUAD4      1001    1001       1       2      12      11
+CQUAD4      1002    1002       2       3      13      12
+CQUAD4      1003    1003       3       4      14      13
+CQUAD4      1004    1004       4       5      15      14
+CQUAD4      1005    1005       5       6      16      15
+CQUAD4      1006    1006       6       7      17      16
+CQUAD4      1007    1007       7       8      18      17
+CQUAD4      1008    1008       8       9      19      18
+CQUAD4      1009    1009       9      10      20      19
+CQUAD4      1010    1010      11      12      22      21
+CQUAD4      1011    1011      12      13      23      22
+CQUAD4      1012    1012      13      14      24      23
+CQUAD4      1013    1013      14      15      25      24
+CQUAD4      1014    1014      15      16      26      25
+CQUAD4      1015    1015      16      17      27      26
+CQUAD4      1016    1016      17      18      28      27
+CQUAD4      1017    1017      18      19      29      28
+CQUAD4      1018    1018      19      20      30      29
+CQUAD4      1019    1019      21      22      32      31
+CQUAD4      1020    1020      22      23      33      32
+CQUAD4      1021    1021      23      24      34      33
+CQUAD4      1022    1022      24      25      35      34
+CQUAD4      1023    1023      25      26      36      35
+CQUAD4      1024    1024      26      27      37      36
+CQUAD4      1025    1025      27      28      38      37
+CQUAD4      1026    1026      28      29      39      38
+CQUAD4      1027    1027      29      30      40      39
+CQUAD4      1028    1028      31      32      42      41
+CQUAD4      1029    1029      32      33      43      42
+CQUAD4      1030    1030      33      34      44      43
+CQUAD4      1031    1031      34      35      45      44
+CQUAD4      1032    1032      35      36      46      45
+CQUAD4      1033    1033      36      37      47      46
+CQUAD4      1034    1034      37      38      48      47
+CQUAD4      1035    1035      38      39      49      48
+CQUAD4      1036    1036      39      40      50      49
+$PROPERTIES
+PCOMP       1001                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1002                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1003                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1004                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1005                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1006                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1007                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1008                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1009                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1010                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1011                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1012                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1013                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1014                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1015                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1016                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1017                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PCOMP       1018                 450000.    HILL
+             102     .25      0.             102     .25     90.
+             102     .25     45.             102     .25    -45.
+PSHELL      1019     101      1.     101
+PSHELL      1020     101      1.     101
+PSHELL      1021     101      1.     101
+PSHELL      1022     101      1.     101
+PSHELL      1023     101      1.     101
+PSHELL      1024     101      1.     101
+PSHELL      1025     101      1.     101
+PSHELL      1026     101      1.     101
+PSHELL      1027     101      1.     101
+PSHELL      1028     101      1.     101
+PSHELL      1029     101      1.     101
+PSHELL      1030     101      1.     101
+PSHELL      1031     101      1.     101
+PSHELL      1032     101      1.     101
+PSHELL      1033     101      1.     101
+PSHELL      1034     101      1.     101
+PSHELL      1035     101      1.     101
+PSHELL      1036     101      1.     101
+$MATERIALS
+$material props for sheets/plates
+MAT1         101  1.07+74000000.     .33      .1
+          47000.  39000.  25850.
+$material prop for laminate plates
+MAT8         102   1.5+76000000.      .38000000.                   .0503
+                                  6.07+7         400000.         450000.
+$LOADS
+$tip center load
+FORCE          5      30         100000.      0.      0.     -1.
+$LE tip load
+FORCE          5      10          50000.      0.      0.     -1.
+$TE tip load
+FORCE          5      50          50000.      0.      0.     -1.
+$LE tip load
+FORCE          6      10         100000.      0.      0.     -1.
+$SPCs
+SPC1           1  123456       1      11      21      31      41
+ENDDATA

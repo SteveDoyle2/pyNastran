@@ -399,8 +399,8 @@ class Load0(Load):
         self.n += 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
-        fdouble = force_double if self.model.is_lax_parser else double
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
+        fdouble = double if self.model.is_strict_card_parser else force_double
 
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
@@ -1099,7 +1099,7 @@ class GRAV(Load):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
 
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
@@ -1599,7 +1599,7 @@ class Combination(VectorizedBaseCard):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble = force_double if self.model.is_lax_parser else double
+        fdouble = double if self.model.is_strict_card_parser else force_double
         sid = integer(card, 1, 'sid')
         scale = fdouble(card, 2, 'scale')
         scale_factors = []
@@ -2221,8 +2221,8 @@ class TEMPD(Load):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
-        #fdouble_or_blank = lax_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
+        #fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else lax_double_or_blank
         #sid = force_integer(card, 1, 'sid')
         #sid = integer(card, 1, 'sid')
 

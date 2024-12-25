@@ -110,8 +110,8 @@ class MAT1(Material):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        idouble_or_blank = integer_double_or_blank if self.model.is_lax_parser else double_or_blank
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        idouble_or_blank =  double_or_blank if self.model.is_strict_card_parser else integer_double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
 
         mid = integer(card, 1, 'mid')
         E = idouble_or_blank(card, 2, 'E')
@@ -2032,7 +2032,7 @@ class MAT10(Material):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         mid = integer(card, 1, 'mid')
         bulk = fdouble_or_blank(card, 2, 'bulk', default=None)
         rho = fdouble_or_blank(card, 3, 'rho', default=0.0)
@@ -2649,7 +2649,7 @@ class MATORT(Material):
         #|        |  IYLD  | IHARD |   SY  |     |  Y1  |  Y2  |  Y3  | N/A |
         #|        |  Yshr1 | Yshr2 | Yshr3 | N/A | N/A  |  N/A |  N/A | N/A |
         #|        | OPTION |  FILE |   X1  |  Y1 |  Z1  |  X2  |  Y2  |  Z2 |
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         mid = integer(card, 1, 'mid')
         E1 = double_or_blank(card, 2, 'E1')
         E2 = double_or_blank(card, 3, 'E2')

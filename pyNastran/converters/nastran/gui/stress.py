@@ -47,7 +47,10 @@ def nocrash_log(func):
             icase = func(cases, *args, **kwargs)
         except NotImplementedError:  # pragma: no cover
             raise
+        except (AttributeError, TypeError) as e:  # pragma: no cover
+            raise
         except Exception as e:
+            raise
             #print('dont crash...')
             traceback.print_exc(file=sys.stdout)
             log.error(str(e))
@@ -873,44 +876,57 @@ def get_plate_stress_strains2(cases: CasesDict,
 
 def _stack_composite_results(model: OP2, log: SimpleLogger,
                              is_stress: bool,
-                             key=None):
-
+                             key: tuple):
     if is_stress:
         stress = model.op2_results.stress
         case_map = {
             # element_name
-            'CTRIA3' : stress.ctria3_composite_stress,
-            'CTRIA6' : stress.ctria6_composite_stress,
-            'CTRIAR' : stress.ctriar_composite_stress,
-            'CQUAD4' : stress.cquad4_composite_stress,
-            'CQUAD8' : stress.cquad8_composite_stress,
-            'CQUADR' : stress.cquadr_composite_stress,
+            'CTRIA3': stress.ctria3_composite_stress,
+            'CTRIA6': stress.ctria6_composite_stress,
+            'CTRIAR': stress.ctriar_composite_stress,
+            'CQUAD4': stress.cquad4_composite_stress,
+            'CQUAD8': stress.cquad8_composite_stress,
+            'CQUADR': stress.cquadr_composite_stress,
         }
     else:
         strain = model.op2_results.strain
         case_map = {
             # element_name
-            'CTRIA3' : strain.ctria3_composite_strain,
-            'CTRIA6' : strain.ctria6_composite_strain,
-            'CTRIAR' : strain.ctriar_composite_strain,
-            'CQUAD4' : strain.cquad4_composite_strain,
-            'CQUAD8' : strain.cquad8_composite_strain,
-            'CQUADR' : strain.cquadr_composite_strain,
+            'CTRIA3': strain.ctria3_composite_strain,
+            'CTRIA6': strain.ctria6_composite_strain,
+            'CTRIAR': strain.ctriar_composite_strain,
+            'CQUAD4': strain.cquad4_composite_strain,
+            'CQUAD8': strain.cquad8_composite_strain,
+            'CQUADR': strain.cquadr_composite_strain,
         }
 
     keys_map = {}
     key_cases = defaultdict(list)
+    assert key is not None, key
+    #use_old_composite_method = True
+    use_old_composite_method = False
+    use_new_composite_method = not use_old_composite_method
+
+    # find all the cases (elements) associated with this key
+    # there will be at most 1 CTRIA3, CQUAD4, ... case
     for res_cases in case_map.values():
         for case_key, case in res_cases.items():
-            if key is None:
-                continue
-
             if case.table_name_str in {'OESCP', 'OESTRCP'}:
                 log.warning(f'skipping strength ratio {case.table_name_str}')
                 continue
-            key_cases[key].append(case)
-            if case_key != key or key in keys_map:
+
+            if use_new_composite_method and case_key[0] != key[0]:
+                # (subcase_id, static/mode/transient, 1/2, 0, 0, '', '');
+                #(1, 2, 1, 0, 0, '', '');
+                #(1, 2, 2, 0, 0, '', '')
+                log.warning(f'***case_key={case_key}; key={key}')
                 continue
+            key_cases[key].append(case)
+            if use_new_composite_method and key in keys_map:
+                continue
+            if use_old_composite_method and (case_key != key or key in keys_map):
+                continue
+            print(f'key={key} case_key={case_key}')
             keys_map[key] = KeyMap(case.subtitle, case.label,
                                    case.superelement_adaptivity_index,
                                    case.pval_step)
@@ -938,6 +954,7 @@ def _stack_composite_results(model: OP2, log: SimpleLogger,
             element_layers = [case.element_layer]
             datas = [case.data]
             eids_list = [np.unique(case.element_layer[:, 0])]
+            element_names = [case.element_name]
             for casei in cases:
                 #itotal0 += case.ntotal
                 #itotal1 += case.ntotal
@@ -945,6 +962,7 @@ def _stack_composite_results(model: OP2, log: SimpleLogger,
                 element_layers.append(casei.element_layer)
                 datas.append(casei.data)
                 eids_list.append(eidsi)
+                element_names.append(case.element_name)
                 #element_ids.append(case.element_id)
                 #data2[itime, itotal0:itotal1, :] = casei.data[itime, :, :]
 
@@ -952,10 +970,16 @@ def _stack_composite_results(model: OP2, log: SimpleLogger,
             ueids = np.unique(eids)
             if len(eids) != len(ueids):  # pragma: no cover
                 msg = f'eids = {eids}\n'
+                msg += str(case)
                 for casei_ in cases_:
                     msg += str(casei_)
                     msg += f'  eids = {np.unique(casei_.element_layer[:, 0])}\n'
+                    msg += f'  eids* = {eids}\n'
+                    msg += f'  ueids = {ueids}\n'
                     msg += f'  element_layer:\n{casei_.element_layer}\n\n'
+                    for i, eidsi in enumerate(eids_list):
+                        msg += f'  eids_list[{i}] = {eidsi}\n'
+                    msg += f'  element_names = {element_names}'
                     log.error(msg)
                     case_map = {}
                     keys_map2 = {}
@@ -985,10 +1009,6 @@ def _stack_composite_results(model: OP2, log: SimpleLogger,
             #case.data = data2
         cases2[key] = case
 
-    #keys = keys_map.keys()
-    #for key in keys:
-        #key_cases =
-        #for etype, case in case_map.items():
     return case_map, keys_map, cases2
 
 def get_composite_sort(element_layers: list[np.ndarray]):
@@ -1006,7 +1026,9 @@ def get_composite_sort(element_layers: list[np.ndarray]):
     return element_layer_stacked, iisort
 
 @nocrash_log
-def get_composite_plate_stress_strains2(cases: CasesDict,
+def get_composite_plate_stress_strains2(#log: SimpleLogger,
+                                        #stop_on_failure: bool,
+                                        cases: CasesDict,
                                         eids: np.ndarray,
                                         model: OP2,
                                         times: np.ndarray,
@@ -1020,7 +1042,8 @@ def get_composite_plate_stress_strains2(cases: CasesDict,
     if not use_new_sidebar_objects:  # pragma: no cover
         return icase
 
-    case_map, keys_map2, cases2 = _stack_composite_results(model, log, is_stress, key=key)
+    case_map, keys_map2, cases2 = _stack_composite_results(
+        model, log, is_stress, key=key)
     subcase_id = key[0]
 
     if not cases2:

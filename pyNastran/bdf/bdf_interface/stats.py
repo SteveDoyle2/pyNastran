@@ -134,7 +134,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
     skip_attrs = [
         'model_groups',
         'active_filename', 'active_filenames', 'debug', # 'log',
-        'reject_lines', 'is_lax_parser',
+        'reject_lines', 'is_strict_card_parser',
         'is_nx', 'is_msc', 'is_optistruct', 'is_zona', 'is_mystran', 'is_nasa95',
         'is_bdf_vectorized', 'dumplines', 'values_to_skip',
         'system_command_lines', 'executive_control_lines', 'case_control_lines',

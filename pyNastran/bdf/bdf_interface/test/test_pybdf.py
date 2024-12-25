@@ -200,7 +200,7 @@ class TestPyBDF(unittest.TestCase):
 
         system_lines, executive_control_lines, case_control_lines, \
             bulk_data_lines, bulk_data_ilines, \
-            additional_deck_lines = decks
+            additional_deck_lines, additional_deck_ilines = decks
 
         assert len(system_lines) == 0, system_lines
         assert len(executive_control_lines) == 0, executive_control_lines
@@ -236,7 +236,7 @@ class TestPyBDF(unittest.TestCase):
 
         system_lines, executive_control_lines, case_control_lines, \
             bulk_data_lines, bulk_data_ilines, \
-            additional_deck_lines = decks
+            additional_deck_lines, additional_deck_ilines = decks
 
         assert len(system_lines) == 0, system_lines
         assert len(executive_control_lines) == 0, executive_control_lines
@@ -261,7 +261,7 @@ class TestPyBDF(unittest.TestCase):
 
         system_lines, executive_control_lines, case_control_lines, \
             bulk_data_lines, bulk_data_ilines, \
-            additional_deck_lines = decks
+            additional_deck_lines, additional_deck_ilines = decks
 
         assert len(system_lines) == 0, system_lines
         assert len(executive_control_lines) == 1, executive_control_lines
@@ -355,7 +355,7 @@ class TestPyBDF(unittest.TestCase):
         out = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)
         (system_lines, executive_control_lines, case_control_lines,
          bulk_data_lines, bulk_data_ilines,
-         additional_deck_lines) = out
+         additional_deck_lines, additional_deck_ilines) = out
 
         assert len(system_lines) == 0, system_lines
         assert len(executive_control_lines) == 2, executive_control_lines
@@ -366,7 +366,7 @@ class TestPyBDF(unittest.TestCase):
         decks = lines_to_decks2(main_lines, iline, punch, log)
         system_lines, executive_control_lines, case_control_lines, \
             bulk_data_lines, bulk_data_ilines, \
-            additional_deck_lines = decks
+            additional_deck_lines, additional_deck_ilines = decks
 
         assert len(system_lines) == 0, system_lines
         assert len(executive_control_lines) == 1, executive_control_lines
@@ -399,7 +399,7 @@ class TestPyBDF(unittest.TestCase):
         decks = lines_to_decks2(main_lines, iline, punch, log)
         system_lines, executive_control_lines, case_control_lines, \
             bulk_data_lines, bulk_data_ilines, \
-            additional_deck_lines = decks
+            additional_deck_lines, additional_deck_ilines = decks
         assert len(system_lines) == 0, system_lines
         assert len(executive_control_lines) == 1, executive_control_lines
         assert len(case_control_lines) == 2, case_control_lines
@@ -414,8 +414,9 @@ class TestPyBDF(unittest.TestCase):
         dumplines = False
         encoding = None
         #consider_superelements = True
-        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
-                           consider_superelements=True, log=None, debug=False)
+        pybdf = BDFInputPy(read_includes, dumplines, encoding,
+                           nastran_format='msc', consider_superelements=True,
+                           log=None, debug=False)
         main_lines = [
             # system
             'SOL 101',       # executive
@@ -439,24 +440,44 @@ class TestPyBDF(unittest.TestCase):
         out = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)
         (system_lines, executive_control_lines, case_control_lines,
          bulk_data_lines, bulk_data_ilines,
-         additional_deck_lines) = out
+         additional_deck_lines, additional_deck_ilines) = out
 
         assert len(system_lines) == 0, system_lines
-        assert len(executive_control_lines) == 2, executive_control_lines
-        assert len(case_control_lines) == 3, case_control_lines
-        assert len(bulk_data_lines) == 2, bulk_data_lines
-        assert len(additional_deck_lines) == 2, additional_deck_lines
-        ntrash_lines = 2
-        assert len(additional_deck_lines[('SUPER', 1, '')]) == 1 + ntrash_lines, additional_deck_lines[('SUPER', 1, '')]
-        assert len(additional_deck_lines[('SUPER', 2, '')]) == 3 + ntrash_lines, additional_deck_lines[('SUPER', 2, '')]
+        if pybdf.use_new_parser:
+            assert executive_control_lines == ['SOL 101'], executive_control_lines
+            assert case_control_lines == ['SUBCASE 1', '  LOAD = 1'], case_control_lines
+            assert bulk_data_lines == ['GRID,1', 'ENDDATA'], case_control_lines
+            assert len(additional_deck_ilines) == 2, additional_deck_ilines
 
+            #deck_keys = list(additional_deck_lines)
+            #assert deck_keys == ['SUPER=1', 'SUPER=2'], deck_keys
+            #assert len(additional_deck_lines) == 2, additional_deck_lines
+        else:  # pragma: no cover
+            assert len(executive_control_lines) == 2, executive_control_lines
+            assert len(case_control_lines) == 3, case_control_lines
+            assert len(bulk_data_lines) == 2, bulk_data_lines
+            assert len(additional_deck_ilines) == 0, additional_deck_ilines
+
+        deck_keys = list(additional_deck_lines)
+        assert deck_keys == [('SUPER', 1, ''), ('SUPER', 2, '')], deck_keys
+        #assert deck_keys == ['SUPER=1', 'SUPER=2'], deck_keys
+        assert len(additional_deck_lines) == 2, additional_deck_lines
+
+        superlines1 = additional_deck_lines[('SUPER', 1, '')]  # ['CONM2,1']
+        superlines2 = additional_deck_lines[('SUPER', 2, '')]
+        if pybdf.use_new_parser:
+            assert superlines1 == ['CONM2,1'], superlines1
+            assert superlines2 == ['CONM2,2', 'GRID,1', 'GRID,2'], superlines2
+        else:
+            assert superlines1 == ['begin super=1', 'begin super=1', 'CONM2,1'], superlines1
+            assert superlines2 == ['begin super=2', 'begin super=2', 'CONM2,2', 'GRID,1', 'GRID,2'], superlines2
         #-----------------------------------------------
         iline = None
         punch = None
         decks = lines_to_decks2(main_lines, iline, punch, log)
         system_lines, executive_control_lines, case_control_lines, \
             bulk_data_lines, bulk_data_ilines, \
-            additional_deck_lines = decks
+            additional_deck_lines, additional_deck_ilines = decks
         assert len(system_lines) == 0, system_lines
         assert len(executive_control_lines) == 1, executive_control_lines
         assert len(case_control_lines) == 2, case_control_lines
@@ -491,7 +512,7 @@ class TestPyBDF(unittest.TestCase):
         decks = lines_to_decks2(main_lines, iline, punch, log)
         system_lines, executive_control_lines, case_control_lines, \
             bulk_data_lines, bulk_data_ilines, \
-            additional_deck_lines = decks
+            additional_deck_lines, additional_deck_ilines = decks
         assert len(system_lines) == 0, system_lines
         assert len(executive_control_lines) == 1, executive_control_lines
         assert len(case_control_lines) == 2, case_control_lines

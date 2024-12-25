@@ -176,7 +176,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class BDFAttributes:
     def __init__(self):
-        # old and busted
+        # old                       -> False
         # fancy superelments/massid -> True
         self.use_new_deck_parser = True
 

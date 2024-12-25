@@ -822,7 +822,7 @@ class FlutterResponse:
             imagi = imags[i, imode]
             text = str(mode)
             axes.scatter(reali, imagi, label=f'Mode {mode}', alpha=0.7)
-            print(f'{i}: {reali}, {imagi}, {text!r}')
+            #print(f'{i}: {reali}, {imagi}, {text!r}')
             axes.text(reali, imagi, text, ha='center', va='center',
                       fontsize=self.font_size)
 
@@ -860,15 +860,15 @@ class FlutterResponse:
          - root-locus
         """
         self.fix()
-        print('plot_xy')
+        #print('plot_xy')
         legend_kwargs = get_legend_kwargs(self.font_size, legend_kwargs)
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
         nmodes = len(modes)
         ncol = _update_ncol(nmodes, ncol)
-        print(f'plot_xy: modes  = {modes}')
-        print(f'plot_xy: imodes = {imodes}')
-        print(f'plot_xy: ncol   = {ncol}')
+        #print(f'plot_xy: modes  = {modes}')
+        #print(f'plot_xy: imodes = {imodes}')
+        #print(f'plot_xy: ncol   = {ncol}')
 
         if fig is None:
             fig = plt.figure()
@@ -878,25 +878,25 @@ class FlutterResponse:
         linestyle = 'None' if self.noline else '-'
 
         jcolor = 0
-        print('starting plot part; jcolor=0')
+        #print('starting plot part; jcolor=0')
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[jcolor]
             color = colors[jcolor]
             freq = self.results[imode, :, self.ifreq].ravel()
             xs = self.results[imode, :, ix].ravel()
             ys = self.results[imode, :, iy].ravel()
-            print('freq, xs, ys')
+            #print('freq, xs, ys')
             jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
                 freq, freq_tol=freq_tol,
                 show_mode_number=self.show_mode_number)
-            print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
+            #print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
 
-            print(f'freq={freq}')
+            #print(f'freq={freq}')
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
             label = _get_mode_freq_label(mode, freq[0])
-            print(f'iplot={iplot}')
+            #print(f'iplot={iplot}')
             assert len(xs[iplot]) > 0
             line = axes.plot(xs[iplot], ys[iplot],
                              color=color2, marker=symbol2, label=label,
@@ -908,7 +908,7 @@ class FlutterResponse:
                 #axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=symbol[0], marker=symbol[1])
                 axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=color, marker=symbol2)
 
-        print(f'setting grid...')
+        #print(f'setting grid...')
         axes.grid(True)
         #axes.set_xlabel(xlabel  + '; _plot_x_y', fontsize=self.font_size)
         axes.set_xlabel(xlabel, fontsize=self.font_size)
@@ -920,7 +920,7 @@ class FlutterResponse:
         title = f'Subcase {self.subcase:d}'
         if png_filename:
             title += '\n%s' % png_filename
-        print(f'title={title!r}')
+        #print(f'title={title!r}')
         fig.suptitle(title)
         if legend:
             # bbox_to_anchor=(1.125, 1.), ncol=ncol,
@@ -2221,7 +2221,7 @@ def _show_save_clear_close(fig: plt.Figure,
                            png_filename: Optional[str],
                            clear: bool,
                            close: bool) -> None:
-    print('_show_save_clear_close')
+    #print('_show_save_clear_close')
     if show:
         plt.show()
     if png_filename:

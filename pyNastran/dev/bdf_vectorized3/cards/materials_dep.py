@@ -344,7 +344,7 @@ class MATS1(Material):
             #limit1 = blank(card, 7, 'yf')
             #limit2 = blank(card, 8, 'yf')
         else:
-            fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+            fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
             hardening_slope = fdouble_or_blank(card, 4, 'H', default=0.0)
             yf = integer_or_blank(card, 5, 'yf', default=1)
             hr = integer_or_blank(card, 6, 'hr', default=1)

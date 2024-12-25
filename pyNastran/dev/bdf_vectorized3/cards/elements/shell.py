@@ -547,7 +547,7 @@ class CTRIA3(ShellElement):
             integer(card, 5, 'n3'),
         ]
         if len(card) > 6:
-            fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+            fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
             theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', default=0.0)
             zoffset = fdouble_or_blank(card, 7, 'zoffset', default=0.0)
             blank(card, 8, 'blank')
@@ -880,7 +880,7 @@ class CTRIAR(ShellElement):
             integer(card, 5, 'n3'),
         ]
 
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', default=0.0)
         zoffset = fdouble_or_blank(card, 7, 'zoffset', default=0.0)
         blank(card, 8, 'blank')
@@ -1118,7 +1118,7 @@ class CQUAD4(ShellElement):
                 integer(card, 5, 'n3'),
                 integer(card, 6, 'n4'),]
         if len(card) > 7:
-            fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+            fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
             theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', default=0.0)
             zoffset = fdouble_or_blank(card, 8, 'zoffset', default=np.nan)
             blank(card, 9, 'blank')
@@ -1604,7 +1604,7 @@ class CQUADR(ShellElement):
                 integer_or_blank(card, 5, 'n3'),
                 integer_or_blank(card, 6, 'n4'),]
 
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', default=0.0)
         zoffset = fdouble_or_blank(card, 8, 'zoffset', default=0.0)
 
@@ -1867,7 +1867,7 @@ class CTRIA6(ShellElement):
             integer_or_blank(card, 8, 'n6', default=0),
         ]
         if len(card) > 9:
-            fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+            fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
             theta_mcid = integer_double_or_blank(card, 9, 'theta_mcid', default=0.0)
             zoffset = fdouble_or_blank(card, 10, 'zoffset', default=0.0)
 
@@ -2174,7 +2174,7 @@ class CQUAD8(ShellElement):
                 integer_or_blank(card, 9, 'n7', default=0),
                 integer_or_blank(card, 10, 'n8', default=0),]
         if len(card) > 11:
-            fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+            fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
             T1 = fdouble_or_blank(card, 11, 'T1')
             T2 = fdouble_or_blank(card, 12, 'T2')
             T3 = fdouble_or_blank(card, 13, 'T3')

@@ -744,6 +744,7 @@ def real_modes_to_omega_freq(eigns: np.ndarray) -> tuple[np.ndarray, np.ndarray]
 def complex_damping_frequency(eigr: np.ndarray,
                               eigi: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """eigenvalue = eigr + eigi*1j"""
+    assert isinstance(eigr, np.ndarray), eigr
     eigr[eigr == -0.] = 0.
     eigi[eigi == -0.] = 0.
     damping = np.zeros(len(eigr), dtype=eigr.dtype)

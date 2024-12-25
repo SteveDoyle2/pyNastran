@@ -7,9 +7,17 @@ try:
 except ImportError:  # pragma: no cover
     IS_PANDAS = False
 
+try:
+    from tables import open_file, Group, Node, File
+    IS_TABLES = True
+except ImportError:
+    print('pytables was not found; no h5 support.  Run ">>> pip install tables"\n'
+          'Do you have h5py installed?  That can cause conflicts.')
+    IS_TABLES = False
+
 
 from .op2_geom import OP2, OP2Geom
-if IS_PANDAS:
+if IS_PANDAS and IS_TABLES:
     from pyNastran.dev.op2_vectorized3.op2_interface.h5_pytables.h5_results import read_h5_result
     from pyNastran.dev.op2_vectorized3.op2_interface.h5_pytables.h5_results import read_h5_geometry_result
 else:  # pragma: no cover

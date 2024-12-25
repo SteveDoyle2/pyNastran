@@ -1,5 +1,6 @@
 """various OP2 tests"""
 import os
+import copy
 import unittest
 from pathlib import Path
 
@@ -1255,6 +1256,15 @@ class TestOP2Main(Tester):
         op2_filename_m1_out = dirname / 'beam_modes_m1_out.op2'
         op2_filename_m2_out = dirname / 'beam_modes_m2_out.op2'
         op2_1 = read_op2(op2_filename_m1, debug=False, log=log)
+
+        eig = op2_1.eigenvectors[1]
+        eig2 = copy.deepcopy(eig)
+        nmodes, nnodes, six = eig.data.shape
+        #nmodes = len(eig2.modes)
+        factors = np.random.rand(nmodes, 1) + 1j * np.random.rand(nmodes, 1)
+        eig2.scale(factors)
+        #print(eig2)
+
         op2_2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
         op2_2.read_op2(op2_filename_m2)
         op2_1.write_f06(f06_filename)

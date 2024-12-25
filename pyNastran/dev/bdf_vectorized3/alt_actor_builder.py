@@ -963,6 +963,10 @@ def create_monpnt1(gui: MainWindow,
         if aecomp_name in all_aecomp_names:
             iaecomp = all_aecomp_names.index(aecomp_name)
             list_type = aecomp.list_type[iaecomp]
+            name = str(name)
+            label = str(label)
+            aecomp_name = str(aecomp_name)
+
             if list_type == 'SET1':
                 _create_monpnt_aecomp_set1(
                     gui, model, iaecomp,

@@ -1,10 +1,22 @@
 import os
+from pathlib import Path
 import unittest
+import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck, _run_mass_properties, _run_loads, _run_hdf5
 
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / '..' / 'models'
+
 
 class TestSuperelements(unittest.TestCase):
+
+    def test_superelements_pch(self):
+        model = BDF(mode='nx')
+        model.is_superelements = True
+        bdf_filename = MODEL_PATH / 'bugs' / 'outboard_op4asmblk.pch'
+        model.read_bdf(bdf_filename, punch=True)
+
     def test_superelements_1(self):
         """SEMPLN/SELOC/SEBULK test"""
         model = BDF(debug=False)
@@ -179,6 +191,7 @@ def create_superelement(debug=False):
     super_model.add_pbarl(1000, 2000, 'ROD', [1.,])
     super_model.add_mat1(2000, 3.0e7, None, 0.3)
     return super_model
+
 
 if __name__ == '__main__':   # pragma: no cover
     unittest.main()

@@ -587,7 +587,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.echo = False
         self.read_includes = True
         self._remove_disabled_cards = False
-        self.use_new_deck_parser = False
+        self.use_new_deck_parser = True
 
         # file management parameters
         self.active_filenames: list[str] = []
@@ -619,7 +619,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         # True:  relax strictness on card parser
         # False: use strict parser (default)
-        self.is_lax_parser = False
+        self.is_strict_card_parser = True
 
         # lines that were rejected b/c they were for a card that isn't supported
         self.reject_lines: list[list[str]] = []
@@ -1408,7 +1408,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
          executive_control_lines,
          case_control_lines,
          bulk_data_lines, bulk_data_ilines,
-         additional_deck_lines) = out
+         additional_deck_lines, additional_deck_ilines) = out
         self._set_pybdf_attributes(obj, save_file_structure)
 
         #assert system_lines == [], system_lines
@@ -4314,7 +4314,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if self.save_file_structure:
             raise NotImplementedError('save_file_structure=True is not supported\n%s' % (
                 list(cards_dict.keys())))
-        add_card = self.add_card_lax if self.is_lax_parser else self.add_card
+        add_card = self.add_card if self.is_strict_card_parser else self.add_card_lax
 
         for card_name, cards in sorted(cards_dict.items()):
             try:
@@ -4336,7 +4336,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _parse_cards_list(self, cards_list: list[str]):
         """parses the cards that are in list format"""
-        add_card = self.add_card_lax if self.is_lax_parser else self.add_card
+        add_card = self.add_card if self.is_strict_card_parser else self.add_card_lax
 
         save_file_structure = self.save_file_structure
         if save_file_structure:
@@ -4621,7 +4621,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
         (system_lines, executive_control_lines, case_control_lines,
          bulk_data_lines, bulk_data_ilines,
-         additional_deck_lines) = out
+         additional_deck_lines, additional_deck_ilines) = out
         self._set_pybdf_attributes(obj, save_file_structure=False)
 
         self.system_command_lines = system_lines

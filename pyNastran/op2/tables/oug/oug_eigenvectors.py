@@ -1,3 +1,4 @@
+import numpy as np
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 from pyNastran.f06.f06_formatting import write_floats_13e
 
@@ -33,8 +34,35 @@ class ComplexEigenvectorArray(ComplexTableArray):
 
 
 class RealEigenvectorArray(RealTableArray):
-    def __init__(self, data_code, is_sort1, isubcase, dt, f06_flag=False):
+    def __init__(self, data_code, is_sort1: bool,
+                 isubcase: int, dt, f06_flag: bool=False):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def scale(self, factors: np.ndarray) -> None:
+        """
+        generic scaling of a mode by a series of factors.
+        Can generate a series of modes with a single call.
+        """
+        assert factors.dtype.name in ['complex64', 'complex128', 'float64', 'float32'], factors.dtype.name
+        assert factors.ndim == 2, factors.shape
+        nold_modes, nnew_modes = factors.shape
+        self.modes = np.array(nnew_modes, dtype='int32')
+
+        nold_modes_og, nnodes, six = self.data.shape
+        assert nold_modes == nold_modes_og, (nold_modes, nold_modes_og)
+
+        # checking the einsum
+        data2 = np.zeros((nnew_modes, nnodes, 6), dtype=factors.dtype)
+        for nmode in range(nnew_modes):
+            for omode in range(nold_modes):
+                tempi = factors[omode, nmode] * self.data[omode, :, :]
+                data2[nmode, :, :] += tempi
+
+        # new = factors * modes
+        data = np.einsum('ij,ilm->jlm', factors, self.data)
+        assert data.shape == (nnew_modes, nnodes, 6), data.shape
+        assert np.allclose(data, data2)
+        self.data = data
 
     def get_phi(self):
         """

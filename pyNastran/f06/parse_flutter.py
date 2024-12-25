@@ -26,6 +26,7 @@ from cpylog import get_logger2, SimpleLogger
 from pyNastran.f06.flutter_response import FlutterResponse, get_flutter_units
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import float_types
+from pyNastran.f06.f06_matrix_parser import read_real_eigenvalues
 
 
 def make_flutter_response(f06_filename: PathLike,
@@ -84,6 +85,8 @@ def make_flutter_response(f06_filename: PathLike,
     eigenvectors_array = None
     eigr_eigi_velocity_list = []
     eigr_eigi_velocity = None
+    load_eigenvalues = True
+    matrices = {}
 
     log.info('f06_filename = %r' % f06_filename)
     with open(f06_filename, 'r') as f06_file:
@@ -92,6 +95,18 @@ def make_flutter_response(f06_filename: PathLike,
             line = f06_file.readline()
             iline += 1
             #log.debug('line%ia = %r' % (iline, line))
+
+            if 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
+                Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
+                asdf
+                isort = np.argsort(Khh)
+                # matrices['MHH'].append(np.diag(Mhh[isort]))
+                # matrices['BHH'].append(np.diag(Bhh[isort]))
+                # matrices['KHH'].append(np.diag(Khh[isort]))
+                matrices['MHH'] = np.diag(Mhh[isort])
+                matrices['BHH'] = np.diag(Bhh[isort])
+                matrices['KHH'] = np.diag(Khh[isort])
+                del Mhh, Bhh, Khh
 
             while ('SUBCASE ' not in line and
                    'FLUTTER  SUMMARY' not in line and

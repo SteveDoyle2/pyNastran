@@ -1933,7 +1933,7 @@ class USET(Set):
     +------+-------+-----+------+-----+----+-----+----+
     """
     type = 'USET'
-    _properties = ['node_ids']
+    _properties = ['node_ids', 'sid']
 
     @classmethod
     def _init_from_empty(cls):
@@ -1995,7 +1995,7 @@ class USET(Set):
         return USET(name, ids, components, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         tested by gspc1.op2
 
@@ -2035,6 +2035,14 @@ class USET(Set):
         """Removes cross-reference links"""
         self.ids = self.node_ids
         self.ids_ref = None
+
+    @property
+    def sid(self):
+        for iletter, letter in enumerate(self.name):
+            if letter.isdigit():
+                break
+        sid_str = self.name[iletter:]
+        return int(sid_str)
 
     @property
     def node_ids(self):

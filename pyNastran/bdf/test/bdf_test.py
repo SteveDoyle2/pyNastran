@@ -73,6 +73,7 @@ def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
     #for filename in files2:
         #print(filename)
     skip_files = [
+        'pyNastran_dump.bdf',
         'mp10a.dat',
         'mp20e.dat',
         'mp30.dat',

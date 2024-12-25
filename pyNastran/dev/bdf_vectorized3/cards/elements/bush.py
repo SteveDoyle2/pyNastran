@@ -93,7 +93,7 @@ class CBUSH(Element):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
 
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
@@ -497,7 +497,7 @@ class PBUSH(Property):
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         model = self.model
-        fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if model.is_strict_card_parser else force_double_or_blank
 
         k_fields = []
         b_fields = []
@@ -750,7 +750,7 @@ def read_pbush_rcv(model: BDF, card, istart: int) -> tuple[float, float, float, 
     Flag indicating that the next 1 to 4 fields are stress or strain
     coefficients. (Character)
     """
-    fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
+    fdouble_or_blank = double_or_blank if model.is_strict_card_parser else force_double_or_blank
 
     #self.rcv = string(card, istart, 'rcv')
     sa = fdouble_or_blank(card, istart + 1, 'sa', default=1.)
@@ -1117,7 +1117,7 @@ class PBUSH1D(Property):
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         model = self.model
-        fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if model.is_strict_card_parser else force_double_or_blank
 
         pid = integer(card, 1, 'pid')
         k = fdouble_or_blank(card, 2, 'k', default=0.0)
@@ -1454,8 +1454,8 @@ def read_pbush1d_shock(model: BDF, card: BDFCard, istart: int) -> tuple[int,
     """
     F(u, v) = Cv * S(u) * sign(v) * |v|^ev
     """
-    fdouble = force_double if model.is_lax_parser else double
-    fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
+    fdouble = double if model.is_strict_card_parser else force_double
+    fdouble_or_blank = double_or_blank if model.is_strict_card_parser else force_double_or_blank
 
     #CVT   Viscous damping coefficient CV for tension v > 0,
     #      force per unit velocity. (Real).

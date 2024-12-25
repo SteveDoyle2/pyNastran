@@ -211,7 +211,7 @@ class CELAS2(Element):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
 
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
@@ -564,7 +564,7 @@ class PELAS(Property):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         pid = integer(card, 1, 'pid')
         k = double(card, 2, 'k')
         ge = fdouble_or_blank(card, 3, 'ge', default=0.)

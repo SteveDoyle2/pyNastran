@@ -2,6 +2,7 @@
 from __future__ import annotations
 #import os
 #from itertools import count
+import warnings
 from pathlib import PurePath
 from typing import Optional, Any, TYPE_CHECKING
 
@@ -37,7 +38,8 @@ from .alt_actor_builder import (
     create_alt_conm2_grids, create_alt_rbe2_grids, create_alt_rbe3_grids,
     create_alt_spcs, create_alt_axes,
     create_monpnt, create_plotels)
-IS_TABLES = False
+
+IS_TABLES = True
 if IS_TABLES:
     from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
     from pyNastran.dev.op2_vectorized3.op2_hdf5 import Results
@@ -57,7 +59,7 @@ class Nastran3:
         self.data_map = None
         self.save_results_model = False
         self.model = BDF(debug=True, log=None, mode='msc')
-        #self.model.is_lax_parser = True
+        #self.model.is_strict_card_parser = False
 
         # the set of element types that are supported
         self.gui_elements: set[str] = set([])
@@ -243,7 +245,7 @@ class Nastran3:
                           name: str='main', plot: bool=True):
         """loads a geometry only an h5 file"""
         model = BDF(debug=True, log=None, mode='msc')
-        model.is_lax_parser = True
+        model.is_strict_card_parser = False
         model.idtype = 'int64'
         model.read_bdf(bdf_filename)
         ugrid, form, cases, unused_icase = self._load_geometry_from_model(
@@ -1487,6 +1489,10 @@ def get_case_headers(case) -> tuple[bool, list[str]]:
             header_names.append(f'time={time:g} sec')
     elif case.analysis_code == 9:  # complex modes
         scale_per_time = False
+        if isinstance(case.eigrs, list):
+            warnings.warn('converting eigrs from a list to an array')
+            case.eigrs = np.array(case.eigrs)
+            case.eigis = np.array(case.eigis)
         eigr = case.eigrs
         eigi = case.eigis
         damping, abs_freqs = complex_damping_frequency(eigr, eigi)

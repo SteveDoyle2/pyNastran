@@ -972,7 +972,7 @@ class BCONP(VectorizedBaseCard):
             a comment for the card
 
         """
-        fdouble_or_blank = lax_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else lax_double_or_blank
 
         contact_id = integer(card, 1, 'contact_id')
         slave = integer(card, 2, 'slave')
@@ -1125,7 +1125,7 @@ class BFRIC(VectorizedBaseCard):
             a comment for the card
 
         """
-        fdouble_or_blank = lax_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else lax_double_or_blank
 
         friction_id = integer(card, 1, 'friction_id')
         fstiff = fdouble_or_blank(card, 2, 'fstiff', default=np.nan)  # default=program selected

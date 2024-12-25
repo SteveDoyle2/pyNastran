@@ -95,7 +95,7 @@ class BAROR(BaseCard):
         OFFT_DEFAULT = ''
 
         pid = integer_or_blank(card, 2, 'pid', default=PROPERTY_ID_DEFAULT)
-        fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if model.is_strict_card_parser else force_double_or_blank
         # x / g0
         field5 = integer_double_or_blank(card, 5, 'g0_x1', default=0.)
         if isinstance(field5, integer_types):
@@ -853,8 +853,7 @@ class PBAR(Property):
         return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
-        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
-        #fdouble = force_double if self.model.is_lax_parser else double
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         A = fdouble_or_blank(card, 3, 'A', default=0.0)

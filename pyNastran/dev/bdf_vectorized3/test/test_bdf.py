@@ -452,7 +452,7 @@ def run_and_compare_fems(
     assert isinstance(bdf_model, str) and os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDFv(debug=debug, log=log)
     fem1.idtype = 'int64'
-    fem1.is_lax_parser = True
+    fem1.is_strict_card_parser = False
     fem1.run_testing_checks = True
 
     _setup_fem(fem1, debug, log, version,
@@ -1157,7 +1157,7 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
 
     """
     if not is_nominal:
-        fem1.is_lax_parser = True
+        fem1.is_strict_card_parser = False
 
     log = fem1.log
     if crash_cards is None:
@@ -1193,9 +1193,9 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
                 write_skin_solid_faces(fem1, skin_filename, size=16, is_double=False)
                 if os.path.exists(skin_filename):
                     modelv = BDFv(log=fem1.log)
-                    modelv.use_new_deck_parser = True
+                    #modelv.use_new_deck_parser = True
                     modelv.idtype = 'int64'
-                    modelv.is_lax_parser = True
+                    modelv.is_strict_card_parser = False
                     modelv.read_bdf(skin_filename)
                     os.remove(skin_filename)
 
@@ -1229,9 +1229,9 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
                     log.info(f'fem1.bdf_filename = {fem1.bdf_filename}')
                     log.info('trying read_bdf from the raw filename')
                     modelv = BDFv(debug=fem1.debug, log=fem1.log)
-                    modelv.use_new_deck_parser = True
+                    #modelv.use_new_deck_parser = True
                     modelv.idtype = 'int64'
-                    modelv.is_lax_parser = True
+                    modelv.is_strict_card_parser = False
                     modelv.read_bdf(fem1.bdf_filename, encoding=encoding, xref=False)
                 if safe_xref:
                     fem1.safe_cross_reference()
@@ -1538,9 +1538,9 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
     assert isinstance(ierror, int), ierror
 
     fem2 = BDFv(debug=debug, log=log)
-    fem2.use_new_deck_parser = True
+    #fem2.use_new_deck_parser = True
     fem2.idtype = 'int64'
-    #fem2.is_lax_parser = True # should be fixed by now...
+    #fem2.is_strict_card_parser = False # should be fixed by now...
     if not quiet:
         fem2.log.info('starting fem2')
     if skip_cards:

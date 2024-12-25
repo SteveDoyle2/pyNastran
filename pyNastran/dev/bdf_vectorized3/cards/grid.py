@@ -328,7 +328,7 @@ class GRID(VectorizedBaseCard):
         #: Grid point coordinate system
         cp = integer_or_blank(card, 2, 'cp', default=GRID_CP_DEFAULT)
 
-        fdouble_or_blank = lax_double_or_blank if self.model.is_lax_parser else double_or_blank
+        fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else lax_double_or_blank
 
         #: node location in local frame
         xyz = [

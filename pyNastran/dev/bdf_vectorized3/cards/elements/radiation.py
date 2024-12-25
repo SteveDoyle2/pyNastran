@@ -71,8 +71,6 @@ class RADCAV(VectorizedBaseCard):
             a comment for the card
 
         """
-        #fdouble = force_double if self.model.is_lax_parser else double
-        #fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         icavity = integer(card, 1, 'icavity')
         ele_ambient = integer_or_blank(card, 2, 'ele_amb', default=0)  # default made up
         shadow = string_or_blank(card, 3, 'shadow', default='YES')
@@ -233,8 +231,6 @@ class RADLST(VectorizedBaseCard):
             a comment for the card
 
         """
-        #fdouble = force_double if self.model.is_lax_parser else double
-        #fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
         icavity = integer(card, 1, 'icavity')
         matrix_type = integer_or_blank(card, 2, 'matrix_type', default=1)
 

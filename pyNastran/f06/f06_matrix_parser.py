@@ -81,7 +81,7 @@ def _read_f06_matrices(f06_file: TextIO,
             continue
 
         if 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
-            Mhh, Bhh, Khh = _read_real_eigenvalues(f06_file, log, line, i)
+            Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, i)
             isort = np.argsort(Khh)
             #matrices['MHH'].append(np.diag(Mhh[isort]))
             #matrices['BHH'].append(np.diag(Bhh[isort]))
@@ -150,11 +150,11 @@ def _compress_matrices(matrices: dict[str, list[np.ndarray]]) -> dict[str, np.nd
         matrices2[key] = matrix
     return matrices2
 
-def _read_real_eigenvalues(f06_file: TextIO,
-                           log: SimpleLogger,
-                           line: str, i: int) -> tuple[np.ndarray,
-                                                       np.ndarray,
-                                                       np.ndarray]:
+def read_real_eigenvalues(f06_file: TextIO,
+                          log: SimpleLogger,
+                          line: str, i: int) -> tuple[np.ndarray,
+                                                      np.ndarray,
+                                                      np.ndarray]:
     line1 = f06_file.readline()
     if '(' in line1 and ')' in line1:
         # (ACTUAL MODES USED IN THE DYNAMIC ANALYSIS)

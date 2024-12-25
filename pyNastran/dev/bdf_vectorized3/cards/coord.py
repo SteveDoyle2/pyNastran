@@ -1165,7 +1165,7 @@ def _parse_cord2x(model: BDF,
                   card: BDFCard,
                   card_type: str) -> tuple[int, int,
                                            np.ndarray, np.ndarray, np.ndarray]:
-    fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
+    fdouble_or_blank = double_or_blank if model.is_strict_card_parser else force_double_or_blank
 
     cid = integer(card, 1, 'cid')
 
@@ -1202,4 +1202,3 @@ def _default_cord2_axes(origin: np.ndarray | list[float],
     if xzplane is None:
         xzplane = np.array([1., 0., 0.], dtype='float64')
     return origin, zaxis, xzplane
-

@@ -61,6 +61,8 @@ try:
     IS_TABLES = True
 except ImportError:  # pragma: no cover
     IS_TABLES = False
+
+#IS_TABLES = False
 if IS_TABLES:
     from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import read_h5_geometry
 else:  # pragma: no cover
@@ -547,7 +549,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self.read_includes = True
         self._remove_disabled_cards = False
 
-        self.is_lax_parser = False
+        self.is_strict_card_parser = True
 
         # file management parameters
         self.active_filenames: list[str] = []
@@ -1401,7 +1403,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
          executive_control_lines,
          case_control_lines,
          bulk_data_lines, bulk_data_ilines,
-         additional_deck_lines) = out
+         additional_deck_lines, additional_deck_ilines) = out
         self._set_pybdf_attributes(obj, save_file_structure)
 
         #assert system_lines == [], system_lines
@@ -3424,7 +3426,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         if card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]
             try:
-                if self.is_lax_parser and hasattr(card_class, 'add_card_lax'):
+                if not self.is_strict_card_parser and hasattr(card_class, 'add_card_lax'):
                     class_instance = card_class.add_card_lax(card_obj, comment=comment)
                 else:
                     class_instance = card_class.add_card(card_obj, comment=comment)
@@ -4444,7 +4446,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
         (system_lines, executive_control_lines, case_control_lines,
          bulk_data_lines, bulk_data_ilines,
-         additional_deck_lines) = out
+         additional_deck_lines, additional_deck_ilines) = out
         self._set_pybdf_attributes(obj, save_file_structure=False)
 
         self.system_command_lines = system_lines
