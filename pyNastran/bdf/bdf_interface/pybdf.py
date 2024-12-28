@@ -684,8 +684,9 @@ class BDFInputPy:
         bdf_filename = bdf_filename_inc
 
         if bdf_filename in self.active_filenames:
-            msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
-                % (bdf_filename, self.active_filenames)
+            active_filenames_str = '\n - '.join(self.active_filenames)
+            msg = 'bdf_filename=%s is already active.\nactive_filenames:\n - %s' \
+                  % (bdf_filename, active_filenames_str)
             log.error(msg)
             raise RuntimeError(msg)
         elif os.path.isdir(bdf_filename):
@@ -773,8 +774,9 @@ class BDFInputPy:
 
             bdf_filename = bdf_filename_inc
             if bdf_filename in self.active_filenames:
-                msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
-                    % (bdf_filename, self.active_filenames)
+                active_filenames_str = '\n - '.join(self.active_filenames)
+                msg = 'bdf_filename=%s is already active.\nactive_filenames:\n - %s' \
+                    % (bdf_filename, active_filenames_str)
                 raise RuntimeError(msg)
             elif os.path.isdir(bdf_filename):
                 current_fname = self.active_filename if len(self.active_filenames) > 0 else 'None'

@@ -140,9 +140,7 @@ class ECHO(CaseControlCard):
                 #print(values_str)
                 #print(value)
                 #['SORT', '(PARAM)']
-                pass
                 values.append(value)
-                #asdf
             else:
                 values.append(value)
 

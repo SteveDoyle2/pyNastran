@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import argparse
 from cpylog import SimpleLogger
@@ -45,12 +45,13 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False):
 
     cleanup = args.cleanup
     extensions = ['.dat', '.bdf']
-    run_jobs(nastran_exe, bdf_filename_dirname,
+    run_jobs(bdf_filename_dirname, nastran_exe,
              extensions=extensions, cleanup=cleanup)
 
 
-def run_jobs(nastran_exe: str | Path, bdf_filename_dirname: Path,
+def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
              extensions: list[str], cleanup: bool=True) -> None:
+    """runs a series of jobs in a specific folder"""
     assert bdf_filename_dirname.exists(), bdf_filename_dirname
 
     log = SimpleLogger()
@@ -69,16 +70,18 @@ def run_jobs(nastran_exe: str | Path, bdf_filename_dirname: Path,
     for bdf_filename in bdf_filenames:
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
 
-    for bdf_filename in bdf_filenames:
+    nfiles = len(bdf_filenames)
+    for ifile, bdf_filename in enumerate(bdf_filenames):
         base = os.path.splitext(str(bdf_filename))[0]
         op2_filename = base + '.op2'
         if os.path.exists(op2_filename):
             log.warning(f'skipping {str(bdf_filename)} because {op2_filename} already exists')
             continue
 
-        log.info(f'running {str(bdf_filename)}')
+        percent = (ifile + 1) / nfiles * 100
+        log.info(f'running {ifile+1}/{nfiles}={percent:.0f}%: {str(bdf_filename)}')
         run_nastran(bdf_filename, nastran_cmd=nastran_exe, cleanup=cleanup)
-        log.debug(f'finished {str(bdf_filename)}')
+        log.debug(f'finished {ifile+1}/{nfiles}={percent:.0f}%: {str(bdf_filename)}')
     log.info('done')
 
 

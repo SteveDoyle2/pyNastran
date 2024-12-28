@@ -4,7 +4,7 @@ SOL 145 plotter
 
 kfreq = ωc/(2V)
 """
-from typing import Optional, cast
+from typing import Optional, TextIO, cast
 import numpy as np
 #import PySide
 try:
@@ -27,6 +27,7 @@ from pyNastran.f06.flutter_response import FlutterResponse, get_flutter_units
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import float_types
 from pyNastran.f06.f06_matrix_parser import read_real_eigenvalues
+Crossing = tuple[float, float, float]
 
 
 def make_flutter_response(f06_filename: PathLike,
@@ -94,7 +95,7 @@ def make_flutter_response(f06_filename: PathLike,
             nblank = 0
             line = f06_file.readline()
             iline += 1
-            #log.debug('line%ia = %r' % (iline, line))
+            #log.debug(f'A: line[{iline:d}] = {line!r}')
 
             if 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
                 Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
@@ -115,6 +116,8 @@ def make_flutter_response(f06_filename: PathLike,
                 iline += 1
                 if not line:
                     nblank += 1
+                else:
+                    nblank = 0
                 if nblank == 100:
                     #print(line.strip())
                     break
@@ -123,11 +126,11 @@ def make_flutter_response(f06_filename: PathLike,
             #if 'FLUTTER  SUMMARY' in line:
                 #found_flutter_summary = True
 
-            #log.debug(f'line[{iline}] = {line!r}')
+            #log.debug(f'B: line[{iline}] = {line!r}')
             if 'SUBCASE' in line[109:]:
+                #log.debug(f'B1: subcase')
                 ieigenvector = -1
                 eigenvectors = []
-                eigenvector_data_list = []
                 sline = line.strip().split()
                 isubcase = sline.index('SUBCASE')
                 new_subcase = int(sline[isubcase + 1])
@@ -147,66 +150,23 @@ def make_flutter_response(f06_filename: PathLike,
                     flutters[subcase] = flutter
                     modes = []
                     results = []
-
                     subcase = new_subcase
                     #break
                 continue
 
-            #log.debug('line%i_FSa = %r' % (iline, line))
+            #log.debug(f'C: line[{iline:d}]_FSa = {line}')
             last_line = None
             while 'FLUTTER  SUMMARY' not in line:
-                last_line = line
-                line = f06_file.readline()
                 #log.debug('i=%s %s' % (iline, line.strip().replace('   ', ' ')))
 
-                if 'EIGENVECTOR FROM THE' in line:
-                    #'                                               EIGENVECTOR FROM THE  PKNL METHOD
-                    #'   EIGENVALUE =    -9.88553E-02    1.71977E+01       VELOCITY =     1.52383E+02
-                    #'
-                    #'   EIGENVECTOR
-                    #'                    1.00000E+00    0.00000E+00
-                    #'                   -3.81052E-03   -6.17235E-04
-                    ieigenvector += 1
-                    # 'EIGENVECTOR FROM THE  PKNL METHOD'
-                    #print(line)
-                    methodi = line.split('EIGENVECTOR FROM THE')[1].split('METHOD')[0].strip()
-                    #print(f'imode={ieigenvector+1}; methodi={methodi!r}')
-                    line = f06_file.readline()
-                    iline += 1
+                iline, line, ieigenvector, methodi = _check_for_eigenvector(
+                    f06_file, iline, line, eigr_eigi_velocity_list,
+                    eigenvectors, ieigenvector, log)
 
-                    if 'VELOCITY' in line:
-                        #'   EIGENVALUE =    -9.88553E-02    1.71977E+01       VELOCITY =     1.52383E+02
-                        eig_value, velocity_str = line.split('VELOCITY =')
-                        eigr_str, eigi_str = eig_value.strip().split('EIGENVALUE =')[1].split()
-                        velocity = float(velocity_str)
-                    else:
-                        eigr_str, eigi_str = line.strip().split('EIGENVALUE =')[1].split()
-                        velocity = np.nan
-
-                    eigr = float(eigr_str)
-                    eigi = float(eigi_str)
-                    #print(f'eigr,eigi,velo = {eigr}, {eigi}, {velocity}')
-                    eigr_eigi_velocity_list.append((eigr, eigi, velocity))
-
-                    while 'EIGENVECTOR' not in line:
-                        line = f06_file.readline()
-                        iline += 1
-                    line = f06_file.readline()
-                    iline += 1
-
-                    spline_point_complex_eigenvector_slines = []
-                    sline = line.split()
-                    while len(sline) == 2:
-                        # print('***', iline, line, sline)
-                        spline_point_complex_eigenvector_slines.append(sline)
-                        line = f06_file.readline()
-                        iline += 1
-                        sline = line.split()
-                    real_imag = np.array(spline_point_complex_eigenvector_slines, dtype='float64')
-                    #eigenvector = real_imag[:, 0].flatten() + 1j*real_imag[:, 1].flatten()
-                    nspline_points = len(spline_point_complex_eigenvector_slines)
-                    eigenvector = (real_imag[:, 0] + real_imag[:, 1] * 1j).reshape(nspline_points, 1)
-                    eigenvectors.append(eigenvector)
+                #short_line = line.strip().replace('   ', ' ')
+                #log.debug(f'i={iline} {short_line!r}')
+                last_line = line
+                line = f06_file.readline()
 
                 if '* * * END OF JOB * * *' in line:
                     last_line = None
@@ -266,6 +226,7 @@ def make_flutter_response(f06_filename: PathLike,
                 eigr_eigi_velocity = np.array(eigr_eigi_velocity_list, dtype='float64') # eigr, eigi, velo
                 assert eigr_eigi_velocity.ndim == 2, eigr_eigi_velocity
                 eigenvectors_array = np.column_stack(eigenvectors)
+                print(f'eigr_eigi_velocity.shape = {eigr_eigi_velocity.shape}')
                 eigenvectors = []
                 eigr_eigi_velocity_list = []
                 #print(f'eigr_eigi_velocity:\n{eigr_eigi_velocity}')
@@ -381,6 +342,7 @@ def plot_flutter_f06(f06_filename: PathLike,
                      ylim_kfreq: Optional[list[float]]=None,
                      vd_limit: Optional[float]=None,
                      damping_limit: Optional[float]=None,
+                     use_rhoref: bool=False,
                      nopoints: bool=False,
                      noline: bool=False,
                      export_csv_filename: Optional[str]=None,
@@ -415,6 +377,8 @@ def plot_flutter_f06(f06_filename: PathLike,
         'alt' : altitude
         'dynamic_pressure' : dynamic pressure
         'mach' : Mach number
+    use_rhoref: bool; default=False
+        assume rho is density ratio (rho/rhoSL)
     plot_vg : bool; default=False
         make a V-damping plot
     plot_vg_vf : bool; default=False
@@ -466,7 +430,6 @@ def plot_flutter_f06(f06_filename: PathLike,
     """
     assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
-    use_rhoref = False
     flutters = make_flutter_response(
         f06_filename, f06_units=f06_units, out_units=out_units,
         use_rhoref=use_rhoref, log=log)
@@ -752,6 +715,70 @@ def _find_modes_to_keep(flutter: FlutterResponse,
     #iimag = np.where(dimag != 0.)[0]
     #log
     return isave, ifilter
+
+
+def _check_for_eigenvector(f06_file: TextIO, iline: int, line: str,
+                           eigr_eigi_velocity_list: list[Crossing],
+                           eigenvectors: list[np.ndarray],
+                           ieigenvector: int,
+                           log: SimpleLogger) -> tuple[int, str, int]:
+    methodi = ''
+    if 'EIGENVECTOR FROM THE' in line:
+        # '                                               EIGENVECTOR FROM THE  PKNL METHOD
+        # '   EIGENVALUE =    -9.88553E-02    1.71977E+01       VELOCITY =     1.52383E+02
+        # '
+        # '   EIGENVECTOR
+        # '                    1.00000E+00    0.00000E+00
+        # '                   -3.81052E-03   -6.17235E-04
+        ieigenvector += 1
+        # 'EIGENVECTOR FROM THE  PKNL METHOD'
+        # print(line)
+        #log.debug(f'eigenvector iline: {iline}')
+        iline, line, eigenvector, eigr, eigi, velocity, methodi = _get_eigenvector(f06_file, iline, line)
+        eigr_eigi_velocity_list.append((eigr, eigi, velocity))
+        eigenvectors.append(eigenvector)
+    return iline, line, ieigenvector, methodi
+
+
+def _get_eigenvector(f06_file: TextIO, iline: int,
+                     line: str) -> tuple[int, str, np.ndarray, float, float, float, str]:
+    methodi = line.split('EIGENVECTOR FROM THE')[1].split('METHOD')[0].strip()
+    # print(f'imode={ieigenvector+1}; methodi={methodi!r}')
+    line = f06_file.readline()
+    iline += 1
+
+    if 'VELOCITY' in line:
+        # '   EIGENVALUE =    -9.88553E-02    1.71977E+01       VELOCITY =     1.52383E+02
+        eig_value, velocity_str = line.split('VELOCITY =')
+        eigr_str, eigi_str = eig_value.strip().split('EIGENVALUE =')[1].split()
+        velocity = float(velocity_str)
+    else:
+        eigr_str, eigi_str = line.strip().split('EIGENVALUE =')[1].split()
+        velocity = np.nan
+
+    eigr = float(eigr_str)
+    eigi = float(eigi_str)
+    # print(f'eigr,eigi,velo = {eigr}, {eigi}, {velocity}')
+
+    while 'EIGENVECTOR' not in line:
+        line = f06_file.readline()
+        iline += 1
+    line = f06_file.readline()
+    iline += 1
+
+    spline_point_complex_eigenvector_slines = []
+    sline = line.split()
+    while len(sline) == 2:
+        # print('***', iline, line, sline)
+        spline_point_complex_eigenvector_slines.append(sline)
+        line = f06_file.readline()
+        iline += 1
+        sline = line.split()
+    real_imag = np.array(spline_point_complex_eigenvector_slines, dtype='float64')
+    # eigenvector = real_imag[:, 0].flatten() + 1j*real_imag[:, 1].flatten()
+    nspline_points = len(spline_point_complex_eigenvector_slines)
+    eigenvector = (real_imag[:, 0] + real_imag[:, 1] * 1j).reshape(nspline_points, 1)
+    return iline, line, eigenvector, eigr, eigi, velocity, methodi
 
 
 if __name__ == '__main__':  # pragma: no cover

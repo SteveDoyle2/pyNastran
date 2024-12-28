@@ -311,8 +311,9 @@ class FlutterResponse:
             #print(f'use_rhoref = {use_rhoref}')
             if use_rhoref:
                 rhoref = atm_density(alt=0, density_units=in_units_dict['density'])
-                print(f'applying rhoref={rhoref}')
+                #print(f'applying rhoref={rhoref}')
                 results[:, :, self.idensity] *= rhoref
+
             # print('rho2', results[0, :, self.idensity])
             # print('vel2', results[0, :, self.ivelocity])
             # print('mach2', results[0, :, self.imach])
@@ -327,6 +328,19 @@ class FlutterResponse:
             results = self._set_pknl_results(in_units_dict, results)
         else:  # pragma: no cover
             raise NotImplementedError(self.method)
+
+        if len(self.eigenvector) > 1:
+            print(f'results.shape = {results.shape}')
+            nmodes, nvelocity = results.shape[:2]
+            print(f'nmodes={nmodes}; nvelocity={nvelocity}')
+            # not sure on the shapes
+            #
+            # npoint, nvelocity, 3?
+            self.eigr_eigi_velocity = self.eigenvector.reshape(nmodes, nvelocity, 3)
+            # nmodes_mpf, npoint, nvelocity?
+            self.eigenvector = self.eigenvector.reshape(nmodes, nmodes, nvelocity)
+            nvelocity = self.results.shape
+
         self.results_in = results
         self.results = self.results_in
 
@@ -437,10 +451,16 @@ class FlutterResponse:
         rho_in_slug_ft3 = rho * kdensityi
         ft_to_alt_unit = convert_altitude(1., 'ft', altitude_units)
         if self.make_alt:
-            alt_ft = [get_alt_for_density(densityi, density_units='slug/ft^3',
-                                          alt_units='ft', nmax=20)
-                      for densityi in rho_in_slug_ft3.ravel()]
-            alt = np.array(alt_ft, dtype='float64').reshape(vel.shape) * ft_to_alt_unit
+            alt_ft = []
+            for idensity, densityi in enumerate(rho_in_slug_ft3.ravel()):
+                try:
+                    alt_fti = get_alt_for_density(densityi, density_units='slug/ft^3',
+                                                  alt_units='ft', nmax=20)
+                except Exception:
+                    raise RuntimeError(f'failed to find altitude for density[{idensity}]='
+                                       f'{rho.ravel()[idensity]:g}')
+                alt_ft.append(alt_fti)
+            alt = np.array(alt_ft, dtype=rho.dtype).reshape(vel.shape) * ft_to_alt_unit
         else:
             alt = np.full(vel.shape, np.nan, dtype=vel.dtype)
 
@@ -569,8 +589,8 @@ class FlutterResponse:
                               ) -> dict[int, list[Crossing]]:
         if damping_required is None:
             damping_required = [
-                (0.00, 0.03),
-                (0.03, 0.04),
+                (0.00, 0.01),
+                (0.03, 0.03),
             ]
 
         if eas_range is None:
@@ -739,8 +759,8 @@ class FlutterResponse:
 
         ivel = 0
         imode = 1
-        #print(f'eigr_eigi_velocity.shape: {self.eigr_eigi_velocity.shape}')
-        #print(f'eigenvector.shape: {self.eigenvector.shape}')
+        print(f'eigr_eigi_velocity.shape: {self.eigr_eigi_velocity.shape}')
+        print(f'eigenvector.shape: {self.eigenvector.shape}')
         #print(f'eigr_eigi_velocity:\n{self.eigr_eigi_velocity}')
 
         # MSC
@@ -817,6 +837,9 @@ class FlutterResponse:
         reals = eigr / abs_eigr
         imags = eigi / abs_eigi
         for i, imodei, mode in zip(count(), imodes, modes):
+            symbol = symbols[jcolor]
+            color = colors[jcolor]
+
             #real = self.eigenvector[imode1, :].real, label=f'iMode1={imode1+1}')
             reali = reals[i, imode]
             imagi = imags[i, imode]
@@ -1428,7 +1451,6 @@ class FlutterResponse:
 
             #for i in range(nspeeds):
             #    damping = self.results[:, i, self.idamping]
-            #    asdf
 
     def export_to_veas(self, veas_filename: PathLike,
                        modes: Optional[list[int]]=None) -> None:

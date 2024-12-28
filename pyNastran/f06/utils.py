@@ -23,7 +23,7 @@ USAGE_145 = (
     'Usage:\n'
     '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
     f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export_csv] [--export_zona] [--f06] '
-    '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] [--ncol NCOL]\n'
+    '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] [--ncol NCOL] [--rhoref]\n'
 )
 USAGE_200 = (
     'Usage:\n'
@@ -95,6 +95,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         '  --ncol NCOL      the number of columns for the legend\n'
         "  --nopoints       don't plot the points\n"
         "  --noline         don't plot the lines\n"
+        '  --rhoref         use sea level rho0 (density is actually density ratio; rho/rhoSL)'
         '  --export_zona    export a zona file\n'
         '  --export_csv     export a CSV file\n'
         '  --f06            export an F06 file (temporary)\n'
@@ -136,6 +137,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     if data['--ylimfreq']:
         ylim_freq = split_float_colons(data['--ylimfreq'])
 
+    use_rhoref = data['--rhoref']
     ncol = 0
     if data['--ncol']:
         ncol = int(data['--ncol'])
@@ -228,6 +230,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         ylim_damping=ylim_damping, ylim_freq=ylim_freq,
         vd_limit=vd_limit,
         damping_limit=damping_limit,
+        use_rhoref=use_rhoref,
         nopoints=nopoints,
         noline=noline,
         ncol=ncol,
