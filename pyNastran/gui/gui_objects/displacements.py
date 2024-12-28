@@ -433,7 +433,7 @@ class ElementalTableResults(VectorTable):
             return ['magnitude', 'x', 'y', 'z']
         raise NotImplementedError('self.is_real=%s' % self.is_real)
 
-    def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
+    def get_vector_result_by_scale_phase(self, i: int, name: str,
                                          unused_scale: float,
                                          phase: float=0.,
                                          ) -> tuple[Optional[np.ndarray], np.ndarray]:
@@ -448,7 +448,8 @@ class ElementalTableResults(VectorTable):
             else:
                 raise NotImplementedError('dim=%s' % self.dim)
         else:
-            deflected_xyz = self._get_complex_displacements_by_phase(i, phase)
+            deflected_xyz = self._get_complex_displacements_by_phase(
+                i, name, phase)
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return xyz, deflected_xyz
 
@@ -483,7 +484,7 @@ class ForceTableResults(VectorTable):
         return ['Magnitude']
 
 
-    def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
+    def get_vector_result_by_scale_phase(self, i: int, name: str,
                                          unused_scale: float,
                                          phase: float=0.,
                                          ) -> tuple[Optional[np.ndarray], np.ndarray]:
@@ -520,7 +521,8 @@ class ForceTableResults(VectorTable):
             else:
                 raise NotImplementedError('dim=%s' % self.dim)
         else:
-            deflected_xyz = self._get_complex_displacements_by_phase(i, phase)
+            deflected_xyz = self._get_complex_displacements_by_phase(
+                i, name, phase)
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return xyz, deflected_xyz
 
@@ -624,7 +626,7 @@ class DisplacementResults(VectorTable):
         #print(self.dxyz_norm)
         #return self.dxyz_norm
 
-    def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
+    def get_vector_result_by_scale_phase(self, i: int, name: str,
                                          scale: float,
                                          phase: float=0.) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -660,7 +662,8 @@ class DisplacementResults(VectorTable):
         else:
             assert isinstance(i, int), (i, phase)
             assert isinstance(phase, float), (i, phase)
-            dxyz = self._get_complex_displacements_by_phase(i, phase)
+            dxyz = self._get_complex_displacements_by_phase(
+                i, name, phase)
             deflected_xyz = self.xyz + scale * dxyz
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return self.xyz, deflected_xyz

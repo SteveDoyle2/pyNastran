@@ -69,7 +69,8 @@ def create_alt_spcs(gui: MainWindow,
     cards = [card for card in cards_all if len(card)]
     ncards = sum([len(card) for card in cards])
 
-    if ncards == 0:  # and len(spcadd) == 0:
+    nastran_settings: NastranSettings = gui.settings.nastran_settings
+    if ncards == 0 or not nastran_settings.is_constraints:  # and len(spcadd) == 0:
         return
 
     spc_ids_list = []
@@ -207,7 +208,7 @@ def create_alt_rbe3_grids(gui: MainWindow,
     """
     elem = model.rbe3
     nastran_settings: NastranSettings = gui.settings.nastran_settings
-    if elem.n == 0 and nastran_settings.is_rbe:
+    if elem.n == 0 or not nastran_settings.is_rbe:
         return
 
     i_independent = np.searchsorted(grid_id, elem.independent_nodes)
@@ -389,6 +390,10 @@ def _create_shell_axes(self: NastranIO,
      - shell element coordinate systems
      - shell material coordinate systems
     """
+    nastran_settings: NastranSettings = gui.settings.nastran_settings
+    if not nastran_settings.is_shell_mcids:
+        return
+
     name_func = [
         ('eleement', get_shell_material_coordinate_system),
         ('material', get_shell_element_coordinate_system),
@@ -680,6 +685,9 @@ def create_monpnt(gui: MainWindow,
                   model: BDF,
                   grid_id: np.ndarray,
                   xyz_cid0: np.ndarray):
+    nastran_settings: NastranSettings = gui.settings.nastran_settings
+    if not nastran_settings.is_aero:
+        return
     create_monpnt1(gui, model, grid_id, xyz_cid0)
     create_caero(gui, model, grid_id, xyz_cid0)
 

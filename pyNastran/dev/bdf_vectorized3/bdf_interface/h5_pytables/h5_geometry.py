@@ -5,10 +5,17 @@ import numpy as np
 from numpy.lib import recfunctions as rfn  # random numpy package to merge arrays...
 try:
     import tables
+except ImportError:
+    print('pytables was not found; no h5 support.  Run ">>> pip install tables"\n'
+          'Do you have h5py installed?  That can cause conflicts.')
+    raise
+
+try:
     from tables import open_file, Group, Node, File
 except ImportError:
     print('pytables was not found; no h5 support.  Run ">>> pip install tables"\n'
           'Do you have h5py installed?  That can cause conflicts.')
+    print(f'tables.__path__ = {tables.__path__}')
     raise
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_nodes import load_h5_node

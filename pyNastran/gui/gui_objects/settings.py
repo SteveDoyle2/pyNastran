@@ -290,9 +290,6 @@ class NastranSettings:
         self.applied_load = True
         self.heat_flux = True
 
-        #self.stress = True
-        #self.stress = True
-        #self.strain = True
         self.strain_energy = True
         self.grid_point_force = True
 

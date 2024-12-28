@@ -205,7 +205,9 @@ class FlutterGui(LoggableGui):
         data = {
             'font_size': self.font_size,
             'plot_font_size': self.plot_font_size,
-
+            'nphase': 10,
+            'animate': True,
+            'dt_ms': 200,
             'export_to_png': self.export_to_png,
             'export_to_csv': self.export_to_csv,
             'export_to_f06': self.export_to_f06,
@@ -1559,11 +1561,13 @@ class FlutterGui(LoggableGui):
         return is_passed
 
     def on_open_new_window(self):
-        return
+        # return
         try:
             from pyNastran.f06.gui_flutter_vtk import VtkWindow
         except ImportError as e:
             self.log.error(str(e))
+            # print(traceback.print_tb(e))
+            print(traceback.print_exception(e))
             self.log.error('cant open window')
             return
         self.new_window = VtkWindow(self, BDF_FILENAME, OP2_FILENAME)

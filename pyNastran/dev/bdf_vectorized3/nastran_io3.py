@@ -45,6 +45,7 @@ if IS_TABLES:
     from pyNastran.dev.op2_vectorized3.op2_hdf5 import Results
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
+    from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
         CTETRA, CPENTA, CHEXA, CPYRAM,
@@ -324,6 +325,8 @@ class Nastran3:
         element_index = np.arange(len(element_id))
 
         gui = self.gui
+        settings: Settings = gui.settings
+        nastran_settings: NastranSettings = settings.nastran_settings
 
         # I think we specifically look up NodeID, ELementID,
         # but I think we want to look up by Index here
@@ -375,7 +378,7 @@ class Nastran3:
                 icase, cases, geometry_form, subcase_id, 'PropertyIndex', uproperty_id)
 
             mean_edge_length, icase, quality_form = _set_quality(
-                icase, cases,
+                icase, cases, nastran_settings,
                 model, subcase_id, self.gui_elements,
                 element_id, nelements, self.gui_elements)
             self.mean_edge_length = mean_edge_length
@@ -969,6 +972,7 @@ def _mean_min_edge_length(min_edge_length: np.ndarray) -> float:
     return mean_edge_length
 
 def _set_quality(icase: int, cases: dict[int, Any],
+                 nastran_settings: NastranSettings,
                  model: BDF, subcase_id: int,
                  gui_elements: set[str],
                  element_id: np.ndarray,
@@ -987,6 +991,10 @@ def _set_quality(icase: int, cases: dict[int, Any],
         ) = model.quality(cards_to_read=cards_to_read)
     except IndexError:
         mean_edge_length = 1.0
+        return mean_edge_length, icase, quality_form
+
+    mean_edge_length = _mean_min_edge_length(min_edge_length)
+    if not nastran_settings.is_element_quality:
         return mean_edge_length, icase, quality_form
 
     if not np.array_equal(element_id, element_id_quality):
@@ -1018,8 +1026,6 @@ def _set_quality(icase: int, cases: dict[int, Any],
     #is_active_element = ~np.isnan(icard_type)
     #nactive_element = is_active_element.sum()
     #assert nactive_element == nelements, (nactive_element, nelements)
-
-    mean_edge_length = _mean_min_edge_length(min_edge_length)
 
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'AspectRatio', aspect_ratio)
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'TaperRatio', taper_ratio)

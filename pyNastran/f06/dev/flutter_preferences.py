@@ -36,6 +36,27 @@ class FlutterPreferencesDialog(PyDialog):
         self.plot_font_size_edit = QSpinBox()
         self.plot_font_size_edit.setValue(data['plot_font_size'])
 
+        self.nphase_label = QLabel('Num Phase:')
+        self.nphase_edit = QSpinBox()
+        self.nphase_edit.setValue(data['nphase'])
+        self.nphase_edit.setMinimum(4)
+        self.nphase_edit.setMaximum(51)
+
+        # self.nframes_label = QLabel('Animation Update Time (ms):')
+        # self.nframes_edit = QSpinBox()
+        # self.nframes_edit.setValue(data['dt_ms'])
+        # self.nframes_edit.setMinimum(100)
+        # self.nframes_edit.setMaximum(60)
+
+        # Update every N milliseconds
+        self.dt_ms_label = QLabel('Animation Update Time (ms):')
+        self.dt_ms_edit = QSpinBox()
+        self.dt_ms_edit.setValue(data['dt_ms'])
+        self.dt_ms_edit.setMinimum(100)
+        self.animate_checkbox = QCheckBox('Animate')
+        self.animate_checkbox.setChecked(data['animate'])
+        #self.dt_ms_edit.setMaximum(2000)
+
         self.export_png_checkbox = QCheckBox('Export PNG')
         self.export_csv_checkbox = QCheckBox('Export CSV')
         self.export_f06_checkbox = QCheckBox('Export F06')
@@ -54,6 +75,14 @@ class FlutterPreferencesDialog(PyDialog):
         irow += 1
         grid.addWidget(self.plot_font_size_label, irow, 0)
         grid.addWidget(self.plot_font_size_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.nphase_label, irow, 0)
+        grid.addWidget(self.nphase_edit, irow, 1)
+        irow += 1
+        grid.addWidget(self.dt_ms_label, irow, 0)
+        grid.addWidget(self.dt_ms_edit, irow, 1)
+        grid.addWidget(self.animate_checkbox, irow, 2)
         irow += 1
 
         grid.addWidget(self.export_png_checkbox, irow, 0)
@@ -75,6 +104,9 @@ class FlutterPreferencesDialog(PyDialog):
         self.export_zona_checkbox.clicked.connect(self.on_export_zona)
         self.font_size_edit.valueChanged.connect(self.on_font_size)
         self.plot_font_size_edit.valueChanged.connect(self.on_plot_font_size)
+        #self.animate_checkbox.clicked.connect(self.on_animate)
+        #self.nphase_edit.valueChanged.connect(self.on_nphase)
+        #self.dt_ms_edit.valueChanged.connect(self.on_dt_ms)
 
     def on_font_size(self) -> None:
         font_size = self.font_size_edit.value()

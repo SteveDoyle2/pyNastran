@@ -41,7 +41,7 @@ from pyNastran.utils.numpy_utils import integer_types # , float_types
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 
 from pyNastran.f06.f06_writer import make_end
-from pyNastran.f06.tables.oload_resultant import Resultant
+from pyNastran.f06.f06_tables.oload_resultant import Resultant
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_interface.op2_classes import (

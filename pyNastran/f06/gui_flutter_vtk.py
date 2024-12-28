@@ -1,20 +1,36 @@
+"""
+TODO: add control over the update time
+TODO: add label in lower left cornre
+
+TODO: add displacement fringe
+TODO: disable rotational modes to have fewer results
+TODO: add way to select another case (j/k keys or GUI case form?)
+TODO: show/hide set of elements (copy from femap, paste as list?)
+TODO: fix weirdness with 0012 model (green lines)
+TODO: add strain energy fringe
+"""
 from __future__ import annotations
 import os
 from pathlib import Path
-from typing import Callable, Optional, Any, TYPE_CHECKING
+from typing import Callable, Optional, Any, cast, TYPE_CHECKING
+import numpy as np
 
 from qtpy.QtWidgets import (
-    QMessageBox, QHBoxLayout,
+    QHBoxLayout,
     QMainWindow, QDockWidget, QFrame, QToolBar,
 )
-
+from qtpy.QtCore import QTimer
+#from pyNastran.utils import object_attributes
 from pyNastran.utils import PathLike
-from pyNastran.dev.bdf_vectorized3.nastran_io3 import Nastran3
+from pyNastran.dev.bdf_vectorized3.nastran_io3 import (
+    Nastran3, DisplacementResults)
 from pyNastran.gui.vtk_rendering_core import (
     vtkActor, vtkDataSetMapper, vtkRenderer,
     vtkRenderWindow, vtkRenderWindowInteractor)
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from pyNastran.gui.utils.vtk.vtk_utils import (
+    numpy_to_vtk_points)
 
 import pyNastran
 
@@ -34,7 +50,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
-#PKG_PATH = Path(pyNastran.__path__[0])
+
 
 class VtkWindow(QMainWindow):
     def __init__(self, parent: QMainWindow,
@@ -48,6 +64,10 @@ class VtkWindow(QMainWindow):
         self.alt_grids = {}
         self.geometry_actors = {}
         self.geometry_properties = {}
+        self.result_cases = {}
+        self.icase = 0
+        self.is_deflected = False
+
         self.settings = Settings(self)
         qsettings = QSettingsLike2()
         if hasattr(qsettings, 'load_json'):
@@ -98,7 +118,64 @@ class VtkWindow(QMainWindow):
         renderer.ResetCamera()
 
         # Render again to set the correct view
+        self.dphase = 0.0
+        self.plot_deformation(icase=self.icase, dphase=self.dphase)
+
+        self.start_animation_timer()
         self.render()
+
+    def stop_animation_timer(self):
+        self.timer.stop()
+
+    def setup_animation_timer(self) -> None:
+        self.iphase = 0
+        self.nphase = 10
+        # Update every N milliseconds
+        self.dt_ms = 100  # ms
+        self.timer = QTimer()
+
+    def start_animation_timer(self) -> None:
+        if not hasattr(self, 'timer'):
+            self.setup_animation_timer()
+        dphases = np.linspace(0.0, 360.0, num=self.nphase + 1)[:-1]
+        nphase = len(dphases)
+        def update_vtk():
+            if self.iphase == nphase:
+                self.iphase = 0
+            dphase = dphases[self.iphase]
+            self.plot_deformation(icase=self.icase, dphase=dphase)
+            self.render()
+            self.iphase += 1
+        self.timer.timeout.connect(update_vtk)
+        self.timer.start(self.dt_ms)
+
+    def plot_deformation(self, icase: int, dphase: int) -> None:
+        case, case_tuple = self.result_cases[icase]
+        case = cast(DisplacementResults, case)
+        i, name = case_tuple
+        scale = case.get_scale(i, name)
+        phase = case.get_phase(i, name) + dphase
+        #print(f'phase={phase}; scale={scale:g}')
+        xyz, deflected_xyz = case.get_vector_result_by_scale_phase(
+            i, name, scale, phase=phase)
+        z = deflected_xyz[:, 2]
+        #print(f'{z.min():g}, {z.max():g}')
+        #print(case)
+        self.is_deflected = True
+        self._update_grid(self.grid, deflected_xyz)
+
+    def _update_grid(self, grid: vtkUnstructuredGrid,
+                     nodes: np.ndarray) -> None:
+        vtk_points = grid.GetPoints()
+        #inan = np.where(nodes.ravel() == np.nan)[0]
+        #if len(inan) > 0:
+            #raise RuntimeError('nan in nodes...')
+        vtk_points = numpy_to_vtk_points(nodes, points=vtk_points, dtype='<f', deep=1)
+        grid.SetPoints(vtk_points)
+        grid.Modified()
+        #self.grid_selected.Modified()
+        #self._update_follower_grids(nodes)
+        #self._update_follower_grids_complex(nodes)
 
     def _update_settings(self):
         """we took the pyNastranGUI settings and are hacking on them"""
@@ -106,6 +183,12 @@ class VtkWindow(QMainWindow):
         nastran_settings.is_bar_axes = False
         nastran_settings.is_shell_mcids = False
         nastran_settings.is_element_quality = False
+        nastran_settings.is_rbe = False
+        nastran_settings.is_constraints = False
+        nastran_settings.is_3d_bars = False
+        nastran_settings.is_3d_bars_update = False
+        nastran_settings.is_mass_update = False
+        nastran_settings.is_aero = False
         return
 
     def _load_model(self, bdf_filename: PathLike,
@@ -114,11 +197,29 @@ class VtkWindow(QMainWindow):
         analysis = Nastran3(self)
         analysis.save_results_model = True
         self.is_geom = True
+
+        #['bar_eids', 'bar_lines', 'card_index', 'data_map', 'element_cards', 'element_id', 'gui', 'gui_elements',
+        # 'include_mass_in_geometry', 'mean_edge_length', 'model', 'node_id', 'save_results_model', 'xyz_cid0']
         analysis.load_nastran3_geometry(bdf_filename)
+        #print(object_attributes(analysis))
+
+        # self.inormal = -1
+        # for key, (case, case_tag) in self.result_cases.items():
+        #     print(case_tag)
+
         self.is_geom = False
         if os.path.exists(op2_filename):
             analysis.load_nastran3_results(op2_filename)
-
+            for key, (case, case_tag) in self.result_cases.items():
+                # if cae.titles[0] == ['Eigenvector']
+                i, name = case_tag
+                print(f'{key}: is_complex={case.is_complex} headers={case.headers[i]!r}')
+                # print(case_tag)
+            self.icase = 0  # plunge
+            #self.icase = 1  # pitch
+            #self.icase = 2  # flutter? pitch-plunge
+            #self.icase = 3 # pitch
+            return
 
         if len(analysis.model.eigenvectors) == 0:
             self.gui.mode2_pulldown.clear()
@@ -230,6 +331,7 @@ class VtkWindow(QMainWindow):
     def _finish_results_io2(self, name: str, form: list, cases: dict[int, Any]):
         if self.is_geom:
             self.result_cases = {}
+            # self.result_cases = cases
             return
         for case_id, case in cases.items():
             print(case)
