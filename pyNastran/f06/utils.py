@@ -19,11 +19,14 @@ import pyNastran
 #from pyNastran.gui.qt_version import qt_version
 
 PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q]'
+AXES = '[--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
+EXPORTS = '[--export_csv] [--export_zona] [--f06]'
 USAGE_145 = (
     'Usage:\n'
-    '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export_csv] [--export_zona] [--f06] '
-    '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] [--ncol NCOL] [--rhoref]\n'
+    f'  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] {AXES} '
+    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] {EXPORTS} '
+    '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] [--ncol NCOL] [--rhoref] '
+    '[--modal IVEL] [--freq_tol FREQ_TOL]\n'
 )
 USAGE_200 = (
     'Usage:\n'
@@ -101,6 +104,8 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         '  --f06            export an F06 file (temporary)\n'
         '  --vd_limit VD_LIMIT            add a Vd and 1.15*Vd line\n'
         '  --damping_limit DAMPING_LIMIT  add a damping limit\n'
+        '  --modal IVEL                   make a modal participation plot\n'
+        '  ----freq_tol FREQ_TOL          sets the Vg-Vf and kfreq delta frequency tolerance\n'
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -125,6 +130,10 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         return
     modes = split_int_colon(data['--modes'], start_value=1)
 
+    subcases = None
+    if data['--subcases']:
+        subcases = split_int_colon(data['--subcases'], start_value=1)
+
     xlim = [None, None]
     if data['--xlim']:
         xlim = split_float_colons(data['--xlim'])
@@ -136,6 +145,11 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     ylim_freq = [None, None]
     if data['--ylimfreq']:
         ylim_freq = split_float_colons(data['--ylimfreq'])
+
+    ivelocity = None
+    if data['--modal']:
+        # '[--modal IVEL]'
+        ivelocity = int(data['--modal'])
 
     use_rhoref = data['--rhoref']
     ncol = 0
@@ -187,6 +201,13 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     if data['--vd_limit']:
         vd_limit = get_cmd_line_float(data, '--vd_limit')
 
+    freq_tol = -1.0
+    if data['--freq_tol']:
+        if isinstance(data['--freq_tol'], bool):
+            data['--freq_tol'] = data['FREQ_TOL']
+        freq_tol = get_cmd_line_float(data, '--freq_tol')
+
+
     damping_limit = None
     if data['--damping_limit']:
         damping_limit = get_cmd_line_float(data, '--damping_limit')
@@ -209,10 +230,12 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     # TODO: need a new parameter
     export_csv_filename = None if export_csv is None else base + '.plot_145_subcase_%d.csv'
 
+    # TODO why does export_zona break this?
     vg_filename = None if export_zona is None else f'vg_{base}_subcase_%d.png'
     vg_vf_filename = None if export_zona is None else f'vg_vf_{base}_subcase_%d.png'
     kfreq_damping_filename = None if export_zona is None else f'kfreq_damping_{base}_subcase_%d.png'
     root_locus_filename = None if export_zona is None else f'root_locus_{base}_subcase_%d.png'
+    modal_participation_filename = None if export_zona is None else f'modal_participation_{base}_subcase_%d.png'
     if not plot:
         return
 
@@ -221,6 +244,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
 
     flutter_responses = plot_flutter_f06(
         f06_filename, modes=modes,
+        subcases=subcases,
         plot_type=plot_type,
         f06_units=in_units,
         out_units=out_units,
@@ -230,7 +254,9 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         ylim_damping=ylim_damping, ylim_freq=ylim_freq,
         vd_limit=vd_limit,
         damping_limit=damping_limit,
+        freq_tol=freq_tol,
         use_rhoref=use_rhoref,
+        ivelocity=ivelocity,
         nopoints=nopoints,
         noline=noline,
         ncol=ncol,
@@ -241,6 +267,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         vg_filename=vg_filename,
         vg_vf_filename=vg_vf_filename,
         root_locus_filename=root_locus_filename,
+        modal_participation_filename=modal_participation_filename,
         kfreq_damping_filename=kfreq_damping_filename, show=show, log=log)
     return flutter_responses
 

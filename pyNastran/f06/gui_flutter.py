@@ -1770,55 +1770,6 @@ def _get_png_filename(base: str, x_plot_type: str, plot_type: str,
     return png_filename0, png_filename
 
 
-def _reshape_eigenvectors(eigenvectors=None) -> np.ndarray:
-    if eigenvectors is None:
-        eigenvectors = np.array([
-            [1, 2, 3, 4, 5, 6, 7, 8],
-            [10, 20, 30, 40, 50, 60, 70, 80],
-        ])
-        eigr_eigi_vel = np.array([
-            [1, 10, 100],
-            [2, 20, 200],
-            [3, 30, 300],
-            [4, 40, 400],
-            [5, 50, 500],
-            [6, 60, 600],
-            [7, 70, 700],
-            [8, 80, 800],
-        ]).T
-    nmodes, nmodes_nvel = eigenvectors.shape
-    nvel = nmodes_nvel // nmodes
-    assert nvel > 0, nvel
-    print(f'nmodes={nmodes}; nvel={nvel}')
-
-    i = 0
-    eigenvectors2 = np.zeros((nmodes, nmodes, nvel))
-    for ivel in range(nvel):
-        for imode in range(nmodes):
-            eigenvectors2[:, imode, ivel] = eigenvectors[:, i]
-            i += 1
-
-    eigenvectors3 = eigenvectors.reshape(nmodes, nvel, nmodes).swapaxes(1, 2)
-    assert eigenvectors2.shape == eigenvectors3.shape, (eigenvectors2.shape, eigenvectors3.shape)
-    assert np.allclose(eigenvectors2, eigenvectors3)
-    # print(data3[:, :, 0])
-    # print(data3[:, :, 1])
-    # print(data3[:, :, 2])
-    # print(data3[:, :, 3])
-    for ivel in range(nvel):
-        print(f'ivel={ivel}')
-        print(eigenvectors2[:, :, ivel])
-        assert np.allclose(eigenvectors2[:, :, ivel], eigenvectors3[:, :, ivel])
-
-    # we want the rows
-    ivel = 0
-    imode = 1
-    mpf = eigenvectors[:, imode, ivel]
-    #eig.scale(mpf)
-    #asdf
-    return eigenvectors3
-
 
 if __name__ == '__main__':
-    #_reshape_eigenvectors()
     main()

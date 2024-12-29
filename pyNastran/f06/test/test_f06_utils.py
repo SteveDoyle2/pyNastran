@@ -37,6 +37,7 @@ from pyNastran.f06.parse_flutter import (
     plot_flutter_f06, make_flutter_plots, make_flutter_response,
     FlutterResponse,
 )
+from pyNastran.f06.flutter_response import reshape_eigenvectors
 from pyNastran.f06.parse_trim import read_f06_trim
 from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 from pyNastran.op2.op2 import OP2
@@ -49,6 +50,89 @@ AERO_PATH = MODEL_PATH / 'aero'
 
 
 class TestF06Flutter(unittest.TestCase):
+
+    def test_reshape_eigenvectors(self):
+        nmode = 2
+        nvel = 1
+
+        # 2x2 -> 2x2x1
+        #(imode, jmode, ivel)
+        eigenvectors = np.array([
+            [1.+0.j, -0.0223484-0.00115277j],
+            [-0.00381052-0.00061724j, 1.+0.j],
+            [0.1, 0.2],
+        ])
+        assert eigenvectors.shape == (nmode+1, nmode*nvel), eigenvectors.shape
+
+        # (ivel, imode, mpfs)
+        ivel = 0
+        eigenvectors_expected = np.zeros((nvel, nmode, nmode+1), dtype=eigenvectors.dtype)
+        eigenvectors_expected[ivel, 0, :] = eigenvectors[:, 0]
+        eigenvectors_expected[ivel, 1, :] = eigenvectors[:, 1]
+
+        #(nmode*nvel*nvel) -> (nmode, nvel)?
+        eigr_eigi_vel = np.array([
+            [-9.88553e-02, 1.71977e+01, 1.52383e+02],
+            [-1.71903e-01, 6.60547e+01, 1.52383e+02]])
+        eigr_eigi_vel_expected = np.zeros((nvel, nmode, 3))
+        assert eigr_eigi_vel.shape == (nmode*nvel, 3), eigr_eigi_vel.shape
+
+        eigenvectors2, eigr_eigi_vel2 = reshape_eigenvectors(eigenvectors, eigr_eigi_vel, incorrect_shape=True)
+        assert eigenvectors2.dtype == eigenvectors_expected.dtype, (eigenvectors2.dtype, eigenvectors_expected.dtype)
+        assert eigenvectors2.shape == eigenvectors_expected.shape, (eigenvectors2.shape, eigenvectors_expected.shape)
+        assert np.allclose(eigenvectors2, eigenvectors_expected)
+
+        assert eigr_eigi_vel2.shape == eigr_eigi_vel_expected.shape, (eigr_eigi_vel2.dtype, eigr_eigi_vel_expected.dtype)
+        assert eigr_eigi_vel2.shape == eigr_eigi_vel_expected.shape, (eigr_eigi_vel2.shape, eigr_eigi_vel_expected.shape)
+
+    def test_reshape_eigenvectors2(self):
+        """
+        we use a faked number of modes (modes+1) to
+        make sure we're swapping the correct axes
+        """
+        # 2 modes, 4 vel
+        ivel = 0
+        nmode = 2
+        nvel = 4
+        eigenvectors = np.array([
+            [1, 2, 3, 4, 5, 6, 7, 8],
+            [10, 20, 30, 40, 50, 60, 70, 80],
+        ])
+        eigr_eigi_vel = np.array([
+            [1, 10, 100],
+            [2, 20, 200],
+            [3, 30, 300],
+            [4, 40, 400],
+            [5, 50, 500],
+            [6, 60, 600],
+            [7, 70, 700],
+            [8, 80, 800],
+        ])
+        eigenvectors_expected = np.zeros((nvel, nmode, nmode), dtype=eigenvectors.dtype)
+        eigenvectors_expected[ivel+0, 0, :] = eigenvectors[:, 0]
+        eigenvectors_expected[ivel+0, 1, :] = eigenvectors[:, 1]
+        eigenvectors_expected[ivel+1, 0, :] = eigenvectors[:, 2]
+        eigenvectors_expected[ivel+1, 1, :] = eigenvectors[:, 3]
+        eigenvectors_expected[ivel+2, 0, :] = eigenvectors[:, 4]
+        eigenvectors_expected[ivel+2, 1, :] = eigenvectors[:, 5]
+        eigenvectors_expected[ivel+3, 0, :] = eigenvectors[:, 6]
+        eigenvectors_expected[ivel+3, 1, :] = eigenvectors[:, 7]
+
+        eigr_eigi_vel_expected = np.zeros((nvel, nmode, 3))
+        eigr_eigi_vel_expected[ivel+0, 0, :] = eigr_eigi_vel[0, :]
+        eigr_eigi_vel_expected[ivel+0, 1, :] = eigr_eigi_vel[1, :]
+        eigr_eigi_vel_expected[ivel+1, 0, :] = eigr_eigi_vel[2, :]
+        eigr_eigi_vel_expected[ivel+1, 1, :] = eigr_eigi_vel[3, :]
+        eigr_eigi_vel_expected[ivel+2, 0, :] = eigr_eigi_vel[4, :]
+        eigr_eigi_vel_expected[ivel+2, 1, :] = eigr_eigi_vel[5, :]
+        eigr_eigi_vel_expected[ivel+3, 0, :] = eigr_eigi_vel[6, :]
+        eigr_eigi_vel_expected[ivel+3, 1, :] = eigr_eigi_vel[7, :]
+        eigenvectors2, eigr_eigi_vel2 = reshape_eigenvectors(
+            eigenvectors, eigr_eigi_vel)
+        assert np.allclose(eigr_eigi_vel2.shape, eigr_eigi_vel_expected.shape)
+        assert np.allclose(eigenvectors2, eigenvectors_expected)
+        assert np.allclose(eigr_eigi_vel2, eigr_eigi_vel_expected)
+
 
     def test_make_grid_point_singularity_table(self):
         model = OP2()
@@ -142,6 +226,7 @@ class TestF06Flutter(unittest.TestCase):
             vg_vf_filename='vg_vf_subcase_%i.png',
             kfreq_damping_filename='kfreq_damping_subcase_%i.png',
             root_locus_filename='root_locus_subcase_%i.png',
+            modal_participation_filename='modal_participation_subcase_%i.png',
             plot=IS_MATPLOTLIB, show=False, log=log,
             close=True,
         )
@@ -263,7 +348,9 @@ class TestF06Flutter(unittest.TestCase):
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
         argv = ['f06', 'plot_145', str(f06_filename), '--eas',
                 '--in_units', 'si', '--out_units', 'english_in',
-                '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv', '--ncol', '2']
+                '--modal', '5',
+                '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv',
+                '--ncol', '2']
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 

@@ -330,16 +330,22 @@ class FlutterResponse:
             raise NotImplementedError(self.method)
 
         if len(self.eigenvector) > 1:
-            print(f'results.shape = {results.shape}')
+            #print(f'results.shape = {results.shape}')
             nmodes, nvelocity = results.shape[:2]
-            print(f'nmodes={nmodes}; nvelocity={nvelocity}')
+            #print(f'nmodes={nmodes}; nvelocity={nvelocity}')
             # not sure on the shapes
             #
             # npoint, nvelocity, 3?
-            self.eigr_eigi_velocity = self.eigenvector.reshape(nmodes, nvelocity, 3)
+            #self.eigr_eigi_velocity = self.eigenvector.reshape(nmodes, nvelocity, 3)
             # nmodes_mpf, npoint, nvelocity?
-            self.eigenvector = self.eigenvector.reshape(nmodes, nmodes, nvelocity)
-            nvelocity = self.results.shape
+            eigenvector, eigr_eigi_velocity = reshape_eigenvectors(
+                self.eigenvector, self.eigr_eigi_velocity)
+            self.eigenvector = eigenvector
+            self.eigr_eigi_velocity = eigr_eigi_velocity
+            assert len(self.eigenvector) and len(self.eigr_eigi_velocity), (len(self.eigenvector), len(self.eigr_eigi_velocity))
+            #= self.eigenvector.reshape(nmodes, nmodes, nvelocity)
+
+            nvelocity = results.shape
 
         self.results_in = results
         self.results = self.results_in
@@ -691,7 +697,8 @@ class FlutterResponse:
                        png_filename=png_filename,
                        **legend_kwargs)
 
-    def plot_modal_participation(self, modes=None,
+    def plot_modal_participation(self, ivel: int,
+                                 modes=None,
                                  mag_tol: float=-1.0,
                                  fig=None, axes=None,
                                  #eigr_lim=None, eigi_lim=None,
@@ -741,9 +748,10 @@ class FlutterResponse:
             0.0 - fully transparent
 
         """
-        if not isinstance(mag_tol, float_types):
-            warnings.warn(f'mag_tol={mag_tol!r} is not a float; default=-1.0')
-            mag_tol = -1.0
+        assert isinstance(ivel, int), ivel
+        # if not isinstance(mag_tol, float_types):
+        #     warnings.warn(f'mag_tol={mag_tol!r} is not a float; default=-1.0')
+        #     mag_tol = -1.0
         assert isinstance(mag_tol, float_types), mag_tol
         modes, imodes = _get_modes_imodes(self.modes, modes)
         legend_kwargs = get_legend_kwargs(self.font_size, legend_kwargs)
@@ -759,15 +767,17 @@ class FlutterResponse:
 
         ivel = 0
         imode = 1
-        print(f'eigr_eigi_velocity.shape: {self.eigr_eigi_velocity.shape}')
-        print(f'eigenvector.shape: {self.eigenvector.shape}')
+        #print(f'eigr_eigi_velocity.shape: {self.eigr_eigi_velocity.shape}')
+        #print(f'eigenvector.shape: {self.eigenvector.shape}')
         #print(f'eigr_eigi_velocity:\n{self.eigr_eigi_velocity}')
 
         # MSC
         #eigr_eigi_velocity:
         #[[-9.88553e-02  1.71977e+01  1.52383e+02]
         # [-1.71903e-01  6.60547e+01  1.52383e+02]]
-        eigr_eigi_velocity = self.eigr_eigi_velocity[ivel, :]
+        assert isinstance(self.eigr_eigi_velocity, np.ndarray), type(self.eigr_eigi_velocity)
+        #print('self.eigr_eigi_velocity = ', self.eigr_eigi_velocity)
+        eigr_eigi_velocity = self.eigr_eigi_velocity[ivel, imode, :]
         eigri, eigii, velocityi = eigr_eigi_velocity
 
         omega_damping = eigri
@@ -782,7 +792,7 @@ class FlutterResponse:
         iomega = (omega != 0.0)
         damping_g[iomega] = 2 * omega_damping[iomega] / omega[iomega]
 
-        title = f'Modal Participation Factors of Mode {imode+1}\n'
+        title = f'Subcas {self.subcase}; Modal Participation Factors of Mode {imode+1}\n'
         title += rf'$\omega$={omega:.2f}; freq={freq:.2f} Hz; g={damping_g:.3g}'
         if np.isfinite(velocityi):
             title += f' V={velocityi:.1f}'
@@ -796,9 +806,10 @@ class FlutterResponse:
         #print(f'eigr_eigi_velocity:\n{self.eigr_eigi_velocity}')
         #print(f'eigenvector:\n{self.eigenvector}')
 
-        eig = self.eigenvector[imodes, :]
-        eigr = eig.real
-        eigi = eig.imag
+        eig = self.eigenvector[ivel, imode, :]
+        print(f'imodes = {imodes}')
+        eigr = eig.real[imodes]
+        eigi = eig.imag[imodes]
         #abs_eigr = np.linalg.norm(eigr)
         #abs_eigi = np.linalg.norm(eigi)
         #if abs_eigr == 0.0:
@@ -806,26 +817,26 @@ class FlutterResponse:
         #if abs_eigi == 0.0:
         #    abs_eigi = 1.0
         mag = np.sqrt(eigr**2 + eigi**2)
-        print(f'eigr = {eigr}')
-        print(f'mag = {mag}')
+        #print(f'eigr = {eigr}')
+        #print(f'mag = {mag}')
 
         # TODO: is this the right axis?
-        mag_max = mag.max(axis=1)
-        print(f'mag_max = {mag_max}')
+        mag_max = mag.max()  # was imodes
+        #print(f'mag_max = {mag_max}')
 
         # normalize the magnitude, so it's a percentage
         # TODO: is this the right axis?
-        mag /= mag_max[:, np.newaxis]
-        print(f'mag2 = {mag}')
-        print(f'mag_tol = {mag_tol!r}')
+        mag /= mag_max # [:, np.newaxis]
+        #print(f'mag2 = {mag}')
+        #print(f'mag_tol = {mag_tol!r}')
 
         # filter out row (or col) for points that are
         # too close to 0
         ifilter0 = (mag > mag_tol)
-        print(f'ifilter0 = {ifilter0}')
+        #print(f'ifilter0 = {ifilter0}')
         # TODO: is this the right axis?
-        ifilter = np.any(ifilter0, axis=1)
-        print(f'ifilter = {ifilter}')
+        #ifilter = np.any(ifilter0, axis=1)
+        #print(f'ifilter = {ifilter}')
 
         # don't normalize
         abs_eigr = 1.0
@@ -836,15 +847,25 @@ class FlutterResponse:
 
         reals = eigr / abs_eigr
         imags = eigi / abs_eigi
+        #print(f'reals = {reals}')
+
+        symbols, colors = self._get_symbols_colors_from_modes(modes)
+        jcolor = 0
         for i, imodei, mode in zip(count(), imodes, modes):
             symbol = symbols[jcolor]
             color = colors[jcolor]
 
             #real = self.eigenvector[imode1, :].real, label=f'iMode1={imode1+1}')
-            reali = reals[i, imode]
-            imagi = imags[i, imode]
+            # reali = reals[i, imode]
+            # imagi = imags[i, imode]
+            reali = reals[i]
+            imagi = imags[i]
+            magi = mag[i]
             text = str(mode)
-            axes.scatter(reali, imagi, label=f'Mode {mode}', alpha=0.7)
+            eig_str = f'{reali:.2g}+{imagi:.2g}j; A={magi:.2g}'.replace('+-', '-')
+            label = f'Mode {mode}; {eig_str}'
+            #print(label)
+            axes.scatter(reali, imagi, label=label, alpha=0.7)
             #print(f'{i}: {reali}, {imagi}, {text!r}')
             axes.text(reali, imagi, text, ha='center', va='center',
                       fontsize=self.font_size)
@@ -1208,6 +1229,7 @@ class FlutterResponse:
                    plot_type: str='tas',
                    clear: bool=False, close: bool=False, legend: bool=True,
                    xlim=None, ylim_damping=None, ylim_freq=None,
+                   ivelocity: Optional[int]=None,
                    #vl_limit=None,
                    vd_limit=None,
                    v_lines: list[tuple[str, float, Color, str]]=None,
@@ -1299,11 +1321,20 @@ class FlutterResponse:
             #            vel, damping,
             #            color, symbol2, linestyle2,
             #            label, texti)
+
+            assert texti == '', texti
             _plot_two_axes(damp_axes, freq_axes,
                            vel, damping, freq,
                            color, symbol2, linestyle2,
                            label, texti,
                            self.point_spacing, markersize=None)
+            if ivelocity and symbol2 and ivelocity < len(vel):
+                markersize = 10
+                plot_kwargs = {
+                    'color': 'k', 'marker': 'o',
+                    's': markersize**2, 'alpha': 0.8}
+                damp_axes.scatter(vel[ivelocity], damping[ivelocity], **plot_kwargs)
+                freq_axes.scatter(vel[ivelocity], freq[ivelocity], **plot_kwargs)
 
         self._plot_crossings(
             damp_axes, damping_required,
@@ -2214,6 +2245,8 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
                    point_spacing: int, markersize=None) -> None:
     #point_spacing2 = None if point_spacing == 0 else point_spacing + 1
     point_spacing2 = point_spacing + 1
+    if point_spacing2 == 1:
+        point_spacing2 = None
     vel2 = vel[::point_spacing2]
     damping2 = damping[::point_spacing2]
     freq2 = freq[::point_spacing2]
@@ -2226,6 +2259,8 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
         damp_axes.plot(vel, damping, color=color, marker=symbol, markersize=markersize, linestyle=linestyle, label=label)
         freq_axes.plot(vel, freq, color=color, marker=symbol, markersize=markersize, linestyle=linestyle)
     elif symbol or text or linestyle:
+        print(point_spacing2, symbol, text, linestyle)
+        bbb
         damp_axes.plot(vel, damping, color=color, linestyle=linestyle, label=label)
         freq_axes.plot(vel, freq, color=color, linestyle=linestyle)
         if symbol:
@@ -2234,6 +2269,7 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
     #else:  # pragma: no cover
     #    raise NotImplementedError(f'point_spacing={point_spacing}; symbol={symbol!r}; text={text!r}')
     if text:
+        asdf
         for xi, y1i, y2i in zip(vel2, damping2, freq2):
             damp_axes.text(xi, y1i, text, color=color)
             freq_axes.text(xi, y2i, text, color=color)
@@ -2252,3 +2288,55 @@ def _show_save_clear_close(fig: plt.Figure,
         fig.clear()
     if close:
         plt.close()
+
+def reshape_eigenvectors(eigenvectors: np.array,
+                         eigr_eigi_vel: np.array,
+                         incorrect_shape: bool=False) -> np.ndarray:
+    """
+    Parameters
+    ----------
+    incorrect_shape: bool
+        helper for testing
+    """
+    nmodes1, nmodes_nvel = eigenvectors.shape
+    nmodes = nmodes1 - 1 if incorrect_shape else nmodes1
+    nvel = nmodes_nvel // nmodes
+    if 0:  # pragma: no cover
+        print(nmodes1, nmodes)
+        print(nmodes_nvel, nmodes, nvel)
+        print('eigenvectors:')
+        print(eigenvectors)
+        print('eigr_eigi_vel:')
+        print(eigr_eigi_vel)
+        print(f'nmodes={nmodes}; nvel={nvel}')
+    assert nvel > 0, nvel
+
+    i = 0
+    # eigenvectors2 = np.zeros((nmodes, nmodes, nvel), dtype=eigenvectors.dtype)
+    # for ivel in range(nvel):
+    #     for imode in range(nmodes):
+    #         eigenvectors2[:, imode, ivel] = eigenvectors[:, i]
+    #         i += 1
+
+    # was 1,2
+    eigenvectors3 = eigenvectors.reshape(nmodes1, nvel, nmodes).swapaxes(0, 1).swapaxes(1, 2)
+    eigr_eigi_vel3 = eigr_eigi_vel.reshape((nvel, nmodes, 3))
+    # assert eigenvectors2.shape == eigenvectors3.shape, (eigenvectors2.shape, eigenvectors3.shape)
+    #assert np.allclose(eigenvectors2, eigenvectors3)
+    # print(data3[:, :, 0])
+    # print(data3[:, :, 1])
+    # print(data3[:, :, 2])
+    # print(data3[:, :, 3])
+    #for ivel in range(nvel):
+        #print(f'ivel={ivel}')
+        #print(eigenvectors2[:, :, ivel])
+        #assert np.allclose(eigenvectors2[:, :, ivel], eigenvectors3[:, :, ivel])
+
+    # we want the rows
+    #ivel = 0
+    #imode = 1
+    #print(eigenvectors.shape)
+    #mpf = eigenvectors[:, imode, ivel]
+    #eig.scale(mpf)
+    #asdf
+    return eigenvectors3, eigr_eigi_vel3
