@@ -20,13 +20,15 @@ import pyNastran
 
 PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q]'
 AXES = '[--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-EXPORTS = '[--export_csv] [--export_zona] [--f06]'
+EXPORTS = '[--export_csv] [--export_zona] [--export_f06]'
 USAGE_145 = (
     'Usage:\n'
-    f'  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] {AXES} '
-    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] {EXPORTS} '
-    '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] [--ncol NCOL] [--rhoref] '
-    '[--modal IVEL] [--freq_tol FREQ_TOL]\n'
+    '  f06 plot_145 F06_FILENAME [--modes MODES] [--subcases SUB] '
+    f'{PLOT_TYPES} [--kfreq] [--rootlocus] '
+    '[--in_units IN] [--out_units OUT] [--rhoref] '
+    f'[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] {AXES} '
+    f'[--noline] [--nopoints] [--ncol NCOL] {EXPORTS} '
+    '[--modal IVEL MODE] [--freq_tol FREQ_TOL]  [--mag_tol MAG_TOL]\n'
 )
 USAGE_200 = (
     'Usage:\n'
@@ -101,15 +103,23 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         '  --rhoref         use sea level rho0 (density is actually density ratio; rho/rhoSL)'
         '  --export_zona    export a zona file\n'
         '  --export_csv     export a CSV file\n'
-        '  --f06            export an F06 file (temporary)\n'
+        '  --export_f06     export an F06 file (temporary)\n'
         '  --vd_limit VD_LIMIT            add a Vd and 1.15*Vd line\n'
         '  --damping_limit DAMPING_LIMIT  add a damping limit\n'
-        '  --modal IVEL                   make a modal participation plot\n'
-        '  ----freq_tol FREQ_TOL          sets the Vg-Vf and kfreq delta frequency tolerance\n'
+        '  --modal IVEL MODE              make a modal participation plot\n'
+        '  --freq_tol FREQ_TOL            sets the delta frequency tolerance for Vg-Vf and kfreq\n'
+        '  --mag_tol MAG_TOL              sets the magnitude tolerance for modal paricipation\n'
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
+        '\n'
+        'Examples:\n'
+        '  f06 plot_145 model.f06\n'
+        '  f06 plot_145 model.f06 --modes 1:10\n'
+        '  f06 plot_145 model.f06 --eas --in_units english_in --out_units english_kt -vd_limit 200 --freq_tol 1.0\n'
+        '  f06 plot_145 model.f06 --modal 0 2:4 --mag_tol 0.1\n'
+
     )
     if len(argv) == 1:
         sys.exit(msg)
@@ -147,9 +157,11 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         ylim_freq = split_float_colons(data['--ylimfreq'])
 
     ivelocity = None
+    mode = None
     if data['--modal']:
-        # '[--modal IVEL]'
+        # '[--modal IVEL MODE]'
         ivelocity = int(data['--modal'])
+        mode = split_int_colon(data['MODE'], start_value=1)
 
     use_rhoref = data['--rhoref']
     ncol = 0
@@ -203,10 +215,15 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
 
     freq_tol = -1.0
     if data['--freq_tol']:
-        if isinstance(data['--freq_tol'], bool):
-            data['--freq_tol'] = data['FREQ_TOL']
+        #if isinstance(data['--freq_tol'], bool):
+        #    data['--freq_tol'] = data['FREQ_TOL']
         freq_tol = get_cmd_line_float(data, '--freq_tol')
 
+    mag_tol = -1.0
+    if data['--mag_tol']:
+        if isinstance(data['--mag_tol'], bool):
+            data['--mag_tol'] = data['MAG_TOL']
+        mag_tol = get_cmd_line_float(data, '--mag_tol')
 
     damping_limit = None
     if data['--damping_limit']:
@@ -218,7 +235,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     nopoints = data['--nopoints']
     noline = data['--noline']
 
-    export_f06 = data['--f06']
+    export_f06 = data['--export_f06']
     export_csv = data['--export_csv']
     export_zona = data['--export_zona']
 
@@ -254,9 +271,9 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         ylim_damping=ylim_damping, ylim_freq=ylim_freq,
         vd_limit=vd_limit,
         damping_limit=damping_limit,
-        freq_tol=freq_tol,
+        freq_tol=freq_tol, mag_tol=mag_tol,
         use_rhoref=use_rhoref,
-        ivelocity=ivelocity,
+        ivelocity=ivelocity, mode=mode,
         nopoints=nopoints,
         noline=noline,
         ncol=ncol,
@@ -432,8 +449,8 @@ def cmd_line_plot_optimization(argv=None, plot: bool=True, show: bool=True,
         #'  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
         #"  --nopoints       don't plot the points\n"
         #"  --noline         don't plot the lines\n"
-        #"  --export         export a zona file\n"
-        #"  --f06            export an F06 file (temporary)\n"
+        #"  --export_zona    export a zona file\n"
+        #"  --export_f06     export an F06 file (temporary)\n"
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'''

@@ -346,9 +346,11 @@ class TestF06Flutter(unittest.TestCase):
     def test_cmd_line_plot_flutter_0012(self):
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
+        ivel = '0'
+        mode = '1:2'
         argv = ['f06', 'plot_145', str(f06_filename), '--eas',
                 '--in_units', 'si', '--out_units', 'english_in',
-                '--modal', '5',
+                '--modal', ivel, mode,
                 '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv',
                 '--ncol', '2']
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)

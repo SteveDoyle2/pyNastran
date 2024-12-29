@@ -343,7 +343,9 @@ def plot_flutter_f06(f06_filename: PathLike,
                      vd_limit: Optional[float]=None,
                      damping_limit: Optional[float]=None,
                      freq_tol: float=-1.0,
+                     mag_tol: float=-1.0,
                      ivelocity: Optional[int]=None,
+                     mode: Optional[int]=None,
                      use_rhoref: bool=False,
                      nopoints: bool=False,
                      noline: bool=False,
@@ -434,6 +436,7 @@ def plot_flutter_f06(f06_filename: PathLike,
     assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
     assert ivelocity is None or isinstance(ivelocity, integer_types), ivelocity
+    #assert mode is None or isinstance(mode, integer_types), mode
     flutters = make_flutter_response(
         f06_filename, f06_units=f06_units, out_units=out_units,
         use_rhoref=use_rhoref, log=log)
@@ -443,9 +446,9 @@ def plot_flutter_f06(f06_filename: PathLike,
                            plot_type,
                            plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                            nopoints, noline, ncol=ncol,
-                           ivelocity=ivelocity,
+                           ivelocity=ivelocity, mode=mode,
                            vd_limit=vd_limit, damping_limit=damping_limit,
-                           freq_tol=freq_tol,
+                           freq_tol=freq_tol, mag_tol=mag_tol,
                            export_csv_filename=export_csv_filename,
                            export_zona_filename=export_zona_filename,
                            export_veas_filename=export_veas_filename,
@@ -477,7 +480,9 @@ def make_flutter_plots(modes: list[int],
                        vd_limit: Optional[float]=None,
                        damping_limit: Optional[float]=None,
                        freq_tol: float=-1.0,
+                       mag_tol: float=-1.0,
                        ivelocity: Optional[int]=None,
+                       mode: Optional[int]=None,
                        export_csv_filename: Optional[str]=None,
                        export_zona_filename: Optional[str]=None,
                        export_veas_filename: Optional[str]=None,
@@ -494,6 +499,7 @@ def make_flutter_plots(modes: list[int],
     assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
     assert ivelocity is None or isinstance(ivelocity, integer_types), ivelocity
+    #assert mode is None or isinstance(mode, integer_types), mode
 
     assert len(flutters) > 0, flutters
     subcases_flutter_set = set(list(flutters.keys()))
@@ -515,12 +521,12 @@ def make_flutter_plots(modes: list[int],
         flutter = cast(FlutterResponse, flutter)
         _make_flutter_subcase_plot(
             modes, flutter, subcase, xlim, ylim_damping, ylim_freq, ylim_kfreq,
-            ivelocity,
+            ivelocity, mode,
             plot_type, plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
             nopoints, noline,
             ncol=ncol, legend=legend,
             vd_limit=vd_limit, damping_limit=damping_limit,
-            freq_tol=freq_tol,
+            freq_tol=freq_tol, mag_tol=mag_tol,
             vg_filename=vg_filename,
             vg_vf_filename=vg_vf_filename,
             root_locus_filename=root_locus_filename,
@@ -547,6 +553,7 @@ def make_flutter_plots(modes: list[int],
 def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                xlim, ylim_damping, ylim_freq, ylim_kfreq,
                                ivelocity: Optional[int],
+                               mode: Optional[int],
                                plot_type: str,
                                plot_vg: bool,
                                plot_vg_vf: bool,
@@ -559,6 +566,7 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                vd_limit: Optional[float]=None,
                                damping_limit: Optional[float]=None,
                                freq_tol: float=-1.0,
+                               mag_tol: float=-1.0,
                                vg_filename: Optional[str]=None,
                                vg_vf_filename: Optional[str]=None,
                                root_locus_filename: Optional[str]=None,
@@ -566,7 +574,6 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                modal_participation_filename: Optional[str]=None,
                                show: bool=True, clear: bool=False, close: bool=False,
                                log: Optional[SimpleLogger]=None):
-        # print(subcase)
         #_remove_neutrinos(flutter, log)
         flutter.nopoints = nopoints
         flutter.noline = noline
@@ -596,6 +603,7 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                     fig=None, axes=None,
                                     eigr_lim=None, eigi_lim=None,
                                     freq_tol=freq_tol,
+                                    ivelocity=ivelocity,
                                     ncol=ncol,
                                     clear=clear, legend=True,
                                     png_filename=filenamei,
@@ -604,14 +612,18 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
         if is_modal_participation:
             assert modal_participation_filename is not None
             filenamei = None if modal_participation_filename is None else (modal_participation_filename % subcase)
-            flutter.plot_modal_participation(
-                ivelocity, modes=modes,
-                fig=None, axes=None,
-                freq_tol=-1.0,
-                ncol=ncol,
-                clear=clear, legend=True,
-                png_filename=filenamei,
-                show=False, close=close)
+            mode_ = [mode] if isinstance(mode, integer_types) or mode is None else mode
+            for modei in mode_:
+                flutter.plot_modal_participation(
+                    ivelocity, modei,
+                    modes=modes,
+                    fig=None, axes=None,
+                    freq_tol=freq_tol,
+                    mag_tol=mag_tol,
+                    ncol=ncol,
+                    clear=clear, legend=True,
+                    png_filename=filenamei,
+                    show=False, close=close)
 
         if plot_kfreq_damping:
             filenamei = None if kfreq_damping_filename is None else (kfreq_damping_filename % subcase)

@@ -639,6 +639,7 @@ class FlutterResponse:
     def plot_root_locus(self, modes=None,
                         fig=None, axes=None,
                         eigr_lim=None, eigi_lim=None,
+                        ivelocity=None,
                         ncol: int=0,
                         show: bool=True, clear: bool=False,
                         close: bool=False, legend: bool=True,
@@ -690,6 +691,7 @@ class FlutterResponse:
         scatter = True
         self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
                        modes=modes, fig=fig, axes=axes,
+                       ivelocity=ivelocity,
                        xlim=eigr_lim, ylim=eigi_lim,
                        ncol=ncol,
                        show=show, clear=clear, close=close, legend=legend,
@@ -697,7 +699,7 @@ class FlutterResponse:
                        png_filename=png_filename,
                        **legend_kwargs)
 
-    def plot_modal_participation(self, ivel: int,
+    def plot_modal_participation(self, ivel: int, mode: int,
                                  modes=None,
                                  mag_tol: float=-1.0,
                                  fig=None, axes=None,
@@ -749,6 +751,7 @@ class FlutterResponse:
 
         """
         assert isinstance(ivel, int), ivel
+        assert isinstance(mode, int), mode
         # if not isinstance(mag_tol, float_types):
         #     warnings.warn(f'mag_tol={mag_tol!r} is not a float; default=-1.0')
         #     mag_tol = -1.0
@@ -765,8 +768,6 @@ class FlutterResponse:
         # iy = self.ieigi
         # scatter = True
 
-        ivel = 0
-        imode = 1
         #print(f'eigr_eigi_velocity.shape: {self.eigr_eigi_velocity.shape}')
         #print(f'eigenvector.shape: {self.eigenvector.shape}')
         #print(f'eigr_eigi_velocity:\n{self.eigr_eigi_velocity}')
@@ -775,6 +776,11 @@ class FlutterResponse:
         #eigr_eigi_velocity:
         #[[-9.88553e-02  1.71977e+01  1.52383e+02]
         # [-1.71903e-01  6.60547e+01  1.52383e+02]]
+        nvel, nmode = self.eigr_eigi_velocity.shape[:2]
+        assert ivel < nvel, f'ivel={ivel} nvel={nvel}'
+        assert mode <= nmode, f'mode={mode} nmode={nmode}'
+
+        imode = mode - 1
         assert isinstance(self.eigr_eigi_velocity, np.ndarray), type(self.eigr_eigi_velocity)
         #print('self.eigr_eigi_velocity = ', self.eigr_eigi_velocity)
         eigr_eigi_velocity = self.eigr_eigi_velocity[ivel, imode, :]
@@ -792,7 +798,7 @@ class FlutterResponse:
         iomega = (omega != 0.0)
         damping_g[iomega] = 2 * omega_damping[iomega] / omega[iomega]
 
-        title = f'Subcas {self.subcase}; Modal Participation Factors of Mode {imode+1}\n'
+        title = f'Subcas {self.subcase}; Modal Participation Factors of Mode {mode}\n'
         title += rf'$\omega$={omega:.2f}; freq={freq:.2f} Hz; g={damping_g:.3g}'
         if np.isfinite(velocityi):
             title += f' V={velocityi:.1f}'
@@ -807,7 +813,7 @@ class FlutterResponse:
         #print(f'eigenvector:\n{self.eigenvector}')
 
         eig = self.eigenvector[ivel, imode, :]
-        print(f'imodes = {imodes}')
+        #print(f'imodes = {imodes}')
         eigr = eig.real[imodes]
         eigi = eig.imag[imodes]
         #abs_eigr = np.linalg.norm(eigr)
@@ -855,12 +861,11 @@ class FlutterResponse:
             symbol = symbols[jcolor]
             color = colors[jcolor]
 
-            #real = self.eigenvector[imode1, :].real, label=f'iMode1={imode1+1}')
-            # reali = reals[i, imode]
-            # imagi = imags[i, imode]
             reali = reals[i]
             imagi = imags[i]
             magi = mag[i]
+            if magi < mag_tol:
+                continue
             text = str(mode)
             eig_str = f'{reali:.2g}+{imagi:.2g}j; A={magi:.2g}'.replace('+-', '-')
             label = f'Mode {mode}; {eig_str}'
@@ -892,6 +897,7 @@ class FlutterResponse:
                   modes=None,
                   fig=None, axes=None,
                   xlim=None, ylim=None,
+                  ivelocity=None,
                   ncol: int=0,
                   show: bool=True, clear: bool=False,
                   close: bool=False, legend: bool=True,
@@ -945,6 +951,13 @@ class FlutterResponse:
             line = axes.plot(xs[iplot], ys[iplot],
                              color=color2, marker=symbol2, label=label,
                              linestyle=linestyle2, markersize=0)
+
+            if ivelocity and symbol2 and ivelocity < len(xs):
+                markersize = 10
+                plot_kwargs = {
+                    'color': 'k', 'marker': 'o',
+                    's': markersize**2, 'alpha': 0.8}
+                axes.scatter(xs[ivelocity], ys[ivelocity], **plot_kwargs)
 
             if scatter:
                 scatteri = np.linspace(.75, 50., len(xs))
