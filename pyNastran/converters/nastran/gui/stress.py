@@ -1311,187 +1311,187 @@ def get_solid_stress_strains2(cases: CasesDict,
     return icase
 
 
-@nocrash_log
-def get_solid_stress_strains(cases: CasesDict,
-                             eids: np.ndarray,
-                             model: OP2,
-                             times: np.ndarray,
-                             key: NastranKey,
-                             icase: int,
-                             form_dict, header_dict,
-                             keys_map: KeysMap,
-                             log: SimpleLogger,
-                             use_old_sidebar_objects: bool,
-                             is_stress: bool) -> int:
-    """
-    helper method for _fill_op2_time_centroidal_stress.
-    """
-    if not use_old_sidebar_objects:
-        return icase
-    #print("***stress eids=", eids)
-    subcase_id = key[0]
-    if is_stress:
-        results = model.op2_results.stress
-        solids = [
-            results.ctetra_stress, results.cpenta_stress, results.chexa_stress, # results.cpyram_stress,
-        ]
-        word = 'Stress (centroid)'
-    else:
-        results = model.op2_results.strain
-        solids = [
-            results.ctetra_strain, results.cpenta_strain, results.chexa_strain, # results.cpyram_strain,
-        ]
-        word = 'Strain (centroid)'
-
-    #titles = []
-    solid_cases = []
-    solid_ieids = []
-    for result in solids:
-        if key not in result:
-            continue
-        case = result[key]
-        if isinstance(case, RealSolidArrayNx):
-            log.info(f'converting {case.class_name}')
-            case = case.to_real_solid_array()
-            result[key] = case
-
-        #print(case)
-        nnodes = case.nnodes_per_element
-        all_eidsi = case.element_node[:, 0]
-        nall_eidsi = len(all_eidsi)
-        nelementsi = nall_eidsi // nnodes
-        eidsi = all_eidsi.reshape(nelementsi, nnodes)[:, 0]
-
-        i = np.searchsorted(eids, eidsi)
-        if len(i) != len(np.unique(i)):
-            #print(case.element_node)
-            #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
-            #print('iplate = %s' % i)
-            #print('  eids = %s' % eids)
-            #print('  eidsiA = %s' % case.element_node[:, 0])
-            #print('  eidsiB = %s' % eidsi)
-            msg = 'i%s (solid)=%s is not unique' % (case.element_name, str(i))
-            #msg = 'iplate=%s is not unique' % str(i)
-            log.warning(msg)
-            continue
-        if i.max() == len(eids):
-            log.error('skipping because lookup is out of range...')
-            continue
-        #print('i =', i, i.max())
-        #print('eids =', eids, len(eids))
-        #print('eidsi =', eidsi, eids)
-        #print(f'------------adding i={i} for {case.element_name}-----------')
-        solid_element_id = np.unique(case.element_node[:, 0])
-        common_eids = np.intersect1d(eids, solid_element_id)
-        if len(common_eids) == 0:
-            continue
-
-        solid_cases.append(case)
-        solid_ieids.append(i)
-    if not solid_ieids:
-        return icase
-
-    solid_ieids = np.hstack(solid_ieids)
-    ieid_max = len(eids)
-    #print('ieid_max =', ieid_max)
-
-    case = solid_cases[0]
-    case_headers = case.get_headers()
-    if is_stress:
-        #sigma = 'σ'
-        method_map = {
-            'oxx' : 'Normal XX',
-            'oyy' : 'Normal YY',
-            'ozz' : 'Normal ZZ',
-            'txy' : 'Shear XY',
-            'tyz' : 'Shear YZ',
-            'txz' : 'Shear XZ',
-
-            'omax' : 'Max Principal',
-            'omin' : 'Min Principal',
-            'omid' : 'Mid Principal',
-            'von_mises' : 'von Mises',
-            'max_shear' : 'Max Shear',
-        }
-        data_format = '%.3f'
-    else:
-        #sigma = 'ϵ'
-        method_map = {
-            'exx' : 'Normal XX',
-            'eyy' : 'Normal YY',
-            'ezz' : 'Normal ZZ',
-            'exy' : 'Shear XY',
-            'eyz' : 'Shear YZ',
-            'exz' : 'Shear XZ',
-
-            'emax' : 'Max Principal',
-            'emin' : 'Min Principal',
-            'emid' : 'Mid Principal',
-            'von_mises' : 'von Mises',
-            'max_shear' : 'Max Shear',
-        }
-        data_format = '%.3e'
-    methods = [method_map[headeri] for headeri in case_headers]
-    #if 'Mises' in methods:
-        #methods.append('Max shear')
-    #else:
-        #methods.append(f'{sigma} von Mises')
-
-    #if case.is_von_mises:
-        #vm_word = 'vonMises'
-    #else:
-        #vm_word = 'maxShear'
-
-    #headersi = case.get_headers()
-    #print('headersi =', headersi)
-
-    scalars_array = []
-    for case in solid_cases:
-        #if case.is_complex:
-            #log.warning(f'skipping complex Rod {word}')
-            #continue
-
-        #ntimes, nelements, nresults = case.data.shape
-        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
-        #                                         txy, angle,
-        #                                         majorP, minorP, ovm]
-
-        keys_map[key] = KeyMap(case.subtitle, case.label,
-                               case.superelement_adaptivity_index,
-                               case.pval_step)
-
-        #nnodes_per_element = case.nnodes
-        #nelements_nnodes = nnodes_nlayers // 2
-        #nelements = nelements_nnodes // nnodes_per_element
-        #nlayers = 2
-        nnodes = case.nnodes_per_element
-        scalars = case.data
-        #print('scalars.shape', scalars.shape)
-        ntimes, nall, nresults = scalars.shape
-        nelements = nall // nnodes
-
-        if isinstance(case, (RealSolidArray, ComplexSolidArray)):
-            scalars_save = scalars.reshape(ntimes, nelements, nnodes, nresults)
-            scalars_array.append(scalars_save[:, :, 0, :])  # centroidal stress
-        else:
-            raise NotImplementedError(case.class_name)
-
-    if len(scalars_array) == 0:
-        return icase
-
-    scalars_array = concatenate_scalars(scalars_array)
-
-    #titles = []  # legend title
-    headers = [] # sidebar word
-    assert scalars_array.shape[2] == len(methods), f'shape={scalars_array.shape}; methods={methods} n={len(methods)}'
-    uname = f'Solid {word}'
-    res = SimpleTableResults(
-        subcase_id, headers, solid_ieids, ieid_max, scalars_array, methods,
-        data_format=data_format,
-        colormap='jet', uname=uname)
-    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                       form_dict, header_dict, methods,
-                                       name='Solid')
+# @nocrash_log
+# def get_solid_stress_strains(cases: CasesDict,
+#                              eids: np.ndarray,
+#                              model: OP2,
+#                              times: np.ndarray,
+#                              key: NastranKey,
+#                              icase: int,
+#                              form_dict, header_dict,
+#                              keys_map: KeysMap,
+#                              log: SimpleLogger,
+#                              use_old_sidebar_objects: bool,
+#                              is_stress: bool) -> int:
+#     """
+#     helper method for _fill_op2_time_centroidal_stress.
+#     """
+#     if not use_old_sidebar_objects:
+#         return icase
+#     #print("***stress eids=", eids)
+#     subcase_id = key[0]
+#     if is_stress:
+#         results = model.op2_results.stress
+#         solids = [
+#             results.ctetra_stress, results.cpenta_stress, results.chexa_stress, # results.cpyram_stress,
+#         ]
+#         word = 'Stress (centroid)'
+#     else:
+#         results = model.op2_results.strain
+#         solids = [
+#             results.ctetra_strain, results.cpenta_strain, results.chexa_strain, # results.cpyram_strain,
+#         ]
+#         word = 'Strain (centroid)'
+#
+#     #titles = []
+#     solid_cases = []
+#     solid_ieids = []
+#     for result in solids:
+#         if key not in result:
+#             continue
+#         case = result[key]
+#         if isinstance(case, RealSolidArrayNx):
+#             log.info(f'converting {case.class_name}')
+#             case = case.to_real_solid_array()
+#             result[key] = case
+#
+#         #print(case)
+#         nnodes = case.nnodes_per_element
+#         all_eidsi = case.element_node[:, 0]
+#         nall_eidsi = len(all_eidsi)
+#         nelementsi = nall_eidsi // nnodes
+#         eidsi = all_eidsi.reshape(nelementsi, nnodes)[:, 0]
+#
+#         i = np.searchsorted(eids, eidsi)
+#         if len(i) != len(np.unique(i)):
+#             #print(case.element_node)
+#             #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
+#             #print('iplate = %s' % i)
+#             #print('  eids = %s' % eids)
+#             #print('  eidsiA = %s' % case.element_node[:, 0])
+#             #print('  eidsiB = %s' % eidsi)
+#             msg = 'i%s (solid)=%s is not unique' % (case.element_name, str(i))
+#             #msg = 'iplate=%s is not unique' % str(i)
+#             log.warning(msg)
+#             continue
+#         if i.max() == len(eids):
+#             log.error('skipping because lookup is out of range...')
+#             continue
+#         #print('i =', i, i.max())
+#         #print('eids =', eids, len(eids))
+#         #print('eidsi =', eidsi, eids)
+#         #print(f'------------adding i={i} for {case.element_name}-----------')
+#         solid_element_id = np.unique(case.element_node[:, 0])
+#         common_eids = np.intersect1d(eids, solid_element_id)
+#         if len(common_eids) == 0:
+#             continue
+#
+#         solid_cases.append(case)
+#         solid_ieids.append(i)
+#     if not solid_ieids:
+#         return icase
+#
+#     solid_ieids = np.hstack(solid_ieids)
+#     ieid_max = len(eids)
+#     #print('ieid_max =', ieid_max)
+#
+#     case = solid_cases[0]
+#     case_headers = case.get_headers()
+#     if is_stress:
+#         #sigma = 'σ'
+#         method_map = {
+#             'oxx' : 'Normal XX',
+#             'oyy' : 'Normal YY',
+#             'ozz' : 'Normal ZZ',
+#             'txy' : 'Shear XY',
+#             'tyz' : 'Shear YZ',
+#             'txz' : 'Shear XZ',
+#
+#             'omax' : 'Max Principal',
+#             'omin' : 'Min Principal',
+#             'omid' : 'Mid Principal',
+#             'von_mises' : 'von Mises',
+#             'max_shear' : 'Max Shear',
+#         }
+#         data_format = '%.3f'
+#     else:
+#         #sigma = 'ϵ'
+#         method_map = {
+#             'exx' : 'Normal XX',
+#             'eyy' : 'Normal YY',
+#             'ezz' : 'Normal ZZ',
+#             'exy' : 'Shear XY',
+#             'eyz' : 'Shear YZ',
+#             'exz' : 'Shear XZ',
+#
+#             'emax' : 'Max Principal',
+#             'emin' : 'Min Principal',
+#             'emid' : 'Mid Principal',
+#             'von_mises' : 'von Mises',
+#             'max_shear' : 'Max Shear',
+#         }
+#         data_format = '%.3e'
+#     methods = [method_map[headeri] for headeri in case_headers]
+#     #if 'Mises' in methods:
+#         #methods.append('Max shear')
+#     #else:
+#         #methods.append(f'{sigma} von Mises')
+#
+#     #if case.is_von_mises:
+#         #vm_word = 'vonMises'
+#     #else:
+#         #vm_word = 'maxShear'
+#
+#     #headersi = case.get_headers()
+#     #print('headersi =', headersi)
+#
+#     scalars_array = []
+#     for case in solid_cases:
+#         #if case.is_complex:
+#             #log.warning(f'skipping complex Rod {word}')
+#             #continue
+#
+#         #ntimes, nelements, nresults = case.data.shape
+#         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
+#         #                                         txy, angle,
+#         #                                         majorP, minorP, ovm]
+#
+#         keys_map[key] = KeyMap(case.subtitle, case.label,
+#                                case.superelement_adaptivity_index,
+#                                case.pval_step)
+#
+#         #nnodes_per_element = case.nnodes
+#         #nelements_nnodes = nnodes_nlayers // 2
+#         #nelements = nelements_nnodes // nnodes_per_element
+#         #nlayers = 2
+#         nnodes = case.nnodes_per_element
+#         scalars = case.data
+#         #print('scalars.shape', scalars.shape)
+#         ntimes, nall, nresults = scalars.shape
+#         nelements = nall // nnodes
+#
+#         if isinstance(case, (RealSolidArray, ComplexSolidArray)):
+#             scalars_save = scalars.reshape(ntimes, nelements, nnodes, nresults)
+#             scalars_array.append(scalars_save[:, :, 0, :])  # centroidal stress
+#         else:
+#             raise NotImplementedError(case.class_name)
+#
+#     if len(scalars_array) == 0:
+#         return icase
+#
+#     scalars_array = concatenate_scalars(scalars_array)
+#
+#     #titles = []  # legend title
+#     headers = [] # sidebar word
+#     assert scalars_array.shape[2] == len(methods), f'shape={scalars_array.shape}; methods={methods} n={len(methods)}'
+#     uname = f'Solid {word}'
+#     res = SimpleTableResults(
+#         subcase_id, headers, solid_ieids, ieid_max, scalars_array, methods,
+#         data_format=data_format,
+#         colormap='jet', uname=uname)
+#     icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+#                                        form_dict, header_dict, methods,
+#                                        name='Solid')
     return icase
 
 @nocrash_log

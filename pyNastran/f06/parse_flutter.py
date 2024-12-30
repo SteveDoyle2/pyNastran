@@ -138,16 +138,17 @@ def make_flutter_response(f06_filename: PathLike,
                 if new_subcase > subcase:
                     log.debug('subcase=%s -> new_subcase=%s' % (subcase, new_subcase))
                     log.debug('modes1 = %s' % modes)
-                    flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
-                                              mach, density_ratio, method,
-                                              modes, results,
-                                              in_units=f06_units,
-                                              use_rhoref=use_rhoref,
-                                              eigenvector=eigenvectors_array,
-                                              eigr_eigi_velocity=eigr_eigi_velocity)
-                    flutter.set_out_units(out_units)
-                    #_remove_neutrinos(flutter, log)
-                    flutters[subcase] = flutter
+                    response = FlutterResponse(
+                        subcase, configuration, xysym, xzsym,
+                        mach, density_ratio, method,
+                        modes, results,
+                        in_units=f06_units,
+                        use_rhoref=use_rhoref,
+                        eigenvector=eigenvectors_array,
+                        eigr_eigi_velocity=eigr_eigi_velocity)
+                    response.set_out_units(out_units)
+                    #_remove_neutrinos(response, log)
+                    flutters[subcase] = response
                     modes = []
                     results = []
                     subcase = new_subcase
@@ -316,15 +317,16 @@ def make_flutter_response(f06_filename: PathLike,
         #if not found_flutter_summary:
             #print(line)
             #raise RuntimeError("failed to find 'FLUTTER SUMMARY'")
-        flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
-                                  mach, density_ratio, method,
-                                  modes, results,
-                                  in_units=f06_units,
-                                  use_rhoref=use_rhoref,
-                                  eigenvector=eigenvectors_array,
-                                  eigr_eigi_velocity=eigr_eigi_velocity)
-        flutter.set_out_units(out_units)
-        flutters[subcase] = flutter
+        response = FlutterResponse(
+            subcase, configuration, xysym, xzsym,
+            mach, density_ratio, method,
+            modes, results,
+            in_units=f06_units,
+            use_rhoref=use_rhoref,
+            eigenvector=eigenvectors_array,
+            eigr_eigi_velocity=eigr_eigi_velocity)
+        response.set_out_units(out_units)
+        flutters[subcase] = response
     return flutters
 
 def plot_flutter_f06(f06_filename: PathLike,
@@ -515,12 +517,12 @@ def make_flutter_plots(modes: list[int],
         missing_cases_list.sort()
         log.warning(f'missing subcases={missing_cases_list}')
 
-    for subcase, flutter in sorted(flutters.items()):
+    for subcase, response in sorted(flutters.items()):
         if subcase not in subcases_set:
             continue
-        flutter = cast(FlutterResponse, flutter)
+        response = cast(FlutterResponse, response)
         _make_flutter_subcase_plot(
-            modes, flutter, subcase, xlim, ylim_damping, ylim_freq, ylim_kfreq,
+            modes, response, subcase, xlim, ylim_damping, ylim_freq, ylim_kfreq,
             ivelocity, mode,
             plot_type, plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
             nopoints, noline,
@@ -535,14 +537,14 @@ def make_flutter_plots(modes: list[int],
             show=show, clear=clear, close=close, log=log)
 
         if export_csv_filename:
-            flutter.export_to_csv(export_csv_filename, modes=modes)
+            response.export_to_csv(export_csv_filename, modes=modes)
         if export_zona_filename:
-            flutter.export_to_zona(export_zona_filename, modes=modes,
-                                   xlim=xlim, plot_type=plot_type)
+            response.export_to_zona(export_zona_filename, modes=modes,
+                                    xlim=xlim, plot_type=plot_type)
         if export_veas_filename:
-            flutter.export_to_veas(export_veas_filename, modes=modes)
+            response.export_to_veas(export_veas_filename, modes=modes)
         if export_f06_filename:
-            flutter.export_to_f06(export_f06_filename, modes=modes)
+            response.export_to_f06(export_f06_filename, modes=modes)
 
     if show:
         plt.show()
@@ -550,7 +552,8 @@ def make_flutter_plots(modes: list[int],
         #plt.close()
 
 
-def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
+def _make_flutter_subcase_plot(modes, response: FlutterResponse,
+                               subcase: int,
                                xlim, ylim_damping, ylim_freq, ylim_kfreq,
                                ivelocity: Optional[int],
                                mode: Optional[int],
@@ -574,47 +577,46 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                modal_participation_filename: Optional[str]=None,
                                show: bool=True, clear: bool=False, close: bool=False,
                                log: Optional[SimpleLogger]=None):
-        #_remove_neutrinos(flutter, log)
-        flutter.nopoints = nopoints
-        flutter.noline = noline
+        #_remove_neutrinos(response, log)
+        response.nopoints = nopoints
+        response.noline = noline
         if plot_vg:
             filenamei = None if vg_filename is None else (vg_filename % subcase)
-            flutter.plot_vg(modes=modes,
-                            plot_type=plot_type,
-                            xlim=xlim, ylim_damping=ylim_damping,
-                            ncol=ncol,
-                            #vd_limit=vd_limit,
-                            png_filename=filenamei, show=False, clear=clear, close=close)
+            response.plot_vg(modes=modes,
+                             plot_type=plot_type,
+                             xlim=xlim, ylim_damping=ylim_damping,
+                             ncol=ncol,
+                             #vd_limit=vd_limit,
+                             png_filename=filenamei, show=False, clear=clear, close=close)
         if plot_vg_vf:
             filenamei = None if vg_vf_filename is None else (vg_vf_filename % subcase)
-            flutter.plot_vg_vf(modes=modes,
-                               plot_type=plot_type,
-                               xlim=xlim,
-                               ylim_damping=ylim_damping, ylim_freq=ylim_freq,
-                               vd_limit=vd_limit, damping_limit=damping_limit,
-                               freq_tol=freq_tol,
-                               ivelocity=ivelocity,
-                               ncol=ncol,
-                               legend=legend,
-                               png_filename=filenamei, show=False, clear=clear, close=close)
+            response.plot_vg_vf(modes=modes,
+                                plot_type=plot_type,
+                                xlim=xlim,
+                                ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+                                vd_limit=vd_limit, damping_limit=damping_limit,
+                                freq_tol=freq_tol,
+                                ivelocity=ivelocity,
+                                ncol=ncol, legend=legend,
+                                png_filename=filenamei, show=False, clear=clear, close=close)
         if plot_root_locus:
             filenamei = None if root_locus_filename is None else (root_locus_filename % subcase)
-            flutter.plot_root_locus(modes=modes,
-                                    fig=None, axes=None,
-                                    eigr_lim=None, eigi_lim=None,
-                                    freq_tol=freq_tol,
-                                    ivelocity=ivelocity,
-                                    ncol=ncol,
-                                    clear=clear, legend=True,
-                                    png_filename=filenamei,
-                                    show=False, close=close)
-        is_modal_participation = len(flutter.eigr_eigi_velocity) and ivelocity is not None
+            response.plot_root_locus(modes=modes,
+                                     fig=None, axes=None,
+                                     eigr_lim=None, eigi_lim=None,
+                                     freq_tol=freq_tol,
+                                     ivelocity=ivelocity,
+                                     ncol=ncol,
+                                     clear=clear, legend=True,
+                                     png_filename=filenamei,
+                                     show=False, close=close)
+        is_modal_participation = len(response.eigr_eigi_velocity) and ivelocity is not None
         if is_modal_participation:
             assert modal_participation_filename is not None
             filenamei = None if modal_participation_filename is None else (modal_participation_filename % subcase)
             mode_ = [mode] if isinstance(mode, integer_types) or mode is None else mode
             for modei in mode_:
-                flutter.plot_modal_participation(
+                response.plot_modal_participation(
                     ivelocity, modei,
                     modes=modes,
                     fig=None, axes=None,
@@ -627,29 +629,32 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
 
         if plot_kfreq_damping:
             filenamei = None if kfreq_damping_filename is None else (kfreq_damping_filename % subcase)
-            flutter.plot_kfreq_damping(modes=modes,
-                                       plot_type=plot_type,
-                                       ylim_damping=ylim_damping,
-                                       ylim_kfreq=ylim_kfreq,
-                                       vd_limit=vd_limit, damping_limit=damping_limit,
-                                       ncol=ncol,
-                                       png_filename=filenamei, show=False, clear=clear, close=close)
+            response.plot_kfreq_damping(
+                modes=modes,
+                plot_type=plot_type,
+                ylim_damping=ylim_damping,
+                ylim_kfreq=ylim_kfreq,
+                vd_limit=vd_limit, damping_limit=damping_limit,
+                ncol=ncol,
+                png_filename=filenamei,
+                show=False, clear=clear, close=close)
 
 
-def _remove_neutrinos(flutter: FlutterResponse, log: SimpleLogger):  # pragma: no cover
-    str(flutter)
+def _remove_neutrinos(response: FlutterResponse,
+                      log: SimpleLogger) -> None:  # pragma: no cover
+    str(response)
     isave, ifilter = (
-        _find_modes_to_keep(flutter, log, tol=1e-8))
+        _find_modes_to_keep(response, log, tol=1e-8))
 
     # fix mode switching
-    results = flutter.results
-    real = results[isave, :, flutter.ieigr]
-    imag = results[isave, :, flutter.ieigi]
+    results = response.results
+    real = results[isave, :, response.ieigr]
+    imag = results[isave, :, response.ieigi]
 
     # find modes that cross (5 modes, 22 points)
     #imag.shape = (5, 22)
-    velocity = results[:, :, flutter.ivelocity]
-    damping = results[:, :, flutter.idamping]
+    velocity = results[:, :, response.ivelocity]
+    damping = results[:, :, response.idamping]
     from scipy.interpolate import CubicSpline
     for imode in isave:
         V = velocity[imode]
@@ -682,12 +687,12 @@ def _remove_neutrinos(flutter: FlutterResponse, log: SimpleLogger):  # pragma: n
     # +------> r
     theta = np.arctan2(imag, real)  # x / y
     theta_deg = np.degrees(theta)
-    flutter.results[ifilter, :, :] = np.nan
-    #flutter.results = flutter.results[isave, :, :]
+    response.results[ifilter, :, :] = np.nan
+    #response.results = response.results[isave, :, :]
     return
 
 
-def _find_modes_to_keep(flutter: FlutterResponse,
+def _find_modes_to_keep(response: FlutterResponse,
                         log: SimpleLogger,
                         tol: float=1e-8) -> tuple[np.ndarray, np.ndarray]:  # pragma: no cover
     """
@@ -702,10 +707,10 @@ def _find_modes_to_keep(flutter: FlutterResponse,
         modes  = [ 1  2  3  4  5  6  7  8  9 10]; n=10
         results.shape = (10, 22, 7); (nmodes, npoint, nresults)
     """
-    #flutter.results.shape = (10, 22, 7)
+    #response.results.shape = (10, 22, 7)
 
     # find the delta for each mode for each result
-    results = flutter.results
+    results = response.results
     mini = results.min(axis=1)
     maxi = results.max(axis=1)
     delta = maxi - mini
@@ -715,16 +720,16 @@ def _find_modes_to_keep(flutter: FlutterResponse,
 
     # lets reduce this downn to to 10 delta reals and delta imaginary eigenvalues
     #delta.shape = (10, 7)
-    abs_dreal = np.abs(delta[:, flutter.ieigr])
-    abs_dimag = np.abs(delta[:, flutter.ieigi])
+    abs_dreal = np.abs(delta[:, response.ieigr])
+    abs_dimag = np.abs(delta[:, response.ieigi])
 
-    ddamp = delta[:, flutter.idamping]
-    damping = results[:, :, flutter.idamping]
+    ddamp = delta[:, response.idamping]
+    damping = results[:, :, response.idamping]
     abs_damp = np.abs(damping).max(axis=1)
     abs_ddamp = np.abs(ddamp)
 
-    dfreq = delta[:, flutter.ifreq]
-    freq = results[:, :, flutter.ifreq]
+    dfreq = delta[:, response.ifreq]
+    freq = results[:, :, response.ifreq]
     abs_freq = np.abs(freq).max(axis=1)
     abs_dfreq = np.abs(dfreq)
 

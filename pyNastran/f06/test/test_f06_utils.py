@@ -52,6 +52,12 @@ AERO_PATH = MODEL_PATH / 'aero'
 class TestF06Flutter(unittest.TestCase):
 
     def test_reshape_eigenvectors(self):
+        """
+        tests reshape_eigenvectors, but hacks the
+        standard input in order to confirm the dimensions
+        and organization are correct. This is done using
+        an extra row in the input matrix.
+        """
         nmode = 2
         nvel = 1
 
@@ -60,7 +66,7 @@ class TestF06Flutter(unittest.TestCase):
         eigenvectors = np.array([
             [1.+0.j, -0.0223484-0.00115277j],
             [-0.00381052-0.00061724j, 1.+0.j],
-            [0.1, 0.2],
+            [0.1, 0.2],   # fake row
         ])
         assert eigenvectors.shape == (nmode+1, nmode*nvel), eigenvectors.shape
 
@@ -77,7 +83,8 @@ class TestF06Flutter(unittest.TestCase):
         eigr_eigi_vel_expected = np.zeros((nvel, nmode, 3))
         assert eigr_eigi_vel.shape == (nmode*nvel, 3), eigr_eigi_vel.shape
 
-        eigenvectors2, eigr_eigi_vel2 = reshape_eigenvectors(eigenvectors, eigr_eigi_vel, incorrect_shape=True)
+        eigenvectors2, eigr_eigi_vel2 = reshape_eigenvectors(
+            eigenvectors, eigr_eigi_vel, incorrect_shape=True)
         assert eigenvectors2.dtype == eigenvectors_expected.dtype, (eigenvectors2.dtype, eigenvectors_expected.dtype)
         assert eigenvectors2.shape == eigenvectors_expected.shape, (eigenvectors2.shape, eigenvectors_expected.shape)
         assert np.allclose(eigenvectors2, eigenvectors_expected)
@@ -137,10 +144,11 @@ class TestF06Flutter(unittest.TestCase):
     def test_make_grid_point_singularity_table(self):
         model = OP2()
         failed = [
-            (1,1),(1,2),(1,7),
-            (2,1),(2,2),(2,7),
+            (1,1), (1,2), (1,7),
+            (2,1), (2,2), (2,7),
         ]
-        msg = '\n'.join(model.make_grid_point_singularity_table(failed).split('\n')[:-2]) + '\n'
+        table = model.make_grid_point_singularity_table(failed)
+        msg = '\n'.join(table.split('\n')[:-2]) + '\n'
         expected = (
             '0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E\n'
             '0                             POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET\n'
@@ -351,6 +359,7 @@ class TestF06Flutter(unittest.TestCase):
         argv = ['f06', 'plot_145', str(f06_filename), '--eas',
                 '--in_units', 'si', '--out_units', 'english_in',
                 '--modal', ivel, mode,
+                '--mag_tol', '0.1',
                 '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv',
                 '--ncol', '2']
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
@@ -674,6 +683,10 @@ class TestF06Utils(unittest.TestCase):
 
         b = split_int_colon('1:5:2')
         assert b == [1, 3, 5], b
+
+        ## TODO: wrong?
+        b2 = split_int_colon('1:6:2')
+        assert b2 == [1, 3, 5], b2
 
         c = split_int_colon(':4')
         assert c == [0, 1, 2, 3, 4], c

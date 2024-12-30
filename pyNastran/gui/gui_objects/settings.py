@@ -43,7 +43,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 from pyNastran.gui import (
-    USE_OLD_SIDEBAR_OBJS_ as USE_OLD_SIDEBAR_OBJECTS,
     USE_NEW_SIDEBAR_OBJS_ as USE_NEW_SIDEBAR_OBJECTS,
     USE_NEW_TERMS_ as USE_NEW_TERMS)
 
@@ -422,7 +421,6 @@ class Settings:
         # True:  startup directory
         self.use_startup_directory = True
 
-        self.use_old_sidebar_objects = USE_OLD_SIDEBAR_OBJECTS
         self.use_new_sidebar_objects = USE_NEW_SIDEBAR_OBJECTS
         self.use_new_sidebar = USE_NEW_SIDEBAR
         self.use_new_terms = USE_NEW_TERMS
@@ -544,9 +542,6 @@ class Settings:
         else:
             self.startup_directory = ''
 
-        self._set_setting(settings, setting_keys, ['use_old_sidebar_objects'],
-                          default=self.use_old_sidebar_objects,
-                          save=True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['use_new_sidebar_objects'],
                           default=self.use_new_sidebar_objects,
                           save=True, auto_type=bool)
@@ -879,7 +874,6 @@ class Settings:
 
         settings.setValue('recent_files', self.recent_files[:NFILES_TO_SAVE])
 
-        settings.setValue('use_old_sidebar_objects', self.use_old_sidebar_objects)
         settings.setValue('use_new_sidebar_objects', self.use_new_sidebar_objects)
         settings.setValue('use_new_terms', self.use_new_terms)
 

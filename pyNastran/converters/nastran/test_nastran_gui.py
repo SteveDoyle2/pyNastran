@@ -29,7 +29,6 @@ from pyNastran.bdf.errors import DuplicateIDsError
 
 from pyNastran.gui import (
     USE_NEW_SIDEBAR_OBJS_ as USE_NEW_SIDEBAR_OBJS,
-    USE_OLD_SIDEBAR_OBJS_ as USE_OLD_SIDEBAR_OBJS,
     USE_NEW_TERMS_ as USE_NEW_TERMS)
 
 USE_OLD_TERMS = not USE_NEW_TERMS
@@ -335,13 +334,10 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(obj_filename)
-        if USE_OLD_SIDEBAR_OBJS and USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 57, len(test.result_cases)  # 55 is probably wrong
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 56, len(test.result_cases)  # 55 is probably wrong
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+            assert len(test.result_cases) == 56, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 56, len(test.result_cases)  # 55 is probably wrong
+            assert len(test.result_cases) == 56, len(test.result_cases)
 
     @unittest.skipIf(IS_MATPLOTLIB is False, 'No matplotlib')
     def test_solid_shell_bar_01(self):
@@ -350,23 +346,18 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 57, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 56, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
             assert len(test.result_cases) == 56, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 341, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 190, len(test.result_cases)
             #assert len(test.result_cases) == 206, len(test.result_cases)  # new? faked
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 278, len(test.result_cases)
+            assert USE_OLD_TERMS
+            # assert len(test.result_cases) == 278, len(test.result_cases)
         test.load_nastran_results(op2_filename)
 
         test.cycle_results()
@@ -469,13 +460,11 @@ class TestNastranGUI(unittest.TestCase):
         assert len(test.models['main'].elements) > 0
         #test.write_result_cases()
 
-        if USE_OLD_SIDEBAR_OBJS and USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 868, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 430, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 694, len(test.result_cases)
+            assert USE_OLD_TERMS
+            # assert len(test.result_cases) == 694, len(test.result_cases)
 
         #assert_result_cases(test, ncases=694)
 
@@ -574,14 +563,12 @@ class TestNastranGUI(unittest.TestCase):
 
         # map strain energy
         keys = list(test.result_cases.keys())
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 868, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 430, len(test.result_cases)
             #assert len(test.result_cases) == 478, len(test.result_cases)  # new?; faked
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 694, len(test.result_cases)
+            assert USE_OLD_TERMS
+            # assert len(test.result_cases) == 694, len(test.result_cases)
 
         #assert_result_cases(test, ncases=694)
         icase = keys[-1]
@@ -656,41 +643,34 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.stop_on_failure = True
         test.load_nastran_geometry(bdf_filename)
-        if USE_OLD_SIDEBAR_OBJS and USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 62, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             # we lost 3 cases for SPCD
             assert len(test.result_cases) == 57, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 60, len(test.result_cases)
+            assert len(test.result_cases) == 57, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_OLD_SIDEBAR_OBJS and USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 1019, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             # we lost 3 cases for SPCD
             assert len(test.result_cases) == 640, len(test.result_cases)
             #assert len(test.result_cases) == 684, len(test.result_cases)  # new terms?
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 759, len(test.result_cases)
+            assert len(test.result_cases) == 640, len(test.result_cases)
+            assert USE_OLD_TERMS
 
     def test_solid_bending(self):
-        bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')
+        dirname = MODEL_PATH / 'solid_bending'
+        bdf_filename = dirname / 'solid_bending.bdf'
+        op2_filename = dirname / 'solid_bending.op2'
         #op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_ogs.op2')
-        deflection_filename1 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node.txt')
-        deflection_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node_short.txt')
+        deflection_filename1 = dirname / 'solid_bending_multi_deflection_node.txt'
+        deflection_filename2 = dirname / 'solid_bending_multi_deflection_node_short.txt'
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 11, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 10, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
             assert len(test.result_cases) == 10, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
@@ -703,15 +683,13 @@ class TestNastranGUI(unittest.TestCase):
             nsolid_stress=1, nsolid_strain=0,
             nabs_stress=1, nabs_strain=0,
             nstrain_energy=0, ngrid_point_forces=0)
-        if USE_OLD_SIDEBAR_OBJS:
-            assert nresults == 24, nresults
-            assert len(test.result_cases) == 49, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert nresults == 24, nresults
             assert len(test.result_cases) == 34, len(test.result_cases)
         else:
-            assert nresults == 24, nresults # 49-10; ???
-            assert len(test.result_cases) == 39, len(test.result_cases)
+            assert USE_OLD_TERMS
+            # assert nresults == 24, nresults # 49-10; ???
+            # assert len(test.result_cases) == 39, len(test.result_cases)
 
 
         nresult_cases = len(test.result_cases)
@@ -737,9 +715,9 @@ class TestNastranGUI(unittest.TestCase):
 
         # test nodal results
         #'node', 'element', 'deflection', 'force', 'patran_nod',
-        csv_filename1 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_node.csv')
-        csv_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_node_extra.txt')
-        csv_filename3 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_node_short.txt')
+        csv_filename1 = dirname / 'solid_bending_multi_node.csv'
+        csv_filename2 = dirname / 'solid_bending_multi_node_extra.txt'
+        csv_filename3 = dirname / 'solid_bending_multi_node_short.txt'
 
         # missing/extra nodes
         test.on_load_custom_results(out_filename=csv_filename1, restype='node', stop_on_failure=True)
@@ -763,21 +741,16 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(model)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 11, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 10, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
             assert len(test.result_cases) == 10, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_OLD_SIDEBAR_OBJS:
-            # ???
-            assert len(test.result_cases) == 39, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 34, len(test.result_cases)
         else:
+            assert USE_NEW_TERMS
             assert len(test.result_cases) == 39, len(test.result_cases)
 
     @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
@@ -815,12 +788,9 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 11, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 10, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
             assert len(test.result_cases) == 10, len(test.result_cases)
 
         test.load_nastran_results(model)
@@ -843,12 +813,9 @@ class TestNastranGUI(unittest.TestCase):
             nbeam_force=nmodes)  # beam force is dropped
         #assert nresults == 231, nresults  # 238-7
         #test.write_result_cases()
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 258, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 238, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
             assert len(test.result_cases) == 238, len(test.result_cases)
 
     @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
@@ -871,15 +838,7 @@ class TestNastranGUI(unittest.TestCase):
         assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
         #test.write_result_cases()
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            # lost some objects because of missing nids in old sidebar displacement
-            assert len(test.result_cases) == 218, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 238, len(test.result_cases)
-        else:
-            assert USE_OLD_SIDEBAR_OBJS, USE_OLD_SIDEBAR_OBJS
-            # lost some objects because of missing nids in old sidebar displacement
-            assert len(test.result_cases) == 218, len(test.result_cases)
+        assert len(test.result_cases) == 238, len(test.result_cases)
 
 
     def test_beam_modes_02(self):
@@ -899,13 +858,7 @@ class TestNastranGUI(unittest.TestCase):
             nbar_force=nmodes,
             nbeam_force=nmodes)  # beam force is dropped
         #assert nresults == 231, nresults  # 238-7
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 258, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 238, len(test.result_cases)
-        else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 238, len(test.result_cases)
+        assert len(test.result_cases) == 238, len(test.result_cases)
 
     def test_beam_modes_03(self):
         dirname = os.path.join(MODEL_PATH, 'beam_modes')
@@ -929,13 +882,7 @@ class TestNastranGUI(unittest.TestCase):
             nbar_force=nmodes,
             nbeam_force=nmodes)  # beam force is dropped
         #assert nresults == 231, nresults  # 238-7
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 258, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 238, len(test.result_cases)
-        else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 238, len(test.result_cases)
+        assert len(test.result_cases) == 238, len(test.result_cases)
 
     def test_beam_modes_04(self):
         dirname = os.path.join(MODEL_PATH, 'beam_modes')
@@ -954,24 +901,12 @@ class TestNastranGUI(unittest.TestCase):
             nbar_force=nmodes,
             nbeam_force=nmodes)  # beam force is dropped
         #assert nresults == 231, nresults  # 238-7
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 258, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 238, len(test.result_cases)
-        else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 238, len(test.result_cases)
+        assert len(test.result_cases) == 238, len(test.result_cases)
 
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 258, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 238, len(test.result_cases)
-        else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 238, len(test.result_cases)
+        assert len(test.result_cases) == 238, len(test.result_cases)
 
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 7, len(test.result_cases)
@@ -995,13 +930,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         assert len(test.result_cases) == 33, len(test.result_cases)
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 73, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 53, len(test.result_cases)
-        else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 53, len(test.result_cases)
+        assert len(test.result_cases) == 53, len(test.result_cases)
 
     def test_thermal_01(self):
         """runs models/thermal/thermal_test_153"""
@@ -1067,13 +996,7 @@ class TestNastranGUI(unittest.TestCase):
         assert len(test.result_cases) == 36, len(test.result_cases)
         test.load_nastran_results(op2_filename)
 
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 76, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 56, len(test.result_cases)
-        else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 56, len(test.result_cases)
+        assert len(test.result_cases) == 56, len(test.result_cases)
 
     def test_aero_op2(self):
         """tests the freedlm model (OP2 with aero)"""
@@ -1092,14 +1015,10 @@ class TestNastranGUI(unittest.TestCase):
         #print(test.result_cases[154])
         #print(test.result_cases[160])
         #assert_result_cases(test, ncases=236)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 260, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test.result_cases) == 220, len(test.result_cases) # old terms
-            #assert len(test.result_cases) == 236, len(test.result_cases) # new terms?
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 236, len(test.result_cases)
+            assert len(test.result_cases) == 224, len(test.result_cases) # new terms
         #print(test.result_cases)
 
     def test_vba1(self):
@@ -1168,13 +1087,7 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         ngeometry = 63
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 65, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 63, len(test.result_cases)
-        else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 63, len(test.result_cases)
+        assert len(test.result_cases) == 63, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
 
@@ -1228,13 +1141,11 @@ class TestNastranGUI(unittest.TestCase):
         )
         test.write_result_cases()
         #assert nresults == 139, nresults  # 202-139; alt is 196-63=133
-        if USE_OLD_SIDEBAR_OBJS and USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 266, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 204, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 202, len(test.result_cases)
+            assert USE_OLD_TERMS
+            assert len(test.result_cases) == -1, len(test.result_cases) # new terms; ???
 
         idisp = None
         iforce_xyz = None
@@ -1318,22 +1229,17 @@ class TestNastranGUI(unittest.TestCase):
         model = read_bdf(bdf_filename)
         test = NastranGUI()
         test.load_nastran_geometry(model)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 65, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 63, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
             assert len(test.result_cases) == 63, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 266, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 204, len(test.result_cases)
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 202, len(test.result_cases)
+            assert USE_OLD_TERMS
+            assert len(test.result_cases) == -1, len(test.result_cases) # new terms; ???
 
     def _test_gui_elements_01b(self):  # pragma: no cover
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
@@ -1374,12 +1280,8 @@ class TestNastranGUI(unittest.TestCase):
             nabs_stress=1, nabs_strain=1,
             nstrain_energy=1, ngrid_point_forces=1)
 
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_OLD_TERMS:
             assert len(test2.result_cases) == 105, len(test2.result_cases)
-        elif USE_OLD_SIDEBAR_OBJS:
-            #print(test2.write_result_cases())
-            assert len(test2.result_cases) == 87, len(test2.result_cases)
-            #assert len(test2.result_cases) == 107, len(test2.result_cases)
         else:
             assert len(test2.result_cases) == 125, len(test2.result_cases)  #  wrong
 
@@ -1392,22 +1294,12 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
 
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 59, len(test.result_cases)
-        elif USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 58, len(test.result_cases)
-        else:
-            assert USE_NEW_SIDEBAR_OBJS
-            assert len(test.result_cases) == 58, len(test.result_cases)
+        assert USE_NEW_SIDEBAR_OBJS
+        assert len(test.result_cases) == 58, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 260, len(test.result_cases)
-        elif USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 197, len(test.result_cases)
-        else:
-            assert USE_NEW_SIDEBAR_OBJS
-            assert len(test.result_cases) == 199, len(test.result_cases)
+        assert USE_NEW_SIDEBAR_OBJS
+        assert len(test.result_cases) == 199, len(test.result_cases)
 
         #test = NastranGUI()
         test.settings.nastran_create_coords = False
@@ -1423,22 +1315,14 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         #test.stop_on_failure = False
         test.load_nastran_geometry(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 0, len(test.result_cases)
-        elif USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 0, len(test.result_cases)
-        else:
-            assert USE_NEW_SIDEBAR_OBJS
-            assert len(test.result_cases) == 58, len(test.result_cases)
+        assert USE_NEW_SIDEBAR_OBJS
+        assert len(test.result_cases) == 58, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 0, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 116, len(test.result_cases) # old terms
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 0, len(test.result_cases)
+            assert len(test.result_cases) == 120, len(test.result_cases) # new terms
 
     def test_gui_elements_03(self):
         """tests a large number of elements and results in SOL 103-modes"""
@@ -1447,13 +1331,8 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         #test.stop_on_failure = False
         test.load_nastran_geometry(op2_filename)
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 57, len(test.result_cases)
-        elif USE_OLD_SIDEBAR_OBJS:
-            assert len(test.result_cases) == 56, len(test.result_cases)
-        else:
-            assert USE_NEW_SIDEBAR_OBJS
-            assert len(test.result_cases) == 56, len(test.result_cases)
+        assert USE_NEW_SIDEBAR_OBJS
+        assert len(test.result_cases) == 56, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
 
@@ -1463,13 +1342,10 @@ class TestNastranGUI(unittest.TestCase):
             #for key, value in test.result_cases.items():
                 #fobj.write(f'{key}: {value}\n')
 
-        if USE_NEW_SIDEBAR_OBJS and USE_OLD_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 672, len(test.result_cases)
-        elif USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
+        if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
             assert len(test.result_cases) == 503, len(test.result_cases) # old terms
         else:
-            assert USE_OLD_SIDEBAR_OBJS
-            assert len(test.result_cases) == 443, len(test.result_cases)
+            assert USE_OLD_TERMS
 
         #test.create_groups_by_property_id()
         test.create_groups_by_visible_result()
@@ -2070,7 +1946,6 @@ def get_nreal_nresults(test,
         (nshear_stress + nshear_strain) * 2 +
 
         #[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises]; # 8; old
-        nplate_stress_strain * 8 * USE_OLD_SIDEBAR_OBJS * 2 +  # 2 layers
         nplate_stress_strain * 8 * USE_NEW_SIDEBAR_OBJS * 1 * USE_OLD_TERMS +  # 1 layer
 
         #[fiber_distance, oxx, oyy, txy, angle, omax, omin, von_mises, oabs, max_shear]  # 10; new
@@ -2078,7 +1953,6 @@ def get_nreal_nresults(test,
         #added abs_princpal and von_mises/max_shear, so +2 results; disabld for now for testing
 
         # [o11, o22, t12, t1z, t2z, angle, major, minor, max_shea]
-        ncomposite_stress_strain * 9 * USE_OLD_SIDEBAR_OBJS * ncomposite_layers +
         ncomposite_stress_strain * 9 * USE_NEW_SIDEBAR_OBJS +
 
         # [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, von_mises]
@@ -2126,6 +2000,7 @@ def get_nreal_nresults(test,
         nresults += nabs * 10
     assert nresults > 0, nresults
     return nresults
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

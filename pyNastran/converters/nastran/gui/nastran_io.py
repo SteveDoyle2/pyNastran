@@ -104,7 +104,7 @@ from pyNastran.gui.qt_files.colors import (
     YELLOW_FLOAT, ORANGE_FLOAT)
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult # , NormalResult
-from pyNastran.gui.gui_objects.displacements import ForceTableResults # , ElementalTableResults
+#from pyNastran.gui.gui_objects.displacements import ElementalTableResults
 from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
 
 
@@ -2557,19 +2557,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             nlabels=None, labelsize=None, ncolors=None, colormap='',
                             set_max_min=False, uname='NastranGeometry-ForceResults2')
 
-                        force_xyz_res = ForceTableResults(
-                            subcase_id, titles, headers, fxyz, fscalar,
-                            scales, data_formats=None,
-                            nlabels=None, labelsize=None, ncolors=None, colormap=colormap,
-                            set_max_min=False, uname='NastranGeometry')
-                        force_xyz_res.save_defaults()
-
                         if settings.use_new_sidebar_objects:
                             cases[icase] = (force_xyz_res2, (0, 'Force XYZ'))
-                            form0.append(('Force XYZ', icase, []))
-                            icase += 1
-                        if settings.use_old_sidebar_objects:
-                            cases[icase] = (force_xyz_res, (0, 'Force XYZ'))
                             form0.append(('Force XYZ', icase, []))
                             icase += 1
 
@@ -2601,19 +2590,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                             nlabels=None, labelsize=None, ncolors=None, colormap='',
                             set_max_min=False, uname='NastranGeometry-MomentResults2')
 
-                        moment_xyz_res = ForceTableResults(
-                            subcase_id, titles, headers, mxyz, mscalar,
-                            scales, data_formats=None,
-                            nlabels=None, labelsize=None, ncolors=None, colormap=colormap,
-                            set_max_min=False, uname='NastranGeometry')
-                        moment_xyz_res.save_defaults()
-
                         if settings.use_new_sidebar_objects:
                             cases[icase] = (moment_xyz_res2, (0, 'Moment XYZ'))
-                            form0.append(('Moment XYZ', icase, []))
-                            icase += 1
-                        if settings.use_old_sidebar_objects:
-                            cases[icase] = (moment_xyz_res, (0, 'Moment XYZ'))
                             form0.append(('Moment XYZ', icase, []))
                             icase += 1
 
@@ -2654,15 +2632,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                         #nlabels=None, labelsize=None, ncolors=None, colormap='',
                         #set_max_min=False, uname='NastranGeometry-SPCD-RXYZ_Results2')
 
-                    spcd_x_res = GuiResult(subcase_id, header='SPCDx', title='SPCDx',
-                                           location='node', scalar=spcd[:, 0])
-                    spcd_y_res = GuiResult(subcase_id, header='SPCDy', title='SPCDy',
-                                           location='node', scalar=spcd[:, 1])
-                    spcd_z_res = GuiResult(subcase_id, header='SPCDz', title='SPCDz',
-                                           location='node', scalar=spcd[:, 2])
-                    spcd_xyz_res = GuiResult(subcase_id, header='SPCD XYZ', title='SPCD XYZ',
-                                             location='node', scalar=tnorm)
-
                     if settings.use_new_sidebar_objects:
                         cases[icase] = (enforced_txyz_res2, (0, 'SPCD T'))
                         form0.append(('SPCD Translation', icase, []))
@@ -2670,20 +2639,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                         #cases[icase] = (enforced_rxyz_res2, (0, 'SPCD R'))
                         #form0.append(('SPCD Rotation', icase, []))
                         #icase += 1
-
-                    if settings.use_old_sidebar_objects:
-                        cases[icase] = (spcd_x_res, (0, 'SPCDx'))
-                        form0.append(('SPCDx', icase, []))
-                        icase += 1
-                        cases[icase] = (spcd_y_res, (0, 'SPCDy'))
-                        form0.append(('SPCDy', icase, []))
-                        icase += 1
-                        cases[icase] = (spcd_z_res, (0, 'SPCDz'))
-                        form0.append(('SPCDz', icase, []))
-                        icase += 1
-                        cases[icase] = (spcd_xyz_res, (0, 'SPCD XYZ'))
-                        form0.append(('SPCD XYZ', icase, []))
-                        icase += 1
 
             if is_temperatures:
                 temperature_key, temperatures = temperature_data

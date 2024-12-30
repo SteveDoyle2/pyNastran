@@ -27,9 +27,9 @@ from .geometry_helper import NastranGuiAttributes
 from .stress import (
     get_spring_stress_strains, get_rod_stress_strains,
     get_bar_stress_strains, get_beam_stress_strains,
-    get_composite_plate_stress_strains, get_composite_plate_stress_strains2,
-    get_plate_stress_strains, get_plate_stress_strains2,
-    get_solid_stress_strains, get_solid_stress_strains2)
+    #get_plate_stress_strains, get_composite_plate_stress_strains, get_solid_stress_strains,
+    get_plate_stress_strains2, get_composite_plate_stress_strains2, get_solid_stress_strains2,
+)
 from .force import get_spring_force, get_bar_force, get_plate_force
 from .result_objects.displacement_results import DisplacementResults2
 from .result_objects.force_results import ForceResults2
@@ -112,8 +112,6 @@ class NastranGuiResults(NastranGuiAttributes):
             form_dict, header_dict, keys_map,
             self.xyz_cid0,
             nnodes, node_ids, log,
-            settings.use_old_sidebar_objects,
-            settings.use_new_sidebar_objects,
             dim_max=dim_max,
             stop_on_failure=stop_on_failure,
         )
@@ -123,8 +121,6 @@ class NastranGuiResults(NastranGuiAttributes):
             form_dict, header_dict, keys_map,
             self.xyz_cid0,
             nnodes, node_ids, log,
-            settings.use_old_sidebar_objects,
-            settings.use_new_sidebar_objects,
             dim_max=dim_max,
             prefix='acoustic',
             stop_on_failure=stop_on_failure,
@@ -747,7 +743,6 @@ class NastranGuiResults(NastranGuiAttributes):
         log = model.log
         settings: Settings = self.settings
         nastran_settings: NastranSettings = settings.nastran_settings
-        use_old_sidebar_objects = settings.use_old_sidebar_objects
         use_new_sidebar_objects = settings.use_new_sidebar_objects
         use_new_terms = settings.use_new_terms
         assert isinstance(icase, int), icase
@@ -784,20 +779,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, eid_to_nid_map,
                 log, use_new_sidebar_objects, use_new_terms, is_stress=True)
-
-            icase = get_plate_stress_strains(
+            icase = get_plate_stress_strains2(
                 log, stop_on_failure,
-                cases, eids, model, times, key, icase,
-                form_dict, header_dict, keys_map, log,
-                use_old_sidebar_objects, is_stress=True)
-
-            icase = get_plate_stress_strains(
-                log, stop_on_failure,
-                cases, eids, model, times, key, icase,
-                form_dict, header_dict, keys_map, log,
-                use_old_sidebar_objects, is_stress=True,
-                prefix='modal_contribution',
-            )
+                cases, nids, eids, model, times, key, icase,
+                form_dict, header_dict, keys_map, eid_to_nid_map,
+                log, use_new_sidebar_objects, use_new_terms, is_stress=True,
+                 prefix='modal_contribution')
 
         if nastran_settings.composite_plate_stress:
             icase = get_composite_plate_stress_strains2(
@@ -805,13 +792,6 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map,
                 log, use_new_sidebar_objects, is_stress=True)
-
-            icase = get_composite_plate_stress_strains(
-                log, stop_on_failure,
-                cases, eids, model, times, key, icase,
-                form_dict, header_dict, keys_map,
-                self.stress[key].composite_data_dict, log,
-                use_old_sidebar_objects, is_stress=True)
 
         if nastran_settings.rod_stress:
             icase = get_rod_stress_strains(
@@ -837,12 +817,6 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
                 use_new_sidebar_objects, use_new_terms, is_stress=True)
-
-            icase = get_solid_stress_strains(
-                log, stop_on_failure,
-                cases, eids, model, times, key, icase,
-                form_dict, header_dict, keys_map, log,
-                use_old_sidebar_objects, is_stress=True)
 
         if nastran_settings.spring_stress:
             icase = get_spring_stress_strains(
@@ -925,7 +899,6 @@ class NastranGuiResults(NastranGuiAttributes):
                                     stop_on_failure: bool) -> int:
         """Creates the time accurate strain objects"""
         settings = self.settings
-        use_old_sidebar_objects = settings.use_old_sidebar_objects
         use_new_sidebar_objects = settings.use_new_sidebar_objects
         use_new_terms = settings.use_new_terms
         nastran_settings: NastranSettings = settings.nastran_settings
@@ -960,21 +933,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 form_dict, header_dict, keys_map, eid_to_nid_map,
                 log, use_new_sidebar_objects, use_new_terms,
                 is_stress=False,
-                prefix='modal_contribution',
-            )
-
-            icase = get_plate_stress_strains(
-                log, stop_on_failure,
-                cases, eids, model, times, key, icase,
-                form_dict, header_dict, keys_map, log,
-                use_old_sidebar_objects, is_stress=False)
-            icase = get_plate_stress_strains(
-                log, stop_on_failure,
-                cases, eids, model, times, key, icase,
-                form_dict, header_dict, keys_map, log,
-                use_old_sidebar_objects, is_stress=False,
-                prefix='modal_contribution',
-            )
+                prefix='modal_contribution')
 
         if nastran_settings.composite_plate_strain:
             icase = get_composite_plate_stress_strains2(
@@ -982,13 +941,6 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map,
                 log, use_new_sidebar_objects, is_stress=False)
-
-            icase = get_composite_plate_stress_strains(
-                log, stop_on_failure,
-                cases, eids, model, times, key, icase,
-                form_dict, header_dict, keys_map,
-                self.strain[key].composite_data_dict, log,
-                use_old_sidebar_objects, is_stress=False)
 
         if nastran_settings.rod_strain:
             icase = get_rod_stress_strains(
@@ -1014,12 +966,6 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases, nids, eids, model, times, key, icase,
                 form_dict, header_dict, keys_map, log,
                 use_new_sidebar_objects, use_new_terms, is_stress=False)
-
-            icase = get_solid_stress_strains(
-                log, stop_on_failure,
-                cases, eids, model, times, key, icase,
-                form_dict, header_dict, keys_map, log,
-                use_old_sidebar_objects, is_stress=False)
 
         if nastran_settings.spring_strain:
             icase = get_spring_stress_strains(
@@ -1350,8 +1296,6 @@ def _fill_nastran_displacements(cases: Cases, model: OP2,
                                 xyz_cid0: np.ndarray,
                                 nnodes: int, node_ids: np.ndarray,
                                 log: SimpleLogger,
-                                use_old_sidebar_objects: bool,
-                                use_new_sidebar_objects: bool,
                                 dim_max: float=1.0,
                                 prefix: str='',
                                 stop_on_failure: bool=False) -> int:
@@ -1405,8 +1349,6 @@ def _fill_nastran_displacements(cases: Cases, model: OP2,
                     xyz_cid0,
                     nnodes, node_ids,
                     log,
-                    use_old_sidebar_objects,
-                    use_new_sidebar_objects,
                     dim_max=dim_max)
             except ValueError:
                 if not t123_offset == 3:
@@ -1433,8 +1375,6 @@ def _fill_nastran_ith_displacement(result, resname: str,
                                    xyz_cid0: np.ndarray,
                                    nnodes: int, node_ids: np.ndarray,
                                    log: SimpleLogger,
-                                   use_old_sidebar_objects: bool,
-                                   use_new_sidebar_objects: bool,
                                    dim_max: float=1.0) -> int:
     """helper for ``_fill_nastran_displacements`` to unindent the code a bit"""
     if t123_offset == 0:
@@ -1453,11 +1393,7 @@ def _fill_nastran_ith_displacement(result, resname: str,
         log.warning('Skipping because SORT2\n' + str(case))
         return icase
 
-    if use_old_sidebar_objects:
-        t123, tnorm, ntimes = _get_t123_tnorm(case, node_ids, nnodes,
-                                              t123_offset=t123_offset)
-    else:
-        ntimes = case.ntimes
+    ntimes = case.ntimes
 
     titles = []
     scales = []
@@ -1595,101 +1531,6 @@ def print_empty_elements(model: BDF,
         print(element.rstrip())
     print('-----------------------------------')
 
-
-def _get_t123_tnorm(case: RealTableArray,
-                    nids: np.ndarray,
-                    nnodes: int,
-                    t123_offset: int=0) -> tuple[np.ndarray, np.ndarray, int]:
-    """
-    Find the largest x/y/z movement.  Assume axes are independent.
-    helper method for _fill_op2_oug_oqg
-
-    Parameters
-    ----------
-    case : DisplacementArray, ForceArray, etc.
-        the OP2 result object???
-    nids : (nnodes,) int ndarray
-        the nodes in the model???
-    nnodes : int
-        the number of nodes in the model???
-    t123_offset : int; default=0
-        0 : translations / forces
-        3 : rotations / moments
-
-    Returns
-    -------
-    t123 : (ntimes, nnodes, 3) float ndarray
-       the translations or rotations
-    tnorm : (ntimes, nnodes) float ndarray
-        used to create the scale factor
-    ntimes : int
-       number of times
-
-    """
-    assert case.is_sort1, case.is_sort1
-
-    #itime0 = 0
-    #t1 = case.data[itime0, :, 0]
-    ntimes1, nnodesi = case.data.shape[:2]
-    if nnodes != nnodesi:
-        #print('nnodes=%s nnodesi=%s' % (nnodes, nnodesi))
-        nids_in_disp = case.node_gridtype[:, 0]
-        #assert len(nidsi) == nnodes, 'nidsi=%s nnodes=%s' % (nidsi, nnodes)
-        j = np.searchsorted(nids, nids_in_disp)  # searching for nidsi
-
-        try:
-            if not np.allclose(nids[j], nids_in_disp):
-                msg = 'nids[j]=%s nids_in_disp=%s' % (nids[j], nids_in_disp)
-                raise RuntimeError(msg)
-        except IndexError:
-            msg = 'node_ids to find = %s\n' % list(nids)
-            msg += 'nids_in_disp = %s\n' % list(nids_in_disp)
-            extra = np.setdiff1d(nids, nids_in_disp)
-            missing = np.setdiff1d(nids_in_disp, nids)
-            msg += f'missing in BDF / extra in results = {missing}\n'
-            msg += f'extra in BDF / missing in results = {extra}\n'
-            raise IndexError(msg)
-
-    # (itime, nnodes, xyz)
-    # (901, 6673, 3)
-    t123 = case.data[:, :, t123_offset:t123_offset+3]
-    ntimes = case.ntimes
-    assert ntimes1 == ntimes, (ntimes1, ntimes)
-
-    if nnodes != nnodesi:
-        #case.data.shape = (11, 43, 6)
-        #nnodes = len(nids) =  48
-        #nnodesi = 43
-
-        dtype = t123.dtype.name
-        t123i = np.zeros((ntimes, nnodes, 3), dtype=dtype)
-        t123i[:, j, :] = t123
-        t123 = t123i
-
-        # (itime, nnodes, xyz)
-        # tnorm (901, 3)
-        tnorm = safe_norm(t123, axis=2)   # I think this is wrong...
-        #print('tnorm.shape ', tnorm.shape)
-        assert len(tnorm) == t123.shape[0]
-    else:
-        # (itime, nnodes, xyz)
-        # tnorm (901, 100, 3)
-        # tnorm (901, 100)
-        #
-        # TODO: used to be 1.0; that gets the scale factor for
-        #       10% x/y/z direction vs. total
-        tnorm = safe_norm(t123, axis=2)
-
-        #print('skipping %s' % name)
-        #print(t123.max(axis=1))
-        #for itime, ti in enumerate(t123):
-            #print('itime=%s' % itime)
-            #print(ti.tolist())
-        assert tnorm.shape == (ntimes, nnodes), tnorm.shape
-
-    assert t123.shape[0] == ntimes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
-    assert t123.shape[1] == nnodes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
-    return t123, tnorm, ntimes
 
 def _get_times(model: OP2, key: NastranKey) -> tuple[bool, bool, bool, np.ndarray]:
     """
