@@ -24,7 +24,6 @@ TODO: disable rotational modes to have fewer results
 """
 from __future__ import annotations
 import os
-from pathlib import Path
 from typing import Callable, Optional, Any, cast, TYPE_CHECKING
 import numpy as np
 
@@ -192,20 +191,18 @@ class VtkWindow(QMainWindow):
     #---------------------------------------------------------------------
     def stop_animation_timer(self):
         self.timer.stop()
-
-    def setup_animation_timer(self) -> None:
-        # Update every N milliseconds
-        self.timer = QTimer()
+    def update_dphases(self):
+        self.dphases = np.linspace(0.0, 360.0, num=self.nphase + 1)[:-1]
 
     def start_animation_timer(self) -> None:
         if not hasattr(self, 'timer'):
-            self.setup_animation_timer()
-        dphases = np.linspace(0.0, 360.0, num=self.nphase + 1)[:-1]
-        nphase = len(dphases)
+            self.timer = QTimer()
+        self.update_dphases()
+        nphase = len(self.dphases)
         def update_vtk():
             if self.iphase == nphase:
                 self.iphase = 0
-            dphase = dphases[self.iphase]
+            dphase = self.dphases[self.iphase]
             self.plot_deformation(icase=self.icase, dphase=dphase)
             self.render()
             self.iphase += 1

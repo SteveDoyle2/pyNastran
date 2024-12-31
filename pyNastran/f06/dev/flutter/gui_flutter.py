@@ -1,12 +1,10 @@
-from __future__ import annotations
 import os
 import sys
 import copy
-import shutil
 import warnings
 import traceback
 from pathlib import Path
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Optional, Any  #TYPE_CHECKING
 
 ICON_PATH = Path('')
 try:
@@ -44,14 +42,11 @@ from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
 from pyNastran.f06.dev.flutter.actions_builder import Actions, Action
-#from pyNastran.f06.dev.flutter.flutter_preferences import FlutterPreferencesDialog
 from pyNastran.f06.dev.flutter.preferences_object import PreferencesObject
 from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
-from pyNastran.f06.parse_flutter import make_flutter_response, get_flutter_units
-if TYPE_CHECKING:
-    from pyNastran.op2.op2 import OP2
+from pyNastran.f06.parse_flutter import get_flutter_units
 
 X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq']
 PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation']
@@ -59,46 +54,27 @@ UNITS_IN = ['english_in', 'english_kt', 'english_ft',
             'si', 'si_mm']
 UNITS_OUT = UNITS_IN
 
-def get_plot_file() -> str:
-    home_dirname = Path(os.path.expanduser('~'))
-    old_filename = home_dirname / 'plot_flutter.json'
-    new_filename = home_dirname / 'plot_145' / 'settings.json'
-    #move_filename(old_filename, new_filename)
-    return str(old_filename)
-
-def move_filename(old_filename: Path,
-                  new_filename: Path) -> None:
-    """
-    Creates new file from old file is new file doesn't exist.
-    Cleans up the mess.
-    """
-    dirname = os.path.dirname(new_filename)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-
-    if old_filename.exists() and not new_filename.exists():
-        shutil.copyfile(old_filename, new_filename)
-    if old_filename.exists():
-        os.remove(old_filename)
-    return
-
 #FONT_SIZE = 12
+from pyNastran.f06.dev.flutter.utils import (
+    get_plot_file, update_ylog_style, load_f06_op2,
+    get_png_filename,)
+
 import pyNastran
 PKG_PATH = Path(pyNastran.__path__[0])
 HOME_FILENAME = get_plot_file()
 
 AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
-if 0:
+if 0:  # pragma: no cover
     BASE_PATH = AERO_PATH / 'flutter_bug'
     BDF_FILENAME = BASE_PATH / 'nx' / 'wing_b1.bdf'
     OP2_FILENAME = BASE_PATH / 'wing_b1.op2'
+elif 0:  # pragma: no cover
+    BDF_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.bdf'
+    OP2_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.op2'
 else:
     BASE_PATH = AERO_PATH / '2_mode_flutter'
     BDF_FILENAME = BASE_PATH / '0012_flutter.bdf'
     OP2_FILENAME = BASE_PATH / '0012_flutter.op2'
-
-#BDF_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.bdf'
-#OP2_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.op2'
 
 
 class FlutterGui(LoggableGui):
@@ -1255,7 +1231,7 @@ class FlutterGui(LoggableGui):
         print(f'export_to_png={self.export_to_png}')
 
         self.export_to_png = False
-        png_filename0, png_filename = _get_png_filename(
+        png_filename0, png_filename = get_png_filename(
             base, x_plot_type, plot_type,
             self.export_to_png)
         print(f'png_filename={png_filename}')
@@ -1600,7 +1576,6 @@ class FlutterGui(LoggableGui):
     def log_debug(self, msg: str) -> None:
         print(msg)
 
-
 def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
     items = list_widget.selectedItems()
     texts = []
@@ -1684,75 +1659,6 @@ def _to_str(value: Optional[int | float]) -> str:
         str_value = str(value)
     return str_value
 
-def load_f06_op2(f06_filename: str, log: SimpleLogger,
-                 in_units: str,
-                 out_units: str,
-                 use_rhoref: bool) -> tuple[OP2, dict[int, FlutterResponse]]:
-    if not os.path.exists(f06_filename):
-        log.error(f'Cant find {f06_filename}')
-        return
-
-    model = None
-    responses = {}
-    in_units_dict = get_flutter_units(in_units)
-    out_units_dict = get_flutter_units(out_units)
-    ext = os.path.splitext(f06_filename)[1].lower()
-    print(f'use_rhoref={use_rhoref}')
-    if ext == '.f06':
-        try:
-            responses: FlutterResponse = make_flutter_response(
-                f06_filename,
-                f06_units=in_units_dict,
-                out_units=out_units_dict,
-                use_rhoref=use_rhoref,
-                log=log)
-        except Exception as e:
-            log.error(str(e))
-            #raise
-            return model, responses
-    elif ext == '.op2':
-        try:
-            from pyNastran.op2.op2 import OP2
-        except ImportError as e:
-            log.error(str(e))
-            return model, responses
-
-        assert isinstance(in_units_dict, dict), in_units_dict
-        model = OP2(log=log)
-        model.in_units = in_units_dict
-        results_to_include = ['eigenvectors', 'vg_vf_response']
-        model.set_results(results_to_include)
-        try:
-            model.read_op2(f06_filename, build_dataframe=False)
-            responses = model.op2_results.vg_vf_response
-            if len(responses) == 0:
-                log.error('Could not find OVG table in op2')
-        except Exception as e:
-            log.error(str(e))
-            return model, responses
-    else:
-        log.error('Could not find OVG table in op2')
-        return model, responses
-
-    for response in responses.values():
-        response.convert_units(out_units_dict)
-
-    return model, responses
-
-def update_ylog_style(fig: plt.Figure,
-                      log_scale_x: bool,
-                      log_scale_y1: bool,
-                      log_scale_y2: bool) -> None:
-    ax_list = fig.axes
-    xscale = 'log' if log_scale_x else 'linear'
-    yscale1 = 'log' if log_scale_y1 else 'linear'
-    yscale2 = 'log' if log_scale_y2 else 'linear'
-    ax_list[0].set_xscale(xscale)
-    ax_list[1].set_xscale(xscale)
-
-    ax_list[0].set_yscale(yscale1)
-    ax_list[1].set_yscale(yscale2)
-
 def main(f06_filename: str='') -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
@@ -1768,28 +1674,6 @@ def main(f06_filename: str='') -> None:  # pragma: no cover
     main_window = FlutterGui(f06_filename)
     # Enter the main loop
     app.exec_()
-
-
-def _get_png_filename(base: str, x_plot_type: str, plot_type: str,
-                      export_to_png: bool) -> tuple[str, Optional[str]]:
-    assert isinstance(base, str), base
-    assert isinstance(x_plot_type, str), x_plot_type
-    assert isinstance(plot_type, str), plot_type
-    assert isinstance(export_to_png, bool), export_to_png
-    if 'x-' in plot_type:
-        # png_filename0 = base + f'_{x_plot_type}-damp-kfreq.png'
-        # png_filename0 = base + f'_{x_plot_type}-damp-freq.png'
-        plot_type2 = plot_type.replace('x-', x_plot_type + '-')
-        png_filename0 = base + f'_{plot_type2}.png'
-    else:
-        #png_filename0 = base + '_root-locus.png'
-        #png_filename0 = base + '_modal-participation.png'
-        png_filename0 = base + f'_{plot_type}.png'
-    #print(f'png_filename0 = {png_filename0}')
-    png_filename = png_filename0 if export_to_png else None
-    #print(f'png_filename = {png_filename}')
-    return png_filename0, png_filename
-
 
 
 if __name__ == '__main__':

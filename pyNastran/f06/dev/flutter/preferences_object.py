@@ -18,15 +18,15 @@ class PreferencesObject:
         self.window_shown = None
         self.window = None
 
-    def show_window(self) -> None:
-        """shows the widnow"""
-        if self.window_shown:
-            self.window.show_legend()
+    # def show_window(self) -> None:
+    #     """shows the window"""
+    #     if self.window_shown:
+    #         self.window.show()
 
-    def hide_window(self) -> None:
-        """hides the widnow"""
-        if self.window_shown:
-            self.window.hide_legend()
+    # def hide_window(self) -> None:
+    #     """hides the window"""
+    #     if self.window_shown:
+    #         self.window.hide()
 
     def set_font_size(self, font_size: int) -> None:
         """sets the font size for the legend window"""
@@ -36,7 +36,7 @@ class PreferencesObject:
         #     self._animation_window.set_font_size(font_size)
 
     def show(self):
-        """Opens a dialog box to set:"""
+        """Opens a dialog box to set"""
         gui: FlutterGui = self.gui
         # if not hasattr(gui, 'case_keys') or len(gui.case_keys) == 0:
         #     gui.log_error('No model has been loaded.')
@@ -65,8 +65,7 @@ class PreferencesObject:
             self.window.show()
         else:
             self.window_shown = True
-            self.window = PreferencesDialog(
-                data, self, win_parent=gui)
+            self.window = PreferencesDialog(data, self, win_parent=gui)
 
         # if data['close']:
         #     # if not self.window._updated_legend:
@@ -83,8 +82,8 @@ class PreferencesObject:
         self.gui._vtk_window_obj.set_preferences(nphase=nphase)
     def on_icase(self, icase: int) -> None:
         self.gui._vtk_window_obj.set_preferences(icase=icase)
-    #def on_animate(self, animate: bool) -> None:
-        #self.gui._vtk_window_obj.set_preferences(animate=animate)
+    def on_animate(self, animate: bool) -> None:
+        self.gui._vtk_window_obj.set_preferences(animate=animate)
 
     def on_close(self):
         #del self.window

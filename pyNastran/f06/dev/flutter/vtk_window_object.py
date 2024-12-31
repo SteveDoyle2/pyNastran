@@ -35,9 +35,16 @@ class VtkWindowObject:
 
     def set_preferences(self, dt_ms: Optional[int]=None,
                         nphase: Optional[int]=None,
-                        icase: Optional[int]=None) -> None:
+                        icase: Optional[int]=None,
+                        animate: Optional[bool]=None) -> None:
+        """
+        To avoid lag:
+         - Stop the timer if something got updated
+         - Update the settings
+         - Restart the timer at iphase=0
+
+        """
         is_updated = False
-        is_timer_paused = False
         if dt_ms is not None and dt_ms != self.dt_ms:
             dt_ms = max(DT_MS_MIN, min(dt_ms, DT_MS_MAX))
             self.dt_ms = dt_ms
@@ -46,12 +53,14 @@ class VtkWindowObject:
                 self.window.timer.stop()  # Pause the timer
                 self.window.dt_ms = self.dt_ms
                 self.window.timer.setInterval(dt_ms)
+
         if nphase is not None and nphase != self.nphase:
             self.nphase = nphase
             if self.window_shown:
                 is_updated = True
                 self.window.timer.stop()
                 self.window.nphase = self.nphase
+
         if icase is not None and icase != self.icase:
             self.icase = icase
             if self.window_shown:
@@ -59,28 +68,21 @@ class VtkWindowObject:
                 self.window.timer.stop()
                 self.window.icase = self.icase
 
-        if is_updated:
+        if animate is None:
+            animate = self.animate
+        elif animate != self.animate:
+            self.animate = animate
+            if self.window_shown:
+                is_updated = True
+                self.window.timer.stop()
+                self.window.animate = self.animate
+
+        if is_updated and animate:
+            # only restart the animation if the timer was stopped
+            # and we're animating
             self.window.iphase = 0
+            self.window.update_dphases()
             self.window.timer.start()
-
-    # def set_dt_ms(self, dt_ms: int) -> None:
-    #     self.dt_ms = dt_ms
-    #     if self.window_shown:
-    #         self.window.dt_ms = self.dt_ms
-    #         self.window.timer.setInterval(dt_ms)
-    #         self.window.iphase = 0
-
-    # def set_nphase(self, nphase: int) -> None:
-    #     self.nphase = nphase
-    #     if self.window_shown:
-    #         self.window.nphase = self.nphase
-    #         self.window.iphase = 0
-
-    # def set_icase(self, icase: int) -> None:
-    #     self.icase = icase
-    #     if self.window_shown:
-    #         self.window.icase = self.icase
-    #         self.window.iphase = 0
 
     @property
     def data(self) -> dict[str, int]:
@@ -88,7 +90,7 @@ class VtkWindowObject:
             'icase': self.icase,
             'dt_ms': self.dt_ms,
             'nphase': self.nphase,
-            'animate': True,
+            'animate': self.animate,
         }
         return out
 
