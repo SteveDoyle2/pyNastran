@@ -2,6 +2,7 @@ from __future__ import annotations
 import os
 import sys
 import copy
+import shutil
 import warnings
 import traceback
 from pathlib import Path
@@ -57,12 +58,34 @@ PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation'
 UNITS_IN = ['english_in', 'english_kt', 'english_ft',
             'si', 'si_mm']
 UNITS_OUT = UNITS_IN
-HOME_DIRNAME = os.path.expanduser('~')
-HOME_FILENAME = os.path.join(HOME_DIRNAME, 'plot_flutter.json')
+
+def get_plot_file() -> str:
+    home_dirname = Path(os.path.expanduser('~'))
+    old_filename = home_dirname / 'plot_flutter.json'
+    new_filename = home_dirname / 'plot_145' / 'settings.json'
+    #move_filename(old_filename, new_filename)
+    return str(old_filename)
+
+def move_filename(old_filename: Path,
+                  new_filename: Path) -> None:
+    """
+    Creates new file from old file is new file doesn't exist.
+    Cleans up the mess.
+    """
+    dirname = os.path.dirname(new_filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+    if old_filename.exists() and not new_filename.exists():
+        shutil.copyfile(old_filename, new_filename)
+    if old_filename.exists():
+        os.remove(old_filename)
+    return
 
 #FONT_SIZE = 12
 import pyNastran
 PKG_PATH = Path(pyNastran.__path__[0])
+HOME_FILENAME = get_plot_file()
 
 AERO_PATH = PKG_PATH / '..' / 'models' / 'aero'
 if 0:
@@ -210,9 +233,6 @@ class FlutterGui(LoggableGui):
 
     # @dontcrash
     def on_export_settings(self):
-        print('on_export_settings')
-        obj = self._export_settings_obj
-        print(f'obj')
         self._export_settings_obj.show()
 
     def on_file_exit(self):
@@ -259,6 +279,7 @@ class FlutterGui(LoggableGui):
         self._set_window_title()
 
     def _apply_settings(self, data: dict[str, Any]) -> None:
+        self._vtk_window_obj.apply_settings(data)
         font_size0 = self.font_size
         # radios = [
         #     ('show_points', self.show_points_radio),

@@ -1,3 +1,7 @@
+
+"""
+TODO: change from dt_ms to FPS
+"""
 from qtpy.QtWidgets import (
     QLabel,
     #QWidget,
@@ -26,6 +30,7 @@ class PreferencesDialog(PyDialog):
         self.on_font_size()
         self.setup_layout()
         self.setup_connections()
+        self.setWindowTitle('Preferences')
         self.show()
 
     def setup_widgets(self, data: dict[str, bool]) -> None:
@@ -44,6 +49,13 @@ class PreferencesDialog(PyDialog):
         self.nphase_edit.setMinimum(4)
         self.nphase_edit.setMaximum(51)
 
+        self.icase_label = QLabel('iCase:')
+        self.icase_edit = QSpinBox()
+        self.icase_edit.setValue(data['icase'])
+        self.icase_edit.setMinimum(0)
+        # self.nphase_edit.setMaximum(51)
+
+
         # self.nframes_label = QLabel('Animation Update Time (ms):')
         # self.nframes_edit = QSpinBox()
         # self.nframes_edit.setValue(data['dt_ms'])
@@ -55,8 +67,10 @@ class PreferencesDialog(PyDialog):
         self.dt_ms_edit = QSpinBox()
         self.dt_ms_edit.setValue(data['dt_ms'])
         self.dt_ms_edit.setMinimum(100)
+        self.dt_ms_edit.setMaximum(5000)
         self.animate_checkbox = QCheckBox('Animate')
         self.animate_checkbox.setChecked(data['animate'])
+        self.animate_checkbox.setEnabled(False)
         #self.dt_ms_edit.setMaximum(2000)
 
         self.export_png_checkbox = QCheckBox('Export PNG')
@@ -79,6 +93,9 @@ class PreferencesDialog(PyDialog):
         grid.addWidget(self.plot_font_size_edit, irow, 1)
         irow += 1
 
+        grid.addWidget(self.icase_label, irow, 0)
+        grid.addWidget(self.icase_edit, irow, 1)
+        irow += 1
         grid.addWidget(self.nphase_label, irow, 0)
         grid.addWidget(self.nphase_edit, irow, 1)
         irow += 1
@@ -109,6 +126,7 @@ class PreferencesDialog(PyDialog):
         #self.animate_checkbox.clicked.connect(self.on_animate)
         self.nphase_edit.valueChanged.connect(self.on_nphase)
         self.dt_ms_edit.valueChanged.connect(self.on_dt_ms)
+        self.icase_edit.valueChanged.connect(self.on_icase)
 
     def on_font_size(self) -> None:
         font_size = self.font_size_edit.value()
@@ -131,9 +149,17 @@ class PreferencesDialog(PyDialog):
         self.win_parent.export_to_zona = self.export_zona_checkbox.isChecked()
 
     def on_dt_ms(self) -> None:
-        self.win_parent.on_dt_ms(self.dt_ms_edit.value())
+        """TODO: move this behind an apply button"""
+        value = self.dt_ms_edit.value()
+        self.gui_obj.on_dt_ms(value)
     def on_nphase(self) -> None:
-        self.win_parent.on_nphase(self.dt_ms_edit.value())
+        """TODO: move this behind an apply button"""
+        value = self.nphase_edit.value()
+        self.gui_obj.on_nphase(value)
+    def on_icase(self) -> None:
+        """TODO: move this behind an apply button"""
+        value = self.icase_edit.value()
+        self.gui_obj.on_icase(value)
     # 'animate': True,
 
     def closeEvent(self, event):

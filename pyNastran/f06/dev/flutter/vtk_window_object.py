@@ -4,12 +4,17 @@ defines:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 from qtpy.QtWidgets import QMainWindow
 from pyNastran.f06.dev.flutter.vtk_window import VtkWindow
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.f06.dev.flutter.gui_flutter import FlutterGui
+
+DT_MS_DEFAULT = 100
+NPHASE_DEFAULT = 10
+DT_MS_MIN = 100
+DT_MS_MAX = 5000
 
 
 class VtkWindowObject:
@@ -18,12 +23,69 @@ class VtkWindowObject:
         self.gui = gui
         self.window_shown = None
         self.window = None
-        self.dt_ms = 150
-        self.nphase = 10
+        self.apply_settings({})
+        # self.dt_ms = DT_MS_DEFAULT
+        # self.nphase = NPHASE_DEFAULT
+    def apply_settings(self, data: dict[str, Any]) -> None:
+        vtk_data = data.get('vtk', {})
+        self.dt_ms = DT_MS_DEFAULT if 'dt_ms' not in vtk_data else int(vtk_data['dt_ms'])
+        self.nphase = NPHASE_DEFAULT if 'nphase' not in vtk_data else int(vtk_data['nphase'])
+        self.icase = 0 if 'icase' not in vtk_data else int(vtk_data['icase'])
+        self.animate = True
+
+    def set_preferences(self, dt_ms: Optional[int]=None,
+                        nphase: Optional[int]=None,
+                        icase: Optional[int]=None) -> None:
+        is_updated = False
+        is_timer_paused = False
+        if dt_ms is not None and dt_ms != self.dt_ms:
+            dt_ms = max(DT_MS_MIN, min(dt_ms, DT_MS_MAX))
+            self.dt_ms = dt_ms
+            if self.window_shown:
+                is_updated = True
+                self.window.timer.stop()  # Pause the timer
+                self.window.dt_ms = self.dt_ms
+                self.window.timer.setInterval(dt_ms)
+        if nphase is not None and nphase != self.nphase:
+            self.nphase = nphase
+            if self.window_shown:
+                is_updated = True
+                self.window.timer.stop()
+                self.window.nphase = self.nphase
+        if icase is not None and icase != self.icase:
+            self.icase = icase
+            if self.window_shown:
+                is_updated = True
+                self.window.timer.stop()
+                self.window.icase = self.icase
+
+        if is_updated:
+            self.window.iphase = 0
+            self.window.timer.start()
+
+    # def set_dt_ms(self, dt_ms: int) -> None:
+    #     self.dt_ms = dt_ms
+    #     if self.window_shown:
+    #         self.window.dt_ms = self.dt_ms
+    #         self.window.timer.setInterval(dt_ms)
+    #         self.window.iphase = 0
+
+    # def set_nphase(self, nphase: int) -> None:
+    #     self.nphase = nphase
+    #     if self.window_shown:
+    #         self.window.nphase = self.nphase
+    #         self.window.iphase = 0
+
+    # def set_icase(self, icase: int) -> None:
+    #     self.icase = icase
+    #     if self.window_shown:
+    #         self.window.icase = self.icase
+    #         self.window.iphase = 0
 
     @property
     def data(self) -> dict[str, int]:
         out = {
+            'icase': self.icase,
             'dt_ms': self.dt_ms,
             'nphase': self.nphase,
             'animate': True,

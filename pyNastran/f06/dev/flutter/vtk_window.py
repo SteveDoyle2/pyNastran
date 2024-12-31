@@ -1,13 +1,26 @@
 """
-TODO: add control over the update time
+done
+----
+preferences window can now hide
+add control over the update time
+added icase to Preferences Menu
+
+not done
+--------
+easy:
 TODO: add label in lower left cornre
 
+moderate:
 TODO: add displacement fringe
-TODO: disable rotational modes to have fewer results
-TODO: add way to select another case (j/k keys or GUI case form?)
-TODO: show/hide set of elements (copy from femap, paste as list?)
-TODO: fix weirdness with 0012 model (green lines)
+TODO: add easy way to select another case (j/k keys or GUI case form?)
 TODO: add strain energy fringe
+
+hard:
+TODO: show/hide set of elements (copy from femap, paste as list?)
+
+minor:
+TODO: fix weirdness with 0012 model (green lines)
+TODO: disable rotational modes to have fewer results
 """
 from __future__ import annotations
 import os
