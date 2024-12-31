@@ -46,6 +46,7 @@ class PreferencesObject:
             # vtk
             'nphase': vtk_obj.nphase,
             'icase': vtk_obj.icase,
+            'ncase': vtk_obj.ncase,
             'animate': vtk_obj.animate,
             'dt_ms': vtk_obj.dt_ms,
 
@@ -74,6 +75,12 @@ class PreferencesObject:
         #     self.window = None
         # else:
         #     self.window.activateWindow()
+
+    def reset_icase_ncase(self, icase: int, ncase: int) -> None:
+        print('preferences_obj.reset')
+        if self.window_shown:
+            self.window.icase_edit.setValue(icase)
+            self.window.icase_edit.setMaximum(ncase)
 
     def on_dt_ms(self, dt_ms: int) -> None:
         self.gui._vtk_window_obj.set_preferences(dt_ms=dt_ms)

@@ -41,7 +41,7 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
-from pyNastran.f06.dev.flutter.actions_builder import Actions, Action
+from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
 from pyNastran.f06.dev.flutter.preferences_object import PreferencesObject
 from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
@@ -82,7 +82,7 @@ class FlutterGui(LoggableGui):
         super().__init__(html_logging=False)
 
         self._export_settings_obj = PreferencesObject(self)
-        self._vtk_window_obj = VtkWindowObject(self)
+        self._vtk_window_obj = VtkWindowObject(self, ICON_PATH)
         self.font_size = 10
         self.plot_font_size = 10
         self.show_lines = True
@@ -143,7 +143,7 @@ class FlutterGui(LoggableGui):
         self._set_window_title()
         self.on_font_size()
         self.on_plot_type()
-        # self.on_open_new_window()
+        self.on_open_new_window()
         self.show()
 
     def setup_toolbar(self):
@@ -1584,20 +1584,6 @@ def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
         texts.append(text)
     return texts
 
-def build_menus(menus_dict: dict[str, tuple[QMenu, list[str]]],
-                actions: dict[str, QAction]) -> None:
-    for menu_name, (menu, actions_list) in menus_dict.items():
-        assert isinstance(menu_name, str), menu_name
-        for action_name in actions_list:
-            assert isinstance(action_name, str), action_name
-            if action_name == '':
-                menu.addSeparator()
-                continue
-            #print(menu_name, action_name)
-            action = actions[action_name]
-            menu.addAction(action)
-            #print('menu = ', menu)
-            #print('action = ', action)
 
 def validate_json(data: dict[str, Any],
                   log: SimpleLogger) -> bool:

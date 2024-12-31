@@ -407,7 +407,7 @@ class VectorTable(GuiResultCommon):
         msg += f'    data_type={self.data_type!r}\n'
         msg += f'    is_real={self.is_real} is_complex={self.is_complex}\n'
         msg += f'    location={self.location!r}\n'
-        msg += f'    header={self.headers!r}\n'
+        msg += f'    headers={self.headers!r}\n'
         msg += f'    data_format={self.data_formats!r}\n'
         msg += f'    uname={self.uname!r}\n'
         return msg

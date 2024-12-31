@@ -19,8 +19,10 @@ DT_MS_MAX = 5000
 
 class VtkWindowObject:
     """defines VtkWindowObject, which is an interface to the PreferencesWindow"""
-    def __init__(self, gui: FlutterGui):
+    def __init__(self, gui: FlutterGui, icon_path: str):
         self.gui = gui
+        self.ncase = 0
+        self.icon_path = icon_path
         self.window_shown = None
         self.window = None
         self.apply_settings({})
@@ -45,6 +47,7 @@ class VtkWindowObject:
 
         """
         is_updated = False
+        apply_fringe_plot = False
         if dt_ms is not None and dt_ms != self.dt_ms:
             dt_ms = max(DT_MS_MIN, min(dt_ms, DT_MS_MAX))
             self.dt_ms = dt_ms
@@ -65,6 +68,7 @@ class VtkWindowObject:
             self.icase = icase
             if self.window_shown:
                 is_updated = True
+                apply_fringe_plot = True
                 self.window.timer.stop()
                 self.window.icase = self.icase
 
@@ -76,6 +80,10 @@ class VtkWindowObject:
                 is_updated = True
                 self.window.timer.stop()
                 self.window.animate = self.animate
+
+        if apply_fringe_plot:
+            # avoid redoing the fringe
+            self.window.apply_fringe_plot = apply_fringe_plot
 
         if is_updated and animate:
             # only restart the animation if the timer was stopped
@@ -137,6 +145,12 @@ class VtkWindowObject:
 
     # def set_data(self):
     #     asdf
+
+    def reset_icase_ncase(self, icase: int, ncase: int) -> None:
+        """called by VtkWindow when icase exceeds the min/max"""
+        print('vtk_window_obj.reset')
+        self.icase = icase
+        self.gui._export_settings_obj.reset_icase_ncase(icase, ncase)
 
     def on_close(self):
         #del self.window

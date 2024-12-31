@@ -1,7 +1,7 @@
 from pathlib import Path
 from functools import partial
 from typing import Callable
-from qtpy.QtWidgets import QAction
+from qtpy.QtWidgets import QAction, QMenu
 
 
 class Action:
@@ -87,3 +87,18 @@ class Actions:
         if len(recent_files):
             recent_files.append('') # dash line
         return recent_files
+
+def build_menus(menus_dict: dict[str, tuple[QMenu, list[str]]],
+                actions: dict[str, QAction]) -> None:
+    for menu_name, (menu, actions_list) in menus_dict.items():
+        assert isinstance(menu_name, str), menu_name
+        for action_name in actions_list:
+            assert isinstance(action_name, str), action_name
+            if action_name == '':
+                menu.addSeparator()
+                continue
+            #print(menu_name, action_name)
+            action = actions[action_name]
+            menu.addAction(action)
+            #print('menu = ', menu)
+            #print('action = ', action)
