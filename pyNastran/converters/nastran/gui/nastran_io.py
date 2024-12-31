@@ -3109,7 +3109,37 @@ def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
                        disp_dict, stress_dict, strain_dict, force_dict,
                        strain_energy_dict, gpstress_dict,
                        log: SimpleLogger):
-    """combines the SORT1-based OP2 results into a SORT1 table"""
+    """
+    Combines the SORT1-based OP2 results into a SORT1 table.
+    Loop over key_items and create a new grouping when there
+    are major changes in the structure of the results including:
+     - subcase
+     - label
+     - superelement_adaptivity_index
+
+    Parameters
+    ----------
+    key_itimes: list[key_itime]
+        The order of the results
+        key_itime: tuple[NastranKey, value]
+          NastranKey:
+            isubcase, analysis_code, sort_method, count, ogs,  # int
+            superelement_adaptivity_index
+          value: int
+            ???
+    keys_map: KeysMap; dict[key_itime, mapped_key]
+        Used to get the subcase grouping
+        mapped_key:
+           subtitle: str
+           label: str
+           superelement_adaptivity_index: str
+           #label
+           #pval_step
+     header_dict: HeaderDict; dict[key_itime, header]
+        header: str
+          the sidebar title of the form
+
+    """
     #print('stress_dict.keys():')
     #for (key, itime), value in stress_dict.items():
         #print(f'  key={key} itime={itime}: {value}')
@@ -3283,7 +3313,6 @@ def _build_sort1_table(key_itimes: list[tuple[NastranKey, int]],
     #if len(formi):
         #form.append(form0)
     #print(form)
-    #aa
     #print('form', form)
     #print('form_results =', form_results)
     return form

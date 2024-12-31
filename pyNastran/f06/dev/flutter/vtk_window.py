@@ -47,18 +47,34 @@ if TYPE_CHECKING:  # pragma: no cover
     #from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
     #from pyNastran.gui.menus.results_sidebar import ResultsSidebar
     from pyNastran.gui.typing import ColorInt
+    from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
 
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 
 
 class VtkWindow(QMainWindow):
-    def __init__(self, parent: QMainWindow,
+    def __init__(self,
+                 gui_obj: VtkWindowObject,
+                 gui: QMainWindow,
+                 data: dict[str, Any],
                  bdf_filename: str, op2_filename: str=''):
+        """Sets up the vtk window
+
+        Parameters
+        ----------
+        gui: QMainWindow
+            the real gui
+        gui_obj: VtkWindowObject
+            the interface object
+        """
         super().__init__()
-        self.gui = parent
-        self.log = parent.log
+        self.gui = gui
+        self.gui_obj = gui_obj
+        self.log = gui.log
         self.run_vtk = True
+
+        self.set_data(data)
         self.eid_maps = {}
         self.nid_maps = {}
         self.alt_grids = {}
@@ -123,15 +139,49 @@ class VtkWindow(QMainWindow):
 
         self.start_animation_timer()
         self.render()
+        self.show()
 
+    #---------------------------------------------------------------------
+    ## teardown
+    def closeEvent(self, event):
+        # print('closeEvent')
+        # event.accept()
+        self.gui_obj.on_close()
+        # print('back...')
+    #---------------------------------------------------------------------
+    # basic setup
+
+    def set_data(self, data: dict[str, int]) -> None:
+        print('setting data', data)
+        self.dt_ms = data['dt_ms']
+        self.iphase = 0
+        self.nphase = data['nphase']
+
+    @property
+    def vtk_interactor(self) -> QVTKRenderWindowInteractor:
+        return self.vtk_interface.vtk_interactor
+    @property
+    def rend(self) -> vtkRenderer:
+        return self.vtk_interface.rend
+    @property
+    def iren(self) -> QVTKRenderWindowInteractor:
+        return self.vtk_interface.vtk_interactor
+    @property
+    def render_window(self) -> vtkRenderWindow:
+        return self.vtk_interactor.GetRenderWindow()
+    def render(self) -> None:
+        self.vtk_interactor.GetRenderWindow().Render()
+
+    def log_info(self, msg: str) -> None:
+        self.gui.log_info(msg)
+    def log_debug(self, msg: str) -> None:
+        self.gui.log_debug(msg)
+    #---------------------------------------------------------------------
     def stop_animation_timer(self):
         self.timer.stop()
 
     def setup_animation_timer(self) -> None:
-        self.iphase = 0
-        self.nphase = 10
         # Update every N milliseconds
-        self.dt_ms = 100  # ms
         self.timer = QTimer()
 
     def start_animation_timer(self) -> None:
@@ -278,25 +328,6 @@ class VtkWindow(QMainWindow):
     # def vtk_interactor(self) -> QVTKRenderWindowInteractor:
     #     return self.vtk_interface.vtk_interactor
 
-    @property
-    def vtk_interactor(self) -> QVTKRenderWindowInteractor:
-        return self.vtk_interface.vtk_interactor
-    @property
-    def rend(self) -> vtkRenderer:
-        return self.vtk_interface.rend
-    @property
-    def iren(self) -> QVTKRenderWindowInteractor:
-        return self.vtk_interface.vtk_interactor
-    @property
-    def render_window(self) -> vtkRenderWindow:
-        return self.vtk_interactor.GetRenderWindow()
-    def render(self) -> None:
-        self.vtk_interactor.GetRenderWindow().Render()
-
-    def log_info(self, msg: str) -> None:
-        self.gui.log_info(msg)
-    def log_debug(self, msg: str) -> None:
-        self.gui.log_debug(msg)
     def create_global_axes(self, dim_max: float):
         return
     def _add_alt_actors(self,

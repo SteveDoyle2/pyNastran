@@ -435,7 +435,6 @@ def _get_nastran_header(case: Any,
         msg = 'unhandled case; header=%r\n%s' % (header, str(case))
         print(msg)
         #raise RuntimeError(msg)
-
     return header.strip('; ')
 
 

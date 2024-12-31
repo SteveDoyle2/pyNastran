@@ -1,10 +1,11 @@
 from __future__ import annotations
 import os
 import sys
+import copy
 import warnings
 import traceback
 from pathlib import Path
-from typing import Callable, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 ICON_PATH = Path('')
 try:
@@ -41,8 +42,11 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
-from pyNastran.f06.dev.actions_builder import Actions, Action
-from pyNastran.f06.dev.flutter_preferences import FlutterPreferencesDialog
+from pyNastran.f06.dev.flutter.actions_builder import Actions, Action
+#from pyNastran.f06.dev.flutter.flutter_preferences import FlutterPreferencesDialog
+from pyNastran.f06.dev.flutter.preferences_object import PreferencesObject
+from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
+
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import make_flutter_response, get_flutter_units
 if TYPE_CHECKING:
@@ -77,6 +81,9 @@ else:
 class FlutterGui(LoggableGui):
     def __init__(self, f06_filename: str=''):
         super().__init__(html_logging=False)
+
+        self._export_settings_obj = PreferencesObject(self)
+        self._vtk_window_obj = VtkWindowObject(self)
         self.font_size = 10
         self.plot_font_size = 10
         self.show_lines = True
@@ -137,7 +144,8 @@ class FlutterGui(LoggableGui):
         self._set_window_title()
         self.on_font_size()
         self.on_plot_type()
-        self.on_open_new_window()
+        # self.on_open_new_window()
+        self.show()
 
     def setup_toolbar(self):
         #frame = QFrame(self)
@@ -202,20 +210,10 @@ class FlutterGui(LoggableGui):
 
     # @dontcrash
     def on_export_settings(self):
-        data = {
-            'font_size': self.font_size,
-            'plot_font_size': self.plot_font_size,
-            'nphase': 10,
-            'animate': True,
-            'dt_ms': 200,
-            'export_to_png': self.export_to_png,
-            'export_to_csv': self.export_to_csv,
-            'export_to_f06': self.export_to_f06,
-            'export_to_zona': self.export_to_zona,
-        }
-        # TODO: clicking the menu pops a second copy of the window
-        window = FlutterPreferencesDialog(data, win_parent=self)
-        window.show()
+        print('on_export_settings')
+        obj = self._export_settings_obj
+        print(f'obj')
+        self._export_settings_obj.show()
 
     def on_file_exit(self):
         if hasattr(self, 'on_file_save') and hasattr(self, 'save_filename'):
@@ -251,8 +249,10 @@ class FlutterGui(LoggableGui):
             return
         #print(f'json_filename={json_filename!r} wildcard={wildcard!r}')
         #print(f'self.data = {self.data}')
+        out_data = copy.deepcopy(self.data)
+        out_data['vtk'] = self._vtk_window_obj.data
         with open(json_filename, 'w') as json_file:
-            json.dump(self.data, json_file, indent=4)
+            json.dump(out_data, json_file, indent=4)
         #print(f'fname="{fname}"')
         self.log.info(f'finished saving {json_filename!r}\n')
         self.save_filename = json_filename
@@ -1561,16 +1561,17 @@ class FlutterGui(LoggableGui):
         return is_passed
 
     def on_open_new_window(self):
-        # return
+        self._vtk_window_obj.show(BDF_FILENAME, OP2_FILENAME)
+        return
         try:
-            from pyNastran.f06.gui_flutter_vtk import VtkWindow
+            from pyNastran.f06.dev.flutter.gui_flutter_vtk import VtkWindow
         except ImportError as e:
             self.log.error(str(e))
             # print(traceback.print_tb(e))
             print(traceback.print_exception(e))
             self.log.error('cant open window')
             return
-        self.new_window = VtkWindow(self, BDF_FILENAME, OP2_FILENAME)
+        self.new_window = VtkWindow(gui, BDF_FILENAME, OP2_FILENAME)
         self.new_window.show()
 
     def log_info(self, msg: str) -> None:
@@ -1744,7 +1745,6 @@ def main(f06_filename: str='') -> None:  # pragma: no cover
     # The Main window
 
     main_window = FlutterGui(f06_filename)
-    main_window.show()
     # Enter the main loop
     app.exec_()
 

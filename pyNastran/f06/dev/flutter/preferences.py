@@ -13,18 +13,20 @@ from qtpy.QtWidgets import (
 )
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 
-class FlutterPreferencesDialog(PyDialog):
-    def __init__(self, data, win_parent=None):
+class PreferencesDialog(PyDialog):
+    def __init__(self, data, gui_obj, win_parent=None):
         """
         Saves the data members from data and
         performs type checks
         """
         PyDialog.__init__(self, data, win_parent)
+        self.gui_obj = gui_obj
         #print(f'data = {data}')
         self.setup_widgets(data)
         self.on_font_size()
         self.setup_layout()
         self.setup_connections()
+        self.show()
 
     def setup_widgets(self, data: dict[str, bool]) -> None:
         self.font_size_label = QLabel('Font Size')
@@ -105,8 +107,8 @@ class FlutterPreferencesDialog(PyDialog):
         self.font_size_edit.valueChanged.connect(self.on_font_size)
         self.plot_font_size_edit.valueChanged.connect(self.on_plot_font_size)
         #self.animate_checkbox.clicked.connect(self.on_animate)
-        #self.nphase_edit.valueChanged.connect(self.on_nphase)
-        #self.dt_ms_edit.valueChanged.connect(self.on_dt_ms)
+        self.nphase_edit.valueChanged.connect(self.on_nphase)
+        self.dt_ms_edit.valueChanged.connect(self.on_dt_ms)
 
     def on_font_size(self) -> None:
         font_size = self.font_size_edit.value()
@@ -127,3 +129,13 @@ class FlutterPreferencesDialog(PyDialog):
         self.win_parent.export_to_png = self.export_png_checkbox.isChecked()
     def on_export_zona(self) -> None:
         self.win_parent.export_to_zona = self.export_zona_checkbox.isChecked()
+
+    def on_dt_ms(self) -> None:
+        self.win_parent.on_dt_ms(self.dt_ms_edit.value())
+    def on_nphase(self) -> None:
+        self.win_parent.on_nphase(self.dt_ms_edit.value())
+    # 'animate': True,
+
+    def closeEvent(self, event):
+        #event.accept()
+        self.gui_obj.on_close()
