@@ -1571,10 +1571,16 @@ class FlutterGui(LoggableGui):
         self.new_window = VtkWindow(gui, BDF_FILENAME, OP2_FILENAME)
         self.new_window.show()
 
-    def log_info(self, msg: str) -> None:
-        print(msg)
     def log_debug(self, msg: str) -> None:
-        print(msg)
+        print(f'DEBUG: {msg}')
+    def log_info(self, msg: str) -> None:
+        print(f'INFO:  {msg}')
+    def log_command(self, msg: str) -> None:
+        print(f'COMMAND: {msg}')
+    def log_warning(self, msg: str) -> None:
+        print(f'WARNING: {msg}')
+    def log_error(self, msg: str) -> None:
+        print(f'ERROR:   {msg}')
 
 def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
     items = list_widget.selectedItems()

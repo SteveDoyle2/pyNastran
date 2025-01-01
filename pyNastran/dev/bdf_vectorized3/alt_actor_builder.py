@@ -573,7 +573,7 @@ def create_alt_rbe2_grids(gui: MainWindow,
     """
     elem = model.rbe2
     nastran_settings: NastranSettings = gui.settings.nastran_settings
-    if elem.n == 0 and nastran_settings.is_rbe:
+    if elem.n == 0 or not nastran_settings.is_rbe:
         return
 
     i_independent = np.searchsorted(grid_id, elem.independent_node)

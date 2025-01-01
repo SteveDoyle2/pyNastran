@@ -5,6 +5,8 @@ https://wiki.python.org/moin/PyQt/Distinguishing%20between%20click%20and%20doubl
 http://www.saltycrane.com/blog/2007/12/pyqt-43-qtableview-qabstracttablemodel/
 http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-work-in-this-program
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.gui.limits import MAX_POINT_SIZE, MAX_LINE_WIDTH
 #from pyNastran.gui.qt_version import qt_version #qt_int
 
@@ -22,6 +24,9 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.qt.version import Background
+if TYPE_CHECKING:
+    from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import EditGeometryPropertiesObject
+
 
 class SingleChoiceQTableView(QTableView):
     def __init__(self, *args, **kwargs):
@@ -180,7 +185,8 @@ class Model(QtCore.QAbstractTableModel):
 
 class EditGeometryProperties(PyDialog):
     force = True
-    def __init__(self, data, win_parent=None):
+    def __init__(self, data, gui_obj: EditGeometryPropertiesObject,
+                 is_gui: bool=True, win_parent=None):
         """
         +------------------+
         | Edit Actor Props |
@@ -205,6 +211,13 @@ class EditGeometryProperties(PyDialog):
         self.set_font_size(data['font_size'])
         del self.out_data['font_size']
         self.setWindowTitle('Edit Geometry Properties')
+        self.is_gui = is_gui
+        self.gui_obj = gui_obj
+        assert isinstance(is_gui, bool), is_gui
+        if is_gui and not hasattr(self.gui_obj, 'on_update_geometry_properties'):
+            print(f'no on_update_geometry_properties in {str(self.gui_obj)}')
+            # self.gui_obj.log_error(f'no on_update_geometry_properties in {str(self.gui_obj)}')
+            return
         self.allow_update = True
 
         #default
@@ -289,7 +302,6 @@ class EditGeometryProperties(PyDialog):
         self.use_slider = True
         self.is_opacity_edit_active = False
         self.is_opacity_edit_slider_active = False
-
         self.is_line_width_edit_active = False
         self.is_line_width_edit_slider_active = False
 
@@ -862,16 +874,12 @@ class EditGeometryProperties(PyDialog):
             #return True
         #return False
 
-    @property
-    def is_gui(self):
-        return hasattr(self.win_parent, 'on_update_geometry_properties')
-
-    def on_apply(self, force=False):
+    def on_apply(self, force: bool=False):
         passed = self.on_validate()
         #print("passed=%s force=%s allow=%s" % (passed, force, self.allow_update))
         if (passed or force) and self.allow_update and self.is_gui:
             #print('obj = %s' % self.out_data[self.active_key])
-            self.win_parent.on_update_geometry_properties(self.out_data, name=self.active_key)
+            self.gui_obj.on_update_geometry_properties(self.out_data, name=self.active_key)
         return passed
 
     def on_cancel(self):
@@ -921,10 +929,11 @@ def main():  # pragma: no cover
         'point' : AltGeometry(parent, 'point', color=blue, opacity=0.1, representation='point'),
         'surface' : AltGeometry(parent, 'surface', color=blue, opacity=0.1, representation='surface'),
     }
-    main_window = EditGeometryProperties(data, win_parent=None)
+    main_window = EditGeometryProperties(data, None, is_gui=False, win_parent=None)
     main_window.show()
     # Enter the main loop
     app.exec_()
+
 
 if __name__ == "__main__":  # pragma: no cover
     main()

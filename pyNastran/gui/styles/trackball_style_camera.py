@@ -32,6 +32,7 @@ class TrackballStyleCamera(vtkInteractorStyleTrackballCamera):
 
         # works
         vtkInteractorStyleTrackballCamera.__init__(self)
+        self.has_pan = hasattr(self.parent, 'on_pan_left')
 
         # TypeError: object.__init__() takes no parameters
         #super(TrackballStyleCamera, self).__init__(self, iren)
@@ -67,6 +68,8 @@ class TrackballStyleCamera(vtkInteractorStyleTrackballCamera):
             elif key == 'Down':
                 view.pitch(-5.)
         else:
+            if not self.has_pan:
+                return
             if key == 'Left':
                 self.parent.on_pan_left(event)
             elif key == 'Right':

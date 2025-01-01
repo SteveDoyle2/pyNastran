@@ -5,12 +5,13 @@ easy:
  - preferences window can now hide
  - add control over the update time (not tested)
  - added icase to Preferences Menu
- - add label in lower left cornre
+ - add edit_geometry_properties menu
+ - add label in lower left corner
  - add fast way to:
     - select another case (k/l keys)
     - enable/disable fringe (a key for apply_fringe)
     - update nphase (n key)
-    - update scale factor (s key)
+    - update scale factor (u key for up)
 
 medium:
  - add displacement fringe
@@ -21,10 +22,9 @@ minor:
 not done
 --------
 easy:
-TODO: nphase minus crashes
-TODO: nphase +/- doesn't scale right (seems to drop phases, but doesn't)
 
 medium:
+TODO: add export gif for set of views and modes
 TODO: fix vtk window show/hide
 TODO: add easier way to select another case (GUI case form?)
 TODO: delink icase_disp and icase_fringe
@@ -40,7 +40,7 @@ TODO:   - combined
 minor:
 TODO: fix up k/l key swapping (not quite right)
 TODO: make vtk font support unicode
-TODO: fix weirdness with 0012 model (green lines)
+TODO: fix RBE2 bug ib 0012 model (green lines)
 TODO: disable rotational modes to have fewer results (are these on?)
 """
 from __future__ import annotations
@@ -69,6 +69,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 from pyNastran.gui.utils.vtk.gui_utils import numpy_array_to_vtk_array
 
 import pyNastran
+from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
+    EditGeometryPropertiesObject)
 
 from pyNastran.gui.gui_objects.settings import NastranSettings
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
@@ -109,7 +111,10 @@ class VtkWindow(QMainWindow):
         super().__init__()
         self.gui = gui
         self.gui_obj = gui_obj
+        self.vtk_tools = VtkTools(gui_obj, self)
         self.log = gui.log
+        self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
+
         self.run_vtk = True
         self.global_apply_fringe_plot = True
         self.global_scale_factor = 1.0
@@ -154,7 +159,7 @@ class VtkWindow(QMainWindow):
         self.vtk_interface = VtkInterface(self, self.vtk_frame)
 
         # put the vtk_interactor inside the vtk_frame
-        self.set_vtk_frame_style()
+        self.set_vtk_frame_style(self.vtk_interactor, self.vtk_frame)
         renderer = self.vtk_interface.rend
 
         # put the corner axis into the renderer
@@ -186,6 +191,7 @@ class VtkWindow(QMainWindow):
         #self.setCentralWidget(self.vtk_frame)
         self.grid = ugrid
         self._load_model(bdf_filename, op2_filename)
+        self.case_keys = list(self.result_cases)
         renderer.ResetCamera()
 
         # Render again to set the correct view
@@ -205,90 +211,69 @@ class VtkWindow(QMainWindow):
     #---------------------------------------------------------------------
     # basic setup
     def _create_menus(self, icon_path: str) -> None:
+        vtk_tools = self.vtk_tools
         actions_dict = {
             # 'cycle_results': 'L',
             # 'rcycle_results': 'k',
             'apply_fringe_plot': Action(name='apply_fringe_plot', text='apply_fringe_plot...', icon='',
-                                        shortcut='a', func=self.on_apply_fringe_plot),
+                                        shortcut='a', func=self.on_apply_fringe_plot, tip='Turn the fringe on/off'),
             'cycle_icase': Action(name='cycle_icase', text='cycle_icase...', icon='',
-                                  shortcut='l', func=self.on_cycle_icase),
+                                  shortcut='l', func=vtk_tools.on_cycle_icase, tip='Increases icase'),
             'rcycle_icase': Action(name='rcycle_icase', text='rcycle_icase...', icon='',
-                                   shortcut='k', func=self.on_rcycle_icase),
+                                   shortcut='k', func=vtk_tools.on_rcycle_icase, tip='Decreases icase'),
             'scale_up': Action(name='scale_up', text='scale_up...', icon='',
-                               shortcut='S', func=self.on_scale_up),
+                               shortcut='u', func=vtk_tools.on_scale_up, tip='Increases the deformation scale factor'),
             'scale_down': Action(name='scale_down', text='scale_down...', icon='',
-                                 shortcut='Ctrl+S', func=self.on_scale_down),
+                                 shortcut='Ctrl+U', func=vtk_tools.on_scale_down, tip='Decreases the deformation scale factor'),
             'nphase_up': Action(name='nphase_up', text='nphase_up...', icon='',
-                                shortcut='N', func=self.on_nphase_up),
+                                shortcut='N', func=vtk_tools.on_nphase_up, tip='Increase the number of frame'),
             'nphase_down': Action(name='nphase_down', text='scale_down...', icon='',
-                                  shortcut='Ctrl+N', func=self.on_nphase_down),
+                                  shortcut='Ctrl+N', func=vtk_tools.on_nphase_down, tip='Decreases the number of frame'),
+            'geo_properties': Action(name='geo_properties', text='Edit Geometry Properties...',
+                                     icon='', tip='Change Model Color/Opacity/Line Width',
+                                     shortcut='Ctrl+E',
+                                     func=self.edit_geometry_properties_obj.edit_geometry_properties,
+                                     show=True),
         }
         actions_input = Actions(icon_path, actions_dict)  # , load_icon=False
         self.qactions = actions_input.build_qactions(self)
 
         self.menubar = self.menuBar()
         self.menu_hidden = self.menubar.addMenu('File')
-        self.menu_hidden.menuAction().setVisible(False)
+        # self.menu_hidden.menuAction().setVisible(False)
         hidden_tools = ('apply_fringe_plot',
                         'cycle_icase', 'rcycle_icase',
                         'scale_up', 'scale_down',
                         'nphase_up', 'nphase_down',
-                        )
+                        'geo_properties')
         menus_dict = {
             'hidden': (self.menu_hidden, hidden_tools)
         }
         build_menus(menus_dict, self.qactions)
 
-    def on_nphase_up(self):
-        """changes the number of frames"""
-        print('on_nphase_up')
-        nphase = self.nphase + 1
-        self.gui_obj.set_preferences(nphase=nphase)
-        #self.update_dphases()
-
-    def on_nphase_down(self):
-        """changes the number of frames"""
-        print('on_nphase_down')
-        # self.nphase -= 1
-        # if self.nphase == 0:
-        #     self.nphase -= 1
-        # self.update_dphases()
-        nphase = self.nphase - 1
-        if nphase == 0:
-            return
-            #nphase -= 1
-        self.gui_obj.set_preferences(nphase=nphase)
-
-    def on_scale_up(self) -> None:
-        """changes the global scale factor"""
-        self.global_scale_factor *= 1.1
-    def on_scale_down(self) -> None:
-        """changes the global scale factor"""
-        self.global_scale_factor /= 1.1
-    def on_rcycle_icase(self) -> None:
-        icase = self._check_icase(self.icase - 1)
-        self.gui_obj.set_preferences(icase=icase)
-
     def on_apply_fringe_plot(self):
         self.global_apply_fringe_plot = not self.global_apply_fringe_plot
         ugrid: vtkUnstructuredGrid = self.grid
+        vtk_mapper = self.vtk_mappers['main']
 
         case, case_tuple = self.result_cases[self.icase]
         case = cast(DisplacementResults, case)
         i, name = case_tuple
         self.iphase = 0
         self.apply_fringe_plot = True
-        self._update_fringe(i, name, case, ugrid)
+        self.apply_fringe_plot = _update_fringe(
+            i, name, case, ugrid, vtk_mapper,
+            self.corner_text_actors, self.iphase,
+            self.global_apply_fringe_plot,
+            self._apply_fringe_plot)
 
-    def on_cycle_icase(self) -> None:
-        icase = self._check_icase(self.icase+1)
-        self.gui_obj.set_preferences(icase=icase)
 
     def set_data(self, data: dict[str, int]) -> None:
         #print('setting data', data)
         self.dt_ms = data['dt_ms']
         self.iphase = 0
         self.nphase = data['nphase']
+        self.animate = True #data['animate']
 
     @property
     def vtk_interactor(self) -> QVTKRenderWindowInteractor:
@@ -305,10 +290,16 @@ class VtkWindow(QMainWindow):
     def render(self) -> None:
         self.vtk_interactor.GetRenderWindow().Render()
 
-    def log_info(self, msg: str) -> None:
-        self.gui.log_info(msg)
     def log_debug(self, msg: str) -> None:
         self.gui.log_debug(msg)
+    def log_info(self, msg: str) -> None:
+        self.gui.log_info(msg)
+    def log_command(self, msg: str) -> None:
+        self.gui.log_command(msg)
+    def log_warning(self, msg: str) -> None:
+        self.gui.log_warning(msg)
+    def log_error(self, msg: str) -> None:
+        self.gui.log_error(msg)
     #---------------------------------------------------------------------
     def stop_animation_timer(self):
         self.timer.stop()
@@ -323,8 +314,8 @@ class VtkWindow(QMainWindow):
         if not hasattr(self, 'timer'):
             self.timer = QTimer()
         self.update_dphases()
-        nphase = len(self.dphases)
         def update_vtk():
+            nphase = len(self.dphases)
             if self.iphase == nphase:
                 self.iphase = 0
             dphase = self.dphases[self.iphase]
@@ -333,20 +324,6 @@ class VtkWindow(QMainWindow):
             self.iphase += 1
         self.timer.timeout.connect(update_vtk)
         self.timer.start(self.dt_ms)
-
-    def _check_icase(self, icase: int) -> int:
-        ncase = len(self.result_cases)
-        if icase >= ncase:
-            icase = 0
-            self.icase = 0
-            self.gui_obj.reset_icase_ncase(icase, ncase)
-        elif icase < 0:
-            print(f'  icase1={icase}')
-            icase = ncase + icase
-            print(f'  icase2={icase}')
-            self.icase = icase
-            self.gui_obj.reset_icase_ncase(icase, ncase)
-        return icase
 
     def plot_deformation(self, icase: int, dphase: float) -> None:
         #ncase = max(self.result_cases)
@@ -363,83 +340,23 @@ class VtkWindow(QMainWindow):
             # simple sinusoid
             scale = scale * self.scales[self.iphase]
         else:
-            phase += dphase
+            phase = dphase
+            #print('phase =', phase)
         #print(f'phase={phase}; scale={scale:g}')
         xyz, deflected_xyz = case.get_vector_result_by_scale_phase(
             i, name, scale, phase=phase)
         ugrid = self.grid
-        self._update_fringe(i, name, case, ugrid)
+        vtk_mapper = self.vtk_mappers['main']
+        _update_fringe(i, name, case, ugrid, vtk_mapper,
+                       self.corner_text_actors, self.iphase,
+                       self.global_apply_fringe_plot,
+                       self.apply_fringe_plot)
 
         #z = deflected_xyz[:, 2]
         #print(f'{z.min():g}, {z.max():g}')
         #print(case)
         self.is_deflected = True
-        self._update_grid(ugrid, deflected_xyz)
-
-    def _update_fringe(self, i: int, name: str,
-                       case: DisplacementResults,
-                       ugrid: vtkUnstructuredGrid) -> None:
-        """
-        Apply the fringe to the model only if:
-         - global_apply_fringe_plot is True
-        otherwise clear it.
-
-        To reduce work, updates only happen when:
-         - iphase = 0
-         - apply_fringe_plot is True
-
-        """
-        if self.iphase != 0:
-            return
-        if not self.apply_fringe_plot:
-            return
-
-        # update corner text
-        subcase = case.subcase_id[0]
-        is_complex = case.is_complex
-        complex_real_word = 'Complex' if is_complex else 'Real'
-        legend_title = case.get_legend_title(i, name)
-        header = case.headers[i]
-        texts = [
-            f'Subcase {subcase}',
-            f'{complex_real_word} {legend_title}',
-            header]
-        set_corner_text(self.corner_text_actors, texts)
-
-        vtk_point_data: vtkPointData = ugrid.GetPointData()
-        if not self.global_apply_fringe_plot:
-            vtk_point_data.SetScalars(None)
-            vtk_point_data.Modified()
-            self.apply_fringe_plot = False
-            return
-
-        fringe = case.get_fringe_result(i, name)
-        dfringe = fringe.max() - fringe.min()
-        dfringe = 1.0 if dfringe == 0.0 else dfringe
-        fringe = (fringe - fringe.min()) / dfringe
-
-        grid_mapper = self.vtk_mappers['main']
-        vtk_fringe = numpy_array_to_vtk_array(
-            grid_mapper, fringe, vector_size=1, phase=0)
-
-        #vtk_point_data: vtkPointData = ugrid.GetPointData()
-        vtk_point_data.SetScalars(vtk_fringe)
-        vtk_point_data.Modified()
-        self.apply_fringe_plot = False
-
-    def _update_grid(self, grid: vtkUnstructuredGrid,
-                     nodes: np.ndarray) -> None:
-        vtk_points = grid.GetPoints()
-        #inan = np.where(nodes.ravel() == np.nan)[0]
-        #if len(inan) > 0:
-            #raise RuntimeError('nan in nodes...')
-        vtk_points = numpy_to_vtk_points(nodes, points=vtk_points,
-                                         dtype='<f', deep=1)
-        grid.SetPoints(vtk_points)
-        grid.Modified()
-        #self.grid_selected.Modified()
-        #self._update_follower_grids(nodes)
-        #self._update_follower_grids_complex(nodes)
+        _update_grid(ugrid, deflected_xyz)
 
     def _update_settings(self):
         """
@@ -447,16 +364,7 @@ class VtkWindow(QMainWindow):
         to speed up loading, minimize RAM usage, and focus the software.
         """
         nastran_settings: NastranSettings = self.settings.nastran_settings
-        nastran_settings.is_bar_axes = False
-        nastran_settings.is_shell_mcids = False
-        nastran_settings.is_element_quality = False
-        nastran_settings.is_rbe = False
-        nastran_settings.is_constraints = False
-        nastran_settings.is_3d_bars = False
-        nastran_settings.is_3d_bars_update = False
-        nastran_settings.is_mass_update = False
-        nastran_settings.is_aero = False
-        return
+        _update_nastran_settings(nastran_settings)
 
     def _load_model(self, bdf_filename: PathLike,
                    op2_filename: PathLike='') -> None:
@@ -484,10 +392,7 @@ class VtkWindow(QMainWindow):
                 i, name = case_tag
                 print(f'{key}: is_complex={case.is_complex} headers={case.headers[i]!r}')
                 # print(case_tag)
-            self.icase = 0  # plunge
-            #self.icase = 1  # pitch
-            #self.icase = 2  # flutter? pitch-plunge
-            #self.icase = 3 # pitch
+            self.icase = 0
             return
 
         if len(analysis.model.eigenvectors) == 0:
@@ -531,17 +436,17 @@ class VtkWindow(QMainWindow):
         self.style = TrackballStyleCamera(vtk_interactor, self)
         vtk_interactor.SetInteractorStyle(self.style)
 
-    def set_vtk_frame_style(self):
+    def set_vtk_frame_style(self, vtk_interactor: QVTKRenderWindowInteractor,
+                            qt_frame: QFrame) -> None:
         """uses the vtk objects to set up the window (frame)"""
         vtk_hbox = QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
 
-        vtk_hbox.addWidget(self.vtk_interactor)
-        vtk_frame = self.vtk_frame
-        vtk_frame.setLayout(vtk_hbox)
-        vtk_frame.setFrameStyle(QFrame.NoFrame | QFrame.Plain)
+        vtk_hbox.addWidget(vtk_interactor)
+        qt_frame.setLayout(vtk_hbox)
+        qt_frame.setFrameStyle(QFrame.NoFrame | QFrame.Plain)
         # this is our main, 'central' widget
-        self.setCentralWidget(self.vtk_frame)
+        self.setCentralWidget(qt_frame)
 
     # @property
     # def vtk_interactor(self) -> QVTKRenderWindowInteractor:
@@ -719,3 +624,145 @@ def set_corner_text(vtk_text_actors: list[vtkTextActor],
     #print('set_corner_text', texts)
     for text, text_actor in zip(texts, vtk_text_actors):
         text_actor.SetInput(text)
+
+class VtkTools:
+    def __init__(self, gui_obj, vtk_window):
+        #print(gui_obj)
+        # print(vtk_window)
+        self.gui_obj = gui_obj
+        self.vtk_window = vtk_window
+
+    def on_nphase_up(self):
+        """changes the number of frames"""
+        #print('on_nphase_up')
+        #print(self.gui)
+        nphase = self.vtk_window.nphase + 1
+        #print('nphase = ', nphase)
+        self.gui_obj.set_preferences(nphase=nphase)
+        #self.update_dphases()
+
+    def on_nphase_down(self):
+        """changes the number of frames"""
+        # self.nphase -= 1
+        # if self.nphase == 0:
+        #     self.nphase -= 1
+        # self.update_dphases()
+        nphase = self.vtk_window.nphase - 1
+        if nphase == 0:
+            return
+            #nphase -= 1
+        self.gui_obj.set_preferences(nphase=nphase)
+
+    def on_scale_up(self) -> None:
+        """changes the global scale factor"""
+        self.vtk_window.global_scale_factor *= 1.1
+    def on_scale_down(self) -> None:
+        """changes the global scale factor"""
+        self.vtk_window.global_scale_factor /= 1.1
+
+    def on_rcycle_icase(self) -> None:
+        icase = self._check_icase(self.icase - 1)
+        self.gui_obj.set_preferences(icase=icase)
+    def on_cycle_icase(self) -> None:
+        icase = self._check_icase(self.icase+1)
+        self.gui_obj.set_preferences(icase=icase)
+
+    def _check_icase(self, icase: int) -> int:
+        ncase = len(self.vtk_window.result_cases)
+        if icase >= ncase:
+            icase = 0
+            self.vtk_window.icase = 0
+            self.gui_obj.reset_icase_ncase(icase, ncase)
+        elif icase < 0:
+            print(f'  icase1={icase}')
+            icase = ncase + icase
+            print(f'  icase2={icase}')
+            self.vtk_window.icase = icase
+            self.gui_obj.reset_icase_ncase(icase, ncase)
+        return icase
+
+def _update_nastran_settings(nastran_settings: NastranSettings) -> None:
+    """
+    We took the pyNastranGUI settings and are hacking on them
+    to speed up loading, minimize RAM usage, and focus the software.
+    """
+    nastran_settings.is_bar_axes = False
+    nastran_settings.is_shell_mcids = False
+    nastran_settings.is_element_quality = False
+    nastran_settings.is_rbe = False
+    nastran_settings.is_constraints = False
+    nastran_settings.is_3d_bars = False
+    nastran_settings.is_3d_bars_update = False
+    nastran_settings.is_mass_update = False
+    nastran_settings.is_aero = False
+
+def _update_fringe(i: int, name: str,
+                   case: DisplacementResults,
+                   ugrid: vtkUnstructuredGrid,
+                   vtk_mapper: vtkDataSetMapper,
+                   corner_text_actors: list[vtkTextActor],
+                   iphase: int,
+                   global_apply_fringe_plot: bool,
+                   apply_fringe_plot: bool) -> bool:
+    """
+    Apply the fringe to the model only if:
+     - global_apply_fringe_plot is True
+    otherwise clear it.
+
+    To reduce work, updates only happen when:
+     - iphase = 0
+     - apply_fringe_plot is True
+
+    """
+    assert isinstance(vtk_mapper, vtkDataSetMapper), type(vtk_mapper)
+    if iphase != 0:
+        return apply_fringe_plot
+    if not apply_fringe_plot:
+        return apply_fringe_plot
+
+    # update corner text
+    subcase = case.subcase_id[0]
+    is_complex = case.is_complex
+    complex_real_word = 'Complex' if is_complex else 'Real'
+    legend_title = case.get_legend_title(i, name)
+    header = case.headers[i]
+    texts = [
+        f'Subcase {subcase}',
+        f'{complex_real_word} {legend_title}',
+        header]
+    set_corner_text(corner_text_actors, texts)
+
+    vtk_point_data: vtkPointData = ugrid.GetPointData()
+    if not global_apply_fringe_plot:
+        vtk_point_data.SetScalars(None)
+        vtk_point_data.Modified()
+        apply_fringe_plot = False
+        return apply_fringe_plot
+
+    fringe = case.get_fringe_result(i, name)
+    dfringe = fringe.max() - fringe.min()
+    dfringe = 1.0 if dfringe == 0.0 else dfringe
+    fringe = (fringe - fringe.min()) / dfringe
+
+    vtk_fringe = numpy_array_to_vtk_array(
+        vtk_mapper, fringe, vector_size=1, phase=0)
+
+    #vtk_point_data: vtkPointData = ugrid.GetPointData()
+    vtk_point_data.SetScalars(vtk_fringe)
+    vtk_point_data.Modified()
+    apply_fringe_plot = False
+    return apply_fringe_plot
+
+def _update_grid(grid: vtkUnstructuredGrid,
+                 nodes: np.ndarray) -> None:
+    vtk_points = grid.GetPoints()
+    #inan = np.where(nodes.ravel() == np.nan)[0]
+    #if len(inan) > 0:
+        #raise RuntimeError('nan in nodes...')
+    vtk_points = numpy_to_vtk_points(nodes, points=vtk_points,
+                                     dtype='<f', deep=1)
+    grid.SetPoints(vtk_points)
+    grid.Modified()
+    #self.grid_selected.Modified()
+    #self._update_follower_grids(nodes)
+    #self._update_follower_grids_complex(nodes)

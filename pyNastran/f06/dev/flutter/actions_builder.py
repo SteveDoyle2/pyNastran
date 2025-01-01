@@ -1,17 +1,21 @@
+import os
 from pathlib import Path
 from functools import partial
 from typing import Callable
+from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QAction, QMenu
 
 
 class Action:
     def __init__(self, name: str, text: str, icon: str='',
                  shortcut: str='',
+                 tip: str='',
                  func=Callable, show: bool=True):
         self.name = name
         self.text = text
         self.ico = icon
         self.shortcut = shortcut
+        self.tip = tip
         self.func = func
         self.show = show
 
@@ -33,7 +37,6 @@ class Actions:
 
     def build_qactions(self, win_parent) -> dict[str, QAction]:
         qactions = {}
-        tip = ''
         dirname = self.dirname
         load_icon = (dirname != '')
         for name, action_inputi in self.actions.items():
@@ -43,6 +46,7 @@ class Actions:
             txt = action_inputi.text
             show = action_inputi.show
             shortcut = action_inputi.shortcut
+            tip = action_inputi.tip
 
             if icon_path and load_icon:
                 ico = QIcon(icon_path)

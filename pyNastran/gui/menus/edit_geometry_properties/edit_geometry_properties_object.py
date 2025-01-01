@@ -21,15 +21,15 @@ class EditGeometryPropertiesObject(BaseGui):
     """defines EditGeometryPropertiesObject"""
     def __init__(self, gui: MainWindow):
         """creates EditGeometryPropertiesObject"""
-        #self.gui = gui
         super().__init__(gui)
-        self._edit_geometry_properties_window_shown = False
-        self._edit_geometry_properties = None
+        self.gui = gui
+        self.window_shown = False
+        self.window = None
 
     def set_font_size(self, font_size: int) -> None:
         """sets the font size for the edit geometry properties window"""
-        if self._edit_geometry_properties_window_shown:
-            self._edit_geometry_properties.set_font_size(font_size)
+        if self.window_shown:
+            self.window.set_font_size(font_size)
 
     def edit_geometry_properties(self) -> None:
         """
@@ -49,10 +49,12 @@ class EditGeometryPropertiesObject(BaseGui):
         if not hasattr(gui, 'case_keys'):
             gui.log_error('No model has been loaded.')
             return
+        if not hasattr(gui, 'geometry_properties'):
+            gui.log_error('No geometry_properties?')
+            return
         if not len(gui.geometry_properties):
             gui.log_error('No secondary geometries to edit.')
             return
-        #print('geometry_properties.keys() =', self.geometry_properties.keys())
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -64,27 +66,27 @@ class EditGeometryPropertiesObject(BaseGui):
             data[key] = deepcopy(value)
 
         data['font_size'] = gui.settings.font_size
-        if not self._edit_geometry_properties_window_shown:
-            self._edit_geometry_properties = EditGeometryProperties(data, win_parent=gui)
-            self._edit_geometry_properties.show()
-            self._edit_geometry_properties_window_shown = True
-            self._edit_geometry_properties.exec_()
+        if not self.window_shown:
+            self.window = EditGeometryProperties(data, self, is_gui=True, win_parent=gui)
+            self.window.show()
+            self.window_shown = True
+            self.window.exec_()
         else:
-            self._edit_geometry_properties.activateWindow()
+            self.window.activateWindow()
 
         if 'clicked_ok' not in data:
-            self._edit_geometry_properties.activateWindow()
+            self.window.activateWindow()
             return
 
         if data['clicked_ok']:
             self.on_update_geometry_properties(data)
             self._save_geometry_properties(data)
-            del self._edit_geometry_properties
-            self._edit_geometry_properties_window_shown = False
+            del self.window
+            self.window_shown = False
         elif data['clicked_cancel']:
             self.on_update_geometry_properties(gui.geometry_properties)
-            del self._edit_geometry_properties
-            self._edit_geometry_properties_window_shown = False
+            del self.window
+            self.window_shown = False
 
     def _save_geometry_properties(self, out_data):
         for name, group in out_data.items():
@@ -117,25 +119,25 @@ class EditGeometryPropertiesObject(BaseGui):
         geometry_properties : dict {str : CoordProperties or AltGeometry}
             Dictionary from name to properties object. Only the names included
             in ``geometry_properties`` are modified.
+
         """
-        if self._edit_geometry_properties_window_shown:
+        if self.window_shown:
             # Override the output state in the edit geometry properties diaglog
             # if the button is pushed while the dialog is open. This prevent the
             # case where you close the dialog and the state reverts back to
             # before you hit the button.
             for name, prop in geometry_properties.items():
-                self._edit_geometry_properties.out_data[name] = prop
-                if self._edit_geometry_properties.active_key == name:
-                    index = self._edit_geometry_properties.table.currentIndex()
-                    self._edit_geometry_properties.update_active_key(index)
+                self.window.out_data[name] = prop
+                if self.window.active_key == name:
+                    index = self.window.table.currentIndex()
+                    self.window.update_active_key(index)
         self.on_update_geometry_properties(geometry_properties)
 
     def on_update_geometry_properties_window(
         self, geometry_properties: dict[str, AltGeometry]) -> None:
         """updates the EditGeometryProperties window"""
-        if self._edit_geometry_properties_window_shown:
-            self._edit_geometry_properties.on_update_geometry_properties_window(
-                geometry_properties)
+        if self.window_shown:
+            self.window.on_update_geometry_properties_window(geometry_properties)
 
     def on_update_geometry_properties(self, out_data, name=None,
                                       write_log: bool=True) -> None:
