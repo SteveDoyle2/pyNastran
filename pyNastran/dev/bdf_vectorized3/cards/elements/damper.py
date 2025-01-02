@@ -41,7 +41,7 @@ class CDAMP1(Element):
         self.components = np.zeros((0, 2), dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int], c1: int=0, c2: int=0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CDAMP1 card
 
@@ -59,11 +59,11 @@ class CDAMP1(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids, [c1, c2], comment))
+        self.cards.append((eid, pid, nids, [c1, c2], ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
         nids = [integer_or_blank(card, 3, 'g1', default=0),
@@ -73,7 +73,7 @@ class CDAMP1(Element):
         c1 = integer_or_blank(card, 4, 'c1', default=0)
         c2 = integer_or_blank(card, 6, 'c2', default=0)
         assert len(card) <= 7, f'len(CDAMP1 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, [c1, c2], comment))
+        self.cards.append((eid, pid, nids, [c1, c2], ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -81,13 +81,15 @@ class CDAMP1(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, componentsi, comment) = card
+            (eid, pid, nids, componentsi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -200,7 +202,8 @@ class CDAMP2(Element):
         self.components = np.zeros((0, 2), dtype='int32')
 
     def add(self, eid: int, b: float, nids: list[int],
-            c1: int=0, c2: int=0, comment: str='') -> int:
+            c1: int=0, c2: int=0,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CDAMP2 card
 
@@ -219,11 +222,11 @@ class CDAMP2(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, b, nids, (c1, c2), comment))
+        self.cards.append((eid, b, nids, (c1, c2), ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         b = double(card, 2, 'b')
         nids = [integer_or_blank(card, 3, 'g1', default=0),
@@ -231,7 +234,7 @@ class CDAMP2(Element):
         c1 = integer_or_blank(card, 4, 'c1', default=0)
         c2 = integer_or_blank(card, 6, 'c2', default=0)
         assert len(card) <= 7, f'len(CDAMP2 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, b, nids, (c1, c2), comment))
+        self.cards.append((eid, b, nids, (c1, c2), ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -239,13 +242,15 @@ class CDAMP2(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         b = np.zeros(ncards, dtype='float64')
         nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
 
         for icard, card in enumerate(self.cards):
-            eid, bi, nids, componentsi, comment = card
+            eid, bi, nids, componentsi, ifilei, comment = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             b[icard] = bi
             nodes[icard, :] = nids
@@ -314,7 +319,7 @@ class CDAMP3(Element):
         self.spoints = np.zeros((0, 2), dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CDAMP3 card
 
@@ -330,18 +335,18 @@ class CDAMP3(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
 
         s1 = integer_or_blank(card, 3, 's1', default=0)
         s2 = integer_or_blank(card, 4, 's2', default=0)
         assert len(card) <= 5, f'len(CDAMP3 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, (s1, s2), comment))
+        self.cards.append((eid, pid, (s1, s2), ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -349,12 +354,14 @@ class CDAMP3(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         spoints = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, spointsi, comment) = card
+            (eid, pid, spointsi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             spoints[icard, :] = spointsi
@@ -427,7 +434,7 @@ class CDAMP4(Element):
         self.spoints = np.zeros((0, 2), dtype='int32')
 
     def add(self, eid: int, b: float, nids: list[int],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CDAMP4 card
 
@@ -443,23 +450,23 @@ class CDAMP4(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, b, nids, comment))
+        self.cards.append((eid, b, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         b = double(card, 2, 'b')
         s1 = integer_or_blank(card, 3, 's1', default=0)
         s2 = integer_or_blank(card, 4, 's2', default=0)
-        self.cards.append((eid, b, [s1, s2], comment))
+        self.cards.append((eid, b, [s1, s2], ifile, comment))
         self.n += 1
         if card.field(5):
             eid = integer(card, 5, 'eid')
             b = double(card, 6, 'b')
             s1 = integer_or_blank(card, 7, 's1', default=0)
             s2 = integer_or_blank(card, 8, 's2', default=0)
-            self.cards.append((eid, b, [s1, s2], comment))
+            self.cards.append((eid, b, [s1, s2], ifile, comment))
             self.n += 1
         assert len(card) <= 9, f'len(CDAMP4 card) = {len(card):d}\ncard={card}'
         return self.n - 1
@@ -468,12 +475,14 @@ class CDAMP4(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         b = np.zeros(ncards, dtype='float64')
         spoints = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
-            eid, bi, spointsi, comment = card
+            eid, bi, spointsi, ifilei, comment = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             b[icard] = bi
             spoints[icard, :] = spointsi
@@ -539,7 +548,8 @@ class CDAMP5(Element):
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='int32')
 
-    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+    def add(self, eid: int, pid: int, nids: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CDAMP5 card
 
@@ -555,17 +565,17 @@ class CDAMP5(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1', default=0),
                 integer_or_blank(card, 4, 'n2', default=0)]
         assert len(card) <= 5, f'len(CDAMP5 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -573,12 +583,14 @@ class CDAMP5(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
-            eid, pid, nids, comment = card
+            eid, pid, nids, ifilei, comment = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -634,7 +646,8 @@ class PDAMP(Property):
         self.property_id = np.array([], dtype='int32')
         self.b = np.array([], dtype='float64')
 
-    def add(self, pid: int, b: float, comment: str='') -> int:
+    def add(self, pid: int, b: float,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PDAMP card
 
@@ -648,36 +661,36 @@ class PDAMP(Property):
             a comment for the card
 
         """
-        self.cards.append((pid, b, comment))
+        self.cards.append((pid, b, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> list[int]:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> list[int]:
         """adds a PDAMP"""
         ns = [self.n]
         pid = integer(card, 1, 'pid')
         b = double(card, 2, 'b')
-        self.cards.append((pid, b, comment))
+        self.cards.append((pid, b, ifile, comment))
         self.n += 1
 
         if card.field(3):
             pid = integer(card, 3, 'pid2')
             b = double(card, 4, 'b2')
-            self.cards.append((pid, b, comment))
+            self.cards.append((pid, b, ifile, comment))
             ns.append(self.n)
             self.n += 1
 
         if card.field(5):
             pid = integer(card, 5, 'pid3')
             b = double(card, 6, 'b3')
-            self.cards.append((pid, b, comment))
+            self.cards.append((pid, b, ifile, comment))
             ns.append(self.n)
             self.n += 1
 
         if card.field(7):
             pid = integer(card, 7, 'pid4')
             b = double(card, 8, 'b4')
-            self.cards.append((pid, b, comment))
+            self.cards.append((pid, b, ifile, comment))
             ns.append(self.n)
             self.n += 1
 
@@ -692,7 +705,7 @@ class PDAMP(Property):
         b = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, bi, comment) = card
+            (pid, bi, ifilei, comment) = card
             property_id[icard] = pid
             b[icard] = bi
         self._save(property_id, b)
@@ -754,7 +767,8 @@ class PDAMP5(Property):
         self.material_id = np.array([], dtype='int32')
         self.b = np.array([], dtype='float64')
 
-    def add(self, pid: int, mid: int, b: float, comment: str='') -> int:
+    def add(self, pid: int, mid: int, b: float,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PDAMP card
 
@@ -770,17 +784,17 @@ class PDAMP5(Property):
             a comment for the card
 
         """
-        self.cards.append((pid, mid, b, comment))
+        self.cards.append((pid, mid, b, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> list[int]:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> list[int]:
         """adds a PDAMP"""
         #ns = [self.n]
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         b = double(card, 3, 'b')
-        self.cards.append((pid, mid, b, comment))
+        self.cards.append((pid, mid, b, ifile, comment))
         self.n += 1
 
         assert len(card) <= 4, f'len(PDAMP5 card) = {len(card):d}\ncard={card}'
@@ -795,7 +809,7 @@ class PDAMP5(Property):
         b = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, bi, comment) = card
+            (pid, mid, bi, ifilei, comment) = card
             property_id[icard] = pid
             material_id[icard] = mid
             b[icard] = bi
@@ -850,7 +864,8 @@ class PDAMPT(Property):
         self.property_id = np.array([], dtype='int32')
         self.table_b = np.array([], dtype='int32')
 
-    def add(self, pid: int, tbid: int, comment: str='') -> int:
+    def add(self, pid: int, tbid: int,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PDAMPT card
 
@@ -864,15 +879,15 @@ class PDAMPT(Property):
             a comment for the card
 
         """
-        self.cards.append((pid, tbid, comment))
+        self.cards.append((pid, tbid, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         tbid = integer_or_blank(card, 2, 'tbid', 0)
         assert len(card) <= 3, f'len(PDAMPT card) = {len(card):d}\ncard={card}'
-        self.cards.append((pid, tbid, comment))
+        self.cards.append((pid, tbid, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -885,7 +900,7 @@ class PDAMPT(Property):
         #: damping force per-unit velocity versus frequency relationship
         table_b = np.zeros(ncards, dtype='int32')
 
-        for icard, (pid, tbid, comment) in enumerate(self.cards):
+        for icard, (pid, tbid, ifilei, comment) in enumerate(self.cards):
             property_id[icard] = pid
             table_b[icard] = tbid
         self._save(property_id, table_b)
@@ -936,7 +951,8 @@ class CVISC(Element):
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='int32')
 
-    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+    def add(self, eid: int, pid: int, nids: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CVISC card
 
@@ -952,18 +968,18 @@ class CVISC(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
         nids = [integer(card, 3, 'g1'),
                 integer_or_blank(card, 5, 'g2', default=0)]
 
         assert len(card) <= 6, f'len(CVISC card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -971,12 +987,14 @@ class CVISC(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
+            (eid, pid, nids, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -1088,18 +1106,19 @@ class PVISC(Property):
         self.cr = np.array([], dtype='float64')
         self.ce = np.array([], dtype='float64')
 
-    def add(self, pid: int, ce: float, cr: float, comment: str='') -> int:
-        self.cards.append((pid, ce, cr, comment))
+    def add(self, pid: int, ce: float, cr: float,
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((pid, ce, cr, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         ioffset = 0
         pid = integer(card, 1 + 4 * ioffset, 'pid')
         ce = double(card, 2 + 4 * ioffset, 'ce')
         cr = double_or_blank(card, 3 + 4 * ioffset, 'cr', default=0.)
         assert len(card) <= 8, f'len(PVISC card) = {len(card):d}\ncard={card}'
-        self.cards.append((pid, ce, cr, comment))
+        self.cards.append((pid, ce, cr, ifile, comment))
         self.n += 1
 
         if card.field(5):
@@ -1108,7 +1127,7 @@ class PVISC(Property):
             ce = double(card, 2 + 4 * ioffset, 'ce')
             cr = double_or_blank(card, 3 + 4 * ioffset, 'cr', default=0.)
             assert len(card) <= 8, f'len(PVISC card) = {len(card):d}\ncard={card}'
-            self.cards.append((pid, ce, cr, ''))
+            self.cards.append((pid, ce, cr, ifile, ''))
             self.n += 1
         return self.n - 1
 
@@ -1119,7 +1138,7 @@ class PVISC(Property):
         cr = np.zeros(ncards, dtype='float64')
         ce = np.zeros(ncards, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (pid, cei, cri, comment) = card
+            (pid, cei, cri, ifilei, comment) = card
             property_id[icard] = pid
             cr[icard] = cri
             ce[icard] = cei
@@ -1195,12 +1214,13 @@ class CGAP(Element):
 
     def add(self, eid: int, pid: int, nids: list[int],
             x: Optional[list[int]], g0: Optional[int],
-            cid: Optional[int]=None, comment: str='') -> int:
-        self.cards.append((eid, pid, nids, x, g0, cid, comment))
+            cid: Optional[int]=None,
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((eid, pid, nids, x, g0, cid, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
         ga = integer_or_blank(card, 3, 'ga', default=0)
@@ -1223,7 +1243,7 @@ class CGAP(Element):
             x = [None, None, None]
         assert len(card) <= 9, f'len(CGAP card) = {len(card):d}\ncard={card}'
 
-        self.cards.append((eid, pid, [ga, gb], x, g0, cid, comment))
+        self.cards.append((eid, pid, [ga, gb], x, g0, cid, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1231,6 +1251,7 @@ class CGAP(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
@@ -1239,7 +1260,7 @@ class CGAP(Element):
         x = np.full((ncards, 3), np.nan, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, xi, g0i, cid, comment) = card
+            (eid, pid, nids, xi, g0i, cid, ifilei, comment) = card
             if g0i is None or g0i == -1:
                 x[icard, :] = xi
             else:
@@ -1249,6 +1270,7 @@ class CGAP(Element):
             if cid is None:
                 cid = -1
 
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -1519,12 +1541,12 @@ class PGAP(Property):
             ka: float=1.e8, kb: Optional[float]=None, mu1: float=0.,
             kt: Optional[float]=None, mu2: Optional[float]=None,
             tmax: float=0., mar: float=100., trmin: float=0.001,
-            comment: str='') -> int:
-        self.cards.append((pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin, comment))
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         #assert isinstance(card, BDFCard), card
         pid = integer(card, 1, 'pid')
         u0 = double_or_blank(card, 2, 'u0', default=0.)
@@ -1538,7 +1560,7 @@ class PGAP(Property):
         mar = double_or_blank(card, 10, 'mar', default=100.)
         trmin = double_or_blank(card, 11, 'trmin', default=0.001)
         assert len(card) <= 12, f'len(PGAP card) = {len(card):d}\ncard={card}'
-        self.cards.append((pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin, comment))
+        self.cards.append((pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin, ifile, comment))
         #i = len(self.cards) - 1
         self.n += 1
         return self.n - 1
@@ -1559,7 +1581,7 @@ class PGAP(Property):
         trmin = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, u0i, f0i, kai, kbi, mu1i, kti, mu2i, tmaxi, mari, trmini, commenti) = card
+            (pid, u0i, f0i, kai, kbi, mu1i, kti, mu2i, tmaxi, mari, trmini, ifilei, commenti) = card
             property_id[icard] = pid
             u0[icard] = u0i
             f0[icard] = f0i

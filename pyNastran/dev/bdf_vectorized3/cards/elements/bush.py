@@ -49,7 +49,8 @@ class CBUSH(Element):
 
     def add(self, eid: int, pid: int, nids: list[int],
             x: Optional[list[float]], g0: Optional[int], cid=None,
-            s: float=0.5, ocid: int=-1, si: Optional[list[float]]=None, comment='') -> int:
+            s: float=0.5, ocid: int=-1, si: Optional[list[float]]=None,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CBUSH card
 
@@ -88,11 +89,11 @@ class CBUSH(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids, cid, g0, x, s, ocid, si, comment))
+        self.cards.append((eid, pid, nids, cid, g0, x, s, ocid, si, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
 
         eid = integer(card, 1, 'eid')
@@ -136,7 +137,7 @@ class CBUSH(Element):
               fdouble_or_blank(card, 12, 's2'),
               fdouble_or_blank(card, 13, 's3'), ]
         assert len(card) <= 14, f'len(CBUSH card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, [ga, gb], cid, g0, x, s, ocid, si, comment))
+        self.cards.append((eid, pid, [ga, gb], cid, g0, x, s, ocid, si, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -144,6 +145,7 @@ class CBUSH(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
@@ -155,7 +157,7 @@ class CBUSH(Element):
         ocid = np.zeros(ncards, dtype=idtype)
         ocid_offset = np.zeros((ncards, 3), dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, pid, nodesi, cidi, g0i, xi, si, ocidi, ocid_offseti, comment) = card
+            (eid, pid, nodesi, cidi, g0i, xi, si, ocidi, ocid_offseti, ifilei, comment) = card
             if cidi is None:
                 cidi = -1
 
@@ -164,6 +166,7 @@ class CBUSH(Element):
             ocid[icard] = ocidi
             ocid_offset[icard, :] = ocid_offseti
 
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nodesi
@@ -462,7 +465,7 @@ class PBUSH(Property):
     def add(self, pid: int, k: list[float], b: list[float], ge: list[float],
             rcv: Optional[list[float]]=None, mass: Optional[float]=None,
             alpha: float=0., tref: float=0., coincident_length=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PBUSH card, which defines a property for a PBUSH
 
@@ -495,7 +498,7 @@ class PBUSH(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         model = self.model
         fdouble_or_blank = double_or_blank if model.is_strict_card_parser else force_double_or_blank
 
@@ -787,12 +790,13 @@ class PBUSHT(Property):
         self.kn_tables = np.zeros((0, 6), dtype='int32')
 
     def add(self, pid: int, k_tables: list[int], b_tables: list[int],
-            ge_tables: list[int], kn_tables: list[int], comment: str='') -> int:
+            ge_tables: list[int], kn_tables: list[int],
+            ifile: int=0, comment: str='') -> int:
         self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PBUSHT card from ``BDF.add_card(...)``
 
@@ -953,21 +957,21 @@ class CBUSH1D(Element):
         self.property_id = np.array([], dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int], cid: int=-1,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         if cid is None:
             cid = -1
-        self.cards.append((eid, pid, nids, cid, comment))
+        self.cards.append((eid, pid, nids, cid, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
         ga = integer(card, 3, 'ga')
         gb = integer_or_blank(card, 4, 'gb', default=-1)
         cid = integer_or_blank(card, 5, 'cid', default=-1)
         assert len(card) <= 6, f'len(CBUSH1D card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, [ga, gb], cid, comment))
+        self.cards.append((eid, pid, [ga, gb], cid, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -975,12 +979,14 @@ class CBUSH1D(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
         coord_id = np.full(ncards, -1, dtype='int32')
         for icard, card in enumerate(self.cards):
-            (eid, pid, nodesi, cid, comment) = card
+            (eid, pid, nodesi, cid, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nodesi
@@ -1106,16 +1112,16 @@ class PBUSH1D(Property):
     def add(self, pid: int,
             k: float=0., c: float=0., m: float=0.,
             sa: float=0., se: float=0., optional_vars=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a PBUSH1D card"""
 
         if optional_vars is None:
             optional_vars = {}
-        self.cards.append((pid, k, c, m, sa, se, optional_vars, comment))
+        self.cards.append((pid, k, c, m, sa, se, optional_vars, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         model = self.model
         fdouble_or_blank = double_or_blank if model.is_strict_card_parser else force_double_or_blank
 
@@ -1153,7 +1159,7 @@ class PBUSH1D(Property):
 
         #return PBUSH1D(pid, k=k, c=c, m=m, sa=sa, se=se,
                        #optional_vars=optional_vars, comment=comment)
-        self.cards.append((pid, k, c, m, sa, se, optional_vars, comment))
+        self.cards.append((pid, k, c, m, sa, se, optional_vars, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1191,7 +1197,7 @@ class PBUSH1D(Property):
         #self.gener_idcdv = gener_idcdv
 
         for icard, card in enumerate(self.cards):
-            (pid, ki, ci, massi, sai, sei, optional_vars, comment) = card
+            (pid, ki, ci, massi, sai, sei, optional_vars, ifilei, comment) = card
             property_id[icard] = pid
             k[icard] = ki
             c[icard] = ci

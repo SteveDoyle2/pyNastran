@@ -3622,7 +3622,7 @@ class AddOptimization(BDFAttributes):
         >>> deqatn = model.add_deqatn(41, eqs, comment: str='')
 
         """
-        deqatn = DEQATN(equation_id, eqs, comment=comment)
+        deqatn = DEQATN(equation_id, eqs, ifile=0, comment=comment)
         self._add_methods._add_deqatn_object(deqatn)
         return deqatn
 
@@ -4717,10 +4717,11 @@ class AddContact(BDFAttributes):
 class AddSuperelements(BDFAttributes):
     def add_sebset(self, seid: int, ids: list[int], components: int | list[int], comment: str='') -> int:
         """Creates an SEBSET/SEBSET1 card"""
+        ifile = 0
         if isinstance(components, integer_string_types):
-            sebset = self.sebset.add_set1(seid, ids, components, comment=comment)
+            sebset = self.sebset.add_set1(seid, ids, components, ifile=ifile, comment=comment)
         else:
-            sebset = self.sebset.add_set(seid, ids, components, comment=comment)
+            sebset = self.sebset.add_set(seid, ids, components, ifile=ifile, comment=comment)
         return sebset
 
     def add_sebset1(self, seid, ids, components, comment: str='') -> int:
@@ -4729,10 +4730,11 @@ class AddSuperelements(BDFAttributes):
 
     def add_secset(self, seid: int, ids: list[int], components: int | list[int], comment: str='') -> int:
         """Creates an SECSET/SECSET1 card"""
+        ifile = 0
         if isinstance(components, integer_string_types):
-            secset = self.sebset.add_set1(seid, ids, components, comment=comment)
+            secset = self.sebset.add_set1(seid, ids, components, ifile=ifile, comment=comment)
         else:
-            secset = self.secset.add_set(seid, ids, components, comment=comment)
+            secset = self.secset.add_set(seid, ids, components, ifile=ifile, comment=comment)
         return secset
 
     def add_secset1(self, seid: int, ids: list[int], components: int, comment: str='') -> int:
@@ -4741,10 +4743,11 @@ class AddSuperelements(BDFAttributes):
 
     def add_seqset(self, seid, ids, components, comment: str='') -> int:
         """Creates an SEQSET card"""
+        ifile = 0
         if isinstance(components, integer_string_types):
-            seqset = self.seqset.add_set1(seid, ids, components, comment=comment)
+            seqset = self.seqset.add_set1(seid, ids, components, ifile=ifile, comment=comment)
         else:
-            seqset = self.seqset.add_set(seid, ids, components, comment=comment)
+            seqset = self.seqset.add_set(seid, ids, components, ifile=ifile, comment=comment)
         return seqset
 
     def add_seqset1(self, seid, ids, components, comment: str='') -> int:
@@ -7483,11 +7486,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         -----
         the length of components and ids must be the same
         """
+        ifile = 0
         if isinstance(components, list):
-            aset = self.aset.add_set(ids, components, comment=comment)
+            aset = self.aset.add_set(ids, components, ifile=ifile, comment=comment)
         else:
             assert isinstance(components, (str, integer_types)), components
-            aset = self.aset.add_set1(ids, components, comment=comment)
+            aset = self.aset.add_set1(ids, components, ifile=ifile, comment=comment)
         return aset
 
     def add_aset1(self, ids: list[int],
@@ -7519,11 +7523,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         -----
         the length of components and ids must be the same
         """
+        ifile = 0
         if isinstance(components, list):
-            bset = self.bset.add_set(ids, components, comment=comment)
+            bset = self.bset.add_set(ids, components, ifile=ifile, comment=comment)
         else:
             assert isinstance(components, (str, integer_types)), components
-            bset = self.bset.add_set1(ids, components, comment=comment)
+            bset = self.bset.add_set1(ids, components, ifile=ifile, comment=comment)
         return bset
 
     def add_bset1(self, ids: list[int],
@@ -7556,11 +7561,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         the length of components and ids must be the same
 
         """
+        ifile = 0
         if isinstance(components, list):
-            cset = self.cset.add_set(ids, components, comment=comment)
+            cset = self.cset.add_set(ids, components, ifile=ifile, comment=comment)
         else:
             assert isinstance(components, (str, integer_types)), components
-            cset = self.cset.add_set1(ids, components, comment=comment)
+            cset = self.cset.add_set1(ids, components, ifile=ifile, comment=comment)
         return cset
 
     def add_cset1(self, ids: list[int],
@@ -7594,11 +7600,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
+        ifile = 0
         if isinstance(components, list):
-            omit = self.omit.add_set(ids, components, comment=comment)
+            omit = self.omit.add_set(ids, components, ifile=ifile, comment=comment)
         else:
             assert isinstance(components, (str, integer_types)), components
-            omit = self.omit.add_set1(ids, components, comment=comment)
+            omit = self.omit.add_set1(ids, components, ifile=ifile, comment=comment)
         return omit
 
     def add_qset(self, ids: list[int],
@@ -7621,11 +7628,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
+        ifile = 0
         if isinstance(components, list):
-            qset = self.qset.add_set(ids, components, comment=comment)
+            qset = self.qset.add_set(ids, components, ifile=ifile, comment=comment)
         else:
             assert isinstance(components, (str, integer_types)), components
-            qset = self.qset.add_set1(ids, components, comment=comment)
+            qset = self.qset.add_set1(ids, components, ifile=ifile, comment=comment)
         return qset
 
     def add_qset1(self, ids: list[int],
@@ -7654,11 +7662,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
+        ifile = 0
         if isinstance(components, list):
-            uset = self.uset.add_set(name, ids, components, comment=comment)
+            uset = self.uset.add_set(name, ids, components, ifile=ifile, comment=comment)
         else:
             assert isinstance(components, (str, integer_types)), components
-            uset = self.uset.add_set1(name, ids, components, comment=comment)
+            uset = self.uset.add_set1(name, ids, components, ifile=ifile, comment=comment)
         assert uset is not None
         return uset
 

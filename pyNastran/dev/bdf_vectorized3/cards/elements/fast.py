@@ -39,16 +39,17 @@ class CFAST(Element):
     def add(self, eid: int, pid: int, fast_type: str,
             ids: list[int],
             gs=None, ga=None, gb=None,
-            xs=None, ys=None, zs=None, comment: str='') -> int:
+            xs=None, ys=None, zs=None,
+            ifile: int=0, comment: str='') -> int:
         """Creates a CFAST card"""
         ga = 0 if ga is None else ga
         gb = 0 if gb is None else gb
         gs = 0 if gs is None else gs
-        self.cards.append((eid, pid, fast_type, ids, [ga, gb], gs, [xs, ys, zs], comment))
+        self.cards.append((eid, pid, fast_type, ids, [ga, gb], gs, [xs, ys, zs], ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CFAST card from ``BDF.add_card(...)``
 
@@ -89,7 +90,7 @@ class CFAST(Element):
         #return CFAST(eid, pid, Type, ida, idb, gs=gs, ga=ga, gb=gb,
                      #xs=xs, ys=ys, zs=zs, comment=comment)
         self.cards.append((eid, pid, fast_type, [ida, idb],
-                           [ga, gb], gs, [xs, ys, zs], comment))
+                           [ga, gb], gs, [xs, ys, zs], ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -97,6 +98,7 @@ class CFAST(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
 
@@ -116,7 +118,8 @@ class CFAST(Element):
         fastener_node = np.zeros(ncards, dtype=idtype)
         fastener_xyz = np.zeros((ncards, 3), dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, pid, fast_typei, idsi, nodesi, gs, xyz, comment) = card
+            (eid, pid, fast_typei, idsi, nodesi, gs, xyz, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nodesi
@@ -235,7 +238,7 @@ class PFAST(Property):
             mcid: int=-1, mflag: int=0,
             kr1: float=0., kr2: float=0., kr3: float=0.,
             mass: float=0., ge: float=0.,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PAST card
 
@@ -265,11 +268,11 @@ class PFAST(Property):
                            kt1, kt2, kt3,
                            kr1, kr2, kr3,
                            mass, ge,
-                           mcid, mflag, comment))
+                           mcid, mflag, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PFAST card from ``BDF.add_card(...)``
 
@@ -303,7 +306,7 @@ class PFAST(Property):
                            kt1, kt2, kt3,
                            kr1, kr2, kr3,
                            mass, ge,
-                           mcid, mflag, comment))
+                           mcid, mflag, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -321,7 +324,7 @@ class PFAST(Property):
 
         for icard, card in enumerate(self.cards):
             (pid, d, kt1, kt2, kt3, kr1, kr2, kr3,
-             massi, gei, mcid, mflagi, comment) = card
+             massi, gei, mcid, mflagi, ifilei, comment) = card
 
             property_id[icard] = pid
             diameter[icard] = d

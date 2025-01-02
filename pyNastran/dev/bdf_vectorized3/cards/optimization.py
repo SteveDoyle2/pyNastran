@@ -108,7 +108,7 @@ class MODTRAK(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         modtrak_id = integer(card, 1, 'sid')
         low_range = integer_or_blank(card, 2, 'low_range', default=0)
         high_range = integer(card, 3, 'high_range')
@@ -240,7 +240,7 @@ class DESVAR(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble = double if self.model.is_strict_card_parser else force_double
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
 
@@ -437,7 +437,7 @@ class DDVAL(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DDVAL card from ``BDF.add_card(...)``
 
@@ -601,7 +601,7 @@ class DLINK(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DLINK card from ``BDF.add_card(...)``
 
@@ -772,7 +772,7 @@ class DVGRID(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DVGRID card from ``BDF.add_card(...)``
 
@@ -992,7 +992,7 @@ class DRESP1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DRESP1 card from ``BDF.add_card(...)``
 
@@ -1478,7 +1478,7 @@ class DRESP2(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DRESP2 card from ``BDF.add_card(...)``
 
@@ -1824,7 +1824,7 @@ class DCONSTR(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         dconstr_id = integer(card, 1, 'dconstr_id')
         dresp_id = integer(card, 2, 'dresp_id')
         lid = integer_double_or_blank(card, 3, 'lid', default=-1e20)
@@ -1998,7 +1998,7 @@ class DVPREL1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DVPREL1 card from ``BDF.add_card(...)``
 
@@ -2300,7 +2300,7 @@ class DVPREL2(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DVPREL2 card from ``BDF.add_card(...)``
 
@@ -2592,7 +2592,7 @@ class DVMREL1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DVMREL1 card from ``BDF.add_card(...)``
 
@@ -2852,7 +2852,7 @@ class DVMREL2(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DVMREL1 card from ``BDF.add_card(...)``
 
@@ -3155,7 +3155,7 @@ class DVCREL1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DVCREL1 card from ``BDF.add_card(...)``
 
@@ -3415,7 +3415,7 @@ class DVCREL2(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DVCREL2 card from ``BDF.add_card(...)``
 
@@ -3675,7 +3675,7 @@ class DSCREEN(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DSCREEN card from ``BDF.add_card(...)``
 

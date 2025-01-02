@@ -108,6 +108,7 @@ class VectorizedBaseCard:
         self.debug = False
         self.write_default_fields = True
         self.id = np.array([], dtype='int32')
+        self.ifile = np.array([], dtype='int32')
         self.comment: dict[int, str] = {}
         #self.n = 0
         if hasattr(self, 'clear'):
@@ -168,7 +169,7 @@ class VectorizedBaseCard:
         #new_obj.comment = {self.comment[i] for i in ikeys}
 
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
         self.model.log.warning(f'adding card {card}')

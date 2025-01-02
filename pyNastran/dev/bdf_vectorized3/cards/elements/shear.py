@@ -39,7 +39,8 @@ class CSHEAR(Element):
     +--------+-------+-------+----+----+----+----+
 
     """
-    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+    def add(self, eid: int, pid: int, nids: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CSHEAR card
 
@@ -55,7 +56,7 @@ class CSHEAR(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -64,14 +65,14 @@ class CSHEAR(Element):
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
                 integer(card, 4, 'n2'),
                 integer(card, 5, 'n3'),
                 integer(card, 6, 'n4'),]
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -79,11 +80,13 @@ class CSHEAR(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 4), dtype=idtype)
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
+            (eid, pid, nids, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -231,7 +234,7 @@ class PSHEAR(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         t = double(card, 3, 't')

@@ -244,7 +244,7 @@ class GENEL(Element):
         s_list = []
         z_list = []
         for icard, card in enumerate(self.cards):
-            (eid, uli, udi, ki, zi, si, comment) = card
+            (eid, uli, udi, ki, zi, si, ifilei, comment) = card
             ns[icard] = len(si)
             nud[icard] = len(udi)
             nul[icard] = len(uli)
@@ -252,6 +252,7 @@ class GENEL(Element):
             nk[icard] = len(ki)
             #print(len(ki), len(si), len(zi))
 
+            ifile[icard] = ifilei
             element_id[icard] = eid
             k_list.append(ki)
             s_list.append(si)

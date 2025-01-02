@@ -143,18 +143,18 @@ class TestContact(unittest.TestCase):
         lines = ['BSURF,    1100,    100,     101']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bsurf.add_card(card)
+        card = bsurf.add_card(card, ifile=0)
 
         lines = ['BSURF,    1100,    11,THRU,15']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bsurf.add_card(card)
+        card = bsurf.add_card(card, ifile=0)
 
         lines = ['BSURF,    1101,    11,THRU,15,',
                  ',1,2']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bsurf.add_card(card)
+        card = bsurf.add_card(card, ifile=0)
 
         model.setup()
         size = 8
@@ -168,18 +168,18 @@ class TestContact(unittest.TestCase):
         lines = ['BSURFS,    1100,    100,     101']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bsurfs.add_card(card)
+        card = bsurfs.add_card(card, ifile=0)
 
         lines = ['BSURFS,    1100,    11,THRU,15']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bsurfs.add_card(card)
+        card = bsurfs.add_card(card, ifile=0)
 
         lines = ['BSURFS,    1101,    11,THRU,15,',
                  ',1,2']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bsurfs.add_card(card)
+        card = bsurfs.add_card(card, ifile=0)
 
         model.setup()
         size = 8
@@ -193,18 +193,18 @@ class TestContact(unittest.TestCase):
         lines = ['BCPROP,    1100,    100,     101']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bcprop.add_card(card)
+        card = bcprop.add_card(card, ifile=0)
 
         lines = ['BCPROP,    1100,    11,THRU,15']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bcprop.add_card(card)
+        card = bcprop.add_card(card, ifile=0)
 
         lines = ['BCPROP,    1101,    11,THRU,15,',
                  ',1,2']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bcprop.add_card(card)
+        card = bcprop.add_card(card, ifile=0)
 
         model.setup()
         size = 8
@@ -218,18 +218,18 @@ class TestContact(unittest.TestCase):
         lines = ['BCPROPS,    1100,    100,     101']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bcprops.add_card(card)
+        card = bcprops.add_card(card, ifile=0)
 
         lines = ['BCPROPS,    1100,    11,THRU,15']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bcprops.add_card(card)
+        card = bcprops.add_card(card, ifile=0)
 
         lines = ['BCPROPS,    1101,    11,THRU,15,',
                  ',1,2']
         card = model._process_card(lines)
         card = BDFCard(card)
-        card = bcprops.add_card(card)
+        card = bcprops.add_card(card, ifile=0)
 
         model.setup()
         size = 8

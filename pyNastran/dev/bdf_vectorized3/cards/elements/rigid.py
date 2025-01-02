@@ -89,7 +89,7 @@ class RBAR(RigidElement):
             cma: int, cmb: int,
             alpha: float=0.,
             tref: float=0.,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a RBAR element
 
@@ -115,11 +115,11 @@ class RBAR(RigidElement):
         cnb = _str_to_int(cnb)
         cma = _str_to_int(cma)
         cmb = _str_to_int(cmb)
-        self.cards.append((eid, nids, [cna, cnb], [cma, cmb], alpha, tref, comment))
+        self.cards.append((eid, nids, [cna, cnb], [cma, cmb], alpha, tref, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
@@ -130,7 +130,7 @@ class RBAR(RigidElement):
         alpha = double_or_blank(card, 8, 'alpha', default=0.0)
         tref = double_or_blank(card, 9, 'tref', default=0.0)
         assert len(card) <= 10, f'len(RBAR card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, [ga, gb], [cna, cnb], [cma, cmb], alpha, tref, comment))
+        self.cards.append((eid, [ga, gb], [cna, cnb], [cma, cmb], alpha, tref, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -138,6 +138,7 @@ class RBAR(RigidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
         dependent_dof = np.zeros((ncards, 2), dtype='int32')
@@ -146,7 +147,8 @@ class RBAR(RigidElement):
         alpha = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, nodesi, cn, cm, alphai, trefi, comment) = card
+            (eid, nodesi, cn, cm, alphai, trefi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
             independent_dof[icard, :] = cn
@@ -249,7 +251,8 @@ class RROD(RigidElement):
         self.n = 0
         self.element_id = np.array([])
 
-    def add(self, eid, nids, cma='', cmb='', alpha=0.0, comment='') -> int:
+    def add(self, eid, nids, cma='', cmb='', alpha=0.0,
+            ifile: int=0, comment: str='') -> int:
         if cma is None or cma == '':
             cma = 0
         else:
@@ -259,11 +262,11 @@ class RROD(RigidElement):
             cmb = 0
         else:
             cmb = int(cmb)
-        self.cards.append((eid, nids, [cma, cmb], alpha, comment))
+        self.cards.append((eid, nids, [cma, cmb], alpha, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a RROD card from ``BDF.add_card(...)``
 
@@ -283,7 +286,7 @@ class RROD(RigidElement):
         alpha = double_or_blank(card, 6, 'alpha', default=0.0)
         assert len(card) <= 7, f'len(RROD card) = {len(card):d}\ncard={card}'
         #return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
-        self.cards.append((eid, [ga, gb], [cma, cmb], alpha, comment))
+        self.cards.append((eid, [ga, gb], [cma, cmb], alpha, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -291,6 +294,7 @@ class RROD(RigidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
         dependent_dof = np.zeros((ncards, 2), dtype='int32')
@@ -299,7 +303,8 @@ class RROD(RigidElement):
         alpha = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, nodesi, cm, alphai, comment) = card
+            (eid, nodesi, cm, alphai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
             dependent_dof[icard] = cm
@@ -388,7 +393,8 @@ class RBAR1(RigidElement):
         self.element_id = np.array([])
 
     def add(self, eid: int, nids: list[int],
-            cb: str='123456', alpha: float=0.0, comment: str='') -> int:
+            cb: str='123456', alpha: float=0.0,
+            ifile: int=0, comment: str='') -> int:
         #if cma is None or cma == '':
             #cma = 0
         #else:
@@ -398,11 +404,11 @@ class RBAR1(RigidElement):
             #cmb = 0
         #else:
             #cmb = int(cmb)
-        self.cards.append((eid, nids, cb, alpha, comment))
+        self.cards.append((eid, nids, cb, alpha, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a RBAR1 card from ``BDF.add_card(...)``
 
@@ -421,7 +427,7 @@ class RBAR1(RigidElement):
         alpha = double_or_blank(card, 5, 'alpha', default=0.0)
         assert len(card) <= 6, f'len(RBAR1 card) = {len(card):d}\ncard={card}'
         #return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
-        self.cards.append((eid, [ga, gb], cb, alpha, comment))
+        self.cards.append((eid, [ga, gb], cb, alpha, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -429,6 +435,7 @@ class RBAR1(RigidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
         dependent_dof = np.zeros(ncards, dtype='int32')
@@ -437,7 +444,8 @@ class RBAR1(RigidElement):
         alpha = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, nodesi, cb, alphai, comment) = card
+            (eid, nodesi, cb, alphai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
             dependent_dof[icard] = cb
@@ -534,12 +542,13 @@ class RBE1(RigidElement):
     def add(self, eid: int,
             Gni: list[int], Cni: list[int],
             Gmi: list[int], Cmi: list[int],
-            alpha: float=0., comment: str='') -> int:
-        self.cards.append((eid, alpha, Gni, Cni, Gmi, Cmi, comment))
+            alpha: float=0.,
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((eid, alpha, Gni, Cni, Gmi, Cmi, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         ium = card.index('UM')
         if ium > 0:
@@ -591,7 +600,7 @@ class RBE1(RigidElement):
             else:
                 assert cmi is None
             i += 2
-        self.cards.append((eid, alpha, Gni, Cni, Gmi, Cmi, comment))
+        self.cards.append((eid, alpha, Gni, Cni, Gmi, Cmi, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -599,6 +608,7 @@ class RBE1(RigidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         ndependent = np.zeros(ncards, dtype='int32')
         nindependent = np.zeros(ncards, dtype='int32')
@@ -610,13 +620,14 @@ class RBE1(RigidElement):
         all_independent_nodes = []
         all_independent_dofs = []
         for icard, card in enumerate(self.cards):
-            (eid, alphai, Gni, Cni, Gmi, Cmi, comment) = card
+            (eid, alphai, Gni, Cni, Gmi, Cmi, ifilei, comment) = card
 
             #def independent_nodes(self):
                 #return self.Gni_node_ids
             #def dependent_nodes(self):
                 #return self.Gmi_node_ids
 
+            ifile[icard] = ifilei
             element_id[icard] = eid
             ndependent[icard] = len(Gni)
             nindependent[icard] = len(Gmi)
@@ -779,11 +790,11 @@ class RBE2(RigidElement):
             gn: int, # independent
             cm: str, Gmi: list[int],  # dependent
             alpha: float=0.0, tref: float=0.0, comment: str='') -> int:
-        self.cards.append((eid, gn, cm, Gmi, alpha, tref, comment))
+        self.cards.append((eid, gn, cm, Gmi, alpha, tref, 0, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         gn = integer(card, 2, 'gn')
         cm = components_or_blank(card, 3, 'cm', default=0)
@@ -813,7 +824,7 @@ class RBE2(RigidElement):
         for i in range(len(card) - 4 - n):
             gmi = integer(card, j + i, 'Gm%i' % (i + 1))
             Gmi.append(gmi)
-        self.cards.append((eid, gn, cm, Gmi, alpha, tref, comment))
+        self.cards.append((eid, gn, cm, Gmi, alpha, tref, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -821,6 +832,7 @@ class RBE2(RigidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         independent_node = np.zeros(ncards, dtype=idtype)
         independent_dof = np.zeros(ncards, dtype='int32')
@@ -830,10 +842,11 @@ class RBE2(RigidElement):
 
         dependent_nodes = []
         for icard, card in enumerate(self.cards):
-            eid, gn, cm, Gmi, alphai, trefi, comment = card
+            eid, gn, cm, Gmi, alphai, trefi, ifilei, comment = card
             dependent_nodes.extend(Gmi)
             nnode[icard] = len(Gmi)
 
+            ifile[icard] = ifilei
             element_id[icard] = eid
             independent_node[icard] = gn
             independent_dof[icard] = cm
@@ -967,18 +980,18 @@ class RBE3(RigidElement):
             weights: list[float], comps: list[str], Gijs: list[int],
             Gmi=None, Cmi=None,
             alpha: float=0.0, tref: float=0.0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         if Gmi is None or Cmi is None:
             assert Gmi is None and Cmi is None, 'Gmi and Cmi should both be None if either is None'
             Gmi = []
             Cmi = []
         self.cards.append((eid, refgrid, refc, alpha, tref,
                            weights, Gijs, comps,
-                           Gmi, Cmi, comment))
+                           Gmi, Cmi, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         eid = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
@@ -1080,7 +1093,7 @@ class RBE3(RigidElement):
         #self.nnode[icard] = len(Gmi)
         self.cards.append((eid, refgrid, refc, alpha, tref,
                            weights, Gijs, comps,
-                           Gmi, Cmi, comment))
+                           Gmi, Cmi, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1089,6 +1102,7 @@ class RBE3(RigidElement):
         ncards = len(self.cards)
         # basic
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         ref_grid = np.zeros(ncards, dtype=idtype)
         ref_component = np.zeros(ncards, dtype='int32')
@@ -1117,8 +1131,9 @@ class RBE3(RigidElement):
         for icard, card in enumerate(self.cards):
             (eid, refgrid, refc, alphai, trefi,
              weights, Gijs, comps,
-             Gmi, Cmi, comment) = card
+             Gmi, Cmi, ifilei, comment) = card
             # basic
+            ifile[icard] = ifilei
             element_id[icard] = eid
             ref_grid[icard] = refgrid
             ref_component[icard] = refc

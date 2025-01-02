@@ -212,7 +212,7 @@ class TestLoads(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        card = model.darea.add_card(cardi)
+        card = model.darea.add_card(cardi, ifile=0)
         model.setup()
         darea = model.darea
         darea.write(size)
@@ -409,7 +409,7 @@ class TestLoads(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        model.pload4.add_card(cardi)
+        model.pload4.add_card(cardi, ifile=0)
         model.pload4.write(size, 'dummy')
         #card.raw_fields()
 
@@ -421,7 +421,7 @@ class TestLoads(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        model.pload4.add_card(cardi)
+        model.pload4.add_card(cardi, ifile=0)
         model.pload4.write(size, 'dummy')
         #card.raw_fields()
 

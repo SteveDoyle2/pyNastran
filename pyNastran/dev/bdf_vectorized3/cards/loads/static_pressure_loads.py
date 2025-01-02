@@ -81,7 +81,7 @@ class PLOAD(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         pressure = double(card, 2, 'pressure')
         nodes = [integer(card, 3, 'n1'),
@@ -273,7 +273,7 @@ class PLOAD1(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
         load_type = string(card, 3, 'Type ("%s")' % '",  "'.join(self.valid_types))
@@ -663,7 +663,7 @@ class PLOAD2(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         pressure = double(card, 2, 'p')
 
@@ -881,7 +881,7 @@ class PLOAD4(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')

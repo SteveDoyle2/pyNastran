@@ -43,7 +43,7 @@ class NSMi(VectorizedBaseCard):
         self.pid_eid = np.array([], dtype='int32')
         self.value = np.array([], dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds an NSM card from ``BDF.add_card(...)``
 
@@ -283,7 +283,7 @@ class NSM1i(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a NSM1/NSML1 card from ``BDF.add_card(...)``
 

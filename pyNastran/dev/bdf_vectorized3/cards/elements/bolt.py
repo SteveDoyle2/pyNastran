@@ -196,7 +196,7 @@ class BOLT(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
         """
         Adds a BOLT card from ``BDF.add_card(...)``
 
@@ -367,7 +367,7 @@ class BOLTFOR(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
         """
         Adds a BOLTFOR card from ``BDF.add_card(...)``
 
@@ -483,7 +483,7 @@ class BOLTFRC(VectorizedBaseCard):
         #self.n += 1
         #return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
         """
         Adds a BOLT card from ``BDF.add_card(...)``
 
@@ -655,7 +655,7 @@ class BOLTSEQ(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a BOLT card from ``BDF.add_card(...)``
 

@@ -158,7 +158,7 @@ class TestAero(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        card = AESTAT.add_card(card)
+        card = AESTAT.add_card(card) # , ifile=0
         card.write_card(size, 'dummy')
         card.raw_fields()
 
@@ -181,7 +181,7 @@ class TestAero(unittest.TestCase):
         card = ['AECOMP', name, list_type] + aelist_ids
         bdf_card = BDFCard(card, has_none=True)
         model = BDF()
-        model.aecomp.add_card(bdf_card, comment='aecomp card')
+        model.aecomp.add_card(bdf_card, ifile=0, comment='aecomp card')
         aecomp1 = model.aecompl
         aecomp1.validate()
         aecomp1.write()
@@ -490,7 +490,7 @@ class TestAero(unittest.TestCase):
         model = BDF(debug=False)
         aeparm = model.aeparm
         aeparm.add_card(BDFCard(['AEPARM', aeparm_id, 'THRUST', 'lb']),
-                        comment='aeparm_comment')
+                        ifile=0, comment='aeparm_comment')
 
         aeparmi = model.add_aeparm(aeparm_id, 'THRUST', 'lb', comment='aeparm_comment')
         model.setup()
@@ -1167,13 +1167,13 @@ class TestAero(unittest.TestCase):
         x43 = 1.
 
         caero1.add_card(BDFCard(['CAERO1', eid, pid, cp, nspan, nchord, lspan, lchord,
-                                 igid, ] + p1 + [x12] + p4 + [x43]))
+                                 igid, ] + p1 + [x12] + p4 + [x43]), ifile=0)
         caero1.parse_cards()
         caero1.validate()
 
         eid = 2
         caero1.add_card(BDFCard(['CAERO1', eid, pid, None, nspan, nchord, lspan, lchord,
-                                 igid, ] + p1 + [x12] + p4 + [x43]))
+                                 igid, ] + p1 + [x12] + p4 + [x43]), ifile=0)
         caero1.parse_cards()
         caero1.validate()
 
@@ -1619,7 +1619,7 @@ class TestAero(unittest.TestCase):
                 dthx, dthy, None, usage]
 
         bdf_card = BDFCard(card, has_none=True)
-        model.spline2.add_card(bdf_card, comment='spline2_a')
+        model.spline2.add_card(bdf_card, ifile=0, comment='spline2_a')
         model.setup()
         #spline_a.write()
         #spline_a.raw_fields()
@@ -1654,7 +1654,7 @@ class TestAero(unittest.TestCase):
         p1 = [0., 1., 2.]
         x12 = 10.
         caero2.add_card(BDFCard(['CAERO2', eid, pid, cp, nsb, nint,
-                                 lsb, lint, igroup, ] + p1 + [x12]))
+                                 lsb, lint, igroup, ] + p1 + [x12]), ifile=0)
 
         #---------------
         # nsb=lsb=None=0
@@ -1699,9 +1699,9 @@ class TestAero(unittest.TestCase):
 
         aefact = AEFACT(model)
         #aefact = model.aefact
-        aefact.add_card(BDFCard(['AEFACT', lint, 0., 1., 2., 3., 4., 5.]))
+        aefact.add_card(BDFCard(['AEFACT', lint, 0., 1., 2., 3., 4., 5.]), ifile=0)
         lrib = 3
-        aefact.add_card(BDFCard(['AEFACT', lrib, 0., 1., 2.]))
+        aefact.add_card(BDFCard(['AEFACT', lrib, 0., 1., 2.]), ifile=0)
         aefact.validate()
         aefact.write()
         model.aefact = aefact
@@ -1720,7 +1720,7 @@ class TestAero(unittest.TestCase):
         paero2a = PAERO2(model)
         paero2a.add_card(BDFCard(['PAERO2', pid, orient, width, AR,
                                   lrsb, lrib] + lth + thi + thn),
-                         comment='paero2')
+                         ifile=0, comment='paero2')
         paero2a.parse_cards()
         paero2a.validate()
         model.add_paero2(pid, orient, width, AR, thi, thn,
@@ -1863,7 +1863,7 @@ class TestAero(unittest.TestCase):
         card = ['CAERO3', 2000, 20001, 0, 22, 33, None, None, None,
                 1.0, 0.0, 0., 100., 17., 130., 0., 100.]
         bdf_card = BDFCard(card, has_none=True)
-        caero3.add_card(bdf_card, comment='msg')
+        caero3.add_card(bdf_card, ifile=0, comment='msg')
         model.setup()
         caero3.validate()
         caero3.write()
@@ -1975,7 +1975,7 @@ class TestAero(unittest.TestCase):
 
         model = BDF(debug=False)
         bdf_card = BDFCard(card, has_none=True)
-        paero4 = model.paero4.add_card(bdf_card, comment='msg')
+        paero4 = model.paero4.add_card(bdf_card, ifile=0, comment='msg')
         str(paero4)
         #paero4.cross_reference(None)
         save_load_deck(model)
@@ -2431,7 +2431,7 @@ class TestAero(unittest.TestCase):
                 #eff, ldw,
                 #crefc, crefs, pllim, pulim,
                 #hmllim, hmulim, tqllim, tqulim,
-            ]), comment='aesurf comment')
+            ]), ifile=0, comment='aesurf comment')
         #assert aesurf1 == aesurf2
 
         cid2 = 1
@@ -3071,7 +3071,8 @@ class TestAero(unittest.TestCase):
         #model.gust.validate()
         model.gust.write()
 
-        gust2 = model.gust.add_card(BDFCard(['GUST', sid, dload, wg, x0, V]), comment='gust load')
+        gust2 = model.gust.add_card(BDFCard(['GUST', sid, dload, wg, x0, V]),
+                                    ifile=0, comment='gust load')
         model.setup(run_geom_check=True)
         #model.gust.validate()
         model.gust.write()
@@ -3112,7 +3113,7 @@ class TestAero(unittest.TestCase):
         card = ['CSSCHD', sid, aesid, lalpha, lmach, lschd]
         bdf_card = BDFCard(card, has_none=True)
         csschd.clear()
-        csschd.add_card(bdf_card, comment='csschd card')
+        csschd.add_card(bdf_card, ifile=0, comment='csschd card')
         csschd.parse_cards()
         csschd.validate()
         csschd.write()

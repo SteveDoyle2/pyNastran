@@ -69,7 +69,7 @@ class MASSSET(Combination):
 
     def add(self, sid: int, scale: float,
             scale_factors: list[float], element_ids: list[int],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a MASSSET card
 
@@ -187,7 +187,8 @@ class CONM1(Element):
         self._mass = np.zeros((0, 6, 6), dtype='float64')
 
     def add(self, eid: int, nid: int, mass_matrix: np.ndarray,
-            cid: int=0, comment: str='') -> int:
+            cid: int=0,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CONM1 card
 
@@ -214,11 +215,11 @@ class CONM1(Element):
                 [                    M66]
 
         """
-        self.cards.append((eid, nid, cid, mass_matrix, comment))
+        self.cards.append((eid, nid, cid, mass_matrix, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         m = np.zeros((6, 6), dtype='float64')
         eid = integer(card, 1, 'eid')
@@ -246,7 +247,7 @@ class CONM1(Element):
         m[5, 3] = fdouble_or_blank(card, 22, 'M64', default=0.)
         m[5, 4] = fdouble_or_blank(card, 23, 'M65', default=0.)
         m[5, 5] = fdouble_or_blank(card, 24, 'M66', default=0.)
-        self.cards.append((eid, nid, cid, m, comment))
+        self.cards.append((eid, nid, cid, m, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -254,12 +255,14 @@ class CONM1(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         _mass = np.zeros((ncards, 6, 6), dtype='float64')
         coord_id = np.zeros(ncards, dtype='int32')
         node_id = np.zeros(ncards, dtype=idtype)
         for icard, card in enumerate(self.cards):
-            eid, nid, cid, m, comment = card
+            eid, nid, cid, m, ifilei, comment = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             node_id[icard] = nid
             coord_id[icard] = cid
@@ -398,7 +401,7 @@ class CONM2(Element):
 
     def add(self, eid: int, nid: int, mass: float, cid: int=0,
             X: Optional[list[float]]=None, I: Optional[list[float]]=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CONM2 card
 
@@ -421,11 +424,11 @@ class CONM2(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, nid, cid, mass, X, I, comment))
+        self.cards.append((eid, nid, cid, mass, X, I, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
@@ -447,7 +450,7 @@ class CONM2(Element):
             fdouble_or_blank(card, 14, 'I33', default=0.0),
         ]
         assert len(card) <= 15, f'len(CONM2 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, nid, cid, mass, X, I, comment))
+        self.cards.append((eid, nid, cid, mass, X, I, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -455,6 +458,7 @@ class CONM2(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         mass = np.zeros(ncards, dtype='float64')
         coord_id = np.zeros(ncards, dtype='int32')
@@ -463,7 +467,8 @@ class CONM2(Element):
         #I11, I21, I22, I31, I32, I33 = I
         inertia = np.zeros((ncards, 6), dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, nid, cid, massi, X, I, comment) = card
+            (eid, nid, cid, massi, X, I, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             node_id[icard] = nid
             coord_id[icard] = cid

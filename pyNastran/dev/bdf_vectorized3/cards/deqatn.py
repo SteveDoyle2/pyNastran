@@ -24,7 +24,8 @@ class DEQATN(BaseCard):  # needs work...
     type = 'DEQATN'
     _properties = ['dtable']
 
-    def __init__(self, equation_id: int, eqs: list[str], comment: str=''):
+    def __init__(self, equation_id: int, eqs: list[str],
+                 ifile: int, comment: str=''):
         """
         Creates a DEQATN card
 
@@ -71,7 +72,7 @@ class DEQATN(BaseCard):  # needs work...
         #return DEQATN(equation_id, eqs, comment='')
 
     def __deepcopy__(self, memo: dict[str, Any]):
-        copy = type(self)(1, [])
+        copy = type(self)(1, [], 0)
         memo[id(self)] = copy
         if self.comment:
             copy.comment = self.comment
@@ -84,7 +85,7 @@ class DEQATN(BaseCard):  # needs work...
         return copy
 
     @classmethod
-    def add_card(cls, card: list[str], comment: str=''):
+    def add_card(cls, card: list[str], ifile: int, comment: str=''):
         """
         Adds a DEQATN card from ``BDF.add_card(...)``
 
@@ -123,7 +124,7 @@ class DEQATN(BaseCard):  # needs work...
         #for line in eqs_temp2:
             #print(line)
         eqs = lines_to_eqs(eqs_temp)
-        return DEQATN(equation_id, eqs, comment=comment)
+        return DEQATN(equation_id, eqs, ifile, comment=comment)
 
     def _setup_equation(self, model: BDF) -> None:
         """

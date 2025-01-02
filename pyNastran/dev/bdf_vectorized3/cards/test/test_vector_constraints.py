@@ -29,11 +29,11 @@ class TestConstraints(unittest.TestCase):
         card = ['SUPORT']
         cardi = BDFCard(card)
         #with self.assertRaises(AssertionError):  # too short
-            #SUPORT.add_card(cardi)
+            #SUPORT.add_card(cardi, ifile=0)
 
         card = ['SUPORT', '2']
         cardi = BDFCard(card)
-        icon = suport.add_set_card(cardi) - 1 # default
+        icon = suport.add_set_card(cardi, ifile=0) - 1 # default
         model.setup()
         self.assertEqual(suport.node_id[icon], 2)
         self.assertEqual(suport.component[icon], 0)
@@ -42,7 +42,7 @@ class TestConstraints(unittest.TestCase):
 
         card = ['SUPORT', '2', '432']
         cardi = BDFCard(card)
-        icon = suport.add_set_card(cardi) # default
+        icon = suport.add_set_card(cardi, ifile=0) # default
         model.setup()
         self.assertEqual(suport.node_id[icon], 2)
         self.assertEqual(suport.component[icon], 234)
@@ -51,7 +51,7 @@ class TestConstraints(unittest.TestCase):
 
         card = ['SUPORT', '3', '4325', 4]
         cardi = BDFCard(card)
-        icon = suport.add_set_card(cardi) # default
+        icon = suport.add_set_card(cardi, ifile=0) # default
         model.setup()
         self.assertEqual(suport.node_id[icon-1], 3)
         self.assertEqual(suport.node_id[icon], 4)
@@ -62,7 +62,7 @@ class TestConstraints(unittest.TestCase):
 
         card = ['SUPORT', '2', None, 3]
         cardi = BDFCard(card)
-        icon = suport.add_set_card(cardi) # default
+        icon = suport.add_set_card(cardi, ifile=0) # default
         model.setup()
         self.assertEqual(suport.node_id[icon-1], 2)
         self.assertEqual(suport.node_id[icon], 3)
@@ -73,7 +73,7 @@ class TestConstraints(unittest.TestCase):
 
         card = ['SUPORT', '2', '432', 3, '1325']
         cardi = BDFCard(card)
-        icon = suport.add_set_card(cardi) # default
+        icon = suport.add_set_card(cardi, ifile=0) # default
         model.setup()
         self.assertEqual(suport.node_id[icon-1], 2)
         self.assertEqual(suport.node_id[icon], 3)
@@ -91,7 +91,7 @@ class TestConstraints(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        con = suport.add_set1_card(cardi)
+        con = suport.add_set1_card(cardi, ifile=0)
         suport.write(size, 'dummy')
         #con.raw_fields()
         save_load_deck(model)
@@ -103,13 +103,13 @@ class TestConstraints(unittest.TestCase):
         card = ['SUPORT1', '1']
         card_obj = BDFCard(card)
         with self.assertRaises(AttributeError):  # removed
-            suport.add_card(card_obj)
+            suport.add_card(card_obj, ifile=0)
         #with self.assertRaises(AssertionError):  # too short
             #suport.add_set1_card(card_obj)
 
         card = ['SUPORT1', '1', '2']
         card_obj = BDFCard(card)
-        con = suport.add_set1_card(card_obj) # default
+        con = suport.add_set1_card(card_obj, ifile=0) # default
         model.setup()
         #print(suport.write())
         suporti = suport.slice_card_by_id(1)
@@ -118,20 +118,20 @@ class TestConstraints(unittest.TestCase):
 
         card = ['SUPORT1', '1', '2', '432']
         card_obj = BDFCard(card)
-        con = suport.add_set1_card(card_obj) # default
+        con = suport.add_set1_card(card_obj, ifile=0) # default
         model.setup()
         self.assertEqual(suport.node_id[1], 2)
         self.assertEqual(suport.component[1], 234)
 
         card = ['SUPORT1', '1', '2', '432', 3]
         card_obj = BDFCard(card)
-        con = suport.add_set1_card(card_obj) # default
+        con = suport.add_set1_card(card_obj, ifile=0) # default
         model.setup()
         self.assertEqual(suport.node_id[3], 3)
 
         card = ['SUPORT1', '1', '2', None, 3]
         card_obj = BDFCard(card)
-        con = suport.add_set1_card(card_obj) # default
+        con = suport.add_set1_card(card_obj, ifile=0) # default
         model.setup()
         self.assertEqual(suport.node_id[4], 2)
         self.assertEqual(suport.node_id[5], 3)
@@ -140,7 +140,7 @@ class TestConstraints(unittest.TestCase):
 
         card = ['SUPORT1', '1', '2', '432', 3, '1325']
         card = BDFCard(card)
-        con = suport.add_set1_card(card) # default
+        con = suport.add_set1_card(card, ifile=0) # default
         model.setup()
         self.assertEqual(suport.node_id[7], 3)
         self.assertEqual(suport.component[7], 1235)
@@ -150,7 +150,7 @@ class TestConstraints(unittest.TestCase):
         card = BDFCard(card)
         model = BDF(debug=False, mode='nx')
         mpc = model.mpc
-        mpc_id = mpc.add_card(card)
+        mpc_id = mpc.add_card(card, ifile=0)
         #print ' %r' % str(mpc)
         #print '%r' % mpc.write_card(size=8)
         #msg = mpc.write_card(size=8, double=False)
@@ -180,7 +180,7 @@ class TestConstraints(unittest.TestCase):
         card = model.add_card(card, 'MPC', is_list=False)
         assert card is not None
         mpc = model.mpc
-        mpc_id = mpc.add_card(card)
+        mpc_id = mpc.add_card(card, ifile=0)
         model.setup(run_geom_check=True)
         msg_8_actual = mpc.write(size=8)
         msg_16_actual = mpc.write(size=16)
@@ -210,7 +210,7 @@ class TestConstraints(unittest.TestCase):
         card = model.add_card(card, 'MPC', is_list=False)
         assert card is not None
         mpc = model.mpc
-        mpc_id = mpc.add_card(card)
+        mpc_id = mpc.add_card(card, ifile=0)
         model.setup(run_geom_check=True)
         msg_8_actual = mpc.write(size=8)
         msg_16_actual = mpc.write(size=16)

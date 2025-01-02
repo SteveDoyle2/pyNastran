@@ -525,15 +525,16 @@ class CTRIA3(ShellElement):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0.,
             tflag: int=0, T1=None, T2=None, T3=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         self.cards.append(((eid, pid, nids,
                             theta_mcid, zoffset,
                             tflag, T1, T2, T3,
-                            comment)))
+                            ifile, comment)))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int,
+                 comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
         #: Element ID
@@ -568,7 +569,7 @@ class CTRIA3(ShellElement):
         self.cards.append((eid, pid, nids,
                             theta_mcid, zoffset,
                             tflag, T1, T2, T3,
-                            comment))
+                            ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -576,6 +577,7 @@ class CTRIA3(ShellElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 3), dtype=idtype)
@@ -588,8 +590,9 @@ class CTRIA3(ShellElement):
             (eid, pid, nids,
              theta_mcid, zoffseti,
              tflagi, T1, T2, T3,
-             comment) = card
+             ifilei, comment) = card
 
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -829,7 +832,7 @@ class CTRIAR(ShellElement):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0.,
             tflag: int=0, T1=None, T2=None, T3=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CTRIAR card
 
@@ -862,11 +865,11 @@ class CTRIAR(ShellElement):
         self.cards.append((eid, pid, nids,
                            theta_mcid, zoffset,
                            tflag, [T1, T2, T3],
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
         #: Element ID
@@ -895,7 +898,7 @@ class CTRIAR(ShellElement):
         card = (eid, pid, nids,
                 theta_mcid, zoffset,
                 tflag, [T1, T2, T3],
-                comment)
+                ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -904,6 +907,7 @@ class CTRIAR(ShellElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 3), dtype=idtype)
@@ -916,8 +920,9 @@ class CTRIAR(ShellElement):
             (eid, pid, nids,
              theta_mcid, zoffseti,
              tflagi, Ti,
-             comment) = card
+             ifilei, comment) = card
 
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -1100,15 +1105,15 @@ class CQUAD4(ShellElement):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=np.nan,
             tflag: int=0, T1=None, T2=None, T3=None, T4=None,
-            comment: str='') -> int:
+            ifile:  int=0, comment: str='') -> int:
         self.cards.append((eid, pid, nids,
             theta_mcid, zoffset,
             tflag, T1, T2, T3, T4,
-            comment))
+            ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
         eid = integer(card, 1, 'eid')
@@ -1140,7 +1145,7 @@ class CQUAD4(ShellElement):
         self.cards.append((eid, pid, nids,
             theta_mcid, zoffset,
             tflag, T1, T2, T3, T4,
-            comment))
+            ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1148,6 +1153,7 @@ class CQUAD4(ShellElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype=idtype)
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 4), dtype=idtype)
@@ -1161,7 +1167,8 @@ class CQUAD4(ShellElement):
             (eid, pid, nids,
              theta_mcid, zoffseti,
              tflagi, T1, T2, T3, T4,
-             comment) = card
+             ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -1547,7 +1554,8 @@ class CQUADR(ShellElement):
 
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0., tflag: int=0,
-            T1=None, T2=None, T3=None, T4=None, comment: str='') -> int:
+            T1=None, T2=None, T3=None, T4=None,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CQUADR card
 
@@ -1592,11 +1600,12 @@ class CQUADR(ShellElement):
         #self.zoffset = np.hstack([self.zoffset, zoffset])
         #self.tflag = np.hstack([self.tflag, tflag])
         #self.T = np.vstack([self.T, np.array([T1, T2, T3, T4], dtype='float64')])
-        self.cards.append((eid, pid, nids, theta_mcid, zoffset, tflag, [T1, T2, T3, T4]))
+        self.cards.append((eid, pid, nids, theta_mcid, zoffset, tflag,
+                           [T1, T2, T3, T4], ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1'),
@@ -1614,7 +1623,8 @@ class CQUADR(ShellElement):
         T3 = fdouble_or_blank(card, 13, 'T3')
         T4 = fdouble_or_blank(card, 14, 'T4')
         assert len(card) <= 15, f'len(CQUADR card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, theta_mcid, zoffset, tflag, [T1, T2, T3, T4]))
+        self.cards.append((eid, pid, nids, theta_mcid, zoffset, tflag,
+                           [T1, T2, T3, T4], ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1622,6 +1632,7 @@ class CQUADR(ShellElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 4), dtype=idtype)
@@ -1632,8 +1643,8 @@ class CQUADR(ShellElement):
         T = np.zeros((ncards, 4), dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, theta_mcid, zoffseti, tflagi, Ti) = card
-
+            (eid, pid, nids, theta_mcid, zoffseti, tflagi, Ti, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -1791,7 +1802,7 @@ class CTRIA6(ShellElement):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: float=0., zoffset: float=0.,
             tflag: int=0, T1=None, T2=None, T3=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CTRIA6 card
 
@@ -1836,12 +1847,12 @@ class CTRIA6(ShellElement):
         #self.tflag = np.hstack([self.tflag, tflag])
         #self.T = np.vstack([self.T, [T1, T2, T3]])
         card = (eid, pid, nids, theta_mcid, zoffset,
-                tflag, T1, T2, T3, comment)
+                tflag, T1, T2, T3, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CTRIA6 card from ``BDF.add_card(...)``
 
@@ -1886,7 +1897,7 @@ class CTRIA6(ShellElement):
         #return CTRIA6(eid, pid, nids, theta_mcid, zoffset,
                       #tflag, T1, T2, T3, comment=comment)
         card = (eid, pid, nids, theta_mcid, zoffset,
-                tflag, T1, T2, T3, comment)
+                tflag, T1, T2, T3, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -1895,6 +1906,7 @@ class CTRIA6(ShellElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 6), dtype=idtype)
@@ -1906,7 +1918,8 @@ class CTRIA6(ShellElement):
 
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, theta_mcid, zoffseti,
-             tflagi, T1, T2, T3, comment) = card
+             tflagi, T1, T2, T3, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -2101,7 +2114,7 @@ class CQUAD8(ShellElement):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0.,
             tflag: int=0, T1=None, T2=None, T3=None, T4=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CQUAD8 card
 
@@ -2146,12 +2159,12 @@ class CQUAD8(ShellElement):
         #self.tflag = np.hstack([self.tflag, tflag])
         #self.T = np.vstack([self.T, np.array([T1, T2, T3, T4], dtype='float64')])
         card = (eid, pid, nids, theta_mcid, zoffset,
-                tflag, T1, T2, T3, T4, comment)
+                tflag, T1, T2, T3, T4, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CQUAD8 card from ``BDF.add_card(...)``
 
@@ -2195,7 +2208,7 @@ class CQUAD8(ShellElement):
                       #tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4,
                       #comment=comment)
         card = (eid, pid, nids, theta_mcid, zoffset,
-                tflag, T1, T2, T3, T4, comment)
+                tflag, T1, T2, T3, T4, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -2204,6 +2217,7 @@ class CQUAD8(ShellElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 8), dtype=idtype)
@@ -2215,7 +2229,7 @@ class CQUAD8(ShellElement):
 
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, theta_mcid, zoffseti,
-             tflagi, T1, T2, T3, T4, comment) = card
+             tflagi, T1, T2, T3, T4, ifilei, comment) = card
             #card, comment = card_comment
 
             #eid = integer(card, 1, 'eid')
@@ -2246,6 +2260,7 @@ class CQUAD8(ShellElement):
                 #T4 = None
                 #tflagi = 0
 
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -2448,7 +2463,8 @@ class CQUAD(ShellElement):
         self.T = None
 
     def add(self, eid: int, pid: int, nids: list[int],
-            theta_mcid: int|float=0., comment: str='') -> int:
+            theta_mcid: int|float=0.,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CQUAD card
 
@@ -2470,11 +2486,11 @@ class CQUAD(ShellElement):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids, theta_mcid, comment))
+        self.cards.append((eid, pid, nids, theta_mcid, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CQUAD card from ``BDF.add_card(...)``
 
@@ -2504,7 +2520,7 @@ class CQUAD(ShellElement):
         assert len(card) <= 13, f'len(CQUAD card) = {len(card):d}\ncard={card}'
         #return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
-        self.cards.append((eid, pid, nids, theta_mcid, comment))
+        self.cards.append((eid, pid, nids, theta_mcid, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2512,6 +2528,7 @@ class CQUAD(ShellElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 9), dtype=idtype)
@@ -2519,8 +2536,9 @@ class CQUAD(ShellElement):
         theta = np.full(ncards, np.nan, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, theta_mcid, comment) = card
+            (eid, pid, nids, theta_mcid, ifilei, comment) = card
 
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -2643,12 +2661,12 @@ class CAABSF(Element):
         self.nodes = np.zeros((0, 4), dtype='int32')
 
     def add(self, eid: int, pid: int, nodes: list[int],
-            comment: str='') -> int:
-        self.cards.append((eid, pid, nodes, comment))
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((eid, pid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CHACAB card from ``BDF.add_card(...)``
 
@@ -2669,7 +2687,7 @@ class CAABSF(Element):
             integer_or_blank(card, 6, 'nid4', default=0),
         ]
         assert len(card) <= 7, f'len(CAABSF card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2677,12 +2695,14 @@ class CAABSF(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 4), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
+            (eid, pid, nids, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids

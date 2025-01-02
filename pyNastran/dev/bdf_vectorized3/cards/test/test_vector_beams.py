@@ -52,7 +52,7 @@ class TestBeams(unittest.TestCase):
         #print(print_card_8(card))
         cardi = BDFCard(card)
         pbeam = model.pbeam
-        card2 = pbeam.add_card(cardi)
+        card2 = pbeam.add_card(cardi, ifile=0)
         pbeam.parse_cards()
         #fields = pbeam.write().split()
         fields = pbeam.to_old_card()[0].raw_fields()
@@ -106,7 +106,7 @@ class TestBeams(unittest.TestCase):
 
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        card2 = model.pbeam.add_card(cardi, comment='')
+        card2 = model.pbeam.add_card(cardi, ifile=0, comment='')
         model.pbeam.parse_cards()
         #lines = model.pbeam.write().split()
         fields = model.pbeam.to_old_card()[0].raw_fields()
@@ -139,7 +139,7 @@ class TestBeams(unittest.TestCase):
 
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        card2 = model.pbeam.add_card(cardi, comment='')
+        card2 = model.pbeam.add_card(cardi, ifile=0, comment='')
         model.pbeam.parse_cards()
         #lines = model.pbeam.write().split()
         fields = model.pbeam.to_old_card()[0].raw_fields()
@@ -166,7 +166,7 @@ class TestBeams(unittest.TestCase):
 
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        card2 = model.pbeam.add_card(cardi, comment='')
+        card2 = model.pbeam.add_card(cardi, ifile=0, comment='')
         model.pbeam.parse_cards()
         model.pbeam.write_default_fields = True
         msg = model.pbeam.write()
@@ -191,7 +191,7 @@ class TestBeams(unittest.TestCase):
         card = model._process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
-        card2 = model.pbeam.add_card(cardi)
+        card2 = model.pbeam.add_card(cardi, ifile=0)
         model.pbeam.parse_cards()
         #lines = model.pbeam.write().split()
         fields = model.pbeam.to_old_card()[0].raw_fields()
@@ -218,7 +218,7 @@ class TestBeams(unittest.TestCase):
 
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        card2 = model.pbeam.add_card(cardi)
+        card2 = model.pbeam.add_card(cardi, ifile=0)
         model.pbeam.parse_cards()
         #lines = model.pbeam.write().split()
         fields = model.pbeam.to_old_card()[0].raw_fields()
@@ -243,7 +243,7 @@ class TestBeams(unittest.TestCase):
         ]
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        model.pbeam.add_card(cardi)
+        model.pbeam.add_card(cardi, ifile=0)
         model.pbeam.parse_cards()
 
         #if 0:
@@ -290,7 +290,7 @@ class TestBeams(unittest.TestCase):
         card = bdf._process_card(lines)
         cardi = BDFCard(card)
         model = BDF()
-        model.pbeam.add_card(cardi)
+        model.pbeam.add_card(cardi, ifile=0)
         model.setup(run_geom_check=False)
 
         #fields = card2.raw_fields()
@@ -331,7 +331,7 @@ class TestBeams(unittest.TestCase):
         card = model._process_card(lines)
         cardi = BDFCard(card)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
-        pbeam = model.pbeam.add_card(cardi)
+        pbeam = model.pbeam.add_card(cardi, ifile=0)
         #pbeam.repr_fields()
         assert fields == fields
 

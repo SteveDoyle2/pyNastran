@@ -36,8 +36,8 @@ class TestBars(unittest.TestCase):
         model = BDF(debug=False)
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        # pbar = PBAR.add_card(cardi)
-        model.pbar.add_card(cardi, comment='')
+        # pbar = PBAR.add_card(cardi, ifile=0)
+        model.pbar.add_card(cardi, ifile=0, comment='')
         model.setup(run_geom_check=False)
         pbar = model.pbar.slice_card_by_property_id(pid)
         #pbar.raw_fields()
@@ -78,7 +78,7 @@ class TestBars(unittest.TestCase):
         card = model._process_card(lines)
         cardi = BDFCard(card)
 
-        model.pbar.add_card(cardi)
+        model.pbar.add_card(cardi, ifile=0)
         pbar = model.pbar
         model.setup(run_geom_check=False)
         self.assertEqual(pbar.property_id, 1)
@@ -117,7 +117,7 @@ class TestBars(unittest.TestCase):
         card = model._process_card(lines)
 
         cardi = BDFCard(card)
-        pbar = model.pbar.add_card(cardi)
+        pbar = model.pbar.add_card(cardi, ifile=0)
         model.setup(run_geom_check=False)
 
         pbar = model.pbar

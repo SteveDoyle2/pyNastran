@@ -72,7 +72,7 @@ class BEAMOR(BaseCard):
         #return BEAMOR(pid, is_g0, g0, x, offt='GGG', comment='')
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, ifile: int, comment: str=''):
         PROPERTY_ID_DEFAULT = 0
         GO_X_DEFAULT = 0
         OFFT_DEFAULT = ''
@@ -164,20 +164,21 @@ class CBEAM(Element):
             offt: str='GGG', bit=None,
             pa: int=0, pb: int=0,
             wa=None, wb=None,
-            sa: int=0, sb: int=0, comment: str='') -> int:
+            sa: int=0, sb: int=0,
+            ifile: int=0, comment: str='') -> int:
         if wa is None:
             wa = [0., 0., 0.]
         if wb is None:
             wb = [0., 0., 0.]
         if bit:
             assert isinstance(bit, integer_types), f'offt/bit={bit!r} and should be an integer'
-            self.cards.append((eid, pid, nids, g0, x, bit, [pa, pb], wa, wb, sa, sb, comment))
+            self.cards.append((eid, pid, nids, g0, x, bit, [pa, pb], wa, wb, sa, sb, ifile, comment))
         else:
-            self.cards.append((eid, pid, nids, g0, x, offt, [pa, pb], wa, wb, sa, sb, comment))
+            self.cards.append((eid, pid, nids, g0, x, offt, [pa, pb], wa, wb, sa, sb, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         PROPERTY_ID_DEFAULT = 0
         OFFT_DEFAULT = ''
         eid = integer(card, 1, 'eid')
@@ -204,7 +205,8 @@ class CBEAM(Element):
         sb = integer_or_blank(card, 18, 'sb', default=0)
 
         assert len(card) <= 19, f'len(CBEAM card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, [ga, gb], g0, x, offt, [pa, pb], wa, wb, sa, sb, comment))
+        self.cards.append((eid, pid, [ga, gb], g0, x, offt, [pa, pb], wa, wb, sa, sb,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -212,6 +214,7 @@ class CBEAM(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
@@ -229,7 +232,8 @@ class CBEAM(Element):
 
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, g0i, xi, offti, [pai, pbi],
-             wai, wbi, sai, sbi, comment) = card
+             wai, wbi, sai, sbi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -968,7 +972,7 @@ class PBEAM(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'property_id')
         mid = integer(card, 2, 'material_id')
 
@@ -1933,7 +1937,7 @@ class PBEAML(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         group = string_or_blank(card, 3, 'group', default='MSCBML0')
@@ -2439,7 +2443,7 @@ class PBCOMP(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         area = double_or_blank(card, 3, 'Area', default=0.0)
@@ -2887,7 +2891,7 @@ class CBEAM3(Element):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
         ga = integer(card, 3, 'ga')
@@ -2934,6 +2938,7 @@ class CBEAM3(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 3), dtype=idtype)
@@ -2948,7 +2953,8 @@ class CBEAM3(Element):
 
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, g0i, xi,
-             wai, wbi, wci, twi, si, comment) = card
+             wai, wbi, wci, twi, si, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -3607,18 +3613,19 @@ class CBEND(Element):
 
     def add(self, eid: int, pid: int, nids: list[int],
             g0: Optional[int], x: Optional[list[float]],
-            geom: str='GGG', comment: str='') -> int:
+            geom: str='GGG',
+            ifile: int=0, comment: str='') -> int:
         assert g0 is None or x is None, (g0, x)
         if g0 is None and not isinstance(x, (list, tuple, np.ndarray)):
             raise TypeError(f'PBEND eid={eid} x={x} and should be a list[float]')
         if x is None and not isinstance(g0, integer_types):
             raise TypeError(f'PBEND eid={eid} g0={g0} and should be an integer')
 
-        self.cards.append((eid, pid, nids, g0, x, geom, comment))
+        self.cards.append((eid, pid, nids, g0, x, geom, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CBEND card from ``BDF.add_card(...)``
 
@@ -3654,7 +3661,7 @@ class CBEND(Element):
 
         assert len(card) == 9, f'len(CBEND card) = {len(card):d}\ncard={card}'
         #return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
-        self.cards.append((eid, pid, [ga, gb], g0, x, geom, comment))
+        self.cards.append((eid, pid, [ga, gb], g0, x, geom, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -3662,6 +3669,7 @@ class CBEND(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
@@ -3670,7 +3678,8 @@ class CBEND(Element):
         geom_flag = np.zeros(ncards, dtype='int32')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, g0i, xi, geom_flagi, comment) = card
+            (eid, pid, nids, g0i, xi, geom_flagi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -4272,7 +4281,7 @@ class PBEND(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PBEND card from ``BDF.add_card(...)``
 

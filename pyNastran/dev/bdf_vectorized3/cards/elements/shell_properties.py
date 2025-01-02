@@ -122,7 +122,7 @@ class PSHELL(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -534,7 +534,7 @@ class PAABSF(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PAABSF card from ``BDF.add_card(...)``
 
@@ -1040,7 +1040,7 @@ class PCOMP(CompositeProperty):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         #print(card.write_card(size=16))
 
         pid = integer(card, 1, 'pid')
@@ -1703,7 +1703,7 @@ class PCOMPG(CompositeProperty):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         # z0 will be calculated later
         nsm = double_or_blank(card, 3, 'nsm', default=0.0)
@@ -2000,7 +2000,7 @@ class PLPLANE(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PLPLANE card from ``BDF.add_card(...)``
 
@@ -2259,7 +2259,7 @@ class PSHLN1(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PSHLN2 card from ``BDF.add_card(...)``
 
@@ -2583,7 +2583,7 @@ class PSHLN2(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PSHLN2 card from ``BDF.add_card(...)``
 

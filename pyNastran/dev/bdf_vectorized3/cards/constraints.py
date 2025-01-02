@@ -62,7 +62,8 @@ class SPC(VectorizedBaseCard):
         return spc
 
     def add(self, spc_id: int, nodes: list[int], components: list[str],
-            enforced: list[float], comment: str='') -> int:
+            enforced: list[float],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an SPC card, which defines the degree of freedoms to be
         constrained
@@ -100,11 +101,11 @@ class SPC(VectorizedBaseCard):
             spc_id = [spc_id] * nnodes
         assert nnodes == len(components)
         assert nnodes == len(enforced)
-        self.cards.append((spc_id, nodes, components, enforced, comment))
+        self.cards.append((spc_id, nodes, components, enforced, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         spc_idi = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
             spc_id = [spc_idi]
@@ -129,7 +130,7 @@ class SPC(VectorizedBaseCard):
 
         #nnodes = len(nodesi)
         #inid1 = inid0 + nnodes
-        self.cards.append((spc_id, nodes, components, enforced, comment))
+        self.cards.append((spc_id, nodes, components, enforced, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -142,7 +143,7 @@ class SPC(VectorizedBaseCard):
         node_id_ = []
         enforced_ = []
         for icard, card in enumerate(self.cards):
-            (spc_idi, nodesi, componentsi, enforcedi, comment) = card
+            (spc_idi, nodesi, componentsi, enforcedi, ifilei, comment) = card
             spc_id_.extend(spc_idi)
             node_id_.extend(nodesi)
             enforced_.extend(enforcedi)
@@ -329,7 +330,8 @@ class SPC1(VectorizedBaseCard):
         ncards_removed = remove_unused_duplicate(self, spc_ids, self.spc_id, 'spc_id')
         return ncards_removed
 
-    def add(self, spc_id: int, components: int, nodes: list[int], comment: str='') -> int:
+    def add(self, spc_id: int, components: int, nodes: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an SPC1 card, which defines the degree of freedoms to be
         constrained to a value of 0.0
@@ -348,11 +350,11 @@ class SPC1(VectorizedBaseCard):
         """
         if isinstance(nodes, integer_types):
             nodes = [nodes]
-        self.cards.append((spc_id, components, nodes, comment))
+        self.cards.append((spc_id, components, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         spc_id = integer(card, 1, 'conid')
         components = components_or_blank(card, 2, 'components', default=0)  # 246 = y; dx, dz dir
         #nodes = [node for node in card.fields(3) if node is not None]
@@ -361,7 +363,7 @@ class SPC1(VectorizedBaseCard):
         assert nnodes > 0, node_fields
         nodes = expand_thru(node_fields, set_fields=True, sort_fields=True)
         assert 'THRU' not in nodes, nodes
-        self.cards.append((spc_id, components, nodes, comment))
+        self.cards.append((spc_id, components, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -374,7 +376,7 @@ class SPC1(VectorizedBaseCard):
         nnodes = np.zeros(ncards, dtype='int32')
         node_id_list = []
         for icard, card in enumerate(self.cards):
-            (spc_idi, componentsi, nodesi, comment) = card
+            (spc_idi, componentsi, nodesi, ifilei, comment) = card
             nnodesi = len(nodesi)
             spc_id[icard] = spc_idi
             nnodes[icard] = nnodesi
@@ -456,11 +458,11 @@ class MPC(VectorizedBaseCard):
 
     def add(self, mpc_id: int,
             nodes: list[int], components: list[str], coefficients: list[float],
-            comment: str=''):
-        self.cards.append((mpc_id, nodes, components, coefficients, comment))
+            ifile: int=0, comment: str=''):
+        self.cards.append((mpc_id, nodes, components, coefficients, ifile, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         mpc_id = integer(card, 1, 'conid')
         nodes = []
         components = []
@@ -494,7 +496,7 @@ class MPC(VectorizedBaseCard):
             components.append(component)
             coefficients.append(coefficient)
             i += 1
-        self.cards.append((mpc_id, nodes, components, coefficients, comment))
+        self.cards.append((mpc_id, nodes, components, coefficients, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -510,7 +512,7 @@ class MPC(VectorizedBaseCard):
         mpc_id = np.zeros(ncards, dtype='int32')
         nnode = np.zeros(ncards, dtype='int32')
         for icard, card in enumerate(self.cards):
-            (mpc_idi, nodes, components, coefficients, comment) = card
+            (mpc_idi, nodes, components, coefficients, ifilei, comment) = card
 
             nnodes = len(nodes)
             idim1 = idim0 + nnodes
@@ -624,21 +626,22 @@ class ADD(VectorizedBaseCard):
     def max_id(self) -> int:
         return max(self.sid.max(), self.sids.max())
 
-    def add(self, sid: int, sets, comment: str='') -> int:
+    def add(self, sid: int, sets,
+            ifile: int=0, comment: str='') -> int:
         """Creates an MPCADD card"""
         if isinstance(sets, integer_types):
             sets = [sets]
-        self.cards.append((sid, sets, comment))
+        self.cards.append((sid, sets, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'conid')
         sets = np.unique(card.fields(2)).tolist()
         nset_cards = len(sets)
         assert nset_cards > 0, f'nset_cards={nset_cards} card={card}'
 
-        self.cards.append((sid, sets, comment))
+        self.cards.append((sid, sets, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -651,7 +654,7 @@ class ADD(VectorizedBaseCard):
         sids_list = []
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
-            (sidi, setsi, comment) = card
+            (sidi, setsi, ifilei, comment) = card
             sid[icard] = sidi
 
             nset_cards = len(setsi)
@@ -881,7 +884,7 @@ class CommonSet(VectorizedBaseCard):
         ncomp = len(components)
         assert nnodes == ncomp, (nnodes, ncomp)
         suport_id = 0
-        self.cards.append((suport_id, nids, components, comment))
+        self.cards.append((suport_id, nids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
@@ -893,18 +896,18 @@ class CommonSet(VectorizedBaseCard):
         nids = expand_thru(nids, set_fields=True, sort_fields=False)
         nnodes = len(nids)
         components = [component] * nnodes
-        self.cards.append((suport_id, nids, components, comment))
+        self.cards.append((suport_id, nids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         card_name = card[0].upper()
         msg = f'add_card(...) has been removed for {card_name}.  Use add_set_card or add_set1_card'
         raise AttributeError(msg)
 
-    def add_set_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a SPCOFF/BNDFIX/BNDFREE card from ``BDF.add_card(...)``
 
@@ -933,11 +936,11 @@ class CommonSet(VectorizedBaseCard):
             nodes.append(node)
             components.append(component)
         assert len(card) > 1, f'len({self.type} card) = {len(card):d}\ncard={card}'
-        self.cards.append((nodes, components, comment))
+        self.cards.append((nodes, components, ifile, comment))
         self.n += len(nodes)
         return self.n - 1
 
-    def add_set1_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set1_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a SPCOFF1/BNDFIX1/BNDFREE1/BNDGRID card from ``BDF.add_card(...)``
 
@@ -959,7 +962,7 @@ class CommonSet(VectorizedBaseCard):
         nodes = expand_thru(nodes)
         nnodes = len(nodes)
         components = [component] * nnodes
-        self.cards.append((nodes, components, comment))
+        self.cards.append((nodes, components, ifile, comment))
         #if comment:
             #self.comment[nid] = comment
         self.n += nnodes
@@ -976,7 +979,7 @@ class CommonSet(VectorizedBaseCard):
         component_list = []
         #comment = {}
         for icard, card in enumerate(self.cards):
-            (nidi, componenti, commenti) = card
+            (nidi, componenti, ifilei, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
             #nnodes = len(nidi)
@@ -1098,7 +1101,7 @@ class BNDFREE(CommonSet):
     pass
 class BNDGRID(CommonSet):
     pass
-    #def add_card(self, card: BDFCard, comment: str=''):
+    #def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         #thru = card.field(3).strip()
         #if thru == 'THRU':
             #self.add_set_card(card, comment='')

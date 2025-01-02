@@ -114,7 +114,7 @@ class MONPNT1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         name = string(card, 1, 'name')
         label_fields = [labeli for labeli in card[2:8] if labeli is not None]
         label = ''.join(label_fields).strip()
@@ -257,7 +257,7 @@ class MONPNT2(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         name = string(card, 1, 'name')
 
         label_fields = [labeli for labeli in card[2:8] if labeli is not None]
@@ -283,6 +283,7 @@ class MONPNT2(VectorizedBaseCard):
         STRESS  CQUAD4
         """
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         name = np.zeros(ncards, dtype='|U8')
         label = np.zeros(ncards, dtype='|U72')
         table = np.zeros(ncards, dtype='|U8')
@@ -401,7 +402,7 @@ class MONPNT3(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         name = string(card, 1, 'name')
 
         label_fields = [labeli for labeli in card[2:8] if labeli is not None]
@@ -577,7 +578,7 @@ class MONDSP1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         row0 = card[0].rstrip(',\t ')
         row1 = card[1].rstrip(',\t ')
         assert len(card) == 2, card

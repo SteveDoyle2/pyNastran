@@ -22,7 +22,7 @@ class TestDampers(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        elem_ids = model.pdamp.add_card(card)
+        elem_ids = model.pdamp.add_card(card, ifile=0)
         model.setup()
 
         elem = model.pdamp
@@ -50,7 +50,7 @@ class TestDampers(unittest.TestCase):
         pid = 20
         b = 1.0
 
-        elem_id = model.cdamp1.add_card(card)
+        elem_id = model.cdamp1.add_card(card, ifile=0)
         model.add_pdamp(pid, b)
         model.setup()
 

@@ -49,7 +49,7 @@ class CONROD(Element):
 
     def add(self, eid: int, mid: int, nodes: list[int],
             A: float=0.0, j: float=0.0, c: float=0.0, nsm: float=0.0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CONROD card
 
@@ -73,11 +73,11 @@ class CONROD(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, nodes, mid, A, j, c, nsm, comment))
+        self.cards.append((eid, nodes, mid, A, j, c, nsm, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         nodes = [integer(card, 2, 'n1'),
                  integer(card, 3, 'n2')]
@@ -87,7 +87,7 @@ class CONROD(Element):
         c = double_or_blank(card, 7, 'c', default=0.0)
         nsm = double_or_blank(card, 8, 'nsm', default=0.0)
         assert len(card) <= 9, 'len(CONROD card) = %i\ncard=%s' % (len(card), str(card))
-        self.cards.append((eid, nodes, mid, A, j, c, nsm, comment))
+        self.cards.append((eid, nodes, mid, A, j, c, nsm, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -105,6 +105,7 @@ class CONROD(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
@@ -114,7 +115,8 @@ class CONROD(Element):
         nsm = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, nodesi, mid, Ai, ji, ci, nsmi, comment) = card
+            (eid, nodesi, mid, Ai, ji, ci, nsmi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             material_id[icard] = mid
             nodes[icard, :] = nodesi
@@ -248,7 +250,8 @@ class CROD(Element):
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='int32')
 
-    def add(self, eid: int, pid: int, nodes: list[int], comment: str='') -> int:
+    def add(self, eid: int, pid: int, nodes: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CROD card
 
@@ -264,17 +267,17 @@ class CROD(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nodes, comment))
+        self.cards.append((eid, pid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
         nodes = [integer(card, 3, 'n1'),
                  integer(card, 4, 'n2')]
         assert len(card) == 5, 'len(CROD card) = %i\ncard=%s' % (len(card), str(card))
-        self.cards.append((eid, pid, nodes, comment))
+        self.cards.append((eid, pid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -288,11 +291,13 @@ class CROD(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
         for icard, card in enumerate(self.cards):
-            (eid, pid, nodesi, comment) = card
+            (eid, pid, nodesi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nodesi
@@ -463,7 +468,7 @@ class PROD(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         A = double(card, 3, 'A')
@@ -583,7 +588,8 @@ class CTUBE(Element):
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='int32')
 
-    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+    def add(self, eid: int, pid: int, nids: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CTUBE card
 
@@ -599,17 +605,17 @@ class CTUBE(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
                 integer(card, 4, 'n2')]
         assert len(card) == 5, 'len(CTUBE card) = %i\ncard=%s' % (len(card), str(card))
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -623,11 +629,13 @@ class CTUBE(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
+            (eid, pid, nids, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -825,7 +833,7 @@ class PTUBE(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         OD1 = double(card, 3, 'OD1')

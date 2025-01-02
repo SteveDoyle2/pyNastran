@@ -82,7 +82,7 @@ class TestSets(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        card = set1.add_card(card)
+        card = set1.add_card(card, ifile=0)
         model.setup()
         set1.write(size, 'dummy')
         #card.raw_fields()
@@ -128,7 +128,7 @@ class TestSets(unittest.TestCase):
         sid = 10
         ids = [1, 2, 3, 4, 5]
         unused_set1a = model.add_set1(sid, ids, is_skin=False, comment='set1')
-        unused_set1b = set1.add_card(BDFCard(['SET1', sid] + ids))
+        unused_set1b = set1.add_card(BDFCard(['SET1', sid] + ids), ifile=0)
         model.setup()
         #set1a.write_card()
         #set1b.write_card()
@@ -142,7 +142,7 @@ class TestSets(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        card = SET2.add_card(card)
+        card = SET2.add_card(card, ifile=0)
         card.write_card(size, 'dummy')
         card.raw_fields()
 
@@ -177,7 +177,7 @@ class TestSets(unittest.TestCase):
         desc = 'ELEM'
         unused_set3a = model.add_set3(sid, desc, ids, comment='set3')
         #model.set3[sid] = set3a
-        set3.add_card(BDFCard(['SET3', sid+1, desc] + ids), comment='set3')
+        set3.add_card(BDFCard(['SET3', sid+1, desc] + ids), ifile=0, comment='set3')
         model.setup(run_geom_check=True)
         unused_set3b = set3.slice_card_by_id(sid+1)
         set3.write(size=8)
@@ -300,18 +300,18 @@ class TestSets(unittest.TestCase):
         model = BDF(debug=False)
         #add_methods = model._add_methods
         aset = model.aset
-        unused_aset1a = aset.add_set1([1, 'THRU', 10], 4, comment='aset')
+        unused_aset1a = aset.add_set1([1, 'THRU', 10], 4, ifile=0, comment='aset')
         card = BDFCard(['ASET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
-        unused_aset1b = aset.add_set1_card(card, comment='aset1')
+        unused_aset1b = aset.add_set1_card(card, ifile=0, comment='aset1')
         aset.write()
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         unused_aseta = aset.add_set([1, 2, 3, 4, 5],
-                                    [5, 4, 3, 2, 1])
+                                    [5, 4, 3, 2, 1], ifile=0)
         card = BDFCard(['ASET',
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        unused_asetb = aset.add_set_card(card)
+        unused_asetb = aset.add_set_card(card, ifile=0)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -326,11 +326,11 @@ class TestSets(unittest.TestCase):
         model = BDF(debug=False)
         #add_methods = model._add_methods
         omit = model.omit
-        unused_omit1a = omit.add_set1([1, 'THRU', 10], 4, comment='omit1')
+        unused_omit1a = omit.add_set1([1, 'THRU', 10], 4, ifile=0, comment='omit1')
         model.setup()
         assert np.array_equal(omit.component, np.ones(10)*4)
         card = BDFCard(['OMIT1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
-        unused_omit1b = omit.add_set1_card(card, comment='omit1')
+        unused_omit1b = omit.add_set1_card(card, ifile=0, comment='omit1')
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -355,18 +355,18 @@ class TestSets(unittest.TestCase):
         model = BDF(debug=False)
         #add_methods = model._add_methods
         bset = model.bset
-        unused_bset1a = bset.add_set1([1, 'THRU', 10], 4, comment='bset1')
+        unused_bset1a = bset.add_set1([1, 'THRU', 10], 4, ifile=0, comment='bset1')
         card = BDFCard(['BSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
-        unused_bset1b = bset.add_set1_card(card, comment='bset1')
+        unused_bset1b = bset.add_set1_card(card, ifile=0, comment='bset1')
         bset.write()
         #| BSET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         unused_bseta = bset.add_set([1, 2, 3, 4, 5],
-                                    [5, 4, 3, 2, 1], comment='bset')
+                                    [5, 4, 3, 2, 1], ifile=0, comment='bset')
         card = BDFCard(['BSET',
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        unused_bsetb = bset.add_set_card(card, comment='bset')
+        unused_bsetb = bset.add_set_card(card, ifile=0, comment='bset')
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -381,19 +381,19 @@ class TestSets(unittest.TestCase):
         model = BDF(debug=False)
         #add_methods = model._add_methods
         cset = model.cset
-        unused_cset1a = cset.add_set1([1, 'THRU', 10], 4, comment='cset')
+        unused_cset1a = cset.add_set1([1, 'THRU', 10], 4, ifile=0, comment='cset')
         card = BDFCard(['CSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
 
-        unused_cset1b = cset.add_set1_card(card, comment='cset1')
+        unused_cset1b = cset.add_set1_card(card, ifile=0, comment='cset1')
         cset.write()
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         unused_cseta = cset.add_set([1, 2, 3, 4, 5],
-                             [5, 4, 3, 2, 1], comment='cset')
+                                    [5, 4, 3, 2, 1], ifile=0, comment='cset')
         card = BDFCard(['CSET',
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        unused_csetb = cset.add_set_card(card, comment='cset')
+        unused_csetb = cset.add_set_card(card, ifile=0, comment='cset')
         model.add_cset([1, 2, 3], '42', comment='cset')
         model.add_cset1([1, 2, 3], [1, 2, 3], comment='cset1')
 
@@ -410,19 +410,19 @@ class TestSets(unittest.TestCase):
         model = BDF(debug=False)
         #add_methods = model._add_methods
         qset = model.qset
-        unused_qset1a = qset.add_set1([1, 'THRU', 10], 4, comment='qset')
+        unused_qset1a = qset.add_set1([1, 'THRU', 10], 4, ifile=0, comment='qset')
         card = BDFCard(['QSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
 
-        unused_qset1b = qset.add_set1_card(card, comment='qset1')
+        unused_qset1b = qset.add_set1_card(card, ifile=0, comment='qset1')
         qset.write()
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         unused_qseta = qset.add_set([1, 2, 3, 4, 5],
-                                    [5, 4, 3, 2, 1], comment='qset')
+                                    [5, 4, 3, 2, 1], ifile=0, comment='qset')
         card = BDFCard(['QSET',
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        unused_qsetb = qset.add_set_card(card, comment='qset')
+        unused_qsetb = qset.add_set_card(card, ifile=0, comment='qset')
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -520,7 +520,7 @@ class TestSets(unittest.TestCase):
         seid = 42
         unused_bset1a = model.add_sebset(seid, [1, 'THRU', 10], 4, comment='bset1')
         card = BDFCard(['SEBSET1', seid, 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
-        unused_bset1b = model.sebset.add_set1_card(card, comment='sebset1')
+        unused_bset1b = model.sebset.add_set1_card(card, ifile=0, comment='sebset1')
         sebset.write()
         #| BSET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
@@ -531,7 +531,7 @@ class TestSets(unittest.TestCase):
         card = BDFCard(['SEBSET', seid + 1,
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        unused_sebsetb_id = model.sebset.add_set1_card(card, comment='sebset')
+        unused_sebsetb_id = model.sebset.add_set1_card(card, ifile=0, comment='sebset')
         model.setup()
         sebseta = sebset.slice_card_by_id(seid)
         unused_sebsetb = sebset.slice_card_by_id(seid+1)
@@ -553,7 +553,7 @@ class TestSets(unittest.TestCase):
         seid = 171
         unused_secset1a = model.add_secset1(seid, [1, 'THRU', 10], 4, comment='cset')
         card = BDFCard(['SECSET1', seid, 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
-        unused_secset1b = secset.add_set1_card(card, comment='secset1')
+        unused_secset1b = secset.add_set1_card(card, ifile=0, comment='secset1')
         secset.write()
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
@@ -563,7 +563,7 @@ class TestSets(unittest.TestCase):
         card = BDFCard(['SECSET', seid,
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        unused_secsetb = secset.add_set_card(card, comment='secset')
+        unused_secsetb = secset.add_set_card(card, ifile=0, comment='secset')
         model.add_secset(seid, [1, 2, 3], '42', comment='secset')
         model.add_secset1(seid, [1, 2, 3], [1, 2, 3], comment='secset1')
 

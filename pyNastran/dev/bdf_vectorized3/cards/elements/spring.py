@@ -63,7 +63,7 @@ class CELAS1(Element):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
         nids = [integer_or_blank(card, 3, 'g1', default=0),
@@ -210,7 +210,7 @@ class CELAS2(Element):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
 
         eid = integer(card, 1, 'eid')
@@ -341,7 +341,7 @@ class CELAS3(Element):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
 
@@ -456,7 +456,7 @@ class CELAS4(Element):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
         s1 = integer_or_blank(card, 3, 's1', default=0)
@@ -563,7 +563,7 @@ class PELAS(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         pid = integer(card, 1, 'pid')
         k = double(card, 2, 'k')
@@ -685,7 +685,7 @@ class PELAST(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         tkid = integer_or_blank(card, 2, 'tkid', default=0)
         tgeid = integer_or_blank(card, 3, 'tgeid', default=0)

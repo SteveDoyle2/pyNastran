@@ -27,7 +27,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class PlotElement(Element):
-    def add(self, eid: int, nodes: list[int], comment: str='') -> int:
+    def add(self, eid: int, nodes: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Adds a PLOTEL card
 
@@ -41,7 +42,7 @@ class PlotElement(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, nodes, comment))
+        self.cards.append((eid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -106,7 +107,7 @@ class PLOTEL(PlotElement):
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """adds a PLOTEL"""
         #['PLOTEL', '3101', '3101', '3102', None, '3102', '3102', '3103']
         eid = integer(card, 1, 'eid')
@@ -115,7 +116,7 @@ class PLOTEL(PlotElement):
             integer(card, 3, 'g2'),
         ]
         #assert len(card) <= 4, f'len(PLOTEL card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, nodes, comment))
+        self.cards.append((eid, nodes, ifile, comment))
         self.n += 1
 
         # TODO: find source that it's 4 and not 5
@@ -125,7 +126,7 @@ class PLOTEL(PlotElement):
                 integer(card, 6, 'g1'),
                 integer(card, 7, 'g2'),
             ]
-            self.cards.append((eid, nodes, ''))
+            self.cards.append((eid, nodes, ifile, ''))
             self.n += 1
             assert len(card) <= 8, f'len(PLOTEL card) = {len(card):d}\ncard={card}'
         else:
@@ -137,11 +138,13 @@ class PLOTEL(PlotElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card_comment in enumerate(self.cards):
-            eid, nodesi, comment = card_comment
+            eid, nodesi, ifilei, comment = card_comment
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
         self._save(element_id, nodes)
@@ -192,7 +195,7 @@ class PLOTEL3(PlotElement):
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 3), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """adds a PLOTEL3"""
         eid = integer(card, 1, 'eid')
         nodes = [
@@ -201,7 +204,7 @@ class PLOTEL3(PlotElement):
             integer(card, 4, 'g3'),
         ]
         assert len(card) <= 5, f'len(PLOTEL3 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, nodes, comment))
+        self.cards.append((eid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -209,11 +212,13 @@ class PLOTEL3(PlotElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 3), dtype=idtype)
 
         for icard, card_comment in enumerate(self.cards):
-            eid, nodesi, comment = card_comment
+            eid, nodesi, ifilei, comment = card_comment
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
         self._save(element_id, nodes)
@@ -264,7 +269,7 @@ class PLOTEL4(PlotElement):
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """adds a PLOTEL4"""
         eid = integer(card, 1, 'eid')
         nodes = [
@@ -274,7 +279,7 @@ class PLOTEL4(PlotElement):
             integer(card, 5, 'g4'),
         ]
         assert len(card) <= 6, f'len(PLOTEL4 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, nodes, comment))
+        self.cards.append((eid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -282,11 +287,13 @@ class PLOTEL4(PlotElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 4), dtype=idtype)
 
         for icard, card_comment in enumerate(self.cards):
-            eid, nodesi, comment = card_comment
+            eid, nodesi, ifilei, comment = card_comment
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
         self._save(element_id, nodes)
@@ -315,7 +322,7 @@ class PLOTEL6(PlotElement):
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 6), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """adds a PLOTEL6"""
         eid = integer(card, 1, 'eid')
         nodes = [
@@ -327,7 +334,7 @@ class PLOTEL6(PlotElement):
             integer(card, 7, 'g6'),
         ]
         assert len(card) <= 8, f'len(PLOTEL6 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, nodes, comment))
+        self.cards.append((eid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -335,11 +342,13 @@ class PLOTEL6(PlotElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 6), dtype=idtype)
 
         for icard, card_comment in enumerate(self.cards):
-            eid, nodesi, comment = card_comment
+            eid, nodesi, ifilei, comment = card_comment
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
         self._save(element_id, nodes)
@@ -370,7 +379,7 @@ class PLOTEL8(PlotElement):
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 8), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """adds a PLOTEL8"""
         eid = integer(card, 1, 'eid')
         nodes = [
@@ -384,7 +393,7 @@ class PLOTEL8(PlotElement):
             integer(card, 9, 'g8'),
         ]
         assert len(card) <= 10, f'len(PLOTEL8 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, nodes, comment))
+        self.cards.append((eid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -392,11 +401,13 @@ class PLOTEL8(PlotElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 8), dtype=idtype)
 
         for icard, card_comment in enumerate(self.cards):
-            eid, nodesi, comment = card_comment
+            eid, nodesi, ifilei, comment = card_comment
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
         self._save(element_id, nodes)
@@ -419,7 +430,7 @@ class PLOTTET(PlotElement):
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 6), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """adds a PLOTEL6"""
         eid = integer(card, 1, 'eid')
         nodes = [
@@ -429,7 +440,7 @@ class PLOTTET(PlotElement):
             integer(card, 5, 'g4'),
         ]
         assert len(card) <= 6, f'len(PLOTTET card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, nodes, comment))
+        self.cards.append((eid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -437,11 +448,13 @@ class PLOTTET(PlotElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 4), dtype=idtype)
 
         for icard, card_comment in enumerate(self.cards):
-            eid, nodesi, comment = card_comment
+            eid, nodesi, ifilei, comment = card_comment
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
         self._save(element_id, nodes)
@@ -463,7 +476,7 @@ class PLOTPYR(PlotElement):
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 5), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """adds a PLOTEL6"""
         eid = integer(card, 1, 'eid')
         nodes = [
@@ -474,7 +487,7 @@ class PLOTPYR(PlotElement):
             integer(card, 6, 'g5'),
         ]
         assert len(card) <= 7, f'len(PLOTPYR card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, nodes, comment))
+        self.cards.append((eid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -482,11 +495,13 @@ class PLOTPYR(PlotElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 6), dtype=idtype)
 
         for icard, card_comment in enumerate(self.cards):
-            eid, nodesi, comment = card_comment
+            eid, nodesi, ifilei, comment = card_comment
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
         self._save(element_id, nodes)
@@ -508,7 +523,7 @@ class PLOTPEN(PlotElement):
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 6), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """adds a PLOTEL6"""
         eid = integer(card, 1, 'eid')
         nodes = [
@@ -520,7 +535,7 @@ class PLOTPEN(PlotElement):
             integer(card, 7, 'g6'),
         ]
         assert len(card) <= 8, f'len(PLOTPEN card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, nodes, comment))
+        self.cards.append((eid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -528,11 +543,13 @@ class PLOTPEN(PlotElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 6), dtype=idtype)
 
         for icard, card_comment in enumerate(self.cards):
-            eid, nodesi, comment = card_comment
+            eid, nodesi, ifilei, comment = card_comment
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
         self._save(element_id, nodes)
@@ -556,7 +573,7 @@ class PLOTHEX(PlotElement):
         self.element_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 8), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """adds a PLOTEL8"""
         eid = integer(card, 1, 'eid')
         nodes = [
@@ -570,7 +587,7 @@ class PLOTHEX(PlotElement):
             integer(card, 9, 'g8'),
         ]
         assert len(card) <= 10, f'len(PLOTHEX card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, nodes, comment))
+        self.cards.append((eid, nodes, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -578,11 +595,13 @@ class PLOTHEX(PlotElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 8), dtype=idtype)
 
         for icard, card_comment in enumerate(self.cards):
-            eid, nodesi, comment = card_comment
+            eid, nodesi, ifilei, comment = card_comment
+            ifile[icard] = ifilei
             element_id[icard] = eid
             nodes[icard, :] = nodesi
         self._save(element_id, nodes)

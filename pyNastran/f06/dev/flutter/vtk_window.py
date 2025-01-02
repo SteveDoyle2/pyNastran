@@ -17,7 +17,9 @@ medium:
  - add displacement fringe
 
 hard:
+
 minor:
+make vtk corner text font support unicode
 
 not done
 --------
@@ -39,7 +41,6 @@ TODO:   - combined
 
 minor:
 TODO: fix up k/l key swapping (not quite right)
-TODO: make vtk font support unicode
 TODO: fix RBE2 bug ib 0012 model (green lines)
 TODO: disable rotational modes to have fewer results (are these on?)
 """
@@ -83,6 +84,8 @@ from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 
 
+from pyNastran.gui.qt_files.tool_actions import set_vtk_property_to_unicode
+from pyNastran.gui import font_file
 if TYPE_CHECKING:  # pragma: no cover
     from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
     #from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
@@ -134,6 +137,9 @@ class VtkWindow(QMainWindow):
         self.vtk_actors = {}
         self.geometry_actors = self.vtk_actors
         self.geometry_properties = {}
+        self.follower_nodes = {}
+        self.follower_functions = {}
+
         self.result_cases = {}
         self.icase = 0
         self.is_deflected = False
@@ -604,6 +610,7 @@ def setup_text_actors(renderer: vtkRenderer,
     for i in range(num):
         text_actor = vtkTextActor()
         text_prop = text_actor.GetTextProperty()
+        set_vtk_property_to_unicode(text_prop, font_file)
         text_prop.SetFontSize(text_size)
         text_prop.SetBold(True)
         text_prop.SetColor(color)

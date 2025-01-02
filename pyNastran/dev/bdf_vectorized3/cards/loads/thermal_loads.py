@@ -56,7 +56,8 @@ class QHBDY(Load):
         #return load
 
     def add(self, sid: int, flag: int, q0: float, grids: list[int],
-            area_factor: Optional[float]=None, comment: str='') -> int:
+            area_factor: Optional[float]=None,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a QHBDY card
 
@@ -81,7 +82,7 @@ class QHBDY(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a QHBDY card from ``BDF.add_card(...)``
 
@@ -234,13 +235,13 @@ class QBDY1(VectorizedBaseCard):
         self.load_id = np.array([], dtype='int32')
 
     def add(self, sid: int, qflux: float, eids: list[int],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a QBDY1 card"""
         self.cards.append((sid, qflux, eids, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a QBDY1 card from ``BDF.add_card(...)``
 
@@ -359,7 +360,7 @@ class QBDY2(VectorizedBaseCard):
         self.load_id = np.array([], dtype='int32')
 
     def add(self, sid: int, eid: int, qfluxs: list[float],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a QBDY1 card"""
         if isinstance(qfluxs, float_types):
             qfluxs = [qfluxs]
@@ -367,7 +368,7 @@ class QBDY2(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a QBDY2 card from ``BDF.add_card(...)``
 
@@ -497,7 +498,7 @@ class QBDY3(Load):
         #return load
 
     def add(self, sid: int, q0, cntrlnd: int, eids: list[int],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a QBDY3 card
 
@@ -520,7 +521,7 @@ class QBDY3(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
         cntrlnd = integer_or_blank(card, 3, 'cntrlnd', default=0)
@@ -664,13 +665,13 @@ class QVOL(Load):
 
     def add(self, sid: int, qvol: float,
             control_point: int, elements: list[int],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a QVOL card"""
         self.cards.append((sid, qvol, control_point, elements, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         qvol = double(card, 2, 'qvol')
         control_point = integer_or_blank(card, 3, 'control_id', default=0)
@@ -813,12 +814,12 @@ class TEMPBC(VectorizedBaseCard):
 
     def add(self, sid: int, bc_type: str,
             nodes: list[int], temps: list[float],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         self.cards.append((sid, bc_type, temps, nodes, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
         sid = integer(card, 1, 'sid')
         bc_type = string_or_blank(card, 2, 'Type', default='STAT')
         nfields_left = len(card) - 3
@@ -937,14 +938,15 @@ class RADM(VectorizedBaseCard):
         self.nemissivity = np.array([], dtype='int32')
         self.emissivity = np.array([], dtype='float64')
 
-    def add(self, radmid: int, absorb: float, emissivity: list[float], comment: str='') -> int:
+    def add(self, radmid: int, absorb: float, emissivity: list[float],
+            ifile: int=0, comment: str='') -> int:
         if isinstance(emissivity, float_types):
             emissivity = [emissivity]
         self.cards.append((radmid, absorb, emissivity, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card, comment='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a RADM card from ``BDF.add_card(...)``
 
@@ -1049,13 +1051,14 @@ class RADBC(VectorizedBaseCard):
         #load.pressure = self.pressure[i, :]
         #return load
 
-    def add(self, node_amb, famb, control_node, eids, comment='') -> int:
+    def add(self, node_amb, famb, control_node, eids,
+            ifile: int=0, comment: str='') -> int:
         assert len(eids) > 0, eids
         self.cards.append((node_amb, famb, control_node, eids, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         node_amb = integer(card, 1, 'nodamb')
         famb = double(card, 2, 'famb')
         control_node = integer_or_blank(card, 3, 'cntrlnd', default=0)

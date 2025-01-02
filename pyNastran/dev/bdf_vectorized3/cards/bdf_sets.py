@@ -64,37 +64,37 @@ class ABCOQSET(VectorizedBaseCard):
         self.node_id = np.array([], dtype='int32')
 
     def add_set(self, nids: list[int], components: list[int],
-                 comment: str='') -> int:
+                ifile: int, comment: str='') -> int:
         assert isinstance(nids, (list, np.ndarray, tuple))
         assert isinstance(components, (list, np.ndarray, tuple))
         nnodes = len(nids)
         ncomp = len(components)
         assert nnodes == ncomp, (nnodes, ncomp)
-        self.cards.append((nids, components, comment))
+        self.cards.append((nids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
         return self.n - 1
 
     def add_set1(self, nids: list[int], component: int,
-                  comment: str='') -> int:
+                 ifile: int, comment: str='') -> int:
         assert isinstance(component, (str, integer_types)), component
         nids = expand_thru(nids, set_fields=True, sort_fields=False)
         nnodes = len(nids)
         components = [component] * nnodes
-        self.cards.append((nids, components, comment))
+        self.cards.append((nids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         card_name = card[0].upper()
         #new_name0 = card_name[:-1] if card.endswith('1') else card_name
         msg = f'add_card(...) has been removed for {card_name}.  Use add_set_card or add_set1_card'
         raise AttributeError(msg)
 
-    def add_set_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -109,13 +109,13 @@ class ABCOQSET(VectorizedBaseCard):
             components.append(component)
         #return cls(ids, components, comment=comment)
 
-        self.cards.append((ids, components, comment))
+        self.cards.append((ids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = comment
         self.n += len(ids)
         return self.n - 1
 
-    def add_set1_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set1_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -128,7 +128,7 @@ class ABCOQSET(VectorizedBaseCard):
         components = [component] * len(ids)
         #return cls(ids, components, comment=comment)
 
-        self.cards.append((ids, components, comment))
+        self.cards.append((ids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = comment
         self.n += len(ids)
@@ -146,7 +146,7 @@ class ABCOQSET(VectorizedBaseCard):
         component_list = []
         #comment = {}
         for icard, card in enumerate(self.cards):
-            (nidi, componenti, commenti) = card
+            (nidi, componenti, ifilei, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
             node_id_list.extend(nidi)
@@ -309,37 +309,37 @@ class SuperBCQSET(VectorizedBaseCard):
         self.node_id = np.array([], dtype='int32')
 
     def add_set(self, seid: int, nids: list[int], components: list[int],
-                 comment: str='') -> int:
+                ifile: int, comment: str='') -> int:
         assert isinstance(nids, (list, np.ndarray, tuple))
         assert isinstance(components, (list, np.ndarray, tuple))
         nnodes = len(nids)
         ncomp = len(components)
         assert nnodes == ncomp, (nnodes, ncomp)
-        self.cards.append((seid, nids, components, comment))
+        self.cards.append((seid, nids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
         return self.n - 1
 
     def add_set1(self, seid: int, nids: list[int], component: int,
-                 comment: str='') -> int:
+                 ifile: int, comment: str='') -> int:
         assert isinstance(component, (str, integer_types)), component
         nids = expand_thru(nids, set_fields=True, sort_fields=False)
         nnodes = len(nids)
         components = [component] * nnodes
-        self.cards.append((seid, nids, components, comment))
+        self.cards.append((seid, nids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         card_name = card[0].upper()
         #new_name0 = card_name[:-1] if card.endswith('1') else card_name
         msg = f'add_card(...) has been removed for {card_name}.  Use add_set_card or add_set1_card'
         raise AttributeError(msg)
 
-    def add_set_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -358,11 +358,11 @@ class SuperBCQSET(VectorizedBaseCard):
             ids.append(idi)
             components.append(component)
 
-        self.cards.append((seid, ids, components, comment))
+        self.cards.append((seid, ids, components, ifile, comment))
         self.n += len(ids)
         return self.n - 1
 
-    def add_set1_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set1_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -375,7 +375,7 @@ class SuperBCQSET(VectorizedBaseCard):
         components = [component] * len(ids)
         #return cls(seid, ids, components, comment=comment)
 
-        self.cards.append((seid, ids, components, comment))
+        self.cards.append((seid, ids, components, ifile, comment))
         self.n += len(ids)
         return self.n - 1
 
@@ -392,7 +392,7 @@ class SuperBCQSET(VectorizedBaseCard):
         component_list = []
         #comment = {}
         for icard, card in enumerate(self.cards):
-            (seidi, nidi, componenti, commenti) = card
+            (seidi, nidi, componenti, ifilei, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
             seid[icard] = seidi
@@ -615,7 +615,7 @@ class RELEASE(VectorizedBaseCard):
         self.n += nnodes
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -804,21 +804,21 @@ class SUPORT(VectorizedBaseCard):
         self.node_id = np.array([], dtype='int32')
 
     def add_set(self, nids: list[int], components: list[int],
-                comment: str='') -> int:
+                ifile: int=0, comment: str='') -> int:
         assert isinstance(nids, (list, np.ndarray, tuple))
         assert isinstance(components, (list, np.ndarray, tuple))
         nnodes = len(nids)
         ncomp = len(components)
         assert nnodes == ncomp, (nnodes, ncomp)
         suport_id = 0
-        self.cards.append((suport_id, nids, components, comment))
+        self.cards.append((suport_id, nids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
         return self.n - 1
 
     def add_set1(self, suport_id: int, nids: list[int], component: list[int],
-                  comment: str='') -> int:
+                  ifile: int=9, comment: str='') -> int:
         if isinstance(component, (str, integer_types)):
             nids = expand_thru(nids, set_fields=True, sort_fields=False)
             nnodes = len(nids)
@@ -827,18 +827,18 @@ class SUPORT(VectorizedBaseCard):
             nnodes = len(nids)
             assert nnodes == len(component)
             components = component
-        self.cards.append((suport_id, nids, components, comment))
+        self.cards.append((suport_id, nids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         card_name = card[0].upper()
         msg = f'add_card(...) has been removed for {card_name}.  Use add_set_card or add_set1_card'
         raise AttributeError(msg)
 
-    def add_set_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -858,13 +858,13 @@ class SUPORT(VectorizedBaseCard):
             n += 1
 
         suport_id = 0
-        self.cards.append((suport_id, nodes, components, comment))
+        self.cards.append((suport_id, nodes, components, ifile, comment))
         #if comment:
             #self.comment[nid] = comment
         self.n += len(nodes)
         return self.n - 1
 
-    def add_set1_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set1_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -886,7 +886,7 @@ class SUPORT(VectorizedBaseCard):
             n += 1
         #return cls(ids, components, comment=comment)
 
-        self.cards.append((suport_id, nodes, components, comment))
+        self.cards.append((suport_id, nodes, components, ifile, comment))
         #if comment:
             #self.comment[nid] = comment
         self.n += len(nodes)
@@ -914,7 +914,7 @@ class SUPORT(VectorizedBaseCard):
         component_list = []
         #comment = {}
         for icard, card in enumerate(cards):
-            (suport_idi, nidi, componenti, commenti) = card
+            (suport_idi, nidi, componenti, ifilei, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
             nnodes = len(nidi)
@@ -1121,36 +1121,36 @@ class USET(VectorizedBaseCard):
         self.node_id = np.array([], dtype='int32')
 
     def add_set(self, name: str, nids: list[int], components: list[int],
-                comment: str='') -> int:
+                ifile: int, comment: str='') -> int:
         assert isinstance(nids, (list, np.ndarray, tuple))
         assert isinstance(components, (list, np.ndarray, tuple))
         nnodes = len(nids)
         ncomp = len(components)
         assert nnodes == ncomp, (nnodes, ncomp)
-        self.cards.append((name, nids, components, comment))
+        self.cards.append((name, nids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
         return self.n - 1
 
     def add_set1(self, name: str, nids: list[int], component: list[int],
-                  comment: str='') -> int:
+                 ifile: int, comment: str='') -> int:
         assert isinstance(component, (str, integer_types)), component
         nids = expand_thru(nids, set_fields=True, sort_fields=False)
         nnodes = len(nids)
         components = [component] * nnodes
-        self.cards.append((name, nids, components, comment))
+        self.cards.append((name, nids, components, ifile, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         card_name = card[0].upper()
         msg = f'add_card(...) has been removed for {card_name}.  Use add_set_card or add_set1_card'
         raise AttributeError(msg)
 
-    def add_set_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -1165,13 +1165,13 @@ class USET(VectorizedBaseCard):
             components.append(component)
             nodes.append(idi)
 
-        self.cards.append((name, nodes, components, comment))
+        self.cards.append((name, nodes, components, ifile, comment))
         #if comment:
             #self.comment[nid] = comment
         self.n += len(nodes)
         return self.n - 1
 
-    def add_set1_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set1_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a USET1 card from ``BDF.add_card(...)``
 
@@ -1196,7 +1196,7 @@ class USET(VectorizedBaseCard):
         nnodes = len(nodes)
         components = [component] * nnodes
         assert len(nodes) == len(components)
-        self.cards.append((name, nodes, components, comment))
+        self.cards.append((name, nodes, components, ifile, comment))
         #if comment:
             #self.comment[nid] = comment
         self.n += len(nodes)
@@ -1225,7 +1225,7 @@ class USET(VectorizedBaseCard):
         component_list = []
         #comment = {}
         for icard, card in enumerate(cards):
-            (namei, nidi, componenti, commenti) = card
+            (namei, nidi, componenti, ifilei, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
             #nidi = expand_thru(nidi, set_fields=True, sort_fields=True)
@@ -1453,12 +1453,12 @@ class SEUSET(VectorizedBaseCard):
         self.n += nnodes
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         card_name = card[0].upper()
         msg = f'add_card(...) has been removed for {card_name}.  Use add_set_card or add_set1_card'
         raise AttributeError(msg)
 
-    def add_set_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -1480,7 +1480,7 @@ class SEUSET(VectorizedBaseCard):
         self.n += len(nodes)
         return self.n - 1
 
-    def add_set1_card(self, card: BDFCard, comment: str='') -> int:
+    def add_set1_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a USET1 card from ``BDF.add_card(...)``
 
@@ -1506,7 +1506,7 @@ class SEUSET(VectorizedBaseCard):
         nnodes = len(nodes)
         components = [component] * nnodes
         assert len(nodes) == len(components)
-        self.cards.append((seid, name, nodes, components, comment))
+        self.cards.append((seid, name, nodes, components, ifile, comment))
         #if comment:
             #self.comment[nid] = comment
         self.n += len(nodes)
@@ -1737,7 +1737,7 @@ class RADSET(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a RADSET card from ``BDF.add_card(...)``
 
@@ -1881,7 +1881,7 @@ class SET1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a SET1 card from ``BDF.add_card(...)``
 
@@ -2049,7 +2049,7 @@ class SET2(VectorizedBaseCard):
         #self.n += 1
         #return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
         """
         Adds a SET2 card from ``BDF.add_card(...)``
 
@@ -2218,7 +2218,7 @@ class SET3(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
         """
         Adds a SET3 card from ``BDF.add_card(...)``
 
@@ -2359,7 +2359,7 @@ class SET4(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
         """
         Adds a SET4 card from ``BDF.add_card(...)``
 
@@ -2483,7 +2483,7 @@ class SESET(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 

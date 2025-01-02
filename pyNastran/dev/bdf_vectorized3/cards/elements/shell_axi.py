@@ -442,14 +442,15 @@ class CTRIAX(AxisymmetricShellElement):
         self.nodes = np.zeros((0, 6), dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int],
-            theta_mcid: int|float=0., comment: str='') -> int:
+            theta_mcid: int|float=0.,
+            ifile: int=0, comment: str='') -> int:
         """Creates a CTRIAX card"""
         nids = add_empty_nodes(nids, self.nodes.shape[1])
-        self.cards.append((eid, pid, nids, theta_mcid, comment))
+        self.cards.append((eid, pid, nids, theta_mcid, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
@@ -463,20 +464,22 @@ class CTRIAX(AxisymmetricShellElement):
         ]
         theta_mcid = integer_double_or_blank(card, 9, 'theta_mcsid', default=0.0)
         assert len(card) <= 10, f'len(CTRIAX card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, theta_mcid, comment))
+        self.cards.append((eid, pid, nids, theta_mcid, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 6), dtype='int32')
         mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, theta_mcid, comment) = card
+            (eid, pid, nids, theta_mcid, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :len(nids)] = nids
@@ -580,18 +583,18 @@ class CTRIAX6(Element):
         self.material_id = np.array([], dtype='int32')
 
     def add(self, eid: int, mid: int, nids: list[int], theta: float=0.,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a CTRIAX6 card"""
         #add_empty_nodes(nids, self.nodes.shape[1])
         if len(nids) == 3:
             # don't do an inplace operation :)
             n1, n2, n3 = nids
             nids = [n1, 0, n2, 0, n3, 0]
-        self.cards.append((eid, mid, nids, theta, comment))
+        self.cards.append((eid, mid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CTRIAX6 card from ``BDF.add_card(...)``
 
@@ -615,7 +618,7 @@ class CTRIAX6(Element):
         ]
         theta = double_or_blank(card, 9, 'theta', default=0.0)
         assert len(card) <= 10, f'len(CTRIAX6 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, mid, nids, theta, comment))
+        self.cards.append((eid, mid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -623,13 +626,15 @@ class CTRIAX6(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 6), dtype=idtype)
         #mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, mid, nids, thetai, comment) = card
+            (eid, mid, nids, thetai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             material_id[icard] = mid
             nodes[icard, :] = nids
@@ -759,12 +764,13 @@ class CQUADX(AxiShellElement):
     Theta/Mcid is MSC only!
     """
     def add(self, eid: int, pid: int, nids: list[int],
-            theta_mcid: int|float=0., comment: str='') -> int:
-        self.cards.append((eid, pid, nids, theta_mcid, comment))
+            theta_mcid: int|float=0.,
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((eid, pid, nids, theta_mcid, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CQUADX card from ``BDF.add_card(...)``
 
@@ -790,20 +796,22 @@ class CQUADX(AxiShellElement):
         ]
         theta_mcid = integer_double_or_blank(card, 12, 'theta/mcid', default=0.)
         assert len(card) <= 13, f'len(CQUADX card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, theta_mcid, comment))
+        self.cards.append((eid, pid, nids, theta_mcid, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 9), dtype='int32')
         mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, theta_mcid, comment) = card
+            (eid, pid, nids, theta_mcid, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -916,12 +924,13 @@ class CQUADX4(AxisymmetricShellElement):
     CQUADX4 is an NX card only!
     """
     def add(self, eid: int, pid: int, nids: list[int],
-            theta: float=0., comment: str='') -> int:
-        self.cards.append((eid, pid, nids, theta, comment))
+            theta: float=0.,
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CQUADX4 card from ``BDF.add_card(...)``
 
@@ -942,19 +951,21 @@ class CQUADX4(AxisymmetricShellElement):
         ]
         theta = double_or_blank(card, 7, 'theta', default=0.)
         assert len(card) <= 8, f'len(CQUADX4 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 4), dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, comment) = card
+            (eid, pid, nids, thetai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -1060,12 +1071,13 @@ class CQUADX8(AxisymmetricShellElement):
     CQUADX8 is an NX card only!
     """
     def add(self, eid: int, pid: int, nids: list[int],
-            theta: float=0., comment: str='') -> int:
-        self.cards.append((eid, pid, nids, theta, comment))
+            theta: float=0.,
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CQUADX8 card from ``BDF.add_card(...)``
 
@@ -1090,19 +1102,21 @@ class CQUADX8(AxisymmetricShellElement):
         ]
         theta = double_or_blank(card, 12, 'theta', default=0.)
         assert len(card) <= 13, f'len(CQUADX card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 8), dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, comment) = card
+            (eid, pid, nids, thetai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -1183,13 +1197,14 @@ class CTRAX3(AxisymmetricShellElement):
     #type = 'CTRAX3'
 
     def add(self, eid: int, pid: int, nids: list[int],
-            theta: float=0., comment: str='') -> int:
+            theta: float=0.,
+            ifile: int=0, comment: str='') -> int:
         """Creates a CTRAX3 card"""
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
@@ -1201,19 +1216,21 @@ class CTRAX3(AxisymmetricShellElement):
         theta = integer_double_or_blank(card, 6, 'theta', default=0.0)
         assert len(card) <= 7, f'len(CTRAX3 card) = {len(card):d}\ncard={card}'
         #return CTRAX3(eid, pid, nids, theta=theta, comment=comment)
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 3), dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, comment) = card
+            (eid, pid, nids, thetai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -1295,13 +1312,14 @@ class CTRAX6(AxisymmetricShellElement):
     Theta/Mcid is NX only!
     """
     def add(self, eid: int, pid: int, nids: list[int],
-            theta: float=0., comment: str='') -> int:
+            theta: float=0.,
+            ifile: int=0, comment: str='') -> int:
         """Creates a CTRAX6 card"""
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CTRAX6 card from ``BDF.add_card(...)``
 
@@ -1326,19 +1344,21 @@ class CTRAX6(AxisymmetricShellElement):
         theta = integer_double_or_blank(card, 9, 'theta', 0.0)
         assert len(card) <= 10, f'len(CTRAX6 card) = {len(card):d}\ncard={card}'
         #return CTRAX6(eid, pid, nids, theta=theta, comment=comment)
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 6), dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, comment) = card
+            (eid, pid, nids, thetai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids

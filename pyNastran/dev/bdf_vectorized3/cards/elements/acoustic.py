@@ -37,7 +37,7 @@ class CHACBR(SolidElement):
         self.nnode_base = 8
         self.nnode = 20
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -59,7 +59,7 @@ class CHACBR(SolidElement):
             integer_or_blank(card, 22, 'nid20', default=0),
         ]
         assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -67,11 +67,13 @@ class CHACBR(SolidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 20), dtype=idtype)
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
+            (eid, pid, nids, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -164,7 +166,7 @@ class CHACAB(SolidElement):
         self.nnode_base = 8
         self.nnode = 20
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -186,7 +188,7 @@ class CHACAB(SolidElement):
             integer_or_blank(card, 22, 'nid20', default=0),
         ]
         assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -194,11 +196,12 @@ class CHACAB(SolidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 20), dtype=idtype)
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
+            (eid, pid, nids, ifilei, comment) = card
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -314,12 +317,13 @@ class PACBAR(Property):
         prop.n = len(i)
 
     def add(self, pid: int, mass_backing: float, mass_septum: float,
-            freq_resonant: float, k_resonant: float, comment: str='') -> int:
-        self.cards.append((pid, mass_backing, mass_septum, freq_resonant, k_resonant, comment))
+            freq_resonant: float, k_resonant: float,
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((pid, mass_backing, mass_septum, freq_resonant, k_resonant, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mass_backing = double(card, 2, 'mass_backing')
         mass_septum = double(card, 3, 'mass_septum')
@@ -327,7 +331,7 @@ class PACBAR(Property):
         k_resonant = double_or_blank(card, 5, 'k_resonant', default=np.nan)
         assert len(card) <= 6, f'len(PACBAR card) = {len(card):d}\ncard={card}'
 
-        self.cards.append((pid, mass_backing, mass_septum, freq_resonant, k_resonant, comment))
+        self.cards.append((pid, mass_backing, mass_septum, freq_resonant, k_resonant, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -342,7 +346,8 @@ class PACBAR(Property):
         k_resonant = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, mass_backingi, mass_septumi, freq_resonanti, k_resonanti, comment) = card
+            (pid, mass_backingi, mass_septumi, freq_resonanti, k_resonanti,
+             ifilei, comment) = card
 
             property_id[icard] = pid
             mass_backing[icard] = mass_backingi

@@ -29,7 +29,8 @@ class CMASS1(Element):
         self.components = np.zeros((0, 2), dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int],
-            c1: int=0, c2: int=0, comment: str='') -> int:
+            c1: int=0, c2: int=0,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CMASS1 card
 
@@ -47,11 +48,11 @@ class CMASS1(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids, [c1, c2], comment))
+        self.cards.append((eid, pid, nids, [c1, c2], ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CMASS1 card from ``BDF.add_card(...)``
 
@@ -70,7 +71,7 @@ class CMASS1(Element):
         n2 = integer_or_blank(card, 5, 'g2', default=0)
         c2 = integer_or_blank(card, 6, 'c2', default=0)
         assert len(card) <= 7, f'len(CMASS1 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, [n1, n2], [c1, c2], comment))
+        self.cards.append((eid, pid, [n1, n2], [c1, c2], ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -78,13 +79,15 @@ class CMASS1(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
 
         for icard, card in enumerate(self.cards):
-            (eidi, pidi, nidsi, componentsi, comment) = card
+            (eidi, pidi, nidsi, componentsi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eidi
             property_id[icard] = pidi
             nodes[icard, :] = nidsi
@@ -211,7 +214,8 @@ class CMASS2(Element):
         self.components = np.zeros((0, 2), dtype='int32')
 
     def add(self, eid: int, mass: float, nids: list[int],
-            c1: int, c2: int, comment: str='') -> int:
+            c1: int, c2: int,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CMASS2 card
 
@@ -229,11 +233,11 @@ class CMASS2(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, mass, nids, [c1, c2], comment))
+        self.cards.append((eid, mass, nids, [c1, c2], ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         mass = double_or_blank(card, 2, 'mass', default=0.)
         n1 = integer_or_blank(card, 3, 'g1', default=0)
@@ -241,7 +245,7 @@ class CMASS2(Element):
         n2 = integer_or_blank(card, 5, 'g2', default=0)
         c2 = integer_or_blank(card, 6, 'c2', default=0)
         assert len(card) <= 7, f'len(CMASS2 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, mass, [n1, n2], [c1, c2], comment))
+        self.cards.append((eid, mass, [n1, n2], [c1, c2], ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -249,13 +253,15 @@ class CMASS2(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         mass = np.zeros(ncards, dtype='float64')
         nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
 
         for icard, card in enumerate(self.cards):
-            (eidi, massi, nidsi, componentsi, comment) = card
+            (eidi, massi, nidsi, componentsi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eidi
             mass[icard] = massi
             nodes[icard, :] = nidsi
@@ -322,7 +328,8 @@ class CMASS3(Element):
         self.property_id = np.array([], dtype='int32')
         self.spoints = np.zeros((0, 2), dtype='int32')
 
-    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+    def add(self, eid: int, pid: int, nids: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CMASS3 card
 
@@ -338,11 +345,11 @@ class CMASS3(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, *nids, comment))
+        self.cards.append((eid, pid, *nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CMASS3 card from ``BDF.add_card(...)``
 
@@ -359,7 +366,7 @@ class CMASS3(Element):
         s1 = integer_or_blank(card, 3, 's1', default=0)
         s2 = integer_or_blank(card, 4, 's2', default=0)
         assert len(card) <= 5, f'len(CMASS3 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, s1, s2, comment))
+        self.cards.append((eid, pid, s1, s2, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -367,12 +374,14 @@ class CMASS3(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         spoints = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, s1, s2, comment) = card
+            (eid, pid, s1, s2, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             spoints[icard, :] = [s1, s2]
@@ -456,7 +465,8 @@ class CMASS4(Element):
         self._mass = np.array([], dtype='float64')
         self.spoints = np.zeros((0, 2), dtype='int32')
 
-    def add(self, eid: int, mass: float, nids: list[int], comment: str='') -> int:
+    def add(self, eid: int, mass: float, nids: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CMASS4 card
 
@@ -472,23 +482,23 @@ class CMASS4(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, mass, *nids, comment))
+        self.cards.append((eid, mass, *nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         mass = double(card, 2, 'mass')
         s1 = integer_or_blank(card, 3, 's1', default=0)
         s2 = integer_or_blank(card, 4, 's2', default=0)
-        self.cards.append((eid, mass, s1, s2, comment))
+        self.cards.append((eid, mass, s1, s2, ifile, comment))
         self.n += 1
         if card.field(5):
             eid = integer(card, 5, 'eid')
             mass = double(card, 6, 'mass')
             s1 = integer_or_blank(card, 7, 's1', default=0)
             s2 = integer_or_blank(card, 8, 's2', default=0)
-            self.cards.append((eid, mass, s1, s2, comment))
+            self.cards.append((eid, mass, s1, s2, ifile, comment))
             self.n += 1
         assert len(card) <= 9, f'len(CMASS4 card) = {len(card):d}\ncard={card}'
         return self.n - 1
@@ -497,12 +507,14 @@ class CMASS4(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         mass = np.zeros(ncards, dtype='float64')
         spoints = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
-            (eid, massi, s1, s2, comment) = card
+            (eid, massi, s1, s2, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             mass[icard] = massi
             spoints[icard, :] = [s1, s2]
@@ -572,7 +584,8 @@ class PMASS(Property):
         self.property_id = np.array([], dtype='int32')
         self._mass = np.array([], dtype='float64')
 
-    def add(self, pid: int, mass: float, comment: str='') -> int:
+    def add(self, pid: int, mass: float,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an PMASS card, which defines a mass applied to a single DOF
 
@@ -586,17 +599,17 @@ class PMASS(Property):
             a comment for the card
 
         """
-        self.cards.append((pid, mass, comment))
+        self.cards.append((pid, mass, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         for icard, j in enumerate([1, 3, 5, 7]):
             if card.field(j):
                 ioffset = icard * 2
                 pid = integer(card, 1 + ioffset, 'pid')
                 mass = double_or_blank(card, 2 + ioffset, 'mass', default=0.)
-                self.cards.append((pid, mass, comment))
+                self.cards.append((pid, mass, ifile, comment))
                 comment = ''
                 self.n += 1
         assert len(card) <= 9, f'len(PMASS card) = {len(card):d}\ncard={card}'
@@ -609,7 +622,7 @@ class PMASS(Property):
         property_id = np.zeros(ncards, dtype=idtype)
         mass = np.zeros(ncards, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (pid, massi, comment) = card
+            (pid, massi, ifilei, comment) = card
             property_id[icard] = pid
             mass[icard] = massi
         self._save(property_id, mass)

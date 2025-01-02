@@ -54,7 +54,7 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         """
         Adds a card from ``BDF.add_card(...)``
 
@@ -401,7 +401,7 @@ class BGSET(VectorizedBaseCard):
         return self.n - 1
 
     #def remove_unused(self)
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         """
         Adds a BGSET card from ``BDF.add_card(...)``
 
@@ -617,7 +617,7 @@ class BCTSET(VectorizedBaseCard):
         return self.n - 1
 
     #def remove_unused(self)
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         """
         Adds a BGSET card from ``BDF.add_card(...)``
 
@@ -960,7 +960,7 @@ class BCONP(VectorizedBaseCard):
         used_dict['coord_id'].append(self.coord_id)
 
     #def remove_unused(self)
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a BCONP card from ``BDF.add_card(...)``
 
@@ -1113,7 +1113,7 @@ class BFRIC(VectorizedBaseCard):
         return self.n - 1
 
     #def remove_unused(self)
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a BCONP card from ``BDF.add_card(...)``
 
@@ -1286,7 +1286,7 @@ class BCRPARA(VectorizedBaseCard):
         return self.n - 1
 
     #def remove_unused(self)
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a BCONP card from ``BDF.add_card(...)``
 
@@ -1466,7 +1466,7 @@ class BEDGE(VectorizedBaseCard):
         return self.n - 1
 
     #def remove_unused(self)
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a BCONP card from ``BDF.add_card(...)``
 
@@ -1785,7 +1785,7 @@ class BCBODY(VectorizedBaseCard):
         #return self.n - 1
 
     #def remove_unused(self)
-    def add_card(self, lines: list[str], comment: str='') -> int:
+    def add_card(self, lines: list[str], ifile: int, comment: str='') -> int:
         """
         Adds a BCBODY card from ``BDF.add_card(...)``
 
@@ -2402,7 +2402,7 @@ class BCBODY1(VectorizedBaseCard):
         #return self.n - 1
 
     #def remove_unused(self)
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a BCBODY1 card from ``BDF.add_card(...)``
 

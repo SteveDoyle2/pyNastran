@@ -154,15 +154,15 @@ class CPLSTS3(PlateStressElement):
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
             tflag: int=0, T1=None, T2=None, T3=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a CPLSTS3 card"""
         self.cards.append((eid, pid, nids, theta,
                            tflag, [T1, T2, T3],
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CPLSTS3 card from ``BDF.add_card(...)``
 
@@ -204,7 +204,7 @@ class CPLSTS3(PlateStressElement):
             T3 = 1.0
         self.cards.append((eid, pid, nids, theta,
                            tflag, [T1, T2, T3],
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -212,6 +212,7 @@ class CPLSTS3(PlateStressElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 3), dtype=idtype)
@@ -221,7 +222,8 @@ class CPLSTS3(PlateStressElement):
         T = np.zeros((ncards, 3), dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, tflagi, ti, comment) = card
+            (eid, pid, nids, thetai, tflagi, ti, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard] = nids
@@ -313,15 +315,15 @@ class CPLSTS4(PlateStressElement):
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
             tflag: int=0, T1=None, T2=None, T3=None, T4=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a CPLSTS4 card"""
         self.cards.append((eid, pid, nids, theta,
                            tflag, [T1, T2, T3, T4],
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CPLSTS4 card from ``BDF.add_card(...)``
 
@@ -364,7 +366,7 @@ class CPLSTS4(PlateStressElement):
             T4 = 1.0
         self.cards.append((eid, pid, nids, theta,
                            tflag, [T1, T2, T3, T4],
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -372,6 +374,7 @@ class CPLSTS4(PlateStressElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 4), dtype=idtype)
@@ -381,7 +384,8 @@ class CPLSTS4(PlateStressElement):
         T = np.zeros((ncards, 4), dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, tflagi, ti, comment) = card
+            (eid, pid, nids, thetai, tflagi, ti, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard] = nids
@@ -460,7 +464,7 @@ class PPLANE(Property):
             #mid2: int=None, twelveIt3: float=1.0,
             #mid3: int=None, tst: float=0.833333, nsm: float=0.0,
             #z1: float=None, z2: float=None, mid4: int=None,
-            #comment: str='') -> PSHELL:
+            #ifile: int=0, comment: str='') -> PSHELL:
         #"""
         #Creates a PSHELL card
 
@@ -505,12 +509,13 @@ class PPLANE(Property):
         #self.n += 1
 
     def add(self, pid: int, mid: int, t: float=0.0, nsm: float=0.0,
-            formulation_option: int=0, comment: str='') -> int:
+            formulation_option: int=0,
+            ifile: int=0, comment: str='') -> int:
         self.cards.append((pid, mid, t, nsm, formulation_option, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PPLANE card from ``BDF.add_card(...)``
 
@@ -771,13 +776,13 @@ class CPLSTN3(PlateStrainElement):
         self.theta = np.array([], dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a CPLSTN3 card"""
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CPLSTS3 card from ``BDF.add_card(...)``
 
@@ -800,7 +805,7 @@ class CPLSTN3(PlateStrainElement):
             integer(card, 5, 'n3'),
         ]
         theta = double_or_blank(card, 6, 'theta', default=0.0)
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -808,13 +813,15 @@ class CPLSTN3(PlateStrainElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 3), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, comment) = card
+            (eid, pid, nids, thetai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard] = nids
@@ -903,13 +910,13 @@ class CPLSTN4(PlateStrainElement):
         self.theta = np.array([], dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a CPLSTN4 card"""
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CPLSTS4 card from ``BDF.add_card(...)``
 
@@ -934,7 +941,7 @@ class CPLSTN4(PlateStrainElement):
         ]
         theta = double_or_blank(card, 7, 'theta', default=0.0)
         assert len(card) <= 8, f'len(CPLSTS4 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -942,13 +949,15 @@ class CPLSTN4(PlateStrainElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 4), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, comment) = card
+            (eid, pid, nids, thetai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard] = nids
@@ -1027,13 +1036,13 @@ class CPLSTN6(PlateStrainElement):
         self.theta = np.array([], dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a CPLSTN6 card"""
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CPLSTN6 card from ``BDF.add_card(...)``
 
@@ -1059,7 +1068,7 @@ class CPLSTN6(PlateStrainElement):
             integer_or_blank(card, 8, 'n6', default=0),
         ]
         theta = double_or_blank(card, 9, 'theta', default=0.0)
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1067,13 +1076,15 @@ class CPLSTN6(PlateStrainElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 6), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, comment) = card
+            (eid, pid, nids, thetai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard] = nids
@@ -1154,13 +1165,13 @@ class CPLSTN8(PlateStrainElement):
         self.theta = np.array([], dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a CPLSTN8 card"""
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CPLSTN8 card from ``BDF.add_card(...)``
 
@@ -1188,7 +1199,7 @@ class CPLSTN8(PlateStrainElement):
             integer_or_blank(card, 10, 'n8', default=0),
         ]
         theta = double_or_blank(card, 11, 'theta', default=0.0)
-        self.cards.append((eid, pid, nids, theta, comment))
+        self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1196,13 +1207,15 @@ class CPLSTN8(PlateStrainElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 8), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, comment) = card
+            (eid, pid, nids, thetai, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard] = nids
@@ -1285,15 +1298,16 @@ class CPLSTS6(PlateStrainElement):
         self.thickness = np.zeros((0, 6), dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-            tflag: int=0, thickness=None, comment: str='') -> int:
+            tflag: int=0, thickness=None,
+            ifile: int=0, comment: str='') -> int:
         """Creates a CPLSTS6 card"""
         if thickness is None:
             thickness = np.full(6, np.nan, dtype='float64')
-        self.cards.append((eid, pid, nids, theta, tflag, thickness, comment))
+        self.cards.append((eid, pid, nids, theta, tflag, thickness, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CPLSTS6 card from ``BDF.add_card(...)``
 
@@ -1332,7 +1346,7 @@ class CPLSTS6(PlateStrainElement):
             theta = 0.0
             tflag = 0
             thickness = np.full(6, np.nan, dtype='float64')
-        self.cards.append((eid, pid, nids, theta, tflag, thickness, comment))
+        self.cards.append((eid, pid, nids, theta, tflag, thickness, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1340,6 +1354,7 @@ class CPLSTS6(PlateStrainElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 6), dtype=idtype)
@@ -1348,7 +1363,8 @@ class CPLSTS6(PlateStrainElement):
         thickness = np.zeros((ncards, 6), dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, tflagi, thicknessi, comment) = card
+            (eid, pid, nids, thetai, tflagi, thicknessi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard] = nids
@@ -1442,16 +1458,16 @@ class CPLSTS8(PlateStrainElement):
         self.thickness = np.zeros((0, 8), dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-            tflag: int=0,
-            thickness=None, comment: str='') -> int:
+            tflag: int=0, thickness=None,
+            ifile: int=0, comment: str='') -> int:
         """Creates a CPLSTS8 card"""
         if thickness is None:
             thickness = np.full(8, np.nan, dtype='float64')
-        self.cards.append((eid, pid, nids, theta, tflag, thickness, comment))
+        self.cards.append((eid, pid, nids, theta, tflag, thickness, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CPLSTS8 card from ``BDF.add_card(...)``
 
@@ -1492,7 +1508,7 @@ class CPLSTS8(PlateStrainElement):
             theta = 0.0
             tflag = 0
             thickness = np.full(8, np.nan, dtype='float64')
-        self.cards.append((eid, pid, nids, theta, tflag, thickness, comment))
+        self.cards.append((eid, pid, nids, theta, tflag, thickness, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1500,6 +1516,7 @@ class CPLSTS8(PlateStrainElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 8), dtype=idtype)
@@ -1508,7 +1525,8 @@ class CPLSTS8(PlateStrainElement):
         thickness = np.zeros((ncards, 8), dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, thetai, tflagi, thicknessi, comment) = card
+            (eid, pid, nids, thetai, tflagi, thicknessi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard] = nids
@@ -1576,4 +1594,3 @@ class CPLSTS8(PlateStrainElement):
                 list_fields.extend([t1, t2, t3, t4, '', '', '', '', t5, t6, t7, t8])
             bdf_file.write(print_card(list_fields))
         return
-

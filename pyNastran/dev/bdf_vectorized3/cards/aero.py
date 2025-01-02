@@ -78,7 +78,7 @@ class AECOMP(VectorizedBaseCard):
         self.all_lists = np.array([], dtype='int32')
 
     def add(self, name: str, list_type: list[str], lists: int | list[int],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an AECOMP card
 
@@ -99,11 +99,11 @@ class AECOMP(VectorizedBaseCard):
             a comment for the card
 
         """
-        self.cards.append((name, list_type, lists, comment))
+        self.cards.append((name, list_type, lists, ifile, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds an AECOMP card from ``BDF.add_card(...)``
 
@@ -124,7 +124,7 @@ class AECOMP(VectorizedBaseCard):
             list_i = integer(card, i, '%s_%d' % (list_type, j))
             lists.append(list_i)
             j += 1
-        self.cards.append((name, list_type, lists, comment))
+        self.cards.append((name, list_type, lists, ifile, comment))
         self.n += 1
         #return AECOMP(name, list_type, lists, comment=comment)
         return self.n - 1
@@ -138,7 +138,7 @@ class AECOMP(VectorizedBaseCard):
 
         all_lists = []
         for icard, card in enumerate(self.cards):
-            namei, list_typei, listsi, comment = card
+            namei, list_typei, listsi, ifilei, comment = card
             name[icard] = namei
             list_type[icard] = list_typei
             nlists[icard] = len(listsi)
@@ -258,7 +258,7 @@ class AECOMPL(VectorizedBaseCard):
         self.nlabels = np.array([], dtype='int32')
         self.labels = np.array([], dtype='|U8')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds an AECOMPL card from ``BDF.add_card(...)``
 
@@ -277,7 +277,7 @@ class AECOMPL(VectorizedBaseCard):
             label = string(card, i, 'label_%d' % j)
             labels.append(label)
             j += 1
-        self.cards.append((name, labels, comment))
+        self.cards.append((name, labels, ifile, comment))
         self.n += 1
         #return AECOMPL(name, labels, comment=comment)
         return self.n - 1
@@ -291,7 +291,7 @@ class AECOMPL(VectorizedBaseCard):
 
         all_labels = []
         for icard, card in enumerate(self.cards):
-            namei, labelsi, comment = card
+            namei, labelsi, ifilei, comment = card
             name[icard] = namei
             nlabels[icard] = len(labelsi)
             all_labels.extend(labelsi)
@@ -414,7 +414,8 @@ class CAERO1(VectorizedBaseCard):
             p4: NDArray3float, x43: float,
             cp: int=0,
             nspan: int=0, lspan: int=0,
-            nchord: int=0, lchord: int=0, comment: str='') -> int:
+            nchord: int=0, lchord: int=0,
+            ifile: int=0, comment: str='') -> int:
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
         (e.g., wing/tail).
@@ -459,12 +460,12 @@ class CAERO1(VectorizedBaseCard):
         lspan = lspan if lspan is not None else 0
         cp = cp if cp is not None else 0
         card = (eid, pid, igroup, p1, x12, p4, x43, cp,
-                nspan, lspan, nchord, lchord, comment)
+                nspan, lspan, nchord, lchord, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CAERO1 card from ``BDF.add_card(...)``
 
@@ -502,7 +503,7 @@ class CAERO1(VectorizedBaseCard):
                       #cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                       #comment=comment)
         card = (eid, pid, igroup, p1, x12, p4, x43, cp,
-                nspan, lspan, nchord, lchord, comment)
+                nspan, lspan, nchord, lchord, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -510,6 +511,7 @@ class CAERO1(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         igroup = np.zeros(ncards, dtype='int32')
@@ -524,7 +526,7 @@ class CAERO1(VectorizedBaseCard):
         lspan = np.zeros(ncards, dtype='int32')
         lchord = np.zeros(ncards, dtype='int32')
         for icard, card in enumerate(self.cards):
-            eid, pid, igroupi, p1i, x12i, p4i, x43i, cpi, nspani, lspani, nchordi, lchordi, comment = card
+            eid, pid, igroupi, p1i, x12i, p4i, x43i, cpi, nspani, lspani, nchordi, lchordi, ifilei, comment = card
             element_id[icard] = eid
             property_id[icard] = pid
             igroup[icard] = igroupi
@@ -955,7 +957,7 @@ class CAERO2(VectorizedBaseCard):
         self.lsb = np.array([], dtype='int32')
         self.lint = np.array([], dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CAERO2 card from ``BDF.add_card(...)``
 
@@ -988,7 +990,7 @@ class CAERO2(VectorizedBaseCard):
                       #comment=comment)
 
         self.cards.append((eid, pid, igroup, p1, x12,
-                           cp, nsb, nint, lsb, lint, comment))
+                           cp, nsb, nint, lsb, lint, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -996,7 +998,8 @@ class CAERO2(VectorizedBaseCard):
             p1: list[float], x12: float,
             cp: int=0,
             nsb: int=0, nint: int=0,
-            lsb: int=0, lint: int=0, comment: str='') -> int:
+            lsb: int=0, lint: int=0,
+            ifile: int=0, comment: str='') -> int:
         """
         Defines a CAERO2 card, which defines a slender body
         (e.g., fuselage/wingtip tank).
@@ -1032,13 +1035,14 @@ class CAERO2(VectorizedBaseCard):
         lsb = lsb if lsb is not None else 0
         lint = lint if lint is not None else 0
         self.cards.append((eid, pid, igroup, p1, x12,
-                           cp, nsb, nint, lsb, lint, comment))
+                           cp, nsb, nint, lsb, lint, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         igroup = np.zeros(ncards, dtype='int32')
@@ -1052,7 +1056,8 @@ class CAERO2(VectorizedBaseCard):
         lint = np.zeros(ncards, dtype='int32')
         for icard, card in enumerate(self.cards):
             (eid, pid, igroupi, p1i, x12i,
-             cpi, nsbi, ninti, lsbi, linti, comment) = card
+             cpi, nsbi, ninti, lsbi, linti, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             igroup[icard] = igroupi
@@ -1355,7 +1360,8 @@ class CAERO3(VectorizedBaseCard):
     def add(self, eid: int, pid: int,
             p1: np.ndarray, x12: float,
             p4: np.ndarray, x43: float,
-            cp: int=0, list_w: int=0, list_c1=None, list_c2=None, comment='') -> int:
+            cp: int=0, list_w: int=0, list_c1=None, list_c2=None,
+            ifile: int=0, comment: str='') -> int:
         """Creates a CAERO3 card"""
         list_w = list_c1 if list_w else 0
         list_c1 = list_c1 if list_c1 else 0
@@ -1363,12 +1369,12 @@ class CAERO3(VectorizedBaseCard):
         assert isinstance(list_w, integer_types), list_w
         assert isinstance(list_c1, integer_types), list_c1
         assert isinstance(list_c2, integer_types), list_c2
-        card = (eid, pid, p1, x12, p4, x43, cp, list_w, list_c1, list_c2, comment)
+        card = (eid, pid, p1, x12, p4, x43, cp, list_w, list_c1, list_c2, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CAERO3 card from ``BDF.add_card(...)``
 
@@ -1401,7 +1407,7 @@ class CAERO3(VectorizedBaseCard):
         x43 = double_or_blank(card, 16, 'x43', default=0.)
 
         assert len(card) <= 17, f'len(CAERO3 card) = {len(card):d}\ncard={card}'
-        card = (eid, pid, p1, x12, p4, x43, cp, list_w, list_c1, list_c2, comment)
+        card = (eid, pid, p1, x12, p4, x43, cp, list_w, list_c1, list_c2, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -1409,6 +1415,7 @@ class CAERO3(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         p1 = np.zeros((ncards, 3), dtype='float64')
@@ -1421,7 +1428,7 @@ class CAERO3(VectorizedBaseCard):
         list_c1 = np.zeros(ncards, dtype='int32')
         list_c2 = np.zeros(ncards, dtype='int32')
         for icard, card in enumerate(self.cards):
-            eid, pid, p1i, x12i, p4i, x43i, cpi, list_wi, list_c1i, list_c2i, comment = card
+            eid, pid, p1i, x12i, p4i, x43i, cpi, list_wi, list_c1i, list_c2i, ifilei, comment = card
             element_id[icard] = eid
             property_id[icard] = pid
             p1[icard, :] = p1i
@@ -1698,7 +1705,8 @@ class CAERO4(VectorizedBaseCard):
     def add(self, eid: int, pid: int,
             p1: np.ndarray, x12: float,
             p4: np.ndarray, x43: float,
-            cp: int=0, nspan: int=0, lspan: int=0, comment: str='') -> int:
+            cp: int=0, nspan: int=0, lspan: int=0,
+            ifile: int=0, comment: str='') -> int:
         """
         Defines a CAERO4 card, which defines a strip theory surface.
 
@@ -1735,7 +1743,7 @@ class CAERO4(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CAERO4 card from ``BDF.add_card(...)``
 
@@ -1777,6 +1785,7 @@ class CAERO4(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         p1 = np.zeros((ncards, 3), dtype='float64')
@@ -2120,7 +2129,8 @@ class CAERO5(VectorizedBaseCard):
             cp: int=0,
             nspan: int=0, lspan: int=0,
             ntheory: int=0,
-            nthick: int=0, comment: str='') -> int:
+            nthick: int=0,
+            ifile: int=0, comment: str='') -> int:
         """Creates a CAERO5 card"""
         card = (eid, pid, p1, x12, p4, x43, cp, nspan, lspan,
                 ntheory, nthick, comment)
@@ -2128,7 +2138,7 @@ class CAERO5(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CAERO5 card from ``BDF.add_card(...)``
 
@@ -2169,6 +2179,7 @@ class CAERO5(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         p1 = np.zeros((ncards, 3), dtype='float64')
@@ -2376,7 +2387,8 @@ class CAERO7(VectorizedBaseCard):
             cp: int=0,
             nspan: int=0, lspan: int=0,
             nchord: int=0,
-            p_airfoil: int=0, ztaic: int=0, comment: str='') -> int:
+            p_airfoil: int=0, ztaic: int=0,
+            ifile: int=0, comment: str='') -> int:
         p_airfoil = p_airfoil if p_airfoil is not None else 0
         ztaic = ztaic if ztaic is not None else 0
         card = (eid, label, p1, x12, p4, x43, cp,
@@ -2386,7 +2398,7 @@ class CAERO7(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CAERO7 card from ``BDF.add_card(...)``
 
@@ -2442,6 +2454,7 @@ class CAERO7(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         label = np.zeros(ncards, dtype='|U8')
         p1 = np.zeros((ncards, 3), dtype='float64')
@@ -2813,7 +2826,7 @@ class PAERO1(PAERO):
         self.caero_body_id = np.array([], dtype='int32')
 
     def add(self, pid: int, caero_body_ids: Optional[list[int]]=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PAERO1 card, which defines associated bodies for the
         panels in the Doublet-Lattice method.
@@ -2830,11 +2843,11 @@ class PAERO1(PAERO):
         """
         #if caero_body_ids is None:
             #caero_body_ids = []
-        self.cards.append((pid, caero_body_ids, comment))
+        self.cards.append((pid, caero_body_ids, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
         """
         Adds a PAERO1 card from ``BDF.add_card(...)``
 
@@ -2859,7 +2872,7 @@ class PAERO1(PAERO):
             #else:
                 #pass
         #return PAERO1(pid, caero_body_ids, comment=comment)
-        self.cards.append((pid, caero_body_ids, comment))
+        self.cards.append((pid, caero_body_ids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2871,7 +2884,7 @@ class PAERO1(PAERO):
         caero_body_id = []
         ncaero_body_id = np.zeros(ncards, dtype='int32')
         for icard, card in enumerate(self.cards):
-            (pid, caero_body_idsi, comment) = card
+            (pid, caero_body_idsi, ifilei, comment) = card
             if caero_body_idsi is None:
                 continue
             ncardsi = len(caero_body_idsi)
@@ -2976,7 +2989,7 @@ class PAERO2(PAERO):
             lrsb: Optional[int]=None,
             lrib: Optional[int]=None,
             lth: Optional[int]=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PAERO2 card, which defines additional cross-sectional
         properties for the CAERO2 geometry.
@@ -3013,11 +3026,11 @@ class PAERO2(PAERO):
 
         """
         self.cards.append((pid, orient, width, AR, thi, thn,
-                           lrsb, lrib, lth, comment))
+                           lrsb, lrib, lth, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PAERO2 card from ``BDF.add_card(...)``
 
@@ -3050,7 +3063,7 @@ class PAERO2(PAERO):
                       #comment=comment)
         assert len(thi) <= 3, thi
         self.cards.append((pid, orient, width, AR, thi, thn,
-                           lrsb, lrib, lth, comment))
+                           lrsb, lrib, lth, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -3071,7 +3084,7 @@ class PAERO2(PAERO):
 
         for icard, card in enumerate(self.cards):
             (pid, orienti, widthi, AR, thii, thni,
-             lrsbi, lribi, lthi, comment) = card
+             lrsbi, lribi, lthi, ifilei, comment) = card
             property_id[icard] = pid
             aspect_ratio[icard] = AR
             width[icard] = widthi
@@ -3209,7 +3222,8 @@ class PAERO3(PAERO):
         self.caero_body_id = np.array([], dtype='int32')
 
     def add(self, pid: int, nbox: int, ncontrol_surfaces: int,
-            x: list[float], y: list[float], comment: str='') -> int:
+            x: list[float], y: list[float],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PAERO3 card, which defines the number of Mach boxes
         in the flow direction and the location of cranks and control
@@ -3231,11 +3245,11 @@ class PAERO3(PAERO):
             a comment for the card
 
         """
-        self.cards.append((pid, nbox, ncontrol_surfaces, x, y, comment))
+        self.cards.append((pid, nbox, ncontrol_surfaces, x, y, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PAERO1 card from ``BDF.add_card(...)``
 
@@ -3273,20 +3287,21 @@ class PAERO3(PAERO):
             y.append(yi)
             j += 1
         #return PAERO3(pid, nbox, ncontrol_surfaces, x, y, comment=comment)
-        self.cards.append((pid, nbox, ncontrol_surfaces, x, y, comment))
+        self.cards.append((pid, nbox, ncontrol_surfaces, x, y, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nbox = np.zeros(ncards, dtype='int32')
         ncontrol_surface = np.zeros(ncards, dtype='int32')
         x = np.full((ncards, 8), np.nan, dtype='float64')
         y = np.full((ncards, 8), np.nan, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (pid, nboxi, ncontrol_surfacei, xi, yi, comment) = card
+            (pid, nboxi, ncontrol_surfacei, xi, yi, ifilei, comment) = card
             property_id[icard] = pid
             nbox[icard] = nboxi
             ncontrol_surface[icard] = ncontrol_surfacei
@@ -3386,7 +3401,8 @@ class PAERO4(PAERO):
     def add(self, pid: int,
             docs: list[float], caocs: list[float], gapocs: list[float],
             cla: int=0, lcla: int=0,
-            circ: int=0, lcirc: int=0, comment: str='') -> int:
+            circ: int=0, lcirc: int=0,
+            ifile: int=0, comment: str='') -> int:
         """
         Parameters
         ----------
@@ -3428,7 +3444,7 @@ class PAERO4(PAERO):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PAERO4 card from ``BDF.add_card(...)``
 
@@ -3604,7 +3620,7 @@ class PAERO5(PAERO):
             nalpha: int=0, lalpha: int=0,
             nxis: int=0, lxis: int=0,
             ntaus: int=0, ltaus: int=0,
-            comment='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a PAERO5 card"""
         card = (pid, caoci,
                 nalpha, lalpha, nxis, lxis,
@@ -3614,7 +3630,7 @@ class PAERO5(PAERO):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PAERO5 card from ``BDF.add_card(...)``
 
@@ -3807,7 +3823,8 @@ class AELIST(VectorizedBaseCard):
         self.nelements = np.array([], dtype='int32')
         self.elements = np.array([], dtype='int32')
 
-    def add(self, sid: int, elements: list[int], comment: str='') -> int:
+    def add(self, sid: int, elements: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an AELIST card, which defines the aero boxes for
         an AESURF/SPLINEx.
@@ -3822,11 +3839,11 @@ class AELIST(VectorizedBaseCard):
             a comment for the card
 
         """
-        self.cards.append((sid, elements, comment))
+        self.cards.append((sid, elements, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds an AELIST card from ``BDF.add_card(...)``
 
@@ -3841,7 +3858,7 @@ class AELIST(VectorizedBaseCard):
         sid = integer(card, 1, 'sid')
         elements = fields(integer_or_string, card, 'eid', i=2, j=len(card))
         #print(f'sid={sid} elements={elements}')
-        self.cards.append((sid, elements, comment))
+        self.cards.append((sid, elements, ifile, comment))
         self.n += 1
         #return AELIST(sid, elements, comment=comment)
         return self.n - 1
@@ -3855,7 +3872,7 @@ class AELIST(VectorizedBaseCard):
 
         all_elements = []
         for icard, card in enumerate(self.cards):
-            sid, elementsi, comment = card
+            sid, elementsi, ifilei, comment = card
             aelist_id[icard] = sid
             elements2 = expand_thru(elementsi)
             #elements2.sort()
@@ -3964,7 +3981,7 @@ class AELINK(VectorizedBaseCard):
     def add(self, aelink_id: int, label: str,
             independent_labels: list[str],
             linking_coefficients: list[float],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
@@ -3984,12 +4001,12 @@ class AELINK(VectorizedBaseCard):
 
         """
         self.cards.append((aelink_id, label, independent_labels,
-                           linking_coefficients, comment))
+                           linking_coefficients, ifile, comment))
         assert len(independent_labels) == len(linking_coefficients)
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds an AELINK card from ``BDF.add_card(...)``
 
@@ -4017,7 +4034,7 @@ class AELINK(VectorizedBaseCard):
                       #comment=comment)
         assert len(independent_labels) == len(linking_coefficients)
         self.cards.append((aelink_id, label, independent_labels,
-                           linking_coefficients, comment))
+                           linking_coefficients, ifile, comment))
         self.n += 1
         #return AELIST(sid, elements, comment=comment)
         return self.n - 1
@@ -4033,7 +4050,7 @@ class AELINK(VectorizedBaseCard):
 
         for icard, card in enumerate(self.cards):
             (aelink_idi, labeli, independent_labelsi,
-             linking_coefficientsi, comment) = card
+             linking_coefficientsi, ifilei, comment) = card
             if aelink_idi == 'ALWAYS':
                 aelink_idi = 0
             aelink_id[icard] = aelink_idi
@@ -4152,7 +4169,8 @@ class AEFACT(VectorizedBaseCard):
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 
-    def add(self, sid: int, fractions: list[float], comment: str='') -> int:
+    def add(self, sid: int, fractions: list[float],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an AEFACT card, which is used by the CAEROx / PAEROx card
         to adjust the spacing of the sub-paneleing (and grid point
@@ -4168,18 +4186,18 @@ class AEFACT(VectorizedBaseCard):
             a comment for the card
 
         """
-        self.cards.append((sid, fractions, comment))
+        self.cards.append((sid, fractions, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
         sid = integer(card, 1, 'sid')
         fractions = []
         for i in range(2, len(card)):
             fraction = double(card, i, 'factor_%d' % (i - 1))
             fractions.append(fraction)
         assert len(card) > 2, 'len(AEFACT card) = %i\n%s' % (len(card), card)
-        self.cards.append((sid, fractions, comment))
+        self.cards.append((sid, fractions, ifile, comment))
         self.n += 1
         #return AEFACT(sid, fractions, comment=comment)
         return self.n - 1
@@ -4193,7 +4211,7 @@ class AEFACT(VectorizedBaseCard):
 
         all_fractions = []
         for icard, card in enumerate(self.cards):
-            sid, fractions, comment = card
+            sid, fractions, ifilei, comment = card
             aefact_id[icard] = sid
             nfractions[icard] = len(fractions)
             all_fractions.extend(fractions)
@@ -4282,7 +4300,8 @@ class FLFACT(VectorizedBaseCard):
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 
-    def add(self, sid: int, factors: list[float], comment: str='') -> int:
+    def add(self, sid: int, factors: list[float],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an FLFACT card, which defines factors used for flutter
         analysis.  These factors define either:
@@ -4316,11 +4335,11 @@ class FLFACT(VectorizedBaseCard):
             a comment for the card
 
         """
-        self.cards.append((sid, factors, comment))
+        self.cards.append((sid, factors, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         assert len(card) > 2, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
         field3 = double_string_or_blank(card, 3, 'THRU')
@@ -4341,7 +4360,7 @@ class FLFACT(VectorizedBaseCard):
         else:
             raise SyntaxError('expected a float or string for FLFACT field 3; value=%r' % field3)
         #return FLFACT(sid, factors, comment=comment)
-        self.cards.append((sid, factors, comment))
+        self.cards.append((sid, factors, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -4354,7 +4373,7 @@ class FLFACT(VectorizedBaseCard):
 
         all_factors = []
         for icard, card in enumerate(self.cards):
-            sid, factors, comment = card
+            sid, factors, ifilei, comment = card
             factors = expand_thru(factors, set_fields=False, sort_fields=False)
             flfact_id[icard] = sid
             nfactors[icard] = len(factors)
@@ -4445,8 +4464,9 @@ class SPLINE1(VectorizedBaseCard):
 
     def add(self, eid: int, caero: int, box1: int, box2: int, setg: int,
             dz: float=0., method: str='IPS',
-            usage: str='BOTH', nelements: int=10,
-            melements: int=10, comment: str='') -> int:
+            usage: str='BOTH',
+            nelements: int=10, melements: int=10,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a SPLINE1, which defines a surface spline.
 
@@ -4491,7 +4511,7 @@ class SPLINE1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a SPLINE1 card from ``BDF.add_card(...)``
 
@@ -4712,7 +4732,7 @@ class SPLINE2(VectorizedBaseCard):
             cid: int=0,
             dthx: float=0.0, dthy: float=0.0,
             usage: str='BOTH',
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a SPLINE2 card, which defines a beam spline.
 
@@ -4759,7 +4779,7 @@ class SPLINE2(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a SPLINE2 card from ``BDF.add_card(...)``
 
@@ -4957,7 +4977,8 @@ class SPLINE3(VectorizedBaseCard):
             nodes: list[int],
             displacement_components: list[int],
             coeffs: list[float],
-            usage: str='BOTH', comment: str='') -> int:
+            usage: str='BOTH',
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a SPLINE3 card, which is useful for control surface
         constraints.
@@ -5010,7 +5031,7 @@ class SPLINE3(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a SPLINE3 card from ``BDF.add_card(...)``
 
@@ -5293,7 +5314,7 @@ class SPLINE4(VectorizedBaseCard):
             nelements: int=10, melements: int=10,
             ftype: Optional[str]='WF2',
             rcore: Optional[float]=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a SPLINE4 card, which defines a curved Infinite Plate,
         Thin Plate, or Finite Plate Spline.
@@ -5337,7 +5358,7 @@ class SPLINE4(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         caero = integer(card, 2, 'caero')
         aelist = integer(card, 3, 'aelist')
@@ -5517,7 +5538,8 @@ class SPLINE5(VectorizedBaseCard):
     def add(self, eid: int, caero: int, aelist: int, setg: int, thx, thy,
             dz: float=0.0, dtor: float=1.0, cid: int=0,
             usage: str='BOTH', method: str='BEAM',
-            ftype: str='WF2', rcore=None, comment: str='') -> int:
+            ftype: str='WF2', rcore=None,
+            ifile: int=0, comment: str='') -> int:
         """Creates a SPLINE5 card"""
         card = (eid, caero, aelist, setg, thx, thy, dz, dtor, cid,
                 usage, method, ftype, rcore, comment)
@@ -5525,7 +5547,7 @@ class SPLINE5(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a SPLINE5 card from ``BDF.add_card(...)``
 
@@ -5711,7 +5733,8 @@ class GUST(VectorizedBaseCard):
         #return len(self.name)
 
     def add(self, sid: int, dload: int, wg: float, x0: float,
-            V: Optional[float]=None, comment: str='') -> int:
+            V: Optional[float]=None,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a GUST card, which defines a stationary vertical gust
         for use in aeroelastic response analysis.
@@ -5741,7 +5764,7 @@ class GUST(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a GUST card from ``BDF.add_card(...)``
 
@@ -5869,8 +5892,8 @@ class FLUTTER(VectorizedBaseCard):
             density: int, mach: int, reduced_freq_velocity: int,
             imethod: str='L',
             nvalue=None, omax=None,
-            epsilon: float=1.0e-3, comment: str='',
-            validate: bool=False) -> int:
+            epsilon: float=1.0e-3,
+            ifile: int=0, comment: str='', validate: bool=False) -> int:
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
         analysis.
@@ -5925,7 +5948,7 @@ class FLUTTER(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a GUST card from ``BDF.add_card(...)``
 
@@ -6123,7 +6146,8 @@ class AESTAT(VectorizedBaseCard):
     #def __len__(self) -> int:
         #return len(self.name)
 
-    def add(self, aestat_id: int, label: str, comment: str='') -> int:
+    def add(self, aestat_id: int, label: str,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an AESTAT card, which is a variable to be used in a TRIM analysis
 
@@ -6137,11 +6161,11 @@ class AESTAT(VectorizedBaseCard):
             a comment for the card
 
         """
-        self.cards.append((aestat_id, label, comment))
+        self.cards.append((aestat_id, label, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment='') -> int:
         """
         Adds an AESTAT card from ``BDF.add_card(...)``
 
@@ -6157,7 +6181,7 @@ class AESTAT(VectorizedBaseCard):
         label = string(card, 2, 'label')
         assert len(card) <= 3, f'len(AESTAT card) = {len(card):d}\ncard={card}'
         #return AESTAT(aestat_id, label, comment=comment)
-        self.cards.append((aestat_id, label, comment))
+        self.cards.append((aestat_id, label, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -6167,7 +6191,7 @@ class AESTAT(VectorizedBaseCard):
         aestat_id = np.zeros(ncards, dtype='int32')
         label = np.zeros(ncards, dtype='|U8')
         for icard, card in enumerate(self.cards):
-            (aestat_idi, labeli, comment) = card
+            (aestat_idi, labeli, ifilei, comment) = card
             aestat_id[icard] = aestat_idi
             label[icard] = labeli
         self._save(aestat_id, label)
@@ -6231,7 +6255,7 @@ class AEPARM(VectorizedBaseCard):
         #return len(self.name)
 
     def add(self, aeparm_id: int, label: str, units: str,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an AEPARM card, which defines a new trim variable.
 
@@ -6251,7 +6275,7 @@ class AEPARM(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds an AEPARM card from ``BDF.add_card(...)``
 
@@ -6362,7 +6386,7 @@ class AESURF(VectorizedBaseCard):
             pllim: float=-np.pi/2., pulim: float=np.pi/2.,
             hmllim=None, hmulim=None, # hinge moment lower/upper limits
             tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
-            comment='') -> int:
+            ifile: int=0, comment='') -> int:
         """
         Creates an AESURF card, which defines a control surface
 
@@ -6408,7 +6432,7 @@ class AESURF(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds an AESURF card from ``BDF.add_card(...)``
 
@@ -6652,7 +6676,8 @@ class AESURFS(VectorizedBaseCard):
         self.aesurfs_id = np.array([], dtype='int32')
 
     def add(self, aesurfs_id: int, label: str,
-            list1: int, list2: int, comment: str='') -> int:
+            list1: int, list2: int,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an AESURFS card
 
@@ -6674,7 +6699,7 @@ class AESURFS(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds an AESURFS card from ``BDF.add_card(...)``
 
@@ -6797,7 +6822,7 @@ class CSSCHD(VectorizedBaseCard):
 
     def add(self, sid: int, aesurf_id: int,
             lschd: int, lalpha: int=None, lmach: int=None,  # aefact
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an CSSCHD card, which defines a specified control surface
         deflection as a function of Mach and alpha (used in SOL 144/146).
@@ -6821,12 +6846,12 @@ class CSSCHD(VectorizedBaseCard):
         #assert lalpha is None or isinstance(lalpha, integer_types), lalpha
         #assert lmach is None or isinstance(lmach, integer_types), lmach
         #assert lschd is None or isinstance(lschd, integer_types), lschd
-        card = (sid, aesurf_id, lalpha, lmach, lschd, comment)
+        card = (sid, aesurf_id, lalpha, lmach, lschd, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CSSCHD card from ``BDF.add_card(...)``
 
@@ -6845,7 +6870,7 @@ class CSSCHD(VectorizedBaseCard):
         lschd = integer(card, 5, 'lSchd')             # AEFACT
         assert len(card) <= 6, f'len(CSSCHD card) = {len(card):d}\ncard={card}'
         #return CSSCHD(sid, aesurf_id, lalpha, lmach, lschd, comment=comment)
-        card = (sid, aesurf_id, lalpha, lmach, lschd, comment)
+        card = (sid, aesurf_id, lalpha, lmach, lschd, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -6860,7 +6885,7 @@ class CSSCHD(VectorizedBaseCard):
         lschd = np.zeros(ncards, dtype='int32')
 
         for icard, card in enumerate(self.cards):
-            (sid, aesurf_idi, lalphai, lmachi, lschdi, comment) = card
+            (sid, aesurf_idi, lalphai, lmachi, lschdi, ifilei, comment) = card
             csschd_id[icard] = sid
             aesurf_id[icard] = aesurf_idi
             lalpha[icard] = lalphai
@@ -6990,7 +7015,8 @@ class DIVERG(VectorizedBaseCard):
         #self.lschd = np.array([], dtype='int32')
 
     def add(self, diverg_id: int, nroots: int,
-            machs: list[float], comment: str='') -> int:
+            machs: list[float],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates an DIVERG card, which is used in divergence
         analysis (SOL 144).
@@ -7015,7 +7041,7 @@ class DIVERG(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DIVERG card from ``BDF.add_card(...)``
 
@@ -7149,7 +7175,8 @@ class TRIM(VectorizedBaseCard):
 
     def add(self, sid: int, mach: float, q: float,
             labels: list[str], uxs: list[float], aeqr: float=1.0,
-            trim_type: int=1, comment: str='') -> int:
+            trim_type: int=1,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a TRIM/TRIM2 card for a static aero (144) analysis.
 
@@ -7181,7 +7208,7 @@ class TRIM(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a TRIM card from ``BDF.add_card(...)``
 

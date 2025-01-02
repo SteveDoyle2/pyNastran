@@ -62,7 +62,7 @@ class XPOINT(VectorizedBaseCard):
         self.n += len(ids)
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -315,7 +315,7 @@ class GRID(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
         nfields = len(card)
@@ -833,7 +833,7 @@ class POINT(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
         """

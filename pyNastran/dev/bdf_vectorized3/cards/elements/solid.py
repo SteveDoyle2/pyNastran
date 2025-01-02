@@ -53,13 +53,14 @@ class SolidElement(Element):
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
 
-    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+    def add(self, eid: int, pid: int, nids: list[int],
+            ifile: int=0, comment: str='') -> int:
         #nids2 = [0] * self.nodes.shape[1]
         nids2 = [0 if nid is None else nid
                  for nid in nids]
         nnodes_to_extend = self.nnode - len(nids)
         nids2.extend([0]*nnodes_to_extend)
-        self.cards.append((eid, pid, nids2, comment))
+        self.cards.append((eid, pid, nids2, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -162,7 +163,7 @@ class CTETRA(SolidElement):
         self.n = 0
         self.nodes = np.zeros((0, 10), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer(card, 3, 'nid1'),
@@ -176,7 +177,7 @@ class CTETRA(SolidElement):
                 integer_or_blank(card, 11, 'nid9', default=0),
                 integer_or_blank(card, 12, 'nid10', default=0), ]
         assert len(card) <= 13, f'len(CTETRA card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -184,11 +185,14 @@ class CTETRA(SolidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 10), dtype=idtype)
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
+            (eid, pid, nids, ifilei, comment) = card
+            print(ifile)
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -364,7 +368,7 @@ class SolidPenta(SolidElement):
         self.n = 0
         self.nodes = np.zeros((0, 15), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -385,7 +389,7 @@ class SolidPenta(SolidElement):
             integer_or_blank(card, 17, 'nid15', default=0),
         ]
         assert len(card) <= 18, f'len(CPENTA card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -393,12 +397,14 @@ class SolidPenta(SolidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 15), dtype=idtype)
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
+            (eid, pid, nids, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -504,7 +510,7 @@ class CPYRAM(SolidElement):
         self.n = 0
         self.nodes = np.zeros((0, 13), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -521,7 +527,7 @@ class CPYRAM(SolidElement):
             integer_or_blank(card, 15, 'nid13', default=0)
         ]
         assert len(card) <= 16, f'len(CPYRAM13 1card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -529,11 +535,13 @@ class CPYRAM(SolidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 13), dtype=idtype)
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
+            (eid, pid, nids, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -618,7 +626,7 @@ class SolidHex(SolidElement):
         self.n = 0
         self.nodes = np.zeros((0, 20), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -640,7 +648,7 @@ class SolidHex(SolidElement):
             integer_or_blank(card, 22, 'nid20', default=0),
         ]
         assert len(card) <= 23, f'len(CHEXA20 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, comment))
+        self.cards.append((eid, pid, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -652,7 +660,7 @@ class SolidHex(SolidElement):
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 20), dtype=idtype)
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, comment) = card
+            (eid, pid, nids, ifilei, comment) = card
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -809,18 +817,19 @@ class PSOLID(Property):
             integ: Optional[str|int]=None,
             stress: Optional[str]='',
             isop: Optional[str]='',
-            fctn: str='SMECH', comment='') -> int:
+            fctn: str='SMECH', ifile: int=0, comment: str='') -> int:
         if integ is None:
             integ = ''
         if stress is None:
             stress = ''
         if isop is None:
             isop = ''
-        self.cards.append((pid, mid, cordm, integ, stress, isop, fctn, comment))
+        self.cards.append((pid, mid, cordm, integ, stress, isop, fctn,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         cordm = integer_or_blank(card, 3, 'cordm', default=-1)
@@ -830,7 +839,8 @@ class PSOLID(Property):
         fctn = string_or_blank(card, 7, 'fctn', default='SMECH')
         assert len(card) <= 8, f'len(PSOLID card) = {len(card):d}\ncard={card}'
 
-        self.cards.append((pid, mid, cordm, integ, stress, isop, fctn, comment))
+        self.cards.append((pid, mid, cordm, integ, stress, isop, fctn,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -847,7 +857,7 @@ class PSOLID(Property):
         fctn = np.full(ncards, '', dtype='|U8')
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, cordm, integi, stressi, isopi, fctni, comment) = card
+            (pid, mid, cordm, integi, stressi, isopi, fctni, ifilei, comment) = card
             if integi == 0:
                 integi = '0'
             elif integi == 1:
@@ -997,12 +1007,13 @@ class PLSOLID(Property):
         prop.material_id = self.material_id[i]
         prop.stress_strain = self.stress_strain[i]
 
-    def add(self, pid, mid, stress_strain='GRID', ge=0., comment='') -> int:
-        self.cards.append((pid, mid, stress_strain, comment))
+    def add(self, pid, mid, stress_strain='GRID', ge=0.,
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((pid, mid, stress_strain, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PLSOLID card from ``BDF.add_card(...)``
 
@@ -1018,7 +1029,7 @@ class PLSOLID(Property):
         mid = integer(card, 2, 'mid')
         stress_strain = string_or_blank(card, 3, 'stress_strain', 'GRID')
         assert len(card) <= 4, f'len(PLSOLID card) = {len(card):d}\ncard={card}'
-        self.cards.append((pid, mid, stress_strain, comment))
+        self.cards.append((pid, mid, stress_strain, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1030,7 +1041,7 @@ class PLSOLID(Property):
         self.stress_strain = np.zeros(ncards, dtype='|U4')
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, stress_strain, comment) = card
+            (pid, mid, stress_strain, ifilei, comment) = card
             assert isinstance(stress_strain, str), stress_strain
 
             self.property_id[icard] = pid
@@ -1132,12 +1143,12 @@ class PSOLCZ(Property):
         prop.thickness = self.thickness[i]
 
     def add(self, pid: int, mid: int, thickness: float,
-            mcid: int=0, comment: str='') -> int:
-        self.cards.append((pid, mid, mcid, thickness, comment))
+            mcid: int=0, ifile: int=0, comment: str='') -> int:
+        self.cards.append((pid, mid, mcid, thickness, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PLSOLCZ card from ``BDF.add_card(...)``
 
@@ -1153,7 +1164,7 @@ class PSOLCZ(Property):
         mcid = integer_or_blank(card, 3, 'mcid', default=0)
         thickness = double(card, 4, 'thickness')
         assert len(card) <= 5, f'len(PSOLCZ card) = {len(card):d}\ncard={card}'
-        self.cards.append((pid, mid, mcid, thickness, comment))
+        self.cards.append((pid, mid, mcid, thickness, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1167,7 +1178,7 @@ class PSOLCZ(Property):
         thickness = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, mcidi, thicknessi, comment) = card
+            (pid, mid, mcidi, thicknessi, ifilei, comment) = card
             property_id[icard] = pid
             material_id[icard] = mid
             mcid[icard] = mcidi
@@ -1266,7 +1277,7 @@ class PCOMPS(Property):
             nb: Optional[float]=None,
             tref: float=0.0, ge: float=0.0,
             failure_theories=None, interlaminar_failure_theories=None,
-            souts=None, comment='') -> int:
+            souts=None, ifile: int=0, comment: str='') -> int:
         nb = nb if nb is not None else np.nan
         sb = sb if sb is not None else np.nan
 
@@ -1280,11 +1291,12 @@ class PCOMPS(Property):
 
         self.cards.append((pid, cordm, psdir, sb, nb, tref, ge,
                            global_ply_ids, mids, thicknesses, thetas,
-                           failure_theories, interlaminar_failure_theories, souts))
+                           failure_theories, interlaminar_failure_theories, souts,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PCOMPS card from ``BDF.add_card(...)``
 
@@ -1345,7 +1357,8 @@ class PCOMPS(Property):
         assert len(card) <= ifield, f'len(PCOMPS card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, cordm, psdir, sb, nb, tref, ge,
                            global_ply_ids, mids, thicknesses, thetas,
-                           failure_theories, interlaminar_failure_theories, souts))
+                           failure_theories, interlaminar_failure_theories, souts,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1372,7 +1385,8 @@ class PCOMPS(Property):
         for icard, card in enumerate(self.cards):
             (pid, cordm, psdiri, sbi, nbi, trefi, gei,
              global_ply_ids, mids, thicknesses, thetas,
-             failure_theories, interlaminar_failure_theories, souts) = card
+             failure_theories, interlaminar_failure_theories, souts,
+             ifilei, comment) = card
             property_id[icard] = pid
             coord_id[icard] = cordm
             psdir[icard] = psdiri
@@ -1575,7 +1589,7 @@ class PCOMPLS(Property):
         self.c8 = np.array([], dtype='|U8')
         self.c20 = np.array([], dtype='|U8')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PCOMPLS card from ``BDF.add_card(...)``
 
@@ -1680,7 +1694,7 @@ class PCOMPLS(Property):
         self.cards.append((pid, global_ply_ids, mids, thicknesses, thetas,
                            direct, cordm, sb, analysis,
                            c8, c20,
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1713,7 +1727,7 @@ class PCOMPLS(Property):
             #print(card)
             (pid, global_ply_idi, midi, thicknessi, thetai,
              directi, cordmi, sbi, analysisi,
-             c8i, c20i, comment) = card
+             c8i, c20i, ifilei, comment) = card
             property_id[icard] = pid
             coord_id[icard] = cordmi
             sb[icard] = sbi

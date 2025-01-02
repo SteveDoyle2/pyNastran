@@ -67,6 +67,7 @@ class BDYOR(BaseCard):
                  rad_mid_front: int, rad_mid_back: int,
                  pid: int, g0: int,
                  ce: int, e123: list[float],
+                 ifile: int=0,
                  comment: str=''):
         """
         Creates the BDYOR card
@@ -91,9 +92,9 @@ class BDYOR(BaseCard):
         self.e123 = e123
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment: str=''):
+    def add_card(cls, card: BDFCard, ifile: int, comment: str=''):
         """
-        Adds a GRDSET card from ``BDF.add_card(...)``
+        Adds a BYDOR card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -121,7 +122,7 @@ class BDYOR(BaseCard):
         return BDYOR(surface_type, iview_front, iview_back,
                      rad_mid_front, rad_mid_back,
                      pid, g0,
-                     ce, e123, comment=comment)
+                     ce, e123, ifile=ifile, comment=comment)
 
     def raw_fields(self):
         g0 = '' if self.g0 == -1 else self.g0
@@ -200,7 +201,7 @@ class CHBDYE(ThermalElement):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         eid2 = integer(card, 2, 'eid2')
         side = integer(card, 3, 'side')
@@ -370,7 +371,7 @@ class CONV(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pconid = integer(card, 2, 'pconid')
         film_node = integer_or_blank(card, 3, 'film_node', default=0)
@@ -506,7 +507,7 @@ class CHBDYG(ThermalElement):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         # no field 2
 
@@ -734,7 +735,7 @@ class CHBDYP(ThermalElement):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=-1)
@@ -1050,7 +1051,7 @@ class PHBDY(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PHBDY card from ``BDF.add_card(...)``
 
@@ -1324,7 +1325,7 @@ class PCONV(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         pconv_id = integer(card, 1, 'pconv_id')
         mid = integer_or_blank(card, 2, 'mid')
@@ -1562,7 +1563,7 @@ class CONVM(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CONVM card from ``BDF.add_card(...)``
 
@@ -1746,7 +1747,7 @@ class PCONVM(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble = double if self.model.is_strict_card_parser else force_double
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         pconvm_id = integer(card, 1, 'pconid')

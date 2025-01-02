@@ -89,7 +89,7 @@ class BAROR(BaseCard):
         return copy
 
     @classmethod
-    def add_card(cls, model: BDF, card: BDFCard, comment: str=''):
+    def add_card(cls, model: BDF, card: BDFCard, ifile: int, comment: str=''):
         PROPERTY_ID_DEFAULT = 0
         GO_X_DEFAULT = 0
         OFFT_DEFAULT = ''
@@ -243,13 +243,13 @@ class CBAR(Element):
             x: Optional[list[float]], g0: Optional[int],
             offt: str='GGG', pa: int=0, pb: int=0,
             wa: Optional[list[float]]=None, wb: Optional[list[float]]=None,
-            comment: str='', validate: bool=False) -> int:
+            ifile: int=0, comment: str='', validate: bool=False) -> int:
         assert x is None or g0 is None, f'pid={pid} x={x} g0={g0}'
-        self.cards.append((eid, pid, nids, x, g0, offt, pa, pb, wa, wb, comment))
+        self.cards.append((eid, pid, nids, x, g0, offt, pa, pb, wa, wb, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         PROPERTY_ID_DEFAULT = 0
         OFFT_DEFAULT = ''
 
@@ -287,7 +287,7 @@ class CBAR(Element):
                        double_or_blank(card, 15, 'w2b', 0.0),
                        double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
         assert len(card) <= 17, f'len(CBAR card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, [ga, gb], x, g0, offt, pa, pb, wa, wb, comment))
+        self.cards.append((eid, pid, [ga, gb], x, g0, offt, pa, pb, wa, wb, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -308,6 +308,7 @@ class CBAR(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 2), dtype=idtype)
@@ -321,7 +322,8 @@ class CBAR(Element):
         wb = np.zeros((ncards, 3), dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, xi, g0i, offti, pai, pbi, wai, wbi, comment) = card
+            (eid, pid, nids, xi, g0i, offti, pai, pbi, wai, wbi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -846,13 +848,14 @@ class PBAR(Property):
                 d1: float=0., d2: float=0.,
                 e1: float=0., e2: float=0.,
                 f1: float=0., f2: float=0.,
-                k1: float=1.e8, k2: float=1.e8, comment: str='') -> int:
+                k1: float=1.e8, k2: float=1.e8,
+                ifile: int=0, comment: str='') -> int:
         self.cards.append((pid, mid, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
-                           e1, e2, f1, f2, k1, k2, comment))
+                           e1, e2, f1, f2, k1, k2, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
@@ -891,7 +894,7 @@ class PBAR(Property):
 
         assert len(card) <= 20, f'len(PBAR card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
-                           e1, e2, f1, f2, k1, k2, comment))
+                           e1, e2, f1, f2, k1, k2, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -920,7 +923,7 @@ class PBAR(Property):
 
         for icard, card in enumerate(self.cards):
             (pid, mid, Ai, i1, i2, i12, j, nsmi, c1, c2, d1, d2,
-             e1, e2, f1, f2, k1, k2, comment) = card
+             e1, e2, f1, f2, k1, k2, ifilei, comment) = card
             property_id[icard] = pid
             material_id[icard] = mid
             #group[icard] = group
@@ -1332,7 +1335,8 @@ class PBARL(Property):
         assert prop.ndim.sum() == len(prop.dims), f'prop.ndim={prop.ndim} len(prop.dims)={len(prop.dims)}'
 
     def add(self, pid: int, mid: int, bar_type: str, dim: list[float],
-            group: str='MSCBML0', nsm: float=0., comment: str='') -> int:
+            group: str='MSCBML0', nsm: float=0.,
+            ifile: int=0, comment: str='') -> int:
         if isinstance(dim, integer_types):
             dim = [float(dim)]
         elif isinstance(dim, float_types):
@@ -1353,7 +1357,7 @@ class PBARL(Property):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         group = string_or_blank(card, 3, 'group', default='MSCBML0')
@@ -1628,7 +1632,7 @@ class PBRSECT(Property):
         self.material_id = np.array([], dtype='int32')
         self.form = np.array([], dtype='|U8')
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a PBRSECT card from ``BDF.add_card(...)``
 
@@ -1761,7 +1765,8 @@ class CBARAO(Element):
         #self.x = np.array([], dtype='float64')
         self.station = np.array([], dtype='float64')
 
-    def add(self, eid: int, scale: str, x: list[float], comment: str='') -> int:
+    def add(self, eid: int, scale: str, x: list[float],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CBARAO card, which defines additional output locations
         for the CBAR card.
@@ -1791,11 +1796,11 @@ class CBARAO(Element):
 
         """
         assert isinstance(scale, str), scale
-        self.cards.append((eid, scale, x, comment))
+        self.cards.append((eid, scale, x, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a CBARAO card from ``BDF.add_card(...)``
 
@@ -1830,7 +1835,7 @@ class CBARAO(Element):
         assert len(card) <= 9, f'len(CBARAO card) = {len(card):d}\ncard={card}'
         nstation = len(x)
         assert nstation > 0, x
-        self.cards.append((eid, scale, x, comment))
+        self.cards.append((eid, scale, x, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1860,6 +1865,7 @@ class CBARAO(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         station: list[float] = []
 
@@ -1867,7 +1873,8 @@ class CBARAO(Element):
         nstation = np.zeros(ncards, dtype='int32')
 
         for icard, card in enumerate(self.cards):
-            (eid, scalei, stationi, comment) = card
+            (eid, scalei, stationi, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             assert scalei in {'FR', 'LE'}, (eid, scalei)
             scale[icard] = scalei

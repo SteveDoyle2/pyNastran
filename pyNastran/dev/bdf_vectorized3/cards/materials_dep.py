@@ -56,7 +56,7 @@ class MATT1(Material):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a MATT1 card from ``BDF.add_card(...)``
 
@@ -308,7 +308,7 @@ class MATS1(Material):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a MATS1 card from ``BDF.add_card(...)``
 
@@ -539,7 +539,7 @@ class MATT2(Material):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a MATT2 card from ``BDF.add_card(...)``
 
@@ -831,7 +831,7 @@ class MATT3(Material):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a MATT3 card from ``BDF.add_card(...)``
 
@@ -1074,7 +1074,7 @@ class MATT4(Material):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a MATT4 card from ``BDF.add_card(...)``
 
@@ -1258,7 +1258,7 @@ class MATT5(Material):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a MATT2 card from ``BDF.add_card(...)``
 
@@ -1483,7 +1483,7 @@ class MATT8(Material):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a MATT8 card from ``BDF.add_card(...)``
 
@@ -1802,7 +1802,7 @@ class MATT9(Material):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a MATT9 card from ``BDF.add_card(...)``
 

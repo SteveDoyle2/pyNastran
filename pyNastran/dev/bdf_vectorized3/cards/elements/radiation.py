@@ -59,7 +59,7 @@ class RADCAV(VectorizedBaseCard):
         self.sets = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a RADCAV card from ``BDF.add_card(...)``
 
@@ -219,7 +219,7 @@ class RADLST(VectorizedBaseCard):
         self.sets = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a RADLST card from ``BDF.add_card(...)``
 
@@ -335,7 +335,7 @@ class RADMTX(VectorizedBaseCard):
         self.sets = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a RADMTX card from ``BDF.add_card(...)``
 
@@ -449,7 +449,7 @@ class VIEW(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a VIEW card from ``BDF.add_card(...)``
 
@@ -564,7 +564,7 @@ class VIEW3D(VectorizedBaseCard):
         self.rad_check = np.array([], dtype='int32')
         self.n = 0
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a VIEW3D card from ``BDF.add_card(...)``
 

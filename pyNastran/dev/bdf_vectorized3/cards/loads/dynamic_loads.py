@@ -212,7 +212,7 @@ class DAREA(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         # sid : int
         #     darea id
         # nodes : list[int]
@@ -418,7 +418,7 @@ class TLOAD1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', default=0.0)
@@ -657,7 +657,7 @@ class TLOAD2(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', default=0)
@@ -932,7 +932,7 @@ class RLOAD1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', default=0)
@@ -1174,7 +1174,7 @@ class RLOAD2(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment:str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment:str='') -> None:
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', default=0)
@@ -1430,7 +1430,7 @@ class LSEQ(VectorizedBaseCard):  # Requires LOADSET in case control deck
         load.load_id = self.load_id[i]
         load.temp_id = self.temp_id[i]
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         lseq_id = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         load_id = integer_or_blank(card, 3, 'lid', default=0)
@@ -1537,7 +1537,7 @@ class TIC(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
@@ -1716,7 +1716,7 @@ class TF(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a TF card from ``BDF.add_card(...)``
 
@@ -1972,7 +1972,7 @@ class DELAY(VectorizedBaseCard):
                 self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DELAY card from ``BDF.add_card(...)``
 
@@ -2167,7 +2167,7 @@ class DPHASE(VectorizedBaseCard):
                 self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DPHASE card from ``BDF.add_card(...)``
 
@@ -2353,7 +2353,7 @@ class QVECT(VectorizedBaseCard):
 
         """
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
         t_source = double_or_blank(card, 3, 't_source')
@@ -2566,7 +2566,7 @@ class ACSRCE(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a ACSRCE card from ``BDF.add_card(...)``
 
@@ -2757,7 +2757,7 @@ class RANDPS(VectorizedBaseCard):
         #self.__apply_slice__(load, i)
         #return load
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         """
         Adds a RANDPS card from ``BDF.add_card(...)``
 

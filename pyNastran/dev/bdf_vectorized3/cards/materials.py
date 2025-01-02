@@ -57,7 +57,8 @@ class MAT1(Material):
     def add(self, mid: int, E: float, G: float, nu: float,
             rho: float=0.0, alpha: float=0.0, tref: float=0.0, ge: float=0.0,
             St: float=0.0, Sc: float=0.0, Ss: float=0.0,
-            mcsid: int=0, comment: str='') -> int:
+            mcsid: int=0,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a MAT1 card
 
@@ -93,7 +94,7 @@ class MAT1(Material):
         E, G, nu = mat1_E_G_nu(E, G, nu)
 
         self.cards.append((mid, E, G, nu, rho, alpha, tref, ge, St, Sc, Ss,
-                           mcsid, comment))
+                           mcsid, ifile, comment))
         self.n += 1
         #self.material_id = np.hstack([self.material_id, [mid]])
         #self.E = np.hstack([self.E, [E]])
@@ -109,7 +110,7 @@ class MAT1(Material):
         #self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         idouble_or_blank =  double_or_blank if self.model.is_strict_card_parser else integer_double_or_blank
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
 
@@ -133,7 +134,7 @@ class MAT1(Material):
         mcsid = integer_or_blank(card, 12, 'mcsid', default=0)
         assert len(card) <= 13, f'len(MAT1 card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, E, G, nu, rho, alpha, tref, ge, St, Sc, Ss,
-                           mcsid, comment))
+                           mcsid, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -165,14 +166,16 @@ class MAT1(Material):
                     #St, Sc, Ss, mcsid, comment=comment)
         assert rho is not None, rho
         assert mcsid is not None, mcsid
+        ifile = 0
         self.cards.append((mid, E, G, nu, rho, alpha, tref, ge, St, Sc, Ss,
-                           mcsid, comment))
+                           mcsid, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         E = np.zeros(ncards, dtype='float64')
         G = np.zeros(ncards, dtype='float64')
@@ -189,7 +192,8 @@ class MAT1(Material):
         for icard, card in enumerate(self.cards):
             (mid, Ei, Gi, nui, rhoi, alphai, trefi, gei,
              Sti, Sci, Ssi,
-             mcsidi, comment) = card
+             mcsidi, ifilei, comment) = card
+            ifile[icard] = ifilei
             material_id[icard] = mid
             E[icard] = Ei
             G[icard] = Gi
@@ -377,7 +381,8 @@ class MAT2(Material):
             a1: Optional[float]=None, a2: Optional[float]=None, a3: Optional[float]=None,
             tref: float=0., ge: float=0.,
             St: Optional[float]=None, Sc: Optional[float]=None, Ss: Optional[float]=None,
-            mcsid: Optional[int]=None, comment: str='') -> int:
+            mcsid: Optional[int]=None,
+            ifile: int=0, comment: str='') -> int:
         """Creates an MAT2 card"""
         if a1 is None:
             a1 = np.nan
@@ -398,11 +403,11 @@ class MAT2(Material):
         ge_matrix = [np.nan] * 6
         self.cards.append((mid, G11, G12, G13, G22, G23, G33, rho,
                            [a1, a2, a3], tref, ge, St, Sc, Ss,
-                           mcsid, ge_matrix, comment))
+                           mcsid, ge_matrix, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         G11 = double_or_blank(card, 2, 'G11', default=0.0)
         G12 = double_or_blank(card, 3, 'G12', default=0.0)
@@ -437,7 +442,8 @@ class MAT2(Material):
             ge_matrix = [np.nan] * 6
             assert len(card) <= 18, f'len(MAT2 card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, G11, G12, G13, G22, G23, G33, rho,
-                           [a1, a2, a3], tref, ge, St, Sc, Ss, mcsid, ge_matrix, comment))
+                           [a1, a2, a3], tref, ge, St, Sc, Ss, mcsid, ge_matrix,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -464,7 +470,8 @@ class MAT2(Material):
 
         for icard, card in enumerate(self.cards):
             (mid, G11i, G12i, G13i, G22i, G23i, G33i, rhoi,
-             alphas, trefi, gei, Sti, Sci, Ssi, mcsidi, ge_matrixi, comment) = card
+             alphas, trefi, gei, Sti, Sci, Ssi, mcsidi, ge_matrixi,
+             ifilei, comment) = card
 
             material_id[icard] = mid
             G11[icard] = G11i
@@ -716,14 +723,14 @@ class MAT3(Material):
             rho: float=0.0, gzx: Optional[float]=None,
             ax: float=0., ath: float=0., az: float=0.,
             tref: float=0., ge: float=0.,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a MAT3 card"""
         self.cards.append((mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
-                           ax, ath, az, tref, ge, comment))
+                           ax, ath, az, tref, ge, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         ex = double(card, 2, 'ex')
         eth = double(card, 3, 'eth')
@@ -741,7 +748,7 @@ class MAT3(Material):
         ge = double_or_blank(card, 16, 'ge', default=0.0)
         assert len(card) <= 17, f'len(MAT3 card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
-                           ax, ath, az, tref, ge, comment))
+                           ax, ath, az, tref, ge, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -766,7 +773,7 @@ class MAT3(Material):
 
         for icard, card in enumerate(self.cards):
             (mid, exi, ethi, ezi, nuxthi, nuthzi, nuzxi, rhoi, gzxi,
-             axi, athi, azi, trefi, gei, comment) = card
+             axi, athi, azi, trefi, gei, ifilei, comment) = card
             material_id[icard] = mid
             ex[icard] = exi
             eth[icard] = ethi
@@ -896,13 +903,15 @@ class MAT4(Material):
     def add(self, mid: int, k: float, cp: float=0.0, rho: float=1.0,
             H: Optional[float]=None, mu: Optional[float]=None, hgen: float=1.0,
             ref_enthalpy: Optional[float]=None, tch: Optional[float]=None, tdelta: Optional[float]=None,
-            qlat: Optional[float]=None, comment: str='') -> int:
+            qlat: Optional[float]=None,
+            ifile: int=0, comment: str='') -> int:
         """Creates a MAT4 card"""
-        self.cards.append((mid, k, cp, rho, H, mu, hgen, ref_enthalpy, tch, tdelta, qlat, comment))
+        self.cards.append((mid, k, cp, rho, H, mu, hgen, ref_enthalpy, tch, tdelta, qlat,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         k = double_or_blank(card, 2, 'k')
         cp = double_or_blank(card, 3, 'cp', default=0.0)
@@ -915,7 +924,8 @@ class MAT4(Material):
         tdelta = double_or_blank(card, 10, 'tdelta')
         qlat = double_or_blank(card, 11, 'qlat')
         assert len(card) <= 12, f'len(MAT4 card) = {len(card):d}\ncard={card}'
-        self.cards.append((mid, k, cp, rho, H, mu, hgen, ref_enthalpy, tch, tdelta, qlat, comment))
+        self.cards.append((mid, k, cp, rho, H, mu, hgen, ref_enthalpy, tch, tdelta, qlat,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -937,7 +947,7 @@ class MAT4(Material):
 
         for icard, card in enumerate(self.cards):
             (mid, ki, cpi, rhoi, Hi, mui, hgeni, ref_enthalpyi,
-             tchi, tdeltai, qlati, comment) = card
+             tchi, tdeltai, qlati, ifilei, comment) = card
             material_id[icard] = mid
             k[icard] = ki
             cp[icard] = cpi
@@ -1035,13 +1045,15 @@ class MAT5(Material):
 
     def add(self, mid: int, kxx: float=0., kxy: float=0., kxz: float=0.,
             kyy: float=0., kyz: float=0., kzz: float=0., cp: float=0.,
-            rho: float=1., hgen: float=1., comment: str='') -> int:
+            rho: float=1., hgen: float=1.,
+            ifile: int=0, comment: str='') -> int:
         """Creates a MAT5 card"""
-        self.cards.append((mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen, comment))
+        self.cards.append((mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         kxx = double_or_blank(card, 2, 'kxx', default=0.0)
         kxy = double_or_blank(card, 3, 'kxy', default=0.0)
@@ -1054,7 +1066,8 @@ class MAT5(Material):
         rho = double_or_blank(card, 9, 'rho', default=1.0)
         hgen = double_or_blank(card, 10, 'hgen', default=1.0)
         assert len(card) <= 11, f'len(MAT5 card) = {len(card):d}\ncard={card}'
-        self.cards.append((mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen, comment))
+        self.cards.append((mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1074,7 +1087,8 @@ class MAT5(Material):
         hgen = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (mid, kxxi, kxyi, kxzi, kyyi, kyzi, kzzi, cpi, rhoi, hgeni, comment) = card
+            (mid, kxxi, kxyi, kxzi, kyyi, kyzi, kzzi, cpi, rhoi, hgeni,
+             ifilei, comment) = card
             material_id[icard] = mid
             kxx[icard] = kxxi
             kxy[icard] = kxyi
@@ -1216,7 +1230,7 @@ class MAT8(Material):
             xt: float=0., xc: Optional[float]=None,
             yt: float=0., yc: Optional[float]=None,
             s: float=0., ge: float=0., f12: float=0., strn: float=0.,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a MAT8 card"""
         xc = xc if xc is not None else xt
         yc = yc if yc is not None else yt
@@ -1243,11 +1257,12 @@ class MAT8(Material):
         ht = None
         hfb = None
         self.cards.append((mid, e11, e22, nu12, g12, g1z, g2z, rho, [a1, a2], tref,
-                           xt, xc, yt, yc, s, ge, f12, strn, hf, ht, hfb, comment))
+                           xt, xc, yt, yc, s, ge, f12, strn, hf, ht, hfb,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         e11 = double(card, 2, 'E11')    #: .. todo:: is this the correct default
         e22 = double(card, 3, 'E22')    #: .. todo:: is this the correct default
@@ -1356,7 +1371,8 @@ class MAT8(Material):
                 hfb = [hfb1, hfb2, hfb3, hfb4, hfb5, hfb6, hfb10, hfb11, hfb12]
 
         self.cards.append((mid, e11, e22, nu12, g12, g1z, g2z, rho, [a1, a2], tref,
-                           xt, xc, yt, yc, s, ge, f12, strn, hf, ht, hfb, comment))
+                           xt, xc, yt, yc, s, ge, f12, strn, hf, ht, hfb,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1391,7 +1407,8 @@ class MAT8(Material):
 
         for icard, card in enumerate(self.cards):
             (mid, e11, e22, nu12i, g12, g1z, g2z, rhoi, alphai, trefi,
-             xt, xc, yt, yc, s, gei, f12i, strni, hfi, hti, hfbi, comment) = card
+             xt, xc, yt, yc, s, gei, f12i, strni, hfi, hti, hfbi,
+             ifilei, comment) = card
             material_id[icard] = mid
             E11[icard] = e11
             E22[icard] = e22
@@ -1652,18 +1669,19 @@ class MAT9(Material):
             G33=0., G34=0., G35=0., G36=0.,
             G44=0., G45=0., G46=0.,
             G55=0., G56=0., G66=0.,
-            rho=0., A=None, tref=0., ge=0., comment='') -> int:
+            rho=0., A=None, tref=0., ge=0.,
+            ifile: int=0, comment: str='') -> int:
         if A is None:
             A = [0.] * 6
         self.cards.append((mid, G11, G12, G13, G14, G15, G16,
                            G22, G23, G24, G25, G26,
                            G33, G34, G35, G36,
                            G44, G45, G46,
-                           G55, G56, G66, rho, A, tref, ge, comment))
+                           G55, G56, G66, rho, A, tref, ge, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         G11 = double_or_blank(card, 2, 'G11', default=0.0)
         G12 = double_or_blank(card, 3, 'G12', default=0.0)
@@ -1700,7 +1718,7 @@ class MAT9(Material):
                            G22, G23, G24, G25, G26,
                            G33, G34, G35, G36,
                            G44, G45, G46,
-                           G55, G56, G66, rho, alpha, tref, ge, comment))
+                           G55, G56, G66, rho, alpha, tref, ge, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1743,7 +1761,8 @@ class MAT9(Material):
              G22i, G23i, G24i, G25i, G26i,
              G33i, G34i, G35i, G36i,
              G44i, G45i, G46i,
-             G55i, G56i, G66i, rhoi, alphai, trefi, gei, comment) = card
+             G55i, G56i, G66i, rhoi, alphai, trefi, gei,
+             ifilei, comment) = card
             material_id[icard] = mid
             G11[icard] = G11i
             G12[icard] = G12i
@@ -1989,7 +2008,7 @@ class MAT10(Material):
             table_rho: Optional[int]=None,
             table_ge: Optional[int]=None,
             table_gamma: Optional[int]=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a MAT10 card
 
@@ -2027,11 +2046,12 @@ class MAT10(Material):
         bulk, rho, c = _check_mat10_bulk_rho_c(mid, bulk, rho, c)
         alpha_gamma = gamma
         self.cards.append((mid, bulk, rho, c, ge, alpha_gamma,
-                           table_bulk, table_rho, table_ge, table_gamma, comment))
+                           table_bulk, table_rho, table_ge, table_gamma,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         mid = integer(card, 1, 'mid')
         bulk = fdouble_or_blank(card, 2, 'bulk', default=None)
@@ -2048,7 +2068,8 @@ class MAT10(Material):
         tid_gamma = integer_or_blank(card, 14, 'tid_gamma', default=0)
         assert len(card) <= 15, f'len(MAT10 card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, bulk, rho, c, ge, alpha_gamma,
-                           tid_bulk, tid_rho, tid_ge, tid_gamma, comment))
+                           tid_bulk, tid_rho, tid_ge, tid_gamma,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2068,7 +2089,7 @@ class MAT10(Material):
 
         for icard, card in enumerate(self.cards):
             (mid, bulki, rhoi, ci, gei, alpha_gammai,
-             tid_bulk, tid_rho, tid_ge, tid_gamma, comment) = card
+             tid_bulk, tid_rho, tid_ge, tid_gamma, ifilei, comment) = card
             if rhoi is None:
                 rhoi = 0.0
             if tid_bulk is None:
@@ -2262,14 +2283,15 @@ class MAT11(Material):
             g12: float, g13: float, g23: float,
             rho: float=0.0,
             a1: float=0.0, a2: float=0.0, a3: float=0.0,
-            tref: float=0.0, ge: float=0.0, comment: str='') -> int:
+            tref: float=0.0, ge: float=0.0,
+            ifile: int=0, comment: str='') -> int:
         """Creates a MAT11 card"""
         self.cards.append((mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
-                           rho, a1, a2, a3, tref, ge, comment))
+                           rho, a1, a2, a3, tref, ge, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         e1 = double(card, 2, 'E1')
         e2 = double(card, 3, 'E2')
@@ -2292,7 +2314,7 @@ class MAT11(Material):
         ge = double_or_blank(card, 16, 'ge', default=0.0)
         assert len(card) <= 17, f'len(MAT11 card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
-                           rho, a1, a2, a3, tref, ge, comment))
+                           rho, a1, a2, a3, tref, ge, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2325,7 +2347,7 @@ class MAT11(Material):
         for i, card in enumerate(self.cards):
             (mid, e1i, e2i, e3i, nu12i, nu13i, nu23i,
              g12i, g13i, g23i, rhoi, a1i, a2i, a3i,
-             trefi, gei, comment) = card
+             trefi, gei, ifilei, comment) = card
             material_id[i] = mid
             e1[i] = e1i
             e2[i] = e2i
@@ -2488,13 +2510,14 @@ class MAT10C(Material):
     def add(self, mid: int, form: str='REAL',
             rho_real: float=0.0, rho_imag: float=0.0,
             c_real: float=0.0, c_imag: float=0.0,
-            comment: str=''):
+            ifile: int=0, comment: str=''):
         assert form in {'REAL', 'IMAG'}, f'form={form!r}'
-        self.cards.append((mid, form, rho_real, rho_imag, c_real, c_imag, comment))
+        self.cards.append((mid, form, rho_real, rho_imag, c_real, c_imag,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         #ID Material identification number. (Integer > 0)
         #FORM Format to define the fluid density and speed of sound. (Character; REAL or PHASE; Default=REAL)
         # - REAL, define the fluid density and speed of sound in rectangular format (real and imaginary).
@@ -2512,7 +2535,8 @@ class MAT10C(Material):
         c_imag = double_or_blank(card, 6, 'sos_imag', default=0.0)
 
         assert len(card) <= 7, f'len(MAT10C card) = {len(card):d}\ncard={card}'
-        self.cards.append((mid, form, rho_real, rho_imag, c_real, c_imag, comment))
+        self.cards.append((mid, form, rho_real, rho_imag, c_real, c_imag,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2525,7 +2549,7 @@ class MAT10C(Material):
         rho = np.zeros(ncards, dtype='complex128')
 
         for icard, card in enumerate(self.cards):
-            (mid, formi, rho_real, rho_imag, c_real, c_imag, comment) = card
+            (mid, formi, rho_real, rho_imag, c_real, c_imag, ifilei, comment) = card
             material_id[icard] = mid
             form[icard] = formi
             c[icard] = c_real + 1j * c_imag
@@ -2629,7 +2653,7 @@ class MATORT(Material):
             option: str='ELEM', file_=None,
             xyz1: Optional[list[float]]=None,
             xyz2: Optional[list[float]]=None,
-            comment: str=''):
+            ifile: int=0, comment: str=''):
         if xyz1 is None:
             xyz1 = [0., 0., 0.]
         if xyz2 is None:
@@ -2639,11 +2663,11 @@ class MATORT(Material):
                            iyield, ihard, sy, y1, y2, y3,
                            yshear1, yshear2, yshear3,
                            option, file_, xyz1, xyz2,
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         #| MATORT |   MID  |   E1  |   E2  |  E3 | NU12 | NU23 | NU31 | RHO |
         #|        |   G12  |  G23  |  G31  |  A1 |  A2  |  A3  | TREF |  GE |
         #|        |  IYLD  | IHARD |   SY  |     |  Y1  |  Y2  |  Y3  | N/A |
@@ -2703,7 +2727,7 @@ class MATORT(Material):
                            iyield, ihard, sy, y1, y2, y3,
                            yshear1, yshear2, yshear3,
                            option, file_, (x1, y1, z1), (x2, y2, z2),
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2749,7 +2773,7 @@ class MATORT(Material):
              iyieldi, ihardi, syi, y1i, y2i, y3i,
              yshear1i, yshear2i, yshear3i,
              optioni, filei, xyz1i, xyz2i,
-             comment) = card
+             ifilei, comment) = card
             material_id[icard] = mid
             E1[icard] = E1i
             E2[icard] = E2i
@@ -2981,7 +3005,8 @@ class MATHP(Material):
             a30=0., a21=0., a12=0., a03=0., d3=0.,
             a40=0., a31=0., a22=0., a13=0., a04=0., d4=0.,
             a50=0., a41=0., a32=0., a23=0., a14=0., a05=0., d5=0.,
-            tab1=None, tab2=None, tab3=None, tab4=None, tabd=None, comment=''):
+            tab1=None, tab2=None, tab3=None, tab4=None, tabd=None,
+            ifile: int=0, comment: str=''):
         #HyperelasticMaterial.__init__(self)
         if comment:
             self.comment = comment
@@ -2992,11 +3017,11 @@ class MATHP(Material):
                            a02, d2, a30, a21, a12, a03, d3, a40,
                            a31, a22, a13, a04, d4, a50, a41,
                            a32, a23, a14, a05, d5, tab1, tab2,
-                           tab3, tab4, tabd, comment))
+                           tab3, tab4, tabd, ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a MATHP card from ``BDF.add_card(...)``
 
@@ -3061,7 +3086,7 @@ class MATHP(Material):
                            a02, d2, a30, a21, a12, a03, d3, a40,
                            a31, a22, a13, a04, d4, a50, a41,
                            a32, a23, a14, a05, d5, tab1, tab2,
-                           tab3, tab4, tabd, comment))
+                           tab3, tab4, tabd, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -3117,7 +3142,7 @@ class MATHP(Material):
              a02i, d2i, a30i, a21i, a12i, a03i, d3i, a40i,
              a31i, a22i, a13i, a04i, d4i, a50i, a41i,
              a32i, a23i, a14i, a05i, d5i,
-             tab1i, tab2i, tab3i, tab4i, tabdi, comment) = card
+             tab1i, tab2i, tab3i, tab4i, tabdi, ifilei, comment) = card
             tab1i = tab1i if tab1i is not None else 0
             tab2i = tab2i if tab2i is not None else 0
             tab3i = tab3i if tab3i is not None else 0
@@ -3377,7 +3402,8 @@ class MATHE(Material):
                    rho=0., texp=0.,
                    c10=0., c01=0.,
                    c20=0., c11=0., c02=0.,
-                   c30=0., c21=0., c12=0., c03=0., comment: str=''):
+                   c30=0., c21=0., c12=0., c03=0.,
+                   ifile: int=0, comment: str=''):
         ##HyperelasticMaterial.__init__(self)
         #if comment:
             #self.comment = comment
@@ -3387,11 +3413,11 @@ class MATHE(Material):
                            c10, c01,
                            c20, c11, c02,
                            c30, c21, c12, c03,
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a MATHE card from ``BDF.add_card(...)``
 
@@ -3436,7 +3462,7 @@ class MATHE(Material):
         self.cards.append((mid, hyperelastic_model, k, rho, texp,
                            c10, c01,
                            c20, c11, c02,
-                           c30, c21, c12, c03, comment))
+                           c30, c21, c12, c03, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -3468,7 +3494,7 @@ class MATHE(Material):
             (mid, modeli, ki, rhoi, texpi,
              c10i, c01i,
              c20i, c11i, c02i,
-             c30i, c21i, c12i, c03i, comment) = card
+             c30i, c21i, c12i, c03i, ifilei, comment) = card
 
             material_id[icard] = mid
             k[icard] = ki

@@ -15,7 +15,7 @@ class TestRigid(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         rbe = model.rbe3
-        rbe_id = rbe.add_card(card)
+        rbe_id = rbe.add_card(card, ifile=0)
         #fields = rbe.raw_fields()
         #msg = print_card_8(fields).rstrip()
         msg = rbe.write().rstrip()
@@ -124,7 +124,7 @@ class TestRigid(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         rbe2 = model.rbe2
-        rbe_id = rbe2.add_card(card)
+        rbe_id = rbe2.add_card(card, ifile=0)
         rbe2.write(size=16)
         #fields = rbe.raw_fields()
         msg = rbe2.write(size=8).rstrip()
@@ -160,7 +160,7 @@ class TestRigid(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         rbe2 = model.rbe2
-        rbe2_id = rbe2.add_card(card)
+        rbe2_id = rbe2.add_card(card, ifile=0)
         msg = rbe2.write().rstrip()
 
         eid = 2
@@ -235,7 +235,7 @@ class TestRigid(unittest.TestCase):
         #print(print_card_8(card))
         card = BDFCard(card)
         rbe1 = model.rbe1
-        rbe1_id = rbe1.add_card(card)
+        rbe1_id = rbe1.add_card(card, ifile=0)
         #fields = rbe.raw_fields()
         #msg = print_card_8(fields).rstrip()
         msg = rbe1.write().rstrip()
@@ -268,7 +268,7 @@ class TestRigid(unittest.TestCase):
         #print(print_card_8(card))
         card = BDFCard(card)
         rbe1 = model.rbe1
-        rbe1_id = rbe1.add_card(card)
+        rbe1_id = rbe1.add_card(card, ifile=0)
         #fields = rbe.raw_fields()
         #msg = print_card_8(fields).rstrip()
         msg = rbe1.write().rstrip()
@@ -314,7 +314,7 @@ class TestRigid(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         rbe1 = model.rbe1
-        rbe1_id = rbe1.add_card(card)
+        rbe1_id = rbe1.add_card(card, ifile=0)
         #fields = rbe.raw_fields()
         #msg = print_card_8(fields).rstrip()
         msg = rbe1.write().rstrip()

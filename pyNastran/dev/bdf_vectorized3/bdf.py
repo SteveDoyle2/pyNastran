@@ -31,6 +31,8 @@ import numpy as np  # type: ignore
 from cpylog import get_logger2
 
 from pyNastran.utils import object_attributes, check_path, PathLike
+from pyNastran.utils.numpy_utils import (
+    integer_types, float_types)
 from pyNastran.bdf.utils import parse_patran_syntax
 from pyNastran.bdf.bdf_interface.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck,
@@ -2917,31 +2919,38 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 #_check_for_spaces(card_name, card_lines, comment, self.log)
             self.log.info('    rejecting card_name = %s' % card_name)
 
-    def _prepare_cord1r(self, unused_card: list[str], card_obj: BDFCard, comment='') -> int:
+    def _prepare_cord1r(self, unused_card: list[str], card_obj: BDFCard,
+                        ifile: int, comment: str='') -> int:
         """adds a CORD1R"""
-        out = self.coord.add_cord1r_bdf(card_obj, icard=0, comment=comment)
+        out = self.coord.add_cord1r_bdf(card_obj, icard=0, ifile=ifile, comment=comment)
         if card_obj.field(5):
-            out = self.coord.add_cord1r_bdf(card_obj, icard=1, comment=comment)
+            out = self.coord.add_cord1r_bdf(card_obj, icard=1, ifile=ifile, comment=comment)
         assert isinstance(out, int), (out, card_obj)
         return out
-    def _prepare_cord1c(self, unused_card: list[str], card_obj: BDFCard, comment='') -> int:
+    def _prepare_cord1c(self, unused_card: list[str], card_obj: BDFCard,
+                        ifile: int, comment: str='') -> int:
         """adds a CORD1C"""
-        out = self.coord.add_cord1c_bdf(card_obj, icard=0, comment=comment)
+        out = self.coord.add_cord1c_bdf(card_obj, icard=0, ifile=ifile, comment=comment)
         if card_obj.field(5):
-            out = self.coord.add_cord1c_bdf(card_obj, icard=1, comment=comment)
+            out = self.coord.add_cord1c_bdf(card_obj, icard=1, ifile=ifile, comment=comment)
         assert isinstance(out, int), (out, card_obj)
         return out
-    def _prepare_cord1s(self, unused_card: list[str], card_obj: BDFCard, comment='') -> int:
+    def _prepare_cord1s(self, unused_card: list[str], card_obj: BDFCard,
+                        ifile: int, comment: str='') -> int:
         """adds a CORD1S"""
-        out = self.coord.add_cord1s_bdf(card_obj, icard=0, comment=comment)
+        out = self.coord.add_cord1s_bdf(card_obj, icard=0, ifile=ifile, comment=comment)
         if card_obj.field(5):
-            out = self.coord.add_cord1s_bdf(card_obj, icard=1, comment=comment)
+            out = self.coord.add_cord1s_bdf(card_obj, icard=1, ifile=ifile, comment=comment)
         assert isinstance(out, int), (out, card_obj)
         return out
 
-    def _prepare_card(self, cls, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_card(self, cls, unused_card: list[str], card_obj: BDFCard,
+                      ifile: int, comment: str='') -> None:
         """adds a card and  calls the add_card method"""
-        i = cls.add_card(card_obj, comment=comment)
+        #try:
+        #    i = cls.add_card(card_obj, comment=comment)
+        #except TypeError:
+        i = cls.add_card(card_obj, ifile=ifile, comment=comment)
         if cls.type == 'PDAMP':
             assert isinstance(i, list), (i, cls)
         else:
@@ -2950,51 +2959,65 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
     def _prepare_card_by_method(self, func: Callable,
                                 unused_card: list[str],
-                                card_obj: BDFCard, comment='') -> None:
+                                card_obj: BDFCard, ifile: int, comment: str='') -> None:
         """adds a card, but doesn't call the add_card method"""
-        i = func(card_obj, comment=comment)
+        i = func(card_obj, ifile=ifile, comment=comment)
         assert isinstance(i, int), (i, card_obj)
         return i
 
-    def _prepare_grdset(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_grdset(self, unused_card: list[str], card_obj: BDFCard,
+                        ifile: int, comment: str='') -> None:
         """adds a GRDSET"""
+        assert isinstance(ifile, integer_types), ifile
         assert self.grdset is None, self.grdset
-        grdset = GRDSET.add_card(card_obj, comment=comment)
+        grdset = GRDSET.add_card(card_obj, ifile, comment=comment)
         self.grdset = grdset
         return self.grdset
-    def _prepare_baror(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_baror(self, unused_card: list[str], card_obj: BDFCard,
+                       ifile: int, comment: str='') -> None:
         """adds a BAROR"""
+        assert isinstance(ifile, integer_types), ifile
         assert self.baror is None, self.baror
-        self.baror = BAROR.add_card(self, card_obj, comment=comment)
+        self.baror = BAROR.add_card(self, card_obj, ifile, comment=comment)
         return self.baror
-    def _prepare_beamor(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_beamor(self, unused_card: list[str], card_obj: BDFCard,
+                        ifile: int, comment: str='') -> None:
         """adds a BEAMOR"""
+        assert isinstance(ifile, integer_types), ifile
         assert self.beamor is None, self.beamor
-        self.beamor = BEAMOR.add_card(card_obj, comment=comment)
+        self.beamor = BEAMOR.add_card(card_obj, ifile, comment=comment)
         return self.beamor
-    def _prepare_bdyor(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_bdyor(self, unused_card: list[str], card_obj: BDFCard,
+                       ifile: int, comment: str='') -> None:
         """adds a BYDOR"""
+        assert isinstance(ifile, integer_types), ifile
         assert self.bdyor is None, self.bdyor
-        self.bdyor = BDYOR.add_card(card_obj, comment=comment)
+        self.bdyor = BDYOR.add_card(card_obj, ifile, comment=comment)
         return self.bdyor
 
-    def _prepare_tempax(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_tempax(self, unused_card: list[str], card_obj: BDFCard,
+                        ifile: int, comment: str='') -> None:
         """adds a TEMPAX"""
-        tempaxs = [TEMPAX.add_card(card_obj, 0, comment=comment)]
+        assert isinstance(ifile, integer_types), ifile
+        tempaxs = [TEMPAX.add_card(card_obj, 0, ifile, comment=comment)]
         if card_obj.field(5):
-            tempaxs.append(TEMPAX.add_card(card_obj, 1, comment=''))
+            tempaxs.append(TEMPAX.add_card(card_obj, 1, ifile, comment=''))
         for tempax in tempaxs:
             self._add_methods._add_load_object(tempax)
         return tempaxs
 
-    def _prepare_dequatn(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dequatn(self, unused_card: list[str], card_obj: BDFCard,
+                         ifile: int, comment: str='') -> None:
         """adds a DEQATN"""
-        deqatn = DEQATN.add_card(card_obj, comment=comment)
+        assert isinstance(ifile, integer_types), ifile
+        deqatn = DEQATN.add_card(card_obj, ifile=ifile, comment=comment)
         self._add_methods._add_deqatn_object(deqatn)
         return deqatn
 
-    def _prepare_dti(self, unused_card_name, card_obj, comment='') -> DTI:
+    def _prepare_dti(self, unused_card_name, card_obj,
+                     ifile: int, comment: str='') -> DTI:
         """adds a DTI"""
+        assert isinstance(ifile, integer_types), ifile
         name = string(card_obj, 1, 'name')
         if name == 'UNITS':
             dti = DTI_UNITS.add_card(card_obj, comment=comment)
@@ -3003,8 +3026,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self._add_methods._add_dti_object(dti)
         return dti
 
-    def _prepare_dmig(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIG:
+    def _prepare_dmig(self, unused_card: list[str], card_obj: BDFCard,
+                      ifile: int, comment: str='') -> DMIG:
         """adds a DMIG"""
+        assert isinstance(ifile, integer_types), ifile
         name = string(card_obj, 1, 'name')
         field2 = integer_or_string(card_obj, 2, 'flag')
 
@@ -3025,9 +3050,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 self._dmig_temp[name].append((card_obj, comment))
         return dmig
 
-    def _prepare_dmix(self, class_obj, add_method, card_obj,
-                      comment: str='') -> DMI | DMIJ | DMIJI | DMIK:
+    def _prepare_dmix(self, class_obj, add_method: Callable,
+                      card_obj,
+                      ifile: int, comment: str='') -> DMI | DMIJ | DMIJI | DMIK:
         """adds a DMI, DMIJ, DMIJI, or DMIK"""
+        assert isinstance(ifile, integer_types), ifile
         field2 = integer(card_obj, 2, 'flag')
         if field2 == 0:
             dmix = class_obj.add_card(card_obj, comment=comment)
@@ -3038,28 +3065,41 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             self._dmig_temp[name].append((card_obj, comment))
         return dmix
 
-    def _prepare_dmiax(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIAX:
+    def _prepare_dmiax(self, unused_card: list[str], card_obj: BDFCard,
+                       ifile: int, comment: str='') -> DMIAX:
         """adds a DMIAX"""
-        return self._prepare_dmix(DMIAX, self._add_methods._add_dmiax_object, card_obj, comment=comment)
+        assert isinstance(ifile, integer_types), ifile
+        return self._prepare_dmix(DMIAX, self._add_methods._add_dmiax_object, card_obj,ifile,  comment=comment)
 
-    def _prepare_dmi(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMI:
+    def _prepare_dmi(self, unused_card: list[str], card_obj: BDFCard,
+                     ifile: int, comment: str='') -> DMI:
         """adds a DMI"""
-        return self._prepare_dmix(DMI, self._add_methods._add_dmi_object, card_obj, comment=comment)
+        assert isinstance(ifile, integer_types), ifile
+        return self._prepare_dmix(DMI, self._add_methods._add_dmi_object, card_obj, ifile, comment=comment)
 
-    def _prepare_dmij(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIJ:
+    def _prepare_dmij(self, unused_card: list[str], card_obj: BDFCard,
+                      ifile: int, comment: str='') -> DMIJ:
         """adds a DMIJ"""
-        return self._prepare_dmix(DMIJ, self._add_methods._add_dmij_object, card_obj, comment=comment)
+        assert isinstance(ifile, integer_types), ifile
+        return self._prepare_dmix(DMIJ, self._add_methods._add_dmij_object, card_obj, ifile, comment=comment)
 
-    def _prepare_dmik(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIK:
+    def _prepare_dmik(self, unused_card: list[str], card_obj: BDFCard,
+                      ifile: int, comment: str='') -> DMIK:
         """adds a DMIK"""
-        return self._prepare_dmix(DMIK, self._add_methods._add_dmik_object, card_obj, comment=comment)
+        assert isinstance(ifile, integer_types), ifile
+        return self._prepare_dmix(DMIK, self._add_methods._add_dmik_object,
+                                  card_obj, ifile, comment=comment)
 
-    def _prepare_dmiji(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIJI:
+    def _prepare_dmiji(self, unused_card: list[str], card_obj: BDFCard,
+                       ifile: int, comment: str='') -> DMIJI:
         """adds a DMIJI"""
-        return self._prepare_dmix(DMIJI, self._add_methods._add_dmiji_object, card_obj, comment=comment)
+        assert isinstance(ifile, integer_types), ifile
+        return self._prepare_dmix(DMIJI, self._add_methods._add_dmiji_object, card_obj, ifile, comment=comment)
 
-    def _prepare_ringfl(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_ringfl(self, unused_card: list[str], card_obj: BDFCard,
+                        ifile: int, comment: str='') -> None:
         """adds a RINGFL"""
+        assert isinstance(ifile, integer_types), ifile
         rings = [RINGFL.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(3):
             rings.append(RINGFL.add_card(card_obj, icard=1, comment=comment))
@@ -3069,7 +3109,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             self._add_methods._add_ringfl_object(ring)
         return rings
 
-    def _prepare_acmodl(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_acmodl(self, unused_card: list[str], card_obj: BDFCard,
+                        ifile: int, comment: str='') -> None:
+        assert isinstance(ifile, integer_types), ifile
         acmodl = ACMODL.add_card(card_obj, self._nastran_format, comment=comment)
         self._add_methods._add_acmodl_object(acmodl)
 
@@ -3153,6 +3195,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                   created.
 
         """
+        if ifile is None:
+            ifile = 0
         card_name = card_name.upper()
         card_obj, unused_card = self.create_card_object(
             card_lines, card_name,
@@ -3197,12 +3241,15 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             the card object representation of card
 
         """
+        ifile = 0
+        assert isinstance(ifile, integer_types), ifile
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,
                                                  is_list=True, has_none=has_none)
-        self._add_card_helper(card_obj, card, card_name, comment)
+        self._add_card_helper(card_obj, card, card_name, ifile, comment=comment)
 
-    def add_card_lines(self, card_lines: list[str], card_name: str, comment: str='', has_none=True):
+    def add_card_lines(self, card_lines: list[str], card_name: str,
+                       ifile: int=0, comment: str='', has_none=True):
         """
         Adds a card object to the BDF object.
 
@@ -3219,10 +3266,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
 
         """
+        assert isinstance(ifile, integer_types), ifile
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,
                                                  is_list=False, has_none=has_none)
-        self._add_card_helper(card_obj, card, card_name, comment)
+        self._add_card_helper(card_obj, card, card_name, ifile, comment=comment)
 
     def _get_npoints_nids_allnids(self) -> np.ndarray:
         """helper method for get_xyz_in_coord"""
@@ -3413,6 +3461,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             an optional the comment for the card
 
         """
+        assert isinstance(ifile, integer_types), (ifile, type(ifile))
         if card_name == 'ECHOON':
             self.echo = True
             return
@@ -3463,7 +3512,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         elif card_name in self._card_parser_prepare:
             add_card_function = self._card_parser_prepare[card_name]
             try:
-                add_card_function(card, card_obj, comment=comment)
+                add_card_function(card, card_obj, ifile=ifile, comment=comment)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
@@ -4584,7 +4633,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
     def _add_card_helper_hdf5(self, card_obj: BDFCard,
                               card: list[str],
-                              card_name: str, comment: str='') -> None:
+                              card_name: str, ifile: int, comment: str='') -> None:
         """
         Adds a card object to the BDF object.
 

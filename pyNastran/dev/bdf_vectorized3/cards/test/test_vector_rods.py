@@ -18,7 +18,7 @@ class TestRods(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        crod_id = model.crod.add_card(cardi)
+        crod_id = model.crod.add_card(cardi, ifile=0)
         A = 1.0
         pid = 100
         mid = 1
@@ -160,7 +160,7 @@ class TestRods(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        conrod_id = model.conrod.add_card(cardi)
+        conrod_id = model.conrod.add_card(cardi, ifile=0)
         model.setup(run_geom_check=False)
 
         conrod = model.conrod
@@ -249,7 +249,7 @@ class TestRods(unittest.TestCase):
         lines = ['conrod,%i, %i, %i, %i, %f, %f, %f, %f' % (eid, nid1, nid2, mid, A, J, c, nsm)]
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        conrod_id = model.conrod.add_card(cardi)
+        conrod_id = model.conrod.add_card(cardi, ifile=0)
         conrod = model.conrod
         #add_methods = model._add_methods
         #add_methods._add_element_object(conrod)
@@ -262,7 +262,7 @@ class TestRods(unittest.TestCase):
         lines = ['crod,%i, %i, %i, %i' % (eid+1, pid, nid1, nid2)]
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        crod_id = model.crod.add_card(cardi)
+        crod_id = model.crod.add_card(cardi, ifile=0)
 
         model.setup(run_geom_check=False)
         crod = model.crod
@@ -275,7 +275,7 @@ class TestRods(unittest.TestCase):
         lines = ['ctube,%i, %i, %i, %i' % (eid+2, pid+1, nid1, nid2)]
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        ctube_id = model.ctube.add_card(cardi)
+        ctube_id = model.ctube.add_card(cardi, ifile=0)
         ctube = model.ctube
 
         model.setup(run_geom_check=False)
@@ -287,7 +287,7 @@ class TestRods(unittest.TestCase):
         lines = ['prod,%i, %i, %f, %f, %f, %f' % (pid, mid, A, J, c, nsm)]
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        prod_i = model.prod.add_card(cardi)
+        prod_i = model.prod.add_card(cardi, ifile=0)
         prod = model.prod
         ptube = model.ptube
 
@@ -303,26 +303,26 @@ class TestRods(unittest.TestCase):
         lines = ['ptube,%i, %i, %f, %f, %f, %f' % (pid+1, mid, OD1, t, nsm, OD2)]
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        ptube_id = ptube.add_card(cardi)
+        ptube_id = ptube.add_card(cardi, ifile=0)
         #add_methods._add_property_object(ptube)
 
         lines = ['mat1,%i, %.2e, %.2e, %f, %f' % (mid, E, G, nu, rho)]
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        card = model.mat1.add_card(cardi)
+        card = model.mat1.add_card(cardi, ifile=0)
         mat1 = model.mat1
         #add_methods._add_structural_material_object(card)
 
         lines = ['grid,%i, %i, %f, %f, %f' % (nid1, 0, xyz1[0], xyz1[1], xyz1[2])]
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        card = model.grid.add_card(cardi)
+        card = model.grid.add_card(cardi, ifile=0)
         #add_methods._add_node_object(card)
 
         lines = ['grid,%i, %i, %f, %f, %f' % (nid2, 0, xyz2[0], xyz2[1], xyz2[2])]
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        card = model.grid.add_card(cardi)
+        card = model.grid.add_card(cardi, ifile=0)
         #add_methods._add_node_object(card)
 
         model.cross_reference()

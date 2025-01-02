@@ -61,7 +61,7 @@ class ROTORG(VectorizedBaseCard):
         self.n += nnodes
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 

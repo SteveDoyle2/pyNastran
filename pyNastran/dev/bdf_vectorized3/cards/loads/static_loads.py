@@ -114,7 +114,7 @@ class DEFORM(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a DEFORM card from ``BDF.add_card(...)``
 
@@ -285,7 +285,7 @@ class SPCD(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
             sids = [sid]
@@ -398,7 +398,7 @@ class Load0(Load):
         self.cards.append((sid, node, cid, mag, xyz, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         fdouble = double if self.model.is_strict_card_parser else force_double
 
@@ -537,7 +537,7 @@ class Load1(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -656,7 +656,7 @@ class Load2(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1098,7 +1098,7 @@ class GRAV(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
 
         sid = integer(card, 1, 'sid')
@@ -1278,7 +1278,7 @@ class ACCEL(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a ACCEL card from ``BDF.add_card(...)``
 
@@ -1451,7 +1451,7 @@ class ACCEL1(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a ACCEL1 card from ``BDF.add_card(...)``
 
@@ -1598,7 +1598,7 @@ class Combination(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble = double if self.model.is_strict_card_parser else force_double
         sid = integer(card, 1, 'sid')
         scale = fdouble(card, 2, 'scale')
@@ -2072,7 +2072,7 @@ class TEMP(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
 
         nfields = len(card)
@@ -2220,7 +2220,7 @@ class TEMPD(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else force_double_or_blank
         #fdouble_or_blank = double_or_blank if self.model.is_strict_card_parser else lax_double_or_blank
         #sid = force_integer(card, 1, 'sid')
@@ -2349,7 +2349,7 @@ class SLOAD(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
 
         nfields = len(card) - 2
@@ -2517,7 +2517,7 @@ class RFORCE(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a RFORCE card from ``BDF.add_card(...)``
 
@@ -2771,7 +2771,7 @@ class RFORCE1(Load):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
         Adds a RFORCE1 card from ``BDF.add_card(...)``
 

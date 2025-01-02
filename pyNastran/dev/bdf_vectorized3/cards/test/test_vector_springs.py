@@ -25,7 +25,7 @@ class TestSprings(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        elem_id = model.pelas.add_card(card)
+        elem_id = model.pelas.add_card(card, ifile=0)
         pelas = model.pelas
         model.setup()
         pelas.write(size, 'dummy')

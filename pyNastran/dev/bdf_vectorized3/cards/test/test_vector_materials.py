@@ -25,7 +25,7 @@ class TestMaterials(unittest.TestCase):
         card = BDFCard(fields)
 
         model = BDF(debug=False)
-        mat1_id = model.mat1.add_card(card)
+        mat1_id = model.mat1.add_card(card, ifile=0)
         mat1 = model.mat1
         mat1.parse_cards()
         self.assertEqual(mid, mat1.material_id)
@@ -412,7 +412,7 @@ class TestMaterials(unittest.TestCase):
         cardi = BDFCard(card)
 
         mat8 = model.mat8
-        card2 = mat8.add_card(cardi)
+        card2 = mat8.add_card(cardi, ifile=0)
 
         #fields = card2.raw_fields()
         #msg = print_card_8(fields)
@@ -539,7 +539,7 @@ class TestMaterials(unittest.TestCase):
         card = model._process_card(lines)
         cardi = BDFCard(card)
         mat11 = model.mat11
-        mat_id = mat11.add_card(cardi)
+        mat_id = mat11.add_card(cardi, ifile=0)
 
         #fields = mat.raw_fields()
         #msg = print_card_8(fields)
