@@ -140,15 +140,15 @@ class GENEL(Element):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0.,
             tflag: int=0, T1=None, T2=None, T3=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         self.cards.append(((eid, pid, nids,
                             theta_mcid, zoffset,
                             tflag, T1, T2, T3,
-                            comment)))
+                            ifile, comment)))
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, comment=''):
+    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
         eid = integer(card, 1, 'eid')
         card_fields = card.fields()
         ucard_fields = [field.upper() if field is not None else None
@@ -223,7 +223,7 @@ class GENEL(Element):
         ud = np.array(ud).reshape(len(ud) // 2, 2)
 
         #return GENEL(eid, ul, ud, k, z, s, comment=comment)
-        self.cards.append((eid, ul, ud, k, z, s, comment))
+        self.cards.append((eid, ul, ud, k, z, s, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -231,6 +231,7 @@ class GENEL(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         nul = np.zeros(ncards, dtype='int32')
         nud = np.zeros(ncards, dtype='int32')

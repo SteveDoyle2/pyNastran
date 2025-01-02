@@ -619,12 +619,15 @@ class CTRIA3(ShellElement):
 
     def _save(self, element_id, property_id, nodes,
               zoffset, mcid, theta,
-              tflag, T):
+              tflag, T, ifile=None):
         assert element_id.min() >= 0, element_id
         assert property_id.min() >= 0, property_id
         assert nodes.min() >= 0, nodes
         ncards_existing = len(self.element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards_existing, dtype='int32')
         if ncards_existing > 0:
+            element_id = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
@@ -633,6 +636,7 @@ class CTRIA3(ShellElement):
             tflag = np.hstack([self.tflag, tflag])
             T = np.vstack([self.T, T])
             zoffset = np.hstack([self.zoffset, zoffset])
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -941,12 +945,15 @@ class CTRIAR(ShellElement):
 
     def _save(self, element_id, property_id, nodes,
               zoffset, theta, mcid,
-              tflag, T):
+              tflag, T, ifile=None):
         assert element_id.min() >= 0, element_id
         assert property_id.min() >= 0, property_id
         assert nodes.min() >= 0, nodes
         ncards_existing = len(self.element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards_existing, dtype='int32')
         if ncards_existing > 0:
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
@@ -955,6 +962,7 @@ class CTRIAR(ShellElement):
             tflag = np.hstack([self.tflag, tflag])
             T = np.vstack([self.T, T])
             zoffset = np.hstack([self.zoffset, zoffset])
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -1190,9 +1198,10 @@ class CQUAD4(ShellElement):
 
     def _save(self, element_id: np.ndarray, property_id: np.ndarray, nodes: np.ndarray,
               zoffset=None, theta=None, mcid=None,
-              tflag=None, T=None) -> None:
+              tflag=None, T=None, ifile=None) -> None:
         _save_quad(self, element_id, property_id, nodes,
-                   zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
+                   zoffset=zoffset, theta=theta, mcid=mcid,
+                   tflag=tflag, T=T, ifile=ifile)
 
     def __apply_slice__(self, element: CQUAD4, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -1663,9 +1672,10 @@ class CQUADR(ShellElement):
 
     def _save(self, element_id: np.ndarray, property_id: np.ndarray, nodes: np.ndarray,
               zoffset=None, theta=None, mcid=None,
-              tflag=None, T=None) -> None:
+              tflag=None, T=None, ifile=None) -> None:
         _save_quad(self, element_id, property_id, nodes,
-                   zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
+                   zoffset=zoffset, theta=theta, mcid=mcid,
+                   tflag=tflag, T=T, ifile=ifile)
 
     def __apply_slice__(self, element: CQUADR, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -1941,35 +1951,38 @@ class CTRIA6(ShellElement):
 
     def _save(self, element_id, property_id, nodes,
               zoffset=None, theta=None, mcid=None,
-              tflag=None, T=None):
+              tflag=None, T=None, ifile=None):
         if len(self.element_id) != 0:
             raise NotImplementedError()
         assert element_id.min() >= 0, element_id
         assert property_id.min() >= 0, property_id
         assert nodes.min() >= 0, nodes
-        nelements = len(element_id)
+        ncards = len(element_id)
+
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if zoffset is None:
+            zoffset = np.full(ncards, np.nan, dtype='float64')
+        if theta is None:
+            theta = np.full(ncards, 0., dtype='float64')
+        if mcid is None:
+            mcid = np.full(ncards, -1, dtype='int32')
+        if tflag is None:
+            tflag = np.zeros(ncards, dtype='int32')
+        if T is None:
+            T = np.full((ncards, 4), np.nan, dtype='float64')
+
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
-
-        if zoffset is None:
-            zoffset = np.full(nelements, np.nan, dtype='float64')
-        if theta is None:
-            theta = np.full(nelements, 0., dtype='float64')
-        if mcid is None:
-            mcid = np.full(nelements, -1, dtype='int32')
-        if tflag is None:
-            tflag = np.zeros(nelements, dtype='int32')
-        if T is None:
-            T = np.full((nelements, 4), np.nan, dtype='float64')
-
         assert zoffset is not None
         self.zoffset = zoffset
         self.theta = theta
         self.mcid = mcid
         self.tflag = tflag
         self.T = T
-        self.n = nelements
+        self.n = ncards
 
     def __apply_slice__(self, element: CTRIA6, i: np.ndarray) -> None:  # ignore[override]
         #assert element.type == 'CTRIA6'
@@ -2280,35 +2293,38 @@ class CQUAD8(ShellElement):
 
     def _save(self, element_id, property_id, nodes,
               zoffset=None, theta=None, mcid=None,
-              tflag=None, T=None):
+              tflag=None, T=None, ifile=None):
         if len(self.element_id) != 0:
             raise NotImplementedError()
         assert element_id.min() >= 0, element_id
         assert property_id.min() >= 0, property_id
         assert nodes.min() >= 0, nodes
-        nelements = len(element_id)
+        ncards = len(element_id)
+
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if zoffset is None:
+            zoffset = np.full(ncards, np.nan, dtype='float64')
+        if theta is None:
+            theta = np.full(ncards, 0., dtype='float64')
+        if mcid is None:
+            mcid = np.full(ncards, -1, dtype='int32')
+        if tflag is None:
+            tflag = np.zeros(ncards, dtype='int32')
+        if T is None:
+            T = np.full((ncards, 4), np.nan, dtype='float64')
+
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
-
-        if zoffset is None:
-            zoffset = np.full(nelements, np.nan, dtype='float64')
-        if theta is None:
-            theta = np.full(nelements, 0., dtype='float64')
-        if mcid is None:
-            mcid = np.full(nelements, -1, dtype='int32')
-        if tflag is None:
-            tflag = np.zeros(nelements, dtype='int32')
-        if T is None:
-            T = np.full((nelements, 4), np.nan, dtype='float64')
-
         assert zoffset is not None
         self.zoffset = zoffset
         self.theta = theta
         self.mcid = mcid
         self.tflag = tflag
         self.T = T
-        self.n = nelements
+        self.n = ncards
 
     def __apply_slice__(self, element: CQUAD8, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -2537,7 +2553,6 @@ class CQUAD(ShellElement):
 
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, theta_mcid, ifilei, comment) = card
-
             ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
@@ -2546,11 +2561,12 @@ class CQUAD(ShellElement):
                 theta[icard] = theta_mcid
             else:
                 mcid[icard] = theta_mcid
-        self._save(element_id, property_id, nodes, theta, mcid)
+        self._save(element_id, property_id, nodes, theta, mcid, ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, theta, mcid):
+    def _save(self, element_id, property_id, nodes, theta, mcid, ifile):
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -2706,19 +2722,22 @@ class CAABSF(Element):
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
+        self._save(element_id, property_id, nodes, ifile=ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes):
+    def _save(self, element_id, property_id, nodes, ifile=None):
         assert element_id.min() >= 0, element_id
         assert property_id.min() >= 0, property_id
         assert nodes.min() >= 0, nodes
-        nelements = len(element_id)
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
-        self.n = nelements
+        self.n = ncards
 
     def __apply_slice__(self, element: CAABSF, i: np.ndarray) -> None:
         element.element_id = self.element_id[i]
@@ -2801,17 +2820,16 @@ class CAABSF(Element):
 def _save_quad(element: CQUAD4 | CQUADR,
                element_id: np.ndarray, property_id: np.ndarray, nodes: np.ndarray,
                zoffset=None, theta=None, mcid=None,
-               tflag=None, T=None):
+               tflag=None, T=None, ifile=None):
     assert element_id.min() >= 0, element_id
     assert property_id.min() >= 0, property_id
     assert nodes.min() >= 0, nodes
-    nelements = len(element_id)
-    element.element_id = element_id
-    element.property_id = property_id
-    element.nodes = nodes
+    ncards = len(element_id)
 
+    if ifile is None:
+        ifile = np.zeros(ncards, dtype='int32')
     if zoffset is None:
-        zoffset = np.full(nelements, np.nan, dtype='float64')
+        zoffset = np.full(ncards, np.nan, dtype='float64')
     if theta is None:
         theta = np.full(nelements, 0., dtype='float64')
     if mcid is None:
@@ -2822,12 +2840,16 @@ def _save_quad(element: CQUAD4 | CQUADR,
         T = np.full((nelements, 4), np.nan, dtype='float64')
 
     assert zoffset is not None
+    element.ifile = ifile
+    element.element_id = element_id
+    element.property_id = property_id
+    element.nodes = nodes
     element.zoffset = zoffset
     element.theta = theta
     element.mcid = mcid
     element.tflag = tflag
     element.T = T
-    element.n = nelements
+    element.n = ncards
 
 def combine_int_float_array(int_array,
                             float_array,
