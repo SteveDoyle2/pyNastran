@@ -41,7 +41,8 @@ class CELAS1(Element):
         self.components = np.zeros((0, 2), dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int],
-            c1: int=0, c2: int=0, comment: str='') -> int:
+            c1: int=0, c2: int=0,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CELAS1 card
 
@@ -59,7 +60,7 @@ class CELAS1(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids, c1, c2, comment))
+        self.cards.append((eid, pid, nids, c1, c2, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -73,7 +74,7 @@ class CELAS1(Element):
         c1 = integer_or_blank(card, 4, 'c1', default=0)
         c2 = integer_or_blank(card, 6, 'c2', default=0)
         assert len(card) <= 7, f'len(CELAS1 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, nids, c1, c2, comment))
+        self.cards.append((eid, pid, nids, c1, c2, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -81,29 +82,33 @@ class CELAS1(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, c1, c2, comment) = card
+            (eid, pid, nids, c1, c2, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
             components[icard, :] = [c1, c2]
-        self._save(element_id, property_id, nodes, components)
+        self._save(element_id, property_id, nodes, components, ifile)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, components):
+    def _save(self, element_id, property_id, nodes, components, ifile=None):
         if len(self.element_id):
             raise NotImplementedError()
-        nelements = len(element_id)
+        ncards = len(element_id)
+        ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.components = components
-        self.n = nelements
+        self.n = ncards
 
     def __apply_slice__(self, elem: CELAS1, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
@@ -181,7 +186,8 @@ class CELAS2(Element):
         self.components = np.zeros((0, 2), dtype='int32')
 
     def add(self, eid: int, k: float, nids: list[int],
-            c1: int=0, c2: int=0, ge: float=0., s: float=0., comment: str='') -> int:
+            c1: int=0, c2: int=0, ge: float=0., s: float=0.,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CELAS2 card
 
@@ -206,7 +212,7 @@ class CELAS2(Element):
         """
         nids = [0 if nid is None else nid
                 for nid in nids]
-        self.cards.append((eid, k, nids, c1, c2, ge, s, comment))
+        self.cards.append((eid, k, nids, c1, c2, ge, s, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -222,7 +228,7 @@ class CELAS2(Element):
         ge = fdouble_or_blank(card, 7, 'ge', default=0.)
         s = fdouble_or_blank(card, 8, 's', default=0.)
         assert len(card) <= 9, f'len(CELAS2 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, k, nids, c1, c2, ge, s, comment))
+        self.cards.append((eid, k, nids, c1, c2, ge, s, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -230,6 +236,7 @@ class CELAS2(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         k = np.zeros(ncards, dtype='float64')
         nodes = np.zeros((ncards, 2), dtype=idtype)
@@ -238,29 +245,33 @@ class CELAS2(Element):
         s = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, ki, nids, c1, c2, gei, si, comment) = card
+            (eid, ki, nids, c1, c2, gei, si, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             k[icard] = ki
             nodes[icard, :] = nids
             components[icard, :] = [c1, c2]
             ge[icard] = gei
             s[icard] = si
-        self._save(element_id, nodes, components, k, ge, s)
+        self._save(element_id, nodes, components, k, ge, s, ifile)
         self.cards = []
 
-    def _save(self, element_id, nodes, components, k, ge, s):
+    def _save(self, element_id, nodes, components, k, ge, s, ifile=None):
         if len(self.element_id):
             raise NotImplementedError()
-        nelements = len(element_id)
+        ncards = len(element_id)
+        ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.element_id = element_id
         self.nodes = nodes
         self.components = components
         self.k = k
         self.ge = ge
         self.s = s
-        self.n = nelements
+        self.n = ncards
 
     def __apply_slice__(self, elem: CELAS2, i: np.ndarray) -> None:  # ignore[override]
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.nodes = self.nodes[i, :]
         elem.components = self.components[i, :]
@@ -321,7 +332,8 @@ class CELAS3(Element):
         self.property_id = np.array([], dtype='int32')
         self.spoints = np.zeros((0, 2), dtype='int32')
 
-    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+    def add(self, eid: int, pid: int, nids: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CELAS3 card
 
@@ -337,7 +349,7 @@ class CELAS3(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, pid, nids[0], nids[1], comment))
+        self.cards.append((eid, pid, nids[0], nids[1], ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -348,7 +360,7 @@ class CELAS3(Element):
         s1 = integer_or_blank(card, 3, 's1', default=0)
         s2 = integer_or_blank(card, 4, 's2', default=0)
         assert len(card) <= 5, f'len(CELAS3 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pid, s1, s2, comment))
+        self.cards.append((eid, pid, s1, s2, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -356,25 +368,29 @@ class CELAS3(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         spoints = np.zeros((ncards, 2), dtype=idtype)
         for icard, card in enumerate(self.cards):
-            (eid, pid, s1, s2, comment) = card
+            (eid, pid, s1, s2, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             spoints[icard, :] = [s1, s2]
-        self._save(element_id, property_id, spoints)
+        self._save(element_id, property_id, spoints, ifile)
         self.cards = []
 
-    def _save(self, element_id, property_id, spoints):
+    def _save(self, element_id, property_id, spoints, ifile=None):
         if len(self.element_id):
             raise NotImplementedError()
-        nelements = len(element_id)
+        ncards = len(element_id)
+        ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.spoints = spoints
-        self.n = nelements
+        self.n = ncards
 
     def __apply_slice__(self, elem: CELAS3, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
@@ -436,7 +452,8 @@ class CELAS4(Element):
         self.k = np.array([], dtype='float64')
         self.spoints = np.zeros((0, 2), dtype='int32')
 
-    def add(self, eid: int, k: float, nids: list[int], comment: str='') -> int:
+    def add(self, eid: int, k: float, nids: list[int],
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CELAS4 card
 
@@ -452,7 +469,7 @@ class CELAS4(Element):
             a comment for the card
 
         """
-        self.cards.append((eid, k, nids[0], nids[1], comment))
+        self.cards.append((eid, k, nids[0], nids[1], ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -462,7 +479,7 @@ class CELAS4(Element):
         s1 = integer_or_blank(card, 3, 's1', default=0)
         s2 = integer_or_blank(card, 4, 's2', default=0)
         assert len(card) <= 5, f'len(CELAS4 card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, k, s1, s2, comment))
+        self.cards.append((eid, k, s1, s2, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -470,26 +487,30 @@ class CELAS4(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         k = np.zeros(ncards, dtype='float64')
         spoints = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
-            (eid, ki, s1, s2, comment) = card
+            (eid, ki, s1, s2, ifilei, comment) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             k[icard] = ki
             spoints[icard, :] = [s1, s2]
-        self._save(element_id, k, spoints)
+        self._save(element_id, k, spoints, ifile)
         self.cards = []
 
-    def _save(self, element_id, k, spoints):
+    def _save(self, element_id, k, spoints, ifile=None):
         if len(self.element_id):
             raise NotImplementedError()
-        nelements = len(element_id)
+        ncards = len(element_id)
+        ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.element_id = element_id
         self.spoints = spoints
         self.k = k
-        self.n = nelements
+        self.n = ncards
 
     def __apply_slice__(self, elem: CELAS4, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
@@ -541,7 +562,7 @@ class PELAS(Property):
         self.s = np.array([], dtype='float64')
 
     def add(self, pid: int, k: float, ge: float=0., s: float=0.,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PELAS card
 
@@ -559,7 +580,7 @@ class PELAS(Property):
             a comment for the card
 
         """
-        self.cards.append((pid, k, ge, s, comment))
+        self.cards.append((pid, k, ge, s, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -569,7 +590,7 @@ class PELAS(Property):
         k = double(card, 2, 'k')
         ge = fdouble_or_blank(card, 3, 'ge', default=0.)
         s = fdouble_or_blank(card, 4, 's', default=0.)
-        self.cards.append((pid, k, ge, s, comment))
+        self.cards.append((pid, k, ge, s, ifile, comment))
         self.n += 1
         if card.field(5):
             comment = ''
@@ -577,7 +598,7 @@ class PELAS(Property):
             k = double(card, 6, 'k')
             ge = fdouble_or_blank(card, 7, 'ge', default=0.)
             s = fdouble_or_blank(card, 8, 's', default=0.)
-            self.cards.append((pid, k, ge, s, comment))
+            self.cards.append((pid, k, ge, s, ifile, comment))
             self.n += 1
         assert len(card) <= 7, f'len(PELAS card) = {len(card):d}\ncard={card}'
         return self.n - 1
@@ -588,29 +609,33 @@ class PELAS(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         k = np.zeros(ncards, dtype='float64')
         ge = np.zeros(ncards, dtype='float64')
         s = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, ki, gei, si, comment) = card
+            (pid, ki, gei, si, ifilei, comment) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             k[icard] = ki
             ge[icard] = gei
             s[icard] = si
-        self._save(property_id, k, ge, s)
+        self._save(property_id, k, ge, s, ifile)
         self.cards = []
 
-    def _save(self, property_id, k, ge, s):
+    def _save(self, property_id, k, ge, s, ifile=None):
         if len(self.property_id):
             raise NotImplementedError()
-        nproperties = len(property_id)
+        ncards = len(property_id)
+        ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.property_id = property_id
         self.k = k
         self.ge = ge
         self.s = s
-        self.n = nproperties
+        self.n = ncards
 
     def __apply_slice__(self, prop: PELAS, i: np.ndarray) -> None:  # ignore[override]
         prop.property_id = self.property_id[i]
@@ -663,7 +688,7 @@ class PELAST(Property):
         self.table_k_nonlinear: np.array = np.array([], dtype='int32')
 
     def add(self, pid: int, tkid: int=0, tgeid: int=0, tknid: int=0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PELAST card
 
@@ -681,7 +706,7 @@ class PELAST(Property):
             a comment for the card
 
         """
-        self.cards.append((pid, tkid, tgeid, tknid, comment))
+        self.cards.append((pid, tkid, tgeid, tknid, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -691,13 +716,14 @@ class PELAST(Property):
         tgeid = integer_or_blank(card, 3, 'tgeid', default=0)
         tknid = integer_or_blank(card, 4, 'tknid', default=0)
         assert len(card) <= 5, f'len(PELAST card) = {len(card):d}\ncard={card}'
-        self.cards.append((pid, tkid, tgeid, tknid, comment))
+        self.cards.append((pid, tkid, tgeid, tknid, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
 
         #: Identification number of a TABLEDi entry that defines the
@@ -715,17 +741,20 @@ class PELAST(Property):
         table_k_nonlinear = np.zeros(ncards, dtype='int32')
 
         for icard, card in enumerate(self.cards):
-            (pid, tkid, tgeid, tknid, comment) = card
+            (pid, tkid, tgeid, tknid, ifilei, comment) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             table_k[icard] = tkid
             table_ge[icard] = tgeid
             table_k_nonlinear[icard] = tknid
-        self._save(property_id, table_k, table_ge, table_k_nonlinear)
+        self._save(property_id, table_k, table_ge, table_k_nonlinear, ifile)
         self.cards = []
 
-    def _save(self, property_id, table_k, table_ge, table_k_nonlinear):
+    def _save(self, property_id, table_k, table_ge, table_k_nonlinear, ifile=None):
         if len(self.property_id):
             raise NotImplementedError()
+        ifile = ifile if ifile is not None else np.zeros(len(property_id), dtype='int32')
+        self.ifile = ifile
         self.property_id = property_id
         self.table_k = table_k
         self.table_ge = table_ge

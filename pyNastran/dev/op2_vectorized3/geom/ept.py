@@ -821,18 +821,20 @@ class EPT:
 
         prop = op2.pbar
         assert ints.shape[1] == 19
-        prop.property_id = ints[:, 0]
-        prop.material_id = ints[:, 1]
-        prop.A = floats[:, 2]
-        prop.I = floats[:, [3, 4, 18]]
-        prop.j = floats[:, 5]
-        prop.nsm = floats[:, 6]
-        prop.c = floats[:, [8, 9]]
-        prop.d = floats[:, [10, 11]]
-        prop.e = floats[:, [12, 13]]
-        prop.f = floats[:, [14, 15]]
-        prop.k = floats[:, [16, 17]]
-        prop.n = nproperties
+        property_id = ints[:, 0]
+        material_id = ints[:, 1]
+        assert len(property_id) == len(np.unique(property_id))
+        A = floats[:, 2]
+        I = floats[:, [3, 4, 18]]
+        J = floats[:, 5]
+        nsm = floats[:, 6]
+        c = floats[:, [8, 9]]
+        d = floats[:, [10, 11]]
+        e = floats[:, [12, 13]]
+        f = floats[:, [14, 15]]
+        k = floats[:, [16, 17]]
+        #prop.n = nproperties
+        prop._save(property_id, material_id, A, J, c, d, e, f, I, k, nsm, force=True)
         prop.write()
 
         #struct1 = Struct(mapfmt(op2._endian + b'2i17f', self.size))

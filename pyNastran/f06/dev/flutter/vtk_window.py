@@ -4,7 +4,7 @@ done
 easy:
  - preferences window can now hide
  - add control over the update time (not tested)
- - added icase to Preferences Menu
+ - add icase to Preferences Menu
  - add edit_geometry_properties menu
  - add label in lower left corner
  - add fast way to:
@@ -12,21 +12,39 @@ easy:
     - enable/disable fringe (a key for apply_fringe)
     - update nphase (n key)
     - update scale factor (u key for up)
+    - set the model to points (d key)
+      - change point size (i key for increase)
 
 medium:
  - add displacement fringe
+ - logic for creating a pickle file when the bdf
+   is loaded (model.obj)
 
 hard:
+ - groups (don't work but...)
+   - checkbox list of each INCLUDE file
+   - ifile logic done in shells; warnings for others
+     - intention is only elements need ifile logic
+     - logic for user setting ifile_filter -> on_update_groups with g key
+   - TODO: Use a vtkFilter for minimum code solution
+     - Much harder code though...
+   - TODO: "Reload" the model for simplicity?
+     - It's actually semi-decent...
+     - it doesn't work cause it's a bad test case, but it's close...
+     - I think CELAS2 from the 0012 are skipped
+     - TODO: The code doesn't handle empty elements -> no update...
 
 minor:
-make vtk corner text font support unicode
+ - make vtk corner text font support unicode
 
 not done
 --------
 easy:
+ - TODO: disable timer if it's not doing anything
 
 medium:
 TODO: add export gif for set of views and modes
+ - {model}_top_subcase-1_real-mode_f=-100 Hz_g=0.05.png
 TODO: fix vtk window show/hide
 TODO: add easier way to select another case (GUI case form?)
 TODO: delink icase_disp and icase_fringe
@@ -37,7 +55,7 @@ TODO: show/hide set of elements by:
 TODO:   - element ids (copy from femap, paste as list?)
 TODO:   - property ids
 TODO:   - material ids
-TODO:   - combined
+TODO:   - combined???
 
 minor:
 TODO: fix up k/l key swapping (not quite right)
@@ -46,25 +64,37 @@ TODO: disable rotational modes to have fewer results (are these on?)
 """
 from __future__ import annotations
 import os
+import pickle
 from typing import Callable, Optional, Any, cast, TYPE_CHECKING
+from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
 import numpy as np
 
 from qtpy.QtWidgets import (
-    QHBoxLayout, QMenu,
-    QMainWindow, QDockWidget, QFrame, QToolBar,
+    QHBoxLayout, QVBoxLayout, QMenu, QAbstractItemView,
+    QMainWindow, QDockWidget, QFrame, QTreeView, QToolBar,
+    QTableWidget, QTableWidgetItem,
+    QListWidget, QListWidgetItem,
+    QTreeWidget, QTreeWidgetItem,
+    QTreeView,
 )
-from qtpy.QtCore import QTimer
+from qtpy.QtGui import QStandardItemModel, QStandardItem
+from qtpy.QtCore import QTimer, Qt
+
 from pyNastran.utils import PathLike
+from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.nastran_io3 import (
     Nastran3, DisplacementResults)
 from pyNastran.f06.dev.flutter.actions_builder import (
     Actions, Action, build_menus)
+from pyNastran.f06.dev.flutter.scalar_bar import ScalarBar
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.vtk_rendering_core import (
     vtkActor, vtkDataSetMapper, vtkRenderer,
     vtkRenderWindow, vtkTextActor)
-from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
+from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points)
 from pyNastran.gui.utils.vtk.gui_utils import numpy_array_to_vtk_array
@@ -76,16 +106,16 @@ from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_objec
 from pyNastran.gui.gui_objects.settings import NastranSettings
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.settings import Settings
+from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from pyNastran.gui.qt_files.view_actions import ViewActions
 from pyNastran.gui.qt_files.tool_actions import ToolActions
-
-from pyNastran.gui.dev.gui2.vtk_interface import VtkInterface, ScalarBar
-from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
+from pyNastran.gui.qt_files.tool_actions import set_vtk_property_to_unicode
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 
+from pyNastran.gui.dev.gui2.vtk_interface import VtkInterface, ScalarBar
 
-from pyNastran.gui.qt_files.tool_actions import set_vtk_property_to_unicode
 from pyNastran.gui import font_file
+
 if TYPE_CHECKING:  # pragma: no cover
     from vtkmodules.vtkCommonDataModel import vtkCellData, vtkPointData
     #from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
@@ -99,7 +129,8 @@ class VtkWindow(QMainWindow):
                  gui_obj: VtkWindowObject,
                  gui: QMainWindow,
                  data: dict[str, Any],
-                 bdf_filename: str, op2_filename: str=''):
+                 bdf_filename: str,
+                 op2_filename: str=''):
         """
         Sets up the vtk window
 
@@ -114,6 +145,9 @@ class VtkWindow(QMainWindow):
         super().__init__()
         self.gui = gui
         self.gui_obj = gui_obj
+        self.bdf_filename = bdf_filename
+        self.op2_filename = op2_filename
+
         self.vtk_tools = VtkTools(gui_obj, self)
         self.log = gui.log
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
@@ -187,6 +221,7 @@ class VtkWindow(QMainWindow):
 
         renderer.SetBackground(*self.settings.background_color)
         renderer.AddActor(geom_actor)
+        self.vtk_actors['main'] = geom_actor
 
         self.corner_text_actors = setup_text_actors(
             renderer, 10, num=3)
@@ -201,6 +236,7 @@ class VtkWindow(QMainWindow):
         renderer.ResetCamera()
 
         # Render again to set the correct view
+        self.update_dphases()
         self.plot_deformation(icase=self.icase, dphase=0.0)
 
         self.start_animation_timer()
@@ -221,16 +257,24 @@ class VtkWindow(QMainWindow):
         actions_dict = {
             # 'cycle_results': 'L',
             # 'rcycle_results': 'k',
+            'update_groups': Action(name='update_groups', text='Update Groups...', icon='',
+                                   shortcut='g', func=self.on_update_groups, tip='Update the groups'),
             'apply_fringe_plot': Action(name='apply_fringe_plot', text='apply_fringe_plot...', icon='',
                                         shortcut='a', func=self.on_apply_fringe_plot, tip='Turn the fringe on/off'),
-            'cycle_icase': Action(name='cycle_icase', text='cycle_icase...', icon='',
+            'main_point': Action(name='main_point', text='Set to Points', icon='',
+                                        shortcut='d', func=self.vtk_tools.on_main_point, tip='Sets the main actor to points'),
+            'point_size_up': Action(name='point_size_up', text='Increase Point Size', icon='',
+                                        shortcut='i', func=self.vtk_tools.on_point_size_up, tip='Increases the point size'),
+            'point_size_down': Action(name='point_size_down', text='Decrease Point Size', icon='',
+                                        shortcut='Ctrl+i', func=self.vtk_tools.on_point_size_down, tip='Decreases the point size'),
+            'cycle_icase': Action(name='cycle_icase', text='cycle_icase', icon='',
                                   shortcut='l', func=vtk_tools.on_cycle_icase, tip='Increases icase'),
-            'rcycle_icase': Action(name='rcycle_icase', text='rcycle_icase...', icon='',
+            'rcycle_icase': Action(name='rcycle_icase', text='rcycle_icase', icon='',
                                    shortcut='k', func=vtk_tools.on_rcycle_icase, tip='Decreases icase'),
-            'scale_up': Action(name='scale_up', text='scale_up...', icon='',
-                               shortcut='u', func=vtk_tools.on_scale_up, tip='Increases the deformation scale factor'),
-            'scale_down': Action(name='scale_down', text='scale_down...', icon='',
-                                 shortcut='Ctrl+U', func=vtk_tools.on_scale_down, tip='Decreases the deformation scale factor'),
+            'scale_up': Action(name='scale_up', text='Increase Global Deformation Scale', icon='',
+                               shortcut='u', func=vtk_tools.on_scale_up, tip='Increases the deformation scale factor by 1.1x'),
+            'scale_down': Action(name='scale_down', text='Decrease Global Deformation Scale', icon='',
+                                 shortcut='Ctrl+U', func=vtk_tools.on_scale_down, tip='Decreases the deformation scale factor by 1.1x'),
             'nphase_up': Action(name='nphase_up', text='nphase_up...', icon='',
                                 shortcut='N', func=vtk_tools.on_nphase_up, tip='Increase the number of frame'),
             'nphase_down': Action(name='nphase_down', text='scale_down...', icon='',
@@ -245,15 +289,22 @@ class VtkWindow(QMainWindow):
         self.qactions = actions_input.build_qactions(self)
 
         self.menubar = self.menuBar()
-        self.menu_hidden = self.menubar.addMenu('File')
+        self.menu_hidden = self.menubar.addMenu('Hidden')
+        self.menu_view = self.menubar.addMenu('View')
         # self.menu_hidden.menuAction().setVisible(False)
-        hidden_tools = ('apply_fringe_plot',
-                        'cycle_icase', 'rcycle_icase',
-                        'scale_up', 'scale_down',
-                        'nphase_up', 'nphase_down',
-                        'geo_properties')
+        view_tools = (
+            'geo_properties', '',
+            'main_point', 'point_size_up', 'point_size_down',
+        )
+        hidden_tools = (
+            'apply_fringe_plot', 'update_groups',
+            'cycle_icase', 'rcycle_icase',
+            'scale_up', 'scale_down',
+            'nphase_up', 'nphase_down',
+        )
         menus_dict = {
-            'hidden': (self.menu_hidden, hidden_tools)
+            'view': (self.menu_view, view_tools),
+            'hidden': (self.menu_hidden, hidden_tools),
         }
         build_menus(menus_dict, self.qactions)
 
@@ -261,7 +312,8 @@ class VtkWindow(QMainWindow):
         self.global_apply_fringe_plot = not self.global_apply_fringe_plot
         ugrid: vtkUnstructuredGrid = self.grid
         vtk_mapper = self.vtk_mappers['main']
-
+        if len(self.result_cases) == 0:
+            return
         case, case_tuple = self.result_cases[self.icase]
         case = cast(DisplacementResults, case)
         i, name = case_tuple
@@ -269,10 +321,11 @@ class VtkWindow(QMainWindow):
         self.apply_fringe_plot = True
         self.apply_fringe_plot = _update_fringe(
             i, name, case, ugrid, vtk_mapper,
-            self.corner_text_actors, self.iphase,
-            self.global_apply_fringe_plot,
-            self._apply_fringe_plot)
-
+            self.corner_text_actors,
+            iphase=self.iphase,
+            global_apply_fringe_plot=self.global_apply_fringe_plot,
+            apply_fringe_plot=self.apply_fringe_plot)
+        print('done')
 
     def set_data(self, data: dict[str, int]) -> None:
         #print('setting data', data)
@@ -280,6 +333,7 @@ class VtkWindow(QMainWindow):
         self.iphase = 0
         self.nphase = data['nphase']
         self.animate = True #data['animate']
+        self.point_size = 2
 
     @property
     def vtk_interactor(self) -> QVTKRenderWindowInteractor:
@@ -313,7 +367,7 @@ class VtkWindow(QMainWindow):
     def update_dphases(self):
         num = self.nphase + 1
         self.dphases = np.linspace(0.0, 360.0, num=num)[:-1]
-        print(num, self.dphases)
+        #print(num, self.dphases)
         self.scales = np.cos(np.radians(self.dphases))
 
     def start_animation_timer(self) -> None:
@@ -334,10 +388,11 @@ class VtkWindow(QMainWindow):
     def plot_deformation(self, icase: int, dphase: float) -> None:
         #ncase = max(self.result_cases)
         #print(f'plot_deformation; icase={icase}/{ncase}; dphase={dphase}')
+        if len(self.result_cases) == 0:
+            return
         case, case_tuple = self.result_cases[icase]
         #print('found case')
         case = cast(DisplacementResults, case)
-        # print(case)
         i, name = case_tuple
         scale = case.get_scale(i, name) * self.global_scale_factor
         phase = case.get_phase(i, name)
@@ -354,12 +409,11 @@ class VtkWindow(QMainWindow):
         ugrid = self.grid
         vtk_mapper = self.vtk_mappers['main']
         _update_fringe(i, name, case, ugrid, vtk_mapper,
-                       self.corner_text_actors, self.iphase,
-                       self.global_apply_fringe_plot,
-                       self.apply_fringe_plot)
+                       self.corner_text_actors,
+                       iphase=self.iphase,
+                       global_apply_fringe_plot=self.global_apply_fringe_plot,
+                       apply_fringe_plot=self.apply_fringe_plot)
 
-        #z = deflected_xyz[:, 2]
-        #print(f'{z.min():g}, {z.max():g}')
         #print(case)
         self.is_deflected = True
         _update_grid(ugrid, deflected_xyz)
@@ -376,36 +430,32 @@ class VtkWindow(QMainWindow):
                    op2_filename: PathLike='') -> None:
         """creates result_cases"""
         bdf_filename = str(bdf_filename)
-        analysis = Nastran3(self)
-        analysis.save_results_model = True
+        log = self.gui.log
+
+        self.analysis = Nastran3(self)
+        self.analysis.save_results_model = True
         self.is_geom = True
 
-        #['bar_eids', 'bar_lines', 'card_index', 'data_map', 'element_cards', 'element_id', 'gui', 'gui_elements',
-        # 'include_mass_in_geometry', 'mean_edge_length', 'model', 'node_id', 'save_results_model', 'xyz_cid0']
-        analysis.load_nastran3_geometry(bdf_filename)
-        #print(object_attributes(analysis))
+        print('reload_model...')
+        model = self._reload_model(
+            bdf_filename, use_obj_file=False)
+        self.fill_table_tree(model)
 
         # self.inormal = -1
         # for key, (case, case_tag) in self.result_cases.items():
         #     print(case_tag)
 
-        self.is_geom = False
+        self.op2_filename = None
         if os.path.exists(op2_filename):
-            # creates result_cases
-            analysis.load_nastran3_results(op2_filename)
-            for key, (case, case_tag) in self.result_cases.items():
-                # if cae.titles[0] == ['Eigenvector']
-                i, name = case_tag
-                print(f'{key}: is_complex={case.is_complex} headers={case.headers[i]!r}')
-                # print(case_tag)
-            self.icase = 0
+            self.op2_filename = op2_filename
+            self._reload_results(op2_filename, log)
             return
 
-        if len(analysis.model.eigenvectors) == 0:
+        if len(self.analysis.model.eigenvectors) == 0:
             self.gui.mode2_pulldown.clear()
             return
-        eigs = analysis.model.eigenvectors
-        self.log.info(f'analysis.model.eigenvectors = {eigs}')
+        eigs = self.analysis.model.eigenvectors
+        log.info(f'analysis.model.eigenvectors = {eigs}')
 
         #(1, 2, 1, 0, 0, '', '')
         #(1, 9, 1, 0, 0, '', '')
@@ -436,6 +486,153 @@ class VtkWindow(QMainWindow):
         self.log.info(f'eigenvector_mpfs = {eigenvector_mpfs}')
         asdf
 
+    def fill_table_tree(self, model: BDF) -> None:
+        for card in model.element_cards:
+            if card.n == 0:
+                continue
+            if not len(card.ifile) == card.n:
+                self.gui.log_warning(f'{card.type} ifile not created')
+        self.ifile_name_dict = get_ifile_name_dict(
+            self.analysis.model)
+        #fill_table_tree(self.table_tree, self.ifile_name_dict)
+
+        #tree = QTreeWidget()
+        tree = self.tree
+        pids, properties = get_property_table(model)
+        mids, materials = get_material_table(model)
+
+        self.ifile_name_dict = get_ifile_name_dict(
+            self.analysis.model)
+        groups = []
+        for ifile, fname in self.ifile_name_dict.items():
+            groups.append((f'{ifile}: File: {fname}', True, ifile, []))
+
+        words = [
+            ('Properties', False, 0, properties),
+            ('Materials', False, 1, materials),
+            ('Groups', False, 2, groups),
+        ]
+
+        self.materials_filter_set = set(list(mids))
+        self.properties_filter_set = set(list(pids))
+        self.ifile_filter_set = set(list(self.ifile_name_dict))
+        tree = self.tree
+        self.tree_model = QStandardItemModel()
+        self.tree_model.setHorizontalHeaderLabels(['Model'])
+        tree_model_add_items(self.tree_model, words)
+        tree.setModel(self.tree_model)
+        self.tree_model.itemChanged.connect(self.on_tree_item_changed)
+
+    def on_tree_item_changed(self, item: QStandardItem) -> None:
+        text = item.text()
+        sline = text.split(':', 2)
+        #print(f'sline = {sline}')
+        idi_str, type, comment = sline
+        type = type.strip()
+        idi = int(idi_str)
+        #print(f'id={idi}; type={type!r} other={comment!r}')
+        if type.startswith('MAT'):  # MAT1, MAT8, ...
+            myset = self.materials_filter_set
+        elif type.startswith('P'):  # PSHELL, PCOMP, ...
+            myset = self.properties_filter_set
+        elif type == 'File':
+            myset = self.ifile_filter_set
+        else:  # pragma: no cover
+            raise RuntimeError(f'type = {type!r}')
+
+        print('check state')
+        print(myset)
+        if item.checkState() == Qt.Checked:
+            print(f"{text} is checked")
+            myset.add(idi)
+        else:
+            print(f"{text} is unchecked")
+            myset.remove(idi)
+        print(f'{type}: {myset}')
+
+    def on_update_groups(self) -> None:
+        print('on_update_groups')
+        print(self.table_tree)
+        # ifile_filter = get_ifile_groups_from_table(
+        #     self.table_tree, self.model)
+        print('self.ifile_filter_set =', self.ifile_filter_set)
+        ifile_filter = np.array(list(self.ifile_filter_set), dtype='int32')
+        iprop_filter = np.array(list(self.properties_filter_set), dtype='int32')
+        imat_filter = np.array(list(self.materials_filter_set), dtype='int32')
+        ifile_filter.sort()
+        iprop_filter.sort()
+        imat_filter.sort()
+        print(f'ifile_filter = {ifile_filter}')
+        print(f'iprop_filter = {iprop_filter}')
+        print(f'imat_filter = {imat_filter}')
+
+        self.analysis.materials_filter = imat_filter
+        self.analysis.properties_filter = iprop_filter
+        self.analysis.ifile_filter = ifile_filter
+        self._reload_model(self.bdf_filename, use_obj_file=True)
+        self._reload_results(self.op2_filename, self.gui.log)
+
+    def _reload_model(self, bdf_filename: PathLike,
+                      use_obj_file: bool=False) -> None:
+        log = self.gui.log
+        #log.info('start of _reload_model')
+        self.is_geom = True
+        self.case_keys = []
+        self.result_cases = {}
+
+        bdf_filename = str(bdf_filename)
+        obj_filename = bdf_filename + '.obj'
+        bdf_filename_lower = bdf_filename.lower()
+        #if use_obj_file and os.path.exists(obj_filename):
+            #log.info(f'loading obj {obj_filename}')
+            #model = read_obj(obj_filename)
+            #model.log = log
+        if use_obj_file:
+            model = self.analysis_model
+        elif os.path.exists(obj_filename):
+            log.info(f'  loading obj {obj_filename}')
+            model = read_obj(obj_filename)
+            model.log = log
+        elif bdf_filename_lower.endswith('.op2'):
+            op2_read
+            #geo = self.load_op2_geometry(bdf_filename)
+        elif bdf_filename_lower.endswith('.h5'):
+            h5_read
+            #geo = self.load_h5_geometry(bdf_filename)
+        else:
+            self.bdf_filename = bdf_filename
+            model = self.analysis.get_bdf_geometry(
+                bdf_filename, log=log)
+            #model.load_mode = 'bdf'
+            #if self.use_obj_file:
+            # print(type(model))
+            log.info(f'saving obj {obj_filename}')
+            write_obj(model, obj_filename)
+        self.analysis_model = model
+
+        if isinstance(model, BDF):
+            self.analysis.load_nastran3_geometry(bdf_filename, name='main')
+        # elif isinstance(model, OP2):
+        #     raise RuntimeError(type(model))
+        else:
+            raise RuntimeError(type(model))
+        self.is_geom = False
+        #log.info('end of _reload_model')
+        return model
+
+    def _reload_results(self, op2_filename, log):
+        # creates result_cases
+        log.level = 'info'
+        self.analysis.load_nastran3_results(op2_filename)
+        log.level = 'debug'
+        for key, (case, case_tag) in self.result_cases.items():
+            # if cae.titles[0] == ['Eigenvector']
+            i, name = case_tag
+            print(f'{key}: is_complex={case.is_complex} headers={case.headers[i]!r}')
+            # print(case_tag)
+        self.icase = 0
+        return
+
     def set_style_as_trackball(self, vtk_interactor) -> None:
         """sets the default rotation style"""
         #self._simulate_key_press('t') # change mouse style to trackball
@@ -448,11 +645,37 @@ class VtkWindow(QMainWindow):
         vtk_hbox = QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
 
+        vbox = QVBoxLayout()
+        font_size = self.gui.font_size
+        font = make_font(font_size)
+        self.ifile_name_dict = {}
+
+        if 0:
+            table_tree = QTableWidget(self)
+            table_tree.setRowCount(3)
+            table_tree.setColumnCount(1)
+            table_tree.setHorizontalHeaderLabels([self.tr('Groups')])
+            table_tree.setFont(font)
+        else:
+            # self.tree = QTreeWidget()
+            self.tree = QTreeView()
+            table_tree = self.tree
+            # table_tree.setHorizontalHeaderLabels([self.tr('Groups')])
+
+        vbox.addWidget(table_tree)
+        self.table_tree = table_tree
+
         vtk_hbox.addWidget(vtk_interactor)
+        vtk_hbox.addLayout(vbox)
         qt_frame.setLayout(vtk_hbox)
         qt_frame.setFrameStyle(QFrame.NoFrame | QFrame.Plain)
         # this is our main, 'central' widget
         self.setCentralWidget(qt_frame)
+        self.set_font_size(self.gui.font_size)
+    def set_font_size(self, font_size: int) -> None:
+        font = make_font(font_size)
+        # self.tree.setFont(font)
+        self.setFont(font)
 
     # @property
     # def vtk_interactor(self) -> QVTKRenderWindowInteractor:
@@ -485,7 +708,7 @@ class VtkWindow(QMainWindow):
             grid = grids_dict[name]
             self.tool_actions.add_alt_geometry(grid, name)
 
-    def get_new_icase(self):
+    def get_new_icase(self) -> int:
         return 0
     def get_form(self) -> list:
         return []
@@ -495,8 +718,8 @@ class VtkWindow(QMainWindow):
             self.result_cases = {}
             # self.result_cases = cases
             return
-        for case_id, case in cases.items():
-            print(case)
+        #for case_id, case in cases.items():
+            #print(case)
         self.gui_obj.ncase = len(cases)
 
     def create_alternate_vtk_grid(self, name: str,
@@ -570,17 +793,6 @@ class VtkWindow(QMainWindow):
         if follower_function is not None:
             self.follower_functions[name] = follower_function
 
-
-class ScalarBar:
-    def __init__(self):
-        pass
-    def VisibilityOn(self):
-        pass
-    def VisibilityOff(self):
-        pass
-    def Modified(self):
-        pass
-
 def setup_text_actors(renderer: vtkRenderer,
                       size: int, num: int=4):
     """
@@ -633,27 +845,19 @@ def set_corner_text(vtk_text_actors: list[vtkTextActor],
         text_actor.SetInput(text)
 
 class VtkTools:
-    def __init__(self, gui_obj, vtk_window):
-        #print(gui_obj)
-        # print(vtk_window)
+    def __init__(self,
+                 gui_obj: VtkWindowObject,
+                 vtk_window: VtkWindow):
         self.gui_obj = gui_obj
         self.vtk_window = vtk_window
 
     def on_nphase_up(self):
         """changes the number of frames"""
-        #print('on_nphase_up')
-        #print(self.gui)
         nphase = self.vtk_window.nphase + 1
-        #print('nphase = ', nphase)
         self.gui_obj.set_preferences(nphase=nphase)
-        #self.update_dphases()
 
     def on_nphase_down(self):
         """changes the number of frames"""
-        # self.nphase -= 1
-        # if self.nphase == 0:
-        #     self.nphase -= 1
-        # self.update_dphases()
         nphase = self.vtk_window.nphase - 1
         if nphase == 0:
             return
@@ -668,10 +872,32 @@ class VtkTools:
         self.vtk_window.global_scale_factor /= 1.1
 
     def on_rcycle_icase(self) -> None:
-        icase = self._check_icase(self.icase - 1)
+        icase = self._check_icase(self.vtk_window.icase - 1)
         self.gui_obj.set_preferences(icase=icase)
+
+    def on_point_size_up(self) -> None:
+        point_size = self.vtk_window.point_size + 1
+        self.set_point_size(point_size)
+
+    def on_point_size_down(self) -> None:
+        point_size = self.vtk_window.point_size - 1
+        self.set_point_size(point_size)
+
+    def set_point_size(self, point_size: int) -> None:
+        point_size = max(point_size, 1)
+        actor: vtkActor = self.vtk_window.geometry_actors['main']
+        prop = actor.GetProperty()
+        prop.SetPointSize(point_size)
+        self.vtk_window.point_size = point_size
+
+    def on_main_point(self):
+        actor: vtkActor = self.vtk_window.geometry_actors['main']
+        prop = actor.GetProperty()
+        prop.SetRepresentationToPoints()
+        self.vtk_window.render()
+
     def on_cycle_icase(self) -> None:
-        icase = self._check_icase(self.icase+1)
+        icase = self._check_icase(self.vtk_window.icase+1)
         self.gui_obj.set_preferences(icase=icase)
 
     def _check_icase(self, icase: int) -> int:
@@ -681,9 +907,7 @@ class VtkTools:
             self.vtk_window.icase = 0
             self.gui_obj.reset_icase_ncase(icase, ncase)
         elif icase < 0:
-            print(f'  icase1={icase}')
             icase = ncase + icase
-            print(f'  icase2={icase}')
             self.vtk_window.icase = icase
             self.gui_obj.reset_icase_ncase(icase, ncase)
         return icase
@@ -691,16 +915,17 @@ class VtkTools:
 def _update_nastran_settings(nastran_settings: NastranSettings) -> None:
     """
     We took the pyNastranGUI settings and are hacking on them
-    to speed up loading, minimize RAM usage, and focus the software.
+    to speed up loading, minimize RAM usage, and focus this tool.
     """
-    nastran_settings.is_bar_axes = False
+    nastran_settings.is_mass = False
+    nastran_settings.is_mass_update = False
     nastran_settings.is_shell_mcids = False
     nastran_settings.is_element_quality = False
     nastran_settings.is_rbe = False
     nastran_settings.is_constraints = False
     nastran_settings.is_3d_bars = False
     nastran_settings.is_3d_bars_update = False
-    nastran_settings.is_mass_update = False
+    nastran_settings.is_bar_axes = False
     nastran_settings.is_aero = False
 
 def _update_fringe(i: int, name: str,
@@ -728,7 +953,10 @@ def _update_fringe(i: int, name: str,
         return apply_fringe_plot
 
     # update corner text
-    subcase = case.subcase_id[0]
+    if isinstance(case.subcase_id, integer_types):
+        subcase = case.subcase_id
+    else:
+        subcase = case.subcase_id[0]
     is_complex = case.is_complex
     complex_real_word = 'Complex' if is_complex else 'Real'
     legend_title = case.get_legend_title(i, name)
@@ -773,3 +1001,156 @@ def _update_grid(grid: vtkUnstructuredGrid,
     #self.grid_selected.Modified()
     #self._update_follower_grids(nodes)
     #self._update_follower_grids_complex(nodes)
+
+def fill_table_tree(table: QTableWidget,
+                    ifile_name_dict: dict[int, str],
+                    right_clicked_func=None) -> None:
+    data = []
+    for i, name in ifile_name_dict.items():
+        data.append((name, i, []))
+    nrows = len(data)
+    table.setMaximumWidth(250)
+    table.setRowCount(nrows)
+    table.setColumnCount(1)
+    for irow, element in enumerate(data):
+        text, i, children = element
+        assert len(children) == 0, children
+        item = QTableWidgetItem(text)
+        table.setItem(irow, 0, item)
+        item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+        item.setCheckState(Qt.CheckState.Checked)
+        if right_clicked_func is not None:
+            func = partial(right_clicked_func, i)
+            item.clicked.connect(func)
+
+    # Resize all columns to fit their contents
+    table.resizeColumnsToContents()
+    return table
+
+def tree_model_add_items(tree_model: QStandardItemModel,
+                         elements: dict,
+                         level: int=0,
+                         count_check: bool=False) -> None:
+    nelements = len(elements)
+    redo = False
+    for element in elements:
+        if not len(element) == 4:
+            print('element = %r' % str(element))
+
+        text, is_checkable, i, children = element
+        nchildren = len(children)
+        # print('text=%r' % text)
+        item = QStandardItem(text)
+        item.setEditable(False)
+        if is_checkable:
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setCheckState(Qt.Checked)
+            #item.setCheckable(True)
+        tree_model.appendRow(item)
+        if nelements == 1 and nchildren == 0 and level == 0:
+            # self.result_data_window.setEnabled(False)
+            item.setEnabled(False)
+            # print(dir(self.tree_view))
+            # self.tree_view.setCurrentItem(self, 0)
+            # item.mousePressEvent(None)
+            redo = True
+        # else:
+        # pass
+        # print('item=%s count_check=%s nelements=%s nchildren=%s' % (
+        # text, count_check, nelements, nchildren))
+        if children:
+            assert isinstance(children, list), children
+            tree_model_add_items(item, children, level + 1,
+                                 count_check=count_check)
+            # print('*children = %s' % children)
+    is_single = redo
+    return is_single
+
+
+def get_ifile_name_dict(model: BDF) -> dict[int, str]:
+    active_filenames = model.active_filenames
+    ifile_name_dict = {}
+    for ifile, fname in enumerate(active_filenames):
+        ifile_name_dict[ifile] = os.path.basename(fname)
+    return ifile_name_dict
+
+def read_obj(obj_filename: PathLike):
+    with open(obj_filename, 'rb') as obj_file:
+        model = pickle.load(obj_file)
+    return model
+
+def write_obj(obj, obj_filename: PathLike):
+    with open(obj_filename, 'wb') as obj_file:
+        pickle.dump(obj, obj_file)
+
+
+def get_ifile_groups_from_table(table_tree: QTreeView,
+                                model: QStandardItemModel,
+                                level: int=0) -> np.ndarray:
+    print(f'get_ifile_groups_from_table; level={level}')
+    nrows = model.rowCount()
+    print('nrows =', nrows)
+    icol = 0
+    ifile_groups_root = {}
+    ifile_groups = []
+    text_flags = ['Properties', 'Materials', 'Groups']
+    is_root = (level == 0)
+    for irow in range(nrows):
+        print(f'irow = {irow}')
+        if level == 0:
+            print('a')
+            item = model.item(irow, icol)
+        else:
+            print('b')
+            item = model.item(irow)
+        print(f'item = {item}')
+        texti = item.text()
+        if is_root and texti in text_flags:
+            ifile_groups_root[texti] = []
+            out = get_ifile_groups_from_table(table_tree, item, level=level+1)
+            print(f'root! text={texti!r}; out={out}')
+        else:
+            print(f'    text={texti!r}')
+        if item is None:
+            continue
+        is_checked = (item.checkState() == Qt.Checked)
+        if is_checked:
+            ifile_groups.append(irow)
+    print(f'ifile_groups = {ifile_groups}')
+    return ifile_groups
+    return np.array(ifile_groups, dtype='int32')
+
+def get_property_table(model: BDF) -> [np.ndarray, list]:
+    properties = []
+    pids = set([])
+    pid_to_type_name: dict[int, tuple[str, str]] = {}
+    for card in model.property_cards:
+        if card.n == 0:
+            continue
+        card_type = card.type
+        for pid in card.property_id:
+            pids.add(pid)
+            pid_to_type_name[pid] = (card_type, '')
+    for pid, (prop_type, name) in pid_to_type_name.items():
+        properties.append((f'{pid}: {prop_type}: {name}', True, pid, []))
+    pids_array = np.array(list(pids), dtype='int32')
+    pids_array.sort()
+    return pids_array, properties
+
+def get_material_table(model: BDF) -> [np.ndarray, list]:
+    materials = []
+    mids = set([])
+    mid_to_type_name: dict[int, tuple[str, str]] = {}
+    for card in model.material_cards:
+        if card.n == 0:
+            continue
+        card_type = card.type
+        for mid in card.material_id:
+            mids.add(mid)
+            mid_to_type_name[mid] = (card_type, '')
+    for mid, (prop_type, name) in mid_to_type_name.items():
+        materials.append((f'{mid}: {card_type}: {name}', True, mid, []))
+
+    mids_array = np.array(list(mids), dtype='int32')
+    mids_array.sort()
+    return mids_array, materials

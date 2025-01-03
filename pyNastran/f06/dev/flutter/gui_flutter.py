@@ -68,7 +68,7 @@ if 0:  # pragma: no cover
     BASE_PATH = AERO_PATH / 'flutter_bug'
     BDF_FILENAME = BASE_PATH / 'nx' / 'wing_b1.bdf'
     OP2_FILENAME = BASE_PATH / 'wing_b1.op2'
-elif 0:  # pragma: no cover
+elif 1:  # pragma: no cover
     BDF_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.bdf'
     OP2_FILENAME = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.op2'
 else:

@@ -292,6 +292,7 @@ class CBAR(Element):
         return self.n - 1
 
     def __apply_slice__(self, elem: CBAR, i: np.ndarray) -> None:  # ignore[override]
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -345,7 +346,7 @@ class CBAR(Element):
                 wb[icard, :] = wbi
         self._save(element_id, property_id, nodes,
                    g0, x,
-                   offt, pa, pb, wa, wb)
+                   offt, pa, pb, wa, wb, ifile)
         baror = self.model.baror
         apply_bar_default(self, baror)
         self.sort()
@@ -353,10 +354,11 @@ class CBAR(Element):
 
     def _save(self, element_id, property_id, nodes,
               g0=None, x=None,
-              offt=None, pa=None, pb=None, wa=None, wb=None) -> None:
+              offt=None, pa=None, pb=None, wa=None, wb=None, ifile=None) -> None:
         neids = len(element_id)
         idtype = element_id.dtype
         fdtype = self.wa.dtype
+        ifile = np.zeros(neids, dtype='int32') if ifile is None else ifile
         g0   = np.zeros(neids, dtype=idtype) if g0 is None else g0
         x    = np.zeros(neids, dtype=idtype) if x is None else x
         offt = np.full(neids, 'GGG') if offt is None else offt
@@ -368,6 +370,7 @@ class CBAR(Element):
         #assert len(element_id) == len(property_id), 'A1'
         #assert len(self.element_id) == len(self.property_id), 'A2'
         if len(self.element_id):
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
@@ -381,6 +384,7 @@ class CBAR(Element):
             wb = np.vstack([self.wb, wb])
 
         assert len(element_id) == len(property_id), 'B'
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         #print(element_id)
@@ -902,6 +906,7 @@ class PBAR(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
         #Type = np.full(ncards, '', dtype='|U8')
@@ -924,6 +929,7 @@ class PBAR(Property):
         for icard, card in enumerate(self.cards):
             (pid, mid, Ai, i1, i2, i12, j, nsmi, c1, c2, d1, d2,
              e1, e2, f1, f2, k1, k2, ifilei, comment) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             #group[icard] = group
@@ -938,12 +944,16 @@ class PBAR(Property):
 
             k[icard, :] = [k1, k2]
             nsm[icard] = nsmi
-        self._save(property_id, material_id, A, J, c, d, e, f, I, k, nsm)
+        self._save(property_id, material_id, A, J, c, d, e, f, I, k, nsm, ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, material_id, A, J, c, d, e, f, I, k, nsm):
-        if len(self.property_id):
+    def _save(self, property_id, material_id, A, J, c, d, e, f, I, k, nsm,
+              ifile=None, force: bool=False):
+        ncards = len(property_id)
+        ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
+        if len(self.property_id) and not force:
+            ifile = np.hstack([self.ifile, ifile])
             property_id = np.hstack([self.property_id, property_id])
             material_id = np.hstack([self.property_id, material_id])
             A = np.hstack([self.A, A])
@@ -957,6 +967,7 @@ class PBAR(Property):
             k = np.vstack([self.k, k])
             nsm = np.hstack([self.nsm, nsm])
 
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         #Type = np.full(ncards, '', dtype='|U8')
@@ -975,6 +986,7 @@ class PBAR(Property):
 
         self.k = k
         self.nsm = nsm
+        self.n = ncards
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
@@ -997,6 +1009,7 @@ class PBAR(Property):
         ##self.k
 
     def __apply_slice__(self, prop: PBAR, i: np.ndarray) -> None:  # ignore[override]
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         #self.Type = np.full(ncards, '', dtype='|U8')
@@ -1320,6 +1333,7 @@ class PBARL(Property):
 
     def __apply_slice__(self, prop: PBARL, i: np.ndarray) -> None:  # ignore[override]
         assert self.ndim.sum() == len(self.dims)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.Type = self.Type[i]
@@ -1353,7 +1367,7 @@ class PBARL(Property):
         if len(dim) != ndim:
             raise ValueError(f'PBARL pid={pid:d} bar_type={bar_type} ndim={ndim:d} len(dims)={dim}')
 
-        self.cards.append((pid, mid, group, bar_type, dim, nsm, comment))
+        self.cards.append((pid, mid, group, bar_type, dim, nsm, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1405,7 +1419,7 @@ class PBARL(Property):
 
         nsm = double_or_blank(card, 9 + ndim, 'nsm', default=0.0)
         assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
-        self.cards.append((pid, mid, group, bar_type, dim, nsm, comment))
+        self.cards.append((pid, mid, group, bar_type, dim, nsm, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1413,6 +1427,7 @@ class PBARL(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
         ndim = np.zeros(ncards, dtype='int32')
@@ -1422,8 +1437,9 @@ class PBARL(Property):
         dims = []
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, groupi, bar_type, dim, nsmi, comment) = card
+            (pid, mid, groupi, bar_type, dim, nsmi, ifilei, comment) = card
             ndimi = len(dim)
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             group[icard] = groupi
@@ -1433,14 +1449,16 @@ class PBARL(Property):
             assert ndimi > 0, f'PBARL: property_id={pid} dims={dims}'
             dims.extend(dim)
         dims_array = np.array(dims, dtype='float64')
-        self._save(property_id, material_id, ndim, Type, group, nsm, dims_array)
+        self._save(property_id, material_id, ndim, Type, group, nsm, dims_array, ifile)
         self.sort()
         self.cards = []
         assert len(self.dims) == self.ndim.sum()
         assert isinstance(self.ndim, np.ndarray), self.ndim
 
-    def _save(self, property_id, material_id, ndim, Type, group, nsm, dims) -> None:
+    def _save(self, property_id, material_id, ndim, Type, group, nsm, dims, ifile=None) -> None:
+        ifile = ifile if ifile is not None else np.zeros(len(property_id), dtype='int32')
         if len(self.property_id):
+            ifile = np.hstack([self.ifile, ifile])
             property_id = np.hstack([self.property_id, property_id])
             material_id = np.hstack([self.material_id, material_id])
             ndim = np.hstack([self.ndim, ndim])
@@ -1448,6 +1466,7 @@ class PBARL(Property):
             group = np.hstack([self.group, group])
             nsm = np.hstack([self.nsm, nsm])
             dims = np.hstack([self.dims, dims])
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         self.ndim = ndim
@@ -1677,7 +1696,7 @@ class PBRSECT(Property):
         if options != []:
             print(card)
             raise RuntimeError(f'PBRSECT pid={pid:d}; nsm={nsm} brps={brps} inps={inps} outp={outp} ts={ts}')
-        self.cards.append((pid, mid, form, nsm, brps, inps, outp, ts, comment))
+        self.cards.append((pid, mid, form, nsm, brps, inps, outp, ts, ifile, comment))
         self.n += 1
         #return PBRSECT(pid, mid, form, options, comment=comment)
         return self.n - 1
@@ -1685,8 +1704,10 @@ class PBRSECT(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
-        material_id = np.zeros(ncards, dtype='int32')
+        idtype = 'int32'
+        ifile = np.zeros(ncards, dtype='int32')
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
         #self.Type = np.full(ncards, '', dtype='|U8')
         #self.group = np.full(ncards, '', dtype='|U8')
 
@@ -1706,8 +1727,9 @@ class PBRSECT(Property):
         #self.nsm = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, form, nsm, brps, inps, outp, ts, comment) = card
+            (pid, mid, form, nsm, brps, inps, outp, ts, ifilei, comment) = card
             assert form in {'', 'GS'}, f'PBRSECT pid={pid} form={form}'
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             form[icard] = form
@@ -1721,12 +1743,16 @@ class PBRSECT(Property):
 
             #self.k[icard, :] = [k1, k2]
             #self.nsm[icard] = nsm
+        self._save(property_id, material_id, form, ifile)
+        self.sort()
+        self.cards = []
 
+    def _save(self, property_id, material_id, form, ifile=None) -> None:
+        ifile = ifile if ifile is not None else np.zeros(len(property_id), dtype='int32')
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         self.form = form
-        self.sort()
-        self.cards = []
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1854,6 +1880,7 @@ class CBARAO(Element):
                 self.station[istation0:istation1] *= xyz_scale
 
     def __apply_slice__(self, elem: CBARAO, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.scale = self.scale[i]
         istation = self.istation # [i, :]
@@ -1883,16 +1910,18 @@ class CBARAO(Element):
             assert nstationi > 0, stationi
             station.extend(stationi)
 
-        self._save(element_id, scale, nstation, station)
+        self._save(element_id, scale, nstation, station, ifile)
         self.sort()
         self.cards = []
 
     def _save(self, element_id: np.ndarray,
               scale: np.ndarray,
               nstation: np.ndarray,
-              station: list[float]) -> None:
+              station: list[float], ifile=None) -> None:
+        ifile = ifile if ifile is not None else np.zeros(len(element_id), dtype='int32')
         if len(self.element_id) != 0:
             raise NotImplementedError()
+        self.ifile = ifile
         self.element_id = element_id
         self.scale = scale
         self.nstation = nstation

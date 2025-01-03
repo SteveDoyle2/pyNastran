@@ -358,7 +358,7 @@ class AxiShellElement(Element):
     def set_from_op2(self, element_id, property_id, nodes, zoffset=None,
                      tflag=None, T=None, theta=None, mcid=None):
         #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3) = out
-        nelements = len(element_id)
+        ncards = len(element_id)
         assert element_id.min() > 0, element_id
         assert property_id.min() > 0, property_id
         assert nodes.min() >= 0, nodes
@@ -366,26 +366,27 @@ class AxiShellElement(Element):
         if mcid is not None:
             assert mcid.min() >= -1, nodes
 
+        self.ifile = np.zeros(ncards, dtype='int32')
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
 
         if zoffset is None:
-            zoffset = np.full(nelements, np.nan, dtype='float64')
+            zoffset = np.full(ncards, np.nan, dtype='float64')
         assert zoffset is not None
         assert zoffset.dtype.name in NUMPY_FLOATS, zoffset.dtype.name
         self.zoffset = zoffset
 
         if theta is None:
-            theta = np.full(nelements, np.nan, dtype='float64')
+            theta = np.full(ncards, np.nan, dtype='float64')
         self.theta = theta
 
         if mcid is None:
-            mcid = np.full(nelements, -1, dtype=theta.dtype)
+            mcid = np.full(ncards, -1, dtype=theta.dtype)
         self.mcid = mcid
 
         if tflag is None:
-            tflag = np.zeros(nelements, dtype=element_id.dtype)
+            tflag = np.zeros(ncards, dtype=element_id.dtype)
         else:
             utflag = np.unique(tflag)
             assert tflag.min() in {0, 1}, utflag
@@ -394,11 +395,11 @@ class AxiShellElement(Element):
 
         nbase_nodes = self.base_nodes.shape[1]
         if T is None:
-            T = np.zeros((nelements, nbase_nodes), dtype=theta.dtype)
-        assert T.shape == (nelements, nbase_nodes), T.shape
+            T = np.zeros((ncards, nbase_nodes), dtype=theta.dtype)
+        assert T.shape == (ncards, nbase_nodes), T.shape
         self.T = T
 
-        self.n = nelements
+        self.n = ncards
         self.check_types()
 
     def geom_check(self, missing: dict[str, np.ndarray]):
@@ -841,14 +842,15 @@ class CQUADX(AxiShellElement):
         self.theta = theta
 
     def set_from_op2(self, element_id, property_id, nodes):
-        nelements = len(element_id)
+        ncards = len(element_id)
         assert element_id.min() > 0, element_id
         assert property_id.min() > 0, property_id
+        self.ifile = np.zeros(ncards, dtype='int32')
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
-        self.mcid = np.full(nelements, -1, dtype=element_id.dtype)
-        self.theta = np.full(nelements, np.nan, dtype='float32')
+        self.mcid = np.full(ncards, -1, dtype=element_id.dtype)
+        self.theta = np.full(ncards, np.nan, dtype='float32')
         self.n = nelements
 
     def __apply_slice__(self, element: CQUADX, i: np.ndarray) -> None:

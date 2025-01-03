@@ -243,6 +243,7 @@ class NastranSettings:
         self.is_properties = True
         self.is_3d_bars = True
         self.is_3d_bars_update = True
+        self.is_mass = True
         self.is_mass_update = True
         self.is_constraints = True
         self.create_coords = True

@@ -160,17 +160,18 @@ class CFAST(Element):
         assert element_id.min() > 0, element_id
         assert property_id.min() > 0, property_id
         #assert nodes.min() > 0, nodes
-        nelement = len(element_id)
+        ncards = len(element_id)
 
+        self.ifile = np.zeros(ncards, dtype='int32')
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.fast_type = elem_grid_flag
 
-        self.ids = np.zeros((nelement, 2), dtype='int32')
+        self.ids = np.zeros((ncards, 2), dtype='int32')
         self.fastener_node = gs
-        self.fastener_xyz = np.zeros((nelement, 3), dtype='float64')
-        self.n = nelement
+        self.fastener_xyz = np.zeros((ncards, 3), dtype='float64')
+        self.n = ncards
 
     @property
     def max_id(self) -> int:

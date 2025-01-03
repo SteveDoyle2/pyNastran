@@ -148,7 +148,6 @@ class VtkWindowObject:
 
     def reset_icase_ncase(self, icase: int, ncase: int) -> None:
         """called by VtkWindow when icase exceeds the min/max"""
-        print('vtk_window_obj.reset')
         self.icase = icase
         self.gui._export_settings_obj.reset_icase_ncase(icase, ncase)
 

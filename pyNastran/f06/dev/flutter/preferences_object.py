@@ -77,7 +77,6 @@ class PreferencesObject:
         #     self.window.activateWindow()
 
     def reset_icase_ncase(self, icase: int, ncase: int) -> None:
-        print('preferences_obj.reset')
         if self.window_shown:
             self.window.icase_edit.setValue(icase)
             self.window.icase_edit.setMaximum(ncase)

@@ -39,6 +39,7 @@ class Actions:
         qactions = {}
         dirname = self.dirname
         load_icon = (dirname != '')
+        used_shortcuts = []
         for name, action_inputi in self.actions.items():
             assert isinstance(action_inputi, Action), action_inputi
             func = action_inputi.func
@@ -60,6 +61,8 @@ class Actions:
             if not show:
                 action.setVisible(show)
             if shortcut:
+                if shortcut in used_shortcuts:
+                    raise RuntimeError(f'shortcut={shortcut} already used; used_shortcuts={used_shortcuts}')
                 action.setShortcut(shortcut)
             #action.setText(name)
             #action.setIcon()

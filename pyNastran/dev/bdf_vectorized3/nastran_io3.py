@@ -59,6 +59,10 @@ class Nastran3:
         self.gui = gui
         self.data_map = None
         self.save_results_model = False
+        self.ifile_filter = np.array([], dtype='int32')
+        self.materials_filter = np.array([], dtype='int32')
+        self.properties_filter = np.array([], dtype='int32')
+
         self.model = BDF(debug=True, log=None, mode='msc')
         #self.model.is_strict_card_parser = False
 
@@ -83,23 +87,33 @@ class Nastran3:
         )
         return data
 
-    def load_op2_results(self, op2_filename: PathLike, plot: bool=True) -> None:
+    def load_op2_results(self, op2_filename: PathLike,
+                         plot: bool=True) -> None:
         """loads results from an op2 file"""
+        model = self.get_op2_results(op2_filename, log=self.gui.log)
+        self._load_op2_results(model, plot)
+
+    def get_op2_results(self, op2_filename: PathLike | OP2, log=None) -> OP2:
         from pyNastran.op2.op2 import OP2
         assert isinstance(op2_filename, (str, PurePath)), op2_filename
-        model = OP2(debug=True, log=None, mode='msc')
+        model = OP2(debug=True, log=self.gui.log, mode='msc')
         model.read_matpool = False
         model.read_op2(op2_filename, combine=True, build_dataframe=False,
                        skip_undefined_matrices=False, encoding=None)
-        self._load_op2_results(model, plot)
+        return model
 
     def load_h5_results(self, h5_filename: PathLike, plot: bool=True) -> None:
         """loads results from an h5 file"""
+        model = self.get_h5_results(h5_filename, log=self.gui.log)
+        self._load_op2_results(model, plot)
+
+    def get_h5_results(self, h5_filename: PathLike | Results,
+                       log=None) -> Results:
         assert isinstance(h5_filename, (str, PurePath)), h5_filename
-        model = Results(debug=True, log=None, mode='msc')
+        model = Results(debug=True, log=log, mode='msc')
         model.read_matpool = False
         model.read_h5(h5_filename)
-        self._load_op2_results(model, plot)
+        return model
 
     def _load_op2_results(self, model: OP2, plot: bool) -> None:
         """loads results from a filled OP2 object (for op2/h5)"""
@@ -117,14 +131,19 @@ class Nastran3:
     def load_nastran3_geometry(self, bdf_filename: PathLike,
                                name: str='main', plot: bool=True):
         """loads geometry from a bdf/op2/h5 file"""
-        bdf_filename_lower = bdf_filename.lower()
-        print(bdf_filename)
-        if bdf_filename_lower.endswith('.op2'):
-            geo = self.load_op2_geometry(bdf_filename)
-        elif bdf_filename_lower.endswith('.h5'):
-            geo = self.load_h5_geometry(bdf_filename)
+        if isinstance(bdf_filename, PathLike):
+            bdf_filename_lower = bdf_filename.lower()
+            if bdf_filename_lower.endswith('.op2'):
+                geo = self.load_op2_geometry(bdf_filename)
+            elif bdf_filename_lower.endswith('.h5'):
+                geo = self.load_h5_geometry(bdf_filename)
+            else:
+                geo = self.load_bdf_geometry(bdf_filename)
+        elif isinstance(bdf_filename, BDF):
+            model = bdf_filename
+            geo = self.load_bdf_geometry(model)
         else:
-            geo = self.load_bdf_geometry(bdf_filename)
+            raise RuntimeError(type(bdf_filename))
         self.xyz_cid0
         return geo
 
@@ -245,14 +264,22 @@ class Nastran3:
     def load_bdf_geometry(self, bdf_filename: PathLike,
                           name: str='main', plot: bool=True):
         """loads a geometry only an h5 file"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.is_strict_card_parser = False
-        model.idtype = 'int64'
-        model.read_bdf(bdf_filename)
+        model = self.get_bdf_geometry(bdf_filename, log=self.gui.log)
         ugrid, form, cases, unused_icase = self._load_geometry_from_model(
             model, name, plot)
         self.gui._finish_results_io2(name, form, cases)
         return ugrid
+
+    def get_bdf_geometry(self, bdf_filename: PathLike | BDF,
+                         log=None) -> BDF:
+        if isinstance(bdf_filename, BDF):
+            model = bdf_filename
+        else:
+            model = BDF(debug=True, log=log, mode='msc')
+            model.is_strict_card_parser = False
+            model.idtype = 'int64'
+            model.read_bdf(bdf_filename)
+        return model
 
     def _load_geometry_from_model(self, model: BDF, name: str, plot: bool,
                                   ) -> tuple[vtkUnstructuredGrid, Form, Cases, int]:
@@ -298,6 +325,7 @@ class Nastran3:
         gui._add_alt_actors(gui.alt_grids)
 
         element_id, property_id, element_cards, gui_elements, card_index = load_elements(
+            self.ifile_filter, self.properties_filter,
             ugrid, model, node_id,
             self.include_mass_in_geometry)
         self.element_id = element_id
@@ -433,7 +461,9 @@ class Nastran3:
         #x = 1
 
 
-def load_elements(ugrid: vtkUnstructuredGrid,
+def load_elements(ifile_filter: np.ndarray,
+                  properties_filter: np.ndarray,
+                  ugrid: vtkUnstructuredGrid,
                   model: BDF,
                   grid_id: np.ndarray,
                   include_mass_in_geometry: bool,
@@ -487,13 +517,28 @@ def load_elements(ugrid: vtkUnstructuredGrid,
     nelement0 = 0
     card_index = {}
     element_cards = [card for card in model.element_cards if card.n]
+    log.warning(f'ifile_filter = {ifile_filter}')
+    log.warning(f'properties_filter = {properties_filter}')
     for element in element_cards:
         nelement = element.n
         #print('element')
         etype = element.type
+        is_removed, element = filter_element_by_ifile_filter(
+            element, ifile_filter, log)
+        if is_removed:
+            log.warning(f'skipping {etype} due to ifile_filter')
+            continue
+        is_removed, element = filter_element_by_property_filter(
+            element, properties_filter, log)
+        if is_removed:
+            log.warning(f'skipping {etype} due to property_filter')
+            continue
+        nelement = element.n
+        log.info(f'working on {etype} with nelement={nelement}')
+
         #print('load', etype, nelement, element.element_id)
         if etype in basic_elements:
-            #print('  basic')
+            log.debug('  basic')
             # basic elements
             # missing nodes are not allowed
             if etype in {'CONROD'}:
@@ -506,6 +551,7 @@ def load_elements(ugrid: vtkUnstructuredGrid,
                 cell_type = cell_type_tri3
                 property_id = element.property_id
             elif etype in {'CQUAD4', 'CQUADR'}:
+                log.debug('cell_type_quad4')
                 cell_type = cell_type_quad4
                 property_id = element.property_id
             elif etype == 'CSHEAR':
@@ -551,8 +597,9 @@ def load_elements(ugrid: vtkUnstructuredGrid,
             del cell_type
             del cell_offseti
             cell_offset0 += nelement * (dnode + 1)
+            log.debug(f'end of {etype} adding')
         elif etype in midside_elements:
-            #print('  midside')
+            log.debug('  midside')
             midside_nodes = element.midside_nodes
             min_midside_nid = midside_nodes.min(axis=1)
             assert len(min_midside_nid) == nelement
@@ -595,6 +642,7 @@ def load_elements(ugrid: vtkUnstructuredGrid,
                     cell_offset_)
 
             if npartial:
+                log.debug('  partial')
                 if etype == 'CTRIA6':
                     cell_type = cell_type_tri3
                     nodes = element.nodes[:, :3]
@@ -616,7 +664,7 @@ def load_elements(ugrid: vtkUnstructuredGrid,
             nodesi = element.base_nodes
 
         elif etype in solid_elements:
-            #log.debug('  solid')
+            log.debug('  solid')
             cell_offset0, n_nodesi, cell_typei, cell_offseti = _create_solid_vtk_arrays(
                 element, grid_id, cell_offset0)
 
@@ -628,6 +676,7 @@ def load_elements(ugrid: vtkUnstructuredGrid,
             del n_nodesi, cell_typei, cell_offseti
 
         elif include_mass_in_geometry and etype == 'CONM2' and 0:
+            log.debug('  CONM2 include_mass_in_geometry')
             cell_type = cell_type_point
             property_ids.append(np.full(nelement, -1))
 
@@ -661,6 +710,7 @@ def load_elements(ugrid: vtkUnstructuredGrid,
             cell_offset0 += nelement * (dnode + 1)
         else:
             if element.type in cards_to_drop_silenced:
+                log.warning(f'  drop silenced {element}')
                 continue
             # more complicated element
             log.warning(f'  dropping {element}')
@@ -670,7 +720,7 @@ def load_elements(ugrid: vtkUnstructuredGrid,
         nelement0 += nelement
         del nelement # , dnode
 
-        if 0:  # pragma: no cover
+        if 1:  # pragma: no cover
             #  testing to make sure things work...useful when they don't :/
             # [number of nodes, nodes]
             n_nodes = np.hstack(n_nodes_)
@@ -678,11 +728,11 @@ def load_elements(ugrid: vtkUnstructuredGrid,
             property_id = np.hstack(property_ids)
             cell_type = np.hstack(cell_type_)  # 10, 12
             cell_offset = np.hstack(cell_offset_) # 0, 5
-            #property_id = np.hstack(property_ids)
 
             assert len(element_id) == len(property_id)
             assert len(element_id) == len(cell_type)
             assert len(element_id) == len(cell_offset)
+            log.debug('***passed checks')
     # [number of nodes, nodes]
     assert len(element_ids) == len(property_ids)
 
@@ -707,6 +757,94 @@ def load_elements(ugrid: vtkUnstructuredGrid,
             nelement_total, ugrid,
             n_nodes, cell_type, cell_offset)
     return element_id, property_id, element_cards, gui_elements, card_index
+
+def filter_element_by_ifile_filter(element,
+                                   ifile_filter: np.ndarray,
+                                   log: SimpleLogger) -> tuple[bool, Any]:
+    is_removed = True
+    nelement = element.n
+    if len(ifile_filter):
+        if hasattr(element, 'ifile'):
+            ifile = element.ifile
+            if len(element.ifile) == 0:
+                log.error(f'{element.type} has no ifile; skipping')
+                is_removed = False
+                return is_removed, element
+        else:
+            log.error(f'{element.type} has no ifile; skipping')
+            is_removed = False
+            return is_removed, element
+            #log.error(f'{element.type} has no ifile; assuming ifile=0')
+            #ifile = np.zeros(nelement, dtype='int32')
+
+        is_in = np.isin(ifile, ifile_filter)
+        if not np.any(is_in):
+            log.error(f'skipping {element.type} because it is empty after filtering; '
+                      f'ifile={np.unique(element.ifile)}')
+            return is_removed, element
+        if not np.all(is_in):
+            print(f'is_in = {is_in.tolist()}')
+            assert len(is_in) == nelement
+            # assert False not in is_in, is_in
+            index = np.zeros(len(is_in), dtype='int32')[is_in]
+            element2 = element.slice_card_by_index(index)
+            assert element2.n <= element.n, element2.n
+            element = element2
+            # assert element.n == element.n
+            # nelement = element2.n
+            # assert element == element2
+            del element2, index
+
+    elif not hasattr(element, 'ifile'):
+        log.error(f'{element.type} has no ifile')
+    is_removed = False
+    return is_removed, element
+
+def filter_element_by_property_filter(element,
+                                      property_filter: np.ndarray,
+                                      log: SimpleLogger) -> tuple[bool, Any]:
+    # property_filter = np.arange(20000)
+    if not hasattr(element, 'property_id') or len(property_filter) == 0:
+        is_removed = False
+        return is_removed, element
+
+    is_removed = True
+    nelement = element.n
+
+    property_id = element.property_id
+    upids = np.unique(property_id)
+
+    is_in = np.isin(property_id, property_filter)
+    print(f'prop is_in = {is_in.tolist()}')
+    if not np.any(is_in):
+        log.error(f'skipping {element.type} because it is empty after filtering; '
+                  f'property_ids={upids}')
+        return is_removed, element
+
+    is_removed = False
+    if np.all(is_in):
+        # keep all elements
+        log.info(f'keep all {element.type} elements')
+        return is_removed, element
+
+    nexpected = is_in.sum()
+    print(f'is_in = {is_in.tolist()}')
+    assert len(is_in) == nelement
+    # assert False not in is_in, is_in
+    index = np.zeros(len(is_in), dtype='int32')[is_in]
+    print('slicing...')
+    element2 = element.slice_card_by_index(index)
+    print('back from slice')
+    assert element2.n <= element.n, element2.n
+    print(f'check n; {element.type}; nexpected={nexpected} n={element2.n}')
+    print('setting...')
+    element = element2
+    # assert element.n == element.n
+    # nelement = element2.n
+    # assert element == element2
+    # del element2, index
+
+    return is_removed, element
 
 def _save_element(i: np.ndarray,
                   grid_id: np.ndarray,

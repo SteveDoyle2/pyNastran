@@ -258,7 +258,7 @@ class CONM1(Element):
         ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         _mass = np.zeros((ncards, 6, 6), dtype='float64')
-        coord_id = np.zeros(ncards, dtype='int32')
+        coord_id = np.zeros(ncards, dtype=idtype)
         node_id = np.zeros(ncards, dtype=idtype)
         for icard, card in enumerate(self.cards):
             eid, nid, cid, m, ifilei, comment = card
@@ -267,13 +267,16 @@ class CONM1(Element):
             node_id[icard] = nid
             coord_id[icard] = cid
             _mass[icard, :, :] = m
-        self._save(element_id, node_id, coord_id, _mass)
+        self._save(element_id, node_id, coord_id, _mass, ifile)
         self.cards = []
 
     def _save(self, element_id: np.ndarray,
               node_id: np.ndarray,
               coord_id: np.ndarray,
-              mass: np.ndarray) -> None:
+              mass: np.ndarray,
+              ifile: np.ndarray=None) -> None:
+        ifile = ifile if ifile is not None else np.zeros(len(element_id), dtype='int32')
+        self.ifile = ifile
         self.element_id = element_id
         self.node_id = node_id
         self.coord_id = coord_id
@@ -281,6 +284,7 @@ class CONM1(Element):
         self.n = len(element_id)
 
     def __apply_slice__(self, elem: CONM1, i: np.ndarray):
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.node_id = self.node_id[i]
         elem.coord_id = self.coord_id[i]
@@ -461,7 +465,7 @@ class CONM2(Element):
         ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         mass = np.zeros(ncards, dtype='float64')
-        coord_id = np.zeros(ncards, dtype='int32')
+        coord_id = np.zeros(ncards, dtype=idtype)
         node_id = np.zeros(ncards, dtype=idtype)
         xyz_offset = np.zeros((ncards, 3), dtype='float64')
         #I11, I21, I22, I31, I32, I33 = I
@@ -477,18 +481,21 @@ class CONM2(Element):
                 xyz_offset[icard, :] = X
             if I is not None:
                 inertia[icard, :] = I
-        self._save(element_id, mass, coord_id, node_id, xyz_offset, inertia)
+        self._save(element_id, mass, coord_id, node_id, xyz_offset, inertia, ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, element_id, mass, coord_id, node_id, xyz_offset, inertia):
+    def _save(self, element_id, mass, coord_id, node_id, xyz_offset, inertia, ifile=None):
+        ifile = ifile if ifile is not None else np.zeros(len(element_id), dtype='int32')
         if len(self.element_id):
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             mass = np.hstack([self._mass, mass])
             coord_id = np.hstack([self.coord_id, coord_id])
             node_id = np.hstack([self.node_id, node_id])
             xyz_offset = np.vstack([self.xyz_offset, xyz_offset])
             inertia = np.vstack([self.inertia, inertia])
+        self.ifile = ifile
         self.element_id = element_id
         self._mass = mass
         self.coord_id = coord_id
@@ -499,6 +506,7 @@ class CONM2(Element):
         self.n = len(element_id)
 
     def __apply_slice__(self, elem: CONM2, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem._mass = self._mass[i]
         elem.coord_id = self.coord_id[i]
