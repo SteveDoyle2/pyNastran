@@ -1451,15 +1451,9 @@ class PCOMP(CompositeProperty):
         used_dict['material_id'].append(self.material_id)
 
     def __apply_slice__(self, prop: PCOMP, i: np.ndarray) -> None:  # ignore[override]
-        print(f'apply_slice, i={i}')
         assert self.nlayer.sum() == len(self.thickness)
-        print('nlayer, working on comment')
         self._slice_comment(prop, i)
-        print('done with comment; ifile')
-        assert len(self.ifile) == len(self.property_id), self.ifile
-        assert len(self.ifile) == self.n, self.ifile
         prop.ifile = self.ifile[i]
-        print('done with ifile; property_id')
         prop.property_id = self.property_id[i]
         prop.z0 = self.z0[i]
         prop.nsm = self.nsm[i]
@@ -1484,8 +1478,6 @@ class PCOMP(CompositeProperty):
         prop.nlayer = self.nlayer[i]
         assert prop.nlayer.sum() == len(prop.thickness), f'prop.nlayer={prop.nlayer} len(prop.thickness)={len(prop.thickness)}'
         prop.n = len(i)
-        assert len(prop.ifile) == len(prop.property_id), self.ifile
-        assert len(prop.ifile) == prop.n, self.ifile
 
     @property
     def sb(self):

@@ -1142,13 +1142,13 @@ class PVISC(Property):
             property_id[icard] = pid
             cr[icard] = cri
             ce[icard] = cei
-        self._save(property_id, cr, ce)
+        self._save(property_id, ce, cr)
         self.cards = []
 
-    def _save(self, property_id, cr, ce):
+    def _save(self, property_id, ce, cr):
         self.property_id = property_id
-        self.cr = cr
         self.ce = ce
+        self.cr = cr
         self.n = len(property_id)
 
     def __apply_slice__(self, prop: PVISC, i: np.ndarray) -> None:

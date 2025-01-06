@@ -497,7 +497,8 @@ class MPT:
         ntotal = 44 * self.factor
         nmaterials = (len(data) - n) // ntotal
 
-        n, ints, floats = get_ints_floats(data, n, nmaterials, 11, size=op2.size, endian=op2._endian)
+        n, ints, floats = get_ints_floats(data, n, nmaterials, 11,
+                                          size=op2.size, endian=op2._endian)
 
         #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
         material = op2.mat4
@@ -533,8 +534,10 @@ class MPT:
         MAT5(2203,22,235) - record 6
         """
         op2 = self.op2
-        nmaterials = (len(data) - n) // 40
-        n, ints, floats = get_ints_floats(data, n, nmaterials, 10, size=op2.size, endian=op2._endian)
+        ntotal = 40 * self.factor
+        nmaterials = (len(data) - n) // ntotal
+        n, ints, floats = get_ints_floats(data, n, nmaterials, 10,
+                                          size=op2.size, endian=op2._endian)
         material = op2.mat5
         material_id = ints[:, 0]
         kxx = floats[:, 1]
@@ -569,7 +572,8 @@ class MPT:
         nmaterials = (len(data) - n) // ntotal
 
         material = op2.mat8
-        n, ints, floats = get_ints_floats(data, n, nmaterials, 19, size=op2.size, endian=op2._endian)
+        n, ints, floats = get_ints_floats(data, n, nmaterials, 19,
+                                          size=op2.size, endian=op2._endian)
         material_id = ints[:, 0]
         assert material_id.min() > 0
         #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
@@ -640,7 +644,7 @@ class MPT:
         materials = []
         ndatai = len(data) - n
         s2 = Struct(op2._endian + b'i 30f iiii')
-        ntotal = 140
+        ntotal = 140 * self.factor
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} nmaterials={nmaterials} leftover={ndatai % ntotal}'
 
@@ -862,10 +866,9 @@ class MPT:
 
         n, ints, floats = get_ints_floats(data, n, nmaterials, 5, size=op2.size, endian=op2._endian)
         material: MAT10 = op2.mat10
-        material_id = ints[:, 0]
         #assert material_id.min() > 0, material_id
         #(mid, bulk, rho, c, ge) = out
-
+        material_id = ints[:, 0]
         bulk = floats[:, 1]
         rho = floats[:, 2]
         c = floats[:, 3]
@@ -956,19 +959,29 @@ class MPT:
             op2.log.warning('skipping MAT11')
             return len(data)
 
-        n, ints, floats = get_ints_floats(data, n, nmaterials, 32, size=op2.size, endian=op2._endian)
+        n, ints, floats = get_ints_floats(data, n, nmaterials, 32,
+                                          size=op2.size, endian=op2._endian)
         material = op2.mat11
-        material_id = ints[:, 0]
         #(mid, bulk, rho, c, ge, alpha) = out
 
-        material.material_id = material_id
-        #material.bulk = floats[:, 1]
-        #material.rho = floats[:, 2]
-        #material.c = floats[:, 3]
-        #material.ge = floats[:, 4]
-        #material.alpha = floats[:, 5]
-        #material.n = nmaterials
-        material.write()
+        # (mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
+        # rho, a1, a2, a3, tref, ge) = out[:16]
+        material_id = ints[:, 0]
+        bulk = floats[:, 1]
+        e1 = floats[:, 2]
+        e2 = floats[:, 3]
+        e3 = floats[:, 4]
+        nu12 = floats[:, 5]
+        nu13 = floats[:, 6]
+        nu23 = floats[:, 7]
+        g12 = floats[:, 8]
+        g13 = floats[:, 9]
+        g23 = floats[:, 10]
+        alpha1 = floats[:, 11]
+        alpha2 = floats[:, 12]
+        alpha3 = floats[:, 13]
+        tref = floats[:, 14]
+        ge = floats[:, 15]
 
         struc = Struct(mapfmt(op2._endian + b'i 15f 16i', self.size))
         for unused_i in range(nmaterials):
@@ -982,6 +995,11 @@ class MPT:
             mat = MAT11.add_op2_data(out)
             self.add_op2_material(mat)
             n += ntotal
+
+        material._save(material_id, bulk, e1, e2, e3, nu12, nu13, nu23,
+                       g12, g13, g23, alpha1, alpha2, alpha3, rho, tref,
+                       ge)
+        material.write()
         op2.card_count['MAT11'] = nmaterials
         return n
 

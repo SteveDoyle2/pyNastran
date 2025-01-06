@@ -2698,9 +2698,10 @@ class EPT:
         n, ints, floats = get_ints_floats(data, n, nentries, 2,
                                           size=op2.size, endian=op2._endian)
         prop = op2.pdamp
-        prop.property_id = ints[:, 0]
-        prop.b = floats[:, 1]
-        prop.n = nentries
+        property_id = ints[:, 0]
+        b = floats[:, 1]
+        #prop.n = nentries
+        prop._save(property_id, b)
         prop.write()
 
         #struct_if = Struct(mapfmt(op2._endian + b'if', self.size))
@@ -2740,11 +2741,11 @@ class EPT:
         n, ints, floats = get_ints_floats(data, n, nproperties, 4,
                                           size=op2.size, endian=op2._endian)
         prop = op2.pelas
-        prop.property_id = ints[:, 0]
-        prop.k = floats[:, 1]
-        prop.ge = floats[:, 2]
-        prop.s = floats[:, 3]
-        prop.n = nproperties
+        property_id = ints[:, 0]
+        k = floats[:, 1]
+        ge = floats[:, 2]
+        s = floats[:, 3]
+        prop._save(property_id, k, ge, s)
         prop.write()
 
         #struct_i3f = Struct(mapfmt(op2._endian + b'i3f', self.size))
@@ -2910,11 +2911,11 @@ class EPT:
         n, ints, floats = get_ints_floats(data, n, nproperties, 4,
                                           size=op2.size, endian=op2._endian)
         prop = op2.pelast
-        prop.property_id = ints[:, 0]
-        prop.table_k = ints[:, 1]
-        prop.table_ge = ints[:, 2]
-        prop.table_k_nonlinear = ints[:, 3]
-        prop.n = nproperties
+        property_id = ints[:, 0]
+        table_k = ints[:, 1]
+        table_ge = ints[:, 2]
+        table_k_nonlinear = ints[:, 3]
+        prop._save(property_id, table_k, table_ge, table_k_nonlinear)
         prop.write()
 
         #struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
@@ -3281,9 +3282,9 @@ class EPT:
         n, ints, floats = get_ints_floats(data, n, nproperties, 2,
                                           size=op2.size, endian=op2._endian)
         prop = op2.pmass
-        prop.property_id = ints[:, 0]
-        prop._mass = floats[:, 1]
-        prop.n = nproperties
+        property_id = ints[:, 0]
+        mass = floats[:, 1]
+        prop._save(property_id, mass)
         prop.write()
 
         #struct_if = Struct(mapfmt(op2._endian + b'if', self.size))
@@ -3309,13 +3310,13 @@ class EPT:
         n, ints, floats = get_ints_floats(data, n, nproperties, 6,
                                           size=op2.size, endian=op2._endian)
         prop = op2.prod
-        prop.property_id = ints[:, 0]
-        prop.material_id = ints[:, 1]
-        prop.A = floats[:, 2]
-        prop.J = floats[:, 3]
-        prop.c = floats[:, 4]
-        prop.nsm = floats[:, 5]
-        prop.n = nproperties
+        property_id = ints[:, 0]
+        material_id = ints[:, 1]
+        A = floats[:, 2]
+        J = floats[:, 3]
+        c = floats[:, 4]
+        nsm = floats[:, 5]
+        prop._save(property_id, material_id, A, J, c, nsm)
         filter_large_property_ids(prop)
         prop.write()
 
@@ -3343,13 +3344,13 @@ class EPT:
         n, ints, floats = get_ints_floats(data, n, nproperties, 6,
                                           size=op2.size, endian=op2._endian)
         prop = op2.pshear
-        prop.property_id = ints[:, 0]
-        prop.material_id = ints[:, 1]
-        prop.t = floats[:, 2]
-        prop.nsm = floats[:, 3]
-        prop.f1 = floats[:, 4]
-        prop.f2 = floats[:, 5]
-        prop.n = nproperties
+        property_id = ints[:, 0]
+        material_id = ints[:, 1]
+        t = floats[:, 2]
+        nsm = floats[:, 3]
+        f1 = floats[:, 4]
+        f2 = floats[:, 5]
+        prop._save(property_id, material_id, t, nsm, f1, f2)
         prop.write()
 
         #struct_2i4f = Struct(mapfmt(op2._endian + b'2i4f', self.size))
@@ -3470,23 +3471,20 @@ class EPT:
         n, ints, floats, strings = get_ints_floats_strings(
             data, n, nproperties, 7, size=op2.size, endian=op2._uendian)
 
-
         #  adding an H...make it SMECH instead of SMEC
         fctn = strings[:, 6].astype('|U8')
         i_smech = np.where(fctn == 'SMEC')[0]
         fctn[i_smech] = 'SMECH'
 
-
         ##data_in = [pid, mid, cid, inp, stress, isop, fctn]
-        prop.property_id = ints[:, 0]
-        prop.material_id = ints[:, 1]
-        prop.coord_id = ints[:, 2]
-        prop.integ = ints[:, 3]
-        prop.stress = ints[:, 4]
-        prop.isop = ints[:, 5]
-        prop.fctn = fctn
-        #self.integ, self.stress, self.isop, self.fctn
-        prop.n = nproperties
+        property_id = ints[:, 0]
+        material_id = ints[:, 1]
+        coord_id = ints[:, 2]
+        integ = ints[:, 3]
+        stress = ints[:, 4]
+        isop = ints[:, 5]
+        prop._save(property_id, material_id, coord_id,
+                   integ, stress, isop, fctn)
 
         ifake = (fctn == 'FAKE')
         if ifake.sum():
@@ -3548,13 +3546,13 @@ class EPT:
         n, ints, floats = get_ints_floats(data, n, nproperties, 5,
                                           size=op2.size, endian=op2._endian)
         prop = op2.ptube
-        prop.property_id = ints[:, 0]
-        prop.material_id = ints[:, 1]
-        prop.diameter = np.full((nproperties, 2), np.nan, dtype=floats.dtype)
-        prop.diameter[:, 0] = floats[:, 2]
-        prop.t = floats[:, 3]
-        prop.nsm = floats[:, 4]
-        prop.n = nproperties
+        property_id = ints[:, 0]
+        material_id = ints[:, 1]
+        diameter = np.full((nproperties, 2), np.nan, dtype=floats.dtype)
+        diameter[:, 0] = floats[:, 2]
+        t = floats[:, 3]
+        nsm = floats[:, 4]
+        prop._save(property_id, material_id, diameter, t, nsm)
         prop.write()
 
         #struct_2i3f = Struct(op2._endian + b'2i3f')
@@ -3665,10 +3663,10 @@ class EPT:
         n, ints, floats = get_ints_floats(data, n, nproperties, 3,
                                           size=op2.size, endian=op2._endian)
         prop = op2.pvisc
-        prop.property_id = ints[:, 0]
-        prop.ce = floats[:, 1]
-        prop.cr = floats[:, 2]
-        prop.n = nproperties
+        property_id = ints[:, 0]
+        ce = floats[:, 1]
+        cr = floats[:, 2]
+        prop._save(property_id, ce, cr)
         prop.write()
 
         #struct_i2f = Struct(op2._endian + b'i2f')

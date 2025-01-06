@@ -277,6 +277,7 @@ class PSHEAR(Property):
         self.nsm = nsm
         self.f1 = f1
         self.f2 = f2
+        self.n = len(property_id)
 
     def __apply_slice__(self, prop: PSHEAR, i: np.ndarray):
         prop.property_id = self.property_id[i]

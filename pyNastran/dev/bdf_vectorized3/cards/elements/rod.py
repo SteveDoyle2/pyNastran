@@ -518,14 +518,14 @@ class PROD(Property):
     def _save(self, property_id, material_id, A, J, c, nsm):
         if len(self.property_id) != 0:
             raise NotImplementedError()
-        nproperties = len(property_id)
+        ncards = len(property_id)
         self.property_id = property_id
         self.material_id = material_id
         self.A = A
         self.J = J
         self.c = c
         self.nsm = nsm
-        self.n = nproperties
+        self.n = ncards
 
     def convert(self, area_scale: float=1.,
                 area_inertia_scale: float=1.0,
@@ -874,6 +874,7 @@ class PTUBE(Property):
         self.t = t
         self.nsm = nsm
         assert self.diameter.ndim == 2, self.diameter.shape
+        self.n = len(property_id)
 
     def __apply_slice__(self, prop: PTUBE, i: np.ndarray) -> None:  # ignore[override]
         assert self.diameter.ndim == 2, self.diameter.shape

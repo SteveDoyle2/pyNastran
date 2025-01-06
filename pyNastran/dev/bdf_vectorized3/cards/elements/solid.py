@@ -907,7 +907,7 @@ class PSOLID(Property):
             isop = np.hstack([self.isop, isop])
             fctn = np.hstack([self.fctn, fctn])
 
-        nproperties = len(property_id)
+        ncards = len(property_id)
         self.property_id = property_id
         self.material_id = material_id
         self.coord_id = coord_id
@@ -920,7 +920,7 @@ class PSOLID(Property):
         self.stress = stress
         self.isop = isop
         self.fctn = fctn
-        self.n = nproperties
+        self.n = ncards
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)

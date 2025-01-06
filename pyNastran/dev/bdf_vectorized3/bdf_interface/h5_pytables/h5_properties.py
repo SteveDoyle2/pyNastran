@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover
         PELAS, PROD, PTUBE, PVISC, PBUSH1D, PBAR, PSHEAR, PSHELL)
     from pyNastran.dev.bdf_vectorized3.cards.elements.beam import PBEAM
     from pyNastran.dev.bdf_vectorized3.cards.elements.solid import PSOLID
+    from pyNastran.dev.bdf_vectorized3.cards.elements.bar import PBARL
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from tables import Group
 
@@ -121,7 +122,7 @@ def _load_h5_visc(prop: PVISC, property_id, data, domain_id):
     property_id = data['PID']
     ce = data['CE']
     cr = data['CR']
-    prop._save(property_id, cr, ce)
+    prop._save(property_id, ce, cr)
     prop.domain_id = domain_id
 
 def _load_h5_ptube(prop: PTUBE, property_id, data, domain_id) -> None:
@@ -687,5 +688,3 @@ def _load_h5_pconv(prop: PCONV, property_id, data, domain_id):
               table_id, characteristic_length,
               grid_inlet, coord_e, e)
     prop.domain_id = domain_id
-
-

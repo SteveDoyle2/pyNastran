@@ -12,7 +12,6 @@ class TestOP2New(unittest.TestCase):
     def _test_01(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         op2_filename = os.path.join(folder, 'solid_bending', 'solid_bending.op2')
-        op2_filename = os.path.join(folder, 'solid_bending', 'solid_bending.op2')
 
         #op2 = OP2(op2_filename)
         #op2.rdn2cop2()

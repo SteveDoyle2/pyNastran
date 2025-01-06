@@ -759,6 +759,7 @@ class PELAST(Property):
         self.table_k = table_k
         self.table_ge = table_ge
         self.table_k_nonlinear = table_k_nonlinear
+        self.n = len(property_id)
 
     def __apply_slice__(self, prop: PELAST, i: np.ndarray) -> None:  # ignore[override]
         prop.property_id = self.property_id[i]
