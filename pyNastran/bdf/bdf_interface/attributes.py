@@ -850,7 +850,7 @@ class BDFAttributes:
                 'CBUSH', 'CBUSH1D', 'CBUSH2D',
 
                 'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                'CFAST', 'GENEL',
+                'CFAST', 'CWELD','GENEL',
 
                 'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
                 'CTRIA3', 'CTRIA6', 'CTRIAR',
@@ -884,7 +884,7 @@ class BDFAttributes:
                 'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
 
                 # 0d
-                'PELAS', 'PGAP', 'PFAST',
+                'PELAS', 'PGAP', 'PFAST', 'PWELD',
                 'PBUSH', 'PBUSH1D', 'PBUSH2D',
                 'PDAMP', 'PDAMP5',
 

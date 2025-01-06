@@ -15,7 +15,7 @@ from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank)
+    integer, integer_or_blank, double, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
@@ -245,6 +245,140 @@ class PFAST(Property):
         return self.comment + print_card_16(card)
 
 
+class PWELD(Property):
+    """
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    |   1  |  2  |  3  |  4  |  5  |  6  |  7  |   8  |  9  |
+    +======+=====+=====+=====+====+======+=====+======+=====+
+    |PWELD | PID | MID |  D  |     |     | MSET|      | TYPE|
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    |      |LDMIN|LDMAX|     |     |     |     |      |     |
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    |PWELD | 100 |  3  | 1.0 |     |     |     |      |     |
+    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    """
+    type = 'PWELD'
+    _field_map = {
+        1: 'pid', 2:'mid', 3:'d', 6:'mset', 9:'ldmin', 10:'ldmax',
+    }
+    pname_fid_map = {
+        'MID' :'mid',
+        'D' : 'd',
+        'LDMIN' : 'ldmin',
+        'LDMAX' : 'ldmax',
+    }
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        mid = 2
+        d = 0.1
+        return PWELD(pid, mid, d, mset=None, ldmin=None, ldmax=None, comment='')
+    
+    def __init__(self, pid: int, mid: int, d: float, mset:str=None, ldmin:float=None, ldmax:float=None, comment: str='') -> PWELD:
+        """
+        Creates a PWELD card
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        d : float
+            diameter of the weld
+        mset : str; default='OFF'
+            flag to eliminate m-set degrees-of-freedom (DOFs)
+        ldmin : float; default=None
+            smallest ratio of length to diameter for stiffness calculation
+        ldmax : float; default=None
+            largest ratio of length to diameter for stiffness calculation
+        comment : str; default=''
+            a comment for the card
+        """
+        Property.__init__(self)
+        if comment:
+            self.comment = comment
+        #: Property ID
+        self.pid = pid
+        #: Material ID
+        self.mid = mid
+        self.mid_ref = None
+        #: Diameter of the weld
+        self.d = d
+        #: M-set flag
+        self.mset = mset
+        #: Minimum length of the weld
+        self.ldmin = ldmin
+        #: Maximum length of the weld
+        self.ldmax = ldmax
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a PWELD card from ``BDF.add_card(...)``
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2,'mid')
+        d = double(card, 3, 'd')
+        mset = string_or_blank(card, 6,'mset', 'OFF')
+        ldmin = double_or_blank(card, 9, 'ldmin')
+        ldmax = double_or_blank(card, 10, 'ldmax')
+        assert len(card) <= 11, f'len(PWELD card) = {len(card):d}\ncard={card}'
+        return PWELD(pid, mid, d, mset=mset, ldmin=ldmin, ldmax=ldmax, comment=comment)
+    
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PWELD card from the OP2
+        Parameters
+        ----------
+        data : list[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        (pid, mid, d, mset, ldmin, ldmax) = data
+        return PWELD(pid, mid, d, mset=mset, ldmin=ldmin, ldmax=ldmax, comment=comment)
+    
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PWELD pid=%s' % self.pid
+        self.mid_ref = model.Material(self.mid, msg=msg)
+    
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.mid = self.Mid()
+        self.mid_ref = None
+
+    def raw_fields(self):
+        fields = ['PWELD', self.pid, self.Mid(), self.d,
+                  self.mset, self.ldmin, self.ldmax]
+        return fields
+    
+    def repr_fields(self):
+        mset = set_blank_if_default(self.mset, 'OFF')
+        fields = ['PWELD', self.pid, self.Mid(), self.d, mset, self.ldmin, self.ldmax]
+        return fields
+    
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+    
 class PGAP(Property):
     """
     +------+------+-------+-------+------+------+------+------+------+
