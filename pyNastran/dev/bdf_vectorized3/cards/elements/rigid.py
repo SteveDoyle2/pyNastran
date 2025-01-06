@@ -315,7 +315,7 @@ class RROD(RigidElement):
 
     def _save(self, element_id, nodes, cm, alpha) -> None:
         if len(self.element_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         nelements = len(element_id)
         assert element_id.min() > 0, element_id
         assert nodes.min() > 0, nodes
@@ -456,18 +456,18 @@ class RBAR1(RigidElement):
 
     def _save(self, element_id, nodes, cb, alpha) -> None:
         if len(self.element_id):
-            asdf
-        nelements = len(element_id)
+            raise RuntimeError(f'stacking of {self.type} is not supported')
+        ncards = len(element_id)
         assert element_id.min() > 0, element_id
         assert nodes.min() > 0, nodes
         if alpha is None:
-            alpha = np.zeros(nelements, dtype='float64')
+            alpha = np.zeros(ncards, dtype='float64')
 
         self.element_id = element_id
         self.nodes = nodes
         self.dependent_dof = cb
         self.alpha = alpha
-        self.n = nelements
+        self.n = ncards
 
     def __apply_slice__(self, element: RBAR1, i: np.ndarray):
         element.element_id = self.element_id[i]
@@ -1188,7 +1188,7 @@ class RBE3(RigidElement):
               weight, independent_nodes, independent_dofs,
               ngrid_per_weight, dependent_nodes, dependent_dofs) -> None:
         if len(self.element_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
 
         self.element_id = element_id
         self.ref_grid = ref_grid

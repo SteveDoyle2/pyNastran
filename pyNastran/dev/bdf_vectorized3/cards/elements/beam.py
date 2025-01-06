@@ -267,7 +267,7 @@ class CBEAM(Element):
               g0, x,
               pa, pb, wa, wb, sa, sb) -> None:
         if len(self.element_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -2982,7 +2982,7 @@ class CBEAM3(Element):
               g0, x,
               wa, wb, wc, tw, s) -> None:
         if len(self.element_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -3698,7 +3698,7 @@ class CBEND(Element):
     def _save(self, element_id, property_id, nodes,
               g0, x, geom_flag) -> None:
         if len(self.element_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes

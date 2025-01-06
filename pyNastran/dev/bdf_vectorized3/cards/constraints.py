@@ -535,7 +535,7 @@ class MPC(VectorizedBaseCard):
 
     def _save(self, mpc_id, nnode, node_id, components, coefficients) -> None:
         if len(self.mpc_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.mpc_id = mpc_id
         self.nnode = nnode
         self.node_id = node_id

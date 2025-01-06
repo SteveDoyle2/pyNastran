@@ -188,12 +188,15 @@ class MAT1(Material):
         St = np.zeros(ncards, dtype='float64')
         Sc = np.zeros(ncards, dtype='float64')
         mcsid = np.zeros(ncards, dtype='int32')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (mid, Ei, Gi, nui, rhoi, alphai, trefi, gei,
              Sti, Sci, Ssi,
-             mcsidi, ifilei, comment) = card
+             mcsidi, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             material_id[icard] = mid
             E[icard] = Ei
             G[icard] = Gi
@@ -207,15 +210,24 @@ class MAT1(Material):
             Sc[icard] = Sci
             mcsid[icard] = mcsidi
         self._save(material_id, E, G, nu, rho, alpha, tref, ge,
-                   Ss, St, Sc, mcsid)
+                   Ss, St, Sc, mcsid,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, material_id, E, G, nu,
               rho, alpha, tref, ge,
-              Ss, St, Sc, mcsid):
-        if len(self.material_id):
+              Ss, St, Sc, mcsid,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        assert len(ifile) == len(material_id)
+        if len(self.material_id) and not force:
+            ifile = np.hstack([self.ifile, ifile])
             material_id = np.hstack([self.material_id, material_id])
+            assert len(ifile) == len(material_id)
             E = np.hstack([self.E, E])
             G = np.hstack([self.G, G])
             nu = np.hstack([self.nu, nu])
@@ -223,11 +235,14 @@ class MAT1(Material):
             alpha = np.hstack([self.alpha, alpha])
             tref = np.hstack([self.tref, tref])
             ge = np.hstack([self.ge, ge])
-            material_id = np.hstack([self.material_id, material_id])
             Ss = np.hstack([self.Ss, Ss])
             St = np.hstack([self.St, St])
             Sc = np.hstack([self.Sc, Sc])
             mcsid = np.hstack([self.mcsid, mcsid])
+
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
         self.material_id = material_id
         self.E = E
         self.G = G
@@ -240,6 +255,8 @@ class MAT1(Material):
         self.St = St
         self.Sc = Sc
         self.mcsid = mcsid
+        assert len(self.ifile) == len(self.material_id)
+        self.n = len(material_id)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['coord_id'].append(self.mcsid)
@@ -259,6 +276,9 @@ class MAT1(Material):
 
     def __apply_slice__(self, mat: MAT1, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        assert len(self.ifile) == len(self.material_id)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.E = self.E[i]
         mat.G = self.G[i]
@@ -450,6 +470,7 @@ class MAT2(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         G11 = np.zeros(ncards, dtype='float64')
         G12 = np.zeros(ncards, dtype='float64')
@@ -467,12 +488,16 @@ class MAT2(Material):
         Sc = np.zeros(ncards, dtype='float64')
         mcsid = np.zeros(ncards, dtype='int32')
         ge_matrix = np.full((ncards, 6), np.nan, dtype='float64')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (mid, G11i, G12i, G13i, G22i, G23i, G33i, rhoi,
              alphas, trefi, gei, Sti, Sci, Ssi, mcsidi, ge_matrixi,
-             ifilei, comment) = card
+             ifilei, commenti) = card
 
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             material_id[icard] = mid
             G11[icard] = G11i
             G12[icard] = G12i
@@ -492,23 +517,29 @@ class MAT2(Material):
             ge_matrix[icard] = ge_matrixi
         self._save(material_id, G11, G12, G13, G22, G23, G33,
                    rho, alpha, tref, ge, Ss, St, Sc,
-                   mcsid, ge_matrix)
+                   mcsid, ge_matrix,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, material_id, G11, G12, G13, G22, G23, G33,
               rho, alpha, tref, ge, Ss, St, Sc,
-              mcsid, ge_matrix):
-        nmaterial = len(material_id)
-        assert nmaterial > 0, nmaterial
+              mcsid, ge_matrix,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
+        ncards = len(material_id)
+        assert ncards > 0, ncards
         assert len(G11) > 0
         assert len(self.material_id) == len(self.G11)
         assert len(material_id) == len(G11)
 
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if ge_matrix is None:
-            ge_matrix = np.full((nmaterial, 6), np.nan, dtype='float64')
+            ge_matrix = np.full((ncards, 6), np.nan, dtype='float64')
 
-        if len(self.material_id) != 0:
+        if len(self.material_id) != 0 and not force:
+            ifile = np.hstack([self.ifile, ifile])
             material_id = np.hstack([self.material_id, material_id])
             G11 = np.hstack([self.G11, G11])
             G12 = np.hstack([self.G12, G12])
@@ -525,6 +556,10 @@ class MAT2(Material):
             Sc = np.hstack([self.Sc, Sc])
             mcsid = np.hstack([self.mcsid, mcsid])
             ge_matrix = np.vstack([self.ge_matrix, ge_matrix])
+
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
 
         #print('calling MAT2 save')
         self.material_id = material_id
@@ -607,6 +642,8 @@ class MAT2(Material):
 
     def __apply_slice__(self, mat: MAT2, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.G11 = self.G11[i]
         mat.G12 = self.G12[i]
@@ -755,7 +792,9 @@ class MAT3(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        material_id = np.zeros(ncards, dtype='int32')
+        idtype = 'int32'
+        ifile = np.zeros(ncards, dtype='int32')
+        material_id = np.zeros(ncards, dtype=idtype)
         ex = np.zeros(ncards, dtype='float64')
         eth = np.zeros(ncards, dtype='float64')
         ez = np.zeros(ncards, dtype='float64')
@@ -770,10 +809,14 @@ class MAT3(Material):
         az = np.zeros(ncards, dtype='float64')
         tref = np.zeros(ncards, dtype='float64')
         ge = np.zeros(ncards, dtype='float64')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (mid, exi, ethi, ezi, nuxthi, nuthzi, nuzxi, rhoi, gzxi,
-             axi, athi, azi, trefi, gei, ifilei, comment) = card
+             axi, athi, azi, trefi, gei, ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             material_id[icard] = mid
             ex[icard] = exi
             eth[icard] = ethi
@@ -792,15 +835,21 @@ class MAT3(Material):
             ge[icard] = gei
         self._save(material_id, ex, eth, ez,
                    nuxth, nuthz, nuzx, gzx,
-                   ax, ath, az, rho, tref, ge)
+                   ax, ath, az, rho, tref, ge,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, material_id, ex, eth, ez,
               nuxth, nuthz, nuzx, gzx,
-              ax, ath, az, rho, tref, ge):
+              ax, ath, az, rho, tref, ge,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
         assert material_id.min() > 0, material_id
-        nmaterials = len(material_id)
+        ncards = len(material_id)
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
         self.material_id = material_id
         self.ex = ex
         self.eth = eth
@@ -817,10 +866,12 @@ class MAT3(Material):
         self.rho = rho
         self.tref = tref
         self.ge = ge
-        self.n = nmaterials
+        self.n = len(material_id)
 
     def __apply_slice__(self, mat: MAT3, i: np.ndarray) -> None:
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.ex = self.ex[i]
         mat.eth = self.eth[i]
@@ -932,7 +983,9 @@ class MAT4(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        material_id = np.zeros(ncards, dtype='int32')
+        ifile = np.zeros(ncards, dtype='int32')
+        idtype = 'int32'
+        material_id = np.zeros(ncards, dtype=idtype)
         k = np.zeros(ncards, dtype='float64')
         rho = np.zeros(ncards, dtype='float64')
 
@@ -944,10 +997,14 @@ class MAT4(Material):
         tch = np.zeros(ncards, dtype='float64')
         tdelta = np.zeros(ncards, dtype='float64')
         qlat = np.zeros(ncards, dtype='float64')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (mid, ki, cpi, rhoi, Hi, mui, hgeni, ref_enthalpyi,
-             tchi, tdeltai, qlati, ifilei, comment) = card
+             tchi, tdeltai, qlati, ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             material_id[icard] = mid
             k[icard] = ki
             cp[icard] = cpi
@@ -960,12 +1017,34 @@ class MAT4(Material):
             tdelta[icard] = tdeltai
             qlat[icard] = qlati
         self._save(material_id, k, cp, rho, H, mu, hgen, ref_enthalpy,
-                   tch, tdelta, qlat)
+                   tch, tdelta, qlat,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, material_id, k, cp, rho, H, mu, hgen, ref_enthalpy,
-              tch, tdelta, qlat):
+              tch, tdelta, qlat,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
+        ncards = len(material_id)
+        if ifile is not None:
+            ifile = np.zeros(ncards, dtype='int32')
+
+        if len(self.material_id) and not force:
+            ifile = np.hstack([self.ifile, ifile])
+            material_id = np.hstack([self.material_id, material_id])
+            k = np.hstack([self.k, k])
+            cp = np.hstack([self.cp, cp])
+            rho = np.hstack([self.rho, rho])
+            H = np.hstack([self.H, H])
+            mu = np.hstack([self.mu, mu])
+            hgen = np.hstack([self.hgen, hgen])
+            ref_enthalpy = np.hstack([self.ref_enthalpy, ref_enthalpy])
+
+        ncards = len(material_id)
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
         self.material_id = material_id
         self.k = k
         self.rho = rho
@@ -982,6 +1061,8 @@ class MAT4(Material):
 
     def __apply_slice__(self, mat: MAT4, i: np.ndarray) -> None:
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.k = self.k[i]
         mat.cp = self.cp[i]
@@ -1074,7 +1155,9 @@ class MAT5(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        material_id = np.zeros(ncards, dtype='int32')
+        ifile = np.zeros(ncards, dtype='int32')
+        idtype = 'int32'
+        material_id = np.zeros(ncards, dtype=idtype)
         kxx = np.zeros(ncards, dtype='float64')
         kxy = np.zeros(ncards, dtype='float64')
         kxz = np.zeros(ncards, dtype='float64')
@@ -1085,10 +1168,13 @@ class MAT5(Material):
 
         cp = np.zeros(ncards, dtype='float64')
         hgen = np.zeros(ncards, dtype='float64')
-
+        comment = {}
         for icard, card in enumerate(self.cards):
             (mid, kxxi, kxyi, kxzi, kyyi, kyzi, kzzi, cpi, rhoi, hgeni,
-             ifilei, comment) = card
+             ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             material_id[icard] = mid
             kxx[icard] = kxxi
             kxy[icard] = kxyi
@@ -1099,12 +1185,18 @@ class MAT5(Material):
             cp[icard] = cpi
             rho[icard] = rhoi
             hgen[icard] = hgeni
-        self._save(material_id, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen)
+        self._save(material_id, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
-    def _save(self, material_id, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen):
-        nmaterials = len(material_id)
+    def _save(self, material_id, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
+        ncards = len(material_id)
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
         self.material_id = material_id
         self.kxx = kxx
         self.kxy = kxy
@@ -1115,11 +1207,13 @@ class MAT5(Material):
         self.cp = cp
         self.rho = rho
         self.hgen = hgen
-        self.n = nmaterials
+        self.n = len(material_id)
         assert material_id.min() >= 1, material_id
 
     def __apply_slice__(self, mat: MAT5, i: np.ndarray) -> None:
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.kxx = self.kxx[i]
         mat.kxy = self.kxy[i]
@@ -1380,8 +1474,9 @@ class MAT8(Material):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
-        material_id = np.zeros(ncards, dtype=idtype)
 
+        ifile = np.zeros(ncards, dtype='int32')
+        material_id = np.zeros(ncards, dtype=idtype)
         E11 = np.zeros(ncards, dtype='float64')
         E22 = np.zeros(ncards, dtype='float64')
         G12 = np.zeros(ncards, dtype='float64')
@@ -1404,11 +1499,14 @@ class MAT8(Material):
         hf = np.full((ncards, 6), np.nan, dtype='float64')
         ht = np.full((ncards, 9), np.nan, dtype='float64')
         hfb = np.full((ncards, 9), np.nan, dtype='float64')
-
+        comment = {}
         for icard, card in enumerate(self.cards):
             (mid, e11, e22, nu12i, g12, g1z, g2z, rhoi, alphai, trefi,
              xt, xc, yt, yc, s, gei, f12i, strni, hfi, hti, hfbi,
-             ifilei, comment) = card
+             ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             material_id[icard] = mid
             E11[icard] = e11
             E22[icard] = e22
@@ -1436,22 +1534,30 @@ class MAT8(Material):
 
         self._save(material_id, E11, E22, G12, G13, G23, nu12,
                    rho, alpha, tref, ge, Xt, Xc, Yt, Yc, S, f12, strn,
-                   hf=hf, ht=ht, hfb=hfb)
+                   hf=hf, ht=ht, hfb=hfb,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, material_id, E11, E22, G12, G13, G23, nu12,
               rho, alpha, tref, ge,
-              Xt, Xc, Yt, Yc, S, f12, strn, hf=None, ht=None, hfb=None):
+              Xt, Xc, Yt, Yc, S, f12, strn, hf=None, ht=None, hfb=None,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
         if len(self.material_id) != 0:
             raise NotImplementedError()
-        nmaterials = len(material_id)
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
 
         if hf is None:
-            hf = np.full((nmaterials, 6), np.nan, dtype='float64')
-            ht = np.full((nmaterials, 9), np.nan, dtype='float64')
-            hfb = np.full((nmaterials, 9), np.nan, dtype='float64')
+            hf = np.full((ncards, 6), np.nan, dtype='float64')
+            ht = np.full((ncards, 9), np.nan, dtype='float64')
+            hfb = np.full((ncards, 9), np.nan, dtype='float64')
 
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
         self.material_id = material_id
         self.E11 = E11
         self.E22 = E22
@@ -1474,10 +1580,12 @@ class MAT8(Material):
         self.hf = hf
         self.ht = ht
         self.hfb = hfb
-        self.n = nmaterials
+        self.n = len(material_id)
 
     def __apply_slice__(self, mat: MAT8, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.E11 = self.E11[i]
         mat.E22 = self.E22[i]
@@ -1725,6 +1833,8 @@ class MAT9(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+
+        ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         G11 = np.zeros(ncards, dtype='float64')
         G12 = np.zeros(ncards, dtype='float64')
@@ -1755,6 +1865,7 @@ class MAT9(Material):
         alpha = np.zeros((ncards, 6), dtype='float64')
         tref = np.zeros(ncards, dtype='float64')
         ge = np.zeros(ncards, dtype='float64')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (mid, G11i, G12i, G13i, G14i, G15i, G16i,
@@ -1762,7 +1873,10 @@ class MAT9(Material):
              G33i, G34i, G35i, G36i,
              G44i, G45i, G46i,
              G55i, G56i, G66i, rhoi, alphai, trefi, gei,
-             ifilei, comment) = card
+             ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             material_id[icard] = mid
             G11[icard] = G11i
             G12[icard] = G12i
@@ -1798,7 +1912,8 @@ class MAT9(Material):
                    G33, G34, G35, G36,
                    G44, G45, G46,
                    G55, G56,
-                   G66, rho, alpha, tref, ge, ge_list=None)
+                   G66, rho, alpha, tref, ge, ge_list=None,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
@@ -1807,10 +1922,15 @@ class MAT9(Material):
               G33, G34, G35, G36,
               G44, G45, G46,
               G55, G56,
-              G66, rho, alpha, tref, ge, ge_list):
+              G66, rho, alpha, tref, ge, ge_list,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
         if len(self.material_id) != 0:
             raise NotImplementedError()
-        nmaterials = len(material_id)
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.material_id = material_id
         self.G11 = G11
         self.G12 = G12
@@ -1842,12 +1962,14 @@ class MAT9(Material):
         self.tref = tref
         self.ge = ge
         if ge_list is None:
-            ge_list = np.full((nmaterials, 21), np.nan, dtype=ge.dtype)
+            ge_list = np.full((ncards, 21), np.nan, dtype=ge.dtype)
         self.ge_list = ge_list
-        self.n = nmaterials
+        self.n = len(material_id)
 
     def __apply_slice__(self, mat: MAT9, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.G11 = self.G11[i]
         mat.G12 = self.G12[i]
@@ -2076,6 +2198,7 @@ class MAT10(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         bulk = np.zeros(ncards, dtype='float64')
         c  = np.zeros(ncards, dtype='float64')
@@ -2086,10 +2209,14 @@ class MAT10(Material):
         table_id_rho = np.zeros(ncards, dtype='int32')
         table_id_ge = np.zeros(ncards, dtype='int32')
         table_id_gamma = np.zeros(ncards, dtype='int32')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (mid, bulki, rhoi, ci, gei, alpha_gammai,
-             tid_bulk, tid_rho, tid_ge, tid_gamma, ifilei, comment) = card
+             tid_bulk, tid_rho, tid_ge, tid_gamma, ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             if rhoi is None:
                 rhoi = 0.0
             if tid_bulk is None:
@@ -2114,16 +2241,23 @@ class MAT10(Material):
         is_alpha = self.model.is_msc
         self._save(material_id, bulk, rho, c, ge, alpha_gamma,
                    table_id_bulk, table_id_rho, table_id_ge, table_id_gamma,
-                   is_alpha=is_alpha)
+                   is_alpha=is_alpha,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, material_id, bulk, rho, c, ge, alpha_gamma,
               table_id_bulk, table_id_rho, table_id_ge, table_id_gamma,
-              is_alpha: bool):
+              is_alpha: bool,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
         """is_alpha=True for MSC otherwise False"""
         if len(self.material_id) != 0:
             raise NotImplementedError()
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.material_id = material_id
         self.bulk = bulk
         self.rho = rho
@@ -2161,27 +2295,32 @@ class MAT10(Material):
         #self.n = nmaterial
         #assert material_id.min() >= 1, material_id
 
-    def _save_msc(self, material_id, bulk, rho, c, ge, alpha):
-        nmaterials = len(material_id)
+    def _save_msc(self, material_id, bulk, rho, c, ge, alpha,
+              ifile=None, comment: Optional[dict[int, str]]=None):
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         self.material_id = material_id
         self.bulk = bulk
         self.rho = rho
         self.c = c
         self.ge = ge
         if alpha is None:
-            alpha = np.zeros(nmaterials, dtype=bulk.dtype)
+            alpha = np.zeros(ncards, dtype=bulk.dtype)
         self.alpha_gamma = alpha
         self.is_alpha = True
-        self.n = nmaterials
         assert alpha is not None
 
-        self.table_id_bulk = np.zeros(nmaterials, dtype=material_id.dtype)
-        self.table_id_rho = np.zeros(nmaterials, dtype=material_id.dtype)
-        self.table_id_ge = np.zeros(nmaterials, dtype=material_id.dtype)
-        self.table_id_gamma = np.zeros(nmaterials, dtype=material_id.dtype)
+        self.table_id_bulk = np.zeros(ncards, dtype=material_id.dtype)
+        self.table_id_rho = np.zeros(ncards, dtype=material_id.dtype)
+        self.table_id_ge = np.zeros(ncards, dtype=material_id.dtype)
+        self.table_id_gamma = np.zeros(ncards, dtype=material_id.dtype)
+        self.n = len(material_id)
 
     def __apply_slice__(self, mat: MAT10, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.bulk = self.bulk[i]
         mat.c = self.c[i]
@@ -2321,6 +2460,7 @@ class MAT11(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         bulk = np.zeros(ncards, dtype='float64')
 
@@ -2343,11 +2483,15 @@ class MAT11(Material):
         tref = np.zeros(ncards, dtype='float64')
         ge = np.zeros(ncards, dtype='float64')
         rho = np.zeros(ncards, dtype='float64')
+        comment = {}
 
         for i, card in enumerate(self.cards):
             (mid, e1i, e2i, e3i, nu12i, nu13i, nu23i,
              g12i, g13i, g23i, rhoi, a1i, a2i, a3i,
-             trefi, gei, ifilei, comment) = card
+             trefi, gei, ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             material_id[i] = mid
             e1[i] = e1i
             e2[i] = e2i
@@ -2369,7 +2513,8 @@ class MAT11(Material):
             ge[i] = gei
         self._save(
             material_id, bulk, e1, e2, e3, nu12, nu13, nu23,
-            g12, g13, g23, alpha1, alpha2, alpha3, rho, tref, ge)
+            g12, g13, g23, alpha1, alpha2, alpha3, rho, tref, ge,
+            ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
@@ -2378,8 +2523,10 @@ class MAT11(Material):
               nu12, nu13, nu23,
               g12, g13, g23,
               alpha1, alpha2, alpha3,
-              rho, tref, ge) -> None:
-        if len(self.material_id) == 0:
+              rho, tref, ge,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False) -> None:
+        if len(self.material_id) == 0 and not force:
             material_id = np.hstack([self.material_id, material_id])
             bulk = np.hstack([self.bulk, bulk])
             e1 = np.hstack([self.e1, e1])
@@ -2423,6 +2570,8 @@ class MAT11(Material):
 
     def __apply_slice__(self, mat: MAT11, i: np.ndarray) -> None:
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
 
         mat.e1 = self.e1[i]
@@ -2543,23 +2692,36 @@ class MAT10C(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         form = np.zeros(ncards, dtype='|U4')
         c  = np.zeros(ncards, dtype='complex128')
         rho = np.zeros(ncards, dtype='complex128')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
-            (mid, formi, rho_real, rho_imag, c_real, c_imag, ifilei, comment) = card
+            (mid, formi, rho_real, rho_imag, c_real, c_imag,
+             ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             material_id[icard] = mid
             form[icard] = formi
             c[icard] = c_real + 1j * c_imag
             rho[icard] = rho_real + 1j * rho_imag
 
-        self._save(material_id, form, rho, c)
+        self._save(material_id, form, rho, c,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
-    def _save(self, material_id, form, rho, c):
+    def _save(self, material_id, form, rho, c,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
+        ncards = len(material_id)
+        if ifile is None:
+            self.ifile = np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.material_id = material_id
         self.form = form
         self.rho = rho
@@ -2574,6 +2736,8 @@ class MAT10C(Material):
 
     def __apply_slice__(self, mat: MAT10C, i: np.ndarray) -> None:
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.form = self.form[i]
         mat.c = self.c[i]
@@ -2734,6 +2898,7 @@ class MATORT(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         E1 = np.zeros(ncards, dtype='float64')
         E2 = np.zeros(ncards, dtype='float64')
@@ -2766,6 +2931,7 @@ class MATORT(Material):
 
         xyz1 = np.zeros((ncards, 3), dtype='float64')
         xyz2 = np.zeros((ncards, 3), dtype='float64')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (mid, E1i, E2i, E3i, nu12i, nu23i, nu31i, rhoi, G12i, G23i, G31i,
@@ -2773,7 +2939,10 @@ class MATORT(Material):
              iyieldi, ihardi, syi, y1i, y2i, y3i,
              yshear1i, yshear2i, yshear3i,
              optioni, filei, xyz1i, xyz2i,
-             ifilei, comment) = card
+             ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             material_id[icard] = mid
             E1[icard] = E1i
             E2[icard] = E2i
@@ -2811,7 +2980,8 @@ class MATORT(Material):
                    rho, alpha1, alpha2, alpha3, tref, ge,
                    iyield, ihard, sy, y1, y2, y3,
                    yshear1, yshear2, yshear3,
-                   option, file_, xyz1, xyz2)
+                   option, file_, xyz1, xyz2,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
@@ -2819,7 +2989,9 @@ class MATORT(Material):
                    rho, alpha1, alpha2, alpha3, tref, ge,
                    iyield, ihard, sy, y1, y2, y3,
                    yshear1, yshear2, yshear3,
-                   option, file_, xyz1, xyz2):
+                   option, file_, xyz1, xyz2,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
         assert len(self.material_id) == 0, self.material_id
         self.material_id = material_id
         self.E1 = E1
@@ -2857,6 +3029,8 @@ class MATORT(Material):
 
     def __apply_slice__(self, mat: MATORT, i: np.ndarray) -> None:
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.E1 = self.E1[i]
         mat.E2 = self.E2[i]
@@ -3093,6 +3267,7 @@ class MATHP(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         a10 = np.zeros(ncards, dtype='float64')
         a01 = np.zeros(ncards, dtype='float64')
@@ -3136,13 +3311,17 @@ class MATHP(Material):
         tab3 = np.zeros(ncards, dtype='int32')
         tab4 = np.zeros(ncards, dtype='int32')
         tabd = np.zeros(ncards, dtype='int32')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (mid, a10i, a01i, d1i, rhoi, avi, trefi, gei, nai, ndi, a20i, a11i,
              a02i, d2i, a30i, a21i, a12i, a03i, d3i, a40i,
              a31i, a22i, a13i, a04i, d4i, a50i, a41i,
              a32i, a23i, a14i, a05i, d5i,
-             tab1i, tab2i, tab3i, tab4i, tabdi, ifilei, comment) = card
+             tab1i, tab2i, tab3i, tab4i, tabdi, ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
             tab1i = tab1i if tab1i is not None else 0
             tab2i = tab2i if tab2i is not None else 0
             tab3i = tab3i if tab3i is not None else 0
@@ -3190,7 +3369,8 @@ class MATHP(Material):
                    a02, d2, a30, a21, a12, a03, d3, a40,
                    a31, a22, a13, a04, d4, a50, a41,
                    a32, a23, a14, a05, d5, tab1, tab2,
-                   tab3, tab4, tabd)
+                   tab3, tab4, tabd,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
@@ -3198,8 +3378,14 @@ class MATHP(Material):
               a02, d2, a30, a21, a12, a03, d3, a40,
               a31, a22, a13, a04, d4, a50, a41,
               a32, a23, a14, a05, d5, tab1, tab2,
-              tab3, tab4, tabd):
+              tab3, tab4, tabd,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
         assert len(self.material_id) == 0, self.material_id
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.material_id = material_id
 
         self.a10 = a10
@@ -3245,6 +3431,8 @@ class MATHP(Material):
 
     def __apply_slice__(self, mat: MATHP, i: np.ndarray) -> None:
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
 
         mat.a10 = self.a10[i]
@@ -3469,6 +3657,7 @@ class MATHE(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         hyperelastic_model = np.zeros(ncards, dtype='|U8')
         k = np.zeros(ncards, dtype='float64')
@@ -3489,12 +3678,16 @@ class MATHE(Material):
         c21 = np.zeros(ncards, dtype='float64')
         c12 = np.zeros(ncards, dtype='float64')
         c03 = np.zeros(ncards, dtype='float64')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (mid, modeli, ki, rhoi, texpi,
              c10i, c01i,
              c20i, c11i, c02i,
-             c30i, c21i, c12i, c03i, ifilei, comment) = card
+             c30i, c21i, c12i, c03i, ifilei, commenti) = card
+            ifile[icard] = ifilei
+            if commenti:
+                comment[mid] = commenti
 
             material_id[icard] = mid
             k[icard] = ki
@@ -3519,14 +3712,17 @@ class MATHE(Material):
         self._save(material_id, hyperelastic_model, k, rho, texp,
               c10, c01,
               c20, c11, c02,
-              c30, c21, c12, c03)
+              c30, c21, c12, c03,
+              ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, material_id, hyperelastic_model, k, rho, texp,
               c10, c01,
               c20, c11, c02,
-              c30, c21, c12, c03):
+              c30, c21, c12, c03,
+              ifile=None, comment: Optional[dict[int, str]]=None,
+              force: bool=False):
         assert len(self.material_id) == 0, self.material_id
         self.material_id = material_id
 
@@ -3545,11 +3741,13 @@ class MATHE(Material):
         self.c21 = c21
         self.c12 = c12
         self.c03 = c03
-        assert len(self.material_id) > 0, self.material_id
+        self.n = len(material_id)
         #self.model.log.warning('saved MATORT')
 
     def __apply_slice__(self, mat: MATHE, i: np.ndarray) -> None:
         mat.n = len(i)
+        self._slice_comment(mat, i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.hyperelastic_model = self.hyperelastic_model[i]
         mat.k = self.k[i]

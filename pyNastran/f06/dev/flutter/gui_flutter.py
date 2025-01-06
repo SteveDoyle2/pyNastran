@@ -1250,7 +1250,11 @@ class FlutterGui(LoggableGui):
                 )
             elif plot_type == 'modal-participation':
                 axes = fig.add_subplot(111)
+                mode = self.mode_edit.value()
+                ivel = self.velocity_edit.currentIndex()
+                print(f'ivel={ivel}; mode={mode}')
                 response.plot_modal_participation(
+                    ivel, mode,
                     fig=fig, axes=axes,
                     modes=modes, #eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
                     freq_tol=freq_tol,

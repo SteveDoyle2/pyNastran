@@ -1,7 +1,9 @@
 """defines various shell element tests"""
+from __future__ import annotations
 import os
 from io import StringIO
 import unittest
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy import array
 
@@ -21,7 +23,9 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.shell_utils import tri_volume,
     #from pyNastran.bdf.cards.elements.plot import plot_equivalent_lamina_vs_theta
 #except ImportError:
 IS_MATPLOTLIB = False
-
+if TYPE_CHECKING:
+    from pyNastran.dev.bdf_vectorized3.cards.elements.shells import CQUAD4
+    from pyNastran.dev.bdf_vectorized3.cards.elements.shell_utils import PCOMP
 
 class TestAcoustic(unittest.TestCase):
     def test_chacbr_pacbar(self):

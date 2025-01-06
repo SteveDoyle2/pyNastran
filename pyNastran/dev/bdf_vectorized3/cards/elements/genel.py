@@ -270,7 +270,7 @@ class GENEL(Element):
 
     def _save(self, element_id, ns, nud, nul, nz, nk, k, z, s, ul, ud) -> None:
         if len(self.element_id) != 0:
-           asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.element_id = element_id
         self.ns = ns
         self.nud = nud

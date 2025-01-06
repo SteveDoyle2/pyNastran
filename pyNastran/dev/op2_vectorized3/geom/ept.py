@@ -3379,14 +3379,15 @@ class EPT:
 
         property_id = ints[:, 0]
 
-        prop.property_id = property_id
-        prop.material_id = ints[:, [1, 3, 5, 10]]
-        prop.t = floats[:, 2]
-        prop.twelveIt3 = floats[:, 4]
-        prop.tst = floats[:, 6]
-        prop.nsm = floats[:, 7]
-        prop.z = floats[:, [8, 9]]
-        prop.n = nproperties
+        #prop.property_id = property_id
+        material_id = ints[:, [1, 3, 5, 10]]
+        t = floats[:, 2]
+        twelveIt3 = floats[:, 4]
+        tst = floats[:, 6]
+        nsm = floats[:, 7]
+        z = floats[:, [8, 9]]
+        #prop.n = nproperties
+        prop._save(property_id, material_id, t, twelveIt3, tst, nsm, z)
 
         op2.pshell.parse_cards()
 

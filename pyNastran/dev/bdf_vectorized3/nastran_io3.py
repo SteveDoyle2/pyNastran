@@ -59,9 +59,18 @@ class Nastran3:
         self.gui = gui
         self.data_map = None
         self.save_results_model = False
+
+        # TODO: only affects elements
         self.ifile_filter = np.array([], dtype='int32')
-        self.materials_filter = np.array([], dtype='int32')
+
+        # filters
         self.properties_filter = np.array([], dtype='int32')
+
+        # TODO: does nothing
+        # TODO: need to consider CONROD as well as traced materials
+        # TODO: PSHELLs/PCOMPs have multiple materials...how does FEMAP do it?
+        # TODO:  - all vs. any filter
+        self.materials_filter = np.array([], dtype='int32')
 
         self.model = BDF(debug=True, log=None, mode='msc')
         #self.model.is_strict_card_parser = False
@@ -324,10 +333,11 @@ class Nastran3:
         # add alternate actors
         gui._add_alt_actors(gui.alt_grids)
 
-        element_id, property_id, element_cards, gui_elements, card_index = load_elements(
+        etypes, element_id, property_id, element_cards, gui_elements, card_index = load_elements(
             self.ifile_filter, self.properties_filter,
             ugrid, model, node_id,
             self.include_mass_in_geometry)
+        self.element_types = etypes
         self.element_id = element_id
         self.element_cards = element_cards
         self.gui_elements = gui_elements
@@ -467,7 +477,7 @@ def load_elements(ifile_filter: np.ndarray,
                   model: BDF,
                   grid_id: np.ndarray,
                   include_mass_in_geometry: bool,
-                  ) -> tuple[np.ndarray, np.ndarray,
+                  ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                              list[Any], set[str],
                              dict[str, tuple[int, int]]]:
     """
@@ -480,11 +490,13 @@ def load_elements(ifile_filter: np.ndarray,
     log = model.log
     property_ids: list[np.ndarray] = []
     element_ids: list[np.ndarray] = []
+    etypes: list[np.ndarray] = []
     #nodes_ids: list[np.ndarray] = []
     #nnodes: list[np.ndarray] = []
     n_nodes_ = []
     cell_type_ = []
     cell_offset_ = []
+    etypes_ = []
 
     cell_type_point = 1  # vtkVertex().GetCellType()
     cell_type_line = 3  # vtkLine().GetCellType()
@@ -512,6 +524,7 @@ def load_elements(ifile_filter: np.ndarray,
     cards_to_drop_silenced = {
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
         'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CVISC',
+        'CONM2',
     }
 
     nelement0 = 0
@@ -520,25 +533,25 @@ def load_elements(ifile_filter: np.ndarray,
     log.warning(f'ifile_filter = {ifile_filter}')
     log.warning(f'properties_filter = {properties_filter}')
     for element in element_cards:
-        nelement = element.n
+        #nelement = element.n
         #print('element')
         etype = element.type
-        is_removed, element = filter_element_by_ifile_filter(
-            element, ifile_filter, log)
-        if is_removed:
-            log.warning(f'skipping {etype} due to ifile_filter')
-            continue
-        is_removed, element = filter_element_by_property_filter(
-            element, properties_filter, log)
+        # is_removed, element = element.filter_by_ifile_filter(ifile_filter)
+        # if is_removed:
+        #     log.warning(f'skipping {etype} due to ifile_filter')
+        #     continue
+        is_removed, element = element.filter_by_property_filter(properties_filter)
         if is_removed:
             log.warning(f'skipping {etype} due to property_filter')
             continue
         nelement = element.n
-        log.info(f'working on {etype} with nelement={nelement}')
+        #log.info(f'working on {etype} with nelement={nelement}')
+        #if hasattr(element, 'property_id'):
+            #log.info(f' pids = {np.unique(element.property_id)}')
 
         #print('load', etype, nelement, element.element_id)
         if etype in basic_elements:
-            log.debug('  basic')
+            #log.debug('  basic')
             # basic elements
             # missing nodes are not allowed
             if etype in {'CONROD'}:
@@ -551,7 +564,7 @@ def load_elements(ifile_filter: np.ndarray,
                 cell_type = cell_type_tri3
                 property_id = element.property_id
             elif etype in {'CQUAD4', 'CQUADR'}:
-                log.debug('cell_type_quad4')
+                #log.debug('cell_type_quad4')
                 cell_type = cell_type_quad4
                 property_id = element.property_id
             elif etype == 'CSHEAR':
@@ -597,9 +610,9 @@ def load_elements(ifile_filter: np.ndarray,
             del cell_type
             del cell_offseti
             cell_offset0 += nelement * (dnode + 1)
-            log.debug(f'end of {etype} adding')
+            #log.debug(f'end of {etype} adding')
         elif etype in midside_elements:
-            log.debug('  midside')
+            #log.debug('  midside')
             midside_nodes = element.midside_nodes
             min_midside_nid = midside_nodes.min(axis=1)
             assert len(min_midside_nid) == nelement
@@ -619,7 +632,7 @@ def load_elements(ifile_filter: np.ndarray,
             if nfull and npartial:
                 log.warning(f'{etype} nelement={nelement} downcasting midside elements to first order')
 
-            log.debug(f'{etype} nelement={nelement} nfull={nfull} npartial={npartial}')
+            #log.debug(f'{etype} nelement={nelement} nfull={nfull} npartial={npartial}')
             if nfull:
                 if etype == 'CTRIA6':
                     cell_type = cell_type_tri6
@@ -642,7 +655,7 @@ def load_elements(ifile_filter: np.ndarray,
                     cell_offset_)
 
             if npartial:
-                log.debug('  partial')
+                #log.debug('  partial')
                 if etype == 'CTRIA6':
                     cell_type = cell_type_tri3
                     nodes = element.nodes[:, :3]
@@ -660,11 +673,12 @@ def load_elements(ifile_filter: np.ndarray,
                     element_id, property_id, nodes,
                     element_ids, property_ids,
                     n_nodes_, cell_type_, cell_offset_)
+                etypes_.append(np.full(nelement, etype))
                 continue
             nodesi = element.base_nodes
 
         elif etype in solid_elements:
-            log.debug('  solid')
+            #log.debug('  solid')
             cell_offset0, n_nodesi, cell_typei, cell_offseti = _create_solid_vtk_arrays(
                 element, grid_id, cell_offset0)
 
@@ -710,7 +724,7 @@ def load_elements(ifile_filter: np.ndarray,
             cell_offset0 += nelement * (dnode + 1)
         else:
             if element.type in cards_to_drop_silenced:
-                log.warning(f'  drop silenced {element}')
+                #log.warning(f'  drop silenced {element}')
                 continue
             # more complicated element
             log.warning(f'  dropping {element}')
@@ -718,9 +732,10 @@ def load_elements(ifile_filter: np.ndarray,
             #raise NotImplementedError(element.type)
         card_index[etype] = (nelement0, nelement0 + nelement)
         nelement0 += nelement
+        etypes_.append(np.full(nelement, etype))
         del nelement # , dnode
 
-        if 1:  # pragma: no cover
+        if 0:  # pragma: no cover
             #  testing to make sure things work...useful when they don't :/
             # [number of nodes, nodes]
             n_nodes = np.hstack(n_nodes_)
@@ -728,11 +743,13 @@ def load_elements(ifile_filter: np.ndarray,
             property_id = np.hstack(property_ids)
             cell_type = np.hstack(cell_type_)  # 10, 12
             cell_offset = np.hstack(cell_offset_) # 0, 5
+            etypes = np.hstack(etypes_)
 
+            assert len(element_id) == len(etypes)
             assert len(element_id) == len(property_id)
             assert len(element_id) == len(cell_type)
             assert len(element_id) == len(cell_offset)
-            log.debug('***passed checks')
+            #log.debug('***passed checks')
     # [number of nodes, nodes]
     assert len(element_ids) == len(property_ids)
 
@@ -745,8 +762,10 @@ def load_elements(ifile_filter: np.ndarray,
         property_id = np.hstack(property_ids)
         cell_type = np.hstack(cell_type_)  # 10, 12
         cell_offset = np.hstack(cell_offset_) # 0, 5
+        etypes = np.hstack(etypes_)
         #property_id = np.hstack(property_ids)
 
+        assert len(element_id) == len(etypes)
         assert len(element_id) == len(property_id)
         assert len(element_id) == len(cell_type)
         assert len(element_id) == len(cell_offset)
@@ -756,95 +775,7 @@ def load_elements(ifile_filter: np.ndarray,
         build_vtk_geometry(
             nelement_total, ugrid,
             n_nodes, cell_type, cell_offset)
-    return element_id, property_id, element_cards, gui_elements, card_index
-
-def filter_element_by_ifile_filter(element,
-                                   ifile_filter: np.ndarray,
-                                   log: SimpleLogger) -> tuple[bool, Any]:
-    is_removed = True
-    nelement = element.n
-    if len(ifile_filter):
-        if hasattr(element, 'ifile'):
-            ifile = element.ifile
-            if len(element.ifile) == 0:
-                log.error(f'{element.type} has no ifile; skipping')
-                is_removed = False
-                return is_removed, element
-        else:
-            log.error(f'{element.type} has no ifile; skipping')
-            is_removed = False
-            return is_removed, element
-            #log.error(f'{element.type} has no ifile; assuming ifile=0')
-            #ifile = np.zeros(nelement, dtype='int32')
-
-        is_in = np.isin(ifile, ifile_filter)
-        if not np.any(is_in):
-            log.error(f'skipping {element.type} because it is empty after filtering; '
-                      f'ifile={np.unique(element.ifile)}')
-            return is_removed, element
-        if not np.all(is_in):
-            print(f'is_in = {is_in.tolist()}')
-            assert len(is_in) == nelement
-            # assert False not in is_in, is_in
-            index = np.zeros(len(is_in), dtype='int32')[is_in]
-            element2 = element.slice_card_by_index(index)
-            assert element2.n <= element.n, element2.n
-            element = element2
-            # assert element.n == element.n
-            # nelement = element2.n
-            # assert element == element2
-            del element2, index
-
-    elif not hasattr(element, 'ifile'):
-        log.error(f'{element.type} has no ifile')
-    is_removed = False
-    return is_removed, element
-
-def filter_element_by_property_filter(element,
-                                      property_filter: np.ndarray,
-                                      log: SimpleLogger) -> tuple[bool, Any]:
-    # property_filter = np.arange(20000)
-    if not hasattr(element, 'property_id') or len(property_filter) == 0:
-        is_removed = False
-        return is_removed, element
-
-    is_removed = True
-    nelement = element.n
-
-    property_id = element.property_id
-    upids = np.unique(property_id)
-
-    is_in = np.isin(property_id, property_filter)
-    print(f'prop is_in = {is_in.tolist()}')
-    if not np.any(is_in):
-        log.error(f'skipping {element.type} because it is empty after filtering; '
-                  f'property_ids={upids}')
-        return is_removed, element
-
-    is_removed = False
-    if np.all(is_in):
-        # keep all elements
-        log.info(f'keep all {element.type} elements')
-        return is_removed, element
-
-    nexpected = is_in.sum()
-    print(f'is_in = {is_in.tolist()}')
-    assert len(is_in) == nelement
-    # assert False not in is_in, is_in
-    index = np.zeros(len(is_in), dtype='int32')[is_in]
-    print('slicing...')
-    element2 = element.slice_card_by_index(index)
-    print('back from slice')
-    assert element2.n <= element.n, element2.n
-    print(f'check n; {element.type}; nexpected={nexpected} n={element2.n}')
-    print('setting...')
-    element = element2
-    # assert element.n == element.n
-    # nelement = element2.n
-    # assert element == element2
-    # del element2, index
-
-    return is_removed, element
+    return etypes, element_id, property_id, element_cards, gui_elements, card_index
 
 def _save_element(i: np.ndarray,
                   grid_id: np.ndarray,

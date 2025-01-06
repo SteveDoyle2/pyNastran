@@ -1220,7 +1220,7 @@ class CQUAD4(ShellElement):
         element.theta = self.theta[i]
         element.zoffset = self.zoffset[i]
         element.T = self.T[i, :]
-        element.n = len(element.element_id)
+        element.n = len(i)
         self.check_types()
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
@@ -1695,7 +1695,7 @@ class CQUADR(ShellElement):
         element.theta = self.theta[i]
         element.zoffset = self.zoffset[i]
         element.T = self.T[i, :]
-        element.n = len(element.element_id)
+        element.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['property_id'].append(self.property_id)
@@ -2004,7 +2004,7 @@ class CTRIA6(ShellElement):
         element.theta = self.theta[i]
         element.zoffset = self.zoffset[i]
         element.T = self.T[i, :]
-        element.n = len(element.element_id)
+        element.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['property_id'].append(self.property_id)
@@ -2346,7 +2346,7 @@ class CQUAD8(ShellElement):
         element.theta = self.theta[i]
         element.zoffset = self.zoffset[i]
         element.T = self.T[i, :]
-        element.n = len(element.element_id)
+        element.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['property_id'].append(self.property_id)
@@ -2591,7 +2591,7 @@ class CQUAD(ShellElement):
         element.nodes = self.nodes[i, :]
         element.mcid = self.mcid[i]
         element.theta = self.theta[i]
-        element.n = len(element.element_id)
+        element.n = len(i)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['property_id'].append(self.property_id)
@@ -2761,7 +2761,7 @@ class CAABSF(Element):
         #element.theta = self.theta[i]
         #element.zoffset = self.zoffset[i]
         #element.T = self.T[i, :]
-        element.n = len(element.element_id)
+        element.n = len(i)
 
     def set_from_op2(self, element_id, property_id, nodes):
         ncards = len(element_id)

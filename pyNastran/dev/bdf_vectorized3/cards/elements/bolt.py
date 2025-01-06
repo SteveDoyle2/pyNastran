@@ -722,7 +722,7 @@ class BOLTSEQ(VectorizedBaseCard):
     def _save(self, bolt_id, s_nos, b_ids, n_incs, nsteps):
         if len(self.bolt_id) != 0:
             bolt_id = np.hstack([self.bolt_id, bolt_id])
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             #preload_type = np.hstack([self.preload_type, preload_type])
             #preload = np.hstack([self.preload, preload])
             #length = np.hstack([self.length, length])

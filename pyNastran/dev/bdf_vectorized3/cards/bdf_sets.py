@@ -1562,7 +1562,7 @@ class SEUSET(VectorizedBaseCard):
         assert len(name) == len(node_id)
         assert len(name) == len(component)
         if ncards_existing != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             name = np.hstack([self.name, name])
             node_id = np.hstack([self.node_id, node_id])
             component = np.hstack([self.component, component])

@@ -1281,7 +1281,7 @@ class CGAP(Element):
 
     def _save(self, element_id, property_id, nodes, coord_id, x, g0) -> None:
         if len(self.element_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -1599,7 +1599,7 @@ class PGAP(Property):
 
     def _save(self, property_id, u0, f0, ka, kb, kt, mu1, mu2, tmax, mar, trmin):
         if len(self.property_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.property_id = property_id
         self.u0 = u0
         self.f0 = f0

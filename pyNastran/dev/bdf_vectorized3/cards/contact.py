@@ -497,7 +497,7 @@ class BGSET(VectorizedBaseCard):
               comment: dict[int, str]=None) -> None:
         ncards_existing = len(self.glue_id)
         if ncards_existing != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             glue_id = np.hstack([self.glue_id, glue_id])
             #nelement = np.hstack([self.nelement, nelement])
             #element_ids = np.hstack([self.element_ids, element_ids])
@@ -730,7 +730,7 @@ class BCTSET(VectorizedBaseCard):
               comment: dict[int, str]=None) -> None:
         ncards_existing = len(self.contact_id)
         if ncards_existing != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             contact_id = np.hstack([self.contact_id, contact_id])
             #nelement = np.hstack([self.nelement, nelement])
             #element_ids = np.hstack([self.element_ids, element_ids])
@@ -1027,7 +1027,7 @@ class BCONP(VectorizedBaseCard):
     def _save(self, contact_id, slave_id, master_id, sfac, friction_id, ptype, coord_id) -> None:
         ncards_existing = len(self.contact_id)
         if ncards_existing != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             contact_id = np.hstack([self.contact_id, contact_id])
         #if comment:
             #self.comment.update(comment)
@@ -2186,7 +2186,7 @@ class BCBODY(VectorizedBaseCard):
             #nelement = np.hstack([self.nelement, nelement])
             #element_id = np.hstack([self.element_id, element_id])
             #nodes = np.hstack([self.nodes, nodes])
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         #if comment:
             #self.comment.update(comment)
         self.bcbody_id = bcbody_id
@@ -2558,7 +2558,7 @@ class BCBODY1(VectorizedBaseCard):
             #nelement = np.hstack([self.nelement, nelement])
             #element_id = np.hstack([self.element_id, element_id])
             #nodes = np.hstack([self.nodes, nodes])
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         #if comment:
             #self.comment.update(comment)
         self.bcbody_id = bcbody_id

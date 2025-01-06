@@ -132,23 +132,25 @@ class MPT:
 
         material = op2.mat1
         n, ints, floats = get_ints_floats(data, n, nmaterials, 12, size=op2.size, endian=op2._endian)
-        material.material_id = ints[:, 0]
+        material_id = ints[:, 0]
         #(mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
          #tref, ge, St, Sc, Ss, mcsid) = out
 
-        material.E = floats[:, 1]
-        material.G = floats[:, 2]
-        material.nu = floats[:, 3]
+        E = floats[:, 1]
+        G = floats[:, 2]
+        nu = floats[:, 3]
 
-        material.rho = floats[:, 4]
-        material.alpha = floats[:, 5]
-        material.tref = floats[:, 6]
-        material.ge = floats[:, 7]
-        material.Ss = floats[:, 8]
-        material.St = floats[:, 9]
-        material.Sc = floats[:, 10]
-        material.mcsid = ints[:, 11]
-        material.n = nmaterials
+        rho = floats[:, 4]
+        alpha = floats[:, 5]
+        tref = floats[:, 6]
+        ge = floats[:, 7]
+        Ss = floats[:, 8]
+        St = floats[:, 9]
+        Sc = floats[:, 10]
+        mcsid = ints[:, 11]
+        material._save(material_id, E, G, nu, rho, alpha, tref, ge,
+                       Ss, St, Sc, mcsid, force=True)
+        #material.n = nmaterials
 
         i = np.where(material.material_id < MID_CAP)[0]
         material.__apply_slice__(material, i)
@@ -291,7 +293,7 @@ class MPT:
         mcsid = ints[:, 16]
         material._save(material_id, G11, G12, G13, G22, G23, G33,
                        rho, alpha, tref, ge, Ss, St, Sc,
-                       mcsid, ge_matrix=None)
+                       mcsid, ge_matrix=None, force=True)
 
         if material.max_id >= MID_CAP:
             i = np.where(material.material_id < MID_CAP)[0]
@@ -397,8 +399,7 @@ class MPT:
         ge_matrix = ints[:, [17, 18, 19, 20, 21, 22]]
         material._save(material_id, G11, G12, G13, G22, G23, G33,
                        rho, alpha, tref, ge, Ss, St, Sc,
-                       mcsid, ge_matrix)
-
+                       mcsid, ge_matrix, force=True)
         material.__apply_slice__(material, i)
 
         filter_large_material_ids(material)
@@ -471,7 +472,8 @@ class MPT:
         ge = floats[:, 14]
         # blank
         material._save(material_id, ex, eth, ez, nuxth, nuthz,
-                       nuzx, rho, gzx, ax, ath, az, tref, ge)
+                       nuzx, rho, gzx, ax, ath, az, tref, ge,
+                       force=True)
 
         #s = Struct(mapfmt(op2._endian + b'i8fi5fi', self.size))
         #for unused_i in range(nmaterials):
@@ -499,18 +501,21 @@ class MPT:
 
         #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
         material = op2.mat4
-        material.material_id = ints[:, 0]
-        material.k = floats[:, 1]
-        material.cp = floats[:, 2]
-        material.rho = floats[:, 3]
-        material.H = floats[:, 4]
-        material.mu = floats[:, 5]
-        material.hgen = floats[:, 6]
-        material.ref_enthalpy = floats[:, 7]
-        material.tch = floats[:, 8]
-        material.tdelta = floats[:, 9]
-        material.qlat = floats[:, 10]
-        material.n = nmaterials
+
+        material_id = ints[:, 0]
+        k = floats[:, 1]
+        cp = floats[:, 2]
+        rho = floats[:, 3]
+        H = floats[:, 4]
+        mu = floats[:, 5]
+        hgen = floats[:, 6]
+        ref_enthalpy = floats[:, 7]
+        tch = floats[:, 8]
+        tdelta = floats[:, 9]
+        qlat = floats[:, 10]
+        #material.n = nmaterials
+        material._save(material_id, k, cp, rho, H, mu, hgen, ref_enthalpy,
+                       tch, tdelta, qlat, force=True)
         material.write()
 
         #s = Struct(mapfmt(op2._endian + b'i10f', self.size))
@@ -541,7 +546,8 @@ class MPT:
         cp = floats[:, 7]
         rho = floats[:, 8]
         hgen = floats[:, 9]
-        material._save(material_id, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen)
+        material._save(material_id, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen,
+                       force=True)
         #s = Struct(op2._endian + b'i9f')
         #for unused_i in range(nmaterials):
             #out = s.unpack(data[n:n+40])
@@ -589,7 +595,7 @@ class MPT:
         #n = nmaterials
         material._save(material_id, E11, E22, G12, G13, G23, nu12, rho, alpha, tref, ge,
                        Xt, Xc, Yt, Yc, S, f12, strn,
-                       hf=None, ht=None, hfb=None)
+                       hf=None, ht=None, hfb=None, force=True)
 
         #i = np.where(material.material_id < MID_CAP)[0]
         #material.__apply_slice__(material, i)
@@ -680,7 +686,7 @@ class MPT:
             G33, G34, G35, G36,
             G44, G45, G46,
             G55, G56, G66,
-            rho, alpha, tref, ge, ge_list=None)
+            rho, alpha, tref, ge, ge_list=None, force=True)
         #if op2.is_debug_file:
             #op2.binary_debug.write(
                 #'  MAT9=(mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, '
@@ -781,7 +787,7 @@ class MPT:
             G33, G34, G35, G36,
             G44, G45, G46,
             G55, G56, G66,
-            rho, alpha, tref, ge, ge_list)
+            rho, alpha, tref, ge, ge_list, force=True)
 
         #s2 = Struct(op2._endian + b'i 30f iiii 21f')
         #if op2.is_debug_file:

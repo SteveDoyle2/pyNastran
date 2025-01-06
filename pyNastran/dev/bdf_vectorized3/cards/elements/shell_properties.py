@@ -163,10 +163,11 @@ class PSHELL(Property):
         nsm = np.zeros(ncards, dtype='float64')
         z = np.zeros((ncards, 2), dtype='float64')
 
+        comment = {}
         for icard, card in enumerate(self.cards):
             (pid, mid1, ti,
              mid2, twelveIt3i, mid3, tsti, nsmi, z1, z2, mid4,
-             comment) = card
+             commenti) = card
 
             property_id[icard] = pid
             material_id[icard, :] = [mid if isinstance(mid, integer_types) else -1
@@ -176,13 +177,24 @@ class PSHELL(Property):
             tst[icard] = tsti
             nsm[icard] = nsmi
             z[icard] = [z1, z2]
-        self._save(property_id, material_id, t, twelveIt3, tst, nsm, z)
+            if commenti:
+                comment[pid] = commenti
+        self._save(property_id, material_id, t, twelveIt3, tst, nsm, z,
+                   comment=comment)
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, material_id, t, twelveIt3, tst, nsm, z) -> None:
+    def _save(self, property_id, material_id, t, twelveIt3, tst, nsm, z,
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             raise NotImplementedError()
+
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         self.t = t
@@ -190,7 +202,7 @@ class PSHELL(Property):
         self.tst = tst
         self.nsm = nsm
         self.z = z
-        self.n = len(property_id)
+        self.n = ncards
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         material_id = np.unique(self.material_id.flatten())
@@ -205,6 +217,8 @@ class PSHELL(Property):
 
     def __apply_slice__(self, prop: PSHELL, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
+        self._slice_comment(prop, i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i, :]
         prop.t = self.t[i]
@@ -592,9 +606,18 @@ class PAABSF(Property):
 
     def _save(self, property_id,
               table_reactance_real, table_reactance_imag,
-              s, a, b, k, rho_c) -> None:
+              s, a, b, k, rho_c,
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
         if len(self.property_id) != 0:
             raise NotImplementedError()
+
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
         self.property_id = property_id
         self.table_reactance_real = table_reactance_real
         self.table_reactance_imag = table_reactance_imag
@@ -603,7 +626,7 @@ class PAABSF(Property):
         self.b = b
         self.k = k
         self.rho_c = rho_c
-        self.n = len(property_id)
+        self.n = ncards
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         tableds = np.unique(np.hstack([
@@ -620,6 +643,8 @@ class PAABSF(Property):
 
     def __apply_slice__(self, prop: PAABSF, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
+        self._slice_comment(prop, i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.table_reactance_real = self.table_reactance_real[i]
         prop.table_reactance_imag = self.table_reactance_imag[i]
@@ -954,7 +979,7 @@ class PCOMP(CompositeProperty):
             thetas: Optional[list[float]]=None, souts: Optional[list[str]]=None,
             nsm: float=0., sb: float=0., ft: str='',
             tref: float=0., ge: float=0., lam: str='',
-            z0=None, comment='') -> int:
+            z0=None, ifile: int=0, comment: str='') -> int:
         """
         Creates a PCOMP card
 
@@ -1016,7 +1041,7 @@ class PCOMP(CompositeProperty):
         assert len(souts) == nmids, souts
         assert len(thetas) == nmids, thetas
         self.cards.append((pid, nsm, sb, ft, tref, ge, lam, z0,
-                           mids, thicknesses, thetas, souts, comment))
+                           mids, thicknesses, thetas, souts, ifile, comment))
         #self.property_id = np.hstack([self.property_id, pid])
         #self.lam = np.hstack([self.lam, lam])
         #if z0 is None:
@@ -1108,14 +1133,16 @@ class PCOMP(CompositeProperty):
         z0 = double_or_blank(card, 2, 'z0')
 
         self.cards.append((pid, nsm, shear_bonding, ft, tref, ge, lam, z0,
-                           mids, thicknesses, thetas, souts, comment))
+                           mids, thicknesses, thetas, souts, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
+        idtype = 'int32'
+        ifile = np.zeros(ncards, dtype='int32')
+        property_id = np.zeros(ncards, dtype=idtype)
         z0 = np.zeros(ncards, dtype='float64')
         nsm = np.zeros(ncards, dtype='float64')
         shear_bonding = np.zeros(ncards, dtype='float64')
@@ -1131,6 +1158,7 @@ class PCOMP(CompositeProperty):
 
         nlayer = np.zeros(ncards, dtype='int32')
         #group = np.full(ncards, '', dtype='|U8')
+        comment = {}
 
         map_ft = {
             'HFAI': 'HFAIL',
@@ -1143,7 +1171,7 @@ class PCOMP(CompositeProperty):
         sout_list = []
         for icard, card in enumerate(self.cards):
             (pid, nsmi, shear_bondingi, fti, trefi, gei, lami, z0i,
-             mids, thicknesses, thetas, souts, comment) = card
+             mids, thicknesses, thetas, souts, ifilei, commenti) = card
 
             nsm[icard] = nsmi
             shear_bonding[icard] = shear_bondingi
@@ -1178,6 +1206,9 @@ class PCOMP(CompositeProperty):
             assert fti in {'', 'HILL', 'HOFF', 'STRN', 'TSAI', 'HFAIL', 'HFABR', 'HTAPE'}, f'pid={pid} failure_theory={fti!r}'
             nlayersi = len(mids)
 
+            ifile[icard] = ifilei
+            if commenti:
+                comment[pid] = commenti
             property_id[icard] = pid
             mids_list.extend(mids)
             thickness_list.extend(thicknesses)
@@ -1194,15 +1225,22 @@ class PCOMP(CompositeProperty):
         assert len(mids_list) == nlayer.sum()
         self._save(property_id,
                    nlayer, material_id, thickness, sout, theta,
-                   z0, nsm, shear_bonding, failure_theory, tref, ge, lam)
+                   z0, nsm, shear_bonding, failure_theory, tref, ge, lam,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, property_id,
               nlayer, material_id, thickness, sout, theta,
-              z0, nsm, shear_bonding, failure_theory, tref, ge, lam):
+              z0, nsm, shear_bonding, failure_theory, tref, ge, lam,
+              ifile=None, comment: Optional[dict[int, str]]=None):
         assert isinstance(lam, np.ndarray), lam
-        if len(self.property_id):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
+        if ncards:
+            ifile = np.hstack([self.ifile, ifile])
             property_id = np.hstack([self.property_id, property_id])
 
             nlayer = np.hstack([self.nlayer, nlayer])
@@ -1219,6 +1257,10 @@ class PCOMP(CompositeProperty):
             ge = np.hstack([self.ge, ge])
             lam = np.hstack([self.lam, lam])
 
+        if comment is not None:
+            self.comment.update(comment)
+        assert len(ifile) == len(property_id), ifile
+        self.ifile = ifile
         self.property_id = property_id
 
         self.nlayer = nlayer
@@ -1399,6 +1441,7 @@ class PCOMP(CompositeProperty):
     def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMP:
         """uses a node_ids to extract GRIDs"""
         iprop = self.index(property_id)
+        print(f'iprop = {iprop}')
         #assert len(self.node_id) > 0, self.node_id
         #i = np.searchsorted(self.node_id, node_id)
         prop = self.slice_card_by_index(iprop)
@@ -1408,7 +1451,15 @@ class PCOMP(CompositeProperty):
         used_dict['material_id'].append(self.material_id)
 
     def __apply_slice__(self, prop: PCOMP, i: np.ndarray) -> None:  # ignore[override]
+        print(f'apply_slice, i={i}')
         assert self.nlayer.sum() == len(self.thickness)
+        print('nlayer, working on comment')
+        self._slice_comment(prop, i)
+        print('done with comment; ifile')
+        assert len(self.ifile) == len(self.property_id), self.ifile
+        assert len(self.ifile) == self.n, self.ifile
+        prop.ifile = self.ifile[i]
+        print('done with ifile; property_id')
         prop.property_id = self.property_id[i]
         prop.z0 = self.z0[i]
         prop.nsm = self.nsm[i]
@@ -1433,6 +1484,8 @@ class PCOMP(CompositeProperty):
         prop.nlayer = self.nlayer[i]
         assert prop.nlayer.sum() == len(prop.thickness), f'prop.nlayer={prop.nlayer} len(prop.thickness)={len(prop.thickness)}'
         prop.n = len(i)
+        assert len(prop.ifile) == len(prop.property_id), self.ifile
+        assert len(prop.ifile) == prop.n, self.ifile
 
     @property
     def sb(self):
@@ -1684,7 +1737,7 @@ class PCOMPG(CompositeProperty):
             thetas=None, souts=None,
             nsm: float=0.0, sb: float=0.0, ft: str='',
             tref: float=0.0, ge: float=0.0, lam: str='', z0=None,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         lam = lam if lam is not None else ''
         ft = ft if ft is not None else ''
         z0 = z0 if z0 is not None else np.nan
@@ -1698,7 +1751,7 @@ class PCOMPG(CompositeProperty):
         cardi = (
             pid, nsm, sb, ft, tref, ge, lam, z0,
             mids, thicknesses, thetas, souts, global_ply_ids,
-            comment)
+            ifile, comment)
         self.cards.append(cardi)
         self.n += 1
         return self.n - 1
@@ -1757,7 +1810,7 @@ class PCOMPG(CompositeProperty):
         cardi = (
             pid, nsm, sb, ft, tref, ge, lam, z0,
             mids, thicknesses, thetas, souts, global_ply_ids,
-            comment)
+            ifile, comment)
         self.cards.append(cardi)
         self.n += 1
         return self.n - 1
@@ -1765,6 +1818,7 @@ class PCOMPG(CompositeProperty):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nsm = np.zeros(ncards, dtype='float64')
         shear_bonding = np.zeros(ncards, dtype='float64')
@@ -1776,6 +1830,7 @@ class PCOMPG(CompositeProperty):
 
         nlayer = np.zeros(ncards, dtype='int32')
         ge = np.zeros(ncards, dtype='float64')
+        comment = {}
 
         global_ply_ids_list = []
         mids_list = []
@@ -1790,8 +1845,12 @@ class PCOMPG(CompositeProperty):
         }
         for icard, card in enumerate(self.cards):
             (pid, nsmi, sbi, fti, trefi, gei, lami, z0i,
-             mids, thicknesses, thetas, souts, global_ply_ids, commment) = card
+             mids, thicknesses, thetas, souts, global_ply_ids,
+             ifilei, commenti) = card
 
+            ifile[icard] = ifilei
+            if commenti:
+                comment[pid] = commenti
             failure_theory[icard] = fti
             shear_bonding[icard] = sbi
             tref[icard] = trefi
@@ -1828,15 +1887,24 @@ class PCOMPG(CompositeProperty):
         sout = np.array(sout_list, dtype='|U4') # YES, NO, YESA
         theta = np.array(thetas_list, dtype='float64')
         self._save(property_id, nsm, shear_bonding, failure_theory, tref, ge, lam, z0,
-                   nlayer, global_ply_id, material_id, thickness, sout, theta)
+                   nlayer, global_ply_id, material_id, thickness, sout, theta,
+                   ifile=ifile, comment=comment)
         assert len(mids_list) == self.nlayer.sum()
         self.sort()
         self.cards = []
 
     def _save(self, property_id, nsm, shear_bonding, failure_theory, tref, ge, lam, z0,
-              nlayer, global_ply_id, material_id, thickness, sout, theta):
+              nlayer, global_ply_id, material_id, thickness, sout, theta,
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
+
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
         self.property_id = property_id
         self.nsm = nsm
         self.shear_bonding = shear_bonding
@@ -1857,6 +1925,8 @@ class PCOMPG(CompositeProperty):
 
     def __apply_slice__(self, prop: PCOMPG, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
+        self._slice_comment(prop, i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.z0 = self.z0[i]
         prop.nsm = self.nsm[i]
@@ -1994,9 +2064,9 @@ class PLPLANE(Property):
 
     def add(self, pid: int, mid: int, cid: int=0,
             stress_strain_output_location: str='GRID', thickness: float=np.nan,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a PLPLANE card"""
-        self.cards.append((pid, mid, cid, stress_strain_output_location, thickness, comment))
+        self.cards.append((pid, mid, cid, stress_strain_output_location, thickness, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2026,23 +2096,28 @@ class PLPLANE(Property):
         # (Real >= 0.0 or blank)
         thickness = double_or_blank(card, 5, 'thickness', default=np.nan)
         assert len(card) <= 6, f'len(PLPLANE card) = {len(card):d}\ncard={card}'
-        self.cards.append((pid, mid, cid, stress_strain_output_location, thickness, comment))
+        self.cards.append((pid, mid, cid, stress_strain_output_location, thickness, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        self.ifile = np.zeros(ncards, dtype='int32')
         self.property_id = np.zeros(ncards, dtype='int32')
         self.material_id = np.zeros(ncards, dtype='int32')
         self.coord_id = np.zeros(ncards, dtype='int32')
         self.stress_strain_output_location = np.zeros(ncards, dtype='|U4')
         self.thickness = np.zeros(ncards, dtype='float64')
+        self.comment = {}
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, cid, stress_strain_output_location, thickness, comment) = card
+            (pid, mid, cid, stress_strain_output_location, thickness, ifilei, commenti) = card
             assert len(stress_strain_output_location) <= 4, stress_strain_output_location
 
+            self.ifile[icard] = ifilei
+            if commenti:
+                self.comment[pid] = comment
             self.property_id[icard] = pid
             self.material_id[icard] = mid
             self.coord_id[icard] = cid
@@ -2057,6 +2132,8 @@ class PLPLANE(Property):
 
     def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
+        self._slice_comment(prop, i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.coord_id = self.coord_id[i]
@@ -2389,9 +2466,16 @@ class PSHLN1(Property):
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, material_id, analysis, beh, beh_h, integration, integration_h) -> None:
+    def _save(self, property_id, material_id, analysis, beh, beh_h, integration, integration_h,
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         self.analysis = analysis
@@ -2408,6 +2492,8 @@ class PSHLN1(Property):
 
     def __apply_slice__(self, prop: PSHLN1, i: np.ndarray) -> None:
         prop.n = len(i)
+        self._slice_comment(prop, i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i, :]
         prop.analysis = self.analysis[i]
@@ -2724,7 +2810,17 @@ class PSHLN2(Property):
     def _save(self, property_id, material_id,
               thickness, direct, analysis,
               beh, integration,
-              beh_h, integration_h) -> None:
+              beh_h, integration_h,
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if not len(self.property_id) == 0:
+            raise RuntimeError(f'stacking of {self.type} is not supported')
+
+        if comment is not None:
+            self.comment.update(comment)
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         self.thickness = thickness
@@ -2742,6 +2838,8 @@ class PSHLN2(Property):
 
     def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:
         prop.n = len(i)
+        self._slice_comment(prop, i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.thickness = self.thickness[i]

@@ -1,13 +1,12 @@
 """
-done
-----
 easy:
  - preferences window can now hide
- - add control over the update time (not tested)
- - add icase to Preferences Menu
- - add edit_geometry_properties menu
- - add label in lower left corner
- - add fast way to:
+ - control over the update time (TODO: untested)
+ - icase to Preferences Menu
+ - edit_geometry_properties menu
+   - TODO: some actors are busted and crash the gui (e.g., no main, show/hide masses)
+ - label in lower left corner
+ - fast way to:
     - select another case (k/l keys)
     - enable/disable fringe (a key for apply_fringe)
     - update nphase (n key)
@@ -16,46 +15,58 @@ easy:
       - change point size (i key for increase)
 
 medium:
- - add displacement fringe
+ - nodal displacement fringe
+   - TODO: enable individual components
  - logic for creating a pickle file when the bdf
    is loaded (model.obj)
-
-hard:
- - groups (don't work but...)
-   - checkbox list of each INCLUDE file
-   - ifile logic done in shells; warnings for others
-     - intention is only elements need ifile logic
-     - logic for user setting ifile_filter -> on_update_groups with g key
-   - TODO: Use a vtkFilter for minimum code solution
-     - Much harder code though...
-   - TODO: "Reload" the model for simplicity?
-     - It's actually semi-decent...
-     - it doesn't work cause it's a bad test case, but it's close...
-     - I think CELAS2 from the 0012 are skipped
-     - TODO: The code doesn't handle empty elements -> no update...
-
-minor:
- - make vtk corner text font support unicode
-
-not done
---------
-easy:
- - TODO: disable timer if it's not doing anything
-
-medium:
 TODO: add export gif for set of views and modes
  - {model}_top_subcase-1_real-mode_f=-100 Hz_g=0.05.png
 TODO: fix vtk window show/hide
 TODO: add easier way to select another case (GUI case form?)
 TODO: delink icase_disp and icase_fringe
-TODO: -> add strain energy fringe
+TODO: -> add strain energy centroidal fringe
 
 hard:
-TODO: show/hide set of elements by:
-TODO:   - element ids (copy from femap, paste as list?)
-TODO:   - property ids
-TODO:   - material ids
-TODO:   - combined???
+ - groups menu (looks like FEMAP):
+   - picking:
+     - one at a time
+     - TODO: support multi-picking and turn off the checks after flipped
+   - checkbox list for each material/property type
+     - comments (TODO: support FEMAP syntax -> split by FEMAP property syntax)
+   - checkbox list for each INCLUDE file
+     - ifile logic done in shells/bars; warnings for others
+     - intention is only elements use ifile logic
+
+ - groups (still preliminary)
+     - logic for user setting ifile_filter -> on_update_groups with g key
+   - TODO: Use a vtkFilter for minimum code solution
+     - Much harder code (more buggy) though, but potentially faster...
+   - "Reload" the model for simplicity?
+     - It's actually semi-decent...
+     - it doesn't work cause it's a bad test case, but it's close...
+     - I think CELAS2 from the 0012 are skipped
+     - TODO: The code doesn't handle empty elements -> no update...
+
+    - show/hide set of elements by:
+        - TODO: element type (CTRIA3, CQUAD4, CBAR, ..., no RBEs/CONM2 since no results)
+        - TODO: element ids (copy from femap, paste as list?)
+        - TODO: ifile (untested)
+        - property ids
+        - TODO: determine properties based on materials
+        - combined???
+
+ - TODO: good picking
+   - can I do a highlight an element when picked?
+   - what about a window that only shows a the active element?
+   - what about the info menu from femap?
+   - currently have p key that will give element/property/nodes assoicated with an element
+      - assumes it's only GRID
+   - TODO: be able to pick bars
+   - TODO: be able to pick nodes
+
+minor:
+ - vtk corner text font supports unicode
+ - TODO: disable timer if it's not doing anything
 
 minor:
 TODO: fix up k/l key swapping (not quite right)
@@ -65,23 +76,25 @@ TODO: disable rotational modes to have fewer results (are these on?)
 from __future__ import annotations
 import os
 import pickle
+import traceback
 from typing import Callable, Optional, Any, cast, TYPE_CHECKING
-from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
+#from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
 import numpy as np
 
 from qtpy.QtWidgets import (
-    QHBoxLayout, QVBoxLayout, QMenu, QAbstractItemView,
-    QMainWindow, QDockWidget, QFrame, QTreeView, QToolBar,
+    QHBoxLayout, QVBoxLayout, QMenu,
+    QMainWindow, QDockWidget, QFrame, QToolBar,
     QTableWidget, QTableWidgetItem,
-    QListWidget, QListWidgetItem,
-    QTreeWidget, QTreeWidgetItem,
-    QTreeView,
+    #QListWidget, QListWidgetItem,
+    #QTreeWidget, QTreeWidgetItem,
+    QTreeView
 )
 from qtpy.QtGui import QStandardItemModel, QStandardItem
 from qtpy.QtCore import QTimer, Qt
 
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.cards.properties.bars import _bar_areaL
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.nastran_io3 import (
     Nastran3, DisplacementResults)
@@ -147,6 +160,10 @@ class VtkWindow(QMainWindow):
         self.gui_obj = gui_obj
         self.bdf_filename = bdf_filename
         self.op2_filename = op2_filename
+        self.load_results = True
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.pid_to_ptype: dict[int, str] = {}
 
         self.vtk_tools = VtkTools(gui_obj, self)
         self.log = gui.log
@@ -235,11 +252,11 @@ class VtkWindow(QMainWindow):
         self.case_keys = list(self.result_cases)
         renderer.ResetCamera()
 
-        # Render again to set the correct view
-        self.update_dphases()
-        self.plot_deformation(icase=self.icase, dphase=0.0)
-
-        self.start_animation_timer()
+        if self.load_results:
+            # Render again to set the correct view
+            self.update_dphases()
+            self.plot_deformation(icase=self.icase, dphase=0.0)
+            self.start_animation_timer()
         self.render()
         self.show()
 
@@ -257,6 +274,8 @@ class VtkWindow(QMainWindow):
         actions_dict = {
             # 'cycle_results': 'L',
             # 'rcycle_results': 'k',
+            'setup_pick': Action(name='setup_pick', text='Pick...', icon='',
+                                 shortcut='p', func=self.setup_pick, tip='pick'),
             'update_groups': Action(name='update_groups', text='Update Groups...', icon='',
                                    shortcut='g', func=self.on_update_groups, tip='Update the groups'),
             'apply_fringe_plot': Action(name='apply_fringe_plot', text='apply_fringe_plot...', icon='',
@@ -301,6 +320,7 @@ class VtkWindow(QMainWindow):
             'cycle_icase', 'rcycle_icase',
             'scale_up', 'scale_down',
             'nphase_up', 'nphase_down',
+            'setup_pick',
         )
         menus_dict = {
             'view': (self.menu_view, view_tools),
@@ -446,6 +466,8 @@ class VtkWindow(QMainWindow):
         #     print(case_tag)
 
         self.op2_filename = None
+        if not self.load_results:
+            return
         if os.path.exists(op2_filename):
             self.op2_filename = op2_filename
             self._reload_results(op2_filename, log)
@@ -496,10 +518,11 @@ class VtkWindow(QMainWindow):
             self.analysis.model)
         #fill_table_tree(self.table_tree, self.ifile_name_dict)
 
-        #tree = QTreeWidget()
         tree = self.tree
-        pids, properties = get_property_table(model)
-        mids, materials = get_material_table(model)
+        pids, properties, pid_to_type_name = get_property_table(model)
+        mids, materials, mid_to_type_name = get_material_table(model)
+        self.pid_to_type_name = pid_to_type_name
+        self.mid_to_type_name = mid_to_type_name
 
         self.ifile_name_dict = get_ifile_name_dict(
             self.analysis.model)
@@ -513,8 +536,8 @@ class VtkWindow(QMainWindow):
             ('Groups', False, 2, groups),
         ]
 
-        self.materials_filter_set = set(list(mids))
-        self.properties_filter_set = set(list(pids))
+        self.materials_filter_set = set(mids.tolist())
+        self.properties_filter_set = set(pids.tolist())
         self.ifile_filter_set = set(list(self.ifile_name_dict))
         tree = self.tree
         self.tree_model = QStandardItemModel()
@@ -524,31 +547,49 @@ class VtkWindow(QMainWindow):
         self.tree_model.itemChanged.connect(self.on_tree_item_changed)
 
     def on_tree_item_changed(self, item: QStandardItem) -> None:
-        text = item.text()
-        sline = text.split(':', 2)
-        #print(f'sline = {sline}')
-        idi_str, type, comment = sline
-        type = type.strip()
-        idi = int(idi_str)
-        #print(f'id={idi}; type={type!r} other={comment!r}')
-        if type.startswith('MAT'):  # MAT1, MAT8, ...
-            myset = self.materials_filter_set
-        elif type.startswith('P'):  # PSHELL, PCOMP, ...
-            myset = self.properties_filter_set
-        elif type == 'File':
-            myset = self.ifile_filter_set
-        else:  # pragma: no cover
-            raise RuntimeError(f'type = {type!r}')
+        if self._updating:
+            return
+        #texti, idi, typei, commenti = _qitem_text_to_sline(item.text())
+        #print(f'id={idi}; type={typei!r} other={commenti!r}')
 
-        print('check state')
-        print(myset)
-        if item.checkState() == Qt.Checked:
-            print(f"{text} is checked")
-            myset.add(idi)
-        else:
-            print(f"{text} is unchecked")
-            myset.remove(idi)
-        print(f'{type}: {myset}')
+        is_checked = (item.checkState() == Qt.Checked)
+        text0 = item.text()
+        selected_items = self.tree.selectedIndexes()
+
+        # disables autoupdating when the check marks are flipped
+        self._updating = True
+        for itemii in selected_items:
+            text = self.tree_model.data(itemii)
+            textii, idii, typeii, commentii = _qitem_text_to_sline(text)
+            print(f'id={idii}; type={typeii!r} other={commentii!r}')
+
+            if typeii.startswith('MAT'):  # MAT1, MAT8, ...
+                myset = self.materials_filter_set
+            elif typeii.startswith('P'):  # PSHELL, PCOMP, ...
+                myset = self.properties_filter_set
+            elif typeii == 'File':
+                myset = self.ifile_filter_set
+            else:  # pragma: no cover
+                raise RuntimeError(f'type = {typeii!r}')
+
+            skip_checkstate = (text0 == textii)
+            if is_checked:
+                print(f"{textii} is checked")
+                #if skip_checkstate:
+                    #item.setCheckState(Qt.Checked)
+                    #item.setCheckState(Qt.CheckState.Checked)
+                myset.add(idii)
+            else:
+                print(f"{textii} is unchecked")
+                #if skip_checkstate:
+                    #item.setCheckState(Qt.Unchecked)
+                    #item.setCheckState(Qt.CheckState.Unchecked)
+                try:
+                    myset.remove(idii)
+                except KeyError:  # can't remove a thing that doesn't exist
+                    pass
+        #print(f'{type}: {myset}')
+        self._updating = False
 
     def on_update_groups(self) -> None:
         print('on_update_groups')
@@ -570,7 +611,75 @@ class VtkWindow(QMainWindow):
         self.analysis.properties_filter = iprop_filter
         self.analysis.ifile_filter = ifile_filter
         self._reload_model(self.bdf_filename, use_obj_file=True)
-        self._reload_results(self.op2_filename, self.gui.log)
+        if self.load_results:
+            self._reload_results(self.op2_filename, self.gui.log)
+        self.render()
+
+    def setup_pick(self):
+        # Create a picker
+        from vtkmodules.vtkRenderingCore import vtkCellPicker #, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper
+        picker = vtkCellPicker()
+        # Add the observer for the picking event
+        # def on_pick(self):
+        #     cell_id = picker.GetCellId()
+        #     if cell_id != -1:
+        #         print("Hovering over the sphere!; cell_id={cell_id}")
+        # self.iren.AddObserver("LeftButtonPressEvent", on_pick)
+        #self.iren.AddObserver("KeyPressEvent", on_pick)
+        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
+        picker.Pick(pixel_x, pixel_y, 0, self.rend)
+        cell_id = picker.GetCellId()
+        print('cell_id = {cell_id}')
+
+        if cell_id != -1:
+            i = cell_id
+            etype = self.analysis.element_types[i]
+            eid = self.element_id[i]
+            pid = self.property_id[i]
+            #ptype = self.pid_to_ptype[pid]
+            ptype = self.pid_to_type_name[pid][0]
+            ptype_lower = ptype.lower()
+            etype_lower = etype.lower()
+            elem_str = ''
+            prop_str = ''
+            nid_str = ''
+            log = self.log
+            if not hasattr(self, 'analysis_model'):
+                log.error('missing analysis model')
+                return
+            if hasattr(self.analysis_model, etype_lower):
+                elem = getattr(self.analysis_model, etype_lower)
+                try:
+                    elemi = elem.slice_card_by_element_id([eid])
+                    elem_str = elemi.write()
+                except Exception:
+                    self.log_error(str(traceback.format_exc()))
+                    log.warning(f'eid={eid} is missing from {etype_lower}.element_id = {elem.element_id}')
+            else:
+                log.warning(f"no such element type {etype_lower}")
+            if hasattr(self.analysis_model, ptype_lower):
+                prop = getattr(self.analysis_model, ptype_lower)
+                try:
+                    propi = prop.slice_card_by_property_id([pid])
+                    prop_str = propi.write()
+                except Exception:
+                    self.log_error(str(traceback.format_exc()))
+                    # self.log_error('\n' + ''.join(traceback.format_stack()))
+                    log.warning(f'pid={pid} is missing from {ptype_lower}.property_id = {prop.property_id}')
+            else:
+                log.warning(f"no such property type {ptype_lower}")
+
+            nids = elemi.nodes.flatten()
+            nids.sort()
+            try:
+                #self.analysis_model.grid.slice_card_by_id(nids)
+                nidsi = self.analysis_model.grid.slice_card_by_node_id(nids)
+                nid_str = nidsi.write()
+            except Exception as e:
+                print('failed on nodes...')
+                pass
+            log.info(f'i={i}: eid={etype} {eid}; pid={pid} {ptype}\n'
+                     f'{nid_str}{elem_str}{prop_str}')
 
     def _reload_model(self, bdf_filename: PathLike,
                       use_obj_file: bool=False) -> None:
@@ -609,6 +718,7 @@ class VtkWindow(QMainWindow):
             log.info(f'saving obj {obj_filename}')
             write_obj(model, obj_filename)
         self.analysis_model = model
+        self.set_pid_to_ptype(model)
 
         if isinstance(model, BDF):
             self.analysis.load_nastran3_geometry(bdf_filename, name='main')
@@ -619,6 +729,14 @@ class VtkWindow(QMainWindow):
         self.is_geom = False
         #log.info('end of _reload_model')
         return model
+
+    def set_pid_to_ptype(self, model: BDF) -> None:
+        for prop in model.property_cards:
+            if prop.n == 0:
+                continue
+            ptype = prop.type
+            for pid in prop.property_id:
+                self.pid_to_ptype[int(pid)] = str(ptype)
 
     def _reload_results(self, op2_filename, log):
         # creates result_cases
@@ -657,10 +775,10 @@ class VtkWindow(QMainWindow):
             table_tree.setHorizontalHeaderLabels([self.tr('Groups')])
             table_tree.setFont(font)
         else:
-            # self.tree = QTreeWidget()
             self.tree = QTreeView()
+            self._updating = False
             table_tree = self.tree
-            # table_tree.setHorizontalHeaderLabels([self.tr('Groups')])
+            #table_tree.setSelectionMode(QTreeView.MultiSelection)
 
         vbox.addWidget(table_tree)
         self.table_tree = table_tree
@@ -714,6 +832,17 @@ class VtkWindow(QMainWindow):
         return []
     def _finish_results_io2(self, name: str, form: list,
                             cases: dict[int, Any]):
+        for i, (case, i_name) in cases.items():
+            if len(i_name) == 2:
+                i, name = i_name
+                if name == 'ElementID':
+                    self.element_id = case.get_fringe_result(*i_name)
+                elif name == 'PropertyID':
+                    self.property_id = case.get_fringe_result(*i_name)
+            else:
+                raise RuntimeError(i_name)
+            #print(i_name)
+
         if self.is_geom:
             self.result_cases = {}
             # self.result_cases = cases
@@ -833,7 +962,7 @@ def setup_text_actors(renderer: vtkRenderer,
         vtk_text_actors.append(text_actor)
         renderer.AddActor(text_actor)
 
-    texts = ['Subcase', 'Result: ', 'Note; ']
+    texts = ['Subcase', 'Result: ', 'Note: ']
     assert len(texts) == num, (texts, num)
     set_corner_text(vtk_text_actors, texts)
     return vtk_text_actors
@@ -1120,37 +1249,129 @@ def get_ifile_groups_from_table(table_tree: QTreeView,
     return ifile_groups
     return np.array(ifile_groups, dtype='int32')
 
-def get_property_table(model: BDF) -> [np.ndarray, list]:
+def get_property_table(model: BDF) -> tuple[np.ndarray, list, dict[int, tuple[str, str]]]:
     properties = []
     pids = set([])
     pid_to_type_name: dict[int, tuple[str, str]] = {}
+    log = model.log
     for card in model.property_cards:
         if card.n == 0:
             continue
         card_type = card.type
-        for pid in card.property_id:
+        for i, pid in enumerate(card.property_id):
             pids.add(pid)
-            pid_to_type_name[pid] = (card_type, '')
-    for pid, (prop_type, name) in pid_to_type_name.items():
-        properties.append((f'{pid}: {prop_type}: {name}', True, pid, []))
+            comment = card.comment.get(pid, '')
+            if comment == '':
+                if card_type == 'PBARL':
+                    idim0, idim1 = card.idim[i]
+                    beam_type =card.Type[i]
+                    dim = card.dims[idim0:idim1]
+                    area, i1, i2, i12 = _bar_areaL('PBARL', beam_type, dim, card)
+                    if i1 is None:
+                        i1 = 0.
+                        i2 = 0.
+                        i12 = 0.
+                    comment = (f'Type={beam_type} '
+                               f'area={engieering_format_str(area)} '
+                               f'I1={engieering_format_str(i1)} '
+                               f'I2={engieering_format_str(i2)} '
+                               f'I12={engieering_format_str(i12)}')
+                elif card_type =='PBEAML':
+                    comment = f'Type={card.Type[i]}'
+                elif card_type == 'PSHELL':
+                    comment = f't={card.t[i]} mid={card.material_id[i, :]}'
+                elif card.type == 'PCOMP':
+                    ilayer0, ilayer1 = card.ilayer[i]
+                    thickness = sum(card.thickness[ilayer0:ilayer1])
+                    theta_str = ply_format(card.theta[ilayer0:ilayer1])
+                    comment = f't={thickness:g} theta={theta_str}'
+                else:
+                    log.warning(f'card.type={card.type} is not supported for comments')
+            pid_to_type_name[pid] = (card_type, comment)
+
     pids_array = np.array(list(pids), dtype='int32')
     pids_array.sort()
-    return pids_array, properties
+    pid_to_type_name = {key: value for key, value in sorted(pid_to_type_name.items())}
+    for pid, (prop_type, name) in pid_to_type_name.items():
+        properties.append((f'{pid}: {prop_type}: {name}', True, pid, []))
+    return pids_array, properties, pid_to_type_name
 
-def get_material_table(model: BDF) -> [np.ndarray, list]:
+def get_material_table(model: BDF) -> tuple[np.ndarray, list, dict[int, tuple[str, str]]]:
     materials = []
     mids = set([])
     mid_to_type_name: dict[int, tuple[str, str]] = {}
+    log = model.log
     for card in model.material_cards:
         if card.n == 0:
             continue
         card_type = card.type
-        for mid in card.material_id:
+        for i, mid in enumerate(card.material_id):
             mids.add(mid)
-            mid_to_type_name[mid] = (card_type, '')
-    for mid, (prop_type, name) in mid_to_type_name.items():
-        materials.append((f'{mid}: {card_type}: {name}', True, mid, []))
+            comment = card.comment.get(mid, '')
+            if card_type == 'MAT1':
+                comment = (f'E={engieering_format_str(card.E[i])} '
+                           f'G={engieering_format_str(card.G[i])} '
+                           f'nu={card.nu[i]}')
+            elif card.type == 'MAT8':
+                comment = (f'E11={engieering_format_str(card.E11[i])} '
+                           f'E22={engieering_format_str(card.E22[i])} '
+                           f'nu12={card.nu12[i]}')
+            else:
+                log.warning(f'card.type={card.type} is not supported for comments')
+            mid_to_type_name[mid] = (card_type, comment)
 
     mids_array = np.array(list(mids), dtype='int32')
     mids_array.sort()
-    return mids_array, materials
+    mid_to_type_name = {key: value for key, value in sorted(mid_to_type_name.items())}
+    for mid, (prop_type, name) in mid_to_type_name.items():
+        materials.append((f'{mid}: {card_type}: {name}', True, mid, []))
+    return mids_array, materials, mid_to_type_name
+
+
+def ply_format(theta: np.ndarray) -> str:
+    thetai = theta.astype('int32')
+    if np.allclose(theta, thetai):
+        theta = thetai
+
+    ntheta = len(theta)
+    if ntheta > 4:
+        is_even = (ntheta % 2 == 0)
+        ntheta1 = ntheta // 2
+        flag = ''
+        if is_even:
+            theta1 = theta[:ntheta1]
+            theta2 = theta[ntheta1:]
+            if np.allclose(theta1, theta2[::-1]):
+                theta = theta1
+                flag = ' Sym'
+    theta_str = '/'.join(str(ti) for ti in theta)
+    return theta_str + flag
+
+def engieering_format_str(value: float) -> str:
+    if value > 1.0:
+        if value < 1000.0:
+            return f'{value:g}'
+        else:
+            base, exp_str = f'{value:e}'.split('e')
+            exp = int(exp_str)
+            exp_remainder3 = exp % 3
+            exp3 = exp - exp_remainder3
+            base2 = float(base) * exp_remainder3
+            return f'{base2}e+{exp3}'
+    else:
+        if value == 0:
+            return '0'
+        base, exp_str = f'{value:e}'.split('e')
+        exp = int(exp_str)
+        exp_remainder3 = -exp % 3
+        exp3 = exp - exp_remainder3
+        base2 = float(base) * exp_remainder3
+        return f'{base2}e-{exp3}'
+
+def _qitem_text_to_sline(text: str) -> tuple[str, int, str, str]:
+    sline = text.split(':', 2)
+    #print(f'sline = {sline}')
+    idi_str, type, comment = sline
+    type = type.strip()
+    idi = int(idi_str)
+    return text, idi, type, comment

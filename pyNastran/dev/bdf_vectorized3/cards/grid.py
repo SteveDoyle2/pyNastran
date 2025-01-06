@@ -449,7 +449,7 @@ class GRID(VectorizedBaseCard):
             ps = np.hstack([self.ps, ps])
             seid = np.hstack([self.seid, seid])
             _xyz_cid0 = np.vstack([self._xyz_cid0, _xyz_cid0])
-        if comment:
+        if comment is not None:
             self.comment.update(comment)
 
         self.node_id = node_id
@@ -491,10 +491,6 @@ class GRID(VectorizedBaseCard):
 
     def has_ps(self) -> bool:
         return self.n > 0 and self.ps.max() > 0
-
-    #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
-        #inid = self._node_index(node_id)
-        #return self.slice_card(inid)
 
     def slice_card_by_node_id(self, node_id: np.ndarray, sort_ids: bool=False) -> GRID:
         """uses a node_ids to extract GRIDs"""
@@ -887,7 +883,7 @@ class POINT(VectorizedBaseCard):
 
     def _save(self, point_id, cp, xyz, _xyz_cid0, comment=None):
         if len(self.point_id) > 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.point_id = point_id
         self.cp = cp
         self.xyz = xyz

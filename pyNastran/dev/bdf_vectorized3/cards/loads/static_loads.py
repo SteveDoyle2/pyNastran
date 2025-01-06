@@ -1353,7 +1353,7 @@ class ACCEL(Load):
 
     def _save(self, load_id, coord_id, nloc, locs, vals, direction, N):
         if len(self.load_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         nloads = len(load_id)
         self.load_id = load_id
         self.coord_id = coord_id
@@ -1514,7 +1514,7 @@ class ACCEL1(Load):
 
     def _save(self, load_id, coord_id, scale, nnodes, nodes, N):
         if len(self.load_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         nloads = len(load_id)
         self.load_id = load_id
         self.coord_id = coord_id
@@ -2618,7 +2618,7 @@ class RFORCE(Load):
 
     def _save(self, load_id, node_id, coord_id, scale, r, method, racc, main_bulk, idrf):
         if len(self.load_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.load_id = load_id
         self.node_id = node_id
         self.coord_id = coord_id

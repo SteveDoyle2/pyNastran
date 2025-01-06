@@ -154,7 +154,7 @@ class VectorizedBaseCard:
         # new method
         #new_ids = self.node_id[i]
         try:
-
+            # intersect the ids we're slicing with the existing ones
             new_ids = self._ids[i]
             common_ids = np.intersect1d(list(self.comment.keys()), new_ids)
             new_obj.comment = {nid: self.comment[nid] for nid in common_ids}
@@ -579,6 +579,103 @@ class Element(VectorizedBaseCard):
                 nid2 = nid_old_to_new.get(nid1, nid1)
                 nodes[i] = nid2
 
+    def filter_by_ifile_filter(self,
+                               ifile_filter: np.ndarray) -> tuple[bool, Any]:
+        log = self.model.log
+        is_removed = True
+        element = self
+        nelement = element.n
+        if len(ifile_filter):
+            if hasattr(element, 'ifile'):
+                ifile = element.ifile
+                if len(element.ifile) == 0:
+                    log.error(f'{element.type} has no ifile; skipping')
+                    is_removed = False
+                    return is_removed, element
+            else:
+                log.error(f'{element.type} has no ifile; skipping')
+                is_removed = False
+                return is_removed, element
+                #log.error(f'{element.type} has no ifile; assuming ifile=0')
+                #ifile = np.zeros(nelement, dtype='int32')
+
+            is_in = np.isin(ifile, ifile_filter)
+            if not np.any(is_in):
+                log.error(f'skipping {element.type} because it is empty after filtering; '
+                          f'ifile={np.unique(element.ifile)}')
+                return is_removed, element
+            if not np.all(is_in):
+                #print(f'is_in = {is_in.tolist()}')
+                assert len(is_in) == nelement
+                # assert False not in is_in, is_in
+                index = np.zeros(len(is_in), dtype='int32')[is_in]
+                element2 = element.slice_card_by_index(index)
+                assert element2.n <= element.n, element2.n
+                element = element2
+                # assert element.n == element.n
+                # nelement = element2.n
+                # assert element == element2
+                del element2, index
+
+        elif not hasattr(element, 'ifile'):
+            log.error(f'{element.type} has no ifile')
+        is_removed = False
+        return is_removed, element
+
+    def filter_by_property_filter(self,
+                                  property_filter: np.ndarray) -> tuple[bool, Any]:
+        """property filter is inclusive"""
+        # property_filter = np.arange(20000)
+        log = self.model.log
+        element = self
+        if not hasattr(element, 'property_id') or len(property_filter) == 0:
+            is_removed = False
+            return is_removed, element
+
+        is_removed = True
+        nelement = element.n
+
+        property_id = element.property_id
+        upids = np.unique(property_id)
+
+        is_in = np.isin(property_id, property_filter)
+        print(f'prop is_in = {is_in.tolist()}')
+        if not np.any(is_in):
+            log.error(f'skipping {element.type} because it is empty after filtering; '
+                      f'property_ids={upids}')
+            return is_removed, element
+
+        is_removed = False
+        if np.all(is_in):
+            # keep all elements
+            log.info(f'keep all {element.type} elements')
+            return is_removed, element
+
+        nexpected = is_in.sum()
+        print(f'is_in = {is_in.tolist()}')
+        assert len(is_in) == nelement
+        # assert False not in is_in, is_in
+        for pid, flag in zip(element.property_id, is_in):
+            is_in2 = pid in property_filter
+            assert flag == is_in2, (pid, flag, is_in2)
+        index = np.arange(len(is_in), dtype='int32')[is_in]
+        #print('pid', element.property_id[is_in])
+        #print('upid', np.unique(element.property_id[is_in]))
+        #print('slicing...')
+        element2 = element.slice_card_by_index(index)
+        #print('back from slice')
+        assert element2.n <= element.n, element2.n
+        #print(f'check n; {element.type}; nexpected={nexpected} n={element2.n}')
+        #print('setting...')
+        element = element2
+        # assert element.n == element.n
+        # nelement = element2.n
+        # assert element == element2
+        # del element2, index
+        # print(element.write())
+        # assert element.element_id[0] != element.element_id[1]
+        return is_removed, element
+
 
 class Property(VectorizedBaseCard):
     _id_name = 'property_id'
@@ -676,7 +773,7 @@ def parse_check(func):
         return func(self, *args, **kwargs)
     return wrapper
 
-def get_print_card_8_16(size: int) -> Callable[list]:
+def get_print_card_8_16(size: int) -> Callable[[int], list]:
     if size == 8:
         print_card = print_card_8
     else:

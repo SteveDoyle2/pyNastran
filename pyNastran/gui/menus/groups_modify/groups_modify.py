@@ -294,7 +294,6 @@ class GroupsModify(PyDialog):
         self.add_edit.pick_style = 'area'
         self.remove_edit.pick_style = 'area'
 
-
     def set_connections(self) -> None:
         """creates the actions for the menu"""
         self.pick_element_button.clicked.connect(self.on_pick_element)

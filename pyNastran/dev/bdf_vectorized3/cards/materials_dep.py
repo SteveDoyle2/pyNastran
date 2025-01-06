@@ -135,7 +135,7 @@ class MATT1(Material):
               ge_table,
               st_table, sc_table, ss_table,):
         if len(self.material_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
             #G = np.hstack([self.G, G])
@@ -399,7 +399,7 @@ class MATS1(Material):
     def _save(self, material_id, table_id, Type, hardening_slope, hr, yf,
               limit1, limit2, stress_strain_measure):
         if len(self.material_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
         self.material_id = material_id
@@ -666,7 +666,7 @@ class MATT2(Material):
               st_table, sc_table, ss_table,
               ge_table):
         if len(self.material_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
 
@@ -930,7 +930,7 @@ class MATT3(Material):
               nuth_table, nuxz_table, rho_table, gzx_table,
               ax_table, ath_table, az_table, ge_table):
         if len(self.material_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
 
@@ -1134,7 +1134,7 @@ class MATT4(Material):
 
     def _save(self, material_id, k_table, cp_table, h_table, mu_table, hgen_table):
         if len(self.material_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
 
@@ -1351,7 +1351,7 @@ class MATT5(Material):
               kxx_table, kxy_table, kxz_table, kyy_table,
               kyz_table, kzz_table, cp_table, hgen_table):
         if len(self.material_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
 
@@ -1603,7 +1603,7 @@ class MATT8(Material):
               xc_table, yt_table, yc_table,
               s_table, ge_table, f12_table):
         if len(self.material_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
 
@@ -2045,7 +2045,7 @@ class MATT9(Material):
               a1_table, a2_table, a3_table,
               a4_table, a5_table, a6_table, ge_table, ges_table):
         if len(self.material_id):
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
 

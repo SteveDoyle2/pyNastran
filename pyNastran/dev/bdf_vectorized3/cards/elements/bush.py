@@ -600,7 +600,7 @@ class PBUSH(Property):
     def _save(self, property_id, k_fields, b_fields, ge_fields, rcv_fields,
               _mass, alpha, tref, coincident_length) -> None:
         if len(self.property_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         ncards = len(property_id)
         if _mass is None:
             _mass = np.zeros(ncards, dtype='float64')
@@ -996,7 +996,7 @@ class CBUSH1D(Element):
 
     def _save(self, element_id, property_id, nodes, coord_id) -> None:
         if len(self.element_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -1289,7 +1289,7 @@ class PBUSH1D(Property):
               gener_equation,
               ):
         if len(self.property_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.property_id = property_id
         self.k = k
         self.c = c

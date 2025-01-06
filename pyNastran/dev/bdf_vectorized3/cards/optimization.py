@@ -819,7 +819,7 @@ class DVGRID(VectorizedBaseCard):
     def _save(self, desvar_id, node_id, coord_id,
               coefficient, dxyz) -> None:
         if len(self.desvar_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.desvar_id = desvar_id
         self.node_id = node_id
         self.coord_id = coord_id
@@ -2419,7 +2419,7 @@ class DVPREL2(VectorizedBaseCard):
     def _save(self, dvprel_id, property_id, property_type, property_name, field_num,
               deqatn_id, p_min, p_max, ndesvar, ndtable, desvar_ids, labels):
         if len(self.dvprel_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.dvprel_id = dvprel_id
         self.property_id = property_id
         self.property_type = property_type
@@ -3716,7 +3716,7 @@ class DSCREEN(VectorizedBaseCard):
 
     def _save(self, dscreen_id, response_type, trs, nstr):
         if len(self.dscreen_id) != 0:
-            asdf
+            raise RuntimeError(f'stacking of {self.type} is not supported')
         self.dscreen_id = dscreen_id
         self.response_type = response_type
         self.trs = trs
