@@ -78,7 +78,7 @@ class TestReadWriteFiles(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'iSat' / 'iSat_launch_100Hz.dat'
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          save_file_structure=True, skip_cards=None, read_cards=None,
-                         encoding=None, log=log, debug=True, mode='msc')
+                         encoding=None, log=log, debug=False, mode='msc')
         assert len(model.include_filenames) == 1, len(model.include_filenames)
         assert len(model.include_filenames[0]) == 2, len(model.include_filenames[0])
 
@@ -481,19 +481,19 @@ class TestReadWrite(unittest.TestCase):
             'RBE2    1500002215000014  123456 1000177 1000178 1000186 1000187\n',
         ]
         bdf_filename = TEST_PATH / 'xref_test.bdf'
-        log = SimpleLogger(level='info', encoding='utf-8')
+        log = SimpleLogger(level='debug', encoding='utf-8')
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.writelines(lines)
 
-        model_old = BDF(log=log, mode='msc', debug=True)
+        model_old = BDF(log=log, mode='msc', debug=False)
         model_old.use_new_deck_parser = False
         with self.assertRaises(RuntimeError):
             model_old.read_bdf(bdf_filename, validate=False, xref=False,
                                punch=False, encoding=None)
 
-        model_new = BDF(log=log, mode='msc', debug=True)
+        model_new = BDF(log=log, mode='msc', debug=False)
         model_new.read_bdf(bdf_filename, validate=False, xref=False,
-                           punch=False, encoding=None)
+                           punch=None, encoding=None)
         os.remove(bdf_filename)
 
     def test_disable_cards(self):
@@ -611,16 +611,16 @@ class TestReadWrite(unittest.TestCase):
         for pth in pths:
             print('-'*60)
             pth2 = get_include_filename(
-                [pth], include_dirs='', is_windows=True, debug=True)
+                [pth], include_dirs='', is_windows=True, debug=False)
             #if not os.path.exists(pth2):
                 #msg = 'Invalid Path\nold:  %r\nnew:  %r' % (pth, pth2)
                 #msg += print_bad_path(pth2)
                 #raise RuntimeError(msg)
             #print('pth1 =', pth2)
 
-            print('-'*60)
+            #print('-'*60)
             pth2 = get_include_filename(
-                [pth], include_dirs='', is_windows=False, debug=True)
+                [pth], include_dirs='', is_windows=False, debug=False)
             #print('pth2 =', pth2, '\n')
         #filename_tokens = _split_to_tokens(r'\\nas3\dir1\dir2', is_windows=True)
 
@@ -643,8 +643,7 @@ class TestReadWrite(unittest.TestCase):
         bdf_filename = sat_path / 'JOBS' / 'QS' / 'relative_path.bdf'
         reader = BDFInputPy(
             read_includes=True, dumplines=False, encoding='ascii',
-            debug=True,
-        )
+            debug=False)
         reader.use_new_parser = True
         reader.get_lines(bdf_filename)
         read_bdf(bdf_filename, debug=False)
@@ -662,8 +661,7 @@ class TestReadWrite(unittest.TestCase):
         bdf_filename = sat_path / 'JOBS' / 'QS' / 'environment_vars.bdf'
         reader = BDFInputPy(
             read_includes=True, dumplines=False, encoding='ascii',
-            debug=True,
-        )
+            debug=False)
         reader.use_new_parser = True
         reader.get_lines(bdf_filename)
         read_bdf(bdf_filename, debug=False)
@@ -701,7 +699,7 @@ class TestReadWrite(unittest.TestCase):
         pth = "INCLUDE '%Satellite_V02_bddm%:Satellite_V02_Materiaux.blk'"
         pth2 = get_include_filename(
             [pth], include_dirs='',
-            is_windows=True, debug=True)
+            is_windows=True, debug=False)
         #print(pth2)
 
         #pth = "INCLUDE '$Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"

@@ -1664,10 +1664,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         old_card_name = None
         backup_comment = ''
         nlines = len(bulk_data_lines)
-        if len(bulk_data_lines) != len(bulk_data_ilines):
-            msg = 'len(bulk_data_lines)=%s len(bulk_data_ilines)=%s' % (
-                len(bulk_data_lines), len(bulk_data_ilines))
-            self.log.warning(msg)
 
         for iline_bulk, line in enumerate(bulk_data_lines):
             ifile_iline = bulk_data_ilines[iline_bulk, :]

@@ -257,6 +257,10 @@ class BDFInputPy:
             (system_lines, executive_control_lines, case_control_lines,
              bulk_data_lines, bulk_data_ilines,
              additional_deck_lines, additional_deck_ilines) = out
+            if len(bulk_data_lines) != len(bulk_data_ilines):
+                msg = 'len(bulk_data_lines)=%s len(bulk_data_ilines)=%s' % (
+                    len(bulk_data_lines), len(bulk_data_ilines))
+                self.log.warning(msg)
         else:
             #print(self.use_new_parser, nastran_format != 'optistruct')
             self.log.debug('using old deck splitter')
@@ -268,6 +272,10 @@ class BDFInputPy:
                 system_lines, executive_control_lines, case_control_lines,
                 bulk_data_lines, bulk_data_ilines,
                 superelement_lines, superelement_ilines) = out
+            if len(bulk_data_lines) != len(bulk_data_ilines):
+                msg = 'len(bulk_data_lines)=%s len(bulk_data_ilines)=%s' % (
+                    len(bulk_data_lines), len(bulk_data_ilines))
+                self.log.warning(msg)
 
             additional_deck_lines = {}
             additional_deck_ilines = {}
@@ -812,7 +820,7 @@ def _is_bulk_data_line(text: str) -> bool:
     #
     text2 = text.split('$')[0].rstrip()
     #card_name = text2.strip().replace(' ', '')[0:8].split(',')[0].upper().rstrip('*')
-    card_name = text2.strip()[0:8].split(',')[0].upper().rstrip('*')
+    card_name = text2.strip()[0:8].split(',')[0].upper().rstrip(' *')
     #card_name2 = text2.split(',')[0].upper()
     #print('card_name =%r' % card_name)
     #print('card_name2=%r' % card_name2)
@@ -1992,9 +2000,11 @@ def lines_to_decks2(lines: list[str],
     """
     fake_ilines = ilines is None
     if fake_ilines:
+        #log.warning('lines_to_decks2: fake_ilines')
         nlines = len(lines)
         ilines = np.zeros((nlines, 2), dtype='int32')
         ilines[:, 1] = np.arange(nlines)
+    assert ilines is not None, ilines
 
     system_lines = []
     executive_control_lines = []   # flag = 1
@@ -2039,11 +2049,16 @@ def lines_to_decks2(lines: list[str],
     #is_sol = False
     guess_deck_sections = punch is None
     flags = []
+    executive_control_ilines_list = []
+    case_control_ilines_list = []
+    bulk_data_ilines_list = []
+    active_ilines = executive_control_ilines_list
     active_lines = executive_control_lines
     ibulk0  = -1
     save_comment_flag = False
     for i, line in enumerate(lines):
         # handle empty comments
+        file_iline = ilines[i]
         line = line.rstrip()
         if '$' in line:
             idollar = line.index('$')
@@ -2056,6 +2071,7 @@ def lines_to_decks2(lines: list[str],
                 # if it goes in the executive/case control, we need to drop it
                 if comment and save_comment_flag:  # bulk or super
                     active_lines.append(comment)
+                    active_ilines.append(file_iline)
                     #log.info(f'{i}: skipping {flag}: {line.rstrip()!r}')
                 elif comment:
                     # log.debug(f'{i}: skipping {flag}: {line.rstrip()!r}')
@@ -2067,7 +2083,8 @@ def lines_to_decks2(lines: list[str],
             if len(line_upper) == 0:  # no comment
                 continue
 		#----------------------------------------------------------------------
-
+        #log.info(f'i={i} flag={flag!r} guess={guess_deck_sections} line={line_upper!r}')
+        #assert len(bulk_data_lines) == len(bulk_data_ilines_list)
         #if line_upper.startswith('SOL '):
             #isol_line = i+1
             #sol_line = line
@@ -2077,6 +2094,7 @@ def lines_to_decks2(lines: list[str],
             #assert flag == -1, flag
             #executive_control_lines.append(line)
         if line_upper.startswith('CEND'):
+            #log.debug('CEND')
             # start of case control deck
             #executive_control_lines = lines[:i]
             #log.warning(f'{i}: found CEND -> case_control')
@@ -2086,6 +2104,7 @@ def lines_to_decks2(lines: list[str],
             flag = 'case_control'
             #active_lines.append(line)
             active_lines = case_control_lines
+            active_ilines = case_control_ilines_list
             save_comment_flag = False
 
         elif line_upper.startswith('BEGIN'):
@@ -2101,7 +2120,8 @@ def lines_to_decks2(lines: list[str],
 
             if ibulk0 != -1:  # save last set of lines
                 #if flag == 'bulk':
-                    #log.debug(f'flag={flag!r}; begin_tag={begin_tag!r}')
+                # log.debug(f'flag={flag!r}; begin_tag={begin_tag!r}')
+                #log.info(f'flag={flag!r}; begin_tag={begin_tag!r}')
                 additional_deck_ilines[flag] = ilines[ibulk0:i]
                 #log.info(f'additional_deck_ilines.keys = {list(additional_deck_ilines.keys())}')
             save_comment_flag = True
@@ -2112,11 +2132,14 @@ def lines_to_decks2(lines: list[str],
                 assert flag in {'N/A', 'case_control'} or flag.startswith(DECK_TAGS), flag
                 flag = 'bulk'
                 active_lines = bulk_data_lines
+                active_ilines = bulk_data_ilines_list
             elif begin_flag.startswith(DECK_TAGS):
                 log.info(f'{i}: found deck_tag -> {begin_tag}')
                 #tag = (begin_flag, idi, label)
                 active_lines = []
+                active_ilines = []
                 additional_deck_lines[begin_tag] = active_lines
+                additional_deck_ilines[begin_tag] = active_ilines
                 flag = begin_flag_old
             else:  # pragma: no cover
                 raise RuntimeError(begin_flag)
@@ -2125,18 +2148,27 @@ def lines_to_decks2(lines: list[str],
             continue
 
         elif guess_deck_sections and _is_bulk_data_line(line) and flag in {'N/A', 'case_control'}: #  and flag in [1, 2]
+            #log.debug('bulk')
             section_name = flag
             log.warning(f'currently in {section_name} deck and skipping directly '
                         f'to bulk data section\n{line}')
-            log.warning(line)
 
             flag = 'bulk'
             save_comment_flag = True
             active_lines = bulk_data_lines
+            active_ilines = bulk_data_ilines_list
+            active_ilines.append(file_iline)
             active_lines.append(line)
         else:
+            #log.debug('else')
+            #is_flag = flag in {'N/A', 'case_control'}
+            #log.debug(f'  line={line!r}')
+            #log.debug(f'  guess_deck_sections={guess_deck_sections}')
+            #log.debug(f'  _is_bulk_data_line(line)={_is_bulk_data_line(line)}')
+            #log.debug(f'  flag={flag!r} in N/A, case_control={is_flag}')
             #mytag = line_upper.startswith('BEGIN')
             #log.warning(f'{i}: {flag} -> {line_upper!r}; {mytag}')
+            active_ilines.append(file_iline)
             active_lines.append(line)
 
         assert isinstance(flag, str), flag
@@ -2144,20 +2176,34 @@ def lines_to_decks2(lines: list[str],
         flags.append(flag)
         #log.debug('end; unhandled?')
 
+    bulk_data_ilines = np.zeros((0, 2), dtype='int32')
+    if len(bulk_data_ilines_list):
+        bulk_data_ilines = np.vstack(bulk_data_ilines_list)
+        assert len(bulk_data_lines) == len(bulk_data_ilines)
+        del bulk_data_ilines_list
+
     if ibulk0 != -1:
         #if flag == 'bulk':
             #log.info(f'flag={flag!r}; begin_tag={begin_tag!r}')
         additional_deck_ilines[flag] = ilines[ibulk0:]
 
-    bulk_data_ilines = None
+    #bulk_data_ilines = None
     bulk_data_flag = ('BULK', 0, '')
     #log.info(f'additional_deck_ilines.keys = {list(additional_deck_ilines.keys())}')
 
     if 'bulk'  in additional_deck_ilines:
         bulk_data_flag = 'bulk'
     if bulk_data_flag in additional_deck_ilines:
-        bulk_data_ilines = additional_deck_ilines[bulk_data_flag]
+        #bulk_data_ilines = additional_deck_ilines[bulk_data_flag]
+        assert len(bulk_data_lines) == len(bulk_data_ilines)
+        assert bulk_data_ilines is not None, bulk_data_ilines
         del additional_deck_ilines[bulk_data_flag]
+
+    assert len(bulk_data_lines) == len(bulk_data_ilines)
+    if len(bulk_data_lines) != len(bulk_data_ilines):
+        msg = 'len(bulk_data_lines)=%s len(bulk_data_ilines)=%s' % (
+            len(bulk_data_lines), len(bulk_data_ilines))
+        log.warning(msg)
     system_lines, executive_control_lines = _break_system_lines(executive_control_lines)
 
     # clean comments
