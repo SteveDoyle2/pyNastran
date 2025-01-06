@@ -43,7 +43,8 @@ from pyNastran.op2.writer.op2_writer import OP2Writer
 from pyNastran.op2.op2_interface.types import NastranKey
 from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 from pyNastran.op2.op2_interface.transforms import (
-    transform_displacement_to_global, transform_gpforce_to_globali)
+    transform_displacement_to_global, transform_gpforce_to_globali,
+    transform_displacement_global_to_local)
 from pyNastran.utils import check_path
 if TYPE_CHECKING:  # pragma: no cover
     from h5py import File as H5File
@@ -1195,6 +1196,26 @@ class OP2(OP2_Scalar, OP2Writer):
                     self.log.info('  %s' % str(key))
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
+    def transform_displacements_global_to_local(self, icd_transform: Any,
+                                                coords: dict[int, Any],
+                                                cid_out: int,
+                                                xyz_cid0: Any=None,
+                                                debug: bool=False) -> None:
+        """requires that cid_out != 0"""
+        assert cid_out != 0, cid_out
+        disp_like_dicts = get_disp_like_dicts(self)
+        for disp_like_dict in disp_like_dicts:
+            if not disp_like_dict:
+                continue
+            #print('-----------')
+            for subcase, result in disp_like_dict.items():
+                if result.table_name in ['BOUGV1', 'BOPHIG', 'TOUGV1']:
+                    continue
+                self.log.debug(f'transforming {result.table_name}')
+                transform_displacement_global_to_local(
+                    subcase, result, icd_transform, coords, cid_out,
+                    xyz_cid0, self.log, debug=debug)
+
     def transform_displacements_to_global(self, icd_transform: Any,
                                           coords: dict[int, Any],
                                           xyz_cid0: Any=None,
@@ -1214,7 +1235,7 @@ class OP2(OP2_Scalar, OP2Writer):
             Dictionary from coordinate id to index of the nodes in
             ``BDF.point_ids`` that their output (`CD`) in that
             coordinate system.
-        coords : dict{int cid :Coord()}
+        coords : dict{int cid : Coord()}
             Dictionary of coordinate id to the coordinate object
             Use this if CD is only rectangular
             Use this if CD is not rectangular
@@ -1239,46 +1260,7 @@ class OP2(OP2_Scalar, OP2Writer):
                     - cp>0 are local frames
 
         """
-        #output = {}
-        ato = self.op2_results.ato
-        crm = self.op2_results.crm
-        psd = self.op2_results.psd
-        rms = self.op2_results.rms
-        #no = self.op2_results.no
-        absi = self.op2_results.abs
-        nrl = self.op2_results.nrl
-        srss = self.op2_results.srss
-        disp_like_dicts = [
-            # should NO results be transformed?
-            #no.displacements, no.velocities, no.accelerations,
-            #no.spc_forces, no.mpc_forces,
-
-            self.displacements,
-            ato.displacements, crm.displacements, psd.displacements, rms.displacements,
-            #self.displacements_scaled,
-            absi.displacements, nrl.displacements, srss.displacements,
-
-            self.velocities,
-            ato.velocities, crm.velocities, psd.velocities, rms.velocities,
-            absi.velocities, nrl.velocities, srss.velocities,
-
-            self.accelerations,
-            ato.accelerations, crm.accelerations, psd.accelerations, rms.accelerations,
-            absi.accelerations, nrl.accelerations, srss.accelerations,
-
-            self.eigenvectors,
-            self.op2_results.RADCONS.eigenvectors, self.op2_results.RADEFFM.eigenvectors,
-            self.op2_results.RADEATC.eigenvectors, self.op2_results.ROUGV1.eigenvectors,
-
-            self.spc_forces, ato.spc_forces, crm.spc_forces, psd.spc_forces, rms.spc_forces,
-            absi.spc_forces, nrl.spc_forces, srss.spc_forces,
-
-            self.mpc_forces, ato.mpc_forces, crm.mpc_forces, psd.mpc_forces, rms.mpc_forces,
-            absi.mpc_forces, nrl.mpc_forces, srss.mpc_forces,
-
-            #self.applied_loads,
-            self.load_vectors,
-        ]
+        disp_like_dicts = get_disp_like_dicts(self)
         for disp_like_dict in disp_like_dicts:
             if not disp_like_dict:
                 continue
@@ -1287,8 +1269,9 @@ class OP2(OP2_Scalar, OP2Writer):
                 if result.table_name in ['BOUGV1', 'BOPHIG', 'TOUGV1']:
                     continue
                 self.log.debug(f'transforming {result.table_name}')
-                transform_displacement_to_global(subcase, result, icd_transform, coords, xyz_cid0,
-                                                 self.log, debug=debug)
+                transform_displacement_to_global(
+                    subcase, result, icd_transform, coords,
+                    xyz_cid0, self.log, debug=debug)
 
     def transform_gpforce_to_global(self, nids_all, nids_transform, icd_transform, coords,
                                     xyz_cid0=None):
@@ -1501,3 +1484,45 @@ def _get_keys_to_skip(model: OP2) -> list[str]:
         strain_energy.get_table_types(include_class=False)
     assert isinstance(my_keys_to_skip, list), my_keys_to_skip
     return my_keys_to_skip
+
+def get_disp_like_dicts(model: OP2) -> list[dict]:
+    ato = model.op2_results.ato
+    crm = model.op2_results.crm
+    psd = model.op2_results.psd
+    rms = model.op2_results.rms
+    # no = model.op2_results.no
+    absi = model.op2_results.abs
+    nrl = model.op2_results.nrl
+    srss = model.op2_results.srss
+    disp_like_dicts = [
+        # should NO results be transformed?
+        # no.displacements, no.velocities, no.accelerations,
+        # no.spc_forces, no.mpc_forces,
+
+        model.displacements,
+        ato.displacements, crm.displacements, psd.displacements, rms.displacements,
+        # self.displacements_scaled,
+        absi.displacements, nrl.displacements, srss.displacements,
+
+        model.velocities,
+        ato.velocities, crm.velocities, psd.velocities, rms.velocities,
+        absi.velocities, nrl.velocities, srss.velocities,
+
+        model.accelerations,
+        ato.accelerations, crm.accelerations, psd.accelerations, rms.accelerations,
+        absi.accelerations, nrl.accelerations, srss.accelerations,
+
+        model.eigenvectors,
+        model.op2_results.RADCONS.eigenvectors, model.op2_results.RADEFFM.eigenvectors,
+        model.op2_results.RADEATC.eigenvectors, model.op2_results.ROUGV1.eigenvectors,
+
+        model.spc_forces, ato.spc_forces, crm.spc_forces, psd.spc_forces, rms.spc_forces,
+        absi.spc_forces, nrl.spc_forces, srss.spc_forces,
+
+        model.mpc_forces, ato.mpc_forces, crm.mpc_forces, psd.mpc_forces, rms.mpc_forces,
+        absi.mpc_forces, nrl.mpc_forces, srss.mpc_forces,
+
+        # self.applied_loads,
+        model.load_vectors,
+    ]
+    return disp_like_dicts

@@ -25,12 +25,46 @@ if TYPE_CHECKING:
     from pyNastran.op2.result_objects.table_object import RealTableArray
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForces
 
+def transform_displacement_global_to_local(subcase: Subcase,
+                                           result: RealTableArray,
+                                           cid_out: int,
+                                           icd_transform: dict[int, np.ndarray],
+                                           coords: dict[int, Coord],
+                                           xyz_cid0: np.ndarray,
+                                           log: SimpleLogger, debug: bool=False) -> None:
+    """
+    Performs an inplace operation to transform the DISPLACMENT, VELOCITY,
+    ACCELERATION result into the global (cid=0) frame
+
+    Assumes you've called ``transform_displacement_to_global first``
+
+    """
+    assert cid_out != 0, cid_out
+    _transform_displacement(subcase, result, icd_transform, coords,
+                            cid_out, xyz_cid0, log, debug=debug)
+
 def transform_displacement_to_global(subcase: Subcase,
                                      result: RealTableArray,
                                      icd_transform: dict[int, np.ndarray],
                                      coords: dict[int, Coord],
                                      xyz_cid0: np.ndarray,
-                                     log: SimpleLogger, debug: bool=False):
+                                     log: SimpleLogger, debug: bool=False) -> None:
+    """
+    Performs an inplace operation to transform the DISPLACMENT, VELOCITY,
+    ACCELERATION result into the global (cid=0) frame
+
+    """
+    cid_out = 0
+    _transform_displacement(subcase, result, icd_transform, coords,
+                            cid_out, xyz_cid0, log, debug=debug)
+
+def _transform_displacement(subcase: Subcase,
+                            result: RealTableArray,
+                            icd_transform: dict[int, np.ndarray],
+                            coords: dict[int, Coord],
+                            cid_out: int,
+                            xyz_cid0: np.ndarray,
+                            log: SimpleLogger, debug: bool=False) -> None:
     """
     Performs an inplace operation to transform the DISPLACMENT, VELOCITY,
     ACCELERATION result into the global (cid=0) frame
@@ -39,12 +73,24 @@ def transform_displacement_to_global(subcase: Subcase,
     #print('result.name = ', result.class_name)
     data = result.data
     nnodesi = data.shape[1]
+    if cid_out == 0:
+        transform_to_global = True
+
+    transform_to_local = not transform_to_global
+    coord_out = coords[cid_out]
+    assert coord_out.type in {'CORD2R', 'CORD1R'}, str(coord_out)
+    coord_out_transform = coord_out.beta().T
+
     for cid, inode in icd_transform.items():
-        if cid in {-1, 0}:
+        if cid == -1:
+            continue
+        if cid == 0 and transform_to_global:
             continue
         coord = coords[cid]
         coord_type = coord.type
         cid_transform = coord.beta()
+        if transform_to_local:
+            cid_transform = coord_out_transform
 
         # a global coordinate system has 1.0 along the main diagonal
         is_global_cid = False
