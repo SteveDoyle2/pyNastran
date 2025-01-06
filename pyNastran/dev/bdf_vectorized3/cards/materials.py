@@ -2485,32 +2485,32 @@ class MAT11(Material):
         rho = np.zeros(ncards, dtype='float64')
         comment = {}
 
-        for i, card in enumerate(self.cards):
+        for icard, card in enumerate(self.cards):
             (mid, e1i, e2i, e3i, nu12i, nu13i, nu23i,
              g12i, g13i, g23i, rhoi, a1i, a2i, a3i,
              trefi, gei, ifilei, commenti) = card
             ifile[icard] = ifilei
             if commenti:
                 comment[mid] = commenti
-            material_id[i] = mid
-            e1[i] = e1i
-            e2[i] = e2i
-            e3[i] = e3i
+            material_id[icard] = mid
+            e1[icard] = e1i
+            e2[icard] = e2i
+            e3[icard] = e3i
 
-            nu12[i] = nu12i
-            nu13[i] = nu13i
-            nu23[i] = nu23i
+            nu12[icard] = nu12i
+            nu13[icard] = nu13i
+            nu23[icard] = nu23i
 
-            g12[i] = g12i
-            g13[i] = g13i
-            g23[i] = g23i
+            g12[icard] = g12i
+            g13[icard] = g13i
+            g23[icard] = g23i
 
-            alpha1[i] = a1i
-            alpha2[i] = a2i
-            alpha3[i] = a3i
-            rho[i] = rhoi
-            tref[i] = trefi
-            ge[i] = gei
+            alpha1[icard] = a1i
+            alpha2[icard] = a2i
+            alpha3[icard] = a3i
+            rho[icard] = rhoi
+            tref[icard] = trefi
+            ge[icard] = gei
         self._save(
             material_id, bulk, e1, e2, e3, nu12, nu13, nu23,
             g12, g13, g23, alpha1, alpha2, alpha3, rho, tref, ge,
@@ -2526,7 +2526,11 @@ class MAT11(Material):
               rho, tref, ge,
               ifile=None, comment: Optional[dict[int, str]]=None,
               force: bool=False) -> None:
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.material_id) == 0 and not force:
+            ifile = np.hstack([self.ifile, ifile])
             material_id = np.hstack([self.material_id, material_id])
             bulk = np.hstack([self.bulk, bulk])
             e1 = np.hstack([self.e1, e1])
@@ -2545,6 +2549,7 @@ class MAT11(Material):
             tref = np.hstack([self.tref, tref])
             ge = np.hstack([self.ge, ge])
 
+        self.ifile = ifile
         self.material_id = material_id
         self.bulk = bulk
 
@@ -2992,7 +2997,11 @@ class MATORT(Material):
                    option, file_, xyz1, xyz2,
               ifile=None, comment: Optional[dict[int, str]]=None,
               force: bool=False):
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         assert len(self.material_id) == 0, self.material_id
+        self.ifile = ifile
         self.material_id = material_id
         self.E1 = E1
         self.E2 = E2
@@ -3182,8 +3191,6 @@ class MATHP(Material):
             tab1=None, tab2=None, tab3=None, tab4=None, tabd=None,
             ifile: int=0, comment: str=''):
         #HyperelasticMaterial.__init__(self)
-        if comment:
-            self.comment = comment
         if d1 is None:
             d1 = (a10 + a01) * 1000.
 
@@ -3385,6 +3392,8 @@ class MATHP(Material):
         ncards = len(material_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
+        if comment:
+            self.comment.update(comment)
         self.ifile = ifile
         self.material_id = material_id
 
@@ -3724,6 +3733,10 @@ class MATHE(Material):
               ifile=None, comment: Optional[dict[int, str]]=None,
               force: bool=False):
         assert len(self.material_id) == 0, self.material_id
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.material_id = material_id
 
         self.hyperelastic_model = hyperelastic_model

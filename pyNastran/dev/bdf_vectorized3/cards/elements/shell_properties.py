@@ -2117,7 +2117,7 @@ class PLPLANE(Property):
 
             self.ifile[icard] = ifilei
             if commenti:
-                self.comment[pid] = comment
+                self.comment[pid] = commenti
             self.property_id[icard] = pid
             self.material_id[icard] = mid
             self.coord_id[icard] = cid

@@ -148,6 +148,7 @@ class VectorizedBaseCard:
          - yes: GRID, Coord, CBAR, PSHELL, MAT1, RBE2
          - no:  MPC, SPC, SPC1, ASET, FREQ
         """
+        assert isinstance(self.comment, dict), self.comment
         if not self.comment:
             return
 
