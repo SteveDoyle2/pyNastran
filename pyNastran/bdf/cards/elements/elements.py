@@ -254,9 +254,9 @@ class CWELD(CFAST):
     +=======+=====+=====+=====+========+=====+=====+======+=====+
     | CWELD | EWID| PWID| GS  |"PARTPAT"| GA  | GB |      |MCID |
     +-------+-----+-----+-----+---------+-----+----+------+-----+
-    |  PIDA | PIDB|     |     |         |     |    |      |     |
+    |       | PIDA|PIDB |     |         |     |    |      |     |
     +-------+-----+-----+-----+---------+-----+----+------+-----+
-    |  XS   | YS  | ZS  |     |         |     |    |      |     |
+    |       | XS  | YS  |  ZS |         |     |    |      |     |
     +-------+-----+-----+-----+---------+-----+----+------+-----+
     or ELPAT:
     +-------+-----+-----+-----+--------+-----+-----+-----+-----+
@@ -338,12 +338,25 @@ class CWELD(CFAST):
         ga = integer(card, 5, 'ga')
         gb = integer(card, 6, 'gb')
         mcid = integer_or_blank(card, 8,'mcid')
-        shida = integer_or_blank(card, 9,'shida')
-        shidb = integer_or_blank(card, 10,'shidb')
-        assert len(card)<=11, f'len(CWELD card) = {len(card):d}\ncard={card}'
-
-        return CWELD(eid, pid, gs, connectype, ga, gb, mcid=mcid, shida=shida, shidb=shidb, comment=comment)
-    
+        shida_pida = integer_or_blank(card, 9,'shida_pida')
+        shidb_pidb = integer_or_blank(card, 10,'shidb_pidb')
+        if connectype == 'ELEMID':
+            x = [None, None, None]
+            assert len(card)<=11, f'len(CWELD card) = {len(card):d}\ncard={card}'
+            return CWELD(eid, pid, gs, connectype, ga, gb, mcid=mcid, shida=shida_pida, shidb=shidb_pidb, comment=comment)
+        elif connectype == 'ELPAT':
+            x = [double_or_blank(card, 18, 'xs', 0.0),
+                 double_or_blank(card, 19, 'ys', 0.0),
+                 double_or_blank(card, 20, 'zs', 0.0)]
+            assert len(card)<=21, f'len(CWELD card) = {len(card):d}\ncard={card}'
+            return CWELD(eid, pid, gs, connectype, ga, gb, mcid=mcid, shida=shida_pida, shidb=shidb_pidb, x=x, comment=comment)
+        elif connectype == 'PARTPAT':
+            x = [double_or_blank(card, 18, 'xs', 0.0),
+                 double_or_blank(card, 19, 'ys', 0.0),
+                 double_or_blank(card, 20, 'zs', 0.0)]
+            assert len(card)<=21, f'len(CWELD card) = {len(card):d}\ncard={card}'
+            return CWELD(eid, pid, gs, connectype, ga, gb, mcid=mcid, shida=shida_pida, shidb=shida_pida, x=x, comment=comment)
+   
     def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly"
@@ -363,8 +376,14 @@ class CWELD(CFAST):
             self.gb_ref = model.Node(self.Gb(), msg=msg)
 
     def raw_fields(self):
-        gs = self._get_gs()
-        list_fields = ['CWELD', self.eid, self.Pid(), gs, self.elemid,  self.Ga(), self.Gb(), self.mcid, self.shida, self.shidb]
+        if self.connectype == 'ELEMID':
+            list_fields = ['CWELD', self.eid, self.Pid(), gs, self.connectype,  self.Ga(), self.Gb(), self.mcid, self.shida, self.shidb]
+        elif self.connectype == 'ELPAT':
+            xs, ys, zs = self.x
+            list_fields = ['CWELD', self.eid, self.Pid(), gs, self.connectype,  self.Ga(), self.Gb(), self.mcid, self.shida, self.shidb, xs, ys, zs]
+        elif self.connectype == 'PARTPAT':
+            xs, ys, zs = self.x
+            list_fields = ['CWELD', self.eid, self.Pid(), gs, self.connectype,  self.Ga(), self.Gb(), self.mcid, self.pida, self.pidb, xs, ys, zs]
         return list_fields
     
     def Gs(self):
