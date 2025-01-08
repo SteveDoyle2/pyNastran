@@ -1201,8 +1201,17 @@ class OP2(OP2_Scalar, OP2Writer):
                                                 cid_out: int,
                                                 xyz_cid0: Any=None,
                                                 debug: bool=False) -> None:
-        """requires that cid_out != 0"""
-        assert cid_out != 0, cid_out
+        """
+        Assuming you've called ``self.transform_displacement_to_global`` first,
+        set:
+
+        nnodes = xyz_cid0.shape[0]
+        icd_transform = {
+            0: np.arange(nnodes),
+        }
+        """
+        if cid_out in {0, -1}:
+            return
         disp_like_dicts = get_disp_like_dicts(self)
         for disp_like_dict in disp_like_dicts:
             if not disp_like_dict:

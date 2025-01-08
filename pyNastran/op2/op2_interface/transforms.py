@@ -9,7 +9,7 @@ Defines:
 """
 from __future__ import annotations
 import sys
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
@@ -36,61 +36,31 @@ def transform_displacement_global_to_local(subcase: Subcase,
     Performs an inplace operation to transform the DISPLACMENT, VELOCITY,
     ACCELERATION result into the global (cid=0) frame
 
-    Assumes you've called ``transform_displacement_to_global first``
+    Assuming you've called ``transform_displacement_to_global`` first,
+    set:
+
+    nnodes = xyz_cid0.shape[0]
+    icd_transform = {
+        0: np.arange(nnodes),
+    }
 
     """
-    assert cid_out != 0, cid_out
-    _transform_displacement(subcase, result, icd_transform, coords,
-                            cid_out, xyz_cid0, log, debug=debug)
-
-def transform_displacement_to_global(subcase: Subcase,
-                                     result: RealTableArray,
-                                     icd_transform: dict[int, np.ndarray],
-                                     coords: dict[int, Coord],
-                                     xyz_cid0: np.ndarray,
-                                     log: SimpleLogger, debug: bool=False) -> None:
-    """
-    Performs an inplace operation to transform the DISPLACMENT, VELOCITY,
-    ACCELERATION result into the global (cid=0) frame
-
-    """
-    cid_out = 0
-    _transform_displacement(subcase, result, icd_transform, coords,
-                            cid_out, xyz_cid0, log, debug=debug)
-
-def _transform_displacement(subcase: Subcase,
-                            result: RealTableArray,
-                            icd_transform: dict[int, np.ndarray],
-                            coords: dict[int, Coord],
-                            cid_out: int,
-                            xyz_cid0: np.ndarray,
-                            log: SimpleLogger, debug: bool=False) -> None:
-    """
-    Performs an inplace operation to transform the DISPLACMENT, VELOCITY,
-    ACCELERATION result into the global (cid=0) frame
-
-    """
-    #print('result.name = ', result.class_name)
     data = result.data
     nnodesi = data.shape[1]
-    if cid_out == 0:
-        transform_to_global = True
 
-    transform_to_local = not transform_to_global
-    coord_out = coords[cid_out]
+    coord_out = coords.coord[cid_out]
     assert coord_out.type in {'CORD2R', 'CORD1R'}, str(coord_out)
     coord_out_transform = coord_out.beta().T
 
+    # assert 0 in icd_transform, icd_transform
     for cid, inode in icd_transform.items():
-        if cid == -1:
+        if cid == -1 or len(inode) == 0:
             continue
-        if cid == 0 and transform_to_global:
-            continue
+        # if cid == 0 and transform_to_global:
+        #     continue
         coord = coords[cid]
         coord_type = coord.type
-        cid_transform = coord.beta()
-        if transform_to_local:
-            cid_transform = coord_out_transform
+        cid_transform = coord_out_transform
 
         # a global coordinate system has 1.0 along the main diagonal
         is_global_cid = False
@@ -105,10 +75,69 @@ def _transform_displacement(subcase: Subcase,
             log.debug('len(inode) = %s' % len(inode))
             assert np.array_equal(inode, np.unique(inode))
 
+        _transform_coord_nids(
+            inode, data, nnodesi,
+            cid_transform, coord, coord_type, is_global_cid,
+            log,
+            xyz_cid0=xyz_cid0)
+
+def transform_displacement_to_global(subcase: Subcase,
+                                     result: RealTableArray,
+                                     icd_transform: dict[int, np.ndarray],
+                                     coords: dict[int, Coord],
+                                     xyz_cid0: np.ndarray,
+                                     log: SimpleLogger, debug: bool=False) -> None:
+    """
+    Performs an inplace operation to transform the DISPLACMENT, VELOCITY,
+    ACCELERATION result into the global (cid=0) frame
+
+    """
+    data = result.data
+    nnodesi = data.shape[1]
+
+    # if 0 not in icd_transform:
+    #     icd_transform[0] = np.zeros(0, dtype=np.float64)
+
+    for cid, inode in icd_transform.items():
+        if cid in {-1, 0} or len(inode) == 0:
+            continue
+
+        coord = coords[cid]
+        coord_type = coord.type
+        cid_transform = coord.beta()
+
+        # a global coordinate system has 1.0 along the main diagonal
+        is_global_cid = False
+        if np.array_equal([1., 1., 1.], np.diagonal(cid_transform)):
+            is_global_cid = True
+
+        if not is_global_cid and debug:
+            log.debug('coord\n%s' % coord)
+            log.debug(cid_transform)
+            log.debug('inode = [%s]' % ', '.join([str(val).rstrip('L') for val in inode.tolist()]))
+            log.debug('data.shape = %s' % str(data.shape))
+            log.debug('len(inode) = %s' % len(inode))
+            assert np.array_equal(inode, np.unique(inode))
+
+        _transform_coord_nids(
+            inode, data, nnodesi,
+            cid_transform, coord, coord_type, is_global_cid,
+            log,
+            xyz_cid0=xyz_cid0)
+
+
+def _transform_coord_nids(inode: np.ndarray,
+                          data: np.ndarray,
+                          nnodesi: int,
+                          cid_transform: np.ndarray,
+                          coord: Coord,
+                          coord_type: str, is_global_cid: bool,
+                          log: SimpleLogger,
+                          xyz_cid0: Optional[np.ndarray]) -> None:
         if coord_type in ['CORD2R', 'CORD1R']:
             if is_global_cid:
                 #self.log.debug('is_global_cid')
-                continue
+                return
             #self.log.debug('rectangular')
 
 
@@ -127,7 +156,7 @@ def _transform_displacement(subcase: Subcase,
                 #rotation = np.full(inode.shape, np.nan, dtype=data.dtype)
                 print(data.shape, inode.shape, nnodesi)
                 print(inode[:nnodesi].shape)
-                continue
+                return
                 #translation = data[:, inode[:nnodesi], :3]
                 #rotation = data[:, inode[:nnodesi], 3:]
             data[:, inode, :3] = translation @ cid_transform

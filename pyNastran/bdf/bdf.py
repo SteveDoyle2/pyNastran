@@ -3720,13 +3720,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # get the indicies of the xyz array where the nodes that
         # need to be transformed are
         for cd, nids in sorted(nids_cd_transform.items()):
-            if cd in [0, -1]:
+            if cd == -1:
                 continue
             nids = np.array(nids)
             icd_transform[cd] = np.where(np.isin(nids_all, nids))[0]
 
         for cp, nids in sorted(nids_cp_transform.items()):
-            if cp in [-1]:
+            if cp == -1:
                 continue
             nids = np.array(nids)
             icp_transform[cp] = np.where(np.isin(nids_all, nids))[0]

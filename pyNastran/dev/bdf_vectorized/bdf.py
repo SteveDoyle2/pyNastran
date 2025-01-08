@@ -2740,19 +2740,20 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         icd_transform = {}
         nids_all = np.array(sorted(self.point_ids))
         for cd, nids in sorted(nids_cd_transform.items()):
-            if cd in [0, -1]:
+            if cd in -1:
                 continue
             nids = np.array(nids)
             icd_transform[cd] = np.where(np.isin(nids_all, nids))[0]
             if cd in nids_cp_transform:
                 icp_transform[cd] = icd_transform[cd]
+
         for cp, nids in sorted(nids_cd_transform.items()):
-            if cp in [0, -1]:
+            if cp in -1:
                 continue
-            if cp in icd_transform:
-                continue
+            # if cp in icd_transform:
+            #     continue
             nids = np.array(nids)
-            icd_transform[cd] = np.where(np.isin(nids_all, nids))[0]
+            icd_transform[cp] = np.where(np.isin(nids_all, nids))[0]
 
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
