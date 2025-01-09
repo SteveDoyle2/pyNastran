@@ -1569,21 +1569,21 @@ class Add0dElements:
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_cweld(self, eid: int, pid: int, gs: int, elemid:str, ga:int, gb:int, mcid:int, shida: int, shidb: int, comment: str='') -> CWELD:
+    def add_cweld(self, eid: int, pid: int, gs: int, elemid:str, ga:int, gb:int, mcid:int, shida: int, shidb: int, x: list[float]=None, comment: str='') -> CWELD:
         """
         Creates a CWELD card
 
         """
-        elem = CWELD(eid, pid, gs, elemid, ga, gb, mcid, shida, shidb, comment=comment)
+        elem = CWELD(eid, pid, gs, elemid, ga, gb, mcid, shida, shidb, x, comment=comment)
         self._add_methods._add_element_object(elem)
         return elem
     
-    def add_pweld(self, pid: int, mid: int, d: float, mset: str, type:str, ldmin: float, ldmax: float, comment: str='') -> PWELD:
+    def add_pweld(self, pid: int, mid: int, d: float, mset: str=None, connect_type:str=None, ldmin: float=None, ldmax: float=None, comment: str='') -> PWELD:
         """
         Creates a PWELD card
 
         """
-        prop = PWELD(pid, mid, mid, d, mset, type, ldmin, ldmax, comment=comment)
+        prop = PWELD(pid, mid, mid, d, mset, connect_type, ldmin, ldmax, comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
 

@@ -259,7 +259,7 @@ class PWELD(Property):
     """
     type = 'PWELD'
     _field_map = {
-        1: 'pid', 2:'mid', 3:'d', 6:'mset', 9:'ldmin', 10:'ldmax',
+        1: 'pid', 2:'mid', 3:'d', 6:'mset', 8:'type', 9:'ldmin', 10:'ldmax',
     }
     pname_fid_map = {
         'MID' :'mid',
@@ -272,9 +272,9 @@ class PWELD(Property):
         pid = 1
         mid = 2
         d = 0.1
-        return PWELD(pid, mid, d, mset=None, ldmin=None, ldmax=None, comment='')
+        return PWELD(pid, mid, d, mset=None, type=None, ldmin=None, ldmax=None, comment='')
     
-    def __init__(self, pid: int, mid: int, d: float, mset:str=None, ldmin:float=None, ldmax:float=None, comment: str='') -> PWELD:
+    def __init__(self, pid: int, mid: int, d: float, mset:str=None, connect_type: str=None, ldmin:float=None, ldmax:float=None, comment: str='') -> PWELD:
         """
         Creates a PWELD card
         Parameters
@@ -306,6 +306,8 @@ class PWELD(Property):
         self.d = d
         #: M-set flag
         self.mset = mset
+        #: Type of weld
+        self.connect_type = connect_type
         #: Minimum length of the weld
         self.ldmin = ldmin
         #: Maximum length of the weld
@@ -326,10 +328,11 @@ class PWELD(Property):
         mid = integer(card, 2,'mid')
         d = double(card, 3, 'd')
         mset = string_or_blank(card, 6,'mset', 'OFF')
+        connect_type = string_or_blank(card, 8, 'connect_type')
         ldmin = double_or_blank(card, 9, 'ldmin')
         ldmax = double_or_blank(card, 10, 'ldmax')
         assert len(card) <= 11, f'len(PWELD card) = {len(card):d}\ncard={card}'
-        return PWELD(pid, mid, d, mset=mset, ldmin=ldmin, ldmax=ldmax, comment=comment)
+        return PWELD(pid, mid, d, mset=mset, connect_type=connect_type, ldmin=ldmin, ldmax=ldmax, comment=comment)
     
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -342,8 +345,8 @@ class PWELD(Property):
         comment : str; default=''
             a comment for the card
         """
-        (pid, mid, d, mset, ldmin, ldmax) = data
-        return PWELD(pid, mid, d, mset=mset, ldmin=ldmin, ldmax=ldmax, comment=comment)
+        (pid, mid, d, mset, connect_type, ldmin, ldmax) = data
+        return PWELD(pid, mid, d, mset=mset, connect_type=connect_type, ldmin=ldmin, ldmax=ldmax, comment=comment)
     
     def cross_reference(self, model: BDF) -> None:
         """
@@ -365,12 +368,12 @@ class PWELD(Property):
 
     def raw_fields(self):
         fields = ['PWELD', self.pid, self.Mid(), self.d,
-                  self.mset, self.ldmin, self.ldmax]
+                  self.mset, self.connect_type, self.ldmin, self.ldmax]
         return fields
     
     def repr_fields(self):
         mset = set_blank_if_default(self.mset, 'OFF')
-        fields = ['PWELD', self.pid, self.Mid(), self.d, mset, self.ldmin, self.ldmax]
+        fields = ['PWELD', self.pid, self.Mid(), self.d, mset, self.connect_type, self.ldmin, self.ldmax]
         return fields
     
     def write_card(self, size: int=8, is_double: bool=False) -> str:

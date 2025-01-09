@@ -314,6 +314,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
 
         group_msg = []
         ncards_total = 0
+        print(groups)
         for card_name in sorted(groups):
             try:
                 ncards = model.card_count[card_name]

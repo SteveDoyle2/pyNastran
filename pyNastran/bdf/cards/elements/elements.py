@@ -343,19 +343,19 @@ class CWELD(CFAST):
         if connectype == 'ELEMID':
             x = [None, None, None]
             assert len(card)<=11, f'len(CWELD card) = {len(card):d}\ncard={card}'
-            return CWELD(eid, pid, gs, connectype, ga, gb, mcid=mcid, shida=shida_pida, shidb=shidb_pidb, comment=comment)
         elif connectype == 'ELPAT':
             x = [double_or_blank(card, 18, 'xs', 0.0),
                  double_or_blank(card, 19, 'ys', 0.0),
                  double_or_blank(card, 20, 'zs', 0.0)]
             assert len(card)<=21, f'len(CWELD card) = {len(card):d}\ncard={card}'
-            return CWELD(eid, pid, gs, connectype, ga, gb, mcid=mcid, shida=shida_pida, shidb=shidb_pidb, x=x, comment=comment)
         elif connectype == 'PARTPAT':
             x = [double_or_blank(card, 18, 'xs', 0.0),
                  double_or_blank(card, 19, 'ys', 0.0),
                  double_or_blank(card, 20, 'zs', 0.0)]
             assert len(card)<=21, f'len(CWELD card) = {len(card):d}\ncard={card}'
-            return CWELD(eid, pid, gs, connectype, ga, gb, mcid=mcid, shida=shida_pida, shidb=shida_pida, x=x, comment=comment)
+        else:
+            raise NameError(f'connectype={connectype!r} is not supported')
+        return CWELD(eid, pid, gs, connectype, ga, gb, mcid=mcid, shida=shida_pida, shidb=shidb_pidb, x=x, comment=comment)
    
     def cross_reference(self, model: BDF) -> None:
         """
@@ -377,22 +377,25 @@ class CWELD(CFAST):
 
     def raw_fields(self):
         if self.connectype == 'ELEMID':
-            list_fields = ['CWELD', self.eid, self.Pid(), gs, self.connectype,  self.Ga(), self.Gb(), self.mcid, self.shida, self.shidb]
+            list_fields = ['CWELD', self.eid, self.Pid(), self.gs, self.connectype, self.Ga(), self.Gb(), self.mcid, self.shida, self.shidb]
         elif self.connectype == 'ELPAT':
             xs, ys, zs = self.x
-            list_fields = ['CWELD', self.eid, self.Pid(), gs, self.connectype,  self.Ga(), self.Gb(), self.mcid, self.shida, self.shidb, xs, ys, zs]
+            list_fields = ['CWELD', self.eid, self.Pid(), self.gs, self.connectype, self.Ga(), self.Gb(), self.mcid, self.shida, self.shidb, xs, ys, zs]
         elif self.connectype == 'PARTPAT':
             xs, ys, zs = self.x
-            list_fields = ['CWELD', self.eid, self.Pid(), gs, self.connectype,  self.Ga(), self.Gb(), self.mcid, self.pida, self.pidb, xs, ys, zs]
+            list_fields = ['CWELD', self.eid, self.Pid(), self.gs, self.connectype, self.Ga(), self.Gb(), self.mcid, self.pida, self.pidb, xs, ys, zs]
+        else:
+            raise NameError(f'connectype={self.connectype!r} is not supported')
         return list_fields
     
     def Gs(self):
         """Gets the GS node"""
-        if isinstance(self.gs, integer_types):
-            return self.gs
-        elif self.gs is not None:
-            return self.gs_ref.nid
-        elif self.gs is None:
+        if self.gs is not None:
+            if isinstance(self.gs, integer_types):
+                return self.gs
+            else:
+                return self.gs_ref.nid
+        else:
             if self.ga is None:
                 # If neither GS nor GA is specified, then (XS, YS, ZS) in basic must be specified.
                 raise RuntimeError(f'Neither Gs nor GA was not returned from CWELD\n{self.get_stats()}')
