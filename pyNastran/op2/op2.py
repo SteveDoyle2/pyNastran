@@ -1196,10 +1196,10 @@ class OP2(OP2_Scalar, OP2Writer):
                     self.log.info('  %s' % str(key))
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
-    def transform_displacements_global_to_local(self, icd_transform: Any,
+    def transform_displacements_global_to_local(self, icd_transform: dict[int, np.ndarray],
                                                 coords: dict[int, Any],
                                                 cid_out: int,
-                                                xyz_cid0: Any=None,
+                                                xyz_cid0: Optional[np.ndarray]=None,
                                                 debug: bool=False) -> None:
         """
         Assuming you've called ``self.transform_displacement_to_global`` first,
@@ -1225,9 +1225,9 @@ class OP2(OP2_Scalar, OP2Writer):
                     subcase, result, icd_transform, coords, cid_out,
                     xyz_cid0, self.log, debug=debug)
 
-    def transform_displacements_to_global(self, icd_transform: Any,
+    def transform_displacements_to_global(self, icd_transform: dict[int, np.ndarray],
                                           coords: dict[int, Any],
-                                          xyz_cid0: Any=None,
+                                          xyz_cid0: Optional[np.ndarray]=None,
                                           debug: bool=False) -> None:
         """
         Transforms the ``data`` of displacement-like results into the

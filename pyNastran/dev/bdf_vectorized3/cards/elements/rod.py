@@ -92,6 +92,7 @@ class CONROD(Element):
         return self.n - 1
 
     def __apply_slice__(self, elem: CONROD, i: np.ndarray) -> None:  # ignore[override]
+        #elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.material_id = self.material_id[i]
         elem.nodes = self.nodes[i, :]
@@ -282,6 +283,7 @@ class CROD(Element):
         return self.n - 1
 
     def __apply_slice__(self, elem: CROD, i: np.ndarray) -> None:  # ignore[override]
+        #elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -442,7 +444,8 @@ class PROD(Property):
         self.nsm: np.ndarray = np.array([], dtype='float64')
 
     def add(self, pid: int, mid: int, A: float,
-            j: float=0., c: float=0., nsm: float=0., comment: str='') -> int:
+            j: float=0., c: float=0., nsm: float=0.,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PROD card
 
@@ -464,7 +467,7 @@ class PROD(Property):
             a comment for the card
 
         """
-        self.cards.append((pid, mid, A, j, c, nsm, comment))
+        self.cards.append((pid, mid, A, j, c, nsm, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -476,11 +479,12 @@ class PROD(Property):
         c = double_or_blank(card, 5, 'c', default=0.0)
         nsm = double_or_blank(card, 6, 'nsm', default=0.0)
         assert len(card) <= 7, f'len(PROD card) = {len(card):d}\ncard={card}'
-        self.cards.append((pid, mid, A, j, c, nsm, comment))
+        self.cards.append((pid, mid, A, j, c, nsm, ifile, comment))
         self.n += 1
         return self.n - 1
 
     def __apply_slice__(self, prop: PROD, i: np.ndarray) -> None:  # ignore[override]
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.A = self.A[i]
@@ -496,36 +500,44 @@ class PROD(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
         A = np.zeros(ncards, dtype='float64')
         J = np.zeros(ncards, dtype='float64')
         c = np.zeros(ncards, dtype='float64')
         nsm = np.zeros(ncards, dtype='float64')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, Ai, j, ci, nsmi, comment) = card
+            (pid, mid, Ai, j, ci, nsmi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             A[icard] = Ai
             J[icard] = j
             c[icard] = ci
             nsm[icard] = nsmi
-        self._save(property_id, material_id, A, J, c, nsm)
+        self._save(property_id, material_id, A, J, c, nsm,
+                   ifile=ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, material_id, A, J, c, nsm):
+    def _save(self, property_id, material_id, A, J, c, nsm,
+              ifile=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             raise NotImplementedError()
-        ncards = len(property_id)
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         self.A = A
         self.J = J
         self.c = c
         self.nsm = nsm
-        self.n = ncards
+        self.n = len(ifile)
 
     def convert(self, area_scale: float=1.,
                 area_inertia_scale: float=1.0,
@@ -620,6 +632,7 @@ class CTUBE(Element):
         return self.n - 1
 
     def __apply_slice__(self, elem: CTUBE, i: np.ndarray) -> None:  # ignore[override]
+        #felem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -807,7 +820,8 @@ class PTUBE(Property):
         self.nsm = np.array([], dtype='float64')
 
     def add(self, pid: int, mid: int, OD1: float, t: Optional[float]=None,
-            nsm: float=0., OD2: Optional[float]=None, comment: str='') -> int:
+            nsm: float=0., OD2: Optional[float]=None,
+            ifile: int=0, comment: str='') -> int:
         """
         Adds a PTUBE card
 
@@ -829,7 +843,7 @@ class PTUBE(Property):
             a comment for the card
 
         """
-        self.cards.append((pid, mid, OD1, OD2, t, nsm, comment))
+        self.cards.append((pid, mid, OD1, OD2, t, nsm, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -841,43 +855,52 @@ class PTUBE(Property):
         nsm = double_or_blank(card, 5, 'nsm', default=0.0)
         OD2 = double_or_blank(card, 6, 'OD2', default=OD1)
         assert len(card) <= 7, f'len(PTUBE card) = {len(card):d}\ncard={card}'
-        self.cards.append((pid, mid, OD1, OD2, t, nsm, comment))
+        self.cards.append((pid, mid, OD1, OD2, t, nsm, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         diameter = np.zeros((ncards, 2), dtype='float64')
         t = np.zeros(ncards, dtype='float64')
         nsm = np.zeros(ncards, dtype='float64')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, OD1, OD2, ti, nsmi, comment) = card
+            (pid, mid, OD1, OD2, ti, nsmi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             diameter[icard] = [OD1, OD2]
             t[icard] = ti
             nsm[icard] = nsmi
-        self._save(property_id, material_id, diameter, t, nsm)
+        self._save(property_id, material_id, diameter, t, nsm, ifile=ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, material_id, diameter, t, nsm):
+    def _save(self, property_id, material_id, diameter, t, nsm,
+              ifile=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id):
             raise NotImplementedError()
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         self.diameter = diameter
         self.t = t
         self.nsm = nsm
         assert self.diameter.ndim == 2, self.diameter.shape
-        self.n = len(property_id)
+        self.n = len(ifile)
 
     def __apply_slice__(self, prop: PTUBE, i: np.ndarray) -> None:  # ignore[override]
         assert self.diameter.ndim == 2, self.diameter.shape
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.diameter = self.diameter[i, :]
         prop.t = self.t[i]

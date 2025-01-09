@@ -86,26 +86,33 @@ class CDAMP1(Element):
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, componentsi, ifilei, comment) = card
+            (eid, pid, nids, componentsi, ifilei, commenti) = card
             ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
             components[icard, :] = componentsi
-        self._save(element_id, property_id, nodes, components)
+        self._save(element_id, property_id, nodes, components,
+                   ifile=ifile)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, components):
-        nelements = len(element_id)
+    def _save(self, element_id, property_id, nodes, components,
+              ifile=None):
+        if ifile is None:
+            ncards = len(element_id)
+            ifile = np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.components = components
-        self.n = nelements
+        self.n = len(ifile)
 
     def __apply_slice__(self, elem: CDAMP1, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -701,23 +708,31 @@ class PDAMP(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         b = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, bi, ifilei, comment) = card
+            (pid, bi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             b[icard] = bi
         self._save(property_id, b)
         self.cards = []
 
-    def _save(self, property_id, b):
-        nproperties = len(property_id)
+    def _save(self, property_id, b, ifile=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.property_id) != 0:
+            asdf
+        self.ifile = ifile
         self.property_id = property_id
         self.b = b
-        self.n = nproperties
+        self.n = len(ifile)
 
     def __apply_slice__(self, prop: PDAMP, i: np.ndarray) -> None:
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.b = self.b[i]
         prop.n = len(i)
@@ -804,24 +819,30 @@ class PDAMP5(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
         b = np.zeros(ncards, dtype='float64')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, bi, ifilei, comment) = card
+            (pid, mid, bi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             b[icard] = bi
-        self._save(property_id, material_id, b)
+        self._save(property_id, material_id, b, ifile=ifile)
         self.cards = []
 
-    def _save(self, property_id, material_id, b):
-        nproperties = len(property_id)
+    def _save(self, property_id, material_id, b, ifile=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         self.b = b
-        self.n = nproperties
+        self.n = len(ifile)
 
     def validate(self) -> None:
         return
@@ -894,22 +915,31 @@ class PDAMPT(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
 
         #: Identification number of a TABLEDi entry that defines the
         #: damping force per-unit velocity versus frequency relationship
         table_b = np.zeros(ncards, dtype='int32')
+        comment = {}
 
-        for icard, (pid, tbid, ifilei, comment) in enumerate(self.cards):
+        for icard, (pid, tbid, ifilei, commenti) in enumerate(self.cards):
+            ifile[icard] = ifilei
             property_id[icard] = pid
             table_b[icard] = tbid
         self._save(property_id, table_b)
         self.cards = []
 
-    def _save(self, property_id, table_b) -> None:
-        assert len(self.property_id) == 0
+    def _save(self, property_id, table_b, ifile=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.property_id) != 0:
+            asdf
+        self.ifile = ifile
         self.property_id = property_id
         self.table_b = table_b
+        self.n = len(ifile)
 
     def __apply_slice__(self, prop: PDAMPT, i: np.ndarray) -> None:
         prop.property_id = self.property_id[i]
@@ -998,17 +1028,24 @@ class CVISC(Element):
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
+        self._save(element_id, property_id, nodes, ifile=ifile)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes):
-        nelements = len(element_id)
+    def _save(self, element_id, property_id, nodes, ifile=None):
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.property_id) != 0:
+            asdf
+        ncards = len(element_id)
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
-        self.n = nelements
+        self.n = ncards
 
     def __apply_slice__(self, elem: CVISC, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -1134,22 +1171,30 @@ class PVISC(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         cr = np.zeros(ncards, dtype='float64')
         ce = np.zeros(ncards, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (pid, cei, cri, ifilei, comment) = card
+            (pid, cei, cri, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             cr[icard] = cri
             ce[icard] = cei
-        self._save(property_id, ce, cr)
+        self._save(property_id, ce, cr, ifile=ifile)
         self.cards = []
 
-    def _save(self, property_id, ce, cr):
+    def _save(self, property_id, ce, cr, ifile=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.property_id):
+            asdf
+        self.ifile = ifile
         self.property_id = property_id
         self.ce = ce
         self.cr = cr
-        self.n = len(property_id)
+        self.n = len(ifile)
 
     def __apply_slice__(self, prop: PVISC, i: np.ndarray) -> None:
         prop.property_id = self.property_id[i]
@@ -1260,7 +1305,7 @@ class CGAP(Element):
         x = np.full((ncards, 3), np.nan, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, xi, g0i, cid, ifilei, comment) = card
+            (eid, pid, nids, xi, g0i, cid, ifilei, commenti) = card
             if g0i is None or g0i == -1:
                 x[icard, :] = xi
             else:
@@ -1275,13 +1320,18 @@ class CGAP(Element):
             property_id[icard] = pid
             nodes[icard, :] = nids
             coord_id[icard] = cid
-        self._save(element_id, property_id, nodes, coord_id, x, g0)
+        self._save(element_id, property_id, nodes, coord_id, x, g0, ifile=ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, coord_id, x, g0) -> None:
+    def _save(self, element_id, property_id, nodes, coord_id, x, g0,
+              ifile=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id):
             raise RuntimeError(f'stacking of {self.type} is not supported')
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -1324,6 +1374,7 @@ class CGAP(Element):
         used_dict['coord_id'].append(coords)
 
     def __apply_slice__(self, elem: CGAP, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -1597,9 +1648,14 @@ class PGAP(Property):
         self._save(property_id, u0, f0, ka, kb, kt, mu1, mu2, tmax, mar, trmin)
         self.cards = []
 
-    def _save(self, property_id, u0, f0, ka, kb, kt, mu1, mu2, tmax, mar, trmin):
+    def _save(self, property_id, u0, f0, ka, kb, kt, mu1, mu2, tmax, mar, trmin,
+              ifile=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
+        self.ifile = ifile
         self.property_id = property_id
         self.u0 = u0
         self.f0 = f0
@@ -1611,8 +1667,10 @@ class PGAP(Property):
         self.tmax = tmax
         self.mar = mar
         self.trmin = trmin
+        self.n = len(property_id)
 
     def __apply_slice__(self, prop: PGAP, i: np.ndarray) -> None:
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.u0 = self.u0[i]
         prop.f0 = self.f0[i]

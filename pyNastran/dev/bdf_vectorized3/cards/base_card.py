@@ -640,7 +640,7 @@ class Element(VectorizedBaseCard):
         upids = np.unique(property_id)
 
         is_in = np.isin(property_id, property_filter)
-        print(f'prop is_in = {is_in.tolist()}')
+        #print(f'prop is_in = {is_in.tolist()}')
         if not np.any(is_in):
             log.error(f'skipping {element.type} because it is empty after filtering; '
                       f'property_ids={upids}')
@@ -653,7 +653,7 @@ class Element(VectorizedBaseCard):
             return is_removed, element
 
         nexpected = is_in.sum()
-        print(f'is_in = {is_in.tolist()}')
+        #print(f'is_in = {is_in.tolist()}')
         assert len(is_in) == nelement
         # assert False not in is_in, is_in
         for pid, flag in zip(element.property_id, is_in):

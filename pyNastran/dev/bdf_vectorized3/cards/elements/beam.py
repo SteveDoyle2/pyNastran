@@ -309,6 +309,7 @@ class CBEAM(Element):
         self.x *= xyz_scale
 
     def __apply_slice__(self, elem: CBEAM, i: np.ndarray) -> None:
+        #elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -961,14 +962,14 @@ class PBEAM(Property):
             nsia=0., nsib=None, cwa=0., cwb=None,
             m1a=0., m2a=0., m1b=None, m2b=None,
             n1a=0., n2a=0., n1b=None, n2b=None,
-            comment='') -> int:
+            ifile: int=0, comment: str='') -> int:
         self.cards.append((pid, mid,
                            xxb, so, area, j, i1, i2, i12, nsm,
                            c1, c2, d1, d2, e1, e2, f1, f2,
                            s1, s2, k1, k2,
                            nsia, nsib, cwa, cwb,
                            m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b,
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1274,7 +1275,7 @@ class PBEAM(Property):
                            s1, s2, k1, k2,
                            nsia, nsib, cwa, cwb,
                            m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b,
-                           comment))
+                           ifile, comment))
 
         self.n += 1
         return self.n - 1
@@ -1283,6 +1284,7 @@ class PBEAM(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
         xxb_list = []
@@ -1330,7 +1332,7 @@ class PBEAM(Property):
              nsiai, nsibi, cwai, cwbi,
              m1ai, m2ai, m1bi, m2bi,
              n1ai, n2ai, n1bi, n2bi,
-             comment) = card
+             ifilei, commenti) = card
             nstations = len(areai)
             if nsmi is None:
                 nsmi = np.zeros(nstations)
@@ -1374,6 +1376,7 @@ class PBEAM(Property):
                 n2bi = n2ai
 
             nstationi = len(xxbi)
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             nstation[icard] = nstationi
@@ -1447,7 +1450,7 @@ class PBEAM(Property):
                    s1, s2, k1, k2,
                    nsia, nsib, cwa, cwb,
                    m1a, m2a, m1b, m2b,
-                   n1a, n2a, n1b, n2b)
+                   n1a, n2a, n1b, n2b, ifile=ifile)
         self.sort()
 
     def _save(self, property_id, material_id,
@@ -1457,7 +1460,11 @@ class PBEAM(Property):
               s1, s2, k1, k2,
               nsia, nsib, cwa, cwb,
               m1a, m2a, m1b, m2b,
-              n1a, n2a, n1b, n2b) -> None:
+              n1a, n2a, n1b, n2b, ifile=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
 
@@ -1539,6 +1546,7 @@ class PBEAM(Property):
         #self.cwb = cwb
 
     def __apply_slice__(self, prop: PBEAM, i: np.ndarray) -> None:
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
 
@@ -1915,7 +1923,8 @@ class PBEAML(Property):
     def add(self, pid: int, mid: int, beam_type: str,
             xxb: list[float], dims: list[list[float]],
             so=None, nsm=None,
-            group: str='MSCBML0', comment: str='') -> int:
+            group: str='MSCBML0',
+            ifile: int=0, comment: str='') -> int:
         nxxb = len(xxb)
         self.model.log.info(f'pid={pid} so0={so} beam_type={beam_type!r} dims={dims} nsm0={nsm} xxb={xxb}')
         if so is None:
@@ -1933,7 +1942,7 @@ class PBEAML(Property):
         self.model.log.info(f'  nstation={nstation} ndim={ndim}')
         assert nstation == len(dims), f'pid={pid} nstation={nstation} dims={dims}'
         assert nstation == len(nsm), f'pid={pid} nstation={nstation} nsm={nsm}'
-        self.cards.append((pid, mid, beam_type, group, xxb, so, nsm, ndim, dims, comment))
+        self.cards.append((pid, mid, beam_type, group, xxb, so, nsm, ndim, dims, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2026,7 +2035,7 @@ class PBEAML(Property):
 
         nstationi = len(xxb)
         assert nstationi == len(nsm), f'pid={pid} nstation={nstationi} nsm={nsm}'
-        self.cards.append((pid, mid, beam_type, group, xxb, so, nsm, ndim, dims, comment))
+        self.cards.append((pid, mid, beam_type, group, xxb, so, nsm, ndim, dims, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2034,6 +2043,7 @@ class PBEAML(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
 
@@ -2055,7 +2065,7 @@ class PBEAML(Property):
         #idim0 = 0
         #istation0 = 0
         for icard, card in enumerate(self.cards):
-            (pid, mid, beam_type, groupi, xxbi, soi, nsmi, ndimi, dims, comment) = card
+            (pid, mid, beam_type, groupi, xxbi, soi, nsmi, ndimi, dims, ifilei, comment) = card
 
             nstationi = len(xxbi)
             all_xxb.extend(xxbi)
@@ -2069,6 +2079,7 @@ class PBEAML(Property):
             #idim1 = idim0 + ndimi * nstationi
             #istation1 = istation0 + nstationi
             nstation[icard] = nstationi
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             group[icard] = groupi
@@ -2094,7 +2105,7 @@ class PBEAML(Property):
             ndim,
             nstation,
             Type, group,
-            xxb, dims, so, nsm)
+            xxb, dims, so, nsm, ifile=ifile)
         nstation_total = self.nstation.sum()
         self.sort()
 
@@ -2132,7 +2143,13 @@ class PBEAML(Property):
               Type: np.ndarray,
               group: np.ndarray,
               xxb: np.ndarray, dims: np.ndarray,
-              so: np.ndarray, nsm: np.ndarray):
+              so: np.ndarray, nsm: np.ndarray, ifile=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.property_id) != 0:
+            asdf
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
 
@@ -2173,6 +2190,7 @@ class PBEAML(Property):
 
     def __apply_slice__(self, prop: PBEAML, i: np.ndarray) -> None:
         prop.n = len(i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
 
@@ -2562,6 +2580,7 @@ class PBCOMP(Property):
         self.sort()
 
     def __apply_slice__(self, prop: PBCOMP, i: np.ndarray) -> None:
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
 
@@ -3021,6 +3040,7 @@ class CBEAM3(Element):
         self.x *= xyz_scale
 
     def __apply_slice__(self, elem: CBEAM, i: np.ndarray) -> None:
+        #elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -3722,6 +3742,7 @@ class CBEND(Element):
         self.x *= xyz_scale
 
     def __apply_slice__(self, elem: CBEND, i: np.ndarray) -> None:
+        #elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -4129,7 +4150,8 @@ class PBEND(Property):
                         rb=None, theta_b=None,
                         c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
                         k1=None, k2=None,
-                        nsm=0., rc=0., zc=0., delta_n=0., comment=''):
+                        nsm=0., rc=0., zc=0., delta_n=0.,
+                        ifile: int=0, comment: str=''):
         """
         +-------+------+-------+-----+----+----+--------+----+--------+
         |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
@@ -4196,13 +4218,14 @@ class PBEND(Property):
                            fsi, rm, t, p,
                            rb, theta_b,
                            centerline_spacing, alpha, flange, kx, ky, kz, sy, sz,
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
     def add_beam_type_2(self, pid, mid,
                         fsi, rm, t, p=None, rb=None, theta_b=None,
-                        nsm=0., rc=0., zc=0., comment=''):
+                        nsm=0., rc=0., zc=0.,
+                        ifile: int=0, comment: str=''):
         """
         +-------+------+-------+-----+----+----+--------+----+--------+
         |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
@@ -4277,7 +4300,7 @@ class PBEND(Property):
                            fsi, rm, t, p,
                            rb, theta_b,
                            centerline_spacing, alpha, flange, kx, ky, kz, sy, sz,
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -4438,7 +4461,7 @@ class PBEND(Property):
                            fsi, rm, t, p,
                            rb, theta_b,
                            centerline_spacing, alpha, flange, kx, ky, kz, sy, sz,
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -4448,6 +4471,7 @@ class PBEND(Property):
         idtype = self.model.idtype
 
         # common
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
         nsm = np.zeros(ncards, dtype='float64')
@@ -4499,10 +4523,11 @@ class PBEND(Property):
              rci, zci, delta_ni, fsii, rmi, ti,
              pi, rbi, theta_bi,
              centerline_spacingi, alphai, flangei, kxi, kyi, kzi, syi, szi,
-             comment) = card
+             ifilei, commenti) = card
 
             #assert beam_typei == 1, card
             # common
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             nsm[icard] = nsmi
@@ -4560,7 +4585,7 @@ class PBEND(Property):
                    fsi, rm, t, p,
                    centerline_spacing, alpha, flange,
                    kx, ky, kz, sy, sz,
-                   )
+                   ifile=ifile)
         self.sort()
 
     def _save(self, property_id, material_id, beam_type, nsm,
@@ -4572,7 +4597,15 @@ class PBEND(Property):
               # beam_type = 2
               fsi, rm, t, p,
               centerline_spacing, alpha, flange,
-              kx, ky, kz, sy, sz) -> None:
+              kx, ky, kz, sy, sz,
+              ifile=None) -> None:
+        ncards = len(property_id)
+        assert ncards > 0, ncards
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.property_id):
+            asdf
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         self.beam_type = beam_type
@@ -4614,7 +4647,8 @@ class PBEND(Property):
         self.kz = kz
         self.sy = sy
         self.sz = sz
-        self.n = len(property_id)
+        self.n = len(ifile)
+        assert self.n > 0, self.n
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
@@ -4657,6 +4691,8 @@ class PBEND(Property):
         #self.k2 = k2
 
     def __apply_slice__(self, prop: PBEND, i: np.ndarray) -> None:
+        print('ifile =', self.ifile)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop._nsm = self._nsm[i]

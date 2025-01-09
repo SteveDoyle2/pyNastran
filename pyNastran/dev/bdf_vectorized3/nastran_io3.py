@@ -288,6 +288,14 @@ class Nastran3:
             model.is_strict_card_parser = False
             model.idtype = 'int64'
             model.read_bdf(bdf_filename)
+
+        for prop in model.property_cards:
+            if prop.n == 0:
+                continue
+            try:
+                assert len(prop.ifile) == len(prop.property_id)
+            except:
+                log.error(f'{prop.type}.ifile error; ifile={prop.ifile}')
         return model
 
     def _load_geometry_from_model(self, model: BDF, name: str, plot: bool,

@@ -1283,6 +1283,7 @@ class PCOMP(CompositeProperty):
             total_thickness = self.total_thickness()
             self.z0[inan] = -total_thickness[inan] / 2
         #x = 1
+        assert len(self.ifile) == len(self.property_id)
 
     def update_layers(self, property_id: np.ndarray,
                       thickness: Optional[np.ndarray]=None,
@@ -1442,9 +1443,11 @@ class PCOMP(CompositeProperty):
         """uses a node_ids to extract GRIDs"""
         iprop = self.index(property_id)
         print(f'iprop = {iprop}')
+        assert len(self.ifile) == len(self.property_id)
         #assert len(self.node_id) > 0, self.node_id
         #i = np.searchsorted(self.node_id, node_id)
         prop = self.slice_card_by_index(iprop)
+        assert len(prop.property_id) == len(prop.ifile)
         return prop
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
@@ -1452,6 +1455,7 @@ class PCOMP(CompositeProperty):
 
     def __apply_slice__(self, prop: PCOMP, i: np.ndarray) -> None:  # ignore[override]
         assert self.nlayer.sum() == len(self.thickness)
+        assert len(self.ifile) == len(self.property_id)
         self._slice_comment(prop, i)
         prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
@@ -1478,6 +1482,7 @@ class PCOMP(CompositeProperty):
         prop.nlayer = self.nlayer[i]
         assert prop.nlayer.sum() == len(prop.thickness), f'prop.nlayer={prop.nlayer} len(prop.thickness)={len(prop.thickness)}'
         prop.n = len(i)
+        assert len(prop.ifile) == len(prop.property_id)
 
     @property
     def sb(self):

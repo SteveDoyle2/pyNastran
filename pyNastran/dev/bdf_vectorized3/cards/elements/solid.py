@@ -804,6 +804,7 @@ class PSOLID(Property):
         return prop
 
     def __apply_slice__(self, prop: PSOLID, i: np.ndarray) -> None:  # ignore[override]
+        prop.ifile = self.property_id[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.coord_id = self.coord_id[i]
@@ -847,6 +848,7 @@ class PSOLID(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         coord_id = np.zeros(ncards, dtype='int32')
@@ -893,12 +895,18 @@ class PSOLID(Property):
             stress[icard] = stressi
             isop[icard] = isopi
             fctn[icard] = fctni
-        self._save(property_id, material_id, coord_id, integ, stress, isop, fctn)
+        self._save(property_id, material_id, coord_id, integ, stress, isop, fctn,
+                   ifile=ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, material_id, coord_id, integ, stress, isop, fctn):
+    def _save(self, property_id, material_id, coord_id, integ, stress, isop, fctn,
+              ifile=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             property_id = np.hstack([self.property_id, property_id])
             material_id = np.hstack([self.material_id, material_id])
             coord_id = np.hstack([self.coord_id, coord_id])
@@ -908,6 +916,7 @@ class PSOLID(Property):
             fctn = np.hstack([self.fctn, fctn])
 
         ncards = len(property_id)
+        self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
         self.coord_id = coord_id
@@ -1003,6 +1012,7 @@ class PLSOLID(Property):
 
     def __apply_slice__(self, prop: PLSOLID, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.stress_strain = self.stress_strain[i]
@@ -1036,6 +1046,7 @@ class PLSOLID(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        self.ifile = np.zeros(ncards, dtype='int32')
         self.property_id = np.zeros(ncards, dtype='int32')
         self.material_id = np.zeros(ncards, dtype='int32')
         self.stress_strain = np.zeros(ncards, dtype='|U4')
@@ -1043,7 +1054,7 @@ class PLSOLID(Property):
         for icard, card in enumerate(self.cards):
             (pid, mid, stress_strain, ifilei, comment) = card
             assert isinstance(stress_strain, str), stress_strain
-
+            self.ifile[icard] = ifilei
             self.property_id[icard] = pid
             self.material_id[icard] = mid
             self.stress_strain[icard] = stress_strain

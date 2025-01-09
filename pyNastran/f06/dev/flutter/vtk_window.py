@@ -660,6 +660,7 @@ class VtkWindow(QMainWindow):
             if hasattr(self.analysis_model, ptype_lower):
                 prop = getattr(self.analysis_model, ptype_lower)
                 try:
+                    assert len(prop.ifile) == len(prop.property_id)
                     propi = prop.slice_card_by_property_id([pid])
                     prop_str = propi.write()
                 except Exception:
@@ -698,10 +699,10 @@ class VtkWindow(QMainWindow):
             #model.log = log
         if use_obj_file:
             model = self.analysis_model
-        elif os.path.exists(obj_filename):
-            log.info(f'  loading obj {obj_filename}')
-            model = read_obj(obj_filename)
-            model.log = log
+        # elif os.path.exists(obj_filename):
+        #     log.info(f'  loading obj {obj_filename}')
+        #     model = read_obj(obj_filename)
+        #     model.log = log
         elif bdf_filename_lower.endswith('.op2'):
             op2_read
             #geo = self.load_op2_geometry(bdf_filename)

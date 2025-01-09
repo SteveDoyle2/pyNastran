@@ -241,6 +241,7 @@ class CBUSH(Element):
         self.si *= xyz_scale
 
     def __apply_slice__(self, elem: CBUSH, i: np.ndarray) -> None:
+        #elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -494,7 +495,7 @@ class PBUSH(Property):
 
         """
         self.cards.append((pid, k, b, ge, rcv,
-                           mass, alpha, tref, coincident_length, comment))
+                           mass, alpha, tref, coincident_length, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -558,7 +559,7 @@ class PBUSH(Property):
 
         alpha, tref, coincident_length = t_fields
         self.cards.append((pid, k_fields, b_fields, ge_fields, rcv_fields,
-                           mass, alpha, tref, coincident_length, comment))
+                           mass, alpha, tref, coincident_length, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -566,6 +567,7 @@ class PBUSH(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
 
         k_fields = np.zeros((ncards, 6), dtype='float64')
@@ -578,8 +580,9 @@ class PBUSH(Property):
         coincident_length = np.zeros(ncards, dtype='float64')
         for icard, card in enumerate(self.cards):
             (pid, k_fieldsi, b_fieldsi, ge_fieldsi, rcv_fieldsi,
-             massi, alphai, trefi, coincident_lengthi, comment) = card
+             massi, alphai, trefi, coincident_lengthi, ifilei, comment) = card
 
+            ifile[icard] = ifilei
             property_id[icard] = pid
             if k_fieldsi:
                 k_fields[icard, :] = k_fieldsi
@@ -594,14 +597,15 @@ class PBUSH(Property):
             tref[icard] = trefi
             coincident_length[icard] = coincident_lengthi
         self._save(property_id, k_fields, b_fields, ge_fields, rcv_fields,
-                   _mass, alpha, tref, coincident_length)
+                   _mass, alpha, tref, coincident_length, ifile=ifile)
         self.cards = []
 
     def _save(self, property_id, k_fields, b_fields, ge_fields, rcv_fields,
-              _mass, alpha, tref, coincident_length) -> None:
-        if len(self.property_id) != 0:
-            raise RuntimeError(f'stacking of {self.type} is not supported')
+              _mass, alpha, tref, coincident_length, ifile=None) -> None:
         ncards = len(property_id)
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if _mass is None:
             _mass = np.zeros(ncards, dtype='float64')
         if alpha is None:
@@ -610,12 +614,26 @@ class PBUSH(Property):
             tref = np.zeros(ncards, dtype='float64')
         if coincident_length is None:
             coincident_length = np.zeros(ncards, dtype='float64')
-
         if ge_fields.ndim == 1:
             ge_fields2 = np.zeros((ncards, 6), dtype='float64')
             ge_fields2[:, :] = ge_fields[:, np.newaxis]
             ge_fields = ge_fields2
             del ge_fields2
+
+        if len(self.property_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            property_id = np.hstack([self.property_id, property_id])
+            k_fields = np.vstack([self.k_fields, k_fields])
+            b_fields = np.vstack([self.b_fields, b_fields])
+            ge_fields = np.vstack([self.ge_fields, ge_fields])
+            rcv_fields = np.vstack([self.rcv_fields, rcv_fields])
+            _mass = np.hstack([self._mass, _mass])
+            alpha = np.hstack([self.alpha, alpha])
+            tref = np.hstack([self.tref, tref])
+            coincident_length = np.hstack([self.coincident_length, coincident_length])
+
+        self.ifile = ifile
         self.property_id = property_id
         self.k_fields = k_fields
         self.b_fields = b_fields
@@ -628,6 +646,7 @@ class PBUSH(Property):
         self.n = len(self.property_id)
 
     def __apply_slice__(self, prop: PBUSH, i: np.ndarray) -> None:
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.k_fields = self.k_fields[i, :]
         prop.b_fields = self.b_fields[i, :]
@@ -792,7 +811,7 @@ class PBUSHT(Property):
     def add(self, pid: int, k_tables: list[int], b_tables: list[int],
             ge_tables: list[int], kn_tables: list[int],
             ifile: int=0, comment: str='') -> int:
-        self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, comment))
+        self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -837,7 +856,7 @@ class PBUSHT(Property):
                 kn_tables = table
             else:
                 raise ValueError(param)
-        self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, comment))
+        self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, ifile, comment))
         self.n += 1
         return self.n - 1
         #return PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
@@ -846,36 +865,47 @@ class PBUSHT(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         k_tables = np.zeros((ncards, 6), dtype='int32')
         b_tables = np.zeros((ncards, 6), dtype='int32')
         ge_tables = np.zeros((ncards, 6), dtype='int32')
         kn_tables = np.zeros((ncards, 6), dtype='int32')
         for icard, card in enumerate(self.cards):
-            pid, k_tablesi, b_tablesi, ge_tablesi, kn_tablesi, comment = card
+            pid, k_tablesi, b_tablesi, ge_tablesi, kn_tablesi, ifilei, commenti = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             k_tables[icard, :] = k_tablesi
             b_tables[icard, :] = b_tablesi
             ge_tables[icard, :] = ge_tablesi
             kn_tables[icard, :] = kn_tablesi
-        self._save(property_id, k_tables, b_tables, ge_tables, kn_tables)
+        self._save(property_id, k_tables, b_tables, ge_tables, kn_tables,
+                   ifile=ifile)
 
-    def _save(self, property_id, k_tables, b_tables, ge_tables, kn_tables):
+    def _save(self, property_id, k_tables, b_tables, ge_tables, kn_tables,
+              ifile=None):
+        ncards = len(property_id)
         ncards_existing = len(self.property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if ncards_existing != 0:
+            ifile = np.hstack([self.ifile, ifile])
             property_id = np.hstack([self.property_id, property_id])
             k_tables = np.vstack([self.k_tables, k_tables])
             b_tables = np.vstack([self.b_tables, b_tables])
             ge_tables = np.vstack([self.ge_tables, ge_tables])
             kn_tables = np.vstack([self.kn_tables, kn_tables])
 
+        self.ifile = ifile
         self.property_id = property_id
         self.k_tables = k_tables
         self.b_tables = b_tables
         self.ge_tables = ge_tables
         self.kn_tables = kn_tables
+        self.n = len(ifile)
 
     def __apply_slice__(self, prop: PBUSHT, i: np.ndarray) -> None:
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.k_tables = self.k_tables[i, :]
         prop.b_tables = self.b_tables[i, :]
@@ -1167,6 +1197,7 @@ class PBUSH1D(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
 
         k = np.zeros(ncards, dtype='float64')
@@ -1197,7 +1228,8 @@ class PBUSH1D(Property):
         #self.gener_idcdv = gener_idcdv
 
         for icard, card in enumerate(self.cards):
-            (pid, ki, ci, massi, sai, sei, optional_vars, ifilei, comment) = card
+            (pid, ki, ci, massi, sai, sei, optional_vars, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             k[icard] = ki
             c[icard] = ci
@@ -1277,7 +1309,7 @@ class PBUSH1D(Property):
                    gener_equation,
                    #gener_idt, gener_idc,
                    #gener_idtdu, gener_idcdu, gener_idtdv, gener_idcdv,
-                   )
+                   ifile=ifile)
         self.sort()
         assert len(self.property_id) > 0, self.property_id
         self.cards = []
@@ -1287,9 +1319,13 @@ class PBUSH1D(Property):
               damper_type, damper_table, damper_equation,
               shock_type, shock_table, shock_equation,
               gener_equation,
-              ):
+              ifile=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
+        self.ifile = ifile
         self.property_id = property_id
         self.k = k
         self.c = c
@@ -1317,9 +1353,10 @@ class PBUSH1D(Property):
         #self.gener_idtdv = gener_idtdv
         #self.gener_idcdv = gener_idcdv
         #assert isinstance(self.shock_table, np.ndarray), type(self.shock_table)
-        self.n = len(property_id)
+        self.n = len(ifile)
 
     def __apply_slice__(self, prop: PBUSH1D, i: np.ndarray) -> None:
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.k = self.k[i]
         prop.c = self.c[i]
