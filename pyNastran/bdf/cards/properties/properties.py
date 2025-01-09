@@ -259,7 +259,7 @@ class PWELD(Property):
     """
     type = 'PWELD'
     _field_map = {
-        1: 'pid', 2:'mid', 3:'d', 6:'mset', 8:'type', 9:'ldmin', 10:'ldmax',
+        1: 'pid', 2:'mid', 3:'d', 6:'mset', 8:'connect_type', 9:'ldmin', 10:'ldmax',
     }
     pname_fid_map = {
         'MID' :'mid',
@@ -272,7 +272,7 @@ class PWELD(Property):
         pid = 1
         mid = 2
         d = 0.1
-        return PWELD(pid, mid, d, mset=None, type=None, ldmin=None, ldmax=None, comment='')
+        return PWELD(pid, mid, d, mset=None, connect_type=None, ldmin=None, ldmax=None, comment='')
     
     def __init__(self, pid: int, mid: int, d: float, mset:str=None, connect_type: str=None, ldmin:float=None, ldmax:float=None, comment: str='') -> PWELD:
         """
