@@ -783,7 +783,10 @@ class FlutterResponse:
         imode = mode - 1
         assert isinstance(self.eigr_eigi_velocity, np.ndarray), type(self.eigr_eigi_velocity)
         #print('self.eigr_eigi_velocity = ', self.eigr_eigi_velocity)
-        eigr_eigi_velocity = self.eigr_eigi_velocity[ivel, imode, :]
+        try:
+            eigr_eigi_velocity = self.eigr_eigi_velocity[ivel, imode, :]
+        except IndexError:
+            raise RuntimeError(f'eigr_eigi_velocity.shape=(ivel, imode, :)={self.eigr_eigi_velocity.shape}; ivel={ivel} nvel={nvel} imode={imode}')
         eigri, eigii, velocityi = eigr_eigi_velocity
 
         omega_damping = eigri
@@ -1335,7 +1338,9 @@ class FlutterResponse:
             #            color, symbol2, linestyle2,
             #            label, texti)
 
-            assert texti == '', texti
+            if texti == '':
+                msgi = str([texti, symbol2, linestyle2]) + 'was unexpected...'
+                warnings.warn(msgi)
             _plot_two_axes(damp_axes, freq_axes,
                            vel, damping, freq,
                            color, symbol2, linestyle2,
@@ -2273,7 +2278,6 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
         freq_axes.plot(vel, freq, color=color, marker=symbol, markersize=markersize, linestyle=linestyle)
     elif symbol or text or linestyle:
         print(point_spacing2, symbol, text, linestyle)
-        bbb
         damp_axes.plot(vel, damping, color=color, linestyle=linestyle, label=label)
         freq_axes.plot(vel, freq, color=color, linestyle=linestyle)
         if symbol:
@@ -2282,7 +2286,6 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
     #else:  # pragma: no cover
     #    raise NotImplementedError(f'point_spacing={point_spacing}; symbol={symbol!r}; text={text!r}')
     if text:
-        asdf
         for xi, y1i, y2i in zip(vel2, damping2, freq2):
             damp_axes.text(xi, y1i, text, color=color)
             freq_axes.text(xi, y2i, text, color=color)

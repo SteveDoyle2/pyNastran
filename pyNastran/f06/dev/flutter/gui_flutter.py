@@ -143,7 +143,7 @@ class FlutterGui(LoggableGui):
         self._set_window_title()
         self.on_font_size()
         self.on_plot_type()
-        self.on_open_new_window()
+        #self.on_open_new_window()
         self.show()
 
     def setup_toolbar(self):
@@ -383,6 +383,8 @@ class FlutterGui(LoggableGui):
         basedir = os.path.dirname(self.f06_filename)
         fname, wildcard_level = getopenfilename(
             self, caption=title, basedir=basedir, filters=qt_wildcard,)
+        if fname == '':
+            return
         self.f06_filename_edit.setText(fname)
         self.ok_button.setEnabled(False)
 
@@ -1303,8 +1305,9 @@ class FlutterGui(LoggableGui):
         except Exception as e:  # pragma: no cover
             self.log.error(f'plot_type={plot_type}')
             self.log.error(str(e))
-            print(traceback.print_tb())
-            print(traceback.print_exception())
+            print(traceback.format_exc())
+            #print(traceback.print_tb())
+            print(traceback.print_exception(e))
             raise
 
         base2 = os.path.splitext(png_filename0)[0]

@@ -333,8 +333,15 @@ class CBUSH(BushElement):
         #return [self.ga, self.gb]
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         return [self.Ga(), self.Gb()]
+
+    def Length(self) -> float:
+        ga_ref, gb_ref = self.nodes_ref
+        p1 = ga_ref.get_position()
+        p2 = gb_ref.get_position()
+        dx = np.linalg.norm(p2 - p1)
+        return dx
 
     def _verify(self, xref):
         ga = self.Ga()
