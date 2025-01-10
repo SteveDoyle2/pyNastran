@@ -308,7 +308,7 @@ class TestAtm(unittest.TestCase):
             0.10132520482878872, delta=0.000001)
 
         with self.assertRaises(RuntimeError):
-            atm_pressure(alt=0., alt_units='m', pressure_units='bar')
+            atm_pressure(alt=0., alt_units='m', pressure_units='kbar')
 
     def test_viscosity(self):
         """tests dynamic viscosity at various altitudes"""

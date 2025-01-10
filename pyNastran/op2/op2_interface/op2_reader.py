@@ -4301,7 +4301,7 @@ def read_ovg(op2_reader: OP2Reader) -> None:
         }
     resp = FlutterResponse.from_nx(
         method, fdata2,
-        subcase_id=subcase_id, cref=cref,
+        subcase_id=subcase_id, subtitle=subtitle, cref=cref,
         is_xysym=is_xysym, is_xzsym=is_xzsym,
         in_units=op2.in_units)
 

@@ -296,6 +296,7 @@ def _write_subcases_loads(model: BDF,
 def _write_dmi(model: BDF,
                aero_eid_map: dict[int, int]) -> tuple[int, str, str]:
     """writes the DMI cards to a series of load cases"""
+    nsubpanels = len(aero_eid_map)
     isubcase = 1
     loads = ''
     subcases = ''
@@ -357,17 +358,25 @@ def _write_dmi(model: BDF,
         elif name == 'WKK':
             # column matrix of (neids*2,1)
 
+            # 1: 'square',
+            # 2: 'rectangular',  # 9 ???
+            # 3: 'diagonal',
+            # 6: 'symmetric',
+            # 9: 'identity',
             matrix_form_str = dmi.matrix_form_str
             if matrix_form_str == 'diagonal':
                 pass
-            elif matrix_form_str == 'square':
-                pass
+            elif matrix_form_str in {'square', 'rectangular'}:
+                assert data.shape[0] == data.shape[1], f'name={name}; shape={data.shape} matrix_form={dmi.matrix_form}={matrix_form_str}'  # (100,100)
+                assert data.shape == (2*nsubpanels, 2*nsubpanels), f'name={name}; shape={data.shape} expected=({2*nsubpanels},{2*nsubpanels}); matrix_form={dmi.matrix_form}={matrix_form_str}'
+                matrix_form_str = 'square'
             else:
                 matrix_form_str = 'column'
-                assert data.shape[1] == 1, f'name={name}; shape={data.shape}'  # (112,1)
+                assert data.shape[1] == 1, f'name={name}; shape={data.shape} matrix_form={dmi.matrix_form}={matrix_form_str}'  # (112,1)
 
             if matrix_form_str in {'diagonal', 'column'}:
                 assert data.shape[1] == 1, f'name={name}; shape={data.shape}'  # (112,1)
+                assert data.shape == (2*nsubpanels, 1), f'name={name}; shape={data.shape}  expected=({2*nsubpanels},{2*nsubpanels}); matrix_form={dmi.matrix_form}={matrix_form_str}'
                 nrows = data.shape[0] // 2
                 data = data.reshape(nrows, 2)
                 force_correction = data[:, 0]

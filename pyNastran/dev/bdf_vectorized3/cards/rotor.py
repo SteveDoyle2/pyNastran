@@ -119,7 +119,7 @@ class ROTORG(VectorizedBaseCard):
             nnode = np.hstack([self.nnode, nnode])
             node_id = np.hstack([self.node_id, node_id])
 
-        save_ifile_comment(ifile, comment)
+        save_ifile_comment(self, ifile, comment)
         assert len(rotor_id) == len(nnode)
         assert nnode.min() > 0, nnode
         self.rotor_id = rotor_id

@@ -2,7 +2,7 @@ from __future__ import annotations
 from copy import deepcopy
 import warnings
 from itertools import count
-from typing import Iterable, Optional, Any, TYPE_CHECKING
+from typing import Iterable, TextIO, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 import scipy
@@ -93,7 +93,8 @@ class FlutterResponse:
 
     @classmethod
     def from_nx(cls, method: str, fdata: np.ndarray,
-                subcase_id: int=1, cref: float=1.0,
+                subcase_id: int=1, subtitle: str='', label: str='',
+                cref: float=1.0,
                 is_xysym: bool=False, is_xzsym: bool=False,
                 in_units: dict[str, str]=None):
         """
@@ -160,6 +161,8 @@ class FlutterResponse:
         resp = FlutterResponse(
             subcase_id, configuration, xysym, xzsym, mach, density_ratio,
             method, modes, results, in_units=in_units,
+            subtitle=subtitle,
+            label=label,
             use_rhoref=False,
             make_alt=False)
         if 0:  # pragma: no cover
@@ -186,6 +189,7 @@ class FlutterResponse:
                  mach: float, density_ratio: float, method: str,
                  modes: list[int], results: Any,
                  in_units: None | str | dict[str, str]=None,
+                 subtitle: str='', label: str='',
                  use_rhoref: bool=False,
                  make_alt: bool=True,
                  eigenvector: Optional[np.ndarray]=None,
@@ -268,7 +272,12 @@ class FlutterResponse:
         self.make_alt = make_alt
         in_units_dict = get_flutter_units(in_units)
 
+        self.is_complex = True
+        self.is_real = True
+        self.nonlinear_factor = None
         self.subcase = subcase
+        self.subtitle = subtitle
+        self.label = label
         self.configuration = configuration
         if method == 'PK':
             self.mach = mach
@@ -1545,6 +1554,20 @@ class FlutterResponse:
                 values = [eas] + damping.tolist() + [eas] + omega.tolist()
                 str_values = (' %11.4E' % value for value in values)
                 veas_file.write(''.join(str_values) + '\n')
+
+    # self.page_num = result.write_f06(
+    #     f06, header, page_stamp, page_num=self.page_num,
+    #     is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+    def write_f06(self, f06_file: TextIO,
+                  header: list[str],
+                  page_stamp: Optional[str]=None,
+                  page_num: int=1, **kwargs) -> int:
+        page_num = self.export_to_f06_file(
+            f06_file, #modes=modes,
+            page_stamp=page_stamp, page_num=page_num)
+        # return self.export_to_f06(f06_filename,
+        #                           page_stamp=page_stamp, page_num=page_num)
+        return page_num
 
     def export_to_f06(self, f06_filename: PathLike,
                       modes: Optional[list[int]]=None,

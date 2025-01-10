@@ -1766,11 +1766,11 @@ class DMIK(NastranMatrix):
                                finalize=finalize)
 
 DMI_MATRIX_MAP = {
-    1 : 'square',
-    2 : 'rectangular', # 9 ???
-    3 : 'diagonal',
-    6 : 'symmetric',
-    9 : 'identity',
+    1: 'square',
+    2: 'rectangular',  # 9 ???
+    3: 'diagonal',
+    6: 'symmetric',
+    9: 'identity',
 }
 REVERSE_DMI_MAP = {value: key for key, value in DMI_MATRIX_MAP.items()}
 
