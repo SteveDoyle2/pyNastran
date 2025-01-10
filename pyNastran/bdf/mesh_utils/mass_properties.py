@@ -1945,7 +1945,7 @@ def _nsm1_element(model: BDF, nsm: NSM1,
                   mass: float, cg: np.ndarray, I: np.ndarray,
                   reference_point: np.ndarray, is_area_array: np.ndarray,
                   divide_by_sum: bool, debug: bool=False):
-    """calculates the mass of an NSM1 element"""
+    """calculates the mass of an NSM1/NSML1 element"""
     nsm_value = nsm.value
     #model.log.warning('  *skipping NSM1/ELEMENT\n%s' % str(nsm))
     #print(nsm.rstrip())

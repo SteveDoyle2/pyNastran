@@ -23,6 +23,44 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.coordinate_systems import Coord
 
 
+def split_comment_to_femap_comment(comment: str) -> tuple[bool, str, tuple[str, int, str]]:
+    """
+    [$ Femap Region 12345 : Wing NSM']
+    ['$ Femap Property 100 : Wing Skin 20 Plies\n$\n$ Femap Layup 101 : 20 Ply\n']
+    ['$$ Femap Material 202 : Steel:42\n']
+    ['$ Femap Property 8000007 : Aileron, Steel Pin dia=.375', '$ Femap PropShape 8000007 : 5,0,0.1875,0.,0.,0.,0.,0.', '$ Femap PropMethod 8000007 : 5,0,1,0.', '$ Femap PropOrient 8000007 : 5,0,0.,1.,2.,3.,4.,-1.,0.,0.']
+    """
+    comment = comment.rstrip()
+    if 'Femap' not in comment:
+        return False, comment, ('', -1, '')
+
+    lines = comment.split('\n')
+    lines = [line.rstrip('$\t\n\r ') for line in lines if line.rstrip('$\t\n\r ')]
+    if len(lines) == 1:
+        line = lines[0]
+        word, idi, name = _femap_comment_to_sline(line)
+    else:
+        for line in lines:
+            out = _femap_comment_to_sline(line)
+        return False, comment, ('', -1, '')
+    return True, '', (word, idi, name)
+
+    #print(f'femap_word_id = {femap_word_id!r}')
+
+def _femap_comment_to_sline(line: str) -> tuple[str, int, str]:
+    # print(line)
+    try:
+        femap_word_id, name = line.split(':', 1)
+    except ValueError:
+        print(line)
+        raise
+    name = name.strip()
+    word_id = femap_word_id.split('Femap')[1]
+    word, id_str = word_id.strip().split()
+    word = word.strip()
+    idi = int(id_str)
+    return word, idi, name
+
 def parse_femap_syntax(lines: list[str]) -> np.ndarray:
     """Parses the following syntax from FEMAP:
 

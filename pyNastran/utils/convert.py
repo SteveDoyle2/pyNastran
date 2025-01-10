@@ -126,6 +126,8 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
         pass
     elif pressure_units_in == 'psi':
         factor *= 144
+    elif pressure_units_in == 'bar':
+        factor *= 2088.545633
     elif pressure_units_in == 'Pa':
         factor /= 47.880172
     elif pressure_units_in == 'kPa':
@@ -133,13 +135,15 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
     elif pressure_units_in == 'MPa':
         factor *= 20885.43815038
     else:
-        msg = f'pressure_units_in={pressure_units_in!r} is not valid; use [Pa, kPa, MPa, psf, psi]'
+        msg = f'pressure_units_in={pressure_units_in!r} is not valid; use [Pa, kPa, MPa, bar, psf, psi]'
         raise RuntimeError(msg)
 
     if pressure_units_out == 'psf':
         pass
     elif pressure_units_out == 'psi':
         factor /= 144
+    elif pressure_units_out == 'bar':
+        factor /= 2088.545633
     elif pressure_units_out == 'Pa':
         factor *= 47.880172
     elif pressure_units_out == 'kPa':
@@ -147,7 +151,7 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
     elif pressure_units_out == 'MPa':
         factor /= 20885.43815038
     else:
-        raise RuntimeError(f'pressure_units_out={pressure_units_out} is not valid; use [Pa, kPa, MPa, psf, psi]')
+        raise RuntimeError(f'pressure_units_out={pressure_units_out} is not valid; use [Pa, kPa, MPa, bar, psf, psi]')
     return factor
 
 def convert_velocity(velocity: float, velocity_units_in: str,

@@ -11,6 +11,8 @@ All mass properties are PointProperty and Property objects.
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from pyNastran.bdf.cards.base_card import expand_thru_by, expand_thru, BaseCard, Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_string, double, double_or_blank, string)
@@ -439,6 +441,39 @@ class NSML1(NSM1x):
         assert isinstance(value, float), f'NSML1; value={value!r} and must be a float'
         NSM1x.__init__(self, sid, nsm_type, value, ids, comment=comment)
 
+    def get_eid_mass_cg_by_element(self, model: BDF) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        value = self.value
+        divide_by_sum = True
+
+        length = 0.
+        area = 0.
+        ncards = len(self.ids)
+        eids = np.zeros(ncards, dtype='int32')
+        mass = np.zeros(ncards, dtype='float64')
+        cg = np.zeros((ncards, 3), dtype='float64')
+        lines = {'CBAR', 'CBEAM', 'CROD', 'CTUBE'}
+        shells = {'CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4', 'CQUADR', 'CQUAD8', 'CQUAD'}
+        if self.nsm_type == 'ELEMENT':
+            eid0 = self.ids[0]
+            etype = model.elements[eid0].type
+            if etype in lines:
+                raise NotImplementedError((self.nsm_type, 'line'))
+            elif etype in shells:
+                for i, eid in enumerate(self.ids):
+                    eids[i] = eid
+                    elem = model.elements[eid]
+                    assert elem.type in shells, elem.type
+                    mass[i] = elem.Mass()
+                    cg[i, :] = elem.Centroid()
+                #raise NotImplementedError((self.nsm_type, 'shell'))
+            else:
+                raise NotImplementedError((self.nsm_type, 'shell', etype))
+        else:
+            raise NotImplementedError(self.nsm_type)
+
+        mass /= mass.sum()
+        mass *= value
+        return eids, mass, cg
 
 class NSMADD(BaseCard):
     """
