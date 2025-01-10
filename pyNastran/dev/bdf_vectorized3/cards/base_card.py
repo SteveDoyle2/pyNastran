@@ -967,3 +967,9 @@ def sort_duplicates(card: VectorizedBaseCard) -> None:
 
     #self.remove_duplicates(inplace=False)
     card._is_sorted = True
+
+def save_ifile_comment(self, ifile, comment):
+    assert len(ifile) > 0, ifile
+    if comment is not None:
+        self.comment.update(comment)
+    self.ifile = ifile

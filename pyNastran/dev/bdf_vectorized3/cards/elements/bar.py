@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, Material, make_idim, hslice_by_idim,
-    searchsorted_filter, parse_check)
+    searchsorted_filter, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import (
     line_mid_mass_per_length, line_length, line_vector_length, line_centroid,
     e_g_nu_from_property_id,
@@ -354,7 +354,8 @@ class CBAR(Element):
 
     def _save(self, element_id, property_id, nodes,
               g0=None, x=None,
-              offt=None, pa=None, pb=None, wa=None, wb=None, ifile=None) -> None:
+              offt=None, pa=None, pb=None, wa=None, wb=None,
+              ifile=None) -> None:
         neids = len(element_id)
         idtype = element_id.dtype
         fdtype = self.wa.dtype
@@ -1455,7 +1456,8 @@ class PBARL(Property):
         assert len(self.dims) == self.ndim.sum()
         assert isinstance(self.ndim, np.ndarray), self.ndim
 
-    def _save(self, property_id, material_id, ndim, Type, group, nsm, dims, ifile=None) -> None:
+    def _save(self, property_id, material_id, ndim, Type, group, nsm, dims,
+              ifile=None, comment=None) -> None:
         ifile = ifile if ifile is not None else np.zeros(len(property_id), dtype='int32')
         if len(self.property_id):
             ifile = np.hstack([self.ifile, ifile])
@@ -1466,7 +1468,7 @@ class PBARL(Property):
             group = np.hstack([self.group, group])
             nsm = np.hstack([self.nsm, nsm])
             dims = np.hstack([self.dims, dims])
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.ndim = ndim
@@ -1747,9 +1749,10 @@ class PBRSECT(Property):
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, material_id, form, ifile=None) -> None:
+    def _save(self, property_id, material_id, form,
+              ifile=None, comment=None) -> None:
         ifile = ifile if ifile is not None else np.zeros(len(property_id), dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.form = form
@@ -1916,12 +1919,12 @@ class CBARAO(Element):
 
     def _save(self, element_id: np.ndarray,
               scale: np.ndarray,
-              nstation: np.ndarray,
-              station: list[float], ifile=None) -> None:
+              nstation: np.ndarray, station: list[float],
+              ifile=None, comment=None) -> None:
         ifile = ifile if ifile is not None else np.zeros(len(element_id), dtype='int32')
         if len(self.element_id) != 0:
             raise NotImplementedError()
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.scale = scale
         self.nstation = nstation

@@ -21,7 +21,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Property,
     hslice_by_idim, make_idim, searchsorted_filter,
-    parse_check,
+    parse_check, save_ifile_comment,
     #vslice_by_idim,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -192,9 +192,7 @@ class PSHELL(Property):
         if len(self.property_id) != 0:
             raise NotImplementedError()
 
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.t = t
@@ -615,9 +613,7 @@ class PAABSF(Property):
         if len(self.property_id) != 0:
             raise NotImplementedError()
 
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.table_reactance_real = table_reactance_real
         self.table_reactance_imag = table_reactance_imag
@@ -1257,10 +1253,7 @@ class PCOMP(CompositeProperty):
             ge = np.hstack([self.ge, ge])
             lam = np.hstack([self.lam, lam])
 
-        if comment is not None:
-            self.comment.update(comment)
-        assert len(ifile) == len(property_id), ifile
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
 
         self.nlayer = nlayer
@@ -1899,9 +1892,7 @@ class PCOMPG(CompositeProperty):
         if len(self.property_id) != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
 
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.nsm = nsm
         self.shear_bonding = shear_bonding
@@ -2470,9 +2461,7 @@ class PSHLN1(Property):
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.analysis = analysis
@@ -2815,9 +2804,7 @@ class PSHLN2(Property):
         if not len(self.property_id) == 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
 
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.thickness = thickness

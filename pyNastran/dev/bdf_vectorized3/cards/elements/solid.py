@@ -16,7 +16,7 @@ from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check, find_missing
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, make_idim, hslice_by_idim,
-    parse_check) # searchsorted_filter,
+    parse_check, save_ifile_comment) # searchsorted_filter,
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_str, array_default_int, array_float_nan,
     get_print_card_size, )
@@ -48,10 +48,11 @@ class SolidElement(Element):
         used_dict['property_id'].append(self.property_id)
 
     def __apply_slice__(self, elem: SolidElement, i: np.ndarray) -> None:  # ignore[override]
-        elem.n = len(i)
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
+        elem.n = len(i)
 
     def add(self, eid: int, pid: int, nids: list[int],
             ifile: int=0, comment: str='') -> int:
@@ -126,16 +127,22 @@ class SolidElement(Element):
     def _save(self,
              element_id: np.ndarray,
              property_id: np.ndarray,
-             nodes: np.ndarray) -> None:
+             nodes: np.ndarray,
+             ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         ncards_existing = len(self.element_id)
         midside_nodes = nodes[:, self.nnode_base:]
         if self.model.filter_midside_nodes and midside_nodes.max() == 0:
             nodes = nodes[:, :self.nnode_base]
 
         if ncards_existing != 0:
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -191,12 +198,11 @@ class CTETRA(SolidElement):
         nodes = np.zeros((ncards, 10), dtype=idtype)
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, ifilei, comment) = card
-            print(ifile)
             ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
+        self._save(element_id, property_id, nodes, ifile=ifile)
 
     @property
     def base_nodes(self) -> np.ndarray:
@@ -408,7 +414,7 @@ class SolidPenta(SolidElement):
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
+        self._save(element_id, property_id, nodes, ifile=ifile)
 
     @property
     def base_nodes(self) -> np.ndarray:
@@ -545,7 +551,7 @@ class CPYRAM(SolidElement):
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
+        self._save(element_id, property_id, nodes, ifile=ifile)
 
     @property
     def base_nodes(self) -> np.ndarray:
@@ -656,15 +662,17 @@ class SolidHex(SolidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 20), dtype=idtype)
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, ifilei, comment) = card
+            (eid, pid, nids, ifilei, commenti) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
+        self._save(element_id, property_id, nodes, ifile=ifile)
 
     @property
     def base_nodes(self) -> np.ndarray:
@@ -901,7 +909,7 @@ class PSOLID(Property):
         self.cards = []
 
     def _save(self, property_id, material_id, coord_id, integ, stress, isop, fctn,
-              ifile=None):
+              ifile=None, comment=None):
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
@@ -916,7 +924,7 @@ class PSOLID(Property):
             fctn = np.hstack([self.fctn, fctn])
 
         ncards = len(property_id)
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.coord_id = coord_id
@@ -1147,11 +1155,12 @@ class PSOLCZ(Property):
         used_dict['coord_id'].append(self.mcid)
 
     def __apply_slice__(self, prop: PSOLCZ, i: np.ndarray) -> None:  # ignore[override]
-        prop.n = len(i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.mcid = self.mcid[i]
         prop.thickness = self.thickness[i]
+        prop.n = len(i)
 
     def add(self, pid: int, mid: int, thickness: float,
             mcid: int=0, ifile: int=0, comment: str='') -> int:
@@ -1183,27 +1192,36 @@ class PSOLCZ(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
         mcid = np.zeros(ncards, dtype=idtype)
         thickness = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, mcidi, thicknessi, ifilei, comment) = card
+            (pid, mid, mcidi, thicknessi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             mcid[icard] = mcidi
             thickness[icard] = thicknessi
-        self._save(property_id, material_id, mcid, thickness)
+        self._save(property_id, material_id, mcid, thickness,
+                   ifile=ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, material_id, mcid, thickness) -> None:
+    def _save(self, property_id, material_id, mcid, thickness,
+              ifile=None, comment=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id):
+            ifile = np.hstack([self.ifile, ifile])
             property_id = np.hstack([self.property_id, property_id])
             material_id = np.hstack([self.material_id, material_id])
             mcid = np.hstack([self.mcid, mcid])
             thickness = np.hstack([self.thickness, thickness])
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.mcid = mcid
@@ -1376,6 +1394,7 @@ class PCOMPS(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         coord_id = np.zeros(ncards, dtype='int32')
         psdir = np.zeros(ncards, dtype='int32')
@@ -1397,7 +1416,8 @@ class PCOMPS(Property):
             (pid, cordm, psdiri, sbi, nbi, trefi, gei,
              global_ply_ids, mids, thicknesses, thetas,
              failure_theories, interlaminar_failure_theories, souts,
-             ifilei, comment) = card
+             ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             coord_id[icard] = cordm
             psdir[icard] = psdiri
@@ -1427,16 +1447,20 @@ class PCOMPS(Property):
 
         self._save(property_id, global_ply_id, material_id, thickness, theta, nlayer,
                    failure_theory, interlaminar_failure_theory, sout,
-                   sb, nb, psdir, tref, ge, coord_id)
+                   sb, nb, psdir, tref, ge, coord_id, ifile=ifile)
 
         self.sort()
         self.cards = []
 
     def _save(self, property_id, global_ply_id, material_id, thickness, theta, nlayer,
               failure_theory, interlaminar_failure_theory, sout,
-              sb, nb, psdir, tref, ge, coord_id):
+              sb, nb, psdir, tref, ge, coord_id,
+              ifile=None, comment=None):
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             raise NotImplementedError()
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.global_ply_id = global_ply_id
         self.material_id = material_id
@@ -1454,6 +1478,7 @@ class PCOMPS(Property):
         self.tref = tref
         self.ge = ge
         self.coord_id = coord_id
+        self.n = len(ifile)
 
     #def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPS:
         #"""uses a node_ids to extract PCOMPSs"""
@@ -1463,6 +1488,7 @@ class PCOMPS(Property):
 
     def __apply_slice__(self, prop: PCOMPS, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
 
         prop.coord_id = self.coord_id[i]
@@ -1712,6 +1738,7 @@ class PCOMPLS(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         #material_id = np.zeros(ncards, dtype='int32')
         coord_id = np.zeros(ncards, dtype='int32')
@@ -1738,7 +1765,8 @@ class PCOMPLS(Property):
             #print(card)
             (pid, global_ply_idi, midi, thicknessi, thetai,
              directi, cordmi, sbi, analysisi,
-             c8i, c20i, ifilei, comment) = card
+             c8i, c20i, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             coord_id[icard] = cordmi
             sb[icard] = sbi
@@ -1771,7 +1799,8 @@ class PCOMPLS(Property):
 
         self._save(property_id, material_id, global_ply_id,
                    theta, thickness, coord_id,
-                   c8, c20, direct, analysis, sb)
+                   c8, c20, direct, analysis, sb,
+                   ifile=ifile)
 
         #for sout in souts:
             #assert len(sout) <= 3, sout
@@ -1783,9 +1812,13 @@ class PCOMPLS(Property):
     def _save(self, property_id, material_id, global_ply_id,
               theta, thickness, coord_id,
               c8, c20,
-              direct, analysis, sb):
+              direct, analysis, sb, ifile=None, comment=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             raise NotImplementedError()
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.global_ply_id = global_ply_id
@@ -1801,6 +1834,7 @@ class PCOMPLS(Property):
         self.c20 = c20
         #self.model.log.warning(f'saved PCOMPLS; material_id={self.material_id}')
         assert len(self.material_id) > 0, self.material_id
+        self.n = len(ifile)
 
     #def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPLS:
         #"""uses a node_ids to extract PCOMPLSs"""
@@ -1810,6 +1844,7 @@ class PCOMPLS(Property):
 
     def __apply_slice__(self, prop: PCOMPLS, i: np.ndarray) -> None:
         prop.n = len(i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
 
         prop.coord_id = self.coord_id[i]

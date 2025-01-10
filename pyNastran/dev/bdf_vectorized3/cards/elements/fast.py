@@ -12,7 +12,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, parse_check)
+    Element, Property, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, get_print_card_size,)
 
@@ -130,7 +130,12 @@ class CFAST(Element):
         self._save(element_id, property_id, nodes, fast_type, ids, fastener_node, fastener_xyz)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, fast_type, ids, fastener_node, fastener_xyz):
+    def _save(self, element_id, property_id, nodes, fast_type, ids, fastener_node, fastener_xyz,
+              ifile=None, comment=None):
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -141,7 +146,7 @@ class CFAST(Element):
 
     def __apply_slice__(self, elem: CFAST, i: np.ndarray) -> None:
         self._slice_comment(elem, i)
-
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -314,6 +319,7 @@ class PFAST(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         diameter = np.zeros(ncards, dtype='float64')
         kt = np.zeros((ncards, 3), dtype='float64')
@@ -325,8 +331,8 @@ class PFAST(Property):
 
         for icard, card in enumerate(self.cards):
             (pid, d, kt1, kt2, kt3, kr1, kr2, kr3,
-             massi, gei, mcid, mflagi, ifilei, comment) = card
-
+             massi, gei, mcid, mflagi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             diameter[icard] = d
             coord_id[icard] = mcid
@@ -335,11 +341,17 @@ class PFAST(Property):
             kr[icard, :] = [kr1, kr2, kr3]
             mass[icard] = massi
             ge[icard] = gei
-        self._save(property_id, diameter, kt, kr, mass, coord_id, mflag, ge)
+        self._save(property_id, diameter, kt, kr, mass, coord_id, mflag, ge,
+                   ifile=ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, diameter, kt, kr, mass, coord_id, mflag, ge):
+    def _save(self, property_id, diameter, kt, kr, mass, coord_id, mflag, ge,
+              ifile=None, comment=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.diameter = diameter
         self.kt = kt
@@ -348,10 +360,11 @@ class PFAST(Property):
         self.coord_id = coord_id
         self.mflag = mflag
         self.ge = ge
+        self.n = len(ifile)
 
     def __apply_slice__(self, prop: PFAST, i: np.ndarray) -> None:
         self._slice_comment(prop, i)
-
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.diameter = self.diameter[i]
         prop.kt = self.kt[i]

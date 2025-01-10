@@ -18,7 +18,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, parse_check,
-    hslice_by_idim, make_idim, remove_unused_duplicate)
+    hslice_by_idim, make_idim, save_ifile_comment,
+    remove_unused_duplicate)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str, array_default_int)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -89,7 +90,7 @@ class ROTORG(VectorizedBaseCard):
             assert isinstance(nidi, list), nidi
             rotor_id[icard] = rotor_idi
             nnodei = len(nidi)
-            assert nnodei > 0, (seidi, nidi)
+            assert nnodei > 0, (rotor_idi, nidi)
             nnode[icard] = nnodei
             node_id_list.extend(nidi)
             #if commenti:
@@ -105,17 +106,20 @@ class ROTORG(VectorizedBaseCard):
               rotor_id: np.ndarray,
               node_id: np.ndarray,
               nnode: np.ndarray,
+              ifile = None,
               comment: dict[int, str]=None) -> None:
-        #ncards = len(node_id)
+        ncards = len(node_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         ncards_existing = len(self.node_id)
 
         if ncards_existing != 0:
+            ifile = np.hstack([self.ifile, ifile])
             rotor_id = np.hstack([self.rotor_id, rotor_id])
             nnode = np.hstack([self.nnode, nnode])
             node_id = np.hstack([self.node_id, node_id])
-        #if comment:
-            #self.comment.update(comment)
 
+        save_ifile_comment(ifile, comment)
         assert len(rotor_id) == len(nnode)
         assert nnode.min() > 0, nnode
         self.rotor_id = rotor_id
@@ -144,6 +148,7 @@ class ROTORG(VectorizedBaseCard):
     def __apply_slice__(self, rotor: ROTORG, i: np.ndarray) -> None:
         self._slice_comment(rotor, i)
         rotor.n = len(i)
+        rotor.ifile = self.ifile[i]
         rotor.rotor_id = self.rotor_id[i]
 
         inode = self.inode

@@ -290,12 +290,21 @@ class Nastran3:
             model.read_bdf(bdf_filename)
 
         for prop in model.property_cards:
-            if prop.n == 0:
-                continue
+            # if prop.n == 0:
+            #     continue
             try:
                 assert len(prop.ifile) == len(prop.property_id)
             except:
                 log.error(f'{prop.type}.ifile error; ifile={prop.ifile}')
+                raise
+        for elem in model.element_cards:
+            # if elem.n == 0:
+            #     continue
+            try:
+                assert len(elem.ifile) == len(elem.element_id)
+            except:
+                log.error(f'{elem.type}.ifile error; ifile={elem.ifile}')
+                raise
         return model
 
     def _load_geometry_from_model(self, model: BDF, name: str, plot: bool,

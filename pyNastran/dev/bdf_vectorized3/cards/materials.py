@@ -11,7 +11,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_check
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_check, save_ifile_comment
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str,
     array_default_int, array_default_float)
@@ -240,9 +240,7 @@ class MAT1(Material):
             Sc = np.hstack([self.Sc, Sc])
             mcsid = np.hstack([self.mcsid, mcsid])
 
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.E = E
         self.G = G
@@ -557,10 +555,7 @@ class MAT2(Material):
             mcsid = np.hstack([self.mcsid, mcsid])
             ge_matrix = np.vstack([self.ge_matrix, ge_matrix])
 
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
-
+        save_ifile_comment(self, ifile, comment)
         #print('calling MAT2 save')
         self.material_id = material_id
         self.G11 = G11
@@ -847,9 +842,10 @@ class MAT3(Material):
               force: bool=False):
         assert material_id.min() > 0, material_id
         ncards = len(material_id)
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.ex = ex
         self.eth = eth
@@ -1027,7 +1023,7 @@ class MAT4(Material):
               ifile=None, comment: Optional[dict[int, str]]=None,
               force: bool=False):
         ncards = len(material_id)
-        if ifile is not None:
+        if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
 
         if len(self.material_id) and not force:
@@ -1041,10 +1037,7 @@ class MAT4(Material):
             hgen = np.hstack([self.hgen, hgen])
             ref_enthalpy = np.hstack([self.ref_enthalpy, ref_enthalpy])
 
-        ncards = len(material_id)
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.k = k
         self.rho = rho
@@ -1194,9 +1187,9 @@ class MAT5(Material):
               ifile=None, comment: Optional[dict[int, str]]=None,
               force: bool=False):
         ncards = len(material_id)
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.kxx = kxx
         self.kxy = kxy
@@ -1555,9 +1548,7 @@ class MAT8(Material):
             ht = np.full((ncards, 9), np.nan, dtype='float64')
             hfb = np.full((ncards, 9), np.nan, dtype='float64')
 
-        if comment is not None:
-            self.comment.update(comment)
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.E11 = E11
         self.E22 = E22
@@ -1930,7 +1921,7 @@ class MAT9(Material):
         ncards = len(material_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.G11 = G11
         self.G12 = G12
@@ -2257,7 +2248,7 @@ class MAT10(Material):
         ncards = len(material_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.bulk = bulk
         self.rho = rho
@@ -2549,7 +2540,7 @@ class MAT11(Material):
             tref = np.hstack([self.tref, tref])
             ge = np.hstack([self.ge, ge])
 
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.bulk = bulk
 
@@ -2725,8 +2716,8 @@ class MAT10C(Material):
               force: bool=False):
         ncards = len(material_id)
         if ifile is None:
-            self.ifile = np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+            ifile = np.zeros(ncards, dtype='int32')
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.form = form
         self.rho = rho
@@ -3001,7 +2992,7 @@ class MATORT(Material):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         assert len(self.material_id) == 0, self.material_id
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.E1 = E1
         self.E2 = E2
@@ -3392,11 +3383,9 @@ class MATHP(Material):
         ncards = len(material_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
-        if comment:
-            self.comment.update(comment)
-        self.ifile = ifile
-        self.material_id = material_id
 
+        save_ifile_comment(self, ifile, comment)
+        self.material_id = material_id
         self.a10 = a10
         self.a01 = a01
         self.d1 = d1
@@ -3736,7 +3725,7 @@ class MATHE(Material):
         ncards = len(material_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
 
         self.hyperelastic_model = hyperelastic_model

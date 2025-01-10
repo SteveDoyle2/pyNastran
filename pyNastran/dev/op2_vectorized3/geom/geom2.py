@@ -2269,7 +2269,6 @@ class GEOM2:
         element_id = ints[:, 0]
         mass = floats[:, 1]
         spoints = ints[:, [2, 3]]
-        #element.components = ints[:, [4, 5]]
         element._save(element_id, mass, spoints)
         filter_large_element_ids(element)
         element.write()
@@ -4494,7 +4493,6 @@ class GEOM2:
         mcid = np.full(nelements, -1, dtype=floats.dtype)
         theta = np.full(nelements, np.nan, dtype=floats.dtype)
         element._save(element_id, property_id, nodes, zoffset, mcid, theta, tflag, T)
-        element.n = nelements
         element.write()
 
         elements = []
@@ -5213,10 +5211,10 @@ class GEOM2:
 
         element = op2.ctube
         n, ints = get_ints(data, n, nelements, 4, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3]]
-        element.n = nelements
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3]]
+        element._save(element_id, property_id, nodes)
         filter_large_element_ids(element)
         element.write()
 
@@ -5243,10 +5241,10 @@ class GEOM2:
 
         element = op2.cvisc
         n, ints = get_ints(data, n, nelements, 4, size=op2.size, endian=op2._endian)
-        element.element_id = ints[:, 0]
-        element.property_id = ints[:, 1]
-        element.nodes = ints[:, [2, 3]]
-        element.n = nelements
+        element_id = ints[:, 0]
+        property_id = ints[:, 1]
+        nodes = ints[:, [2, 3]]
+        element._save(element_id, property_id, nodes)
         element.write()
 
         #struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
@@ -5435,9 +5433,9 @@ class GEOM2:
 
         plotel = op2.plotel
         n, ints = get_ints(data, n, nelements, 3, size=op2.size, endian=op2._endian)
-        plotel.element_id = ints[:, 0]
-        plotel.nodes = ints[:, 1:]
-        plotel.n = nelements
+        element_id = ints[:, 0]
+        nodes = ints[:, 1:]
+        plotel._save(element_id, nodes)
         plotel.write()
 
         #for unused_i in range(nelements):

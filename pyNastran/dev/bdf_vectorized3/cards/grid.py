@@ -20,7 +20,7 @@ from pyNastran.bdf.bdf_interface.assign_type_force import (
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float, array_default_int)
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, parse_check, sort_duplicates)
+    VectorizedBaseCard, parse_check, sort_duplicates, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card_size, update_field_size
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
@@ -306,10 +306,11 @@ class GRID(VectorizedBaseCard):
 
     def add(self, nid: int, xyz: np.ndarray,
             cp: int=0, cd: int=0,
-            ps: int=0, seid: int=0, comment: str='') -> int:
+            ps: int=0, seid: int=0,
+            ifile: int=0, comment: str='') -> int:
         ps = 0 if ps == '' else ps
         assert isinstance(ps, int), ps
-        self.cards.append((nid, xyz, cp, cd, ps, seid, comment))
+        self.cards.append((nid, xyz, cp, cd, ps, seid, ifile, comment))
         if comment:
             self.comment[nid] = _format_comment(comment)
         self.n += 1
@@ -354,7 +355,7 @@ class GRID(VectorizedBaseCard):
             ps = GRID_PS_DEFAULT
             seid = GRID_SEID_DEFAULT
             assert len(card) >= 2, f'len(GRID card) = {len(card):d}\ncard={card}'
-        self.cards.append((nid, xyz, cp, cd, ps, seid, comment))
+        self.cards.append((nid, xyz, cp, cd, ps, seid, ifile, comment))
         if comment:
             self.comment[nid] = comment
         self.n += 1
@@ -367,13 +368,14 @@ class GRID(VectorizedBaseCard):
             self.model.log.debug('parse GRID')
 
         try:
-            node_id, cp, cd, xyz, ps, seid, comment = self._setup(
+            node_id, cp, cd, xyz, ps, seid, ifile, comment = self._setup(
                 ncards, self.cards, 'int32', 'float64')
         except OverflowError:
-            node_id, cp, cd, xyz, ps, seid, comment = self._setup(
+            node_id, cp, cd, xyz, ps, seid, ifile, comment = self._setup(
                 ncards, self.cards, 'int64', 'float64')
 
-        self._save(node_id, cp, cd, xyz, ps, seid, comment)
+        self._save(node_id, cp, cd, xyz, ps, seid,
+                   ifile=ifile, comment=comment)
 
         grdset = self.model.grdset
         if grdset is not None:
@@ -412,6 +414,7 @@ class GRID(VectorizedBaseCard):
 
     def _setup(self, ncards: int, cards: list[Any],
                idtype: str, fdtype: str):
+        ifile = np.zeros(ncards, dtype='int32')
         node_id = np.zeros(ncards, dtype=idtype)
         cp = np.zeros(ncards, dtype=idtype)
         cd = np.zeros(ncards, dtype=idtype)
@@ -421,7 +424,8 @@ class GRID(VectorizedBaseCard):
 
         comment = {}
         for icard, card in enumerate(cards):
-            (nidi, xyzi, cpi, cdi, psi, seidi, commenti) = card
+            (nidi, xyzi, cpi, cdi, psi, seidi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             node_id[icard] = nidi
             cp[icard] = cpi
             cd[icard] = cdi
@@ -431,17 +435,20 @@ class GRID(VectorizedBaseCard):
             if commenti:
                 #comment[i] = commenti
                 comment[nidi] = commenti
-        return node_id, cp, cd, xyz, ps, seid, comment
+        return node_id, cp, cd, xyz, ps, seid, ifile, comment
 
     def _save(self,
               node_id: np.ndarray, cp: np.ndarray, cd: np.ndarray,
               xyz: np.ndarray, ps: np.ndarray, seid: np.ndarray,
-              comment: Optional[dict[int, str]]=None) -> None:
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
         ncards = len(node_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         ncards_existing = len(self.node_id)
 
         _xyz_cid0 = np.full((ncards, 3), np.nan, dtype='float64')
         if ncards_existing != 0:
+            ifile = np.hstack([self.ifile, ifile])
             node_id = np.hstack([self.node_id, node_id])
             cp = np.hstack([self.cp, cp])
             cd = np.hstack([self.cd, cd])
@@ -449,9 +456,8 @@ class GRID(VectorizedBaseCard):
             ps = np.hstack([self.ps, ps])
             seid = np.hstack([self.seid, seid])
             _xyz_cid0 = np.vstack([self._xyz_cid0, _xyz_cid0])
-        if comment is not None:
-            self.comment.update(comment)
 
+        save_ifile_comment(self, ifile, comment)
         self.node_id = node_id
         self.cp = cp
         self.cd = cd

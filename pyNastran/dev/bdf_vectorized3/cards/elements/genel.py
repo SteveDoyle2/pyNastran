@@ -268,9 +268,14 @@ class GENEL(Element):
         self._save(element_id, ns, nud, nul, nz, nk, k, z, s, ul, ud)
         self.cards = []
 
-    def _save(self, element_id, ns, nud, nul, nz, nk, k, z, s, ul, ud) -> None:
+    def _save(self, element_id, ns, nud, nul, nz, nk, k, z, s, ul, ud,
+              ifile=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
+        self.ifile = ifile
         self.element_id = element_id
         self.ns = ns
         self.nud = nud
@@ -282,8 +287,9 @@ class GENEL(Element):
         self.s = s
         self.ul = ul
         self.ud = ud
+        self.n = len(ifile)
 
-    def __apply_slice__(self, element: GENEL, i: np.ndarray) -> None:
+    def __apply_slice__(self, elem: GENEL, i: np.ndarray) -> None:
         #print('set_id', self.set_id)
         #print('is_skin', self.is_skin)
         #print('num_ids', self.num_ids)
@@ -293,26 +299,26 @@ class GENEL(Element):
         #self.is_skin = np.zeros(ncards, dtype='bool')
         #self.num_ids = np.zeros(ncards, dtype='int32')
         #self.ids = np.array([], dtype='int32')
+        elem.ifile = self.ifile[i]
+        elem.element_id = self.element_id[i]
 
-        element.element_id = self.element_id[i]
+        elem.k = hslice_by_idim(i, self.idim_k, self.k)
+        elem.s = hslice_by_idim(i, self.idim_s, self.s)
+        elem.z = hslice_by_idim(i, self.idim_z, self.z)
 
-        element.k = hslice_by_idim(i, self.idim_k, self.k)
-        element.s = hslice_by_idim(i, self.idim_s, self.s)
-        element.z = hslice_by_idim(i, self.idim_z, self.z)
+        elem.ul = hslice_by_idim(i, self.idim_ul, self.ul)
+        elem.ud = hslice_by_idim(i, self.idim_ud, self.ud)
 
-        element.ul = hslice_by_idim(i, self.idim_ul, self.ul)
-        element.ud = hslice_by_idim(i, self.idim_ud, self.ud)
+        elem.nk = self.nk[i]
+        elem.ns = self.ns[i]
+        elem.nz = self.nz[i]
+        elem.nul = self.nul[i]
+        elem.nud = self.nud[i]
 
-        element.nk = self.nk[i]
-        element.ns = self.ns[i]
-        element.nz = self.nz[i]
-        element.nul = self.nul[i]
-        element.nud = self.nud[i]
-
-        element.n = len(self.element_id)
+        elem.n = len(self.element_id)
         #print('--------------------------------------')
         #print(self)
-        assert element.n > 0, element.element_id
+        assert elem.n > 0, elem.element_id
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""

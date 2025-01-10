@@ -13,7 +13,7 @@ from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, parse_check)
+    Element, Property, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
     array_default_int, array_default_float,
@@ -98,12 +98,13 @@ class CELAS1(Element):
         self._save(element_id, property_id, nodes, components, ifile)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, components, ifile=None):
+    def _save(self, element_id, property_id, nodes, components,
+              ifile=None, comment=None):
         if len(self.element_id):
             raise NotImplementedError()
         ncards = len(element_id)
         ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -256,12 +257,13 @@ class CELAS2(Element):
         self._save(element_id, nodes, components, k, ge, s, ifile)
         self.cards = []
 
-    def _save(self, element_id, nodes, components, k, ge, s, ifile=None):
+    def _save(self, element_id, nodes, components, k, ge, s,
+              ifile=None, comment=None):
         if len(self.element_id):
             raise NotImplementedError()
         ncards = len(element_id)
         ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.nodes = nodes
         self.components = components
@@ -381,12 +383,13 @@ class CELAS3(Element):
         self._save(element_id, property_id, spoints, ifile)
         self.cards = []
 
-    def _save(self, element_id, property_id, spoints, ifile=None):
+    def _save(self, element_id, property_id, spoints,
+              ifile=None, comment=None):
         if len(self.element_id):
             raise NotImplementedError()
         ncards = len(element_id)
         ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.spoints = spoints
@@ -501,12 +504,13 @@ class CELAS4(Element):
         self._save(element_id, k, spoints, ifile)
         self.cards = []
 
-    def _save(self, element_id, k, spoints, ifile=None):
+    def _save(self, element_id, k, spoints,
+              ifile=None, comment=None):
         if len(self.element_id):
             raise NotImplementedError()
         ncards = len(element_id)
         ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.spoints = spoints
         self.k = k
@@ -622,22 +626,24 @@ class PELAS(Property):
             k[icard] = ki
             ge[icard] = gei
             s[icard] = si
-        self._save(property_id, k, ge, s, ifile)
+        self._save(property_id, k, ge, s, ifile=ifile)
         self.cards = []
 
-    def _save(self, property_id, k, ge, s, ifile=None):
+    def _save(self, property_id, k, ge, s,
+              ifile=None, comment=None):
         if len(self.property_id):
             raise NotImplementedError()
         ncards = len(property_id)
         ifile = ifile if ifile is not None else np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.k = k
         self.ge = ge
         self.s = s
-        self.n = ncards
+        self.n = len(ifile)
 
     def __apply_slice__(self, prop: PELAS, i: np.ndarray) -> None:  # ignore[override]
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.k = self.k[i]
         prop.ge = self.ge[i]
@@ -750,18 +756,20 @@ class PELAST(Property):
         self._save(property_id, table_k, table_ge, table_k_nonlinear, ifile)
         self.cards = []
 
-    def _save(self, property_id, table_k, table_ge, table_k_nonlinear, ifile=None):
+    def _save(self, property_id, table_k, table_ge, table_k_nonlinear,
+              ifile=None, comment=None):
+        ifile = ifile if ifile is not None else np.zeros(len(property_id), dtype='int32')
         if len(self.property_id):
             raise NotImplementedError()
-        ifile = ifile if ifile is not None else np.zeros(len(property_id), dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.table_k = table_k
         self.table_ge = table_ge
         self.table_k_nonlinear = table_k_nonlinear
-        self.n = len(property_id)
+        self.n = len(ifile)
 
     def __apply_slice__(self, prop: PELAST, i: np.ndarray) -> None:  # ignore[override]
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.table_k = self.table_k[i]
         prop.table_ge = self.table_ge[i]

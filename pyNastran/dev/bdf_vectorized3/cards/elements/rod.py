@@ -10,7 +10,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property,
-    parse_check, searchsorted_filter, )
+    parse_check, searchsorted_filter, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, get_print_card_size # , array_default_int
 from .utils import get_density_from_material, basic_mass_material_id
 
@@ -92,7 +92,7 @@ class CONROD(Element):
         return self.n - 1
 
     def __apply_slice__(self, elem: CONROD, i: np.ndarray) -> None:  # ignore[override]
-        #elem.ifile = self.ifile[i]
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.material_id = self.material_id[i]
         elem.nodes = self.nodes[i, :]
@@ -128,8 +128,13 @@ class CONROD(Element):
         self._save(element_id, material_id, nodes, A, J, c, nsm)
         self.cards = []
 
-    def _save(self, element_id, material_id, nodes, A, J, c, nsm):
+    def _save(self, element_id, material_id, nodes, A, J, c, nsm,
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             material_id = np.hstack([self.material_id, material_id])
             nodes = np.vstack([self.nodes, nodes])
@@ -138,6 +143,7 @@ class CONROD(Element):
             c = np.hstack([self.c, c])
             nsm = np.hstack([self.nsm, nsm])
 
+        save_ifile_comment(self, ifile, comment)
         nelements = len(element_id)
         self.element_id = element_id
         self.material_id = material_id
@@ -283,7 +289,7 @@ class CROD(Element):
         return self.n - 1
 
     def __apply_slice__(self, elem: CROD, i: np.ndarray) -> None:  # ignore[override]
-        #elem.ifile = self.ifile[i]
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -306,10 +312,15 @@ class CROD(Element):
         self._save(element_id, property_id, nodes)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes):
+    def _save(self, element_id, property_id, nodes,
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
             raise NotImplementedError()
         nelements = len(element_id)
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -524,13 +535,13 @@ class PROD(Property):
         self.cards = []
 
     def _save(self, property_id, material_id, A, J, c, nsm,
-              ifile=None):
+              ifile=None, comment=None):
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             raise NotImplementedError()
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.A = A
@@ -632,7 +643,7 @@ class CTUBE(Element):
         return self.n - 1
 
     def __apply_slice__(self, elem: CTUBE, i: np.ndarray) -> None:  # ignore[override]
-        #felem.ifile = self.ifile[i]
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -652,14 +663,19 @@ class CTUBE(Element):
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
+        self._save(element_id, property_id, nodes, ifile=ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes):
+    def _save(self, element_id, property_id, nodes,
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id):
             raise NotImplementedError()
         nelements = len(element_id)
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -883,13 +899,13 @@ class PTUBE(Property):
         self.cards = []
 
     def _save(self, property_id, material_id, diameter, t, nsm,
-              ifile=None):
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id):
             raise NotImplementedError()
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.diameter = diameter

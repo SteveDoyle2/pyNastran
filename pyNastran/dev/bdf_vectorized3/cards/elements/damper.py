@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import zip_longest
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, parse_check)
+    Element, Property, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size,
     array_str, array_float, array_float_nan,
@@ -100,11 +100,11 @@ class CDAMP1(Element):
         self.cards = []
 
     def _save(self, element_id, property_id, nodes, components,
-              ifile=None):
+              ifile=None, comment=None):
         if ifile is None:
             ncards = len(element_id)
             ifile = np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -262,18 +262,24 @@ class CDAMP2(Element):
             b[icard] = bi
             nodes[icard, :] = nids
             components[icard, :] = componentsi
-        self._save(element_id, nodes, components, b)
+        self._save(element_id, nodes, components, b,
+                   ifile=ifile)
         self.cards = []
 
-    def _save(self, element_id, nodes, components, b):
-        nelements = len(element_id)
+    def _save(self, element_id, nodes, components, b,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.nodes = nodes
         self.components = components
         self.b = b
-        self.n = nelements
+        self.n = len(ifile)
 
     def __apply_slice__(self, elem: CDAMP2, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.nodes = self.nodes[i, :]
         elem.components = self.components[i]
@@ -372,17 +378,23 @@ class CDAMP3(Element):
             element_id[icard] = eid
             property_id[icard] = pid
             spoints[icard, :] = spointsi
-        self._save(element_id, property_id, spoints)
+        self._save(element_id, property_id, spoints,
+                   ifile=ifile)
         self.cards = []
 
-    def _save(self, element_id, property_id, spoints):
-        nelements = len(element_id)
+    def _save(self, element_id, property_id, spoints,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.spoints = spoints
-        self.n = nelements
+        self.n = len(ifile)
 
     def __apply_slice__(self, elem: CDAMP3, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.spoints = self.spoints[i, :]
@@ -493,18 +505,25 @@ class CDAMP4(Element):
             element_id[icard] = eid
             b[icard] = bi
             spoints[icard, :] = spointsi
-        self._save(element_id, b, spoints)
+        self._save(element_id, b, spoints, ifile=ifile)
         self.cards = []
 
-    def _save(self, element_id, b, spoints):
-        assert len(self.element_id) == 0
-        nelements = len(element_id)
+    def _save(self, element_id, b, spoints,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
+        if len(self.element_id):
+            asdf
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.b = b
         self.spoints = spoints
-        self.n = nelements
+        self.n = len(ifile)
 
     def __apply_slice__(self, elem: CDAMP4, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.b = self.b[i]
         elem.spoints = self.spoints[i, :]
@@ -601,18 +620,26 @@ class CDAMP5(Element):
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
+        self._save(element_id, property_id, nodes,
+                   ifile=ifile)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes):
-        assert len(self.element_id) == 0
-        nelements = len(element_id)
+    def _save(self, element_id, property_id, nodes,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
+        if len(self.element_id):
+            asdf
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
-        self.n = nelements
+        self.n = len(ifile)
 
     def __apply_slice__(self, elem: CDAMP4, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -717,16 +744,16 @@ class PDAMP(Property):
             ifile[icard] = ifilei
             property_id[icard] = pid
             b[icard] = bi
-        self._save(property_id, b)
+        self._save(property_id, b, ifile=ifile)
         self.cards = []
 
-    def _save(self, property_id, b, ifile=None):
+    def _save(self, property_id, b, ifile=None, comment=None):
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             asdf
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.b = b
         self.n = len(ifile)
@@ -834,11 +861,12 @@ class PDAMP5(Property):
         self._save(property_id, material_id, b, ifile=ifile)
         self.cards = []
 
-    def _save(self, property_id, material_id, b, ifile=None):
+    def _save(self, property_id, material_id, b,
+              ifile=None, comment=None):
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.b = b
@@ -927,21 +955,23 @@ class PDAMPT(Property):
             ifile[icard] = ifilei
             property_id[icard] = pid
             table_b[icard] = tbid
-        self._save(property_id, table_b)
+        self._save(property_id, table_b, ifile=ifile)
         self.cards = []
 
-    def _save(self, property_id, table_b, ifile=None) -> None:
+    def _save(self, property_id, table_b,
+              ifile=None, comment=None) -> None:
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             asdf
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.table_b = table_b
         self.n = len(ifile)
 
     def __apply_slice__(self, prop: PDAMPT, i: np.ndarray) -> None:
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.table_b = self.table_b[i]
         prop.n = len(i)
@@ -977,6 +1007,7 @@ class CVISC(Element):
     """
     @Element.clear_check
     def clear(self) -> None:
+        self.ifile = np.array([], dtype='int32')
         self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='int32')
@@ -1023,7 +1054,7 @@ class CVISC(Element):
         nodes = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, ifilei, comment) = card
+            (eid, pid, nids, ifilei, commenti) = card
             ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
@@ -1031,18 +1062,19 @@ class CVISC(Element):
         self._save(element_id, property_id, nodes, ifile=ifile)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, ifile=None):
+    def _save(self, element_id, property_id, nodes,
+              ifile=None, comment=None):
         ncards = len(element_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             asdf
-        ncards = len(element_id)
-        self.ifile = ifile
+        assert ncards > 0, ncards
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
-        self.n = ncards
+        self.n = len(ifile)
 
     def __apply_slice__(self, elem: CVISC, i: np.ndarray) -> None:
         elem.ifile = self.ifile[i]
@@ -1184,19 +1216,21 @@ class PVISC(Property):
         self._save(property_id, ce, cr, ifile=ifile)
         self.cards = []
 
-    def _save(self, property_id, ce, cr, ifile=None):
+    def _save(self, property_id, ce, cr,
+              ifile=None, comment=None):
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id):
             asdf
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.ce = ce
         self.cr = cr
         self.n = len(ifile)
 
     def __apply_slice__(self, prop: PVISC, i: np.ndarray) -> None:
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.cr = self.cr[i]
         prop.ce = self.ce[i]
@@ -1320,18 +1354,19 @@ class CGAP(Element):
             property_id[icard] = pid
             nodes[icard, :] = nids
             coord_id[icard] = cid
-        self._save(element_id, property_id, nodes, coord_id, x, g0, ifile=ifile)
+        self._save(element_id, property_id, nodes, coord_id, x, g0,
+                   ifile=ifile)
         self.sort()
         self.cards = []
 
     def _save(self, element_id, property_id, nodes, coord_id, x, g0,
-              ifile=None) -> None:
+              ifile=None, comment=None) -> None:
         ncards = len(element_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id):
             raise RuntimeError(f'stacking of {self.type} is not supported')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -1619,6 +1654,7 @@ class PGAP(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         u0 = np.zeros(ncards, dtype='float64')
         f0 = np.zeros(ncards, dtype='float64')
@@ -1633,6 +1669,7 @@ class PGAP(Property):
 
         for icard, card in enumerate(self.cards):
             (pid, u0i, f0i, kai, kbi, mu1i, kti, mu2i, tmaxi, mari, trmini, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             u0[icard] = u0i
             f0[icard] = f0i
@@ -1645,17 +1682,19 @@ class PGAP(Property):
             tmax[icard] = tmaxi
             mar[icard] = mari
             trmin[icard] = trmini
-        self._save(property_id, u0, f0, ka, kb, kt, mu1, mu2, tmax, mar, trmin)
+        self._save(property_id, u0, f0, ka, kb, kt, mu1, mu2, tmax, mar, trmin,
+                   ifile=ifile)
         self.cards = []
 
-    def _save(self, property_id, u0, f0, ka, kb, kt, mu1, mu2, tmax, mar, trmin,
-              ifile=None):
+    def _save(self, property_id, u0, f0, ka, kb, kt,
+              mu1, mu2, tmax, mar, trmin,
+              ifile=None, comment=None) -> None:
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.u0 = u0
         self.f0 = f0

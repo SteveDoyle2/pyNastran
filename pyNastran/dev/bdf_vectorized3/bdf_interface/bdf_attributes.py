@@ -820,7 +820,7 @@ class BDFAttributes:
             self.caabsf, # absorber shell
         ]
         masses = [
-            self.conm1, self.conm2, self.massset,
+            self.conm1, self.conm2,
             self.cmass1, self.cmass2, self.cmass3, self.cmass4,
         ]
         elements = self.spring_element_cards + self.damper_element_cards + [
@@ -1180,6 +1180,7 @@ class BDFAttributes:
             #self.snorm,
             self.suport, # self.suport1,
             self.cbarao,
+            self.massset,
         ] + self.spc_cards + self.mpc_cards + self.element_cards + self.rigid_element_cards + \
         self.property_cards + self.material_cards + self.optimization_cards + \
         self.load_cards + self.dynamic_load_cards + \

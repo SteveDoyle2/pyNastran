@@ -9,7 +9,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, parse_check)
+    Element, Property, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -98,8 +98,13 @@ class CMASS1(Element):
     def _save(self,
               element_id: np.ndarray,
               property_id: np.ndarray,
-              nodes: np.ndarray, components: np.ndarray) -> None:
+              nodes: np.ndarray, components: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         assert len(self.element_id) == 0
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -113,6 +118,7 @@ class CMASS1(Element):
         used_dict['node_id'].append(nodes)
 
     def __apply_slice__(self, elem: CMASS1, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -271,8 +277,13 @@ class CMASS2(Element):
 
     def _save(self, element_id: np.ndarray,
               mass: np.ndarray,
-              nodes: np.ndarray, components: np.ndarray) -> None:
+              nodes: np.ndarray, components: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         assert len(self.element_id) == 0
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self._mass = mass
         self.nodes = nodes
@@ -285,6 +296,7 @@ class CMASS2(Element):
         used_dict['node_id'].append(nodes)
 
     def __apply_slice__(self, elem: CMASS2, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem._mass = self._mass[i]
         elem.nodes = self.nodes[i, :]
@@ -390,16 +402,21 @@ class CMASS3(Element):
 
     def _save(self, element_id: np.ndarray,
               property_id: np.ndarray,
-              spoints: np.ndarray) -> None:
+              spoints: np.ndarray, ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         assert len(self.element_id) == 0
         assert element_id.min() > 0, element_id
         assert spoints.min() >= 0, spoints
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.spoints = spoints
         self.n = len(element_id)
 
     def __apply_slice__(self, elem: CMASS3, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.spoints = self.spoints[i, :]
@@ -521,16 +538,22 @@ class CMASS4(Element):
         self._save(element_id, mass, spoints)
         self.cards = []
 
-    def _save(self, element_id, mass, spoints):
+    def _save(self, element_id, mass, spoints,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         assert len(self.element_id) == 0
         assert element_id.min() > 0, element_id
         assert spoints.min() >= 0, spoints
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self._mass = mass
         self.spoints = spoints
         self.n = len(element_id)
 
     def __apply_slice__(self, elem: CMASS4, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem._mass = self._mass[i]
         elem.spoints = self.spoints[i, :]
@@ -619,22 +642,31 @@ class PMASS(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         mass = np.zeros(ncards, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (pid, massi, ifilei, comment) = card
+            (pid, massi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             mass[icard] = massi
-        self._save(property_id, mass)
+        self._save(property_id, mass, ifile=ifile)
         self.cards = []
 
-    def _save(self, property_id: np.ndarray, mass: np.ndarray) -> None:
-        assert len(self.property_id) == 0
+    def _save(self, property_id: np.ndarray, mass: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.property_id):
+            asdf
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self._mass = mass
         self.n = len(property_id)
 
     def __apply_slice__(self, prop: PMASS, i: np.ndarray) -> None:
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop._mass = self._mass[i]
         prop.n = len(i)

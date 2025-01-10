@@ -26,7 +26,7 @@ from pyNastran.dev.bdf_vectorized3.cards.coord import transform_spherical_to_rec
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, hslice_by_idim, make_idim,
     parse_check, remove_unused_duplicate,
-    remove_unused_primary,
+    remove_unused_primary, save_ifile_comment,
     ) # , searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float, array_default_int,
@@ -1564,7 +1564,7 @@ class Combination(VectorizedBaseCard):
 
     def add(self, sid: int, scale: float,
             scale_factors: list[float],
-            load_ids: list[int], comment: str='') -> int:
+            load_ids: list[int], ifile: int=0, comment: str='') -> int:
         """
         Creates a LOAD/CLOAD/DLOAD/BOLTLD card
 
@@ -1594,7 +1594,7 @@ class Combination(VectorizedBaseCard):
             scale_factors
 
         assert len(scale_factors) == len(load_ids), f'sid={sid:d} scale_factors={scale_factors} load_ids={load_ids}'
-        self.cards.append((sid, scale, scale_factors, load_ids, comment))
+        self.cards.append((sid, scale, scale_factors, load_ids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1614,7 +1614,7 @@ class Combination(VectorizedBaseCard):
             load_ids.append(integer(card, n + 1, 'load_id'))
 
         assert len(card) > 3, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
-        self.cards.append((sid, scale, scale_factors, load_ids, comment))
+        self.cards.append((sid, scale, scale_factors, load_ids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1622,6 +1622,7 @@ class Combination(VectorizedBaseCard):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         load_id = np.zeros(ncards, dtype=idtype)
         scale = np.zeros(ncards, dtype='float64')
         nloads = np.zeros(ncards, dtype='int32')
@@ -1630,9 +1631,10 @@ class Combination(VectorizedBaseCard):
         all_scale_factors = []
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
-            (sid, scalei, scale_factors, load_idsi, comment) = card
+            (sid, scalei, scale_factors, load_idsi, ifilei, commenti) = card
             nloads_actual = len(scale_factors)
 
+            ifile[icard] = ifilei
             load_id[icard] = sid
             scale[icard] = scalei
             nloads[icard] = nloads_actual
@@ -1641,16 +1643,20 @@ class Combination(VectorizedBaseCard):
 
         load_ids = np.array(all_load_ids, dtype=idtype)
         scale_factors = np.array(all_scale_factors, dtype='float64')
-        self._save(load_id, scale, nloads, load_ids, scale_factors)
+        self._save(load_id, scale, nloads, load_ids, scale_factors,
+                   ifile=ifile)
         self.cards = []
 
-    def _save(self, _idi, scale, _n_ids, _ids_data, scale_factors):
+    def _save(self, _idi, scale, _n_ids, _ids_data, scale_factors,
+              ifile=None, comment=None) -> None:
         if len(self._idi) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             _idi = np.hstack([self._idi, _idi])
             scale = np.hstack([self.scale, scale])
             _n_ids = np.hstack([self._n_ids, _n_ids])
             _ids_data = np.hstack([self._ids_data, _ids_data])
             scale_factors = np.hstack([self.scale_factors, scale_factors])
+        save_ifile_comment(self, ifile, comment)
         self._idi = _idi
         self.scale = scale
         self._n_ids = _n_ids
@@ -1660,6 +1666,7 @@ class Combination(VectorizedBaseCard):
     def __apply_slice__(self, load: Combination,
                         i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
+        load.ifile = self.ifile[i]
         load._idi = self._idi[i]
         load.scale = self.scale[i]
 

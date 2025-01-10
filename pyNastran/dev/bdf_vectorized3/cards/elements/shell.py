@@ -18,7 +18,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element,
-    parse_check,
+    parse_check, save_ifile_comment,
     #hslice_by_idim, make_idim,
     searchsorted_filter)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -621,7 +621,7 @@ class CTRIA3(ShellElement):
 
     def _save(self, element_id, property_id, nodes,
               zoffset, mcid, theta,
-              tflag, T, ifile=None):
+              tflag, T, ifile=None, comment=None):
         assert element_id.min() >= 0, element_id
         assert property_id.min() >= 0, property_id
         assert nodes.min() >= 0, nodes
@@ -639,7 +639,7 @@ class CTRIA3(ShellElement):
             T = np.vstack([self.T, T])
             zoffset = np.hstack([self.zoffset, zoffset])
         assert len(ifile) == len(element_id)
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -950,7 +950,7 @@ class CTRIAR(ShellElement):
 
     def _save(self, element_id, property_id, nodes,
               zoffset, theta, mcid,
-              tflag, T, ifile=None):
+              tflag, T, ifile=None, comment=None):
         assert element_id.min() >= 0, element_id
         assert property_id.min() >= 0, property_id
         assert nodes.min() >= 0, nodes
@@ -968,7 +968,7 @@ class CTRIAR(ShellElement):
             tflag = np.hstack([self.tflag, tflag])
             T = np.vstack([self.T, T])
             zoffset = np.hstack([self.zoffset, zoffset])
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -1960,7 +1960,8 @@ class CTRIA6(ShellElement):
 
     def _save(self, element_id, property_id, nodes,
               zoffset=None, theta=None, mcid=None,
-              tflag=None, T=None, ifile=None):
+              tflag=None, T=None,
+              ifile=None, comment=None):
         if len(self.element_id) != 0:
             raise NotImplementedError()
         assert element_id.min() >= 0, element_id
@@ -1981,7 +1982,7 @@ class CTRIA6(ShellElement):
         if T is None:
             T = np.full((ncards, 4), np.nan, dtype='float64')
 
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -2303,7 +2304,7 @@ class CQUAD8(ShellElement):
 
     def _save(self, element_id, property_id, nodes,
               zoffset=None, theta=None, mcid=None,
-              tflag=None, T=None, ifile=None):
+              tflag=None, T=None, ifile=None, comment=None):
         if len(self.element_id) != 0:
             raise NotImplementedError()
         assert element_id.min() >= 0, element_id
@@ -2324,7 +2325,7 @@ class CQUAD8(ShellElement):
         if T is None:
             T = np.full((ncards, 4), np.nan, dtype='float64')
 
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -2572,12 +2573,13 @@ class CQUAD(ShellElement):
                 theta[icard] = theta_mcid
             else:
                 mcid[icard] = theta_mcid
-        self._save(element_id, property_id, nodes, theta, mcid, ifile)
+        self._save(element_id, property_id, nodes, theta, mcid, ifile=ifile)
         self.sort()
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, theta, mcid, ifile):
-        self.ifile = ifile
+    def _save(self, element_id, property_id, nodes, theta, mcid,
+              ifile=None, comment=None):
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -2738,14 +2740,15 @@ class CAABSF(Element):
         self.sort()
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, ifile=None):
+    def _save(self, element_id, property_id, nodes,
+              ifile=None, comment=None):
         assert element_id.min() >= 0, element_id
         assert property_id.min() >= 0, property_id
         assert nodes.min() >= 0, nodes
         ncards = len(element_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes

@@ -8,8 +8,7 @@ import numpy as np
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, searchsorted_filter,
-    parse_check,
-)
+    parse_check, save_ifile_comment)
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double,
@@ -93,16 +92,21 @@ class CSHEAR(Element):
         self._save(element_id, property_id, nodes)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes):
+    def _save(self, element_id, property_id, nodes,
+              ifile=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id):
             raise NotImplementedError()
-        nelements = len(element_id)
+        self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
-        self.n = nelements
+        self.n = len(ifile)
 
     def __apply_slice__(self, elem: CSHEAR, i: np.ndarray):
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -201,7 +205,8 @@ class PSHEAR(Property):
         self.f2 = np.array([], dtype='float64')
 
     def add(self, pid: int, mid: int, t: float, nsm: float=0.,
-            f1: float=0., f2: float=0., comment: str='') -> int:
+            f1: float=0., f2: float=0.,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a PSHEAR card
 
@@ -230,7 +235,7 @@ class PSHEAR(Property):
         #self.f1 = np.hstack([self.f1, f1])
         #self.f2 = np.hstack([self.f2, f2])
         #self.n += 1
-        self.cards.append((pid, mid, t, nsm, f1, f2, comment))
+        self.cards.append((pid, mid, t, nsm, f1, f2, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -242,13 +247,14 @@ class PSHEAR(Property):
         f1 = double_or_blank(card, 5, 'f1', default=0.0)
         f2 = double_or_blank(card, 6, 'f2', default=0.0)
         assert len(card) <= 7, f'len(PSHEAR card) = {len(card):d}\ncard={card}'
-        self.cards.append((pid, mid, t, nsm, f1, f2, comment))
+        self.cards.append((pid, mid, t, nsm, f1, f2, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         t = np.zeros(ncards, dtype='float64')
@@ -257,29 +263,35 @@ class PSHEAR(Property):
         f2 = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            pid, mid, ti, nsmi, f1i, f2i, comment = card
-
+            pid, mid, ti, nsmi, f1i, f2i, ifilei, commenti = card
+            ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
             t[icard] = ti
             nsm[icard] = nsmi
             f1[icard] = f1i
             f2[icard] = f2i
-        self._save(property_id, material_id, t, nsm, f1, f2)
+        self._save(property_id, material_id, t, nsm, f1, f2, ifile=ifile)
         self.cards = []
 
-    def _save(self, property_id, material_id, t, nsm, f1, f2):
+    def _save(self, property_id, material_id, t, nsm, f1, f2,
+              ifile=None, comment=None):
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id):
             raise NotImplementedError()
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.t = t
         self.nsm = nsm
         self.f1 = f1
         self.f2 = f2
-        self.n = len(property_id)
+        self.n = len(ifile)
 
     def __apply_slice__(self, prop: PSHEAR, i: np.ndarray):
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.t = self.t[i]

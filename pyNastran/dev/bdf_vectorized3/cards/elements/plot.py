@@ -1,6 +1,6 @@
 from __future__ import annotations
 #from itertools import count
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer,
@@ -12,7 +12,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, parse_check, # searchsorted_filter,
+    Element, parse_check, save_ifile_comment, # searchsorted_filter,
     )
 from .rod import line_length, line_centroid
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -46,13 +46,19 @@ class PlotElement(Element):
         self.n += 1
         return self.n - 1
 
-    def _save(self, element_id, nodes):
+    def _save(self, element_id, nodes,
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         nelements = len(element_id)
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.nodes = nodes
         self.n = nelements
 
     def __apply_slice__(self, elem: PlotElement, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.nodes = self.nodes[i, :]
         elem.n = len(i)

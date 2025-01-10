@@ -13,7 +13,7 @@ from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import Combination
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, parse_check)
+    Element, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float, array_default_int,
     get_print_card_size)
@@ -88,7 +88,7 @@ class MASSSET(Combination):
 
         """
         return super().add(
-            sid, scale, scale_factors, element_ids, comment=comment)
+            sid, scale, scale_factors, element_ids, ifile, comment=comment)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['element_id'].append(self.element_ids)
@@ -485,7 +485,9 @@ class CONM2(Element):
         self.sort()
         self.cards = []
 
-    def _save(self, element_id, mass, coord_id, node_id, xyz_offset, inertia, ifile=None):
+    def _save(self, element_id, mass, coord_id, node_id,
+              xyz_offset, inertia,
+              ifile=None, comment=None):
         ifile = ifile if ifile is not None else np.zeros(len(element_id), dtype='int32')
         if len(self.element_id):
             ifile = np.hstack([self.ifile, ifile])
@@ -495,7 +497,7 @@ class CONM2(Element):
             node_id = np.hstack([self.node_id, node_id])
             xyz_offset = np.vstack([self.xyz_offset, xyz_offset])
             inertia = np.vstack([self.inertia, inertia])
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self._mass = mass
         self.coord_id = coord_id

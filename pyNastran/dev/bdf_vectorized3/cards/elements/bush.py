@@ -12,7 +12,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, parse_check)
+    Element, Property, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str,
     array_default_int, array_default_float, array_float_nan)
@@ -184,7 +184,12 @@ class CBUSH(Element):
               x: np.ndarray, g0: np.ndarray,
               s: np.ndarray,
               coord_id: np.ndarray,
-              ocid: np.ndarray, ocid_offset: np.ndarray) -> None:
+              ocid: np.ndarray, ocid_offset: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -241,7 +246,7 @@ class CBUSH(Element):
         self.si *= xyz_scale
 
     def __apply_slice__(self, elem: CBUSH, i: np.ndarray) -> None:
-        #elem.ifile = self.ifile[i]
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -601,8 +606,8 @@ class PBUSH(Property):
         self.cards = []
 
     def _save(self, property_id, k_fields, b_fields, ge_fields, rcv_fields,
-              _mass, alpha, tref, coincident_length, ifile=None) -> None:
-        ncards = len(property_id)
+              _mass, alpha, tref, coincident_length,
+              ifile=None, comment=None) -> None:
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
@@ -633,7 +638,7 @@ class PBUSH(Property):
             tref = np.hstack([self.tref, tref])
             coincident_length = np.hstack([self.coincident_length, coincident_length])
 
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.k_fields = k_fields
         self.b_fields = b_fields
@@ -883,7 +888,7 @@ class PBUSHT(Property):
                    ifile=ifile)
 
     def _save(self, property_id, k_tables, b_tables, ge_tables, kn_tables,
-              ifile=None):
+              ifile=None, comment=None):
         ncards = len(property_id)
         ncards_existing = len(self.property_id)
         if ifile is None:
@@ -896,7 +901,7 @@ class PBUSHT(Property):
             ge_tables = np.vstack([self.ge_tables, ge_tables])
             kn_tables = np.vstack([self.kn_tables, kn_tables])
 
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.k_tables = k_tables
         self.b_tables = b_tables
@@ -1024,15 +1029,21 @@ class CBUSH1D(Element):
         self._save(element_id, property_id, nodes, coord_id)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, coord_id) -> None:
+    def _save(self, element_id, property_id, nodes, coord_id,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.coord_id = coord_id
 
     def __apply_slice__(self, elem: CBUSH1D, i: np.ndarray) -> None:
+        elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -1319,13 +1330,13 @@ class PBUSH1D(Property):
               damper_type, damper_table, damper_equation,
               shock_type, shock_table, shock_equation,
               gener_equation,
-              ifile=None):
+              ifile=None, comment=None):
         ncards = len(property_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.k = k
         self.c = c
