@@ -752,7 +752,9 @@ class PDAMP(Property):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id) != 0:
-            asdf
+            ifile = np.hstack([self.ifile, ifile])
+            property_id = np.hstack([self.property_id, property_id])
+            b = np.hstack([self.b, b])
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.b = b
