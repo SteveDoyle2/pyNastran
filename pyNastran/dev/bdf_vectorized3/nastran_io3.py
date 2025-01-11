@@ -289,7 +289,7 @@ class Nastran3:
             model.idtype = 'int64'
             model.read_bdf(bdf_filename)
 
-        for prop in model.property_cards:
+        for prop in model.property_cards + model.aero_property_cards:
             # if prop.n == 0:
             #     continue
             try:
@@ -297,7 +297,15 @@ class Nastran3:
             except:
                 log.error(f'{prop.type}.ifile error; ifile={prop.ifile}')
                 raise
-        for elem in model.element_cards:
+        for mat in model.material_cards:
+            # if mat.n == 0:
+            #     continue
+            try:
+                assert len(mat.ifile) == len(mat.material_id)
+            except:
+                log.error(f'{mat.type}.ifile error; ifile={mat.ifile}')
+                raise
+        for elem in model.aero_element_cards + model.element_cards:
             # if elem.n == 0:
             #     continue
             try:
