@@ -77,6 +77,7 @@ from __future__ import annotations
 import os
 import pickle
 import traceback
+from functools import wraps
 from typing import Callable, Optional, Any, cast, TYPE_CHECKING
 #from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
 import numpy as np
@@ -94,13 +95,14 @@ from qtpy.QtCore import QTimer, Qt
 
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.properties.bars import _bar_areaL
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.nastran_io3 import (
     Nastran3, DisplacementResults)
 from pyNastran.f06.dev.flutter.actions_builder import (
     Actions, Action, build_menus)
 from pyNastran.f06.dev.flutter.scalar_bar import ScalarBar
+from pyNastran.f06.dev.flutter.nastran_utils import (
+    get_element_table, get_property_table, get_material_table,)
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.vtk_rendering_core import (
@@ -518,7 +520,8 @@ class VtkWindow(QMainWindow):
             self.analysis.model)
         #fill_table_tree(self.table_tree, self.ifile_name_dict)
 
-        tree = self.tree
+        #tree = self.tree
+        etypes, element_types, etype_to_n = get_element_table(model)
         pids, properties, pid_to_type_name = get_property_table(model)
         mids, materials, mid_to_type_name = get_material_table(model)
         self.pid_to_type_name = pid_to_type_name
@@ -531,11 +534,12 @@ class VtkWindow(QMainWindow):
             groups.append((f'{ifile}: File: {fname}', True, ifile, []))
 
         words = [
+            ('Types', False, 0, element_types),
             ('Properties', False, 0, properties),
             ('Materials', False, 1, materials),
             ('Groups', False, 2, groups),
         ]
-
+        self.element_types_set = set(list(etypes))
         self.materials_filter_set = set(mids.tolist())
         self.properties_filter_set = set(pids.tolist())
         self.ifile_filter_set = set(list(self.ifile_name_dict))
@@ -547,23 +551,46 @@ class VtkWindow(QMainWindow):
         self.tree_model.itemChanged.connect(self.on_tree_item_changed)
 
     def on_tree_item_changed(self, item: QStandardItem) -> None:
+        print('on_tree_item_changed')
         if self._updating:
+            print('  already updating...')
             return
+        groups = [
+            'Spring', 'Damper', 'Bush', 'Bar/Beam',
+            'Shell', 'Solids',]
         #texti, idi, typei, commenti = _qitem_text_to_sline(item.text())
         #print(f'id={idi}; type={typei!r} other={commenti!r}')
 
-        is_checked = (item.checkState() == Qt.Checked)
         text0 = item.text()
-        selected_items = self.tree.selectedIndexes()
+        #print(f'text0 = {text0}')
+        is_checked = (item.checkState() == Qt.Checked)
+        3print(f'is_checked = {is_checked}')
+        if 1:
+            selected_texts = [item.text()]
+        else:
+            selected_texts = []
+            for itemii in selected_items:
+                text = self.tree_model.data(itemii)
+                selected_texts.append(text)
+
+        #selected_items = self.tree.selectedIndexes()
 
         # disables autoupdating when the check marks are flipped
         self._updating = True
-        for itemii in selected_items:
-            text = self.tree_model.data(itemii)
+        for text in selected_texts:
+            #text = self.tree_model.data(itemii)
+            print(f'  text={text!r}')
             textii, idii, typeii, commentii = _qitem_text_to_sline(text)
-            print(f'id={idii}; type={typeii!r} other={commentii!r}')
+            print(f'  id={idii}; type={typeii!r} other={commentii!r}')
 
-            if typeii.startswith('MAT'):  # MAT1, MAT8, ...
+            is_group = False
+            if typeii in groups:
+                is_group = True
+            elif typeii.startswith('C'):  # CQUAD4, CBAR, ...
+                print(f'  element! -> {typeii!r}')
+                myset = self.element_types_set
+                idii = typeii
+            elif typeii.startswith('MAT'):  # MAT1, MAT8, ...
                 myset = self.materials_filter_set
             elif typeii.startswith('P'):  # PSHELL, PCOMP, ...
                 myset = self.properties_filter_set
@@ -572,41 +599,60 @@ class VtkWindow(QMainWindow):
             else:  # pragma: no cover
                 raise RuntimeError(f'type = {typeii!r}')
 
-            skip_checkstate = (text0 == textii)
-            if is_checked:
-                print(f"{textii} is checked")
-                #if skip_checkstate:
-                    #item.setCheckState(Qt.Checked)
-                    #item.setCheckState(Qt.CheckState.Checked)
-                myset.add(idii)
-            else:
-                print(f"{textii} is unchecked")
-                #if skip_checkstate:
-                    #item.setCheckState(Qt.Unchecked)
-                    #item.setCheckState(Qt.CheckState.Unchecked)
-                try:
-                    myset.remove(idii)
-                except KeyError:  # can't remove a thing that doesn't exist
-                    pass
-        #print(f'{type}: {myset}')
+            if not is_group:
+                skip_checkstate = (text0 == textii)
+                if is_checked:
+                    print(f"  {textii} is checked")
+                    #if skip_checkstate:
+                        #item.setCheckState(Qt.Checked)
+                        #item.setCheckState(Qt.CheckState.Checked)
+                    myset.add(idii)
+                else:
+                    print(f"  {textii} is unchecked")
+                    #if skip_checkstate:
+                        #item.setCheckState(Qt.Unchecked)
+                        #item.setCheckState(Qt.CheckState.Unchecked)
+                    try:
+                        myset.remove(idii)
+                    except KeyError:  # can't remove a thing that doesn't exist
+                        pass
+            #print(f'{type}: {myset}')
         self._updating = False
 
+    def dont_crash(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            # do something before `sum`
+            try:
+                result = func(self) # , *args, **kwargs
+            except Exception as e:
+                self.log_error(str(traceback.format_exc()))
+                result = None
+            # do something after `sum`
+            return result
+        return wrapper
+
+    @dont_crash
     def on_update_groups(self) -> None:
         print('on_update_groups')
         print(self.table_tree)
         # ifile_filter = get_ifile_groups_from_table(
         #     self.table_tree, self.model)
-        print('self.ifile_filter_set =', self.ifile_filter_set)
+        self.log.info(f'self.ifile_filter_set = {self.ifile_filter_set}')
+        etypes = list(self.element_types_set)
+        self.log.info(f'etypes = {etypes}')
         ifile_filter = np.array(list(self.ifile_filter_set), dtype='int32')
         iprop_filter = np.array(list(self.properties_filter_set), dtype='int32')
         imat_filter = np.array(list(self.materials_filter_set), dtype='int32')
         ifile_filter.sort()
         iprop_filter.sort()
         imat_filter.sort()
+        print(f'etypes = {etypes}')
         print(f'ifile_filter = {ifile_filter}')
         print(f'iprop_filter = {iprop_filter}')
         print(f'imat_filter = {imat_filter}')
 
+        self.analysis.etypes_filter = etypes
         self.analysis.materials_filter = imat_filter
         self.analysis.properties_filter = iprop_filter
         self.analysis.ifile_filter = ifile_filter
@@ -742,6 +788,9 @@ class VtkWindow(QMainWindow):
     def _reload_results(self, op2_filename, log):
         # creates result_cases
         log.level = 'info'
+        get_element_table(self.model)
+        get_property_table(self.model)
+        get_material_table(self.model)
         self.analysis.load_nastran3_results(op2_filename)
         log.level = 'debug'
         for key, (case, case_tag) in self.result_cases.items():
@@ -1250,129 +1299,25 @@ def get_ifile_groups_from_table(table_tree: QTreeView,
     return ifile_groups
     return np.array(ifile_groups, dtype='int32')
 
-def get_property_table(model: BDF) -> tuple[np.ndarray, list, dict[int, tuple[str, str]]]:
-    properties = []
-    pids = set([])
-    pid_to_type_name: dict[int, tuple[str, str]] = {}
-    log = model.log
-    for card in model.property_cards:
-        if card.n == 0:
-            continue
-        card_type = card.type
-        for i, pid in enumerate(card.property_id):
-            pids.add(pid)
-            comment = card.comment.get(pid, '')
-            if comment == '':
-                if card_type == 'PBARL':
-                    idim0, idim1 = card.idim[i]
-                    beam_type =card.Type[i]
-                    dim = card.dims[idim0:idim1]
-                    area, i1, i2, i12 = _bar_areaL('PBARL', beam_type, dim, card)
-                    if i1 is None:
-                        i1 = 0.
-                        i2 = 0.
-                        i12 = 0.
-                    comment = (f'Type={beam_type} '
-                               f'area={engieering_format_str(area)} '
-                               f'I1={engieering_format_str(i1)} '
-                               f'I2={engieering_format_str(i2)} '
-                               f'I12={engieering_format_str(i12)}')
-                elif card_type =='PBEAML':
-                    comment = f'Type={card.Type[i]}'
-                elif card_type == 'PSHELL':
-                    comment = f't={card.t[i]} mid={card.material_id[i, :]}'
-                elif card.type == 'PCOMP':
-                    ilayer0, ilayer1 = card.ilayer[i]
-                    thickness = sum(card.thickness[ilayer0:ilayer1])
-                    theta_str = ply_format(card.theta[ilayer0:ilayer1])
-                    comment = f't={thickness:g} theta={theta_str}'
-                else:
-                    log.warning(f'card.type={card.type} is not supported for comments')
-            pid_to_type_name[pid] = (card_type, comment)
-
-    pids_array = np.array(list(pids), dtype='int32')
-    pids_array.sort()
-    pid_to_type_name = {key: value for key, value in sorted(pid_to_type_name.items())}
-    for pid, (prop_type, name) in pid_to_type_name.items():
-        properties.append((f'{pid}: {prop_type}: {name}', True, pid, []))
-    return pids_array, properties, pid_to_type_name
-
-def get_material_table(model: BDF) -> tuple[np.ndarray, list, dict[int, tuple[str, str]]]:
-    materials = []
-    mids = set([])
-    mid_to_type_name: dict[int, tuple[str, str]] = {}
-    log = model.log
-    for card in model.material_cards:
-        if card.n == 0:
-            continue
-        card_type = card.type
-        for i, mid in enumerate(card.material_id):
-            mids.add(mid)
-            comment = card.comment.get(mid, '')
-            if card_type == 'MAT1':
-                comment = (f'E={engieering_format_str(card.E[i])} '
-                           f'G={engieering_format_str(card.G[i])} '
-                           f'nu={card.nu[i]}')
-            elif card.type == 'MAT8':
-                comment = (f'E11={engieering_format_str(card.E11[i])} '
-                           f'E22={engieering_format_str(card.E22[i])} '
-                           f'nu12={card.nu12[i]}')
-            else:
-                log.warning(f'card.type={card.type} is not supported for comments')
-            mid_to_type_name[mid] = (card_type, comment)
-
-    mids_array = np.array(list(mids), dtype='int32')
-    mids_array.sort()
-    mid_to_type_name = {key: value for key, value in sorted(mid_to_type_name.items())}
-    for mid, (prop_type, name) in mid_to_type_name.items():
-        materials.append((f'{mid}: {card_type}: {name}', True, mid, []))
-    return mids_array, materials, mid_to_type_name
-
-
-def ply_format(theta: np.ndarray) -> str:
-    thetai = theta.astype('int32')
-    if np.allclose(theta, thetai):
-        theta = thetai
-
-    ntheta = len(theta)
-    if ntheta > 4:
-        is_even = (ntheta % 2 == 0)
-        ntheta1 = ntheta // 2
-        flag = ''
-        if is_even:
-            theta1 = theta[:ntheta1]
-            theta2 = theta[ntheta1:]
-            if np.allclose(theta1, theta2[::-1]):
-                theta = theta1
-                flag = ' Sym'
-    theta_str = '/'.join(str(ti) for ti in theta)
-    return theta_str + flag
-
-def engieering_format_str(value: float) -> str:
-    if value > 1.0:
-        if value < 1000.0:
-            return f'{value:g}'
-        else:
-            base, exp_str = f'{value:e}'.split('e')
-            exp = int(exp_str)
-            exp_remainder3 = exp % 3
-            exp3 = exp - exp_remainder3
-            base2 = float(base) * exp_remainder3
-            return f'{base2}e+{exp3}'
-    else:
-        if value == 0:
-            return '0'
-        base, exp_str = f'{value:e}'.split('e')
-        exp = int(exp_str)
-        exp_remainder3 = -exp % 3
-        exp3 = exp - exp_remainder3
-        base2 = float(base) * exp_remainder3
-        return f'{base2}e-{exp3}'
-
 def _qitem_text_to_sline(text: str) -> tuple[str, int, str, str]:
+    """
+    1: PSHELL: t=1.0 mid=[1, 2, 3, -1]
+    2: PBEAML: type=BAR
+    CTRIA3: n=100
+    Shells: n=101
+
+    (2, 'PBEAML', 'type=BAR') = _qitem_text_to_sline('2: PBEAML: type=BAR')
+    (-1, 'CTRIA3', 'n=100') = _qitem_text_to_sline('CTRIA3: n=100')
+
+    """
     sline = text.split(':', 2)
+    if len(sline) == 2:
+        idi = -1
+        type, comment = sline
+    else:
+        assert len(sline) == 3, sline
     #print(f'sline = {sline}')
-    idi_str, type, comment = sline
+        idi_str, type, comment = sline
+        idi = int(idi_str)
     type = type.strip()
-    idi = int(idi_str)
     return text, idi, type, comment

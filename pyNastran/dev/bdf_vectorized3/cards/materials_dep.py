@@ -10,7 +10,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 #from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_check
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Material, parse_check, save_ifile_comment)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     get_print_card_size, array_str, array_default_int, array_float_nan)
 
@@ -133,7 +134,11 @@ class MATT1(Material):
     def _save(self, material_id, e_table, g_table, nu_table,
               rho_table, alpha_table,
               ge_table,
-              st_table, sc_table, ss_table,):
+              st_table, sc_table, ss_table,
+              ifile=None, comment=None) -> None:
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.material_id):
             raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
@@ -147,6 +152,7 @@ class MATT1(Material):
             #Ss = np.hstack([self.Ss, Ss])
             #St = np.hstack([self.St, St])
             #Sc = np.hstack([self.Sc, Sc])
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.e_table = e_table
         self.g_table = g_table
@@ -301,10 +307,12 @@ class MATS1(Material):
 
     def add(self, mid: int, tid: int, Type: str,
             h: float, hr: int, yf: int, limit1: float, limit2: float,
-            stress_strain_measure: str='', comment: str='') -> int:
+            stress_strain_measure: str='',
+            ifile: int=0, comment: str='') -> int:
         """Creates a MATS1 card"""
         assert isinstance(Type, str), f'Type={Type!r}'
-        self.cards.append((mid, tid, Type, h, hr, yf, limit1, limit2, stress_strain_measure, comment))
+        self.cards.append((mid, tid, Type, h, hr, yf, limit1, limit2, stress_strain_measure,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -359,13 +367,14 @@ class MATS1(Material):
         assert len(card) <= 9, f'len(MATS1 card) = {len(card):d}\ncard={card}'
         #return MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
         self.cards.append((mid, tid, nonlinear_type, hardening_slope, hr, yf,
-                           limit1, limit2, stress_strain_measure, comment))
+                           limit1, limit2, stress_strain_measure, ifile, comment))
         self.n += 1
         return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         table_id = np.zeros(ncards, dtype='int32')
         Type = np.zeros(ncards, dtype='|U8')
@@ -375,13 +384,15 @@ class MATS1(Material):
         limit1 = np.zeros(ncards, dtype='float64')
         limit2 = np.zeros(ncards, dtype='float64')
         stress_strain_measure = np.zeros(ncards, dtype='|U8')
-
+        comment = {}
         for icard, card in enumerate(self.cards):
             (mid, tid, nonlinear_typei, hardening_slopei, hri, yfi,
-             limit1i, limit2i, stress_strain_measurei, comment) = card
+             limit1i, limit2i, stress_strain_measurei,
+             ifilei, commenti) = card
             tid = 0 if tid is None else tid
             hri = 1 if hri is None else hri
             yfi = 1 if yfi is None else yfi
+            ifile[icard] = ifilei
             material_id[icard] = mid
             table_id[icard] = tid
             Type[icard] = nonlinear_typei
@@ -392,16 +403,22 @@ class MATS1(Material):
             limit2[icard] = limit2i
             stress_strain_measure[icard] = stress_strain_measurei
         self._save(material_id, table_id, Type, hardening_slope, hr, yf,
-                   limit1, limit2, stress_strain_measure)
+                   limit1, limit2, stress_strain_measure,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, material_id, table_id, Type, hardening_slope, hr, yf,
-              limit1, limit2, stress_strain_measure):
+              limit1, limit2, stress_strain_measure,
+              ifile=None, comment=None) -> None:
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.material_id):
             raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.table_id = table_id
         self.Type = Type
@@ -664,12 +681,16 @@ class MATT2(Material):
               rho_table,
               a1_table, a2_table, a3_table,
               st_table, sc_table, ss_table,
-              ge_table):
+              ge_table,
+              ifile=None, comment=None) -> None:
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.material_id):
             raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
-
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.g11_table = g11_table
         self.g22_table = g22_table
@@ -722,6 +743,7 @@ class MATT2(Material):
 
     def __apply_slice__(self, mat: MATT1, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
+        mat.ifile = self.ifile[i]
         mat.material_id = self.material_id[i]
         mat.g11_table = self.g11_table[i]
         mat.g22_table = self.g22_table[i]
@@ -928,12 +950,16 @@ class MATT3(Material):
     def _save(self, material_id,
               ex_table, eth_table, ez_table,
               nuth_table, nuxz_table, rho_table, gzx_table,
-              ax_table, ath_table, az_table, ge_table):
+              ax_table, ath_table, az_table, ge_table,
+              ifile=None, comment=None) -> None:
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.material_id):
             raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
-
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.ex_table = ex_table
         self.eth_table = eth_table
@@ -1132,12 +1158,16 @@ class MATT4(Material):
         self.sort()
         self.cards = []
 
-    def _save(self, material_id, k_table, cp_table, h_table, mu_table, hgen_table):
+    def _save(self, material_id, k_table, cp_table, h_table, mu_table, hgen_table,
+              ifile=None, comment=None) -> None:
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.material_id):
             raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
-
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.k_table = k_table
         self.cp_table = cp_table
@@ -1349,12 +1379,16 @@ class MATT5(Material):
 
     def _save(self, material_id,
               kxx_table, kxy_table, kxz_table, kyy_table,
-              kyz_table, kzz_table, cp_table, hgen_table):
+              kyz_table, kzz_table, cp_table, hgen_table,
+              ifile=None, comment=None) -> None:
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.material_id):
             raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
-
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.kxx_table = kxx_table
         self.kxy_table = kxy_table
@@ -1601,12 +1635,16 @@ class MATT8(Material):
               g1z_table, g2z_table, rho_table,
               a1_table, a2_table, xt_table,
               xc_table, yt_table, yc_table,
-              s_table, ge_table, f12_table):
+              s_table, ge_table, f12_table,
+              ifile=None, comment=None) -> None:
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.material_id):
             raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
-
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.e1_table = e1_table
         self.e2_table = e2_table
@@ -2043,12 +2081,16 @@ class MATT9(Material):
               g44_table, g45_table, g46_table,
               g55_table, g56_table, g66_table, rho_table,
               a1_table, a2_table, a3_table,
-              a4_table, a5_table, a6_table, ge_table, ges_table):
+              a4_table, a5_table, a6_table, ge_table, ges_table,
+              ifile=None, comment=None) -> None:
+        ncards = len(material_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.material_id):
             raise RuntimeError(f'stacking of {self.type} is not supported')
             #material_id = np.hstack([self.material_id, material_id])
             #E = np.hstack([self.E, E])
-
+        save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.g11_table = g11_table
         self.g12_table = g12_table

@@ -229,11 +229,13 @@ class CBEAM(Element):
         wb = np.zeros((ncards, 3), dtype='float64')
         sa = np.zeros(ncards, dtype='int32')
         sb = np.zeros(ncards, dtype='int32')
-
+        comment = {}
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, g0i, xi, offti, [pai, pbi],
-             wai, wbi, sai, sbi, ifilei, comment) = card
+             wai, wbi, sai, sbi, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -1328,7 +1330,7 @@ class PBEAM(Property):
         n2a = np.zeros(ncards, dtype='float64')
         n1b = np.zeros(ncards, dtype='float64')
         n2b = np.zeros(ncards, dtype='float64')
-
+        comment = {}
         for icard, card in enumerate(self.cards):
             (pid, mid,
              xxbi, soi, areai, ji, i1i, i2i, i12i, nsmi,
@@ -1382,6 +1384,8 @@ class PBEAM(Property):
 
             nstationi = len(xxbi)
             ifile[icard] = ifilei
+            if commenti:
+                comment[pid] = commenti
             property_id[icard] = pid
             material_id[icard] = mid
             nstation[icard] = nstationi

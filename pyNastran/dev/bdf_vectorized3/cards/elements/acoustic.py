@@ -71,9 +71,12 @@ class CHACBR(SolidElement):
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 20), dtype=idtype)
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, ifilei, comment) = card
+            (eid, pid, nids, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
