@@ -142,6 +142,8 @@ class AECOMP(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             namei, list_typei, listsi, ifilei, commenti = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[namei] = commenti
             name[icard] = namei
             list_type[icard] = list_typei
             nlists[icard] = len(listsi)
@@ -300,6 +302,8 @@ class AECOMPL(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             namei, labelsi, ifilei, commenti = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[namei] = commenti
             name[icard] = namei
             nlabels[icard] = len(labelsi)
             all_labels.extend(labelsi)
@@ -540,6 +544,8 @@ class CAERO1(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             eid, pid, igroupi, p1i, x12i, p4i, x43i, cpi, nspani, lspani, nchordi, lchordi, ifilei, commenti = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             element_id[icard] = eid
             property_id[icard] = pid
             igroup[icard] = igroupi
@@ -1072,11 +1078,13 @@ class CAERO2(VectorizedBaseCard):
         nint = np.zeros(ncards, dtype='int32')
         lsb = np.zeros(ncards, dtype='int32')
         lint = np.zeros(ncards, dtype='int32')
-        commet = {}
+        comment = {}
         for icard, card in enumerate(self.cards):
             (eid, pid, igroupi, p1i, x12i,
              cpi, nsbi, ninti, lsbi, linti, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             element_id[icard] = eid
             property_id[icard] = pid
             igroup[icard] = igroupi
@@ -1456,6 +1464,8 @@ class CAERO3(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             eid, pid, p1i, x12i, p4i, x43i, cpi, list_wi, list_c1i, list_c2i, ifilei, commenti = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             element_id[icard] = eid
             property_id[icard] = pid
             p1[icard, :] = p1i
@@ -1832,6 +1842,8 @@ class CAERO4(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             eid, pid, p1i, x12i, p4i, x43i, cpi, nspani, lspani, ifilei, commenti = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             element_id[icard] = eid
             property_id[icard] = pid
             p1[icard, :] = p1i
@@ -2236,6 +2248,8 @@ class CAERO5(VectorizedBaseCard):
             (eid, pid, p1i, x12i, p4i, x43i, cpi, nspani, lspani, ntheoryi, nthicki,
              ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             element_id[icard] = eid
             property_id[icard] = pid
             p1[icard, :] = p1i
@@ -2524,6 +2538,8 @@ class CAERO7(VectorizedBaseCard):
              p_airfoili, ztaici, ifilei, commenti) = card
             assert len(labeli) <= 8, f'label={labeli!r}'
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             element_id[icard] = eid
             label[icard] = labeli
             p1[icard, :] = p1i
@@ -2948,6 +2964,8 @@ class PAERO1(PAERO):
                 continue
             ncardsi = len(caero_body_idsi)
             ifile[icard] = ifilei
+            if commenti:
+                comment[pid] = commenti
             property_id[icard] = pid
             if ncardsi == 0:
                 continue
@@ -3155,6 +3173,8 @@ class PAERO2(PAERO):
             (pid, orienti, widthi, AR, thii, thni,
              lrsbi, lribi, lthi, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[pid] = commenti
             property_id[icard] = pid
             aspect_ratio[icard] = AR
             width[icard] = widthi
@@ -3593,6 +3613,8 @@ class PAERO4(PAERO):
             (pid, docsi, caocsi, gapocsi,
              clai, lclai, circi, lcirci, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[pid] = commenti
             property_id[icard] = pid
 
             ndoci = len(docs)
@@ -4167,6 +4189,8 @@ class AELINK(VectorizedBaseCard):
             if aelink_idi == 'ALWAYS':
                 aelink_idi = 0
             ifile[icard] = ifilei
+            if commenti:
+                comment[aelink_idi] = commenti
             aelink_id[icard] = aelink_idi
             label[icard] = labeli
             independent_labels.extend(independent_labelsi)
@@ -4334,6 +4358,8 @@ class AEFACT(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             sid, fractions, ifilei, commenti = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[sid] = commenti
             aefact_id[icard] = sid
             nfractions[icard] = len(fractions)
             all_fractions.extend(fractions)
@@ -4506,6 +4532,8 @@ class FLFACT(VectorizedBaseCard):
             sid, factors, ifilei, commenti = card
             factors = expand_thru(factors, set_fields=False, sort_fields=False)
             ifile[icard] = ifilei
+            if commenti:
+                comment[sid] = commenti
             flfact_id[icard] = sid
             nfactors[icard] = len(factors)
             all_factors.extend(factors)
@@ -4700,6 +4728,8 @@ class SPLINE1(VectorizedBaseCard):
             (eid, caero, box1, box2, setg, dzi, methodi, usagei,
                 nelementi, melementi, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             spline_id[icard] = eid
             caero_id[icard] = caero
             box_id[icard, :] = [box1, box2]
@@ -4980,6 +5010,8 @@ class SPLINE2(VectorizedBaseCard):
             (eid, caero, box1, box2, setg, dzi, dtori, cid,
                 dthxi, dthyi, usagei, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             spline_id[icard] = eid
             caero_id[icard] = caero
             coord_id[icard] = cid
@@ -5271,6 +5303,8 @@ class SPLINE3(VectorizedBaseCard):
                 nodesi, displacement_componentsi,
                 coeffsi, usagei, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             spline_id[icard] = eid
             caero_id[icard] = caero
             box_id[icard] = box_idi
@@ -5572,6 +5606,8 @@ class SPLINE4(VectorizedBaseCard):
                 nelementi, melementi, ftypei, rcorei,
                 ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             spline_id[icard] = eid
             caero_id[icard] = caero
             aelist_id[icard] = aelist
@@ -5786,6 +5822,8 @@ class SPLINE5(VectorizedBaseCard):
             (eid, caero, aelist, setg, thxi, thyi, dzi, dtori, cidi,
              usagei, methodi, ftypei, rcorei, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[eid] = commenti
             spline_id[icard] = eid
             caero_id[icard] = caero
             aelist_id[icard] = aelist
@@ -5986,10 +6024,12 @@ class GUST(VectorizedBaseCard):
         wg = np.zeros(ncards, dtype='float64')
         x0 = np.zeros(ncards, dtype='float64')
         V = np.zeros(ncards, dtype='float64')
-
+        comment = {}
         for icard, card in enumerate(self.cards):
             (gust_idi, dloadi, wgi, x0i, Vi, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[gust_idi] = commenti
             gust_id[icard] = gust_idi
             dload_id[icard] = dloadi
             wg[icard] = wgi
@@ -6214,6 +6254,8 @@ class FLUTTER(VectorizedBaseCard):
             if omaxi is None:
                 omaxi = 0
             ifile[icard] = ifilei
+            if commenti:
+                comment[flutter_idi] = commenti
             flutter_id[icard] = flutter_idi
             method[icard] = methodi
             imethod[icard] = imethodi
@@ -6402,6 +6444,8 @@ class AESTAT(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             (aestat_idi, labeli, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[aestat_idi] = commenti
             aestat_id[icard] = aestat_idi
             label[icard] = labeli
         self._save(aestat_id, label,
@@ -6522,10 +6566,12 @@ class AEPARM(VectorizedBaseCard):
         aeparm_id = np.zeros(ncards, dtype='int32')
         label = np.zeros(ncards, dtype='|U8')
         units = np.zeros(ncards, dtype='|U8')
-
+        comment = {}
         for icard, card in enumerate(self.cards):
             (aeparm_idi, labeli, unitsi, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[aeparm_idi] = commenti
             aeparm_id[icard] = aeparm_idi
             label[icard] = labeli
             units[icard] = unitsi
@@ -6729,6 +6775,8 @@ class AESURF(VectorizedBaseCard):
              refci, refsi, pllimi, pulimi, hmllimi, hmulimi,
              tqllimi, tqulimi, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[aesurf_idi] = commenti
             aesurf_id[icard] = aesurf_idi
             label[icard] = labeli
             coord_id[icard, :] = [cid1i, cid2i]
@@ -6972,6 +7020,8 @@ class AESURFS(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             (aesurfs_idi, labeli, list1i, list2i, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[aesurfs_idi] = commenti
             aesurfs_id[icard] = aesurfs_idi
             label[icard] = labeli
             list1_id[icard] = list1i
@@ -7136,6 +7186,8 @@ class CSSCHD(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             (sid, aesurf_idi, lalphai, lmachi, lschdi, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[sid] = commenti
             csschd_id[icard] = sid
             aesurf_id[icard] = aesurf_idi
             lalpha[icard] = lalphai
@@ -7336,6 +7388,8 @@ class DIVERG(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             (sid, nrootsi, machsi, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[sid] = commenti
             diverg_id[icard] = sid
             nroots[icard] = nrootsi
             nmach[icard] = len(machsi)
@@ -7568,6 +7622,8 @@ class TRIM(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             (sid, machi, qi, labelsi, uxsi, aeqri, ifilei, commenti) = card
             ifile[icard] = ifilei
+            if commenti:
+                comment[sid] = commenti
             trim_id[icard] = sid
             mach[icard] = machi
             q[icard] = qi

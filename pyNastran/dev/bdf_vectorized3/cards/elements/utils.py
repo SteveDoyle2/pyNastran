@@ -85,6 +85,42 @@ def get_mass_from_property(property_id: np.ndarray,
         mass[i_lookup] = prop_mass[i_all]
     return mass
 
+def get_material_id_from_property(property_id: np.ndarray,
+                                  allowed_properties: list[Any],
+                                  material_filter: np.ndarray) -> np.ndarray:
+    assert len(allowed_properties) > 0, allowed_properties
+    nproperties = len(property_id)
+    mids_list = []
+    for prop in allowed_properties:
+        i_lookup, i_all = searchsorted_filter(prop.property_id, property_id)
+        if len(i_all) == 0:
+            continue
+
+        if hasattr(prop, 'material_id'):
+            is_in = np.isin(prop.material_id, material_filter)
+            if len(prop.property_id) == len(prop.material_id):
+                if np.any(is_in):
+                    mids_list.append(prop.material_id)
+            #else:
+                # PCOMP
+                #is_in =
+                #mids_list.append(prop.material_id)
+        elif hasattr(prop, 'material_ids'):
+            if len(prop.property_id) == len(prop.material_ids):
+                is_ins = np.isin(prop.material_ids, material_filter)
+                is_in = np.any(is_ins, axis=1)
+                mids_list.append(is_in)
+            #else:
+                #???
+        else:
+            print('get_material_id_from_property', prop.type)
+            #pass
+    if len(mids_list):
+        mids = np.hstack(mids_list)
+    else:
+        mids = np.ones(nproperties, dtype='bool')
+    return mids
+
 def basic_mass_material_id(property_id: np.ndarray,
                            allowed_properties: list[Any], msg: str='') -> np.ndarray:
     """Intended for elements that can only have a single material id"""

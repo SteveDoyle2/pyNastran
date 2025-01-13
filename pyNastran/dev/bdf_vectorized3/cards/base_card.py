@@ -623,6 +623,113 @@ class Element(VectorizedBaseCard):
         is_removed = False
         return is_removed, element
 
+    def filter(self,
+               ifile_filter: np.ndarray,
+               property_filter: np.ndarray,
+               material_filter: np.ndarray) -> tuple[bool, Any]:
+        """filers """
+        log = self.model.log
+        element = self
+        if len(ifile_filter) == 0 or len(property_filter) == 0 or len(material_filter) == 0:
+            is_removed = False
+            return is_removed, element
+
+        is_removed = True
+        nelement = element.n
+
+        is_in_file = np.isin(element.ifile, ifile_filter)
+        is_ins = [is_in_file]
+        if hasattr(element, 'property_id'):
+            log.debug(f'property_id')
+            property_id = element.property_id
+            #upids = np.unique(property_id)
+            is_in_prop = np.isin(element.property_id, property_filter)
+            if not np.all(is_in_prop):
+                log.debug(f'  all')
+            elif not np.all(is_in_prop):
+                log.debug(f'  adding')
+                is_ins.append(is_in_prop)
+            else:
+                log.debug(f'  else...n={is_in_prop.sum()}/{self.n}')
+
+
+        if hasattr(element, 'material_id'):
+            log.debug(f'material_id')
+            is_in_mat = np.isin(element.material_id, material_filter)
+            if not np.all(is_in_mat):
+                log.debug(f'  all')
+            elif not np.all(is_in_mat):
+                log.debug(f'  adding')
+                is_ins.append(is_in_mat)
+            else:
+                log.debug(f'  else...n={is_in_mat.sum()}/{self.n}')
+        else:
+            if -1 not in material_filter:  # PSHELLs
+                material_filter_ = np.hstack([-1], material_filter)
+            #is_in_mat = get_material_ids_from_property(
+                #self.property_id, self.allowed_materials,
+                #material_filter)
+            is_in_mat = np.any(is_in_mats, axis=1)
+            assert len(is_in_mat) == nelement, len(is_in_mat)
+            if not np.all(is_in_mat):
+                log.debug(f'  all')
+            elif not np.all(is_in_mat):
+                log.debug(f'  adding')
+                is_ins.append(is_in_mat)
+            else:
+                log.debug(f'  else...n={is_in_mat.sum()}/{self.n}')
+
+        log.debug(f'n is_ins={len(is_ins)}')
+        if len(is_ins) == 0:
+            is_removed = True
+            return is_removed, element
+        elif len(is_ins) == 1:
+            is_in = is_ins[0]
+        elif len(is_ins) == 2:
+            is_in = is_ins[0] & is_ins[1]
+        elif len(is_ins) == 3:
+            is_in = is_ins[0] & is_ins[1] & is_ins[2]
+        else:  # pragma: no cover
+            #is_in = np.logical_and(*is_ins)
+            raise RuntimeError(len(is_ins))
+
+        assert len(is_in) == nelement, len(is_in)
+        #print(f'prop is_in = {is_in.tolist()}')
+        if not np.any(is_in):
+            log.error(f'skipping {element.type} because it is empty after filtering; '
+                      f'property_ids={upids}')
+            return is_removed, element
+
+        is_removed = False
+        if np.all(is_in):
+            # keep all elements
+            return is_removed, element
+
+        nexpected = is_in.sum()
+        #print(f'is_in = {is_in.tolist()}')
+        assert len(is_in) == nelement
+        # assert False not in is_in, is_in
+        for pid, flag in zip(element.property_id, is_in):
+            is_in2 = pid in property_filter
+            assert flag == is_in2, (pid, flag, is_in2)
+        index = np.arange(len(is_in), dtype='int32')[is_in]
+        #print('pid', element.property_id[is_in])
+        #print('upid', np.unique(element.property_id[is_in]))
+        #print('slicing...')
+        element2 = element.slice_card_by_index(index)
+        #print('back from slice')
+        assert element2.n <= element.n, element2.n
+        #print(f'check n; {element.type}; nexpected={nexpected} n={element2.n}')
+        #print('setting...')
+        element = element2
+        # assert element.n == element.n
+        # nelement = element2.n
+        # assert element == element2
+        # del element2, index
+        # print(element.write())
+        # assert element.element_id[0] != element.element_id[1]
+        return is_removed, element
+
     def filter_by_property_filter(self,
                                   property_filter: np.ndarray) -> tuple[bool, Any]:
         """property filter is inclusive"""
@@ -649,7 +756,6 @@ class Element(VectorizedBaseCard):
         is_removed = False
         if np.all(is_in):
             # keep all elements
-            log.info(f'keep all {element.type} elements')
             return is_removed, element
 
         nexpected = is_in.sum()

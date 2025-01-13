@@ -60,10 +60,10 @@ class Nastran3:
         self.data_map = None
         self.save_results_model = False
 
+        # filters
+        self.etypes_filter = {} # TODO: doesn't work
         # TODO: only affects elements
         self.ifile_filter = np.array([], dtype='int32')
-
-        # filters
         self.properties_filter = np.array([], dtype='int32')
 
         # TODO: does nothing
@@ -358,10 +358,12 @@ class Nastran3:
         # add alternate actors
         gui._add_alt_actors(gui.alt_grids)
 
-        etypes, element_id, property_id, element_cards, gui_elements, card_index = load_elements(
-            self.ifile_filter, self.properties_filter,
+        out = load_elements(
+            self.etypes_filter, self.ifile_filter,
+            self.properties_filter, self.materials_filter,
             ugrid, model, node_id,
             self.include_mass_in_geometry)
+        etypes, element_id, property_id, element_cards, gui_elements, card_index = out
         self.element_types = etypes
         self.element_id = element_id
         self.element_cards = element_cards
@@ -496,8 +498,10 @@ class Nastran3:
         #x = 1
 
 
-def load_elements(ifile_filter: np.ndarray,
+def load_elements(etypes_filter: set[str],
+                  ifile_filter: np.ndarray,
                   properties_filter: np.ndarray,
+                  materials_filter: np.ndarray,
                   ugrid: vtkUnstructuredGrid,
                   model: BDF,
                   grid_id: np.ndarray,
@@ -555,26 +559,40 @@ def load_elements(ifile_filter: np.ndarray,
     nelement0 = 0
     card_index = {}
     element_cards = [card for card in model.element_cards if card.n]
-    log.warning(f'ifile_filter = {ifile_filter}')
-    log.warning(f'properties_filter = {properties_filter}')
+    etypes_filter_list = list(etypes_filter)
+    etypes_filter_list.sort()
+    if len(etypes_filter_list):
+        log.debug('filters:\n'
+                  f'  etypes_filter = {etypes_filter_list}'
+                  f'  ifile_filter = {ifile_filter}\n'
+                  f'  properties_filter = {properties_filter}\n'
+                  f'  materials_filter = {materials_filter}\n')
     for element in element_cards:
-        #nelement = element.n
-        #print('element')
         etype = element.type
-        # is_removed, element = element.filter_by_ifile_filter(ifile_filter)
-        # if is_removed:
-        #     log.warning(f'skipping {etype} due to ifile_filter')
-        #     continue
-        is_removed, element = element.filter_by_property_filter(properties_filter)
+        is_removed = len(etypes_filter) and etype not in etypes_filter
         if is_removed:
+            log.warning(
+            f'\netype={etype!r} etypes_filter={etypes_filter}\n'
+            f'  len(etypes_filter)={len(etypes_filter)}\n'
+            f'  etype not in etypes_filter={etype not in etypes_filter}')
+            log.warning(f'skipping {etype}')
+            continue
+
+        is_removed, element = element.filter_by_ifile_filter(ifile_filter)
+        if is_removed:
+            log.warning(f'skipping {etype} due to ifile_filter')
+            continue
+        #is_removed, element = element.filter(
+            #ifile_filter, properties_filter, materials_filter)
+        is_removed, element = element.filter_by_property_filter(
+             properties_filter)
+        if is_removed:
+            #log.warning(f'skipping {etype} due to ifile/prop/mat filter')
             log.warning(f'skipping {etype} due to property_filter')
             continue
         nelement = element.n
         #log.info(f'working on {etype} with nelement={nelement}')
-        #if hasattr(element, 'property_id'):
-            #log.info(f' pids = {np.unique(element.property_id)}')
 
-        #print('load', etype, nelement, element.element_id)
         if etype in basic_elements:
             #log.debug('  basic')
             # basic elements
@@ -603,16 +621,6 @@ def load_elements(ifile_filter: np.ndarray,
             nodesi = element.nodes
 
             if 0:  # pragma: no cover
-                pids_to_filter = [2, 70, 71,
-                                  60, 61, # skin
-
-                                  # spar
-                                  4, 5, 6, 7, 8, 9,
-                                  10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-                                  20, 21, 22, 13, 24, 25, 26, 27, 28, 29,
-                                  30, 31, 32, 13, 34, 35, 36, 37, 38, 39,
-                                  #901,  # cb
-                                  222]  # ribs
                 pids_to_filter = []
                 i = filter_property_ids(etype, property_id, pids_to_filter, log)
                 #nelement = len(i)
@@ -850,6 +858,7 @@ def gui_material_ids(model: BDF,
     #shells = [card for card in model.shell_element_cards if card.n > 0]
     idtype = element_ids.dtype
     fdtype = model.fdtype
+    log = model.log
 
     materials_dict = {}
     neid = len(element_ids)
@@ -976,7 +985,7 @@ def gui_material_ids(model: BDF,
                 #if base_flag == 'Shell':
                     #del material_id
             del material_dicti
-            print(f'finished {etype} {flag}')
+            log.debug(f'finished {etype} {flag}')
 
     #materials_dict2 = {}
     #for flag, material_dict in materials_dict.items():

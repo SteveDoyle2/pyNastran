@@ -154,17 +154,18 @@ def create_alt_conm2_grids(gui: MainWindow,
     nastran_settings: NastranSettings = gui.settings.nastran_settings
     if not nastran_settings.is_mass:
         return
+    log = model.log
     try:
         mass_total, cg, inertia = model.inertia_sum()
     except Exception as e:
-        model.log.error(f'cannot build mass actors\n{str(e)}')
+        log.error(f'cannot build mass actors\n{str(e)}')
         #raise
         mass_total = 0.
 
     if mass_total != 0.0:
         name = f'CG mass={mass_total:g} xyz=[{cg[0]:g}, {cg[0]:g}, {cg[2]:g}]'
-        print(f'mass = {mass_total:g}')
-        print(f'cg = {cg}')
+        log.info(f'mass = {mass_total:g}')
+        log.info(f'cg = {cg}')
         #print('inertia =', inertia)
         _build_dot(gui, name, cg)
 
