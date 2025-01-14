@@ -518,6 +518,7 @@ class GRID(VectorizedBaseCard):
         return grid
 
     def __apply_slice__(self, grid: GRID, i: np.ndarray) -> None:
+        assert grid.n <= i.max(), 'GRID.n <=i.max()'
         self._slice_comment(grid, i)
 
         grid.n = len(i)

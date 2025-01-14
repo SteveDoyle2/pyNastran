@@ -301,6 +301,7 @@ class Nastran3:
         else:
             model = BDF(debug=True, log=log, mode='msc')
             model.is_strict_card_parser = False
+            model.allow_overwrites_set = {'GRID', 'CONM2'}
             model.idtype = 'int64'
             model.read_bdf(bdf_filename)
 

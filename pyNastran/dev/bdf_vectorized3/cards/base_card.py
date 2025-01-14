@@ -156,6 +156,8 @@ class VectorizedBaseCard:
         #new_ids = self.node_id[i]
         try:
             # intersect the ids we're slicing with the existing ones
+            if not i.max() <= self._ids.max():
+                raise RuntimeError(f'_slice_comment: i={i}; _ids={self._ids}')
             new_ids = self._ids[i]
             common_ids = np.intersect1d(list(self.comment.keys()), new_ids)
             new_obj.comment = {nid: self.comment[nid] for nid in common_ids}
@@ -1009,6 +1011,15 @@ def sort_duplicates(card: VectorizedBaseCard) -> None:
     uids_sorted = np.unique(ids_sorted)
 
     if not np.array_equal(uarg, iarg) or len(ids) != len(uids_sorted):
+        print(f'card.type = {card.type}')
+        model = card.model
+        if card.type in model.allow_overwrites_set:
+            #isort = np.searchsorted(ids_sorted, uarg)
+            model.log.warning('picking lower indicies (first added to model)')
+            card.__apply_slice__(card, uids_sorted)
+            card._is_sorted = True
+            return
+
         # we have duplicate/unsorted nodes
         #
         #print(iarg.tolist())
