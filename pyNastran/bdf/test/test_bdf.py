@@ -444,6 +444,8 @@ def run_and_compare_fems(
     if is_lax_parser:
         fem1.log.warning('using lax card parser')
         fem1.is_strict_card_parser = False
+        fem1.allow_overwrites_set = {'GRID', 'CONM2'}
+        fem1._make_card_parser()
     #fem1.use_new_deck_parser = True
     if version:
         map_version(fem1, version)

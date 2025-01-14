@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 import sys
 from copy import deepcopy
+from functools import partial
 from collections import Counter
 from io import StringIO, IOBase
 from pathlib import PurePath
@@ -620,6 +621,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # True:  relax strictness on card parser
         # False: use strict parser (default)
         self.is_strict_card_parser = True
+
+        # set of result types that overwrites work on
+        self.allow_overwrites_set: set[str] = set([])
 
         # lines that were rejected b/c they were for a card that isn't supported
         self.reject_lines: list[list[str]] = []
@@ -2241,7 +2245,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'RADBND' : (Crash, None),
 
             # nodes
-            'GRID' : (GRID, add_methods._add_node_object),
+            'GRID': (GRID, partial(add_methods._add_node_object, allow_overwrites='GRID' in self.allow_overwrites_set)),
             'SPOINT' : (SPOINTs, add_methods._add_spoint_object),
             'EPOINT' : (EPOINTs, add_methods._add_epoint_object),
             'RINGAX' : (RINGAX, add_methods._add_ringax_object),
@@ -2441,11 +2445,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'NSM1' : (NSM1, add_methods._add_nsm_object),
             'NSML1' : (NSML1, add_methods._add_nsm_object),
 
-            'CONM1' : (CONM1, add_methods._add_mass_object),
-            'CONM2' : (CONM2, add_methods._add_mass_object),
-            'CMASS1' : (CMASS1, add_methods._add_mass_object),
-            'CMASS2' : (CMASS2, add_methods._add_mass_object),
-            'CMASS3' : (CMASS3, add_methods._add_mass_object),
+            'CONM1': (CONM1, partial(add_methods._add_mass_object, allow_overwrites='CONM1' in self.allow_overwrites_set)),
+            'CONM2': (CONM2, partial(add_methods._add_mass_object, allow_overwrites='CONM2' in self.allow_overwrites_set)),
+            'CMASS1': (CMASS1, partial(add_methods._add_mass_object, allow_overwrites='CMASS1' in self.allow_overwrites_set)),
+            'CMASS2': (CMASS2, partial(add_methods._add_mass_object, allow_overwrites='CMASS2' in self.allow_overwrites_set)),
+            'CMASS3': (CMASS3, partial(add_methods._add_mass_object, allow_overwrites='CMASS3' in self.allow_overwrites_set)),
             # CMASS4 - added later because documentation is wrong
 
             'MPC' : (MPC, add_methods._add_constraint_mpc_object),

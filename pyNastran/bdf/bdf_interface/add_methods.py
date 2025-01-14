@@ -246,7 +246,6 @@ class AddMethods:
         """adds a GRID card"""
         key = node.nid
         model = self.model
-        #allow_overwrites = True
 
         assert key > 0, 'nid=%s node=%s' % (key, node)
         if key not in model.nodes:
@@ -434,15 +433,36 @@ class AddMethods:
                             allow_overwrites: bool=False) -> None:
         key = elem.eid
         model = self.model
-        assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
-        if key in model.elements and not allow_overwrites:
-            if not elem == model.elements[key]:
-                model._duplicate_elements.append(elem)
-                if model._stop_on_duplicate_error:
-                    model.pop_parse_errors()
-        else:
+        assert key > 0, 'eid=%s elem=%s' % (key, elem)
+        if key not in model.elements:
             model.elements[key] = elem
             model._type_to_id_map[elem.type].append(key)
+        elif elem == model.elements[key]:
+            pass
+        elif allow_overwrites:
+            model.log.warning(f'replacing elements:\n{model.elements[key]}with:\n{elem}')
+            model.elements[key] = elem
+
+            # already handled
+            #model._type_to_id_map[elem.type].append(key)
+        else:
+            model._duplicate_elements.append(elem)
+            if model._stop_on_duplicate_error:
+                model.pop_parse_errors()
+            #raise RuntimeError('eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, model.elements[key], elem))
+
+        if 0:  # pragma: no cover
+            key = elem.eid
+            model = self.model
+            assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
+            if key in model.elements and not allow_overwrites:
+                if not elem == model.elements[key]:
+                    model._duplicate_elements.append(elem)
+                    if model._stop_on_duplicate_error:
+                        model.pop_parse_errors()
+            else:
+                model.elements[key] = elem
+                model._type_to_id_map[elem.type].append(key)
 
     def _add_ao_object(self, elem_flag: CBARAO,
                        allow_overwrites: bool=False) -> None:

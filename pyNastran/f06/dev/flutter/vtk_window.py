@@ -564,7 +564,7 @@ class VtkWindow(QMainWindow):
         text0 = item.text()
         #print(f'text0 = {text0}')
         is_checked = (item.checkState() == Qt.Checked)
-        3print(f'is_checked = {is_checked}')
+        #print(f'is_checked = {is_checked}')
         if 1:
             selected_texts = [item.text()]
         else:

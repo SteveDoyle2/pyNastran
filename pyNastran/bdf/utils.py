@@ -35,7 +35,7 @@ def split_comment_to_femap_comment(comment: str) -> tuple[bool, str, tuple[str, 
         return False, comment, ('', -1, '')
 
     lines = comment.split('\n')
-    lines = [line.rstrip('$\t\n\r ') for line in lines if line.rstrip('$\t\n\r ')]
+    lines = [line.rstrip('$\t\n\r ') for line in lines if line.rstrip('$\t\n\r ') and ':' in line]
     if len(lines) == 1:
         line = lines[0]
         word, idi, name = _femap_comment_to_sline(line)
