@@ -730,7 +730,17 @@ vtk_imports_all = [  # 9.3
     'vtkmodules.vtkRenderingVolume', 'vtkmodules.vtkRenderingVolumeAMR', 'vtkmodules.vtkRenderingVolumeOpenGL2',
     'vtkmodules.vtkRenderingVtkJS', 'vtkmodules.vtkTestingRendering', 'vtkmodules.vtkViewsContext2D',
     'vtkmodules.vtkViewsCore', 'vtkmodules.vtkViewsInfovis', 'vtkmodules.vtkWebCore', 'vtkmodules.vtkWebGLExporter',
+    # tested - 9.4.1
+    # Unable to find a valid OpenGL 3.2 or later implementation
+    'vtkmodules.util.data_model', 'vtkmodules.util.execution_model',
 ]
+
+import vtk
+vtk_version_str = vtk.VTK_VERSION
+print(f'vtk_version_str = {vtk.VTK_VERSION!r}') # '9.3.1'
+
+if vtk_version_str >= '9.4.0':
+    raise RuntimeError('use vtk<9.4')
 
 # can we get rid of scipy.optimize?
 hiddenimports = [
