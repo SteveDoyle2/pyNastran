@@ -8,6 +8,15 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
 class TestCoords(unittest.TestCase):
+    def test_grid_repeated(self):
+        model = BDF(debug=False, log=None, mode='msc')
+        model.allow_overwrites_set = {'GRID'}
+        model._make_card_parser()
+        model.add_grid(1, [0., 0., 0.], comment='a')
+        model.add_grid(2, [1., 0., 0.], comment='')
+        model.add_grid(1, [2., 0., 0.], comment='a')
+        model.parse_cards()
+
     def test_ricoord(self):
         model = BDF(debug=False, log=None, mode='msc')
         fields = ['CORD1R', '1', '1', '101', '2']

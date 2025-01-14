@@ -1022,7 +1022,17 @@ def sort_duplicates(card: VectorizedBaseCard) -> None:
             #assert (iarg - uarg).sum() == 0, (iarg - uarg).sum()
 
         is_duplicate_ids = (len(ids_sorted) != len(uids_sorted))
-        if is_duplicate_ids:
+        model = card.model
+        if is_duplicate_ids and card.type in model.allow_overwrites_set:
+            #print(f'ids_sorted = {ids_sorted}')
+            #print(f'uids_sorted = {uids_sorted}')
+            idx = np.searchsorted(ids_sorted, uids_sorted, side='right') - 1
+            assert np.array_equal(ids_sorted[idx], uids_sorted)
+            #print(f'idx = {idx}')
+            card.__apply_slice__(card, idx)
+            # card._is_sorted = True
+            # return
+        elif is_duplicate_ids:
             # Now that we've sorted the ids, we'll take the delta id with the next id.
             # We check the two neighoring values when there is a duplicate,
             # so if they're they same in xyz, cp, cd, etc., the results are the same
