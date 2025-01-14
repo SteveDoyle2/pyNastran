@@ -79,7 +79,7 @@ else:
 
 class FlutterGui(LoggableGui):
     def __init__(self, f06_filename: str=''):
-        super().__init__(html_logging=True)
+        super().__init__(html_logging=False)
 
         self._export_settings_obj = PreferencesObject(self)
         self._vtk_window_obj = VtkWindowObject(self, ICON_PATH)
@@ -1001,7 +1001,6 @@ class FlutterGui(LoggableGui):
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock_widget)
             vbox2 = vbox
         else:
-            asf
             #self.log_dock_widget.hide()
             vbox2 = QHBoxLayout()
             vbox2.addWidget(self.modes_widget)

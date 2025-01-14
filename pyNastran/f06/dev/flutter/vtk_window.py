@@ -113,6 +113,7 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points)
 from pyNastran.gui.utils.vtk.gui_utils import numpy_array_to_vtk_array
+from vtkmodules.vtkRenderingCore import vtkCellPicker  # , vtkPointPicker, vtkAreaPicker, vtkDataSetMapper
 
 import pyNastran
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
@@ -452,7 +453,16 @@ class VtkWindow(QMainWindow):
                    op2_filename: PathLike='') -> None:
         """creates result_cases"""
         bdf_filename = str(bdf_filename)
+        op2_filename = str(op2_filename)
+        if op2_filename == '.':
+            op2_filename = ''
+
         log = self.gui.log
+        log.debug('checking bdf')
+        assert os.path.exists(bdf_filename), bdf_filename
+        if len(op2_filename):
+            log.debug('checking op2')
+            assert os.path.exists(bdf_filename), bdf_filename
 
         self.analysis = Nastran3(self)
         self.analysis.save_results_model = True
@@ -467,6 +477,7 @@ class VtkWindow(QMainWindow):
         # for key, (case, case_tag) in self.result_cases.items():
         #     print(case_tag)
 
+        log.debug(f'op2_filename={op2_filename}; load_results={self.load_results}')
         self.op2_filename = None
         if not self.load_results:
             return
@@ -515,12 +526,13 @@ class VtkWindow(QMainWindow):
             if card.n == 0:
                 continue
             if not len(card.ifile) == card.n:
-                self.gui.log_warning(f'{card.type} ifile not created')
+                model.log.warning(f'{card.type} ifile not created')
         self.ifile_name_dict = get_ifile_name_dict(
             self.analysis.model)
         #fill_table_tree(self.table_tree, self.ifile_name_dict)
 
         #tree = self.tree
+        log = model.log
         etypes, element_types, etype_to_n = get_element_table(model)
         pids, properties, pid_to_type_name = get_property_table(model)
         mids, materials, mid_to_type_name = get_material_table(model)
@@ -663,7 +675,6 @@ class VtkWindow(QMainWindow):
 
     def setup_pick(self):
         # Create a picker
-        from vtkmodules.vtkRenderingCore import vtkCellPicker #, vtkPointPicker, vtkAreaPicker, vtkDataSetMapper
         picker = vtkCellPicker()
         # Add the observer for the picking event
         # def on_pick(self):
@@ -739,6 +750,7 @@ class VtkWindow(QMainWindow):
         bdf_filename = str(bdf_filename)
         obj_filename = bdf_filename + '.obj'
         bdf_filename_lower = bdf_filename.lower()
+        log.info(f'bdf_filename = {bdf_filename!r}; use_obj_file={use_obj_file}')
         #if use_obj_file and os.path.exists(obj_filename):
             #log.info(f'loading obj {obj_filename}')
             #model = read_obj(obj_filename)
@@ -788,9 +800,11 @@ class VtkWindow(QMainWindow):
     def _reload_results(self, op2_filename, log):
         # creates result_cases
         log.level = 'info'
-        get_element_table(self.model)
-        get_property_table(self.model)
-        get_material_table(self.model)
+        if not hasattr(self, 'model'):
+            log.error('missing model...')
+        get_element_table(self.analysis_model)
+        get_property_table(self.analysis_model)
+        get_material_table(self.analysis_model)
         self.analysis.load_nastran3_results(op2_filename)
         log.level = 'debug'
         for key, (case, case_tag) in self.result_cases.items():
@@ -882,7 +896,9 @@ class VtkWindow(QMainWindow):
         return []
     def _finish_results_io2(self, name: str, form: list,
                             cases: dict[int, Any]):
+        log = self.gui.log
         for i, (case, i_name) in cases.items():
+            #log.info(str(i_name))
             if len(i_name) == 2:
                 i, name = i_name
                 if name == 'ElementID':
@@ -890,6 +906,7 @@ class VtkWindow(QMainWindow):
                 elif name == 'PropertyID':
                     self.property_id = case.get_fringe_result(*i_name)
             else:
+                log.error(str(case))
                 raise RuntimeError(i_name)
             #print(i_name)
 
