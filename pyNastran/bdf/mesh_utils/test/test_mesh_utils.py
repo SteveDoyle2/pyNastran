@@ -208,8 +208,8 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         model.add_paero1(pid)
         model.add_aero(velocity=0., cref=1.0, rho_ref=1.0)
         name = 'WKK'
-        form = 'rectangular'
-        tin = tout = 1
+        form = 'diagonal'
+        #tin = tout = 1
         # nrows = 8
         # ncols = 1
         # GCj = [1, 1, 1, 1, 1, 1, 1, 1]
@@ -233,13 +233,13 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         #               main structure will be pid=1
         #    'caero' : write the CAERO1 as the property id
         #    'paero' : write the PAERO1 as the property id
-        model = read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, debug=False)
         tin = tout = 'float32'
         nrows = 1
         GCj = [101]
         GCi = [1]
         Real = [np.radians(5.)]
-        model.add_dmi_w2gj(tin, tin, nrows, GCj, GCi, Real)
+        model.add_dmi_w2gj(tin, tout, nrows, GCj, GCi, Real)
         #print(model.caeros)
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_subpanels.bdf',
                 '--pid', 'aesurf', '--subpanels']

@@ -9098,12 +9098,16 @@ class AddCards(AddCoords, AddContact, AddBolts,
         elif str_form == 'rectangular':
             assert nrows >= 1
             assert ncols >= 1
+        elif str_form == 'diagonal':
+            assert nrows >= 1, (nrows, ncols)
+            assert ncols == 1, (nrows, ncols)
         else:  # pragma: no cover
             raise NotImplementedError(str_form)
 
         # ncols = 2
         GCi = np.repeat(list(range(1, nrows+1)), ncols, axis=0).reshape(nrows, ncols).flatten()
         GCj = np.repeat(list(range(1, ncols+1)), nrows, axis=0).reshape(nrows, ncols).flatten()
+        #self.log.warning(f'str_form = {str_form}')
         #self.log.warning(f'GCi = {GCi}')
         #self.log.warning(f'GCj = {GCj}')
 
