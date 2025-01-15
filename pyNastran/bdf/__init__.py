@@ -53,7 +53,7 @@ BULK_DATA_CARDS = {
     'CBUSH', 'CBUSH1D', 'CBUSH2D',
     # dampers
     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-    'CFAST',
+    'CFAST', 'CWELD',
 
     'CBAR', 'CBARAO', 'BAROR',
     'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND', 'BEAMOR',
@@ -78,7 +78,7 @@ BULK_DATA_CARDS = {
 
     ## properties
     'PMASS',
-    'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
+    'PELAS', 'PGAP', 'PFAST', 'PWELD', 'PLPLANE', 'PPLANE',
     'PBUSH', 'PBUSH1D',
     'PDAMP', 'PDAMP5',
     'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', 'PBEND',
@@ -312,7 +312,7 @@ BULK_DATA_CARDS = {
 
     ## ???
     'ACMODL', 'PANEL', 'SWLDPRM',
-    'CWELD', 'PWELD', 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
+    'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
     'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
     'BNDFIX', 'BNDFIX1',
     'AEFORCE', 'UXVEC', 'GUST2',

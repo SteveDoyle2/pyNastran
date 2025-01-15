@@ -54,9 +54,9 @@ from .bdf_interface.assign_type import (
 
 from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from .cards.elements.elements import (
-    CFAST, CGAP, CRAC2D, CRAC3D, GENEL,
+    CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL,
     PLOTEL, PLOTEL3, PLOTEL4, PLOTELs)
-from .cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
+from .cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
 from .cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
 from .cards.cyclic import CYAX, CYJOIN
 from .cards.msgmesh import CGEN
@@ -218,7 +218,7 @@ SolidElement = CTETRA4 | CTETRA10 | CPENTA6 | CPENTA15 | \
 
 Element = (
     SpringElement | DamperElement |
-    CVISC | CBUSH | CBUSH1D | CBUSH2D | CFAST | #CWELD
+    CVISC | CBUSH | CBUSH1D | CBUSH2D | CFAST | CWELD |
     CGAP | GENEL | CCONEAX |
     CROD | CTUBE | CONROD |
     CBAR | CBEAM | CBEAM3 | CBEND | CSHEAR |
@@ -246,7 +246,7 @@ Property = (
     PSHEAR | PPLANE |
     PSHELL | PCOMP | PCOMPG |
     PSOLID | PLSOLID | PIHEX | PCOMPS | PCOMPLS |
-    PTRSHL #| PWELD
+    PTRSHL | PWELD
 )
 Material = (
         MAT1 | MAT2 | MAT3 | MAT8 | MAT9 | MAT10 | MAT11 |
@@ -403,7 +403,6 @@ MISSING_CARDS = {
     'CSPOT', 'CFILLET',
     'CBUTT',
     'PCOHE',
-    'CWELD', 'PWELD',
 
     ## rigid_elements
     'RSPINT', 'RSPINR', 'RBE2GS',
@@ -668,7 +667,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CBUSH', 'CBUSH1D', 'CBUSH2D',
             # dampers
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-            'CFAST',
+            # fasteners
+            'CFAST', 'CWELD',
 
             'CBAR', 'CBARAO', 'BAROR',
             'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND', 'BEAMOR',
@@ -699,7 +699,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             ## properties
             'PMASS',
-            'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
+            'PELAS', 'PGAP', 'PFAST', 'PWELD', 'PLPLANE', 'PPLANE',
             'PBUSH', 'PBUSH1D', 'PBUSH2D',
             'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', 'PBEND',
@@ -951,7 +951,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CONVM',
             ## ???
             #'PANEL', 'SWLDPRM',
-            #'CWELD', 'PWELD',
             # 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP',
             #'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
             #'AEFORCE', 'UXVEC', 'GUST2',
@@ -2217,9 +2216,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'ROTORB' : (Crash, None),
 
             #'SWLDPRM' : (Crash, None),
-
-            #'CWELD' : (Crash, None),
-            #'PWELD' : (Crash, None),
             #'PWSEAM' : (Crash, None),
             #'CWSEAM' : (Crash, None),
             #'CSEAM' : (Crash, None),
@@ -2365,6 +2361,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'CFAST' : (CFAST, add_methods._add_damper_object),
             'PFAST' : (PFAST, add_methods._add_property_object),
+
+            'CWELD' : (CWELD, add_methods._add_damper_object),
+            'PWELD' : (PWELD, add_methods._add_property_object),
 
             'CGAP' : (CGAP, add_methods._add_element_object),
             'PGAP' : (PGAP, add_methods._add_property_object),

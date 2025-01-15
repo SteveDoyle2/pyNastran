@@ -17,8 +17,8 @@ from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
 from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
 from pyNastran.bdf.cards.elements.elements import (
-    CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, PLOTEL3, PLOTEL4, GENEL)
-from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
+    CFAST, CWELD, CGAP, CRAC2D, CRAC3D, PLOTEL, PLOTEL3, PLOTEL4, GENEL)
+from pyNastran.bdf.cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
 from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
 #from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD, GMLOAD
@@ -374,6 +374,9 @@ CARD_MAP = {
 
     'CFAST' : CFAST,
     'PFAST' : PFAST,
+
+    'CWELD' : CWELD,
+    'PWELD' : PWELD,
 
     'CGAP' : CGAP,
     'PGAP' : PGAP,
@@ -1566,6 +1569,23 @@ class Add0dElements:
         self._add_methods._add_property_object(prop)
         return prop
 
+    def add_cweld(self, eid: int, pid: int, gs: int, elemid:str, ga:int, gb:int, mcid:int, shida: int, shidb: int, x: list[float]=None, comment: str='') -> CWELD:
+        """
+        Creates a CWELD card
+
+        """
+        elem = CWELD(eid, pid, gs, elemid, ga, gb, mcid, shida, shidb, x, comment=comment)
+        self._add_methods._add_element_object(elem)
+        return elem
+    
+    def add_pweld(self, pid: int, mid: int, d: float, mset: str=None, connect_type:str=None, ldmin: float=None, ldmax: float=None, comment: str='') -> PWELD:
+        """
+        Creates a PWELD card
+
+        """
+        prop = PWELD(pid, mid, mid, d, mset, connect_type, ldmin, ldmax, comment=comment)
+        self._add_methods._add_property_object(prop)
+        return prop
 
 class Add1dElements:
     def add_conrod(self, eid: int, mid: int, nids: list[int],

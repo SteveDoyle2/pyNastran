@@ -78,7 +78,8 @@ structure = {
     'CBUSH', 'CBUSH1D', 'CBUSH2D',
     # dampers
     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-    'CFAST',
+    # fasteners
+    'CFAST', 'CWELD',
 
     'CBAR', 'CBARAO', 'BAROR',
     'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND', 'BEAMOR',
@@ -94,7 +95,7 @@ structure = {
 
     ## properties
     'PMASS',
-    'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
+    'PELAS', 'PGAP', 'PFAST', 'PWELD', 'PLPLANE', 'PPLANE',
     'PBUSH', 'PBUSH1D',
     'PDAMP', 'PDAMP5',
     'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', 'PBEND',
