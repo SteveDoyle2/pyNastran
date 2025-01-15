@@ -11,7 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
         CAEROs, PAEROs, SPLINEs, FREQs,
     )
     from pyNastran.bdf.cards.bolt import BOLT, BOLTFOR, BOLTSEQ, BOLTLD
-    from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTELs, GENEL
+    from pyNastran.bdf.cards.elements.elements import CFAST, CWELD, CGAP, CRAC2D, CRAC3D, PLOTELs, GENEL
     #from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
     #from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
     #from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD

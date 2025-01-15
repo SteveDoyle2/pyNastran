@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 import numpy as np
+from cpylog import SimpleLogger
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import read_bdf, BDF, CaseControlDeck, Subcase
 
@@ -80,7 +81,7 @@ dict_int_list_obj_attrs: list[str] = [
 def get_diff_bdfs(bdf_filename1: PathLike, bdf_filename2: PathLike,
                   added_bdf_filename: PathLike='',
                   removed_bdf_filename: PathLike='',
-                  ) -> tuple[bool, bool, BDF, BDF]:
+                  log=None) -> tuple[bool, bool, BDF, BDF]:
     """
     diffs two bdfs
 
@@ -95,13 +96,11 @@ def get_diff_bdfs(bdf_filename1: PathLike, bdf_filename2: PathLike,
     if removed_bdf_filename == '':
         removed_bdf_filename = base2 + '.removed' + ext2
 
-    old_model = read_bdf(bdf_filename1, xref=False)
-    new_model = read_bdf(bdf_filename2, xref=False)
+    old_model = read_bdf(bdf_filename1, xref=False, log=log)
+    new_model = read_bdf(bdf_filename2, xref=False, log=log)
 
-    from cpylog import SimpleLogger
-    log = SimpleLogger(level='debug')
-    removed_model = BDF()
-    added_model = BDF()
+    removed_model = BDF(log=log)
+    added_model = BDF(log=log)
 
     # dict_int_list_obj_attrs: list[str] = [
     #     'spcs', 'spcadds',

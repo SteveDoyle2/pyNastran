@@ -50,7 +50,7 @@ def cmd_line_diff(argv=None, quiet: bool=False) -> None:
     #bdf_filename_out = data['--output']
     #debug = data['--debug']
     #assert debug in {True, False}, debug
-    debug = False
+    debug = None if quiet else True
     # if bdf_filename_out is None:
     #     bdf_filename_out = 'merged.bdf'
 
@@ -59,5 +59,10 @@ def cmd_line_diff(argv=None, quiet: bool=False) -> None:
         #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
     #cards_to_skip = []
 
+    from cpylog import SimpleLogger
     from pyNastran.bdf.mesh_utils.bdf_diff import get_diff_bdfs
-    added_cards, removed_cards, added_model, removed_model = get_diff_bdfs(bdf_filename1, bdf_filename2)
+    level = 'warning' if debug is None else 'debug' if debug else 'info'
+    log = SimpleLogger(level=level)
+    print(log)
+    added_cards, removed_cards, added_model, removed_model = get_diff_bdfs(
+        bdf_filename1, bdf_filename2, log=log)

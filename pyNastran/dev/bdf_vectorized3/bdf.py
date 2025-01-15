@@ -551,8 +551,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self.read_includes = True
         self._remove_disabled_cards = False
 
+        # False: use strict parser (default)
         self.is_strict_card_parser = True
         self.allow_overwrites_set = set([])
+
+        # set of card types that overwrites work on
+        self.allow_overwrites_set: set[str] = set([])
 
         # file management parameters
         self.active_filenames: list[str] = []
