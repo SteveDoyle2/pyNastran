@@ -622,7 +622,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # False: use strict parser (default)
         self.is_strict_card_parser = True
 
-        # set of result types that overwrites work on
+        # set of card types that overwrites work on
         self.allow_overwrites_set: set[str] = set([])
 
         # lines that were rejected b/c they were for a card that isn't supported

@@ -569,7 +569,7 @@ class CAERO1(VectorizedBaseCard):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id):
-            ifile = np.stack([self.ifile, ifile])
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             igroup = np.hstack([self.igroup, igroup])
@@ -1108,7 +1108,7 @@ class CAERO2(VectorizedBaseCard):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id):
-            ifile = np.stack([self.ifile, ifile])
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             igroup = np.hstack([self.igroup, igroup])
@@ -1781,7 +1781,7 @@ class CAERO4(VectorizedBaseCard):
              a comment for the card
 
         """
-        card = (eid, pid, p1, x12, p4, x43, cp, nspan, lspan, comment)
+        card = (eid, pid, p1, x12, p4, x43, cp, nspan, lspan, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -1820,7 +1820,7 @@ class CAERO4(VectorizedBaseCard):
         #return CAERO1(eid, pid, igroup, p1, x12, p4, x43,
                       #cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                       #comment=comment)
-        card = (eid, pid, p1, x12, p4, x43, cp, nspan, lspan, comment)
+        card = (eid, pid, p1, x12, p4, x43, cp, nspan, lspan, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -1865,7 +1865,7 @@ class CAERO4(VectorizedBaseCard):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id):
-            ifile = np.stack([self.ifile, ifile])
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             p1 = np.vstack([self.p1, p1])
@@ -2185,7 +2185,7 @@ class CAERO5(VectorizedBaseCard):
             ifile: int=0, comment: str='') -> int:
         """Creates a CAERO5 card"""
         card = (eid, pid, p1, x12, p4, x43, cp, nspan, lspan,
-                ntheory, nthick, comment)
+                ntheory, nthick, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -2223,7 +2223,7 @@ class CAERO5(VectorizedBaseCard):
         x43 = double_or_blank(card, 16, 'x43', 0.)
 
         assert len(card) <= 17, f'len(CAERO5 card) = {len(card):d}\ncard={card}'
-        card = (eid, pid, p1, x12, p4, x43, cp, nspan, lspan, ntheory, nthick, comment)
+        card = (eid, pid, p1, x12, p4, x43, cp, nspan, lspan, ntheory, nthick, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -3168,6 +3168,7 @@ class PAERO2(PAERO):
         orientation = np.zeros(ncards, dtype='|U4')
         thi = np.zeros((ncards, 3), dtype='int32')
         thn = np.zeros((ncards, 3), dtype='int32')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (pid, orienti, widthi, AR, thii, thni,
@@ -3397,7 +3398,7 @@ class PAERO3(PAERO):
         ncontrol_surface = np.zeros(ncards, dtype='int32')
         x = np.full((ncards, 8), np.nan, dtype='float64')
         y = np.full((ncards, 8), np.nan, dtype='float64')
-        commet = {}
+        comment = {}
         for icard, card in enumerate(self.cards):
             (pid, nboxi, ncontrol_surfacei, xi, yi, ifilei, commenti) = card
             property_id[icard] = pid
@@ -4029,7 +4030,7 @@ class AELIST(VectorizedBaseCard):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.aelist_id):
-            ifile = np.stack([self.ifile, ifile])
+            ifile = np.hstack([self.ifile, ifile])
             aelist_id = np.hstack([self.aelist_id, aelist_id])
             elements = np.hstack([self.elements, elements])
             nelements = np.hstack([self.nelements, nelements])
@@ -4375,7 +4376,7 @@ class AEFACT(VectorizedBaseCard):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.aefact_id):
-            ifile = np.stack([self.ifile, ifile])
+            ifile = np.hstack([self.ifile, ifile])
             aefact_id = np.hstack([self.aefact_id, aefact_id])
             nfractions = np.hstack([self.nfractions, nfractions])
             fractions = np.hstack([self.fractions, fractions])
@@ -4548,7 +4549,7 @@ class FLFACT(VectorizedBaseCard):
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.flfact_id):
-            ifile = np.stack([self.ifile, ifile])
+            ifile = np.hstack([self.ifile, ifile])
             flfact_id = np.hstack([self.flfact_id, flfact_id])
             factors = np.hstack([self.factors, factors])
             nfactors = np.hstack([self.nfactors, nfactors])
@@ -5818,6 +5819,7 @@ class SPLINE5(VectorizedBaseCard):
         method = np.zeros(ncards, dtype='|U4')
         ftype = np.zeros(ncards, dtype='|U4')
         rcore = np.zeros(ncards, dtype='float64')
+        comment = {}
         for icard, card in enumerate(self.cards):
             (eid, caero, aelist, setg, thxi, thyi, dzi, dtori, cidi,
              usagei, methodi, ftypei, rcorei, ifilei, commenti) = card
@@ -6532,7 +6534,7 @@ class AEPARM(VectorizedBaseCard):
             a comment for the card
 
         """
-        self.cards.append((aeparm_id, label, units, comment))
+        self.cards.append((aeparm_id, label, units, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -6555,7 +6557,7 @@ class AEPARM(VectorizedBaseCard):
 
         assert len(card) <= 4, f'len(AEPARM card) = {len(card):d}\ncard={card}'
         #return AEPARM(aeparm_id, label, units, comment=comment)
-        self.cards.append((aeparm_id, label, units, comment))
+        self.cards.append((aeparm_id, label, units, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -6700,7 +6702,7 @@ class AESURF(VectorizedBaseCard):
             aelist_id2 = 0
         card = (aesurf_id, label, cid1, aelist_id1, cid2, aelist_id2, eff, ldw,
                 crefc, crefs, pllim, pulim, hmllim, hmulim,
-                tqllim, tqulim, comment)
+                tqllim, tqulim, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -7016,6 +7018,7 @@ class AESURFS(VectorizedBaseCard):
         label = np.zeros(ncards, dtype='|U8')
         list1_id = np.zeros(ncards, dtype='int32')
         list2_id = np.zeros(ncards, dtype='int32')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (aesurfs_idi, labeli, list1i, list2i, ifilei, commenti) = card
@@ -7182,6 +7185,7 @@ class CSSCHD(VectorizedBaseCard):
         lalpha = np.zeros(ncards, dtype='int32')
         lmach = np.zeros(ncards, dtype='int32')
         lschd = np.zeros(ncards, dtype='int32')
+        comment = {}
 
         for icard, card in enumerate(self.cards):
             (sid, aesurf_idi, lalphai, lmachi, lschdi, ifilei, commenti) = card
@@ -7200,11 +7204,11 @@ class CSSCHD(VectorizedBaseCard):
 
     def _save(self, csschd_id, aesurf_id, lalpha, lmach, lschd,
               ifile=None, comment=None):
-        ncards = len(csschd)
+        ncards = len(csschd_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.csschd_id):
-            ifile = np.stack([self.ifile, ifile])
+            ifile = np.hstack([self.ifile, ifile])
             csschd_id = np.hstack([self.csschd_id, csschd_id])
             aesurf_id = np.hstack([self.aesurf_id, aesurf_id])
             lalpha = np.hstack([self.lalpha, lalpha])
@@ -7383,6 +7387,7 @@ class DIVERG(VectorizedBaseCard):
         diverg_id = np.zeros(ncards, dtype='int32')
         nroots = np.zeros(ncards, dtype='int32')
         nmach = np.zeros(ncards, dtype='int32')
+        comment = {}
 
         machs_list = []
         for icard, card in enumerate(self.cards):
