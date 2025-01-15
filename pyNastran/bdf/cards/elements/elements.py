@@ -390,7 +390,7 @@ class CWELD(CFAST):
     
     def Gs(self):
         """Gets the GS node"""
-        if self.gs is not None:
+        if self.gs_ref is not None:
             return self.gs_ref.nid
         elif isinstance(self.gs, integer_types):
             return self.gs
