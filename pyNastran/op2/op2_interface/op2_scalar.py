@@ -60,6 +60,7 @@ else:  # pramga: no cover
 
 
 from pyNastran import is_release, __version__
+from pyNastran.utils import PathLike, is_binary_file
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import EmptyRecordError
 from pyNastran.op2.op2_interface.op2_reader import OP2Reader, reshape_bytes_block
@@ -74,7 +75,6 @@ from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.op2_interface.read_matrix import read_matrix
 from pyNastran.op2.fortran_format import FortranFormat
 
-from pyNastran.utils import is_binary_file
 from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 """
 ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf
@@ -427,7 +427,7 @@ STR_PARAMS_1 = SATK_STR_PARAMS1 | {
     # vbaop2_test
     b'STABFEM',
 }
-def _check_unique_sets(*sets: list[set[str]]):
+def _check_unique_sets(*sets: list[set[str]]) -> None:
     """verifies that the sets are unique"""
     for i, seti in enumerate(sets):
         for unused_j, setj in enumerate(sets[i+1:]):
@@ -478,7 +478,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
     def matrix_tables(self):
         return MATRIX_TABLES
 
-    def set_as_nx(self):
+    def set_as_nx(self) -> None:
         self.is_nx = True
         self.is_msc = False
         self.is_autodesk = False
@@ -486,7 +486,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_optistruct = False
         self._nastran_format = 'nx'
 
-    def set_as_msc(self):
+    def set_as_msc(self) -> None:
         self.is_nx = False
         self.is_msc = True
         self.is_autodesk = False
@@ -494,7 +494,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_optistruct = False
         self._nastran_format = 'msc'
 
-    def set_as_autodesk(self):
+    def set_as_autodesk(self) -> None:
         self.is_nx = False
         self.is_msc = False
         self.is_autodesk = True
@@ -502,7 +502,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_optistruct = False
         self._nastran_format = 'autodesk'
 
-    def set_as_nasa95(self):
+    def set_as_nasa95(self) -> None:
         self.is_nx = False
         self.is_msc = False
         self.is_autodesk = False
@@ -515,7 +515,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if hasattr(self, 'reader_geom2') and hasattr(self.reader_geom2, '_read_cquad4_nasa95'):
             self.reader_geom2.geom2_map[(5408, 54, 261)] = ['CQUAD4', self.reader_geom2._read_cquad4_nasa95]
 
-    def set_as_optistruct(self):
+    def set_as_optistruct(self) -> None:
         self.is_nx = False
         self.is_msc = False
         self.is_autodesk = False
@@ -523,7 +523,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_optistruct = True
         self._nastran_format = 'optistruct'
 
-    def __init__(self, debug=False, log=None, debug_file=None):
+    def __init__(self, debug: bool=False, log=None, debug_file=None):
         """
         Initializes the OP2_Scalar object
 
@@ -579,7 +579,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         self.op2_reader = OP2Reader(self)
 
-    def set_subcases(self, subcases=None):
+    def set_subcases(self, subcases=None) -> None:
         """
         Allows you to read only the subcases in the list of isubcases
 
@@ -606,7 +606,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             self.valid_subcases = set(subcases)
         self.log.debug(f'set_subcases - subcases = {self.valid_subcases}')
 
-    def set_transient_times(self, times):  # TODO this name sucks...
+    def set_transient_times(self, times) -> None:  # TODO this name sucks...
         """
         Takes a dictionary of list of times in a transient case and
         gets the output closest to those times.
@@ -1596,9 +1596,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_mpf_4(self, data: bytes, ndata: int):
+    def _read_mpf_4(self, data: bytes, ndata: int) -> int:
         """unused"""
-        if self.read_mode == 1: # or self.table_name_str not in ['OFMPF2M']:
+        if self.read_mode == 1:  # or self.table_name_str not in ['OFMPF2M']:
             return ndata
         #print(self.table_name_str, ndata, self.num_wide)  # 176
         #self.show_ndata(100, types='ifs')
@@ -1826,27 +1826,27 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #print(param.rstrip())
         return nvalues
 
-    def _not_available(self, data: bytes, ndata: int):
+    def _not_available(self, data: bytes, ndata: int) -> None:
         """testing function"""
         if ndata > 0:
             raise RuntimeError('this should never be called...'
                                f'table_name={self.table_name!r} len(data)={ndata}')
 
-    def _table_crasher(self, data: bytes, ndata: int):
+    def _table_crasher(self, data: bytes, ndata: int) -> int:
         """auto-table crasher"""
         if self.is_debug_file:
             self.binary_debug.write(f'  crashing table = {self.table_name}\n')
             raise NotImplementedError(self.table_name)
         return ndata
 
-    def _nx_table_passer(self, data, ndata: int):
+    def _nx_table_passer(self, data, ndata: int) -> int:
         """auto-table skipper"""
         desc = self.op2_reader.desc_map.get(self.table_name, '???')
         #assert desc != '???', self.table_name
         self.to_nx(f' because table_name={self.table_name} ({desc}) was found')
         self._table_passer(data, ndata)
 
-    def _table_passer(self, data, ndata: int):
+    def _table_passer(self, data, ndata: int) -> int:
         """auto-table skipper"""
         if self.is_debug_file:
             self.binary_debug.write(f'  skipping table = {self.table_name}\n')
@@ -1888,7 +1888,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             assert op2_filename is not None, op2_filename
         return op2_filename
 
-    def _create_binary_debug(self):
+    def _create_binary_debug(self) -> None:
         """Instatiates the ``self.binary_debug`` variable/file"""
         if hasattr(self, 'binary_debug') and self.binary_debug is not None:
             self.binary_debug.close()
@@ -1897,7 +1897,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_debug_file, self.binary_debug = create_binary_debug(
             self.op2_filename, self.debug_file, self.log)
 
-    def _setup_filenames(self, op2_filename: Optional[str], force: bool=True):
+    def _setup_filenames(self, op2_filename: Optional[str],
+                         force: bool=True) -> None:
         if op2_filename:
             fname = os.path.splitext(op2_filename)[0]
             self.op2_filename = op2_filename
@@ -1906,7 +1907,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             self.des_filename = fname + '.des'
             self.h5_filename = fname + '.h5'
 
-    def read_op2(self, op2_filename=None,
+    def read_op2(self, op2_filename: Optional[PathLike]=None,
                  combine: bool=False,
                  load_as_h5: bool=False,
                  h5_file=None,
@@ -1962,7 +1963,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         if self.read_mode != 2:
             op2_filename = self._validate_op2_filename(op2_filename)
-            self.log.info(f'op2_filename = {op2_filename!r}')
+            self.log.info(f'op2_filename = {str(op2_filename)!r}')
             self._setup_filenames(op2_filename, force=True)
             if not is_binary_file(op2_filename):
                 if os.path.getsize(op2_filename) == 0:
@@ -2014,7 +2015,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         #self.remove_unpickable_data()
         return table_names
 
-    def close_op2(self, force=True):
+    def close_op2(self, force: bool=True) -> None:
         """closes the OP2 and debug file"""
         if self.is_debug_file:
             self.binary_debug.write('-' * 80 + '\n')
@@ -2032,7 +2033,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             self._cleanup_words()
             #self.op2_reader.h5_file.close()
 
-    def _cleanup_words(self):
+    def _cleanup_words(self) -> None:
         """
         Remove internal parameters that are not useful and just clutter
         the object attributes.
@@ -2068,7 +2069,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             if hasattr(self, word):
                 delattr(self, word)
 
-    def _setup_op2(self):
+    def _setup_op2(self) -> None:
         """
         Does preliminary op2 tasks like:
           - open the file
@@ -2124,7 +2125,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if self.read_mode == 1:
             self._set_structs(size)
 
-    def _make_tables(self):
+    def _make_tables(self) -> None:
         return
         #global RESULT_TABLES, NX_RESULT_TABLES, MSC_RESULT_TABLES
         #table_mapper = self._get_table_mapper()

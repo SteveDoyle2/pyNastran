@@ -4,6 +4,7 @@ import copy
 import warnings
 import traceback
 from pathlib import Path
+from functools import wraps
 from typing import Optional, Any  #TYPE_CHECKING
 
 ICON_PATH = Path('')
@@ -193,10 +194,23 @@ class FlutterGui(LoggableGui):
         #self.toolbar.setObjectName('main_toolbar')
         self.statusbar = self.statusBar()
 
+    def dont_crash(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            # do something before `sum`
+            try:
+                result = func(self, *args, **kwargs)
+            except Exception as e:
+                self.log_error(str(traceback.format_exc()))
+                result = None
+            # do something after `sum`
+            return result
+        return wrapper
+
     def set_f06(self, ifile: int) -> None:
         f06_filename = self.recent_files[ifile]
         self.f06_filename_edit.setText(f06_filename)
-        self.on_load_f06()
+        self.on_load_f06(None)
 
     def setup_modes(self):
         self.modes_widget = QListWidget(self)
@@ -1071,8 +1085,8 @@ class FlutterGui(LoggableGui):
         font = make_font(font_size, is_bold=False)
         self.setFont(font)
 
-    # @dontcrash
-    def on_load_f06(self) -> None:
+    @dont_crash
+    def on_load_f06(self, event) -> None:
         f06_filename = os.path.abspath(self.f06_filename_edit.text())
         if not os.path.exists(f06_filename) or not os.path.isfile(f06_filename):
             self.f06_filename_edit.setStyleSheet(QLINEEDIT_RED)
@@ -1228,19 +1242,20 @@ class FlutterGui(LoggableGui):
         #self.log.warning('on_ok; _save')
         self._save(self.save_filename)
 
-    # @dontcrash
+    @dont_crash
     def plot(self, modes: list[int]) -> None:
-        self.log.info(f'plot; modes = {modes}\n')
+        log = self.log
+        log.info(f'plot; modes = {modes}\n')
         if not self.is_valid:
-            self.log.warning(f'not valid\n')
+            log.warning(f'not valid\n')
             return
         if len(self.responses) == 0:
-            self.log.warning(f'no subcases\n')
+            log.warning(f'no subcases\n')
             return
 
         x_plot_type = self.x_plot_type
         plot_type = self.plot_type
-        self.log.info(f'plot_type = {plot_type}\n')
+        log.info(f'plot_type = {plot_type}\n')
 
         noline = not self.show_lines
         nopoints = not self.show_points
@@ -1248,7 +1263,7 @@ class FlutterGui(LoggableGui):
         freq_tol = self.freq_tol
         freq_tol_remove = self.freq_tol_remove
         mag_tol = self.mag_tol
-        self.log.info(f'freq_tol = {freq_tol}\n')
+        log.info(f'freq_tol = {freq_tol}\n')
         if noline and nopoints:
             noline = False
             nopoints = True
@@ -1264,14 +1279,14 @@ class FlutterGui(LoggableGui):
         elif x_plot_type == 'q':
             xlim = self.q_lim
         else:  # pragma: no cover
-            self.log.error(f'x_plot_type={x_plot_type!r} is not supported')
+            log.error(f'x_plot_type={x_plot_type!r} is not supported')
             #raise RuntimeError(x_plot_type)
             xlim = self.xlim
 
-        #self.log.info(f'xlim={xlim}\n')
+        #log.info(f'xlim={xlim}\n')
         assert xlim[0] != '' and xlim[1] != '', (xlim, x_plot_type)
         v_lines = []
-        #self.log.info(f'vf={self.vf!r}; vl={self.vl!r}\n')
+        #log.info(f'vf={self.vf!r}; vl={self.vl!r}\n')
         if isinstance(self.vf, float) and self.vf > 0.:
             # name, velocity, color, linestyle
             v_lines.append(('VF', self.vf, 'r', '-'))
@@ -1284,19 +1299,19 @@ class FlutterGui(LoggableGui):
             v_lines.append(('VL', self.vl, 'k', '--'))
             v_lines.append(('1.15*VL', 1.15*self.vl, 'k', '-'))
 
-        #self.log.info(f'v_lines={v_lines}\n')
-        #self.log.info(f'kfreq_lim={self.kfreq_lim}\n')
-        #self.log.info(f'ydamp_lim={self.ydamp_lim}\n')
-        #self.log.info(f'freq_lim={self.freq_lim}\n')
-        #self.log.info(f'damping={self.damping}\n')
+        #log.info(f'v_lines={v_lines}\n')
+        #log.info(f'kfreq_lim={self.kfreq_lim}\n')
+        #log.info(f'ydamp_lim={self.ydamp_lim}\n')
+        #log.info(f'freq_lim={self.freq_lim}\n')
+        #log.info(f'damping={self.damping}\n')
         xlim_kfreq = self.kfreq_lim
         ylim_damping = self.ydamp_lim
         ylim_freq = self.freq_lim
         damping_limit = self.damping  # % damping
 
         # changing directory so we don't make a long filename
-        # in teh plot header
-        #self.log.info(f'damping_limit = {damping_limit}\n')
+        # in the plot header
+        #log.info(f'damping_limit = {damping_limit}\n')
         dirname = os.path.abspath(os.path.dirname(self.f06_filename))
         basename = os.path.basename(self.f06_filename)
 
@@ -1307,7 +1322,7 @@ class FlutterGui(LoggableGui):
 
         fig = plt.figure(1)
         fig.clear()
-        self.log.info(f'cleared plot\n')
+        log.info(f'cleared plot\n')
         if plot_type not in {'root-locus', 'modal-participation'}:
             gridspeci = gridspec.GridSpec(2, 4)
             damp_axes = fig.add_subplot(gridspeci[0, :3])
@@ -1318,21 +1333,22 @@ class FlutterGui(LoggableGui):
         # you can change the output units without reloading
         if self._units_out != self.units_out:
             response.convert_units(self.units_out)
-            self._units_out  = self.units_out
+            self._units_out = self.units_out
 
         response.noline = noline
         response.set_symbol_settings(
             nopoints, self.show_mode_number, self.point_spacing)
+        log.info(f'self.plot_font_size = {self.plot_font_size}')
         response.set_font_settings(self.plot_font_size)
-        response.log = self.log
+        response.log = log
         #print('trying plots...')
 
-        self.log.info(f'getting logs\n')
+        log.info(f'getting logs\n')
         log_scale_x = self.data['log_scale_x']
         log_scale_y1 = self.data['log_scale_y1']
         log_scale_y2 = self.data['log_scale_y2']
         print(f'log_scale_x={log_scale_x}; log_scale_y1={log_scale_y1}; log_scale_y2={log_scale_y2}')
-        print(f'export_to_png={self.export_to_png}')
+        #print(f'export_to_png={self.export_to_png}')
 
         self.export_to_png = False
         png_filename0, png_filename = get_png_filename(
@@ -1342,8 +1358,8 @@ class FlutterGui(LoggableGui):
         try:
             if plot_type == 'root-locus':
                 axes = fig.add_subplot(111)
-                #self.log.info(f'modes={modes}; eigr_lim={self.eigr_lim}; eigi_lim={self.eigi_lim}; freq_tol={freq_tol}')
-                #self.log.info(f'png_filename={png_filename}')
+                #log.info(f'modes={modes}; eigr_lim={self.eigr_lim}; eigi_lim={self.eigi_lim}; freq_tol={freq_tol}')
+                #log.info(f'png_filename={png_filename}')
                 response.plot_root_locus(
                     fig=fig, axes=axes,
                     modes=modes, eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
@@ -1356,7 +1372,7 @@ class FlutterGui(LoggableGui):
                 axes = fig.add_subplot(111)
                 mode = self.mode_edit.value()
                 ivel = self.velocity_edit.currentIndex()
-                print(f'ivel={ivel}; mode={mode}')
+                #print(f'ivel={ivel}; mode={mode}')
                 response.plot_modal_participation(
                     ivel, mode,
                     fig=fig, axes=axes,
@@ -1385,10 +1401,10 @@ class FlutterGui(LoggableGui):
             else:
                 assert plot_type in 'x-damp-freq', plot_type
                 #print('plot_vg_vf')
-                #self.log.info(f'png_filename={png_filename!r}')
-                #self.log.info(f'modes={modes!r}')
-                #self.log.info(f'freq_tol={freq_tol!r}')
-                #self.log.info(f'v_lines={v_lines!r}')
+                #log.info(f'png_filename={png_filename!r}')
+                #log.info(f'modes={modes!r}')
+                #log.info(f'freq_tol={freq_tol!r}')
+                #log.info(f'v_lines={v_lines!r}')
                 response.plot_vg_vf(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     plot_type=x_plot_type,
@@ -1404,9 +1420,10 @@ class FlutterGui(LoggableGui):
                     png_filename=png_filename,
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
+                fig.canvas.draw()
         except Exception as e:  # pragma: no cover
-            self.log.error(f'plot_type={plot_type}')
-            self.log.error(str(e))
+            log.error(f'plot_type={plot_type}')
+            log.error(str(e))
             print(traceback.format_exc())
             #print(traceback.print_tb())
             print(traceback.print_exception(e))
@@ -1417,16 +1434,19 @@ class FlutterGui(LoggableGui):
         veas_filename = base2 + '.export.veas'
         f06_filename = base2 + '.export.f06'
         if self.export_to_csv:
-            self.log.debug(f'writing {csv_filename}')
+            log.debug(f'writing {csv_filename}')
             response.export_to_csv(csv_filename, modes=modes)
         if self.export_to_zona:
-            self.log.debug(f'writing {veas_filename}')
+            log.debug(f'writing {veas_filename}')
             response.export_to_veas(veas_filename, modes=modes, xlim=None)
         if self.export_to_f06:
-            self.log.debug(f'writing {f06_filename}')
+            log.debug(f'writing {f06_filename}')
             response.export_to_f06(f06_filename, modes=modes)
         os.chdir(current_directory)
-        self.log.info(f'saved {png_filename}')
+        if png_filename:
+            log.info(f'saved {png_filename}')
+        else:
+            log.info(f'did not write file because export_to_png=False')
 
     def get_xlim(self) -> tuple[Limit, Limit, Limit, Limit,
                                 Limit, Limit, Limit, Limit, Limit,
