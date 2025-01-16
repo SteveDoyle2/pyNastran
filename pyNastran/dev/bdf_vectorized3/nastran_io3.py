@@ -140,19 +140,25 @@ class Nastran3:
     def load_nastran3_geometry(self, bdf_filename: PathLike,
                                name: str='main', plot: bool=True):
         """loads geometry from a bdf/op2/h5 file"""
+        log = self.gui.log
         if isinstance(bdf_filename, PathLike):
             bdf_filename_lower = bdf_filename.lower()
             if bdf_filename_lower.endswith('.op2'):
                 geo = self.load_op2_geometry(bdf_filename)
             elif bdf_filename_lower.endswith('.h5'):
                 geo = self.load_h5_geometry(bdf_filename)
-            else:
+            else:  # str
+                #log.debug(f'start load_bdf_geometry; type={type(bdf_filename)}')
                 geo = self.load_bdf_geometry(bdf_filename)
+                #log.error(f'end load_bdf_geometry; type={type(bdf_filename)}')
         elif isinstance(bdf_filename, BDF):
             model = bdf_filename
             geo = self.load_bdf_geometry(model)
         else:
             raise RuntimeError(type(bdf_filename))
+
+        if not hasattr(self, 'xyz_cid0'):
+            log.error('cant find xyz_cid0')
         self.xyz_cid0
         return geo
 
@@ -173,6 +179,11 @@ class Nastran3:
         assert isinstance(op2_filename, (str, PurePath)), op2_filename
         model = OP2Geom(debug=True, log=None, mode='msc')
         idtype = model.idtype
+        log = model.log
+
+        if not str(op2_filename).lower().endswith('.op2'):
+            log.error(f'op2_filename={op2_filename!r} is not a .op2 file')
+            assert op2_filename.endswith('.op2'), op2_filename
         model.read_op2(op2_filename)
         model.idtype = idtype
         model.setup(run_geom_check=False)
@@ -191,6 +202,9 @@ class Nastran3:
                                  name: str, plot: bool) -> int:
         #self.xyz_cid0 = model.grid.xyz_cid0() # .astype('float32')
         #self.node_ids = model.grid.node_id
+        log = model.log
+        if not hasattr(self, 'node_id'):
+            log.error(f'missing node_id; load the geometry')
 
         xyz_cid0 = self.xyz_cid0
         node_id = self.node_id
@@ -271,9 +285,10 @@ class Nastran3:
         return ugrid
 
     def load_bdf_geometry(self, bdf_filename: PathLike,
-                          name: str='main', plot: bool=True):
+                          name: str='main', plot: bool=True) -> vtkUnstructuredGrid:
         """loads a geometry only an h5 file"""
-        model = self.get_bdf_geometry(bdf_filename, log=self.gui.log)
+        log = self.gui.log
+        model = self.get_bdf_geometry(bdf_filename, log=log)
         ugrid, form, cases, unused_icase = self._load_geometry_from_model(
             model, name, plot)
         self.gui._finish_results_io2(name, form, cases)
@@ -286,6 +301,7 @@ class Nastran3:
         else:
             model = BDF(debug=True, log=log, mode='msc')
             model.is_strict_card_parser = False
+            model.allow_overwrites_set = {'GRID', 'CONM2'}
             model.idtype = 'int64'
             model.read_bdf(bdf_filename)
 
@@ -318,6 +334,7 @@ class Nastran3:
     def _load_geometry_from_model(self, model: BDF, name: str, plot: bool,
                                   ) -> tuple[vtkUnstructuredGrid, Form, Cases, int]:
         self.model = model
+        log = model.log
         gui = self.gui
         gui.eid_maps[name] = {}
         gui.nid_maps[name] = {}
@@ -385,7 +402,7 @@ class Nastran3:
                      node_id: np.ndarray,
                      element_id: np.ndarray,
                      property_id: np.ndarray) -> tuple[Form, Cases, int]:
-
+        log = model.log
         node_index = np.arange(len(node_id))
         element_index = np.arange(len(element_id))
 

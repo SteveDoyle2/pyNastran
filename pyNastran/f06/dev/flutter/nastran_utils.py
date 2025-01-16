@@ -6,19 +6,20 @@ if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
-def get_element_table(model: BDF) -> tuple[list[str], list]:
+def get_element_table(model: BDF) -> tuple[list[str], list, dict[str, int]]:
     card_types = []
     type_to_n = {}
+    log = model.log
     for card in model.element_cards:
         if card.n == 0:
             continue
         card_types.append(card.type)
-        type_to_n[card.type] = (card.n,)
+        type_to_n[card.type] = card.n
 
     group_type_to_card_type_map = {
         # True: can't collapse?
         # False: can?
-        'Spring' : (False, model.spring_element_cards),
+        'Spring': (False, model.spring_element_cards),
         'Damper': (False, model.damper_element_cards + [model.cvisc]),
         'Bush': (False, [model.cbush, model.cbush1d, model.cgap]), #  model.cbush2d
         'Bar/Beam': (False, [model.cbar, model.cbeam, model.cbend]),
@@ -46,6 +47,8 @@ def get_element_table(model: BDF) -> tuple[list[str], list]:
         if len(group_card_types) == 0:
             continue
         if len(group_card_types) == 1:
+            #log.debug(f'group_row')
+            #log.debug(f'group_row={str(group_row)}')
             elements.append(group_row)
         else:
             elements.append(group_tuple)
@@ -57,9 +60,10 @@ def get_element_table(model: BDF) -> tuple[list[str], list]:
             continue
         other_card_names.append(card.type)
         other_cards.append((f'{card.type}: {card.n}', True, card.n, []))
-    if other_cards:
+
+    if len(other_cards):
         elements.append(('Other', True, -1, other_cards))
-    model.log.waning(f'other_card_names = {other_card_names}')
+    model.log.warning(f'other_card_names = {other_card_names}')
     return card_types, elements, type_to_n
 
 def get_property_table(model: BDF) -> tuple[np.ndarray, list, dict[int, tuple[str, str]]]:

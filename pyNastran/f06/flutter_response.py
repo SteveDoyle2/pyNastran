@@ -1,3 +1,9 @@
+"""
+TODO:
+ - more control of font sizes
+ - control over point size / text annotation size
+ -
+"""
 from __future__ import annotations
 from copy import deepcopy
 import warnings
@@ -8,6 +14,7 @@ import numpy as np
 import scipy
 import scipy.interpolate
 try:
+    import matplotlib
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
     from matplotlib.lines import Line2D
@@ -386,7 +393,7 @@ class FlutterResponse:
         self._colors: list[str] = []
         self.generate_symbols()
         self.set_symbol_settings()
-        self.set_font_settings()
+        self.set_font_settings(font_size=None)
 
     def set_symbol_settings(self, nopoints: bool=False,
                             show_mode_number: bool=False,
@@ -395,8 +402,18 @@ class FlutterResponse:
         self.show_mode_number = show_mode_number
         self.point_spacing = point_spacing
 
-    def set_font_settings(self, font_size: int=13) -> None:
+    def set_font_settings(self, font_size: Optional[int]=13) -> None:
         # TODO: split label, title, tic_marks, legend
+        if font_size is None:
+            font_size = plt.rcParams['font.size']
+
+        #print(f'font_size = {font_size}')
+        font = {
+            #'family': 'normal',
+            #'weight': 'bold',
+            'size': font_size,
+        }
+        matplotlib.rc('font', **font)
         self.font_size = font_size
 
     def set_out_units(self, out_units: str | dict[str, str]) -> None:
@@ -549,8 +566,8 @@ class FlutterResponse:
             ax22.plot(self.eigenvector[:, imode2].imag, label=f'iMode2={imode2+1}')
         plt.legend()
 
-        ax11.set_ylabel('Real', fontsize=self.font_size)
-        ax12.set_ylabel('Imaginary', fontsize=self.font_size)
+        ax11.set_ylabel('Real')  #, fontsize=self.font_size)
+        ax12.set_ylabel('Imaginary')  #, fontsize=self.font_size)
         for ax in axes.ravel():
             ax.grid(True)
             ax.set_xlim([0, nmodes])
@@ -815,11 +832,11 @@ class FlutterResponse:
         if np.isfinite(velocityi):
             title += f' V={velocityi:.1f}'
         #print(title)
-        axes.set_title(title, fontsize=self.font_size)
+        axes.set_title(title)  #, fontsize=self.font_size)
         axes.grid(True)
-        axes.set_xlabel(xlabel, fontsize=self.font_size)
-        axes.set_ylabel(ylabel, fontsize=self.font_size)
-        axes.tick_params(axis='both', which='major', labelsize=self.font_size)
+        axes.set_xlabel(xlabel)  #, fontsize=self.font_size)
+        axes.set_ylabel(ylabel)  #, fontsize=self.font_size)
+        axes.tick_params(axis='both', which='major')  #, labelsize=self.font_size)
 
         #print(f'eigr_eigi_velocity:\n{self.eigr_eigi_velocity}')
         #print(f'eigenvector:\n{self.eigenvector}')
@@ -884,8 +901,8 @@ class FlutterResponse:
             #print(label)
             axes.scatter(reali, imagi, label=label, alpha=0.7)
             #print(f'{i}: {reali}, {imagi}, {text!r}')
-            axes.text(reali, imagi, text, ha='center', va='center',
-                      fontsize=self.font_size)
+            axes.text(reali, imagi, text, ha='center', va='center')
+                      #fontsize=self.font_size)
 
         if legend:
             # bbox_to_anchor=(1.125, 1.), ncol=ncol,
@@ -965,6 +982,7 @@ class FlutterResponse:
                              linestyle=linestyle2, markersize=0)
 
             if ivelocity and symbol2 and ivelocity < len(xs):
+                # single point selected for modes plotting corresponding to ivelocity
                 markersize = 10
                 plot_kwargs = {
                     'color': 'k', 'marker': 'o',
@@ -972,6 +990,8 @@ class FlutterResponse:
                 axes.scatter(xs[ivelocity], ys[ivelocity], **plot_kwargs)
 
             if scatter:
+                # used for the root locus
+                # velocity increases driving an incrase in the point size
                 scatteri = np.linspace(.75, 50., len(xs))
                 #assert symbol[2] == '-', symbol
                 #axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=symbol[0], marker=symbol[1])
@@ -980,9 +1000,9 @@ class FlutterResponse:
         #print(f'setting grid...')
         axes.grid(True)
         #axes.set_xlabel(xlabel  + '; _plot_x_y', fontsize=self.font_size)
-        axes.set_xlabel(xlabel, fontsize=self.font_size)
-        axes.set_ylabel(ylabel, fontsize=self.font_size)
-        axes.tick_params(axis='both', which='major', labelsize=self.font_size)
+        axes.set_xlabel(xlabel)  #, fontsize=self.font_size)
+        axes.set_ylabel(ylabel)  #, fontsize=self.font_size)
+        axes.tick_params(axis='both', which='major')  #, labelsize=self.font_size)
         set_xlim(axes, xlim)
         set_ylim(axes, ylim)
 
@@ -1012,7 +1032,10 @@ class FlutterResponse:
                    png_filename=None,
                    **legend_kwargs):
         """
-        Builds the plot
+        Builds the plot with 2 subplots for:
+         - Vg, Vf
+         - Vg, Vk
+         - kg, kf
 
         Parameters
         ----------
@@ -1072,7 +1095,8 @@ class FlutterResponse:
 
             # plot the line
             label = _get_mode_freq_label(mode, freq[0])
-            legend_element = Line2D([0], [0], color=color2, marker=symbol2, label=label, linestyle=linestyle2)
+            legend_element = Line2D([0], [0], color=color2,
+                                    marker=symbol2, label=label, linestyle=linestyle2)
             if self.nopoints:
                 symbol2 = 'None'
 
@@ -1081,6 +1105,7 @@ class FlutterResponse:
             # self.log.info(f'y1s={y1s[iplot]}')
             # self.log.info(f'y2s={y2s[iplot]}')
             if scatter:
+                # when velocity increases, point size increases
                 scatteri = np.linspace(.75, 50., len(xs))
                 #assert symbol[2] == '-', symbol
                 axes1.scatter(xs[iplot], y1s[iplot],
@@ -1107,15 +1132,15 @@ class FlutterResponse:
             legend_elements.append(legend_element)
 
         axes1.grid(True)
-        axes1.set_xlabel(xlabel, fontsize=self.font_size)
+        axes1.set_xlabel(xlabel)  #, fontsize=self.font_size)
         #axes1.set_xlabel(xlabel + '; _plot_x_y2', fontsize=self.font_size)
-        axes1.set_ylabel(ylabel1, fontsize=self.font_size)
+        axes1.set_ylabel(ylabel1)  #, fontsize=self.font_size)
 
         axes2.grid(True)
-        axes2.set_xlabel(xlabel, fontsize=self.font_size)
-        axes2.set_ylabel(ylabel2, fontsize=self.font_size)
-        axes1.tick_params(axis='both', which='major', labelsize=self.font_size)
-        axes2.tick_params(axis='both', which='major', labelsize=self.font_size)
+        axes2.set_xlabel(xlabel)  #, fontsize=self.font_size)
+        axes2.set_ylabel(ylabel2)  #, fontsize=self.font_size)
+        axes1.tick_params(axis='both', which='major')  #, labelsize=self.font_size)
+        axes2.tick_params(axis='both', which='major')  #, labelsize=self.font_size)
 
         title = f'Subcase {self.subcase:d}'
         if png_filename:
@@ -1369,27 +1394,27 @@ class FlutterResponse:
             imodes_crossing, xcrossing_dict,
             colors_show, symbols_show)
 
-        damp_axes.set_xlabel(xlabel, size=self.font_size)
-        freq_axes.set_xlabel(xlabel, size=self.font_size)
-        damp_axes.set_ylabel(r'Structural Damping; $g = 2 \gamma $', fontsize=self.font_size)
+        damp_axes.set_xlabel(xlabel)  #, size=self.font_size)
+        freq_axes.set_xlabel(xlabel)  #, size=self.font_size)
+        damp_axes.set_ylabel(r'Structural Damping; $g = 2 \gamma $')  #, fontsize=self.font_size)
         freq_axes.set_ybound(lower=0.)
 
         damp_axes.grid(True)
         set_xlim(damp_axes, xlim)
         set_ylim(damp_axes, ylim_damping)
-        freq_axes.set_ylabel('Frequency [Hz]', fontsize=self.font_size)
+        freq_axes.set_ylabel('Frequency [Hz]')  #, fontsize=self.font_size)
         freq_axes.grid(True)
 
         set_xlim(freq_axes, xlim)
         set_ylim(freq_axes, ylim_freq)
-        freq_axes.tick_params(axis='both', which='major', labelsize=self.font_size)
-        damp_axes.tick_params(axis='both', which='major', labelsize=self.font_size)
+        freq_axes.tick_params(axis='both', which='major')  #, labelsize=self.font_size)
+        damp_axes.tick_params(axis='both', which='major')  #, labelsize=self.font_size)
 
         title = f'Subcase {self.subcase}'
         if png_filename:
             title += '\n%s' % png_filename
 
-        damp_axes.set_title(title, fontsize=self.font_size)
+        damp_axes.set_title(title)  #, fontsize=self.font_size)
         #plt.suptitle(title)
 
         _add_damping_limit(plot_type, damp_axes, damping_limit)
@@ -2200,8 +2225,8 @@ def get_legend_kwargs(font_size: int,
 
     #if 'prop' not in legend_kwargs:
         #legend_kwargs['prop'] = {'size': font_size}
-    if 'fontsize' not in legend_kwargs:
-        legend_kwargs['fontsize'] = font_size
+    #if 'fontsize' not in legend_kwargs:
+        #legend_kwargs['fontsize'] = font_size
 
     return legend_kwargs
 
@@ -2285,33 +2310,35 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
                    label: str, text: str,
                    point_spacing: int, markersize=None) -> None:
     #point_spacing2 = None if point_spacing == 0 else point_spacing + 1
+
+    # setup for plotting every Nth point
     point_spacing2 = point_spacing + 1
     if point_spacing2 == 1:
         point_spacing2 = None
     vel2 = vel[::point_spacing2]
     damping2 = damping[::point_spacing2]
     freq2 = freq[::point_spacing2]
-    # assert len(vel2) > 0, point_spacing
-    # assert len(damping2) > 0, point_spacing
-    # assert len(freq2) > 0, point_spacing
-    # print('point_spacing = ', point_spacing)
-    # print(f'symbol, text = {symbol!r}, {text!r}')
+
     if point_spacing2 is None:
+        # plot all points and lines (default)
         damp_axes.plot(vel, damping, color=color, marker=symbol, markersize=markersize, linestyle=linestyle, label=label)
         freq_axes.plot(vel, freq, color=color, marker=symbol, markersize=markersize, linestyle=linestyle)
     elif symbol or text or linestyle:
-        print(point_spacing2, symbol, text, linestyle)
+        # draw lines with all points
         damp_axes.plot(vel, damping, color=color, linestyle=linestyle, label=label)
         freq_axes.plot(vel, freq, color=color, linestyle=linestyle)
+
         if symbol:
+            # plot every other point (for reduced clutter)
             damp_axes.scatter(vel2, damping2, color=color, marker=symbol, s=markersize, label=label)
-            freq_axes.scatter(vel2, freq2, color=color, marker=symbol, s=markersize, )
+            freq_axes.scatter(vel2, freq2, color=color, marker=symbol, s=markersize)
     #else:  # pragma: no cover
     #    raise NotImplementedError(f'point_spacing={point_spacing}; symbol={symbol!r}; text={text!r}')
     if text:
+        # annotate the mode number
         for xi, y1i, y2i in zip(vel2, damping2, freq2):
-            damp_axes.text(xi, y1i, text, color=color)
-            freq_axes.text(xi, y2i, text, color=color)
+            damp_axes.text(xi, y1i, text, color=color, clip_on=True)
+            freq_axes.text(xi, y2i, text, color=color, clip_on=True)
 
 def _show_save_clear_close(fig: plt.Figure,
                            show: bool,

@@ -15,16 +15,26 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
                  in_units: str,
                  out_units: str,
                  use_rhoref: bool) -> tuple[OP2, dict[int, FlutterResponse]]:
-    if not os.path.exists(f06_filename):
-        log.error(f'Cant find {f06_filename}')
-        return
+    """
+    load a Vg-Vf plot from:
+     - OP2 / F06
+     - dict[subcase: int, FlutterResponse]
 
+    From an OP2, load:
+     - eigenvectors, vg_vf_response
+    From an F06, load:
+     - vg_vf_response
+    """
     model = None
     responses = {}
+    if not os.path.exists(f06_filename):
+        log.error(f'Cant find {f06_filename}')
+        return model, responses
+
     in_units_dict = get_flutter_units(in_units)
     out_units_dict = get_flutter_units(out_units)
     ext = os.path.splitext(f06_filename)[1].lower()
-    print(f'use_rhoref={use_rhoref}')
+    #print(f'use_rhoref={use_rhoref}')
     if ext == '.f06':
         try:
             responses: FlutterResponse = make_flutter_response(

@@ -452,7 +452,12 @@ def run_and_compare_fems(
     assert isinstance(bdf_model, str) and os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDFv(debug=debug, log=log)
     fem1.idtype = 'int64'
-    fem1.is_strict_card_parser = False
+    is_lax_parser = True
+    if is_lax_parser:
+        fem1.log.warning('using lax card parser')
+        fem1.is_strict_card_parser = False
+        fem1.allow_overwrites_set = {'GRID', 'CONM2'}
+        fem1._make_card_parser()
     fem1.run_testing_checks = True
 
     _setup_fem(fem1, debug, log, version,
