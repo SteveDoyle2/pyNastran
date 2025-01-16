@@ -473,6 +473,10 @@ def _convert_elements(model: BDF,
                 elem.xs *= xyz_scale
                 elem.ys *= xyz_scale
                 elem.zs *= xyz_scale
+        elif elem_type == 'CWELD':
+            if elem.x is not None:
+                scales.add('length')
+                elem.x *= xyz_scale
 
         elif elem_type == 'GENEL':
             # I'm pretty sure [S] this is unitless
@@ -749,6 +753,9 @@ def _convert_properties(model: BDF,
             scales.update(['length', 'temperature'])
             prop.thicknesses *= xyz_scale
             prop.tref *= temperature_scale
+        elif prop_type == 'PWELD':
+            scales.add('length')
+            prop.d *= xyz_scale
         else:
             raise NotImplementedError(f'{prop.get_stats()}\n{prop}')
 

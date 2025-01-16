@@ -9,8 +9,8 @@ All ungrouped properties are defined in this file.  This includes:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from pyNastran.utils.numpy_utils import integer_types
+from typing import Optional, TYPE_CHECKING
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
@@ -247,36 +247,42 @@ class PFAST(Property):
 
 class PWELD(Property):
     """
-    +------+-----+-----+-----+-----+-----+-----+------+-----+
-    |   1  |  2  |  3  |  4  |  5  |  6  |  7  |   8  |  9  |
-    +======+=====+=====+=====+====+======+=====+======+=====+
-    |PWELD | PID | MID |  D  |     |     | MSET|      | TYPE|
-    +------+-----+-----+-----+-----+-----+-----+------+-----+
-    |      |LDMIN|LDMAX|     |     |     |     |      |     |
-    +------+-----+-----+-----+-----+-----+-----+------+-----+
-    |PWELD | 100 |  3  | 1.0 |     |     |     |      |     |
-    +------+-----+-----+-----+-----+-----+-----+------+-----+
+    +-------+-------+-------+-----+-----+-----+------+------+------+
+    |   1   |   2   |   3   |  4  |  5  |  6  |   7  |   8  |  9   |
+    +=======+=======+=======+=====+=====+=====+======+======+======+
+    | PWELD |  PID  |  MID  |  D  |     |     | MSET |      | TYPE |
+    +-------+-------+-------+-----+-----+-----+------+------+------+
+    |       | LDMIN | LDMAX |     |     |     |      |      |      |
+    +-------+-------+-------+-----+-----+-----+------+------+------+
+    | PWELD |  100  |   3   | 1.0 |     |     |      |      |      |
+    +-------+-------+-------+-----+-----+-----+------+------+------+
     """
     type = 'PWELD'
     _field_map = {
-        1: 'pid', 2:'mid', 3:'d', 6:'mset', 8:'connect_type', 9:'ldmin', 10:'ldmax',
+        1: 'pid', 2: 'mid', 3: 'd', 6: 'mset', 8: 'connect_type',
+        9: 'ldmin', 10: 'ldmax',
     }
     pname_fid_map = {
-        'MID' :'mid',
-        'D' : 'd',
-        'LDMIN' : 'ldmin',
-        'LDMAX' : 'ldmax',
+        'MID': 'mid',
+        'D': 'd',
+        'LDMIN': 'ldmin',
+        'LDMAX': 'ldmax',
     }
     @classmethod
     def _init_from_empty(cls):
         pid = 1
         mid = 2
         d = 0.1
-        return PWELD(pid, mid, d, mset=None, connect_type=None, ldmin=None, ldmax=None, comment='')
-    
-    def __init__(self, pid: int, mid: int, d: float, mset:str=None, connect_type: str=None, ldmin:float=None, ldmax:float=None, comment: str='') -> PWELD:
+        return PWELD(pid, mid, d, mset='OFF', connect_type='', ldmin=None, ldmax=None, comment='')
+
+    def __init__(self, pid: int, mid: int, d: float,
+                 mset: str='OFF', connect_type: str='',
+                 ldmin: Optional[float]=None,
+                 ldmax: Optional[float]=None,
+                 comment: str='') -> PWELD:
         """
         Creates a PWELD card
+
         Parameters
         ----------
         pid : int
@@ -312,6 +318,10 @@ class PWELD(Property):
         self.ldmin = ldmin
         #: Maximum length of the weld
         self.ldmax = ldmax
+        assert isinstance(d, float_types), d
+        assert isinstance(mset, str), mset
+        assert isinstance(connect_type, str), connect_type
+        assert connect_type in ['', 'SPOT'], connect_type
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -327,15 +337,16 @@ class PWELD(Property):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2,'mid')
         d = double(card, 3, 'd')
-        mset = string_or_blank(card, 6,'mset', 'OFF')
-        connect_type = string_or_blank(card, 8, 'connect_type')
+        mset = string_or_blank(card, 6,'mset', default='OFF')
+        connect_type = string_or_blank(card, 8, 'connect_type', default='')
         ldmin = double_or_blank(card, 9, 'ldmin')
         ldmax = double_or_blank(card, 10, 'ldmax')
         assert len(card) <= 11, f'len(PWELD card) = {len(card):d}\ncard={card}'
-        return PWELD(pid, mid, d, mset=mset, connect_type=connect_type, ldmin=ldmin, ldmax=ldmax, comment=comment)
-    
+        return PWELD(pid, mid, d, mset=mset, connect_type=connect_type,
+                     ldmin=ldmin, ldmax=ldmax, comment=comment)
+
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PWELD card from the OP2
         Parameters
@@ -347,7 +358,7 @@ class PWELD(Property):
         """
         (pid, mid, d, mset, connect_type, ldmin, ldmax) = data
         return PWELD(pid, mid, d, mset=mset, connect_type=connect_type, ldmin=ldmin, ldmax=ldmax, comment=comment)
-    
+
     def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
@@ -360,28 +371,31 @@ class PWELD(Property):
         """
         msg = ', which is required by PWELD pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg=msg)
-    
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
     def raw_fields(self):
-        fields = ['PWELD', self.pid, self.Mid(), self.d,
-                  self.mset, self.connect_type, self.ldmin, self.ldmax]
+        fields = [
+            'PWELD', self.pid, self.Mid(), self.d, None, None, self.mset, None, self.connect_type,
+            self.ldmin, self.ldmax]
         return fields
-    
+
     def repr_fields(self):
         mset = set_blank_if_default(self.mset, 'OFF')
-        fields = ['PWELD', self.pid, self.Mid(), self.d, mset, self.connect_type, self.ldmin, self.ldmax]
+        fields = [
+            'PWELD', self.pid, self.Mid(), self.d, None, None, mset, None, self.connect_type,
+            self.ldmin, self.ldmax]
         return fields
-    
+
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
-    
+
 class PGAP(Property):
     """
     +------+------+-------+-------+------+------+------+------+------+

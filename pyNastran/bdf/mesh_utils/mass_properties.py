@@ -7,6 +7,7 @@ Defines:
 
 """
 from __future__ import annotations
+import copy
 from itertools import count
 from collections import defaultdict
 from typing import cast, Optional, Any, TYPE_CHECKING
@@ -269,7 +270,8 @@ def _mass_properties(model: BDF, elements: list[Element], masses: list[int],
     mass = 0.
     cg = array([0., 0., 0.])
     inertia = array([0., 0., 0., 0., 0., 0., ])
-    no_mass = NO_MASS
+    no_mass = copy.deepcopy(NO_MASS)
+    no_mass.add('CWELD')  # TODO: not sure
     mass_inertia = {'CONM2'}
     for pack in (elements, masses):
         for element in pack:
@@ -548,7 +550,8 @@ def mass_properties_nsm(model: BDF, element_ids=None, mass_ids=None, nsm_id=None
     nsm_centroids_length: dict[str, list[np.ndarray]] = defaultdict(list)
     lengths: dict[str, list[float]] = defaultdict(list)
 
-    no_mass = NO_MASS
+    no_mass = copy.deepcopy(NO_MASS)
+    no_mass.add('CWELD')
     type_to_id_map = cast(dict[str, list[int]], model._type_to_id_map)
     for etype, eids in type_to_id_map.items():
         #assert isinstance(eids, list), f'etype={etype} eids={eids} type={type(eids)}'
