@@ -50,13 +50,20 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False):
 
 
 def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
-             extensions: list[str], cleanup: bool=True) -> None:
+             extensions: list[str], cleanup: bool=True,
+             run: bool=True) -> None:
     """runs a series of jobs in a specific folder"""
     assert bdf_filename_dirname.exists(), bdf_filename_dirname
+    if isinstance(extensions, str):
+        extensions = [extensions]
+    assert isinstance(extensions, list), extensions
+    for ext in extensions:
+        assert ext.startswith('.'), extensions
 
     log = SimpleLogger()
     if bdf_filename_dirname.is_dir():
         dirname = bdf_filename_dirname
+        #suffixs = [fname.suffix for fname in dirname.iterdir() if '.test_bdf.' not in fname.name]
         bdf_filenames = [dirname / fname.name for fname in dirname.iterdir()
                          if fname.suffix in extensions and '.test_bdf.' not in fname.name]
         assert len(bdf_filenames) > 0, dirname
@@ -80,7 +87,8 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
 
         percent = (ifile + 1) / nfiles * 100
         log.info(f'running {ifile+1}/{nfiles}={percent:.0f}%: {str(bdf_filename)}')
-        run_nastran(bdf_filename, nastran_cmd=nastran_exe, cleanup=cleanup)
+        run_nastran(bdf_filename, nastran_cmd=nastran_exe,
+                    cleanup=cleanup, run=run)
         log.debug(f'finished {ifile+1}/{nfiles}={percent:.0f}%: {str(bdf_filename)}')
     log.info('done')
 

@@ -37,6 +37,7 @@ LINESTYLES = ['-', '--', '-.', ':', 'None', ' ', '',
               'solid', 'dashed', 'dashdot', 'dotted']
 Crossing = tuple[float, float, float]
 
+
 class FlutterResponse:
     """storage object for single subcase SOL 145 results"""
 
@@ -66,7 +67,8 @@ class FlutterResponse:
         #modes  : array([1, 2])
         #names  : ['kfreq', '1/kfreq', 'density', 'velocity', 'damping', 'freq', 'eigr', 'eigi', 'eas', 'q', 'alt']
         #noline : False
-        #out_units : {'velocity': 'in/s', 'density': 'slinch/in^3', 'altitude': 'ft', 'dynamic_pressure': 'psi', 'eas': 'in/s'}
+        #out_units : {'velocity': 'in/s', 'density': 'slinch/in^3', 'altitude': 'ft',
+        # 'dynamic_pressure': 'psi', 'eas': 'in/s'}
         xyz_sym = ''
         if hasattr(self, 'xysym'):
             xyz_sym += f'xysym  = {self.xysym!r}\n'
@@ -123,7 +125,7 @@ class FlutterResponse:
         if in_units is None:
             in_units = get_flutter_units('english_in')
         b = cref / 2.0
-        configuration = 'AEROSG2D' #  TODO: what is this?
+        configuration = 'AEROSG2D'  #  TODO: what is this?
         xysym = '???'
         xzsym = '???'
         #[mach, rho, velocity, damping, freq]
@@ -177,15 +179,15 @@ class FlutterResponse:
                                  ncol=ncol, show=False,
                                  clear=False, close=False, legend=True, png_filename=None)
             resp.plot_vg_vf(fig=None, damp_axes=None, freq_axes=None, modes=None, plot_type='eas',
-                             legend=True, xlim=None,
-                            ylim_damping=None, ylim_freq=None, vd_limit=None,
+                            legend=True, xlim=None,
+                            ylim_damping=None, ylim_freq=None,
                             damping_limit=None,
                             clear=False, close=False,
                             ncol=ncol, png_filename=None, show=False)
             resp.plot_kfreq_damping(modes=None, plot_type='tas', fig=None, damp_axes=None, freq_axes=None,
                                     xlim=None, ncol=ncol, legend=True,
                                     show=False, clear=False, close=False, png_filename=None,
-                                    ylim_damping=None, ylim_kfreq=None, vd_limit=None, damping_limit=None)
+                                    ylim_damping=None, ylim_kfreq=None, damping_limit=None)
             resp.plot_kfreq_damping2(modes=None, fig=None, xlim=None, ylim=None,
                                      show=True, clear=False, close=False,
                                      ncol=ncol, legend=True, png_filename=None)
@@ -221,15 +223,11 @@ class FlutterResponse:
             False: assume the density in the table is absolute density
             True: assume the density should be defined by sea level density,
                   so density is a density ratio
-
-        Units
-        -----
-        Units are only applicable for quantities that have units
-        (e.g. units on Mach don't do anything).
-        All allowable fields are shown below.
-
         in_units : dict[str] = str (default=None -> no units conversion)
-            The units to read from the F06.
+            The units to read from the F06.  Units are only applicable for
+            quantities that have units (e.g. units on Mach don't do anything).
+            All allowable fields are shown below.
+
             PK method:
                 in_units = {'velocity' : 'in/s'}
                 The velocity units are the units for the FLFACT card in the BDF
@@ -263,7 +261,7 @@ class FlutterResponse:
 
         """
         if eigr_eigi_velocity is None:
-            eigr_eigi_velocity = np.zeros((0,3), dtype='float64')
+            eigr_eigi_velocity = np.zeros((0, 3), dtype='float64')
         if eigenvector is None:
             eigenvector = np.array([], dtype='complex128')
         else:
@@ -395,9 +393,23 @@ class FlutterResponse:
         self.set_symbol_settings()
         self.set_font_settings(font_size=None)
 
+    def set_plot_settings(self, figsize=None):
+        if figsize is None:
+            figsize = plt.rcParams['figure.figsize']
+            #figsize = (6.4, 4.8)
+        out = {'figsize': figsize}
+        matplotlib.rc('figure', **out)
+
     def set_symbol_settings(self, nopoints: bool=False,
                             show_mode_number: bool=False,
-                            point_spacing: int=0) -> None:
+                            point_spacing: int=0,
+                            markersize: int=0) -> None:
+        if markersize is None:
+            markersize = plt.rcParams['markersize']
+        plt.rcParams['lines.markersize'] = markersize
+        #out = {'lines': markersize}
+        #matplotlib.rc('lines', **out)
+
         self.nopoints = nopoints
         self.show_mode_number = show_mode_number
         self.point_spacing = point_spacing
@@ -449,10 +461,10 @@ class FlutterResponse:
         density_units_in = in_units['density']
 
         # in/s
-        vel = results[:, :, self.ivelocity]#.ravel()
+        vel = results[:, :, self.ivelocity]  #.ravel()
 
         # slinch/in^3 - in_units
-        rho = results[:, :, self.idensity]#.ravel()
+        rho = results[:, :, self.idensity]  #.ravel()
 
         # good
         rho_ref = atm_density(0., R=1716., alt_units='ft',
@@ -517,11 +529,11 @@ class FlutterResponse:
         # rgbkm - max of 35 combinations
         # C0-10 - max of 70 combinations
         if colors is None:
-            #colors = ['r', 'g', 'b', 'k', 'm'] # 5
-            colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9'] # 10
+            #colors = ['r', 'g', 'b', 'k', 'm']  # 5
+            colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']  # 10
 
         if symbols is None:
-            symbols = ['o', '*', 'x', 'v', '>', '<', '^'] # 7
+            symbols = ['o', '*', 'x', 'v', '>', '<', '^']  # 7
         if imethod == 0:
             for symbol in symbols:
                 for color in colors:
@@ -615,7 +627,8 @@ class FlutterResponse:
 
     def get_flutter_crossings(self,
                               damping_required: Optional[list[tuple[float, float]]]=None,
-                              modes=None, eas_range=None,
+                              modes=None,
+                              eas_range: Optional[tuple[float, float]]=None,
                               freq_round: int=2,
                               eas_round: int=3,
                               ) -> dict[int, list[Crossing]]:
@@ -1119,7 +1132,7 @@ class FlutterResponse:
                 axes2.plot(xs[iplot], y2s[iplot], marker=symbol2,
                            color=color2, markersize=markersize, linestyle=linestyle2)
             else:
-                _plot_two_axes(
+                legend_elementsi = _plot_two_axes(
                     axes1, axes2,
                     xs[iplot], y1s[iplot], y2s[iplot],
                     color, symbol2, linestyle, label, texti,
@@ -1170,14 +1183,13 @@ class FlutterResponse:
                            close: bool=False, legend: bool=True,
                            freq_tol: float=-1.0,
                            png_filename=None,
-                           vd_limit=None, damping_limit=None,
+                           damping_limit=None,
                            **kwargs):
         """
         Plots a kfreq vs. damping curve
 
         See ``plot_root_locus`` for arguments
         """
-        assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
 
         ylabel1 = r'Structural Damping; $g = 2 \gamma $'
@@ -1280,13 +1292,16 @@ class FlutterResponse:
                    clear: bool=False, close: bool=False, legend: bool=True,
                    xlim=None, ylim_damping=None, ylim_freq=None,
                    ivelocity: Optional[int]=None,
-                   #vl_limit=None,
-                   vd_limit=None,
                    v_lines: list[tuple[str, float, Color, str]]=None,
                    damping_limit=None,
                    ncol: int=0,
                    freq_tol: float=-1.0,
-                   png_filename=None, show: bool=False):
+                   filter_freq: bool=False,
+                   damping_required: list[tuple[float, float]]=None,
+                   filter_damping: bool=False,
+                   eas_range: Optional[tuple[float, float]]=None,
+                   png_filename=None, show: bool=False,
+                   ) -> tuple[plt.Figure, tuple[plt.Axes, plt.Axes]]:
         """
         Make a V-g and V-f plot
 
@@ -1308,16 +1323,27 @@ class FlutterResponse:
             should the legend be shown
         show : bool; default=None???
             show/don't show the plot
-
+        filter_freq : bool; default=False
+            filter modes entirely outside the plot range
+            useful for cleaning up the legend; False for interactive mode
+        damping_required: list[(damping_target, damping_required)]
+            A point will be created at the damping point if it meets the criterion
+            for damping_required. This is useful when you have slight spikes over the target damping
+            target_damping: float
+                the target damping for flutter
+            damping_required: float
+                the required damping for flutter
+        filter_damping: bool; default=False
+            filter crossings entirely outside the plot range
+            useful for cleaning up the legend
         """
         if v_lines is None:
             v_lines = []
         #assert vl_limit is None or isinstance(vl_limit, float_types), vl_limit
-        assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
         #self.fix()
         if fig is None:
-            fig = plt.figure() # figsize=(12,9), self.subcase
+            fig = plt.figure()  # figsize=(12,9), self.subcase
             gridspeci = gridspec.GridSpec(2, 4)
             damp_axes = fig.add_subplot(gridspeci[0, :3])
             freq_axes = fig.add_subplot(gridspeci[1, :3], sharex=damp_axes)
@@ -1335,14 +1361,18 @@ class FlutterResponse:
         imodes_crossing = []
         xcrossing_dict = {}
 
-        damping_required = [
-            (0.00, 0.03),
-            (0.03, 0.04),
-        ]
         if hasattr(self, 'ieas') and plot_type == 'eas':
             xcrossing_dict = self.get_flutter_crossings(
-                damping_required=damping_required, modes=modes)
+                damping_required=damping_required, modes=modes,
+                eas_range=eas_range)
 
+        if ylim_freq is None or not isinstance(ylim_freq[0], float_types) or not isinstance(ylim_freq[0], float_types):
+            filter_freq = False
+
+        if filter_freq:
+            yfreq_min, yfreq_max = ylim_freq
+
+        legend_elements = []
         for i, imode, mode in zip(count(), imodes, modes):
             color = colors[jcolor]
             symbol = symbols[jcolor]
@@ -1367,19 +1397,32 @@ class FlutterResponse:
             #freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
             #print(color, symbol, linestyle)
             label = _get_mode_freq_label(mode, freq[0])
+            if filter_freq and freq.min() > ylim_freq[1]:
+                # if we're entirely greater than the max, skip line
+                #print(f'skipping {label!r}; min={freq.min()} yfreq_max={ylim_freq[1]}')
+                continue
+            if filter_freq and freq.max() < ylim_freq[0]:
+                # if we're entirely below than the min, skip line
+                #print(f'skipping {label!r}; min={freq.max()} yfreq_min={ylim_freq[0]}')
+                continue
+
             # _plot_axes(damp_axes,
             #            vel, damping,
             #            color, symbol2, linestyle2,
             #            label, texti)
 
-            if texti == '':
-                msgi = str([texti, symbol2, linestyle2]) + 'was unexpected...'
-                warnings.warn(msgi)
-            _plot_two_axes(damp_axes, freq_axes,
-                           vel, damping, freq,
-                           color, symbol2, linestyle2,
-                           label, texti,
-                           self.point_spacing, markersize=None)
+            #if texti == '':
+                #msgi = str([texti, symbol2, linestyle2]) + 'was unexpected...'
+                #warnings.warn(msgi)
+            legend_elementsi = _plot_two_axes(
+                damp_axes, freq_axes,
+                vel, damping, freq,
+                color, symbol2, linestyle2,
+                label, texti,
+                self.point_spacing,
+                markersize=None)
+            #assert len(legend_elementsi), len(legend_elementsi)
+            legend_elements.extend(legend_elementsi)
             if ivelocity and symbol2 and ivelocity < len(vel):
                 markersize = 10
                 plot_kwargs = {
@@ -1388,11 +1431,31 @@ class FlutterResponse:
                 damp_axes.scatter(vel[ivelocity], damping[ivelocity], **plot_kwargs)
                 freq_axes.scatter(vel[ivelocity], freq[ivelocity], **plot_kwargs)
 
-        self._plot_crossings(
+        # add horizontal line
+        legend_elementsi = _add_damping_limit(
+            plot_type, damp_axes, damping_limit)
+        legend_elements.extend(legend_elementsi)
+
+        # add vertical lines
+        for v_line in v_lines:
+            name, velocity, vcolor, linestyle = v_line
+            legend_elementsi = _add_vlimit(
+                plot_type, damp_axes, freq_axes,
+                name, velocity, xunit,
+                color=vcolor, linestyle=linestyle)
+            #_add_limit(plot_type, damp_axes, freq_axes, '1.15*VL', 1.15, vl_limit)
+            legend_elements.extend(legend_elementsi)
+
+        # crossings go on top (aka at the end)
+        eas_max = None if (xlim is None or xlim[1] is None) else xlim[1]
+        legend_elementsi = self._plot_crossings(
             damp_axes, damping_required,
             imodes, modes,
             imodes_crossing, xcrossing_dict,
-            colors_show, symbols_show)
+            colors_show, symbols_show,
+            eas_max=eas_max,
+            filter_damping=filter_damping)
+        legend_elements.extend(legend_elementsi)
 
         damp_axes.set_xlabel(xlabel)  #, size=self.font_size)
         freq_axes.set_xlabel(xlabel)  #, size=self.font_size)
@@ -1417,28 +1480,14 @@ class FlutterResponse:
         damp_axes.set_title(title)  #, fontsize=self.font_size)
         #plt.suptitle(title)
 
-        _add_damping_limit(plot_type, damp_axes, damping_limit)
-        #_add_vd_limit(plot_type, damp_axes, freq_axes, vl_limit)
-
-        for v_line in v_lines:
-            name, velocity, vcolor, linestyle = v_line
-            _add_vlimit(plot_type, damp_axes, freq_axes,
-                        name, velocity, xunit,
-                        color=vcolor, linestyle=linestyle)
-            #_add_limit(plot_type, damp_axes, freq_axes, '1.15*VL', 1.15, vl_limit)
-        # if name_vd_limit:
-        #     name, vl_limit = name_vl_limit
-        #     _add_limit(plot_type, damp_axes, freq_axes, 'VD', 1, vd_limit)
-        #     _add_limit(plot_type, damp_axes, freq_axes, '1.15*VD', 1.15, vd_limit)
-        # if name_vf_limit:
-        #     name, vl_limit = name_vl_limit
-        #     _add_limit(plot_type, damp_axes, freq_axes, 'VD', 1, vd_limit)
-        #     _add_limit(plot_type, damp_axes, freq_axes, '1.15*VD', 1.15, vd_limit)
-
         nmodes = len(modes)
         ncol = _update_ncol(nmodes, ncol)
         if legend:
-            damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol)
+            damp_axes.legend(
+                handles=legend_elements,
+                bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol,
+                #fontsize=10,
+            )
             #damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol)
             #fig.subplots_adjust(hspace=0.25)
             #fig.subplots_adjust(hspace=.5)
@@ -1449,6 +1498,7 @@ class FlutterResponse:
 
         _show_save_clear_close(
             fig, show, png_filename, clear, close)
+        return fig, (damp_axes, freq_axes)
 
     def _plot_crossings(self,
                         damp_axes: plt.Axes,
@@ -1458,10 +1508,13 @@ class FlutterResponse:
                         imodes_crossing: np.ndarray,
                         xcrossing_dict: dict[int, list[Crossing]],
                         colors: list[str],
-                        symbols: list[str]) -> None:
+                        symbols: list[str],
+                        eas_max=None,
+                        filter_damping: bool=False) -> list[Line2D]:
+        legend_elements = []
         assert isinstance(xcrossing_dict, dict), xcrossing_dict
         if len(xcrossing_dict) == 0:
-            return
+            return legend_elements
         jcolor = 0
         xunit = self.out_units['eas']
         # TODO: fix the colors...
@@ -1481,11 +1534,17 @@ class FlutterResponse:
                 damping0, freq0, eas0 = case
                 if np.isnan(eas0):
                     continue
+                if filter_damping and eas0 > eas_max:
+                    continue
                 damping_str = f'{damping0*100:.0f}%'
                 label = f'  {mode}: {damping_str}={eas0:.1f} [{xunit}]; f={freq0:.2f} [Hz]'
+                legend_element = Line2D([0], [0],
+                                        marker=symbol2, color=color, label=label, linestyle='')
                 damp_axes.plot(eas0, damping0, color=color,
                                marker=symbol2, linestyle='', label=label)
+                legend_elements.append(legend_element)
             jcolor += 1
+        return legend_elements
 
     def export_to_csv(self, csv_filename: PathLike,
                       modes: Optional[list[int]]=None) -> None:
@@ -1980,15 +2039,21 @@ def _asarray(results, allow_fix_kfreq: bool=True):
 def _add_damping_limit(plot_type: str,
                        damp_axes: Axes,
                        damping_limit: Optional[float],
-                       linewidth: int=2) -> None:
+                       linewidth: int=2) -> list[Line2D]:
+    legend_elements = []
     if damping_limit is None:
-        return
+        return legend_elements
     #damp_label = f'Damping={damping_limit*100:.1f}'
     #plt.axhline(y=1.0, color="black", linestyle="--")
-    damp_axes.axhline(y=0., color='k', linestyle='--', linewidth=linewidth,
-                      label=f'Structural Damping=0%')
-    damp_axes.axhline(y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
-                      label=f'Abs Structural Damping={damping_limit*100:.0f}%')
+    line1 = damp_axes.axhline(
+        y=0., color='k', linestyle='--', linewidth=linewidth,
+        label=f'Structural Damping=0%')
+    line2 = damp_axes.axhline(
+        y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
+        label=f'Abs Structural Damping={damping_limit*100:.0f}%')
+    legend_elements.append(line1)
+    legend_elements.append(line2)
+    return legend_elements
 
 
 def _add_vlimit(plot_type: str,
@@ -1998,21 +2063,23 @@ def _add_vlimit(plot_type: str,
                 xunit: str,
                 linestyle: str='--',
                 color: str='k',
-                linewidth: int=2) -> None:
+                linewidth: int=2) -> list[Line2D]:
+    legend_elements = []
     if plot_type not in {'tas', 'eas'}:
-        return
+        return legend_elements
     assert linestyle in LINESTYLES, (name, linestyle)
-    # ax.text(0, vd_limit, 'Damping Limit')
 
     if velocity == int(velocity):
         label = f'{name}={velocity:.0f} [{xunit}]'
     else:
         label = f'{name}={velocity:.1f} [{xunit}]'
-    damp_axes.axvline(x=velocity, color=color, linestyle=linestyle,
-                      linewidth=linewidth, label=label)
-    freq_axes.axvline(x=velocity, color=color, linestyle=linestyle,
-                      linewidth=linewidth)
-
+    line = damp_axes.axvline(
+        x=velocity, color=color, linestyle=linestyle,
+        linewidth=linewidth, label=label)
+    freq_axes.axvline(
+        x=velocity, color=color, linestyle=linestyle,
+        linewidth=linewidth)
+    return [line]
 
 def get_flutter_units(units: Optional[str | dict[str, str]]) -> dict[str, str]:
     """gets the units"""
@@ -2156,13 +2223,13 @@ def _increment_jcolor(mode: int,
     #print(f'freq_tol = {freq_tol!r}')
     assert isinstance(freq, np.ndarray), freq
     assert isinstance(freq_tol, float_types), freq_tol
-    is_filered = False
+    is_filtered = False
     if freq.max() - freq.min() <= freq_tol:
         color = 'gray'
-        is_filered = True
+        is_filtered = True
         jcolor -= 1
-    linestyle2 = '--' if is_filered else linestyle
-    symbol2 = '' if is_filered else symbol
+    linestyle2 = '--' if is_filtered else linestyle
+    symbol2 = '' if is_filtered else symbol
 
     text = ''
     if show_mode_number and symbol2:
@@ -2173,13 +2240,13 @@ def _increment_jcolor(mode: int,
 
 Limit = tuple[Optional[float], Optional[float]] | None
 def set_xlim(axes: plt.Axes, xlim: Limit) -> None:
-    if xlim == [None, None]:# or xlim == (None, None):
+    if xlim == [None, None]:  # or xlim == (None, None):
         xlim = None
     if xlim is not None:
         axes.set_xlim(xlim)
 
 def set_ylim(axes: plt.Axes, ylim: Limit) -> None:
-    if ylim == [None, None]:# or ylim == (None, None):
+    if ylim == [None, None]:  # or ylim == (None, None):
         ylim = None
     if ylim is not None:
         axes.set_ylim(ylim)
@@ -2251,19 +2318,16 @@ def check_range(eas_min0: float, eas_max0: float,
     """
     if np.isnan(eas):
         return eas, freq
-    if eas_min0 is not None and eas_max0 is not None:
-        if not (eas_min0 <= eas <= eas_max0):
-            eas = np.nan
-            freq = np.nan
-    elif eas_min0 is not None:
-        if not (eas_min0 <= eas):
-            eas = np.nan
-            freq = np.nan
-    elif eas_max0 is not None:
-        if not (eas <= eas_max0):
-            eas = np.nan
-            freq = np.nan
+    if eas_min0 is not None and eas < eas_min0:
+        eas = np.nan
+        freq = np.nan
+        return eas, freq
+
+    if eas_max0 is not None and eas > eas_max0:
+        eas = np.nan
+        freq = np.nan
     return eas, freq
+
 
 def _get_min_damping(damping_required: list[tuple[float, float]]) -> float:
     """
@@ -2308,7 +2372,12 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
                    vel: np.ndarray, damping: np.ndarray, freq: np.ndarray,
                    color: str, symbol: str, linestyle: str,
                    label: str, text: str,
-                   point_spacing: int, markersize=None) -> None:
+                   point_spacing: int,
+                   markersize=None) -> list[Line2D]:
+    legend_element = Line2D([0], [0], color=color,
+                            marker=symbol, label=label, linestyle=linestyle)
+    legend_elements = [legend_element]
+
     #point_spacing2 = None if point_spacing == 0 else point_spacing + 1
 
     # setup for plotting every Nth point
@@ -2318,20 +2387,28 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
     vel2 = vel[::point_spacing2]
     damping2 = damping[::point_spacing2]
     freq2 = freq[::point_spacing2]
+    legend_elements = []
 
+    legend_element = Line2D([0], [0], color=color,
+                            marker=symbol, label=label, linestyle=linestyle)
+    legend_elements = [legend_element]
     if point_spacing2 is None:
         # plot all points and lines (default)
-        damp_axes.plot(vel, damping, color=color, marker=symbol, markersize=markersize, linestyle=linestyle, label=label)
+        line = damp_axes.plot(vel, damping, color=color, marker=symbol, markersize=markersize, linestyle=linestyle, label=label)
         freq_axes.plot(vel, freq, color=color, marker=symbol, markersize=markersize, linestyle=linestyle)
     elif symbol or text or linestyle:
         # draw lines with all points
-        damp_axes.plot(vel, damping, color=color, linestyle=linestyle, label=label)
+        line = damp_axes.plot(vel, damping, color=color, linestyle=linestyle, label=label)
         freq_axes.plot(vel, freq, color=color, linestyle=linestyle)
 
         if symbol:
             # plot every other point (for reduced clutter)
-            damp_axes.scatter(vel2, damping2, color=color, marker=symbol, s=markersize, label=label)
+            damp_axes.scatter(vel2, damping2, color=color, marker=symbol, s=markersize)
             freq_axes.scatter(vel2, freq2, color=color, marker=symbol, s=markersize)
+            #for linei in line:
+                #print(linei.get_label())
+                #linei.set_symbol(symbol)
+                #linei.set_markersize(markersize)
     #else:  # pragma: no cover
     #    raise NotImplementedError(f'point_spacing={point_spacing}; symbol={symbol!r}; text={text!r}')
     if text:
@@ -2339,6 +2416,8 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
         for xi, y1i, y2i in zip(vel2, damping2, freq2):
             damp_axes.text(xi, y1i, text, color=color, clip_on=True)
             freq_axes.text(xi, y2i, text, color=color, clip_on=True)
+    return legend_elements
+
 
 def _show_save_clear_close(fig: plt.Figure,
                            show: bool,
@@ -2354,6 +2433,7 @@ def _show_save_clear_close(fig: plt.Figure,
         fig.clear()
     if close:
         plt.close()
+
 
 def reshape_eigenvectors(eigenvectors: np.array,
                          eigr_eigi_vel: np.array,
