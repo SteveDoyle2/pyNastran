@@ -1155,7 +1155,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         Replaces the common cards from the current (self) model from the
         ones in the new replace_model.  The intention is that you're
         going to replace things like PSHELLs and DESVARs from a pch file
-        in order to update your BDF with the optimized geometry.
+        in order to update your BDF with the optimized geometry. You can
+        also just add cards with this and if the ids exist, it'll overwrite.
 
         .. todo:: only does a subset of cards.
 
@@ -1165,10 +1166,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         cards one-to-one...not sure what to do
 
         """
+        self.log.info('replacing cards')
+        self.log.info(replace_model.get_bdf_stats())
         for nid, node in replace_model.nodes.items():
             self.nodes[nid] = node
-        for eid, elem in self.elements.items():
+        for eid, elem in replace_model.elements.items():
             self.elements[eid] = elem
+        for eid, elem in replace_model.masses.items():
+            self.masses[eid] = elem
         for eid, elem in replace_model.rigid_elements.items():
             self.rigid_elements[eid] = elem
         for pid, prop in replace_model.properties.items():
