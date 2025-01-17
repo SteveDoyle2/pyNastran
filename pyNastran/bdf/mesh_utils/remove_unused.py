@@ -113,6 +113,7 @@ def remove_unused(bdf_filename: PathLike,
         'PHBDY', 'CHBDYG', 'CHBDYP', 'CHBDYE', 'RADBC', 'CONVM', # 'CONV',
         'QVOL', 'PCONVM', # 'PCONV',
         #'PBCOMP', 'PDAMP5', 'CFAST',
+        'CWELD',
         'AECOMP', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
         'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
         'DCONADD',
@@ -612,7 +613,10 @@ def remove_unused(bdf_filename: PathLike,
                 nids_used.add(card.nid)
                 cids_used.add(card.cid)
             #for nid in ids:
-
+        elif card_type == 'PWELD':
+            for pid in ids:
+                card = model.properties[pid]
+                mids_used.add(card.mid)
         else:  # pragma: no cover
             raise NotImplementedError(card_type)
 
@@ -773,7 +777,7 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
             if elem.g0 is not None:
                 assert isinstance(elem.g0, int), elem.g0
 
-    elif card_type == 'CFAST':
+    elif card_type in {'CFAST', 'CWELD'}:
         for eid in ids:
             elem = model.elements[eid]
             nids_used.update(elem.node_ids)

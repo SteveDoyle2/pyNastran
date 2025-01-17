@@ -105,7 +105,7 @@ def get_material_mass_breakdown_table(model: BDF) -> tuple[dict[int, float],
             raise NotImplementedError(elem)
     return dict(mid_to_mass), dict(pid_to_mid_to_mass), dict(pid_to_mid_to_rho_mass), dict(pid_to_mid_to_nsm_mass)
 
-def get_property_mass_breakdown_table(model):
+def get_property_mass_breakdown_table(model: BDF):
     pids_to_thickness = get_thickness_breakdown(model, property_ids=None, stop_if_no_thickness=False)
     pids_to_length = get_length_breakdown(model, property_ids=None, stop_if_no_length=False)
     pids_to_area = get_area_breakdown(model, property_ids=None, sum_bar_area=False, stop_if_no_area=False)
@@ -167,6 +167,9 @@ def get_length_breakdown(model: BDF, property_ids=None,
 
         # acoustic
         'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
+
+        # welds - not sure
+        'PWELD',
     }
     bar_properties = {'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
                       'PROD', 'PTUBE', 'PBRSECT', 'PBMSECT', 'PBCOMP',
@@ -254,6 +257,9 @@ def get_area_breakdown(model: BDF,
 
         # acoustic
         'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
+
+        # weld
+        'PWELD',
     }
     bar_properties = {
         'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBEAM3'}
@@ -309,7 +315,7 @@ def get_thickness_breakdown(model: BDF,
                             stop_if_no_thickness: bool=False):
     skip_props = {
         'PBAR', 'PBARL', 'PROD', 'PSOLID', 'PBUSH', 'PBUSH1D',
-        'PGAP', 'PRAC2D', 'PRAC3D'}
+        'PGAP', 'PRAC2D', 'PRAC3D', 'PWELD'}
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=stop_if_no_thickness,
         msg=' which is required by get_thickness_breakdown')
@@ -354,7 +360,8 @@ def get_thickness_breakdown(model: BDF,
             raise RuntimeError(msg)
     return pids_to_thickness
 
-def get_volume_breakdown(model: BDF, property_ids=None, stop_if_no_volume=True):
+def get_volume_breakdown(model: BDF, property_ids=None,
+                         stop_if_no_volume: bool=True):
     """
     Gets a breakdown of the volume by property region.
 
@@ -390,9 +397,11 @@ def get_volume_breakdown(model: BDF, property_ids=None, stop_if_no_volume=True):
         # lines - should be included
         'PBEND', 'PBEAM3',
 
-
         # acoustic
         'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
+
+        # weld
+        'PWELD',
     }
     bar_properties = {
         'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', # 'PBEAM3'
@@ -613,7 +622,7 @@ def get_mass_breakdown(model: BDF, property_ids=None,
                     masses_nonstructural.append(area * nsm)
                 else:
                     masses.append(area * (rho * thickness + nsm))
-        elif prop.type in {'PBRSECT', 'PBMSECT'}:
+        elif prop.type in {'PBRSECT', 'PBMSECT', 'PWELD'}:
             model.log.warning('skipping:\n%s' % prop)
             continue
         else:  # pragma: no cover

@@ -101,6 +101,116 @@ class TestElements(unittest.TestCase):
         model.cross_reference()
         save_load_deck(model)
 
+    def test_cweld_elemid(self):
+        connectype = 'ELEMID'
+        log = get_logger(level='debug')
+        model = BDF(log=log)
+        eid = 10
+        pid = 20
+        gs = None
+        ga = 32
+        gb = 33
+        mcid = 0
+        shida = 101
+        shidb = 102
+        x = [1., 2., 3.]
+        model.add_cweld(eid, pid, gs, connectype, ga, gb,
+                        mcid=mcid, shida=shida, shidb=shidb,
+                        x=x, comment='weld')
+        mid = 201
+        d = 0.1
+        model.add_pweld(pid, mid, d, comment='pweld')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_grid(31, [0., 0., 0.])
+        model.add_grid(32, [1., 0., 0.])
+        model.add_grid(33, [2., 0., 0.])
+        save_load_deck(model)
+
+    def test_cweld_elpat(self):
+        connectype = 'ELPAT'
+        log = get_logger(level='debug')
+        model = BDF(log=log)
+        eid = 10
+        pid = 20
+        gs = None
+        ga = 32
+        gb = 33
+        mcid = 0
+        shida = 101
+        shidb = 102
+        x = [1., 2., 3.]
+        model.add_cweld(eid, pid, gs, connectype, ga, gb,
+                        mcid=mcid, shida=shida, shidb=shidb,
+                        x=x, comment='weld')
+        mid = 201
+        d = 0.1
+        model.add_pweld(pid, mid, d, comment='pweld')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_grid(31, [0., 0., 0.])
+        model.add_grid(32, [1., 0., 0.])
+        model.add_grid(33, [2., 0., 0.])
+        save_load_deck(model)
+
+    def test_cweld_partpat(self):
+        connectype = 'ELEMID'
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        eid = 10
+        pid = 20
+        gs = None
+        ga = 32
+        gb = 33
+        mcid = 0
+        shida = 101
+        shidb = 102
+        model.add_cweld(eid, pid, gs, connectype, ga, gb,
+                        mcid=mcid, shida=shida, shidb=shidb,
+                        x=None, comment='weld')
+        mid = 201
+        d = 0.1
+        model.add_pweld(pid, mid, d, comment='pweld')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_grid(31, [0., 0., 0.])
+        model.add_grid(32, [1., 0., 0.])
+        model.add_grid(33, [2., 0., 0.])
+        save_load_deck(model)
+
+    def test_cweld_elemid(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        eid = 10
+        pid = 20
+        gs = None
+        ga = 32
+        gb = 33
+        mcid = 0
+        shida = 101
+        shidb = 102
+        connectype = 'ELEMID'
+        model.add_cweld(eid, pid, gs, connectype, ga, gb,
+                        mcid, shida, shidb,
+                        x=None, comment='weld')
+        mid = 201
+        d = 0.1
+        model.add_pweld(pid, mid, d, comment='pweld')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_grid(31, [0., 0., 0.])
+        model.add_grid(32, [1., 0., 0.])
+        model.add_grid(33, [2., 0., 0.])
+        save_load_deck(model)
+
     def test_cfast(self):
         """tests a CFAST/PFAST"""
         log = get_logger(level='warning')

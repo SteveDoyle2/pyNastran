@@ -237,9 +237,11 @@ class CFAST(Element):
         return self.comment + print_card_8(card)
 
 
-class CWELD(CFAST):
+class CWELD(Element):
     """
-    There are five different formats of the CWELD card as GRIDid, ELEMID, ELPAT and PARTPAT.
+    There are five different formats of the CWELD card as
+    GRIDid, ELEMID, ELPAT and PARTPAT.
+
     ELEMID format:
     +-------+-----+-----+-----+--------+-----+-----+-----+-----+
     |   1   |  2  |  3  |  4  |  5     |  6  |  7  |  8  |  9  |
@@ -249,15 +251,15 @@ class CWELD(CFAST):
     |       |SHIDA|SHIDB|     |        |     |     |     |     |
     +-------+-----+-----+-----+--------+-----+-----+-----+-----+
     or PARTPAT format:
-    +-------+-----+-----+-----+---------+-----+-----+-----+-----+
-    |   1   |  2  |  3  |  4  |  5      |  6  |  7  |  8  |  9  |
-    +=======+=====+=====+=====+========+=====+=====+======+=====+
-    | CWELD | EWID| PWID| GS  |"PARTPAT"| GA  | GB |      |MCID |
-    +-------+-----+-----+-----+---------+-----+----+------+-----+
-    |       | PIDA|PIDB |     |         |     |    |      |     |
-    +-------+-----+-----+-----+---------+-----+----+------+-----+
-    |       | XS  | YS  |  ZS |         |     |    |      |     |
-    +-------+-----+-----+-----+---------+-----+----+------+-----+
+    +-------+------+------+-----+---------+-----+-----+------+-----+
+    |   1   |  2   |  3   |  4  |  5      |  6  |  7  |  8   |  9  |
+    +=======+=============+=====+=========+=====+=====+======+=====+
+    | CWELD | EWID | PWID | GS  |"PARTPAT"| GA  | GB  |      |MCID |
+    +-------+------+------+-----+---------+-----+-----+------+-----+
+    |       | PIDA | PIDB |     |         |     |     |      |     |
+    +-------+------+------+-----+---------+-----+-----+------+-----+
+    |       |  XS  |  YS  |  ZS |         |     |     |      |     |
+    +-------+------+------+-----+---------+-----+-----+------+-----+
     or ELPAT:
     +-------+-----+-----+-----+--------+-----+-----+-----+-----+
     |   1   |  2  |  3  |  4  |  5     |  6  |  7  |  8  |  9  |
@@ -268,15 +270,24 @@ class CWELD(CFAST):
     +-------+-----+-----+-----+--------+-----+-----+-----+-----+
     |       | XS  |   YS|  ZS |        |     |     |     |     |
     +-------+-----+-----+-----+--------+-----+-----+-----+-----+
-    "ELEMID" string indicating that the connectivity of surface patch A to surface patch B is defined with two shell element identification numbers, SHIDA and SHIDB, respectively.
+    "ELEMID" string indicating that the connectivity of
+    surface patch A to surface patch B is defined with
+    two shell element identification numbers, SHIDA and SHIDB,
+    respectively.
+
+    Parameters
+    ----------
+
+    x : list[float]; [xs, ys, zs]
+        applies to ELPAT, PARTPAT
     """
     type = 'CWELD'
     _properties = ['node_ids', 'nodes']
     _field_map = {
-        1: 'eid', 2:'pid', 3:'gs', 4:'connectype', 5:'ga', 6:'gb', 8:'mcid',
+        1: 'eid', 2: 'pid', 3: 'gs', 4: 'connectype',
+        5: 'ga', 6: 'gb', 8: 'mcid',
     }
-    cp_name_map = {
-        }
+    cp_name_map = {}
 
     @classmethod
     def _init_from_empty(cls):
@@ -284,13 +295,20 @@ class CWELD(CFAST):
         pid = 1
         connectype = 'ELEMID'
         return CWELD(eid, pid, gs=None, connectype=connectype, ga=None, gb=None, mcid=None, shida=None, shidb=None, comment='')
-    
-    def __init__(self, eid: int, pid: int, gs: Optional[int], connectype: str, ga: int, gb: int, mcid=None, shida:Optional[int]=None, shidb:Optional[int]=None, pida:Optional[int]=None, pidb:Optional[int]=None, x:Optional[list[float]]=None, comment:str=''):
+
+    def __init__(self, eid: int, pid: int, gs: Optional[int],
+                 connectype: str, ga: int, gb: int,
+                 mcid: int=-1,
+                 shida: Optional[int]=None, shidb: Optional[int]=None,
+                 pida: Optional[int]=None, pidb: Optional[int]=None,
+                 x: Optional[list[float]]=None, comment: str=''):
         Element.__init__(self)
         if comment:
             self.comment = comment
         if pid is None:
             pid = eid
+        if x is not None:
+            x = np.asarray(x, dtype='float64')
         self.eid = eid
         self.pid = pid
         self.gs = gs
@@ -307,18 +325,42 @@ class CWELD(CFAST):
         self.gs_ref = None
         self.ga_ref = None
         self.gb_ref = None
+        self.mcid_ref = None
+        assert connectype in ['ELEMID', 'ELPAT', 'PARTPAT'], connectype
 
     def validate(self):
         if self.connectype in ['GRIDID', 'ALIGN']:
             msg = f'Format "GRIDID" or "ALIGN" of CWELD of element eid={self.eid} is not supported'
             raise TypeError(msg)
-        
+
         if self.gs is None and self.ga is None:
             msg = f'The definition of CWELD; eid={self.eid} is not correct, either GS or GA must be defined'
             raise ValueError(msg)
-        
+
+        if self.connectype == 'ELEMID':
+            assert self.gs is None, self.get_stats()
+            assert self.pida is None, self.get_stats()
+            assert self.pidb is None, self.get_stats()
+            assert self.shida is not None, self.get_stats()
+            assert self.shidb is not None, self.get_stats()
+        elif self.connectype == 'ELPAT':
+            assert self.x is not None, self.get_stats()
+            #assert gs is None
+            assert self.shida is not None, self.get_stats()
+            assert self.shidb is not None, self.get_stats()
+            pass
+        elif self.connectype == 'PARTPAT':
+            assert self.pida is not None, self.get_stats()
+            assert self.pidb is not None, self.get_stats()
+            assert self.shida is None, self.get_stats()
+            assert self.shidb is None, self.get_stats()
+            #assert self.gs is None, self.get_stats()
+        else:  # pragma: no cover
+            raise NotImplementedError(self.connectype)
+
+
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CWELD card from ``BDF.add_card(...)``
 
@@ -331,43 +373,50 @@ class CWELD(CFAST):
 
         """
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', eid)
+        pid = integer_or_blank(card, 2, 'pid', default=eid)
         gs = integer_or_blank(card, 3, 'gs')
-        connectype = string(card, 4, 'connectype')
-        
+        connect_type = string(card, 4, 'connectype')
+
         ga = integer(card, 5, 'ga')
         gb = integer(card, 6, 'gb')
-        mcid = integer_or_blank(card, 8,'mcid')
+        mcid = integer_or_blank(card, 8,'mcid', -1)
         shida_pida = integer_or_blank(card, 9,'shida_pida')
         shidb_pidb = integer_or_blank(card, 10,'shidb_pidb')
-        if connectype == 'ELEMID':
-            x = [None, None, None]
-            assert len(card)<=11, f'len(CWELD card) = {len(card):d}\ncard={card}'
-        elif connectype == 'ELPAT':
-            x = [double_or_blank(card, 18, 'xs', 0.0),
-                 double_or_blank(card, 19, 'ys', 0.0),
-                 double_or_blank(card, 20, 'zs', 0.0)]
-            assert len(card)<=21, f'len(CWELD card) = {len(card):d}\ncard={card}'
-        elif connectype == 'PARTPAT':
-            x = [double_or_blank(card, 18, 'xs', 0.0),
-                 double_or_blank(card, 19, 'ys', 0.0),
-                 double_or_blank(card, 20, 'zs', 0.0)]
-            assert len(card)<=21, f'len(CWELD card) = {len(card):d}\ncard={card}'
-        else:
-            raise NameError(f'connectype={connectype!r} is not supported')
-        return CWELD(eid, pid, gs, connectype, ga, gb, mcid=mcid, shida=shida_pida, shidb=shidb_pidb, x=x, comment=comment)
-   
+
+        if connect_type == 'ELEMID':
+            x = None
+            assert len(card) <= 11, f'len(CWELD card) = {len(card):d}\ncard={card}'
+        elif connect_type == 'ELPAT':
+            x = [double_or_blank(card, 18, 'xs', default=0.0),
+                 double_or_blank(card, 19, 'ys', default=0.0),
+                 double_or_blank(card, 20, 'zs', default=0.0)]
+            assert len(card) <= 21, f'len(CWELD card) = {len(card):d}\ncard={card}'
+        elif connect_type == 'PARTPAT':
+            x = [double_or_blank(card, 18, 'xs', default=0.0),
+                 double_or_blank(card, 19, 'ys', default=0.0),
+                 double_or_blank(card, 20, 'zs', default=0.0)]
+            assert len(card) <= 21, f'len(CWELD card) = {len(card):d}\ncard={card}'
+        #elif connect_type == 'GRIDID':
+        #elif connect_type == 'ALIGN':
+        else:  # pragma: no cover
+            raise NotImplementedError(f'connect_type={connect_type!r} is not supported')
+        return CWELD(eid, pid, gs, connect_type, ga, gb, mcid=mcid, shida=shida_pida, shidb=shidb_pidb, x=x, comment=comment)
+
     def cross_reference(self, model: BDF) -> None:
         """
-        Cross links the card so referenced cards can be extracted directly"
-        
+        Cross links the card so referenced cards can be
+        extracted directly
+
         Parameters
         ----------
         model : BDF()
             the BDF object
+
         """
-        msg = ', which is required by CWELD eid=%s' % self.eid
+        msg = f', which is required by CWELD eid={self.eid:d}'
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+        if self.mcid != -1:
+            self.mcid_ref = model.Coord(self.Mcid(), msg=msg)
         if self.gs:
             self.gs_ref = model.Node(self.Gs(), msg=msg)
         if self.ga:
@@ -375,39 +424,95 @@ class CWELD(CFAST):
         if self.gb:
             self.gb_ref = model.Node(self.Gb(), msg=msg)
 
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.pid = self.Pid()
+        self.mcid = self.Mcid()
+        self.gs = self.Gs()
+        self.ga = self.Ga()
+        self.gb = self.Gb()
+        self.mcid_ref = None
+        self.pid_ref = None
+        self.gs_ref = None
+        self.ga_ref = None
+        self.gb_ref = None
+
     def raw_fields(self):
+        pid = self.Pid()
+        ga = self.Ga()
+        gb = self.Gb()
+        gs = self.Gs()
+        mcid = self.Mcid()
         if self.connectype == 'ELEMID':
-            list_fields = ['CWELD', self.eid, self.Pid(), self.gs, self.connectype, self.Ga(), self.Gb(), self.mcid, self.shida, self.shidb]
+            #     | CWELD | EWID| PWID| GS  |"ELEMID"| GA  | GB  |     | MCID|
+            #     +-------+-----+-----+-----+--------+-----+-----+-----+-----+
+            #     |       |SHIDA|SHIDB|     |        |     |     |     |     |
+            list_fields = ['CWELD', self.eid, pid, gs, self.connectype, ga, gb,
+                           None, mcid, self.shida, self.shidb]
         elif self.connectype == 'ELPAT':
-            xs, ys, zs = self.x
-            list_fields = ['CWELD', self.eid, self.Pid(), self.gs, self.connectype, self.Ga(), self.Gb(), self.mcid, self.shida, self.shidb, xs, ys, zs]
+            assert self.x is not None
+            list_fields = ['CWELD', self.eid, pid, gs, self.connectype, ga, gb,
+                           None, mcid, self.shida, self.shidb] + list(self.x)
         elif self.connectype == 'PARTPAT':
-            xs, ys, zs = self.x
-            list_fields = ['CWELD', self.eid, self.Pid(), self.gs, self.connectype, self.Ga(), self.Gb(), self.mcid, self.pida, self.pidb, xs, ys, zs]
-        else:
-            raise NameError(f'connectype={self.connectype!r} is not supported')
+            #     | CWELD | EWID| PWID| GS  |"PARTPAT"| GA  | GB |      |MCID |
+            #     +-------+-----+-----+-----+---------+-----+----+------+-----+
+            #     |       | PIDA|PIDB |     |         |     |    |      |     |
+            #     +-------+-----+-----+-----+---------+-----+----+------+-----+
+            #     |       | XS  | YS  |  ZS |         |     |    |      |     |
+            assert self.x is not None
+            list_fields = ['CWELD', self.eid, pid, gs, self.connectype, ga, gb, None, mcid,
+                           self.pida, self.pidb, None, None, None, None, None, None,
+                           ] + list(self.x)
+        else:  # pragma: no cover
+            raise NotImplementedError(f'connectype={self.connectype!r} is not supported')
         return list_fields
-    
-    def Gs(self):
+
+    @property
+    def node_ids(self):
+        """gets all the node ids used on the CFAST (Gs, Ga, Gb)"""
+        gs = self.Gs()
+        gs = gs if gs is not None else 0
+        return [gs, self.Ga(), self.Gb()]
+
+    def Ga(self) -> int:
+        if self.ga_ref is None:
+            return self.ga
+        return self.ga_ref.nid
+
+    def Gb(self) -> int:
+        if self.gb_ref is None:
+            return self.gb
+        return self.gb_ref.nid
+
+    def Gs(self) -> int:
         """Gets the GS node"""
         if self.gs_ref is not None:
             return self.gs_ref.nid
         elif isinstance(self.gs, integer_types):
             return self.gs
-        else:
-            if self.ga is None:
-                # If neither GS nor GA is specified, then (XS, YS, ZS) in basic must be specified.
-                raise RuntimeError(f'Neither Gs nor GA was not returned from CWELD\n{self.get_stats()}')
-            else:
-                return self.ga_ref.nid
+        #else:
+            # TODO: check this block; return ga_ref seems wrong...
+            #if self.ga is None:
+            #    # If neither GS nor GA is specified, then (XS, YS, ZS) in basic must be specified.
+            #    raise RuntimeError(f'Neither Gs nor GA was not returned from CWELD\n{self.get_stats()}')
+            #else:
+            #    return self.ga_ref.nid
 
     def _get_gs(self) -> Optional[int]:
         if self.gs is None:
-            out = (self.gs)
+            out = self.gs
         else:
-            out = (self.Gs())
+            out = self.Gs()
         return out
-    
+
+    def Mcid(self) -> int:
+        if self.mcid_ref is None:
+            return self.mcid
+        return self.mcid_ref.cid
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
 
 class CGAP(Element):
     """
@@ -717,12 +822,12 @@ class CGAP(Element):
             return self.cid
         return self.cid_ref.cid
 
-    def Ga(self):
+    def Ga(self) -> int:
         if self.ga_ref is None:
             return self.ga
         return self.ga_ref.nid
 
-    def Gb(self):
+    def Gb(self) -> int:
         if self.gb_ref is None:
             return self.gb
         return self.gb_ref.nid

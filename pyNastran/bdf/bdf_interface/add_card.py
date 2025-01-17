@@ -194,8 +194,6 @@ CARD_MAP = {
 
     #'SWLDPRM' : Crash, None),
 
-    #'CWELD' : Crash, None),
-    #'PWELD' : Crash, None),
     #'PWSEAM' : Crash, None),
     #'CWSEAM' : Crash, None),
     #'CSEAM' : Crash, None),
@@ -1569,21 +1567,34 @@ class Add0dElements:
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_cweld(self, eid: int, pid: int, gs: int, elemid:str, ga:int, gb:int, mcid:int, shida: int, shidb: int, x: list[float]=None, comment: str='') -> CWELD:
+    def add_cweld(self, eid: int, pid: int, gs: int, connectype: str,
+                  ga: int, gb: int, mcid: int=-1,
+                  shida: Optional[int]=None, shidb: Optional[int]=None,
+                  pida: Optional[int]=None, pidb: Optional[int]=None,
+                  x: Optional[list[float]]=None, comment: str='') -> CWELD:
         """
         Creates a CWELD card
 
         """
-        elem = CWELD(eid, pid, gs, elemid, ga, gb, mcid, shida, shidb, x, comment=comment)
+        elem = CWELD(eid, pid, gs, connectype, ga, gb,
+                     mcid=mcid, shida=shida, shidb=shidb,
+                     pida=pida, pidb=pidb,
+                     x=x, comment=comment)
         self._add_methods._add_element_object(elem)
         return elem
-    
-    def add_pweld(self, pid: int, mid: int, d: float, mset: str=None, connect_type:str=None, ldmin: float=None, ldmax: float=None, comment: str='') -> PWELD:
+
+    def add_pweld(self, pid: int, mid: int, d: float,
+                  mset: str='OFF', connect_type: str='',
+                  ldmin: float=None, ldmax: float=None,
+                  comment: str='') -> PWELD:
         """
         Creates a PWELD card
 
         """
-        prop = PWELD(pid, mid, mid, d, mset, connect_type, ldmin, ldmax, comment=comment)
+        prop = PWELD(pid, mid, d,
+                     mset=mset,
+                     connect_type=connect_type,
+                     ldmin=ldmin, ldmax=ldmax, comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
 
