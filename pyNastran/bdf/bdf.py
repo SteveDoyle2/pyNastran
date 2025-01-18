@@ -34,7 +34,8 @@ from cpylog import get_logger2
 from pyNastran.utils import PathLike, object_attributes, check_path, deprecated as _deprecated
 from .utils import parse_patran_syntax
 from .bdf_interface.utils import (
-    _parse_pynastran_header, to_fields, parse_executive_control_deck,
+    _parse_pynastran_header, to_fields, to_fields_line0,
+    parse_executive_control_deck,
     fill_dmigs, _get_card_name, _parse_dynamic_syntax,
 )
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
@@ -1170,6 +1171,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.log.info(replace_model.get_bdf_stats())
         for nid, node in replace_model.nodes.items():
             self.nodes[nid] = node
+        for cid, coord in replace_model.coords.items():
+            if cid == 0:
+                continue
+            self.coords[cid] = coord
         for eid, elem in replace_model.elements.items():
             self.elements[eid] = elem
         for eid, elem in replace_model.masses.items():
@@ -1468,8 +1473,36 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
 
+    def _get_unparsed_cards(self, bulk_data_lines: list[str],
+                            bulk_data_ilines: Any) -> None:
+        cards_dict, card_count = self.get_bdf_cards_dict(
+            bulk_data_lines, bulk_data_ilines)
+
+        cards = {}
+        for card_name, cards_list in cards_dict.items():
+            if card_name not in self.cards_to_read:
+                for (comment, card_lines, ifile_iline) in cards_list:
+                    self.reject_lines.append([_format_comment(comment)] + card_lines)
+                continue
+
+            if card_name in []:
+                # FORCE, PLOAD2, ...
+                pass
+            else:
+                cardsi = {}
+                cards[card_name] = cardsi
+                for (comment, card_lines, ifile_iline) in cards_list:
+                    fields = to_fields_line0(card_lines[0], card_name)
+                    idi = fields[1].strip()
+                    cardsi[idi] = (comment, card_lines)
+        self._parsed_cards = cards
+        return
+
     def _parse_all_cards(self, bulk_data_lines: list[str], bulk_data_ilines: Any) -> None:
         """creates and loads all the cards the bulk data section"""
+        if not self._parse:
+            return self._get_unparsed_cards(bulk_data_lines, bulk_data_ilines)
+
         cards_list = []
         cards_dict = {}
         if self._is_cards_dict:
