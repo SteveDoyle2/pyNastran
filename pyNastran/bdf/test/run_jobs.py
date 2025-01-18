@@ -50,7 +50,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False):
              extensions=extensions, cleanup=cleanup)
 
 
-def get_bdf_filenames_to_run(bdf_filename_dirname: Path,
+def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
                              extensions: list[str]) -> list[Path]:
     assert bdf_filename_dirname.exists(), bdf_filename_dirname
     if isinstance(extensions, str):
@@ -61,19 +61,25 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: Path,
 
     bdf_filename_dirname_list = bdf_filename_dirname
     if not isinstance(bdf_filename_dirname, list):
-        bdf_filename_dirname = [bdf_filename_dirname]
+        assert isinstance(bdf_filename_dirname, Path), bdf_filename_dirname
+        bdf_filename_dirname_list = [bdf_filename_dirname]
+    del bdf_filename_dirname
 
-    if bdf_filename_dirname.is_dir():
-        dirname = bdf_filename_dirname
-        #suffixs = [fname.suffix for fname in dirname.iterdir() if '.test_bdf.' not in fname.name]
-        bdf_filenames = [dirname / fname.name for fname in dirname.iterdir()
-                         if fname.suffix in extensions and '.test_bdf.' not in fname.name]
-        assert len(bdf_filenames) > 0, dirname
-    elif bdf_filename_dirname.is_file():
-        bdf_filenames = [bdf_filename_dirname]
-    else:  # pragma: no cover
-        raise NotImplementedError(bdf_filename_dirname)
+    #----------------------------------------
+    bdf_filenames: list[Path] = []
+    for bdf_filename_dirnamei in bdf_filename_dirname_list:
+        if bdf_filename_dirnamei.is_dir():
+            dirname = bdf_filename_dirnamei
+            #suffixs = [fname.suffix for fname in dirname.iterdir() if '.test_bdf.' not in fname.name]
+            bdf_filenamesi = [dirname / fname.name for fname in dirname.iterdir()
+                              if fname.suffix in extensions and '.test_bdf.' not in fname.name]
+            assert len(bdf_filenamesi) > 0, dirname
 
+        elif bdf_filename_dirnamei.is_file():
+            bdf_filenamesi = [bdf_filename_dirnamei]
+        else:  # pragma: no cover
+            raise NotImplementedError(bdf_filename_dirnamei)
+        bdf_filenames.extend(bdf_filenamesi)
     for bdf_filename in bdf_filenames:
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
     return bdf_filenames
@@ -105,7 +111,7 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
 
         percent = (ifile + 1) / nfiles * 100
         log.debug(f'estimated time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr')
-        log.info(f'running  {ifile0+1}/{nfiles}={percent:.0f}%: {str(bdf_filename)}')
+        log.info(f'running  {ifile+1}/{nfiles}={percent:.0f}%: {str(bdf_filename)}')
         run_nastran(bdf_filename, nastran_cmd=nastran_exe,
                     cleanup=cleanup, run=run)
         log.debug(f'finished {ifile+1}/{nfiles}={percent:.0f}%: {str(bdf_filename)}')
