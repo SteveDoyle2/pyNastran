@@ -72,7 +72,7 @@ readme = {file="README.md", content-type="text/markdown"}
 #readme = {file="README.rst", content-type="text/x-rst"}
 #readme = "README.rst"
 
-requires-python = '>=3.9'
+requires-python = '>=3.10'
 
 #keywords = ["packaging", "dependency", "infer", "pyproject.toml"]
 keywords = ["nastran"]
@@ -118,10 +118,11 @@ dependencies = [
     #"numpy>=1.26.0,<1.27; python_version=='3.12'",
     'numpy<3',
     'scipy<2',
-    'matplotlib',
+    'matplotlib<4',
     'cpylog>=1.4.0',
     'docopt-ng>=0.9.0',
     'colorama',
+    'qtpy',
 ]
 #-------------------------------------------------------------------------------------------
 [project.optional-dependencies]
@@ -138,7 +139,7 @@ gui_pyqt5 = [
     'h5py',     # hdf5
     'PyQt5',    # gui library
     'vtk>=9.0', # rendering library
-    'qtpy',
+    #'qtpy',
     'imageio < 3.0',
     'pillow >= 8.4.0',  # 2021/10
 ]
@@ -147,7 +148,7 @@ gui_pyside2 = [
     'h5py',     # hdf5
     'PySide2',  # gui library
     'vtk>=9.0', # rendering library
-    'qtpy',
+    #'qtpy',
     'imageio < 3.0',
     'pillow >= 8.4.0',
 ]
