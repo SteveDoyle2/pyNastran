@@ -187,7 +187,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         # ----
         #new
         'bolt', 'boltld', 'boltfor', 'boltseq', 'boltfrc',
-        'use_new_deck_parser', 'allow_overwrites_set',
+        'use_new_deck_parser', 'allow_overwrites_set', '_parse',
 
     ] + list_attrs + card_dict_groups + scalar_attrs
     missed_attrs = []

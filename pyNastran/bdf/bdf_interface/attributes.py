@@ -130,6 +130,7 @@ class BDFAttributes:
         """creates the attributes for the BDF"""
         self.__init_attributes()
         self._is_cards_dict = False
+        self._parse = True
 
         self.is_nx = False
         self.is_msc = False

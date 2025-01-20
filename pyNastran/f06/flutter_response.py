@@ -393,12 +393,32 @@ class FlutterResponse:
         self.set_symbol_settings()
         self.set_font_settings(font_size=None)
 
-    def set_plot_settings(self, figsize=None):
+        self._xtick_major_locator_multiple = None
+        self._ytick_major_locator_multiple = None
+
+    def set_plot_settings(self, figsize=None,
+                          xtick_major_locator_multiple=None, ytick_major_locator_multiple=None):
         if figsize is None:
             figsize = plt.rcParams['figure.figsize']
-            #figsize = (6.4, 4.8)
-        out = {'figsize': figsize}
-        matplotlib.rc('figure', **out)
+            # figsize = (6.4, 4.8)
+
+        #print('plt.rcParams = ', plt.rcParams)
+        self._xtick_major_locator_multiple = xtick_major_locator_multiple
+        self._ytick_major_locator_multiple = ytick_major_locator_multiple
+        #if xtick_major_locator_multiple is None:
+            #xtick_major_locator_multiple = plt.rcParams['xtick.major.locator.multiple']
+        #if ytick_major_locator_multiple is None:
+            #ytick_major_locator_multiple = plt.rcParams['ytick.major.locator.multiple']
+        figure_params = {
+            'figsize': figsize,
+        }
+        mydict = {
+            #'figsize.figsize': figsize,
+            #'xtick.major.locator.multiple': xtick_major_locator_multiple,
+            #'ytick.major.locator.multiple': ytick_major_locator_multiple,
+        }
+        matplotlib.rc('figure', **figure_params)
+        #plt.rcParams.update(mydict)
 
     def set_symbol_settings(self, nopoints: bool=False,
                             show_mode_number: bool=False,
@@ -1290,7 +1310,9 @@ class FlutterResponse:
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None,
                    plot_type: str='tas',
                    clear: bool=False, close: bool=False, legend: bool=True,
-                   xlim=None, ylim_damping=None, ylim_freq=None,
+                   xlim: Optional[Limit]=None,
+                   ylim_damping: Optional[Limit]=None,
+                   ylim_freq: Optional[Limit]=None,
                    ivelocity: Optional[int]=None,
                    v_lines: list[tuple[str, float, Color, str]]=None,
                    damping_limit=None,
@@ -1473,6 +1495,17 @@ class FlutterResponse:
         freq_axes.tick_params(axis='both', which='major')  #, labelsize=self.font_size)
         damp_axes.tick_params(axis='both', which='major')  #, labelsize=self.font_size)
 
+        from matplotlib.ticker import MultipleLocator
+        if _is_tick(self._xtick_major_locator_multiple, 0):
+            damp_axes.xaxis.set_major_locator(MultipleLocator(self._xtick_major_locator_multiple[0]))
+        if _is_tick(self._xtick_major_locator_multiple, 1):
+            freq_axes.xaxis.set_major_locator(MultipleLocator(self._xtick_major_locator_multiple[1]))
+
+        if _is_tick(self._ytick_major_locator_multiple, 0):
+            damp_axes.yaxis.set_major_locator(MultipleLocator(self._ytick_major_locator_multiple[0]))
+        if _is_tick(self._ytick_major_locator_multiple, 1):
+            freq_axes.yaxis.set_major_locator(MultipleLocator(self._ytick_major_locator_multiple[1]))
+
         title = f'Subcase {self.subcase}'
         if png_filename:
             title += '\n%s' % png_filename
@@ -1537,7 +1570,7 @@ class FlutterResponse:
                 if filter_damping and eas0 > eas_max:
                     continue
                 damping_str = f'{damping0*100:.0f}%'
-                label = f'  {mode}: {damping_str}={eas0:.1f} [{xunit}]; f={freq0:.2f} [Hz]'
+                label = f'Mode {mode}: g={damping_str}; {eas0:.0f} {xunit}; {freq0:.1f} Hz'
                 legend_element = Line2D([0], [0],
                                         marker=symbol2, color=color, label=label, linestyle='')
                 damp_axes.plot(eas0, damping0, color=color,
@@ -2050,7 +2083,7 @@ def _add_damping_limit(plot_type: str,
         label=f'Structural Damping=0%')
     line2 = damp_axes.axhline(
         y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
-        label=f'Abs Structural Damping={damping_limit*100:.0f}%')
+        label=f'Limit Structural Damping={damping_limit*100:.0f}%')
     legend_elements.append(line1)
     legend_elements.append(line2)
     return legend_elements
@@ -2184,12 +2217,12 @@ def _get_mode_freq_label(mode: int, freq: float) -> str:
     # write tiny numbers
     if abs(freq) > 1.0:
         # don't write big numbers in scientific
-        freq_num = f'{freq:.2f}'
+        freq_num = f'{freq:.1f}'
     else:
         freq_num = f'{freq:.3g}'
         # strip silly scientific notation
         freq_num = freq_num.replace('-0', '-').replace('-0', '-').replace('+0', '+')
-    label = f'Mode {mode:d}; freq={freq_num}'
+    label = f'Mode {mode:d}; freq={freq_num} Hz'
     return label
 
 
@@ -2486,3 +2519,7 @@ def reshape_eigenvectors(eigenvectors: np.array,
     #eig.scale(mpf)
     #asdf
     return eigenvectors3, eigr_eigi_vel3
+
+def _is_tick(values: Optional[tuple[float, float]], index: int):
+    out = values is not None and values[index] is not None
+    return out

@@ -72,6 +72,19 @@ class TestReadWriteFiles(unittest.TestCase):
         #os.remove('out_test_include2.bdf')
 
 
+    def test_isat_fast(self):
+        log = SimpleLogger(level='info', encoding='utf-8')
+        bdf_filename = MODEL_PATH / 'iSat' / 'iSat_launch_100Hz.dat'
+        model = BDF(log=log, debug=False)
+
+        model._parse = False
+        skip_cards = ['CQUAD4', 'CBAR', 'GRID']
+        model.disable_cards(skip_cards)
+        # elif read_cards:
+        #     model.enable_cards(read_cards)
+        model.read_bdf(bdf_filename)
+        assert len(model._parsed_cards)
+
     def test_isat_files(self):
         """read/writes the isat model with the file structure"""
         log = SimpleLogger(level='info', encoding='utf-8')

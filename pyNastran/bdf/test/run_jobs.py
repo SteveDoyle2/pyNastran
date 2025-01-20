@@ -1,8 +1,9 @@
 import os
 import sys
 from pathlib import Path
-
+import time
 import argparse
+
 from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.utils import print_bad_path
@@ -49,10 +50,8 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False):
              extensions=extensions, cleanup=cleanup)
 
 
-def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
-             extensions: list[str], cleanup: bool=True,
-             run: bool=True) -> None:
-    """runs a series of jobs in a specific folder"""
+def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
+                             extensions: list[str]) -> list[Path]:
     assert bdf_filename_dirname.exists(), bdf_filename_dirname
     if isinstance(extensions, str):
         extensions = [extensions]
@@ -60,24 +59,49 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
     for ext in extensions:
         assert ext.startswith('.'), extensions
 
-    log = SimpleLogger()
-    if bdf_filename_dirname.is_dir():
-        dirname = bdf_filename_dirname
-        #suffixs = [fname.suffix for fname in dirname.iterdir() if '.test_bdf.' not in fname.name]
-        bdf_filenames = [dirname / fname.name for fname in dirname.iterdir()
-                         if fname.suffix in extensions and '.test_bdf.' not in fname.name]
-        assert len(bdf_filenames) > 0, dirname
-    elif bdf_filename_dirname.is_file():
-        bdf_filenames = [bdf_filename_dirname]
-    else:  # pragma: no cover
-        raise NotImplementedError(bdf_filename_dirname)
+    bdf_filename_dirname_list = bdf_filename_dirname
+    if not isinstance(bdf_filename_dirname, list):
+        assert isinstance(bdf_filename_dirname, Path), bdf_filename_dirname
+        bdf_filename_dirname_list = [bdf_filename_dirname]
+    del bdf_filename_dirname
 
+    #----------------------------------------
+    bdf_filenames: list[Path] = []
+    for bdf_filename_dirnamei in bdf_filename_dirname_list:
+        if bdf_filename_dirnamei.is_dir():
+            dirname = bdf_filename_dirnamei
+            #suffixs = [fname.suffix for fname in dirname.iterdir() if '.test_bdf.' not in fname.name]
+            bdf_filenamesi = [dirname / fname.name for fname in dirname.iterdir()
+                              if fname.suffix in extensions and '.test_bdf.' not in fname.name]
+            assert len(bdf_filenamesi) > 0, dirname
+
+        elif bdf_filename_dirnamei.is_file():
+            bdf_filenamesi = [bdf_filename_dirnamei]
+        else:  # pragma: no cover
+            raise NotImplementedError(bdf_filename_dirnamei)
+        bdf_filenames.extend(bdf_filenamesi)
+    for bdf_filename in bdf_filenames:
+        assert bdf_filename.exists(), print_bad_path(bdf_filename)
+    return bdf_filenames
+
+
+def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
+             extensions: list[str], cleanup: bool=True,
+             run: bool=True) -> int:
+    """runs a series of jobs in a specific folder"""
+    bdf_filenames = get_bdf_filenames_to_run(
+        bdf_filename_dirname, extensions)
+
+    log = SimpleLogger(level='debug')
     bdf_filenames_str = [str(bdf_filename) for bdf_filename in bdf_filenames]
     log.info(f'bdf_filenames = {bdf_filenames_str}')
     for bdf_filename in bdf_filenames:
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
 
     nfiles = len(bdf_filenames)
+    t_est_min = 0.
+    t_est_hr = 0.
+    t0 = time.time()
     for ifile, bdf_filename in enumerate(bdf_filenames):
         base = os.path.splitext(str(bdf_filename))[0]
         op2_filename = base + '.op2'
@@ -86,11 +110,17 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
             continue
 
         percent = (ifile + 1) / nfiles * 100
-        log.info(f'running {ifile+1}/{nfiles}={percent:.0f}%: {str(bdf_filename)}')
+        log.debug(f'estimated time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr')
+        log.info(f'running  {ifile+1}/{nfiles}={percent:.0f}%: {str(bdf_filename)}')
         run_nastran(bdf_filename, nastran_cmd=nastran_exe,
                     cleanup=cleanup, run=run)
         log.debug(f'finished {ifile+1}/{nfiles}={percent:.0f}%: {str(bdf_filename)}')
+        dt = time.time() - t0
+        t_est = (ifile / nfiles) * dt
+        t_est_min = t_est / 60.
+        t_est_hr = t_est_min / 60.
     log.info('done')
+    return nfiles
 
 
 if __name__ == '__main__':

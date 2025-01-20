@@ -210,6 +210,41 @@ def _to_fields_set1(card_lines: list[str], card_name: str) -> list[str]:
     warnings.warn(f'SET1 was too long; {fields}')
     return fields
 
+def to_fields_line0(card_line: str, card_name: str) -> list[str]:
+    """
+    Converts the first line of a card into the string versions of the line.
+    Handles large, small, and CSV formatted cards.
+    """
+    # first line
+    line = card_line.rstrip()
+    if '=' in line:
+        msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
+        raise CardParseSyntaxError(msg)
+
+    if '\t' in line:
+        line = expand_tabs(line)
+
+    if '*' in line:  # large field
+        if ',' in line:  # csv
+            new_fields = line.split(',')[:5]
+            for unused_i in range(5 - len(new_fields)):
+                new_fields.append('')
+            assert len(new_fields) == 5, new_fields
+        else:  # standard
+            new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
+                          line[56:72]]
+    else:  # small field
+        if ',' in line:  # csv
+            new_fields = line.split(',')[:9]
+            for unused_i in range(9 - len(new_fields)):
+                new_fields.append('')
+            assert len(new_fields) == 9, new_fields
+        else:  # standard
+            new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
+                          line[32:40], line[40:48], line[48:56], line[56:64],
+                          line[64:72]]
+    return new_fields
+
 def to_fields(card_lines: list[str], card_name: str) -> list[str]:
     """
     Converts a series of lines in a card into string versions of the field.
@@ -283,7 +318,7 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
                           line[64:72]]
         fields += new_fields
 
-    for line in card_lines[1:]: # continuation lines
+    for line in card_lines[1:]:  # continuation lines
         if '=' in line and card_name != 'EIGRL':
             msg = 'card_name=%r\nequal signs are not supported...\nline=%r' % (card_name, line)
             raise CardParseSyntaxError(msg)

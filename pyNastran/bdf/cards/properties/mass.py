@@ -442,37 +442,103 @@ class NSML1(NSM1x):
         NSM1x.__init__(self, sid, nsm_type, value, ids, comment=comment)
 
     def get_eid_mass_cg_by_element(self, model: BDF) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """lumped mass to be distributed
+
+        - Area element calculation (for example, CQUAD4):
+          Mass for a particular element = (Element area) x (VALUE / ΣElement area for all IDs)
+        - Line element calculation (for example, CBEAM):
+          Mass for a particular element = (Element length) x (VALUE / ΣElement length for all IDs)
+
+        """
         value = self.value
         divide_by_sum = True
 
-        length = 0.
-        area = 0.
-        ncards = len(self.ids)
-        eids = np.zeros(ncards, dtype='int32')
-        mass = np.zeros(ncards, dtype='float64')
-        cg = np.zeros((ncards, 3), dtype='float64')
+        use_length = False
+        use_area = False
+
         lines = {'CBAR', 'CBEAM', 'CROD', 'CTUBE'}
-        shells = {'CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4', 'CQUADR', 'CQUAD8', 'CQUAD'}
+        shell_elements = {'CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4', 'CQUADR', 'CQUAD8', 'CQUAD'}
+
+        id0: int = self.ids[0]
         if self.nsm_type == 'ELEMENT':
-            eid0 = self.ids[0]
-            etype = model.elements[eid0].type
+            ncards = len(self.ids)
+            eids = np.zeros(ncards, dtype='int32')
+            cg = np.zeros((ncards, 3), dtype='float64')
+
+            elem0 = model.elements[id0]
+            etype = elem0.type
             if etype in lines:
-                raise NotImplementedError((self.nsm_type, 'line'))
-            elif etype in shells:
+                line_elements = {'CBAR', 'CBEAM', 'CROD', 'CTUBE', 'CBUSH'}
+                use_length = True
+                length = np.zeros(ncards, dtype='float64')
                 for i, eid in enumerate(self.ids):
                     eids[i] = eid
                     elem = model.elements[eid]
-                    assert elem.type in shells, elem.type
-                    mass[i] = elem.Mass()
+                    assert elem.type in line_elements, elem.type
+                    length[i] = elem.Length()
+                    cg[i, :] = elem.Centroid()
+            elif etype in shell_elements:
+                use_area = True
+                area = np.zeros(ncards, dtype='float64')
+                for i, eid in enumerate(self.ids):
+                    eids[i] = eid
+                    elem = model.elements[eid]
+                    assert elem.type in shell_elements, elem.type
+                    area[i] = elem.Area()
                     cg[i, :] = elem.Centroid()
                 #raise NotImplementedError((self.nsm_type, 'shell'))
             else:
                 raise NotImplementedError((self.nsm_type, 'shell', etype))
-        else:
+
+        elif self.nsm_type == 'PSHELL':
+            use_area = True
+            prop = model.properties[id0]
+            ptype = prop.type
+            shell_properties = {'PSHELL'}
+            assert ptype in shell_properties, prop
+            elems = [(eid, elem) for eid, elem in sorted(model.elements.items())
+                     if elem.type in shell_elements and elem.pid in self.ids]
+
+            ncards = len(elems)
+            eids = np.zeros(ncards, dtype='int32')
+            area = np.zeros(ncards, dtype='float64')
+            cg = np.zeros((ncards, 3), dtype='float64')
+            for i, (eid, elem) in enumerate(elems):
+                eids[i] = eid
+                elem = model.elements[eid]
+                assert prop.type in shell_properties, (elem, prop)
+                area[i] = elem.Area()
+                cg[i, :] = elem.Centroid()
+
+        elif self.nsm_type in {'PCOMP', 'PCOMPG'}:
+            use_area = True
+            prop = model.properties[id0]
+            ptype = prop.type
+            shell_properties = {'PCOMP', 'PCOMPG'}
+            assert ptype in shell_properties, prop
+            elems = [(eid, elem) for eid, elem in sorted(model.elements.items())
+                     if elem.type in shell_elements and elem.pid in self.ids]
+
+            ncards = len(elems)
+            eids = np.zeros(ncards, dtype='int32')
+            area = np.zeros(ncards, dtype='float64')
+            cg = np.zeros((ncards, 3), dtype='float64')
+            for i, (eid, elem) in enumerate(elems):
+                eids[i] = eid
+                elem = model.elements[eid]
+                assert prop.type in shell_properties, (elem, prop)
+                area[i] = elem.Area()
+                cg[i, :] = elem.Centroid()
+        else:  # pragma: no cover
             raise NotImplementedError(self.nsm_type)
 
-        mass /= mass.sum()
-        mass *= value
+        # here's where we do the distribution
+        if use_area:
+            mass = value * area / area.sum()
+        elif use_length:
+            mass = value * length / length.sum()
+        else:
+            raise RuntimeError((use_area, use_length))
         return eids, mass, cg
 
 class NSMADD(BaseCard):
