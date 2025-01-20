@@ -463,7 +463,8 @@ def shell_mass_per_area(model: BDF,
             ti_all = ti[iall]
             mass_per_areai_all = nsm_all + rho_all * ti_all
         elif prop.type == 'PPLANE':
-            mpa = prop.mass_per_area()
+            ti_all = None if T is None else T[iall]
+            mpa = prop.mass_per_area(ti_all)
             mass_per_area[ilookup] = mpa[iall]
             continue
         else:

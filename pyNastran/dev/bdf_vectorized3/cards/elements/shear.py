@@ -83,29 +83,32 @@ class CSHEAR(Element):
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
         nodes = np.zeros((ncards, 4), dtype=idtype)
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, ifilei, comment) = card
+            (eid, pid, nids, ifilei, commenti) = card
             ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-        self._save(element_id, property_id, nodes)
+        self._save(element_id, property_id, nodes,
+                   ifile=ifile, comment=comment)
         self.cards = []
 
     def _save(self, element_id, property_id, nodes,
-              ifile=None) -> None:
+              ifile=None, comment=None) -> None:
         ncards = len(element_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id):
             raise NotImplementedError()
-        self.ifile = ifile
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.n = len(ifile)
 
     def __apply_slice__(self, elem: CSHEAR, i: np.ndarray):
+        self._slice_comment(elem, i)
         elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
@@ -291,6 +294,7 @@ class PSHEAR(Property):
         self.n = len(ifile)
 
     def __apply_slice__(self, prop: PSHEAR, i: np.ndarray):
+        self._slice_comment(prop, i)
         prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]

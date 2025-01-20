@@ -478,6 +478,7 @@ class GRID(VectorizedBaseCard):
         node_id = used_dict['node_id']
         ncards_removed = len(self.node_id) - len(node_id)
         if ncards_removed:
+            assert len(node_id) > 0, node_id
             self.slice_card_by_id(node_id, assume_sorted=True, sort_ids=False)
         return ncards_removed
 
@@ -518,8 +519,10 @@ class GRID(VectorizedBaseCard):
         return grid
 
     def __apply_slice__(self, grid: GRID, i: np.ndarray) -> None:
-        assert grid.n <= i.max(), 'GRID.n <=i.max()'
+        assert len(i), f'{self.type}.n={self.n}; i={i}'
+        assert self.n > i.max(), f'{self.type}.n>i.max(); n={self.n}; i={i}'
         self._slice_comment(grid, i)
+        grid.ifile = self.ifile[i]
 
         grid.n = len(i)
         grid._is_sorted = self._is_sorted
@@ -888,15 +891,19 @@ class POINT(VectorizedBaseCard):
         assert self.xyz.shape == self._xyz_cid0.shape
         self.cards = []
 
-    def _save(self, point_id, cp, xyz, _xyz_cid0, comment=None):
+    def _save(self, point_id, cp, xyz, _xyz_cid0,
+              ifile=None, comment=None) -> None:
+        ncards = len(point_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.point_id) > 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
+        save_ifile_comment(self, ifile, comment)
         self.point_id = point_id
         self.cp = cp
         self.xyz = xyz
         self._xyz_cid0 = _xyz_cid0
-        if comment:
-            self.comment = comment
+        self.n = len(ifile)
 
     #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
         #inid = self._node_index(node_id)

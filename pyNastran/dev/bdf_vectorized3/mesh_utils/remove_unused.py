@@ -70,11 +70,14 @@ def remove_unused(model: BDF, inplace: bool=False) -> BDF:
 
     set_cards_to_skip = {
         'NSM1', 'NSML1'}
+    card_types = [card.type for card in cards]
+    #log.warning(f'card_types = {card_types}')
     for card in cards:
         if card.type in set_cards_to_skip:
             continue
 
-        #print(card.type)
+        #log.warning(card.type)
+        #log.warning('nids' + str(used_dict['node_id']))
         if hasattr(card, 'set_used'):
             card.set_used(used_dict)
         else:

@@ -2790,7 +2790,7 @@ class PSHLN2(Property):
                    beh, integration,
                    beh_h, integration_h)
         self.sort()
-        self.model.log.warning(f'PSHLN2 self.thickness={self.thickness}')
+        #self.model.log.warning(f'PSHLN2 self.thickness={self.thickness}')
         self.cards = []
 
     def _save(self, property_id, material_id,

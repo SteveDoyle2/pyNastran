@@ -157,7 +157,7 @@ class VectorizedBaseCard:
         try:
             # intersect the ids we're slicing with the existing ones
             if not i.max() <= self._ids.max():
-                raise RuntimeError(f'_slice_comment: i={i}; _ids={self._ids}')
+                raise RuntimeError(f'_slice_comment: i={i}; {self._id_name}={self._ids}')
             new_ids = self._ids[i]
             common_ids = np.intersect1d(list(self.comment.keys()), new_ids)
             new_obj.comment = {nid: self.comment[nid] for nid in common_ids}
@@ -1011,9 +1011,9 @@ def sort_duplicates(card: VectorizedBaseCard) -> None:
     uids_sorted = np.unique(ids_sorted)
 
     if not np.array_equal(uarg, iarg) or len(ids) != len(uids_sorted):
-        print(f'card.type = {card.type}')
+        #print(f'card.type = {card.type}')
         model = card.model
-        if card.type in model.allow_overwrites_set:
+        if 0 and card.type in model.allow_overwrites_set:
             #isort = np.searchsorted(ids_sorted, uarg)
             model.log.warning('picking lower indicies (first added to model)')
             card.__apply_slice__(card, uids_sorted)
@@ -1033,17 +1033,21 @@ def sort_duplicates(card: VectorizedBaseCard) -> None:
             #assert (iarg - uarg).sum() == 0, (iarg - uarg).sum()
 
         is_duplicate_ids = (len(ids_sorted) != len(uids_sorted))
+        print(f'ids = {ids}')
+        print(f'ids_sorted = {ids_sorted}')
+        print(f'is_duplicate_ids = {is_duplicate_ids}')
         model = card.model
-        if is_duplicate_ids and card.type in model.allow_overwrites_set:
+        if 0 and is_duplicate_ids and card.type in model.allow_overwrites_set:
             #print(f'ids_sorted = {ids_sorted}')
             #print(f'uids_sorted = {uids_sorted}')
             idx = np.searchsorted(ids_sorted, uids_sorted, side='right') - 1
             assert np.array_equal(ids_sorted[idx], uids_sorted)
-            #print(f'idx = {idx}')
+            print(f'idx = {idx}')
             card.__apply_slice__(card, idx)
             # card._is_sorted = True
             # return
-        elif is_duplicate_ids:
+
+        if is_duplicate_ids:
             # Now that we've sorted the ids, we'll take the delta id with the next id.
             # We check the two neighoring values when there is a duplicate,
             # so if they're they same in xyz, cp, cd, etc., the results are the same
@@ -1097,6 +1101,8 @@ def sort_duplicates(card: VectorizedBaseCard) -> None:
 
 def save_ifile_comment(self, ifile, comment):
     assert len(ifile) > 0, ifile
-    if comment is not None:
+    if comment is not None and len(comment):
+        #print(f'comment = {comment!r}')
+        #print(f'self.comment = {self.comment!r}')
         self.comment.update(comment)
     self.ifile = ifile

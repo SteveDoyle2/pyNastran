@@ -160,11 +160,14 @@ class Nastran3:
         if not hasattr(self, 'xyz_cid0'):
             log.error('cant find xyz_cid0')
         self.xyz_cid0
+        #log.info('xyz_cid0 exists...')
         return geo
 
     def load_nastran3_results(self, results_filename: PathLike,
                               name: str='main', plot: bool=True) -> vtkUnstructuredGrid:
         """loads geometry from a op2/h5 file"""
+        #self.gui.log.info('load_nastran3_results')
+        self.xyz_cid0
         results_filename = str(results_filename)
         results_filename_lower = results_filename.lower()
         if results_filename_lower.endswith('.op2'):

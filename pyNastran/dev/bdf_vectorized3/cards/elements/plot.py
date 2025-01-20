@@ -58,6 +58,7 @@ class PlotElement(Element):
         self.n = nelements
 
     def __apply_slice__(self, elem: PlotElement, i: np.ndarray) -> None:
+        self._slice_comment(elem, i)
         elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.nodes = self.nodes[i, :]

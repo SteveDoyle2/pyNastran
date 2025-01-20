@@ -15,7 +15,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property,
+    Element, Property, save_ifile_comment,
     #hslice_by_idim, make_idim, searchsorted_filter,
     parse_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -104,12 +104,21 @@ class PlateStressElement(Element):
         #t = self.total_thickness()
         #mass = rho * A * t
         tflag = None
-        T = None
+
+        # If T is blank or zero then the thickness must be specified
+        # for Ti on the CPLSTS3, CPLSTS4, CPLSTS6, and CPLSTS8 entries.
+        # T is ignored for plane strain elements.
+        T = self.T
         mass_per_area = shell_mass_per_area(
             self.model, tflag, T,
             self.property_id, self.allowed_properties)
         mass = mass_per_area * A
         return mass
+
+    def mass_material_id(self) -> np.ndarray:
+        material_id = basic_mass_material_id(
+            self.property_id, self.allowed_properties, self.type)
+        return material_id
 
     def volume(self) -> np.ndarray:
         A = self.area()
@@ -129,6 +138,13 @@ class PlateStressElement(Element):
     @property
     def max_id(self) -> int:
         return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
+
+    # @abstractmethod
+    # def Centroid(self) -> np.ndarray:
+    #     ...
+    # @abstractmethod
+    # def center_of_mass(self) -> np.ndarray:
+    #     ...
 
 
 class CPLSTS3(PlateStressElement):
@@ -238,22 +254,28 @@ class CPLSTS3(PlateStressElement):
 
     def _save(self, element_id: np.ndarray, property_id: np.ndarray,
               nodes: np.ndarray, theta: np.ndarray,
-              tflag: np.ndarray, T: np.ndarray) -> None:
+              tflag: np.ndarray, T: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
             raise NotImplementedError()
-        nelements = len(element_id)
-        assert nelements > 0, element_id
+        assert ncards > 0, element_id
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
         self.tflag = tflag
         self.T = T
-        assert nodes.shape == (nelements, 3), nodes.shape
-        assert T.shape == (nelements, 3), T.shape
-        self.n = nelements
+        assert nodes.shape == (ncards, 3), nodes.shape
+        assert T.shape == (ncards, 3), T.shape
+        self.n = len(ifile)
 
     def __apply_slice__(self, element: CPLSTS3, i: np.ndarray) -> None:  # ignore[override]
+        self._slice_comment(element, i)
+        element.ifile = self.ifile[i]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -398,20 +420,26 @@ class CPLSTS4(PlateStressElement):
 
     def _save(self, element_id: np.ndarray, property_id: np.ndarray,
               nodes: np.ndarray, theta: np.ndarray,
-              tflag: np.ndarray, T: np.ndarray) -> None:
+              tflag: np.ndarray, T: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
             raise NotImplementedError()
-        nelements = len(element_id)
-        assert nelements > 0, element_id
+        assert ncards > 0, element_id
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
         self.tflag = tflag
         self.T = T
-        self.n = nelements
+        self.n = len(ifile)
 
     def __apply_slice__(self, element: CPLSTS4, i: np.ndarray) -> None:  # ignore[override]
+        self._slice_comment(element, i)
+        element.ifile = self.ifile[i]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -427,6 +455,9 @@ class CPLSTS4(PlateStressElement):
     def centroid(self) -> np.ndarray:
         centroid = quad_centroid(self.model.grid, self.nodes)
         return centroid
+
+    def center_of_mass(self) -> np.ndarray:
+        return self.centroid()
 
     def quality(self):
         return quad_quality_nodes(self.model.grid, self.nodes)
@@ -560,18 +591,28 @@ class PPLANE(Property):
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, material_id, thickness, nsm, formulation_option):
+    def _save(self, property_id, material_id, thickness,
+              nsm, formulation_option,
+              ifile=None, comment=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        assert len(self.property_id) == 0
+        save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
         self.material_id = material_id
         self.thickness = thickness
         self.nsm = nsm
         self.formulation_option = formulation_option
+        self.n = len(ifile)
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
 
     def __apply_slice__(self, prop: PPLANE, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
+        self._slice_comment(prop, i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.thickness = self.thickness[i]
@@ -629,13 +670,22 @@ class PPLANE(Property):
                    missing,
                    material_id=(mids, material_ids))
 
-    def mass_per_area(self) -> np.ndarray:
+    def mass_per_area(self, T: Optional[np.ndarray]) -> np.ndarray:
         #self.model.log.warning(f'faking mass/area for {self.type}')
-        thickness = self.thickness
+        thickness = self.thickness.copy()
         #thickness = np.zeros(len(self.property_id))
         #nsm = self.nsm
         #mid = self.material_id
-
+        if T is not None:
+            # CPLSTS4
+            tavg = T.mean(axis=1)
+            assert len(tavg) == T.shape[0], len(tavg)
+            inan = np.isnan(thickness)
+            thickness[inan] = tavg[inan]
+        else:
+             # CPLSTN4
+             inan = np.isnan(thickness)
+             assert inan.sum() == 0, f'Plane Strain elements must have thickenss defined on PPLANE; pid={self.property_id[inan]}; thickness={thickness[inan]}'
         rho = get_density_from_material(self.material_id, self.allowed_materials)
         mass_per_area = rho * thickness
         return mass_per_area
@@ -673,6 +723,8 @@ class PlateStrainElement(Element):
         used_dict['node_id'].append(self.nodes.ravel())
 
     def __apply_slice__(self, element: PlateStrainElement, i: np.ndarray) -> None:  # ignore[override]
+        self._slice_comment(element, i)
+        element.ifile = self.ifile[i]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -833,21 +885,28 @@ class CPLSTN3(PlateStrainElement):
         #element._save(element_id, property_id, nodes, theta, tflag, T)
 
     def _save(self, element_id: np.ndarray, property_id: np.ndarray,
-              nodes: np.ndarray, theta: np.ndarray) -> None:
+              nodes: np.ndarray, theta: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
             raise NotImplementedError()
-        nelements = len(element_id)
-        assert nelements > 0, element_id
+        assert ncards > 0, element_id
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
-        assert nodes.shape == (nelements, 3), nodes.shape
-        self.n = nelements
+        assert nodes.shape == (ncards, 3), nodes.shape
+        self.n = len(ifile)
 
     def area(self) -> np.ndarray:
         area = tri_area(self.model.grid, self.nodes)
         return area
+
+    def center_of_mass(self) -> np.ndarray:
+        return self.centroid()
 
     def centroid(self) -> np.ndarray:
         centroid = tri_centroid(self.model.grid, self.nodes)
@@ -918,7 +977,7 @@ class CPLSTN4(PlateStrainElement):
 
     def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         """
-        Adds a CPLSTS4 card from ``BDF.add_card(...)``
+        Adds a CPLSTN4 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -940,7 +999,7 @@ class CPLSTN4(PlateStrainElement):
             integer(card, 6, 'n4'),
         ]
         theta = double_or_blank(card, 7, 'theta', default=0.0)
-        assert len(card) <= 8, f'len(CPLSTS4 card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 8, f'len(CPLSTN4 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, theta, ifile, comment))
         self.n += 1
         return self.n - 1
@@ -967,16 +1026,20 @@ class CPLSTN4(PlateStrainElement):
         self.cards = []
 
     def _save(self, element_id: np.ndarray, property_id: np.ndarray,
-              nodes: np.ndarray, theta: np.ndarray) -> None:
+              nodes: np.ndarray, theta: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
             raise NotImplementedError()
-        nelements = len(element_id)
-        assert nelements > 0, element_id
+        assert ncards > 0, element_id
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
-        self.n = nelements
+        self.n = len(ifile)
 
     def area(self) -> np.ndarray:
         area = quad_area(self.model.grid, self.nodes)
@@ -1096,17 +1159,21 @@ class CPLSTN6(PlateStrainElement):
         #element._save(element_id, property_id, nodes, theta, tflag, T)
 
     def _save(self, element_id: np.ndarray, property_id: np.ndarray,
-              nodes: np.ndarray, theta: np.ndarray) -> None:
+              nodes: np.ndarray, theta: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
             raise NotImplementedError()
-        nelements = len(element_id)
-        assert nelements > 0, element_id
+        assert ncards > 0, element_id
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
-        assert nodes.shape == (nelements, 6), nodes.shape
-        self.n = nelements
+        assert nodes.shape == (ncards, 6), nodes.shape
+        self.n = len(ifile)
 
     def area(self) -> np.ndarray:
         area = tri_area(self.model.grid, self.base_nodes)
@@ -1225,17 +1292,21 @@ class CPLSTN8(PlateStrainElement):
         self.cards = []
 
     def _save(self, element_id: np.ndarray, property_id: np.ndarray,
-              nodes: np.ndarray, theta: np.ndarray) -> None:
+              nodes: np.ndarray, theta: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
             raise NotImplementedError()
-        nelements = len(element_id)
-        assert nelements > 0, element_id
+        assert ncards > 0, element_id
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
-        assert nodes.shape == (nelements, 8), nodes.shape
-        self.n = nelements
+        assert nodes.shape == (ncards, 8), nodes.shape
+        self.n = len(ifile)
 
     def area(self) -> np.ndarray:
         area = quad_area(self.model.grid, self.base_nodes)
@@ -1280,7 +1351,7 @@ class CPLSTS6(PlateStrainElement):
     +---------+-------+-----+-------+-------+----+----+----+----+
     |    1    |   2   |  3  |   4   |    5  |  6 |  7 |  8 |  9 |
     +=========+=======+=====+=======+=======+====+====+====+====+
-    | CPLSTS8 |  EID  | PID |  G1   |   G2  | G3 | G4 | G5 | G6 |
+    | CPLSTS6 |  EID  | PID |  G1   |   G2  | G3 | G4 | G5 | G6 |
     +---------+-------+-----+-------+-------+----+----+----+----+
     |         |       |     | THETA | TFLAG | T1 | T2 | T3 |    |
     +---------+-------+-----+-------+-------+----+----+----+----+
@@ -1378,19 +1449,23 @@ class CPLSTS6(PlateStrainElement):
         #element._save(element_id, property_id, nodes, theta, tflag, T)
 
     def _save(self, element_id: np.ndarray, property_id: np.ndarray,
-              nodes: np.ndarray, theta: np.ndarray, tflag: np.ndarray, thickness: np.ndarray) -> None:
+              nodes: np.ndarray, theta: np.ndarray, tflag: np.ndarray, thickness: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id):
             raise NotImplementedError()
-        nelements = len(element_id)
-        assert nelements > 0, element_id
+        assert ncards > 0, element_id
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
         self.tflag = tflag
         self.thickness = thickness
-        assert nodes.shape == (nelements, 6), nodes.shape
-        self.n = nelements
+        assert nodes.shape == (ncards, 6), nodes.shape
+        self.n = len(ifile)
 
     def area(self) -> np.ndarray:
         area = tri_area(self.model.grid, self.base_nodes)
@@ -1539,19 +1614,23 @@ class CPLSTS8(PlateStrainElement):
 
     def _save(self, element_id: np.ndarray, property_id: np.ndarray,
               nodes: np.ndarray, theta: np.ndarray,
-              tflag: np.ndarray, thickness: np.ndarray) -> None:
+              tflag: np.ndarray, thickness: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
             raise NotImplementedError()
-        nelements = len(element_id)
-        assert nelements > 0, element_id
+        assert ncards > 0, element_id
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
         self.tflag = tflag
         self.thickness = thickness
-        assert nodes.shape == (nelements, 8), nodes.shape
-        self.n = nelements
+        assert nodes.shape == (ncards, 8), nodes.shape
+        self.n = ncards
 
     def area(self) -> np.ndarray:
         area = quad_area(self.model.grid, self.base_nodes)

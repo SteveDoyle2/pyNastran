@@ -297,6 +297,9 @@ def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
     grid = model.grid
 
     node_id = grid.node_id
+    all_node_ids = node_id.copy()
+    new_node_ids = node_id.copy()
+
     xyz_cid0 = grid.xyz_cid0()
     idtype = model.idtype
     nid_pairs2i = [(nid1, nid2) if nid1 < nid2 else (nid2, nid1)
@@ -304,6 +307,7 @@ def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
     nid_pairs_array = np.array(nid_pairs2i, dtype=idtype)
     inode = np.searchsorted(node_id, nid_pairs_array)
 
+    use_old_method = False
     # update the nodes
     nid_old_to_new = {}
     for i1, i2 in inode:
@@ -314,31 +318,45 @@ def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
         if normi <= tol:
             #iupdate = (normi <= tol)
             for nid1, nid2 in nid_pairs_array:
-                nid_new = grid.node_id[i1]
-                #nid_old = grid.node_id[i2]
-                grid.node_id[i2] = nid_new
-                grid.xyz[i2, :] = grid.xyz[i1, :]
-                grid.cp[i2] = grid.cp[i1]
-                grid.cd[i2] = grid.cd[i1]
-                grid.seid[i2] = grid.seid[i1]
-                grid.ps[i2] = grid.ps[i1]
-                nid_old_to_new[nid2] = nid1
+                nid_new0 = new_node_ids[i1]
+                new_node_ids[i2] = nid_new0
+                if use_old_method:
+                    nid_new = grid.node_id[i1]
+                    #nid_old = grid.node_id[i2]
+                    grid.node_id[i2] = nid_new
+                    grid.xyz[i2, :] = grid.xyz[i1, :]
+                    grid.cp[i2] = grid.cp[i1]
+                    grid.cd[i2] = grid.cd[i1]
+                    grid.seid[i2] = grid.seid[i1]
+                    grid.ps[i2] = grid.ps[i1]
+                    nid_old_to_new[nid2] = nid1
+
     #print(f'reduced-set:\n{model.grid.write()}')
 
-    # =0: node_sets is None -> no sets are used
-    if len(all_node_set) != 0:
-        for nid1, nid2 in nid_old_to_new.items():
-            assert nid1 in all_node_set, 'nid1=%s all_node_set=%s' % (nid1, all_node_set)
-            assert nid2 in all_node_set, 'nid2=%s all_node_set=%s' % (nid2, all_node_set)
+    if use_old_method:
+        # =0: node_sets is None -> no sets are used
+        if len(all_node_set) != 0:
+            for nid1, nid2 in nid_old_to_new.items():
+                assert nid1 in all_node_set, 'nid1=%s all_node_set=%s' % (nid1, all_node_set)
+                assert nid2 in all_node_set, 'nid2=%s all_node_set=%s' % (nid2, all_node_set)
 
-    update_cards(model, nid_old_to_new)
+    update_cards(model, all_node_ids, new_node_ids, nid_old_to_new)
     return
 
 
 def update_cards(model: BDF,
+                 all_node_ids: np.ndarray,
+                 new_node_ids: np.ndarray,
                  nid_old_to_new: dict[int, int]) -> None:
+    """
+    The ids have been updated, but now we need to slice out
+    invalid ids
+    """
     log = model.log
     log.warning('update_cards')
+    #print(f'new_node_ids = {new_node_ids}')
+    unique_new_node_ids = np.unique(new_node_ids)
+    #print(f'unique_new_node_ids = {unique_new_node_ids}')
 
     no_equiv_cards = {
         'MAT1', 'MAT2', 'MAT3', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10',
@@ -395,13 +413,18 @@ def update_cards(model: BDF,
     grid = model.grid
     ids = np.unique(grid.node_id)
 
-    nids_to_remove_list = list(nid_old_to_new.keys())
-    nids_to_remove = np.unique(nids_to_remove_list)
-
+    if 0:  # pragma: no cover
+        nids_to_remove_list = list(nid_old_to_new.keys())
+        nids_to_remove = np.unique(nids_to_remove_list)
+        nids_to_keep = np.setdiff1d(ids, nids_to_remove)
+        reverse_index = grid.index(nids_to_keep, assume_sorted=False, check_index=True)
+    else:
+        #reverse_index = np.searchsorted(all_node_ids, ids)
+        reverse_index = np.searchsorted(all_node_ids, unique_new_node_ids)
+    #print(f'reverse_index = {reverse_index}')
     # inplace operation to remove duplicate ids
-    nids_to_keep = np.setdiff1d(ids, nids_to_remove)
-    reverse_index = grid.index(nids_to_keep, assume_sorted=False, check_index=True)
     grid.__apply_slice__(grid, reverse_index)
+    grid.sort()
     #grid.slice_card_by_id(ids, assume_sorted=True, sort_ids=False)
 
     #print(f'final-set:\n{model.grid.write()}')

@@ -86,8 +86,8 @@ class TestAcoustic(unittest.TestCase):
         assert len(caabsf.write(size=16)) > 0
         assert len(paabsf.write(size=8)) > 0
         assert len(paabsf.write(size=16)) > 0
-
         save_load_deck(model)
+
 
 class TestShells(unittest.TestCase):
     def test_pshell(self):
@@ -376,9 +376,8 @@ class TestShells(unittest.TestCase):
         n4 = 4
         n5 = 5
         n6 = 6
-        #A = 2.
         t = rho = nsm = E = G = nu = 0.1
-        mid2 = mid3 = mid4 = twelveIt3 = tst = z1 = z2 = None
+        mid2 = mid3 = twelveIt3 = tst = z1 = z2 = None
 
         #mass = A * (t * rho + nsm)
         cards = [
@@ -1393,6 +1392,8 @@ class TestShells(unittest.TestCase):
         eid = 10
         pid = 100
         mid = 1000
+        model.add_cplsts4(eid, pid, [1, 2, 3, 4],
+                          T1=1., T2=1., T3=1., T4=1.)
 
         # only when t=0.0
         model.add_pplane(pid, mid, t=0.0, nsm=0.0, formulation_option=0, comment='')
@@ -1418,6 +1419,7 @@ class TestShells(unittest.TestCase):
         ]
         model.add_card_lines(card_lines, 'PSHLN1', comment='', has_none=True)
         model.setup()
+        assert model.grid.n == 4, model.grid
         #t = pplane.total_thickness()
         #assert np.allclose(t, 1.0), t
         save_load_deck(model, run_read_write=False)
@@ -1434,9 +1436,10 @@ class TestShells(unittest.TestCase):
         eid = 10
         pid = 100
         mid = 1000
+        model.add_cplstn4(eid, pid, [1, 2, 3, 4])
 
         # only when t=0.0
-        model.add_pplane(pid, mid, t=0.0, nsm=0.0, formulation_option=0, comment='')
+        model.add_pplane(pid, mid, t=1.0, nsm=0.0, formulation_option=0, comment='')
         pplane = model.pplane
         pshln2 = model.pshln2
         #with self.assertRaises(AssertionError):
