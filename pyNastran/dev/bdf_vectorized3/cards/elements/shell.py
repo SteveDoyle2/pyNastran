@@ -288,7 +288,8 @@ class ShellElement(Element):
         #print(self.T)
         thickness = shell_thickness(self.model,
                                     self.tflag, self.T,
-                                    self.property_id, self.allowed_properties)
+                                    self.property_id, self.allowed_properties,
+                                    self.type)
         inan = np.isnan(thickness)
         if np.any(inan):
             log = self.model.log

@@ -275,7 +275,7 @@ class AxiShellElement(Element):
         tflag, T = _axi_tflag_T(self)
         thickness = shell_thickness(self.model,
                                     tflag, T,
-                                    self.property_id, self.allowed_properties)
+                                    self.property_id, self.allowed_properties, self.type)
         inan = np.isnan(thickness)
         if np.any(inan):
             log = self.model.log
@@ -298,7 +298,7 @@ class AxiShellElement(Element):
 
         thickness = shell_thickness(self.model,
                                     tflag, T,
-                                    self.property_id, self.allowed_properties)
+                                    self.property_id, self.allowed_properties, self.type)
         inan = np.isnan(thickness)
         if inan.sum():
             self.model.log.error(thickness[inan])

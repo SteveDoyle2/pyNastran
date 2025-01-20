@@ -76,7 +76,7 @@ class PlateStressElement(Element):
         thickness = shell_thickness(
             self.model,
             tflag, T,
-            self.property_id, self.allowed_properties)
+            self.property_id, self.allowed_properties, self.type)
         #thickness = shell_thickness(self.property_id, self.allowed_properties)
         inan = np.isnan(thickness)
         if np.any(inan):
@@ -754,7 +754,7 @@ class PlateStrainElement(Element):
         tflag = None
         thickness = shell_thickness(
             self.model, tflag, T,
-            self.property_id, self.allowed_properties)
+            self.property_id, self.allowed_properties, self.type)
         inan = np.isnan(thickness)
         if np.any(inan):
             log = self.model.log

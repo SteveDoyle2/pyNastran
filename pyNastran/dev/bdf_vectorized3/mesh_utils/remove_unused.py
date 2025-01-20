@@ -101,6 +101,7 @@ def remove_unused(model: BDF, inplace: bool=False) -> BDF:
     not_supported_cards = {'DLINK', 'POINT', 'BEDGE', 'BCONP', 'BFRIC', 'BGSET', 'BGADD'}
     for card in cards:
         if hasattr(card, 'remove_unused'):
+            #log.warning(f'running {card.type} remove_unused')
             card.remove_unused(used_arrays)
         elif card.type in not_supported_cards:
             log.error(f'{card.type} does not support remove_unused')

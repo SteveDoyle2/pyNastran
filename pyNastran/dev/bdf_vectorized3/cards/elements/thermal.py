@@ -17,7 +17,8 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, parse_check,
-    make_idim, hslice_by_idim, )
+    make_idim, hslice_by_idim,
+    remove_unused_primary, remove_unused_duplicate)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, array_default_float,
     array_float, get_print_card_size)
@@ -596,6 +597,15 @@ class CHBDYG(ThermalElement):
         load.grid = hslice_by_idim(i, self.igrid, self.grid)
         load.nnode = self.nnode[i]
         load.n = len(i)
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.grid)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        node_id = used_dict['node_id']
+        ncards_removed = remove_unused_primary(
+            self, node_id, self.grid, 'node_id')
+        return ncards_removed
 
     @property
     def igrid(self) -> np.ndarray:

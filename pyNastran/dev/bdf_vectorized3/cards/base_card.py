@@ -128,6 +128,7 @@ class VectorizedBaseCard:
         def wrapper(self):
             self.n = 0
             self.cards = []
+            self.comment = {}
             return func(self)
         return wrapper
 
@@ -1003,24 +1004,63 @@ def sort_duplicates(card: VectorizedBaseCard) -> None:
     #ids = self.node_id
     ids = getattr(card, card._id_name)
     iarg = np.argsort(ids)
+    rarg = np.flip(iarg)
 
     # sort the sort index
-    uarg = np.unique(iarg)
+    uarg, idx, rdx, ucounts = np.unique(
+        ids, return_index=True, return_inverse=True,
+        return_counts=True)
 
     ids_sorted = ids[iarg]
     uids_sorted = np.unique(ids_sorted)
-
     if not np.array_equal(uarg, iarg) or len(ids) != len(uids_sorted):
         #print(f'card.type = {card.type}')
         model = card.model
-        if 0 and card.type in model.allow_overwrites_set:
-            #isort = np.searchsorted(ids_sorted, uarg)
-            model.log.warning('picking lower indicies (first added to model)')
-            card.__apply_slice__(card, uids_sorted)
+        is_duplicate_id = ucounts.max() > 1
+        if is_duplicate_id:
+            if card.type in model.allow_overwrites_set:
+                isort = np.searchsorted(ids_sorted, uarg, side='right') - 1
+                #model.log.warning('picking lower indicies (first added to model)')
+                card.__apply_slice__(card, isort)
+                card._is_sorted = True
+                return
+            else:
+                # we have duplicate/unsorted nodes
+                dnode = ids_sorted[1:] - ids_sorted[:-1]  # high - low
+                # dnode = np.diff(ids_sorted)
+                # inode = (dnode == 0)
+                inode1 = np.hstack([False, dnode == 0])
+                inode2 = np.hstack([dnode == 0, False])
+                # ids_unique1 = ids_sorted[inode1] # high node
+                # ids_unique2 = ids_sorted[inode2] # low  node
+
+                iarg1 = iarg[inode1]
+                iarg2 = iarg[inode2]
+                if not is_equal_by_index(card, iarg1, iarg2):
+                    msg = compare_by_indexs(card, iarg1, iarg2)
+                    if msg != '' or not card._skip_equality_check:
+                        raise RuntimeError(msg)
+
+                uids_sorted, idx = np.unique(ids, return_index=True)
+                nunique_nodes = len(uids_sorted)
+                assert nunique_nodes == len(idx)
+
+                card.__apply_slice__(card, idx)
+                card._is_sorted = True
+                return
+                # raise RuntimeError(f'ids={ids}')
+        else:
+            card.__apply_slice__(card, idx)
             card._is_sorted = True
             return
 
         # we have duplicate/unsorted nodes
+        # print(f'{card._id_name} = {ids} -> ids[iarg]={ids[iarg]}')
+        # print(f'idx = {idx}; iarg={iarg}; uarg={uarg}')
+        # print(f'rdx = {rdx}; rarg={rarg}')
+        # print(f'ucounts = {ucounts}')
+        # mapper = {i: nid for i, nid in enumerate(ids.tolist())}
+        # print(f'mapper = {mapper}')
         #
         #print(iarg.tolist())
         #print('->  ', ids_sorted.tolist())
@@ -1033,16 +1073,17 @@ def sort_duplicates(card: VectorizedBaseCard) -> None:
             #assert (iarg - uarg).sum() == 0, (iarg - uarg).sum()
 
         is_duplicate_ids = (len(ids_sorted) != len(uids_sorted))
-        print(f'ids = {ids}')
-        print(f'ids_sorted = {ids_sorted}')
-        print(f'is_duplicate_ids = {is_duplicate_ids}')
+        # print(f'ids = {ids}')
+        # print(f'ids_sorted = {ids_sorted}')
+        # print(f'is_duplicate_ids = {is_duplicate_ids}')
         model = card.model
-        if 0 and is_duplicate_ids and card.type in model.allow_overwrites_set:
+        if is_duplicate_ids and card.type in model.allow_overwrites_set:
             #print(f'ids_sorted = {ids_sorted}')
             #print(f'uids_sorted = {uids_sorted}')
-            idx = np.searchsorted(ids_sorted, uids_sorted, side='right') - 1
+            idx = np.searchsorted(ids_sorted, uids_sorted)
+            #idx = np.searchsorted(ids_sorted, uids_sorted, side='right') - 1
+            # print(f'idx = {idx}')
             assert np.array_equal(ids_sorted[idx], uids_sorted)
-            print(f'idx = {idx}')
             card.__apply_slice__(card, idx)
             # card._is_sorted = True
             # return

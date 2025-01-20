@@ -295,12 +295,14 @@ def shell_thickness(model: BDF,
                     tflag: np.ndarray,
                     T: np.ndarray,
                     property_id: np.ndarray,
-                    allowed_properties: list[PCOMP | PSHELL | PLPLANE]) -> np.ndarray:
+                    allowed_properties: list[PCOMP | PSHELL | PLPLANE],
+                    card_type: str) -> np.ndarray:
     log = model.log
     allow_nan_thickness = model.allow_nan_thickness
     thickness = np.full(len(property_id), np.nan, dtype='float64')
 
     if T is not None:
+        #print(card_type, T)
         if T.min() == T.max() and tflag.min() == tflag.max():
             # shortcutting T/tflag
             ti = T[0, 0]

@@ -476,9 +476,14 @@ class GRID(VectorizedBaseCard):
 
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
         node_id = used_dict['node_id']
+        assert isinstance(node_id, np.ndarray), node_id
+        assert isinstance(self.node_id, np.ndarray), self.node_id
         ncards_removed = len(self.node_id) - len(node_id)
-        if ncards_removed:
-            assert len(node_id) > 0, node_id
+        nnew = self.n - ncards_removed
+        if nnew == 0:
+            self.clear()
+            assert self.n == 0, self.n
+        elif ncards_removed:
             self.slice_card_by_id(node_id, assume_sorted=True, sort_ids=False)
         return ncards_removed
 
@@ -729,7 +734,7 @@ class GRID(VectorizedBaseCard):
         if not self._is_sorted:
             self.sort()
         xyz_cid0 = self._xyz_cid0
-        assert xyz_cid0.shape[0] > 0, xyz_cid0.shape
+        #assert xyz_cid0.shape[0] > 0, xyz_cid0.shape
 
         xyz = self.xyz
         #self.model.log.info(f'xyz = {xyz_cid0.shape}')
@@ -793,7 +798,7 @@ class GRID(VectorizedBaseCard):
                 xyz_cid0i = xyz_cidr @ beta + origin
             xyz_cid0[icp, :] = xyz_cid0i
         assert not np.any(np.isnan(xyz_cid0))
-        assert xyz_cid0.shape[0] > 0, xyz_cid0.shape
+        #assert xyz_cid0.shape[0] > 0, xyz_cid0.shape
         return xyz_cid0
 
 
