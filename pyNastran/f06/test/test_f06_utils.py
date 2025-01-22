@@ -374,6 +374,48 @@ class TestF06Flutter(unittest.TestCase):
         flutters = cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 
+    @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
+    def test_plot_func_0012(self):
+        log = SimpleLogger(level='warning')
+        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
+        flutter = make_flutter_response(f06_filename, f06_units='si', log=log)[1]
+        flutter.set_plot_settings(
+            #figsize=(4,4),
+            xtick_major_locator_multiple=[50.0, 50.0],
+            ytick_major_locator_multiple=[0.05, None],
+        )
+        flutter.set_plot_options(noline=False)
+        flutter.set_symbol_settings(
+            nopoints=False,
+            show_mode_number=False,
+            point_spacing=3,
+            markersize=None,
+            #markersize=0,
+        )
+        flutter.plot_vg_vf(plot_type='eas')
+        flutter.plot_vg(plot_type='eas')
+        #---------------------------------
+        flutter.set_plot_settings(figsize=(4,4),)
+        flutter.set_symbol_settings(
+            nopoints=False,
+            show_mode_number=True,
+            point_spacing=3,
+            markersize=None,
+        )
+        flutter.plot_vg_vf(plot_type='eas')
+        flutter.plot_vg(plot_type='eas')
+
+        flutter.set_symbol_settings(
+            nopoints=False,
+            show_mode_number=False,
+            point_spacing=3,
+            markersize=8,
+        )
+        flutter.plot_vg_vf(plot_type='eas')
+        flutter.plot_vg(plot_type='eas')
+        flutter.plot_kfreq_damping()
+        flutter.plot_kfreq_damping2()
+
     def test_fix_modes_0012(self):
         log = SimpleLogger(level='warning')
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'

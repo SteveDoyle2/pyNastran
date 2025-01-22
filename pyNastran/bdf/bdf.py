@@ -1475,19 +1475,46 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _get_unparsed_cards(self, bulk_data_lines: list[str],
                             bulk_data_ilines: Any) -> None:
+        """
+        Saves _parsed_cards.
+
+        TODO: May switch this to using the card group (e.g., elements)
+        instead of the card type.
+
+        Parameters
+        ----------
+        bulk_data_lines: list[str]
+            the lines to parse
+        bulk_data_ilines: np.ndarray
+            unused
+
+        """
         cards_dict, card_count = self.get_bdf_cards_dict(
             bulk_data_lines, bulk_data_ilines)
 
         cards = {}
+        load_cards = [
+            'FORCE', 'FORCE1', 'FORCE2',
+            'MOMENT', 'MOMENT1', 'MOMENT2',
+            'PLOAD', 'PLOAD2', 'PLOAD4',
+            'SPC', 'SPC1', 'MPC',
+            'NSM', 'NSML', 'NSM1', 'NSML1',
+        ]
         for card_name, cards_list in cards_dict.items():
             if card_name not in self.cards_to_read:
                 for (comment, card_lines, ifile_iline) in cards_list:
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
                 continue
 
-            if card_name in []:
+            if card_name in load_cards:
                 # FORCE, PLOAD2, ...
-                pass
+                cardsi = {}
+                cards[card_name] = cardsi
+                for (comment, card_lines, ifile_iline) in cards_list:
+                    fields = to_fields_line0(card_lines[0], card_name)
+                    idi1 = fields[1].strip()
+                    idi2 = fields[2].strip()
+                    cardsi[idi] = (comment, card_lines)
             else:
                 cardsi = {}
                 cards[card_name] = cardsi
