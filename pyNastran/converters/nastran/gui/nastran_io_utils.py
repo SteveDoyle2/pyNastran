@@ -3049,6 +3049,10 @@ def get_model_unvectorized(log: SimpleLogger,
         model.load(obj_filename=bdf_filename)
     else:  # read the bdf/punch
         model = BDF(log=log, debug=True)
+
+        skip_cards = ['DMI']
+        model.disable_cards(skip_cards)
+
         model.is_strict_card_parser = False
         #model.set_error_storage(nparse_errors=0,
         #                        stop_on_parsing_error=True,

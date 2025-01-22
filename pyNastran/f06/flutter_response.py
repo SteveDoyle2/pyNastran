@@ -652,14 +652,40 @@ class FlutterResponse:
                               freq_round: int=2,
                               eas_round: int=3,
                               ) -> dict[int, list[Crossing]]:
+        """
+        Gets the flutter crossings
+
+        Parameters
+        ----------
+        damping_required: list[(damping_target, damping_required)]
+            A point will be created at the damping point if it meets the criterion
+            for damping_required. This is useful when you have slight spikes over the target damping
+            target_damping: float
+                the target damping for flutter
+            damping_required: float
+                the required damping for flutter
+        modes : (nmode,) int ndarray; default=None -> all modes
+            the modes to analyze
+        eas_range: [eas_min, eas_max]
+            the equivalent airspeed range of the plot to consider
+        freq_round: int; default=2
+            number of digits for the frequency
+        eas_round
+            number of digits for the equivalent airspeed
+
+        Returns
+        -------
+        xcrossing_dict: dict[mode, [(percent_damping, freq, velocity), ...]
+            the flutter crossings
+        """
         if damping_required is None:
             damping_required = [
                 (0.00, 0.01),
                 (0.03, 0.03),
             ]
-
         if eas_range is None:
             eas_range = [None, None]
+
         eas_min0, eas_max0 = eas_range
         modes, imodes = _get_modes_imodes(self.modes, modes)
         min_damping = _get_min_damping(damping_required)
@@ -669,29 +695,28 @@ class FlutterResponse:
         # elif is_damping_range:
         xcrossing_dict = {}
         for imode in imodes:
+            mode = imode + 1
             dampi = self.results[imode, :, self.idamping].flatten()
             if dampi.max() < min_damping:
                 continue
             easi = self.results[imode, :, self.ieas].flatten()
             freqi = self.results[imode, :, self.ifreq].flatten()
 
-            is_nan_case = False
             crossings = []
             for damping_targeti, damping_requiredi in damping_required:
                 if dampi.max() < damping_requiredi:
                     continue
                 eas0, freq0 = get_zero_crossings(easi, freqi, dampi - damping_targeti)
-                eas0, freq0 = check_range(eas_min0, eas_max0, freq0, eas0)
-                if np.isnan(eas0):
-                    is_nan_case = True
-                    continue
                 freq0 = round(freq0, freq_round)
                 eas0 = round(eas0, eas_round)
-                crossings.append((damping_targeti, float(freq0), float(eas0)))
-            if is_nan_case:
-                continue
 
-            mode = imode + 1
+                eas0, freq0 = check_range(eas_min0, eas_max0, freq0, eas0)
+                if np.isnan(eas0):
+                    continue
+                crossings.append((damping_targeti, float(freq0), float(eas0)))
+
+            if len(crossings) == 0:
+                continue
             xcrossing_dict[mode] = crossings
         return xcrossing_dict
 
