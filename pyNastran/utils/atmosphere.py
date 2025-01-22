@@ -568,6 +568,44 @@ def atm_equivalent_airspeed(alt: float,
     eas2 = convert_velocity(eas, 'ft/s', eas_units)
     return eas2
 
+def atm_calibrated_airspeed(alt: float,
+                            mach: float,
+                            alt_units: str='ft',
+                            cas_units: str='ft/s') -> float:
+    """
+    Calibrated airspeed
+
+    Parameters
+    ----------
+    alt : float
+        altitude in alt_units
+    mach : float
+        Mach Number \f$ M \f$
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
+    cas_units : str; default='ft/s'
+        the calibrated airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
+
+    Returns
+    -------
+    cas : float
+        Calibrated airspeed in cas_units
+
+    CAS = EAS * sqrt(p/p0)
+
+    """
+    eas = atm_equivalent_airspeed(alt, mach, alt_units=alt_units, eas_units=cas_units)
+
+    z = convert_altitude(alt, alt_units, 'ft')
+    p0 = atm_pressure(0.)  # psf
+    p = atm_pressure(z)  # psf
+    a0 = atm_speed_of_sound(z, velocity_units=cas_units)
+    qc = p * ((1 + 0.2*mach**2)**3.5 - 1)
+    mach_comp = np.sqrt(5 * (qc/p0+1)**(1/3.5) - 1)
+    cas = a0 * mach_comp
+    return cas
+
+
 def atm_mach(alt: float,
              V: float,
              alt_units: str='ft',
