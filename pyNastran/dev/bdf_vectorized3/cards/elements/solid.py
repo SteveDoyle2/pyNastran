@@ -48,6 +48,7 @@ class SolidElement(Element):
         used_dict['property_id'].append(self.property_id)
 
     def __apply_slice__(self, elem: SolidElement, i: np.ndarray) -> None:  # ignore[override]
+        self._slice_comment(elem, i)
         elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
@@ -812,7 +813,8 @@ class PSOLID(Property):
         return prop
 
     def __apply_slice__(self, prop: PSOLID, i: np.ndarray) -> None:  # ignore[override]
-        prop.ifile = self.property_id[i]
+        self._slice_comment(prop, i)
+        prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.coord_id = self.coord_id[i]
@@ -1019,11 +1021,12 @@ class PLSOLID(Property):
         used_dict['material_id'].append(self.material_id)
 
     def __apply_slice__(self, prop: PLSOLID, i: np.ndarray) -> None:  # ignore[override]
-        prop.n = len(i)
+        self._slice_comment(prop, i)
         prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.stress_strain = self.stress_strain[i]
+        prop.n = len(i)
 
     def add(self, pid, mid, stress_strain='GRID', ge=0.,
             ifile: int=0, comment: str='') -> int:
@@ -1155,6 +1158,7 @@ class PSOLCZ(Property):
         used_dict['coord_id'].append(self.mcid)
 
     def __apply_slice__(self, prop: PSOLCZ, i: np.ndarray) -> None:  # ignore[override]
+        self._slice_comment(prop, i)
         prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
@@ -1488,6 +1492,7 @@ class PCOMPS(Property):
 
     def __apply_slice__(self, prop: PCOMPS, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
+        self._slice_comment(prop, i)
         prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
 
@@ -1844,6 +1849,7 @@ class PCOMPLS(Property):
 
     def __apply_slice__(self, prop: PCOMPLS, i: np.ndarray) -> None:
         prop.n = len(i)
+        self._slice_comment(prop, i)
         prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
 

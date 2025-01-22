@@ -1364,8 +1364,14 @@ class ACCEL(Load):
         self.N = N
         self.n = nloads
 
-    def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['coord_id'].append(self.coord_id)
+
+    # def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+    #     node_id = used_dict['node_id']
+    #     ncards_removed = remove_unused_primary(
+    #         self, node_id, self.grid, 'node_id')
+    #     return ncards_removed
 
     @property
     def iloc(self) -> np.ndarray:

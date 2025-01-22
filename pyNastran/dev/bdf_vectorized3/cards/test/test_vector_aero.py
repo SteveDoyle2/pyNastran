@@ -270,7 +270,10 @@ class TestAero(unittest.TestCase):
 
         data = ['AEFACT', '98', '.3', '0.7', '1.0']
         model.add_card(data, data[0], COMMENT_GOOD, is_list=True)
+        assert len(model.aefact.cards) == 3
         model.setup()
+        assert len(model.aefact.aefact_id) == 2
+        assert len(model.aefact.cards) == 0
 
         #msg = '$this is a bad comment\n'
         msg = 'AEFACT        97      .3      .7      1.\n'

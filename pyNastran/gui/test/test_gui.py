@@ -5,6 +5,7 @@ import sys
 import time
 import itertools
 import traceback
+from pyNastran.utils import PathLike
 
 from docopt import docopt
 
@@ -51,7 +52,7 @@ class FakeGUI(FakeGUIMethods, NastranIO):
         NastranIO.__init__(self)
         self.format_class_map = CLASS_MAP
 
-    def load_geometry(self, input_filename):
+    def load_geometry(self, input_filename: PathLike):
         """loads a model"""
         load_geometry_name = f'load_{self._formati}_geometry'
         if self._formati in self.format_class_map:
@@ -61,17 +62,20 @@ class FakeGUI(FakeGUIMethods, NastranIO):
             # self.load_nastran_geometry(bdf_filename, None)
             getattr(self, load_geometry_name)(input_filename)
         else:
-            msg = "load_geometry_name=%s doesn't exist" % load_geometry_name
+            msg = f"load_geometry_name={load_geometry_name} doesn't exist"
             raise NotImplementedError(msg)
+        self._cls = cls
+        return cls
 
-    def load_results(self, output_filename):
+    def load_results(self, output_filename: PathLike):
         """loads a model"""
         load_results_name = 'load_%s_results' % self._formati
         if self._formati in self.format_class_map:
-            cls = self.format_class_map[self._formati](self)
+            cls = (self._cls if self._cls is not None else
+                self.format_class_map[self._formati](self) )
             getattr(cls, load_results_name)(output_filename)
         elif hasattr(self, load_results_name):
-            # self.load_nastran_ressults(op2_filename, None)
+            # self.load_nastran_results(op2_filename, None)
             getattr(self, load_results_name)(output_filename)
         else:
             msg = "load_results_name=%s doesn't exist" % load_results_name

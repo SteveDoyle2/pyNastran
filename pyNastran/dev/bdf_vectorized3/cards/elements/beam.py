@@ -2187,6 +2187,7 @@ class PBEAML(Property):
         assert nstations == len(self.so), (self.xxb, self.so)
         assert nstations == len(self._nsm), (self.xxb, self._nsm)
         #assert nx == len(self.so), (self.xxb, self.so)
+        self.n = len(ifile)
 
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
@@ -2207,7 +2208,6 @@ class PBEAML(Property):
         #self.istation = hslice_by_idim(i, idim, elements)
         prop.Type = self.Type[i]
         prop.group = self.group[i]
-        #prop._nsm = self._nsm[i]
 
         idim = self.idim
         istation = self.istation
@@ -2223,7 +2223,7 @@ class PBEAML(Property):
         #prop.istation = self.istation[i, :]
         prop.nstation = self.nstation[i]
 
-        prop.so = self.so[i]
+        prop.so = hslice_by_idim(i, istation, self.so)
         prop.n = len(i)
 
         nproperties = len(prop.property_id)
@@ -3924,7 +3924,7 @@ class CBEND(Element):
         cd1_ref = self.model.coord.slice_card_by_id(cd1, sort_ids=False)
         xyz0 = cd1_ref.transform_xyz_to_global_assuming_rectangular(v)
 
-        print('xyz0 =', xyz0)
+        #print('xyz0 =', xyz0)
         length12 = np.linalg.norm(xyz2 - xyz1, axis=1)
         if igeom_flag1.sum():
             xyz1i = xyz1[igeom_flag1, :]
@@ -3981,7 +3981,7 @@ class CBEND(Element):
             #msg += f'nid1={self.nodes[inan,0]}\n'
             #msg += f'nid2={self.nodes[inan,1]}\n'
             #raise RuntimeError(msg)
-        print(f'length = {length}')
+        #print(f'length = {length}')
         return length
 
     def centroid(self) -> np.ndarray:

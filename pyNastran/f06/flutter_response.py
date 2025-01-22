@@ -33,6 +33,7 @@ if TYPE_CHECKING and IS_MATPLOTLIB:  # pragma: no cover
     from matplotlib.axes import Axes
 
 Color = str
+LineData = tuple[str, float, Color, str]
 LINESTYLES = ['-', '--', '-.', ':', 'None', ' ', '',
               'solid', 'dashed', 'dashdot', 'dotted']
 Crossing = tuple[float, float, float]
@@ -609,6 +610,7 @@ class FlutterResponse:
     def plot_vg(self, fig=None, modes=None,
                 plot_type: str='tas',
                 xlim=None, ylim_damping=None,
+                v_lines: Optional[list[LineData]]=None,
                 ncol: int=0,
                 clear: bool=False, legend: bool=True,
                 freq_tol: float=-1.0,
@@ -1229,6 +1231,7 @@ class FlutterResponse:
                            freq_tol: float=-1.0,
                            png_filename=None,
                            damping_limit=None,
+                           v_lines: list[LineData]=None,
                            **kwargs):
         """
         Plots a kfreq vs. damping curve
@@ -1339,7 +1342,7 @@ class FlutterResponse:
                    ylim_damping: Optional[Limit]=None,
                    ylim_freq: Optional[Limit]=None,
                    ivelocity: Optional[int]=None,
-                   v_lines: list[tuple[str, float, Color, str]]=None,
+                   v_lines: list[LineData]=None,
                    damping_limit=None,
                    ncol: int=0,
                    freq_tol: float=-1.0,
@@ -1384,8 +1387,6 @@ class FlutterResponse:
             filter crossings entirely outside the plot range
             useful for cleaning up the legend
         """
-        if v_lines is None:
-            v_lines = []
         #assert vl_limit is None or isinstance(vl_limit, float_types), vl_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
         #self.fix()
@@ -1483,15 +1484,9 @@ class FlutterResponse:
             plot_type, damp_axes, damping_limit)
         legend_elements.extend(legend_elementsi)
 
-        # add vertical lines
-        for v_line in v_lines:
-            name, velocity, vcolor, linestyle = v_line
-            legend_elementsi = _add_vlimit(
-                plot_type, damp_axes, freq_axes,
-                name, velocity, xunit,
-                color=vcolor, linestyle=linestyle)
-            #_add_limit(plot_type, damp_axes, freq_axes, '1.15*VL', 1.15, vl_limit)
-            legend_elements.extend(legend_elementsi)
+        legend_elementsi = add_vertical_lines(
+            [damp_axes, freq_axes], v_lines, plot_type)
+        legend_elements.extend(legend_elementsi)
 
         # crossings go on top (aka at the end)
         eas_max = None if (xlim is None or xlim[1] is None) else xlim[1]
@@ -2548,3 +2543,26 @@ def reshape_eigenvectors(eigenvectors: np.array,
 def _is_tick(values: Optional[tuple[float, float]], index: int):
     out = values is not None and values[index] is not None
     return out
+
+def add_vertical_lines(axes: list[Axes],
+                       v_lines: Optional[list[LineData]],
+                       plot_type: str) -> list[Line2D]:
+    """the first plot gets the label"""
+    legend_elements = []
+    if v_lines is None:
+        return legend_elements
+
+    if len(axes) == 2:
+        damp_axes, freq_axes = axes
+        # add vertical lines
+        for v_line in v_lines:
+            name, velocity, vcolor, linestyle = v_line
+            legend_elementsi = _add_vlimit(
+                plot_type, damp_axes, freq_axes,
+                name, velocity, xunit,
+                color=vcolor, linestyle=linestyle)
+            #_add_limit(plot_type, damp_axes, freq_axes, '1.15*VL', 1.15, vl_limit)
+            legend_elements.extend(legend_elementsi)
+    else:
+        raise RuntimeError(len(axes))
+    return legend_elements

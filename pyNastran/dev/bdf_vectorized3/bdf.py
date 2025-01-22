@@ -553,7 +553,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
         # False: use strict parser (default)
         self.is_strict_card_parser = True
-        self.allow_overwrites_set = set([])
 
         # set of card types that overwrites work on
         self.allow_overwrites_set: set[str] = set([])
@@ -1457,10 +1456,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             if union_cards:
                 raise DisabledCardError(f'the following cards have been removed: {list(union_cards)}')
 
-        self.cross_reference(run_geom_check=xref)
+        self.cross_reference(run_setup=xref,
+                             run_geom_check=xref)
         self._xref = xref
 
-        self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
+        self.log.debug(f'---finished BDF.read_bdf of {self.bdf_filename}---')
 
     def _parse_all_cards(self, bulk_data_lines: list[str], bulk_data_ilines: Any) -> None:
         """creates and loads all the cards the bulk data section"""

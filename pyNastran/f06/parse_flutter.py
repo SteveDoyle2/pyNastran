@@ -527,7 +527,8 @@ def make_flutter_plots(modes: list[int],
             plot_type, plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
             nopoints, noline,
             ncol=ncol, legend=legend,
-            vd_limit=vd_limit, damping_limit=damping_limit,
+            vd_limit=vd_limit,
+            damping_limit=damping_limit,
             freq_tol=freq_tol, mag_tol=mag_tol,
             vg_filename=vg_filename,
             vg_vf_filename=vg_vf_filename,
@@ -580,13 +581,14 @@ def _make_flutter_subcase_plot(modes, response: FlutterResponse,
         #_remove_neutrinos(response, log)
         response.nopoints = nopoints
         response.noline = noline
+        v_lines = _vd_limit_to_v_lines(vd_limit)
         if plot_vg:
             filenamei = None if vg_filename is None else (vg_filename % subcase)
             response.plot_vg(modes=modes,
                              plot_type=plot_type,
                              xlim=xlim, ylim_damping=ylim_damping,
                              ncol=ncol,
-                             #vd_limit=vd_limit,
+                             v_lines=v_lines,
                              png_filename=filenamei, show=False, clear=clear, close=close)
         if plot_vg_vf:
             filenamei = None if vg_vf_filename is None else (vg_vf_filename % subcase)
@@ -594,7 +596,8 @@ def _make_flutter_subcase_plot(modes, response: FlutterResponse,
                                 plot_type=plot_type,
                                 xlim=xlim,
                                 ylim_damping=ylim_damping, ylim_freq=ylim_freq,
-                                vd_limit=vd_limit, damping_limit=damping_limit,
+                                damping_limit=damping_limit,
+                                v_lines=v_lines,
                                 freq_tol=freq_tol,
                                 ivelocity=ivelocity,
                                 ncol=ncol, legend=legend,
@@ -634,7 +637,7 @@ def _make_flutter_subcase_plot(modes, response: FlutterResponse,
                 plot_type=plot_type,
                 ylim_damping=ylim_damping,
                 ylim_kfreq=ylim_kfreq,
-                vd_limit=vd_limit, damping_limit=damping_limit,
+                v_lines=v_lines, damping_limit=damping_limit,
                 ncol=ncol,
                 png_filename=filenamei,
                 show=False, clear=clear, close=close)
@@ -822,6 +825,15 @@ def _get_eigenvector(f06_file: TextIO, iline: int,
     nspline_points = len(spline_point_complex_eigenvector_slines)
     eigenvector = (real_imag[:, 0] + real_imag[:, 1] * 1j).reshape(nspline_points, 1)
     return iline, line, eigenvector, eigr, eigi, velocity, methodi
+
+
+def _vd_limit_to_v_lines(vd_limit: Optional[float]=None) -> list:
+    v_lines = []
+    if vd_limit:
+        # (name, value, color, linestyle)
+        v_lines.append(('VD', vd_limit, 'k', '--'))
+        v_lines.append(('1.15*VD', vd_limit, 'k', '-'))
+    return v_lines
 
 
 if __name__ == '__main__':  # pragma: no cover

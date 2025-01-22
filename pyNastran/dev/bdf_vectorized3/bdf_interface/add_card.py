@@ -5487,9 +5487,11 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                 icard = np.arange(ncard)
                 card.slice_card_by_index(icard)
 
-    def setup(self, run_geom_check: bool=True) -> None:
+    def setup(self, run_setup: bool=True,
+              run_geom_check: bool=True) -> None:
+        #if not run_setup:
+            #return
         self.parse_cards()
-
         self._check_duplicates()
         if not run_geom_check:
             return
@@ -5576,8 +5578,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         assert isinstance(encoding, str), encoding
         return encoding
 
-    def cross_reference(self, run_geom_check: bool=True):
-        self.setup(run_geom_check=run_geom_check)
+    def cross_reference(self, run_setup: bool=True,
+                        run_geom_check: bool=True):
+        self.setup(run_setup=run_setup,
+                   run_geom_check=run_geom_check)
         #self.log.warning('no xref')
 
     def add_param(self, key: str, values: list[int | float | str],

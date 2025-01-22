@@ -246,6 +246,7 @@ class CBUSH(Element):
         self.si *= xyz_scale
 
     def __apply_slice__(self, elem: CBUSH, i: np.ndarray) -> None:
+        self._slice_comment(elem, i)
         elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
@@ -651,6 +652,7 @@ class PBUSH(Property):
         self.n = len(self.property_id)
 
     def __apply_slice__(self, prop: PBUSH, i: np.ndarray) -> None:
+        self._slice_comment(prop, i)
         prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.k_fields = self.k_fields[i, :]
@@ -910,6 +912,7 @@ class PBUSHT(Property):
         self.n = len(ifile)
 
     def __apply_slice__(self, prop: PBUSHT, i: np.ndarray) -> None:
+        self._slice_comment(prop, i)
         prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.k_tables = self.k_tables[i, :]
@@ -1043,6 +1046,7 @@ class CBUSH1D(Element):
         self.coord_id = coord_id
 
     def __apply_slice__(self, elem: CBUSH1D, i: np.ndarray) -> None:
+        self._slice_comment(elem, i)
         elem.ifile = self.ifile[i]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
@@ -1367,6 +1371,7 @@ class PBUSH1D(Property):
         self.n = len(ifile)
 
     def __apply_slice__(self, prop: PBUSH1D, i: np.ndarray) -> None:
+        self._slice_comment(prop, i)
         prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.k = self.k[i]
