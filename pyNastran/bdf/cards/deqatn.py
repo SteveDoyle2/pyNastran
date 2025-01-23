@@ -143,6 +143,29 @@ BUILTINS = ['del', 'eval', 'yield', 'async', 'await', 'property',
             'slice', 'filter', 'map']
 
 
+def split_deqatn_line0(card: list[str]) -> tuple[int, str, str, list[str]]:
+    line0 = card[0]
+    if '\t' in line0:
+        line0 = line0.expandtabs()
+
+    name_eqid = line0[:16]
+    # print('name_eqid = %r' % name_eqid)
+    assert ',' not in name_eqid, name_eqid
+
+    try:
+        name, eq_id = name_eqid.split()
+        assert name.strip().upper() == 'DEQATN', card
+    except ValueError:
+        msg = 'cannot split %r\n' % name_eqid
+        msg += "Expected data of the form 'DEQATN  100'\n"
+        msg += 'card=%s' % card
+        raise ValueError(msg)
+
+    equation_id = int(eq_id)
+    line0_eq = line0[16:]
+    eqs_temp = [line0_eq] + card[1:]
+    return equation_id, name_eqid, line0_eq, eqs_temp
+
 class DEQATN(BaseCard):  # needs work...
     """
     Design Equation Definition

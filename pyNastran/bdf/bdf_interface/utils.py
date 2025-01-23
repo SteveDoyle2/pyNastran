@@ -346,7 +346,6 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
                 nfields = len(new_fields)
                 msg = 'nfields=%s new_fields=%s' % (nfields, new_fields)
                 raise RuntimeError(msg)
-
         fields += new_fields
     return fields
 

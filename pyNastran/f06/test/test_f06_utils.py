@@ -378,7 +378,8 @@ class TestF06Flutter(unittest.TestCase):
     def test_plot_func_0012(self):
         log = SimpleLogger(level='warning')
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
-        flutter = make_flutter_response(f06_filename, f06_units='si', log=log)[1]
+        flutters, data = make_flutter_response(f06_filename, f06_units='si', log=log)
+        flutter = flutters[1]
         flutter.set_plot_settings(
             #figsize=(4,4),
             xtick_major_locator_multiple=[50.0, 50.0],

@@ -4300,7 +4300,7 @@ def read_ovg(op2_reader: OP2Reader) -> None:
             'altitude': 'ft', 'eas': 'in/s', 'dynamic_pressure': 'psi',
         }
     resp = FlutterResponse.from_nx(
-        method, fdata2,
+        method, fdata2, op2.op2_filename,
         subcase_id=subcase_id, subtitle=subtitle, cref=cref,
         is_xysym=is_xysym, is_xzsym=is_xzsym,
         in_units=op2.in_units)

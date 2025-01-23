@@ -83,7 +83,11 @@ class TestReadWriteFiles(unittest.TestCase):
         # elif read_cards:
         #     model.enable_cards(read_cards)
         model.read_bdf(bdf_filename)
-        assert len(model._parsed_cards)
+        assert len(model.elements) == 161, len(model.elements)
+
+    def test_solid_bending_fast(self):
+        #from pyNastran.bdf.mesh_utils.remove_cards import
+        bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
 
     def test_isat_files(self):
         """read/writes the isat model with the file structure"""

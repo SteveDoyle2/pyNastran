@@ -80,6 +80,10 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
     model2.pop_parse_errors()
     model2.get_bdf_stats()
     model2.write_bdf('model2.bdf')
+
+    # model_parse = BDF(log=model.log)
+    # model_parse._parse = False
+    # model_parse.read_bdf('model2.bdf')
     if run_test_bdf:
         folder = ''
         log_error = SimpleLogger(level='error', encoding='utf-8')
