@@ -4,7 +4,7 @@ SOL 145 plotter
 
 kfreq = ωc/(2V)
 """
-from typing import Optional, TextIO, cast
+from typing import Optional, TextIO, cast, Any
 import numpy as np
 
 try:
@@ -33,7 +33,8 @@ Crossing = tuple[float, float, float]
 def make_flutter_response(f06_filename: PathLike,
                           f06_units=None, out_units=None,
                           use_rhoref: bool=False,
-                          log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
+                          log: Optional[SimpleLogger]=None) -> tuple[dict[int, FlutterResponse],
+                                                               dict[str, Any]]:
     """
     Creates the FlutterResponse object
 

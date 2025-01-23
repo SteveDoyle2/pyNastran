@@ -159,7 +159,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
 
         # unhandled
         'radset',
-        'dmigs', 'dmijis', 'dmijs', 'dmiks', 'dmis',
+        'dmig', 'dmiji', 'dmij', 'dmik', 'dmi',
 
 
         # vector

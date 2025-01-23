@@ -1,7 +1,8 @@
 from __future__ import annotations
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
+import shutil
+from typing import Optional, TYPE_CHECKING
 from matplotlib import pyplot as plt
 from pyNastran.f06.parse_flutter import make_flutter_response, get_flutter_units
 
@@ -37,7 +38,7 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
     #print(f'use_rhoref={use_rhoref}')
     if ext == '.f06':
         try:
-            responses: FlutterResponse = make_flutter_response(
+            responses, mass = make_flutter_response(
                 f06_filename,
                 f06_units=in_units_dict,
                 out_units=out_units_dict,

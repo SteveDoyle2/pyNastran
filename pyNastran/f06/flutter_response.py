@@ -401,6 +401,18 @@ class FlutterResponse:
         self._xtick_major_locator_multiple = None
         self._ytick_major_locator_multiple = None
 
+        #-----------------------------------------------------------
+        # The plot gets messy and dfreq_tol doesn't work if you have NaN
+        # points. To hack this, we just chop the plot above some
+        # x value (x_cutoff)
+        #
+        # 0 rigid body modes -> don't filter 0 frequency points for the first N modes
+        # not really the rigid body modes, but you can say don't filter the first 20 modes
+        # TODO: may go away
+        self.nrigid_body_modes = 0
+        # lets you filter failed modes to a specific value
+        self.x_cutoff = None
+
     def set_plot_settings(self, figsize=None,
                           xtick_major_locator_multiple=None, ytick_major_locator_multiple=None):
         if figsize is None:
@@ -428,12 +440,10 @@ class FlutterResponse:
     def set_symbol_settings(self, nopoints: bool=False,
                             show_mode_number: bool=False,
                             point_spacing: int=0,
-                            markersize: int=0) -> None:
+                            markersize: int=None) -> None:
         if markersize is None:
-            markersize = plt.rcParams['markersize']
+            markersize = plt.rcParams['lines.markersize']
         plt.rcParams['lines.markersize'] = markersize
-        #out = {'lines': markersize}
-        #matplotlib.rc('lines', **out)
 
         self.nopoints = nopoints
         self.show_mode_number = show_mode_number
@@ -1436,6 +1446,11 @@ class FlutterResponse:
             vel = self.results[imode, :, ix].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
+            if mode > self.nrigid_body_modes and self.x_cutoff is not None:
+                irigid = np.where(vel < self.x_cutoff)[0]
+                vel = vel[irigid]
+                damping = damping[irigid]
+                freq = freq[irigid]
 
             jcolor, color, linestyle2, symbol2, texti = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
@@ -1451,7 +1466,8 @@ class FlutterResponse:
             #iplot = np.where(freq != np.nan)
             #damp_axes.plot(vel[iplot], damping[iplot], symbols[i], label='Mode %i' % mode)
             #freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
-            #print(color, symbol, linestyle)
+            # print(color, symbol, linestyle)
+            #dfreq = freq.max() - freq.min()
             label = _get_mode_freq_label(mode, freq[0])
             if filter_freq and freq.min() > ylim_freq[1]:
                 # if we're entirely greater than the max, skip line
@@ -1461,6 +1477,7 @@ class FlutterResponse:
                 # if we're entirely below than the min, skip line
                 #print(f'skipping {label!r}; min={freq.max()} yfreq_min={ylim_freq[0]}')
                 continue
+            #print(mode, color, symbol, linestyle, dfreq, freq)
 
             # _plot_axes(damp_axes,
             #            vel, damping,
