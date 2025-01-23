@@ -166,7 +166,7 @@ def check_mass(fem1: BDF, run_mass: bool=True, quiet: bool=False):
 
 def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
     """Verifies the dmig.get_matrix() method works."""
-    for (unused_key, dmig) in sorted(fem1.dmigs.items()):
+    for (unused_key, dmig) in sorted(fem1.dmig.items()):
         try:
             if isinstance(dmig, NastranMatrix):
                 dmig.get_matrix()
@@ -178,7 +178,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
                   % (dmig.type, dmig.name, str(dmig)))
             raise
 
-    for (unused_key, dmi) in sorted(fem1.dmis.items()):
+    for (unused_key, dmi) in sorted(fem1.dmi.items()):
         try:
             if isinstance(dmi, NastranMatrix):
                 dmi.get_matrix()
@@ -202,7 +202,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
                   % (dmij.type, dmij.name, str(dmij)))
             raise
 
-    for (unused_key, dmiji) in sorted(fem1.dmijis.items()):
+    for (unused_key, dmiji) in sorted(fem1.dmiji.items()):
         try:
             if isinstance(dmiji, NastranMatrix):
                 dmiji.get_matrix()
@@ -214,7 +214,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
                   % (dmiji.type, dmiji.name, str(dmiji)))
             raise
 
-    for (unused_key, dmik) in sorted(fem1.dmiks.items()):
+    for (unused_key, dmik) in sorted(fem1.dmik.items()):
         try:
             if isinstance(dmik, NastranMatrix):
                 dmik.get_matrix()

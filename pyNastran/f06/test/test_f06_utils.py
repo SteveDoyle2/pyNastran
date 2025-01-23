@@ -419,7 +419,8 @@ class TestF06Flutter(unittest.TestCase):
     def test_fix_modes_0012(self):
         log = SimpleLogger(level='warning')
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
-        flutter = make_flutter_response(f06_filename, f06_units='si', log=log)[1]
+        flutters, mass = make_flutter_response(f06_filename, f06_units='si', log=log)
+        flutter = flutters[1]
         fix_modes_2024(flutter)
 
     def test_fix_modes_constant(self):

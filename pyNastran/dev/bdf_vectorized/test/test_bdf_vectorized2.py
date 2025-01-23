@@ -467,7 +467,7 @@ def get_element_stats(fem1, fem2):
 
 
 def get_matrix_stats(fem1, fem2):
-    for (key, dmig) in sorted(fem1.dmigs.items()):
+    for (key, dmig) in sorted(fem1.dmig.items()):
         try:
             if isinstance(dmig, NastranMatrix):
                 dmig.get_matrix()

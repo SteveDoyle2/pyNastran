@@ -4,9 +4,9 @@ SOL 145 plotter
 
 kfreq = ωc/(2V)
 """
-from typing import Optional, TextIO, cast
+from typing import Optional, TextIO, cast, Any
 import numpy as np
-#import PySide
+
 try:
     import matplotlib.pyplot as plt  # pylint: disable=unused-import
     IS_MATPLOTLIB = True
@@ -33,7 +33,8 @@ Crossing = tuple[float, float, float]
 def make_flutter_response(f06_filename: PathLike,
                           f06_units=None, out_units=None,
                           use_rhoref: bool=False,
-                          log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
+                          log: Optional[SimpleLogger]=None) -> tuple[dict[int, FlutterResponse],
+                                                               dict[str, Any]]:
     """
     Creates the FlutterResponse object
 
@@ -87,6 +88,7 @@ def make_flutter_response(f06_filename: PathLike,
     eigr_eigi_velocity_list = []
     eigr_eigi_velocity = None
     load_eigenvalues = True
+    data = {}
     matrices = {}
 
     log.info('f06_filename = %r' % f06_filename)
@@ -96,8 +98,10 @@ def make_flutter_response(f06_filename: PathLike,
             line = f06_file.readline()
             iline += 1
             #log.debug(f'A: line[{iline:d}] = {line!r}')
-
-            if 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
+            if 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line:
+                print(f'line = {line}')
+                asdf
+            elif 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
                 Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
                 asdf
                 isort = np.argsort(Khh)
@@ -110,10 +114,13 @@ def make_flutter_response(f06_filename: PathLike,
                 del Mhh, Bhh, Khh
 
             while ('SUBCASE ' not in line and
+                   'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' not in line and
+                   #'R E A L   E I G E N V A L U E S' not in line and
                    'FLUTTER  SUMMARY' not in line and
                    'EIGENVECTOR FROM THE' not in line):
                 line = f06_file.readline()
                 iline += 1
+                #print(f'i={iline} {line.rstrip()}')
                 if not line:
                     nblank += 1
                 else:
@@ -139,7 +146,7 @@ def make_flutter_response(f06_filename: PathLike,
                     log.debug('subcase=%s -> new_subcase=%s' % (subcase, new_subcase))
                     log.debug('modes1 = %s' % modes)
                     response = FlutterResponse(
-                        subcase, configuration, xysym, xzsym,
+                        f06_filename, subcase, configuration, xysym, xzsym,
                         mach, density_ratio, method,
                         modes, results,
                         in_units=f06_units,
@@ -154,6 +161,18 @@ def make_flutter_response(f06_filename: PathLike,
                     subcase = new_subcase
                     #break
                 continue
+            elif 'R E A L   E I G E N V A L U E S' in line:
+                Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
+                isort = np.argsort(Khh)
+                # matrices['MHH'].append(np.diag(Mhh[isort]))
+                # matrices['BHH'].append(np.diag(Bhh[isort]))
+                # matrices['KHH'].append(np.diag(Khh[isort]))
+                matrices['MHH'] = np.diag(Mhh[isort])
+                matrices['BHH'] = np.diag(Bhh[isort])
+                matrices['KHH'] = np.diag(Khh[isort])
+            elif 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line:
+                iline, line, opgwg = _read_opgwg(f06_file, iline, line)
+                data['opgwg'] = opgwg
 
             #log.debug(f'C: line[{iline:d}]_FSa = {line}')
             last_line = None
@@ -318,7 +337,7 @@ def make_flutter_response(f06_filename: PathLike,
             #print(line)
             #raise RuntimeError("failed to find 'FLUTTER SUMMARY'")
         response = FlutterResponse(
-            subcase, configuration, xysym, xzsym,
+            f06_filename, subcase, configuration, xysym, xzsym,
             mach, density_ratio, method,
             modes, results,
             in_units=f06_units,
@@ -327,7 +346,168 @@ def make_flutter_response(f06_filename: PathLike,
             eigr_eigi_velocity=eigr_eigi_velocity)
         response.set_out_units(out_units)
         flutters[subcase] = response
-    return flutters
+
+    if len(matrices):
+        data['matrices'] = matrices
+    return flutters, data
+
+def _read_opgwg(f06_file: TextIO, iline: int,
+                line: str) -> tuple[int, str, dict[str, np.ndarray]]:
+    assert 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line, line
+    # REFERENCE POINT = 0
+    sline = f06_file.readline().split('=')
+    iline += 1
+    ref_point = int(sline[1])
+
+    # MO
+    line = f06_file.readline()
+    #print(f'MO = {line.strip()}')
+    iline += 1
+
+    mo_list = []
+    for i in range(6):
+        #  * 1 2 3 4 5 6 *
+        line = f06_file.readline().strip()
+        iline += 1
+        #print(line)
+        assert '*' in line[0], line
+        sline = line[1:-1].split()
+        assert len(sline) == 6, sline
+        mo_list.append(sline)
+
+    # S
+    line = f06_file.readline()
+    iline += 1
+    #print(f'S = {line.strip()}')
+    s_list = []
+    for i in range(3):
+        #  * 1 2 36 *
+        line = f06_file.readline().strip()
+        iline += 1
+        assert '*' in line[0], line
+        sline = line[1:-1].split()
+        assert len(sline) == 3, sline
+        s_list.append(sline)
+
+    #---------------------------------------------
+    # DIRECTION
+    line = f06_file.readline()
+    #print(f'dir = {line.strip()}')
+    iline += 1
+
+    # MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
+    line = f06_file.readline()
+    iline += 1
+
+    mass_cg_list = []
+    for i in range(3):
+        #  X 1 2 3
+        #  Y 1 2 3
+        #  Z 1 2 3
+        line = f06_file.readline().strip()
+        iline += 1
+        sline = line[1:].split()
+        assert len(sline) == 4, sline
+        mass_cg_list.append(sline)
+
+    # I(S)
+    line = f06_file.readline()
+    iline += 1
+    is_list = []
+    #print('IS = ', line.strip())
+    for i in range(3):
+        #  * 1 2 3 *
+        #  * 1 2 3 *
+        #  * 1 2 3 *
+        line = f06_file.readline().strip()
+        iline += 1
+        assert '*' in line[0], line
+        sline = line[1:-1].split()
+        assert len(sline) == 3, sline
+        #print(f'is[{i}] = {sline}')
+        is_list.append(sline)
+
+    # I(Q)
+    line = f06_file.readline()
+    iline += 1
+    iq_list = []
+    #print('IQ = ', line.strip())
+    for i in range(3):
+        #  * 1     *
+        #  *   2   *
+        #  *     3 *
+        line = f06_file.readline().strip()
+        iline += 1
+        assert '*' in line[0], line
+        sline = line[1:-1].split()
+        assert len(sline) == 1, sline
+        iq_list.append(sline)
+
+    # Q
+    line = f06_file.readline()
+    iline += 1
+    q_list = []
+    for i in range(3):
+        #  * 1 2 3 *
+        #  * 1 2 3 *
+        #  * 1 2 3 *
+        line = f06_file.readline().strip()
+        iline += 1
+        assert '*' in line[0], line
+        sline = line[1:-1].split()
+        assert len(sline) == 3, sline
+        q_list.append(sline)
+
+    MO = np.array(mo_list, dtype='float64')
+    mass_cg = np.array(mass_cg_list, dtype='float64')
+    IS = np.array(is_list, dtype='float64')
+    IQ = np.array(iq_list, dtype='float64')
+    S = np.array(s_list, dtype='float64')
+    Q = np.array(q_list, dtype='float64')
+
+    assert MO.shape == (6, 6), MO.shape
+    assert mass_cg.shape == (3, 4), mass_cg.shape
+    assert IS.shape == (3, 3), IS.shape
+    assert IQ.shape == (3, 1), IQ.shape
+    assert S.shape == (3, 3), S.shape
+    assert Q.shape == (3, 3), Q.shape
+    #print(MO.shape, mass_cg.shape, IS.shape, IQ.shape, S.shape, Q.shape)
+    line = f06_file.readline().strip()
+    iline += 1
+
+    mass_full = mass_cg[:, 0]
+    cg_full = mass_cg[:, 1:]
+    mass = mass_full.mean()
+    mass_error = mass_full - mass
+    xcg = (cg_full[1, 0] + cg_full[2, 0]) / 2.
+    ycg = (cg_full[0, 1] + cg_full[2, 1]) / 2.
+    zcg = (cg_full[0, 2] + cg_full[1, 2]) / 2.
+    xyz_cg = np.array([xcg, ycg, zcg])
+
+    cg_error = cg_full.copy()
+    cg_error[1, 0] = cg_error[1, 0] - xcg
+    cg_error[2, 0] = cg_error[2, 0] - xcg
+
+    # ycg
+    cg_error[0, 1] = cg_error[0, 1] - ycg
+    cg_error[2, 1] = cg_error[2, 1] - ycg
+
+    # zcg
+    cg_error[0, 2] = cg_error[0, 2] - zcg
+    cg_error[1, 2] = cg_error[1, 2] - zcg
+
+    opgwg = {
+        'ref_point': ref_point,
+        'MO': MO,
+        # 'mass_full': mass_full,
+        # 'cg_full': cg_full,
+        'cg': xyz_cg,
+        'mass': mass,
+        'mass_error': mass_error.sum(),
+        'cg_error': cg_error.sum(),
+    }
+    #print(opgwg)
+    return iline, line, opgwg
 
 def plot_flutter_f06(f06_filename: PathLike,
                      f06_units: Optional[dict[str, str]]=None,
@@ -439,7 +619,7 @@ def plot_flutter_f06(f06_filename: PathLike,
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
     assert ivelocity is None or isinstance(ivelocity, integer_types), ivelocity
     #assert mode is None or isinstance(mode, integer_types), mode
-    flutters = make_flutter_response(
+    flutters, mass = make_flutter_response(
         f06_filename, f06_units=f06_units, out_units=out_units,
         use_rhoref=use_rhoref, log=log)
 

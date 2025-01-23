@@ -5,7 +5,8 @@ TODO:
  -
 """
 from __future__ import annotations
-from copy import deepcopy
+import os
+#from copy import deepcopy
 import warnings
 from itertools import count
 from typing import Iterable, TextIO, Optional, Any, TYPE_CHECKING
@@ -105,6 +106,7 @@ class FlutterResponse:
 
     @classmethod
     def from_nx(cls, method: str, fdata: np.ndarray,
+                op2_filename: str,
                 subcase_id: int=1, subtitle: str='', label: str='',
                 cref: float=1.0,
                 is_xysym: bool=False, is_xzsym: bool=False,
@@ -171,7 +173,7 @@ class FlutterResponse:
         modes = np.arange(nmodes, dtype='int32') + 1
 
         resp = FlutterResponse(
-            subcase_id, configuration, xysym, xzsym, mach, density_ratio,
+            op2_filename, subcase_id, configuration, xysym, xzsym, mach, density_ratio,
             method, modes, results, in_units=in_units,
             subtitle=subtitle,
             label=label,
@@ -196,7 +198,8 @@ class FlutterResponse:
                                      ncol=ncol, legend=True, png_filename=None)
         return resp
 
-    def __init__(self, subcase: int, configuration: str,
+    def __init__(self, f06_filename: str,
+                 subcase: int, configuration: str,
                  xysym: str, xzsym: str,
                  mach: float, density_ratio: float, method: str,
                  modes: list[int], results: Any,
@@ -264,6 +267,7 @@ class FlutterResponse:
             unused
 
         """
+        self.f06_filename = f06_filename
         if eigr_eigi_velocity is None:
             eigr_eigi_velocity = np.zeros((0, 3), dtype='float64')
         if eigenvector is None:
@@ -405,6 +409,18 @@ class FlutterResponse:
         self._xtick_major_locator_multiple = None
         self._ytick_major_locator_multiple = None
 
+        #-----------------------------------------------------------
+        # The plot gets messy and dfreq_tol doesn't work if you have NaN
+        # points. To hack this, we just chop the plot above some
+        # x value (x_cutoff)
+        #
+        # 0 rigid body modes -> don't filter 0 frequency points for the first N modes
+        # not really the rigid body modes, but you can say don't filter the first 20 modes
+        # TODO: may go away
+        self.nrigid_body_modes = 0
+        # lets you filter failed modes to a specific value
+        self.x_cutoff = None
+
     def set_plot_settings(self, figsize=None,
                           xtick_major_locator_multiple=None,
                           ytick_major_locator_multiple=None):
@@ -433,17 +449,10 @@ class FlutterResponse:
     def set_symbol_settings(self, nopoints: bool=False,
                             show_mode_number: bool=False,
                             point_spacing: int=0,
-                            markersize: int=0) -> None:
+                            markersize: int=None) -> None:
         if markersize is None:
             markersize = plt.rcParams['lines.markersize']
-        #if point_spacing is None:
-            #point_spacing = plt.rcParams['lines.markevery']
-
-        #print(list(plt.rcParams.keys()))
         plt.rcParams['lines.markersize'] = markersize
-        #plt.rcParams['lines.markevery'] = point_spacing
-        #out = {'lines': markersize}
-        #matplotlib.rc('lines', **out)
 
         self.nopoints = nopoints
         self.show_mode_number = show_mode_number
@@ -902,7 +911,8 @@ class FlutterResponse:
         iomega = (omega != 0.0)
         damping_g[iomega] = 2 * omega_damping[iomega] / omega[iomega]
 
-        title = f'Subcas {self.subcase}; Modal Participation Factors of Mode {mode}\n'
+        title = self._get_title(nlines=1)
+        title += f'\nModal Participation Factors of Mode {mode}\n'
         title += rf'$\omega$={omega:.2f}; freq={freq:.2f} Hz; g={damping_g:.3g}'
         if np.isfinite(velocityi):
             title += f' V={velocityi:.1f}'
@@ -1084,10 +1094,7 @@ class FlutterResponse:
         set_xlim(axes, xlim)
         set_ylim(axes, ylim)
 
-        title = f'Subcase {self.subcase:d}'
-        if png_filename:
-            title += '\n%s' % png_filename
-        #print(f'title={title!r}')
+        title = self._get_title(nlines=2)
         fig.suptitle(title)
         if legend:
             # bbox_to_anchor=(1.125, 1.), ncol=ncol,
@@ -1096,6 +1103,14 @@ class FlutterResponse:
         _show_save_clear_close(
             fig, show, png_filename, clear, close)
         return axes
+
+    def _get_title(self, nlines: int=2) -> str:
+        basename = os.path.basename(self.f06_filename)
+        if nlines == 1:
+            title = f'Subcase {self.subcase}; {basename}'
+        else:
+            title = f'Subcase {self.subcase}\n{basename}'
+        return title
 
     def _plot_x_y2(self, ix: int, iy1: int, iy2: int,
                    xlabel: str, ylabel1: str, ylabel2: str,
@@ -1218,13 +1233,10 @@ class FlutterResponse:
         axes2.grid(True)
         axes2.set_xlabel(xlabel)  #, fontsize=self.font_size)
         axes2.set_ylabel(ylabel2)  #, fontsize=self.font_size)
-
         _set_ticks(self, axes1, 0)
         _set_ticks(self, axes2, 1)
 
-        title = f'Subcase {self.subcase:d}'
-        if png_filename:
-            title += '\n%s' % png_filename
+        title = self._get_title(nlines=2)
         fig.suptitle(title)
         if legend:
             #legend_kwargs = {}
@@ -1455,6 +1467,11 @@ class FlutterResponse:
             vel = self.results[imode, :, ix].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
+            if mode > self.nrigid_body_modes and self.x_cutoff is not None:
+                irigid = np.where(vel < self.x_cutoff)[0]
+                vel = vel[irigid]
+                damping = damping[irigid]
+                freq = freq[irigid]
 
             jcolor, color, linestyle2, symbol2, texti = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
@@ -1471,6 +1488,7 @@ class FlutterResponse:
             #damp_axes.plot(vel[iplot], damping[iplot], symbols[i], label='Mode %i' % mode)
             #freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
             #print(color, symbol, linestyle)
+            #dfreq = freq.max() - freq.min()
             label = _get_mode_freq_label(mode, freq[0])
             if filter_freq and freq.min() > ylim_freq[1]:
                 # if we're entirely greater than the max, skip line
@@ -1478,6 +1496,7 @@ class FlutterResponse:
             if filter_freq and freq.max() < ylim_freq[0]:
                 # if we're entirely below than the min, skip line
                 continue
+            #print(mode, color, symbol, linestyle, dfreq, freq)
 
             # _plot_axes(damp_axes,
             #            vel, damping,
@@ -1540,10 +1559,7 @@ class FlutterResponse:
         _set_ticks(self, damp_axes, 0)
         _set_ticks(self, freq_axes, 1)
 
-        title = f'Subcase {self.subcase}'
-        if png_filename:
-            title += '\n%s' % png_filename
-
+        title = self._get_title(nlines=2)
         damp_axes.set_title(title)  #, fontsize=self.font_size)
         #plt.suptitle(title)
 
@@ -2505,6 +2521,7 @@ def reshape_eigenvectors(eigenvectors: np.array,
     #eig.scale(mpf)
     #asdf
     return eigenvectors3, eigr_eigi_vel3
+
 
 def _add_vertical_lines(axes_list: list[Axes],
                         v_lines: Optional[list[LineData]],

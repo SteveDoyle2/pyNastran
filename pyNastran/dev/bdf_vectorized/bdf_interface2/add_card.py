@@ -9,7 +9,7 @@ class AddCard(BDFAttributes):
     def _add_dmi_object(self, dmi, allow_overwrites=False):
         """adds a DMI object"""
         name = dmi.name
-        self.dmis[name] = dmi
+        self.dmi[name] = dmi
         self._type_to_id_map[dmi.type].append(name)
 
     def _add_dmig_object(self, dmig, allow_overwrites=False):
@@ -33,7 +33,7 @@ class AddCard(BDFAttributes):
     def _add_dmik_object(self, dmik, allow_overwrites=False):
         """adds a DMIK object"""
         name = dmik.name
-        self.dmiks[name] = dmik
+        self.dmik[name] = dmik
         self._type_to_id_map[dmik.type].append(name)
 
     def _add_param_object(self, param, allow_overwrites=False):

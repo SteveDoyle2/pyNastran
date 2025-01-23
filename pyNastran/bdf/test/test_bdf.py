@@ -441,7 +441,6 @@ def run_and_compare_fems(
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDF(debug=debug, log=log)
-    is_lax_parser = True
     if is_lax_parser:
         fem1.log.warning('using lax card parser')
         fem1.is_strict_card_parser = False
