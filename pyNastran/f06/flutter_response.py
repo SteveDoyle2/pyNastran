@@ -5,7 +5,8 @@ TODO:
  -
 """
 from __future__ import annotations
-from copy import deepcopy
+import os
+#from copy import deepcopy
 import warnings
 from itertools import count
 from typing import Iterable, TextIO, Optional, Any, TYPE_CHECKING
@@ -103,6 +104,7 @@ class FlutterResponse:
 
     @classmethod
     def from_nx(cls, method: str, fdata: np.ndarray,
+                op2_filename: str,
                 subcase_id: int=1, subtitle: str='', label: str='',
                 cref: float=1.0,
                 is_xysym: bool=False, is_xzsym: bool=False,
@@ -169,7 +171,7 @@ class FlutterResponse:
         modes = np.arange(nmodes, dtype='int32') + 1
 
         resp = FlutterResponse(
-            subcase_id, configuration, xysym, xzsym, mach, density_ratio,
+            op2_filename, subcase_id, configuration, xysym, xzsym, mach, density_ratio,
             method, modes, results, in_units=in_units,
             subtitle=subtitle,
             label=label,
@@ -194,7 +196,8 @@ class FlutterResponse:
                                      ncol=ncol, legend=True, png_filename=None)
         return resp
 
-    def __init__(self, subcase: int, configuration: str,
+    def __init__(self, f06_filename: str,
+                 subcase: int, configuration: str,
                  xysym: str, xzsym: str,
                  mach: float, density_ratio: float, method: str,
                  modes: list[int], results: Any,
@@ -261,6 +264,7 @@ class FlutterResponse:
             unused
 
         """
+        self.f06_filename = f06_filename
         if eigr_eigi_velocity is None:
             eigr_eigi_velocity = np.zeros((0, 3), dtype='float64')
         if eigenvector is None:
@@ -887,7 +891,8 @@ class FlutterResponse:
         iomega = (omega != 0.0)
         damping_g[iomega] = 2 * omega_damping[iomega] / omega[iomega]
 
-        title = f'Subcas {self.subcase}; Modal Participation Factors of Mode {mode}\n'
+        title = self._get_title(nlines=1)
+        title += f'\nModal Participation Factors of Mode {mode}\n'
         title += rf'$\omega$={omega:.2f}; freq={freq:.2f} Hz; g={damping_g:.3g}'
         if np.isfinite(velocityi):
             title += f' V={velocityi:.1f}'
@@ -1066,10 +1071,7 @@ class FlutterResponse:
         set_xlim(axes, xlim)
         set_ylim(axes, ylim)
 
-        title = f'Subcase {self.subcase:d}'
-        if png_filename:
-            title += '\n%s' % png_filename
-        #print(f'title={title!r}')
+        title = self._get_title(nlines=2)
         fig.suptitle(title)
         if legend:
             # bbox_to_anchor=(1.125, 1.), ncol=ncol,
@@ -1078,6 +1080,14 @@ class FlutterResponse:
         _show_save_clear_close(
             fig, show, png_filename, clear, close)
         return axes
+
+    def _get_title(self, nlines: int=2) -> str:
+        basename = os.path.basename(self.f06_filename)
+        if nlines == 1:
+            title = f'Subcase {self.subcase}; {basename}'
+        else:
+            title = f'Subcase {self.subcase}\n{basename}'
+        return title
 
     def _plot_x_y2(self, ix: int, iy1: int, iy2: int,
                    xlabel: str, ylabel1: str, ylabel2: str,
@@ -1202,9 +1212,7 @@ class FlutterResponse:
         axes1.tick_params(axis='both', which='major')  #, labelsize=self.font_size)
         axes2.tick_params(axis='both', which='major')  #, labelsize=self.font_size)
 
-        title = f'Subcase {self.subcase:d}'
-        if png_filename:
-            title += '\n%s' % png_filename
+        title = self._get_title(nlines=2)
         fig.suptitle(title)
         if legend:
             #legend_kwargs = {}
@@ -1485,7 +1493,7 @@ class FlutterResponse:
         legend_elements.extend(legend_elementsi)
 
         legend_elementsi = add_vertical_lines(
-            [damp_axes, freq_axes], v_lines, plot_type)
+            [damp_axes, freq_axes], v_lines, plot_type, xunit)
         legend_elements.extend(legend_elementsi)
 
         # crossings go on top (aka at the end)
@@ -1526,10 +1534,7 @@ class FlutterResponse:
         if _is_tick(self._ytick_major_locator_multiple, 1):
             freq_axes.yaxis.set_major_locator(MultipleLocator(self._ytick_major_locator_multiple[1]))
 
-        title = f'Subcase {self.subcase}'
-        if png_filename:
-            title += '\n%s' % png_filename
-
+        title = self._get_title(nlines=2)
         damp_axes.set_title(title)  #, fontsize=self.font_size)
         #plt.suptitle(title)
 
@@ -2546,7 +2551,7 @@ def _is_tick(values: Optional[tuple[float, float]], index: int):
 
 def add_vertical_lines(axes: list[Axes],
                        v_lines: Optional[list[LineData]],
-                       plot_type: str) -> list[Line2D]:
+                       plot_type: str, xunit: str) -> list[Line2D]:
     """the first plot gets the label"""
     legend_elements = []
     if v_lines is None:

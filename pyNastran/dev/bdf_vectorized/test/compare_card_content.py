@@ -50,7 +50,7 @@ def compare_card_content(fem1, fem2):
         #'loads',
         'coords',
         'spcs', 'spcoffs', 'mpcs', 'dareas',
-        'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies', 'sets',
+        'nlparms', 'tsteps', 'tstepnls', 'dmig', 'dequations', 'frequencies', 'sets',
         'tables', 'random_tables', 'methods', 'cMethods']
     for name in check_obj_names:
         check_length(fem1, fem2, name)
@@ -185,15 +185,15 @@ def compare_card_content(fem1, fem2):
 
 
 def compare_matrices(fem1, fem2):
-    for key in fem1.dmigs:
-        card1 = fem1.dmigs[key]
-        card2 = fem2.dmigs[key]
+    for key in fem1.dmig:
+        card1 = fem1.dmig[key]
+        card2 = fem2.dmig[key]
         assert str(card1) == str(card2)
         #assert_fields(card1, card2)
 
-    #for key in fem1.dmis:
-        #card1 = fem1.dmis[key]
-        #card2 = fem2.dmis[key]
+    #for key in fem1.dmi:
+        #card1 = fem1.dmi[key]
+        #card2 = fem2.dmi[key]
         #assert str(card1) == str(card2)
 
     for key in fem1.dmij:

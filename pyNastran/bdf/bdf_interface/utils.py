@@ -590,21 +590,34 @@ def fill_dmigs(model: BDF) -> None:
         card_name = card0[0]
         card_name = card_name.rstrip(' *').upper()
 
-        if card_name == 'DMIG':
-            # if field2 == 'UACCEL':  # special DMIG card
-            card = model.dmig[name]
-        elif card_name == 'DMI':
-            card = model.dmi[name]
-        elif card_name == 'DMIJ':
-            card = model.dmij[name]
-        elif card_name == 'DMIJI':
-            card = model.dmiji[name]
-        elif card_name == 'DMIK':
-            card = model.dmik[name]
-        elif card_name == 'DMIAX':
-            card = model.dmiax[name]
-        else:  # pragma: no cover
-            raise NotImplementedError(card_name)
+        # dmig, dmi, dmij, dmiji, dmik, dmiax
+        try:
+            card_dict = getattr(model, card_name.lower())
+        except AttributeError:
+            raise AttributeError(f'No slot to store {card_name.lower()}')
+
+        # find the header for the MGG matrix (or other)
+        try:
+            card = card_dict[name]
+        except KeyError:
+            raise KeyError(f'No matrix header for {card_name}: {name}')
+
+        # if 0:
+        #     if card_name == 'DMIG':
+        #         # if field2 == 'UACCEL':  # special DMIG card
+        #         card = model.dmig[name]
+        #     elif card_name == 'DMI':
+        #         card = model.dmi[name]
+        #     elif card_name == 'DMIJ':
+        #         card = model.dmij[name]
+        #     elif card_name == 'DMIJI':
+        #         card = model.dmiji[name]
+        #     elif card_name == 'DMIK':
+        #         card = model.dmik[name]
+        #     elif card_name == 'DMIAX':
+        #         card = model.dmiax[name]
+        #     else:  # pragma: no cover
+        #         raise NotImplementedError(card_name)
 
         for (card_obj, comment) in card_comments:
             card._add_column(card_obj, comment=comment)

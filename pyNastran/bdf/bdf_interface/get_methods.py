@@ -952,10 +952,10 @@ class GetMethods(BDFAttributes):
     def DMIG(self, dname: str, msg: str='') -> DMIG:
         """gets a DMIG"""
         try:
-            return self.dmigs[dname]
+            return self.dmig[dname]
         except KeyError:
             raise KeyError('dname=%s not found%s.  Allowed DMIGs=%s'
-                           % (dname, msg, _unique_keys(self.dmigs)))
+                           % (dname, msg, _unique_keys(self.dmig)))
 
     def DEQATN(self, equation_id: int, msg: str='') -> DEQATN:
         """gets a DEQATN"""

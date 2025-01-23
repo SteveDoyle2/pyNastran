@@ -1459,6 +1459,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.pop_parse_errors()
         fill_dmigs(self)
 
+        if not self._parse:
+            return
         if validate:
             self.validate()
 
@@ -1477,25 +1479,59 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                             bulk_data_ilines: Any) -> None:
         cards_dict, card_count = self.get_bdf_cards_dict(
             bulk_data_lines, bulk_data_ilines)
-
-        cards = {}
+        #cards = {}
+        string_names = ['PARAM']
+        dict_list_cards = [
+            # dict[spc_id][list_index]
+            'FORCE', 'FORCE1', 'FORCE2',
+            'MOMENT', 'MOMENT1', 'MOMENT2',
+            'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
+            'SPC', 'SPC1', 'MPC',
+        ]
+        special_cards = [
+            'DMI', 'DMIG', 'DMIJ', 'DMIK',
+            #'SPC', 'SPC1', 'MPC',
+        ]
+        rslot_to_type_map = self.get_rslot_map()
+        #print(rslot_to_type_map)
         for card_name, cards_list in cards_dict.items():
+            slot_name = rslot_to_type_map[card_name]
+            print(card_name, slot_name)
+            slot = getattr(self, slot_name)
             if card_name not in self.cards_to_read:
                 for (comment, card_lines, ifile_iline) in cards_list:
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
                 continue
 
-            if card_name in []:
-                # FORCE, PLOAD2, ...
-                pass
-            else:
-                cardsi = {}
-                cards[card_name] = cardsi
+            if card_name in string_names:
+                # DMI, PARAM
                 for (comment, card_lines, ifile_iline) in cards_list:
                     fields = to_fields_line0(card_lines[0], card_name)
                     idi = fields[1].strip()
-                    cardsi[idi] = (comment, card_lines)
-        self._parsed_cards = cards
+                    assert idi not in slot, card_name
+                    slot[idi] = (comment, card_lines)
+            elif card_name in dict_list_cards:
+                # FORCE, PLOAD2, ...
+                # load_id, index
+                for (comment, card_lines, ifile_iline) in cards_list:
+                    #print('dict_listA', slot_name, card_lines[0])
+                    fields = to_fields_line0(card_lines[0], card_name)
+                    idi = int(fields[1].strip())
+                    # assert idi not in slot, card_name
+                    if idi not in slot:
+                        slot[idi] = []
+                    slot[idi].append((comment, card_lines))
+            elif card_name in special_cards:
+                pass
+            else:
+                #cardsi = {}
+                #cards[card_name] = cardsi
+                for (comment, card_lines, ifile_iline) in cards_list:
+                    fields = to_fields_line0(card_lines[0], card_name)
+                    idi = int(fields[1].strip())
+                    assert idi not in slot, (card_name)
+                    slot[idi] = (comment, card_lines)
+        #self._parsed_cards = cards
         return
 
     def _parse_all_cards(self, bulk_data_lines: list[str], bulk_data_ilines: Any) -> None:
