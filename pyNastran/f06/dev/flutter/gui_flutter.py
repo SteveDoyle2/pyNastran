@@ -116,7 +116,7 @@ class FlutterGui(LoggableGui):
         self.alt_lim = []
         self.q_lim = []
         self.rho_lim = []
-        #self.x_lim = []
+        self.eas_damping_lim = [None, None]
         self.freq_lim = [None, None]
         self.damping_lim = [None, None]
         self.kfreq_lim = [None, None]
@@ -334,9 +334,10 @@ class FlutterGui(LoggableGui):
             ('alt_lim', self.alt_lim_edit_min, self.alt_lim_edit_max),
             ('q_lim', self.q_lim_edit_min, self.q_lim_edit_max),
             ('rho_lim', self.rho_lim_edit_min, self.rho_lim_edit_max),
-            ('xlim', self.xlim_edit_min, self.xlim_edit_max),
+            ('ikfreq_lim', self.ikfreq_lim_edit_min, self.ikfreq_lim_edit_max),
 
             ('damp_lim', self.damp_lim_edit_min, self.damp_lim_edit_max),
+            ('eas_damping_lim', self.eas_damping_lim_edit_min, self.eas_damping_lim_edit_max),
             ('freq_lim', self.freq_lim_edit_min, self.freq_lim_edit_max),
             ('kfreq_lim', self.kfreq_lim_edit_min, self.kfreq_lim_edit_max),
         ]
@@ -490,41 +491,41 @@ class FlutterGui(LoggableGui):
             self.setWindowTitle(f'Flutter Plot: {self.save_filename}')
 
     def setup_widgets(self) -> None:
-        self.f06_filename_label = QLabel('F06 Filename:')
-        self.f06_filename_edit = QLineEdit()
-        self.f06_filename_browse = QPushButton('Browse...')
+        self.f06_filename_label = QLabel('F06 Filename:', self)
+        self.f06_filename_edit = QLineEdit(self)
+        self.f06_filename_browse = QPushButton('Browse...', self)
 
-        self.bdf_filename_checkbox = QCheckBox('BDF Filename:')
-        self.bdf_filename_edit = QLineEdit()
-        self.bdf_filename_browse = QPushButton('Browse...')
+        self.bdf_filename_checkbox = QCheckBox('BDF Filename:', self)
+        self.bdf_filename_edit = QLineEdit(self)
+        self.bdf_filename_browse = QPushButton('Browse...', self)
         self.bdf_filename_checkbox.setChecked(False)
         self.bdf_filename_edit.setEnabled(False)
         self.bdf_filename_browse.setEnabled(False)
         self.bdf_filename_edit.setToolTip('Loads the Nastran Geometry')
 
-        self.op2_filename_checkbox = QCheckBox('OP2 Filename:')
-        self.op2_filename_edit = QLineEdit()
-        self.op2_filename_browse = QPushButton('Browse...')
+        self.op2_filename_checkbox = QCheckBox( 'OP2 Filename:', self)
+        self.op2_filename_edit = QLineEdit(self)
+        self.op2_filename_browse = QPushButton('Browse...', self)
         self.op2_filename_checkbox.setChecked(False)
         self.op2_filename_edit.setEnabled(False)
         self.op2_filename_browse.setEnabled(False)
         self.op2_filename_edit.setToolTip('Loads the Nastran Results (and geometry if BDF Filename is empty)')
 
-        self.use_rhoref_checkbox = QCheckBox('Sea Level Rho Ref')
+        self.use_rhoref_checkbox = QCheckBox('Sea Level Rho Ref', self)
         self.use_rhoref_checkbox.setChecked(False)
 
-        self.log_xscale_checkbox = QCheckBox('Log Scale x')
-        self.log_yscale1_checkbox = QCheckBox('Log Scale y1')
-        self.log_yscale2_checkbox = QCheckBox('Log Scale y2')
+        self.log_xscale_checkbox = QCheckBox('Log Scale x', self)
+        self.log_yscale1_checkbox = QCheckBox('Log Scale y1', self)
+        self.log_yscale2_checkbox = QCheckBox('Log Scale y2', self)
         self.log_xscale_checkbox.setChecked(False)
         self.log_yscale1_checkbox.setChecked(False)
         self.log_yscale2_checkbox.setChecked(False)
 
-        self.show_points_checkbox = QCheckBox('Show Points')
-        self.show_mode_number_checkbox = QCheckBox('Show Mode Number')
-        self.point_spacing_label = QLabel('Point Spacing')
-        self.point_spacing_spinner = QSpinBox()
-        self.show_lines_checkbox = QCheckBox('Show Lines')
+        self.show_points_checkbox = QCheckBox('Show Points', self)
+        self.show_mode_number_checkbox = QCheckBox('Show Mode Number', self)
+        self.point_spacing_label = QLabel('Point Spacing', self)
+        self.point_spacing_spinner = QSpinBox(self)
+        self.show_lines_checkbox = QCheckBox('Show Lines', self)
         self.show_points_checkbox.setChecked(True)
         self.show_lines_checkbox.setChecked(True)
         self.show_points_checkbox.setToolTip('The points are symbols')
@@ -532,74 +533,73 @@ class FlutterGui(LoggableGui):
         self.point_spacing_spinner.setToolTip('Skip Every Nth Point; 0=Plot All')
         self.point_spacing_spinner.setValue(0)
         self.point_spacing_spinner.setMinimum(0)
-        self.point_spacing_spinner.setMaximum(10)
+        self.point_spacing_spinner.setMaximum(30)
 
-        self.eas_lim_label = QLabel('EAS Limits:')
-        self.eas_lim_edit_min = QFloatEdit('0')
-        self.eas_lim_edit_max = QFloatEdit()
+        self.eas_lim_label = QLabel('EAS Limits:', self)
+        self.eas_lim_edit_min = QFloatEdit('0', self)
+        self.eas_lim_edit_max = QFloatEdit(self)
 
-        self.tas_lim_label = QLabel('TAS Limits:')
-        self.tas_lim_edit_min = QFloatEdit('0')
-        self.tas_lim_edit_max = QFloatEdit()
+        self.tas_lim_label = QLabel('TAS Limits:', self)
+        self.tas_lim_edit_min = QFloatEdit('0', self)
+        self.tas_lim_edit_max = QFloatEdit(self)
 
-        self.mach_lim_label = QLabel('Mach Limits:')
-        self.mach_lim_edit_min = QFloatEdit()
-        self.mach_lim_edit_max = QFloatEdit()
+        self.mach_lim_label = QLabel('Mach Limits:', self)
+        self.mach_lim_edit_min = QFloatEdit(self)
+        self.mach_lim_edit_max = QFloatEdit(self)
 
-        self.alt_lim_label = QLabel('Alt Limits:')
-        self.alt_lim_edit_min = QFloatEdit()
-        self.alt_lim_edit_max = QFloatEdit()
+        self.alt_lim_label = QLabel('Alt Limits:', self)
+        self.alt_lim_edit_min = QFloatEdit(self)
+        self.alt_lim_edit_max = QFloatEdit(self)
 
-        self.q_lim_label = QLabel('Q Limits:')
-        self.q_lim_edit_min = QFloatEdit()
-        self.q_lim_edit_max = QFloatEdit()
+        self.q_lim_label = QLabel('Q Limits:', self)
+        self.q_lim_edit_min = QFloatEdit(self)
+        self.q_lim_edit_max = QFloatEdit(self)
 
-        self.rho_lim_label = QLabel('Rho Limits:')
-        self.rho_lim_edit_min = QFloatEdit('0')
-        self.rho_lim_edit_max = QFloatEdit()
+        self.rho_lim_label = QLabel('Rho Limits:', self)
+        self.rho_lim_edit_min = QFloatEdit('0', self)
+        self.rho_lim_edit_max = QFloatEdit(self)
 
-        self.xlim_label = QLabel('X Limits:')
-        self.xlim_edit_min = QFloatEdit('0')
-        self.xlim_edit_max = QFloatEdit()
+        self.damp_lim_label = QLabel('Damping Limits (g):', self)
+        self.damp_lim_edit_min = QFloatEdit('-0.3', self)
+        self.damp_lim_edit_max = QFloatEdit('0.3', self)
 
-        self.damp_lim_label = QLabel('Damping Limits (g):')
-        self.damp_lim_edit_min = QFloatEdit('-0.3')
-        self.damp_lim_edit_max = QFloatEdit('0.3')
+        self.freq_lim_label = QLabel('Freq Limits (Hz):', self)
+        self.freq_lim_edit_min = QFloatEdit('0', self)
+        self.freq_lim_edit_max = QFloatEdit(self)
 
-        self.freq_lim_label = QLabel('Freq Limits (Hz):')
-        self.freq_lim_edit_min = QFloatEdit('0')
-        self.freq_lim_edit_max = QFloatEdit()
+        self.kfreq_lim_label = QLabel('KFreq Limits:', self)
+        self.kfreq_lim_edit_min = QFloatEdit(self)
+        self.kfreq_lim_edit_max = QFloatEdit(self)
 
-        self.kfreq_lim_label = QLabel('KFreq Limits:')
-        self.kfreq_lim_edit_min = QFloatEdit()
-        self.kfreq_lim_edit_max = QFloatEdit()
+        self.ikfreq_lim_label = QLabel('1/KFreq Limits:', self)
+        self.ikfreq_lim_edit_min = QFloatEdit(self)
+        self.ikfreq_lim_edit_max = QFloatEdit(self)
 
+        self.eigr_lim_label = QLabel('Real Eigenvalue:', self)
+        self.eigr_lim_edit_min = QFloatEdit(self)
+        self.eigr_lim_edit_max = QFloatEdit(self)
 
-        self.eigr_lim_label = QLabel('Real Eigenvalue:')
-        self.eigr_lim_edit_min = QFloatEdit()
-        self.eigr_lim_edit_max = QFloatEdit()
-
-        self.eigi_lim_label = QLabel('Imag Eigenvalue:')
-        self.eigi_lim_edit_min = QFloatEdit()
-        self.eigi_lim_edit_max = QFloatEdit()
+        self.eigi_lim_label = QLabel('Imag Eigenvalue:', self)
+        self.eigi_lim_edit_min = QFloatEdit(self)
+        self.eigi_lim_edit_max = QFloatEdit(self)
 
         #--------------------------------------------
-        self.freq_tol_label = QLabel('dFreq Tol (Hz) Dash:')
-        self.freq_tol_edit = QFloatEdit('-1.0')
+        self.freq_tol_label = QLabel('dFreq Tol (Hz) Dash:', self)
+        self.freq_tol_edit = QFloatEdit('-1.0', self)
         self.freq_tol_edit.setToolTip("Applies a dotted line for modes that don't change by more than some amount")
 
-        self.mag_tol_label = QLabel('Magnitude Tol:')
-        self.mag_tol_edit = QFloatEdit('-1.0')
+        self.mag_tol_label = QLabel('Magnitude Tol:', self)
+        self.mag_tol_edit = QFloatEdit('-1.0', self)
         self.mag_tol_edit.setToolTip("Filters modal participation factors based on magnitude")
 
-        self.freq_tol_remove_label = QLabel('dFreq Tol (Hz) Hide:')
-        self.freq_tol_remove_edit = QFloatEdit('-1.0')
+        self.freq_tol_remove_label = QLabel('dFreq Tol (Hz) Hide:', self)
+        self.freq_tol_remove_edit = QFloatEdit('-1.0', self)
         self.freq_tol_remove_edit.setToolTip("Completely remove modes that don't change by more than some amount")
         self.freq_tol_remove_label.setVisible(False)
         self.freq_tol_remove_edit.setVisible(False)
 
-        self.subcase_label = QLabel('Subcase:')
-        self.subcase_edit = QComboBox()
+        self.subcase_label = QLabel('Subcase:', self)
+        self.subcase_edit = QComboBox(self)
 
         units_msg = (
             "english_in: inch/s, slich/in^3\n"
@@ -608,17 +608,17 @@ class FlutterGui(LoggableGui):
             "si:         m/s,    kg/m^3\n"
             "si-mm:      mm/s,   Mg/mm^3\n"
         )
-        self.x_plot_type_label = QLabel('X-Axis Plot Type:')
+        self.x_plot_type_label = QLabel('X-Axis Plot Type:', self)
         self.x_plot_type_pulldown = QComboBox(self)
         self.x_plot_type_pulldown.addItems(X_PLOT_TYPES)
         self.x_plot_type_pulldown.setToolTip('sets the x-axis')
 
-        self.plot_type_label = QLabel('Plot Type:')
+        self.plot_type_label = QLabel('Plot Type:', self)
         self.plot_type_pulldown = QComboBox(self)
         self.plot_type_pulldown.addItems(PLOT_TYPES)
         #self.plot_type_pulldown.setToolTip(units_msg)
 
-        self.units_in_label = QLabel('Units In:')
+        self.units_in_label = QLabel('Units In:', self)
         self.units_in_pulldown = QComboBox(self)
         self.units_in_pulldown.addItems(UNITS_IN)
         self.units_in_pulldown.setToolTip(units_msg)
@@ -626,40 +626,46 @@ class FlutterGui(LoggableGui):
         self.units_in_pulldown.setCurrentIndex(iunits_in)
         self.units_in_pulldown.setToolTip('Sets the units for the F06/OP2; set when loaded')
 
-        self.units_out_label = QLabel('Units Out:')
-        self.units_out_pulldown = QComboBox()
+        self.units_out_label = QLabel('Units Out:', self)
+        self.units_out_pulldown = QComboBox(self)
         self.units_out_pulldown.addItems(UNITS_OUT)
         self.units_out_pulldown.setToolTip(units_msg)
         iunits_out = UNITS_IN.index('english_kt')
         self.units_out_pulldown.setCurrentIndex(iunits_out)
         self.units_out_pulldown.setToolTip('Sets the units for the plot; may be updated')
 
-        self.output_directory_label = QLabel('Output Directory:')
+        self.output_directory_label = QLabel('Output Directory:', self)
         self.output_directory_edit = QLineEdit('', self)
         self.output_directory_browse = QPushButton('Browse...', self)
         self.output_directory_edit.setDisabled(True)
         self.output_directory_browse.setDisabled(True)
 
-        self.VL_label = QLabel('VL, Limit:')
-        self.VL_edit = QFloatEdit('')
+        self.VL_label = QLabel('VL, Limit:', self)
+        self.VL_edit = QFloatEdit('', self)
         self.VL_edit.setToolTip('Makes a vertical line for VL')
 
-        self.VF_label = QLabel('VF, Flutter:')
-        self.VF_edit = QFloatEdit('')
+        self.VF_label = QLabel('VF, Flutter:', self)
+        self.VF_edit = QFloatEdit('', self)
         self.VF_edit.setToolTip('Makes a vertical line for VF')
 
-        self.damping_label = QLabel('Damping, g:')
-        self.damping_edit = QFloatEdit('')
+        self.damping_label = QLabel('Damping, g:', self)
+        self.damping_edit = QFloatEdit('', self)
         self.damping_edit.setToolTip('Enables the flutter crossing (e.g., 0.03 for 3%)')
 
-        self.mode_label = QLabel('Mode:')
-        self.mode_edit = QSpinBox()
+        self.eas_damping_lim_label = QLabel('EAS Crossing Range:', self)
+        self.eas_damping_lim_edit_min = QFloatEdit('', self)
+        self.eas_damping_lim_edit_max = QFloatEdit('', self)
+        self.eas_damping_lim_edit_min.setToolTip('Defines the flutter crossing range')
+        self.eas_damping_lim_edit_max.setToolTip('Defines the flutter crossing range')
+
+        self.mode_label = QLabel('Mode:', self)
+        self.mode_edit = QSpinBox(self)
         self.mode_edit.setMinimum(1)
         #self.mode_edit.SetValue(3)
         self.mode_edit.setToolTip('Sets the mode')
 
-        self.velocity_label = QLabel('Velocity Point:')
-        self.velocity_edit = QComboBox()
+        self.velocity_label = QLabel('Velocity Point:', self)
+        self.velocity_edit = QComboBox(self)
         self.velocity_edit.setToolTip('Sets the velocity (input units)')
 
         self.f06_load_button = QPushButton('Load F06', self)
@@ -667,9 +673,9 @@ class FlutterGui(LoggableGui):
 
 
         self.pop_vtk_gui_button = QPushButton('Open GUI', self)
-        self.solution_type_label = QLabel('Solution Type:')
+        self.solution_type_label = QLabel('Solution Type:', self)
         self.solution_type_pulldown = QComboBox(self)
-        self.mode2_label = QLabel('Mode:')
+        self.mode2_label = QLabel('Mode:', self)
         self.mode2_pulldown = QComboBox(self)
         self.setup_modes()
         self.on_plot_type()
@@ -701,6 +707,11 @@ class FlutterGui(LoggableGui):
             show_kfreq = True
         else:
             show_kfreq = False
+
+        if x_plot_type == 'ikfreq':
+            show_ikfreq = True
+        else:
+            show_ikfreq = False
 
         if plot_type == 'x-damp-freq':
             show_xlim = True
@@ -739,6 +750,12 @@ class FlutterGui(LoggableGui):
             elif 'rho' == x_plot_type:
                 show_rho_lim = True
                 show_xlim = False
+            elif 'kfreq' == x_plot_type:
+                show_kfreq_lim = True
+                show_xlim = False
+            elif 'ikfreq' == x_plot_type:
+                show_ikfreq_lim = True
+                show_xlim = False
         #print(f'x_plot_type={x_plot_type} show_damp={show_damp}; show_xlim={show_xlim}')
         #assert show_xlim is False, show_xlim
 
@@ -776,10 +793,6 @@ class FlutterGui(LoggableGui):
         self.rho_lim_edit_min.setVisible(show_rho_lim)
         self.rho_lim_edit_max.setVisible(show_rho_lim)
 
-        self.xlim_label.setVisible(show_xlim)
-        self.xlim_edit_min.setVisible(show_xlim)
-        self.xlim_edit_max.setVisible(show_xlim)
-
         self.damp_lim_label.setVisible(show_damp)
         self.damp_lim_edit_min.setVisible(show_damp)
         self.damp_lim_edit_max.setVisible(show_damp)
@@ -794,6 +807,10 @@ class FlutterGui(LoggableGui):
         self.kfreq_lim_edit_min.setVisible(show_kfreq)
         self.kfreq_lim_edit_max.setVisible(show_kfreq)
 
+        self.ikfreq_lim_label.setVisible(show_ikfreq)
+        self.ikfreq_lim_edit_min.setVisible(show_ikfreq)
+        self.ikfreq_lim_edit_max.setVisible(show_ikfreq)
+
         self.eigr_lim_label.setVisible(show_root_locus)
         self.eigr_lim_edit_min.setVisible(show_root_locus)
         self.eigr_lim_edit_max.setVisible(show_root_locus)
@@ -802,10 +819,10 @@ class FlutterGui(LoggableGui):
         self.eigi_lim_edit_min.setVisible(show_root_locus)
         self.eigi_lim_edit_max.setVisible(show_root_locus)
 
-        self.VL_label.setVisible(show_xlim)
-        self.VL_edit.setVisible(show_xlim)
-        self.VF_label.setVisible(show_xlim)
-        self.VF_edit.setVisible(show_xlim)
+        self.VL_label.setVisible(show_eas_lim)
+        self.VL_edit.setVisible(show_eas_lim)
+        self.VF_label.setVisible(show_eas_lim)
+        self.VF_edit.setVisible(show_eas_lim)
 
         show_items = [
             (show_modal_participation, (
@@ -900,14 +917,14 @@ class FlutterGui(LoggableGui):
         grid.addWidget(self.rho_lim_edit_max, irow, 2)
         irow += 1
 
-        grid.addWidget(self.xlim_label, irow, 0)
-        grid.addWidget(self.xlim_edit_min, irow, 1)
-        grid.addWidget(self.xlim_edit_max, irow, 2)
-        irow += 1
-
         grid.addWidget(self.kfreq_lim_label, irow, 0)
         grid.addWidget(self.kfreq_lim_edit_min, irow, 1)
         grid.addWidget(self.kfreq_lim_edit_max, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.ikfreq_lim_label, irow, 0)
+        grid.addWidget(self.ikfreq_lim_edit_min, irow, 1)
+        grid.addWidget(self.ikfreq_lim_edit_max, irow, 2)
         irow += 1
         #--------------------------------------------------
         # y-axes
@@ -970,6 +987,11 @@ class FlutterGui(LoggableGui):
 
         grid.addWidget(self.damping_label, irow, 0)
         grid.addWidget(self.damping_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.eas_damping_lim_label, irow, 0)
+        grid.addWidget(self.eas_damping_lim_edit_min, irow, 1)
+        grid.addWidget(self.eas_damping_lim_edit_max, irow, 2)
         irow += 1
 
         jrow = 0
@@ -1278,10 +1300,14 @@ class FlutterGui(LoggableGui):
             xlim = self.alt_lim
         elif x_plot_type == 'q':
             xlim = self.q_lim
+        elif x_plot_type == 'kfreq':
+            xlim = self.kfreq_lim
+        elif x_plot_type == 'ikfreq':
+            xlim = self.ikfreq_lim
         else:  # pragma: no cover
             log.error(f'x_plot_type={x_plot_type!r} is not supported')
             #raise RuntimeError(x_plot_type)
-            xlim = self.xlim
+            xlim = (None, None)
 
         #log.info(f'xlim={xlim}\n')
         assert xlim[0] != '' and xlim[1] != '', (xlim, x_plot_type)
@@ -1308,6 +1334,7 @@ class FlutterGui(LoggableGui):
         ylim_damping = self.ydamp_lim
         ylim_freq = self.freq_lim
         damping_limit = self.damping  # % damping
+        eas_range = self.eas_damping_lim
 
         # changing directory so we don't make a long filename
         # in the plot header
@@ -1338,12 +1365,12 @@ class FlutterGui(LoggableGui):
         response.noline = noline
         response.set_symbol_settings(
             nopoints, self.show_mode_number, self.point_spacing)
-        log.info(f'self.plot_font_size = {self.plot_font_size}')
+        #log.info(f'self.plot_font_size = {self.plot_font_size}')
         response.set_font_settings(self.plot_font_size)
         response.log = log
         #print('trying plots...')
 
-        log.info(f'getting logs\n')
+        #log.info(f'getting logs\n')
         log_scale_x = self.data['log_scale_x']
         log_scale_y1 = self.data['log_scale_y1']
         log_scale_y2 = self.data['log_scale_y2']
@@ -1405,17 +1432,20 @@ class FlutterGui(LoggableGui):
                 #log.info(f'modes={modes!r}')
                 #log.info(f'freq_tol={freq_tol!r}')
                 #log.info(f'v_lines={v_lines!r}')
+                damping_required = [
+                    (0.00, 0.01),
+                    (0.03, 0.03),
+                ]
                 response.plot_vg_vf(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     plot_type=x_plot_type,
                     modes=modes,
                     xlim=xlim, ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+                    eas_range=eas_range,
                     freq_tol=freq_tol,
                     show=True, clear=False, close=False,
                     legend=True,
                     v_lines=v_lines,
-                    #vl_limit=vl,
-                    #vd_limit=vd,
                     damping_limit=damping_limit,
                     png_filename=png_filename,
                 )
@@ -1464,8 +1494,6 @@ class FlutterGui(LoggableGui):
         q_lim_max, is_passed5b = get_float_or_none(self.q_lim_edit_max)
         rho_lim_min, is_passed6a = get_float_or_none(self.rho_lim_edit_min)
         rho_lim_max, is_passed6b = get_float_or_none(self.rho_lim_edit_max)
-        xlim_min, is_passed7a = get_float_or_none(self.xlim_edit_min)
-        xlim_max, is_passed7b = get_float_or_none(self.xlim_edit_max)
 
         is_passed_x = all([is_passed1a, is_passed1b,
                            is_passed2a, is_passed2b,
@@ -1473,7 +1501,6 @@ class FlutterGui(LoggableGui):
                            is_passed4a, is_passed4b,
                            is_passed5a, is_passed5b,
                            is_passed6a, is_passed6b,
-                           is_passed7a, is_passed7a,
                            ])
 
         damp_lim_min, is_passed_damp1 = get_float_or_none(self.damp_lim_edit_min)
@@ -1482,6 +1509,8 @@ class FlutterGui(LoggableGui):
         freq_lim_max, is_passed_freq2 = get_float_or_none(self.freq_lim_edit_max)
         kfreq_lim_min, is_passed_kfreq1 = get_float_or_none(self.kfreq_lim_edit_min)
         kfreq_lim_max, is_passed_kfreq2 = get_float_or_none(self.kfreq_lim_edit_max)
+        ikfreq_lim_min, is_passed_ikfreq1 = get_float_or_none(self.ikfreq_lim_edit_min)
+        ikfreq_lim_max, is_passed_ikfreq2 = get_float_or_none(self.ikfreq_lim_edit_max)
 
         eigr_lim_min, is_passed_eigr1 = get_float_or_none(self.eigr_lim_edit_min)
         eigr_lim_max, is_passed_eigr2 = get_float_or_none(self.eigr_lim_edit_max)
@@ -1506,18 +1535,27 @@ class FlutterGui(LoggableGui):
         alt_lim = [alt_lim_min, alt_lim_max]
         q_lim = [q_lim_min, q_lim_max]
         rho_lim = [rho_lim_min, rho_lim_max]
-        xlim = [xlim_min, xlim_max]
+        #kfreq_lim = [kfreq_lim_min, kfreq_lim_max]
+        ikfreq_lim = [ikfreq_lim_min, ikfreq_lim_max]
 
         vl, is_passed_vl = get_float_or_none(self.VL_edit)
         vf, is_passed_vf = get_float_or_none(self.VF_edit)
         damping, is_passed_damping = get_float_or_none(self.damping_edit)
+        eas_damping_lim_min, is_passed_eas_damping_lim1 = get_float_or_none(self.eas_damping_lim_edit_min)
+        eas_damping_lim_max, is_passed_eas_damping_lim2 = get_float_or_none(self.eas_damping_lim_edit_max)
+
         if is_passed_vl and vl is None:
             vl = -1.0
         if is_passed_vf and vf is None:
             vf = -1.0
         if is_passed_damping and damping is None:
             damping = -1.0
+        #if is_passed_eas_damping_lim1 and eas_damping_lim_min is None:
+        #    eas_damping_lim_min = None
+        #if is_passed_eas_damping_lim2 and eas_damping_lim_max is None:
+        #    eas_damping_lim_max = None
 
+        eas_damping_lim = [eas_damping_lim_min, eas_damping_lim_max]
         damp_lim = [damp_lim_min, damp_lim_max]
         freq_lim = [freq_lim_min, freq_lim_max]
         kfreq_lim = [kfreq_lim_min, kfreq_lim_max]
@@ -1529,6 +1567,7 @@ class FlutterGui(LoggableGui):
             is_passed_damp1, is_passed_damp2,
             is_passed_freq1, is_passed_freq2,
             is_passed_kfreq1, is_passed_kfreq2,
+            is_passed_ikfreq1, is_passed_ikfreq2,
             is_passed_eig,
             is_passed_tol1, is_passed_tol2, is_passed_tol3,
             is_passed_vl, is_passed_vf, is_passed_damping,
@@ -1538,11 +1577,11 @@ class FlutterGui(LoggableGui):
         #self.log.warning(f'is_passed_flags = {is_passed_flags}')
         #print(f'freq_tol = {freq_tol}')
         out = (
-            eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim, xlim,
-            damp_lim, freq_lim, kfreq_lim,
+            eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim,
+            damp_lim, freq_lim, kfreq_lim, ikfreq_lim,
             eigr_lim, eigi_lim,
             freq_tol, freq_tol_remove, mag_tol,
-            vl, vf, damping, is_passed,
+            vl, vf, damping, eas_damping_lim, is_passed,
         )
         return out
 
@@ -1556,11 +1595,11 @@ class FlutterGui(LoggableGui):
 
     def validate(self) -> bool:
         #self.log.warning('validate')
-        (eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim, xlim,
-         ydamp_lim, freq_lim, kfreq_lim,
+        (eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim,
+         ydamp_lim, freq_lim, kfreq_lim, ikfreq_lim,
          eigr_lim, eigi_lim,
          freq_tol, freq_tol_remove, mag_tol,
-         vl, vf, damping, is_valid_xlim) = self.get_xlim()
+         vl, vf, damping, eas_damping_lim, is_valid_xlim) = self.get_xlim()
 
         selected_modes = []
         subcase, is_subcase_valid = self._get_subcase()
@@ -1576,7 +1615,7 @@ class FlutterGui(LoggableGui):
         self.alt_lim = alt_lim
         self.q_lim = q_lim
         self.rho_lim = rho_lim
-        self.xlim = xlim
+        self.ikfreq_lim = ikfreq_lim
         self.ydamp_lim = ydamp_lim
         self.kfreq_lim = kfreq_lim
         self.freq_lim = freq_lim
@@ -1588,6 +1627,7 @@ class FlutterGui(LoggableGui):
         self.vl = vl
         self.vf = vf
         self.damping = damping
+        self.eas_damping_lim = eas_damping_lim
 
         self.x_plot_type = self.x_plot_type_pulldown.currentText()
         self.plot_type = self.plot_type_pulldown.currentText()
@@ -1648,7 +1688,7 @@ class FlutterGui(LoggableGui):
             'alt_lim': alt_lim,
             'q_lim': q_lim,
             'rho_lim': rho_lim,
-            'xlim': xlim,
+            'ikfreq_lim': ikfreq_lim,
 
             'damp_lim': ydamp_lim,
             'freq_lim': freq_lim,
@@ -1664,6 +1704,7 @@ class FlutterGui(LoggableGui):
             'vl': vl,
             'vf': vf,
             'damping': damping,
+            'eas_damping_lim': eas_damping_lim,
         }
         self.units_in = units_in
         self.units_out = units_out

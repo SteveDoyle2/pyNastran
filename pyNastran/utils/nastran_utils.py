@@ -24,7 +24,7 @@ def run_nastran(bdf_filename: PathLike,
         True : output (e.g., *.f06) will go to the current working directory (default)
         False : outputs (e.g., *.f06) will go to the input BDF directory
     cleanup : bool; default=False
-        remove the *.log, *.f04, and *.plt files
+        remove the *.asg, *asm, *.log, *.f04, and *.plt files
 
     Returns
     -------
@@ -67,6 +67,8 @@ def run_nastran(bdf_filename: PathLike,
     if run and cleanup:
         base = os.path.basename(bdf_filename)[0]
         fnames = [
+            base + '.asg',
+            base + '.asm',
             base + '.f04',
             base + '.log',
             base + '.plt',

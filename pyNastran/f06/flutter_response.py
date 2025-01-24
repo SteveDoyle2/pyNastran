@@ -1044,12 +1044,13 @@ class FlutterResponse:
             symbol = symbols[jcolor]
             color = colors[jcolor]
             freq = self.results[imode, :, self.ifreq].ravel()
+            damping = self.results[imode, :, self.idamping].ravel()
             xs = self.results[imode, :, ix].ravel()
             ys = self.results[imode, :, iy].ravel()
             #print('freq, xs, ys')
             jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, freq_tol=freq_tol,
+                freq, damping, freq_tol=freq_tol,
                 show_mode_number=self.show_mode_number)
             #print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
 
@@ -1176,12 +1177,13 @@ class FlutterResponse:
             color = colors[jcolor]
 
             freq = self.results[imode, :, self.ifreq].ravel()
+            damping = self.results[imode, :, self.idamping].ravel()
             xs = self.results[imode, :, ix].ravel()
             y1s = self.results[imode, :, iy1].ravel()
             y2s = self.results[imode, :, iy2].ravel()
             jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, freq_tol=freq_tol,
+                freq, damping, freq_tol=freq_tol,
                 show_mode_number=self.show_mode_number)
 
             iplot = np.where(freq != np.nan)
@@ -1447,7 +1449,6 @@ class FlutterResponse:
         jcolor = 0
         imodes_crossing = []
         xcrossing_dict = {}
-
         if hasattr(self, 'ieas') and plot_type == 'eas':
             xcrossing_dict = self.get_flutter_crossings(
                 damping_required=damping_required, modes=modes,
@@ -1475,7 +1476,7 @@ class FlutterResponse:
 
             jcolor, color, linestyle2, symbol2, texti = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, freq_tol=freq_tol,
+                freq, damping, freq_tol=freq_tol,
                 show_mode_number=self.show_mode_number)
             if color != 'gray':
                 imodes_crossing.append(imode)
@@ -1490,10 +1491,10 @@ class FlutterResponse:
             #print(color, symbol, linestyle)
             #dfreq = freq.max() - freq.min()
             label = _get_mode_freq_label(mode, freq[0])
-            if filter_freq and freq.min() > ylim_freq[1]:
+            if filter_freq and freq.min() > ylim_freq[1] and damping.max() < 0.0:
                 # if we're entirely greater than the max, skip line
                 continue
-            if filter_freq and freq.max() < ylim_freq[0]:
+            if filter_freq and freq.max() < ylim_freq[0] and damping.max() < 0.0:
                 # if we're entirely below than the min, skip line
                 continue
             #print(mode, color, symbol, linestyle, dfreq, freq)
@@ -1623,7 +1624,7 @@ class FlutterResponse:
             # freq = self.results[imode, :, self.ifreq].ravel()
             # jcolor, color, linestyle2, symbol2 = _increment_jcolor(
             #     jcolor, color, linestyle, symbol,
-            #     freq, freq_tol)
+            #     freq, damping, freq_tol)
             for case in xcrossing_dict[mode]:
                 damping0, freq0, eas0 = case
                 if np.isnan(eas0):
@@ -2257,14 +2258,14 @@ def _get_mode_freq_label(mode: int, freq: float) -> str:
         freq_num = f'{freq:.3g}'
         # strip silly scientific notation
         freq_num = freq_num.replace('-0', '-').replace('-0', '-').replace('+0', '+')
-    label = f'Mode {mode:d}; freq={freq_num} Hz'
+    label = f'Mode {mode:d}; {freq_num} Hz'
     return label
 
 
 def _increment_jcolor(mode: int,
                       jcolor: int, color: str,
                       linestyle: str, symbol: str,
-                      freq: np.ndarray,
+                      freq: np.ndarray, damping: np.ndarray,
                       freq_tol: float=-1.0,
                       show_mode_number: bool=False,
                       # jcolor, color, linestyle2, symbol2, text
@@ -2294,7 +2295,7 @@ def _increment_jcolor(mode: int,
     assert isinstance(freq, np.ndarray), freq
     assert isinstance(freq_tol, float_types), freq_tol
     is_filtered = False
-    if freq.max() - freq.min() <= freq_tol:
+    if freq.max() - freq.min() <= freq_tol and damping.max() < 0.:
         color = 'gray'
         is_filtered = True
         jcolor -= 1
@@ -2551,7 +2552,6 @@ def _add_vertical_lines(axes_list: list[Axes],
                 axes.axvline(
                     x=velocity, color=vcolor, linestyle=linestyle,
                     linewidth=linewidth)
-            legend_elements.append(legend_element)
     return legend_elements
 
 

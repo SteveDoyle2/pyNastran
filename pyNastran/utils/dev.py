@@ -25,7 +25,8 @@ def get_files_of_type(dirname: str, extension: str='.txt',
     extension : str; default='.txt'
         list of filetypes to get
     max_size : float; default=100.0
-        size in MB for max file size
+        >0.0: size in MB for max file size
+        <=0.0: no limit
     limit_file : str; default=no_dig.txt
         the presence of this file indicates no folder digging
         should be done on this folder
@@ -65,6 +66,10 @@ def get_files_of_type(dirname: str, extension: str='.txt',
                 #assert len(filenames2) > 0, dirnamei
             else:
                 print('no digging in filename=%s; dirname=%s' % (filename, dirname))
+        elif (os.path.isfile(filename) and
+              os.path.splitext(filenamei)[1].endswith(extension) and
+              max_size <= 0.0):
+            filenames2.append(filename)
         elif (os.path.isfile(filename) and
               os.path.splitext(filenamei)[1].endswith(extension) and
               os.path.getsize(filename) / 1048576. <= max_size):
