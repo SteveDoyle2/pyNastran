@@ -1937,7 +1937,7 @@ class DMI(NastranMatrix):
 
         #: 0-Set by cell precision
         tout = integer_or_blank(card, 5, 'tout', default=0)
-        blank(card, 6, 'blank')
+        #blank(card, 6, 'blank')
         nrows = integer(card, 7, 'nrows')
         ncols = integer(card, 8, 'ncols')
 

@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.cards.elements.shells import CQUAD4
     from pyNastran.dev.bdf_vectorized3.cards.elements.shell_utils import PCOMP
 
-class TestAcoustic(unittest.TestCase):
+class TestAcousticV3(unittest.TestCase):
     def test_chacbr_pacbar(self):
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -89,7 +89,7 @@ class TestAcoustic(unittest.TestCase):
         save_load_deck(model)
 
 
-class TestShells(unittest.TestCase):
+class TestShellsV3(unittest.TestCase):
     def test_pshell(self):
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -1922,7 +1922,7 @@ class TestShells(unittest.TestCase):
         assert np.allclose(vol, expected_volume2), (vol, expected_volume2)
 
 
-class TestAxisymmetricShells(unittest.TestCase):
+class TestAxisymmetricShellsV3(unittest.TestCase):
     def test_cquadx4(self):
         """tests a CQUADX4"""
         log = get_logger(level='warning')

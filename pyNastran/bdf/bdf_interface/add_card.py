@@ -26,6 +26,8 @@ from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
+from pyNastran.bdf.cards.elements.shell_nasa95 import (
+    CTRSHL, CQUAD1, PQUAD1)
 from pyNastran.bdf.cards.elements.solid import (
     #CTETRA, CPYRAM, CPENTA, CHEXA,
     CIHEX1, CIHEX2, CHEXA1, CHEXA2,
@@ -160,7 +162,6 @@ from pyNastran.bdf.write_path import write_include
 
 CARD_MAP = {
     #'=' : Crash, None),
-
     'RELEASE' : RELEASE,
     'SETREE' : SETREE,
     'SENQSET' : SENQSET,
@@ -332,6 +333,9 @@ CARD_MAP = {
     'PSHEAR' : PSHEAR,
 
     # nastran95
+    'CQUAD1': CQUAD1,
+    'PQUAD1': PQUAD1,
+    'CTRSHL': CTRSHL,
     'CIHEX1' : CIHEX1,
     'CIHEX2' : CIHEX2,
     'CHEXA1' : CHEXA1,

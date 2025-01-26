@@ -19,7 +19,7 @@ from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_plot_elements import T
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_rigid import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_rods import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_sets import *
-from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import TestShells, TestAxisymmetricShells, TestAcoustic
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import TestShellsV3, TestAxisymmetricShellsV3, TestAcousticV3
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_solids import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_springs import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_superelements import *

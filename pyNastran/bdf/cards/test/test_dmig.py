@@ -289,7 +289,7 @@ class TestDMIGReal(unittest.TestCase):
         model = BDF(debug=False)
         bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
-        out = model.dmigs['REALS'].get_matrix(is_sparse=False)
+        out = model.dmig['REALS'].get_matrix(is_sparse=False)
 
         reals_actual, unused_rows_reversed, unused_cols_reversed = out
         #print "---reals_actual---\n", reals_actual
@@ -300,7 +300,7 @@ class TestDMIGReal(unittest.TestCase):
             [0.5, 2.0, 0.75],
             [0.25, 0.75, 3.0],
         ]
-        a_matrix = model.dmigs['REALS']
+        a_matrix = model.dmig['REALS']
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         self.assertTrue(np.allclose(reals_expected, reals_actual))
@@ -311,7 +311,7 @@ class TestDMIGReal(unittest.TestCase):
         bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
-        out = model.dmigs['REAL'].get_matrix(is_sparse=False)
+        out = model.dmig['REAL'].get_matrix(is_sparse=False)
         real_actual, unused_rows_reversed, unused_cols_reversed = out
         #print "---REAL_actual---\n", REAL_actual
         real_expected = [
@@ -319,7 +319,7 @@ class TestDMIGReal(unittest.TestCase):
             [0.0, 2.0, 0.75],
             [0.0, 0.0, 3.0],
         ]
-        a_matrix = model.dmigs['REAL']
+        a_matrix = model.dmig['REAL']
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
@@ -335,7 +335,7 @@ class TestDMIGReal(unittest.TestCase):
         model = BDF(debug=False)
         bdf_filename = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_filename, xref=False, punch=True)
-        out = model.dmigs['POLE'].get_matrix(is_sparse=False)
+        out = model.dmig['POLE'].get_matrix(is_sparse=False)
 
         pole_actual, unused_rows_reversed, unused_cols_reversed = out
         #print("---pole_actual---\n", pole_actual)
@@ -345,7 +345,7 @@ class TestDMIGReal(unittest.TestCase):
             [0.0, 0.0, 3.0],
         ])
 
-        a_matrix = model.dmigs['POLE']
+        a_matrix = model.dmig['POLE']
         #print('GCi = ', a_matrix.GCi)
         #print('GCj = ', a_matrix.GCj)
         #print('Real = ', a_matrix.Real)
@@ -389,7 +389,7 @@ class TestDMIGReal(unittest.TestCase):
             model.add_card(card_lines, 'DMIG', is_list=False)
         fill_dmigs(model)
 
-        a_matrix = model.dmigs['A']
+        a_matrix = model.dmig['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         #a_matrix.get_matrix()
@@ -408,7 +408,7 @@ class TestDMIGReal(unittest.TestCase):
         fill_dmigs(model)
         get_matrices(model)
 
-        a_matrix = model.dmigs['A']
+        a_matrix = model.dmig['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         #a_matrix.get_matrix()
@@ -427,7 +427,7 @@ class TestDMIGReal(unittest.TestCase):
         fill_dmigs(model)
         get_matrices(model)
 
-        a_matrix = model.dmigs['A']
+        a_matrix = model.dmig['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         #a_matrix.get_matrix()
@@ -446,7 +446,7 @@ class TestDMIGReal(unittest.TestCase):
         for card_lines in cards:
             model.add_card(card_lines, 'DMIG', is_list=False)
         fill_dmigs(model)
-        a_matrix = model.dmigs['AMTRXX']
+        a_matrix = model.dmig['AMTRXX']
         assert len(a_matrix.GCi) == 4, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 4, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         assert a_matrix.shape == (4, 4), 'shape=%s' % str(a_matrix.shape)
@@ -456,7 +456,7 @@ class TestDMIGReal(unittest.TestCase):
     def test_dmig_9(self):
         pch_filename = os.path.join(TEST_PATH, 'dmig.pch')
         model = read_bdf(pch_filename, debug=False, punch=True)
-        vax = model.dmigs['VAX']
+        vax = model.dmig['VAX']
         vax_array, vax_dict_row, vax_dict_col = vax.get_matrix()
         assert vax_array.shape == (15, 1), vax_array
         vax_dict_row_expected = {
@@ -525,7 +525,7 @@ class TestDMIGReal(unittest.TestCase):
         kaax.tout = 3  # complex
         kaax.Complex = kaax.Real
         get_matrices(model)
-        #kaax = model.dmigs['KAAX'].get_matrix(is_sparse=True)
+        #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
 
     def test_dmig_sparse2(self):
         """tests dmig_sparse.pch"""
@@ -560,7 +560,7 @@ class TestDMIGReal(unittest.TestCase):
         kaax.tout = 3  # complex
         kaax.Complex = kaax.Real
         get_matrices(model)
-        #kaax = model.dmigs['KAAX'].get_matrix(is_sparse=True)
+        #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
 
     def test_dmig_symmetry(self):
         """testing symmetric DMIGs"""
@@ -617,7 +617,7 @@ class TestDMIGReal(unittest.TestCase):
         assert np.array_equal(B2.toarray(), B_expected)
 
         get_matrices(model)
-        #kaax = model.dmigs['KAAX'].get_matrix(is_sparse=True)
+        #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
 
     def test_dmig_rectangular(self):
         """testing symmetric DMIGs"""
@@ -677,7 +677,7 @@ class TestDMIGReal(unittest.TestCase):
         assert np.array_equal(B2.toarray(), B_expected)
 
         get_matrices(model)
-        #kaax = model.dmigs['KAAX'].get_matrix(is_sparse=True)
+        #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
 
     def test_dmig_column(self):
         """testing symmetric DMIGs"""
@@ -731,7 +731,7 @@ class TestDMIGReal(unittest.TestCase):
         assert np.array_equal(B2.toarray(), B_expected)
 
         get_matrices(model)
-        #kaax = model.dmigs['KAAX'].get_matrix(is_sparse=True)
+        #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
 
     def test_dmig_uaccel(self):
         """tests DMIG,UACCEL"""
@@ -746,7 +746,7 @@ class TestDMIGReal(unittest.TestCase):
         for line in lines:
             model.add_card(line, 'DMIG')
         fill_dmigs(model)
-        str(model.dmigs)
+        str(model.dmig)
         str(model.get_bdf_stats())
 
         tin = 1
@@ -771,7 +771,7 @@ class TestDMIGImag(unittest.TestCase):
         model = BDF(debug=False)
         bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
-        out = model.dmigs['IMAG'].get_matrix(is_sparse=False)
+        out = model.dmig['IMAG'].get_matrix(is_sparse=False)
 
         imag_actual, unused_rows_reversed, unused_cols_reversed = out
         #print "---IMAG_actual---\n", IMAG_actual
@@ -785,7 +785,7 @@ class TestDMIGImag(unittest.TestCase):
             [0.0, 2.1, 0.751],
             [0.0, 0.0, 3.1],
         ]
-        a_matrix = model.dmigs['IMAG']
+        a_matrix = model.dmig['IMAG']
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
@@ -799,7 +799,7 @@ class TestDMIGImag(unittest.TestCase):
         bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
-        out = model.dmigs['IMAGS'].get_matrix(is_sparse=False)
+        out = model.dmig['IMAGS'].get_matrix(is_sparse=False)
         imags_actual, unused_rows_reversed, unused_cols_reversed = out
         #print("---imag_actual---\n", imag_actual)
         imags_expected_real = [
@@ -812,7 +812,7 @@ class TestDMIGImag(unittest.TestCase):
             [0.51, 2.1, 0.751],
             [0.251, 0.751, 3.1],
         ]
-        a_matrix = model.dmigs['IMAGS']
+        a_matrix = model.dmig['IMAGS']
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
