@@ -1454,7 +1454,7 @@ class PCONV(VectorizedBaseCard):
         self.table_id = np.zeros(nproperties, dtype='int32')
         self.characteristic_length = np.zeros(nproperties, dtype='float64')
         self.grid_inlet = np.zeros(nproperties, dtype='int32')
-        self.coord_e = np.zeros(nproperties, dtype='float64')
+        self.coord_e = np.zeros(nproperties, dtype='int32')
         self.e = np.zeros((nproperties, 3), dtype='float64')
         self.n = nproperties
 
@@ -1649,10 +1649,11 @@ class CONVM(VectorizedBaseCard):
         self._save(element_id, pconvm_id, film_node, temp_ambient, control_node_mdot, mdot)
         self.cards = []
 
-    def _save(self, element_id, pconvm_id, film_node, temp_ambient, control_node_mdot, mdot):
+    def _save(self, element_id, pconvm_id, film_node, temp_ambient, control_node_mdot, mdot,
+              ifile=None, comment=None):
+        ncards = len(element_id)
         if mdot is None:
-            mdot = np.ones(nelements, dtype='float64')
-        nelements = len(element_id)
+            mdot = np.ones(ncards, dtype='float64')
         assert len(self.element_id) == 0
         self.element_id = element_id
         self.pconvm_id = pconvm_id
@@ -1660,7 +1661,7 @@ class CONVM(VectorizedBaseCard):
         self.temp_ambient = temp_ambient
         self.control_node_mdot = control_node_mdot
         self.mdot = mdot
-        self.n = nelements
+        self.n = len(ifile)
 
     def __apply_slice__(self, elem: CONVM, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]

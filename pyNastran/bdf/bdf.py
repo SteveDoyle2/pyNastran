@@ -51,7 +51,7 @@ from .cards.utils import wipe_empty_fields
 
 #from .write_path import write_include
 from .bdf_interface.assign_type import (
-    integer, integer_or_string, string)
+    integer, double, integer_or_string, string)
 
 from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from .cards.elements.elements import (
@@ -1495,10 +1495,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             bulk_data_lines, bulk_data_ilines)
 
         #reject_cards = {'ADAPT'}
-        singletons = {'grdset', 'acmodl', 'mdlprm', 'cyax', 'axic'}
+        singletons = {
+            'grdset', 'acmodl', 'mdlprm', 'cyax', 'axic',
+            'aero', 'aeros', }
+        string_slots_many = ['dmi', 'dmig', 'dmij', 'dmik']
         string_names = [
             'PARAM',
-            'DMI', 'DMIG', 'DMIJ', 'DMIK',
+            #'DMI', 'DMIG', 'DMIJ', 'DMIK',
             'USET', 'USET1',
         ]
         dict_list_slots = [
@@ -1535,6 +1538,18 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     equation_id, name_eqid, a, b = split_deqatn_line0(card_lines)
                     assert equation_id not in slot, (card_name, slot_name)
                     slot[equation_id] = (comment, card_lines)
+
+            elif slot_name in string_slots_many:
+                # DMI, DMIG; no PARAM
+                assert isinstance(slot, dict), slot_name
+                for (comment, card_lines, ifile_iline) in cards_list:
+                    fields = to_fields_line0(card_lines[0], card_name)
+                    idi = fields[1].strip()
+                    if idi not in slot:
+                        slot[idi] = []
+                    #sloti = slot[idi]
+                    #assert isinstance(sloti, list), slot_name
+                    slot[idi].append((comment, card_lines))
 
             elif card_name in string_names:
                 # DMI, PARAM
@@ -3147,6 +3162,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             dmix = class_obj.add_card(card_obj, comment=comment)
             add_method(dmix)
         else:
+            field4 = double(
+                card_obj, 4, 'DMI column',
+                end=('did you mean to set field 2 to 0 to '
+                     f'define the header; field2={field2}'))
             dmix = -1
             name = string(card_obj, 1, 'name')
             self._dmig_temp[name].append((card_obj, comment))

@@ -2975,7 +2975,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         """adds a GRDSET"""
         assert isinstance(ifile, integer_types), ifile
         assert self.grdset is None, self.grdset
-        grdset = GRDSET.add_card(card_obj, ifile, comment=comment)
+        grdset = GRDSET.add_card(card_obj, ifile=ifile, comment=comment)
         self.grdset = grdset
         return self.grdset
     def _prepare_baror(self, unused_card: list[str], card_obj: BDFCard,

@@ -68,8 +68,7 @@ def remove_unused(model: BDF, inplace: bool=False) -> BDF:
             used_dict['tf_id'].append(tf_id)
             del tf_id, _options
 
-    set_cards_to_skip = {
-        'NSM1', 'NSML1'}
+    set_cards_to_skip = {'NSM1', 'NSML1'}
     card_types = [card.type for card in cards]
     #log.warning(f'card_types = {card_types}')
     for card in cards:
@@ -129,6 +128,7 @@ def to_dict_array(card, used_dict: dict[str, list[np.ndarray]]) -> dict[str, np.
 
         min_value = 1
         if key == 'coord_id':
+            # -1 is valid
             min_value = -1
         elif key == 'suport_id':
             min_value = 0

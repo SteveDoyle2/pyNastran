@@ -108,7 +108,8 @@ class WriteMesh(BDFAttributes):
                 #bdf_file.write(suport.write_card(size, is_double))
             #for unused_suport_id, suport in sorted(self.suport1.items()):
                 #bdf_file.write(suport.write_card(size, is_double))
-        #self._write_common(bdf_file, size=size, is_double=False)
+        #self._write_common(bdf_file, size=size, flfact_size=flfact_size,
+        #                   is_double=False)
 
     def write_bulk_data(self, bdf_file: TextIOLike,
                         size: int=8, is_double: bool=False,
@@ -163,9 +164,10 @@ class Writer:
                         enddata: Optional[bool]=None, close: bool=True,
                         nodes_size: Optional[int]=None,
                         elements_size: Optional[int]=None,
-                        loads_size: Optional[int]=None) -> None:
-        size, nodes_size, elements_size, loads_size = _fix_sizes(
-            size, nodes_size, elements_size, loads_size)
+                        loads_size: Optional[int]=None,
+                        flfact_size: Optional[int]=None) -> None:
+        size, nodes_size, elements_size, loads_size, flfact_size = _fix_sizes(
+            size, nodes_size, elements_size, loads_size, flfact_size)
 
         model = self.model
 
@@ -187,7 +189,7 @@ class Writer:
         self._write_nonstructural_mass(bdf_file, size, is_double)
         self._write_aero(bdf_file, size, is_double)
 
-        self._write_common(bdf_file, loads_size, is_double)
+        self._write_common(bdf_file, loads_size, flfact_size, is_double)
         if (enddata is None and 'ENDDATA' in model.card_count) or enddata:
             bdf_file.write('ENDDATA\n')
         if close:
@@ -211,7 +213,8 @@ class Writer:
             self._write_case_control_deck(bdf_file)
 
     def _write_common(self, bdf_file: TextIOLike,
-                      size: int=8, is_double: bool=False) -> None:
+                      size: int=8, flfact_size: int=8,
+                      is_double: bool=False) -> None:
         """
         Write the common outputs so none get missed...
 
@@ -232,7 +235,7 @@ class Writer:
         self._write_static_aero(bdf_file, size, is_double)
 
         write_aero_in_flutter, write_aero_in_gust = self.find_aero_location()
-        self._write_flutter(bdf_file, size, is_double, write_aero_in_flutter)
+        self._write_flutter(bdf_file, size, flfact_size, is_double, write_aero_in_flutter)
         self._write_gust(bdf_file, size, is_double, write_aero_in_gust)
 
         self._write_thermal(bdf_file, size, is_double)
@@ -861,7 +864,8 @@ class Writer:
                 bdf_file.write(model.aeros.write_card(size, is_double))
 
     def _write_flutter(self, bdf_file: TextIOLike,
-                       size: int=8, is_double: bool=False,
+                       size: int=8, flfact_size: int=8,
+                       is_double: bool=False,
                        write_aero_in_flutter: bool=True) -> None:
         """Writes the flutter cards"""
         model = self.model
@@ -889,7 +893,7 @@ class Writer:
         model.aecomp.write_file(bdf_file, size=size, is_double=is_double)  # helper for AECOMP
         model.aecompl.write_file(bdf_file, size=size, is_double=is_double)  # helper for AECOMPL
         model.aelist.write_file(bdf_file, size=size, is_double=is_double)  # aero boxes for AESURF
-        model.flfact.write_file(bdf_file, size=size, is_double=is_double)  # Mach, vel, rho for FLUTTER
+        model.flfact.write_file(bdf_file, size=flfact_size, is_double=is_double)  # Mach, vel, rho for FLUTTER
         model.aefact.write_file(bdf_file, size=size, is_double=is_double)
 
         if (write_aero_in_flutter and model.aero) or len(model.flutter) or model.mkaeros:

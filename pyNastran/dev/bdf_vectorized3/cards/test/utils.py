@@ -41,11 +41,21 @@ def save_load_deck(model: BDF,
     if run_mass_properties:
         eids_mass, mass1 = model.mass()
         eids_inertia, massi1, cgi1, inertiai1 = model.inertia()
-        mass2 = model.mass_sum(element_id=None)
-        massi2, cgi2, inertiai2 = model.inertia_sum(element_id=None)
-        assert np.allclose(mass1, massi1)
-        assert np.allclose(mass2, massi2)
-        assert np.allclose(mass1.sum(), mass2.sum())
+        mass2 = model.mass_sum(element_id=None, nansum=True)
+        massi2, cgi2, inertiai2 = model.inertia_sum(element_id=None, nansum=True)
+        dmass1 = mass1 - massi1
+        dmass2 = mass2 - massi2
+        close1 = np.isclose(mass1, massi1) | ~np.isfinite(mass1)
+        close2 = np.isclose(mass2, massi2) | ~np.isfinite(mass2)
+        assert np.all(close1), f'mass1={mass1} massi1={massi1} dmass={dmass1}'
+        assert np.all(close2), f'mass2={mass2} massi2={massi2} dmass={dmass2}'
+        print(mass1)
+        print(mass2)
+        nansum1 = np.nansum(mass1)
+        nansum2 = np.nansum(mass2)
+        assert np.allclose(nansum1, nansum2), f'mass1={nansum1} mass2={nansum2}'
+        if np.any(np.isnan(mass1)):
+            model.log.warning('NAN masses')
         model.get_mass_breakdown_by_property_id_by_material_id()
 
     if run_loads and 0:

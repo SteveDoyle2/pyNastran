@@ -592,9 +592,10 @@ def atm_calibrated_airspeed(alt: float,
         Calibrated airspeed in cas_units
 
     CAS = EAS * sqrt(p/p0)
-
+    https://aerotoolbox.com/airspeed-conversions/
     """
-    eas = atm_equivalent_airspeed(alt, mach, alt_units=alt_units, eas_units=cas_units)
+    eas = atm_equivalent_airspeed(alt, mach, alt_units=alt_units,
+                                  eas_units=cas_units)
 
     z = convert_altitude(alt, alt_units, 'ft')
     p0 = atm_pressure(0.)  # psf

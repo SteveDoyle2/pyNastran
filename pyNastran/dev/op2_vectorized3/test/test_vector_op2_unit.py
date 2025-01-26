@@ -499,7 +499,7 @@ class TestOP2(unittest.TestCase):
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
 
-    def _test_bdf_op2_post_minus4(self):
+    def test_bdf_op2_post_minus4(self):
         """tests a large number of elements and results in SOL 107-complex modes"""
         log = get_logger(level='warning')
         unused_bdf_filename = MODEL_PATH / 'elements' / 'modes_elements_post4.op2'
@@ -516,7 +516,8 @@ class TestOP2(unittest.TestCase):
                  #build_dataframe=False,
                  #skip_undefined_matrices=True, mode='msc',
                  #encoding=None)
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+        run_op2(op2_filename, make_geom=True, run_geom_check=False,
+                write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
@@ -551,7 +552,7 @@ class TestOP2(unittest.TestCase):
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
 
-    def _test_bdf_op2_thermal_02(self):
+    def test_bdf_op2_thermal_02(self):
         """checks hd15306.bdf"""
         log = get_logger(level='warning')
         #bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
@@ -581,7 +582,7 @@ class TestOP2(unittest.TestCase):
     def _test_bdf_op2_thermal_03(self):
         """checks time_thermal_elements.bdf"""
         log = get_logger(level='warning')
-        bdf_filename = MODEL_PATH, 'elements' / 'time_thermal_elements.bdf'
+        bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
         op2_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.op2'
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
@@ -598,7 +599,7 @@ class TestOP2(unittest.TestCase):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-    def _test_bdf_op2_thermal_04(self):
+    def test_bdf_op2_thermal_04(self):
         """checks time_thermal_elements.bdf"""
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'thermal' / 'thermal_elements2.bdf'
@@ -646,7 +647,7 @@ class TestOP2(unittest.TestCase):
                 build_pandas=True, log=log)
 
 
-    def _test_cbar100(self):
+    def test_cbar100(self):
         """tests a CBAR-100 model"""
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'unit' / 'bars' / 'pbarl_bar_100.bdf'
@@ -1465,7 +1466,7 @@ class TestOP2(unittest.TestCase):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-    def _test_bdf_op2_other_31(self):
+    def test_bdf_op2_other_31(self):
         """checks htrussx.bdf, which tests getting rid of the Panel"""
         log = get_logger(level='info')
         bdf_filename = MODEL_PATH / 'other' / 'htrussx.bdf'
@@ -1590,7 +1591,7 @@ class TestOP2(unittest.TestCase):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-    def _test_msc_2017_failure_indices_strength_ratio(self):
+    def test_msc_2017_failure_indices_strength_ratio(self):
         """
         checks msc/failure_indices_strength_ratio/TestStressTemp.op2, which tests
          - op2_results.strength_ratio.cquad4_composite_stress[1]
@@ -1598,8 +1599,8 @@ class TestOP2(unittest.TestCase):
 
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'msc', 'failure_indices_strength_ratio', 'TestStressTemp.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'msc', 'failure_indices_strength_ratio', 'TestStressTemp.op2')
+        bdf_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio', 'TestStressTemp.bdf'
+        op2_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio', 'TestStressTemp.op2'
 
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             #'', bdf_filename, log=log)
@@ -1629,8 +1630,8 @@ class TestOP2(unittest.TestCase):
          - UNITS table for MSC 2014
         """
         log = get_logger(level='info')
-        #bdf_filename = os.path.join(MODEL_PATH, 'msc', 'units_mass_spring_damper', 'test_nx_corner.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'msc', 'units_mass_spring_damper', 'units_mass_spring_damper.op2')
+        #bdf_filename = MODEL_PATH / 'msc' / 'units_mass_spring_damper' / 'test_nx_corner.bdf'
+        op2_filename = MODEL_PATH / 'msc' / 'units_mass_spring_damper' / 'units_mass_spring_damper.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1662,8 +1663,8 @@ class TestOP2(unittest.TestCase):
          - UNITS table for MSC 2021
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'msc', 'cbush_2021', 'cbush_test.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'msc', 'cbush_2021', 'cbush_test.op2')
+        bdf_filename = MODEL_PATH / 'msc' / 'cbush_2021' / 'cbush_test.bdf'
+        op2_filename = MODEL_PATH / 'msc' / 'cbush_2021' /  'cbush_test.op2'
 
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             #'', bdf_filename, log=log)
@@ -1693,8 +1694,8 @@ class TestOP2(unittest.TestCase):
          - RBE2 alpha for MSC 2020
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_RBE_tests', 'rigid_rbe2.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_RBE_tests', 'rigid_rbe2--v2020.op2')
+        bdf_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2.bdf'
+        op2_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2--v2020.op2'
 
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             #'', bdf_filename, log=log)
@@ -2758,7 +2759,7 @@ class TestOP2(unittest.TestCase):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def _test_op2_autodesk_1(self):
+    def test_op2_autodesk_1(self):
         """tests an Autodesk Nastran example"""
         op2_filename = os.path.join(PKG_PATH, 'op2', 'test', 'examples',
                                     'autodesk', 'aa8lzviq9.op2')
@@ -2993,7 +2994,7 @@ class TestOP2(unittest.TestCase):
         _verify_ids(bdf, op2, isubcase=1)
         os.remove(debug_file)
 
-    def _test_op2_bcell_01(self):
+    def test_op2_bcell_01(self):
         """tests other/bcell9p0.op2"""
         folder = os.path.abspath(os.path.join(MODEL_PATH))
         bdf_filename = os.path.join(folder, 'other', 'bcell9p0.bdf')

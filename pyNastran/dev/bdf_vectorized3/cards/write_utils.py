@@ -55,7 +55,7 @@ def array_str(ndarray: np.ndarray, size: int=8) -> np.ndarray:
     return str_array
 
 def array_default_int(ndarray: np.ndarray, default: int=0, size: int=8) -> np.ndarray:
-    assert ndarray.dtype.name not in {'float32', 'float64'}, ndarray.dtype.name
+    assert ndarray.dtype.name not in {'float32', 'float64'}, f'name={ndarray.dtype.name!r}'
     idefault = np.where(ndarray == default)
     if size == 8:
         str_array = ndarray.astype('|U8')

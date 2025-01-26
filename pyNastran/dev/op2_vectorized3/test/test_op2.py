@@ -124,7 +124,8 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
     return failed_cases
 
 
-def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
+def run_op2(op2_filename: str, make_geom: bool=False,
+            run_geom_check: bool=True, combine: bool=True,
             write_bdf: bool=False, read_bdf: Optional[bool]=None,
             write_f06: bool=True, write_op2: bool=False,
             write_hdf5: bool=True,
@@ -311,7 +312,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
                 op2.idtype = 'int64'
                 op2.fdtype = 'float64'
             if hasattr(op2, 'setup'):
-                op2.setup()
+                op2.setup(run_geom_check=run_geom_check)
         elif ext == '.h5':
             op2.read_h5(op2_filename)
 

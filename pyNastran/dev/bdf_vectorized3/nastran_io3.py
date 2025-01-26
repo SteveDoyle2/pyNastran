@@ -328,7 +328,7 @@ class Nastran3:
             # if elem.n == 0:
             #     continue
             try:
-                assert len(elem.ifile) == len(elem.element_id)
+                assert len(elem.ifile) == len(elem.element_id), elem.type
             except:
                 log.error(f'{elem.type}.ifile error; ifile={elem.ifile}')
                 raise

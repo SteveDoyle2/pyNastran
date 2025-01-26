@@ -6,6 +6,8 @@ import numpy as np
 import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, read_bdf, DMI, DMIG, fill_dmigs
 from pyNastran.bdf.cards.test.utils import save_load_deck, get_matrices
+from pyNastran.bdf.bdf_interface.utils import fill_dmigs
+
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'cards', 'test')
@@ -46,6 +48,42 @@ class TestDTI(unittest.TestCase):
 
 class TestDMI(unittest.TestCase):
 
+    def test_dmi_ailternate(self):
+        model = BDF(debug=True)
+        lines1 = ['DMI,ALTERNTE,0,3,1,1,,12,1']
+        model.add_card(lines1, 'DMI', is_list=False)
+        lines2 = [
+            'DMI', 'ALTERNTE', '1', '2', '1.0', '0.0',
+            '2.0', '0.0', '3.0', '0.0', '4.0', '0.0', '5.0',
+            '0.0', '6.0',
+        ]
+        model.add_card(lines2, 'DMI')
+        fill_dmigs(model)
+        #print(model.dmi)
+        dmi = model.dmi['ALTERNTE']
+        alternate = dmi.get_matrix()[0]
+        assert alternate.shape == (12, 1), rrr.shape
+        alternate = alternate.flatten()
+        alternate_expected = np.array([
+            0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0])
+        assert np.array_equal(alternate, alternate_expected), f'alternate={alternate};\nalternate_expected={alternate_expected}'
+        print(str(dmi))
+
+    def test_dmi_thru(self):
+        model = BDF(debug=True)
+        lines1 = ['DMI,RRR,0,3,1,1,,12,1']
+        model.add_card(lines1, 'DMI', is_list=False)
+        lines2 = ['DMI,RRR,1,2,1.0,THRU,10,12,2.0']
+        model.add_card(lines2, 'DMI', is_list=False)
+        fill_dmigs(model)
+        #print(model.dmi)
+        dmi = model.dmi['RRR']
+        rrr = dmi.get_matrix()[0]
+        assert rrr.shape == (12, 1), rrr.shape
+        rrr = rrr.flatten()
+        rrr_expected = np.array([0.] + [1.] * 9 + [0., 2.])
+        assert np.array_equal(rrr, rrr_expected), f'rrr={rrr};\nrrr_expected={rrr_expected}'
+        print(str(dmi))
     def test_dmi_01(self):
         """tests a DMI card"""
         lines = ['DMI,Q,0,6,1,0,,4,4']
@@ -167,7 +205,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
             bdf_file.write(data)
         model = BDF(debug=False)
         model.read_bdf('dmi.bdf', punch=True)
-        w2gj = model.dmis['W2GJ']
+        w2gj = model.dmi['W2GJ']
         assert w2gj.shape == (1200, 1), w2gj.shape
         w2gj.get_matrix()
 
@@ -182,7 +220,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
 
         model2 = BDF(debug=False)
         model2.read_bdf('dmi_out.bdf')
-        w2gj_new = model.dmis['W2GJ']
+        w2gj_new = model.dmi['W2GJ']
         assert w2gj_new.shape == (1200, 1), w2gj_new.shape
 
         assert np.allclose(w2gj.GCi, w2gj_new.GCi)

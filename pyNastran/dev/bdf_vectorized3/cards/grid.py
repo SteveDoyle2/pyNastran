@@ -194,7 +194,8 @@ class GRDSET(BaseCard):
         seid = 0
         return GRDSET(cp, cd, ps, seid, comment='')
 
-    def __init__(self, cp: int=0, cd: int=0, ps: int=0, seid: int=0, comment: str=''):
+    def __init__(self, cp: int=0, cd: int=0, ps: int=0, seid: int=0,
+                 ifile: int=0, comment: str=''):
         """
         Creates the GRDSET card
 
@@ -216,6 +217,7 @@ class GRDSET(BaseCard):
         """
         if comment:
             self.comment = comment
+        self.ifile = ifile
 
         #: Output Coordinate System
         self.cp = cp
@@ -230,7 +232,7 @@ class GRDSET(BaseCard):
         self.seid = seid
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment: str=''):
+    def add_card(cls, card: BDFCard, ifile: int=0, comment: str=''):
         """
         Adds a GRDSET card from ``BDF.add_card(...)``
 
@@ -254,7 +256,7 @@ class GRDSET(BaseCard):
         ps = integer_or_blank(card, 7, 'ps', default=0)
         seid = integer_or_blank(card, 8, 'seid', default=0)
         assert len(card) <= 9, f'len(GRDSET card) = {len(card):d}\ncard={card}'
-        return GRDSET(cp, cd, ps, seid, comment=comment)
+        return GRDSET(cp, cd, ps, seid, ifile=ifile, comment=comment)
 
     def _verify(self, xref):
         """

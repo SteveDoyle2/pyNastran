@@ -4,7 +4,7 @@ from copy import deepcopy
 from math import sin, cos, radians, atan2, sqrt, degrees
 from itertools import count
 import warnings
-from typing import Any, TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
 
 import numpy as np
 from scipy.sparse import coo_matrix  # type: ignore
@@ -12,12 +12,14 @@ from scipy.sparse import coo_matrix  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.utils import unique2d
 from pyNastran.bdf.cards.base_card import BaseCard
+from pyNastran.bdf.cards.collpase_card import collapse_thru_packs, collapse_thru_ipacks
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, string, string_or_blank,
+    integer, blank, integer_or_blank,
+    double, string, string_or_blank,
     parse_components, interpret_value, integer_double_string_or_blank)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -1934,8 +1936,8 @@ class DMI(NastranMatrix):
         tin = integer(card, 4, 'tin')
 
         #: 0-Set by cell precision
-        tout = integer_or_blank(card, 5, 'tout', 0)
-
+        tout = integer_or_blank(card, 5, 'tout', default=0)
+        blank(card, 6, 'blank')
         nrows = integer(card, 7, 'nrows')
         ncols = integer(card, 8, 'ncols')
 
@@ -2061,13 +2063,14 @@ class DMI(NastranMatrix):
                         real_value = self.Real[-1]
                         end_i = fields[i + 1]
                         for ii in range(i1, end_i + 1):
-                            #print('adding j=%s i1=%s val=%s' % (j, ii, real_value))
+                            #print('THRU adding j=%s i1=%s val=%s' % (j, ii, real_value))
                             self.GCj.append(j)
                             self.GCi.append(ii)
                             self.Real.append(real_value)
                         i += 1
                         is_done_reading_floats = True
-
+        #print(self.GCi)
+        #print(self.GCj)
     def _read_complex(self, card):
         """reads a complex DMI column"""
         #msg = 'complex matrices not supported in the DMI reader...'
@@ -2155,53 +2158,8 @@ class DMI(NastranMatrix):
         return self._write_card(print_card_8)
 
     def _get_real_fields(self, func):
-        msg = ''
-        uGCj = np.unique(self.GCj)
-        for gcj in uGCj:
-            i = np.where(gcj == self.GCj)[0]
-            gcis = self.GCi[i]
-            reals = self.Real[i]
-
-            list_fields = ['DMI', self.name, gcj]
-            max_value = reals.max()
-
-            if len(i) == (reals != 0).sum():
-                # dense
-                list_fields.append(1)
-                list_fields.extend(reals)
-                msg += func(list_fields)
-                continue
-
-            if len(reals) == 1:
-                list_fields.extend([1, max_value])
-                msg += func(list_fields)
-                continue
-
-            if max_value == reals.min():
-                #DMI     WKK     1       1       1.0     THRU    112
-                list_fields.extend([1, max_value, 'THRU', self.nrows])
-                msg += func(list_fields)
-                continue
-
-            if len(i) == (reals != 0).sum():
-                # dense
-                list_fields.append(1)
-                list_fields.extend(reals)
-                msg += func(list_fields)
-                continue
-
-            isort = np.argsort(gcis)
-
-            # will always write the first one
-            gci_last = -1
-            for gci, real in zip(gcis[isort], reals[isort]):
-                if gci == gci_last + 1:
-                    pass
-                else:
-                    list_fields.append(gci)
-                list_fields.append(real)
-                gci_last = gci
-            msg += func(list_fields)
+        msg = _get_real_matrix_columns(
+            self.name, self.GCi, self.GCj, self.Real, func)
         return msg
 
     def _get_complex_fields(self, func):
@@ -2312,6 +2270,115 @@ class DMI(NastranMatrix):
 
         """
         return self.write_card(size=8, is_double=False)
+
+
+def _get_real_matrix_columns(name: str, GCi, GCj, Real,
+                             func: Callable[float, str]) -> str:
+    msg = ''
+    uGCj = np.unique(GCj)
+    #print(f'uGCj={uGCj}')
+    for gcj in uGCj:
+        # get a single column and filter 0 values
+        i = np.where((gcj == GCj) & (Real != 0.))[0]
+        singles, doubles = collapse_thru_ipacks(i, GCi[i].tolist())
+
+        # if singles:
+        #     gcis = GCi[singles]
+        #     reals = Real[singles]
+        #     list_fields = ['DMI', name, gcj]
+        #     for gci, real in zip(gcis, reals):
+        #         list_fields.extend([gci, real])
+        #     msg += func(list_fields)
+
+        list_fields = ['DMI', name, gcj]
+        for (start, thru, end) in doubles:
+            i2 = slice(start, end+1)
+            gcis2 = GCi[i2]
+            reals2 = Real[i2]
+            if reals2.max() == reals2.min():
+                gci1 = gcis2[0]
+                gci2 = gcis2[-1]
+                real = reals2[0]
+                list_fields.extend([gci1, 'THRU', gci2, real])
+            else:
+                for gci, real in zip(gcis2, reals2):
+                    list_fields.extend([gci, real])
+                #list_fields.extend([gci, 'THRU', real])
+                #print(double)
+        #print(list_fields)
+        if singles:
+            gcis1 = GCi[singles]
+            reals1 = Real[singles]
+            for gci, real in zip(gcis1, reals1):
+                list_fields.extend([gci, real])
+        msg += func(list_fields)
+    return msg
+
+def _get_real_matrix_columns2(name: str, GCi, GCj, Real,
+                              func: Callable[float, str]):  # pramga: no cover
+    msg = ''
+    uGCj = np.unique(GCj)
+    #print(f'uGCj={uGCj}')
+    for gcj in uGCj:
+        i = np.where((gcj == GCj) & (Real != 0.))[0]
+        gcis = GCi[i].copy()
+        reals = Real[i].copy()
+        isort = np.argsort(gcis)
+        gcis = gcis[isort]
+        reals = reals[isort]
+
+        gc1 = gcis[0]
+        nreals = len(reals)
+        # print(f'gcj={gcj} gcis={gcis}')
+        # print(f'reals={reals}')
+        list_fields = ['DMI', name, gcj]
+        max_value = reals.max()
+
+        if nreals == 1:
+            # 1 value
+            list_fields.extend([gc1, max_value])
+            msg += func(list_fields)
+            return
+        # print(f'gcis = {gcis}')
+        assert len(gcis) == len(np.unique(gcis)), gcis
+        gc_end = gcis[-1]
+        gc_range = np.arange(gc1, gc_end + 1)
+
+        # dgci = gc_end - gc1 #+ 1
+        # print(f'dgci={dgci}')
+        # print(f'gc_range={gc_range}')
+        if len(gc_range) == len(i):
+            # dense
+            # print(f'dense0, dgci={dgci}')
+            if reals.max() == reals.min():
+                # DMI     WKK     1       1       1.0     THRU    112
+                list_fields.extend([gc1, max_value, 'THRU', gc_end])
+                msg += func(list_fields)
+                return
+            else:
+                list_fields.append(gc1)
+                list_fields.extend(reals)
+            msg += func(list_fields)
+            return
+
+        real_range = np.zeros(len(gc_range), dtype=reals.dtype)
+        igc_range = np.searchsorted(gc_range, gcis)
+        real_range[igc_range] = reals
+        gcis = gc_range
+        reals = real_range
+        isort = np.argsort(gcis)
+
+        # will always write the first one
+        gci_last = -1
+        for gci, real in zip(gcis[isort], reals[isort]):
+            if gci == gci_last + 1:
+                pass
+            else:
+                list_fields.append(gci)
+            list_fields.append(real)
+            gci_last = gci
+        msg += func(list_fields)
+    return msg
 
 
 def get_row_col_map(matrix: DMIG,

@@ -85,8 +85,8 @@ def _check_sort_fields(fields):
         raise NotImplementedError(f'fields={fields}; type={type(fields)}')
     fields.sort()
 
-def collapse_thru_packs(fields):
-    assert isinstance(fields, list), fields
+def collapse_thru_packs(fields: list[int]) -> tuple[list[int], list[list[int]]]:
+    #assert isinstance(fields, list), fields
     assert 'THRU' not in fields, fields
     packs = condense(fields)
     singles, doubles = build_thru_packs(packs, max_dv=1)
@@ -94,8 +94,18 @@ def collapse_thru_packs(fields):
     #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
     return singles, doubles
 
+def collapse_thru_ipacks(ifields: list[int], fields: list[int]):
+    #assert isinstance(fields, list), fields
+    assert 'THRU' not in fields, fields
+    packs = condensei(ifields, fields)
+    singles, doubles = build_thru_packs(packs, max_dv=1)
 
-def collapse_colon_packs(fields, thru_split=3):
+    #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
+    return singles, doubles
+
+
+def collapse_colon_packs(fields: list[int],
+                         thru_split: int=3) -> tuple[list[int], list[list[int]]]:
     """
     Applies colons (:) to packs to represent THRU and BY as is used by
     Patran.
@@ -147,7 +157,7 @@ def collapse_colon_packs(fields, thru_split=3):
     return singles, doubles2
 
 
-def condense(value_list):
+def condense(value_list) -> list[list[int]]:
     """
     Builds a list of packs (list of 3 values representing the first, last,
     and delta values for condensing a SET card.
@@ -205,8 +215,75 @@ def condense(value_list):
         packs.append([first_val, val, dv_old])
     return packs
 
+def condensei(value_ilist: list[int],
+              value_list: list[int]) -> list[list[int]]:
+    """
+    Builds a list of packs (list of 3 values representing the first, last,
+    and delta values for condensing a DMI card.
 
-def build_thru_packs(packs, max_dv=1, thru_split=3):
+    Parameters
+    ----------
+    value_ilist : list[int]
+        list of ivalues to pack
+    value_list : list[int]
+        list of values to pack
+
+    Returns
+    -------
+    packs : list[pack]
+       pack : list[id_low, id_high, delta_id]
+           a list representation of the min/max/delta id values
+
+    .. seealso:: build_thru
+
+    """
+    if len(value_list) == 0:
+        return []
+    if len(value_list) == 1:
+        return [[value_ilist[0], value_ilist[0], 1]]
+    #value_list.sort()
+    packs = []
+
+    dv_old = None
+    first_vali = value_ilist[0]
+    last_vali = first_vali
+    first_val = value_list[0]
+    last_val = first_val
+
+    for vali, val in zip(value_ilist[1:], value_list[1:], strict=True):
+        try:
+            dv = val - last_val
+        except TypeError:
+            print("last_val=%r val=%r" % (last_val, val))
+            print("value_list=%r" % value_list)
+            raise
+
+        # sets up the first item of the pack
+        if dv_old is None:
+            dv_old = dv
+
+        # fill up the pack
+        if dv_old == dv:
+            last_val = val
+            last_vali = vali
+        else:
+            packs.append([first_vali, last_vali, dv_old])
+            last_val = val
+            last_vali = vali
+            dv_old = None
+            first_val = val
+            first_vali = vali
+
+    # fills the last pack
+    if dv_old == dv:
+        packs.append([first_vali, vali, dv])
+    else:
+        packs.append([first_vali, vali, dv_old])
+    return packs
+
+def build_thru_packs(packs: list[int],
+                     max_dv: int=1, thru_split: int=3.
+                     ) -> tuple[list[int], list[list[int]]]:
     """
     Applies THRU and BY to packs to shorten output as Nastran does on
     cards like the SPOINT
