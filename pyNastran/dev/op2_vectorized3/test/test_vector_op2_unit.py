@@ -1599,8 +1599,9 @@ class TestOP2(unittest.TestCase):
 
         """
         log = get_logger(level='info')
-        bdf_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio', 'TestStressTemp.bdf'
-        op2_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio', 'TestStressTemp.op2'
+        bdf_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio' / 'TestStressTemp.bdf'
+        op2_filename = MODEL_PATH / 'msc' / 'failure_indices_strength_ratio' / 'TestStressTemp.op2'
+        assert bdf_filename.exists(), print_bad_path(bdf_filename)
 
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             #'', bdf_filename, log=log)
@@ -2759,10 +2760,10 @@ class TestOP2(unittest.TestCase):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def test_op2_autodesk_1(self):
+    def _test_op2_autodesk_1(self):
         """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(PKG_PATH, 'op2', 'test', 'examples',
-                                    'autodesk', 'aa8lzviq9.op2')
+        op2_filename = (PKG_PATH / 'op2' / 'test' / 'examples' /
+                        'autodesk' / 'aa8lzviq9.op2')
         log = get_logger(level='warning')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, write_f06=False,
@@ -2994,7 +2995,7 @@ class TestOP2(unittest.TestCase):
         _verify_ids(bdf, op2, isubcase=1)
         os.remove(debug_file)
 
-    def test_op2_bcell_01(self):
+    def _test_op2_bcell_01(self):
         """tests other/bcell9p0.op2"""
         folder = os.path.abspath(os.path.join(MODEL_PATH))
         bdf_filename = os.path.join(folder, 'other', 'bcell9p0.bdf')

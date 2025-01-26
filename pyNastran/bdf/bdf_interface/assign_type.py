@@ -426,7 +426,8 @@ def integer_or_blank(card: BDFCard, ifield: int, fieldname: str,
     raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-def double(card: BDFCard, ifield: int, fieldname: str, end: str='') -> float:
+def double(card: BDFCard, ifield: int, fieldname: str,
+           end: str='') -> float:
     """
     Casts a value to a double
 
@@ -586,7 +587,8 @@ def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
 
-def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> float | str:
+def double_or_string(card: BDFCard, ifield: int, fieldname: str,
+                     end: str='') -> float | str:
     """
     Casts a value to a double/string
 
@@ -607,7 +609,7 @@ def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> float | str:
     elif svalue is None or isinstance(svalue, integer_types):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\n'
-                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
+                          'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
     elif isinstance(svalue, str):
         svalue = svalue.strip().upper()
 
@@ -618,7 +620,7 @@ def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> float | str:
         except Exception:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\n'
-                              'card=%s' % (fieldname, svalue, ifield, dtype, card))
+                              'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
     elif svalue.isdigit():  # 1, not +1, or -1
         # fail
         pass
@@ -628,16 +630,16 @@ def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> float | str:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an float or '
                               'string (without a blank space; not %s).\n'
-                              'card=%s' % (fieldname, svalue, ifield, dtype, card))
+                              'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
         elif svalue[0].isdigit() or '.' in svalue or '+' in svalue or '-' in svalue:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an float or '
                               'string (without a blank space; not %s).\n'
-                              'card=%s' % (fieldname, svalue, ifield, dtype, card))
+                              'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
         return str(svalue)
     dtype = _get_dtype(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\n'
-                      'card=%s' % (fieldname, svalue, ifield, dtype, card))
+                      'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
 
 
 def double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):

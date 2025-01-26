@@ -2280,8 +2280,13 @@ def _get_real_matrix_columns(name: str, GCi, GCj, Real,
     for gcj in uGCj:
         # get a single column and filter 0 values
         i = np.where((gcj == GCj) & (Real != 0.))[0]
+        if len(i) == 0:
+            list_fields = ['DMI', name, gcj, 1, 0.0]
+            msg += func(list_fields)
+            continue
+        assert len(i) > 0, i
         singles, doubles = collapse_thru_ipacks(i, GCi[i].tolist())
-
+        assert len(singles) + len(doubles) > 0, (singles, doubles)
         # if singles:
         #     gcis = GCi[singles]
         #     reals = Real[singles]
@@ -2299,18 +2304,20 @@ def _get_real_matrix_columns(name: str, GCi, GCj, Real,
                 gci1 = gcis2[0]
                 gci2 = gcis2[-1]
                 real = reals2[0]
-                list_fields.extend([gci1, 'THRU', gci2, real])
+                list_fields.extend([gci1, real, 'THRU', gci2])
             else:
                 for gci, real in zip(gcis2, reals2):
                     list_fields.extend([gci, real])
                 #list_fields.extend([gci, 'THRU', real])
                 #print(double)
+            assert len(list_fields) > 3, list_fields
         #print(list_fields)
         if singles:
             gcis1 = GCi[singles]
             reals1 = Real[singles]
             for gci, real in zip(gcis1, reals1):
                 list_fields.extend([gci, real])
+        assert len(list_fields) > 3, list_fields
         msg += func(list_fields)
     return msg
 
