@@ -1813,7 +1813,8 @@ class DMI(NastranMatrix):
 
     def __init__(self, name: str, matrix_form: int, tin: int, tout: int,
                  nrows: int, ncols: int,
-                 GCj, GCi, Real, Complex=None, comment='', finalize=True):
+                 GCj, GCi, Real, Complex=None,
+                 comment: str='', finalize: bool=True):
         """
 
         Parameters
@@ -2158,7 +2159,7 @@ class DMI(NastranMatrix):
         return self._write_card(print_card_8)
 
     def _get_real_fields(self, func):
-        msg = _get_real_matrix_columns(
+        msg = _dmi_get_real_matrix_columns(
             self.name, self.GCi, self.GCj, self.Real, func)
         return msg
 
@@ -2272,8 +2273,8 @@ class DMI(NastranMatrix):
         return self.write_card(size=8, is_double=False)
 
 
-def _get_real_matrix_columns(name: str, GCi, GCj, Real,
-                             func: Callable[float, str]) -> str:
+def _dmi_get_real_matrix_columns(name: str, GCi, GCj, Real,
+                                func: Callable[float, str]) -> str:
     msg = ''
     uGCj = np.unique(GCj)
     #print(f'uGCj={uGCj}')
@@ -2321,8 +2322,8 @@ def _get_real_matrix_columns(name: str, GCi, GCj, Real,
         msg += func(list_fields)
     return msg
 
-def _get_real_matrix_columns2(name: str, GCi, GCj, Real,
-                              func: Callable[float, str]):  # pramga: no cover
+def _dmi_get_real_matrix_columns2(name: str, GCi, GCj, Real,
+                                  func: Callable[float, str]):  # pramga: no cover
     msg = ''
     uGCj = np.unique(GCj)
     #print(f'uGCj={uGCj}')

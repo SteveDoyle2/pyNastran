@@ -53,6 +53,7 @@ from .cards.utils import wipe_empty_fields
 from .bdf_interface.assign_type import (
     integer, double, integer_or_string, string)
 
+from pyNastran.bdf.cards.deqatn import split_deqatn_line0
 from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from .cards.elements.elements import (
     CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL,
@@ -1491,6 +1492,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             unused
 
         """
+        log = self.log
         cards_dict, card_count = self.get_bdf_cards_dict(
             bulk_data_lines, bulk_data_ilines)
 
@@ -1506,8 +1508,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         ]
         dict_list_slots = [
             'loads', 'spcs', 'mpcs', 'nsms', 'dload_entries',
-            'load_combinations', 'tics', 'dareas', 'frequencies',
-            'bcs',
+            'load_combinations', 'spcadds', 'mpcadds', 'nsmadds',
+            'tics', 'dareas', 'frequencies',
+            'bcs', 'delays', 'dphases', 'matcid',
         ]
         list_slots = [
             'asets', 'bsets', 'csets', 'omits', 'qsets',
@@ -1516,7 +1519,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         ]
         zona_cards_to_skip = ['STFLOW', 'TRIMVAR', 'AEROZ']
         zona_slots_to_skip = ['panlsts', 'pafoils']
-        from pyNastran.bdf.cards.deqatn import split_deqatn_line0
         rslot_to_type_map = self.get_rslot_map()
 
         for card_name, cards_list in cards_dict.items():
@@ -1590,7 +1592,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     except ValueError:
                         raise ValueError(f'Cant parse {fields[1]!r} to an integer\n' +
                                            ''.join(card_lines))
-                    assert idi not in slot, (card_name, slot_name, type(slot))
+                    if idi in slot:
+                        raise RuntimeError(f'Cannot replace duplicate card:\n' +
+                                           ''.join(slot[idi][1]) + 'with:\n'
+                                           ''.join(card_lines))
                     slot[idi] = (comment, card_lines)
         return
 
@@ -3167,7 +3172,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             dmix = class_obj.add_card(card_obj, comment=comment)
             add_method(dmix)
         else:
-            if class_obj.type not in {'DMIAX', 'DTI', 'DMIG', 'DMIJI'}:
+            if class_obj.type not in {'DMIAX', 'DTI', 'DMIG', 'DMIK', 'DMIJI'}:
                 field4 = double(
                     card_obj, 4, f'{class_obj.type} column',
                     end=('did you mean to set field 2 to 0 to '

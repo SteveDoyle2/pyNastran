@@ -46,6 +46,19 @@ class TestDTI(unittest.TestCase):
         #print(dti.write_card())
         save_load_deck(model)
 
+class TestMatrix(unittest.TestCase):
+    def test_matrix_real(self):
+        from pyNastran.op2.result_objects.matrix import Matrix
+        eye = np.eye(3)
+        mat = Matrix('EYER', 'square', eye)
+        mat.write_dmi()
+
+    def test_matrix_complex(self):
+        from pyNastran.op2.result_objects.matrix import Matrix
+        eye = np.eye(3) + np.eye(3) * 2j
+        mat = Matrix('EYEC', 'square', eye)
+        mat.write_dmi()
+
 class TestDMI(unittest.TestCase):
 
     def test_dmi_ailternate(self):
