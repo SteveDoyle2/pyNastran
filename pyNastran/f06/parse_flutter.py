@@ -505,6 +505,7 @@ def _read_opgwg(f06_file: TextIO, iline: int,
         'mass': mass,
         'mass_error': mass_error.sum(),
         'cg_error': cg_error.sum(),
+        'I(S)': IS,
     }
     #print(opgwg)
     return iline, line, opgwg
