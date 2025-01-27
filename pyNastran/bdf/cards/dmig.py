@@ -2072,6 +2072,7 @@ class DMI(NastranMatrix):
                         is_done_reading_floats = True
         #print(self.GCi)
         #print(self.GCj)
+
     def _read_complex(self, card):
         """reads a complex DMI column"""
         #msg = 'complex matrices not supported in the DMI reader...'
@@ -2082,43 +2083,51 @@ class DMI(NastranMatrix):
         i = 0
         fields = [interpret_value(field, card) for field in card[3:]]
         # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
-        if 0: # pragma: no cover
-            is_real = True
-            gci = None
-            for field in fields:
-                if isinstance(field, integer_types):
-                    gci = field
-                elif isinstance(field, float):
-                    if is_real:
-                        real = field
-                    else:
-                        self.GCj.append(j)
-                        self.GCi.append(gci)
-                        self.Real.append(real)
-                        self.Complex.append(field)
-                    is_real = not is_real
 
         while i < len(fields):
+            #print(f'fields = {fields[i:]}')
+            #print(f' - GCj  = {self.GCj}')
+            #print(f' - GCi  = {self.GCi}')
+            #print(f' - Real = {self.Real}')
+            #print(f' - Imag = {self.Complex}')
             i1 = fields[i]
             assert isinstance(i1, int), card
             i += 1
             is_done_reading_floats = False
             while not is_done_reading_floats and i < len(fields):
+                #print(f'fields = {fields[i:]}')
+                #print(f' - GCj  = {self.GCj}')
+                #print(f' - GCi  = {self.GCi}')
+                #print(f' - Real = {self.Real}')
+                #print(f' - Imag = {self.Complex}')
                 value = fields[i]
-                #print("i=%s len(fields)=%s value=%s" % (
-                    #i, len(fields), value))
+                #print(f"i={i} len(fields)={len(fields)} value={value}")
                 if isinstance(value, integer_types):
                     is_done_reading_floats = True
                 elif isinstance(value, float):
+                    real_value = value
                     complex_value = fields[i + 1]
+                    #print(f'complex_value = {complex_value}')
                     assert isinstance(complex_value, float), card
                     self.GCj.append(j)
                     self.GCi.append(i1)
                     self.Real.append(value)
                     self.Complex.append(complex_value)
                     i += 2
+                    i1 += 1
                 else:
-                    raise NotImplementedError()
+                    #print(f'value = {value}')
+                    assert value == 'THRU', (value, real_value, complex_value)
+                    end_i = fields[i + 1]
+                    #print(f'end_i = {end_i}')
+                    for ii in range(i1, end_i + 1):
+                        #print(f'  THRU adding j={j} i1={ii} val={real_value}+{complex_value}j')
+                        self.GCj.append(j)
+                        self.GCi.append(ii)
+                        self.Real.append(real_value)
+                        self.Complex.append(complex_value)
+                    i += 1
+                    is_done_reading_floats = True
 
     @property
     def is_real(self) -> bool:
@@ -2164,41 +2173,9 @@ class DMI(NastranMatrix):
         return msg
 
     def _get_complex_fields(self, func):
-        msg = ''
-        uGCj = np.unique(self.GCj)
-        for gcj in uGCj:
-            i = np.where(gcj == self.GCj)[0]
-            gcis = self.GCi[i]
-            reals = self.Real[i]
-            complexs = self.Complex[i]
-            isort = np.argsort(gcis)
-            list_fields = ['DMI', self.name, gcj]
-
-            #if reals.max() == 0. and reals.min() == 0. and complexs.max() == 0. and complexs.min() == 0.:
-                #continue
-
-            # will always write the first one
-            gci_last = -10
-            #print('gcis=%s \nreals=%s \ncomplexs=%s' % (
-                #gcis[isort], reals[isort], complexs[isort]))
-            if max(gcis) == min(gcis):
-                list_fields += [gcis[0]]
-                for reali, complexi in zip(reals, complexs):
-                    list_fields.extend([reali, complexi])
-                msg += func(list_fields)
-            else:
-                #print(f'list_fields0 = {list_fields}')
-                for i, gci, reali, complexi in zip(count(), gcis[isort], reals[isort], complexs[isort]):
-                    #print('B', gci, reali, complexi, gci_last)
-                    if gci != gci_last + 1 and i != 0:
-                        pass
-                    else:
-                        list_fields.append(gci)
-                    list_fields.append(reali)
-                    list_fields.append(complexi)
-                    gci_last = gci
-                #print(f'list_fields = {list_fields}')
-                msg += func(list_fields)
+        msg = _dmi_get_complex_matrix_columns(
+            self.name, self.GCi, self.GCj,
+            self.Real, self.Complex, func)
         return msg
 
     def get_matrix(self,
@@ -2322,72 +2299,58 @@ def _dmi_get_real_matrix_columns(name: str, GCi, GCj, Real,
         msg += func(list_fields)
     return msg
 
-def _dmi_get_real_matrix_columns2(name: str, GCi, GCj, Real,
-                                  func: Callable[float, str]):  # pramga: no cover
+
+def _dmi_get_complex_matrix_columns(name: str, GCi, GCj, Real, Complex,
+                                    func: Callable[float, str]) -> str:
     msg = ''
     uGCj = np.unique(GCj)
     #print(f'uGCj={uGCj}')
     for gcj in uGCj:
-        i = np.where((gcj == GCj) & (Real != 0.))[0]
-        gcis = GCi[i].copy()
-        reals = Real[i].copy()
-        isort = np.argsort(gcis)
-        gcis = gcis[isort]
-        reals = reals[isort]
+        # get a single column and filter 0 values
+        i = np.where((gcj == GCj) & ((Real != 0.0) | (Complex != 0.0)))[0]
+        if len(i) == 0:
+            list_fields = ['DMI', name, gcj, 1, 0.0, 0.0]
+            msg += func(list_fields)
+            continue
+        assert len(i) > 0, i
+        singles, doubles = collapse_thru_ipacks(i, GCi[i].tolist())
+        assert len(singles) + len(doubles) > 0, (singles, doubles)
+        # if singles:
+        #     gcis = GCi[singles]
+        #     reals = Real[singles]
+        #     list_fields = ['DMI', name, gcj]
+        #     for gci, real in zip(gcis, reals):
+        #         list_fields.extend([gci, real])
+        #     msg += func(list_fields)
 
-        gc1 = gcis[0]
-        nreals = len(reals)
-        # print(f'gcj={gcj} gcis={gcis}')
-        # print(f'reals={reals}')
         list_fields = ['DMI', name, gcj]
-        max_value = reals.max()
-
-        if nreals == 1:
-            # 1 value
-            list_fields.extend([gc1, max_value])
-            msg += func(list_fields)
-            return
-        # print(f'gcis = {gcis}')
-        assert len(gcis) == len(np.unique(gcis)), gcis
-        gc_end = gcis[-1]
-        gc_range = np.arange(gc1, gc_end + 1)
-
-        # dgci = gc_end - gc1 #+ 1
-        # print(f'dgci={dgci}')
-        # print(f'gc_range={gc_range}')
-        if len(gc_range) == len(i):
-            # dense
-            # print(f'dense0, dgci={dgci}')
-            if reals.max() == reals.min():
-                # DMI     WKK     1       1       1.0     THRU    112
-                list_fields.extend([gc1, max_value, 'THRU', gc_end])
-                msg += func(list_fields)
-                return
+        for (start, thru, end) in doubles:
+            i2 = slice(start, end+1)
+            gcis2 = GCi[i2]
+            reals2 = Real[i2]
+            complexs2 = Complex[i2]
+            if reals2.max() == reals2.min() and complexs2.max() == complexs2.min():
+                gci1 = gcis2[0]
+                gci2 = gcis2[-1]
+                real = reals2[0]
+                complex = complexs2[0]
+                list_fields.extend([gci1, real, complex, 'THRU', gci2])
             else:
-                list_fields.append(gc1)
-                list_fields.extend(reals)
-            msg += func(list_fields)
-            return
-
-        real_range = np.zeros(len(gc_range), dtype=reals.dtype)
-        igc_range = np.searchsorted(gc_range, gcis)
-        real_range[igc_range] = reals
-        gcis = gc_range
-        reals = real_range
-        isort = np.argsort(gcis)
-
-        # will always write the first one
-        gci_last = -1
-        for gci, real in zip(gcis[isort], reals[isort]):
-            if gci == gci_last + 1:
-                pass
-            else:
-                list_fields.append(gci)
-            list_fields.append(real)
-            gci_last = gci
+                for gci, real, complex in zip(gcis2, reals2, complexs2):
+                    list_fields.extend([gci, real, complex])
+                #list_fields.extend([gci, 'THRU', real])
+                #print(double)
+            assert len(list_fields) > 3, list_fields
+        #print(list_fields)
+        if singles:
+            gcis1 = GCi[singles]
+            reals1 = Real[singles]
+            complex1 = Complex[singles]
+            for gci, real, complex in zip(gcis1, reals1, complex1):
+                list_fields.extend([gci, real, complex])
+        assert len(list_fields) > 3, list_fields
         msg += func(list_fields)
     return msg
-
 
 def get_row_col_map(matrix: DMIG,
                     GCi: np.ndarray, GCj: np.ndarray,

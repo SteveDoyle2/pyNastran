@@ -82,7 +82,7 @@ class TestDMI(unittest.TestCase):
         assert np.array_equal(alternate, alternate_expected), f'alternate={alternate};\nalternate_expected={alternate_expected}'
         print(str(dmi))
 
-    def test_dmi_thru(self):
+    def test_dmi_thru_real(self):
         model = BDF(debug=True)
         lines1 = ['DMI,RRR,0,3,1,1,,12,1']
         model.add_card(lines1, 'DMI', is_list=False)
@@ -97,6 +97,28 @@ class TestDMI(unittest.TestCase):
         rrr_expected = np.array([0.] + [1.] * 9 + [0., 2.])
         assert np.array_equal(rrr, rrr_expected), f'rrr={rrr};\nrrr_expected={rrr_expected}'
         print(str(dmi))
+
+    def test_dmi_thru_complex(self):
+        model = BDF(debug=True)
+        lines1 = ['DMI,RRR,0,3,3,3,,12,1']
+        model.add_card(lines1, 'DMI', is_list=False)
+        lines2 = ['DMI,RRR,1,2,1.0,3.0,THRU,10,12,',
+                  ',2.0,4.0']
+        model.add_card(lines2, 'DMI', is_list=False)
+        fill_dmigs(model)
+        #print(model.dmi)
+        dmi = model.dmi['RRR']
+        rrr = dmi.get_matrix()[0]
+        assert rrr.shape == (12, 1), rrr.shape
+        rrr = rrr.flatten()
+        rrr_expected_real = np.array([0.] + [1.] * 9 + [0., 2.])
+        rrr_expected_imag = np.array([0.] + [3.] * 9 + [0., 4.])
+        #print(rrr.real)
+        #print(rrr.imag)
+        assert np.array_equal(rrr.real, rrr_expected_real), f'rrr={rrr.real};\nrrr_expected={rrr_expected_real}'
+        assert np.array_equal(rrr.imag, rrr_expected_imag), f'rrr={rrr.imag};\nrrr_expected={rrr_expected_imag}'
+        print(str(dmi))
+
     def test_dmi_01(self):
         """tests a DMI card"""
         lines = ['DMI,Q,0,6,1,0,,4,4']

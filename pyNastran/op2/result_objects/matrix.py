@@ -74,7 +74,7 @@ class Matrix:
         self.col_dof = None
         self.row_nid = None
         self.row_dof = None
-        if not isinstance(name, str):
+        if not isinstance(name, str):  # pragma: no cover
             raise TypeError(f'name={name!r} must be a string; type={type(name)}')
 
     def set_matpool_data(self,
@@ -117,11 +117,11 @@ class Matrix:
         else:
             raise RuntimeError(f'form = {self.form!r}')
 
-    def export_to_hdf5(self, group, log) -> None:
+    def export_to_hdf5(self, group, log: SimpleLogger) -> None:
         """exports the object to HDF5 format"""
         export_to_hdf5(self, group, log)
 
-    def build_dataframe(self):
+    def build_dataframe(self) -> None:
         """exports the object to pandas format"""
         import pandas as pd
         matrix = self.data
@@ -246,7 +246,7 @@ class Matrix:
             i = coo.row
             j = coo.col
             data = coo.data
-        else:
+        else:  # pragma: no cover
             raise TypeError(self.data)
         assert len(data) == len(i)
         assert len(data) == len(j)
@@ -334,10 +334,10 @@ class Matrix:
         return not self.is_real
 
     @property
-    def is_sparse(self):
+    def is_sparse(self) -> bool:
         return scipy.sparse.issparse(self.data)
     @property
-    def is_dense(self):
+    def is_dense(self) -> bool:
         return not self.is_sparse
 
     def to_sparse(self, sparse_type: str='coo') -> None:
@@ -353,7 +353,7 @@ class Matrix:
             elif sparse_type == 'csc':
                 data = scipy.sparse.csc_matrix(
                     (data_array, (i, j)), shape=self.shape, dtype=dtype, copy=False)
-            else:
+            else:  # pragma: no cover
                 raise ValueError(f'sparse_type={sparse_type!r}; supports=[coo, csr, csc]')
             self.data = data
 
@@ -407,20 +407,26 @@ class Matrix:
 
         tout = self.tin
         nrows, ncols = self.shape
+        data_array, GCi, GCj = self.data_i_j()
         if self.is_complex:
-            msg += _dmi_get_complex_fields(self, func)
-        else:
-            real_array, GCi, GCj = self.data_i_j()
             dmi = DMI(self.name, matrix_form=self.form,
                       tin=self.tin, tout=tout,
                       nrows=nrows, ncols=ncols,
                       GCj=GCj, GCi=GCi,
-                      Real=real_array, Complex=None)
+                      Real=data_array.real, Complex=data_array.imag)
+            msg += dmi._get_complex_fields(func)
+        else:
+            dmi = DMI(self.name, matrix_form=self.form,
+                      tin=self.tin, tout=tout,
+                      nrows=nrows, ncols=ncols,
+                      GCj=GCj, GCi=GCi,
+                      Real=data_array, Complex=None)
             msg += dmi._get_real_fields(func)
         return msg
 
 
-def sparse_symmetric_to_rectangular(name: str, matrix: sparse_types, log: SimpleLogger):
+def sparse_symmetric_to_rectangular(name: str, matrix: sparse_types,
+                                    log: SimpleLogger) -> np.ndarray:
     # get the upper and lower triangular matrices
     upper_tri = scipy.sparse.triu(matrix)
     lower_tri = scipy.sparse.tril(matrix)
@@ -472,50 +478,4 @@ def form_to_int(form: str) -> int:
         return 6
     elif form == 'pseudo-identity':
         return 9
-    raise RuntimeError(f'form = {form!r}')
-
-
-def _dmi_get_complex_fields(dmi: Matrix, func: Callable[list[Any]]) -> str:
-    """writes a complex DMI"""
-    msg = ''
-    name = dmi.name
-    #nrows = dmi.nrows
-    data, GCi, GCj = dmi.data_i_j()
-    real_array = data.real
-    imag_array = data.imag
-
-    uGCj = np.unique(dmi.GCj)
-    for gcj in uGCj:
-        i = np.where(gcj == dmi.GCj)[0]
-        gcis = dmi.GCi[i]
-        reals = real_array[i]
-        complexs = imag_array[i]
-        isort = np.argsort(gcis)
-        list_fields = ['DMI', name, gcj]
-
-        #if reals.max() == 0. and reals.min() == 0. and complexs.max() == 0. and complexs.min() == 0.:
-            #continue
-
-        # will always write the first one
-        gci_last = -10
-        #print('gcis=%s \nreals=%s \ncomplexs=%s' % (
-            #gcis[isort], reals[isort], complexs[isort]))
-        if gcis.max() == gcis.min():
-            list_fields += [gcis[0]]
-            for reali, complexi in zip(reals, complexs):
-                list_fields.extend([reali, complexi])
-            msg += func(list_fields)
-        else:
-            #print(f'list_fields0 = {list_fields}')
-            for i, gci, reali, complexi in zip(count(), gcis[isort], reals[isort], complexs[isort]):
-                #print('B', gci, reali, complexi, gci_last)
-                if gci != gci_last + 1 and i != 0:
-                    pass
-                else:
-                    list_fields.append(gci)
-                list_fields.append(reali)
-                list_fields.append(complexi)
-                gci_last = gci
-            #print(f'list_fields = {list_fields}')
-            msg += func(list_fields)
-    return msg
+    raise RuntimeError(f'form = {form!r}')  # pragma: no cover
