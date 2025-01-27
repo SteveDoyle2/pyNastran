@@ -3194,7 +3194,8 @@ class PAERO2(PAERO):
             #if ncardsi == 0:
                 #continue
         self._save(property_id, aspect_ratio, width, orientation,
-                   thi, thn, lrsb, lrib, lth)
+                   thi, thn, lrsb, lrib, lth,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
@@ -3746,7 +3747,7 @@ class PAERO5(PAERO):
         card = (pid, caoci,
                 nalpha, lalpha, nxis, lxis,
                 ntaus, ltaus,
-                comment)
+                ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -3784,7 +3785,7 @@ class PAERO5(PAERO):
         card = (pid, caoci,
                 nalpha, lalpha, nxis, lxis,
                 ntaus, ltaus,
-                comment)
+                ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -3792,6 +3793,7 @@ class PAERO5(PAERO):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         ncaoci = np.zeros(ncards, dtype='int32')
         caoci = []
@@ -3801,11 +3803,13 @@ class PAERO5(PAERO):
         lxis = np.zeros(ncards, dtype='int32')
         ntaus = np.zeros(ncards, dtype='int32')
         ltaus = np.zeros(ncards, dtype='int32')
+        comment = {}
         for icard, card in enumerate(self.cards):
             (pid, caocii,
              nalphai, lalphai, nxisi, lxisi,
              ntausi, ltausi,
-             comment) = card
+             ifilei, commenti) = card
+            ifile[icard] = ifile
             property_id[icard] = pid
 
             #ndoci = len(docs)
@@ -3821,7 +3825,7 @@ class PAERO5(PAERO):
             ltaus[icard] = ltausi
 
         caoci = np.array(caoci, dtype='float64')
-        self._save(property_id, ncaoci, caoci, nalpha, lalpha, nxis, lxis, ntaus, ltaus)
+        self._save(property_id, ncaoci, caoci, nalpha, lalpha, nxis, lxis, ntaus, ltaus, ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
@@ -3833,6 +3837,7 @@ class PAERO5(PAERO):
             ifile = np.zeros(ncards, dtype='int32')
         if len(self.property_id):
             ifile = np.stack([self.ifile, ifile])
+            property_id = np.stack([self.property_id, property_id])
             afd
         save_ifile_comment(self, ifile, comment)
         self.property_id = property_id
@@ -3994,20 +3999,23 @@ class AELIST(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         aelist_id = np.zeros(ncards, dtype='int32')
         nelements = np.zeros(ncards, dtype='int32')
-        #elements = np.array([], dtype='int32')
+        comment = {}
 
         all_elements = []
         for icard, card in enumerate(self.cards):
-            sid, elementsi, ifilei, comment = card
+            sid, elementsi, ifilei, commenti = card
+            ifile[icard] = ifilei
             aelist_id[icard] = sid
             elements2 = expand_thru(elementsi)
             #elements2.sort()
             nelements[icard] = len(elements2)
             all_elements.extend(elements2)
         elements = np.array(all_elements, dtype='int32')
-        self._save(aelist_id, nelements, elements)
+        self._save(aelist_id, nelements, elements,
+                   ifile=ifile, comment=comment)
         self.clean_ids()
         self.sort()
         self.cards = []

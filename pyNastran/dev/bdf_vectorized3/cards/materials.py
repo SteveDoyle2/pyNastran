@@ -1537,16 +1537,21 @@ class MAT8(Material):
               Xt, Xc, Yt, Yc, S, f12, strn, hf=None, ht=None, hfb=None,
               ifile=None, comment: Optional[dict[int, str]]=None,
               force: bool=False):
-        if len(self.material_id) != 0:
-            raise NotImplementedError()
         ncards = len(material_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
-
         if hf is None:
             hf = np.full((ncards, 6), np.nan, dtype='float64')
             ht = np.full((ncards, 9), np.nan, dtype='float64')
             hfb = np.full((ncards, 9), np.nan, dtype='float64')
+
+        if len(self.material_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
+            material_id = np.hstack([self.material_id, material_id])
+            hf = np.vstack([self.hf, hf])
+            ht = np.vstack([self.ht, ht])
+            hfb = np.vstack([self.hfb, hfb])
+            raise NotImplementedError()
 
         save_ifile_comment(self, ifile, comment)
         self.material_id = material_id

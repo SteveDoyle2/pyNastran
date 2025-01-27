@@ -4,7 +4,7 @@ from copy import deepcopy
 from math import sin, cos, radians, atan2, sqrt, degrees
 from itertools import count
 import warnings
-from typing import Any, Callable, TYPE_CHECKING
+from typing import Callable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from scipy.sparse import coo_matrix  # type: ignore
@@ -18,7 +18,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, blank, integer_or_blank,
+    integer, integer_or_blank,  # blank,
     double, string, string_or_blank,
     parse_components, interpret_value, integer_double_string_or_blank)
 if TYPE_CHECKING:  # pragma: no cover
@@ -53,7 +53,7 @@ class DTI_UNITS(BaseCard):
         fields = []
         return DTI_UNITS(name, fields, comment='')
 
-    def _finalize_hdf5(self, encoding):
+    def _finalize_hdf5(self, encoding: str):
         """hdf5 helper function"""
         keys, values = self.fields
 
@@ -67,7 +67,7 @@ class DTI_UNITS(BaseCard):
         self.fields = {key : value for key, value in zip(keys, values_str)}
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, encoding):
+    def export_to_hdf5(cls, h5_file, model: BDF, encoding: str):
         """exports the elements in a vectorized way"""
         #from pyNastran.bdf.bdf_interface.hdf5_exporter import _export_list
         for name, dti in sorted(model.dti.items()):
@@ -88,7 +88,7 @@ class DTI_UNITS(BaseCard):
                 #'temp_stress' : temp_stress
             #}
 
-    def __init__(self, name, fields, comment=''):
+    def __init__(self, name: str, fields: list, comment: str=''):
         """
         Creates a DTI,UNITS card
 
@@ -111,7 +111,7 @@ class DTI_UNITS(BaseCard):
             assert fieldsi is None or isinstance(fieldsi, str), fields
 
     @classmethod
-    def add_card(cls, card, comment):
+    def add_card(cls, card: BDFCard, comment: str):
         """
         Adds a DTI card from ``BDF.add_card(...)``
 
@@ -2558,7 +2558,7 @@ def gc_to_index(GC: np.ndarray) -> tuple[np.ndarray, int]:
 def _fill_dense_rectangular_matrix(matrix: DMIG,
                                    nrows: int, ncols: int, ndim: int,
                                    rows: dict[Any, int], cols: dict[Any, int],
-                                   apply_symmetry: bool) -> Any:
+                                   apply_symmetry: bool) -> np.ndarray:
     """helper method for ``get_matrix``"""
     if matrix.is_complex:
         dense_mat = _fill_dense_rectangular_matrix_complex(
@@ -2863,7 +2863,7 @@ def get_dmi_matrix(matrix: DMI,
 
 def get_matrix(self: DMIG,
                is_sparse: bool=False,
-               apply_symmetry: bool=False) -> tuple[Any,
+               apply_symmetry: bool=False) -> tuple[np.ndarray,
                                                    dict[int, Any],
                                                    dict[int, Any]]:
     """
@@ -2894,17 +2894,18 @@ def get_matrix(self: DMIG,
     #is_sparse = False
     if is_sparse:
         #assert isinstance(self, (DMIG, DMIK, DMIJI)), type(self)
-        M = _fill_sparse_matrix(self, nrows, ncols, apply_symmetry)
+        matrix = _fill_sparse_matrix(self, nrows, ncols, apply_symmetry)
     else:
         if ndim == 1:
             #assert isinstance(self, int), type(self)
-            M = _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
-            assert isinstance(M, np.ndarray), type(M)
+            matrix = _fill_dense_column_matrix(self, nrows, ncols, ndim,
+                                               rows, cols, apply_symmetry)
         else:
             #assert isinstance(self, (DMIG, DMIK, DMIJ, DMIJI)), type(self)
-            M = _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
-            assert isinstance(M, np.ndarray), type(M)
-    return M, rows_reversed, cols_reversed
+            matrix = _fill_dense_rectangular_matrix(self, nrows, ncols, ndim,
+                                                    rows, cols, apply_symmetry)
+        assert isinstance(matrix, np.ndarray), type(matrix)
+    return matrix, rows_reversed, cols_reversed
 
 
 def _set_matrix(nrows: int, ncols: int,
@@ -2922,7 +2923,8 @@ def _set_matrix(nrows: int, ncols: int,
         raise
     return matrixi
 
-def _export_dmig_to_hdf5(h5_file, model: BDF, dict_obj, encoding: str) -> None:
+def _export_dmig_to_hdf5(h5_file, model: BDF, dict_obj,
+                         encoding: str) -> None:
     """export dmigs, dmij, dmiji, dmik, dmi"""
     for name, dmig in dict_obj.items():
         dmig_group = h5_file.create_group(name)
@@ -2977,7 +2979,9 @@ def _export_dmig_to_hdf5(h5_file, model: BDF, dict_obj, encoding: str) -> None:
                 dmig_group.create_dataset('Complex', data=dmig.Complex)
 
 
-def _export_dmiax_to_hdf5(h5_file, model, dict_obj, encoding: str) -> None:
+def _export_dmiax_to_hdf5(h5_file, model: BDF,
+                          dict_obj: dict[str, DMIAX],
+                          encoding: str) -> None:
     """export dmiax"""
     for name, dmiax in dict_obj.items():
         #print(f'exporting {dmiax.type} name={name!r}')
@@ -3034,7 +3038,7 @@ def _export_dmiax_to_hdf5(h5_file, model, dict_obj, encoding: str) -> None:
         if hasattr(dmiax, 'Complex') and dmiax.Complex is not None:
             dmiax_group.create_dataset('Complex', data=dmiax.Complex)
 
-def _set_polar(polar) -> int:
+def _set_polar(polar: Optional[int | bool]) -> int:
     if polar in {None, 0, False}:
         polar = 0
     elif polar in {1, True}:
@@ -3082,6 +3086,6 @@ def dtype_to_tin_tout_str(myarray: np.ndarray) -> str:
         tin = 'complex64'
     elif tin_real == 4 and tin_total == 4:
         tin = 'float32'
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError('dtype_to_tin_tout')
     return tin

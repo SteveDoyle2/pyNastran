@@ -4711,7 +4711,7 @@ class AddContact(BDFAttributes):
             grids: list[tuple[int, int]],
             comment: str='') -> int:
         """Creates a BEDGE card"""
-        bcrpara = self.bedge.add(bedge_id, eids, grids, comment)
+        bcrpara = self.bedge.add(bedge_id, eids, grids, comment=comment)
         return bcrpara
 
 class AddSuperelements(BDFAttributes):

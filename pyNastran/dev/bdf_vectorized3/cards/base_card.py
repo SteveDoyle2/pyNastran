@@ -340,7 +340,7 @@ class VectorizedBaseCard:
         #if imax_allowable == -1:
             #imax_allowable = 0
         if imax > imax_allowable:
-            raise RuntimeError(f'imax_allowable={imax_allowable}; ids={self_ids}; len(i)={imax}')
+            raise RuntimeError(f'{self.type}: imax_allowable={imax_allowable}; ids={self_ids}; len(i)={imax}')
         cls = self.__class__
         card = cls(self.model)
         #card = CQUAD4(self.model)

@@ -14,7 +14,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     components_or_blank, parse_components,)
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    remove_unused_primary, remove_unused_duplicate, parse_check)
+    remove_unused_primary, remove_unused_duplicate, parse_check,
+    save_ifile_comment,
+)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
@@ -136,14 +138,17 @@ class SPC(VectorizedBaseCard):
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        #ncards = len(self.cards)
+        ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         spc_id_ = []
         components_ = []
         node_id_ = []
         enforced_ = []
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (spc_idi, nodesi, componentsi, enforcedi, ifilei, comment) = card
+            (spc_idi, nodesi, componentsi, enforcedi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             spc_id_.extend(spc_idi)
             node_id_.extend(nodesi)
             enforced_.extend(enforcedi)
@@ -153,19 +158,30 @@ class SPC(VectorizedBaseCard):
         node_id = np.array(node_id_, dtype=idtype)
         components = np.array(components_, dtype='int32')
         enforced = np.array(enforced_, dtype='float64')
-        self._save(spc_id, node_id, components, enforced)
+        self._save(spc_id, node_id, components, enforced,
+                   ifile=ifile, comment=comment)
         assert len(self.spc_id) == len(self.node_id)
         assert len(self.spc_id) == len(self.components)
         assert len(self.spc_id) == len(self.enforced)
         self.cards = []
 
-    def _save(self, spc_id, node_id, components, enforced):
-        nspcs = len(spc_id)
+    def _save(self, spc_id, node_id, components, enforced,
+              ifile=None, comment=None):
+        ncards = len(spc_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        # if len(self.spc_id):
+        #     ifile = np.hstack([self.ifile, ifile])
+        #     spc_id = np.hstack([self.spc_id, spc_id])
+        #     node_id = np.hstack([self.node_id, node_id])
+        #     components = np.hstack([self.components, components])
+        #     enforced = np.hstack([self.enforced, enforced])
+        # save_ifile_comment(self, ifile, comment)
         self.spc_id = spc_id
         self.node_id = node_id
         self.components = components
         self.enforced = enforced
-        self.n = nspcs
+        self.n = ncards
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
@@ -313,6 +329,8 @@ class SPC1(VectorizedBaseCard):
 
     def __apply_slice__(self, spc: SPC1, i: np.ndarray) -> None:
         spc.n = len(i)
+        #self._slice_comment(spc, i)
+        #spc.ifile = self.ifile[i]
         spc.spc_id = self.spc_id[i]
         spc.components = self.components[i]
 
@@ -371,6 +389,7 @@ class SPC1(VectorizedBaseCard):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         spc_id = np.zeros(ncards, dtype='int32')
         components = np.zeros(ncards, dtype='int32')
         nnodes = np.zeros(ncards, dtype='int32')
@@ -378,6 +397,7 @@ class SPC1(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             (spc_idi, componentsi, nodesi, ifilei, comment) = card
             nnodesi = len(nodesi)
+            ifile[icard] = ifilei
             spc_id[icard] = spc_idi
             nnodes[icard] = nnodesi
             node_id_list.extend(nodesi)
@@ -386,8 +406,16 @@ class SPC1(VectorizedBaseCard):
         self._save(spc_id, node_id, components, nnodes)
         self.cards = []
 
-    def _save(self, spc_id, node_id, components, nnodes):
+    def _save(self, spc_id, node_id, components, nnodes,
+              ifile=None,
+              comment: dict[int, str]=None) -> None:
         nspcs = len(spc_id)
+        ncards = len(node_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.spc_id):
+            asdf
+        #save_ifile_comment(self, ifile, comment)
         self.spc_id = spc_id
         self.node_id = node_id
         self.components = components
@@ -533,14 +561,21 @@ class MPC(VectorizedBaseCard):
         #assert len(self.mpc_id) == len(self.coefficients)
         self.cards = []
 
-    def _save(self, mpc_id, nnode, node_id, components, coefficients) -> None:
+    def _save(self, mpc_id, nnode, node_id, components, coefficients,
+              ifile=None,
+              comment: dict[int, str]=None) -> None:
+        ncards = len(mpc_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.mpc_id) != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
+        save_ifile_comment(self, ifile, comment)
         self.mpc_id = mpc_id
         self.nnode = nnode
         self.node_id = node_id
         self.components = components
         self.coefficients = coefficients
+        self.n = len(ifile)
 
     def __apply_slice__(self, mpc: MPC, i: np.ndarray):
         """this kind of doesn't make sense..."""
@@ -667,11 +702,19 @@ class ADD(VectorizedBaseCard):
         #self.sort()
         self.cards = []
 
-    def _save(self, sid, sids, nsids):
+    def _save(self, sid, sids, nsids,
+              ifile=None,
+              comment: dict[int, str]=None) -> None:
+        ncards = len(sid)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
         if len(self.sid):
+            ifile = np.hstack([self.ifile, ifile])
             sid = np.hstack([self.sid, sids])
             sids = np.hstack([self.sids, sids])
             nsids = np.hstack([self.nsids, nsids])
+        save_ifile_comment(self, ifile, comment)
         nsid = len(sid)
         self.sid = sid
         self.sids = sids
@@ -974,12 +1017,15 @@ class CommonSet(VectorizedBaseCard):
         if self.debug:
             self.model.log.debug(f'parse {self.type}')
 
+        ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         idtype = self.model.idtype
         node_id_list = []
         component_list = []
-        #comment = {}
+        comment = {}
         for icard, card in enumerate(self.cards):
             (nidi, componenti, ifilei, commenti) = card
+            ifile[icard] = ifilei
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
             #nnodes = len(nidi)
@@ -990,22 +1036,26 @@ class CommonSet(VectorizedBaseCard):
                 #comment[nidi] = commenti
         node_id = np.array(node_id_list, dtype=idtype)
         component = np.array(component_list, dtype=idtype)
-        self._save(node_id, component, comment=None)
+        self._save(node_id, component, ifile=ifile, comment=comment)
         #self.sort()
         self.cards = []
 
     def _save(self,
               node_id: np.ndarray,
               component: np.ndarray,
+              ifile=None,
               comment: dict[int, str]=None) -> None:
-        #ncards = len(node_id)
+        ncards = len(node_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
         ncards_existing = len(self.node_id)
 
         if ncards_existing != 0:
+            ifile = np.hstack([self.ifile, ifile])
             node_id = np.hstack([self.node_id, node_id])
             component = np.hstack([self.component, component])
-        #if comment:
-            #self.comment.update(comment)
+        save_ifile_comment(self, ifile, comment)
         self.node_id = node_id
         self.component = component
         #print(node_id, component)

@@ -204,6 +204,7 @@ class TestModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'contact' / 'contact.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet', '--skip_nominal']
         test_bdf(args, show_args=False)
+
     def test_models_contact_2(self):
         bdf_filename = MODEL_PATH / 'contact' / '2bars_shell_s-contact.dat'
         args = ['test_bdf', str(bdf_filename), '--quiet']

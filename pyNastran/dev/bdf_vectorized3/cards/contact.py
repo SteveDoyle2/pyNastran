@@ -9,7 +9,7 @@ import numpy as np
 from pyNastran.bdf.cards.base_card import expand_thru_by # expand_thru,
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs # collapse_thru,
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, hslice_by_idim, vslice_by_idim, make_idim, parse_check)
+    VectorizedBaseCard, hslice_by_idim, vslice_by_idim, make_idim, parse_check, save_ifile_comment)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string, #blank,
     integer_or_blank, double_or_blank, string_or_blank,
@@ -49,8 +49,8 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
         self.ids = np.array([], dtype='int32')
 
     def add(self, sid: list[int], ids: list[int],
-            comment: str='') -> int:
-        self.cards.append((sid, ids, comment))
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((sid, ids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -99,7 +99,7 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
 
         ids = np.array(ids_list, dtype=idtype)
         assert len(card) > 2, f'len({self.type} card) = {len(card):d}\ncard={card}'
-        self.cards.append((sid, ids, comment))
+        self.cards.append((sid, ids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -111,14 +111,16 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
 
         ncards = len(self.cards)
         idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
         sid = np.zeros(ncards, dtype=idtype)
         n_ids = np.zeros(ncards, dtype=idtype)
         ids_list = []
-        #comment = {}
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (sidi, idsi, commenti) = card
+            (sidi, idsi, ifilei, commenti) = card
             assert isinstance(sidi, int), sidi
             #assert isinstance(element_ids, (list), componenti
+            ifile[icard] = ifilei
             sid[icard] = sidi
             n_ids[icard] = len(idsi)
             ids_list.extend(idsi)
@@ -127,7 +129,8 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
                 #comment[nidi] = commenti
         sid = np.array(sid, dtype=idtype)
         ids = np.array(ids_list, dtype=idtype)
-        self._save(sid, n_ids, ids, comment=None)
+        self._save(sid, n_ids, ids,
+                   ifile=ifile, comment=comment)
         #self.sort()
         self.cards = []
 
@@ -135,14 +138,19 @@ class ElementPropertyNodeSet(VectorizedBaseCard):
               sid: np.ndarray,
               n_ids: np.ndarray,
               ids: np.ndarray,
+              ifile=None,
               comment: dict[int, str]=None) -> None:
+        ncards = len(sid)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
         ncards_existing = len(self.sid)
         if ncards_existing != 0:
+            ifile = np.hstack([self.ifile, ifile])
             sid = np.hstack([self.sid, sid])
             n_ids = np.hstack([self.n_ids, n_ids])
             ids = np.hstack([self.ids, ids])
-        #if comment:
-            #self.comment.update(comment)
+        save_ifile_comment(self, ifile, comment)
         self.sid = sid
         self.n_ids = n_ids
         self.ids = ids
@@ -396,12 +404,13 @@ class BGSET(VectorizedBaseCard):
 
     def add(self, sid: list[int], element_ids: list[int],
             comment: str='') -> int:
-        self.cards.append((sid, element_ids, comment))
+        self.cards.append((sid, element_ids, ifile, comment))
         self.n += 1
         return self.n - 1
 
     #def remove_unused(self)
-    def add_card(self, card: BDFCard, ifile: int, comment: str=''):
+    def add_card(self, card: BDFCard, ifile: int,
+                 comment: str=''):
         """
         Adds a BGSET card from ``BDF.add_card(...)``
 
@@ -444,7 +453,8 @@ class BGSET(VectorizedBaseCard):
                      #comment=comment, sol=sol)
 
         assert len(card) > 2, f'len({self.type} card) = {len(card):d}\ncard={card}'
-        self.cards.append((glue_id, sids, tids, sdists, exts, comment))
+        self.cards.append((glue_id, sids, tids, sdists, exts,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -457,6 +467,7 @@ class BGSET(VectorizedBaseCard):
         ncards = len(self.cards)
         idtype = self.model.idtype
         fdtype = self.model.fdtype
+        ifile = np.zeros(ncards, dtype='int32')
         glue_id = np.zeros(ncards, dtype='int32')
         nsource = np.zeros(ncards, dtype='int32')
         source_ids = []
@@ -464,10 +475,11 @@ class BGSET(VectorizedBaseCard):
         search_distances = []
         extensions = []
 
-        #comment = {}
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (glue_idi, source_idi, target_idi, search_distancei, extensioni, commenti) = card
-
+            (glue_idi, source_idi, target_idi, search_distancei, extensioni,
+             ifilei, commenti) = card
+            ifile[icard] = ifilei
             glue_id[icard] = glue_idi
             source_ids.extend(source_idi)
             target_ids.extend(target_idi)
@@ -483,7 +495,8 @@ class BGSET(VectorizedBaseCard):
         target_id = np.array(target_ids, dtype=idtype)
         search_distance = np.array(search_distances, dtype=fdtype)
         extension = np.array(extensions, dtype=fdtype)
-        self._save(glue_id, nsource, source_region, target_id, search_distance, extension, comment=None)
+        self._save(glue_id, nsource, source_region, target_id,
+                   search_distance, extension, ifile=ifile, comment=comment)
         #self.sort()
         self.cards = []
 
@@ -494,15 +507,21 @@ class BGSET(VectorizedBaseCard):
               target_ids,
               search_distance,
               extension: np.ndarray,
+              ifile=None,
               comment: dict[int, str]=None) -> None:
+        ncards = len(glue_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         ncards_existing = len(self.glue_id)
         if ncards_existing != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
             glue_id = np.hstack([self.glue_id, glue_id])
             #nelement = np.hstack([self.nelement, nelement])
             #element_ids = np.hstack([self.element_ids, element_ids])
         #if comment:
             #self.comment.update(comment)
+        save_ifile_comment(self, ifile, comment)
         self.glue_id = glue_id
         self.nsource = nsource
         self.source_ids = source_ids
@@ -607,12 +626,12 @@ class BCTSET(VectorizedBaseCard):
             frictions: list[float],
             min_distances: list[float], max_distances: list[float],
             desc_id: int=0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Adds a BCTSET card, which defines generalized contact"""
         self.cards.append((contact_id, source_ids, target_ids,
                            frictions,
                            min_distances, max_distances,
-                           desc_id, comment))
+                           desc_id, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -666,7 +685,7 @@ class BCTSET(VectorizedBaseCard):
         assert len(card) > 2, f'len({self.type} card) = {len(card):d}\ncard={card}'
         self.cards.append((contact_id, source_ids, target_ids, frictions,
                            min_distances, max_distances,
-                           desc_id, comment))
+                           desc_id, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -679,6 +698,7 @@ class BCTSET(VectorizedBaseCard):
         ncards = len(self.cards)
         idtype = self.model.idtype
         fdtype = self.model.fdtype
+        ifile = np.zeros(ncards, dtype='int32')
         contact_id = np.zeros(ncards, dtype='int32')
         desc_id = np.zeros(ncards, dtype='int32')
         nsource = np.zeros(ncards, dtype='int32')
@@ -692,8 +712,8 @@ class BCTSET(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             (contact_idi, source_idsi, target_idsi, frictionsi,
              min_search_distancei, max_search_distancei,
-             desc_idi, commenti) = card
-
+             desc_idi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             contact_id[icard] = contact_idi
 
             source_ids_list.extend(source_idsi)
@@ -947,9 +967,10 @@ class BCONP(VectorizedBaseCard):
 
     def add(self, contact_id: int, slave: int, master: int,
             fric_id: int, sfac: float=1.0, ptype: int=1, cid: int=0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a BCONP card"""
-        self.cards.append((contact_id, slave, master, sfac, fric_id, ptype, cid, comment))
+        self.cards.append((contact_id, slave, master, sfac, fric_id, ptype, cid,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -983,7 +1004,8 @@ class BCONP(VectorizedBaseCard):
         cid = integer_or_blank(card, 8, 'cid', default=0)
         #return BCONP(contact_id, slave, master, sfac, friction_id, ptype, cid,
                      #comment=comment)
-        self.cards.append((contact_id, slave, master, sfac, friction_id, ptype, cid, comment))
+        self.cards.append((contact_id, slave, master, sfac, friction_id, ptype, cid,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -996,6 +1018,7 @@ class BCONP(VectorizedBaseCard):
         ncards = len(self.cards)
         #idtype = self.model.idtype
         #fdtype = self.model.fdtype
+        ifile = np.zeros(ncards, dtype='int32')
         contact_id = np.zeros(ncards, dtype='int32')
         slave_id = np.zeros(ncards, dtype='int32')
         master_id = np.zeros(ncards, dtype='int32')
@@ -1004,11 +1027,12 @@ class BCONP(VectorizedBaseCard):
         ptype = np.zeros(ncards, dtype='int32')
         coord_id = np.zeros(ncards, dtype='int32')
 
-        #comment = {}
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (contact_idi, slave_idi, master_idi, sfaci, friction_idi, ptypei, cid, commenti) = card
+            (contact_idi, slave_idi, master_idi, sfaci, friction_idi, ptypei, cid,
+             ifilei, commenti) = card
             print(card)
-
+            ifile[icard] = ifilei
             contact_id[icard] = contact_idi
             slave_id[icard] = slave_idi
             master_id[icard] = master_idi
@@ -1106,9 +1130,10 @@ class BFRIC(VectorizedBaseCard):
         self.fstiff = np.array([], dtype='float64')
         self.mu1 = np.array([], dtype='float64')
 
-    def add(self, friction_id: int, mu1: float, fstiff: float=None, comment: str='') -> int:
+    def add(self, friction_id: int, mu1: float, fstiff: float=None,
+            ifile: int=0, comment: str='') -> int:
         """Creates a BFRIC card"""
-        self.cards.append((friction_id, fstiff, mu1, comment))
+        self.cards.append((friction_id, fstiff, mu1, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1132,7 +1157,7 @@ class BFRIC(VectorizedBaseCard):
         #
         mu1 = double(card, 4, 'mu1')
         #return BFRIC(friction_id, mu1, fstiff=fstiff, comment=comment)
-        self.cards.append((friction_id, fstiff, mu1, comment))
+        self.cards.append((friction_id, fstiff, mu1, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1144,14 +1169,15 @@ class BFRIC(VectorizedBaseCard):
 
         #idtype = self.model.idtype
         #fdtype = self.model.fdtype
+        ifile = np.zeros(ncards, dtype='int32')
         friction_id = np.zeros(ncards, dtype='int32')
         fstiff = np.zeros(ncards, dtype='float64')
         mu1 = np.zeros(ncards, dtype='float64')
 
-        #comment = {}
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (friction_idi, fstiffi, mu1i, commenti) = card
-
+            (friction_idi, fstiffi, mu1i, ifilei, commenti) = card
+            ifile[icard] = ifilei
             friction_id[icard] = friction_idi
             fstiff[icard] = fstiffi
             mu1[icard] = mu1i
@@ -1159,18 +1185,22 @@ class BFRIC(VectorizedBaseCard):
                 #comment[i] = commenti
                 #comment[nidi] = commenti
 
-        self._save(friction_id, fstiff, mu1)
+        self._save(friction_id, fstiff, mu1, ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
-    def _save(self, friction_id, fstiff, mu1) -> None:
+    def _save(self, friction_id, fstiff, mu1,
+              ifile=None, comment=None) -> None:
+        ncards = len(friction_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         ncards_existing = len(self.friction_id)
         if ncards_existing != 0:
+            ifile = np.hstack([self.ifile, ifile])
             friction_id = np.hstack([self.friction_id, friction_id])
             fstiff = np.hstack([self.fstiff, fstiff])
             mu1 = np.hstack([self.mu1, mu1])
-        #if comment:
-            #self.comment.update(comment)
+        save_ifile_comment(self, ifile, comment)
         self.friction_id = friction_id
         self.fstiff = fstiff
         self.mu1 = mu1
@@ -1253,7 +1283,7 @@ class BCRPARA(VectorizedBaseCard):
 
     def add(self, contact_region_id: int, offset: Optional[float]=None,
             surf: str='TOP', surface_type: str='FLEX', grid_point: int=0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a BFRIC card
 
         Creates a BCRPARA card
@@ -1281,7 +1311,8 @@ class BCRPARA(VectorizedBaseCard):
             a comment for the card
 
         """
-        self.cards.append((contact_region_id, offset, surf, surface_type, grid_point, comment))
+        self.cards.append((contact_region_id, offset, surf, surface_type, grid_point,
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1317,7 +1348,7 @@ class BCRPARA(VectorizedBaseCard):
         #return BCRPARA(crid, surf=surf, offset=offset, Type=Type,
                        #grid_point=grid_point, comment=comment)
         self.cards.append((contact_region_id, offset, surf,
-                           surface_type, grid_point, comment))
+                           surface_type, grid_point, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1329,17 +1360,18 @@ class BCRPARA(VectorizedBaseCard):
 
         #idtype = self.model.idtype
         #fdtype = self.model.fdtype
+        ifile = np.zeros(ncards, dtype='int32')
         contact_region_id = np.zeros(ncards, dtype='int32')
         offset = np.zeros(ncards, dtype='float64')
         surf = np.zeros(ncards, dtype='|U8')
         surface_type = np.zeros(ncards, dtype='|U8')
         grid_point = np.zeros(ncards, dtype='int32')
 
-        #comment = {}
+        comment = {}
         for icard, card in enumerate(self.cards):
             (contact_region_idi, offseti, surfi,
-             surface_typei, grid_pointi, commenti) = card
-
+             surface_typei, grid_pointi, ifilei, commenti) = card
+            ifile[icard] = ifilei
             contact_region_id[icard] = contact_region_idi
             offset[icard] = offseti
             surf[icard] = surfi
@@ -1459,9 +1491,10 @@ class BEDGE(VectorizedBaseCard):
     def add(self, bedge_id: int,
             eids: list[int],
             grids: list[tuple[int, int]],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """Creates a BEDGE card"""
-        self.cards.append((bedge_id, eids, grids, comment))
+        assert isinstance(ifile, int), ifile
+        self.cards.append((bedge_id, eids, grids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1511,7 +1544,8 @@ class BEDGE(VectorizedBaseCard):
                 nids.append((nid1, nid2))
             neids += 1
 
-        self.cards.append((bedge_id, eids, nids, comment))
+        # assert isinstance(ifile, int), ifile
+        self.cards.append((bedge_id, eids, nids, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1523,14 +1557,18 @@ class BEDGE(VectorizedBaseCard):
 
         #idtype = self.model.idtype
         #fdtype = self.model.fdtype
+        ifile = np.zeros(ncards, dtype='int32')
         bedge_id = np.zeros(ncards, dtype='int32')
         nelement = np.zeros(ncards, dtype='int32')
 
-        #comment = {}
+        comment = {}
         element_list = []
         nodes_list = []
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (bedge_idi, eidsi, nidsi, commenti) = card
+            (bedge_idi, eidsi, nidsi, ifilei, commenti) = card
+            # assert isinstance(ifilei, int), card
+            ifile[icard] = ifilei
             bedge_id[icard] = bedge_idi
             nelement[icard] = len(eidsi)
             element_list.extend(eidsi)
@@ -1542,17 +1580,24 @@ class BEDGE(VectorizedBaseCard):
         element_id = np.array(element_list, dtype='int32')
         nodes = np.array(nodes_list, dtype='int32')
         assert nodes.ndim == 2, nodes.shape
-        self._save(bedge_id, nelement, element_id, nodes)
+        self._save(bedge_id, nelement, element_id, nodes,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
-    def _save(self, bedge_id, nelement, element_id, nodes) -> None:
+    def _save(self, bedge_id, nelement, element_id, nodes,
+              ifile=None, comment=None) -> None:
+        ncards = len(bedge_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         ncards_existing = len(self.bedge_id)
         if ncards_existing != 0:
+            ifile = np.hstack([self.ifile, ifile])
             bedge_id = np.hstack([self.bedge_id, bedge_id])
             nelement = np.hstack([self.nelement, nelement])
             element_id = np.hstack([self.element_id, element_id])
             nodes = np.hstack([self.nodes, nodes])
+        save_ifile_comment(self, ifile, comment)
         #if comment:
             #self.comment.update(comment)
         self.bedge_id = bedge_id
@@ -1780,7 +1825,7 @@ class BCBODY(VectorizedBaseCard):
             #grids: list[tuple[int, int]],
             #comment: str='') -> int:
         #"""Creates a BEDGE card"""
-        #self.cards.append((bedge_id, eids, grids, comment))
+        #self.cards.append((bedge_id, eids, grids, ifile, comment))
         #self.n += 1
         #return self.n - 1
 
@@ -2079,7 +2124,7 @@ class BCBODY(VectorizedBaseCard):
                            ('NLOAD', nload, dcos, ang_vel, vel_rb),
                            ('ADVANCE', sangle, coptb, user, min_node),
                            ('RIGID', cgid, nent, rigid_body_name),
-                           comment))
+                           ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -2091,6 +2136,7 @@ class BCBODY(VectorizedBaseCard):
 
         #idtype = self.model.idtype
         #fdtype = self.model.fdtype
+        ifile = np.zeros(ncards, dtype='int32')
         bcbody_id = np.zeros(ncards, dtype='int32')
         bsid = np.zeros(ncards, dtype='int32')
         dim = np.zeros(ncards, dtype='|U8')
@@ -2126,8 +2172,9 @@ class BCBODY(VectorizedBaseCard):
              dimi, behavi, bsidi, istypei,
              frici, idispli, controli,
              nloadi, advancei, rigidi,
-             commenti) = card
+             ifilei, commenti) = card
             assert isinstance(bsidi, int), bsidi
+            ifile[icard] = ifilei
             bcbody_id[icard] = bcbody_idi
             bsid[icard] = bsidi
             dim[icard] = dimi
@@ -2397,7 +2444,7 @@ class BCBODY1(VectorizedBaseCard):
             HEAT indicates body is a heat-rigid body (See Remark 3..).
         """
         afsd
-        #self.cards.append((bedge_id, eids, grids, comment))
+        #self.cards.append((bedge_id, eids, grids, ifile, comment))
         #self.n += 1
         #return self.n - 1
 
@@ -2511,7 +2558,8 @@ class BCBODY1(VectorizedBaseCard):
         bcg_out = integer_or_blank(card, 7, 'bcg_out', default=0)
         assert len(card) < 9, card
 
-        cardi = (bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, bcg_out, comment)
+        cardi = (bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, bcg_out,
+                 ifile, comment)
         self.cards.append(cardi)
         self.n += 1
         return self.n - 1
