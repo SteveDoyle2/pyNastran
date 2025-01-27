@@ -17,7 +17,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, parse_check,
-    make_idim, hslice_by_idim,
+    make_idim, hslice_by_idim, save_ifile_comment,
     remove_unused_primary, remove_unused_duplicate)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, array_default_float,
@@ -1454,7 +1454,7 @@ class PCONV(VectorizedBaseCard):
         self.table_id = np.zeros(nproperties, dtype='int32')
         self.characteristic_length = np.zeros(nproperties, dtype='float64')
         self.grid_inlet = np.zeros(nproperties, dtype='int32')
-        self.coord_e = np.zeros(nproperties, dtype='float64')
+        self.coord_e = np.zeros(nproperties, dtype='int32')
         self.e = np.zeros((nproperties, 3), dtype='float64')
         self.n = nproperties
 
@@ -1539,7 +1539,7 @@ class CONVM(VectorizedBaseCard):
     def add(self, eid: int, pconvm_id: int, ta1: int,
             film_node: int=0, cntmdot: int=0,
             ta2: int=0, mdot: float=1.0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a CONVM card
 
@@ -1569,7 +1569,7 @@ class CONVM(VectorizedBaseCard):
 
         """
         ta2 = 0 if ta2 is None else ta2
-        self.cards.append((eid, pconvm_id, film_node, cntmdot, [ta1, ta2], mdot, comment))
+        self.cards.append((eid, pconvm_id, film_node, cntmdot, [ta1, ta2], mdot, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1594,7 +1594,7 @@ class CONVM(VectorizedBaseCard):
         ta2 = integer_or_blank(card, 6, 'ta2', default=ta1)
         mdot = fdouble_or_blank(card, 7, 'mdot', default=1.0)
         assert len(card) <= 8, f'len(CONVM card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pconvm, film_node, cntmdot, [ta1, ta2], mdot, comment))
+        self.cards.append((eid, pconvm, film_node, cntmdot, [ta1, ta2], mdot, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -1602,6 +1602,7 @@ class CONVM(VectorizedBaseCard):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
 
+        ifile = np.zeros(ncards, dtype='int32')
         # Parameters
         # ----------
         # eid : int
@@ -1637,8 +1638,10 @@ class CONVM(VectorizedBaseCard):
         #     a comment for the card
 
         #grids = []
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (eid, pconvm, film_nodei, cntmdot, ta, mdoti, comment) = card
+            (eid, pconvm, film_nodei, cntmdot, ta, mdoti, ifilei, commenti) = card
+            ifile[icard] = ifilei
             element_id[icard] = eid
             pconvm_id[icard] = pconvm
             film_node[icard] = film_nodei
@@ -1646,21 +1649,26 @@ class CONVM(VectorizedBaseCard):
             temp_ambient[icard] = ta
             control_node_mdot[icard] = cntmdot
             mdot[icard] = mdoti
-        self._save(element_id, pconvm_id, film_node, temp_ambient, control_node_mdot, mdot)
+        self._save(element_id, pconvm_id, film_node, temp_ambient, control_node_mdot, mdot,
+                   ifile, comment)
         self.cards = []
 
-    def _save(self, element_id, pconvm_id, film_node, temp_ambient, control_node_mdot, mdot):
+    def _save(self, element_id, pconvm_id, film_node, temp_ambient, control_node_mdot, mdot,
+              ifile=None, comment=None):
+        ncards = len(element_id)
         if mdot is None:
-            mdot = np.ones(nelements, dtype='float64')
-        nelements = len(element_id)
+            mdot = np.ones(ncards, dtype='float64')
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         assert len(self.element_id) == 0
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.pconvm_id = pconvm_id
         self.film_node = film_node
         self.temp_ambient = temp_ambient
         self.control_node_mdot = control_node_mdot
         self.mdot = mdot
-        self.n = nelements
+        self.n = len(ifile)
 
     def __apply_slice__(self, elem: CONVM, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]

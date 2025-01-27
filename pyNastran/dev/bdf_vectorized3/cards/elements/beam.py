@@ -3795,6 +3795,10 @@ class CBEND(Element):
         self.geom_flag = geom_flag
         self.n = len(property_id)
 
+    def mass_material_id(self) -> np.ndarray:
+        material_id = basic_mass_material_id(self.property_id, self.allowed_properties, 'CBAR')
+        return material_id
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['element_id'].append(self.element_id)
         used_dict['property_id'].append(self.property_id)

@@ -1571,10 +1571,12 @@ class BDFAttributes:
         element_ids = np.hstack(element_ids_all)
         return element_ids, masses
 
-    def mass_sum(self, element_id: Optional[np.ndarray]=None) -> float:
+    def mass_sum(self, element_id: Optional[np.ndarray]=None,
+                 nansum: bool=False) -> float:
         eids, massv = self.mass()
+        fsum = np.nansum if nansum else np.sum
         if element_id is None:
-            mass = massv.sum()
+            mass = fsum(massv)
         else:
             element_id = np.atleast_1d(element_id).astype('int32')
             isort = np.argsort(eids)
@@ -1585,13 +1587,15 @@ class BDFAttributes:
             mass = mass2[i]
         return mass
 
-    def inertia_sum(self, element_id: Optional[np.ndarray]=None) -> tuple[float, np.ndarray, np.ndarray]:
+    def inertia_sum(self, element_id: Optional[np.ndarray]=None,
+                    nansum: bool=False) -> tuple[float, np.ndarray, np.ndarray]:
         """
         mass moment of inertia
         """
         log = self.log
         element_ids_all = []
         inertias = []
+        fsum = np.nansum if nansum else np.sum
         total_mass = 0.
         mass_cg = np.zeros(3, dtype='float64')
         element_cards = [card for card in self.element_cards
@@ -1604,7 +1608,7 @@ class BDFAttributes:
             element_ids_all.append(card.element_id)
             #inertiai = card.inertia()
             massi = card.mass()
-            massi_sum = massi.sum()
+            massi_sum = fsum(massi)
             assert massi.shape == (card.n, ), massi.shape
 
             if hasattr(card, 'center_of_mass'):
@@ -1621,7 +1625,7 @@ class BDFAttributes:
             #mass += massi.sum()
             #log.debug(f'{card.type}; mass={massi_sum}')
             mass_centroid = centroid * massi[:, np.newaxis]
-            mass_cg += mass_centroid.sum(axis=0)
+            mass_cg += fsum(mass_centroid, axis=0)
             inertias.append((massi, centroid))
 
         if total_mass == 0.:

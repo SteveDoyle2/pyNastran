@@ -488,7 +488,7 @@ def _apply_conrod_mass(conrod_eids, mass_list, centroid_list):
             print(f'total_length = {total_length}')
 
 
-class TestNsm(unittest.TestCase):
+class TestNsmV3(unittest.TestCase):
     def test_nsm_1002(self):
         eid_quad = 1
         eid_tri = 2

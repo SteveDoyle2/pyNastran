@@ -8,7 +8,7 @@ from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
-class TestMaterials(unittest.TestCase):
+class TestMaterialsV3(unittest.TestCase):
     """tests MAT1"""
     def test_mat1_01(self):
         """tests MAT1 initialization from a BDFCard"""

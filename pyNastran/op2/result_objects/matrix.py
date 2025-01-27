@@ -7,7 +7,7 @@ import scipy.sparse
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.dmig import dtype_to_tin_tout_str
+from pyNastran.bdf.cards.dmig import DMI, dtype_to_tin_tout_str
 from pyNastran.bdf.field_writer import print_card_8, print_card_16, print_card_double
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
 from pyNastran.utils import object_attributes, object_methods, object_stats
@@ -405,10 +405,18 @@ class Matrix:
         func_small: Callable[list[Any]] = print_card_8 if size == 8 else print_card_16
         func: Callable[list[Any]] = func_small if tin in {1, 3} else print_card_double
 
+        tout = self.tin
+        nrows, ncols = self.shape
         if self.is_complex:
             msg += _dmi_get_complex_fields(self, func)
         else:
-            msg += _dmi_get_real_fields(self, func)
+            real_array, GCi, GCj = self.data_i_j()
+            dmi = DMI(self.name, matrix_form=self.form,
+                      tin=self.tin, tout=tout,
+                      nrows=nrows, ncols=ncols,
+                      GCj=GCj, GCi=GCi,
+                      Real=real_array, Complex=None)
+            msg += dmi._get_real_fields(func)
         return msg
 
 
@@ -466,62 +474,6 @@ def form_to_int(form: str) -> int:
         return 9
     raise RuntimeError(f'form = {form!r}')
 
-
-def _dmi_get_real_fields(dmi: Matrix, func: Callable[list[Any]]) -> str:
-    """writes a real DMI"""
-    msg = ''
-    name = dmi.name
-    #nrows = dmi.nrows
-    nrows = dmi.shape[0]
-    real_array, GCi, GCj = dmi.data_i_j()
-
-    uGCj = np.unique(GCj)
-    for gcj in uGCj:
-        i = np.where(gcj == GCj)[0]
-        gcis = GCi[i]
-        reals = real_array[i]
-
-        list_fields = ['DMI', name, gcj]
-        max_value = reals.max()
-
-        if len(i) == (reals != 0).sum():
-            # dense
-            list_fields.append(1)
-            list_fields.extend(reals)
-            msg += func(list_fields)
-            continue
-
-        if len(reals) == 1:
-            list_fields.extend([1, max_value])
-            msg += func(list_fields)
-            continue
-
-        if max_value == reals.min():
-            #DMI     WKK     1       1       1.0     THRU    112
-            list_fields.extend([1, max_value, 'THRU', nrows])
-            msg += func(list_fields)
-            continue
-
-        if len(i) == (reals != 0).sum():
-            # dense
-            list_fields.append(1)
-            list_fields.extend(reals)
-            msg += func(list_fields)
-            continue
-
-        isort = np.argsort(gcis)
-
-        # will always write the first one
-        gci_last = -1
-        for gci, real in zip(gcis[isort], reals[isort]):
-            if gci == gci_last + 1:
-                pass
-            else:
-                list_fields.append(gci)
-            list_fields.append(real)
-            gci_last = gci
-        msg += func(list_fields)
-    return msg
 
 def _dmi_get_complex_fields(dmi: Matrix, func: Callable[list[Any]]) -> str:
     """writes a complex DMI"""

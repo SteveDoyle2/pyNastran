@@ -10,7 +10,7 @@ from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 #ROOT_PATH = pyNastran.__path__[0]
 TEST_DYNAMIC = False
 
-class TestDynamic(unittest.TestCase):
+class TestDynamicV3(unittest.TestCase):
     """
     The cards tested are:
      * TSTEP

@@ -1,5 +1,5 @@
 """defines OP2 Matrix Test"""
-import os
+from pathlib import Path
 import unittest
 
 import numpy as np
@@ -9,8 +9,8 @@ import pyNastran
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_geom import read_op2_geom, FatalError
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = (PKG_PATH / '..' / 'models').absolute()
 
 
 class TestOP2Matrix(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestOP2Matrix(unittest.TestCase):
 
     def test_gpspc(self):
         """Tests the gspc1 MATPOOL model"""
-        op2_filename = os.path.join(PKG_PATH, 'op2', 'test', 'matrices', 'gpsc1.op2')
+        op2_filename = PKG_PATH / 'op2' / 'test' / 'matrices' / 'gpsc1.op2'
         model = read_op2_geom(op2_filename, debug=False)
 
         deltak = model.matrices['DELTAK']
@@ -43,7 +43,7 @@ class TestOP2Matrix(unittest.TestCase):
 
     def test_kelm_kdict(self):
         """Tests reading KELM and KDICT"""
-        op2_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar_kelm.op2')
+        op2_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar_kelm.op2'
         model = read_op2_geom(op2_filename, debug=False)
 
         kelm = model.matrices['KELM']
@@ -79,18 +79,18 @@ class TestOP2Matrix(unittest.TestCase):
     def test_op2_dmi_01(self):
         """tests DMI matrix style"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        bdf_filename = os.path.join(MODEL_PATH, 'matrix', 'matrix.dat')
-        op2_filename = os.path.join(MODEL_PATH, 'matrix', 'mymatrix.op2')
+        bdf_filename = MODEL_PATH / 'matrix' / 'matrix.dat'
+        op2_filename = MODEL_PATH / 'matrix' / 'mymatrix.op2'
         matrices = {
-            'A' : True,
-            'B' : False,
-            'ATB' : False,
-            'BTA' : False,
-            'MYDOF' : True,
+            'A': True,
+            'B': False,
+            'ATB': False,
+            'BTA': False,
+            'MYDOF': True,
         }
         model = read_bdf(bdf_filename, log=log)
 
-        dmi_a = model.dmis['A']
+        dmi_a = model.dmi['A']
         assert dmi_a.shape == (4, 2), 'shape=%s' % (dmi_a.shape)
         #print('dmi_a\n', dmi_a)
         a, rows_reversed, cols_reversed = dmi_a.get_matrix(is_sparse=False, apply_symmetry=False)
@@ -139,18 +139,18 @@ class TestOP2Matrix(unittest.TestCase):
 
     def test_op2_dmi_02(self):
         """tests DMI matrix style"""
-        bdf_filename = os.path.join(MODEL_PATH, 'matrix', 'matrix.dat')
-        op2_filename = os.path.join(MODEL_PATH, 'matrix', 'mymatrix.op2')
+        bdf_filename = MODEL_PATH / 'matrix' / 'matrix.dat'
+        op2_filename = MODEL_PATH / 'matrix' / 'mymatrix.op2'
         matrices = {
-            'A' : True,
-            'B' : False,
-            'ATB' : False,
-            'BTA' : False,
-            'MYDOF' : True,
+            'A': True,
+            'B': False,
+            'ATB': False,
+            'BTA': False,
+            'MYDOF': True,
         }
         model = read_bdf(bdf_filename, debug=False)
 
-        dmi_a = model.dmis['A']
+        dmi_a = model.dmi['A']
         a, rows_reversed, cols_reversed = dmi_a.get_matrix(is_sparse=False, apply_symmetry=False)
         #print('model.dmi.A =\n%s' % dmi_a)
         #print('model.dmi.A =\n%s' % str(a))
@@ -218,6 +218,7 @@ def compare_dmi_matrix_from_bdf_to_op2(bdf_model, op2_model, expected, actual, m
 
 
 if __name__ == '__main__':  # pragma: no cover
+    import os
     ON_RTD = os.environ.get('READTHEDOCS', None) == 'True'
     if not ON_RTD:
         unittest.main()

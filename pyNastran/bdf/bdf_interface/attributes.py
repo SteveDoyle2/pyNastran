@@ -871,6 +871,8 @@ class BDFAttributes:
 
                 # acoustic
                 'CHACAB', 'CAABSF', 'CHACBR',
+                # nastran95
+                'CTRSHL', #'CQUAD1'
             ],
             'normals' : ['SNORM'],
             'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1'],
@@ -991,7 +993,7 @@ class BDFAttributes:
             'gusts' : ['GUST', 'GUST2'],
             'flutters' : ['FLUTTER'],
             'flfacts' : ['FLFACT'],
-            'mkaeros' : ['MKAERO1', 'MKAERO2'],
+            'mkaeros' : ['MKAERO1', 'MKAERO2', 'MKAEROZ'],
             'aecomps' : ['AECOMP', 'AECOMPL'],
             'aefacts' : ['AEFACT'],
             'aelinks' : ['AELINK'],
@@ -1077,7 +1079,7 @@ class BDFAttributes:
             'qsets' : ['QSET', 'QSET1'],
             'csets' : ['CSET', 'CSET1'],
             'usets' : ['USET', 'USET1'],
-            'sets' : ['SET1', 'SET3'],
+            'sets' : ['SET1', 'SET2', 'SET3'],
 
             # super-element sets
             'se_bsets' : ['SEBSET', 'SEBSET1'],
@@ -1150,6 +1152,10 @@ class BDFAttributes:
             ## other
             #'INCLUDE',  # '='
             #'ENDDATA',
+            #------------------
+            # zone
+            'panlsts': ['PANLST1', 'PANLST2', 'PANLST3'],
+            'pafoils': ['PAFOIL7'],
         }  # type: dict[str, list[str]]
         self._type_to_slot_map = self.get_rslot_map()
 

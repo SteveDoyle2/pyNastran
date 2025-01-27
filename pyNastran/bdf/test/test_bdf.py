@@ -1200,10 +1200,10 @@ def check_subcase_dmig_matrix(fem: BDF,
     print(f'{matrix_name}_name')
     if is_real:
         for scale, name in scale_names:
-            dmig = fem.dmigs[name]
+            dmig = fem.dmig[name]
     else:
         for scale1, scale2, name in scale_names:
-            dmig = fem.dmigs[name]
+            dmig = fem.dmig[name]
 
     del dmig
 

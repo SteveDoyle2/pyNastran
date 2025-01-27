@@ -17,7 +17,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, searchsorted_filter, parse_check) # Property, hslice_by_idim, make_idim
+    Element, searchsorted_filter, parse_check,
+    save_ifile_comment) # Property, hslice_by_idim, make_idim
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
     array_default_int, # array_default_float,
@@ -496,19 +497,25 @@ class CTRIAX(AxisymmetricShellElement):
               property_id: np.ndarray,
               nodes: np.ndarray,
               theta: np.ndarray,
-              mcid: np.ndarray) -> None:
+              mcid: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
             theta = np.hstack([self.theta, theta])
             mcid = np.hstack([self.mcid, mcid])
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
         self.mcid = mcid
-        self.n = len(element_id)
+        self.n = len(ifile)
 
     def __apply_slice__(self, element: CTRIAX, i: np.ndarray) -> None:
         element.element_id = self.element_id[i]
@@ -633,30 +640,39 @@ class CTRIAX6(Element):
         nodes = np.zeros((ncards, 6), dtype=idtype)
         #mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (eid, mid, nids, thetai, ifilei, comment) = card
+            (eid, mid, nids, thetai, ifilei, commenti) = card
             ifile[icard] = ifilei
             element_id[icard] = eid
             material_id[icard] = mid
             nodes[icard, :] = nids
             theta[icard] = thetai
-        self._save(element_id, material_id, nodes, theta)
+        self._save(element_id, material_id, nodes, theta,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, element_id: np.ndarray,
               material_id: np.ndarray,
               nodes: np.ndarray,
-              theta: np.ndarray) -> None:
+              theta: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             material_id = np.hstack([self.material_id, material_id])
             nodes = np.vstack([self.nodes, nodes])
             theta = np.hstack([self.theta, theta])
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.material_id = material_id
         self.nodes = nodes
         self.theta = theta
+        self.n = len(ifile)
 
     def __apply_slice__(self, element: CTRIAX6, i: np.ndarray) -> None:
         assert len(self.material_id) > 0
@@ -828,18 +844,25 @@ class CQUADX(AxiShellElement):
               property_id: np.ndarray,
               nodes: np.ndarray,
               theta: np.ndarray,
-              mcid: np.ndarray) -> None:
+              mcid: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
             mcid = np.hstack([self.mcid, mcid])
             theta = np.hstack([self.theta, theta])
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.mcid = mcid
         self.theta = theta
+        self.n = len(ifile)
 
     def set_from_op2(self, element_id, property_id, nodes):
         ncards = len(element_id)
@@ -979,16 +1002,23 @@ class CQUADX4(AxisymmetricShellElement):
     def _save(self, element_id: np.ndarray,
               property_id: np.ndarray,
               nodes: np.ndarray,
-              theta: np.ndarray) -> None:
+              theta: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
             theta = np.hstack([self.theta, theta])
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
+        self.n = len(ifile)
 
     def __apply_slice__(self, element: CQUADX4, i: np.ndarray) -> None:
         element.element_id = self.element_id[i]
@@ -1130,16 +1160,23 @@ class CQUADX8(AxisymmetricShellElement):
     def _save(self, element_id: np.ndarray,
               property_id: np.ndarray,
               nodes: np.ndarray,
-              theta: np.ndarray) -> None:
+              theta: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
             theta = np.hstack([self.theta, theta])
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
+        self.n = len(ifile)
 
     def __apply_slice__(self, element: CQUADX8, i: np.ndarray) -> None:
         element.element_id = self.element_id[i]
@@ -1244,16 +1281,23 @@ class CTRAX3(AxisymmetricShellElement):
     def _save(self, element_id: np.ndarray,
               property_id: np.ndarray,
               nodes: np.ndarray,
-              theta: np.ndarray) -> None:
+              theta: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
             theta = np.hstack([self.theta, theta])
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
+        self.n = len(ifile)
 
     def __apply_slice__(self, element: CTRAX3, i: np.ndarray) -> None:
         element.element_id = self.element_id[i]
@@ -1372,16 +1416,23 @@ class CTRAX6(AxisymmetricShellElement):
     def _save(self, element_id: np.ndarray,
               property_id: np.ndarray,
               nodes: np.ndarray,
-              theta: np.ndarray) -> None:
+              theta: np.ndarray,
+              ifile=None, comment=None) -> None:
+        ncards = len(element_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.element_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             element_id = np.hstack([self.element_id, element_id])
             property_id = np.hstack([self.property_id, property_id])
             nodes = np.vstack([self.nodes, nodes])
             theta = np.hstack([self.theta, theta])
+        save_ifile_comment(self, ifile, comment)
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.theta = theta
+        self.n = len(ifile)
 
     def __apply_slice__(self, element: CTRAX6, i: np.ndarray) -> None:
         element.element_id = self.element_id[i]

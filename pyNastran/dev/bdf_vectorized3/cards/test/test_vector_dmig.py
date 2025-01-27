@@ -13,7 +13,7 @@ TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'cards', 'test')
 
 class TestDTI(unittest.TestCase):
 
-    def test_dti_units(self):
+    def test_vector_dti_units(self):
         """tests DTI,UNITS"""
         model = BDF(debug=False)
         fields = {
@@ -29,7 +29,7 @@ class TestDTI(unittest.TestCase):
         #print(dti.write_card())
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dti_units2(self):
+    def test_vector_dti_units2(self):
         """tests DTI,UNITS"""
         model = BDF(debug=False)
         fields = {
@@ -47,7 +47,7 @@ class TestDTI(unittest.TestCase):
 
 class TestDMI(unittest.TestCase):
 
-    def test_dmi_01(self):
+    def test_vector_dmi_01(self):
         """tests a DMI card"""
         lines = ['DMI,Q,0,6,1,0,,4,4']
         model = BDF(debug=False)
@@ -59,7 +59,7 @@ class TestDMI(unittest.TestCase):
         dmi.write_card(size, 'dummy')
         #dmi.raw_fields()
 
-    def test_dmi_02(self):
+    def test_vector_dmi_02(self):
         data = """
 DMI         W2GJ       0       2       1       0            1200       1
 DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
@@ -193,7 +193,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         os.remove('dmi_out.bdf')
         save_load_deck(model2, run_mass_properties=False)
 
-    def test_dmi_complex(self):
+    def test_vector_dmi_complex(self):
         """tests a complex DMI"""
         #DMI QQQ 0 2 3 3 4 2
         #DMI QQQ 1 1 1.0 2.0 3.0 0.0 3
@@ -248,7 +248,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
 
 
 class TestDMIGReal(unittest.TestCase):
-    def test_dmig_1(self):
+    def test_vector_dmig_1(self):
         """Tests DMIG reading"""
         model = BDF(debug=False)
         bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
@@ -271,7 +271,7 @@ class TestDMIGReal(unittest.TestCase):
         a_matrix.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_2(self):
+    def test_vector_dmig_2(self):
         model = BDF(debug=False)
         bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
@@ -296,7 +296,7 @@ class TestDMIGReal(unittest.TestCase):
         #model2.read_bdf(bdf_name, xref=False, punch=True)
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_3(self):
+    def test_vector_dmig_3(self):
         model = BDF(debug=False)
         bdf_filename = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_filename, xref=False, punch=True)
@@ -331,7 +331,7 @@ class TestDMIGReal(unittest.TestCase):
         a_matrix.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_4(self):
+    def test_vector_dmig_4(self):
         lines = ['DMIG    ENFORCE 0       1       1       0']
         model = BDF(debug=False)
         card = model._process_card(lines)
@@ -343,7 +343,7 @@ class TestDMIGReal(unittest.TestCase):
         #dmi.raw_fields()
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_5(self):
+    def test_vector_dmig_5(self):
         cards = [
             ['DMIG, A, 0, 9, 1, 1,  ,    , 1'],
             ['DMIG, A, 1, 0,  , 2, 1, 1.0,'],
@@ -361,7 +361,7 @@ class TestDMIGReal(unittest.TestCase):
         #a_matrix.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_6(self):
+    def test_vector_dmig_6(self):
         cards = [
             ['DMIG, A, 1, 0,  , 2, 1, 1.0,'],
             ['DMIG, A, 0, 9, 1, 1,  ,    , 1'],
@@ -380,7 +380,7 @@ class TestDMIGReal(unittest.TestCase):
         #a_matrix.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_7(self):
+    def test_vector_dmig_7(self):
         cards = [
             ['DMIG, A, 0, 9, 1, 1,  ,    , 1'],
             ['DMIG, A, 1, ,  , 2, 1, 1.0,'],
@@ -399,7 +399,7 @@ class TestDMIGReal(unittest.TestCase):
         #a_matrix.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_8(self):
+    def test_vector_dmig_8(self):
         """symmetric"""
         cards = [
             ['DMIG,AMTRXX,0,6,1,0'],
@@ -419,7 +419,7 @@ class TestDMIGReal(unittest.TestCase):
         a_matrix.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_9(self):
+    def test_vector_dmig_9(self):
         pch_filename = os.path.join(TEST_PATH, 'dmig.pch')
         model = read_bdf(pch_filename, debug=False, punch=True)
         vax = model.dmig['VAX']
@@ -435,7 +435,7 @@ class TestDMIGReal(unittest.TestCase):
         assert list(sorted(vax_dict_row)) == list(sorted(vax_dict_row_expected)), 'vax_dict_row=%s vax_dict_row_expected=%s' % (vax_dict_row, vax_dict_row_expected)
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_10(self):
+    def test_vector_dmig_10(self):
         """tests the add card method with a real DMIG"""
         model = BDF(debug=False)
         name = 'DMIG_1'
@@ -475,7 +475,7 @@ class TestDMIGReal(unittest.TestCase):
 
         save_load_deck(model, run_test_bdf=False, run_mass_properties=False)
 
-    def test_dmig_sparse(self):
+    def test_vector_dmig_sparse(self):
         """tests dmig_sparse.pch"""
         bdf_filename = os.path.join(TEST_PATH, 'dmig_sparse.pch')
         model = read_bdf(bdf_filename, validate=True, xref=True, punch=True,
@@ -493,7 +493,7 @@ class TestDMIGReal(unittest.TestCase):
         get_matrices(model)
         #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
 
-    def test_dmig_sparse2(self):
+    def test_vector_dmig_sparse2(self):
         """tests dmig_sparse.pch"""
         model = BDF(debug=True, log=None, mode='msc')
         name = 'TEST'
@@ -528,7 +528,7 @@ class TestDMIGReal(unittest.TestCase):
         get_matrices(model)
         #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
 
-    def test_dmig_symmetry(self):
+    def test_vector_dmig_symmetry(self):
         """testing symmetric DMIGs"""
         model = BDF(debug=False, log=None, mode='msc')
 
@@ -586,7 +586,7 @@ class TestDMIGReal(unittest.TestCase):
         #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_rectangular(self):
+    def test_dvector_mig_rectangular(self):
         """testing symmetric DMIGs"""
         model = BDF(debug=False, log=None, mode='msc')
 
@@ -646,7 +646,7 @@ class TestDMIGReal(unittest.TestCase):
         get_matrices(model)
         #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
 
-    def test_dmig_column(self):
+    def test_vector_dmig_column(self):
         """testing symmetric DMIGs"""
         model = BDF(debug=False, log=None, mode='msc')
 
@@ -700,7 +700,7 @@ class TestDMIGReal(unittest.TestCase):
         get_matrices(model)
         #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
 
-    def test_dmig_uaccel(self):
+    def test_vector_dmig_uaccel(self):
         """tests DMIG,UACCEL"""
         model = BDF(debug=None)
 
@@ -734,7 +734,7 @@ class TestDMIGReal(unittest.TestCase):
 
 
 class TestDMIGImag(unittest.TestCase):
-    def test_dmig_1(self):
+    def test_vector_dmig_1(self):
         model = BDF(debug=False)
         bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
@@ -761,7 +761,7 @@ class TestDMIGImag(unittest.TestCase):
         a_matrix.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_2(self):
+    def test_vector_dmig_2(self):
         model = BDF(debug=False)
         bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
@@ -791,7 +791,7 @@ class TestDMIGImag(unittest.TestCase):
         a_matrix.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_3(self):
+    def test_vector_dmig_3(self):
         """tests the add card method with a complex DMIG"""
         model = BDF(debug=False)
         name = 'DMIG_1'
@@ -826,7 +826,7 @@ class TestDMIGImag(unittest.TestCase):
         dmik.get_matrix()
         save_load_deck(model, run_mass_properties=False)
 
-    def test_dmig_4(self):
+    def test_vector_dmig_4(self):
         """tests the add card method with a complex polar DMIG"""
         model = BDF(debug=False)
         name = 'DMIG_1'
@@ -863,7 +863,7 @@ class TestDMIGImag(unittest.TestCase):
 
 
 class TestDMIAX(unittest.TestCase):
-    def test_dmiax(self):
+    def test_vector_dmiax(self):
         """tests DMIAX"""
         model = BDF(debug=None)
 

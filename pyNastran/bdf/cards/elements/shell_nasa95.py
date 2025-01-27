@@ -324,6 +324,9 @@ class CTRSHL(TriShell):
 
     """
     type = 'CTRSHL'
+    @classmethod
+    def _init_from_empty(cls):
+        return CTRSHL(1, 1, [1, 2, 3, 4, 5, 6], 0.0)
     def __init__(self, eid: int, pid: int, nids: list[int],
                  theta: float,
                  comment: str='') -> None:

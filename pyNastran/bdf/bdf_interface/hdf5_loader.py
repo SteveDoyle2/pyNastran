@@ -1028,11 +1028,11 @@ def _load_dmig(model, name, sub_group, class_type):
     dmig = class_obj(name, ifo, tin, tout, polar, ncols,
                      GCj, GCi, Real, Complex=Complex, comment='', finalize=True)
     assert class_type in ['DMIG', 'DMIK', 'DMIJ', 'DMIJI'], class_type
-    slot_name = class_type.lower() + 's'
+    slot_name = class_type.lower()
     slot = getattr(model, slot_name)
     slot[name] = dmig
     str(dmig)
-    #model.dmigs[name] = dmig
+    #model.dmig[name] = dmig
 
 def _load_dmiax(model, name, sub_group):
     """loads the DMIAX"""

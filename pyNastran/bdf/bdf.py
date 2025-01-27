@@ -51,8 +51,9 @@ from .cards.utils import wipe_empty_fields
 
 #from .write_path import write_include
 from .bdf_interface.assign_type import (
-    integer, integer_or_string, string)
+    integer, double, integer_or_string, string)
 
+from pyNastran.bdf.cards.deqatn import split_deqatn_line0
 from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from .cards.elements.elements import (
     CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL,
@@ -1491,50 +1492,65 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             unused
 
         """
+        log = self.log
         cards_dict, card_count = self.get_bdf_cards_dict(
             bulk_data_lines, bulk_data_ilines)
 
         #reject_cards = {'ADAPT'}
-        singletons = {'grdset', 'acmodl', 'mdlprm', 'cyax', 'axic'}
+        singletons = {
+            'grdset', 'acmodl', 'mdlprm', 'cyax', 'axic',
+            'aero', 'aeros', 'doptprm', 'dtable', 'modtrak'}
+        string_slots_many = ['dmi', 'dmig', 'dmij', 'dmiji', 'dmik', 'dmiax', 'dti']
         string_names = [
             'PARAM',
-            'DMI', 'DMIG', 'DMIJ', 'DMIK',
-            'USET', 'USET1',
+            #'DMI', 'DMIG', 'DMIJ', 'DMIK',
+            'USET', 'USET1', 'DSCREEN',
         ]
         dict_list_slots = [
             'loads', 'spcs', 'mpcs', 'nsms', 'dload_entries',
-            'load_combinations', 'tics', 'dareas', 'frequencies',
+            'load_combinations', 'spcadds', 'mpcadds', 'nsmadds',
+            'tics', 'dareas', 'frequencies',
+            'bcs', 'delays', 'dphases', 'matcid',
         ]
-        # dict_list_cards = [
-            # dict[spc_id][list_index]
-        #     'FORCE', 'FORCE1', 'FORCE2',
-        #     'MOMENT', 'MOMENT1', 'MOMENT2',
-        #     'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GMLOAD',
-        #     'SPC', 'SPC1', 'MPC', 'SPCD', 'GMSPC',
-        #     'NSM', 'NSML', 'NSM1', 'NSML1',
-        #     'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5',
-        #     'TEMP',
-        # ]
-        #special_cards = [
-            #'SPC', 'SPC1', 'MPC',
-        #]
-        from pyNastran.bdf.cards.deqatn import split_deqatn_line0
+        list_slots = [
+            'asets', 'bsets', 'csets', 'omits', 'qsets',
+            'se_bsets', 'se_csets', 'se_qsets',
+            'mkaeros', 'monitor_points', 'suport',
+        ]
+        zona_cards_to_skip = ['STFLOW', 'TRIMVAR', 'AEROZ']
+        zona_slots_to_skip = ['panlsts', 'pafoils']
         rslot_to_type_map = self.get_rslot_map()
+
         for card_name, cards_list in cards_dict.items():
-            if card_name not in self.cards_to_read:
+            if (card_name not in self.cards_to_read or card_name in zona_cards_to_skip):
                 for (comment, card_lines, ifile_iline) in cards_list:
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
                 continue
+
             slot_name = rslot_to_type_map[card_name]
+            if slot_name in zona_slots_to_skip:
+                for (comment, card_lines, ifile_iline) in cards_list:
+                    self.reject_lines.append([_format_comment(comment)] + card_lines)
+                continue
+
             #print(card_name, slot_name)
             slot = getattr(self, slot_name)
-
             if card_name == 'DEQATN':
                 #, 'PBRSECT', 'PBMSECT']:
                 for (comment, card_lines, ifile_iline) in cards_list:
                     equation_id, name_eqid, a, b = split_deqatn_line0(card_lines)
                     assert equation_id not in slot, (card_name, slot_name)
                     slot[equation_id] = (comment, card_lines)
+
+            elif slot_name in string_slots_many:
+                # DMI, DMIG; no PARAM
+                assert isinstance(slot, dict), slot_name
+                for (comment, card_lines, ifile_iline) in cards_list:
+                    fields = to_fields_line0(card_lines[0], card_name)
+                    idi = fields[1].strip()
+                    if idi not in slot:
+                        slot[idi] = []
+                    slot[idi].append((comment, card_lines))
 
             elif card_name in string_names:
                 # DMI, PARAM
@@ -1545,25 +1561,30 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     assert idi not in slot, (card_name, slot_name)
                     slot[idi] = (comment, card_lines)
 
+            elif slot_name in list_slots:
+                # MKAERO, SUPORT
+                assert isinstance(slot, list), (card_name, slot_name)
+                for (comment, card_lines, ifile_iline) in cards_list:
+                    #print('dict_listA', slot_name, card_lines[0])
+                    slot.append((comment, card_lines))
+
             elif slot_name in dict_list_slots:
                 # FORCE, PLOAD2, ...
                 # load_id, index
-                assert isinstance(slot, dict), (card_name, slot_name)
+                assert isinstance(slot, dict), (card_name, slot_name, type(slot))
                 for (comment, card_lines, ifile_iline) in cards_list:
                     #print('dict_listA', slot_name, card_lines[0])
                     fields = to_fields_line0(card_lines[0], card_name)
                     idi = int(fields[1].strip())
-                    # assert idi not in slot, card_name
                     if idi not in slot:
                         slot[idi] = []
-                    #sloti = slot[idi]
-                    #assert isinstance(sloti, list), slot_name
                     slot[idi].append((comment, card_lines))
+
             elif slot_name in singletons:
                 for (comment, card_lines, ifile_iline) in cards_list:
                     setattr(self, slot_name, (comment, card_lines))
             else:
-                assert isinstance(slot, dict), (card_name, slot_name)
+                assert isinstance(slot, dict), (card_name, slot_name, type(slot))
                 for (comment, card_lines, ifile_iline) in cards_list:
                     fields = to_fields_line0(card_lines[0], card_name)
                     try:
@@ -1571,7 +1592,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     except ValueError:
                         raise ValueError(f'Cant parse {fields[1]!r} to an integer\n' +
                                            ''.join(card_lines))
-                    assert idi not in slot, (card_name, slot_name)
+                    if idi in slot:
+                        raise RuntimeError(f'Cannot replace duplicate card:\n' +
+                                           ''.join(slot[idi][1]) + 'with:\n'
+                                           ''.join(card_lines))
                     slot[idi] = (comment, card_lines)
         return
 
@@ -3140,13 +3164,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 self._dmig_temp[name].append((card_obj, comment))
         return dmig
 
-    def _prepare_dmix(self, class_obj, add_method, card_obj, comment='') -> DMI | DMIJ | DMIJI | DMIK:
+    def _prepare_dmix(self, class_obj, add_method, card_obj,
+                      comment: str='') -> DMI | DMIJ | DMIJI | DMIK:
         """adds a DMI, DMIJ, DMIJI, or DMIK"""
         field2 = integer(card_obj, 2, 'flag')
         if field2 == 0:
             dmix = class_obj.add_card(card_obj, comment=comment)
             add_method(dmix)
         else:
+            if class_obj.type not in {'DMIAX', 'DTI', 'DMIG', 'DMIK', 'DMIJI'}:
+                field4 = double(
+                    card_obj, 4, f'{class_obj.type} column',
+                    end=('did you mean to set field 2 to 0 to '
+                         f'define the header; field2={field2}'))
             dmix = -1
             name = string(card_obj, 1, 'name')
             self._dmig_temp[name].append((card_obj, comment))

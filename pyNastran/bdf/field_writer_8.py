@@ -245,7 +245,7 @@ def print_field_8(value: Optional[int | float | str]) -> str:
     else:
         field = '%8s' % value
     if len(field) != 8:
-        msg = 'field=%r is not 8 characters long...raw_value=%r' % (field, value)
+        msg = f'field={field!r} is not 8 characters long...raw_value={value!r}'
         raise RuntimeError(msg)
     return field
 

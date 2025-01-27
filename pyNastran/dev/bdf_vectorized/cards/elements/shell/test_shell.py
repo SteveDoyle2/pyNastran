@@ -10,7 +10,7 @@ from pyNastran.dev.bdf_vectorized.bdf import BDF
 #from pyNastran.dev.bdf_vectorized.cards.elements.shell.pcomp import PCOMP
 from pyNastran.dev.bdf_vectorized.cards.elements.shell.pshell import PSHELL
 
-class TestShells(unittest.TestCase):
+class TestShellsV1(unittest.TestCase):
     def _make_cquad4(self, model, rho, nu, G, E, t, nsm):
         eid = 10
         pid = 20
