@@ -98,24 +98,27 @@ def make_flutter_response(f06_filename: PathLike,
             line = f06_file.readline()
             iline += 1
             #log.debug(f'A: line[{iline:d}] = {line!r}')
+            # if iline > 930:
+            #     asdf
+
             if 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line:
                 print(f'line = {line}')
                 asdf
-            elif 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
-                Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
-                asdf
-                isort = np.argsort(Khh)
-                # matrices['MHH'].append(np.diag(Mhh[isort]))
-                # matrices['BHH'].append(np.diag(Bhh[isort]))
-                # matrices['KHH'].append(np.diag(Khh[isort]))
-                matrices['MHH'] = np.diag(Mhh[isort])
-                matrices['BHH'] = np.diag(Bhh[isort])
-                matrices['KHH'] = np.diag(Khh[isort])
-                del Mhh, Bhh, Khh
+            # elif 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
+            #     Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
+            #     asdf
+            #     isort = np.argsort(Khh)
+            #     # matrices['MHH'].append(np.diag(Mhh[isort]))
+            #     # matrices['BHH'].append(np.diag(Bhh[isort]))
+            #     # matrices['KHH'].append(np.diag(Khh[isort]))
+            #     matrices['MHH'] = np.diag(Mhh[isort])
+            #     matrices['BHH'] = np.diag(Bhh[isort])
+            #     matrices['KHH'] = np.diag(Khh[isort])
+            #     del Mhh, Bhh, Khh
 
             while ('SUBCASE ' not in line and
                    'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' not in line and
-                   #'R E A L   E I G E N V A L U E S' not in line and
+                   ('R E A L   E I G E N V A L U E S' not in line) and #  and load_eigenvalues
                    'FLUTTER  SUMMARY' not in line and
                    'EIGENVECTOR FROM THE' not in line):
                 line = f06_file.readline()
@@ -141,7 +144,7 @@ def make_flutter_response(f06_filename: PathLike,
                 sline = line.strip().split()
                 isubcase = sline.index('SUBCASE')
                 new_subcase = int(sline[isubcase + 1])
-                #print('subcasei=%r iline=%s' % (new_subcase, iline))
+                #log.debug(f'subcasei={new_subcase} iline={iline:d}')
                 if new_subcase > subcase:
                     log.debug('subcase=%s -> new_subcase=%s' % (subcase, new_subcase))
                     log.debug('modes1 = %s' % modes)
@@ -161,15 +164,17 @@ def make_flutter_response(f06_filename: PathLike,
                     subcase = new_subcase
                     #break
                 continue
-            elif 'R E A L   E I G E N V A L U E S' in line:
-                Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
-                isort = np.argsort(Khh)
-                # matrices['MHH'].append(np.diag(Mhh[isort]))
-                # matrices['BHH'].append(np.diag(Bhh[isort]))
-                # matrices['KHH'].append(np.diag(Khh[isort]))
-                matrices['MHH'] = np.diag(Mhh[isort])
-                matrices['BHH'] = np.diag(Bhh[isort])
-                matrices['KHH'] = np.diag(Khh[isort])
+            # elif 'R E A L   E I G E N V A L U E S' in line:
+            #     Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
+            #     isort = np.argsort(Khh)
+            #     # matrices['MHH'].append(np.diag(Mhh[isort]))
+            #     # matrices['BHH'].append(np.diag(Bhh[isort]))
+            #     # matrices['KHH'].append(np.diag(Khh[isort]))
+            #     matrices['MHH'] = np.diag(Mhh[isort])
+            #     matrices['BHH'] = np.diag(Bhh[isort])
+            #     matrices['KHH'] = np.diag(Khh[isort])
+            #     data['lama'] = (matrices['MHH'], matrices['BHH'], matrices['KHH'])
+
             elif 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line:
                 iline, line, opgwg = _read_opgwg(f06_file, iline, line)
                 data['opgwg'] = opgwg
@@ -181,7 +186,8 @@ def make_flutter_response(f06_filename: PathLike,
 
                 iline, line, ieigenvector, methodi = _check_for_eigenvector(
                     f06_file, iline, line, eigr_eigi_velocity_list,
-                    eigenvectors, ieigenvector, log)
+                    matrices, eigenvectors, ieigenvector,
+                    load_eigenvalues, log)
 
                 #short_line = line.strip().replace('   ', ' ')
                 #log.debug(f'i={iline} {short_line!r}')
@@ -505,6 +511,7 @@ def _read_opgwg(f06_file: TextIO, iline: int,
         'mass': mass,
         'mass_error': mass_error.sum(),
         'cg_error': cg_error.sum(),
+        'I(S)': IS,
     }
     #print(opgwg)
     return iline, line, opgwg
@@ -945,11 +952,27 @@ def _find_modes_to_keep(response: FlutterResponse,
 
 def _check_for_eigenvector(f06_file: TextIO, iline: int, line: str,
                            eigr_eigi_velocity_list: list[Crossing],
+                           matrices: dict[str, np.ndarray],
                            eigenvectors: list[np.ndarray],
                            ieigenvector: int,
+                           load_eigenvalues: bool,
                            log: SimpleLogger) -> tuple[int, str, int]:
     methodi = ''
-    if 'EIGENVECTOR FROM THE' in line:
+    if 'R E A L   E I G E N V A L U E S' in line:
+        frequencies, Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
+
+        isort = np.argsort(Khh)
+        # matrices['MHH'].append(np.diag(Mhh[isort]))
+        # matrices['BHH'].append(np.diag(Bhh[isort]))
+        # matrices['KHH'].append(np.diag(Khh[isort]))
+        if load_eigenvalues:
+            matrices['freq'] = frequencies[isort]
+            matrices['MHH'] = np.diag(Mhh[isort])
+            matrices['BHH'] = np.diag(Bhh[isort])
+            matrices['KHH'] = np.diag(Khh[isort])
+        del frequencies, Mhh, Bhh, Khh
+
+    elif 'EIGENVECTOR FROM THE' in line:
         # '                                               EIGENVECTOR FROM THE  PKNL METHOD
         # '   EIGENVALUE =    -9.88553E-02    1.71977E+01       VELOCITY =     1.52383E+02
         # '

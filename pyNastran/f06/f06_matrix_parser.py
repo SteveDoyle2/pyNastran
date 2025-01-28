@@ -81,7 +81,7 @@ def _read_f06_matrices(f06_file: TextIO,
             continue
 
         if 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
-            Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, i)
+            frequencies, Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, i)
             isort = np.argsort(Khh)
             #matrices['MHH'].append(np.diag(Mhh[isort]))
             #matrices['BHH'].append(np.diag(Bhh[isort]))
@@ -154,7 +154,14 @@ def read_real_eigenvalues(f06_file: TextIO,
                           log: SimpleLogger,
                           line: str, i: int) -> tuple[np.ndarray,
                                                       np.ndarray,
+                                                      np.ndarray,
                                                       np.ndarray]:
+    """
+    Starts with line='R E A L   E I G E N V A L U E S'
+
+    Parameters
+    ----------
+    """
     line1 = f06_file.readline()
     if '(' in line1 and ')' in line1:
         # (ACTUAL MODES USED IN THE DYNAMIC ANALYSIS)
@@ -171,30 +178,34 @@ def read_real_eigenvalues(f06_file: TextIO,
     #    NO.       ORDER                                                                       MASS              STIFFNESS
     #        1         1        4.637141E+01        6.809655E+00        1.083790E+00        1.000000E+00        4.637141E+01
     #        2         2        2.369379E+02        1.539279E+01        2.449838E+00        1.000000E+00        2.369379E+02
+    frequencies_list = []
     Mhh_list = []
     Khh_list = []
     Bhh_list = []
-    log.debug("mode_num, extraction_order, eigenvalue, radians, cycles, gen_mass, gen_stiffness")
+    #log.debug("mode_num, extraction_order, eigenvalue, radians, cycles, gen_mass, gen_stiffness")
     while len(line_strip):
         sline = line_strip.split()
         if 'NASTRAN' in sline or 'PAGE' in sline:
             break
-        log.debug(f'eigenvalue: {line_strip}')
+        #log.debug(f'eigenvalue: {line_strip}')
         assert len(sline) == 7, sline
-        mode_num, extraction_order, eigenvalue_str, radians, cycles, gen_mass_str, gen_stiffness_str = sline
+        mode_num, extraction_order, eigenvalue_str, radians, cycle_str, gen_mass_str, gen_stiffness_str = sline
+        cycle = float(cycle_str)
+        #print(f'mode_num={mode_num} cycle={cycle}')
         eigenvalue = float(eigenvalue_str)
         gen_mass = float(gen_mass_str)
+        frequencies_list.append(cycle)
         Mhh_list.append(gen_mass)
         Bhh_list.append(0.)
         Khh_list.append(eigenvalue)
         line = f06_file.readline()
         line_strip = line.strip()
         i += 1
-
+    frequencies = np.array(frequencies_list, dtype='float64')
     Mhh = np.array(Mhh_list, dtype='float64')
     Bhh = np.array(Bhh_list, dtype='float64')
     Khh = np.array(Khh_list, dtype='float64')
-    return Mhh, Bhh, Khh
+    return frequencies, Mhh, Bhh, Khh
 
 
 def _read_matrix(f06_file: TextIO,

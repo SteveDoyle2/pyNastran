@@ -23,13 +23,14 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False):
     else:
         argv = [FILE] + sys.argv[2:]  # ['run_jobs'] + sys.argv[2:]
     print(f'argv = {argv}')
-    parser = argparse.ArgumentParser(prog='run_jobs')
 
+    parser = argparse.ArgumentParser(prog='run_jobs')
     parser.add_argument("bdf_dirname_filename", help='path to Nastran filename')
     #parser.add_argument('-o', '--overwrite', default=False, help='overwrite files')
     parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran execuable')
     parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
-    parser.add_argument('-r', '--recursive', action='store_false', help='recursively search for directories')
+    parser.add_argument('-r', '--recursive', action='store_true', help='recursively search for directories')
+    parser.add_argument('--test', action='store_false', help='skip run the jobs')
     #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
     parser.add_argument('-v', '--version', action='version',
                         version=pyNastran.__version__)
@@ -37,7 +38,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False):
     args = parser.parse_args(args=argv[1:])
     if not quiet:  # pragma: no cover
         print(args)
-
+    run = args.test
     recursive = args.recursive
     bdf_filename_dirname = Path(args.bdf_dirname_filename)
     nastran_exe = args.exe
@@ -52,7 +53,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False):
     extensions = ['.dat', '.bdf']
     run_jobs(bdf_filename_dirname, nastran_exe,
              extensions=extensions, cleanup=cleanup,
-             recursive=True)
+             recursive=recursive, run=run)
 
 
 def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
@@ -95,10 +96,17 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
         else:  # pragma: no cover
             raise NotImplementedError(bdf_filename_dirnamei)
         bdf_filenames.extend(bdf_filenamesi)
+
+    bdf_filenames_run = []
     for bdf_filename in bdf_filenames:
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
-    assert len(bdf_filenames) > 0, bdf_filenames
-    return bdf_filenames
+        base, ext = os.path.splitext(str(bdf_filename))
+        op2_filename = Path(base + '.op2')
+        if op2_filename.exists():
+            continue
+        bdf_filenames_run.append(bdf_filename)
+    assert len(bdf_filenames_run) > 0, bdf_filenames_run
+    return bdf_filenames_run
 
 
 def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
@@ -115,6 +123,7 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
     """
     bdf_filenames = get_bdf_filenames_to_run(
         bdf_filename_dirname, extensions, recursive=recursive)
+    #print(bdf_filenames, len(bdf_filenames))
 
     log = SimpleLogger(level='debug')
     bdf_filenames_str = [str(bdf_filename) for bdf_filename in bdf_filenames]
