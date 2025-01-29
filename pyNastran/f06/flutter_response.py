@@ -637,7 +637,8 @@ class FlutterResponse:
                 ncol: int=0,
                 clear: bool=False, legend: bool=True,
                 freq_tol: float=-1.0,
-                png_filename=None, show: bool=True, **legend_kwargs):
+                png_filename=None, show: bool=True,
+                **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
         Make a V-g plot
 
@@ -647,34 +648,36 @@ class FlutterResponse:
         ylabel = 'Structural Damping'
         iy = self.idamping
         scatter = True
-        self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
-                       modes=modes, fig=fig, xlim=xlim, ylim=ylim_damping,
-                       ncol=ncol,
-                       show=show, clear=clear, legend=legend,
-                       freq_tol=freq_tol,
-                       v_lines=v_lines, plot_type=plot_type, xunit=xunit,
-                       png_filename=png_filename,
-                       **legend_kwargs)
+        fig, axes = self._plot_x_y(
+            ix, iy, xlabel, ylabel, scatter,
+            modes=modes, fig=fig, xlim=xlim, ylim=ylim_damping,
+            ncol=ncol,
+            show=show, clear=clear, legend=legend,
+            freq_tol=freq_tol,
+            v_lines=v_lines, plot_type=plot_type, xunit=xunit,
+            png_filename=png_filename,
+            **legend_kwargs)
+        return fig, axes
 
     #@property
-    def flutter_speed(self, modes=None,
-                      dfreq: float=-1.0,
-                      #ddamp: float=-1.0,
-                      damping_range: Limit=None,
-                      velocity_range: Limit=None):
-        """gets the flutter speed"""
-        if damping_range is None:
-            damping_range = [None, None]
-        if velocity_range is None:
-            velocity_range = [None, None]
-
-        is_damping_range = damping_range[0] is not None or damping_range[1] is not None
-        is_velocity_range = velocity_range[0] is not None or velocity_range[1] is not None
+    # def flutter_speed(self, modes=None,
+    #                   dfreq: float=-1.0,
+    #                   #ddamp: float=-1.0,
+    #                   damping_range: Limit=None,
+    #                   velocity_range: Limit=None):
+    #     """gets the flutter speed"""
+    #     if damping_range is None:
+    #         damping_range = [None, None]
+    #     if velocity_range is None:
+    #         velocity_range = [None, None]
+    #     is_damping_range = damping_range[0] is not None or damping_range[1] is not None
+    #     is_velocity_range = velocity_range[0] is not None or velocity_range[1] is not None
 
     def get_flutter_crossings(self,
                               damping_required: Optional[list[tuple[float, float]]]=None,
                               modes=None,
                               eas_range: Optional[tuple[float, float]]=None,
+                              point_removal: Optional[list[tuple[float, float]]]=None,
                               freq_round: int=2,
                               eas_round: int=3,
                               ) -> dict[int, list[Crossing]]:
@@ -728,6 +731,9 @@ class FlutterResponse:
             easi = self.results[imode, :, self.ieas].flatten()
             freqi = self.results[imode, :, self.ifreq].flatten()
 
+            easi, dampi, freqi = remove_excluded_points(
+                easi, dampi, freqi, point_removal)
+
             crossings = []
             for damping_targeti, damping_requiredi in damping_required:
                 if dampi.max() < damping_requiredi:
@@ -756,7 +762,7 @@ class FlutterResponse:
                         #noline: bool=False, nopoints: bool=False,
                         freq_tol: float=-1.0,
                         png_filename=None,
-                        **legend_kwargs):
+                        **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
         Plots a root locus
 
@@ -799,15 +805,17 @@ class FlutterResponse:
         ix = self.ieigr
         iy = self.ieigi
         scatter = True
-        self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
-                       modes=modes, fig=fig, axes=axes,
-                       ivelocity=ivelocity,
-                       xlim=eigr_lim, ylim=eigi_lim,
-                       ncol=ncol,
-                       show=show, clear=clear, close=close, legend=legend,
-                       freq_tol=freq_tol,
-                       png_filename=png_filename,
-                       **legend_kwargs)
+        fig, axes = self._plot_x_y(
+            ix, iy, xlabel, ylabel, scatter,
+            modes=modes, fig=fig, axes=axes,
+            ivelocity=ivelocity,
+            xlim=eigr_lim, ylim=eigi_lim,
+            ncol=ncol,
+            show=show, clear=clear, close=close, legend=legend,
+            freq_tol=freq_tol,
+            png_filename=png_filename,
+            **legend_kwargs)
+        return fig, axes
 
     def plot_modal_participation(self, ivel: int, mode: int,
                                  modes=None,
@@ -1013,7 +1021,7 @@ class FlutterResponse:
                   close: bool=False, legend: bool=True,
                   freq_tol: float=-1.0,
                   png_filename=None,
-                  **legend_kwargs):
+                  **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
         builds the plot for:
          - Vg
@@ -1103,7 +1111,7 @@ class FlutterResponse:
 
         _show_save_clear_close(
             fig, show, png_filename, clear, close)
-        return axes
+        return fig, axes
 
     def _get_title(self, nlines: int=2) -> str:
         basename = os.path.basename(self.f06_filename)
@@ -1284,7 +1292,7 @@ class FlutterResponse:
         iy2 = self.ikfreq
         scatter = True
         #print(f"plot_kfreq_damping; plot_type={plot_type}")
-        fig, axes = self._plot_x_y2(
+        fig, axes2 = self._plot_x_y2(
             ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
             modes=modes, fig=fig, axes1=damp_axes, axes2=freq_axes,
             xlim=xlim, ylim1=ylim_damping, ylim2=ylim_kfreq,
@@ -1293,7 +1301,7 @@ class FlutterResponse:
             freq_tol=freq_tol,
             png_filename=png_filename,
             **kwargs)
-        return fig, axes
+        return fig, axes2
 
     def plot_kfreq_damping2(self, modes=None,
                             fig=None, damp_axes=None, freq_axes=None,
@@ -1317,7 +1325,7 @@ class FlutterResponse:
         iy1 = self.idamping
         iy2 = self.ifreq
         scatter = True
-        fig, axes = self._plot_x_y2(
+        fig, axes2 = self._plot_x_y2(
             ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
             modes=modes,
             fig=fig, axes1=damp_axes, axes2=freq_axes,
@@ -1327,7 +1335,7 @@ class FlutterResponse:
             freq_tol=freq_tol,
             png_filename=png_filename,
             **kwargs)
-        return fig, axes
+        return fig, axes2
 
     def fix(self):
         """attempts to fix the mode switching"""
@@ -2574,7 +2582,18 @@ def _is_tick(values: Optional[tuple[float, ...]], index: int):
 def remove_excluded_points(vel: np.ndarray, damping: np.ndarray, freq: np.ndarray,
                            point_removal: list[tuple[float, float]],
                            ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Removes points in a given velocity range"""
+    """
+    Removes points in a given velocity range
+
+    Parameters
+    ----------
+    vel, damping, freq : (nvel,)
+        the data for the plot
+    point_removal : list[range]
+        range : tuple[float, float]
+        points in the range will be removed; useful for deleting a single point based on EAS
+
+    """
     if point_removal is None or len(point_removal) == 0:
         return vel, damping, freq
 
