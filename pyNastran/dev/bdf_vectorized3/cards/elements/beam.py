@@ -33,9 +33,10 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_default_float_nan, get_print_card_size,)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from ..coord import COORD
@@ -54,7 +55,10 @@ class BEAMOR(BaseCard):
 
     """
     type = 'BEAMOR'
-    def __init__(self, pid, g0, x, offt='GGG', comment=''):
+    def __init__(self, pid: int, g0: Optional[int],
+                 x: Optional[list[float]],
+                 offt: str='GGG', ifile: int=0,
+                 comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -62,6 +66,12 @@ class BEAMOR(BaseCard):
         self.g0 = g0
         self.x = x
         self.offt = offt
+        self.ifile = ifile
+
+    def __deepcopy__(self, memo_dict):
+        raw_fields = self.raw_fields()
+        card = BDFCard(raw_fields)
+        return self.add_card(card, self.ifile, comment=self.comment)
 
     #@classmethod
     #def _init_from_empty(cls):
@@ -72,7 +82,7 @@ class BEAMOR(BaseCard):
         #return BEAMOR(pid, is_g0, g0, x, offt='GGG', comment='')
 
     @classmethod
-    def add_card(cls, card, ifile: int, comment: str=''):
+    def add_card(cls, card: BDFCard, ifile: int, comment: str=''):
         PROPERTY_ID_DEFAULT = 0
         GO_X_DEFAULT = 0
         OFFT_DEFAULT = ''

@@ -66,6 +66,7 @@ def make_flutter_response(f06_filename: PathLike,
 
     if log is None:
         log = get_logger2(log=None, debug=True, encoding='utf-8')
+    #log.level = 'debug'
     flutters = {}
     iline = 0
 
@@ -104,21 +105,24 @@ def make_flutter_response(f06_filename: PathLike,
             if 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line:
                 print(f'line = {line}')
                 asdf
-            # elif 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
-            #     Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
-            #     asdf
-            #     isort = np.argsort(Khh)
-            #     # matrices['MHH'].append(np.diag(Mhh[isort]))
-            #     # matrices['BHH'].append(np.diag(Bhh[isort]))
-            #     # matrices['KHH'].append(np.diag(Khh[isort]))
-            #     matrices['MHH'] = np.diag(Mhh[isort])
-            #     matrices['BHH'] = np.diag(Bhh[isort])
-            #     matrices['KHH'] = np.diag(Khh[isort])
-            #     del Mhh, Bhh, Khh
+            elif 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
+                frequencies, Mhh, Bhh, Khh = read_real_eigenvalues(
+                    f06_file, log, line, iline)
+
+                isort = np.argsort(Khh)
+                # matrices['MHH'].append(np.diag(Mhh[isort]))
+                # matrices['BHH'].append(np.diag(Bhh[isort]))
+                # matrices['KHH'].append(np.diag(Khh[isort]))
+                if load_eigenvalues:
+                    matrices['freq'] = frequencies[isort]
+                    matrices['MHH'] = np.diag(Mhh[isort])
+                    matrices['BHH'] = np.diag(Bhh[isort])
+                    matrices['KHH'] = np.diag(Khh[isort])
+                del frequencies, Mhh, Bhh, Khh
 
             while ('SUBCASE ' not in line and
                    'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' not in line and
-                   ('R E A L   E I G E N V A L U E S' not in line) and #  and load_eigenvalues
+                   #('R E A L   E I G E N V A L U E S' not in line) and #  and load_eigenvalues
                    'FLUTTER  SUMMARY' not in line and
                    'EIGENVECTOR FROM THE' not in line):
                 line = f06_file.readline()
@@ -550,7 +554,9 @@ def plot_flutter_f06(f06_filename: PathLike,
                      subcases: Optional[list[int]]=None,
                      ncol: int=0,
                      plot: bool=True, show: bool=True, clear: bool=False, close: bool=False,
-                     log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
+                     log: Optional[SimpleLogger]=None) -> tuple[
+                                                          dict[int, FlutterResponse],
+                                                          dict]:
     """
     Plots a flutter (SOL 145) deck
 
@@ -649,7 +655,7 @@ def plot_flutter_f06(f06_filename: PathLike,
                            kfreq_damping_filename=kfreq_damping_filename,
                            subcases=subcases,
                            show=show, clear=clear, close=close)
-    return flutters
+    return flutters, mass
 
 def make_flutter_plots(modes: list[int],
                        flutters: dict[int, FlutterResponse],
@@ -959,12 +965,10 @@ def _check_for_eigenvector(f06_file: TextIO, iline: int, line: str,
                            log: SimpleLogger) -> tuple[int, str, int]:
     methodi = ''
     if 'R E A L   E I G E N V A L U E S' in line:
-        frequencies, Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, iline)
+        frequencies, Mhh, Bhh, Khh = read_real_eigenvalues(
+            f06_file, log, line, iline)
 
         isort = np.argsort(Khh)
-        # matrices['MHH'].append(np.diag(Mhh[isort]))
-        # matrices['BHH'].append(np.diag(Bhh[isort]))
-        # matrices['KHH'].append(np.diag(Khh[isort]))
         if load_eigenvalues:
             matrices['freq'] = frequencies[isort]
             matrices['MHH'] = np.diag(Mhh[isort])

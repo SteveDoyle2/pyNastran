@@ -189,11 +189,16 @@ class TestF06Flutter(unittest.TestCase):
         """tests plot_flutter_f06"""
         f06_filename = AERO_PATH / 'bah_plane' / 'bah_plane.f06'
         log = get_logger2(log=None, debug=None, encoding='utf-8')
-        flutters = plot_flutter_f06(
+        flutters, data = plot_flutter_f06(
             f06_filename, show=False, close=True,
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True, plot_kfreq_damping=True,
             plot=IS_MATPLOTLIB,
             log=log)
+        matrices = data['matrices']
+        matrices['freq']
+        matrices['KHH']
+        matrices['BHH']
+        matrices['MHH']
         assert len(flutters) == 2, list(flutters.keys())
         fix_modes_2024(flutters[1])
         fix_modes_2024(flutters[2])
@@ -221,7 +226,7 @@ class TestF06Flutter(unittest.TestCase):
             close=True,
         )
 
-        flutters = plot_flutter_f06(
+        flutters, data = plot_flutter_f06(
             f06_filename,
             f06_units='si', out_units=None,
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
@@ -238,6 +243,11 @@ class TestF06Flutter(unittest.TestCase):
             plot=IS_MATPLOTLIB, show=False, log=log,
             close=True,
         )
+        matrices = data['matrices']
+        matrices['freq']
+        matrices['MHH']
+        matrices['BHH']
+        matrices['KHH']
         flutter = flutters[1]
         fix_modes_2024(flutter)
 

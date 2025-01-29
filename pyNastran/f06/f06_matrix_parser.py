@@ -185,7 +185,7 @@ def read_real_eigenvalues(f06_file: TextIO,
     #log.debug("mode_num, extraction_order, eigenvalue, radians, cycles, gen_mass, gen_stiffness")
     while len(line_strip):
         sline = line_strip.split()
-        if 'NASTRAN' in sline or 'PAGE' in sline:
+        if '***' in sline or 'NASTRAN' in sline or 'PAGE' in sline:
             break
         #log.debug(f'eigenvalue: {line_strip}')
         assert len(sline) == 7, sline

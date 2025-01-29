@@ -708,7 +708,7 @@ class BCTSET(VectorizedBaseCard):
         min_search_distances_list = []
         max_search_distances_list = []
 
-        #comment = {}
+        comment = {}
         for icard, card in enumerate(self.cards):
             (contact_idi, source_idsi, target_idsi, frictionsi,
              min_search_distancei, max_search_distancei,
@@ -734,7 +734,7 @@ class BCTSET(VectorizedBaseCard):
         frictions = np.array(frictions_list, dtype=fdtype)
         self._save(contact_id, nsource, source_ids, target_ids,
                    frictions, min_search_distances, max_search_distances,
-                   desc_id, comment=None)
+                   desc_id, ifile=ifile, comment=comment)
         #self.sort()
         self.cards = []
 
@@ -747,10 +747,16 @@ class BCTSET(VectorizedBaseCard):
               min_search_distances: np.ndarray,
               max_search_distances: np.ndarray,
               desc_id: np.ndarray,
+              ifile=None,
               comment: dict[int, str]=None) -> None:
+        ncards = len(contact_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
         ncards_existing = len(self.contact_id)
         if ncards_existing != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
+            ifile = np.hstack([self.ifile, ifile])
             contact_id = np.hstack([self.contact_id, contact_id])
             #nelement = np.hstack([self.nelement, nelement])
             #element_ids = np.hstack([self.element_ids, element_ids])
@@ -1031,7 +1037,6 @@ class BCONP(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             (contact_idi, slave_idi, master_idi, sfaci, friction_idi, ptypei, cid,
              ifilei, commenti) = card
-            print(card)
             ifile[icard] = ifilei
             contact_id[icard] = contact_idi
             slave_id[icard] = slave_idi
@@ -1044,11 +1049,19 @@ class BCONP(VectorizedBaseCard):
                 #comment[i] = commenti
                 #comment[nidi] = commenti
 
-        self._save(contact_id, slave_id, master_id, sfac, friction_id, ptype, coord_id)
+        self._save(contact_id, slave_id, master_id, sfac, friction_id, ptype, coord_id,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
-    def _save(self, contact_id, slave_id, master_id, sfac, friction_id, ptype, coord_id) -> None:
+    def _save(self, contact_id, slave_id, master_id, sfac,
+              friction_id, ptype, coord_id,
+              ifile=None,
+              comment: dict[int, str]=None) -> None:
+        ncards = len(contact_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
         ncards_existing = len(self.contact_id)
         if ncards_existing != 0:
             raise RuntimeError(f'stacking of {self.type} is not supported')
@@ -1190,7 +1203,8 @@ class BFRIC(VectorizedBaseCard):
         self.cards = []
 
     def _save(self, friction_id, fstiff, mu1,
-              ifile=None, comment=None) -> None:
+              ifile=None,
+              comment: dict[int, str]=None) -> None:
         ncards = len(friction_id)
         if ifile is None:
             ifile = np.zeros(ncards, dtype='int32')
@@ -1381,13 +1395,21 @@ class BCRPARA(VectorizedBaseCard):
                 #comment[i] = commenti
                 #comment[nidi] = commenti
 
-        self._save(contact_region_id, offset, surf, surface_type, grid_point)
+        self._save(contact_region_id, offset, surf, surface_type, grid_point,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
-    def _save(self, contact_region_id, offset, surf, surface_type, grid_point) -> None:
+    def _save(self, contact_region_id, offset, surf, surface_type, grid_point,
+              ifile=None,
+              comment: dict[int, str] = None) -> None:
+        ncards = len(contact_region_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+
         ncards_existing = len(self.contact_region_id)
         if ncards_existing != 0:
+            ifile = np.hstack([self.ifile, ifile])
             contact_region_id = np.hstack([self.contact_region_id, contact_region_id])
             offset = np.hstack([self.offset, offset])
             surf = np.hstack([self.surf, surf])
@@ -2164,7 +2186,7 @@ class BCBODY(VectorizedBaseCard):
         nent = np.zeros(ncards, dtype='int32')
         rigid_body_name = np.zeros(ncards, dtype='|U24')
 
-        #comment = {}
+        comment = {}
         #element_list = []
         #nodes_list = []
         for icard, card in enumerate(self.cards):
@@ -2572,6 +2594,7 @@ class BCBODY1(VectorizedBaseCard):
 
         #idtype = self.model.idtype
         #fdtype = self.model.fdtype
+        ifile = np.zeros(ncards, dtype='int32')
         bcbody_id = np.zeros(ncards, dtype='int32')
         bpid = np.zeros(ncards, dtype='int32')
         bsid = np.zeros(ncards, dtype='int32')
@@ -2580,10 +2603,12 @@ class BCBODY1(VectorizedBaseCard):
         bc_rigid = np.zeros(ncards, dtype='int32')
         bcg_out = np.zeros(ncards, dtype='int32')
 
-        #comment = {}
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (bcbody_idi, bpidi, dimensioni, behaviori, bsidi, bc_rigidi, bcg_outi, comment) = card
+            (bcbody_idi, bpidi, dimensioni, behaviori, bsidi, bc_rigidi, bcg_outi,
+             ifilei, commenti) = card
             assert isinstance(bsidi, int), bsidi
+            ifile[icard] = ifilei
             bcbody_id[icard] = bcbody_idi
             bpid[icard] = bpidi
             bsid[icard] = bsidi
@@ -2595,11 +2620,13 @@ class BCBODY1(VectorizedBaseCard):
                 #comment[i] = commenti
                 #comment[nidi] = commenti
 
-        self._save(bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, bcg_out)
+        self._save(bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, bcg_out,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
-    def _save(self, bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, bcg_out) -> None:
+    def _save(self, bcbody_id, bpid, dimension, behavior, bsid, bc_rigid, bcg_out,
+              ifile=None, comment=None) -> None:
         ncards_existing = len(self.bcbody_id)
         if ncards_existing != 0:
             bcbody_id = np.hstack([self.bcbody_id, bcbody_id])

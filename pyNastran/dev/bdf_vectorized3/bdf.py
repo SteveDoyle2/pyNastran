@@ -71,7 +71,7 @@ else:  # pragma: no cover
     warnings.warn('cannot find tables and/or pandas.  Disabling h5 support')
 
 from .cards.elements.bar import BAROR
-from .cards.elements.beam import BEAMOR
+from pyNastran.dev.bdf_vectorized3.cards.elements.beam import BEAMOR
 from .cards.elements.thermal import BDYOR
 
 #from pyNastran.bdf.cards.elements.elements import CRAC2D, CRAC3D
@@ -2128,7 +2128,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 raise UnsupportedCard(msg)
         class RuntimeCrash:
             """class for crashing on specific cards"""
-            def __init__(self) -> None:
+            def __init__(self, *args, **kwargs) -> None:
                 """dummy init"""
                 pass
             @classmethod
@@ -2691,8 +2691,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BCSURF': (RuntimeCrash, None),
             'BCRGSRF': (RuntimeCrash, None),
 
-            'BCTABL1': (RuntimeCrash, None),
-            'BWIDTH': (RuntimeCrash, None),
+            'BCTABL1': RuntimeCrash,
+            'BWIDTH': RuntimeCrash,
 
             # mpcs
             'MPC': partial(self._prepare_card, self.mpc),
