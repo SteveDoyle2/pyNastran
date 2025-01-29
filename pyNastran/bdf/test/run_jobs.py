@@ -15,7 +15,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False):
     """
     run_nastran_job dirname
     run_nastran_job filename.bdf -x C:\bin\nastran.exe
-    run_nastran_job .            -x C:\bin\nastran.exe --cleanup -r
+    run_nastran_job .            -x C:\bin\nastran.exe --cleanup -r --test
     """
     FILE = os.path.abspath(__file__)
     if argv is None:
@@ -77,18 +77,21 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
     for bdf_filename_dirnamei in bdf_filename_dirname_list:
         assert bdf_filename_dirnamei.exists(), bdf_filename_dirnamei
         if bdf_filename_dirnamei.is_dir():
-            dirname = os.path.abspath(bdf_filename_dirnamei)
+            dirname = Path(os.path.abspath(bdf_filename_dirnamei))
             if recursive:
                 bdf_filenamesi = []
                 for ext in extensions:
                     files = get_files_of_type(
                         dirname, extension=ext, max_size=0.)  # no size limit (in MB)
                     bdf_filenamesi += [Path(fname) for fname in files
-                                       if '.test_bdf.' not in os.path.basename(fname)]
+                                       if ('.test_bdf.' not in os.path.basename(fname) and
+                                           '.test_op2.' not in os.path.basename(fname))]
             else:
                 #suffixs = [fname.suffix for fname in dirname.iterdir() if '.test_bdf.' not in fname.name]
                 bdf_filenamesi = [dirname / fname.name for fname in dirname.iterdir()
-                                  if fname.suffix in extensions and '.test_bdf.' not in fname.name]
+                                  if (fname.suffix in extensions and
+                                      '.test_bdf.' not in fname.name and
+                                      '.test_op2.' not in fname.name)]
             assert len(bdf_filenamesi) > 0, dirname
 
         elif bdf_filename_dirnamei.is_file():
@@ -137,6 +140,10 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
     t_est_hr = 0.
     t0 = time.time()
     for ifile, bdf_filename in enumerate(bdf_filenames):
+        if not os.path.exists(bdf_filename):
+            log.warning(f'skipping {str(bdf_filename)} because {bdf_filename} doesnt exist')
+            continue
+
         base = os.path.splitext(str(bdf_filename))[0]
         op2_filename = base + '.op2'
         if os.path.exists(op2_filename):
@@ -149,9 +156,9 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
         percent1 = (ifile + 1) / nfiles * 100
         log.debug(f'estimated time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr; time/run={t_run_min:.1f} min')
         log.info(f'running  {ifile+1}/{nfiles}={percent0:.0f}%: {str(bdf_filename)}')
-        run_nastran(bdf_filename, nastran_cmd=nastran_exe,
-                    cleanup=cleanup, run=run)
-        log.debug(f'finished {ifile+1}/{nfiles}={percent1:.0f}%: {str(bdf_filename)}')
+        return_code, call_args = run_nastran(bdf_filename, nastran_cmd=nastran_exe,
+                                             cleanup=cleanup, run=run)
+        log.debug(f'finished {ifile+1}/{nfiles}={percent1:.0f}%: {str(bdf_filename)}; return_code={return_code}')
 
         # if 0:
         dt = time.time() - t0

@@ -38,7 +38,7 @@ QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 
 from cpylog import SimpleLogger
-from pyNastran.gui.utils.qt.pydialog import QFloatEdit, make_font
+from pyNastran.gui.utils.qt.pydialog import QLineEdit, QFloatEdit, make_font
 from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
@@ -658,6 +658,10 @@ class FlutterGui(LoggableGui):
         self.eas_damping_lim_edit_min.setToolTip('Defines the flutter crossing range')
         self.eas_damping_lim_edit_max.setToolTip('Defines the flutter crossing range')
 
+        self.point_removal_label = QLabel('EAS Crossing Range:', self)
+        self.point_removal_edit = QLineEdit('400:410,450:500', self)
+        self.point_removal_edit.setToolTip('Remove bad points from a mode; "400:410,450:500"')
+
         self.mode_label = QLabel('Mode:', self)
         self.mode_edit = QSpinBox(self)
         self.mode_edit.setMinimum(1)
@@ -992,6 +996,10 @@ class FlutterGui(LoggableGui):
         grid.addWidget(self.eas_damping_lim_label, irow, 0)
         grid.addWidget(self.eas_damping_lim_edit_min, irow, 1)
         grid.addWidget(self.eas_damping_lim_edit_max, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.point_removal_label, irow, 0)
+        grid.addWidget(self.point_removal_edit, irow, 1)
         irow += 1
 
         jrow = 0
@@ -1377,6 +1385,7 @@ class FlutterGui(LoggableGui):
         print(f'log_scale_x={log_scale_x}; log_scale_y1={log_scale_y1}; log_scale_y2={log_scale_y2}')
         #print(f'export_to_png={self.export_to_png}')
 
+        #print(f'point_removal = {self.point_removal}')
         self.export_to_png = False
         png_filename0, png_filename = get_png_filename(
             base, x_plot_type, plot_type,
@@ -1448,6 +1457,7 @@ class FlutterGui(LoggableGui):
                     v_lines=v_lines,
                     damping_limit=damping_limit,
                     png_filename=png_filename,
+                    point_removal=self.point_removal,
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
                 fig.canvas.draw()
@@ -1544,6 +1554,22 @@ class FlutterGui(LoggableGui):
         eas_damping_lim_min, is_passed_eas_damping_lim1 = get_float_or_none(self.eas_damping_lim_edit_min)
         eas_damping_lim_max, is_passed_eas_damping_lim2 = get_float_or_none(self.eas_damping_lim_edit_max)
 
+        # 595:596,600:601
+        point_removal_str = self.point_removal_edit.text().strip()
+        point_removal = []
+        try:
+            point_removal_list = point_removal_str.split(',')
+            for point in point_removal_list:
+                a_str, b_str = point.split(':')
+                a = float(a_str)
+                b = float(b_str)
+                point_float = (a, b)
+                point_removal.append(point_float)
+        except Exception as e:
+            self.log.error(str(e))
+            # print(traceback.print_tb(e))
+            print(traceback.print_exception(e))
+
         if is_passed_vl and vl is None:
             vl = -1.0
         if is_passed_vf and vf is None:
@@ -1581,7 +1607,7 @@ class FlutterGui(LoggableGui):
             damp_lim, freq_lim, kfreq_lim, ikfreq_lim,
             eigr_lim, eigi_lim,
             freq_tol, freq_tol_remove, mag_tol,
-            vl, vf, damping, eas_damping_lim, is_passed,
+            vl, vf, damping, eas_damping_lim, point_removal, is_passed,
         )
         return out
 
@@ -1599,7 +1625,8 @@ class FlutterGui(LoggableGui):
          ydamp_lim, freq_lim, kfreq_lim, ikfreq_lim,
          eigr_lim, eigi_lim,
          freq_tol, freq_tol_remove, mag_tol,
-         vl, vf, damping, eas_damping_lim, is_valid_xlim) = self.get_xlim()
+         vl, vf, damping, eas_damping_lim, point_removal,
+         is_valid_xlim) = self.get_xlim()
 
         selected_modes = []
         subcase, is_subcase_valid = self._get_subcase()
@@ -1628,6 +1655,7 @@ class FlutterGui(LoggableGui):
         self.vf = vf
         self.damping = damping
         self.eas_damping_lim = eas_damping_lim
+        self.point_removal = point_removal
 
         self.x_plot_type = self.x_plot_type_pulldown.currentText()
         self.plot_type = self.plot_type_pulldown.currentText()
@@ -1705,6 +1733,7 @@ class FlutterGui(LoggableGui):
             'vf': vf,
             'damping': damping,
             'eas_damping_lim': eas_damping_lim,
+            'point_removal': point_removal,
         }
         self.units_in = units_in
         self.units_out = units_out

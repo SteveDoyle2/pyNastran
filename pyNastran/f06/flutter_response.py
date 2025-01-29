@@ -1392,6 +1392,7 @@ class FlutterResponse:
                    filter_damping: bool=False,
                    eas_range: Optional[tuple[float, float]]=None,
                    png_filename=None, show: bool=False,
+                   point_removal: Optional[list[tuple[float, float]]]=None,
                    ) -> tuple[plt.Figure, tuple[plt.Axes, plt.Axes]]:
         """
         Make a V-g and V-f plot
@@ -1473,6 +1474,9 @@ class FlutterResponse:
                 vel = vel[irigid]
                 damping = damping[irigid]
                 freq = freq[irigid]
+
+            vel, damping, freq = remove_excluded_points(
+                vel, damping, freq, point_removal)
 
             jcolor, color, linestyle2, symbol2, texti = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
@@ -2565,3 +2569,24 @@ def _set_ticks(self, axes: plt.Axes, iaxis: int) -> None:
 def _is_tick(values: Optional[tuple[float, ...]], index: int):
     out = values is not None and values[index] is not None
     return out
+
+
+def remove_excluded_points(vel: np.ndarray, damping: np.ndarray, freq: np.ndarray,
+                           point_removal: list[tuple[float, float]],
+                           ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Removes points in a given velocity range"""
+    if point_removal is None or len(point_removal) == 0:
+        return vel, damping, freq
+
+    istack_list = []
+    for (a, b) in point_removal:
+        i = ((vel <= a) | (b <= vel))
+        istack_list.append(i)
+    istack = np.column_stack(istack_list)
+    islice = np.all(istack, axis=1)
+    assert len(i) == len(islice), (len(i), len(islice))
+
+    vel = vel[islice]
+    damping = damping[islice]
+    freq = freq[islice]
+    return vel, damping, freq
