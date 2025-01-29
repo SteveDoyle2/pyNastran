@@ -4530,6 +4530,28 @@ class AddAero:
         self._add_methods._add_trim_object(trim)
         return trim
 
+    def add_mkaero1_from_geometric_spacing(self, machs: list[float],
+                                           k_min: float, k_max: float,
+                                           num_k: int=3,
+                                           nround: int=0,
+                                           comment: str='') -> MKAERO1:
+        """
+        Generate N geometrically spaced reduced frequencies
+        between k_min and k_max.
+
+        >>> mkaero = add_mkaero1_from_geometric_spacing(
+            k_min=0.1, k_max=1.0, num_k=2, nround=3,
+        )
+        >>> mkaero.kfreqs
+        [0.1, 0.2154, 0.4642, 1.0]
+        """
+        num_k_internal = 2 + num_k
+        # Compute common ratio
+        r = (k_max / k_min) ** (1 / (num_k_internal - 1))
+
+        kfreqs = [round(k_min * r ** i, nround) for i in range(num_k_internal)]
+        return self.add_mkaero1(machs, kfreqs, comment=comment)
+
     def add_mkaero1(self, machs: list[float], reduced_freqs: list[float],
                     comment: str='') -> MKAERO1:
         """

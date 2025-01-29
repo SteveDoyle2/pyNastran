@@ -28,6 +28,10 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string_or_blank, blank, fields, components_or_blank
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import (
+    force_double, force_double_or_blank,
+)
+
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
@@ -357,7 +361,7 @@ class FREQ1(FREQ):
         self.freqs = unique(freqs)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FREQ1 card from ``BDF.add_card(...)``
 
@@ -369,9 +373,9 @@ class FREQ1(FREQ):
             a comment for the card
         """
         sid = integer(card, 1, 'sid')
-        f1 = double_or_blank(card, 2, 'f1', 0.0)
+        f1 = double_or_blank(card, 2, 'f1', default=0.0)
         df = double(card, 3, 'df')
-        ndf = integer_or_blank(card, 4, 'ndf', 1)
+        ndf = integer_or_blank(card, 4, 'ndf', default=1)
         assert len(card) <= 5, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
         return FREQ1(sid, f1, df, ndf, comment=comment)
 
