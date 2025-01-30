@@ -2623,17 +2623,17 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RADM': partial(self._prepare_card, self.radm),
 
             # radiation
-            'RADSET' : partial(self._prepare_card, self.radset),
+            'RADSET': partial(self._prepare_card, self.radset),
 
             # dynamic loads
-            'DLOAD' : partial(self._prepare_card, self.dload),
-            'DAREA' : partial(self._prepare_card, self.darea),
-            'TLOAD1' : partial(self._prepare_card, self.tload1),
-            'TLOAD2' : partial(self._prepare_card, self.tload2),
-            'RLOAD1' : partial(self._prepare_card, self.rload1),
-            'RLOAD2' : partial(self._prepare_card, self.rload2),
-            'TIC' : partial(self._prepare_card, self.tic),
-            'TF' : partial(self._prepare_card, self.tf),
+            'DLOAD': partial(self._prepare_card, self.dload),
+            'DAREA': partial(self._prepare_card, self.darea),
+            'TLOAD1': partial(self._prepare_card, self.tload1),
+            'TLOAD2': partial(self._prepare_card, self.tload2),
+            'RLOAD1': partial(self._prepare_card, self.rload1),
+            'RLOAD2': partial(self._prepare_card, self.rload2),
+            'TIC': partial(self._prepare_card, self.tic),
+            'TF': partial(self._prepare_card, self.tf),
             'QVECT': partial(self._prepare_card, self.qvect),
             'QHBDY': partial(self._prepare_card, self.qhbdy),
 
@@ -2647,36 +2647,36 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'RANDT1' : (RANDT1, add_methods._add_dload_entry), # random
 
             # materials
-            'MAT1' : partial(self._prepare_card, self.mat1),
-            'MAT2' : partial(self._prepare_card, self.mat2),
-            'MAT3' : partial(self._prepare_card, self.mat3),
+            'MAT1': partial(self._prepare_card, self.mat1),
+            'MAT2': partial(self._prepare_card, self.mat2),
+            'MAT3': partial(self._prepare_card, self.mat3),
             ## there is no MAT6 or MAT7
-            'MAT8' : partial(self._prepare_card, self.mat8),
-            'MAT9' : partial(self._prepare_card, self.mat9),
-            'MAT10' : partial(self._prepare_card, self.mat10),
-            'MAT11' : partial(self._prepare_card, self.mat11),
-            'MAT10C' : partial(self._prepare_card, self.mat10c),
-            'MATORT' : partial(self._prepare_card, self.matort),
+            'MAT8': partial(self._prepare_card, self.mat8),
+            'MAT9': partial(self._prepare_card, self.mat9),
+            'MAT10': partial(self._prepare_card, self.mat10),
+            'MAT11': partial(self._prepare_card, self.mat11),
+            'MAT10C': partial(self._prepare_card, self.mat10c),
+            'MATORT': partial(self._prepare_card, self.matort),
 
-            'MATS1' : partial(self._prepare_card, self.mats1),
-            #'MATS3' : partial(self._prepare_card, self.mats3),
-            #'MATS8' : partial(self._prepare_card, self.mats8),
+            'MATS1': partial(self._prepare_card, self.mats1),
+            #'MATS3': partial(self._prepare_card, self.mats3),
+            #'MATS8': partial(self._prepare_card, self.mats8),
 
-            'MATT1' : partial(self._prepare_card, self.matt1),
-            'MATT2' : partial(self._prepare_card, self.matt2),
-            'MATT3' : partial(self._prepare_card, self.matt3),
-            'MATT4' : partial(self._prepare_card, self.matt4),
-            'MATT5' : partial(self._prepare_card, self.matt5),
-            'MATT8' : partial(self._prepare_card, self.matt8),
-            'MATT9' : partial(self._prepare_card, self.matt9),
-            #'MATT11' : partial(self._prepare_card, self.matt11),
+            'MATT1': partial(self._prepare_card, self.matt1),
+            'MATT2': partial(self._prepare_card, self.matt2),
+            'MATT3': partial(self._prepare_card, self.matt3),
+            'MATT4': partial(self._prepare_card, self.matt4),
+            'MATT5': partial(self._prepare_card, self.matt5),
+            'MATT8': partial(self._prepare_card, self.matt8),
+            'MATT9': partial(self._prepare_card, self.matt9),
+            #'MATT11': partial(self._prepare_card, self.matt11),
 
-            'MATHE' : partial(self._prepare_card, self.mathe),  # MOONEY only; no OGDEN, ABOYCE, ...
-            'MATHP' : partial(self._prepare_card, self.mathp),
+            'MATHE': partial(self._prepare_card, self.mathe),  # MOONEY only; no OGDEN, ABOYCE, ...
+            'MATHP': partial(self._prepare_card, self.mathp),
 
             # thermal materials
-            'MAT4' : partial(self._prepare_card, self.mat4),
-            'MAT5' : partial(self._prepare_card, self.mat5),
+            'MAT4': partial(self._prepare_card, self.mat4),
+            'MAT5': partial(self._prepare_card, self.mat5),
 
             # rigid elements
             'RBAR': partial(self._prepare_card, self.rbar),
@@ -2686,10 +2686,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RBE3': partial(self._prepare_card, self.rbe3),
             'RROD': partial(self._prepare_card, self.rrod),
             #'RSSCON': partial(self._prepare_card, self.rsscon),  # not supported
-            #'RSPLINE' : (RSPLINE, add_methods._add_rigid_element_object),
-            'RSPLINE' : (RuntimeCrash, None),
-            'BCSURF': (RuntimeCrash, None),
-            'BCRGSRF': (RuntimeCrash, None),
+            #'RSPLINE': (RSPLINE, add_methods._add_rigid_element_object),
+            'RSPLINE': RuntimeCrash,
+            'BCSURF': RuntimeCrash,
+            'BCRGSRF': RuntimeCrash,
 
             'BCTABL1': RuntimeCrash,
             'BWIDTH': RuntimeCrash,
@@ -2709,11 +2709,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BNDFREE1': partial(self._prepare_card_by_method, self.bndfree.add_set1_card),
             'BNDGRID': partial(self._prepare_card_by_method, self.bndgrid.add_set1_card),
 
-            #'BNDFIX' : (Crash, None),
-            #'BNDFIX1' : (Crash, None),
+            #'BNDFIX': (Crash, None),
+            #'BNDFIX1': (Crash, None),
 
-            #'ROTORD' : partial(self._prepare_card_by_method, self.rotord.add_set1_card),
-            'ROTORG' : partial(self._prepare_card_by_method, self.rotorg.add_card),
+            #'ROTORD': partial(self._prepare_card_by_method, self.rotord.add_set1_card),
+            'ROTORG': partial(self._prepare_card_by_method, self.rotorg.add_card),
 
             # nx-contact
             'BSURF': partial(self._prepare_card_by_method, self.bsurf.add_card),     # shell contact by element id
@@ -2744,11 +2744,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BCTPARA': (BCTPARA, add_methods._add_bctpara_object),
 
             # cohesive zone
-            'CIFQDX': (RuntimeCrash, None),
-            'CIFQUAD': (RuntimeCrash, None),
-            'PCOHE': (RuntimeCrash, None),
+            'CIFQDX': RuntimeCrash,
+            'CIFQUAD': RuntimeCrash,
+            'PCOHE': RuntimeCrash,
 
-            'BDYLIST': (RuntimeCrash, None),
+            'BDYLIST': RuntimeCrash,
             'MASSSET': partial(self._prepare_card, self.massset),
 
             # pseudo-constraint
@@ -2822,21 +2822,21 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # sol 144 - trim/divergence
             'CSSCHD': partial(self._prepare_card, self.csschd),
             'TRIM': partial(self._prepare_card, self.trim),
-            'DIVERG' : partial(self._prepare_card, self.diverg),
+            'DIVERG': partial(self._prepare_card, self.diverg),
             #'TRIM2': partial(self._prepare_card, self.trim2),
             # diverg
 
             # sol 145 - flutter
-            'FLFACT' : partial(self._prepare_card, self.flfact),
-            'FLUTTER' : partial(self._prepare_card, self.flutter),
+            'FLFACT': partial(self._prepare_card, self.flfact),
+            'FLUTTER': partial(self._prepare_card, self.flutter),
 
             # sol 146 - gust
-            'GUST' : partial(self._prepare_card, self.gust),
+            'GUST': partial(self._prepare_card, self.gust),
 
-            'MONPNT1' : partial(self._prepare_card, self.monpnt1),
-            'MONPNT2' : partial(self._prepare_card, self.monpnt2),
-            'MONPNT3' : partial(self._prepare_card, self.monpnt3),
-            'MONDSP1' : partial(self._prepare_card, self.mondsp1),
+            'MONPNT1': partial(self._prepare_card, self.monpnt1),
+            'MONPNT2': partial(self._prepare_card, self.monpnt2),
+            'MONPNT3': partial(self._prepare_card, self.monpnt3),
+            'MONDSP1': partial(self._prepare_card, self.mondsp1),
 
             # optimization
             'DESVAR': partial(self._prepare_card, self.desvar),
@@ -2856,29 +2856,29 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DDVAL': partial(self._prepare_card, self.ddval),
             'DSCREEN': partial(self._prepare_card, self.dscreen),
 
-            #'DRESP3' : (DRESP3, add_methods._add_dresp_object),
+            #'DRESP3': (DRESP3, add_methods._add_dresp_object),
 
-            #'CORD3G' : self._prepare_CORD3G,
+            #'CORD3G': self._prepare_CORD3G,
 
-            'DTI' : self._prepare_dti,
-            'DMIG' : self._prepare_dmig,
-            'DMIAX' : self._prepare_dmiax,
-            'DMI' : self._prepare_dmi,
-            'DMIJ' : self._prepare_dmij,
-            'DMIK' : self._prepare_dmik,
-            'DMIJI' : self._prepare_dmiji,
-            #'RINGFL' : self._prepare_ringfl,
+            'DTI': self._prepare_dti,
+            'DMIG': self._prepare_dmig,
+            'DMIAX': self._prepare_dmiax,
+            'DMI': self._prepare_dmi,
+            'DMIJ': self._prepare_dmij,
+            'DMIK': self._prepare_dmik,
+            'DMIJI': self._prepare_dmiji,
+            #'RINGFL': self._prepare_ringfl,
 
-            'DEQATN' : self._prepare_dequatn,
+            'DEQATN': self._prepare_dequatn,
 
-            #'TEMPAX' : self._prepare_tempax,
+            #'TEMPAX': self._prepare_tempax,
             # GRDSET-will be last card to update from _card_parser_prepare
-            'GRDSET' : self._prepare_grdset,
-            'BAROR' : self._prepare_baror,
-            'BEAMOR' : self._prepare_beamor,
+            'GRDSET': self._prepare_grdset,
+            'BAROR': self._prepare_baror,
+            'BEAMOR': self._prepare_beamor,
             'BDYOR': self._prepare_bdyor,
 
-            #'ACMODL' : self._prepare_acmodl,
+            #'ACMODL': self._prepare_acmodl,
         }
         ncards_supported = len(self._card_parser_prepare) + len(self._card_parser)
         #print(f'ncards = {ncards_supported}')

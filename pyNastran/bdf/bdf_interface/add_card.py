@@ -2431,8 +2431,12 @@ class Add1dElements:
         #self._add_property_object(prop)
         #return prop
 
-    def add_pbusht(self, pid: int, k_tables: list[int], b_tables: list[int],
-                   ge_tables: list[int], kn_tables: list[int], comment: str='') -> PBUSHT:
+    def add_pbusht(self, pid: int,
+                   k_tables: Optional[list[int]]=None,
+                   b_tables: Optional[list[int]]=None,
+                   ge_tables: Optional[list[int]]=None,
+                   kn_tables: Optional[list[int]]=None,
+                   comment: str='') -> PBUSHT:
         """Creates a PBUSHT card"""
         prop = PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
                       comment=comment)

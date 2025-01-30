@@ -796,8 +796,11 @@ class Add0dElements(BDFAttributes):
         #self._add_property_object(prop)
         #return prop
 
-    def add_pbusht(self, pid: int, k_tables: list[int], b_tables: list[int],
-                   ge_tables: list[int], kn_tables: list[int], comment: str='') -> int:
+    def add_pbusht(self, pid: int,
+                   k_tables: Optional[list[int]]=None,
+                   b_tables: Optional[list[int]]=None,
+                   ge_tables: Optional[list[int]]=None,
+                   kn_tables: Optional[list[int]]=None, comment: str='') -> int:
         """Creates a PBUSHT card"""
         prop = self.pbusht.add(pid, k_tables, b_tables, ge_tables, kn_tables,
                                comment=comment)

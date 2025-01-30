@@ -2962,9 +2962,9 @@ class CBEAM3(Element):
 
     def add(self, eid: int, pid: int, nids: list[int],
             x: Optional[list[float]], g0: Optional[int],
-            wa=None, wb=None, tw=None,
+            wa=None, wb=None, wc=None, tw=None,
             sa: int=0, sb: int=0, sc: int=0,
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         if wa is None:
             wa = [0., 0., 0.]
         if wb is None:
@@ -2975,7 +2975,7 @@ class CBEAM3(Element):
             tw = [0., 0., 0.]
         self.cards.append((eid, pid, nids, g0, x,
                            wa, wb, wc, tw,
-                           [sa, sb, sc], comment))
+                           [sa, sb, sc], ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -3018,7 +3018,7 @@ class CBEAM3(Element):
                       #wa=wa, wb=wb, wc=wc, tw=tw, s=s, comment=comment)
         self.cards.append((eid, pid, [ga, gb, gc], g0, x,
                            wa, wb, wc, tw,
-                           s, comment))
+                           s, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -3038,10 +3038,10 @@ class CBEAM3(Element):
         wc = np.zeros((ncards, 3), dtype='float64')
         tw = np.zeros((ncards, 3), dtype='float64')
         s = np.zeros((ncards, 3), dtype='int32')
-
+        comment = {}
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, g0i, xi,
-             wai, wbi, wci, twi, si, ifilei, comment) = card
+             wai, wbi, wci, twi, si, ifilei, commenti) = card
             ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
@@ -3061,7 +3061,7 @@ class CBEAM3(Element):
 
         self._save(element_id, property_id, nodes,
                    g0, x,
-                   wa, wb, wc, tw, s)
+                   wa, wb, wc, tw, s, ifile=ifile, comment=comment)
         #beamor = self.model.beamor
         #apply_bar_default(self, beamor)
         self.cards = []
@@ -3769,9 +3769,10 @@ class CBEND(Element):
         g0 = np.zeros(ncards, dtype=idtype)
         x = np.full((ncards, 3), np.nan, dtype='float64')
         geom_flag = np.zeros(ncards, dtype='int32')
-
+        comment = {}
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, g0i, xi, geom_flagi, ifilei, comment) = card
+            (eid, pid, nids, g0i, xi, geom_flagi,
+             ifilei, commenti) = card
             ifile[icard] = ifilei
             element_id[icard] = eid
             property_id[icard] = pid
@@ -3781,11 +3782,10 @@ class CBEND(Element):
             else:
                 assert g0i > 0, card
                 g0[icard] = g0i
-
             geom_flag[icard] = geom_flagi
-
         self._save(element_id, property_id, nodes,
-                   g0, x, geom_flag)
+                   g0, x, geom_flag, ifile=ifile, comment=comment)
+        self.sort()
         self.cards = []
 
     def _save(self, element_id, property_id, nodes,
@@ -4215,14 +4215,14 @@ class PBEND(Property):
             #nsia=0., nsib=None, cwa=0., cwb=None,
             #m1a=0., m2a=0., m1b=None, m2b=None,
             #n1a=0., n2a=0., n1b=None, n2b=None,
-            #comment='') -> int:
+            #ifile: int=0, comment: str='') -> int:
         #self.cards.append((pid, mid,
                            #xxb, so, area, j, i1, i2, i12, nsm,
                            #c1, c2, d1, d2, e1, e2, f1, f2,
                            #s1, s2, k1, k2,
                            #nsia, nsib, cwa, cwb,
                            #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b,
-                           #comment))
+                           #ifile, comment))
         #self.n += 1
         #return self.n - 1
 
@@ -4597,6 +4597,7 @@ class PBEND(Property):
         sy = np.full(ncards, np.nan, dtype='float64')
         sz = np.full(ncards, np.nan, dtype='float64')
 
+        comment = {}
         for icard, card in enumerate(self.cards):
             (pid, mid, beam_typei, areai, i1i, i2i, ji,
              c1i, c2i, d1i, d2i, e1i, e2i, f1i, f2i,
@@ -4655,7 +4656,7 @@ class PBEND(Property):
                 kz[icard] = kzi
                 sy[icard] = syi
                 sz[icard] = szi
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(beam_type)
 
         self._save(property_id, material_id, beam_type, nsm,
@@ -4668,7 +4669,7 @@ class PBEND(Property):
                    fsi, rm, t, p,
                    centerline_spacing, alpha, flange,
                    kx, ky, kz, sy, sz,
-                   ifile=ifile)
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
