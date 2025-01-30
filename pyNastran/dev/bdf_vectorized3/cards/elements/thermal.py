@@ -23,13 +23,13 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, array_default_float,
     array_float, get_print_card_size)
 
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     #from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
-class BDYOR(BaseCard):
+class BDYOR:
     """
 
     +--------+------+--------+--------+---------+---------+----+-----+-----+
@@ -82,6 +82,7 @@ class BDYOR(BaseCard):
         if comment:
             self.comment = comment
 
+        self.ifile = ifile
         self.surface_type = surface_type
         self.iview_front = iview_front
         self.iview_back = iview_back
@@ -124,6 +125,11 @@ class BDYOR(BaseCard):
                      rad_mid_front, rad_mid_back,
                      pid, g0,
                      ce, e123, ifile=ifile, comment=comment)
+
+    def __deepcopy__(self, memo_dict):
+        raw_fields = self.raw_fields()
+        card = BDFCard(raw_fields)
+        return self.add_card(card, self.ifile, comment=self.comment)
 
     def raw_fields(self):
         g0 = '' if self.g0 == -1 else self.g0

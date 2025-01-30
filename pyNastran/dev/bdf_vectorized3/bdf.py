@@ -72,7 +72,7 @@ else:  # pragma: no cover
 
 from .cards.elements.bar import BAROR
 from pyNastran.dev.bdf_vectorized3.cards.elements.beam import BEAMOR
-from .cards.elements.thermal import BDYOR
+from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import BDYOR
 
 #from pyNastran.bdf.cards.elements.elements import CRAC2D, CRAC3D
 #from pyNastran.bdf.cards.properties.properties import PRAC2D, PRAC3D

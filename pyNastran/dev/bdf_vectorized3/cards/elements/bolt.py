@@ -1,23 +1,23 @@
 from __future__ import annotations
 from collections import defaultdict
-from itertools import zip_longest
-from typing import TYPE_CHECKING
+#from itertools import zip_longest
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.field_writer_8 import set_blank_if_default # , set_string8_blank_if_default
+#from pyNastran.bdf.field_writer_8 import set_blank_if_default # , set_string8_blank_if_default
 from pyNastran.bdf.cards.base_card import (
     read_ids_thru, expand_thru, _format_comment)
 #from pyNastran.bdf.field_writer_double import print_scientific_double
-from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+#from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string,
     integer_or_blank, double_or_blank,
-    components_or_blank, integer_string_or_blank, integer_double_or_blank,
-    integer_or_string,
-    modal_components_or_blank,
+    components_or_blank, integer_string_or_blank, #integer_double_or_blank,
+    #integer_or_string,
+    #modal_components_or_blank,
 )
-from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
+#from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
@@ -208,10 +208,11 @@ class BOLT(VectorizedBaseCard):
             a comment for the card
 
         """
+        model = self.model
         bolt_id = integer(card, 1, 'sid')
-
-        top_bottom_flag = card.field(9)
-        if isinstance(top_bottom_flag, str) and top_bottom_flag.upper() in {'TOP', 'BOTTOM'}:
+        if model.is_msc:
+            top_bottom_flag = card.field(9)
+            assert isinstance(top_bottom_flag, str) and top_bottom_flag.upper() in {'TOP', 'BOTTOM'}, top_bottom_flag
             top_bottom_flag = top_bottom_flag.upper()
             # msc
             #BOLT ID GRIDC
@@ -237,11 +238,11 @@ class BOLT(VectorizedBaseCard):
                     i += 1
                 ifield += 1
             card = ('msc', bolt_id, gridc, top_bottom_dict, comment)
-        else:
-            etype = integer(card, 2, 'etype')
-            if etype == 1:
+        elif self.model.is_nx:
+            element_type = integer(card, 2, 'etype')
+            if element_type == 1:
                 eids = read_ids_thru(card, ifield0=3, base_str='EID%d')
-            elif etype == 2:
+            elif element_type == 2:
                 csid = integer_or_blank(card, 3, 'csid', default=0)
                 idir = integer_or_blank(card, 4, 'idir', default=0)
                 assert idir in {0, 1, 2, 3}, idir
@@ -257,9 +258,11 @@ class BOLT(VectorizedBaseCard):
                 #fields = card[9:]
                 #eids = expand_thru_by(fields, set_fields=True, sort_fields=True, require_int=True, allow_blanks=False)
                 assert len(card) <= 15, card
-            else:
-                raise RuntimeError(etype)
-            card = ('nx', bolt_id, etype, eids, comment)
+            else:  # pragma: no cover
+                raise RuntimeError(element_type)
+            card = ('nx', bolt_id, element_type, eids, comment)
+        else:  # pragma: no cover
+            raise RuntimeError(self.model._nastran_format)
 
         self.cards.append(card)
         self.n += 1
