@@ -82,17 +82,17 @@ def save_load_deck(model: BDF,
         model.write_bdf(stringio_double, size=16, is_double=True, close=False)
         stringio_double.seek(0)
 
-        model2 = BDF(debug=False, log=model.log)
+        model2 = BDF(debug=False, mode=nastran_format, log=model.log)
         model2.read_bdf(stringio8, punch=model.punch)
 
-        model3 = BDF(debug=False, log=model.log)
+        model3 = BDF(debug=False, mode=nastran_format, log=model.log)
         model3.read_bdf(stringio16, punch=model.punch)
 
-        model4 = BDF(debug=False, log=model.log)
+        model4 = BDF(debug=False, mode=nastran_format, log=model.log)
         model4.read_bdf(stringio_double, punch=model.punch)
 
     if run_read_write and run_equivalence and len(model.grid):
-        model2 = BDF(debug=False, log=model.log)
+        model2 = BDF(debug=False, mode=model._nastran_format, log=model.log)
         model2.read_bdf(stringio8, punch=model.punch)
         bdf_filename_out = None
 

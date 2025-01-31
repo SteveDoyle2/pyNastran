@@ -24,7 +24,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, make_idim,
     hslice_by_idim, vslice_by_idim,
     remove_unused_primary, remove_unused_duplicate,
-    parse_check,
+    parse_check, save_ifile_comment,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float,
@@ -76,7 +76,7 @@ class BOLTLD(Combination):
 
     def add(self, bolt_id: int, scale: float,
             scale_factors: list[float], bolt_ids: list[int],
-            comment: str='') -> int:
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a BOLTLD card
 
@@ -96,7 +96,8 @@ class BOLTLD(Combination):
 
         """
         return super().add(
-            bolt_id, scale, scale_factors, bolt_ids, comment=comment)
+            bolt_id, scale, scale_factors, bolt_ids,
+            ifile=ifile, comment=comment)
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['bolt_id'].append(self.bolt_ids)
@@ -189,6 +190,7 @@ class BOLT(VectorizedBaseCard):
                nids: Optional[list]=None,  # element_type=2
                csid=None,  # element_type=2
                idir=None,  # element_type=2
+               ifile: int=0,
                comment: str='') -> int:
         assert element_type == 1, element_type
         card = ('nx', bolt_id, element_type, eids, comment)
@@ -196,7 +198,8 @@ class BOLT(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int,
+                 comment: str='') -> None:
         """
         Adds a BOLT card from ``BDF.add_card(...)``
 
@@ -212,7 +215,9 @@ class BOLT(VectorizedBaseCard):
         bolt_id = integer(card, 1, 'sid')
         if model.is_msc:
             top_bottom_flag = card.field(9)
-            assert isinstance(top_bottom_flag, str) and top_bottom_flag.upper() in {'TOP', 'BOTTOM'}, top_bottom_flag
+            if not (isinstance(top_bottom_flag, str) and top_bottom_flag.upper() in {'TOP', 'BOTTOM'}):
+                raise RuntimeError(f'top_bottom_flag={top_bottom_flag}; expected=[TOP, BOTTOM]\n'
+                                   f'{card}')
             top_bottom_flag = top_bottom_flag.upper()
             # msc
             #BOLT ID GRIDC
@@ -237,7 +242,7 @@ class BOLT(VectorizedBaseCard):
                     top_bottom_dict[top_bottom_flag].append(value)
                     i += 1
                 ifield += 1
-            card = ('msc', bolt_id, gridc, top_bottom_dict, comment)
+            card = ('msc', bolt_id, gridc, top_bottom_dict, ifile, comment)
         elif self.model.is_nx:
             element_type = integer(card, 2, 'etype')
             if element_type == 1:
@@ -260,7 +265,7 @@ class BOLT(VectorizedBaseCard):
                 assert len(card) <= 15, card
             else:  # pragma: no cover
                 raise RuntimeError(element_type)
-            card = ('nx', bolt_id, element_type, eids, comment)
+            card = ('nx', bolt_id, element_type, eids, ifile, comment)
         else:  # pragma: no cover
             raise RuntimeError(self.model._nastran_format)
 
@@ -277,6 +282,84 @@ class BOLT(VectorizedBaseCard):
             assert card[0] == 'nx', card
             self.parse_cards_nx()
 
+
+    def parse_cards_msc(self) -> None:
+        """
+        +--------+--------+-------+-------+------+------+------+------+------+
+        |   1    |   2    |   3   |   4   |  5   |  6   |   7  |  8   |  9   |
+        +========+========+=======+=======+======+======+======+======+======+
+        |  BOLT  | ID     | GRIDC |       |      |      |      |      |      |
+        +--------+--------+-------+-------+------+------+------+------+------+
+        |        | TOP    | GT1   |  GT2  |  GT3 |  GT4 |  GT5 |  GT6 |  GT7 |
+        +--------+--------+-------+-------+------+------+------+------+------+
+        |        | GT8    | GT9   |  etc  |      |      |      |      |      |
+        +--------+--------+-------+-------+------+------+------+------+------+
+        |        | BOTTOM | GB1   |  GB2  |  GB3 |  GB4 |  GB5 |  GB6 |  GB7 |
+        +--------+--------+-------+-------+------+------+------+------+------+
+        |        | GB8    | GB9   |  etc  |      |      |      |      |      |
+        +--------+--------+-------+-------+------+------+------+------+------+
+        |  BOLT  |   100  | 1025  |       |      |      |      |      |      |
+        +--------+--------+-------+-------+------+------+------+------+------+
+        |        |   TOP  |  101  |  102  |  103 |  104 |  105 |      |      |
+        +--------+--------+-------+-------+------+------+------+------+------+
+        |        | BOTTOM |   1   |   2   |   3  |   4  |   5  |      |      |
+        +--------+--------+-------+-------+------+------+------+------+------+
+        """
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+
+        ifile = np.zeros(ncards, dtype='int32')
+        bolt_id = np.zeros(ncards, dtype='int32')
+        gridc = np.zeros(ncards, dtype='int32')
+        num_top_ids = np.zeros(ncards, dtype='int32')
+        num_bottom_ids = np.zeros(ncards, dtype='int32')
+        top_ids_list = []
+        bottom_ids_list = []
+        comment = {}
+        for icard, card in enumerate(self.cards):
+            #card = ('msc', bolt_id, gridc, top_bottom_dict, comment)
+            (method, bolt_idi, gridci, top_bottom_dict, ifilei, commenti) = card
+            assert card[0] == 'msc'
+            ifile[icard] = ifilei
+            bolt_id[icard] = bolt_idi
+            gridc[icard] = gridci
+            ids_top = top_bottom_dict['TOP']
+            ids_btm = top_bottom_dict['BOTTOM']
+            # ids2 = split_set3_ids(eidsi)
+            num_bottom_ids[icard] = len(ids_btm)
+            num_top_ids[icard] = len(ids_top)
+            bottom_ids_list.extend(ids_btm)
+            top_ids_list.extend(ids_top)
+        bottom_ids = np.array(bottom_ids_list, dtype='int32')
+        top_ids = np.array(top_ids_list, dtype='int32')
+
+        self._save_msc(bolt_id, top_ids, num_top_ids,
+                       bottom_ids, num_bottom_ids,
+                       ifile=ifile, comment=comment)
+        self.sort()
+        self.cards = []
+
+    def _save_msc(self, bolt_id, top_ids, num_top_ids,
+                  bottom_ids, num_bottom_ids,
+                  ifile=None, comment=None):
+        ncards = len(bolt_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.bolt_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
+            bolt_id = np.hstack([self.bolt_id, bolt_id])
+            top_ids = np.hstack([self.top_ids, top_ids])
+            num_top_ids = np.hstack([self.num_top_ids, num_top_ids])
+            bottom_ids = np.hstack([self.bottom_ids, bottom_ids])
+            num_bottom_ids = np.hstack([self.num_bottom_ids, num_bottom_ids])
+        save_ifile_comment(self, ifile, comment)
+        self.bolt_id = bolt_id
+        self.top_ids = top_ids
+        self.num_top_ids = num_top_ids
+        self.bottom_ids = bottom_ids
+        self.num_bottom_ids = num_bottom_ids
+        self.n = len(bolt_id)
+
     def parse_cards_nx(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
@@ -285,42 +368,54 @@ class BOLT(VectorizedBaseCard):
         num_ids = np.zeros(ncards, dtype='int32')
         all_ids = []
         for icard, card in enumerate(self.cards):
-            if card[0] == 'msc':
-                asdf
-            else:
-                assert card[0] == 'nx', card
-                method, bolt_idi, etypei, eidsi, comment = card
+            assert card[0] == 'nx', card
+            method, bolt_idi, etypei, eidsi, comment = card
 
             bolt_id[icard] = bolt_idi
             ids2 = split_set3_ids(eidsi)
             num_ids[icard] = len(ids2)
             all_ids.extend(ids2)
         ids = np.array(all_ids, dtype=idtype)
-        self._save(bolt_id, num_ids, ids)
+        self._save_nx(bolt_id, num_ids, ids, ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
-    def _save(self, bolt_id, num_ids, element_ids):
+    def _save_nx(self, bolt_id, num_ids, element_ids,
+                 ifile=None, comment=None):
+        ncards = len(bolt_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.bolt_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             bolt_id = np.hstack([self.bolt_id, bolt_id])
             num_ids = np.hstack([self.num_ids, num_ids])
             element_ids = np.hstack([self.element_ids, element_ids])
+        save_ifile_comment(ifile, comment)
         self.bolt_id = bolt_id
         self.num_ids = num_ids
         self.element_ids = element_ids
         self.n = len(bolt_id)
 
     def __apply_slice__(self, bolt: BOLT, i: np.ndarray) -> None:
-        assert self.num_ids.sum() == len(self.element_ids)
         bolt.n = len(i)
         bolt.bolt_id = self.bolt_id[i]
 
-        ibolt = self.ibolt # [i, :]
-        bolt.element_ids = hslice_by_idim(i, ibolt, self.element_ids)
-
-        bolt.num_ids = self.num_ids[i]
-        #assert isinstance(prop.ndim, np.ndarray), prop.ndim
-        #assert prop.ndim.sum() == len(prop.dims), f'prop.ndim={prop.ndim} len(prop.dims)={len(prop.dims)}'
+        if hasattr(self, 'element_ids'):
+            # nx
+            assert self.num_ids.sum() == len(self.element_ids)
+            ibolt = self.ibolt # [i, :]
+            bolt.element_ids = hslice_by_idim(i, ibolt, self.element_ids)
+            bolt.num_ids = self.num_ids[i]
+            #assert isinstance(prop.ndim, np.ndarray), prop.ndim
+            #assert prop.ndim.sum() == len(prop.dims), f'prop.ndim={prop.ndim} len(prop.dims)={len(prop.dims)}'
+        else:
+            # msc
+            itop = self.itop # [i, :]
+            ibtm = self.ibtm # [i, :]
+            bolt.top_ids = hslice_by_idim(i, itop, self.top_ids)
+            bolt.bottom_ids = hslice_by_idim(i, ibtm, self.bottom_ids)
+            bolt.num_top_ids = self.num_top_ids[i]
+            bolt.num_bottom_ids = self.num_bottom_ids[i]
 
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass
@@ -331,10 +426,19 @@ class BOLT(VectorizedBaseCard):
     @property
     def ibolt(self) -> np.ndarray:
         return make_idim(self.n, self.num_ids)
+    @property
+    def itop(self) -> np.ndarray:
+        return make_idim(self.n, self.num_top_ids)
+    @property
+    def ibtm(self) -> np.ndarray:
+        return make_idim(self.n, self.num_bottom_ids)
 
     @property
     def max_id(self) -> int:
-        return max(self.bolt_id.max(), self.element_ids.max())
+        if hasattr(self, 'element_ids'):
+            return max(self.bolt_id.max(), self.element_ids.max())
+        else:
+            return max(self.bolt_id.max(), self.top_ids.max(), self.bottom_ids.max())
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
@@ -343,13 +447,37 @@ class BOLT(VectorizedBaseCard):
         print_card, size = get_print_card_size(size, self.max_id)
 
         bolt_id = array_str(self.bolt_id, size=size).tolist()
-        ids_ = array_str(self.element_ids, size=size).tolist()
-        etype = 1
-        for sid, (ibolt0, ibolt1) in zip(bolt_id, self.ibolt):
-            ids = ids_[ibolt0:ibolt1]
+        if hasattr(self, 'element_ids'):
+            ids_ = array_str(self.element_ids, size=size).tolist()
+            etype = 1
+            for sid, (ibolt0, ibolt1) in zip(bolt_id, self.ibolt):
+                ids = ids_[ibolt0:ibolt1]
 
-            list_fields = ['BOLT', sid, etype] + ids
-            bdf_file.write(print_card(list_fields))
+                list_fields = ['BOLT', sid, etype] + ids
+                bdf_file.write(print_card(list_fields))
+        else:
+            for sid, (itop0, itop1), (ibtm0, ibtm1) in zip(bolt_id, self.itop, self.ibtm):
+                top_ids = self.top_ids[itop0:itop1]
+                btm_ids = self.bottom_ids[ibtm0:ibtm1]
+                ntop = len(top_ids)
+                blanks = 8
+                list_fields = ['BOLT', sid] + [''] * 7
+                list_fields.append('TOP')
+                for i, idi in enumerate(top_ids):
+                    if i > 0 and i % 7 == 0:
+                        list_fields.append('')
+                    list_fields.append(idi)
+
+                nblanks = 2
+                list_fields.extend([''] * nblanks)
+                list_fields.append('BOTTOM')
+                for i, idi in enumerate(btm_ids):
+                    if i > 0 and i % 7 == 0:
+                        list_fields.append('')
+                    list_fields.append(idi)
+                #print(print_card(list_fields))
+                bdf_file.write(print_card(list_fields))
+
         return
 
 

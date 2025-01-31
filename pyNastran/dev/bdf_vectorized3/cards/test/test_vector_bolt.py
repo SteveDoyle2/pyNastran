@@ -20,7 +20,7 @@ class TestBolt(unittest.TestCase):
         save_load_deck(model)
 
     def test_bolt_nx_1(self):
-        model = BDF(debug=False)
+        model = BDF(mode='nx', debug=False)
         model.case_control_deck
         model.subcases
         boltseq = model.boltseq
