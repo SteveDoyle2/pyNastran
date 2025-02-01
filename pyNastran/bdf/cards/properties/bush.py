@@ -11,7 +11,7 @@ All bush properties are BushingProperty and Property objects.
 """
 from __future__ import annotations
 import warnings
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import Property
@@ -973,10 +973,15 @@ class PBUSH2D(BushingProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-def _append_nones(list_obj, nrequired):
+def _append_nones(list_obj: Optional[list[int]],
+                  nrequired: int) -> list[Optional[int]]:
     """this function has side effects"""
-    n_none = nrequired - len(list_obj)
-    list_obj.extend([None] * n_none)
+    if list_obj is None:
+        list_obj = [None] * nrequired
+    else:
+        n_none = nrequired - len(list_obj)
+        list_obj.extend([None] * n_none)
+    return list_obj
 
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'
@@ -995,20 +1000,24 @@ class PBUSHT(BushingProperty):
             self.ge_tables[0] = value
         elif name == 'TGEID2':
             self.ge_tables[1] = value
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('%r has not implemented update_by_pname_fid for %r' % (self.type, name))
 
-    def __init__(self, pid, k_tables, b_tables,
-                 ge_tables, kn_tables, comment=''):
+    def __init__(self, pid: int,
+                 k_tables: Optional[list[int]]=None,
+                 b_tables: Optional[list[int]]=None,
+                 ge_tables: Optional[list[int]]=None,
+                 kn_tables: Optional[list[int]]=None,
+                 comment: str=''):
         BushingProperty.__init__(self)
         if comment:
             self.comment = comment
         self.pid = pid
 
-        _append_nones(k_tables, 6)
-        _append_nones(b_tables, 6)
-        _append_nones(ge_tables, 6)
-        _append_nones(kn_tables, 6)
+        k_tables = _append_nones(k_tables, 6)
+        b_tables = _append_nones(b_tables, 6)
+        ge_tables = _append_nones(ge_tables, 6)
+        kn_tables = _append_nones(kn_tables, 6)
 
         self.k_tables = k_tables
         self.b_tables = b_tables

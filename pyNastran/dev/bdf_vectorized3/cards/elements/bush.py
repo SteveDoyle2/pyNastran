@@ -815,8 +815,10 @@ class PBUSHT(Property):
         self.ge_tables = np.zeros((0, 6), dtype='int32')
         self.kn_tables = np.zeros((0, 6), dtype='int32')
 
-    def add(self, pid: int, k_tables: list[int], b_tables: list[int],
-            ge_tables: list[int], kn_tables: list[int],
+    def add(self, pid: int, k_tables: Optional[list[int]]=None,
+            b_tables: Optional[list[int]]=None,
+            ge_tables: Optional[list[int]]=None,
+            kn_tables: Optional[list[int]]=None,
             ifile: int=0, comment: str='') -> int:
         self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, ifile, comment))
         self.n += 1
@@ -861,7 +863,7 @@ class PBUSHT(Property):
                 ge_tables = table
             elif param == 'KN':
                 kn_tables = table
-            else:
+            else:  # pragma: no cover
                 raise ValueError(param)
         self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, ifile, comment))
         self.n += 1
@@ -882,10 +884,20 @@ class PBUSHT(Property):
             pid, k_tablesi, b_tablesi, ge_tablesi, kn_tablesi, ifilei, commenti = card
             ifile[icard] = ifilei
             property_id[icard] = pid
-            k_tables[icard, :] = k_tablesi
-            b_tables[icard, :] = b_tablesi
-            ge_tables[icard, :] = ge_tablesi
-            kn_tables[icard, :] = kn_tablesi
+            is_tablei = False
+            if k_tablesi:
+                k_tables[icard, :] = k_tablesi
+                is_tablei = True
+            if b_tablesi:
+                b_tables[icard, :] = b_tablesi
+                is_tablei = True
+            if ge_tablesi:
+                ge_tables[icard, :] = ge_tablesi
+                is_tablei = True
+            if kn_tablesi:
+                kn_tables[icard, :] = kn_tablesi
+                is_tablei = True
+            assert is_tablei, (f'PBUSHT: pid={pid:d} is empty')
         self._save(property_id, k_tables, b_tables, ge_tables, kn_tables,
                    ifile=ifile)
 

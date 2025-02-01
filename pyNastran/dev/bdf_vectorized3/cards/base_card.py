@@ -346,7 +346,10 @@ class VectorizedBaseCard:
         #card = CQUAD4(self.model)
         assert self.n > 0, self
         self.__apply_slice__(card, i)
-        card.max_id
+        try:
+            card.max_id
+        except ValueError:
+            raise ValueError(str(self) + self.write())
         assert card.n > 0, card
         return card
 

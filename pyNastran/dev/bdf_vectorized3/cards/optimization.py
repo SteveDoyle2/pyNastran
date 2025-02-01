@@ -6,7 +6,8 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.bdf import MAX_INT
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    hslice_by_idim, remove_unused_primary, parse_check) #, BaseCard, _node_ids, expand_thru
+    hslice_by_idim, remove_unused_primary, parse_check,
+    save_ifile_comment) #, BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
     string, string_or_blank, integer_double_string_or_blank,
@@ -1954,7 +1955,8 @@ class DVPREL1(VectorizedBaseCard):
             desvar_ids: list[int],
             coeffs: list[float],
             p_min=None, p_max: float=1e20, c0: float=0.0,
-            validate: bool=True, comment: str='') -> int:
+            validate: bool=True,
+            ifile: int=0, comment: str='') -> int:
         """
         Creates a DVPREL1 card
 
@@ -1991,9 +1993,10 @@ class DVPREL1(VectorizedBaseCard):
         assert len(desvar_ids) == len(coeffs), f'desvar_ids={desvar_ids} coeffs={coeffs}'
         card = (oid, prop_type, pid, pname_fid, desvar_ids, coeffs,
                 p_min, p_max, c0,
-                comment)
+                ifile, comment)
         assert oid > 0, oid
         assert pid > 0, pid
+        assert len(desvar_ids), card
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -2050,9 +2053,10 @@ class DVPREL1(VectorizedBaseCard):
         #return DVPREL1(oid, prop_type, pid, pname_fid, desvars, coeffs,
                        #p_min=p_min, p_max=p_max, c0=c0,
                        #comment=comment)
+        assert len(desvar_ids), card
         card = (oid, prop_type, pid, pname_fid, desvar_ids, coeffs,
                 p_min, p_max, c0,
-                comment)
+                ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -2060,6 +2064,7 @@ class DVPREL1(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        ifile = np.zeros(ncards, dtype='int32')
         dvprel_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         property_type = np.zeros(ncards, dtype='|U8')
@@ -2072,11 +2077,12 @@ class DVPREL1(VectorizedBaseCard):
 
         all_desvars = []
         all_coeffs = []
+        comment = {}
         for icard, card in enumerate(self.cards):
             (oid, prop_type, pid, pname_fid, desvars, coeffs,
              p_mini, p_maxi, c0i,
-             comment) = card
-
+             ifilei, commenti) = card
+            ifile[icard] = ifilei
             dvprel_id[icard] = oid
             property_type[icard] = prop_type
             property_id[icard] = pid
@@ -2091,6 +2097,7 @@ class DVPREL1(VectorizedBaseCard):
             ndesvar[icard] = len(desvars)
             all_desvars.extend(desvars)
             all_coeffs.extend(coeffs)
+            assert len(desvars), card
 
         try:
             desvar_id = np.array(all_desvars, dtype='int32')
@@ -2101,15 +2108,21 @@ class DVPREL1(VectorizedBaseCard):
         self._save(dvprel_id, property_id, property_type,
                    property_name, field_num,
                    p_min, p_max, c0, ndesvar,
-                   desvar_id, coefficients)
+                   desvar_id, coefficients,
+                   ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
     def _save(self, dvprel_id, property_id, property_type,
               property_name, field_num,
               p_min, p_max, c0, ndesvar,
-              desvar_id, coefficients) -> None:
+              desvar_id, coefficients,
+              ifile=None, comment=None) -> None:
+        ncards = len(dvprel_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
         if len(self.dvprel_id) != 0:
+            ifile = np.hstack([self.ifile, ifile])
             dvprel_id = np.hstack([self.dvprel_id, dvprel_id])
             property_id = np.hstack([self.property_id, property_id])
             property_type = np.hstack([self.property_type, property_type])
@@ -2121,6 +2134,7 @@ class DVPREL1(VectorizedBaseCard):
             ndesvar = np.hstack([self.ndesvar, ndesvar])
             desvar_id = np.hstack([self.desvar_id, desvar_id])
             coefficients = np.hstack([self.coefficients, coefficients])
+        save_ifile_comment(self, ifile, comment)
         self.dvprel_id = dvprel_id
         self.property_id = property_id
         self.property_type = property_type
@@ -2134,6 +2148,7 @@ class DVPREL1(VectorizedBaseCard):
         self.desvar_id = desvar_id
         self.coefficients = coefficients
         assert self.property_id.min() > 0, self.property_id
+        assert len(self.desvar_id)
 
     def __apply_slice__(self, opt: DVPREL1, i: np.ndarray) -> None:
         opt.dvprel_id = self.dvprel_id[i]
@@ -2180,6 +2195,7 @@ class DVPREL1(VectorizedBaseCard):
 
     @property
     def max_id(self) -> int:
+        assert len(self.desvar_id)
         return max(self.dvprel_id.max(), self.property_id.max(),
                    self.desvar_id.max())
 
