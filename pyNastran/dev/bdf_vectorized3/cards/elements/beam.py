@@ -3823,7 +3823,7 @@ class PBEAM3(Property):
             cy=None, cz=None, dy=None, dz=None,
             ey=None, ez=None, fy=None, fz=None,
             cw=None,
-            ky=None, kz=None,
+            ky: float=1.0, kz: float=1.0,
             ny=None, nz=None,
             my=None, mz=None,
             w=None, wy=None, wz=None,
@@ -3881,6 +3881,25 @@ class PBEAM3(Property):
         if fz is None:
             fz = np.zeros(3, dtype='float64')
 
+        if cw is None:
+            cw = np.zeros(3, dtype='float64')
+
+        if ny is None:
+            ny = np.zeros(3, dtype='float64')
+        if nz is None:
+            nz = np.zeros(3, dtype='float64')
+        if my is None:
+            my = np.zeros(3, dtype='float64')
+        if mz is None:
+            mz = np.zeros(3, dtype='float64')
+
+        if nsiy is None:
+            nsiy = np.zeros(3, dtype='float64')
+        if nsiz is None:
+            nsiz = np.zeros(3, dtype='float64')
+        if nsiyz is None:
+            nsiyz = np.zeros(3, dtype='float64')
+
         #spots = ('C', 'D', 'E', 'F')
         if w is None:
             w = np.zeros((3, 4), dtype='float64')
@@ -3902,6 +3921,7 @@ class PBEAM3(Property):
             w, wy, wz,
             ifile, comment,
         )
+        assert ky > 0.0, ky
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -3985,6 +4005,7 @@ class PBEAM3(Property):
         ky = double_or_blank(card, ifield, 'Ky', default=1.0)
         kz = double_or_blank(card, ifield + 1, 'Kz', default=1.0)
         ifield += 2
+        assert ky > 0.0, ky
 
         locations = ['A', 'B', 'C']
         ny = []
@@ -4058,7 +4079,7 @@ class PBEAM3(Property):
                 wy[iloc, ispot] = wyi
                 wz[iloc, ispot] = wzi
                 ifield += 3
-        assert len(card) <= 33, f'len(PBEAM3 card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 76, f'len(PBEAM3 card) = {len(card):d}\ncard={card}'
         # return PBEAM3(pid, mid, area, iz, iy, iyz, j, nsm=nsm,
         #               so=so,
         #               cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
@@ -4068,6 +4089,7 @@ class PBEAM3(Property):
         #               cw=cw, stress=stress,
         #               w=w, wy=wy, wz=wz,
         #               comment=comment)
+        assert ky > 0.0, ky
         card = (pid, mid, area, iz, iy, iyz, j, nsm,
                 so, cy, cz, dy, dz, ey, ez, fy, fz,
                 ky, kz,
@@ -4127,7 +4149,7 @@ class PBEAM3(Property):
              cwi, stressi,
              wi, wyi, wzi,
              ifilei, commenti) = card
-
+            assert kyi > 0.0, kyi
             property_id[icard] = pid
             material_id[icard] = mid
             area[icard, :] = areai
@@ -4192,6 +4214,7 @@ class PBEAM3(Property):
         self.j = j
         self._nsm = nsm
         self.sout = sout
+        assert np.all(np.isfinite(ky)), ky
         self.ky = ky
         self.kz = kz
         self.ny = ny
@@ -4302,17 +4325,17 @@ class PBEAM3(Property):
         izs = array_default_float(self.iz, default=0.0, size=size)
         iyzs = array_default_float(self.iyz, default=0.0, size=size)
         nsms = array_default_float(self._nsm, default=0.0, size=size)
-        kys = self.ky
-        kzs = self.kz
-        nys = self.ny
-        nzs = self.nz
-        mys = self.my
-        mzs = self.mz
-        nsiys = self.nsiy
-        nsizs = self.nsiz
-        nsiyzs = self.nsiyz
-        cws = self.cw
-        stress = self.stress
+        kys = array_default_float(self.ky, default=1.0, size=size)
+        kzs = array_default_float(self.kz, default=1.0, size=size)
+        nys = array_default_float(self.ny, default=0.0, size=size)
+        nzs = array_default_float(self.nz, default=0.0, size=size)
+        mys = array_default_float(self.my, default=0.0, size=size)
+        mzs = array_default_float(self.mz, default=0.0, size=size)
+        nsiys = array_default_float(self.nsiy, default=0.0, size=size)
+        nsizs = array_default_float(self.nsiz, default=0.0, size=size)
+        nsiyzs = array_default_float(self.nsiyz, default=0.0, size=size)
+        cws = array_default_float(self.cw, default=0.0, size=size)
+        stress = self.stress.tolist()
         for pid, mid, sout, a, iy, iz, iyz, j, nsm, \
             ky, kz, nyi, nzi, myi, mzi, nsiy, nsiz, nsiyz, \
                 cw, stressi in zip_longest(
@@ -4350,9 +4373,16 @@ class PBEAM3(Property):
             ]
 
             cy = cz = dy = dz = ey = ez = fy = fz = 0.
-            for i, ai, iyi, izi, iyzi, ji, nsmi, soi in zip_longest(
-                    count(), a, iy, iz, iyz, j, nsm, sout):
-
+            assert len(a) == len(iy)
+            assert len(a) == len(iz)
+            assert len(a) == len(iyz)
+            assert len(a) == len(j)
+            assert len(a) == len(nsm)
+            assert len(a) == len(sout)
+            i = 0
+            for ai, iyi, izi, iyzi, ji, nsmi, souti in zip_strict(
+                    a, iy, iz, iyz, j, nsm, sout):
+                assert souti in ['YES', 'NO', 'YESA'], (souti, sout)
                 if i == 0:
                     # PID MID A(A) IZ(A) IY(A) IYZ(A) J(A) NSM(A)
                     list_fields = [
@@ -4361,25 +4391,27 @@ class PBEAM3(Property):
                         cy, cz, dy, dz, ey, ez, fy, fz]
                 else:
                     list_fields += [
-                        soi, None,
+                        souti, None,
                         ai, izi, iyi, iyzi, ji, nsmi,
                         cy, cz, dy, dz, ey, ez, fy, fz]
+                i += 1
 
             # KY KZ NY(A) NZ(A) NY(B) NZ(B) NY(C) NZ(C)
             list_fields += [ky, kz]
-            for ny, nz in zip(nys, nzs):
-                list_fields += [ny, nz]
+
+            for ny, nz in zip_longest(nys, nzs):
+                list_fields += ny.tolist() + nz.tolist()
 
             # MY(A) MZ(A) MY(B) MZ(B) MY(C) MZ(C) NSIY(A) NSIZ(A)
-            for my, mz in zip(mys, mzs):
-                list_fields += [my, mz]
+            for my, mz in zip_longest(mys, mzs):
+                list_fields += my.tolist() + mz.tolist()
 
             # NSIYZ(A) NSIY(B) NSIZ(B) NSIYZ(B) NSIY(C) NSIZ(C) NSIYZ(C) CW(A)
-            for nsiy, nsiz, nsiyz in zip(nsiys, nsizs, nsiyzs):
-                list_fields += [nsiy, nsiz, nsiyz]
+            for nsiy_i, nsiz_i, nsiyz_i in zip_longest(nsiy, nsiz, nsiyz):
+                list_fields += [nsiy_i, nsiz_i, nsiyz_i]
 
             # CW(B) CW(C) STRESS
-            list_fields += cw + stressi
+            list_fields += cw.tolist() + [stressi]
 
             # list_fields += self.cw
             # list_fields += [self.stress, None, None, None, None, None]
