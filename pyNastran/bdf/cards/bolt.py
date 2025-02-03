@@ -99,6 +99,7 @@ class BOLT_MSC(BaseCard):
             #return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+
 class BOLT(BaseCard):
     """
     +-------+------+-------+-------+------+------+------+------+------+

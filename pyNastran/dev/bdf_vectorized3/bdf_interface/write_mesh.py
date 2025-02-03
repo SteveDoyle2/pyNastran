@@ -615,7 +615,7 @@ class Writer:
         model.pbeam.write_file(bdf_file, size=size, is_double=is_double)
         model.pbeaml.write_file(bdf_file, size=size, is_double=is_double)
         model.pbcomp.write_file(bdf_file, size=size, is_double=is_double)
-        #model.pbeam3.write_file(bdf_file, size=size, is_double=is_double)
+        model.pbeam3.write_file(bdf_file, size=size, is_double=is_double)
 
         # bend
         model.pbend.write_file(bdf_file, size=size, is_double=is_double)

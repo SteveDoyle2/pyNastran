@@ -671,7 +671,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PBEAM', 'PBEAML', 'PBCOMP', # 'PBRSECT',
             'PBEND',
             #'PBMSECT', # not fully supported
-            #'PBEAM3',  # v1.3
+            'PBEAM3',  # v1.3
 
             'PSHELL', 'PCOMP', 'PCOMPG',
             'PSHEAR', 'PSHLN1', 'PSHLN2',
@@ -2480,6 +2480,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # beam3
             'CBEAM3': partial(self._prepare_card, self.cbeam3),
+            'PBEAM3': partial(self._prepare_card, self.pbeam3),
 
             # bend
             'CBEND' : partial(self._prepare_card, self.cbend),

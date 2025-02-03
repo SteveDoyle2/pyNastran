@@ -1681,16 +1681,25 @@ class Add1dElements(BDFAttributes):
                      comment=comment)
         return prop
 
-    def add_cbeam3(self, eid, pid, nids, x, g0, wa, wb, wc, tw, s,
+    def add_cbeam3(self, eid, pid, nids, x=None, g0=None,
+                   wa=None, wb=None, wc=None, tw=None,
+                   sa: int=0, sb: int=0, sc: int=0,
                    comment: str='') -> int:
         """Creates a CBEAM3 card"""
-        elem = self.cbeam3.add(eid, pid, nids, x, g0, wa, wb, wc, tw, s,
+        assert isinstance(sa, integer_types), sa
+        assert isinstance(sb, integer_types), sb
+        assert isinstance(sc, integer_types), sc
+        assert x is not None or g0 is not None, (x, g0)
+        elem = self.cbeam3.add(eid, pid, nids, x=x, g0=g0,
+                               wa=wa, wb=wb, wc=wc, tw=tw,
+                               sa=sa, sb=sb, sc=sc,
                                comment=comment)
         return elem
 
 
 class Add2dElements(BDFAttributes):
-    def add_cshear(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+    def add_cshear(self, eid: int, pid: int, nids: list[int],
+                   comment: str='') -> int:
         """
         Creates a CSHEAR card
 
@@ -5468,16 +5477,18 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                 print(card)
                 raise
             #print(class_name)
-            if not (class_name == 'COORD' or class_name in self._card_parser_prepare or card.type in self._card_parser_prepare):
+            if not (class_name == 'COORD' or
+                    class_name in self._card_parser_prepare):
                 msg = (
                     f'{class_name} has not been added to the list of cards to load,\n'
                     'but is included in the set of cards to process\n'
-                    'add it to bdf.py\n'
+                    'add it to bdf.py into _card_parse_prepare \n'
                 )
                 if card not in self.cards_to_read and card not in {'ASET'}:
                     msg += 'add it to self.cards_to_read'
                 raise RuntimeError(msg)
             assert isinstance(card.n, int), f'{card.type} n={card.n} type={type(card.n)}'
+            #print(class_name, card.n)
             if card.n > 0:
                 try:
                     card.parse_cards()
