@@ -265,7 +265,8 @@ class ZONA:
     def safe_cross_reference(self):
         self.cross_reference()
 
-    def write_bdf(self, bdf_file, size=8, is_double=False):
+    def write_bdf(self, bdf_file: TextIO, size: int=8,
+                  is_double: bool=False):
         #if self.model.nastran_format != 'zona':
             #return
         for unused_id, panlst in self.panlsts.items():

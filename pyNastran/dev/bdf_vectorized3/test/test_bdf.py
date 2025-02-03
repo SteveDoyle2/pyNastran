@@ -1162,7 +1162,10 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
 
     """
     if not is_nominal:
+        #print('not nominal')
         fem1.is_strict_card_parser = False
+    #print(fem1, is_nominal)
+    #print(fem1.is_strict_card_parser)
 
     log = fem1.log
     if crash_cards is None:
@@ -1321,6 +1324,7 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
     if run_convert and not is_nominal:
         units_to = ['m', 'kg', 's']
         units_from = ['m', 'kg', 's']
+        #print(type(fem1))
         fem1b = copy.deepcopy(fem1)
         convert(fem1b, units_to, units=units_from)
     if run_mass:

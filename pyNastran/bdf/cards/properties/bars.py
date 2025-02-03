@@ -2474,6 +2474,7 @@ def parse_pbrsect_options(pid: int, options: list[Any]):
 
 class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
     """
+    MSC
     +--------+----------+---------+---------+----------+---------+---------+----------+----------+
     |    1   |     2    |    3    |    4    |     5    |    6    |    7    |     8    |     9    |
     +========+==========+=========+=========+==========+=========+=========+==========+==========+
@@ -2686,9 +2687,9 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
         self.mid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a PBARL card from ``BDF.add_card(...)``
+        Adds a PBEAM3 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -2705,9 +2706,9 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
         area = [double(card, 3, 'A')]
         iz = [double(card, 4, 'Iz')]
         iy = [double(card, 5, 'Iy')]
-        iyz = [double_or_blank(card, 6, 'Iyz', 0.0)]
+        iyz = [double_or_blank(card, 6, 'Iyz', default=0.0)]
         j = [double_or_blank(card, 7, 'J', iy[0] + iz[0])]
-        nsm = [double_or_blank(card, 8, 'nsm', 0.0)]
+        nsm = [double_or_blank(card, 8, 'nsm', default=0.0)]
 
         #CY(A) CZ(A) DY(A) DZ(A) EY(A) EZ(A) FY(A) FZ(A)
         cy = [double_or_blank(card, 9, 'cy', default=0.)]

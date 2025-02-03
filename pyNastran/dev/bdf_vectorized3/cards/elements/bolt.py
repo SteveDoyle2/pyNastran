@@ -193,7 +193,7 @@ class BOLT(VectorizedBaseCard):
                ifile: int=0,
                comment: str='') -> int:
         assert element_type == 1, element_type
-        card = ('nx', bolt_id, element_type, eids, comment)
+        card = ('nx', bolt_id, element_type, eids, ifile, comment)
         self.cards.append(card)
         self.n += 1
         return self.n - 1
@@ -364,13 +364,14 @@ class BOLT(VectorizedBaseCard):
         ncards = len(self.cards)
         idtype = self.model.idtype
 
+        ifile = np.zeros(ncards, dtype='int32')
         bolt_id = np.zeros(ncards, dtype='int32')
         num_ids = np.zeros(ncards, dtype='int32')
         all_ids = []
         for icard, card in enumerate(self.cards):
             assert card[0] == 'nx', card
-            method, bolt_idi, etypei, eidsi, comment = card
-
+            method, bolt_idi, etypei, eidsi, ifilei, comment = card
+            ifile[icard] = ifilei
             bolt_id[icard] = bolt_idi
             ids2 = split_set3_ids(eidsi)
             num_ids[icard] = len(ids2)
@@ -390,7 +391,7 @@ class BOLT(VectorizedBaseCard):
             bolt_id = np.hstack([self.bolt_id, bolt_id])
             num_ids = np.hstack([self.num_ids, num_ids])
             element_ids = np.hstack([self.element_ids, element_ids])
-        save_ifile_comment(ifile, comment)
+        save_ifile_comment(self, ifile, comment)
         self.bolt_id = bolt_id
         self.num_ids = num_ids
         self.element_ids = element_ids

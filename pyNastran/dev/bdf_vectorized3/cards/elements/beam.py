@@ -2733,10 +2733,9 @@ class PBCOMP(Property):
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
-        for arg in [
-            property_ids, material_ids, self._area, self.i1, self.i2, self.i12, self.j, self.nsm,
-            self.k, self.m1, self.m2, self.n1, self.n2, self.symopt, self.istation]:
-            print(arg)
+        for arg in [property_ids, material_ids, self._area,
+                    self.i1, self.i2, self.i12, self.j, self.nsm,
+                    self.k, self.m1, self.m2, self.n1, self.n2, self.symopt, self.istation]:
             assert not isinstance(arg, float), arg
 
         for pid, mid, A, i1, i2, i12, j, nsm, \
@@ -2759,9 +2758,7 @@ class PBCOMP(Property):
 
             n1 = set_blank_if_default(n1, default=0.0)
             n2 = set_blank_if_default(n2, default=0.0)
-
             symopt = set_blank_if_default(symopt, default=0)
-
             list_fields = ['PBCOMP', pid, mid, area, i1, i2, i12, j,
                            nsm, k1, k2, m1, m2, n1, n2, symopt, None]
 
@@ -2973,6 +2970,9 @@ class CBEAM3(Element):
             wc = [0., 0., 0.]
         if tw is None:
             tw = [0., 0., 0.]
+        assert isinstance(sa, integer_types), sa
+        assert isinstance(sb, integer_types), sb
+        assert isinstance(sc, integer_types), sc
         self.cards.append((eid, pid, nids, g0, x,
                            wa, wb, wc, tw,
                            [sa, sb, sc], ifile, comment))
@@ -2984,7 +2984,7 @@ class CBEAM3(Element):
         pid = integer_or_blank(card, 2, 'pid', default=eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
-        gc = integer_or_blank(card, 5, 'gc')
+        gc = integer_or_blank(card, 5, 'gc', default=0)
 
         # card, eid, x1_default, x2_default, x3_default
         x, g0 = init_x_g0_cbeam3(card, eid, 0., 0., 0.)
@@ -3088,6 +3088,13 @@ class CBEAM3(Element):
         self.s = s
         self.n = len(property_id)
 
+    def centroid(self) -> np.ndarray:
+        centroid = line_centroid(self.model, self.nodes)
+        return centroid
+
+    def center_of_mass(self) -> np.ndarray:
+        return self.centroid()
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['element_id'].append(self.element_id)
         used_dict['property_id'].append(self.property_id)
@@ -3174,7 +3181,6 @@ class CBEAM3(Element):
 
             # offt doesn't exist in NX nastran
             #offt = set_blank_if_default(offt, 'GGG')
-
             list_fields = ['CBEAM3', eid, pid, ga, gb, gc, x1, x2, x3,
                            w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
                            twa, twb, twc, sa, sb, sc]
@@ -3202,7 +3208,8 @@ class CBEAM3(Element):
         return props
 
     def mass_material_id(self) -> np.ndarray:
-        material_id = basic_mass_material_id(self.property_id, self.allowed_properties, 'CBEAM3')
+        material_id = basic_mass_material_id(
+            self.property_id, self.allowed_properties, 'CBEAM3')
         return material_id
 
     def mass(self) -> np.ndarray:
@@ -3213,25 +3220,82 @@ class CBEAM3(Element):
         return mass
 
     def line_vector_length(self) -> tuple[np.ndarray, np.ndarray]:
-        line_vector, length = line_vector_length(self.model, self.nodes)
+        line_vector, length = line_vector_length(self.model, self.nodes[:, [0, 1]])
         return line_vector, length
 
+    @property
+    def base_nodes(self) -> np.ndarray:
+        return self.nodes[:, [0, 1]]
+
+    @property
+    def midside_nodes(self) -> np.ndarray:
+        return self.nodes[:, 2]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
+                          msg=f'no shell properties for {self.type}')
+        #for prop in self.allowed_properties:
+            #print(prop.write(size=8))
+        assert len(pids) > 0, self.allowed_properties
+        pids.sort()
+
+        base_nodes = self.base_nodes
+        midside_nodes = self.midside_nodes
+        assert base_nodes is not None
+        #print(self.base_nodes)
+        geom_check(self,
+                   missing,
+                   node=(nid, base_nodes), filter_node0=False,
+                   property_id=(pids, self.property_id))
+        if midside_nodes is not None:
+            geom_check(self,
+                       missing,
+                       node=(nid, midside_nodes), filter_node0=True)
+
+    def area(self) -> np.ndarray:
+        model = self.model
+        property_id = self.property_id
+        allowed_properties = self.allowed_properties
+
+        nelement = len(property_id)
+        assert nelement > 0, property_id
+        area = np.full(nelement, np.nan, dtype='float64')
+        assert len(allowed_properties) > 0, allowed_properties
+
+        for prop in allowed_properties:
+            ilookup, iall = searchsorted_filter(prop.property_id, property_id)
+            if len(iall) == 0:
+                continue
+            areai = prop.area()
+            area[ilookup] = areai
+
+        assert nelement > 0, nelement
+        assert len(area) == nelement, area
+
+        # if np.isnan(mass_per_area.max()):
+        # inan = np.isnan(mass_per_area)
+        # pid_nan = property_id[inan]
+        # raise RuntimeError(f'property_id={pid_nan} has nan mass_per_area')
+        return area
+
     def length(self) -> np.ndarray:
-        missing = np.setdiff1d(self.nodes.flatten(), self.model.grid.node_id)
+        node_ends = self.nodes[:, [0, 1]]
+        missing = np.setdiff1d(node_ends.flatten(), self.model.grid.node_id)
         if len(missing):
             raise RuntimeError(missing)
-        length = line_length(self.model, self.nodes)
+        length = line_length(self.model, node_ends)
         inan = np.isnan(length)
         if np.any(inan):
             msg = 'CBEAM has nan length\n'
             msg += f'eids={self.element_id[inan]}\n'
-            msg += f'nid1={self.nodes[inan,0]}\n'
-            msg += f'nid2={self.nodes[inan,1]}\n'
+            msg += f'nid1={node_ends[inan,0]}\n'
+            msg += f'nid2={node_ends[inan,1]}\n'
             raise RuntimeError(msg)
         return length
 
     def centroid(self) -> np.ndarray:
-        centroid = line_centroid(self.model, self.nodes)
+        centroid = line_centroid(self.model, self.nodes[:, [0, 1]])
         return centroid
 
     def e_g_nu(self) -> np.ndarray:
@@ -3679,6 +3743,690 @@ class CBEAM3(Element):
     #@property
     #def is_bit(self) -> np.ndarray:
         #return not self.is_offt
+
+
+class PBEAM3(Property):
+    """
+    MSC
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |    1   |     2    |    3    |    4    |     5    |    6    |    7    |     8    |     9    |
+    +========+==========+=========+=========+==========+=========+=========+==========+==========+
+    | PBEAM3 |    PID   |   MID   |   A(A)  |   IZ(A)  |  IY(A)  |  IYZ(A) |   J(A)   |  NSM(A)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   CY(A)  |  CZ(A)  |  DY(A)  |   DZ(A)  |  EY(A)  |  EZ(A)  |   FY(A)  |   FZ(A)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   SO(B)  |         |   A(B)  |   IZ(B)  |  IY(B)  |  IYZ(B) |   J(B)   |  NSM(B)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   CY(B)  |  CZ(B)  |  DY(B)  |   DZ(B)  |  EY(B)  |  EZ(B)  |   FY(B)  |   FZ(B)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   SO(C)  |         |   A(C)  |   IZ(C)  |  IY(C)  |  IYZ(C) |   J(C)   |  NSM(C)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   CY(C)  |  CZ(C)  |  DY(C)  |   DZ(C)  |  EY(C)  |  EZ(C)  |   FY(C)  |   FZ(C)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |    KY    |   KZ    |  NY(A)  |   NZ(A)  |  NY(B)  |  NZ(B)  |   NY(C)  |   NZ(C)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |  MY(A)   |  MZ(A)  |  MY(B)  |   MZ(B)  |  MY(C)  |  MZ(C)  |  NSIY(A) |  NSIZ(A) |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        | NSIYZ(A) | NSIY(B) | NSIZ(B) | NSIYZ(B) | NSIY(C) | NSIZ(C) | NSIYZ(C) |   CW(A)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   CW(B)  |  CW(C)  |  STRESS |          |         |         |          |          |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   WC(A)  |  WYC(A) |  WZC(A) |   WD(A)  |  WYD(A) |  WZD(A) |   WE(A)  |  WYE(A)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |  WZE(A)  |  WF(A)  |  WYF(A) |  WZF(A)  |  WC(B)  |  WYC(B) |  WZC(B)  |   WD(B)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |  WYD(B)  |  WZD(B) |  WE(B)  |  WYE(B)  |  WZE(B) |  WF(B)  |  WYF(B)  |  WZF(B)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   WC(C)  |  WYC(C) |  WZC(C) |   WD(C)  |  WYD(C) |  WZD(C) |  WE(C)   |  WYE(C)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |  WZE(C)  |  WF(C)  |  WYF(C) |  WZF(C)  |         |         |          |          |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+
+    """
+    # _show_attributes = ['property_id', 'material_id', 't',
+    #                     'twelveIt3', 'tst', 'nsm', 'z']
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.material_id = np.zeros((0, 4), dtype='int32')
+
+        self.so = np.zeros((0, 3), dtype='|U4')
+        self.cy = np.zeros(0, dtype='float64')
+        self.cz = np.zeros(0, dtype='float64')
+
+        self.cy = np.zeros(0, dtype='float64')
+        self.cz = np.zeros(0, dtype='float64')
+
+        self.area = np.zeros(0, dtype='float64')
+        self.iy = np.zeros(0, dtype='float64')
+        self.iz = np.zeros(0, dtype='float64')
+        self.iyz = np.zeros(0, dtype='float64')
+        self.nsm = np.zeros(0, dtype='float64')
+
+        self.dy = np.zeros(0, dtype='float64')
+        self.dz = np.zeros(0, dtype='float64')
+
+        self.ey = np.zeros(0, dtype='float64')
+        self.ez = np.zeros(0, dtype='float64')
+
+        self.fy = np.zeros(0, dtype='float64')
+        self.fz = np.zeros(0, dtype='float64')
+
+        #spots = ('C', 'D', 'E', 'F')
+        self.w = np.zeros((0, 4), dtype='float64')
+        self.wy = np.zeros((0, 4), dtype='float64')
+        self.wz = np.zeros((0, 4), dtype='float64')
+
+    def add(self, pid: int, mid: int,
+            area, iz, iy, iyz=None, j=None, nsm=None,
+            so=None,
+            cy=None, cz=None, dy=None, dz=None,
+            ey=None, ez=None, fy=None, fz=None,
+            cw=None,
+            ky=None, kz=None,
+            ny=None, nz=None,
+            my=None, mz=None,
+            w=None, wy=None, wz=None,
+            nsiy=None, nsiz=None, nsiyz=None,
+            stress: str='GRID',
+            ifile: int=0, comment: str=''):
+        """
+        Creates a PBEAM3 card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            defines material; MAT1
+        nsm : float; default=0.0
+            non-structural mass per unit area
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if so is None:
+            so = np.array(['YES', 'YES', 'YES'], dtype='|U4')
+        if cy is None:
+            cy = np.zeros(3, dtype='float64')
+        if cz is None:
+            cz = np.zeros(3, dtype='float64')
+
+        if cy is None:
+            cy = np.zeros(3, dtype='float64')
+        if cz is None:
+            cz = np.zeros(3, dtype='float64')
+
+        if iy is None:
+            iy = np.zeros(3, dtype='float64')
+        if iz is None:
+            iz = np.zeros(3, dtype='float64')
+        if iyz is None:
+            iyz = np.zeros(3, dtype='float64')
+        if nsm is None:
+            nsm = np.zeros(3, dtype='float64')
+
+        if dy is None:
+            dy = np.zeros(3, dtype='float64')
+        if dz is None:
+            dz = np.zeros(3, dtype='float64')
+
+        if ey is None:
+            ey = np.zeros(3, dtype='float64')
+        if ez is None:
+            ez = np.zeros(3, dtype='float64')
+
+        if fy is None:
+            fy = np.zeros(3, dtype='float64')
+        if fz is None:
+            fz = np.zeros(3, dtype='float64')
+
+        #spots = ('C', 'D', 'E', 'F')
+        if w is None:
+            w = np.zeros((3, 4), dtype='float64')
+        if wy is None:
+            wy = np.zeros((3, 4), dtype='float64')
+        if wz is None:
+            wz = np.zeros((3, 4), dtype='float64')
+
+        # self.cards.append((pid, mid, A, iz, iy, iyz, j, nsm,
+        #                    cy, cz, dy, dz, ey, ez, fy, fz,
+        #                    ifile, comment))
+        card = (
+            pid, mid, area, iz, iy, iyz, j, nsm,
+            so, cy, cz, dy, dz, ey, ez, fy, fz,
+            ky, kz,
+            ny, nz, my, mz,
+            nsiy, nsiz, nsiyz,
+            cw, stress,
+            w, wy, wz,
+            ifile, comment,
+        )
+        self.cards.append(card)
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, ifile: int,
+                 comment: str='') -> int:
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+        """
+        Adds a PBEAM3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #PID MID A(A) IZ(A) IY(A) IYZ(A) J(A) NSM(A)
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+
+        area = [double(card, 3, 'A')]
+        iz = [double(card, 4, 'Iz')]
+        iy = [double(card, 5, 'Iy')]
+        iyz = [double_or_blank(card, 6, 'Iyz', default=0.0)]
+        j = [double_or_blank(card, 7, 'J', iy[0] + iz[0])]
+        nsm = [double_or_blank(card, 8, 'nsm', default=0.0)]
+
+        #CY(A) CZ(A) DY(A) DZ(A) EY(A) EZ(A) FY(A) FZ(A)
+        cy = [double_or_blank(card, 9, 'cy', default=0.)]
+        cz = [double_or_blank(card, 10, 'cz', default=0.)]
+
+        dy = [double_or_blank(card, 11, 'dy', default=0.)]
+        dz = [double_or_blank(card, 12, 'dz', default=0.)]
+
+        ey = [double_or_blank(card, 13, 'ey', default=0.)]
+        ez = [double_or_blank(card, 14, 'ez', default=0.)]
+
+        fy = [double_or_blank(card, 15, 'fy', default=0.)]
+        fz = [double_or_blank(card, 16, 'fz', default=0.)]
+
+        #SO(B)        A(B) IZ(B) IY(B) IYZ(B)  J(B) NSM(B)
+        #CY(B) CZ(B) DY(B) DZ(B) EY(B)  EZ(B) FY(B)  FZ(B)
+
+        #SO(C)        A(C) IZ(C) IY(C) IYZ(C) J(C)  NSM(C)
+        #CY(C) CZ(C) DY(C) DZ(C) EY(C)  EZ(C) FY(C)  FZ(C)
+
+        so = ['YES']
+        locations = ['B', 'C']
+        for i, location in enumerate(locations):
+            offset = 17 + i * 16
+            so.append(string_or_blank(card, offset, 'SO_%s' % location, default='YESA'))
+
+            area.append(double_or_blank(card, offset + 2, 'area_%s' % location, default=area[0]))
+            iz.append(double_or_blank(card, offset + 3, 'Iz', default=iz[0]))
+            iy.append(double_or_blank(card, offset + 4, 'Iy', default=iy[0]))
+            iyz.append(double_or_blank(card, offset + 5, 'Iyz', default=iyz[0]))
+            j.append(double_or_blank(card, offset + 6, 'J', default=j[0]))
+            nsm.append(double_or_blank(card, offset + 7, 'nsm', default=nsm[0]))
+
+            cy.append(double_or_blank(card, offset + 8, 'cy', default=0.))
+            cz.append(double_or_blank(card, offset + 9, 'cz', default=0.))
+
+            dy.append(double_or_blank(card, offset + 10, 'dy', default=0.))
+            dz.append(double_or_blank(card, offset + 11, 'dz', default=0.))
+
+            ey.append(double_or_blank(card, offset + 12, 'ey', default=0.))
+            ez.append(double_or_blank(card, offset + 13, 'ez', default=0.))
+
+            fy.append(double_or_blank(card, offset + 14, 'fy', default=0.))
+            fz.append(double_or_blank(card, offset + 15, 'fz', default=0.))
+
+        #KY       KZ      NY(A)   NZ(A)    NY(B)   NZ(B)   NY(C)    NZ(C)
+        #MY(A)    MZ(A)   MY(B)   MZ(B)    MY(C)   MZ(C)   NSIY(A)  NSIZ(A)
+        #NSIYZ(A) NSIY(B) NSIZ(B) NSIYZ(B) NSIY(C) NSIZ(C) NSIYZ(C) CW(A)
+        #CW(B)    CW(C)   STRESS
+
+        ifield = 49
+        ky = double_or_blank(card, ifield, 'Ky', default=1.0)
+        kz = double_or_blank(card, ifield + 1, 'Kz', default=1.0)
+        ifield += 2
+
+        locations = ['A', 'B', 'C']
+        ny = []
+        nz = []
+        for i, location in enumerate(locations):
+            if i == 0:
+                nyi = double_or_blank(card, ifield, 'NY(%s)' % location, default=0.0)
+                nzi = double_or_blank(card, ifield + 1, 'NZ(%s)' % location, default=0.0)
+            else:
+                nyi = double_or_blank(card, ifield, 'NY(%s)' % location, default=ny[0])
+                nzi = double_or_blank(card, ifield + 1, 'NZ(%s)' % location, default=nz[0])
+            ny.append(nyi)
+            nz.append(nzi)
+            ifield += 2
+
+        my = []
+        mz = []
+        for i, location in enumerate(locations):
+            if i == 0:
+                myi = double_or_blank(card, ifield, 'MY(%s)' % location, default=0.0)
+                mzi = double_or_blank(card, ifield + 1, 'MZ(%s)' % location, default=0.0)
+            else:
+                myi = double_or_blank(card, ifield, 'MY(%s)' % location, default=my[0])
+                mzi = double_or_blank(card, ifield + 1, 'MZ(%s)' % location, default=mz[0])
+            my.append(myi)
+            mz.append(mzi)
+            ifield += 2
+
+        nsiy = []
+        nsiz = []
+        nsiyz = []
+        for i, location in enumerate(locations):
+            if i == 0:
+                nsiyi = double_or_blank(card, ifield, 'NSIY(%s)' % location, default=0.0)
+                nsizi = double_or_blank(card, ifield + 1, 'NSIZ(%s)' % location, default=0.0)
+                nsiyzi = double_or_blank(card, ifield + 2, 'NSIYZ(%s)' % location, default=0.0)
+            else:
+                nsiyi = double_or_blank(card, ifield, 'NSIY(%s)' % location, default=nsiy[0])
+                nsizi = double_or_blank(card, ifield + 1, 'NSIZ(%s)' % location, default=nsiz[0])
+                nsiyzi = double_or_blank(card, ifield + 2, 'NSIYZ(%s)' % location, default=nsiyz[0])
+            nsiy.append(nsiyi)
+            nsiz.append(nsizi)
+            nsiyz.append(nsiyzi)
+            ifield += 3
+
+        cw = []
+        for location in locations:
+            cwi = double_or_blank(card, ifield, 'CW(%s)' % location, default=0.0)
+            cw.append(cwi)
+            ifield += 1
+        stress = string_or_blank(card, ifield, 'STRESS',
+                                 default='GRID')
+        ifield += 6
+
+        # WC(A)  WYC(A) WZC(A) WD(A)  WYD(A) WZD(A) WE(A)  WYE(A)
+        # WZE(A) WF(A)) WYF(A) WZF(A) WC(B)  WYC(B) WZC(B) WD(B)
+        # WYD(B) WZD(B) WE(B)  WYE(B) WZE(B) WF(B)  WYF(B) WZF(B)
+        # WC(C)  WYC(C) WZC(C) WD(C)  WYD(C) WZD(C) WE(C)  WYE(C)
+        # WZE(C) WF(C)  WYF(C) WZF(C)
+
+        spots = ('C', 'D', 'E', 'F')
+        w = np.zeros((3, 4), dtype='float64')
+        wy = np.zeros((3, 4), dtype='float64')
+        wz = np.zeros((3, 4), dtype='float64')
+        for iloc, location in enumerate(locations):
+            for ispot, spot in enumerate(spots):
+                wi = double_or_blank(card, ifield, 'W%s(%s)' % (spot, location), default=0.0)
+                wyi = double_or_blank(card, ifield + 1, 'WY%s(%s)' % (spot, location), default=0.0)
+                wzi = double_or_blank(card, ifield + 2, 'WZ%s(%s)' % (spot, location), default=0.0)
+                w[iloc, ispot] = wi
+                wy[iloc, ispot] = wyi
+                wz[iloc, ispot] = wzi
+                ifield += 3
+        assert len(card) <= 33, f'len(PBEAM3 card) = {len(card):d}\ncard={card}'
+        # return PBEAM3(pid, mid, area, iz, iy, iyz, j, nsm=nsm,
+        #               so=so,
+        #               cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
+        #               ky=ky, kz=kz,
+        #               ny=ny, nz=nz, my=my, mz=mz,
+        #               nsiy=nsiy, nsiz=nsiz, nsiyz=nsiyz,
+        #               cw=cw, stress=stress,
+        #               w=w, wy=wy, wz=wz,
+        #               comment=comment)
+        card = (pid, mid, area, iz, iy, iyz, j, nsm,
+                so, cy, cz, dy, dz, ey, ez, fy, fz,
+                ky, kz,
+                ny, nz, my, mz,
+                nsiy, nsiz, nsiyz,
+                cw, stress,
+                w, wy, wz,
+                ifile, comment)
+        self.cards.append(card)
+        self.n += 1
+        return self.n - 1
+
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        ifile = np.zeros(ncards, dtype='int32')
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
+        ky = np.zeros(ncards, dtype='float64')
+        kz = np.zeros(ncards, dtype='float64')
+
+        # area, iz, iy, iyz, j, nsm,
+        # so, cy, cz, dy, dz, ey, ez, fy, fz,
+        # ky, kz,
+        # ny, nz, my, mz,
+        area = np.zeros((ncards, 3), dtype='float64')
+        iy = np.zeros((ncards, 3), dtype='float64')
+        iz = np.zeros((ncards, 3), dtype='float64')
+        iyz = np.zeros((ncards, 3), dtype='float64')
+        j = np.zeros((ncards, 3), dtype='float64')
+        nsm = np.zeros((ncards, 3), dtype='float64')
+
+        cw = np.zeros((ncards, 3), dtype='float64')
+        sout = np.zeros((ncards, 3), dtype='|U8')
+
+        ny = np.zeros((ncards, 3), dtype='float64')
+        nz = np.zeros((ncards, 3), dtype='float64')
+        my = np.zeros((ncards, 3), dtype='float64')
+        mz = np.zeros((ncards, 3), dtype='float64')
+
+        stress = np.zeros(ncards, dtype='|U8')
+        w = np.zeros((ncards, 12), dtype='float64')
+        wy = np.zeros((ncards, 12), dtype='float64')
+        wz = np.zeros((ncards, 12), dtype='float64')
+
+        nsiy = np.zeros((ncards, 3), dtype='float64')
+        nsiz = np.zeros((ncards, 3), dtype='float64')
+        nsiyz = np.zeros((ncards, 3), dtype='float64')
+        comment = {}
+        for icard, card in enumerate(self.cards):
+            (pid, mid, areai, izi, iyi, iyzi, ji, nsmi,
+             soi, cyi, czi, dyi, dzi, eyi, ezi, fyi, fzi,
+             kyi, kzi,
+             nyi, nzi, myi, mzi,
+             nsiy_i, nsiz_i, nsiyz_i,
+             cwi, stressi,
+             wi, wyi, wzi,
+             ifilei, commenti) = card
+
+            property_id[icard] = pid
+            material_id[icard] = mid
+            area[icard, :] = areai
+            iy[icard, :] = iyi
+            iz[icard, :] = izi
+            iyz[icard, :] = iyzi
+            j[icard, :] = ji
+            nsm[icard, :] = nsmi
+
+            ky[icard] = kyi
+            kz[icard] = kzi
+            my[icard] = myi
+            mz[icard] = mzi
+            ny[icard] = nyi
+            nz[icard] = nzi
+
+            sout[icard, :] = soi
+            stress[icard] = stressi
+            w[icard, :] = wi.ravel()
+            wy[icard, :] = wyi.ravel()
+            wz[icard, :] = wzi.ravel()
+            nsiy[icard, :] = nsiy_i
+            nsiz[icard, :] = nsiz_i
+            nsiyz[icard, :] = nsiyz_i
+
+            cw[icard, :] = cwi
+            if commenti:
+                comment[pid] = commenti
+        self._save(property_id, material_id,
+                   area, iy, iz, iyz, j, nsm,
+                   ky, kz, sout,
+                   ny, nz, my, nz,
+                   nsiy, nsiz, nsiyz,
+                   cw, stress, w, wy, wz,
+                   ifile=ifile, comment=comment)
+        self.sort()
+        self.cards = []
+
+    def _save(self, property_id, material_id,
+              area, iy, iz, iyz, j, nsm,
+              ky, kz, sout,
+              ny, nz, my, mz,
+              nsiy, nsiz, nsiyz,
+              cw, stress,
+              w, wy, wz,
+              ifile=None, comment: Optional[dict[int, str]]=None) -> None:
+        ncards = len(property_id)
+        if ifile is None:
+            ifile = np.zeros(ncards, dtype='int32')
+        if len(self.property_id) != 0:
+            raise NotImplementedError()
+
+        save_ifile_comment(self, ifile, comment)
+        self.property_id = property_id
+        self.material_id = material_id
+        assert area.min() >= 0., area
+        assert nsm.min() >= 0., nsm
+        self._area = area
+        self.iy = iy
+        self.iz = iz
+        self.iyz = iyz
+        self.j = j
+        self._nsm = nsm
+        self.sout = sout
+        self.ky = ky
+        self.kz = kz
+        self.ny = ny
+        self.nz = nz
+        self.my = my
+        self.mz = mz
+        self.nsiy = nsiy
+        self.nsiz = nsiz
+        self.nsiyz = nsiyz
+
+        self.cw = cw
+        self.stress = stress
+        self.w = w
+        self.wy = wy
+        self.wz = wz
+
+        self.nsiy = nsiy
+        self.nsiz = nsiz
+        self.nsiyz = nsiyz
+        self.n = ncards
+
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        material_id = np.unique(self.material_id.flatten())
+        material_id = material_id[material_id > 0]
+        used_dict['material_id'].append(material_id)
+
+    def convert(self, xyz_scale: float=1.0,
+                area_scale: float=1.0,
+                area_inertia_scale: float=1.0,
+                nsm_per_area_scale: float=1.0, **kwargs):
+
+        self._area *= area_scale
+        self.iy *= area_inertia_scale
+        self.iz *= area_inertia_scale
+        self.iyz *= area_inertia_scale
+        self.j *= area_inertia_scale
+        self._nsm *= nsm_per_area_scale
+
+    def __apply_slice__(self, prop: PBEAM3, i: np.ndarray) -> None:  # ignore[override]
+        prop.n = len(i)
+        self._slice_comment(prop, i)
+        prop.ifile = self.ifile[i]
+        prop.property_id = self.property_id[i]
+        prop.material_id = self.material_id[i]
+
+        prop._area = self._area[i, :]
+        prop.iy = self.iy[i, :]
+        prop.iz = self.iz[i, :]
+        prop.iyz = self.iyz[i, :]
+        prop.j = self.j[i, :]
+        prop._nsm = self._nsm[i, :]
+        prop.cw = self.cw[i, :]
+        prop.w = self.w[i, :]
+        prop.wy = self.wy[i, :]
+        prop.wz = self.wz[i, :]
+
+        prop.nsiy = self.nsiy[i, :]
+        prop.nsiz = self.nsiz[i, :]
+        prop.nsiyz = self.nsiyz[i, :]
+        prop.cw = self.cw[i, :]
+
+    def area(self) -> None:
+        nprop = len(self.property_id)
+        area = self._area.mean(axis=1)
+        assert len(area) == nprop
+        return area
+
+    def mass_per_length(self) -> np.ndarray:
+        nsm = self._nsm
+        mid = self.material_id
+        area = self._area
+
+        rho = get_density_from_material(mid, self.allowed_materials)
+        mass_per_length = nsm + rho[:, np.newaxis] * area
+        mass_per_lengthi = mass_per_length.mean(axis=1)
+        assert len(mass_per_lengthi) == len(mid)
+        return mass_per_lengthi
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        mids = hstack_msg([mat.material_id for mat in self.allowed_materials],
+                          msg=f'no beam3 materials for {self.type}')
+        mids = np.unique(mids)
+        material_ids = np.unique(self.material_id.ravel())
+        # if -1 == material_ids[0]:
+        #     material_ids = material_ids[1:]
+        geom_check(self,
+                   missing,
+                   material_id=(mids, material_ids))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(), self.material_id.max())
+
+    @parse_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        property_ids = array_str(self.property_id, size=size)
+        material_ids = array_str(self.material_id, size=size)
+        souts = self.sout
+        # tws = array_default_float(self.tw, default=0.0, size=size, is_double=False)
+        # ps = array_default_float_nan(self.p, default=0., size=size, is_double=False)
+        areas = array_default_float(self._area, default=0.0, size=size)
+        js = array_default_float(self._area, default=0.0, size=size)
+        iys = array_default_float(self.iy, default=0.0, size=size)
+        izs = array_default_float(self.iz, default=0.0, size=size)
+        iyzs = array_default_float(self.iyz, default=0.0, size=size)
+        nsms = array_default_float(self._nsm, default=0.0, size=size)
+        kys = self.ky
+        kzs = self.kz
+        nys = self.ny
+        nzs = self.nz
+        mys = self.my
+        mzs = self.mz
+        nsiys = self.nsiy
+        nsizs = self.nsiz
+        nsiyzs = self.nsiyz
+        cws = self.cw
+        stress = self.stress
+        for pid, mid, sout, a, iy, iz, iyz, j, nsm, \
+            ky, kz, nyi, nzi, myi, mzi, nsiy, nsiz, nsiyz, \
+                cw, stressi in zip_longest(
+                property_ids, material_ids, souts, areas,
+                iys, izs, iyzs, js, nsms, kys, kzs,
+                nys, nzs, mys, mzs,
+                nsiys, nsizs, nsiyzs, cws, stress):
+
+            # PID MID A(A) IZ(A) IY(A) IYZ(A) J(A) NSM(A)
+            # pid = integer(card, 1, 'pid')
+            # mid = integer(card, 2, 'mid')
+
+            # area = [double(card, 3, 'A')]
+            # iz = [double(card, 4, 'Iz')]
+            # iy = [double(card, 5, 'Iy')]
+            # iyz = [double_or_blank(card, 6, 'Iyz', default=0.0)]
+            # j = [double_or_blank(card, 7, 'J', iy[0] + iz[0])]
+            # nsm = [double_or_blank(card, 8, 'nsm', default=0.0)]
+
+            # # CY(A) CZ(A) DY(A) DZ(A) EY(A) EZ(A) FY(A) FZ(A)
+            # cy = [double_or_blank(card, 9, 'cy', default=0.)]
+            # cz = [double_or_blank(card, 10, 'cz', default=0.)]
+            #
+            # dy = [double_or_blank(card, 11, 'dy', default=0.)]
+            # dz = [double_or_blank(card, 12, 'dz', default=0.)]
+            #
+            # ey = [double_or_blank(card, 13, 'ey', default=0.)]
+            # ez = [double_or_blank(card, 14, 'ez', default=0.)]
+            #
+            # fy = [double_or_blank(card, 15, 'fy', default=0.)]
+            # fz = [double_or_blank(card, 16, 'fz', default=0.)]
+            list_fields = [
+                'PBEAM3', pid, mid, a[0], iy[0], iz[0], iyz[0], j[0], nsm[0],
+                # CY(A) CZ(A) DY(A) DZ(A) EY(A) EZ(A) FY(A) FZ(A)
+            ]
+
+            cy = cz = dy = dz = ey = ez = fy = fz = 0.
+            for i, ai, iyi, izi, iyzi, ji, nsmi, soi in zip_longest(
+                    count(), a, iy, iz, iyz, j, nsm, sout):
+
+                if i == 0:
+                    # PID MID A(A) IZ(A) IY(A) IYZ(A) J(A) NSM(A)
+                    list_fields = [
+                            'PBEAM3', pid, mid,
+                        ai, izi, iyi, iyzi, ji, nsmi,
+                        cy, cz, dy, dz, ey, ez, fy, fz]
+                else:
+                    list_fields += [
+                        soi, None,
+                        ai, izi, iyi, iyzi, ji, nsmi,
+                        cy, cz, dy, dz, ey, ez, fy, fz]
+
+            # KY KZ NY(A) NZ(A) NY(B) NZ(B) NY(C) NZ(C)
+            list_fields += [ky, kz]
+            for ny, nz in zip(nys, nzs):
+                list_fields += [ny, nz]
+
+            # MY(A) MZ(A) MY(B) MZ(B) MY(C) MZ(C) NSIY(A) NSIZ(A)
+            for my, mz in zip(mys, mzs):
+                list_fields += [my, mz]
+
+            # NSIYZ(A) NSIY(B) NSIZ(B) NSIYZ(B) NSIY(C) NSIZ(C) NSIYZ(C) CW(A)
+            for nsiy, nsiz, nsiyz in zip(nsiys, nsizs, nsiyzs):
+                list_fields += [nsiy, nsiz, nsiyz]
+
+            # CW(B) CW(C) STRESS
+            list_fields += cw + stressi
+
+            # list_fields += self.cw
+            # list_fields += [self.stress, None, None, None, None, None]
+
+            # WC(A) WYC(A) WZC(A) WD(A) WYD(A) WZD(A) WE(A) WYE(A)
+            # WZE(A) WF(A)) WYF(A) WZF(A)
+            # for w, wy, wz in zip(self.w, self.wy, self.wz):
+            #     for wi, wyi, wzi in zip(w, wy, wz):
+            #         list_fields += [wi, wyi, wzi]
+            msg = print_card(list_fields)
+            bdf_file.write(msg)
+        return
+
+    @property
+    def allowed_materials(self) -> list[Any]:
+        beam3_materials = [self.model.mat1]
+        return [mat for mat in beam3_materials if mat.n]
+
+    # def expanded_mass_material_id(self) -> tuple[np.ndarray, np.ndarray]:
+    #     mid = self.mass_material_id()
+    #     return self.property_id, mid
+
+    def mass_material_id(self) -> np.ndarray:
+        return self.material_id
+
+    # def mass_per_area(self) -> np.ndarray:
+    #     thickness = self.t
+    #     nsm = self.nsm
+    #     mid = self.mass_material_id()
+    #     rho = get_density_from_material(mid, self.allowed_materials)
+    #     mass_per_area = nsm + rho * thickness
+    #     return mass_per_area
+
+    # def nsm_rho_thickness(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    #     thickness = self.t
+    #     nsm = self.nsm
+    #     mid = self.mass_material_id()
+    #     rho = get_density_from_material(mid, self.allowed_materials)
+    #     return nsm, rho, thickness
+
+    def density(self) -> np.ndarray:
+        mid = self.mass_material_id()
+        rho = get_density_from_material(mid, self.allowed_materials)
+        return rho
+
+    # def total_thickness(self) -> np.ndarray:
+    #     return self.t
 
 
 class CBEND(Element):

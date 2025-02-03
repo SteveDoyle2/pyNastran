@@ -24,8 +24,8 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
     CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5,
     PDAMP, PDAMP5, PDAMPT, CVISC, PVISC, CGAP, PGAP)
 from pyNastran.dev.bdf_vectorized3.cards.elements.beam import (
-    CBEAM, PBEAM, PBEAML, PBCOMP, # , PBMSECT
-    CBEAM3, # PBEAM3,
+    CBEAM, PBEAM, PBEAML, PBCOMP,  #, PBMSECT
+    CBEAM3, PBEAM3,
     CBEND, PBEND)
 from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
@@ -414,7 +414,7 @@ class BDFAttributes:
 
         # beam3
         self.cbeam3 = CBEAM3(self)
-        #self.pbeam3 = PBEAM3(self)
+        self.pbeam3 = PBEAM3(self)
 
         self.cbend = CBEND(self)
         self.pbend = PBEND(self)
@@ -858,6 +858,7 @@ class BDFAttributes:
     def beam_property_cards(self) -> list[Any]:
         properties = [
             self.pbeam, self.pbeaml, self.pbcomp,
+            self.pbeam3,
         ]
         return properties
 
