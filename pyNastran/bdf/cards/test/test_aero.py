@@ -2,9 +2,10 @@
 # pylint: disable=R0914
 """tests aero cards"""
 import os
+from io import StringIO
+from pathlib import Path
 from collections import defaultdict
 import unittest
-from io import StringIO
 from typing import Optional, Any
 
 import numpy as np
@@ -36,6 +37,7 @@ if IS_MATPLOTLIB:
 ROOTPATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(ROOTPATH, '..', 'models')
 TEST_PATH = os.path.join(ROOTPATH, 'bdf', 'cards', 'test')
+AERO_PATH = Path(MODEL_PATH) / 'aero'
 
 COMMENT_BAD = 'this is a bad comment'
 COMMENT_GOOD = 'this is a good comment\n'
@@ -2940,7 +2942,7 @@ class TestAero(unittest.TestCase):
 
     def test_bah_plane_bdf(self):
         """tests the bah_plane"""
-        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')
+        bdf_filename = AERO_PATH / 'bah_plane' / 'bah_plane.bdf'
         folder = ''
         run_bdf(folder, bdf_filename, debug=False, xref=True, check=True,
                 punch=False, mesh_form='combined',
@@ -3009,7 +3011,7 @@ class TestAero(unittest.TestCase):
     def test_zona_1(self):
         """zona explicit test"""
         log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
-        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
+        bdf_filename = AERO_PATH / 'f16_ma41.bdf'
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
@@ -3022,7 +3024,7 @@ class TestAero(unittest.TestCase):
     def test_zona_2(self):
         """zona explicit test"""
         log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
-        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'ztran.bdf')
+        bdf_filename = AERO_PATH / 'ztran.bdf'
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',

@@ -520,6 +520,7 @@ def alternate_values_in_list(pid_eid_str, values):
         pid_eid_value.append(value)
     return pid_eid_value
 
+
 class NSMADD(ADD):
     """
     Defines an NSM combination set as a union of NSM cards.

@@ -18,7 +18,7 @@ import pyNastran
 #matplotlib.use(matplotlib_backend)
 #from pyNastran.gui.qt_version import qt_version
 
-PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q]'
+PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q|--index]'
 AXES = '[--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
 EXPORTS = '[--export_csv] [--export_zona] [--export_f06]'
 USAGE_145 = (
@@ -76,6 +76,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         '  --mach           plot Mach number\n'
         '  --alt            plot altitude\n'
         '  --q              plot dynamic pressure\n'
+        '  --index          plot the index\n'
         '\n'
         'Units:\n'
         '  --in_units IN    Selects the input unit system\n'
@@ -206,6 +207,8 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         plot_type = 'rho'
     elif data['--q']:
         plot_type = 'q'
+    elif data['--index']:
+        plot_type = 'index'
     else:
         sys.stderr.write('plot_type assumed to be --tas\n')
 

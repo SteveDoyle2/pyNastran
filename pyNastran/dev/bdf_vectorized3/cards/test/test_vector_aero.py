@@ -44,6 +44,7 @@ if IS_MATPLOTLIB:
 ROOTPATH = pyNastran.__path__[0]
 MODEL_PATH = Path(os.path.join(ROOTPATH, '..', 'models'))
 TEST_PATH = os.path.join(ROOTPATH, 'bdf', 'cards', 'test')
+AERO_PATH = MODEL_PATH / 'aero'
 
 COMMENT_BAD = 'this is a bad comment'
 COMMENT_GOOD = 'this is a good comment\n'
@@ -75,7 +76,7 @@ class TestAero(unittest.TestCase):
      * SPLINE1 / SPLINE2 / SPLINE4 / SPLINE5
     """
     def test_cpmopt(self):
-        bdf_filename = MODEL_PATH / 'aero' / 'cpmopt.bdf'
+        bdf_filename = AERO_PATH / 'cpmopt.bdf'
         model = read_bdf(bdf_filename)
         check_set_methods(model)
         methods = SetMethods(model)
@@ -84,7 +85,7 @@ class TestAero(unittest.TestCase):
         assert np.array_equal(spline_nodes, expected_spline_nodes), spline_nodes.tolist()
 
     def test_freedlm(self):
-        bdf_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm.bdf'
+        bdf_filename = AERO_PATH / 'freedlm' / 'freedlm.bdf'
         model = read_bdf(bdf_filename)
 
         check_set_methods(model)
@@ -3183,7 +3184,7 @@ class TestAero(unittest.TestCase):
 
     def test_bah_plane_bdf(self):
         """tests the bah_plane"""
-        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')
+        bdf_filename = AERO_PATH / 'bah_plane' / 'bah_plane.bdf'
         folder = ''
         run_equivalence = False # buggy
         run_extract_bodies = False # was True in OG
@@ -3256,7 +3257,7 @@ class TestAero(unittest.TestCase):
     def _test_zona_1(self):
         """zona explicit test"""
         log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
-        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
+        bdf_filename = AERO_PATH / 'zona' / 'f16_ma41.bdf'
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
@@ -3269,7 +3270,7 @@ class TestAero(unittest.TestCase):
     def _test_zona_2(self):
         """zona explicit test"""
         log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
-        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'ztran.bdf')
+        bdf_filename = AERO_PATH / 'zona' / 'ztran.bdf'
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',

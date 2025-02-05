@@ -6,7 +6,6 @@ TODO:
 """
 from __future__ import annotations
 import os
-#from copy import deepcopy
 import warnings
 from itertools import count
 from typing import Iterable, TextIO, Optional, Any, TYPE_CHECKING
@@ -47,8 +46,9 @@ class FlutterResponse:
 
     def __eq__(self, flutter_response: FlutterResponse) -> bool:
         return True
+
     def export_to_hdf5(self, h5_file, encoding: str):
-        return #h5_file.create_dataset('data', data=np.ones(10))
+        return  #h5_file.create_dataset('data', data=np.ones(10))
 
     def __repr__(self) -> str:
         #from pyNastran.utils import object_stats
@@ -103,6 +103,51 @@ class FlutterResponse:
 
     def get_stats(self) -> str:
         return f'FlutterResponse(isubcase={self.subcase})'
+
+    @classmethod
+    def from_zona(cls,
+                  modes: list[int],
+                  result: np.ndarray,
+                  in_units: dict[str, str],
+                  zona_out_filename: str,
+                  subcase_id: int=1, subtitle: str='', label: str='',
+                  #cref: float=1.0,
+                  #is_xysym: bool=False, is_xzsym: bool=False,
+                  ):
+
+        mach0 = 0.0
+        density_ratio = 1.0
+        configuration = 'AEROSG2D'  #  TODO: what is this?
+        xysym = '???'
+        xzsym = '???'
+        method = 'PKNL'
+        # in_units = {
+        #     'altitude': 'ft',
+        #     'velocity': 'in/s',
+        #     'eas': 'in/s',
+        #     'density': 'slinch/in^3',
+        #     'dynamic_pressure': 'psi',
+        # }
+        out_units = in_units
+        print('in_units', in_units)
+        assert isinstance(in_units, dict), in_units
+        resp = FlutterResponse(
+            zona_out_filename, subcase_id, configuration, xysym, xzsym, mach0, density_ratio,
+            method, modes, result, in_units=in_units,
+            subtitle=subtitle,
+            label=label,
+            use_rhoref=False,
+            make_alt=False)
+        resp.set_out_units(out_units)
+        fig, axes = resp.plot_vg_vf(
+            fig=None, damp_axes=None, freq_axes=None, modes=None, plot_type='eas',
+            legend=True, xlim=None,
+            ylim_damping=None, ylim_freq=None,
+            damping_limit=None,
+            clear=False, close=False,
+            ncol=0, png_filename=None, show=False)
+        plt.show()
+        return resp
 
     @classmethod
     def from_nx(cls, method: str, fdata: np.ndarray,
@@ -202,7 +247,7 @@ class FlutterResponse:
                  subcase: int, configuration: str,
                  xysym: str, xzsym: str,
                  mach: float, density_ratio: float, method: str,
-                 modes: list[int], results: Any,
+                 modes: list[int] | np.ndarray, results: Any,
                  in_units: None | str | dict[str, str]=None,
                  subtitle: str='', label: str='',
                  use_rhoref: bool | float=False,
@@ -239,7 +284,9 @@ class FlutterResponse:
                 in_units = {'velocity' : 'in/s'}
                 The velocity units are the units for the FLFACT card in the BDF
             PKNL method:
-                in_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3', 'altitude' : 'ft', 'dynamic_pressure': 'psi'}
+                in_units = {
+                    'velocity' : 'in/s', 'density' : 'slinch/in^3', 'altitude' : 'ft',
+                    'dynamic_pressure': 'psi'}
                 The velocity/density units are the units for the FLFACT card in the BDF
 
         out_units dict[str] = str (default=None -> no units conversion)
@@ -329,8 +376,6 @@ class FlutterResponse:
             self.ieas = 9
             self.iq = 10
             self.ialt = 11
-            #flutter.results[:, :, flutter.idensity] *= 1.146e-7
-            #print(f'use_rhoref = {use_rhoref}')
             if isinstance(use_rhoref, float_types):
                 rhoref = use_rhoref
                 results[:, :, self.idensity] *= rhoref
@@ -365,12 +410,13 @@ class FlutterResponse:
             # npoint, nvelocity, 3?
             #self.eigr_eigi_velocity = self.eigenvector.reshape(nmodes, nvelocity, 3)
             # nmodes_mpf, npoint, nvelocity?
-            eigenvector, eigr_eigi_velocity = reshape_eigenvectors(
-                self.eigenvector, self.eigr_eigi_velocity)
-            self.eigenvector = eigenvector
-            self.eigr_eigi_velocity = eigr_eigi_velocity
-            assert len(self.eigenvector) and len(self.eigr_eigi_velocity), (len(self.eigenvector), len(self.eigr_eigi_velocity))
-            #= self.eigenvector.reshape(nmodes, nmodes, nvelocity)
+            if 0:
+                eigenvector, eigr_eigi_velocity = reshape_eigenvectors(
+                    self.eigenvector, self.eigr_eigi_velocity)
+                self.eigenvector = eigenvector
+                self.eigr_eigi_velocity = eigr_eigi_velocity
+                assert len(self.eigenvector) and len(self.eigr_eigi_velocity), (len(self.eigenvector), len(self.eigr_eigi_velocity))
+                #= self.eigenvector.reshape(nmodes, nmodes, nvelocity)
 
             nvelocity = results.shape
 
@@ -463,7 +509,6 @@ class FlutterResponse:
         if font_size is None:
             font_size = plt.rcParams['font.size']
 
-        #print(f'font_size = {font_size}')
         font = {
             #'family': 'normal',
             #'weight': 'bold',
@@ -505,10 +550,10 @@ class FlutterResponse:
         density_units_in = in_units['density']
 
         # in/s
-        vel = results[:, :, self.ivelocity]  #.ravel()
+        vel = results[:, :, self.ivelocity]
 
         # slinch/in^3 - in_units
-        rho = results[:, :, self.idensity]  #.ravel()
+        rho = results[:, :, self.idensity]
 
         # good
         rho_ref = atm_density(0., R=1716., alt_units='ft',
@@ -1053,7 +1098,10 @@ class FlutterResponse:
             color = colors[jcolor]
             freq = self.results[imode, :, self.ifreq].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
-            xs = self.results[imode, :, ix].ravel()
+            if ix >= 0:
+                xs = self.results[imode, :, ix].ravel()
+            else:
+                asdf
             ys = self.results[imode, :, iy].ravel()
             #print('freq, xs, ys')
             jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
@@ -1204,7 +1252,8 @@ class FlutterResponse:
             if self.nopoints:
                 symbol2 = 'None'
 
-            # self.log.info(f'scatter={scatter}; color={color2}; linestyle={linestyle2!r} symbol={symbol2!r}; markersize={markersize}')
+            # self.log.info(f'scatter={scatter}; color={color2}; linestyle={linestyle2!r}'
+            #               ' symbol={symbol2!r}; markersize={markersize}')
             # self.log.info(f'xs={xs[iplot]}')
             # self.log.info(f'y1s={y1s[iplot]}')
             # self.log.info(f'y2s={y2s[iplot]}')
@@ -1384,7 +1433,14 @@ class FlutterResponse:
             symbols = ['None'] * len(symbols)
         return symbols, colors
 
-    def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None,
+    def _result_by_mode(self, imode: int, ix: int) -> np.ndarray:
+        if ix == -1:  # index
+            nvel = len(self.results[imode, :, 0])
+            return np.arange(0, nvel, dtype='int32')
+        return self.results[imode, :, ix]
+
+    def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None,
+                   modes=None,
                    plot_type: str='tas',
                    clear: bool=False, close: bool=False, legend: bool=True,
                    xlim: Optional[Limit]=None,
@@ -1437,6 +1493,7 @@ class FlutterResponse:
             filter crossings entirely outside the plot range
             useful for cleaning up the legend
         """
+        self.sort_modes_by_freq()
         #assert vl_limit is None or isinstance(vl_limit, float_types), vl_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
         #self.fix()
@@ -1474,9 +1531,9 @@ class FlutterResponse:
             color = colors[jcolor]
             symbol = symbols[jcolor]
 
-            vel = self.results[imode, :, ix].ravel()
-            damping = self.results[imode, :, self.idamping].ravel()
-            freq = self.results[imode, :, self.ifreq].ravel()
+            vel = self._result_by_mode(imode, ix).ravel()
+            damping = self._result_by_mode(imode, self.idamping).ravel()
+            freq = self._result_by_mode(imode, self.ifreq).ravel()
             if mode > self.nrigid_body_modes and self.x_cutoff is not None:
                 irigid = np.where(vel < self.x_cutoff)[0]
                 vel = vel[irigid]
@@ -1595,6 +1652,76 @@ class FlutterResponse:
         _show_save_clear_close(
             fig, show, png_filename, clear, close)
         return fig, (damp_axes, freq_axes)
+
+    def sort_modes_by_freq(self,
+                           debug: bool=True):
+        index = self._result_by_mode(0, -1)
+        nresult = self.results.shape[2]
+        for ivel in index:
+            #freqs = self.results[:, ivel, self.idamping] * self.results[:, ivel, self.ifreq]
+            freqs = self.results[:, ivel, self.ifreq]
+            ifreq_sort = np.argsort(freqs)
+            for ires in range(nresult):
+                self.results[:, ivel, ires] = self.results[ifreq_sort, ivel, ires]
+        modes = self.get_delta_modes(dfreq=1.0)
+
+    def polyfit_modes(self):
+        modes, imodes = _get_modes_imodes(self.modes, modes)
+
+
+        #------------------------------------------------------
+        # setup a linear extrapolation of the first 2 points
+        # so we can bump the degree
+        deg = 1  # linear
+        i0 = 0
+        i1 = deg + 1
+        i2 = i1 + 1
+        nmodes, nvel, nresults = self.results.shape
+        del nresults
+        ivel = 0
+        #eas_estimated = np.zeros(nmodes)
+        eas_estimated = self.results[:, ivel, self.ieas].copy()
+        for imode in imodes:
+            eas = self.results[imode, :, self.ieas]
+            freqs = self.results[imode, :, self.ifreq]
+            temp = eas[i0:i1]
+            assert len((temp)) == deg + 1, (temp, deg)
+            func = np.poly1d(np.polyfit(eas[i0:i1], freqs[i0:i1], deg))
+            eas_estimated[imode] = func(eas[i2])
+
+        #------------------------------------------------------
+        # compare to predicted and flip if necessary
+
+        #------------------------------------------------------
+        # setup a quadratic extrapolation of the first 3 points
+        deg = 2
+        for i1 in range(nvel-2):  # TODO: I think -2, maybe -3???
+            i1 = deg + 1
+            i2 = i1 + 2
+
+            # testing i1/i2
+            eas1 = self.results[0, i1, self.ieas]
+            eas2 = self.results[0, i2, self.ieas]
+
+            # loop over modes and do the thing...
+
+            # compare to predicted and flip
+
+        #------------------------------------------------------
+        # I think we're done
+
+    def get_delta_modes(self, modes=None, dfreq: float=-1.0):
+        modes, imodes = _get_modes_imodes(self.modes, modes)
+        freqs = self.results[imodes, :, self.ifreq]
+        dfs = freqs.max(axis=1) - freqs.min(axis=1)
+        assert len(dfs) == len(imodes), (len(dfs), len(imodes))
+        print(dfs.tolist())
+        idfreq = dfs < dfreq
+        return modes[idfreq]
+        # for imode in range(imodes):
+        #     freqs = self.results[imode, :, self.ifreq]
+        #     df = freqs.max() - freqs.min()
+        #     if df <
 
     def _plot_crossings(self,
                         damp_axes: plt.Axes,
@@ -1940,9 +2067,13 @@ class FlutterResponse:
             ix = self.idamping
             xlabel = r'Structural Damping; $g = 2 \gamma $'
             xunit = 'g'
+        elif plot_type == 'index':
+            ix = -1
+            xlabel = r'Index'
+            xunit = ''
         else:  # pramga: no cover
             raise NotImplementedError(f"plot_type={plot_type!r} not in ['tas', 'eas', 'alt', 'kfreq', "
-                                      "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']")
+                                      "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt', 'index']")
         return ix, xlabel, xunit
 
     def object_attributes(self, mode: str='public', keys_to_skip=None,
@@ -2379,6 +2510,7 @@ def get_legend_kwargs(font_size: int,
 
     return legend_kwargs
 
+
 def _is_q_units_consistent(rho_units: str, vel_units: str,
                            q_units: str) -> bool:
     units = [
@@ -2448,8 +2580,11 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
 
     if markevery2 is None:
         # plot all points and lines (default)
-        line = damp_axes.plot(vel, damping, color=color, marker=symbol, markersize=markersize, linestyle=linestyle, label=label)
-        freq_axes.plot(vel, freq, color=color, marker=symbol, markersize=markersize, linestyle=linestyle)
+        line = damp_axes.plot(
+            vel, damping, color=color, marker=symbol, markersize=markersize,
+            linestyle=linestyle, label=label)
+        freq_axes.plot(vel, freq, color=color, marker=symbol, markersize=markersize,
+                       linestyle=linestyle)
     elif symbol or text or linestyle:
         # draw lines with all points
         line = damp_axes.plot(vel, damping, color=color, linestyle=linestyle, label=label)
@@ -2495,12 +2630,12 @@ def reshape_eigenvectors(eigenvectors: np.array,
     nmodes1, nmodes_nvel = eigenvectors.shape
     nmodes = nmodes1 - 1 if incorrect_shape else nmodes1
     nvel = nmodes_nvel // nmodes
-    if 0:  # pragma: no cover
-        print(nmodes1, nmodes)
-        print(nmodes_nvel, nmodes, nvel)
-        print('eigenvectors:')
-        print(eigenvectors)
-        print('eigr_eigi_vel:')
+    if nvel == 0:  # pragma: no cover
+        print(f'nmodes1={nmodes1} nmodes={nmodes}; incorrect_shape={incorrect_shape}')
+        print(f'nmodes*nvel={nmodes_nvel} nmodes={nmodes} -> nvel={nvel}')
+        print(f'eigenvectors.shape = {eigenvectors.shape}')
+        # print(eigenvectors)
+        print(f'eigr_eigi_vel.shape = {eigr_eigi_vel.shape}:')
         print(eigr_eigi_vel)
         print(f'nmodes={nmodes}; nvel={nvel}')
     assert nvel > 0, nvel

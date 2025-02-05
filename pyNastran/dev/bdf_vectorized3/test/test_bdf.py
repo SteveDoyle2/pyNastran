@@ -12,6 +12,7 @@ import sys
 import copy
 import traceback
 import warnings
+from pathlib import Path
 from itertools import count, chain
 from typing import Optional, Any
 from io import StringIO
@@ -449,7 +450,7 @@ def run_and_compare_fems(
     """runs two fem models and compares them"""
     if skip_cards is None:
         skip_cards = []
-    assert isinstance(bdf_model, str) and os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
+    assert isinstance(bdf_model, (Path, str)) and os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDFv(debug=debug, log=log)
     fem1.idtype = 'int64'
     is_lax_parser = True
@@ -1171,6 +1172,9 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
     if crash_cards is None:
         crash_cards = []
     check_path(bdf_model, 'bdf_model')
+    if isinstance(bdf_model, Path):
+        bdf_model = str(bdf_model)
+
     try:
         if bdf_model.lower().endswith('.h5'):
             if not hasattr(fem1, 'read_h5'):

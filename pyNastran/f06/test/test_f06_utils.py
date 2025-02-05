@@ -48,7 +48,6 @@ PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = PKG_PATH / '..' / 'models'
 AERO_PATH = MODEL_PATH / 'aero'
 
-
 class TestF06Flutter(unittest.TestCase):
 
     def test_reshape_eigenvectors(self):
@@ -452,16 +451,35 @@ class TestF06Flutter(unittest.TestCase):
         """constant to check dxyz"""
         # nmodes, nvel
         eigr = np.array([
-            [0.,1., 2.],
-            [0.,1., 2.],
+            [0., 1., 2.],
+            [0., 1., 2.],
         ])
         eigi = np.array([
-            [1.,1.,1.],
-            [0.,.5,1.1],
+            [1., 1., 1.],
+            [0., .5, 1.1],
         ])
         nmodes, nvel = eigr.shape
         out = _fix_modes(eigr, eigi, nmodes, nvel, kmodes=0)
 
+        def fix_modes_dumb(self):
+            """
+            steps
+            1. sort by frequency
+            """
+            coeffs = [0, -40, -2, 0.5]
+            x = np.linspace(-10, 13., num=100)
+            y1 = coeffs[0] + coeffs[1] * x + coeffs[2] * x**2 + coeffs[3]  * x**3
+
+            coeffs2 = [-20, 5, 1, 0.1]
+            y2 = coeffs[0] + coeffs[1] * x + coeffs[2] * x ** 2 + coeffs[3] * x ** 3
+
+            fig = plt.Figure(1)
+            ax = fig.gca()
+            ax.plot(x, y1, label='y1')
+            ax.plot(x, y2, label='y2')
+            plt.grid(True)
+            #plt.show()
+            #flutter.sort_modes_by_freq(freq)
 
 def fix_modes_2024(flutter: FlutterResponse,
                    kmodes: int=0,
@@ -646,26 +664,41 @@ def _fix_modes(eigr: np.ndarray,
     return out
 
 
+class TestZonaFlutter(unittest.TestCase):
+    def _test_zona_gafa(self):
+        from pyNastran.f06.dev.flutter.read_zona_out import read_zona_out
+        f06_filename = AERO_PATH / 'aerobeam.f06'
+        png_filename = AERO_PATH / 'aerobeam.png'
+        responses, mass = read_zona_out(f06_filename)
+        # plot_sol_200(f06_filename, png_filename=png_filename,
+        #              show=True)
+        if len(responses) == 1:
+            warnings.warn('nresponses=1 and should be 2')
+        else:
+            assert len(responses) == 2, list(responses.keys())
+
+
+
 class TestF06Utils(unittest.TestCase):
     def test_opt_aerobeam(self):
         """tests optimization"""
-        f06_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.f06')
-        png_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.png')
+        f06_filename = AERO_PATH / 'aerobeam.f06'
+        png_filename = AERO_PATH / 'aerobeam.png'
         plot_sol_200(f06_filename, png_filename=png_filename,
                      show=True)
         #read_sol_200(f06_filename)
 
     def test_opt_mdb200(self):
         """tests optimization"""
-        f06_filename = os.path.join(MODEL_PATH, 'other', 'mdb200.f06')
-        png_filename = os.path.join(MODEL_PATH, 'other', 'mdb200.png')
+        f06_filename = MODEL_PATH / 'other' / 'mdb200.f06'
+        png_filename = MODEL_PATH / 'other' / 'mdb200.png'
         plot_sol_200(f06_filename, png_filename=png_filename,
                      show=True)
 
     def test_f06_trim_freedlm(self):
         """tests read_f06_trim"""
-        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm.bdf')
-        caero_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm_caero.bdf')
+        bdf_filename = AERO_PATH / 'freedlm' / 'freedlm.bdf'
+        caero_filename = AERO_PATH / 'freedlm' / 'freedlm_caero.bdf'
         model = read_bdf(bdf_filename)
         export_caero_mesh(
             model,
@@ -677,7 +710,7 @@ class TestF06Utils(unittest.TestCase):
         #print(f'nnodes = {len(model2.nodes)}')
         #print(f'nelements = {len(model2.elements)}')
 
-        f06_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm.f06')
+        f06_filename = AERO_PATH / 'freedlm' / 'freedlm.f06'
         trim_results = read_f06_trim(f06_filename,
                                      log=None, nlines_max=1_000_000, debug=None)
         assert len(trim_results.aero_force.keys()) == 2
@@ -698,7 +731,7 @@ class TestF06Utils(unittest.TestCase):
 
     def test_f06_trim_aerobeam(self):
         """tests read_f06_trim"""
-        f06_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.f06')
+        f06_filename = AERO_PATH / 'aerobeam.f06'
         trim_results = read_f06_trim(f06_filename,
                                      log=None, nlines_max=1_000_000, debug=None)
         assert len(trim_results.aero_force.keys()) == 0
@@ -709,7 +742,7 @@ class TestF06Utils(unittest.TestCase):
 
     #def test_f06_trim_cpmopt(self):
         #"""tests read_f06_trim"""
-        #f06_filename = os.path.join(MODEL_PATH, 'aero', 'cpmopt.f06')
+        #f06_filename = MODEL_PATH / 'aero' / 'cpmopt.f06'
         #trim_results = read_f06_trim(f06_filename,
         #                             log=None, nlines_max=1_000_000, debug=None)
         #assert len(trim_results.aero_force.keys()) == 0

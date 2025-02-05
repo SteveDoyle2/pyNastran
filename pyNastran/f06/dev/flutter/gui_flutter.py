@@ -49,7 +49,7 @@ from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import get_flutter_units
 
-X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq']
+X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq', 'index']
 PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation']
 UNITS_IN = ['english_in', 'english_kt', 'english_ft',
             'si', 'si_mm']
@@ -417,8 +417,8 @@ class FlutterGui(LoggableGui):
 
     def on_browse_f06(self) -> None:
         """pops a dialog to select the f06 file"""
-        title = 'Load Nastran Flutter F06 File'
-        qt_wildcard = 'F06 File (*.f06)'
+        title = 'Load a Flutter (Nastran F06, Zona Out) File'
+        qt_wildcard = 'F06 File (*.f06); Zona File (*.out)'
         basedir = os.path.dirname(self.f06_filename)
         fname, wildcard_level = getopenfilename(
             self, caption=title, basedir=basedir, filters=qt_wildcard,)
@@ -534,6 +534,10 @@ class FlutterGui(LoggableGui):
         self.point_spacing_spinner.setValue(0)
         self.point_spacing_spinner.setMinimum(0)
         self.point_spacing_spinner.setMaximum(30)
+
+        self.index_lim_label = QLabel('Index Limits:', self)
+        self.index_lim_edit_min = QFloatEdit('0', self)
+        self.index_lim_edit_max = QFloatEdit(self)
 
         self.eas_lim_label = QLabel('EAS Limits:', self)
         self.eas_lim_edit_min = QFloatEdit('0', self)
@@ -675,7 +679,6 @@ class FlutterGui(LoggableGui):
         self.f06_load_button = QPushButton('Load F06', self)
         self.ok_button = QPushButton('Run', self)
 
-
         self.pop_vtk_gui_button = QPushButton('Open GUI', self)
         self.solution_type_label = QLabel('Solution Type:', self)
         self.solution_type_pulldown = QComboBox(self)
@@ -690,6 +693,7 @@ class FlutterGui(LoggableGui):
         x_plot_type = self.x_plot_type_pulldown.currentText()
         plot_type = self.plot_type_pulldown.currentText()
 
+        show_index_lim = False
         show_eas_lim = False
         show_tas_lim = False
         show_mach_lim = False
@@ -736,30 +740,24 @@ class FlutterGui(LoggableGui):
             raise RuntimeError(f'plot_type={plot_type!r}')
 
         if show_xlim:
-            if 'eas' == x_plot_type:
+            if 'index' == x_plot_type:
+                show_index_lim = True
+            elif 'eas' == x_plot_type:
                 show_eas_lim = True
-                show_xlim = False
             elif 'tas' == x_plot_type:
                 show_tas_lim = True
-                show_xlim = False
             elif 'mach' == x_plot_type:
                 show_mach_lim = True
-                show_xlim = False
             elif 'alt' == x_plot_type:
                 show_alt_lim = True
-                show_xlim = False
             elif 'q' == x_plot_type:
                 show_q_lim = True
-                show_xlim = False
             elif 'rho' == x_plot_type:
                 show_rho_lim = True
-                show_xlim = False
             elif 'kfreq' == x_plot_type:
                 show_kfreq_lim = True
-                show_xlim = False
             elif 'ikfreq' == x_plot_type:
                 show_ikfreq_lim = True
-                show_xlim = False
         #print(f'x_plot_type={x_plot_type} show_damp={show_damp}; show_xlim={show_xlim}')
         #assert show_xlim is False, show_xlim
 
@@ -772,6 +770,10 @@ class FlutterGui(LoggableGui):
         self.x_plot_type_pulldown.setVisible(show_xaxis)
         self.freq_tol_label.setVisible(show_freq_tol)
         self.freq_tol_edit.setVisible(show_freq_tol)
+
+        self.index_lim_label.setVisible(show_index_lim)
+        self.index_lim_edit_min.setVisible(show_index_lim)
+        self.index_lim_edit_max.setVisible(show_index_lim)
 
         self.eas_lim_label.setVisible(show_eas_lim)
         self.eas_lim_edit_min.setVisible(show_eas_lim)
@@ -891,6 +893,11 @@ class FlutterGui(LoggableGui):
 
         #--------------------------------------------------
         # x-axis
+        grid.addWidget(self.index_lim_label, irow, 0)
+        grid.addWidget(self.index_lim_edit_min, irow, 1)
+        grid.addWidget(self.index_lim_edit_max, irow, 2)
+        irow += 1
+
         grid.addWidget(self.eas_lim_label, irow, 0)
         grid.addWidget(self.eas_lim_edit_min, irow, 1)
         grid.addWidget(self.eas_lim_edit_max, irow, 2)
@@ -1298,7 +1305,9 @@ class FlutterGui(LoggableGui):
             noline = False
             nopoints = True
 
-        if x_plot_type == 'eas':
+        if x_plot_type == 'index':
+            xlim = self.index_lim
+        elif x_plot_type == 'eas':
             xlim = self.eas_lim
         elif x_plot_type == 'tas':
             xlim = self.tas_lim
@@ -1492,6 +1501,8 @@ class FlutterGui(LoggableGui):
                                 Limit, Limit, Limit, Limit, Limit,
                                 Optional[float], Optional[float],
                                 Optional[float], Optional[float], bool]:
+        index_lim_min, is_passed0a = get_float_or_none(self.index_lim_edit_min)
+        index_lim_max, is_passed0b = get_float_or_none(self.index_lim_edit_max)
         eas_lim_min, is_passed1a = get_float_or_none(self.eas_lim_edit_min)
         eas_lim_max, is_passed1b = get_float_or_none(self.eas_lim_edit_max)
         tas_lim_min, is_passed2a = get_float_or_none(self.tas_lim_edit_min)
@@ -1505,13 +1516,15 @@ class FlutterGui(LoggableGui):
         rho_lim_min, is_passed6a = get_float_or_none(self.rho_lim_edit_min)
         rho_lim_max, is_passed6b = get_float_or_none(self.rho_lim_edit_max)
 
-        is_passed_x = all([is_passed1a, is_passed1b,
-                           is_passed2a, is_passed2b,
-                           is_passed3a, is_passed3b,
-                           is_passed4a, is_passed4b,
-                           is_passed5a, is_passed5b,
-                           is_passed6a, is_passed6b,
-                           ])
+        is_passed_x = all([
+            is_passed0a, is_passed0b,
+            is_passed1a, is_passed1b,
+            is_passed2a, is_passed2b,
+            is_passed3a, is_passed3b,
+            is_passed4a, is_passed4b,
+            is_passed5a, is_passed5b,
+            is_passed6a, is_passed6b,
+        ])
 
         damp_lim_min, is_passed_damp1 = get_float_or_none(self.damp_lim_edit_min)
         damp_lim_max, is_passed_damp2 = get_float_or_none(self.damp_lim_edit_max)
@@ -1539,6 +1552,7 @@ class FlutterGui(LoggableGui):
         if is_passed_tol3 and mag_tol is None:
             mag_tol = -1.0
 
+        index_lim = [index_lim_min, index_lim_max]
         eas_lim = [eas_lim_min, eas_lim_max]
         tas_lim = [tas_lim_min, tas_lim_max]
         mach_lim = [mach_lim_min, mach_lim_max]
@@ -1603,7 +1617,7 @@ class FlutterGui(LoggableGui):
         #self.log.warning(f'is_passed_flags = {is_passed_flags}')
         #print(f'freq_tol = {freq_tol}')
         out = (
-            eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim,
+            index_lim, eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim,
             damp_lim, freq_lim, kfreq_lim, ikfreq_lim,
             eigr_lim, eigi_lim,
             freq_tol, freq_tol_remove, mag_tol,
@@ -1621,7 +1635,7 @@ class FlutterGui(LoggableGui):
 
     def validate(self) -> bool:
         #self.log.warning('validate')
-        (eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim,
+        (index_lim, eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim,
          ydamp_lim, freq_lim, kfreq_lim, ikfreq_lim,
          eigr_lim, eigi_lim,
          freq_tol, freq_tol_remove, mag_tol,
@@ -1636,6 +1650,7 @@ class FlutterGui(LoggableGui):
 
         self.subcase = subcase
         self.selected_modes = selected_modes
+        self.index_lim = index_lim
         self.eas_lim = eas_lim
         self.tas_lim = tas_lim
         self.mach_lim = mach_lim
@@ -1710,6 +1725,7 @@ class FlutterGui(LoggableGui):
             'selected_modes': selected_modes,
             'x_plot_type': self.x_plot_type,
             'plot_type': self.plot_type,
+            'index_lim': index_lim,
             'eas_lim': eas_lim,
             'tas_lim': tas_lim,
             'mach_lim': mach_lim,

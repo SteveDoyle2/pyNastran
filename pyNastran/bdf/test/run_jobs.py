@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 from pathlib import Path
 import time
 import argparse
@@ -123,6 +124,8 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
     recursive: bool; default=False
         finds all bdf/dat files in all sub-directories
         NOTE: doesn't apply to files
+
+    TODO: remove failed jobs from the time estimator
     """
     bdf_filenames = get_bdf_filenames_to_run(
         bdf_filename_dirname, extensions, recursive=recursive)
@@ -135,6 +138,7 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
 
     nfiles = len(bdf_filenames)
+    eta = 'N/A'
     t_run_min = 0.
     t_est_min = 0.
     t_est_hr = 0.
@@ -154,7 +158,8 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
         nfiles_remaining1 = nfiles - (ifile + 1)
         percent0 = ifile / nfiles * 100
         percent1 = (ifile + 1) / nfiles * 100
-        log.debug(f'estimated time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr; time/run={t_run_min:.1f} min')
+
+        log.debug(f'ETA:{eta}; time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr; time/run={t_run_min:.1f} min')
         log.info(f'running  {ifile+1}/{nfiles}={percent0:.0f}%: {str(bdf_filename)}')
         return_code, call_args = run_nastran(bdf_filename, nastran_cmd=nastran_exe,
                                              cleanup=cleanup, run=run)
@@ -169,6 +174,8 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
         t_est_sec = dt * nfiles_remaining1 / (ifile + 1)
         t_est_min = t_est_sec / 60.
         t_est_hr = t_est_min / 60.
+        new = datetime.datetime.now() + datetime.timedelta(minutes=t_est_min)
+        eta = new.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
     log.info('done')
     return nfiles
 

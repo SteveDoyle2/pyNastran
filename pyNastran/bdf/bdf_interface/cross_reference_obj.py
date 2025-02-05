@@ -487,6 +487,14 @@ class CrossReference:
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, prop)
 
+        for nsms in model.nsms.values():
+            for nsm in nsms:
+                nsm.cross_reference(model)
+
+        for nsmadds in model.nsmadds.values():
+            for nsmadd in nsmadds:
+                nsmadd.cross_reference(model)
+
     def safe_cross_reference_masses(self) -> None:
         """
         Links the mass to nodes, properties (and materials depending on
