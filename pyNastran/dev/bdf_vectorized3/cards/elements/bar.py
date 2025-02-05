@@ -1,6 +1,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from itertools import count
+from collections import defaultdict
 from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
@@ -158,6 +159,7 @@ def split_offt_vector(offt: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndar
     offt_vector = np.full(neids, '', dtype='|U1')
     offt_end_a = np.full(neids, '', dtype='|U1')
     offt_end_b = np.full(neids, '', dtype='|U1')
+    print(offt)
     for i, (offt_vectori, offt_end_ai, offt_end_bi) in enumerate(offt):
         offt_vector[i] = offt_vectori
         offt_end_a[i] = offt_end_ai
@@ -400,6 +402,7 @@ class CBAR(Element):
         self.wa = wa
         self.wb = wb
         self.n = len(element_id)
+        check_offt(self.type, element_id, offt)
 
     def convert(self, xyz_scale: float=1.0,
                 mass_scale: float=1.0, **kwargs):
@@ -2133,3 +2136,11 @@ def k_from_property_id(property_id: np.ndarray,
             k1_k2i = prop.k()
         k1_k2[i_lookup] = k1_k2i[i_all]
     return k1_k2
+
+def check_offt(etype: str, element_id: np.ndarray, offt: np.ndarray) -> None:
+    bad_offt = defaultdict(list)
+    for eid, offt in zip(element_id, offt):
+        if len(offt) != 3:
+            bad_offt[str(offt)].append(int(eid))
+    if len(bad_offt):
+        raise RuntimeError('Invalid OFFTs\n' + '\n'.join(f'offt={offt!r} bad_eids={eids}' for offt, eids in bad_offt.items()))

@@ -1,14 +1,32 @@
+from pathlib import Path
 import unittest
 import numpy as np
 
+import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict, parse_patran_syntax_dict_map,
     write_patran_syntax_dict, split_eids_along_nids,
     parse_femap_syntax,
     get_femap_property_comments_dict, get_femap_material_comments_dict)
+from pyNastran.bdf.test.run_jobs import get_bdf_filenames_to_run, cmd_line_run_jobs
+
 
 class TestBdfUtils(unittest.TestCase):
+    def test_run_jobs(self):
+        pkg_path = Path(pyNastran.__path__[0])
+        model_path = pkg_path / '..' / 'models'
+        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str(model_path), '--cleanup', '-r', '--test'], quiet=True)
+        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str(model_path), '--cleanup', '-r', '--test'])
+        assert nfiles >= 1, nfiles  # 105
+
+        extensions = ['.dat', '.bdf']
+        bdf_files = get_bdf_filenames_to_run(model_path, extensions, recursive=True)
+        assert len(bdf_files) >= 10, len(bdf_files)  # 105
+
+        bdf_files = get_bdf_filenames_to_run(model_path, extensions, recursive=False)
+        assert len(bdf_files) == 1, len(bdf_files)
+
     def test_get_femap_comments_dict(self):
         """tests:
           - ``get_femap_property_comments_dict``
