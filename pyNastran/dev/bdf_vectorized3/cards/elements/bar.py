@@ -351,6 +351,7 @@ class CBAR(Element):
                    offt, pa, pb, wa, wb, ifile)
         baror = self.model.baror
         apply_bar_default(self, baror)
+        check_offt(self.type, self.element_id, self.offt)
         self.sort()
         self.cards = []
 
@@ -402,7 +403,6 @@ class CBAR(Element):
         self.wa = wa
         self.wb = wb
         self.n = len(element_id)
-        check_offt(self.type, element_id, offt)
 
     def convert(self, xyz_scale: float=1.0,
                 mass_scale: float=1.0, **kwargs):

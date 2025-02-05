@@ -272,6 +272,7 @@ class CBEAM(Element):
                    pa, pb, wa, wb, sa, sb)
         beamor = self.model.beamor
         apply_bar_default(self, beamor)
+        check_offt(self.type, element_id, offt)
         self.cards = []
 
     def _save(self, element_id, property_id, nodes,
@@ -300,7 +301,6 @@ class CBEAM(Element):
         self.sa = sa
         self.sb = sb
         self.n = len(property_id)
-        check_offt(self.type, element_id, offt)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['element_id'].append(self.element_id)
