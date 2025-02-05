@@ -49,8 +49,8 @@ def save_load_deck(model: BDF,
         close2 = np.isclose(mass2, massi2) | ~np.isfinite(mass2)
         assert np.all(close1), f'mass1={mass1} massi1={massi1} dmass={dmass1}'
         assert np.all(close2), f'mass2={mass2} massi2={massi2} dmass={dmass2}'
-        print(mass1)
-        print(mass2)
+        #print(mass1)
+        #print(mass2)
         nansum1 = np.nansum(mass1)
         nansum2 = np.nansum(mass2)
         assert np.allclose(nansum1, nansum2), f'mass1={nansum1} mass2={nansum2}'
