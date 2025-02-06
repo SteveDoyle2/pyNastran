@@ -10,68 +10,68 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 RESULT_NAME_MAP = {
-    'BAR' : 'cbar_strain_energy',
-    'BEAM' : 'cbeam_strain_energy',
-    'BEND' : 'cbend_strain_energy',
-    'BEAM3' : 'cbeam3_strain_energy',
+    'BAR' : 'cbar',
+    'BEAM' : 'cbeam',
+    'BEND' : 'cbend',
+    'BEAM3' : 'cbeam3',
 
-    'ROD' : 'crod_strain_energy',
-    'TUBE' : 'ctube_strain_energy',
-    'CONROD' : 'conrod_strain_energy',
+    'ROD' : 'crod',
+    'TUBE' : 'ctube',
+    'CONROD' : 'conrod',
 
-    'TRIA3' : 'ctria3_strain_energy',
-    'TRIAFD' : 'ctria3_strain_energy',
-    'TRIA3FD' : 'ctria3_strain_energy',
-    'TRIA6' : 'ctria6_strain_energy',
-    'TRIAX6' : 'ctriax6_strain_energy',
-    'CTRIA6N' : 'ctria6_strain_energy', # per JG
-    'TRIAR' : 'ctriar_strain_energy',
-    'TRIAX3FD' : 'ctriax_strain_energy',
-    'TRIAXFD' : 'ctriax_strain_energy',
+    'TRIA3' : 'ctria3',
+    'TRIAFD' : 'ctria3',
+    'TRIA3FD' : 'ctria3',
+    'TRIA6' : 'ctria6',
+    'TRIAX6' : 'ctriax6',
+    'CTRIA6N' : 'ctria6', # per JG
+    'TRIAR' : 'ctriar',
+    'TRIAX3FD' : 'ctriax',
+    'TRIAXFD' : 'ctriax',
 
-    'QUAD4' : 'cquad4_strain_energy',
-    'QUADFD' : 'cquad4_strain_energy',
-    'QUAD4FD' : 'cquad4_strain_energy',
-    'QUAD8' : 'cquad8_strain_energy',
-    'CQUAD8N' : 'cquad8_strain_energy', # guessed per JG
+    'QUAD4' : 'cquad4',
+    'QUADFD' : 'cquad4',
+    'QUAD4FD' : 'cquad4',
+    'QUAD8' : 'cquad8',
+    'CQUAD8N' : 'cquad8', # guessed per JG
     # TODO: this will probably be a problem someday...cquad8_nonlinear_strain_energy
-    'QUAD8N' : 'cquad8_strain_energy',
+    'QUAD8N' : 'cquad8',
 
-    'QUADR' : 'cquadr_strain_energy',
-    'QUADXFD' : 'cquadx_strain_energy',
-    'QUADX4FD' : 'cquadx_strain_energy',
-    'SHEAR' : 'cshear_strain_energy',
+    'QUADR' : 'cquadr',
+    'QUADXFD' : 'cquadx',
+    'QUADX4FD' : 'cquadx',
+    'SHEAR' : 'cshear',
 
-    'TETRA' : 'ctetra_strain_energy',
-    'TETRAFD' : 'ctetra_strain_energy',
-    'TETRA4FD' : 'ctetra_strain_energy',
-    'PENTA' : 'cpenta_strain_energy',
-    'PENTAFD' : 'cpenta_strain_energy',
-    'PENTA6FD' : 'cpenta_strain_energy',
-    'HEXA' : 'chexa_strain_energy',
-    'HEXAFD' : 'chexa_strain_energy',
-    'HEXA8FD' : 'chexa_strain_energy',
-    'PYRAM' : 'cpyram_strain_energy',
-    'PYRA' : 'cpyram_strain_energy',
+    'TETRA' : 'ctetra',
+    'TETRAFD' : 'ctetra',
+    'TETRA4FD' : 'ctetra',
+    'PENTA' : 'cpenta',
+    'PENTAFD' : 'cpenta',
+    'PENTA6FD' : 'cpenta',
+    'HEXA' : 'chexa',
+    'HEXAFD' : 'chexa',
+    'HEXA8FD' : 'chexa',
+    'PYRAM' : 'cpyram',
+    'PYRA' : 'cpyram',
 
-    'GAP' : 'cgap_strain_energy',
-    'BUSH' : 'cbush_strain_energy',
-    'ELAS1' : 'celas1_strain_energy',
-    'ELAS2' : 'celas2_strain_energy',
-    'ELAS3' : 'celas3_strain_energy',
-    'ELAS4' : 'celas4_strain_energy',
+    'GAP' : 'cgap',
+    'BUSH' : 'cbush',
+    'ELAS1' : 'celas1',
+    'ELAS2' : 'celas2',
+    'ELAS3' : 'celas3',
+    'ELAS4' : 'celas4',
 
-    'DUM8' : 'cdum8_strain_energy',
-    'DMIG' : 'dmig_strain_energy',
-    'GENEL' : 'genel_strain_energy',
-    'CONM2' : 'conm2_strain_energy',
-    'RBE1' : 'rbe1_strain_energy',
-    'RBE3' : 'rbe3_strain_energy',
-    'WELDP' : 'cweld_strain_energy',
-    'WELDC' : 'cweld_strain_energy',
-    'WELD' : 'cweld_strain_energy',
-    'FASTP' : 'cfast_strain_energy',
-    'SEAMP' : 'cseam_strain_energy',
+    'DUM8' : 'cdum8',
+    'DMIG' : 'dmig',
+    'GENEL' : 'genel',
+    'CONM2' : 'conm2',
+    'RBE1' : 'rbe1',
+    'RBE3' : 'rbe3',
+    'WELDP' : 'cweld',
+    'WELDC' : 'cweld',
+    'WELD' : 'cweld',
+    'FASTP' : 'cfast',
+    'SEAMP' : 'cseam',
 }
 
 class ONR:
@@ -119,6 +119,8 @@ class ONR:
         postfix = ''
         if op2.table_name in [b'ONRGY1', b'ONRGY2', b'ONRGY']:
             prefix = 'strain_energy.'
+        if op2.table_name in [b'OEKE1']:
+            prefix = 'kinetic_energy.'
         elif op2.table_name in [b'RANEATC']: #, b'OSTRMS1C']:
             op2.format_code = 1
             op2.sort_bits[0] = 0 # real
@@ -448,14 +450,21 @@ class ONR:
             if op2.table_name not in op2.table_name in [b'ONRGY', b'ONRGY1']:
                 msg = f'table_name={op2.table_name} table_code={op2.table_code}'
                 raise NotImplementedError(msg)
-            n = self._read_element_strain_energy(data, ndata)
+            n = self._read_element_strain_energy(data, ndata, result_name_suffix='_strain_energy')
+        elif op2.table_code == 36:  # element kinetic energy
+            if op2.table_name not in op2.table_name in [b'OEKE1']:
+                msg = f'table_name={op2.table_name} table_code={op2.table_code}'
+                raise NotImplementedError(msg)
+            n = self._read_element_strain_energy(data, ndata, result_name_suffix='_kinetic_energy')
         else:  # pragma: no cover
             raise NotImplementedError(op2.table_code)
         return n
 
-    def _read_element_strain_energy(self, data: bytes, ndata: int) -> int:
+    def _read_element_strain_energy(self, data: bytes, ndata: int,
+                                    result_name_suffix: str) -> int:
         """
-        table_code = 19
+        table_code = 19 : ONR/OEE - element strain energy density
+        table_code = 36 : EKE - element kinetic energy density
         """
         op2 = self.op2
         dt = op2.nonlinear_factor
@@ -465,9 +474,12 @@ class ONR:
         try:
             result_name = RESULT_NAME_MAP[element_name]
         except KeyError:  # pragma: no cover
-            raise NotImplementedError('element_name1=%r element_name=%r' % (element_name, op2.data_code['element_name']))
+            raise NotImplementedError(f'element_name1={element_name!r} element_name={op2.data_code["element_name"]!r}')
         prefix, postfix = self.get_onr_prefix_postfix()
-        result_name = prefix + result_name + postfix
+
+        # strain_energy.cbar_strain_energy
+        # kinetic_energy.cbar_kinetic_energy
+        result_name = prefix + result_name + result_name_suffix + postfix
         #result_name = 'strain_energy'
 
         if op2._results.is_not_saved(result_name):
@@ -512,7 +524,7 @@ class ONR:
             if op2.is_optistruct:
                 op2.use_vector = False
 
-            if op2.use_vector and op2.sort_method == 1: # and op2.is_sort1:
+            if op2.use_vector and op2.sort_method == 1:  # and op2.is_sort1:
                 n = nelements * ntotal
                 ielement = obj.ielement
                 ielement2 = obj.ielement + nelements

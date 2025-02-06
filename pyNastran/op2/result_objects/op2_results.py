@@ -59,6 +59,7 @@ class Results:
         self.thermal_strain = Strain('thermal_strain')
         self.creep_strain = Strain('creep_strain')
 
+        self.kinetic_energy = KineticEnergy()
         self.strain_energy = StrainEnergy()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
         self.ROQGM1 = ROQGM1()   # relative mpc forces???
@@ -101,6 +102,7 @@ class Results:
             'force' : self.force,
             'thermal_load' : self.thermal_load,
             'strain_energy' : self.strain_energy,
+            'kinetic_energy' : self.kinetic_energy,
             'stress': self.stress,
             'stressa': self.stressa,
             'strain': self.strain,
@@ -132,7 +134,7 @@ class Results:
             self.stress, self.strain,
             self.elastic_strain, self.plastic_strain, self.thermal_strain, self.creep_strain,
             self.stressa,
-            self.strain_energy,
+            self.kinetic_energy, self.strain_energy,
             self.ato, self.psd, self.rms, self.no, self.crm,
             self.modal_contribution, self.strength_ratio, self.failure_indices,
             self.solution_set,
@@ -814,6 +816,100 @@ class Strain:
         ]
         if include_class:
             return [f'{self.word}.' + table for table in tables]
+        return tables
+
+
+class KineticEnergy:
+    def __init__(self):
+        """
+        EKE - kinetic energy density; tCode=36
+        """
+        self.celas1_kinetic_energy = {}
+        self.celas2_kinetic_energy = {}
+        self.celas3_kinetic_energy = {}
+        self.celas4_kinetic_energy = {}
+
+        self.cdamp1_kinetic_energy = {}
+        self.cdamp2_kinetic_energy = {}
+        self.cdamp3_kinetic_energy = {}
+        self.cdamp4_kinetic_energy = {}
+
+        self.cquad4_kinetic_energy = {}
+        self.cquad8_kinetic_energy = {}
+        self.cquadr_kinetic_energy = {}
+        self.cquadx_kinetic_energy = {}
+
+        self.ctria3_kinetic_energy = {}
+        self.ctria6_kinetic_energy = {}
+        self.ctriar_kinetic_energy = {}
+        self.ctriax_kinetic_energy = {}
+        self.ctriax6_kinetic_energy = {}
+
+        self.ctetra_kinetic_energy = {}
+        self.cpenta_kinetic_energy = {}
+        self.chexa_kinetic_energy = {}
+        self.cpyram_kinetic_energy = {}
+
+        self.crod_kinetic_energy = {}
+        self.ctube_kinetic_energy = {}
+        self.conrod_kinetic_energy = {}
+
+        self.cbar_kinetic_energy = {}
+        self.cbeam_kinetic_energy = {}
+        self.cbend_kinetic_energy = {}
+        self.cbeam3_kinetic_energy = {}
+
+        self.cgap_kinetic_energy = {}
+        self.cdum8_kinetic_energy = {}
+        self.cbush_kinetic_energy = {}
+        #self.chexa8fd_kinetic_energy = {}
+        self.dmig_kinetic_energy = {}
+        self.genel_kinetic_energy = {}
+        self.cshear_kinetic_energy = {}
+        self.conm2_kinetic_energy = {}
+        self.rbe1_kinetic_energy = {}
+        self.rbe3_kinetic_energy = {}
+        self.cweld_kinetic_energy = {}
+        self.cfast_kinetic_energy = {}
+        self.cseam_kinetic_energy = {}
+
+    def get_table_types(self, include_class: bool=True) -> list[str]:
+        tables = [
+            # OEE - kinetic energy density # tCode=18
+            'cquad4_kinetic_energy', 'cquad8_kinetic_energy', 'cquadr_kinetic_energy',
+            'cquadx_kinetic_energy',
+
+            'ctria3_kinetic_energy', 'ctria6_kinetic_energy', 'ctriar_kinetic_energy',
+            'ctriax_kinetic_energy', 'ctriax6_kinetic_energy',
+
+            'cshear_kinetic_energy',
+
+            'ctetra_kinetic_energy', 'cpenta_kinetic_energy',
+            'chexa_kinetic_energy', 'cpyram_kinetic_energy',
+
+            'crod_kinetic_energy', 'ctube_kinetic_energy', 'conrod_kinetic_energy',
+
+            'cbar_kinetic_energy', 'cbeam_kinetic_energy', 'cbeam3_kinetic_energy',
+
+            'cgap_kinetic_energy',
+            'cbush_kinetic_energy',
+            'celas1_kinetic_energy', 'celas2_kinetic_energy',
+            'celas3_kinetic_energy', 'celas4_kinetic_energy',
+
+            'cdamp1_kinetic_energy', 'cdamp2_kinetic_energy',
+            'cdamp3_kinetic_energy', 'cdamp4_kinetic_energy',
+
+            'cdum8_kinetic_energy',
+            #'chexa8fd_kinetic_energy'
+            'cbend_kinetic_energy',
+            'dmig_kinetic_energy',
+            'genel_kinetic_energy',
+            'conm2_kinetic_energy',
+            'rbe1_kinetic_energy', 'rbe3_kinetic_energy',
+            'cweld_kinetic_energy', 'cfast_kinetic_energy', 'cseam_kinetic_energy',
+        ]
+        if include_class:
+            return ['kinetic_energy.' + table for table in tables]
         return tables
 
 class StrainEnergy:

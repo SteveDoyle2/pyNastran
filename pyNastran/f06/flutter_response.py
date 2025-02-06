@@ -129,7 +129,7 @@ class FlutterResponse:
         #     'dynamic_pressure': 'psi',
         # }
         out_units = in_units
-        print('in_units', in_units)
+        #print('in_units', in_units)
         assert isinstance(in_units, dict), in_units
         resp = FlutterResponse(
             zona_out_filename, subcase_id, configuration, xysym, xzsym, mach0, density_ratio,
@@ -1715,7 +1715,7 @@ class FlutterResponse:
         freqs = self.results[imodes, :, self.ifreq]
         dfs = freqs.max(axis=1) - freqs.min(axis=1)
         assert len(dfs) == len(imodes), (len(dfs), len(imodes))
-        print(dfs.tolist())
+        #print(dfs.tolist())
         idfreq = dfs < dfreq
         return modes[idfreq]
         # for imode in range(imodes):

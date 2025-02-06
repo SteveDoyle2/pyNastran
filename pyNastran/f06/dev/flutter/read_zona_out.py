@@ -13,10 +13,10 @@ def read_zona_out(zona_out_filename: PathLike) -> tuple[dict, dict]:
     log = SimpleLogger(level='info')
     case_dict, ref_dict = zona_lines_to_out(log, lines)
     for key, data in case_dict.items():
-        log.info(f'{key}:\n{str(data)}')
+        log.debug(f'{key}:\n{str(data)}')
 
     # data = out_to_data()
-    modes, result, in_units = out_dict_to_results(case_dict, ref_dict)
+    modes, result, in_units = out_dict_to_results(case_dict, ref_dict, log)
 
     # FlutterResponse.from_nx()
     assert isinstance(in_units, dict), in_units
@@ -30,7 +30,7 @@ def read_zona_out(zona_out_filename: PathLike) -> tuple[dict, dict]:
 
 def out_dict_to_results(out_dict: dict,
                         ref_dict: dict[str, tuple[float, str]],
-                        ) -> tuple[list[int],
+                        log: SimpleLogger) -> tuple[list[int],
                                    np.ndarray,
                                    dict[str, str]]:
     header_name = out_dict['header']
@@ -54,11 +54,16 @@ def out_dict_to_results(out_dict: dict,
     else:  # pragma: no cover
         raise NotImplementedError(header_name)
 
-    if velocity_units == 'in/s':
+    if velocity_units in 'in/s':
         altitude_units = 'ft'
+        dynamic_pressure_units = 'psi'
+    elif velocity_units in 'ft/s':
+        altitude_units = 'ft'
+        dynamic_pressure_units = 'psf'
     else:
         assert velocity_units == 'm/s', velocity_units
         altitude_units = 'm'
+        dynamic_pressure_units = 'Pa'
 
     density_units = out_dict['density_units']
     in_units = {
@@ -66,15 +71,15 @@ def out_dict_to_results(out_dict: dict,
         'density': density_units,
         'eas': velocity_units,
         'altitude': altitude_units,
-        'dynamic_pressure': 'psi',
+        'dynamic_pressure': dynamic_pressure_units,
     }
 
     modes = [mode for mode in out_dict if isinstance(mode, int)]
     nmodes = len(modes)
-    print(f'modes = {modes}')
+    log.info(f'modes = {modes}')
     results_list = []
     result = np.zeros((nmodes, nrows, 9), dtype='float64')
-    print(f'nmodes={nmodes}; nrows={nrows}')
+    log.debug(f'nmodes={nmodes}; nrows={nrows}')
     for imode, mode in enumerate(modes):
         # g, f(Hz), k
         data = out_dict[mode]
@@ -89,7 +94,7 @@ def out_dict_to_results(out_dict: dict,
 
         # fdata   [                rho,     mach, velocity, damping, freq]
         # results [kfreq, 1/kfreq, density, mach, velocity, damping, freq, eigr, eigi]
-        print(len(kfreq))
+        #log.debug(len(kfreq))
         result[imode, :, 0] = kfreq
         result[imode, :, 1] = 1 / kfreq
         result[imode, :, 2] = density
@@ -145,7 +150,7 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
     assert 'BULK ENTRY ID' in bulk_id_sline, bulk_id_sline
     bulk_id = bulk_id_sline[1]
 
-    print(subcase, discipline, bulk_id)
+    log.info(f'subcase={subcase!r} discipline={discipline!r} bulk_id={bulk_id!r}')
     iline += 3
 
     while 'REFERENCE LENGTH (L) = ' not in lines[iline]:
@@ -155,7 +160,7 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
 
     ref_line = lines[iline]
     ref_dict = split_ref_line(ref_line)
-    print('ref_dict', ref_dict)
+    log.debug(f'ref_dict = {ref_dict}')
 
     #' THE FOLLOWING V-G-F TABLE LISTS   49 NUMBER OF STRUCTURAL MODES (  1 - 49 ) AND    0 NUMBER OF AERODYNAMIC LAG ROOTS (  0 -  0 )'
     while 'THE FOLLOWING V-G-F TABLE LISTS' not in lines[iline]:
@@ -193,14 +198,20 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
         units_sline2 = lines[iline+1].strip('\n').split()
         names_sline = split_flutter_values(
             lines[iline+2], apply_float=False)  #.strip('\n').split()
-        print('names_sline =', names_sline)
+        log.debug(f'names_sline = {names_sline}')
         assert names_sline[0] == 'V/VREF', names_sline
         header = 'v/vref'
         if names_sline[1] == 'DENSITY':
             header += ',density'
-            assert units_sline1[1] == 'SLIN/', units_sline1
-            assert units_sline2[0] == 'IN**3', units_sline2
-        else:
+            if units_sline1[1] == 'SLIN/':
+                assert units_sline2[0] == 'IN**3', units_sline2
+                density_units = 'slinch/in^3'
+            elif units_sline1[1] == 'SLUG/':
+                assert units_sline2[0] == 'FT**3', units_sline2
+                density_units = 'slug/ft^3'
+            else:  # pragma: no cover
+                raise RuntimeError((units_sline1[1], units_sline2[0]))
+        else:  # pragma: no cover
             raise NotImplementedError(names_sline)
 
         if names_sline[2] == 'MACH':
@@ -214,12 +225,10 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
         #log.debug(f'units_sline1 = {units_sline1}')
         #log.debug(f'units_sline2 = {units_sline2}')
         #log.debug(f'names_sline = {names_sline}')
-        assert 'SLIN/' in units_sline1[1], units_sline1
-        assert 'IN**3' == units_sline2[0], units_sline2
         assert 'V/VREF' in names_sline, names_sline
         iline += 3
         if header not in out:
-            out['density_units'] = 'slinch/in^3'
+            out['density_units'] = density_units
             out['header'] = header
             out[header] = []
 
@@ -248,8 +257,8 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
         assert dmode >= 1, dmode
         #print(f'dmode = {dmode}')
 
-    print('------------------------------------------------')
-    print(f'{iline}: {lines[iline].rstrip()}')
+    log.info('------------------------------------------------')
+    log.info(f'{iline}: {lines[iline].rstrip()}')
 
     raise RuntimeError('end of zona_lines_to_out')
 
@@ -272,7 +281,7 @@ def split_ref_line(line: str) -> dict[str, tuple[float, str]]:
         name, value_str = name_value.split('=')
         name = name.strip()
         value_str = value_str.strip()
-        if name == 'MACH NUMBER':
+        if name in {'MACH NUMBER', 'MACH'}:
             value = float(value_str)
             unit = ''
         elif name == 'VREF':
@@ -282,7 +291,9 @@ def split_ref_line(line: str) -> dict[str, tuple[float, str]]:
             unit = unit.strip(' ()').lower()
             if unit == 'in/sec':
                 unit = 'in/s'
-            assert unit in {'in/s', 'm/s'}, unit
+            elif unit == 'ft/sec':
+                unit = 'ft/s'
+            assert unit in {'in/s', 'ft/s', 'm/s'}, unit
         elif name == 'REFERENCE LENGTH (L)':
             value_str2, unit = value_str.split(' ')
             value_str2 = value_str2.strip()
@@ -328,7 +339,7 @@ def split_flutter_values(line: str,
         line[112:120],  # 13: F(HZ)
         line[120:],     # 14: K=WL/V
     ]
-    print(values)
+    #print(values)
     values2 = [value.strip() for value in values]
     if not apply_float:
         return values2

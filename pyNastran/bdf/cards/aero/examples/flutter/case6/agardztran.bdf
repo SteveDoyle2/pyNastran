@@ -1,0 +1,544 @@
+$ pyNastran: version=zona
+$ AGARDWEK.MOD CONTAINS THE FREE FORMAT INPUT OF THE FEM MODAL DATA
+$ASSIGN FEM=agardwek.mod,BOUNDARY=SYM,FORM=FREE 
+MEMORY 800MB
+CEND
+$ BEGIN CASE CONTROL SECTION. 8 SUBCASES ARE INCLUDED.
+TITLE = AGARD445.6 WEAKENED WING TRANSNOIC FLUTTER ANALYSIS
+ECHO = SORT
+SUBCASE = 1
+       SUBTITLE = ZTRAN METHOD. STEADY BACKGROUND FLOW FROM CFL3D N-S
+       LABEL =  MACH 0.678
+       FLUTTER =  1
+SUBCASE = 2
+       SUBTITLE = ZONA6 METHOD. LINEAR THEORY           
+       LABEL =  MACH 0.678 
+       FLUTTER =  2
+SUBCASE = 3
+       SUBTITLE = ZTRAN METHOD. STEADY BACKGROUND FLOW FROM CFL3D N-S
+       LABEL =  MACH 0.901  
+       FLUTTER =  3
+SUBCASE = 4
+       SUBTITLE = ZONA6 METHOD. LINEAR THEORY           
+       LABEL =  MACH 0.901  
+       FLUTTER =  4
+SUBCASE = 5
+       SUBTITLE = ZTRAN METHOD. STEADY BACKGROUND FLOW FROM CFL3D N-S
+       LABEL =  MACH 0.954  
+       FLUTTER =  5
+SUBCASE = 6
+       SUBTITLE = ZONA6 METHOD. LINEAR THEORY           
+       LABEL =  MACH 0.954  
+       FLUTTER =  6
+SUBCASE = 7
+       SUBTITLE = ZTRAN METHOD. STEADY BACKGROUND FLOW FROM CFL3D N-S
+       LABEL =  MACH 0.980 
+       FLUTTER =  7
+SUBCASE = 8
+       SUBTITLE = ZONA6 METHOD. LINEAR THEORY           
+       LABEL =  MACH 0.980  
+       FLUTTER =  8
+BEGIN BULK
+$------------------------------------------------------------------------
+GRID,1,,0.0,0.0,0.0
+GRID,2,,1.0,0.0,0.0
+CROD,1,1, 1,2
+PROD,1,1, 1.0
+MAT1,1,3.0e7,,0.3
+$------------------------------------------------------------------------
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$ THIS CASE DEMONSTRATES THE USE OF THE TRANSONIC (ZTRAN) METHOD        $
+$ FOR FLUTTER ANALYSIS OF THE AGARD STANDARD 445.6 WING                 $
+$ (WEAKENED WING MODEL) WITH THE MATCH POINT FLUTTER ANALYSIS THAT      $
+$ SATISFIES THE NASA LANGLEY TDT TUNNEL CONDITION.                      $
+$                                                                       $
+$ Ref.                                                                  $
+$ E. Carson Yates, Jr., Norman S. Land, and Jerome T. Foughner, Jr.     $
+$   "Measured and Calculated Subsonic and Transonic Flutter             $
+$    Characteristicsof a 45 Sweptback Wing Planform in Air and in       $
+$    Freon-12 in the Langley Transonic Dynamic Tunnel,"                 $
+$    NASA TN D-1616, March, 1963                                        $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$                                                                       $
+$                 * AERO PARAMETERS *                                   $
+$                                                                       $
+$ AERO MODEL SYMMETRY IS REQUESTED ABOUT THE X-Z PLANE.                 $
+$ A REFERENCE CHORD OF 21.996 INCHES IS SPECIFIED.                       $ 
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       ACSID   XZSYM   FLIP    FMMUNIT FMLUNIT REFC    REFB    REFS    $
+AEROZ           YES     NO      SLIN    IN      21.996  1.0     1.0
+$
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+PLTAERO     1   YES             TECPLOT AGARDZTRAN.PLT  YES
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$              AERODYNAMIC GEOMETRY INPUT                               $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$                        * WING MACROELEMENTS *                         $
+$                                                                       $
+$ AGARD STANDARD 445.6 WING (20 CHORDWISE AERO BOXES EVENLY CUT AND     $
+$ 11 SPANWISE AERO BOXES WITH CUTS BASED ON SPAN LOCATIONS              $
+$ SPECIFIED IN PERCENTAGE OF SPAN LENGTH IN AN AEFACT BULK DATA         $
+$ CARD WITH SID OF 10). THE PAFOIL7E NTRY REFERS TO A PAFOIL7 DATA      $
+$ CARD WITH AN ID OF 1001 TO DEFINE THE NACA65A004 AIRFOIL SECTION      $
+$            
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  1001    WING            12      21      10              1001    +CA1
+$       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
++CA1    0.0     0.0     0.0     21.996  0       0                       +CA2
+$       XTL     YTL     ZTL     TCH     LTCHD   ATTCHT                  $
++CA2    31.866  30.0    0.0     14.496  0       0
+$                                                                       $
+$ NACA 65A004 AIRFOIL SECTION
+$ 
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+PAFOIL7 1001    1001    1002    1003    0.0     1002    1003    0.0
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+AEFACT  1001    0.      0.5     .75     1.25    2.5     5.      7.5     +A1
++A1     10.     15.     20.     25.     30.     35.     40.     45.     +A2
++A2     50.     55.     60.     65.     70.     75.     80.     85.     +A3
++A3     90.     95.     100.
+AEFACT  1002    0.      .304    .368    .469    .647    .875    1.059   +B1
++B1     1.213   1.459   1.645   1.789   1.892   1.962   1.997   1.996   +B2
++B2     1.954   1.868   1.743   1.586   1.402   1.195   .967    .729    +B3
++B3     .49     .25     0.
+AEFACT  1003    0.      0.      0.      0.      0.      0.      0.      +C1
++C1     0.      0.      0.      0.      0.      0.      0.      0.      +C2
++C2     0.      0.      0.      0.      0.      0.      0.      0.      +C3
++C3     0.      0.      0.      
+$       SID     D1      D2      ETC                                     $
+AEFACT  10      0.0     16.45   27.25   37.75   47.75   57.15   65.75   +AE1
++AE1    73.5    80.     85.     90.     100.
+$             
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$                 * VOLUME CELLS FOR ZTRAN METHOD *                     $
+$ THE CAERO7 MACROELEMENT HAS 11 SPANWISE STRIPS  WHICH IS MODELLED     $
+$ BY FIVE CELLWNG AND ONE CELLBOX.                                      $
+$ EACH CELLWNG OCCUPIES TWO STRIPS EXCEPT THE LAST CELLWNG THREE STRIPS $
+$ THE HEIGTH OF VOLUME BOLCK=20. AND HAS 7 LAYERS OF VOLUME CELL ON THE $
+$ TOP AND BOTTOM OF THE CAERO7 WITH COSINE DISTRIBUTIONS.               $
+$ COARSE VOLUME CELLS FROM LAYER 4 TO 7 IS DEFINED BY THE COARSE1       $
+$ AND COARSE2  ENTRIES.                                                 $
+$                                                                       $
+$ NOTE THAT THIS IS A BLOCK-TRIDIAGONAL TECHNIQUE THE GREATLY IMPROVE   $
+$ THE COMPUTATIONAL EFFICIENT                                           $
+$                                                                       $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+CELLWNG 10001   1001    1       3               20001                 
+        7       20.0    20.0    0.      0.      COS      4       6
+        7       20.0    20.0    0.      0.      COS      4       6
+        2       4.      4.              2       4.       4.
+CELLWNG 20001   1001    3       5       10001   30001                 
+        7       20.0    20.0    0.      0.      COS      4       6
+        7       20.0    20.0    0.      0.      COS      4       6
+        2       4.      4.              2       4.       4.
+CELLWNG 30001   1001    5       7       20001   40001                  
+        7       20.0    20.0    0.      0.      COS      4       6
+        7       20.0    20.0    0.      0.      COS      4       6
+        2       4.      4.              2       4.       4.
+CELLWNG 40001   1001    7       9       30001   50001                 
+        7       20.0    20.0    0.      0.      COS      4       6
+        7       20.0    20.0    0.      0.      COS      4       6
+        2       4.      4.              2       4.       4.
+CELLWNG 50001   1001    9       12      40001   60001                 
+        7       20.0    20.0    0.      0.      COS      4       6
+        7       20.0    20.0    0.      0.      COS      4       6
+        2       4.      4.              2       4.       4.
+$                                                                       $
+$ A CELLBOX IS ATTACHED TO TIP  OF THE WING FOR THE EXTENSION OF VOLUME $
+$ BLOCK                                                                 $
+$ THIS IS OPTIONAL AND ONLY TO MAKE SURE THAT THE VOLUME BLOCK IS       $ 
+$ SUFFICIENTLY LARGE TO INCLUDE THE NONLEAR FLOW OUTSIDE THE WING TIP   $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+CELLBOX 60001           25      4       50001
+        27.866  30.0    22.496          33.866  36.     22.496
+        7       20.0    20.0    0.      0.      COS     4       6
+        7       20.0    20.0    0.      0.      COS     4       6
+$                                    
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$              AERODYNAMIC AIC MATRIX GENERATION                        $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$ 4 MKAEROZ BULK DATA CARDS ARE SPECIFIED FOR AIC'S TO BE COMPUTED FOR  $
+$ 4 MACH NUMBERS (.678,.901,.954, AND .980)                             $
+$                                                                       $
+$                        * * * MACH = 0.678 * * *                       $
+$                                                                       $
+$ METHOD=3 TO EMPLOY THE ZTRAN METHOD                                   $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 1       0.678   3       1       SAVE    AGARD678N.AIC           +MK1
++MK1    0.0     .03     0.06    0.1     0.2     0.4     0.6     0.8
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMFLT 1       1
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 2       0.678   0       0       SAVE    AGARD678L.AIC           +MK1
++MK1    0.0     .03     0.06    0.1     0.2     0.4     0.6     0.8
+$                                                                       $
+$  CFL3D MESH AND SOLUTION IN PLOT3D FORMAT ARE IMPORTED FROM THE       $
+$  EXTERNAL FILES AGARDCFD.GRID AND AGARDCFD.678, RESPECTIVELY          $
+$  VIA THE INPCFD BULK DATA CARD                                        $
+$                                                                       $
+$  THE AGARDCP67a.PLT ~ AGARDCD67e.PLT STORE THE INTERPOLATED CFD       $
+$  SOLUTIONS FOR CELLWNG WITH ID=10001 ~ 60001 TO VERFY THE             $
+$  INTERPOLATION                                                        $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+INPCFD  1       -1      11      IUDP3D  AGARD445.GRID     AGARDM0678.SOL
+        10001                   TECPLOT AGARDSRF.PLT      AGARDCP67a.PLT
+        1       1       85      1       39      1       1         BOTH
+        20001                   TECPLOT AGARDSRF.PLT      AGARDCP67b.PLT
+        1       1       85      1       39      1       1         BOTH
+        30001                   TECPLOT AGARDSRF.PLT      AGARDCP67c.PLT
+        1       1       85      1       39      1       1         BOTH
+        40001                   TECPLOT AGARDSRF.PLT      AGARDCP67d.PLT
+        1       1       85      1       39      1       1         BOTH
+        50001                   TECPLOT AGARDSRF.PLT      AGARDCP67e.PLT
+        1       1       85      1       39      1       1         BOTH
+        60001                   TECPLOT AGARDSRF.PLT      AGARDCP67f.PLT
+        1       1       85      1       39      1       1         BOTH
+$                                                                       $
+$ OMITCFD BULK DATA CARD OMITS THE CFD GRID POINTS FROM K=1 TO K=10     $
+$ FROM THE INTERPOLATION OF THE CFD SOLUTION. THIS IS TO AVOID THE      $
+$ CFD SOLUTION IN THE BOUNDARY LAYER SO THAT ONLY THE INVISID FLOW      $
+$ SOLUTION IS USED FOR THE ZTRAN METHOD                                 $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+OMITCFD 11              TECPLOT CFD-SURFACE.PLT SURFSOL_M678.PLT
+        1       37      181      1       30      1       37
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+CORD2R  1               0.0     0.0     0.0     0.0     1.0     0.0     
+        1.0     1.0     0.0
+$
+$                                                                       $
+$                                                                       $
+$                        * * * MACH = 0.901 * * *                       $
+$                                                                       $
+$ METHOD=3 TO EMPLOY THE ZTRAN METHOD                                   $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 3       0.901   3       3       SAVE    AGARD901N.AIC           +MK1
++MK1    0.0     .03     0.06    0.1     0.2     0.4     0.6     0.8
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMFLT 3       3
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 4       0.901   0       0       SAVE    AGARD901L.AIC           +MK1
++MK1    0.0     .03     0.06    0.1     0.2     0.4     0.6     0.8
+$                                                                       $
+$  CFL3D MESH AND SOLUTION IN PLOT3D FORMAT ARE IMPORTED FROM THE       $
+$  EXTERNAL FILES AGARDCFD.GRID AND AGARDCFD.090, RESPECTIVELY          $
+$  VIA THE INPCFD BULK DATA CARD                                        $
+$                                                                       $
+$  THE AGARDCP90a.PLT ~ AGARDCD90e.PLT STORE THE INTERPOLATED CFD       $
+$  SOLUTIONS FOR CELLWNG WITH ID=10001 ~ 60001 TO VERFY THE             $
+$  INTERPOLATION                                                        $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+INPCFD  3       -1      13      IUDP3D  AGARD445.GRID     AGARDM0901.SOL
+        10001                   TECPLOT AGARDSRF.PLT      AGARDCP90a.PLT
+        1       1       85      1       39      1       1         BOTH
+        20001                   TECPLOT AGARDSRF.PLT      AGARDCP90b.PLT
+        1       1       85      1       39      1       1         BOTH
+        30001                   TECPLOT AGARDSRF.PLT      AGARDCP90c.PLT
+        1       1       85      1       39      1       1         BOTH
+        40001                   TECPLOT AGARDSRF.PLT      AGARDCP90d.PLT
+        1       1       85      1       39      1       1         BOTH
+        50001                   TECPLOT AGARDSRF.PLT      AGARDCP90e.PLT
+        1       1       85      1       39      1       1         BOTH
+        60001                   TECPLOT AGARDSRF.PLT      AGARDCP90f.PLT
+        1       1       85      1       39      1       1         BOTH
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+OMITCFD 13              TECPLOT CFD-SURFACE.PLT SURFSOL_M901.PLT
+        1       37      181      1       30      1       37
+$                                                                       $
+$                                                                       $
+$                        * * * MACH = 0.954 * * *                       $
+$                                                                       $
+$ METHOD=3 TO EMPLOY THE ZTRAN METHOD                                   $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 5       0.954   3       5       SAVE    AGARD954N.AIC           +MK1
++MK1    0.0     .03     0.06    0.1     0.2     0.4     0.6     0.8
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMFLT 5       5
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 6       0.954   0       0       SAVE    AGARD954L.AIC           +MK1
++MK1    0.0     .03     0.06    0.1     0.2     0.4     0.6     0.8
+$                                                                       $
+$  CFL3D MESH AND SOLUTION IN PLOT3D FORMAT ARE IMPORTED FROM THE       $
+$  EXTERNAL FILES AGARDCFD.GRID AND AGARDCFD.095, RESPECTIVELY          $
+$  VIA THE INPCFD BULK DATA CARD                                        $
+$                                                                       $
+$  THE AGARDCP95a.PLT ~ AGARDCD95e.PLT STORE THE INTERPOLATED CFD       $
+$  SOLUTIONS FOR CELLWNG WITH ID=10001 ~ 60001 TO VERFY THE             $
+$  INTERPOLATION                                                        $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+INPCFD  5       -1      15      IUDP3D  AGARD445.GRID     AGARDM0954.SOL
+        10001                   TECPLOT AGARDSRF.PLT      AGARDCP95a.PLT
+        1       1       85      1       39      1       1         BOTH
+        20001                   TECPLOT AGARDSRF.PLT      AGARDCP95b.PLT
+        1       1       85      1       39      1       1         BOTH
+        30001                   TECPLOT AGARDSRF.PLT      AGARDCP95c.PLT
+        1       1       85      1       39      1       1         BOTH
+        40001                   TECPLOT AGARDSRF.PLT      AGARDCP95d.PLT
+        1       1       85      1       39      1       1         BOTH
+        50001                   TECPLOT AGARDSRF.PLT      AGARDCP95e.PLT
+        1       1       85      1       39      1       1         BOTH
+        60001                   TECPLOT AGARDSRF.PLT      AGARDCP95f.PLT
+        1       1       85      1       39      1       1         BOTH
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+OMITCFD 15              TECPLOT CFD-SURFACE.PLT SURFSOL_M954.PLT
+        1       37      181      1       30      1       37
+$                                                                       $
+$                                                                       $
+$                        * * * MACH = 0.980 * * *                       $
+$                                                                       $
+$ METHOD=3 TO EMPLOY THE ZTRAN METHOD                                   $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 7       0.980   3       7       SAVE    AGARD980N.AIC           +MK1
++MK1    0.0     .03     0.06    0.1     0.2     0.4     0.6     0.8
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+TRIMFLT 7       7
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 8       0.980   0       0       SAVE    AGARD980L.AIC           +MK1
++MK1    0.0     .03     0.06    0.1     0.2     0.4     0.6     0.8
+$                                                                       $
+$  CFL3D MESH AND SOLUTION IN PLOT3D FORMAT ARE IMPORTED FROM THE       $
+$  EXTERNAL FILES AGARDCFD.GRID AND AGARDCFD.098, RESPECTIVELY          $
+$  VIA THE INPCFD BULK DATA CARD                                        $
+$                                                                       $
+$  THE AGARDCP98a.PLT ~ AGARDCD98e.PLT STORE THE INTERPOLATED CFD       $
+$  SOLUTIONS FOR CELLWNG WITH ID=10001 ~ 60001 TO VERFY THE             $
+$  INTERPOLATION                                                        $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+INPCFD  7       -1      17      IUDP3D  AGARD445.GRID     AGARDM0980.SOL
+        10001                   TECPLOT AGARDSRF.PLT      AGARDCP98a.PLT
+        1       1       85      1       39      1       1         BOTH
+        20001                   TECPLOT AGARDSRF.PLT      AGARDCP98b.PLT
+        1       1       85      1       39      1       1         BOTH
+        30001                   TECPLOT AGARDSRF.PLT      AGARDCP98c.PLT
+        1       1       85      1       39      1       1         BOTH
+        40001                   TECPLOT AGARDSRF.PLT      AGARDCP98d.PLT
+        1       1       85      1       39      1       1         BOTH
+        50001                   TECPLOT AGARDSRF.PLT      AGARDCP98e.PLT
+        1       1       85      1       39      1       1         BOTH
+        60001                   TECPLOT AGARDSRF.PLT      AGARDCP98f.PLT
+        1       1       85      1       39      1       1         BOTH
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+OMITCFD 17              TECPLOT CFD-SURFACE.PLT SURFSOL_M980.PLT
+        1       37      181      1       30      1       37
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$               FLUTTER ANALYSIS FOR 8 SUBCASES                         $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$ THE SPEED OF SOUND OF AIR IN THE NASA TRANSONIC DYNAMIC TUNNEL        $
+$ IS ALMOS CONSTANT. THEREFORE, THE MATCH POINT ANALYSIS CAN BE ACHIEVED$
+$ BY THE DENSITY ITERATION.                                             $
+$                                                                       $
+$ 8 FLUTTER CARDS ARE USED.  EACH FLUTTER CARD REFERS TO A FIXMACH      $
+$ BULK DATA CARD FOR MATCH POINT FLUTTER ANALYSIS.                      $
+$                                                                       $
+$                                                                       $
+$             * MACH 0.678 - ZTRAN & ZONA6 FLUTTER CASES *              $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST         $
+FLUTTER 1       SYM     1       0       0       
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDMK            FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMACH 1       1               SLUG    FT      1.0     0        3      +FIX0
+$       VEL1    DEN1    -ECT-
++FIX0   759.1   .00005  759.1   .0001   759.1   .00015  759.1   .0002   +FIX1
++FIX1   759.1   .0003   759.1   .00035  759.1   .00037  759.1   .00039  +FIX2
++FIX2   759.1   .00040  759.1   .00041  759.1   .00043  759.1   .00045
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST         $
+FLUTTER 2       SYM     2       0       0       
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDMK            FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMACH 2       2               SLUG    FT      1.0     0        0      +FIX0
+$       VEL1    DEN1    -ECT-
++FIX0   759.1   .00005  759.1   .0001   759.1   .00015  759.1   .0002   +FIX1
++FIX1   759.1   .0003   759.1   .00035  759.1   .00037  759.1   .00039  +FIX2
++FIX2   759.1   .00040  759.1   .00041  759.1   .00043  759.1   .00045
+$                                                                       $
+$ PLTVG TO PLOT FREQUENCY & DAMPING V.S. DYNAMIC PRESSURE               $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDFLUT  NMODE   XAXIS   FORM        FILENM              $
+PLTVG   10      1       4       Q       TABLE   WEKZTRAN_678.DAT
+PLTVG   20      2       4       Q       TABLE   WEKZONA6_678.DAT
+$                                                                       $
+$                                                                       $
+$             * MACH 0.901   - ZTRAN & ZONA6 FLUTTER CASE *             $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST         $
+FLUTTER 3       SYM     3       0       0       
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDMK            FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMACH 3       3               SLUG    FT      1.0     0        3      +FIX0
+$       VEL1    DEN1    -ECT-
++FIX0   973.40  .00002  973.4   .00005  973.4   .00008  973.4   .00009  +FIX1
++FIX1   973.40  .0001   973.4   .00015  973.4   .00017  973.4   .00018  +FIX2
++FIX2   973.40  .00019  973.4   .00020  973.4   .00022  973.4   .00025
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST         $
+FLUTTER 4       SYM     4       0       0       
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDMK            FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMACH 4       4               SLUG    FT      1.0     0        0      +FIX0
+$       VEL1    DEN1    -ECT-
++FIX0   973.40  .00002  973.4   .00005  973.4   .00008  973.4   .00009  +FIX1
++FIX1   973.40  .0001   973.4   .00015  973.4   .00017  973.4   .00018  +FIX2
++FIX2   973.40  .00019  973.4   .00020  973.4   .00022  973.4   .00025
+$                                                                       $
+$                                                                       $
+$ PLTVG TO PLOT FREQUENCY & DAMPING V.S. DYNAMIC PRESSURE               $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDFLUT  NMODE   XAXIS   FORM        FILENM              $
+PLTVG   30      3       4       Q       TABLE   WEKZTRAN_901.DAT 
+PLTVG   40      4       4       Q       TABLE   WEKZONA6_901.DAT 
+$                                                                       $
+$                                                                       $
+$                  * MACH 0.954  - ZTRAN & ZONA6 FLUTTER CASE *         $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST         $
+FLUTTER 5       SYM     5       0       0       
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDMK            FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMACH 5       5               SLUG    FT      1.0     0       3       +FIX0
+$       VEL1    DEN1    -ECT-
++FIX0   1008.4  .00005  1008.4  .00006  1008.4  .00007  1008.4  .000075 +FIX1
++FIX1   1008.4  .00008  1008.4  .00010  1008.4  .00011  1008.4  .00012  +FIX2
++FIX2   1008.4  .000125 1008.4  .00013  1008.4  .000135 1008.4  .00014  +FIX3
++FIX3   1008.4  .00015  1008.4  .00016  1008.4  .00017  1008.4  .00018
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST         $
+FLUTTER 6       SYM     6       0       0       
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDMK            FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMACH 6       6               SLUG    FT      1.0     0       0       +FIX0
+$       VEL1    DEN1    -ECT-
++FIX0   1008.4  .00005  1008.4  .00006  1008.4  .00007  1008.4  .000075 +FIX1
++FIX1   1008.4  .00008  1008.4  .00010  1008.4  .00011  1008.4  .00012  +FIX2
++FIX2   1008.4  .000125 1008.4  .00013  1008.4  .000135 1008.4  .00014  +FIX3
++FIX3   1008.4  .00015  1008.4  .00016  1008.4  .00017  1008.4  .00018
+$                                                                       $
+$                                                                       $
+$ PLTVG TO PLOT FREQUENCY & DAMPING V.S. DYNAMIC PRESSURE               $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDFLUT  NMODE   XAXIS   FORM        FILENM              $
+PLTVG   50      5       4       Q       TABLE   WEKZTRAN_954.DAT
+PLTVG   60      6       4       Q       TABLE   WEKZONA6_954.DAT
+$                                                                       $
+$                                                                       $
+$                  * MACH 0.980 - ZTRAN & ZONA6 FLUTTER CASE *          $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST         $
+FLUTTER 7       SYM     7       0       0       
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDMK            FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMACH 7       7               SLUG    FT      1.0     0        3      +FIX0
+$       VEL1    DEN1    -ECT-
++FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1
++FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2
++FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3
++FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST         $
+FLUTTER 8       SYM     8       0       0       
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDMK            FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMACH 8       8               SLUG    FT      1.0     0        3      +FIX0
+$       VEL1    DEN1    -ECT-
++FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1
++FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2
++FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3
++FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018
+$                                                                       $
+$ PLTVG TO PLOT FREQUENCY & DAMPING V.S. DYNAMIC PRESSURE               $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   IDFLUT  NMODE   XAXIS   FORM        FILENM              $
+PLTVG   70      7       4       Q       TABLE   WEKZTRAN_980.DAT
+PLTVG   80      8       4       Q       TABLE   WEKZONA6_980.DAT
+$                                         
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$              SPLINE INPUT                                             $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$                  * SURFACE SPLINE FIT ON THE WING *                   $
+$                                                                       $
+$                                                                       $
+$ THE INFINITE PLATE SPLINE METHOD IS USED TO SPLINE THE WING AERO      $
+$ BOXES TO THE WING STRUCTURE GRIDS.  THE SETK BULK DATA CARD REFERS    $
+$ TO A PANLST3 BULK DATA CARD THAT SPLINES ALL OF THE WING AERO BOXES   $          
+$ TO THE GRID POINTS SPECIFIED IN THE SET1 (SID=60) BULK DATA CARD.     $
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       EID     MODEL   CP      SETK    SETG    DZ      EPS             $
+SPLINE1 10      WING            10      60
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   LABEL                                                   $
+PANLST3 10      WING                    
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SID     G1      G2      ETC                                     $
+SET1    60      1       THRU    121   
+$                                                                       $
+$                                                                       $
+$ PLTMODE BULK DATA CARDS FOR PLOTTING THE INTERPOLATED MODES           $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$       SETID   SYM     MODE    TYPE    MAXDISP FORM       FILENM       $
+PLTMODE 10      SYM     1               .5      TECPLOT    WEAKDMD_1.PLT
+PLTMODE 20      SYM     2               .5      TECPLOT    WEAKDMD_2.PLT
+PLTMODE 30      SYM     3               .5      TECPLOT    WEAKDMD_3.PLT
+PLTMODE 40      SYM     4               .5      TECPLOT    WEAKDMD_4.PLT
+PLTMODE 50      SYM     5               .5      TECPLOT    WEAKDMD_5.PLT
+$                                                                       $
+ENDDATA

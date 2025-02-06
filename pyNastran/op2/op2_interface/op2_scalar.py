@@ -877,6 +877,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OGPFB2' : [reader_ogpf._read_ogpf2_3, reader_ogpf._read_ogpf2_4, 'grid point forces; SORT2'],  # grid point forces
 
             #=======================
+            # kinetic energy density
+            b'OEKE1': [reader_onr._read_onr1_3, reader_onr._read_onr1_4, 'element kinetic energy'],
+
             # ONR/OEE
             # strain energy density
             b'ONRGY'  : [reader_onr._read_onr1_3, reader_onr._read_onr1_4, 'strain energy density'],
@@ -1095,7 +1098,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #           Output by DSTAP2.
             # DBCOPT - Design optimization history table for ???
 
-            b'OEKE1' : [self._table_passer, self._table_passer, 'element kinetic energy'],
             #b'DSCMCOL' : [self._table_passer, self._table_passer],
             #b'DBCOPT' : [self._table_passer, self._table_passer],
             #b'FRL0': [self._table_passer, self._table_passer],  # frequency response list

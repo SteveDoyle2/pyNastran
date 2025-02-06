@@ -1103,7 +1103,7 @@ def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger) 
                       f'eids={element}.min = {eid_min}')
             log.error(msg)
         else:
-            if table1.table_name not in ['ONRGY1', 'ONRGY2']:
+            if table1.table_name not in ['ONRGY1', 'ONRGY2', 'OEKE1']:
                 msg = f'table_name = {table1.table_name}\n'
                 for i, eidsi in enumerate(element):
                     eid_min = eidsi.min()

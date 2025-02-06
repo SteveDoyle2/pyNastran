@@ -3,6 +3,7 @@ tests:
  - plot sol_145
 """
 import os
+import warnings
 from pathlib import Path
 import unittest
 
@@ -41,12 +42,17 @@ from pyNastran.f06.flutter_response import reshape_eigenvectors
 from pyNastran.f06.parse_trim import read_f06_trim
 from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 from pyNastran.op2.op2 import OP2
+from pyNastran.utils import print_bad_path
 
 
 DIRNAME = os.path.dirname(__file__)
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = PKG_PATH / '..' / 'models'
 AERO_PATH = MODEL_PATH / 'aero'
+#pyNastran\bdf\cards\aero\examples\flutter\case6
+AERO_EXAMPLES = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples'
+assert AERO_EXAMPLES.exists(), print_bad_path(AERO_EXAMPLES)
+
 
 class TestF06Flutter(unittest.TestCase):
 
@@ -665,10 +671,11 @@ def _fix_modes(eigr: np.ndarray,
 
 
 class TestZonaFlutter(unittest.TestCase):
-    def _test_zona_gafa(self):
+    def test_zona_gafa(self):
         from pyNastran.f06.dev.flutter.read_zona_out import read_zona_out
-        f06_filename = AERO_PATH / 'aerobeam.f06'
-        png_filename = AERO_PATH / 'aerobeam.png'
+        #bdf_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.bdf'
+        f06_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.out'
+        png_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.png'
         responses, mass = read_zona_out(f06_filename)
         # plot_sol_200(f06_filename, png_filename=png_filename,
         #              show=True)
