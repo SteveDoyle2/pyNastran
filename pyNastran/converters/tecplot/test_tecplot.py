@@ -56,16 +56,20 @@ class TestTecplot(unittest.TestCase):
         tecplot_filenames = [
             'ascii/3dgeom.dat', #  good; multi-zone, geometry
             'ascii/channel.dat', # 2d structured point; good
+
+            #    'Zone I=    17, J=    17K=     1, F=POINT'
+            # -> 'Zone I=    17, J=    17,K=     1, F=POINT'
             #'ascii/cylinder_slice.dat', # 3d structured point; block 2 has poor formatting
-            #'ascii/cylindrical.dat',  # 3d structured empty lines; good
+            'ascii/cylindrical.dat',  # 3d structured empty lines at end; good
 
             'ascii/movie.dat',  # csv -> good
             'ascii/multzn2d.dat',  #  2d structured; good
             'ascii/plane_slice.dat',  # 2d structured multi-line; good
-            #'ascii/simp3dbk.dat',  # 3d structured block - bad
-            'ascii/simp3dpt.dat', #  good
+            'ascii/simp3dbk.dat',  # 3d structured block - good
+            'ascii/simp3dpt.dat', #  3d structured point - good
         ]
         log = SimpleLogger(level='warning', encoding='utf-8')
+        #log = SimpleLogger(level='debug', encoding='utf-8')
         ascii_plt = os.path.join(MODEL_PATH, 'ascii.plt')
         binary_plt = os.path.join(MODEL_PATH, 'binary.plt')
         #junk_plt = os.path.join(MODEL_PATH, 'junk.plt')

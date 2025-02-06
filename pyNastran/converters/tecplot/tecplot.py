@@ -273,6 +273,7 @@ class Tecplot(TecplotBinary):
         hexas: list[np.ndarray] = []
         zone_ids: list[np.ndarray] = []
         names: list[str] = []
+        assert len(self.zones), self.zones
         for izone, zone in enumerate(self.zones):
             names.append(zone.name)
             nodes2d = zone.xy
@@ -286,41 +287,49 @@ class Tecplot(TecplotBinary):
             hexasi = np.zeros((0, 8), dtype='int32')
             trisi = np.zeros((0, 3), dtype='int32')
             tetsi = np.zeros((0, 4), dtype='int32')
-            if 'I' in zone.headers_dict:
-                i = zone.headers_dict['I']
-                if 'J' in zone.headers_dict:
+            is_i = 'I' in zone.headers_dict and zone.headers_dict['I'] > 1
+            is_j = 'J' in zone.headers_dict and zone.headers_dict['J'] > 1
+            is_k = 'K' in zone.headers_dict and zone.headers_dict['K'] > 1
+            #print(zone.headers_dict)
+            if is_i or is_j or is_k:
+                self.log.debug(f'is_ijk=[{is_i},{is_j},{is_k}]')
+                if is_i and is_j and is_k:
+                    i = zone.headers_dict['I']
                     j = zone.headers_dict['J']
-                    if 'K' in zone.headers_dict:
-                        k = zone.headers_dict['K']
-                        nnodes = i * j * k
-                        elements = np.arange(0, nnodes).reshape(k, j, i)
-                        #print(elements[0, :, :])
-                        #print(elements[1:, :, :])
-                        n1 = elements[:-1, :-1, :-1].ravel()
-                        n2 = elements[:-1, :-1, 1:].ravel()
-                        n3 = elements[:-1, 1:, 1:].ravel()
-                        n4 = elements[:-1, 1:, :-1].ravel()
+                    k = zone.headers_dict['K']
+                    nnodes = i * j * k
+                    elements = np.arange(0, nnodes).reshape(k, j, i)
+                    #print(elements)
+                    assert i>0 and j>0 and k>0, f'ijk=[{i},{j},{k}]'
+                    #print(elements[0, :, :])
+                    #print(elements[1:, :, :])
+                    n1 = elements[:-1, :-1, :-1].ravel()
+                    n2 = elements[:-1, :-1, 1:].ravel()
+                    n3 = elements[:-1, 1:, 1:].ravel()
+                    n4 = elements[:-1, 1:, :-1].ravel()
 
-                        n5 = elements[1:, :-1, :-1].ravel()
-                        n6 = elements[1:, :-1, 1:].ravel()
-                        n7 = elements[1:, 1:, 1:].ravel()
-                        n8 = elements[1:, 1:, :-1].ravel()
-                        #nhexas = (i - 1) * (j - 1) * (k - 1)
-                        hexasi = np.vstack([n1, n2, n3, n4, n5, n6, n7, n8]).T
-                    else:
-                        nnodes = i * j
-                        elements = np.arange(0, nnodes).reshape(j, i)
-                        #print('elements:')
-                        #print(elements)
-                        n1 = elements[:-1, :-1].ravel()
-                        n2 = elements[:-1, 1:].ravel()
-                        n3 = elements[1:, 1:].ravel()
-                        n4 = elements[1:, :-1].ravel()
-                        #nquads = (i - 1) * (j - 1)
-                        quadsi = np.vstack([n1, n2, n3, n4]).T
-                    #trisi = None
-                    #tetsi = None
-                    #hexasi = None
+                    n5 = elements[1:, :-1, :-1].ravel()
+                    n6 = elements[1:, :-1, 1:].ravel()
+                    n7 = elements[1:, 1:, 1:].ravel()
+                    n8 = elements[1:, 1:, :-1].ravel()
+                    #nhexas = (i - 1) * (j - 1) * (k - 1)
+                    hexasi = np.vstack([n1, n2, n3, n4, n5, n6, n7, n8]).T
+                    #assert len(hexasi) > 0, hexasi
+                elif is_i and is_j:
+                    i = zone.headers_dict['I']
+                    j = zone.headers_dict['J']
+                    nnodes = i * j
+                    elements = np.arange(0, nnodes).reshape(j, i)
+                    #print('elements:')
+                    #print(elements)
+                    n1 = elements[:-1, :-1].ravel()
+                    n2 = elements[:-1, 1:].ravel()
+                    n3 = elements[1:, 1:].ravel()
+                    n4 = elements[1:, :-1].ravel()
+                    #nquads = (i - 1) * (j - 1)
+                    quadsi = np.vstack([n1, n2, n3, n4]).T
+                else:
+                    raise RuntimeError((is_i, is_j, is_k))
             else:
                 quadsi = zone.quad_elements
                 hexasi = zone.hexa_elements
@@ -332,6 +341,7 @@ class Tecplot(TecplotBinary):
             ntetsi = len(tetsi)
             nhexasi = len(hexasi)
             nelementsi = nquadsi + ntrisi + ntetsi + nhexasi
+            print(f'nquad={nquadsi} ntrisi={ntrisi} ntetsi={ntetsi} nhexasi={nhexasi}')
             assert nelementsi > 0, str(zone)
             if nquadsi:
                 quads.append(inode + quadsi)
@@ -734,6 +744,7 @@ def read_tecplot(tecplot_filename: PathLike,
     if use_cols:
         tecplot.use_cols = use_cols
         tecplot.dtype = dtype
+    print('tecplot_filename =', tecplot_filename)
     tecplot.read_tecplot(tecplot_filename,
                          filetype=filetype,
                          zones_to_exclude=zones_to_exclude,
