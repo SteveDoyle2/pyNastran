@@ -520,7 +520,7 @@ class RealStrainEnergyArray(BaseElement):
         # ''
         # '                        TYPE = TETRA    SUBTOTAL        7.225325E+00                 0.0072'
 
-        if self.analysis_code in {1, 5, 6, 10}: # statics, frequency, transient, nonlinear statics
+        if self.analysis_code in {1, 5, 6, 10}:  # statics, frequency, transient, nonlinear statics
             subcase_mode = 'SUBCASE'
         elif self.analysis_code in {2, 9}:  # modes, complex modes
             subcase_mode = 'MODE'

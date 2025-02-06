@@ -1,0 +1,141 @@
+$SOL 103
+$SOL 146
+SOL 111
+CEND
+TITLE = N2A STATIC AEROELASTIC AND FLUTTER MODEL
+ECHO = SORT(PARAM,AEROS)
+SUBCASE 1
+  SUPORT = 1
+  $LOAD = 1
+  ACCE(PLOT) = ALL
+  $FORCE(PLOT,VONMISES,CENTER) = ALL
+  $STRESS(PLOT,VONMISES,CENTER) = ALL
+  $SPCFORCES(PLOT) = ALL
+  $STRAIN(PLOT,VONMISES,FIBER,CENTER) = ALL
+  DISPLACEMENT(PLOT) = ALL
+  $GPFORCE(PLOT,SORT1) = ALL
+  $GPKE(PRINT) = ALL
+  EKE(PLOT,PRINT) = ALL
+  SPC = 100
+  MPC = 1
+  $TRIM = 1
+  LABEL = Random Gust
+  METHOD = 40
+  GUST  = 41  $ apply the random gust load
+  $DLOAD = 42  $ apply the load to an EPOINT to pull out the gust load
+  FREQ = 100
+  DLOAD = 600
+BEGIN BULK
+$---------------------------------------
+PARAM,DDRMM,-1  $ request EKE with SOL 111
+$PARAM,RESVEC,NO
+$
+$	acsid	vel	refc	rhoref	symxz	symxy
+AERO	1	10000.	341.07	1.0	1	0
+
+$ random gust
+$ nid tip = 2356
+$ nid wing break = 1828
+$ 
+
+$	SID	EXCITE	DELAY	DPHASE	TC	TD	TYPE
+RLOAD1	600	601			602		LOAD
+$	EXCITE	G	CID	mag	n1	n2	n3
+MOMENT	601	1828	0	1.0	0.	1.	0.
+TABLED1	602
+	0.0	1.0	1000.	1.0	ENDT
+
+$		f1	df	N
+FREQ1	100	2.	0.5	20
+$	method	f1	f2	nmode
+EIGRL	40			20
+
+$	gust	rload1	wg	x0	V
+GUST	41	42	1e-4	0.	10000.
+
+$ required for gust loads
+$PARAM,GUSTAERO,-1
+
+$ specify the mach
+$PARAM,M,0.7
+$ specify Q
+$PARAM,Q, 4.00747
+
+$	SID	J	K	X	Y	TID
+$RANDPS	1031	1	1	1.0	0.0	1032
+
+$EPOINT	50
+
+$TABRND1	1032							+001
+$+001	0.00	2.8708+0 0.25 1.2641+0 0.50 4.7188-1	0.75 2.3080-1+002
+$+002	1.00	1.3456-1 1.25 8.7595-2 1.50 6.1402-2	1.75 4.5369-2+003
+$+003	2.00	3.4865-2 2.25 2.7618-2 2.50 2.2412-2	2.75 1.8547-2+004
+$+004	3.00	1.5601-2 3.25 1.3304-2 3.50 1.1478-2	3.75 1.0004-2+005
+$+005	4.00	8.7964-3 4.25 7.7947-3 4.50 6.9547-3	4.75 6.2434-3+006
+$+006	5.00	5.6359-3 5.25 5.1128-3 5.50 4.6593-3	5.75 4.2636-3+007
+$+007	6.00	3.9162-3 6.25 3.6095-3 6.50 3.3375-3	6.75 3.0951-3+008
+$+008	7.00 2.8782-3 7.25 2.6833-3 7.50 2.5076-3	7.75 2.3485-3+009
+$+009	8.00 2.2042-3 8.25 2.0727-3 8.50 1.9526-3	8.75 1.8427-3+010
+$+010	9.00 1.7418-3 9.25 1.6490-3 9.50 1.5634-3	9.75 1.4843-3+011
+$+011	10.00 1.4440-3
+$ENDT
+
+$ TABDMP1 DEFINES DAMPING COEFFICIENTS (G1) VERSES
+$ (3 PERCENT STRUCTURAL DAMPING IS SPECIFIED OVER THE RANGE.
+$ VALUES ARE LINEARLY INTERPOLATED AND STRUCTURAL DAMPING IS
+$ ROUGHLY EQUIVALENT TO 1.5%
+TABDMP1	2000
+	0.	.03	10.	.03	ENDT
+
+MKAERO1	0.8
+	0.01	0.02	0.05
+MKAERO1	0.8
+	0.1	0.2	0.5
+MKAERO1	0.8
+	1.0	2.0	5.0
+
+$                                              R E A L   E I G E N V A L U E S
+$   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+$    NO.       ORDER                                                                       MASS              STIFFNESS
+$        1         1        0.0                 0.0                 0.0                 1.000000E+00        0.0
+$        2         2        0.0                 0.0                 0.0                 1.000000E+00        0.0
+$        3         3        1.883657E+02        1.372464E+01        2.184344E+00        1.000000E+00        1.883657E+02
+$        4         4        1.046121E+03        3.234380E+01        5.147675E+00        1.000000E+00        1.046121E+03
+$        5         5        5.283291E+03        7.268625E+01        1.156838E+01        1.000000E+00        5.283291E+03
+$        6         6        9.686056E+03        9.841776E+01        1.566367E+01        1.000000E+00        9.686056E+03
+$        7         7        1.835714E+04        1.354885E+02        2.156367E+01        1.000000E+00        1.835714E+04
+$        8         8        1.954446E+04        1.398015E+02        2.225010E+01        1.000000E+00        1.954446E+04
+$        9         9        2.051030E+04        1.432142E+02        2.279325E+01        1.000000E+00        2.051030E+04
+$       10        10        3.549691E+04        1.884062E+02        2.998578E+01        1.000000E+00        3.549691E+04
+$       11        11        3.941716E+04        1.985376E+02        3.159823E+01        1.000000E+00        3.941716E+04
+$       12        12        4.410781E+04        2.100186E+02        3.342550E+01        1.000000E+00        4.410781E+04
+$       13        13        4.898729E+04        2.213307E+02        3.522588E+01        1.000000E+00        4.898729E+04
+$       14        14        5.332465E+04        2.309213E+02        3.675227E+01        1.000000E+00        5.332465E+04
+$       15        15        5.481572E+04        2.341276E+02        3.726256E+01        1.000000E+00        5.481572E+04
+$       16        16        5.833473E+04        2.415258E+02        3.844003E+01        1.000000E+00        5.833473E+04
+$       17        17        6.523628E+04        2.554139E+02        4.065039E+01        1.000000E+00        6.523628E+04
+$       18        18        7.337655E+04        2.708811E+02        4.311206E+01        1.000000E+00        7.337655E+04
+$       19        19        7.524132E+04        2.743015E+02        4.365644E+01        1.000000E+00        7.524132E+04
+$       20        20        7.844875E+04        2.800870E+02        4.457724E+01        1.000000E+00        7.844875E+04
+
+$---------------------------------------
+$MDLPRM,HDF5,1
+PARAM,GRDPNT,0
+$PARAM,COUPMASS,1
+PARAM,AUNITS,0.00259
+PARAM,WTMASS,0.00259
+PARAM,BAILOUT,-1
+PARAM,PRTMAXIM,YES
+PARAM,POST,-1
+PLOTEL,2,2356,1002
+PLOTEL3,10,2356,7996,20032
+PLOTEL4,20,2356,7996,20032,10342
+AEROS   1       1       131.0   2556.4  734000.01       0       
+AESTAT  500     ANGLEA  
+AESTAT  501     PITCH   
+AESTAT  502     URDD3   
+AESTAT  503     URDD5   
+TRIM    1       0.789   1.5     PITCH   0.0     URDD3   2.5     
+        URDD5   0.0
+INCLUDE 'bwb_geom.blk'
+ENDDATA
