@@ -276,7 +276,9 @@ class CBAR(Element):
 
         # doesn't exist in NX nastran
         offt = integer_string_or_blank(card, 8, 'offt', default=OFFT_DEFAULT)
-        #print('cls.offt = %r' % (cls.offt))
+        #print(f'CBAR.offt = {offt!r}; OFFT_DEFAULT={OFFT_DEFAULT!r}')
+        if offt and isinstance(offt, str):
+            assert len(offt) == 3, card
 
         pa = integer_or_blank(card, 9, 'pa', default=0)
         pb = integer_or_blank(card, 10, 'pb', default=0)
@@ -351,7 +353,6 @@ class CBAR(Element):
                    offt, pa, pb, wa, wb, ifile)
         baror = self.model.baror
         apply_bar_default(self, baror)
-        check_offt(self.type, self.element_id, self.offt)
         self.sort()
         self.cards = []
 
@@ -590,6 +591,7 @@ class CBAR(Element):
     def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray,
                  ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                             np.ndarray, np.ndarray, np.ndarray]:
+        check_offt(self.type, self.element_id, self.offt)
         log = self.model.log
         coords: COORD = self.model.coord
         #xyz1, xyz2 = self.get_xyz()
