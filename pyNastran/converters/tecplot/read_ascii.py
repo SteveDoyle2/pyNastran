@@ -42,6 +42,7 @@ def read_header_lines(lines: list[str], iline: int, line: str,
     "Simulation Time"
     zone,t="forces"
     """
+    nlines = len(lines)
     i = 0
     title_line = ''
     #variables_line = ''
@@ -55,7 +56,7 @@ def read_header_lines(lines: list[str], iline: int, line: str,
             #break
         #print(linei)
     #print('-----------------------------')
-    while i < 30:
+    while i < 30 and iline < nlines:
         #print(iline, i, line.strip())
         #self.n = 0
         #log.info(f'{iline:d}: {line}')
@@ -715,29 +716,28 @@ def read_block(lines: list[str], iline: int,
     basis.
     """
     log.debug('start of BLOCK')
-    #print('nnodes =', nnodes)
-    #print('nvars =', nvars)
+    #log.debug('nnodes={nnodes} nvars={nvars}')
     ndata = nnodes * nvars
-    #print('ndata =', ndata)
-    results: list[str] = []
-
-    while len(results) < ndata:
+    #log.debug('ndata={ndata}')
+    results_list: list[str] = []
+    while len(results_list) < ndata:
         sline = split_line(line)
-        results += sline
-        #print('block:', iline, sline, len(results))
+        results_list.extend(sline)
+        #print('block:', iline, sline, len(results_list))
         if len(sline) == 0:
             raise
         iline, line, sline = get_next_sline(lines, iline)
-        #log.debug(str(sline))s
-    #print(len(results))
+        if sline is None:
+            break
+        #log.debug(f'{len(sline)}/{len(results_list)}: {sline}')
+    results = np.array(results_list, dtype='float64')
+    #log.debug(f'nresults={len(results)} ndata={ndata}')
     assert len(results) == ndata, 'len(results)=%s expected=%s' % (len(results), ndata)
     log.debug('end of BLOCK')
 
-    #TODO: save results
-    raise RuntimeError('not done...save results')
+    results_reshape = results.reshape(nvars, nnodes).T
+    xyz_results[:, :] = results_reshape
     return iline, line, sline
-    #return iline
-
 
 def get_next_line(lines: list[str], iline: int) -> tuple[int, Optional[str]]:
     """Read the next line from the file.  Handles comments."""

@@ -12,7 +12,7 @@ from pyNastran.utils.nastran_utils import run_nastran
 from pyNastran.utils.dev import get_files_of_type
 
 
-def cmd_line_run_jobs(argv=None, quiet: bool=False):
+def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     """
     run_nastran_job dirname
     run_nastran_job filename.bdf -x C:\bin\nastran.exe
@@ -22,8 +22,9 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False):
     if argv is None:
         argv = sys.argv[1:]  # ['run_jobs'] + sys.argv[2:]
     else:
-        argv = [FILE] + sys.argv[2:]  # ['run_jobs'] + sys.argv[2:]
-    print(f'argv = {argv}')
+        argv = [FILE] + argv[2:]  # ['run_jobs'] + sys.argv[2:]
+    if not quiet:
+        print(f'argv = {argv}')
 
     parser = argparse.ArgumentParser(prog='run_jobs')
     parser.add_argument("bdf_dirname_filename", help='path to Nastran filename')
@@ -52,9 +53,13 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False):
 
     cleanup = args.cleanup
     extensions = ['.dat', '.bdf']
-    run_jobs(bdf_filename_dirname, nastran_exe,
-             extensions=extensions, cleanup=cleanup,
-             recursive=recursive, run=run)
+
+    level = 'warning' if quiet else 'debug'
+    nfiles = run_jobs(
+        bdf_filename_dirname, nastran_exe,
+        extensions=extensions, cleanup=cleanup,
+        recursive=recursive, run=run, log=level)
+    return nfiles
 
 
 def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
@@ -116,8 +121,10 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
 def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
              extensions: list[str], cleanup: bool=True,
              recursive: bool=False,
-             run: bool=True) -> int:
-    """runs a series of jobs in a specific folder
+             run: bool=True,
+             log: SimpleLogger | str='debug') -> int:
+    """
+    Runs a series of jobs in a specific folder
 
     Parameters
     ----------
@@ -125,13 +132,19 @@ def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
         finds all bdf/dat files in all sub-directories
         NOTE: doesn't apply to files
 
+    Returns
+    -------
+    nfiles: int
+        the number of files
+
     TODO: remove failed jobs from the time estimator
     """
+    # log = SimpleLogger(level='debug')
+    log = SimpleLogger(log) if isinstance(log, str) else log
     bdf_filenames = get_bdf_filenames_to_run(
         bdf_filename_dirname, extensions, recursive=recursive)
     #print(bdf_filenames, len(bdf_filenames))
 
-    log = SimpleLogger(level='debug')
     bdf_filenames_str = [str(bdf_filename) for bdf_filename in bdf_filenames]
     log.info(f'bdf_filenames = {bdf_filenames_str}')
     for bdf_filename in bdf_filenames:

@@ -26,7 +26,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from .rod import line_pid_mass_per_length, line_length, line_vector_length, line_centroid, e_g_nu_from_property_id
 from .bar import (apply_bar_default, init_x_g0, get_bar_vector, split_offt_vector,
                   inertia_from_property_id, k_from_property_id,
-                  e_g_nu_from_isotropic_material)
+                  e_g_nu_from_isotropic_material, check_offt)
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, array_default_float, array_default_str,
@@ -272,6 +272,7 @@ class CBEAM(Element):
                    pa, pb, wa, wb, sa, sb)
         beamor = self.model.beamor
         apply_bar_default(self, beamor)
+        check_offt(self.type, element_id, offt)
         self.cards = []
 
     def _save(self, element_id, property_id, nodes,
