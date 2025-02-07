@@ -114,8 +114,8 @@ def read_header_lines(lines: list[str], iline: int, line: str,
 
     return iline, title_line, header_lines, line
 
-def _header_lines_to_header_dict(title_line: str, header_lines: list[str],
-                                variables: list[str], log: SimpleLogger):
+def header_lines_to_header_dict_alt(title_line: str, header_lines: list[str],
+                                    variables: list[str], log: SimpleLogger):
     """
     VARIABLES= X, Y, Z, EXTID
     ZONE I=      96 J=      24 F=FEPOINT
@@ -159,7 +159,7 @@ def _header_lines_to_header_dict(title_line: str, header_lines: list[str],
     slines = split_slines_by_char(quote_split, ',')
     slines = split_slines_by_char(slines, '=')
     slines = split_slines_by_char(slines, ' ')
-    print('slines =', slines)
+    #print('slines =', slines)
     # ['VARIABLES', '=', 'X', 'Y', 'Z', 'EXTID',
     #  'ZONE',
     #  'I', '=', '96', 'J', '=', '24',
@@ -192,7 +192,7 @@ def _header_lines_to_header_dict(title_line: str, header_lines: list[str],
             assert len(values) == 1, values
             headers_dict2[key] = values[0]
 
-    print(headers_dict2)
+    #print(headers_dict2)
     variables = headers_dict2['VARIABLES']
     _simplify_header(headers_dict2, variables)
     assert len(headers_dict2) > 0, headers_dict2
@@ -551,11 +551,11 @@ def read_zonetype(log: SimpleLogger,
             #nelementsi = len(quads)
             # for xyz in xyz_results:
             #     print(xyz)
-            for quad in quads:
-                print(quad)
+            # for quad in quads:
+            #     print(quad)
             zone_data_list.append(np.array(xyz_results, dtype='float64'))
             quads_list.append(np.array(quads, dtype='int32') - 1)
-            print(quads_list)
+            #print(quads_list)
             return iline
         else:
             raise RuntimeError((is_i, is_j, is_k))

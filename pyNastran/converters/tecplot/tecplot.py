@@ -19,7 +19,7 @@ from pyNastran.converters.tecplot.write_ascii import (
     write_ascii_header, write_ascii_tecplot_zone)
 from pyNastran.converters.tecplot.read_ascii import (
     read_header_lines, header_lines_to_header_dict,
-    read_zonetype,
+    header_lines_to_header_dict_alt, read_zonetype,
 )
 
 class Tecplot(TecplotBinary):
@@ -178,8 +178,12 @@ class Tecplot(TecplotBinary):
             iline, title_line, header_lines, line = read_header_lines(
                 lines, iline, line, log)
             #print('header_lines', header_lines)
-            headers_dict = header_lines_to_header_dict(
-                title_line, header_lines, self.variables, log)
+            try:
+                headers_dict = header_lines_to_header_dict(
+                    title_line, header_lines, self.variables, log)
+            except:
+                headers_dict = header_lines_to_header_dict_alt(
+                    title_line, header_lines, self.variables, log)
             if headers_dict is None:
                 break
 
