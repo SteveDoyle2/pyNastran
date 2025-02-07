@@ -114,6 +114,92 @@ def read_header_lines(lines: list[str], iline: int, line: str,
 
     return iline, title_line, header_lines, line
 
+def _header_lines_to_header_dict(title_line: str, header_lines: list[str],
+                                variables: list[str], log: SimpleLogger):
+    """
+    VARIABLES= X, Y, Z, EXTID
+    ZONE I=      96 J=      24 F=FEPOINT
+    """
+    if len(header_lines) == 0:
+        return None
+
+    headers_dict = {}
+    if title_line:
+        title_sline = title_line.split('=', 1)
+        title = title_sline[1]
+    else:
+        title = 'tecplot geometry and solution file'
+    headers_dict['TITLE'] = title
+
+    headers_joined = _join_headers(header_lines)
+    def split_by_quotes(line: str) -> list[str]:
+        if "'" in line:
+            single_quote
+        elif '"' in line:
+            double_quote
+        else:
+            return [line]
+    def split_slines_by_char(lines: list[str], char: str) -> list[str]:
+        lines2 = []
+        for line in lines:
+            if '"' in line:
+                lines2.extend(sline)
+                continue
+            if char == '=':
+                sline = []
+                for val in line.strip().split(char):
+                   sline += [val.strip(), '=']
+                sline.pop()
+            else:
+                sline = [val.strip() for val in line.strip().split(char)]
+            lines2.extend(sline)
+        return lines2
+    #def split_by_keywords():
+    quote_split = split_by_quotes(headers_joined)
+    slines = split_slines_by_char(quote_split, ',')
+    slines = split_slines_by_char(slines, '=')
+    slines = split_slines_by_char(slines, ' ')
+    print('slines =', slines)
+    # ['VARIABLES', '=', 'X', 'Y', 'Z', 'EXTID',
+    #  'ZONE',
+    #  'I', '=', '96', 'J', '=', '24',
+    #  'F', '=', 'FEPOINT']
+    for i, val in enumerate(slines):
+        if val == 'VARIABLES' and slines[i+1] == '=':
+            key = val
+            values = []
+            headers_dict[key] = values
+        elif val == 'ZONE':
+            continue
+        elif val in {'I', 'J', 'F'} and slines[i+1] == '=':
+            if val == 'F':
+                val = 'DATAPACKING'
+            key = val
+            values = []
+            headers_dict[key] = values
+        elif val == '=':
+            continue
+        else:
+            values.append(val)
+
+    headers_dict2 = TecplotDict()
+    for key, values in headers_dict.items():
+        if isinstance(values, str):
+            headers_dict2[key] = values
+        elif key == 'VARIABLES':
+            headers_dict2[key] = values
+        else:
+            assert len(values) == 1, values
+            headers_dict2[key] = values[0]
+
+    print(headers_dict2)
+    variables = headers_dict2['VARIABLES']
+    _simplify_header(headers_dict2, variables)
+    assert len(headers_dict2) > 0, headers_dict2
+    return headers_dict2
+
+
+
 def header_lines_to_header_dict(title_line: str, header_lines: list[str],
                                 variables: list[str], log: SimpleLogger):
     """parses the parsed header lines"""
@@ -421,33 +507,65 @@ def read_zonetype(log: SimpleLogger,
         nelementsi = headers_dict['E']
         is_unstructured = True
     elif zone_type in {'POINT', 'BLOCK'}: #  structured
-        ni = headers_dict['I']
-        if 'J' in headers_dict:
+        is_i = 'I' in headers_dict
+        is_j = 'J' in headers_dict
+        is_k = 'K' in headers_dict
+        if is_i and is_j and is_k:
+            # 3d
+            ni = headers_dict['I']
             nj = headers_dict['J']
-            if 'K' in headers_dict:
-                # 3d
-                nk = headers_dict['K']
-                nnodesi = ni * nj * nk
-                nelementsi = (ni - 1) * (nj - 1) * (nk - 1)
-            else:
-                # 2d
-                nnodesi = ni * nj
-                nelementsi = (ni - 1) * (nj - 1)
-        else:
-            assert 'K' not in headers_dict, list(headers_dict.keys())
+            nk = headers_dict['K']
+            nnodesi = ni * nj * nk
+            nelementsi = (ni - 1) * (nj - 1) * (nk - 1)
+        elif is_i and is_j:
+            ni = headers_dict['I']
+            nj = headers_dict['J']
+            # 2d
+            nnodesi = ni * nj
+            nelementsi = (ni - 1) * (nj - 1)
+        elif is_i:
+            ni = headers_dict['I']
             nnodesi = ni
             nelementsi = (ni - 1)
+        else:  # pragma: no cover
+            raise RuntimeError((is_i, is_j, is_k))
         assert nelementsi >= 0, nelementsi
         #nelementsi = 0
         elements = None # np.zeros((nelementsi, 8), dtype='int32')
         is_structured = True
+    elif zone_type in {'FEPOINT'}:  # quads?
+        is_i = 'I' in headers_dict
+        is_j = 'J' in headers_dict
+        is_k = 'K' in headers_dict
+        if is_i and is_j and is_k:
+            raise RuntimeError((is_i, is_j, is_k))
+        elif is_i and is_j:
+            xyz_results = []
+            quads = []
+            iline, line = read_fepoint_ij(
+                lines, iline, xyz_results, quads, nresults, zone_type,
+                log)
+            assert len(xyz_results) > 0
+            assert len(quads) > 0
+            #nnodesi = len(xyz_results)
+            #nelementsi = len(quads)
+            # for xyz in xyz_results:
+            #     print(xyz)
+            for quad in quads:
+                print(quad)
+            zone_data_list.append(np.array(xyz_results, dtype='float64'))
+            quads_list.append(np.array(quads, dtype='int32') - 1)
+            print(quads_list)
+            return iline
+        else:
+            raise RuntimeError((is_i, is_j, is_k))
     else:
         raise NotImplementedError('zone_type = %r' % zone_type)
     log.info(f'zone_type={zone_type} data_packing={data_packing} '
              f'nnodes={nnodesi} nelements={nelementsi}')
 
-    assert nnodesi > 0, nnodesi
-    assert nresults >= 0, 'nresults=%s' % nresults
+    assert nnodesi > 0, f'nnodesi={nnodesi}; zone_type={zone_type}'
+    assert nresults >= 0, f'nresults={nresults}; zone_type={zone_type}'
 
     xyz_results = np.zeros((nnodesi, nresults), dtype='float32')
     if zone_type == 'FEBRICK':
@@ -549,6 +667,35 @@ def read_zonetype(log: SimpleLogger,
         #return
     log.debug('final sline=%s' % sline)
     return iline
+
+def read_fepoint_ij(
+                lines: list[str], iline,
+                xyz_results: list[list[str]],
+                quads, nresults, zone_type,
+                log: SimpleLogger):
+    xyz_lines = lines[iline - 1:]
+    jline = 0
+    for jline, line in enumerate(xyz_lines):
+        #print(jline, line.rstrip())
+        if '.' not in line:
+            break
+        sline = line.strip().split()
+        assert len(sline) == nresults, sline
+        xyz_results.append(sline)
+    #print('-----------------')
+    #print('jline =', jline)
+    block_lines = lines[iline -1 + jline:]
+    for kline, line in enumerate(block_lines):
+        if '.' in line:
+            raise RuntimeError(line)
+        if 'ZONE' in line:
+            break
+        quad = line.strip().split()
+        quads.append(quad)
+        assert len(quad) == 4, quad
+    iline += jline + kline - 1
+
+    return iline, line
 
 def _read_zonetype_fe(iline: int,
                       line: str,

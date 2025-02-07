@@ -21,6 +21,11 @@ NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 class TestTecplot(unittest.TestCase):
 
+    def _test_mode1(self):
+        tecplot_filename = os.path.join(PKG_PATH, 'bdf', 'cards', 'aero',
+                                        'examples', 'flutter', 'case1', 'mode1.dat')
+        read_tecplot(tecplot_filename, filetype='ascii')
+
     def test_split_headers(self):
         log = SimpleLogger(level='info', encoding='utf-8')
         headers = [

@@ -291,7 +291,8 @@ class Tecplot(TecplotBinary):
             is_j = 'J' in zone.headers_dict and zone.headers_dict['J'] > 1
             is_k = 'K' in zone.headers_dict and zone.headers_dict['K'] > 1
             #print(zone.headers_dict)
-            if is_i or is_j or is_k:
+            datapacking = zone.headers_dict['DATAPACKING']
+            if (is_i or is_j or is_k) and datapacking in {'POINT', 'BLOCK'}:
                 self.log.debug(f'is_ijk=[{is_i},{is_j},{is_k}]')
                 if is_i and is_j and is_k:
                     i = zone.headers_dict['I']

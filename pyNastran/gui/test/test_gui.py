@@ -160,7 +160,7 @@ def run_docopt(argv=None):
         if not os.path.isfile(input_filename):
             raise RuntimeError(f'input_filename={input_filename!r} is not a file')
         input_filenames = [input_filename]
-        output_filenames = []
+        output_filenames = ['']
         if output_filename is not None:
             output_filenames.append(output_filename)
 

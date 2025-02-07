@@ -119,7 +119,7 @@ class ONR:
         postfix = ''
         if op2.table_name in [b'ONRGY1', b'ONRGY2', b'ONRGY']:
             prefix = 'strain_energy.'
-        if op2.table_name in [b'OEKE1']:
+        elif op2.table_name in [b'OEKE1']:
             prefix = 'kinetic_energy.'
         elif op2.table_name in [b'RANEATC']: #, b'OSTRMS1C']:
             op2.format_code = 1
