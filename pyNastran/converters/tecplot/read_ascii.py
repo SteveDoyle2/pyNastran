@@ -133,32 +133,64 @@ def header_lines_to_header_dict_alt(title_line: str, header_lines: list[str],
 
     headers_joined = _join_headers(header_lines)
     def split_by_quotes(line: str) -> list[str]:
+        line = line.strip()
+        # if len(line) == 0:
+        #     return []
+
         if "'" in line:
             single_quote
+        elif '"' in line and line[0] == '"' and line[-1] == '"' and line.count('"') == 2:
+            return [line]
         elif '"' in line:
-            double_quote
+            #print(line)
+            assert "'" not in line, line
+            a, word, c = line.split('"', 2)
+            lines = [a, f'"{word}"', ] + split_by_quotes(c)
+            #print('new_lines =', lines)
+            return lines
         else:
             return [line]
     def split_slines_by_char(lines: list[str], char: str) -> list[str]:
         lines2 = []
+        sline = []
         for line in lines:
-            if '"' in line:
-                lines2.extend(sline)
+            line = line.strip()
+            if len(line) == 0:
                 continue
-            if char == '=':
+
+            #print(f'  line={line!r}; char={char!r}')
+            if line.startswith('"') and line.count('"') == 2:
+                #print('   quote')
+                if len(sline):
+                    lines2.extend(sline)
+                lines2.append(line)
                 sline = []
-                for val in line.strip().split(char):
+                continue
+
+            elif char == '=':
+                #print('   equal')
+                sline = []
+                for val in line.split(char):
                    sline += [val.strip(), '=']
                 sline.pop()
             else:
-                sline = [val.strip() for val in line.strip().split(char)]
+                #print('   else')
+                sline = [val.strip() for val in line.split(char)]
+            lines2.extend(sline)
+            sline = []
+        if len(sline):
             lines2.extend(sline)
         return lines2
     #def split_by_keywords():
     quote_split = split_by_quotes(headers_joined)
-    slines = split_slines_by_char(quote_split, ',')
-    slines = split_slines_by_char(slines, '=')
-    slines = split_slines_by_char(slines, ' ')
+    #print(f'quote_split = {quote_split}')
+    comma_split = split_slines_by_char(quote_split, ',')
+    #print(f'comma_split = {comma_split}')
+    equal_split = split_slines_by_char(comma_split, '=')
+    #print(f'equal_split = {equal_split}')
+    space_split = split_slines_by_char(equal_split, ' ')
+    #print(f'space_split = {space_split}')
+    slines = space_split
     #print('slines =', slines)
     # ['VARIABLES', '=', 'X', 'Y', 'Z', 'EXTID',
     #  'ZONE',
@@ -171,7 +203,7 @@ def header_lines_to_header_dict_alt(title_line: str, header_lines: list[str],
             headers_dict[key] = values
         elif val == 'ZONE':
             continue
-        elif val in {'I', 'J', 'F'} and slines[i+1] == '=':
+        elif val in {'I', 'J', 'F', 'T'} and slines[i+1] == '=':
             if val == 'F':
                 val = 'DATAPACKING'
             key = val
@@ -680,7 +712,7 @@ def read_fepoint_ij(
         if '.' not in line:
             break
         sline = line.strip().split()
-        assert len(sline) == nresults, sline
+        assert len(sline) == nresults, (nresults, sline)
         xyz_results.append(sline)
     #print('-----------------')
     #print('jline =', jline)
