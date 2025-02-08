@@ -40,6 +40,7 @@ from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long,
     write_imag_floats_13e, write_float_12e)
 from pyNastran.op2.errors import SixtyFourBitError
+from pyNastran.op2.op2_helper import polar_to_real_imag, real_imag_to_mag_phase
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.writer.utils import fix_table3_types
@@ -2125,6 +2126,95 @@ class ComplexTableArray(TableArray):
             #f06_file.write(page_stamp % page_num)
             #page_num += 1
         #return page_num
+
+    def plot_freq(self, nids: np.ndarray, dof: int,
+                  mag_unit='', ifig: int=1):
+        import matplotlib.pyplot as plt
+        fig = plt.figure(ifig)
+        nrows = 2
+        ncols = 1
+        ax1, ax2 = fig.subplots(nrows, ncols)
+
+        all_nids = self.node_gridtype[:, 0]
+        inids = np.searchsorted(all_nids, nids)
+        freq = self._times
+        idof = dof - 1
+        data = self.data[:, inids, :]  # (freq, inid, idof)
+        mag, phase = real_imag_to_mag_phase(data)
+
+        assert len(inids) == len(nids)
+        tag = ' (excitation)'
+        for i, nid in enumerate(nids):
+            # ax1.loglog(freq, mag[:, i, idof], label=f'N={nid} dof={dof}')
+            # ax2.semilogx(freq, phase[:, i, idof])
+
+            ax1.semilogy(freq, mag[:, i, idof], label=f'N={nid} dof={dof}{tag}')
+            #ax1.plot(freq, mag[:, i, idof], label=f'N={nid} dof={dof}{tag}')
+            ax2.plot(freq, phase[:, i, idof])
+            tag = ''
+
+        ax1.legend()
+        ax1.grid()
+        ax2.grid()
+        ax1.set_xlabel('Frequency [Hz]')
+        ax2.set_xlabel('Frequency [Hz]')
+        if mag_unit:
+            ax1.set_ylabel(f'Magnitude [{mag_unit}]')
+        else:
+            ax1.set_ylabel(f'Magnitude')
+        ax2.set_ylabel('Phase [deg]')
+        return fig, (ax1, ax2)
+
+    def plot_tf(self, nids_in: int | list[int],
+                nids_out: int | list[int],
+                dof: int, ifig: int=1):
+        if isinstance(nids_out, integer_types):
+            nids_out = [nids_out]
+        nout = len(nids_out)
+        if isinstance(nids_in, integer_types):
+            nids_in = [nids_in] * nout
+
+        import matplotlib.pyplot as plt
+        fig = plt.figure(ifig)
+        nrows = 2
+        ncols = 1
+        ax1, ax2 = fig.subplots(nrows, ncols)
+
+        #nids = [nid_in] + nids_out
+        all_nids = self.node_gridtype[:, 0]
+        inids_in = np.searchsorted(all_nids, nids_in)
+        inids_out = np.searchsorted(all_nids, nids_out)
+        freq = self._times
+        idof = dof - 1
+        data_in = self.data[:, inids_in, :]  # (freq, inid, idof)
+        data_out = self.data[:, inids_out, :]  # (freq, inid, idof)
+        assert data_in.shape == data_out.shape
+
+        nfreq = data_in.shape[0]
+        tf_freq_domain = data_out / data_in
+        mag, phase = real_imag_to_mag_phase(tf_freq_domain)
+        assert mag.shape == (nfreq, nout, 6), mag.shape
+
+        # nid_in, nid_out = nids
+        # inid_in, inid_out = inids
+
+        for inid, nid_out, nid_in in zip(count(), nids_out, nids_in):
+            ax1.semilogy(freq, mag[:, inid, idof], label=f'TF({nid_out}/{nid_in}); dof={dof}')
+            # ax1.loglog(freq, mag[:, idof], label=f'TF; dof={dof}')
+            # ax2.semilogx(freq, phase[:, idof])
+
+            #ax1.plot(freq, mag[:, idof], label=f'TF; dof={dof}')
+            ax2.plot(freq, phase[:, inid, idof])
+
+        ax1.legend()
+        ax1.grid()
+        ax2.grid()
+        ax1.set_xlabel('Frequency [Hz]')
+        ax2.set_xlabel('Frequency [Hz]')
+        ax1.set_ylabel('Magnitude')
+        ax2.set_ylabel('Phase [deg]')
+        return fig, (ax1, ax2)
+
 
 def index_str_to_axis(index_str: str) -> int:
     index_str = index_str.lower().strip()

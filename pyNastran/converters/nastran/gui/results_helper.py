@@ -1313,9 +1313,10 @@ def _fill_nastran_displacements(cases: Cases, model: OP2,
 
             # TODO: what is a velocity/acceleration?
             #       is it a fringe, displacement, force?
+            # result, name, deflects (vs. force)
             (model.displacements, 'Displacement', True),
-            (model.velocities, 'Velocity', False),
-            (model.accelerations, 'Acceleration', False),
+            (model.velocities, 'Velocity', True),
+            (model.accelerations, 'Acceleration', True),
             (model.eigenvectors, 'Eigenvectors', True),
             (model.spc_forces, 'SPC Forces', False),
             (model.mpc_forces, 'MPC Forces', False),

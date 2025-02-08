@@ -1015,7 +1015,7 @@ class NastranIO(NastranIO_xref):
             #[model.gridPointForces, 'GridPointForces'],  # TODO: this is buggy...
         ]
         temperature_like = [
-            [model.temperatures, 'Temperature', ('temperature', ''')]
+            [model.temperatures, 'Temperature', ('temperature', '')]
         ]
         nnodes = self.nNodes
 
@@ -1025,7 +1025,7 @@ class NastranIO(NastranIO_xref):
             if subcase_id in result:
                 case = result[subcase_id]
 
-                if case.nonlinear_factor is not None: # transient
+                if case.nonlinear_factor is not None:  # transient
                     return
                 displacements = zeros((nnodes, 3), dtype='float32')
                 x_displacements = zeros(nnodes, dtype='float32')

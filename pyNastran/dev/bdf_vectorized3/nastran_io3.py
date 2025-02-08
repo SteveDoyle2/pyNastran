@@ -468,9 +468,16 @@ class Nastran3:
                 element_id, nelements, self.gui_elements)
             self.mean_edge_length = mean_edge_length
 
-            icase = gui_material_ids(
-                model, icase, cases, geometry_form,
-                element_id, property_id, self.card_index)
+            try:
+                # material_id[***ieid, :ilayer***] = material_id_rect
+                #
+                # ValueError: shape mismatch: value array of shape (636,28) could not be
+                # broadcast to indexing result of shape (636,24)
+                icase = gui_material_ids(
+                    model, icase, cases, geometry_form,
+                    element_id, property_id, self.card_index)
+            except Exception as e:
+                log.error('failed creating material_ids results')
 
         form = [
             ('Geometry', None, geometry_form),

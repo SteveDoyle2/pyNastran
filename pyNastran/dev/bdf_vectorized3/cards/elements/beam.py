@@ -841,6 +841,11 @@ class CBEAM(Element):
         if np.abs(total_mass).sum() == 0.0:
             return centroid
 
+        inotfinite = ~np.isfinite(total_mass)
+        if inotfinite.sum():
+            bad_eids = element_id[inotfinite]
+            bad_mass = total_mass[inotfinite]
+            self.model.log.debug(f'bad mass: eids={bad_eids}; total_mass={bad_mass}')
         center_of_mass = (centroid * mass_per_length[:, np.newaxis] + nsm_centroid * nsm_per_length[:, np.newaxis]) / total_mass[:, np.newaxis]
         assert not np.isnan(center_of_mass.max()), center_of_mass
         assert mass_per_length.shape == (self.n, ), mass_per_length.shape

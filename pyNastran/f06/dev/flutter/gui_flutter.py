@@ -418,7 +418,7 @@ class FlutterGui(LoggableGui):
     def on_browse_f06(self) -> None:
         """pops a dialog to select the f06 file"""
         title = 'Load a Flutter (Nastran F06, Zona Out) File'
-        qt_wildcard = 'F06 File (*.f06); Zona File (*.out)'
+        qt_wildcard = 'F06 File (*.f06);; Zona File (*.out)'
         basedir = os.path.dirname(self.f06_filename)
         fname, wildcard_level = getopenfilename(
             self, caption=title, basedir=basedir, filters=qt_wildcard,)
