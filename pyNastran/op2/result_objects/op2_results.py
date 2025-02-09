@@ -27,6 +27,7 @@ class Results:
         self.monitor3 = None
         self.responses = Responses()
 
+        self.scalars = {}  # fake data
         self.separation_initial = {}
         self.separation_final = {}
         self.contact_slide_distance = {}
@@ -156,6 +157,8 @@ class Results:
         """gets only the objects that are do not contain sub-objects"""
         base_names = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
+
+            'scalars',
             'separation_initial', 'separation_final',
             'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
             'superelement_tables',
@@ -174,6 +177,8 @@ class Results:
         base = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
             'cddata',
+
+            'scalars',
             'separation_initial', 'separation_final',
             'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
             'bolt_results',

@@ -9,6 +9,8 @@ from collections import defaultdict
 import unittest
 
 import numpy as np
+from pyNastran.converters.neu.neu import read_neu
+
 try:
     import matplotlib
     matplotlib.use('Agg')
@@ -475,6 +477,27 @@ class TestNastranGUI(unittest.TestCase):
         test.settings.set_corner_text_size(10)
         test.settings.set_magnify(magnify=4)
         #self.settings.s
+
+    def test_nastran_f16_aero(self):
+        dirname = PKG_PATH / r'bdf' / 'cards' / 'aero' / 'examples' / 'flutter' / 'case5'
+        neu_filename = dirname / 'f16-aero.neu'
+        test = NastranGUI()
+        test.load_nastran_geometry(neu_filename)
+        test.load_nastran_results(neu_filename)
+
+    def test_nastran_flut_anti(self):
+        dirname = PKG_PATH / r'bdf' / 'cards' / 'aero' / 'examples' / 'flutter' / 'case5'
+        neu_filename = dirname / 'flut_anti.neu'
+        test = NastranGUI()
+        test.load_nastran_geometry(neu_filename)
+        test.load_nastran_results(neu_filename)
+
+    def test_nastran_cp_anti(self):
+        dirname = PKG_PATH / r'bdf' / 'cards' / 'aero' / 'examples' / 'flutter' / 'case5'
+        neu_filename = dirname / 'cp2anti.neu'
+        test = NastranGUI()
+        test.load_nastran_geometry(neu_filename)
+        test.load_nastran_results(neu_filename)
 
     def test_solid_shell_bar_obj(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')

@@ -5,6 +5,7 @@ from typing import Any, Optional, cast, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm
 
+from pyNastran.converters.neu.neu import read_neu
 from pyNastran.gui.vtk_interface import (
     vtkVertex, vtkLine,
     vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
@@ -3034,7 +3035,12 @@ def get_model_unvectorized(log: SimpleLogger,
     if ext == '.pch':
         punch = True
 
-    if ext == '.op2':
+    if ext == '.neu':
+        neu_model = read_neu(bdf_filename, log=log)
+        model = neu_model.model
+        #xref_nodes = True
+        #return model, xref_nodes
+    elif ext == '.op2':
         model = OP2Geom(make_geom=True, debug=False, log=log,
                         debug_file=None)
         model.clear_results()
