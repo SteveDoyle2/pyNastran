@@ -6,6 +6,7 @@ from pyNastran.converters.cart3d.test_cart3d import TestCart3d
 from pyNastran.converters.fast.test_fast import TestFast
 from pyNastran.converters.fld.test_fld import TestFLD
 from pyNastran.converters.fluent.test_fluent import TestFluent
+from pyNastran.converters.neu.test_neu import TestNeu
 from pyNastran.converters.panair.test_panair import TestPanair
 from pyNastran.converters.stl.test_stl import TestSTL
 from pyNastran.converters.tecplot.test_tecplot import TestTecplot
