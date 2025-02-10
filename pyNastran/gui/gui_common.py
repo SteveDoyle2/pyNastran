@@ -10,7 +10,7 @@ from typing import Callable, Optional, Any, cast
 import numpy as np
 from cpylog import SimpleLogger
 
-from pyNastran.gui.arg_handling import determine_format
+from pyNastran.gui.arg_handling import determine_format, determine_input_output_formats
 from pyNastran.gui.qt_version import qt_int, qt_version
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
@@ -152,16 +152,29 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         format = ''
 
         # get format of primary file
+        formats = determine_input_output_formats(
+            self.log, filenames, allowed_formats=self.fmt_order)
+        if len(formats) == 0:
+            self.log.warning(f'Dropped file: {filename}')
+            return
+
         try:
             format = determine_format(filename, allowed_formats=self.fmt_order)
         except Exception as error:
             self.log_error(str(error))
             self.log_error(f'problem determining format: {filename}')
 
-        if format != self.format:
+        # TODO: add popups
+        # 1. if no input file:
+        #  - load the specified format
+        # 2. if input specified and format doesn't match:
+        #  - load the specified format
+        # 3. if input specified and format matches:
+        #  - pop window (geometry/results); results is default
+        #
+        if format != self.format:  # 1, 2
             self.log.info(f'Dropped file: {filename}')
             self.on_load_geometry(filename, geometry_format=format)
-            self.on_load_results()
             return
         else:
             #self.format, self.infile_name, self.out_filename
