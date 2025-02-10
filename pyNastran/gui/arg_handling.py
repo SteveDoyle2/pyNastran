@@ -27,7 +27,7 @@ OUTPUT_FORMAT_TO_EXTENSION = {
 INPUT_FORMAT_TO_EXTENSION = {
     # an extension should not be added to this list if it is
     # shared with another type
-    'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'], # '.dat'
+    'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch', '.blk', '.neu'], # '.dat'
     'h5nastran' : ['.h5'],
     #'nastran2' : ['.bdf', '.ecd', '.nas',],
 
@@ -51,7 +51,7 @@ INPUT_FORMAT_TO_EXTENSION = {
     'fld' : ['.fld'],
     'fluent' : ['.vrt', '.cel', '.daten'],
     #'abaqus' : ['.inp'],
-    # 'plot3d' : ['.p3d', '.p3da'],
+    #'plot3d' : ['.p3d', '.p3da'],
 
     #'fast': ['.cogsg'],
     'avus': ['.grd'],

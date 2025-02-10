@@ -837,6 +837,29 @@ class NastranGuiResults(NastranGuiAttributes):
                                    stop_on_failure: bool) -> int:
         """Creates the time accurate force objects"""
         nastran_settings: NastranSettings = self.settings.nastran_settings
+
+        for _key, scalar in model.op2_results.scalars.items():
+            print(key)
+            print(_key)
+            print('-----------')
+            if key == _key:
+                subcase_id = key[2]
+                title = scalar.title
+                header = scalar.header
+                res = GuiResult(
+                    subcase_id, header, title, location='node',
+                     scalar=scalar.result,
+                     #mask_value: Optional[int]=None, nlabels: Optional[int]=None,
+                     #labelsize: Optional[int]=None, ncolors: Optional[int]=None,
+                     #colormap: str='jet',
+                     #data_map: Any=None,
+                     #data_format: Optional[str]=None,
+                     #scale_type: str='',
+                )
+                cases[icase] = (res, (subcase_id, header))
+                form_dict['scalars'].append((header, icase, []))
+                icase += 1
+
         force = model.op2_results.force
         if nastran_settings.force:
             for itime, unused_dt in enumerate(times):
@@ -1248,7 +1271,7 @@ def fill_responses(cases: Cases, model: OP2, icase: int) -> tuple[int, list[Form
         #print(fractional_mass_response)
 
     des_filename = model.des_filename
-    if os.path.exists(des_filename):
+    if des_filename is not None and os.path.exists(des_filename):
         des_desvars = read_des_filename(des_filename)
         if des_desvars:
             subcase_id = 0
@@ -1533,7 +1556,8 @@ def print_empty_elements(model: BDF,
     print('-----------------------------------')
 
 
-def _get_times(model: OP2, key: NastranKey) -> tuple[bool, bool, bool, np.ndarray]:
+def _get_times(model: OP2,
+               key: NastranKey) -> tuple[bool, bool, bool, np.ndarray]:
     """
     Get the times/frequencies/eigenvalues/loadsteps used on a given
     subcase

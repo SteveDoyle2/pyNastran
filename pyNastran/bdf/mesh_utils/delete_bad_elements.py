@@ -920,34 +920,43 @@ def quad_quality(element, p1, p2, p3, p4):
     #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
     lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
     #assert len(lengths) == 3, lengths
-    aspect_ratio = lengths.max() / lengths.min()
+    min_length = lengths.min()
 
-    cos_theta1 = (v21 @ -v14) / (length21 * length14)
-    cos_theta2 = (v32 @ -v21) / (length32 * length21)
-    cos_theta3 = (v43 @ -v32) / (length43 * length32)
-    cos_theta4 = (v14 @ -v43) / (length14 * length43)
-    #max_thetai = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
+    if min_length == 0.:
+        aspect_ratio = np.nan
+        #cos_theta1 = cos_theta2 = cos_theta3 = cos_theta4 = np.nan
+        min_theta = np.nan
+        max_theta = np.nan
+        dideal_theta = np.nan
+    else:
+        aspect_ratio = lengths.max() / min_length
 
-    # dot the local normal with the normal vector
-    # then take the norm of that to determine the angle relative to the normal
-    # then take the sign of that to see if we're pointing roughly towards the normal
-    #
-    # np.sign(np.linalg.norm(np.dot(
-    # a x b = ab sin(theta)
-    # a x b / ab = sin(theta)
-    # sin(theta) < 0. -> normal is flipped
-    normal2 = np.sign(np.cross(v21, v32) @ normal)
-    normal3 = np.sign(np.cross(v32, v43) @ normal)
-    normal4 = np.sign(np.cross(v43, v14) @ normal)
-    normal1 = np.sign(np.cross(v14, v21) @ normal)
-    n = np.array([normal1, normal2, normal3, normal4])
-    theta_additional = np.where(n < 0, 2*np.pi, 0.)
+        cos_theta1 = (v21 @ -v14) / (length21 * length14)
+        cos_theta2 = (v32 @ -v21) / (length32 * length21)
+        cos_theta3 = (v43 @ -v32) / (length43 * length32)
+        cos_theta4 = (v14 @ -v43) / (length14 * length43)
+        #max_thetai = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
 
-    theta = n * np.arccos(np.clip(
-        [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.)) + theta_additional
-    min_theta = theta.min()
-    max_theta = theta.max()
-    dideal_theta = max(max_theta - PIOVER2, PIOVER2 - min_theta)
+        # dot the local normal with the normal vector
+        # then take the norm of that to determine the angle relative to the normal
+        # then take the sign of that to see if we're pointing roughly towards the normal
+        #
+        # np.sign(np.linalg.norm(np.dot(
+        # a x b = ab sin(theta)
+        # a x b / ab = sin(theta)
+        # sin(theta) < 0. -> normal is flipped
+        normal2 = np.sign(np.cross(v21, v32) @ normal)
+        normal3 = np.sign(np.cross(v32, v43) @ normal)
+        normal4 = np.sign(np.cross(v43, v14) @ normal)
+        normal1 = np.sign(np.cross(v14, v21) @ normal)
+        n = np.array([normal1, normal2, normal3, normal4])
+        theta_additional = np.where(n < 0, 2*np.pi, 0.)
+
+        theta = n * np.arccos(np.clip(
+            [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.)) + theta_additional
+        min_theta = theta.min()
+        max_theta = theta.max()
+        dideal_theta = max(max_theta - PIOVER2, PIOVER2 - min_theta)
     #print('theta_max = ', theta_max)
 
 
@@ -964,7 +973,8 @@ def quad_quality(element, p1, p2, p3, p4):
     n123 = np.cross(v21, v31)
     n134 = np.cross(v31, v41)
     #v1 o v2 = v1 * v2 cos(theta)
-    cos_warp1 = (n123 @ n134) / (np.linalg.norm(n123) * np.linalg.norm(n134))
+    warp_denom = np.linalg.norm(n123) * np.linalg.norm(n134)
+    cos_warp1 = (n123 @ n134) / warp_denom if warp_denom != 0. else np.nan
 
     # split the quad in the order direction and take the maximum of the two splits
     # 4---3
@@ -973,7 +983,8 @@ def quad_quality(element, p1, p2, p3, p4):
     # 1---2
     n124 = np.cross(v21, v41)
     n234 = np.cross(v32, v42)
-    cos_warp2 = (n124 @ n234) / (np.linalg.norm(n124) * np.linalg.norm(n234))
+    warp_denom = np.linalg.norm(n124) * np.linalg.norm(n234)
+    cos_warp2 = (n124 @ n234) / warp_denom if warp_denom != 0.0 else np.nan
 
     max_warp = np.abs(np.arccos(
         np.clip([cos_warp1, cos_warp2], -1., 1.))).max()

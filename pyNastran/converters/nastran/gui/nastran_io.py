@@ -58,7 +58,7 @@ from pyNastran.femutils.nan import (
 )
 from pyNastran.femutils.utils import duplicates, is_monotonic, safe_norm
 
-
+from pyNastran.converters.neu.neu import read_neu
 from pyNastran.bdf.patran_utils.colon_syntax import _apply_colon_set
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -2780,7 +2780,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             if not IS_TESTING or self.is_testing_flag:
                 log.info(model.get_op2_stats())
             # print(model.get_op2_stats())
-
+        elif ext == '.neu':
+            neu_model = read_neu(results_filename, is_geom=False, log=log)
+            model = neu_model.results_model
         elif ext == '.nod':
             gui.load_patran_nod(results_filename)
             gui.cycle_results_explicit()  # start at icase=0
@@ -2848,6 +2850,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         keys = model.get_key_order()
         assert keys is not None, keys
         #print('keys_order =', keys)
+        #print(model.op2_results.scalars)
 
         disp_dict = defaultdict(list)
         stress_dict = defaultdict(list)

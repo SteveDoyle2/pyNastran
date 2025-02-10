@@ -10,6 +10,7 @@ from typing import Callable, Optional, Any, cast
 import numpy as np
 from cpylog import SimpleLogger
 
+from pyNastran.gui.arg_handling import determine_format
 from pyNastran.gui.qt_version import qt_int, qt_version
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
@@ -137,6 +138,26 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         # in,lb,s
         self.input_units = ['', '', ''] # '' means not set
         self.display_units = ['', '', '']
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        filenames = [url.toLocalFile() for url in event.mimeData().urls()]
+        filename = filenames[0]
+        try:
+            format = determine_format(filename, allowed_formats=self.fmt_order)
+        except Exception as error:
+            self.log_error(str(error))
+            self.log_error(f'problem determining format: {filename}')
+        for filename in filenames:
+            self.log.info(f'Dropped file: {filename}')
+            self.on_load_geometry(filename, geometry_format=format)
+            break
 
     #def dragEnterEvent(self, e):
         #print(e)

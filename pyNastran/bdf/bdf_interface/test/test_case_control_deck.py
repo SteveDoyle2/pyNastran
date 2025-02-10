@@ -723,6 +723,22 @@ class CaseControlTest(unittest.TestCase):
         subcase.add_set_from_values(100, [1, 2, 10])
         # subcase.add('SET', value, options, param_type)  # TODO: doesn't work
 
+    def test_case_control_simple(self):
+        model = BDF(debug=False)
+        model.sol = 101
+        model.case_control_deck = CaseControlDeck([])
+
+        subcase = model.case_control_deck.create_new_subcase(1)
+        set_str = ' 1, 2, 3'
+        subcase.add('SET 52', set_str, 52, 'SET-type')
+        subcase.add_set_from_values(100, [1, 2, 10])
+        # subcase.add('SET', value, options, param_type)  # TODO: doesn't work
+        subcase.add('DISP', 'ALL', ['PLOT'], 'STRESS-type')
+        subcase.add('TSTEP', 10, [], 'STRESS-type')
+        subcase.add_integer_type('METHOD', 11)
+        subcase.add_result_type('ACCEL', 'ALL', ['PLOT'])
+        #print(model.case_control_deck)
+
 def compare_lines(self, lines, lines_expected, has_endline):
     i = 0
     for line, line_expected in zip(lines, lines_expected):
