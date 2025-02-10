@@ -3,6 +3,7 @@ import os
 import sys
 from typing import Optional, Any
 
+from cpylog import SimpleLogger
 import pyNastran
 from pyNastran import DEV
 from pyNastran.utils import check_path
@@ -62,6 +63,40 @@ INPUT_FORMAT_TO_EXTENSION = {
     #'abaqus' : ['.inp'],
 }
 
+def determine_input_output_formats(filenames: list[str],
+                                   allowed_formats: list[str],
+                                   log: SimpleLogger) -> list[str]:
+    filenames2 = []
+    formats = []
+    exts2 = []
+    for filename in filenames:
+        try:
+            ext = os.path.splitext(filename)[1]
+            exts2.append(ext)
+            filenames2.append(filename)
+        except TypeError:
+            log.warning(f'no extension for {filename}')
+            continue
+    if exts2 == 0:
+        return formats
+
+    extension_to_format = {
+        ext : formati for formati, format_exts in INPUT_FORMAT_TO_EXTENSION.items()
+        for ext in format_exts}
+    for formati, format_exts in OUTPUT_FORMAT_TO_EXTENSION.items():
+        for ext in format_exts:
+            extension_to_format[ext] = formati
+
+    found_exts = []
+    for ext, filename in zip(exts2, filenames2):
+        if ext in extension_to_format:
+            found_exts.append(ext)
+            formati = extension_to_format[ext]
+            formats.append(formati)
+        else:
+            log.warning(f'unknown extension: {ext!r} for {filename}')
+            continue
+    return formats
 
 def determine_format(input_filename: str,
                      output_filenames: Optional[list[str]]=None,

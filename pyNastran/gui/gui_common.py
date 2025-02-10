@@ -149,15 +149,25 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
     def dropEvent(self, event):
         filenames = [url.toLocalFile() for url in event.mimeData().urls()]
         filename = filenames[0]
+        format = ''
+
+        # get format of primary file
         try:
             format = determine_format(filename, allowed_formats=self.fmt_order)
         except Exception as error:
             self.log_error(str(error))
             self.log_error(f'problem determining format: {filename}')
-        for filename in filenames:
+
+        if format != self.format:
             self.log.info(f'Dropped file: {filename}')
             self.on_load_geometry(filename, geometry_format=format)
-            break
+            self.on_load_results()
+            return
+        else:
+            #self.format, self.infile_name, self.out_filename
+            for filename in filenames:
+                self.log.info(f'Dropped file: {filename}')
+                self.on_load_results(filename)
 
     #def dragEnterEvent(self, e):
         #print(e)

@@ -62,6 +62,20 @@ analysis_type_dict = {
     25: ('Static Aeroelasticity', ''),
     26: ('Aerodynamic Flutter', ''),
 }
+LOCATION_MAP = {
+    7: 'node',
+    8: 'centroid',
+}
+OUT_TYPE_MAP = {
+    0: 'Any',
+    1: 'Disp',
+    2: 'Accel',
+    3: 'Force',
+    4: 'Stress',
+    5: 'Strain',
+    6: 'Temp',  # others: 'User
+}
+
 
 def get_block_lines(lines: list[str],
                     iline: int) -> dict[str, list[str]]:
@@ -132,12 +146,14 @@ class Neu:
         #print(self.model.get_bdf_stats())
         self.organize_results()
 
-    def combine_results_into_sets(self) -> dict[int, Any]:
+    def combine_results_into_sets(self) -> tuple[bool, dict[int, Any]]:
+        passed = False
         set_id_to_results_default = defaultdict(list)
 
         for (set_id, vector_id), result in self.results.items():
             ncurrent = len(set_id_to_results_default[set_id])
-            assert ncurrent + 1 == vector_id
+            #print(f'set_id={set_id} vector_id={vector_id}')
+            #assert ncurrent + 1 == vector_id
             set_id_to_results_default[set_id].append(result)
 
         set_id_to_results = {}
@@ -150,14 +166,17 @@ class Neu:
                 titles = []
                 results_list = []
                 for (titlei, idsi, valuesi) in results:
-                    assert np.array_equal(ids, idsi)
+                    if not np.array_equal(ids, idsi):
+                        self.log.error(f'cannot collapse results; failed on {titlei}')
+                        return passed, self.results
                     if 'Total Translation' in titlei:
                         continue
                     titles.append(titlei)
                     results_list.append(valuesi)
                 results2 = np.column_stack(results_list)
                 set_id_to_results[set_id] = (titles, idsi, results2)
-        return set_id_to_results
+        passed = True
+        return passed, set_id_to_results
 
     def split_results_by_complex(self, set_id_to_results: dict[int, Any],
                                  ) -> dict[int, Any]:
@@ -200,7 +219,9 @@ class Neu:
         return out_result
 
     def organize_results(self):
-        set_id_to_results = self.combine_results_into_sets()
+        passed, set_id_to_results = self.combine_results_into_sets()
+        if not passed:
+            return
         results = self.split_results_by_complex(set_id_to_results)
         op2_model = OP2(log=self.log)
 
@@ -210,7 +231,6 @@ class Neu:
         superelement_adaptivity_index = ''
         pval_step = ''
         sort_method = 0
-
         for output_set, (names, ids, results) in results.items():
             isubcase = output_set
             #---------------------
@@ -282,7 +302,7 @@ class Neu:
             # 'CPIM:       2M= 0.9k= 0.1',
             # 'MAGN:       2M= 0.9k= 0.1',
             # 'PHAS:       2M= 0.9k= 0.1']
-        assert len(op2_model.op2_results.scalars) > 0
+        #assert len(op2_model.op2_results.scalars) > 0
         self.results_model = op2_model
 
         title_lines = (
@@ -419,7 +439,7 @@ def read_block_dict(log: SimpleLogger,
                     lines: list[str],
                     skip_geom: bool=False,
                     skip_results: bool=False,
-                    ) -> tuple[str, dict]:
+                    ) -> tuple[tuple[str, str], dict]:
     nlines = len(lines)
 
     minus1_count = 0
@@ -446,11 +466,11 @@ def read_block_dict(log: SimpleLogger,
         name, result_type, read_flag = block_name_dict[key]
         if key == '100':
             assert version == '', version
-            assert lines[iline+1].strip() == '<NULL>', lines[2]
+            #assert lines[iline+1].strip() == '<NULL>', lines[iline+1]
             version = lines[iline+2].strip(', \n')
-            assert version in ['12.', '7.'], f'version={version!r}'
-            assert lines[iline+3].strip() == '-1', lines[4]
-            assert lines[iline+4].strip() == '-1', lines[5]
+            assert version in ['12.', '7.', '8.2'], f'version={version!r}'
+            assert lines[iline+3].strip() == '-1', lines[iline+3]
+            assert lines[iline+4].strip() == '-1', lines[iline+4]
             iline += 5
             continue
         elif key in block_name_dict:
@@ -474,22 +494,31 @@ def read_block_dict(log: SimpleLogger,
             raise RuntimeError(key)
         iline += 1
     #log.debug(f'made blocks; n={len(block_dict)}')
-    return version, block_dict
+    version_sline = version.split('.')
+    assert isinstance(version_sline, list), version_sline
+    version_tuple = tuple([int(val) if val else 0
+                           for val in version_sline])
+    return version_tuple, block_dict
 
 def int_line(line: str) -> int:
     sline = line.strip(' ,\n').split(',')
     assert len(sline) == 1, sline
     return int(sline[0])
 
-def int_sline(line: str) -> int:
+def int_sline(line: str) -> list[int]:
     sline = line.strip(' ,\n').split(',')
     return [int(val) for val in sline]
 
 def float_line(line: str) -> float:
     sline = line.strip(' ,\n').split(',')
     assert len(sline) == 1, sline
-    assert 'D' in sline[0]
+    assert '.' in sline[0], sline
     return float(sline[0].replace('D', 'E'))
+
+def float_slines(line: str) -> list[float]:
+    sline = line.strip(' ,\n').split(',')
+    assert '.' in sline[0], line
+    return [float(val.replace('D', 'E')) for val in sline]
 
 def split_line(line: str) -> list[str]:
     sline = line.strip(' ,\n').split(',')
@@ -550,6 +579,42 @@ def read_output_headers(log: SimpleLogger,
     # FLT FREQ= 5.44246 HZ, FLT SPEED= 903.617, FLT MODE=       1
     result_headers[output_set_id] = data_dict
 
+def _read_results_header(nums: list[str],
+                         inum: int,
+                         version: tuple[int, int]):
+    title = nums[inum]
+    min_value, max_value, abs_value = float_slines(nums[inum + 1])
+    comps = int_sline(nums[inum + 2])
+    comps += int_sline(nums[inum + 3])
+    if version >= (10, 0):
+        raise RuntimeError(version)
+        # DoubleSidedContourVectorID # 10.0+
+    id_min, id_max, out_type_int, location_int = int_sline(nums[inum + 4])
+    assert location_int in [7, 8], location_int  # node, centroid
+    out_type = OUT_TYPE_MAP[out_type_int]
+    location = LOCATION_MAP[location_int]
+    # print(f'out_type={out_type}; location={location}')
+    calc_warn, comp_dir, cent_total = int_sline(nums[inum + 5])
+    assert cent_total == 1, cent_total
+    out = (
+        title,
+        min_value, max_value, abs_value, comps,
+        id_min, id_max, out_type, location,
+        calc_warn, comp_dir, cent_total,
+    )
+    return out
+    # title = block[2]
+    # min_value, max_value, abs_value = float_slines(block[3])
+    # comps = int_sline(block[4])
+    # comps += int_sline(block[5])
+    # if version >= (10, 0):
+    #     raise RuntimeError(version)
+    #     #DoubleSidedContourVectorID # 10.0+
+    # id_min, id_max, out_type, location_int = int_sline(block[6])
+    # assert location_int in [7, 8], location_int  # node, centroid
+    # calc_warn, comp_dir, cent_total = int_sline(block[7])
+    # assert cent_total == 1, cent_total
+
 def read_results(headers: dict[int, tuple[str, str, str]],
                  block: list[str], version: str,
                  debug: bool=True):
@@ -568,8 +633,12 @@ def read_results(headers: dict[int, tuple[str, str, str]],
     output_set_id, vector_id, one = sline
     assert one == 1, sline
     #print('b:', sline)
+    (title,
+     min_value, max_value, abs_value, comps,
+     id_min, id_max, out_type, location,
+     calc_warn, comp_dir, cent_total,
+     ) = _read_results_header(block, 2, version)
 
-    title = block[2]
     #print(f'result title = {title!r}')
     nums = block[8:]
     # print(title)
@@ -614,7 +683,12 @@ def read_results(headers: dict[int, tuple[str, str, str]],
             output_set_id, vector_id, one = sline
             assert one == 1, sline
 
-            title = nums[inum]
+            (title,
+             min_value, max_value, abs_value, comps,
+             id_min, id_max, out_type, location,
+             calc_warn, comp_dir, cent_total,
+             ) = _read_results_header(nums, inum, version)
+
             #print(f'result title = {title!r}')
             results[(output_set_id, vector_id)] = (title, ids, values)
             # skip over the header
@@ -645,7 +719,7 @@ def read_results(headers: dict[int, tuple[str, str, str]],
 def read_elements(elements: dict[str, list],
                   block: list[str],
                   version: str, debug: bool=False):
-    if version == '7.':
+    if version == (7, 0):
         """
         top=0: line2
         top=2: tri3
@@ -693,7 +767,7 @@ def read_elements(elements: dict[str, list],
             if debug:
                 print(f'{iblock_line}: eid={eid} pid={pid} etype={etype} top={top}; nids={nids}')
             iblock_line += 7
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(version)
     if cquad4:
         elementsi['CQUAD4'] = cquad4
@@ -711,7 +785,7 @@ def read_nodes(block: list[str], version: str,
                debug: bool=False) -> tuple[np.ndarray, np.ndarray]:
     nids = []
     xyzs = []
-    if version == '7.':
+    if version == (7, 0):
         for line in block[1:-2]:
             sline = line.strip('\n ,').split(',')
             # print(f'sline = {sline}')
@@ -725,7 +799,7 @@ def read_nodes(block: list[str], version: str,
                 print(f'nid={nid} xyz={xyz}')
             nids.append(nid)
             xyzs.append(xyzi)
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(version)
     nid_out = np.array(nids, dtype='int32')
     xyz_out = np.array(xyzs, dtype='float64')
