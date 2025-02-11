@@ -10,7 +10,7 @@ def read_zona_out(zona_out_filename: PathLike) -> tuple[dict, dict]:
     with open(zona_out_filename, 'r') as zona_out_file:
         lines = zona_out_file.readlines()
 
-    log = SimpleLogger(level='info')
+    log = SimpleLogger(level='debug')
     case_dict, ref_dict = zona_lines_to_out(log, lines)
     for key, data in case_dict.items():
         log.debug(f'{key}:\n{str(data)}')
@@ -45,12 +45,26 @@ def out_dict_to_results(out_dict: dict,
         velocity = header_data[:, 0] * vref
         density = header_data[:, 1]
         mach = header_data[:, 2]
-    if header_name == 'v/vref,density,q':
+    elif header_name == 'v/vref,density,q':
         vref, velocity_units = ref_dict['VREF']
         velocity = header_data[:, 0] * vref
         density = header_data[:, 1]
         q = header_data[:, 2]
         mach = q
+    elif header_name == 'v/vref,density,alt':
+        # ref_dict = {'MACH': (0.8, ''), 'ATMOS TABLE': ('STANDARD', ''),
+        #             'REFERENCE LENGTH (L)': (1.0, 'in'),
+        #             'VREF': (2.0, 'in/s')}
+        print('ref_dict = ', ref_dict)
+        vref, velocity_units = ref_dict['VREF']
+        atmos_table = ref_dict['ATMOS TABLE'][0]
+        assert atmos_table == 'STANDARD', atmos_table
+        mach = ref_dict['MACH'][0]
+        #alt, altitude_units = ref_dict['ALT']
+        print(f'vref={vref}; velocity_units={velocity_units}')
+        velocity = header_data[:, 0] * vref
+        density = header_data[:, 1]
+        q = 0.5 * density * velocity ** 2
     else:  # pragma: no cover
         raise NotImplementedError(header_name)
 
@@ -186,10 +200,8 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
             log.debug(f'Units {iline}: {lines[iline].rstrip()}')
             iline += 1
 
-        mode_sline = lines[iline].strip('\n').split()
-        modes_strs = mode_sline[5::3]
-        modes = [int(mode) for mode in modes_strs]
-        log.debug(mode_sline)
+        modes = get_mode_sline(lines[iline])
+
         log.debug(f'modes = {modes}')
         for mode in modes:
             out[mode] = []
@@ -218,8 +230,9 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
             header += ',mach'
         elif names_sline[2] == 'DYN P':  # 'DYN P'
             header += ',q'
-            pass
-        else:
+        elif names_sline[2] == 'ALTITUDE':  # 'DYN P'
+            header += ',alt'
+        else:  # pragma: no cover
             raise NotImplementedError(names_sline)
 
         #log.debug(f'units_sline1 = {units_sline1}')
@@ -274,6 +287,29 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
     #  0.0000 0.000+00   0.0000    0.0000   4.502 INFINT    0.0000   4.704 INFINT    0.0000   5.675 INFINT    0.0000   5.970 INFINT
     #  0.0100 1.146-07   0.0100    0.0000   4.502 8.7162    0.0000   4.704 9.1072    0.0000   5.67510.9868   -0.0004   5.96711.5524
 
+def get_mode_sline(line: str) -> list[int]:
+    """
+    '   UNITS    UNITS    UNITS          MODE NO. 93              MODE NO. 94              MODE NO. 95              MODE NO. 96'
+    -> [93, 94, 95, 96]
+    '   UNITS    UNITS    UNITS          MODE NO.101              MODE NO.102              MODE NO.103              MODE NO.104'
+    -> [101, 102, 103, 104]
+    """
+    mode_sline = line.strip('\n').split()
+    mode_sline2 = []
+    for val in mode_sline:
+        val = val.rstrip('.')
+        if '.' in val:
+            val_split = val.split('.')
+            mode_sline2.extend(val_split)
+        else:
+            mode_sline2.append(val)
+
+    #print('mode_sline2', mode_sline2)
+    modes_strs = mode_sline2[5::3]
+    modes = [int(mode) for mode in modes_strs]
+    #log.debug(f'mode_sline = {mode_sline!r}')
+    return modes
+
 def split_ref_line(line: str) -> dict[str, tuple[float, str]]:
     sline = line.strip().split(',')
     out = {}
@@ -302,8 +338,12 @@ def split_ref_line(line: str) -> dict[str, tuple[float, str]]:
             value = float(value_str3) / 2.0
             unit = unit.strip(' ()').lower()
             assert unit in {'in', 'ft', 'm'}, unit
+        elif name == 'ATMOS TABLE':
+            assert value_str == 'STANDARD', value_str
+            value = value_str
+            unit = ''
         else:  # pragma: no cover
-            raise RuntimeError(f'name={name!r} value={value_str!r}')
+            raise RuntimeError(f'unhandled name; name={name!r} value={value_str!r}')
         out[name] = (value, unit)
     return out
 
@@ -356,7 +396,7 @@ def split_flutter_values(line: str,
             assert is_blank is False, values2
             is_blank = True
             continue
-        if value == 'INFINT':
+        if value in {'INFINT', '+INFINT'}:
             value_out = np.inf #'INFINT'
         else:
             try:
