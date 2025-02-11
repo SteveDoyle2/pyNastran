@@ -1475,24 +1475,28 @@ class FlutterResponse:
         # lambda1 = beta1 +/- j*omega1
         beta1 = self.results[imode1, :, ireal]
         beta2 = self.results[imode2, :, ireal]
-        omega1 = self.results[imode1, :, ireal]
-        omega2 = self.results[imode2, :, ireal]
+        omega1 = self.results[imode1, :, iimag]
+        omega2 = self.results[imode2, :, iimag]
 
         a = (beta2 - beta1) / (beta2 + beta1)
         b = (omega2**2 - omega1**2) / 2
         c = (beta1 + beta2)**2
-        d = omega2**2 + omega1**2
+        d = (omega2**2 + omega1**2) / 2
         e = (beta1 + beta2) / 2
-        Fs = b[0] ** 2
-        F = 1/Fs * (1 - a**2) * (b**2 + c * (d/2 + e**2))
+        Fs = b ** 2
+        Fs0 = Fs[0]
+        F = 1/Fs0 * (1 - a**2) * (b**2 + c * (d + e**2))
 
         ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
         ix = self.ieas
         xvalues = self.results[imode1, :, ix]
         axes.plot(xvalues, F, label='F')
-        axes.set_ylabel(f'Zimmerman Flutter Margin')
+        axes.plot(xvalues, Fs/Fs0, label='Fs', linestyle='--', color='k')
+        axes.set_ylabel(f'Zimmerman Flutter Margin Criterion')
         axes.set_xlabel(xlabel)
         axes.grid(True)
+        axes.set_ylim([-0.2, 1.0])
+        axes.legend()
         if show:
             plt.show()
 
@@ -1550,7 +1554,7 @@ class FlutterResponse:
             filter crossings entirely outside the plot range
             useful for cleaning up the legend
         """
-        self.sort_modes_by_freq()
+        #self.sort_modes_by_freq()
         #assert vl_limit is None or isinstance(vl_limit, float_types), vl_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
         #self.fix()
