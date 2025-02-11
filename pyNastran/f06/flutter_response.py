@@ -1439,6 +1439,63 @@ class FlutterResponse:
             return np.arange(0, nvel, dtype='int32')
         return self.results[imode, :, ix]
 
+    def plot_zimmerman(self, modes=None,
+                       fig=None, axes=None,
+                       plot_type: str='tas',
+                       show: bool=True):
+        """
+        Not validated
+
+        https://ntrs.nasa.gov/api/citations/19830003800/downloads/19830003800.pdf
+
+        Parameters
+        ----------
+        fig : plt.Figure; default=None
+            the fig object
+        damp_axes : plt.Axes; default=None
+            the ax object
+        plot_type : str; default='tas'
+           tas, eas, alt, kfreq, 1/kfreq, freq, damp, eigr, eigi, q, mach
+        """
+        print('plot_zimmerman')
+        modes, imodes = _get_modes_imodes(self.modes, modes)
+        print(f'modes = {modes}')
+        if len(modes) != 2:
+            print(f'more than 2 modes specified; modes={modes}')
+            return
+        if fig is None:
+            fig = plt.figure()  # figsize=(12,9), self.subcase
+            axes = fig.gca()
+        # fig.clear()
+
+        ireal = self.ieigr
+        iimag = self.ieigi
+        imode1, imode2 = imodes
+
+        # lambda1 = beta1 +/- j*omega1
+        beta1 = self.results[imode1, :, ireal]
+        beta2 = self.results[imode2, :, ireal]
+        omega1 = self.results[imode1, :, ireal]
+        omega2 = self.results[imode2, :, ireal]
+
+        a = (beta2 - beta1) / (beta2 + beta1)
+        b = (omega2**2 - omega1**2) / 2
+        c = (beta1 + beta2)**2
+        d = omega2**2 + omega1**2
+        e = (beta1 + beta2) / 2
+        Fs = b[0] ** 2
+        F = 1/Fs * (1 - a**2) * (b**2 + c * (d/2 + e**2))
+
+        ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
+        ix = self.ieas
+        xvalues = self.results[imode1, :, ix]
+        axes.plot(xvalues, F, label='F')
+        axes.set_ylabel(f'Zimmerman Flutter Margin')
+        axes.set_xlabel(xlabel)
+        axes.grid(True)
+        if show:
+            plt.show()
+
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None,
                    modes=None,
                    plot_type: str='tas',

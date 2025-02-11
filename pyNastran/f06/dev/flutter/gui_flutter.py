@@ -50,7 +50,8 @@ from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import get_flutter_units
 
 X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq', 'index']
-PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation']
+PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation',
+              'zimmerman']
 UNITS_IN = ['english_in', 'english_kt', 'english_ft',
             'si', 'si_mm']
 UNITS_OUT = UNITS_IN
@@ -725,6 +726,7 @@ class FlutterGui(LoggableGui):
         show_freq = False
         show_damp = False
         show_root_locus = False
+        show_zimmerman = False
         show_modal_participation = False
 
         #PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
@@ -750,6 +752,8 @@ class FlutterGui(LoggableGui):
             show_xlim = True
             show_damp = True
             show_kfreq = True
+        elif plot_type == 'zimmerman':
+            show_zimmerman = True
         elif plot_type == 'root-locus':
             show_root_locus = True
             #show_kfreq = False
@@ -1387,7 +1391,7 @@ class FlutterGui(LoggableGui):
         fig = plt.figure(1)
         fig.clear()
         log.info(f'cleared plot\n')
-        if plot_type not in {'root-locus', 'modal-participation'}:
+        if plot_type not in {'root-locus', 'modal-participation', 'zimmerman'}:
             gridspeci = gridspec.GridSpec(2, 4)
             damp_axes = fig.add_subplot(gridspeci[0, :3])
             freq_axes = fig.add_subplot(gridspeci[1, :3], sharex=damp_axes)
@@ -1421,7 +1425,10 @@ class FlutterGui(LoggableGui):
             self.export_to_png)
         print(f'png_filename={png_filename}')
         try:
-            if plot_type == 'root-locus':
+            if plot_type == 'zimmerman':
+                axes = fig.add_subplot(111)
+                response.plot_zimmerman(fig=fig, axes=axes, modes=modes, show=True)
+            elif plot_type == 'root-locus':
                 axes = fig.add_subplot(111)
                 #log.info(f'modes={modes}; eigr_lim={self.eigr_lim}; eigi_lim={self.eigi_lim}; freq_tol={freq_tol}')
                 #log.info(f'png_filename={png_filename}')
