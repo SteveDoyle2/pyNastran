@@ -63,9 +63,9 @@ INPUT_FORMAT_TO_EXTENSION = {
     #'abaqus' : ['.inp'],
 }
 
-def determine_input_output_formats(filenames: list[str],
-                                   allowed_formats: list[str],
-                                   log: SimpleLogger) -> list[str]:
+def determine_input_output_formats(log: SimpleLogger,
+                                   filenames: list[str],
+                                   allowed_formats: list[str]) -> list[str]:
     filenames2 = []
     formats = []
     exts2 = []

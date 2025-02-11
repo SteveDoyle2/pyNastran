@@ -19,7 +19,7 @@ from pathlib import PurePath
 import traceback
 from collections import defaultdict
 from typing import (
-    Sequence, Optional, Any, TYPE_CHECKING)
+    Sequence, TextIO, Optional, Any, TYPE_CHECKING)
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -5115,26 +5115,26 @@ class BDF(BDF_):
             #self._write_executive_control_deck(bdf_file)
             #self._write_case_control_deck(bdf_file)
 
-    #def _write_nodes(self, bdf_file: Any, size: int=8, is_double: bool=False) -> None:
+    #def _write_nodes(self, bdf_file: TextIO, size: int=8, is_double: bool=False) -> None:
         #"""
         #Writes the NODE-type cards
         #"""
         #BDF_._write_nodes(self, bdf_file, size=size, is_double=is_double)
 
-    def _write_grids(self, bdf_file: Any,
+    def _write_grids(self, bdf_file: TextIO,
                      size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the GRID-type cards"""
         self.nodes.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
 
-    def _write_elements_interspersed(self, bdf_file: Any,
+    def _write_elements_interspersed(self, bdf_file: TextIO,
                                      size: int=8, is_double: bool=False,
                                      is_long_ids: Optional[bool]=None) -> None:
         """spoofed method"""
         self._write_elements(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
         self._write_properties(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
 
-    def _write_elements(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_elements(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
                         is_long_ids: Optional[bool]=None) -> None:
         """Writes the elements in a sorted order"""
         if self.elements:
@@ -5158,13 +5158,13 @@ class BDF(BDF_):
                 bdf_file.write(element.write_card(size, is_double))
         self._write_nsm(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
-    #def _write_loads(self, bdf_file: Any, size: int=8, is_double: bool=False) -> None:
+    #def _write_loads(self, bdf_file: TextIO, size: int=8, is_double: bool=False) -> None:
         #"""Writes the loads in a sorted order"""
         #BDF_._write_loads(self, bdf_file, size=size, is_double=is_double)
         ##for key, loadi in sorted(self.loads):
             ##bdf_file.write(loadi.write_card(size=size, is_double=is_double))
 
-    def _write_loads(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_loads(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the load cards sorted by ID"""
         if self.loads or self.tempds:

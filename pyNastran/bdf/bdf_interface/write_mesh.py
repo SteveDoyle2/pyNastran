@@ -304,7 +304,7 @@ class WriteMesh(BDFAttributes):
         if close:
             bdf_file.close()
 
-    def _write_header(self, bdf_file: Any, encoding: str, write_header: bool=True) -> None:
+    def _write_header(self, bdf_file: TextIO, encoding: str, write_header: bool=True) -> None:
         """Writes the executive and case control decks."""
         self._set_punch()
 
@@ -319,7 +319,7 @@ class WriteMesh(BDFAttributes):
             self._write_executive_control_deck(bdf_file)
             self._write_case_control_deck(bdf_file)
 
-    def _write_executive_control_deck(self, bdf_file: Any) -> None:
+    def _write_executive_control_deck(self, bdf_file: TextIO) -> None:
         """Writes the executive control deck."""
         msg = ''
         for line in self.system_command_lines:
@@ -341,7 +341,7 @@ class WriteMesh(BDFAttributes):
             if 'CEND' not in msg:
                 bdf_file.write('CEND\n')
 
-    def _write_case_control_deck(self, bdf_file: Any) -> None:
+    def _write_case_control_deck(self, bdf_file: TextIO) -> None:
         """Writes the Case Control Deck."""
         if self.case_control_deck:
             msg = '$CASE CONTROL DECK\n'
@@ -352,7 +352,7 @@ class WriteMesh(BDFAttributes):
                 assert 'BEGIN BULK' in msg, msg
             bdf_file.write(''.join(msg))
 
-    def _write_elements(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_elements(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
                         is_long_ids: Optional[bool]=None) -> None:
         """Writes the elements in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
@@ -376,7 +376,7 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(snorm.write_card(size, is_double))
         self._write_nsm(bdf_file, size, is_double)
 
-    def _write_nsm(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_nsm(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
                    is_long_ids: Optional[bool]=None) -> None:
         """Writes the nsm in a sorted order"""
         if self.nsms or self.nsmadds:
@@ -392,7 +392,7 @@ class WriteMesh(BDFAttributes):
                         print(f'failed printing nsm...type={nsm.type} key={key!r}')
                         raise
 
-    def _write_elements_interspersed(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_elements_interspersed(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
                                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the elements and properties in and interspersed order"""
         missing_properties = []

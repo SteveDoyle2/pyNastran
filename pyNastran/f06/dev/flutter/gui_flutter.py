@@ -150,8 +150,28 @@ class FlutterGui(LoggableGui):
         self.on_font_size()
         self.on_plot_type()
         self._set_f06_default_names(self.f06_filename_edit.text())
+        self.setAcceptDrops(True)
         #self.on_open_new_window()
         self.show()
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        filenames = [url.toLocalFile() for url in event.mimeData().urls()]
+        for filename in filenames:
+            flower = filename.lower()
+            if flower.endswith(('.bdf', '.dat', '.blk', '.pch', '.inp')):
+                self.bdf_filename_edit.setText(filename)
+            elif flower.endswith(('.f06', '.out')):
+                self.f06_filename_edit.setText(filename)
+            elif flower.endswith(('.op2', '.h5')):
+                self.op2_filename_edit.setText(filename)
+            else:
+                self.log.error(f'unknown extension (bdf/f06/op2) format for {filename}')
 
     def setup_toolbar(self):
         #frame = QFrame(self)
