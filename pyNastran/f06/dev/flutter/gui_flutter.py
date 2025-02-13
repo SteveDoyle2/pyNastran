@@ -1351,7 +1351,11 @@ class FlutterGui(LoggableGui):
             xlim = (None, None)
 
         #log.info(f'xlim={xlim}\n')
-        assert xlim[0] != '' and xlim[1] != '', (xlim, x_plot_type)
+        if plot_type == 'zimmerman':
+            print('skipping xlim check')
+        else:
+            assert xlim[0] != '' and xlim[1] != '', (xlim, x_plot_type)
+
         v_lines = []
         #log.info(f'vf={self.vf!r}; vl={self.vl!r}\n')
         if isinstance(self.vf, float) and self.vf > 0.:

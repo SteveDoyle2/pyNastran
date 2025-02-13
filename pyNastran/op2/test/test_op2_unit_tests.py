@@ -2623,6 +2623,21 @@ class TestOP2Main(Tester):
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
+    def test_op2_solid_bending_skip(self):
+        log = get_logger(level='warning')
+        folder = os.path.join(MODEL_PATH, 'solid_bending')
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
+        model = OP2()
+        model.is_nx = False
+
+        tables_to_skip = {
+            b'OQG1': False,
+            b'OES1X1': False,
+            b'OUGV1': False,
+        }
+        model.set_additional_result_tables_to_read(tables_to_skip)
+        model.read_op2(op2_filename)
+
     def test_op2_solid_bending_01(self):
         log = get_logger(level='warning')
         folder = os.path.join(MODEL_PATH, 'solid_bending')
