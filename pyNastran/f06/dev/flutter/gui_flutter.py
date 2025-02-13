@@ -683,7 +683,7 @@ class FlutterGui(LoggableGui):
         self.eas_damping_lim_edit_min.setToolTip('Defines the flutter crossing range')
         self.eas_damping_lim_edit_max.setToolTip('Defines the flutter crossing range')
 
-        self.point_removal_label = QLabel('EAS Crossing Range:', self)
+        self.point_removal_label = QLabel('Point Removal:', self)
         self.point_removal_edit = QLineEdit('400:410,450:500', self)
         self.point_removal_edit.setToolTip('Remove bad points from a mode; "400:410,450:500"')
 

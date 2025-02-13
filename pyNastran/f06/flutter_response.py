@@ -1490,6 +1490,11 @@ class FlutterResponse:
         ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
         ix = self.ieas
         xvalues = self.results[imode1, :, ix]
+
+        title = self._get_title(nlines=1)
+        title += f'\nModes: {modes[0]}, {modes[1]}'
+        plt.suptitle(title)
+
         axes.plot(xvalues, F, label='F')
         axes.plot(xvalues, Fs/Fs0, label='Fs', linestyle='--', color='k')
         axes.set_ylabel(f'Zimmerman Flutter Margin Criterion')
