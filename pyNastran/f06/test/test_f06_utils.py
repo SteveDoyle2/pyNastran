@@ -284,13 +284,15 @@ class TestF06Flutter(unittest.TestCase):
                 plot_kfreq_damping=True,
                 show=True, close=True, log=log)
 
-        plot_flutter_f06(
+        flutters, mass = plot_flutter_f06(
             f06_filename,
             plot_type='rho',
             f06_units='si', out_units='english_ft',
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
             plot=IS_MATPLOTLIB, show=False, close=True, log=log)
+        #flutters[1].plot_zimmerman([1, 2], show=True)
+        flutters[1].plot_zimmerman([1, 2], show=False)
 
         plot_flutter_f06(
             f06_filename,
