@@ -1439,14 +1439,49 @@ class FlutterResponse:
             return np.arange(0, nvel, dtype='int32')
         return self.results[imode, :, ix]
 
+    def calculate_zimmerman(self, imode1: int, imode2: int) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Not validated
+        https://ntrs.nasa.gov/api/citations/19830003800/downloads/19830003800.pdf
+        """
+        # lambda1 = beta1 +/- j*omega1
+        ireal = self.ieigr
+        iimag = self.ieigi
+        beta1 = self.results[imode1, :, ireal]
+        beta2 = self.results[imode2, :, ireal]
+        omega1 = self.results[imode1, :, iimag]
+        omega2 = self.results[imode2, :, iimag]
+
+        #beta_1p2 = (beta2 + beta1)
+        # a = (beta2 - beta1) / (beta2 + beta1)
+        # b = (omega2**2 - omega1**2) / 2
+        # c = (beta1 + beta2)**2
+        # d = omega2**2 + omega1**2
+        # e = (beta1 + beta2) / 2
+        # Fs = b ** 2
+        # Fs0 = Fs[0]
+        # F = 1 / Fs0 * (1 - a**2) * (b**2 + c * (d/2 + e**2))
+
+        #-------------------------------------------------
+        a = (beta2 - beta1) / (beta2 + beta1)
+        b = (omega2**2 - omega1**2) / 2
+        c = (beta1 + beta2)**2
+        d = (omega2**2 + omega1**2) / 2
+        e = (beta1 + beta2) / 2
+        Fs = b ** 2
+
+        F = 1/Fs0 * (1 - a**2) * (b**2 + c * (d + e**2))
+
+        title = self._get_title(nlines=1)
+        title += f'\nModes: {modes[0]}, {modes[1]}'
+        plt.suptitle(title)
+        return F, Fs
+
     def plot_zimmerman(self, modes=None,
                        fig=None, axes=None,
                        plot_type: str='tas',
-                       show: bool=True):
+                       show: bool=True) -> plt.Figure:
         """
-        Not validated
-
-        https://ntrs.nasa.gov/api/citations/19830003800/downloads/19830003800.pdf
 
         Parameters
         ----------
@@ -1457,53 +1492,66 @@ class FlutterResponse:
         plot_type : str; default='tas'
            tas, eas, alt, kfreq, 1/kfreq, freq, damp, eigr, eigi, q, mach
         """
-        print('plot_zimmerman')
         modes, imodes = _get_modes_imodes(self.modes, modes)
-        print(f'modes = {modes}')
-        if len(modes) != 2:
-            print(f'more than 2 modes specified; modes={modes}')
+        imodes = np.array([0, 1, 0, 1])
+        nmodes = len(imodes)
+        print(f'nmodes = {nmodes}')
+        if nmodes < 2:
+            print(f'less than 2 modes specified; modes={modes}')
             return
+
         if fig is None:
             fig = plt.figure()  # figsize=(12,9), self.subcase
-            axes = fig.gca()
+            if nmodes == 2:
+                ax = fig.gca()
+                axes = np.array([[fig.gca()]])
+            else:
+                print(nmodes, '*******')
+                fig, axes = plt.subplots(ncols=nmodes-1, nrows=nmodes-1)
+                # print(axes[0])
+                # print(axes[1])
+                # print(axes[2])
+                # print(axes[3])
         # fig.clear()
-
-        ireal = self.ieigr
-        iimag = self.ieigi
-        imode1, imode2 = imodes
-
-        # lambda1 = beta1 +/- j*omega1
-        beta1 = self.results[imode1, :, ireal]
-        beta2 = self.results[imode2, :, ireal]
-        omega1 = self.results[imode1, :, iimag]
-        omega2 = self.results[imode2, :, iimag]
-
-        a = (beta2 - beta1) / (beta2 + beta1)
-        b = (omega2**2 - omega1**2) / 2
-        c = (beta1 + beta2)**2
-        d = (omega2**2 + omega1**2) / 2
-        e = (beta1 + beta2) / 2
-        Fs = b ** 2
-        Fs0 = Fs[0]
-        F = 1/Fs0 * (1 - a**2) * (b**2 + c * (d + e**2))
 
         ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
         ix = self.ieas
-        xvalues = self.results[imode1, :, ix]
+        xvalues = self.results[0, :, ix]
+        #print(f'imodes = {imodes}')
+        for i, imode in enumerate(imodes):
+            for j, jmode in enumerate(imodes[i+1:]):
+                if imode == jmode:
+                    #print('SKIP', (i, j), (int(imode), int(jmode)), 'shape=', axes.shape)
+                    continue
+                Fi, Fsi = self.calculate_zimmerman(imode, jmode)
+                print((i, j), (int(imode), int(jmode)), f'shape={axes.shape}')
+                ax = axes[i, j]
+                ax.plot(xvalues, Fi, label=f'F({imode+1}, {jmode+1}')
+                ax.plot(xvalues, Fsi, label=f'Fs({imode+1}, {jmode+1}')
 
-        title = self._get_title(nlines=1)
-        title += f'\nModes: {modes[0]}, {modes[1]}'
-        plt.suptitle(title)
+        for ax in axes.ravel():
+            ax.grid(True)
 
-        axes.plot(xvalues, F, label='F')
-        axes.plot(xvalues, Fs/Fs0, label='Fs', linestyle='--', color='k')
-        axes.set_ylabel(f'Zimmerman Flutter Margin Criterion')
-        axes.set_xlabel(xlabel)
-        axes.grid(True)
-        axes.set_ylim([-0.2, 1.0])
-        axes.legend()
+        if len(modes) == 2:
+            #ax = axes[0, 0]
+            #axes.plot(xvalues, Fi, label='F')
+            ax.set_ylabel(f'Zimmerman Flutter Margin Criterion')
+            ax.set_xlabel(xlabel)
+        else:
+            fig.suptitle(f'Zimmerman Flutter Margin Criterion')
+            # fig = plt.figure()
+            # gs = fig.add_gridspec(2, 2, hspace=0, wspace=0)
+            # (ax1, ax2), (ax3, ax4) = gs.subplots(sharex='col', sharey='row')
+            # fig.suptitle('Sharing x per column, y per row')
+            # ax1.plot(x, y)
+            # ax2.plot(x, y ** 2, 'tab:orange')
+            # ax3.plot(x + 1, -y, 'tab:green')
+            # ax4.plot(x + 2, -y ** 2, 'tab:red')
+            for ax in axes:
+                ax.label_outer()
         if show:
             plt.show()
+        return fig
 
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None,
                    modes=None,
@@ -1559,7 +1607,7 @@ class FlutterResponse:
             filter crossings entirely outside the plot range
             useful for cleaning up the legend
         """
-        #self.sort_modes_by_freq()
+        self.sort_modes_by_freq()
         #assert vl_limit is None or isinstance(vl_limit, float_types), vl_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
         #self.fix()
