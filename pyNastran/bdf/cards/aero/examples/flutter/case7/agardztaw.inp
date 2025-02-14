@@ -1,0 +1,343 @@
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$ THIS CASE DEMONSTRATES THE ZTAW MODULE FOR AIC CORRECTION ON AGARD 445$
+$ WEAKENED WING USING FIVE METHODS:                                     $
+$ (1) STEADY DOWNDWASH WEIGHTING MATRIX METHOD                          $
+$ (2) UNSTEADY DOWNDWASH WEIGHTING MATRIX METHOD                        $
+$ (3) STEADY FORCE CORRECTION MATRIX METHOD                             $
+$ (4) UNSTEADY FORCE CORRECTION MATRIX METHOD                           $
+$ (5) UNSTEADY PRESSURE CORRECTION METHOD FOR THE TORSION MODE          $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$ AGARDWEK.MOD CONTAINS THE FREE FORMAT INPUT OF THE FEM MODAL DATA
+ASSIGN FEM=agardwek.mod,BOUNDARY=SYM,FORM=FREE 
+CEND
+$ BEGIN CASE CONTROL SECTION. 8 SUBCASES ARE INCLUDED.
+TITLE = AGARD445.6 WEAKENED WING FLUTTER ANALYSIS USING ZTAW METHOD
+ECHO = SORT
+SUBCASE = 1
+       SUBTITLE = STEADY DOWNWASH WEIGHTING MATRIX METHOD  
+       LABEL =  MACH 0.95   
+       FLUTTER =  1
+SUBCASE = 2
+       SUBTITLE = UNSTEADY DOWNWASH WEIGHTING MATRIX METHOD                        
+       LABEL =  MACH 0.95   
+       FLUTTER =  2
+SUBCASE = 3
+       SUBTITLE = STEADY FORCE CORRECTION MATRIX METHOD                     
+       LABEL =  MACH 0.95  
+       FLUTTER =  3
+SUBCASE = 4
+       SUBTITLE = UNSTEADY FORCE CORRECTION MATRIX METHOD                     
+       LABEL =  MACH 0.95  
+       FLUTTER =  4
+SUBCASE = 5
+       SUBTITLE = UNSTEADY CP CORRECTION USING UNSTEADY DOWNWASH METHOD       
+       LABEL =  ONLY CORRECTS UNSTEADY CP OF 2ND FEM MODE AT MACH 0.95  
+       FLUTTER =  5
+BEGIN BULK
+$                                                                       $
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$                                                                       $
+$                                                                       $
+$                 * AERO PARAMETERS *                                   $
+$                                                                       $
+$ AERO MODEL SYMMETRY IS REQUESTED ABOUT THE X-Z PLANE.                 $
+$ A REFERENCE CHORD OF 21.96 INCHES IS SPECIFIED.                       $ 
+$                                                                       $
+$       ACSID   XZSYM   FLIP    FMMUNIT FMLUNIT REFC    REFB    REFS    $
+AEROZ           YES     NO      SLIN    IN      21.96   1.0     1.0
+$                                                                       $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$              AERODYNAMIC AIC MATRIX GENERATION                        $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+$                        * * * MACH = 0.950 * * *                       $
+$                                                                       $
+MKAEROZ 1       0.95    0       0                                       +MK1
++MK1    0.0     .05     0.1     0.15    0.2     0.25    0.3     0.35    +MK2
++MK2    0.4     0.5     
+MKAEROZ 2       0.95    0       0                                       +MK1
++MK1    0.0     .05     0.1     0.15    0.2     0.25    0.3     0.35    +MK2
++MK2    0.4     0.5     
+$
+$ 
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$              DOWNWASH WEIGHTING MATRIX METHOD                         $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $       
+$
+WT2AJJ  1       SYM     RIGID   PITCH   1       STEADY  WT2AJJST.DAT
+        CFD     -114.58 7       +114.58 8       TECPLOT AGARDM95DCP.PLT
+        111
+WT2AJJ  2       SYM     RIGID   PITCH   1       UNSTEAD WT2AJJUN.DAT
+        CFD     -114.58 7       +114.58 8       TECPLOT AGARDM95DCP.PLT
+        111
+$
+PANLST1 111     1001    1001    1201
+$
+INPCFD  7       0       7       P3D     agard445.grid   agardm095a00.sol
+INPCFD  8       0       8       P3D     agard445.grid   agardm095a05.sol
+OMITCFD 7       1.4     TECPLOT M095A00.PLT                                     
+        1       1       169     1       39      1       1                       
+OMITCFD 8       1.4     TECPLOT M095A05.PLT                                     
+        1       1       169     1       39      1       1                       
+           
+$
+MKAEROZ 3       0.95    0       0                                       +MK1
++MK1    0.0     .05     0.1     0.15    0.2     0.25    0.3     0.35    +MK2
++MK2    0.4     0.5     
+MKAEROZ 4       0.95    0       0                                       +MK1
++MK1    0.0     .05     0.1     0.15    0.2     0.25    0.3     0.35    +MK2
++MK2    0.4     0.5     
+$                                                                       $
+$
+$ 
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$              AERODYNAMIC MATRICES CORRECTION                          $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$
+$ DEFINES SPANWISE FORCES AND MOMENTS FOR FORCE CORRECTION MATRIX
+$
+CORD2R  10              5.49    0.0     0.0     5.49    0.0     1.
+        6.49    -1.0     0.0      
+LOADMOD 1       ZSHEAR  10      1       10
+LOADMOD 2       YMOMENT 10      1       10
+PANLST2 1       1001    1001    THRU    1020
+$
+LOADMOD 3       ZSHEAR  10      2       10
+LOADMOD 4       YMOMENT 10      2       10
+PANLST2 2       1001    1021    THRU    1040
+$
+LOADMOD 5       ZSHEAR  10      3       10
+LOADMOD 6       YMOMENT 10      3       10
+PANLST2 3       1001    1041    THRU    1060
+$
+LOADMOD 7       ZSHEAR  10      4       10
+LOADMOD 8       YMOMENT 10      4       10
+PANLST2 4       1001    1061    THRU    1080
+$
+LOADMOD 9       ZSHEAR  10      5       10
+LOADMOD 10      YMOMENT 10      5       10
+PANLST2 5       1001    1081    THRU    1100
+$
+LOADMOD 11      ZSHEAR  10      6       10
+LOADMOD 12      YMOMENT 10      6       10
+PANLST2 6       1001    1101    THRU    1120
+$
+LOADMOD 13      ZSHEAR  10      7       10
+LOADMOD 14      YMOMENT 10      7       10
+PANLST2 7       1001    1121    THRU    1140
+$
+LOADMOD 15      ZSHEAR  10      8       10
+LOADMOD 16      YMOMENT 10      8       10
+PANLST2 8       1001    1141    THRU    1160
+$
+LOADMOD 17      ZSHEAR  10      9       10
+LOADMOD 18      YMOMENT 10      9       10
+PANLST2 9       1001    1161    THRU    1180
+$
+LOADMOD 19      ZSHEAR  10      10       10
+LOADMOD 20      YMOMENT 10      10       10
+PANLST2 10      1001    1181    THRU    1200
+$
+LOADMOD 21      ZSHEAR  10      11       10
+LOADMOD 22      YMOMENT 10      11       10
+PANLST2 11      1001    1201    THRU    1220
+SET1    10      1   
+$...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+WT1AJJ  3       SYM     1       STEADY  WT1AJJST.DAT     
+        100                     
+WT1AJJ  4       SYM     1       UNSTEAD WT1AJJUN.DAT     
+        100                     
+$
+WT1FRC  100        RIGID   PITCH  
+               1   1.000  57.259 6.25960   0.00
+               2   1.000  57.259-18.1850   0.00
+               3   1.000  57.259 4.33520   0.00
+               4   1.000  57.259-7.20000   0.00
+               5   1.000  57.259 4.76950   0.00
+               6   1.000  57.259-4.54330   0.00
+               7   1.000  57.259 4.69550   0.00
+               8   1.000  57.259-1.88529   0.00
+               9   1.000  57.259 4.00180   0.00
+              10   1.000  57.259 -0.9738   0.00
+              11   1.000  57.259 3.12990   0.00
+              12   1.000  57.259  -.1316   0.00
+              13   1.000  57.259 2.347     0.00
+              14   1.000  57.259  0.5202   0.00
+              15   1.000  57.259 2.416     0.00
+              16   1.000  57.259 2.070     0.00
+              17   1.000  57.259  1.3566   0.00
+              18   1.000  57.259  1.3317   0.00
+              19   1.000  57.259  1.5396   0.00
+              20   1.000  57.259 2.20000   0.00
+              21   1.000  57.259 1.9668    0.00
+              22   1.000  57.259 3.229     0.00
+$
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$      UNSTEADY PRESSURE CORRECTION MOTHOD FOR THE TORSION MODE         $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+MKAEROZ 5       0.95    0       0                                       +MK1
++MK1    0.0     .05     0.1     0.15    0.2     0.25    0.3     0.35    +MK2
++MK2    0.4     0.5     
+$                                                                       $
+$ WTUCP WITH IDMK=5 REFRES TO MKAEROZ WITH IDNK=5.                      $
+$ ENTRIES WT1AJJi=-5 REFERS TO WT2AJJ IDMK=-5 THAT IS IDENTICAL TO      $
+$ WT2AJJ WITH IDMK=2.                                                   $
+$ ENTRIES CPTYPEi="FEM" AND LABLEi=2 TO CORRECT THE UNSTEADY CP OF      $
+$ TORSION MODE.                                                         $
+$                                                                       $
+WTUCP   5                                                               +WTU1
++WTU1   -5      FEM     2
+$
+WT2AJJ  -5      SYM     RIGID   PITCH   1       UNSTEADY               
+        CFD     -114.58 7       +114.58 8       
+        111
+$
+$
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$              AERODYNAMIC GEOMETRY INPUT                               $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$                        * WING MACROELEMENTS *                         $
+$                                                                       $
+$                                                                       $
+$ AGARD STANDARD 445.6 WING (20 CHORDWISE AERO BOXES EVENLY CUT AND     $
+$ 11 SPANWISE AERO BOXES WITH CUTS BASED ON SPAN LOCATIONS              $
+$ SPECIFIED IN PERCENTAGE OF SPAN LENGTH IN AN AEFACT BULK DATA         $
+$ CARD WITH SID OF 10). THE ZTAIC ENTRY REFERS TO A ZTAIC BULK DATA     $
+$ CARD WITH AN ID OF 1001 THAT ESTABLISHES THE STEADY PRESSURE INPUT    $
+$ FOR THIS WING MACROELEMENT.                                           $
+$            
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  1001    WING            12      21      10              1001    +CA1
+$       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
++CA1    0.0     0.0     0.0     21.96   0       0                       +CA2
+$       XTL     YTL     ZTL     TCH     LTCHD   ATTCHT                  $
++CA2    31.866  30.0    0.0     14.496  0       0
+$                                                                       $
+$ NACA 65A004 AIRFOIL SECTION
+$ 
+PAFOIL7 1001    1001    1002    1003    0.0     1002    1003    0.0
+$                                                                       $
+AEFACT  1001    0.      0.5     .75     1.25    2.5     5.      7.5     +A1
++A1     10.     15.     20.     25.     30.     35.     40.     45.     +A2
++A2     50.     55.     60.     65.     70.     75.     80.     85.     +A3
++A3     90.     95.     100.
+AEFACT  1002    0.      .304    .368    .469    .647    .875    1.059   +B1
++B1     1.213   1.459   1.645   1.789   1.892   1.962   1.997   1.996   +B2
++B2     1.954   1.868   1.743   1.586   1.402   1.195   .967    .729    +B3
++B3     .49     .25     0.
+AEFACT  1003    0.      0.      0.      0.      0.      0.      0.      +C1
++C1     0.      0.      0.      0.      0.      0.      0.      0.      +C2
++C2     0.      0.      0.      0.      0.      0.      0.      0.      +C3
++C3     0.      0.      0.      
+$       SID     D1      D2      ETC                                     $
+AEFACT  10      0.0     16.45   27.25   37.75   47.75   57.15   65.75   +AE1
++AE1    73.5    80.     85.     90.     100.
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$              SPLINE INPUT                                             $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$                  * SURFACE SPLINE FIT ON THE WING *                   $
+$                                                                       $
+$                                                                       $
+$ THE INFINITE PLATE SPLINE METHOD IS USED TO SPLINE THE WING AERO      $
+$ BOXES TO THE WING STRUCTURE GRIDS.  THE SETK BULK DATA CARD REFERS    $
+$ TO A PANLST3 BULK DATA CARD THAT SPLINES ALL OF THE WING AERO BOXES   $          
+$ TO THE GRID POINTS SPECIFIED IN THE SET1 (SID=60) BULK DATA CARD.     $
+$                                                                       $
+$       EID     MODEL   CP      SETK    SETG    DZ      EPS             $
+SPLINE1 10      WING            1000    60
+$                                                                       $
+$       SETID   LABEL                                                   $
+PANLST3 1000    WING                    
+$                                                                       $
+$       SID     G1      G2      ETC                                     $
+SET1    60      1       THRU    121   
+$                                                                       $
+$                                                                       $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$               FLUTTER ANALYSIS FOR 5 SUBCASES                         $
+$    EACH SUBCASE USES THE GENERALIZED AERODYNAMIC FORCES (GAF)         $
+$    COMPUTED BY THE CORRECTED AIC MATRIX USING DIFFERENT METHOD        $
+$                                                                       $
+$ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                   SUBACSE = 1                                         $
+$  USES GAF BY THE STEADY DOWNWASH WEIGHTING MATRIX METHOD              $
+$-----------------------------------------------------------------------$
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST         $
+FLUTTER 1       SYM     1       0       0       
+$                                                                       $
+$       SETID   IDMK            FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMACH 1       1               SLUG    FT      1.0     0        3      +FIX0
+$       VEL1    DEN1    -ECT-
++FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1
++FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2
++FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3
++FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                   SUBACSE = 2                                         $
+$  USES GAF BY THE UNSTEADY DOWNWASH WEIGHTING MATRIX METHOD            $
+$-----------------------------------------------------------------------$
+FLUTTER 2       SYM     2       0       0       
+FIXMACH 2       2               SLUG    FT      1.0     0        3      +FIX0
++FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1
++FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2
++FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3
++FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                   SUBACSE = 3                                         $
+$  USES GAF BY THE STEADY FORCE CORRECTION MATRIX METHOD                $
+$-----------------------------------------------------------------------$
+FLUTTER 3       SYM     3       0       0       
+FIXMACH 3       3               SLUG    FT      1.0     0        3      +FIX0
++FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1
++FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2
++FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3
++FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                   SUBACSE = 4                                         $
+$  USES GAF BY THE UNSTEADY FORCE CORRECTION MATRIX METHOD              $
+$-----------------------------------------------------------------------$
+FLUTTER 4       SYM     4       0       0       
+FIXMACH 4       4               SLUG    FT      1.0     0        3      +FIX0
++FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1
++FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2
++FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3
++FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                   SUBACSE = 5                                         $
+$  USES GAF BY THE UNSTEADY CP CORRECTION METHOD FOR THE 2ND MODE       $
+$-----------------------------------------------------------------------$
+FLUTTER 5       SYM     5       0       0       
+FIXMACH 5       5               SLUG    FT      1.0     0        3      +FIX0
++FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1
++FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2
++FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3
++FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018
+$                                                                       $
+ENDDATA

@@ -1,0 +1,46 @@
+SOL 101
+CEND
+BEGIN BULK
+$ $                                                                       $
+$ $ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$ $                                                                       $
+$ $              AERODYNAMIC GEOMETRY INPUT                               $
+$ $                                                                       $
+$ $ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$ $                                                                       $
+$ $                        * WING MACROELEMENTS *                         $
+$ $                                                                       $
+$ $ AGARD STANDARD 445.6 WING (20 CHORDWISE AERO BOXES EVENLY CUT AND     $
+$ $ 11 SPANWISE AERO BOXES WITH CUTS BASED ON SPAN LOCATIONS              $
+$ $ SPECIFIED IN PERCENTAGE OF SPAN LENGTH IN AN AEFACT BULK DATA         $
+$ $ CARD WITH SID OF 10). THE PAFOIL7E NTRY REFERS TO A PAFOIL7 DATA      $
+$ $ CARD WITH AN ID OF 1001 TO DEFINE THE NACA65A004 AIRFOIL SECTION      $
+$ $...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$ $       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+$ $       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
+$ $       XTL     YTL     ZTL     TCH     LTCHD   ATTCHT                  $
+$ CAERO7      1001    WING              12      21       0            1001
+$               0.      0.      0.  21.996
+$           31.866     30.      0.  14.496
+PSHELL,1001,1,0.1
+$ $                                                                       $
+$ $ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$ $                                                                       $
+$ $              AERODYNAMIC GEOMETRY INPUT                               $
+$ $                                                                       $
+$ $ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
+$ $                                                                       $
+$ $                        * WING MACROELEMENTS *                         $
+$ $                                                                       $
+$ $ AGARD STANDARD 445.6 WING (20 CHORDWISE AERO BOXES EVENLY CUT AND     $
+$ $ 11 SPANWISE AERO BOXES WITH CUTS BASED ON SPAN LOCATIONS              $
+$ $ SPECIFIED IN PERCENTAGE OF SPAN LENGTH IN AN AEFACT BULK DATA         $
+$ $ CARD WITH SID OF 10). THE PAFOIL7E NTRY REFERS TO A PAFOIL7 DATA      $
+$ $ CARD WITH AN ID OF 1001 TO DEFINE THE NACA65A004 AIRFOIL SECTION      $
+$ $...1..|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|...10..|
+$ $       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+$ $       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
+$ $       XTL     YTL     ZTL     TCH     LTCHD   ATTCHT                  $
+$ CAERO7      1001    WING              12      21       0            1001
+$               0.      0.      0.  21.996
+$           31.866     30.      0.  14.496
