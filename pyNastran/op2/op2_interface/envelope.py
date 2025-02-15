@@ -21,6 +21,8 @@ class ResultsEnvelope:
         log = self.log
         assert len(self.op2_filenames), self.op2_filenames
         assert self.result_names is not None, self.result_names
+        from collections import defaultdict
+        gres_dict = defaultdict(list)
         for op2_filename in self.op2_filenames:
             model = OP2(log=log)
             model.read_op2(op2_filename)
@@ -35,14 +37,15 @@ class ResultsEnvelope:
                 assert self.nfiles_max == 1, self.nfiles_max
                 if isinstance(res_dict, dict):
                     for subcase, resi in res_dict.items():
-                        if subcase in res_dict_total:
-                            asdf
-                        else:
-                            res_dict_total[subcase] = res_dict_total[subcase]
-                elif isinstance(resi, TableArray):
-                    new_data = []
+                        key = (result_name, subcase)
+                        gres_dict[key].append(resi)
+                # elif isinstance(resi, TableArray):
+                #     asdf
+                #     new_data = []
                 else:
                     raise RuntimeError(result_name)
+        keys = list(gres_dict.keys())
+        print(keys)
 
 def main():
     import pyNastran
