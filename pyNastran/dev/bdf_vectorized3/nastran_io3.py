@@ -1204,6 +1204,7 @@ def _load_stress_strain(element_cards: list,
 
     is_strain = not is_stress
     # collect all the stresses
+    #result_form = _get_res_form(subcase_form, 'Stress', ntimes)
     result_form = []
     if is_stress:
         stress_form = ('Stress', None, result_form)
@@ -1474,8 +1475,8 @@ def _load_stress_strain(element_cards: list,
                 omax[ielement0] = omaxi
                 omin[ielement0] = omini
                 del omaxi, omini
-                x = 1
-        elif etype in {'CTRIA3', 'CTRIAR', 'CQUAD4', 'CQUADR', 'CTRIA6', 'CQUAD8'}:
+        elif etype in {'CTRIA3', 'CTRIAR', 'CQUAD4', 'CQUADR',
+                       'CTRIA6', 'CQUAD8'}:
             for result in results_cases:
                 if result.is_complex:
                     continue
@@ -1502,7 +1503,7 @@ def _load_stress_strain(element_cards: list,
                 oxx[ielement0] = oyyi
                 oxx[ielement0] = txyi
                 del nnodei, oxxi, oyyi, txyi, upper, lower
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(etype)
         assert len(oxx) == nelements
         nelement0 += element.n
@@ -1541,6 +1542,8 @@ def _load_stress_strain(element_cards: list,
         icase, cases, result_form, subcase_id,
         o+vm_word, von_mises)
     #del name_results
+    # if len(result_form) == 1:
+    #     stress_form.append(result_form[0])
     if len(result_form):
         formi = subcase_form
         formi.append(stress_form)
@@ -1566,58 +1569,17 @@ def _load_oug(model: OP2,
 
     """
     del name
-    print(f'name_results = {name_results}')
+    #print(f'name_results = {name_results}')
     for (res_name, results) in name_results:
         if subcase not in results:
             continue
-        res_form: Form = []
-        subcase_form.append((res_name, None, res_form))
-
         case = results[subcase]
         #print('key =', key)
-
         subcase_id = key # [0]
-        make_disp1 = False
 
         uname = f'{res_name}Results'
         ntimes = case.data.shape[0]
-        if make_disp1:
-            scale_per_time, header_names = get_case_headers(case)
-
-            nids = case.node_gridtype[:, 0]
-            inid = np.searchsorted(nids, node_id)
-            # isave = (node_id[inid] == nids)
-            # isave = None
-            t123 = case.data[:, inid, :3]
-            assert t123.shape[2] == 3, t123.shape
-            # dxyz = t123[:, isave, :]
-            dxyz = t123
-            assert dxyz.shape[2] == 3, dxyz.shape
-
-            headers = [res_name] * ntimes  # sidebar
-            titles = [res_name] * ntimes # legend
-            data_formats = ['%f'] * ntimes
-            unused_scalar = None
-            scales = get_vector_scales(
-                t123, ntimes, dim_max,
-                scale_per_time)
-            res = DisplacementResults(
-                subcase_id, titles, headers,
-                xyz_cid0, dxyz, unused_scalar, scales,
-                data_formats=data_formats, nlabels=None,
-                labelsize=None, ncolors=None,
-                colormap='jet', set_max_min=True,
-                uname=uname)
-
-            for itime, header_name in enumerate(header_names):
-                #assert t123.shape[1] == 3, t123.shape
-                #dxyz = np.full((nnodes, 3), np.nan, dtype='float32')
-                #dxyz[isave, :] = t123[isave, :]
-                headers[itime] = f'Txyz {header_name}'
-                formi: Form = (header_name, icase, [])
-                cases[icase] = (res, (itime, res_name))
-                res_form.append(formi)
-                icase += 1
+        res_form = _get_res_form(subcase_form, res_name, ntimes)
 
         t123_offset = 0
         if t123_offset == 0:
@@ -1651,15 +1613,23 @@ def _load_oug(model: OP2,
                 cases[icase] = (nastran_res2, (itime, title1))  # do I keep this???
                 formii: Form = (title1, icase, [])
                 #form_dict[(key, itime)].append(formii)
-                print(f'adding formii={str(formii)} icase={icase}')
+                #print(f'adding formii={str(formii)} icase={icase}')
                 res_form.append(formii)
                 icase += 1
             nastran_res2.headers = headers2
-
             #form_dict[(key, itime)].append(formii)
         #form.append('')
-    print(f'res_form = {res_form}')
+    #print(f'res_form = {res_form}')
     return icase
+
+def _get_res_form(subcase_form: Form, res_name: str,
+                 ntimes: int) -> Form:
+    if ntimes == 1:
+        res_form = subcase_form
+    else:
+        res_form: Form = []
+        subcase_form.append((res_name, None, res_form))
+    return res_form
 
 def get_case_headers(case) -> tuple[bool, list[str]]:
     """
