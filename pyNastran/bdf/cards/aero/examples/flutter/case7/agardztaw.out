@@ -1,0 +1,1787 @@
+
+                                                                   **                 
+                                                       ***        **                  
+                                                      ***        **             ***   
+                                                      **        **            ******  
+                                           ****       **       **          ******     
+                                           ****      **       **         *****        
+                                            ***      **      **        *****                *
+                                            ***      **     **       ****            *********
+                                    *       ***      *     **     ****          ****************
+                                   ***       ***     *    **    ****       **************
+                                  *****      ***     *   **   ***   *********** 
+                                  ******      **    *   **  **      ******** 
+                                   ******     **    *  **                 ********************
+                                     *****     **   ***        ZONA          ***  *******************
+                               *      *****    **   *       AEROELASTIC        **        ************
+                               **       ****    *  *      SOFTWARE SYSTEM       *****            ****
+                               ****      ****   ***                              *******
+                              *******     ****   *                                *********
+                              *********     ***  *          -  ZAERO  -           ***  *******
+                                 *********   *****          VERSION 9.3           ***    *********
+                                    ********   ***       Z93-64-062124-iz1t       *****    **********
+                              *         ******  **                                ******     *********
+                               ****        ********   RELEASE DATE: JUN-2024     *********     *******
+                               *********       *****                            ***********      ****
+                               ***************   ****   LICENSE NO.            *****  ******       *
+                                **********************                        ******   ****** 
+                                            ************                    ********   ********
+                                                    *******             *************   *********
+                                  ********************************************* ******  **********
+                                   ********************    *******************  ******   ********
+                                    *************        ***************  ****  *******   *****
+                                     *******         *********** ******  *****  *******   ****
+                                      *          ************  *******  ******  ********   *
+                                             **************  ********  *******  ********
+                                           **************   ********   ******   ********
+                                              ********    *********   *******   *****
+                                                ****    **********   ********   ***
+                                                  *   ***********   *********
+                                                          ******    *******
+
+
+
+
+                    THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET OF ZONA TECHNOLOGY, INC.  THE RECEIPT OR
+                POSSESSION OF THIS PROGRAM DOES NOT CONVEY ANY RIGHTS TO REPRODUCE OR DISCLOSE ITS CONTENTS, OR TO
+               MANUFACTURE, USE, OR SELL ANYTHING HEREIN, IN WHOLE OR IN PART, WITHOUT THE SPECIFIC WRITTEN CONSENT
+                                                       OF ZONA TECHNOLOGY, INC.
+
+
+
+
+                                              * * * PROGRAM STARTED ON 01/31/2025 AT 16:48:03 * * *
+
+
+
+                                                  E X E C U T I V E  C O N T R O L  S U M M A R Y
+
+                                  |...1...|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|..10...|
+
+
+                                  ASSIGN FEM=agardwek.mod,BOUNDARY=SYM,FORM=FREE                                  
+                                  CEND                                                                            
+
+
+                                                       C A S E  C O N T R O L  S U M M A R Y 
+
+                                                D O U B L E  P R E C I S I O N  C O M P U T A T I O N 
+
+                                        M A X I M U M  A L L O C A B L E  M E M O R Y  =1600  M E G A B Y T E S
+
+                                  |...1...|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|..10...|
+
+
+                                  TITLE = AGARD445.6 WEAKENED WING FLUTTER ANALYSIS USING ZTAW METHOD             
+                                  ECHO = SORT                                                                     
+                                  SUBCASE = 1                                                                     
+                                  SUBTITLE = STEADY DOWNWASH WEIGHTING MATRIX METHOD                              
+                                  LABEL =  MACH 0.95                                                              
+                                  FLUTTER =  1                                                                    
+                                  SUBCASE = 2                                                                     
+                                  SUBTITLE = UNSTEADY DOWNWASH WEIGHTING MATRIX METHOD                            
+                                  LABEL =  MACH 0.95                                                              
+                                  FLUTTER =  2                                                                    
+                                  SUBCASE = 3                                                                     
+                                  SUBTITLE = STEADY FORCE CORRECTION MATRIX METHOD                                
+                                  LABEL =  MACH 0.95                                                              
+                                  FLUTTER =  3                                                                    
+                                  SUBCASE = 4                                                                     
+                                  SUBTITLE = UNSTEADY FORCE CORRECTION MATRIX METHOD                              
+                                  LABEL =  MACH 0.95                                                              
+                                  FLUTTER =  4                                                                    
+                                  SUBCASE = 5                                                                     
+                                  SUBTITLE = UNSTEADY CP CORRECTION USING UNSTEADY DOWNWASH METHOD                
+                                  LABEL =  ONLY CORRECTS UNSTEADY CP OF 2ND FEM MODE AT MACH 0.95                 
+                                  FLUTTER =  5                                                                    
+                                  BEGIN BULK                                                                      
+
+
+                                                       S O R T E D   B U L K   D A T A   E C H O
+                    CARD
+                    COUNT         |...1...|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|..10...|
+
+
+                        1 -       AEFACT  10      0.0     16.45   27.25   37.75   47.75   57.15   65.75   +AE1    
+                        2 -       +AE1    73.5    80.     85.     90.     100.                                    
+                        3 -       AEFACT  1001    0.      0.5     .75     1.25    2.5     5.      7.5     +A1     
+                        4 -       +A1     10.     15.     20.     25.     30.     35.     40.     45.     +A2     
+                        5 -       +A2     50.     55.     60.     65.     70.     75.     80.     85.     +A3     
+                        6 -       +A3     90.     95.     100.                                                    
+                        7 -       AEFACT  1002    0.      .304    .368    .469    .647    .875    1.059   +B1     
+                        8 -       +B1     1.213   1.459   1.645   1.789   1.892   1.962   1.997   1.996   +B2     
+                        9 -       +B2     1.954   1.868   1.743   1.586   1.402   1.195   .967    .729    +B3     
+                       10 -       +B3     .49     .25     0.                                                      
+                       11 -       AEFACT  1003    0.      0.      0.      0.      0.      0.      0.      +C1     
+                       12 -       +C1     0.      0.      0.      0.      0.      0.      0.      0.      +C2     
+                       13 -       +C2     0.      0.      0.      0.      0.      0.      0.      0.      +C3     
+                       14 -       +C3     0.      0.      0.                                                      
+                       15 -       AEROZ           YES     NO      SLIN    IN      21.96   1.0     1.0             
+                       16 -       CAERO7  1001    WING            12      21      10              1001    +CA1    
+                       17 -       +CA1    0.0     0.0     0.0     21.96   0       0                       +CA2    
+                       18 -       +CA2    31.866  30.0    0.0     14.496  0       0                               
+                       19 -       CORD2R  10              5.49    0.0     0.0     5.49    0.0     1.              
+                       20 -               6.49    -1.0    0.0                                                     
+                       21 -       FIXMACH 1       1               SLUG    FT      1.0     0       3       +FIX0   
+                       22 -       +FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1   
+                       23 -       +FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2   
+                       24 -       +FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3   
+                       25 -       +FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018          
+                       26 -       FIXMACH 2       2               SLUG    FT      1.0     0       3       +FIX0   
+                       27 -       +FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1   
+                       28 -       +FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2   
+                       29 -       +FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3   
+                       30 -       +FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018          
+                       31 -       FIXMACH 3       3               SLUG    FT      1.0     0       3       +FIX0   
+                       32 -       +FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1   
+                       33 -       +FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2   
+                       34 -       +FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3   
+                       35 -       +FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018          
+                       36 -       FIXMACH 4       4               SLUG    FT      1.0     0       3       +FIX0   
+                       37 -       +FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1   
+                       38 -       +FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2   
+                       39 -       +FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3   
+                       40 -       +FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018          
+                       41 -       FIXMACH 5       5               SLUG    FT      1.0     0       3       +FIX0   
+                       42 -       +FIX0   1035.0  .00005  1035.   .00006  1035.   .00007  1035.   .000075 +FIX1   
+                       43 -       +FIX1   1035.0  .00008  1035.   .00010  1035.   .00011  1035.   .00012  +FIX2   
+                       44 -       +FIX2   1035.0  .000125 1035.   .00013  1035.   .000135 1035.   .00014  +FIX3   
+                       45 -       +FIX3   1035.0  .00015  1035.   .00016  1035.   .00017  1035.   .00018          
+                       46 -       FLUTTER 1       SYM     1       0       0                                       
+                       47 -       FLUTTER 2       SYM     2       0       0                                       
+                       48 -       FLUTTER 3       SYM     3       0       0                                       
+                       49 -       FLUTTER 4       SYM     4       0       0                                       
+                       50 -       FLUTTER 5       SYM     5       0       0                                       
+                       51 -       INPCFD  7       0       7       P3D     AGARD445.GRID   AGARDM095A00.SOL        
+                       52 -       INPCFD  8       0       8       P3D     AGARD445.GRID   AGARDM095A05.SOL        
+                       53 -       LOADMOD 1       ZSHEAR  10      1       10                                      
+                       54 -       LOADMOD 2       YMOMENT 10      1       10                                      
+                       55 -       LOADMOD 3       ZSHEAR  10      2       10                                      
+                       56 -       LOADMOD 4       YMOMENT 10      2       10                                      
+                       57 -       LOADMOD 5       ZSHEAR  10      3       10                                      
+                       58 -       LOADMOD 6       YMOMENT 10      3       10                                      
+                       59 -       LOADMOD 7       ZSHEAR  10      4       10                                      
+                       60 -       LOADMOD 8       YMOMENT 10      4       10                                      
+                       61 -       LOADMOD 9       ZSHEAR  10      5       10                                      
+                       62 -       LOADMOD 10      YMOMENT 10      5       10                                      
+                       63 -       LOADMOD 11      ZSHEAR  10      6       10                                      
+                       64 -       LOADMOD 12      YMOMENT 10      6       10                                      
+                       65 -       LOADMOD 13      ZSHEAR  10      7       10                                      
+                       66 -       LOADMOD 14      YMOMENT 10      7       10                                      
+                       67 -       LOADMOD 15      ZSHEAR  10      8       10                                      
+                       68 -       LOADMOD 16      YMOMENT 10      8       10                                      
+                       69 -       LOADMOD 17      ZSHEAR  10      9       10                                      
+                       70 -       LOADMOD 18      YMOMENT 10      9       10                                      
+                       71 -       LOADMOD 19      ZSHEAR  10      10      10                                      
+                       72 -       LOADMOD 20      YMOMENT 10      10      10                                      
+                       73 -       LOADMOD 21      ZSHEAR  10      11      10                                      
+                       74 -       LOADMOD 22      YMOMENT 10      11      10                                      
+                       75 -       MKAEROZ 1       0.95    0       0                                       +MK1    
+                       76 -       +MK1    0.0     .05     0.1     0.15    0.2     0.25    0.3     0.35    +MK2    
+                       77 -       +MK2    0.4     0.5                                                             
+                       78 -       MKAEROZ 2       0.95    0       0                                       +MK1    
+                       79 -       +MK1    0.0     .05     0.1     0.15    0.2     0.25    0.3     0.35    +MK2    
+                       80 -       +MK2    0.4     0.5                                                             
+                       81 -       MKAEROZ 3       0.95    0       0                                       +MK1    
+                       82 -       +MK1    0.0     .05     0.1     0.15    0.2     0.25    0.3     0.35    +MK2    
+                       83 -       +MK2    0.4     0.5                                                             
+                       84 -       MKAEROZ 4       0.95    0       0                                       +MK1    
+                       85 -       +MK1    0.0     .05     0.1     0.15    0.2     0.25    0.3     0.35    +MK2    
+                       86 -       +MK2    0.4     0.5                                                             
+                       87 -       MKAEROZ 5       0.95    0       0                                       +MK1    
+                       88 -       +MK1    0.0     .05     0.1     0.15    0.2     0.25    0.3     0.35    +MK2    
+                       89 -       +MK2    0.4     0.5                                                             
+                       90 -       OMITCFD 7       1.4     TECPLOT M095A00.PLT                                     
+                       91 -               1       1       169     1       39      1       1                       
+                       92 -       OMITCFD 8       1.4     TECPLOT M095A05.PLT                                     
+                       93 -               1       1       169     1       39      1       1                       
+                       94 -       PAFOIL7 1001    1001    1002    1003    0.0     1002    1003    0.0             
+                       95 -       PANLST1 111     1001    1001    1201                                            
+                       96 -       PANLST2 1       1001    1001    THRU    1020                                    
+                       97 -       PANLST2 2       1001    1021    THRU    1040                                    
+                       98 -       PANLST2 3       1001    1041    THRU    1060                                    
+                       99 -       PANLST2 4       1001    1061    THRU    1080                                    
+                      100 -       PANLST2 5       1001    1081    THRU    1100                                    
+                      101 -       PANLST2 6       1001    1101    THRU    1120                                    
+                      102 -       PANLST2 7       1001    1121    THRU    1140                                    
+                      103 -       PANLST2 8       1001    1141    THRU    1160                                    
+                      104 -       PANLST2 9       1001    1161    THRU    1180                                    
+                      105 -       PANLST2 10      1001    1181    THRU    1200                                    
+                      106 -       PANLST2 11      1001    1201    THRU    1220                                    
+                      107 -       PANLST3 1000    WING                                                            
+                      108 -       SET1    10      1                                                               
+                      109 -       SET1    60      1       THRU    121                                             
+                      110 -       SPLINE1 10      WING            1000    60                                      
+                      111 -       WT1AJJ  3       SYM     1       STEADY  WT1AJJST.DAT                            
+                      112 -               100                                                                     
+                      113 -       WT1AJJ  4       SYM     1       UNSTEAD WT1AJJUN.DAT                            
+                      114 -               100                                                                     
+                      115 -       WT1FRC  100     RIGID   PITCH                                                   
+                      116 -               1       1.000   57.259  6.25960 0.00                                    
+                      117 -               2       1.000   57.259  -18.18500.00                                    
+                      118 -               3       1.000   57.259  4.33520 0.00                                    
+                      119 -               4       1.000   57.259  -7.200000.00                                    
+                      120 -               5       1.000   57.259  4.76950 0.00                                    
+                      121 -               6       1.000   57.259  -4.543300.00                                    
+                      122 -               7       1.000   57.259  4.69550 0.00                                    
+                      123 -               8       1.000   57.259  -1.885290.00                                    
+                      124 -               9       1.000   57.259  4.00180 0.00                                    
+                      125 -               10      1.000   57.259  -0.9738 0.00                                    
+                      126 -               11      1.000   57.259  3.12990 0.00                                    
+                      127 -               12      1.000   57.259  -.1316  0.00                                    
+                      128 -               13      1.000   57.259  2.347   0.00                                    
+                      129 -               14      1.000   57.259  0.5202  0.00                                    
+                      130 -               15      1.000   57.259  2.416   0.00                                    
+                      131 -               16      1.000   57.259  2.070   0.00                                    
+                      132 -               17      1.000   57.259  1.3566  0.00                                    
+                      133 -               18      1.000   57.259  1.3317  0.00                                    
+                      134 -               19      1.000   57.259  1.5396  0.00                                    
+                      135 -               20      1.000   57.259  2.20000 0.00                                    
+                      136 -               21      1.000   57.259  1.9668  0.00                                    
+                      137 -               22      1.000   57.259  3.229   0.00                                    
+                      138 -       WT2AJJ  -5      SYM     RIGID   PITCH   1       UNSTEADY                        
+                      139 -               CFD     -114.58 7       +114.58 8                                       
+                      140 -               111                                                                     
+                      141 -       WT2AJJ  1       SYM     RIGID   PITCH   1       STEADY  WT2AJJST.DAT            
+                      142 -               CFD     -114.58 7       +114.58 8       TECPLOT AGARDM95DCP.PLT         
+                      143 -               111                                                                     
+                      144 -       WT2AJJ  2       SYM     RIGID   PITCH   1       UNSTEAD WT2AJJUN.DAT            
+                      145 -               CFD     -114.58 7       +114.58 8       TECPLOT AGARDM95DCP.PLT         
+                      146 -               111                                                                     
+                      147 -       WTUCP   5                                                               +WTU1   
+                      148 -       +WTU1   -5      FEM     2                                                       
+                      149 -       ENDDATA
+
+
+
+   ========================================================================================================================
+
+     SYMMETRIC (OR ASYMMETRIC) FINITE ELEMENT MODAL RESULTS ARE SUCCESSFULLY READ IN FROM FILE agardwek.mod                                                                    
+     RIGID BODY DEGREES OF FREEDOM (DEFINED IN THE FEM BASIC COORDINATE SYSTEM) =       0
+
+            MODE      EXTRACTION      EIGENVALUE              FREQUENCY                      GENERALIZED        
+                        ORDER         (RAD/S)**2         (RAD/S)            (HZ)            MASS       STIFFNESS
+               1               1     0.36127E+04     0.60106E+02     0.95662E+01     0.10000E+01     0.36127E+04
+               2               2     0.57503E+05     0.23980E+03     0.38165E+02     0.10000E+01     0.57503E+05
+               3               3     0.92283E+05     0.30378E+03     0.48348E+02     0.10000E+01     0.92283E+05
+               4               4     0.33085E+06     0.57519E+03     0.91545E+02     0.10000E+01     0.33085E+06
+               5               5     0.55075E+06     0.74213E+03     0.11811E+03     0.10000E+01     0.55075E+06
+
+      MASS UNIT AND LENGTH UNIT OF THE FEM MODEL ARE IN: LBF/  AND  IN   ,  RESPECTIVELY
+
+   ========================================================================================================================
+
+
+
+
+ ******  USER MESSAGE *********
+ BULK DATA CARD WT2AJJ   WITH IDMK=       1 IS ACTIVATIVED TO CORRECT AIC MATRICES GENERATED
+ BY BULK DATA CARD MKAEROZ WITH IDMK=       1
+
+
+ **** CFD MESH ON FILE: AGARD445.GRID    FROM BULK DATA CARD INPCFD   WITH ID=       7 HAS BEEN SUCCESSFULLY IMPORTED ****
+
+ TOTAL CFD BLOCKS=       1 NUMBER OF GRID POINTS=           13182 IMAX,JMAX,KMAX OF EACH BLOCK ARE:
+ BLOCK:   1, IMAX=    169, JMAX=     39, KMAX=      2     BLOCK:
+
+
+ **** CFD MESH ON FILE: AGARD445.GRID    FROM BULK DATA CARD INPCFD   WITH ID=       8 HAS BEEN SUCCESSFULLY IMPORTED ****
+
+ TOTAL CFD BLOCKS=       1 NUMBER OF GRID POINTS=           13182 IMAX,JMAX,KMAX OF EACH BLOCK ARE:
+ BLOCK:   1, IMAX=    169, JMAX=     39, KMAX=      2     BLOCK:
+
+
+
+
+ ******  USER MESSAGE *********
+ BULK DATA CARD WT2AJJ   WITH IDMK=       2 IS ACTIVATIVED TO CORRECT AIC MATRICES GENERATED
+ BY BULK DATA CARD MKAEROZ WITH IDMK=       2
+
+
+ **** CFD MESH ON FILE: AGARD445.GRID    FROM BULK DATA CARD INPCFD   WITH ID=       7 HAS BEEN SUCCESSFULLY IMPORTED ****
+
+ TOTAL CFD BLOCKS=       1 NUMBER OF GRID POINTS=           13182 IMAX,JMAX,KMAX OF EACH BLOCK ARE:
+ BLOCK:   1, IMAX=    169, JMAX=     39, KMAX=      2     BLOCK:
+
+
+ **** CFD MESH ON FILE: AGARD445.GRID    FROM BULK DATA CARD INPCFD   WITH ID=       8 HAS BEEN SUCCESSFULLY IMPORTED ****
+
+ TOTAL CFD BLOCKS=       1 NUMBER OF GRID POINTS=           13182 IMAX,JMAX,KMAX OF EACH BLOCK ARE:
+ BLOCK:   1, IMAX=    169, JMAX=     39, KMAX=      2     BLOCK:
+
+
+
+
+ ******  USER MESSAGE *********
+ BULK DATA CARD WT1AJJ   WITH IDMK=       3 IS ACTIVATIVED TO CORRECT AIC MATRICES GENERATED
+ BY BULK DATA CARD MKAEROZ WITH IDMK=       3
+
+
+ INPUT FORCES AND COMPUTED FORCES SPECIFIED BY BULK DATA CARD WT1FRC WITH ID=     100
+  LOADMOD ID         RE(INPUT)         IM(INPUT)   RE(UNCORRECTED)   IM(UNCORRECTED)     RE(CORRECTED)     IM(CORRECTED)
+           1       0.35842E+03       0.00000E+00       0.39273E+03       0.00000E+00       0.35842E+03       0.00000E+00
+           2      -0.10413E+04       0.00000E+00      -0.57233E+03       0.00000E+00      -0.10413E+04       0.00000E+00
+           3       0.24823E+03       0.00000E+00       0.26185E+03       0.00000E+00       0.24823E+03       0.00000E+00
+           4      -0.41226E+03       0.00000E+00      -0.21097E+03       0.00000E+00      -0.41226E+03       0.00000E+00
+           5       0.27310E+03       0.00000E+00       0.25612E+03       0.00000E+00       0.27310E+03       0.00000E+00
+           6      -0.26014E+03       0.00000E+00      -0.11202E+03       0.00000E+00      -0.26014E+03       0.00000E+00
+           7       0.26886E+03       0.00000E+00       0.24208E+03       0.00000E+00       0.26886E+03       0.00000E+00
+           8      -0.10795E+03       0.00000E+00      -0.42799E+02       0.00000E+00      -0.10795E+03       0.00000E+00
+           9       0.22914E+03       0.00000E+00       0.22228E+03       0.00000E+00       0.22914E+03       0.00000E+00
+          10      -0.55759E+02       0.00000E+00       0.11291E+02       0.00000E+00      -0.55759E+02       0.00000E+00
+          11       0.17921E+03       0.00000E+00       0.19481E+03       0.00000E+00       0.17921E+03       0.00000E+00
+          12      -0.75353E+01       0.00000E+00       0.56872E+02       0.00000E+00      -0.75353E+01       0.00000E+00
+          13       0.13439E+03       0.00000E+00       0.16446E+03       0.00000E+00       0.13439E+03       0.00000E+00
+          14       0.29786E+02       0.00000E+00       0.92244E+02       0.00000E+00       0.29786E+02       0.00000E+00
+          15       0.13834E+03       0.00000E+00       0.12627E+03       0.00000E+00       0.13834E+03       0.00000E+00
+          16       0.11853E+03       0.00000E+00       0.10664E+03       0.00000E+00       0.11853E+03       0.00000E+00
+          17       0.77678E+02       0.00000E+00       0.87129E+02       0.00000E+00       0.77678E+02       0.00000E+00
+          18       0.76252E+02       0.00000E+00       0.97259E+02       0.00000E+00       0.76252E+02       0.00000E+00
+          19       0.88156E+02       0.00000E+00       0.75541E+02       0.00000E+00       0.88156E+02       0.00000E+00
+          20       0.12597E+03       0.00000E+00       0.10426E+03       0.00000E+00       0.12597E+03       0.00000E+00
+          21       0.11262E+03       0.00000E+00       0.11322E+03       0.00000E+00       0.11262E+03       0.00000E+00
+          22       0.18489E+03       0.00000E+00       0.19154E+03       0.00000E+00       0.18489E+03       0.00000E+00
+
+
+
+
+ ******  USER MESSAGE *********
+ BULK DATA CARD WT1AJJ   WITH IDMK=       4 IS ACTIVATIVED TO CORRECT AIC MATRICES GENERATED
+ BY BULK DATA CARD MKAEROZ WITH IDMK=       4
+
+
+ INPUT FORCES AND COMPUTED FORCES SPECIFIED BY BULK DATA CARD WT1FRC WITH ID=     100
+  LOADMOD ID         RE(INPUT)         IM(INPUT)   RE(UNCORRECTED)   IM(UNCORRECTED)     RE(CORRECTED)     IM(CORRECTED)
+           1       0.35842E+03       0.00000E+00       0.39273E+03       0.00000E+00       0.35842E+03       0.00000E+00
+           2      -0.10413E+04       0.00000E+00      -0.57233E+03       0.00000E+00      -0.10413E+04       0.00000E+00
+           3       0.24823E+03       0.00000E+00       0.26185E+03       0.00000E+00       0.24823E+03       0.00000E+00
+           4      -0.41226E+03       0.00000E+00      -0.21097E+03       0.00000E+00      -0.41226E+03       0.00000E+00
+           5       0.27310E+03       0.00000E+00       0.25612E+03       0.00000E+00       0.27310E+03       0.00000E+00
+           6      -0.26014E+03       0.00000E+00      -0.11202E+03       0.00000E+00      -0.26014E+03       0.00000E+00
+           7       0.26886E+03       0.00000E+00       0.24208E+03       0.00000E+00       0.26886E+03       0.00000E+00
+           8      -0.10795E+03       0.00000E+00      -0.42799E+02       0.00000E+00      -0.10795E+03       0.00000E+00
+           9       0.22914E+03       0.00000E+00       0.22228E+03       0.00000E+00       0.22914E+03       0.00000E+00
+          10      -0.55759E+02       0.00000E+00       0.11291E+02       0.00000E+00      -0.55759E+02       0.00000E+00
+          11       0.17921E+03       0.00000E+00       0.19481E+03       0.00000E+00       0.17921E+03       0.00000E+00
+          12      -0.75353E+01       0.00000E+00       0.56872E+02       0.00000E+00      -0.75353E+01       0.00000E+00
+          13       0.13439E+03       0.00000E+00       0.16446E+03       0.00000E+00       0.13439E+03       0.00000E+00
+          14       0.29786E+02       0.00000E+00       0.92244E+02       0.00000E+00       0.29786E+02       0.00000E+00
+          15       0.13834E+03       0.00000E+00       0.12627E+03       0.00000E+00       0.13834E+03       0.00000E+00
+          16       0.11853E+03       0.00000E+00       0.10664E+03       0.00000E+00       0.11853E+03       0.00000E+00
+          17       0.77678E+02       0.00000E+00       0.87129E+02       0.00000E+00       0.77678E+02       0.00000E+00
+          18       0.76252E+02       0.00000E+00       0.97259E+02       0.00000E+00       0.76252E+02       0.00000E+00
+          19       0.88156E+02       0.00000E+00       0.75541E+02       0.00000E+00       0.88156E+02       0.00000E+00
+          20       0.12597E+03       0.00000E+00       0.10426E+03       0.00000E+00       0.12597E+03       0.00000E+00
+          21       0.11262E+03       0.00000E+00       0.11322E+03       0.00000E+00       0.11262E+03       0.00000E+00
+          22       0.18489E+03       0.00000E+00       0.19154E+03       0.00000E+00       0.18489E+03       0.00000E+00
+
+
+
+
+ ******  USER MESSAGE *********
+ BULK DATA CARD WT2AJJ   WITH IDMK=      -5 IS ACTIVATIVED TO CORRECT AIC MATRICES GENERATED
+ BY BULK DATA CARD MKAEROZ WITH IDMK=       5
+
+
+ **** CFD MESH ON FILE: AGARD445.GRID    FROM BULK DATA CARD INPCFD   WITH ID=       7 HAS BEEN SUCCESSFULLY IMPORTED ****
+
+ TOTAL CFD BLOCKS=       1 NUMBER OF GRID POINTS=           13182 IMAX,JMAX,KMAX OF EACH BLOCK ARE:
+ BLOCK:   1, IMAX=    169, JMAX=     39, KMAX=      2     BLOCK:
+
+
+ **** CFD MESH ON FILE: AGARD445.GRID    FROM BULK DATA CARD INPCFD   WITH ID=       8 HAS BEEN SUCCESSFULLY IMPORTED ****
+
+ TOTAL CFD BLOCKS=       1 NUMBER OF GRID POINTS=           13182 IMAX,JMAX,KMAX OF EACH BLOCK ARE:
+ BLOCK:   1, IMAX=    169, JMAX=     39, KMAX=      2     BLOCK:
+
+
+
+
+
+                                             ****************************************
+                                             *                                      *
+                                             *       SUBCASE       =        1       *
+                                             *       DISCIPLINE    = FLUTTER        *
+                                             *       BULK ENTRY ID =        1       *
+                                             *                                      *
+                                             ****************************************
+
+
+
+   S U M M A R Y   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N   O F   F L U T T E R   C A R D   I D  =       1
+
+         TITLE   = AGARD445.6 WEAKENED WING FLUTTER ANALYSIS USING ZTAW METHOD             
+         SUBTITLE= STEADY DOWNWASH WEIGHTING MATRIX METHOD                                 
+         LABEL   = MACH 0.95                                                               
+
+
+
+                    S U M M A R Y   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+             ***  THERE IS NO DIVERGENCE DYNAMIC PRESSURE BELOW THE HIGHEST INPUT DYNAMIC PRESSURE:  0.9641E+02 (SLUG/FT/S**2)  ***
+
+                        E N D   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+
+
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.5000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.6000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.7000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.7500E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.8000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1000E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1100E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1200E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1250E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1300E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1350E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1400E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1500E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1600E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1700E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1800E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ NON-MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXMACH ID=       1 WITH NKSTEP=   25
+ MACH =  0.9500, REFERENCE LENGTH (L) = 1.8300E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+      AT   16 VELOCITIES:
+  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03
+  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03
+  AND AT   16 DENSITIES:
+  5.0000E-05  6.0000E-05  7.0000E-05  7.5000E-05  8.0000E-05  1.0000E-04  1.1000E-04  1.2000E-04  1.2500E-04  1.3000E-04
+  1.3500E-04  1.4000E-04  1.5000E-04  1.6000E-04  1.7000E-04  1.8000E-04
+
+ LENGTH UNIT IS CONVERTED FROM   IN     OF THE FEM MODEL TO   FT     OF THE FLUTTER ANALYSIS
+
+ MASS   UNIT IS CONVERTED FROM   LBF/   OF THE FEM MODEL TO   SLUG   OF THE FLUTTER ANALYSIS
+
+
+ THE FOLLOWING V-G-F TABLE LISTS    5 NUMBER OF STRUCTURAL MODES (  1 -  5 ) AND    0 NUMBER OF AERODYNAMIC LAG ROOTS (  0 -  0 )
+
+
+                                               SUMMARY     MODES  1 -  4
+
+   UNITS    UNITS    UNITS          MODE NO.  1              MODE NO.  2              MODE NO.  3              MODE NO.  4
+    NONE   SLUG/   SLUG/        STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE
+           FT**3   FT/S**2    MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00% 
+   V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00 0.000+00    0.0000   9.566 INFINT    0.0000  38.165 INFINT    0.0000  48.348 INFINT    0.0000  91.545 INFINT
+ 1035.000 5.000-05 2.678+01   -0.0242  11.164 0.0620   -0.0734  36.113 0.2006   -0.0139  49.005 0.2722   -0.0174  91.377 0.5075
+ 1035.000 6.000-05 3.213+01   -0.0264  11.538 0.0640   -0.0904  35.684 0.1982   -0.0167  49.122 0.2728   -0.0209  91.346 0.5074
+ 1035.000 7.000-05 3.749+01   -0.0276  11.933 0.0662   -0.1085  35.244 0.1957   -0.0193  49.235 0.2734   -0.0243  91.314 0.5072
+ 1035.000 7.500-05 4.017+01   -0.0276  12.139 0.0674   -0.1180  35.020 0.1945   -0.0206  49.291 0.2737   -0.0261  91.299 0.5071
+ 1035.000 8.000-05 4.284+01   -0.0273  12.351 0.0686   -0.1278  34.793 0.1932   -0.0220  49.345 0.2741   -0.0278  91.284 0.5070
+ 1035.000 1.000-04 5.356+01   -0.0215  13.264 0.0736   -0.1711  33.847 0.1880   -0.0271  49.557 0.2752   -0.0347  91.225 0.5067
+ 1035.000 1.100-04 5.891+01   -0.0153  13.763 0.0764   -0.1957  33.348 0.1852   -0.0296  49.659 0.2758   -0.0382  91.196 0.5065
+ 1035.000 1.200-04 6.427+01   -0.0063  14.291 0.0793   -0.2229  32.828 0.1823   -0.0321  49.759 0.2763   -0.0417  91.167 0.5064
+ 1035.000 1.250-04 6.695+01   -0.0004  14.567 0.0809   -0.2376  32.560 0.1808   -0.0334  49.808 0.2766   -0.0434  91.153 0.5063
+ 1035.000 1.300-04 6.962+01    0.0066  14.851 0.0824   -0.2532  32.288 0.1793   -0.0346  49.856 0.2769   -0.0451  91.139 0.5062
+ 1035.000 1.350-04 7.230+01    0.0146  15.143 0.0841   -0.2699  32.010 0.1778   -0.0358  49.905 0.2772   -0.0469  91.125 0.5061
+ 1035.000 1.400-04 7.498+01    0.0239  15.442 0.0857   -0.2877  31.728 0.1762   -0.0370  49.952 0.2774   -0.0486  91.111 0.5061
+ 1035.000 1.500-04 8.034+01    0.0464  16.060 0.0892   -0.3272  31.149 0.1730   -0.0394  50.047 0.2779   -0.0521  91.084 0.5059
+ 1035.000 1.600-04 8.569+01    0.0752  16.695 0.0927   -0.3729  30.558 0.1697   -0.0417  50.140 0.2785   -0.0555  91.057 0.5057
+ 1035.000 1.700-04 9.105+01    0.1109  17.329 0.0962   -0.4258  29.969 0.1664   -0.0440  50.231 0.2790   -0.0590  91.030 0.5056
+ 1035.000 1.800-04 9.641+01    0.1533  17.938 0.0996   -0.4863  29.408 0.1633   -0.0463  50.321 0.2795   -0.0625  91.004 0.5055
+
+
+                                               SUMMARY     MODES  5 -  5
+
+   UNITS    UNITS    UNITS          MODE NO.  5              MODE NO.
+    NONE   SLUG/   SLUG/        STRUCTURAL MODE                                                                           
+           FT**3   FT/S**2    MODAL DAMPING= 0.00%                                                                            
+   V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00 0.000+00    0.0000 118.113 INFINT
+ 1035.000 5.000-05 2.678+01   -0.0076 118.908 0.6605
+ 1035.000 6.000-05 3.213+01   -0.0091 119.062 0.6613
+ 1035.000 7.000-05 3.749+01   -0.0107 119.215 0.6622
+ 1035.000 7.500-05 4.017+01   -0.0114 119.291 0.6626
+ 1035.000 8.000-05 4.284+01   -0.0122 119.366 0.6630
+ 1035.000 1.000-04 5.356+01   -0.0152 119.663 0.6646
+ 1035.000 1.100-04 5.891+01   -0.0167 119.810 0.6655
+ 1035.000 1.200-04 6.427+01   -0.0182 119.955 0.6663
+ 1035.000 1.250-04 6.695+01   -0.0189 120.027 0.6667
+ 1035.000 1.300-04 6.962+01   -0.0197 120.098 0.6671
+ 1035.000 1.350-04 7.230+01   -0.0204 120.170 0.6675
+ 1035.000 1.400-04 7.498+01   -0.0212 120.241 0.6679
+ 1035.000 1.500-04 8.034+01   -0.0226 120.382 0.6686
+ 1035.000 1.600-04 8.569+01   -0.0241 120.521 0.6694
+ 1035.000 1.700-04 9.105+01   -0.0256 120.659 0.6702
+ 1035.000 1.800-04 9.641+01   -0.0271 120.796 0.6709
+
+ NON-MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXMACH ID=       1 WITH NKSTEP=   25
+ MACH =  0.9500, REFERENCE LENGTH (L) = 1.8300E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+
+
+    1 NUMBER OF FLUTTER MODES ARE FOUND.
+ FLUTTER SPEED, FREQUENCY, AND DYNAMIC PRESSURE AS A FUNCTION OF ASSUMED STRUCTURAL DAMPING
+
+
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER AT MODE NO.:   1 | G= 0.00% | G= 0.50% | G= 1.00% | G= 1.50% | G= 2.00% | G= 2.50% | G= 3.00% | G= 3.50% | G= 4.00% |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | SPEED |UNITS=  FT/  SEC  | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | V/VREF|UNITS=    NONE    | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |  FREQ |UNITS=      HZ    |  14.5832 |  14.7874 |  14.9759 |  15.1557 |  15.3175 |  15.4735 |  15.6103 |  15.7470 |  15.8838 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYN P |UNITS=SLUG/FT/S**2| 6.710+01 | 6.902+01 | 7.077+01 | 7.241+01 | 7.386+01 | 7.525+01 | 7.644+01 | 7.762+01 | 7.881+01 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |DENSITY|UNITS=SLUG/FT**3  | 1.252-04 | 1.288-04 | 1.321-04 | 1.352-04 | 1.379-04 | 1.405-04 | 1.427-04 | 1.449-04 | 1.471-04 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYNAMIC PRESSURE AT G=0.0, W =     14.5832 HZ, V =  1.0350E+03 :                                                            |
+ | COMPUTED =  6.7106E+01, INTERPOLATED =  6.7103E+01, ERROR =  5.1077E-03%. CORRESPONDING EIGENVECTOR OF    5 MODES =         |
+ |  1.000E+00  0.000E+00,  -1.108E-01  2.232E-02,   1.083E-02  9.746E-04,  -1.369E-03  1.817E-03,   1.391E-03 -1.909E-04,      |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER MODE TRACKING: 100% = PRIMARY MODE. 0% = NO CONTRIBUTION TO FLUTTER MODE.                                           |
+ | MODE(   1) = 100.0000%,  MODE(   2) =  47.7879%,  MODE(   3) =   1.3919%,  MODE(   4) =   0.0955%,  MODE(   5) =   0.1008%, |
+ -------------------------------------------------------------------------------------------------------------------------------
+
+
+
+          * * * *  F R E Q U E N C Y   V E R S U S     DYNAMIC PRESSURE       F O R   T H E   F I R S T    5   M O D E S * * * *
+      HZ          
+  200.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        E                             E     E     E  E  E            E     E     E  E  E  E  E     E     E     E     E           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+  100.0 +                                                                                                                        
+        |                                                                                                                        
+        D                             D     D     D  D  D            D     D     D  D  D  D  D     D     D     D     D           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        C                             C     C     C  C  C            C     C     C  C  C  C  C     C     C     C     C           
+        |                                                                                                                        
+        B                                                                                                                        
+        |                             B     B     B  B  B            B     B     B  B                                            
+        |                                                                              B  B  B     B     B     B     B           
+        |                                                                                                                        
+        |                                                                                                            A           
+        |                                                            A     A     A  A  A  A  A     A     A     A                 
+        A                             A     A     A  A  A                                                                        
+        |                                                                                                                        
+    0.0 +-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                         DYNAMIC PRESSURE     ( X 1.061E+02 )  ( UNITS=SLUG/FT/S**2)
+
+
+
+            * * * *  D A M P I N G   V E R S U S     DYNAMIC PRESSURE       F O R   T H E   F I R S T    5   M O D E S * * * *
+
+    0.2 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                            A           
+        |                                                                                                                        
+        |                                                                                                                        
+    0.1 +                                                                                                      A                 
+        |                                                                                                                        
+        |                                                                                                A                       
+        |                                                                                                                        
+        |                                                                                          A                             
+        |                                                                                                                        
+        |                                                                                 A  A                                   
+    0.0 E-----------+-----------+-----------+-----------+-----------+-----------+---A--A----+-----------+-----------+-----------+
+        |                             E     E     E  E  E            E     E     A                                               
+        |                             A     D     D  D  D            C     C     E  E  E  E  E     E     E     E     E           
+        |                                                            D     D     D  D  D  D  C     C     C     C     C           
+        |                                                                                    D     D     D     D     D           
+        |                             B                                                                                          
+   -0.1 +                                   B                                                                                    
+        |                                                                                                                        
+        |                                         B  B                                                                           
+        |                                               B                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                            B                                                           
+   -0.2 +                                                                  B                                                     
+        |                                                                                                                        
+        |                                                                        B                                               
+        |                                                                           B                                            
+        |                                                                              B                                         
+        |                                                                                 B                                      
+        |                                                                                                                        
+   -0.3 +                                                                                    B                                   
+        |                                                                                                                        
+        |                                                                                          B                             
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                B                       
+   -0.4 +                                                                                                                        
+        |                                                                                                                        
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                         DYNAMIC PRESSURE     ( X 1.061E+02 )  ( UNITS=SLUG/FT/S**2)
+
+
+
+
+
+                              E N D   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N
+
+
+
+
+
+                                             ****************************************
+                                             *                                      *
+                                             *       SUBCASE       =        2       *
+                                             *       DISCIPLINE    = FLUTTER        *
+                                             *       BULK ENTRY ID =        2       *
+                                             *                                      *
+                                             ****************************************
+
+
+
+   S U M M A R Y   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N   O F   F L U T T E R   C A R D   I D  =       2
+
+         TITLE   = AGARD445.6 WEAKENED WING FLUTTER ANALYSIS USING ZTAW METHOD             
+         SUBTITLE= UNSTEADY DOWNWASH WEIGHTING MATRIX METHOD                               
+         LABEL   = MACH 0.95                                                               
+
+
+
+                    S U M M A R Y   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+             ***  THERE IS NO DIVERGENCE DYNAMIC PRESSURE BELOW THE HIGHEST INPUT DYNAMIC PRESSURE:  0.9641E+02 (SLUG/FT/S**2)  ***
+
+                        E N D   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+
+
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.5000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.6000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.7000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.7500E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.8000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1000E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1100E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1200E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1250E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1300E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1350E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1400E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1500E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1600E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1700E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1800E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ NON-MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXMACH ID=       2 WITH NKSTEP=   25
+ MACH =  0.9500, REFERENCE LENGTH (L) = 1.8300E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+      AT   16 VELOCITIES:
+  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03
+  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03
+  AND AT   16 DENSITIES:
+  5.0000E-05  6.0000E-05  7.0000E-05  7.5000E-05  8.0000E-05  1.0000E-04  1.1000E-04  1.2000E-04  1.2500E-04  1.3000E-04
+  1.3500E-04  1.4000E-04  1.5000E-04  1.6000E-04  1.7000E-04  1.8000E-04
+
+ LENGTH UNIT IS CONVERTED FROM   IN     OF THE FEM MODEL TO   FT     OF THE FLUTTER ANALYSIS
+
+ MASS   UNIT IS CONVERTED FROM   LBF/   OF THE FEM MODEL TO   SLUG   OF THE FLUTTER ANALYSIS
+
+
+ THE FOLLOWING V-G-F TABLE LISTS    5 NUMBER OF STRUCTURAL MODES (  1 -  5 ) AND    0 NUMBER OF AERODYNAMIC LAG ROOTS (  0 -  0 )
+
+
+                                               SUMMARY     MODES  1 -  4
+
+   UNITS    UNITS    UNITS          MODE NO.  1              MODE NO.  2              MODE NO.  3              MODE NO.  4
+    NONE   SLUG/   SLUG/        STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE
+           FT**3   FT/S**2    MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00% 
+   V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00 0.000+00    0.0000   9.566 INFINT    0.0000  38.165 INFINT    0.0000  48.348 INFINT    0.0000  91.545 INFINT
+ 1035.000 5.000-05 2.678+01   -0.0228  11.164 0.0620   -0.0788  36.209 0.2011   -0.0148  49.029 0.2723   -0.0184  91.416 0.5077
+ 1035.000 6.000-05 3.213+01   -0.0245  11.538 0.0640   -0.0971  35.803 0.1988   -0.0178  49.150 0.2730   -0.0220  91.392 0.5076
+ 1035.000 7.000-05 3.749+01   -0.0248  11.933 0.0662   -0.1166  35.390 0.1965   -0.0207  49.268 0.2736   -0.0257  91.368 0.5075
+ 1035.000 7.500-05 4.017+01   -0.0244  12.139 0.0674   -0.1268  35.180 0.1954   -0.0221  49.326 0.2739   -0.0275  91.357 0.5074
+ 1035.000 8.000-05 4.284+01   -0.0235  12.351 0.0686   -0.1373  34.967 0.1942   -0.0235  49.382 0.2743   -0.0293  91.345 0.5074
+ 1035.000 1.000-04 5.356+01   -0.0152  13.260 0.0736   -0.1838  34.086 0.1893   -0.0291  49.602 0.2755   -0.0367  91.301 0.5071
+ 1035.000 1.100-04 5.891+01   -0.0074  13.754 0.0764   -0.2102  33.625 0.1867   -0.0319  49.708 0.2761   -0.0403  91.279 0.5070
+ 1035.000 1.200-04 6.427+01    0.0034  14.274 0.0792   -0.2391  33.150 0.1841   -0.0346  49.811 0.2766   -0.0440  91.257 0.5069
+ 1035.000 1.250-04 6.695+01    0.0103  14.545 0.0807   -0.2548  32.907 0.1827   -0.0359  49.862 0.2769   -0.0458  91.247 0.5068
+ 1035.000 1.300-04 6.962+01    0.0182  14.822 0.0823   -0.2713  32.660 0.1814   -0.0373  49.913 0.2772   -0.0476  91.236 0.5067
+ 1035.000 1.350-04 7.230+01    0.0273  15.105 0.0839   -0.2888  32.410 0.1800   -0.0386  49.963 0.2775   -0.0494  91.226 0.5067
+ 1035.000 1.400-04 7.498+01    0.0376  15.393 0.0855   -0.3074  32.159 0.1786   -0.0399  50.013 0.2778   -0.0513  91.215 0.5066
+ 1035.000 1.500-04 8.034+01    0.0621  15.983 0.0887   -0.3483  31.651 0.1758   -0.0425  50.111 0.2783   -0.0549  91.195 0.5065
+ 1035.000 1.600-04 8.569+01    0.0921  16.578 0.0920   -0.3945  31.143 0.1729   -0.0451  50.207 0.2788   -0.0586  91.175 0.5064
+ 1035.000 1.700-04 9.105+01    0.1279  17.165 0.0953   -0.4467  30.648 0.1702   -0.0476  50.302 0.2794   -0.0622  91.155 0.5063
+ 1035.000 1.800-04 9.641+01    0.1688  17.722 0.0984   -0.5047  30.187 0.1676   -0.0501  50.395 0.2799   -0.0659  91.135 0.5062
+
+
+                                               SUMMARY     MODES  5 -  5
+
+   UNITS    UNITS    UNITS          MODE NO.  5              MODE NO.
+    NONE   SLUG/   SLUG/        STRUCTURAL MODE                                                                           
+           FT**3   FT/S**2    MODAL DAMPING= 0.00%                                                                            
+   V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00 0.000+00    0.0000 118.113 INFINT
+ 1035.000 5.000-05 2.678+01   -0.0075 118.932 0.6606
+ 1035.000 6.000-05 3.213+01   -0.0090 119.091 0.6615
+ 1035.000 7.000-05 3.749+01   -0.0105 119.249 0.6623
+ 1035.000 7.500-05 4.017+01   -0.0113 119.327 0.6628
+ 1035.000 8.000-05 4.284+01   -0.0120 119.404 0.6632
+ 1035.000 1.000-04 5.356+01   -0.0150 119.712 0.6649
+ 1035.000 1.100-04 5.891+01   -0.0165 119.863 0.6658
+ 1035.000 1.200-04 6.427+01   -0.0180 120.013 0.6666
+ 1035.000 1.250-04 6.695+01   -0.0187 120.088 0.6670
+ 1035.000 1.300-04 6.962+01   -0.0194 120.162 0.6674
+ 1035.000 1.350-04 7.230+01   -0.0202 120.236 0.6678
+ 1035.000 1.400-04 7.498+01   -0.0209 120.309 0.6682
+ 1035.000 1.500-04 8.034+01   -0.0224 120.455 0.6690
+ 1035.000 1.600-04 8.569+01   -0.0239 120.600 0.6698
+ 1035.000 1.700-04 9.105+01   -0.0253 120.743 0.6706
+ 1035.000 1.800-04 9.641+01   -0.0268 120.885 0.6714
+
+ NON-MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXMACH ID=       2 WITH NKSTEP=   25
+ MACH =  0.9500, REFERENCE LENGTH (L) = 1.8300E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+
+
+    1 NUMBER OF FLUTTER MODES ARE FOUND.
+ FLUTTER SPEED, FREQUENCY, AND DYNAMIC PRESSURE AS A FUNCTION OF ASSUMED STRUCTURAL DAMPING
+
+
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER AT MODE NO.:   1 | G= 0.00% | G= 0.50% | G= 1.00% | G= 1.50% | G= 2.00% | G= 2.50% | G= 3.00% | G= 3.50% | G= 4.00% |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | SPEED |UNITS=  FT/  SEC  | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | V/VREF|UNITS=    NONE    | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |  FREQ |UNITS=      HZ    |  14.1102 |  14.3370 |  14.5345 |  14.7092 |  14.8764 |  15.0321 |  15.1795 |  15.3198 |  15.4507 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYN P |UNITS=SLUG/FT/S**2| 6.258+01 | 6.489+01 | 6.685+01 | 6.854+01 | 7.014+01 | 7.161+01 | 7.300+01 | 7.430+01 | 7.550+01 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |DENSITY|UNITS=SLUG/FT**3  | 1.168-04 | 1.211-04 | 1.248-04 | 1.279-04 | 1.309-04 | 1.337-04 | 1.362-04 | 1.387-04 | 1.409-04 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYNAMIC PRESSURE AT G=0.0, W =     14.1102 HZ, V =  1.0350E+03 :                                                            |
+ | COMPUTED =  6.2625E+01, INTERPOLATED =  6.2586E+01, ERROR =  6.1771E-02%. CORRESPONDING EIGENVECTOR OF    5 MODES =         |
+ |  1.000E+00  0.000E+00,  -9.913E-02  2.096E-02,   9.438E-03  1.125E-03,  -1.324E-03  1.827E-03,   1.238E-03 -1.449E-04,      |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER MODE TRACKING: 100% = PRIMARY MODE. 0% = NO CONTRIBUTION TO FLUTTER MODE.                                           |
+ | MODE(   1) = 100.0000%,  MODE(   2) =  38.8149%,  MODE(   3) =   1.1458%,  MODE(   4) =   0.0735%,  MODE(   5) =   0.0815%, |
+ -------------------------------------------------------------------------------------------------------------------------------
+
+
+
+          * * * *  F R E Q U E N C Y   V E R S U S     DYNAMIC PRESSURE       F O R   T H E   F I R S T    5   M O D E S * * * *
+      HZ          
+  200.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        E                             E     E     E  E  E            E     E     E  E  E  E  E     E     E     E     E           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+  100.0 +                                                                                                                        
+        |                                                                                                                        
+        D                             D     D     D  D  D            D     D     D  D  D  D  D     D     D     D     D           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        C                             C     C     C  C  C            C     C     C  C  C  C  C     C     C     C     C           
+        |                                                                                                                        
+        B                                                                                                                        
+        |                             B     B     B  B  B            B     B     B  B  B                                         
+        |                                                                                 B  B     B     B     B     B           
+        |                                                                                                                        
+        |                                                                                                            A           
+        |                                                            A     A     A  A  A  A  A     A     A     A                 
+        A                             A     A     A  A  A                                                                        
+        |                                                                                                                        
+    0.0 +-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                         DYNAMIC PRESSURE     ( X 1.061E+02 )  ( UNITS=SLUG/FT/S**2)
+
+
+
+            * * * *  D A M P I N G   V E R S U S     DYNAMIC PRESSURE       F O R   T H E   F I R S T    5   M O D E S * * * *
+
+    0.2 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                            A           
+        |                                                                                                                        
+        |                                                                                                      A                 
+    0.1 +                                                                                                                        
+        |                                                                                                A                       
+        |                                                                                                                        
+        |                                                                                          A                             
+        |                                                                                    A                                   
+        |                                                                              A  A                                      
+    0.0 E-----------+-----------+-----------+-----------+-----------+-----------+A--A-------+-----------+-----------+-----------+
+        |                             E     E     E  E  E            E     E     E  E                                            
+        |                             A     D     D  D  D            C     C     C  C  E  E  E     E     E     E     E           
+        |                                                            D     D     D  D  D  D  D     C     C     C     C           
+        |                                                                                          D     D     D     D           
+        |                             B                                                                                          
+   -0.1 +                                   B                                                                                    
+        |                                         B                                                                              
+        |                                            B  B                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+   -0.2 +                                                            B                                                           
+        |                                                                  B                                                     
+        |                                                                                                                        
+        |                                                                        B                                               
+        |                                                                           B                                            
+        |                                                                              B                                         
+   -0.3 +                                                                                 B                                      
+        |                                                                                    B                                   
+        |                                                                                                                        
+        |                                                                                          B                             
+        |                                                                                                                        
+        |                                                                                                                        
+   -0.4 +                                                                                                B                       
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                      B                 
+        |                                                                                                                        
+        |                                                                                                                        
+   -0.5 +                                                                                                            B           
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                         DYNAMIC PRESSURE     ( X 1.061E+02 )  ( UNITS=SLUG/FT/S**2)
+
+
+
+
+
+                              E N D   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N
+
+
+
+
+
+                                             ****************************************
+                                             *                                      *
+                                             *       SUBCASE       =        3       *
+                                             *       DISCIPLINE    = FLUTTER        *
+                                             *       BULK ENTRY ID =        3       *
+                                             *                                      *
+                                             ****************************************
+
+
+
+   S U M M A R Y   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N   O F   F L U T T E R   C A R D   I D  =       3
+
+         TITLE   = AGARD445.6 WEAKENED WING FLUTTER ANALYSIS USING ZTAW METHOD             
+         SUBTITLE= STEADY FORCE CORRECTION MATRIX METHOD                                   
+         LABEL   = MACH 0.95                                                               
+
+
+
+                    S U M M A R Y   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+             ***  THERE IS NO DIVERGENCE DYNAMIC PRESSURE BELOW THE HIGHEST INPUT DYNAMIC PRESSURE:  0.9641E+02 (SLUG/FT/S**2)  ***
+
+                        E N D   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+
+
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.5000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.6000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.7000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.7500E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.8000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1000E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1100E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1200E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1250E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1300E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1350E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1400E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1500E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1600E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1700E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1800E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ NON-MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXMACH ID=       3 WITH NKSTEP=   25
+ MACH =  0.9500, REFERENCE LENGTH (L) = 1.8300E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+      AT   16 VELOCITIES:
+  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03
+  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03
+  AND AT   16 DENSITIES:
+  5.0000E-05  6.0000E-05  7.0000E-05  7.5000E-05  8.0000E-05  1.0000E-04  1.1000E-04  1.2000E-04  1.2500E-04  1.3000E-04
+  1.3500E-04  1.4000E-04  1.5000E-04  1.6000E-04  1.7000E-04  1.8000E-04
+
+ LENGTH UNIT IS CONVERTED FROM   IN     OF THE FEM MODEL TO   FT     OF THE FLUTTER ANALYSIS
+
+ MASS   UNIT IS CONVERTED FROM   LBF/   OF THE FEM MODEL TO   SLUG   OF THE FLUTTER ANALYSIS
+
+
+ THE FOLLOWING V-G-F TABLE LISTS    5 NUMBER OF STRUCTURAL MODES (  1 -  5 ) AND    0 NUMBER OF AERODYNAMIC LAG ROOTS (  0 -  0 )
+
+
+                                               SUMMARY     MODES  1 -  4
+
+   UNITS    UNITS    UNITS          MODE NO.  1              MODE NO.  2              MODE NO.  3              MODE NO.  4
+    NONE   SLUG/   SLUG/        STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE
+           FT**3   FT/S**2    MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00% 
+   V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00 0.000+00    0.0000   9.566 INFINT    0.0000  38.165 INFINT    0.0000  48.348 INFINT    0.0000  91.545 INFINT
+ 1035.000 5.000-05 2.678+01   -0.0271  11.083 0.0615   -0.0660  36.663 0.2036   -0.0152  49.216 0.2733   -0.0174  91.567 0.5086
+ 1035.000 6.000-05 3.213+01   -0.0304  11.421 0.0634   -0.0803  36.365 0.2020   -0.0183  49.371 0.2742   -0.0209  91.574 0.5086
+ 1035.000 7.000-05 3.749+01   -0.0329  11.771 0.0653   -0.0952  36.066 0.2003   -0.0214  49.522 0.2750   -0.0244  91.582 0.5087
+ 1035.000 7.500-05 4.017+01   -0.0339  11.952 0.0663   -0.1029  35.915 0.1995   -0.0229  49.595 0.2754   -0.0261  91.587 0.5087
+ 1035.000 8.000-05 4.284+01   -0.0345  12.135 0.0674   -0.1107  35.764 0.1986   -0.0244  49.668 0.2758   -0.0278  91.591 0.5087
+ 1035.000 1.000-04 5.356+01   -0.0345  12.906 0.0716   -0.1438  35.152 0.1952   -0.0305  49.948 0.2774   -0.0347  91.611 0.5088
+ 1035.000 1.100-04 5.891+01   -0.0327  13.313 0.0739   -0.1617  34.839 0.1935   -0.0335  50.083 0.2782   -0.0381  91.622 0.5089
+ 1035.000 1.200-04 6.427+01   -0.0295  13.735 0.0763   -0.1805  34.520 0.1917   -0.0364  50.215 0.2789   -0.0416  91.634 0.5090
+ 1035.000 1.250-04 6.695+01   -0.0273  13.952 0.0775   -0.1903  34.359 0.1908   -0.0379  50.280 0.2792   -0.0433  91.640 0.5090
+ 1035.000 1.300-04 6.962+01   -0.0247  14.173 0.0787   -0.2004  34.196 0.1899   -0.0393  50.344 0.2796   -0.0450  91.646 0.5090
+ 1035.000 1.350-04 7.230+01   -0.0217  14.398 0.0799   -0.2109  34.031 0.1890   -0.0408  50.407 0.2799   -0.0467  91.653 0.5091
+ 1035.000 1.400-04 7.498+01   -0.0181  14.628 0.0812   -0.2217  33.865 0.1881   -0.0423  50.470 0.2803   -0.0484  91.659 0.5091
+ 1035.000 1.500-04 8.034+01   -0.0093  15.098 0.0838   -0.2446  33.527 0.1862   -0.0451  50.593 0.2810   -0.0519  91.673 0.5092
+ 1035.000 1.600-04 8.569+01    0.0018  15.582 0.0865   -0.2692  33.183 0.1843   -0.0480  50.714 0.2817   -0.0553  91.687 0.5092
+ 1035.000 1.700-04 9.105+01    0.0154  16.080 0.0893   -0.2959  32.833 0.1823   -0.0508  50.833 0.2823   -0.0587  91.701 0.5093
+ 1035.000 1.800-04 9.641+01    0.0317  16.588 0.0921   -0.3250  32.479 0.1804   -0.0536  50.949 0.2830   -0.0621  91.716 0.5094
+
+
+                                               SUMMARY     MODES  5 -  5
+
+   UNITS    UNITS    UNITS          MODE NO.  5              MODE NO.
+    NONE   SLUG/   SLUG/        STRUCTURAL MODE                                                                           
+           FT**3   FT/S**2    MODAL DAMPING= 0.00%                                                                            
+   V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00 0.000+00    0.0000 118.113 INFINT
+ 1035.000 5.000-05 2.678+01   -0.0092 119.282 0.6625
+ 1035.000 6.000-05 3.213+01   -0.0111 119.509 0.6638
+ 1035.000 7.000-05 3.749+01   -0.0129 119.734 0.6650
+ 1035.000 7.500-05 4.017+01   -0.0138 119.846 0.6657
+ 1035.000 8.000-05 4.284+01   -0.0147 119.957 0.6663
+ 1035.000 1.000-04 5.356+01   -0.0184 120.397 0.6687
+ 1035.000 1.100-04 5.891+01   -0.0202 120.615 0.6699
+ 1035.000 1.200-04 6.427+01   -0.0220 120.830 0.6711
+ 1035.000 1.250-04 6.695+01   -0.0229 120.937 0.6717
+ 1035.000 1.300-04 6.962+01   -0.0238 121.043 0.6723
+ 1035.000 1.350-04 7.230+01   -0.0247 121.149 0.6729
+ 1035.000 1.400-04 7.498+01   -0.0256 121.255 0.6735
+ 1035.000 1.500-04 8.034+01   -0.0274 121.465 0.6747
+ 1035.000 1.600-04 8.569+01   -0.0291 121.673 0.6758
+ 1035.000 1.700-04 9.105+01   -0.0309 121.879 0.6770
+ 1035.000 1.800-04 9.641+01   -0.0327 122.084 0.6781
+
+ NON-MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXMACH ID=       3 WITH NKSTEP=   25
+ MACH =  0.9500, REFERENCE LENGTH (L) = 1.8300E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+
+
+    1 NUMBER OF FLUTTER MODES ARE FOUND.
+ FLUTTER SPEED, FREQUENCY, AND DYNAMIC PRESSURE AS A FUNCTION OF ASSUMED STRUCTURAL DAMPING
+
+
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER AT MODE NO.:   1 | G= 0.00% | G= 0.50% | G= 1.00% | G= 1.50% | G= 2.00% | G= 2.50% | G= 3.00% | G= 3.50% | G= 4.00% |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | SPEED |UNITS=  FT/  SEC  | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 |          |          |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | V/VREF|UNITS=    NONE    | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 |          |          |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |  FREQ |UNITS=      HZ    |  15.5028 |  15.6988 |  15.8820 |  16.0652 |  16.2229 |  16.3784 |  16.5338 |          |          |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYN P |UNITS=SLUG/FT/S**2| 8.481+01 | 8.695+01 | 8.892+01 | 9.089+01 | 9.256+01 | 9.419+01 | 9.583+01 |          |          |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |DENSITY|UNITS=SLUG/FT**3  | 1.583-04 | 1.623-04 | 1.660-04 | 1.697-04 | 1.728-04 | 1.758-04 | 1.789-04 |          |          |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYNAMIC PRESSURE AT G=0.0, W =     15.5028 HZ, V =  1.0350E+03 :                                                            |
+ | COMPUTED =  8.4837E+01, INTERPOLATED =  8.4819E+01, ERROR =  2.1007E-02%. CORRESPONDING EIGENVECTOR OF    5 MODES =         |
+ |  1.000E+00  0.000E+00,  -1.075E-01  2.708E-02,   2.166E-02  4.591E-05,   8.367E-04  1.689E-03,   2.224E-03 -5.508E-04,      |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER MODE TRACKING: 100% = PRIMARY MODE. 0% = NO CONTRIBUTION TO FLUTTER MODE.                                           |
+ | MODE(   1) = 100.0000%,  MODE(   2) =  40.6055%,  MODE(   3) =   2.3017%,  MODE(   4) =   0.0770%,  MODE(   5) =   0.1343%, |
+ -------------------------------------------------------------------------------------------------------------------------------
+
+
+
+          * * * *  F R E Q U E N C Y   V E R S U S     DYNAMIC PRESSURE       F O R   T H E   F I R S T    5   M O D E S * * * *
+      HZ          
+  200.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        E                             E     E     E  E  E            E     E     E  E  E  E  E     E     E     E     E           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+  100.0 +                                                                                                                        
+        |                                                                                                                        
+        D                             D     D     D  D  D            D     D     D  D  D  D  D     D     D     D     D           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        C                             C     C     C  C  C            C     C     C  C  C  C  C     C     C     C     C           
+        |                                                                                                                        
+        B                                                                                                                        
+        |                             B     B     B  B  B            B     B     B  B  B  B  B     B     B     B                 
+        |                                                                                                            B           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                            A     A     A  A  A  A  A     A     A     A     A           
+        A                             A     A     A  A  A                                                                        
+        |                                                                                                                        
+    0.0 +-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                         DYNAMIC PRESSURE     ( X 1.061E+02 )  ( UNITS=SLUG/FT/S**2)
+
+
+
+            * * * *  D A M P I N G   V E R S U S     DYNAMIC PRESSURE       F O R   T H E   F I R S T    5   M O D E S * * * *
+
+    0.1 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                            A           
+        |                                                                                                      A                 
+        |                                                                                                                        
+    0.0 E-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+A----------+-----------+
+        |                             E     E     E  E  E                                          A                             
+        |                             D     D     D  C  C            E     E     E  E  E  E  A                                   
+        |                             A     A     A  D  D            D     C     A  A        E     E     E     E     E           
+        |                                                                  D     D  D  C  C  C                                   
+        |                                                                              D  D  D     D     C     C     C           
+        |                                                                                                D     D     D           
+        |                             B                                                                                          
+        |                                   B                                                                                    
+        |                                                                                                                        
+   -0.1 +                                         B  B                                                                           
+        |                                               B                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                            B                                                           
+        |                                                                                                                        
+        |                                                                  B                                                     
+        |                                                                                                                        
+        |                                                                        B                                               
+        |                                                                           B                                            
+   -0.2 +                                                                              B                                         
+        |                                                                                 B                                      
+        |                                                                                    B                                   
+        |                                                                                                                        
+        |                                                                                          B                             
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                B                       
+        |                                                                                                                        
+   -0.3 +                                                                                                                        
+        |                                                                                                      B                 
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                         DYNAMIC PRESSURE     ( X 1.061E+02 )  ( UNITS=SLUG/FT/S**2)
+
+
+
+
+
+                              E N D   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N
+
+
+
+
+
+                                             ****************************************
+                                             *                                      *
+                                             *       SUBCASE       =        4       *
+                                             *       DISCIPLINE    = FLUTTER        *
+                                             *       BULK ENTRY ID =        4       *
+                                             *                                      *
+                                             ****************************************
+
+
+
+   S U M M A R Y   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N   O F   F L U T T E R   C A R D   I D  =       4
+
+         TITLE   = AGARD445.6 WEAKENED WING FLUTTER ANALYSIS USING ZTAW METHOD             
+         SUBTITLE= UNSTEADY FORCE CORRECTION MATRIX METHOD                                 
+         LABEL   = MACH 0.95                                                               
+
+
+
+                    S U M M A R Y   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+             ***  THERE IS NO DIVERGENCE DYNAMIC PRESSURE BELOW THE HIGHEST INPUT DYNAMIC PRESSURE:  0.9641E+02 (SLUG/FT/S**2)  ***
+
+                        E N D   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+
+
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.5000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.6000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.7000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.7500E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.8000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1000E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1100E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1200E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1250E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1300E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1350E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1400E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1500E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1600E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1700E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1800E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ NON-MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXMACH ID=       4 WITH NKSTEP=   25
+ MACH =  0.9500, REFERENCE LENGTH (L) = 1.8300E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+      AT   16 VELOCITIES:
+  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03
+  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03
+  AND AT   16 DENSITIES:
+  5.0000E-05  6.0000E-05  7.0000E-05  7.5000E-05  8.0000E-05  1.0000E-04  1.1000E-04  1.2000E-04  1.2500E-04  1.3000E-04
+  1.3500E-04  1.4000E-04  1.5000E-04  1.6000E-04  1.7000E-04  1.8000E-04
+
+ LENGTH UNIT IS CONVERTED FROM   IN     OF THE FEM MODEL TO   FT     OF THE FLUTTER ANALYSIS
+
+ MASS   UNIT IS CONVERTED FROM   LBF/   OF THE FEM MODEL TO   SLUG   OF THE FLUTTER ANALYSIS
+
+
+ THE FOLLOWING V-G-F TABLE LISTS    5 NUMBER OF STRUCTURAL MODES (  1 -  5 ) AND    0 NUMBER OF AERODYNAMIC LAG ROOTS (  0 -  0 )
+
+
+                                               SUMMARY     MODES  1 -  4
+
+   UNITS    UNITS    UNITS          MODE NO.  1              MODE NO.  2              MODE NO.  3              MODE NO.  4
+    NONE   SLUG/   SLUG/        STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE
+           FT**3   FT/S**2    MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00% 
+   V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00 0.000+00    0.0000   9.566 INFINT    0.0000  38.165 INFINT    0.0000  48.348 INFINT    0.0000  91.545 INFINT
+ 1035.000 5.000-05 2.678+01   -0.0240  11.081 0.0615   -0.0700  36.768 0.2042   -0.0135  49.234 0.2734   -0.0176  91.630 0.5089
+ 1035.000 6.000-05 3.213+01   -0.0266  11.418 0.0634   -0.0851  36.492 0.2027   -0.0163  49.394 0.2743   -0.0211  91.649 0.5090
+ 1035.000 7.000-05 3.749+01   -0.0282  11.767 0.0653   -0.1007  36.216 0.2011   -0.0192  49.549 0.2752   -0.0246  91.669 0.5092
+ 1035.000 7.500-05 4.017+01   -0.0286  11.947 0.0663   -0.1087  36.077 0.2004   -0.0206  49.625 0.2756   -0.0263  91.680 0.5092
+ 1035.000 8.000-05 4.284+01   -0.0288  12.130 0.0673   -0.1169  35.939 0.1996   -0.0220  49.700 0.2760   -0.0280  91.690 0.5093
+ 1035.000 1.000-04 5.356+01   -0.0266  12.894 0.0716   -0.1514  35.380 0.1965   -0.0276  49.991 0.2776   -0.0350  91.733 0.5095
+ 1035.000 1.100-04 5.891+01   -0.0236  13.296 0.0738   -0.1699  35.096 0.1949   -0.0305  50.131 0.2784   -0.0384  91.756 0.5096
+ 1035.000 1.200-04 6.427+01   -0.0191  13.712 0.0761   -0.1893  34.810 0.1933   -0.0332  50.268 0.2792   -0.0419  91.778 0.5098
+ 1035.000 1.250-04 6.695+01   -0.0163  13.926 0.0773   -0.1994  34.665 0.1925   -0.0346  50.335 0.2796   -0.0436  91.790 0.5098
+ 1035.000 1.300-04 6.962+01   -0.0131  14.142 0.0785   -0.2098  34.520 0.1917   -0.0360  50.402 0.2799   -0.0453  91.802 0.5099
+ 1035.000 1.350-04 7.230+01   -0.0094  14.362 0.0797   -0.2205  34.373 0.1909   -0.0374  50.468 0.2803   -0.0470  91.813 0.5100
+ 1035.000 1.400-04 7.498+01   -0.0051  14.586 0.0810   -0.2315  34.226 0.1901   -0.0388  50.534 0.2807   -0.0487  91.825 0.5100
+ 1035.000 1.500-04 8.034+01    0.0050  15.042 0.0835   -0.2547  33.930 0.1884   -0.0415  50.662 0.2814   -0.0522  91.849 0.5102
+ 1035.000 1.600-04 8.569+01    0.0174  15.509 0.0861   -0.2795  33.631 0.1868   -0.0443  50.789 0.2821   -0.0556  91.874 0.5103
+ 1035.000 1.700-04 9.105+01    0.0320  15.985 0.0887   -0.3060  33.332 0.1851   -0.0470  50.913 0.2828   -0.0590  91.898 0.5104
+ 1035.000 1.800-04 9.641+01    0.0492  16.467 0.0914   -0.3346  33.033 0.1834   -0.0496  51.036 0.2834   -0.0625  91.923 0.5106
+
+
+                                               SUMMARY     MODES  5 -  5
+
+   UNITS    UNITS    UNITS          MODE NO.  5              MODE NO.
+    NONE   SLUG/   SLUG/        STRUCTURAL MODE                                                                           
+           FT**3   FT/S**2    MODAL DAMPING= 0.00%                                                                            
+   V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00 0.000+00    0.0000 118.113 INFINT
+ 1035.000 5.000-05 2.678+01   -0.0075 119.283 0.6625
+ 1035.000 6.000-05 3.213+01   -0.0089 119.511 0.6638
+ 1035.000 7.000-05 3.749+01   -0.0104 119.737 0.6651
+ 1035.000 7.500-05 4.017+01   -0.0111 119.849 0.6657
+ 1035.000 8.000-05 4.284+01   -0.0119 119.961 0.6663
+ 1035.000 1.000-04 5.356+01   -0.0148 120.403 0.6688
+ 1035.000 1.100-04 5.891+01   -0.0163 120.622 0.6700
+ 1035.000 1.200-04 6.427+01   -0.0177 120.839 0.6712
+ 1035.000 1.250-04 6.695+01   -0.0184 120.946 0.6718
+ 1035.000 1.300-04 6.962+01   -0.0192 121.054 0.6724
+ 1035.000 1.350-04 7.230+01   -0.0199 121.161 0.6730
+ 1035.000 1.400-04 7.498+01   -0.0206 121.267 0.6736
+ 1035.000 1.500-04 8.034+01   -0.0220 121.479 0.6747
+ 1035.000 1.600-04 8.569+01   -0.0235 121.689 0.6759
+ 1035.000 1.700-04 9.105+01   -0.0249 121.898 0.6771
+ 1035.000 1.800-04 9.641+01   -0.0263 122.105 0.6782
+
+ NON-MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXMACH ID=       4 WITH NKSTEP=   25
+ MACH =  0.9500, REFERENCE LENGTH (L) = 1.8300E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+
+
+    1 NUMBER OF FLUTTER MODES ARE FOUND.
+ FLUTTER SPEED, FREQUENCY, AND DYNAMIC PRESSURE AS A FUNCTION OF ASSUMED STRUCTURAL DAMPING
+
+
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER AT MODE NO.:   1 | G= 0.00% | G= 0.50% | G= 1.00% | G= 1.50% | G= 2.00% | G= 2.50% | G= 3.00% | G= 3.50% | G= 4.00% |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | SPEED |UNITS=  FT/  SEC  | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | V/VREF|UNITS=    NONE    | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |  FREQ |UNITS=      HZ    |  14.8160 |  15.0405 |  15.2301 |  15.4194 |  15.5945 |  15.7567 |  15.9190 |  16.0684 |  16.2090 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYN P |UNITS=SLUG/FT/S**2| 7.769+01 | 8.032+01 | 8.250+01 | 8.467+01 | 8.665+01 | 8.848+01 | 9.031+01 | 9.198+01 | 9.354+01 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |DENSITY|UNITS=SLUG/FT**3  | 1.450-04 | 1.499-04 | 1.540-04 | 1.580-04 | 1.617-04 | 1.652-04 | 1.686-04 | 1.717-04 | 1.746-04 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYNAMIC PRESSURE AT G=0.0, W =     14.8160 HZ, V =  1.0350E+03 :                                                            |
+ | COMPUTED =  7.7715E+01, INTERPOLATED =  7.7692E+01, ERROR =  3.0715E-02%. CORRESPONDING EIGENVECTOR OF    5 MODES =         |
+ |  1.000E+00  0.000E+00,  -9.303E-02  2.289E-02,   1.838E-02 -6.583E-06,   5.829E-04  1.561E-03,   1.945E-03 -4.083E-04,      |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER MODE TRACKING: 100% = PRIMARY MODE. 0% = NO CONTRIBUTION TO FLUTTER MODE.                                           |
+ | MODE(   1) = 100.0000%,  MODE(   2) =  30.5055%,  MODE(   3) =   1.7897%,  MODE(   4) =   0.0491%,  MODE(   5) =   0.1022%, |
+ -------------------------------------------------------------------------------------------------------------------------------
+
+
+
+          * * * *  F R E Q U E N C Y   V E R S U S     DYNAMIC PRESSURE       F O R   T H E   F I R S T    5   M O D E S * * * *
+      HZ          
+  200.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        E                             E     E     E  E  E            E     E     E  E  E  E  E     E     E     E     E           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+  100.0 +                                                                                                                        
+        |                                                                                                                        
+        D                             D     D     D  D  D            D     D     D  D  D  D  D     D     D     D     D           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        C                             C     C     C  C  C            C     C     C  C  C  C  C     C     C     C     C           
+        |                                                                                                                        
+        B                                                                                                                        
+        |                             B     B     B  B  B            B     B     B  B  B  B  B     B     B     B     B           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                            A     A     A  A  A  A  A     A     A     A     A           
+        A                             A     A     A  A  A                                                                        
+        |                                                                                                                        
+    0.0 +-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                         DYNAMIC PRESSURE     ( X 1.061E+02 )  ( UNITS=SLUG/FT/S**2)
+
+
+
+            * * * *  D A M P I N G   V E R S U S     DYNAMIC PRESSURE       F O R   T H E   F I R S T    5   M O D E S * * * *
+
+    0.1 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                            A           
+        |                                                                                                                        
+        |                                                                                                      A                 
+        |                                                                                                A                       
+        |                                                                                          A                             
+    0.0 E-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
+        |                             E     E     E  E  E            E                 A  A  A                                   
+        |                             D     D     D  C  C                  E     E  E  E  E  E     E     E     E                 
+        |                                   A     A  D  D            D     C     C  C                                E           
+        |                                                                  D     D  D  C  C  C     C     C                       
+        |                                                                              D  D  D     D           C     C           
+        |                                                                                                D     D     D           
+        |                             B                                                                                          
+        |                                                                                                                        
+        |                                   B                                                                                    
+   -0.1 +                                         B                                                                              
+        |                                            B                                                                           
+        |                                               B                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                            B                                                           
+        |                                                                                                                        
+        |                                                                  B                                                     
+        |                                                                                                                        
+        |                                                                        B                                               
+   -0.2 +                                                                           B                                            
+        |                                                                              B                                         
+        |                                                                                 B                                      
+        |                                                                                    B                                   
+        |                                                                                                                        
+        |                                                                                          B                             
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                B                       
+   -0.3 +                                                                                                                        
+        |                                                                                                                        
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                         DYNAMIC PRESSURE     ( X 1.061E+02 )  ( UNITS=SLUG/FT/S**2)
+
+
+
+
+
+                              E N D   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N
+
+
+
+
+
+                                             ****************************************
+                                             *                                      *
+                                             *       SUBCASE       =        5       *
+                                             *       DISCIPLINE    = FLUTTER        *
+                                             *       BULK ENTRY ID =        5       *
+                                             *                                      *
+                                             ****************************************
+
+
+
+   S U M M A R Y   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N   O F   F L U T T E R   C A R D   I D  =       5
+
+         TITLE   = AGARD445.6 WEAKENED WING FLUTTER ANALYSIS USING ZTAW METHOD             
+         SUBTITLE= UNSTEADY CP CORRECTION USING UNSTEADY DOWNWASH METHOD                   
+         LABEL   = ONLY CORRECTS UNSTEADY CP OF 2ND FEM MODE AT MACH 0.95                  
+
+
+
+                    S U M M A R Y   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+             ***  THERE IS NO DIVERGENCE DYNAMIC PRESSURE BELOW THE HIGHEST INPUT DYNAMIC PRESSURE:  0.9641E+02 (SLUG/FT/S**2)  ***
+
+                        E N D   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+
+
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.5000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.6000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.7000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.7500E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.8000E-04 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1000E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1100E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1200E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1250E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1300E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1350E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1400E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1500E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1600E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1700E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1035.0000 DENSITY=  0.1800E-03 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.5000E+00 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ NON-MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXMACH ID=       5 WITH NKSTEP=   25
+ MACH =  0.9500, REFERENCE LENGTH (L) = 1.8300E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+      AT   16 VELOCITIES:
+  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03
+  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03  1.0350E+03
+  AND AT   16 DENSITIES:
+  5.0000E-05  6.0000E-05  7.0000E-05  7.5000E-05  8.0000E-05  1.0000E-04  1.1000E-04  1.2000E-04  1.2500E-04  1.3000E-04
+  1.3500E-04  1.4000E-04  1.5000E-04  1.6000E-04  1.7000E-04  1.8000E-04
+
+ LENGTH UNIT IS CONVERTED FROM   IN     OF THE FEM MODEL TO   FT     OF THE FLUTTER ANALYSIS
+
+ MASS   UNIT IS CONVERTED FROM   LBF/   OF THE FEM MODEL TO   SLUG   OF THE FLUTTER ANALYSIS
+
+
+ THE FOLLOWING V-G-F TABLE LISTS    5 NUMBER OF STRUCTURAL MODES (  1 -  5 ) AND    0 NUMBER OF AERODYNAMIC LAG ROOTS (  0 -  0 )
+
+
+                                               SUMMARY     MODES  1 -  4
+
+   UNITS    UNITS    UNITS          MODE NO.  1              MODE NO.  2              MODE NO.  3              MODE NO.  4
+    NONE   SLUG/   SLUG/        STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE
+           FT**3   FT/S**2    MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00% 
+   V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00 0.000+00    0.0000   9.566 INFINT    0.0000  38.165 INFINT    0.0000  48.348 INFINT    0.0000  91.545 INFINT
+ 1035.000 5.000-05 2.678+01   -0.0235  11.071 0.0615   -0.0790  36.200 0.2010   -0.0122  49.013 0.2722   -0.0159  91.458 0.5080
+ 1035.000 6.000-05 3.213+01   -0.0257  11.418 0.0634   -0.0974  35.791 0.1988   -0.0146  49.132 0.2729   -0.0190  91.442 0.5079
+ 1035.000 7.000-05 3.749+01   -0.0269  11.783 0.0654   -0.1169  35.374 0.1964   -0.0170  49.249 0.2735   -0.0222  91.426 0.5078
+ 1035.000 7.500-05 4.017+01   -0.0269  11.973 0.0665   -0.1271  35.162 0.1953   -0.0182  49.306 0.2738   -0.0237  91.419 0.5078
+ 1035.000 8.000-05 4.284+01   -0.0266  12.167 0.0675   -0.1377  34.947 0.1941   -0.0193  49.362 0.2741   -0.0253  91.411 0.5077
+ 1035.000 1.000-04 5.356+01   -0.0211  13.001 0.0722   -0.1841  34.058 0.1891   -0.0239  49.580 0.2754   -0.0316  91.381 0.5076
+ 1035.000 1.100-04 5.891+01   -0.0151  13.453 0.0747   -0.2103  33.593 0.1866   -0.0261  49.686 0.2759   -0.0347  91.367 0.5075
+ 1035.000 1.200-04 6.427+01   -0.0065  13.930 0.0773   -0.2389  33.112 0.1839   -0.0283  49.790 0.2765   -0.0378  91.353 0.5074
+ 1035.000 1.250-04 6.695+01   -0.0011  14.178 0.0787   -0.2544  32.866 0.1825   -0.0294  49.841 0.2768   -0.0394  91.346 0.5074
+ 1035.000 1.300-04 6.962+01    0.0053  14.432 0.0801   -0.2706  32.616 0.1811   -0.0305  49.891 0.2771   -0.0409  91.339 0.5073
+ 1035.000 1.350-04 7.230+01    0.0128  14.692 0.0816   -0.2878  32.362 0.1797   -0.0316  49.942 0.2774   -0.0425  91.332 0.5073
+ 1035.000 1.400-04 7.498+01    0.0214  14.958 0.0830   -0.3060  32.106 0.1783   -0.0327  49.991 0.2776   -0.0440  91.325 0.5072
+ 1035.000 1.500-04 8.034+01    0.0423  15.503 0.0861   -0.3459  31.585 0.1754   -0.0348  50.090 0.2782   -0.0472  91.312 0.5072
+ 1035.000 1.600-04 8.569+01    0.0683  16.061 0.0892   -0.3910  31.057 0.1725   -0.0368  50.187 0.2787   -0.0503  91.298 0.5071
+ 1035.000 1.700-04 9.105+01    0.1001  16.617 0.0923   -0.4419  30.533 0.1696   -0.0389  50.282 0.2793   -0.0534  91.285 0.5070
+ 1035.000 1.800-04 9.641+01    0.1373  17.155 0.0952   -0.4989  30.027 0.1667   -0.0409  50.377 0.2798   -0.0564  91.272 0.5069
+
+
+                                               SUMMARY     MODES  5 -  5
+
+   UNITS    UNITS    UNITS          MODE NO.  5              MODE NO.
+    NONE   SLUG/   SLUG/        STRUCTURAL MODE                                                                           
+           FT**3   FT/S**2    MODAL DAMPING= 0.00%                                                                            
+   V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00 0.000+00    0.0000 118.113 INFINT
+ 1035.000 5.000-05 2.678+01   -0.0073 119.002 0.6610
+ 1035.000 6.000-05 3.213+01   -0.0087 119.175 0.6619
+ 1035.000 7.000-05 3.749+01   -0.0102 119.347 0.6629
+ 1035.000 7.500-05 4.017+01   -0.0109 119.432 0.6634
+ 1035.000 8.000-05 4.284+01   -0.0116 119.517 0.6638
+ 1035.000 1.000-04 5.356+01   -0.0145 119.854 0.6657
+ 1035.000 1.100-04 5.891+01   -0.0160 120.020 0.6666
+ 1035.000 1.200-04 6.427+01   -0.0174 120.185 0.6675
+ 1035.000 1.250-04 6.695+01   -0.0181 120.267 0.6680
+ 1035.000 1.300-04 6.962+01   -0.0188 120.348 0.6685
+ 1035.000 1.350-04 7.230+01   -0.0195 120.430 0.6689
+ 1035.000 1.400-04 7.498+01   -0.0203 120.511 0.6694
+ 1035.000 1.500-04 8.034+01   -0.0217 120.672 0.6703
+ 1035.000 1.600-04 8.569+01   -0.0231 120.832 0.6711
+ 1035.000 1.700-04 9.105+01   -0.0245 120.991 0.6720
+ 1035.000 1.800-04 9.641+01   -0.0259 121.148 0.6729
+
+ NON-MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXMACH ID=       5 WITH NKSTEP=   25
+ MACH =  0.9500, REFERENCE LENGTH (L) = 1.8300E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+
+
+    1 NUMBER OF FLUTTER MODES ARE FOUND.
+ FLUTTER SPEED, FREQUENCY, AND DYNAMIC PRESSURE AS A FUNCTION OF ASSUMED STRUCTURAL DAMPING
+
+
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER AT MODE NO.:   1 | G= 0.00% | G= 0.50% | G= 1.00% | G= 1.50% | G= 2.00% | G= 2.50% | G= 3.00% | G= 3.50% | G= 4.00% |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | SPEED |UNITS=  FT/  SEC  | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | V/VREF|UNITS=    NONE    | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 | 1035.000 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |  FREQ |UNITS=      HZ    |  14.2207 |  14.4207 |  14.5947 |  14.7591 |  14.9133 |  15.0511 |  15.1822 |  15.3133 |  15.4444 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYN P |UNITS=SLUG/FT/S**2| 6.740+01 | 6.951+01 | 7.130+01 | 7.298+01 | 7.453+01 | 7.590+01 | 7.718+01 | 7.847+01 | 7.976+01 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |DENSITY|UNITS=SLUG/FT**3  | 1.258-04 | 1.297-04 | 1.331-04 | 1.362-04 | 1.391-04 | 1.417-04 | 1.441-04 | 1.465-04 | 1.489-04 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYNAMIC PRESSURE AT G=0.0, W =     14.2208 HZ, V =  1.0350E+03 :                                                            |
+ | COMPUTED =  6.7412E+01, INTERPOLATED =  6.7403E+01, ERROR =  1.3839E-02%. CORRESPONDING EIGENVECTOR OF    5 MODES =         |
+ |  1.000E+00  0.000E+00,  -9.456E-02  2.087E-02,   1.069E-02  8.511E-04,  -7.780E-04  1.663E-03,   1.077E-03 -2.336E-04,      |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER MODE TRACKING: 100% = PRIMARY MODE. 0% = NO CONTRIBUTION TO FLUTTER MODE.                                           |
+ | MODE(   1) = 100.0000%,  MODE(   2) =  44.7610%,  MODE(   3) =   1.4476%,  MODE(   4) =   0.0707%,  MODE(   5) =   0.0763%, |
+ -------------------------------------------------------------------------------------------------------------------------------
+
+
+
+          * * * *  F R E Q U E N C Y   V E R S U S     DYNAMIC PRESSURE       F O R   T H E   F I R S T    5   M O D E S * * * *
+      HZ          
+  200.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        E                             E     E     E  E  E            E     E     E  E  E  E  E     E     E     E     E           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+  100.0 +                                                                                                                        
+        |                                                                                                                        
+        D                             D     D     D  D  D            D     D     D  D  D  D  D     D     D     D     D           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        C                             C     C     C  C  C            C     C     C  C  C  C  C     C     C     C     C           
+        |                                                                                                                        
+        B                                                                                                                        
+        |                             B     B     B  B  B            B     B     B  B  B                                         
+        |                                                                                 B  B     B     B     B     B           
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                            A     A     A  A  A  A  A     A     A     A     A           
+        A                             A     A     A  A  A                                                                        
+        |                                                                                                                        
+    0.0 +-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                         DYNAMIC PRESSURE     ( X 1.061E+02 )  ( UNITS=SLUG/FT/S**2)
+
+
+
+            * * * *  D A M P I N G   V E R S U S     DYNAMIC PRESSURE       F O R   T H E   F I R S T    5   M O D E S * * * *
+
+    0.2 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                            A           
+        |                                                                                                                        
+    0.1 +                                                                                                                        
+        |                                                                                                      A                 
+        |                                                                                                                        
+        |                                                                                                A                       
+        |                                                                                                                        
+        |                                                                                          A                             
+        |                                                                                 A  A                                   
+    0.0 E-----------+-----------+-----------+-----------+-----------+-----------+---A--A----+-----------+-----------+-----------+
+        |                             E     E     E  E  E            E     E     E                                               
+        |                             A     D     D  D  D            D     C     C  E  E  E  E     E     E     E     E           
+        |                                                                  D     D  D  D  D  D     D     C     C     C           
+        |                                                                                                D     D     D           
+        |                                                                                                                        
+   -0.1 +                             B                                                                                          
+        |                                   B                                                                                    
+        |                                         B                                                                              
+        |                                            B                                                                           
+        |                                               B                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+   -0.2 +                                                            B                                                           
+        |                                                                  B                                                     
+        |                                                                                                                        
+        |                                                                        B                                               
+        |                                                                           B                                            
+        |                                                                              B                                         
+        |                                                                                                                        
+   -0.3 +                                                                                 B                                      
+        |                                                                                    B                                   
+        |                                                                                                                        
+        |                                                                                          B                             
+        |                                                                                                                        
+        |                                                                                                                        
+   -0.4 +                                                                                                B                       
+        |                                                                                                                        
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                         DYNAMIC PRESSURE     ( X 1.061E+02 )  ( UNITS=SLUG/FT/S**2)
+
+
+
+
+
+                              E N D   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N
+
+
+
+                                             ****************************************
+                                             ***                                  ***
+                                             ***  Z A E R O   T E R M I N A T E D ***
+                                             ***                                  ***
+                                             ***          N O R M A L L Y         ***
+                                             ***                                  ***
+                                             ***      16:48:49    01/31/2025      ***
+                                             ***                                  ***
+                                             ****************************************

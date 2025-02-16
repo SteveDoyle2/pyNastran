@@ -1,16 +1,31 @@
 import os
+from typing import Optional
 import numpy as np
 from cpylog import SimpleLogger
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.f06.flutter_response import FlutterResponse
 
+def debug_to_level(debug: Optional[str | bool]) -> str:
+    if debug is None:
+        return 'warning'
+    if isinstance(debug, str):
+        return debug
+    return 'debug' if debug else 'info'
 
-def read_zona_out(zona_out_filename: PathLike) -> tuple[dict, dict]:
+def debug_to_log(debug: Optional[str|bool],
+                 log: Optional[SimpleLogger]) -> SimpleLogger:
+    level = debug_to_level(debug)
+    log = SimpleLogger(level=level) if log is None else log
+    return log
+
+def read_zona_out(zona_out_filename: PathLike,
+                  log: Optional[SimpleLogger]=None,
+                  debug: Optional[str|bool]=True) -> tuple[dict, dict]:
+    log = debug_to_log(debug, log)
     assert os.path.exists(zona_out_filename), print_bad_path(zona_out_filename)
     with open(zona_out_filename, 'r') as zona_out_file:
         lines = zona_out_file.readlines()
 
-    log = SimpleLogger(level='debug')
     case_dict, ref_dict = zona_lines_to_out(log, lines)
     for key, data in case_dict.items():
         log.debug(f'{key}:\n{str(data)}')
@@ -45,12 +60,14 @@ def out_dict_to_results(out_dict: dict,
         velocity = header_data[:, 0] * vref
         density = header_data[:, 1]
         mach = header_data[:, 2]
+        density_units = out_dict['density_units']
     elif header_name == 'v/vref,density,q':
         vref, velocity_units = ref_dict['VREF']
         velocity = header_data[:, 0] * vref
         density = header_data[:, 1]
         q = header_data[:, 2]
         mach = q
+        density_units = out_dict['density_units']
     elif header_name == 'v/vref,density,alt':
         # ref_dict = {'MACH': (0.8, ''), 'ATMOS TABLE': ('STANDARD', ''),
         #             'REFERENCE LENGTH (L)': (1.0, 'in'),
@@ -65,6 +82,26 @@ def out_dict_to_results(out_dict: dict,
         velocity = header_data[:, 0] * vref
         density = header_data[:, 1]
         q = 0.5 * density * velocity ** 2
+        density_units = out_dict['density_units']
+    elif header_name == 'v/vref,v,q':
+        #print('ref_dict = ', ref_dict)
+        #velocity0, velocity_units = ref_dict['VELOCITY']
+        #atmos_table = ref_dict['ATMOS TABLE'][0]
+        #assert atmos_table == 'STANDARD', atmos_table
+        #mach = ref_dict['MACH'][0]
+        # alt, altitude_units = ref_dict['ALT']
+        #print(f'vref={vref}; velocity_units={velocity_units}')
+        v_vref = header_data[:, 0]
+        #print((velocity - velocity0).max())
+        q = header_data[:, 1]
+        if 'DENSITY' in ref_dict and 'VREF' in ref_dict and 'MACH' in ref_dict:
+            vref, velocity_units = ref_dict['VREF']
+            velocity = v_vref * vref
+            density, density_units = ref_dict['DENSITY']
+            mach = ref_dict['MACH'][0]
+        else:
+            raise RuntimeError(f'V,q; {ref_dict}')
+        print(f'density = {density}')
     else:  # pragma: no cover
         raise NotImplementedError(header_name)
 
@@ -79,7 +116,8 @@ def out_dict_to_results(out_dict: dict,
         altitude_units = 'm'
         dynamic_pressure_units = 'Pa'
 
-    density_units = out_dict['density_units']
+    print(f'out_dict = {list(out_dict.keys())}')
+    print(f'out_dict[header] = {out_dict['header']}')
     in_units = {
         'velocity': velocity_units,
         'density': density_units,
@@ -197,7 +235,7 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
             if '***  Z A E R O   T E R M I N A T E D ***' in lines[iline]:
                 log.info('***zero terminated***')
                 return out, ref_dict
-            log.debug(f'Units {iline}: {lines[iline].rstrip()}')
+            #log.debug(f'Units {iline}: {lines[iline].rstrip()}')
             iline += 1
 
         modes = get_mode_sline(lines[iline])
@@ -212,8 +250,17 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
             lines[iline+2], apply_float=False)  #.strip('\n').split()
         log.debug(f'names_sline = {names_sline}')
         assert names_sline[0] == 'V/VREF', names_sline
+
+        density_units = ''
         header = 'v/vref'
-        if names_sline[1] == 'DENSITY':
+        if names_sline[1] == 'V':
+            assert units_sline2[0] == 'SEC', units_sline2
+            header += ',v'
+            if units_sline1[1] == 'IN/':
+                velocity_units = 'in/s'
+            else:  # pragma: no cover
+                raise RuntimeError((units_sline1[1], units_sline2[0]))
+        elif names_sline[1] == 'DENSITY':
             header += ',density'
             if units_sline1[1] == 'SLIN/':
                 assert units_sline2[0] == 'IN**3', units_sline2
@@ -224,7 +271,7 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
             else:  # pragma: no cover
                 raise RuntimeError((units_sline1[1], units_sline2[0]))
         else:  # pragma: no cover
-            raise NotImplementedError(names_sline)
+            raise NotImplementedError(f'names_sline[1]={names_sline[1]!r}; names_sline={names_sline}')
 
         if names_sline[2] == 'MACH':
             header += ',mach'
@@ -241,7 +288,8 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
         assert 'V/VREF' in names_sline, names_sline
         iline += 3
         if header not in out:
-            out['density_units'] = density_units
+            if density_units:
+                out['density_units'] = density_units
             out['header'] = header
             out[header] = []
 
@@ -310,6 +358,29 @@ def get_mode_sline(line: str) -> list[int]:
     #log.debug(f'mode_sline = {mode_sline!r}')
     return modes
 
+
+def _split_num_unit(value_str: str) -> tuple[float, str]:
+    """
+    Parameters
+    ----------
+    value_str
+
+    Returns
+    -------
+
+    '1.0726E-07 (SLIN/IN**3  )'
+    -> (1.0726E-07, 'SLIN/IN**3')
+
+    """
+    print(value_str)
+    assert '(' in value_str, value_str
+
+    value_str2, unit = value_str.split(' ', 1)
+    value_str2 = value_str2.strip()
+    value = float(value_str2)
+    unit = unit.strip(' ()').lower()
+    return value, unit
+
 def split_ref_line(line: str) -> dict[str, tuple[float, str]]:
     sline = line.strip().split(',')
     out = {}
@@ -321,15 +392,24 @@ def split_ref_line(line: str) -> dict[str, tuple[float, str]]:
             value = float(value_str)
             unit = ''
         elif name == 'VREF':
-            value_str2, unit = value_str.split(' ')
-            value_str2 = value_str2.strip()
-            value = float(value_str2)
-            unit = unit.strip(' ()').lower()
+            value, unit = _split_num_unit(value_str)
             if unit == 'in/sec':
                 unit = 'in/s'
             elif unit == 'ft/sec':
                 unit = 'ft/s'
             assert unit in {'in/s', 'ft/s', 'm/s'}, unit
+        elif name == 'DENSITY':
+            value, unit = _split_num_unit(value_str)
+
+            if unit == 'slin/in**3':
+                unit = 'slinch/in^3'
+            # elif unit == 'ft/sec':
+            #     unit = 'ft/s'
+            assert unit in {'slinch/in^3'}, f'unit={unit!r}'
+        elif name == 'ALTITUDE':
+            value, unit = _split_num_unit(value_str)
+            assert unit in {'ft'}, f'unit={unit!r}'
+
         elif name == 'REFERENCE LENGTH (L)':
             value_str2, unit = value_str.split(' ')
             value_str2 = value_str2.strip()
@@ -420,7 +500,3 @@ def cast_float(value_str: str):
             raise RuntimeError(value_str)
         value = float(value_str2)
     return value
-
-if __name__ == '__main__':
-    #read_zona_out(r'C:\work\code_sandbox\zona.out')
-    read_zona_out(r'C:\work\code_sandbox\gafa.out')

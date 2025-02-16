@@ -1453,14 +1453,25 @@ class FlutterResponse:
         omega2 = self.results[imode2, :, iimag]
 
         #beta_1p2 = (beta2 + beta1)
+        # a = (beta2 - beta1) / (beta2 + beta1)
+        # b = (omega2**2 - omega1**2) / 2
+        # c = (beta1 + beta2)**2
+        # d = omega2**2 + omega1**2
+        # e = (beta1 + beta2) / 2
+        # Fs = b ** 2
+        # Fs0 = Fs[0]
+        # F = 1 / Fs0 * (1 - a**2) * (b**2 + c * (d/2 + e**2))
+
+        #-------------------------------------------------
         a = (beta2 - beta1) / (beta2 + beta1)
         b = (omega2**2 - omega1**2) / 2
         c = (beta1 + beta2)**2
-        d = omega2**2 + omega1**2
+        d = (omega2**2 + omega1**2) / 2
         e = (beta1 + beta2) / 2
         Fs = b ** 2
         Fs0 = Fs[0]
-        F = 1 / Fs0 * (1 - a**2) * (b**2 + c * (d/2 + e**2))
+
+        F = 1/Fs0 * (1 - a**2) * (b**2 + c * (d + e**2))
         return F, Fs
 
     def plot_zimmerman(self, modes=None,
@@ -1486,12 +1497,14 @@ class FlutterResponse:
             print(f'less than 2 modes specified; modes={modes}')
             return
 
-        if fig is None:
+        if fig is None or 1:
             fig = plt.figure()  # figsize=(12,9), self.subcase
             if nmodes == 2:
+                print('nmodesA')
                 ax = fig.gca()
                 axes = np.array([[fig.gca()]])
             else:
+                print('nmodesB')
                 print(nmodes, '*******')
                 fig, axes = plt.subplots(ncols=nmodes-1, nrows=nmodes-1)
                 # print(axes[0])
@@ -1503,26 +1516,33 @@ class FlutterResponse:
         ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
         ix = self.ieas
         xvalues = self.results[0, :, ix]
-        #print(f'imodes = {imodes}')
-        for i, imode in enumerate(imodes):
-            for j, jmode in enumerate(imodes[i+1:]):
-                if imode == jmode:
-                    #print('SKIP', (i, j), (int(imode), int(jmode)), 'shape=', axes.shape)
+        print(f'imodes = {imodes}')
+        for i, imodei, modei in zip(count(), imodes, modes):
+            for j, jmodei, modej in enumerate(count(), imodes[i+1:], modes):
+                if modei == modej:
                     continue
-                Fi, Fsi = self.calculate_zimmerman(imode, jmode)
-                print((i, j), (int(imode), int(jmode)), f'shape={axes.shape}')
+                Fi, Fsi = self.calculate_zimmerman(imodei, jmodei)
+                print(axes)
+                print((i, j), (int(jmodei), int(jmodei)), f'shape={axes.shape}')
                 ax = axes[i, j]
-                ax.plot(xvalues, Fi, label=f'F({imode+1}, {jmode+1}')
-                ax.plot(xvalues, Fsi, label=f'Fs({imode+1}, {jmode+1}')
+                ax.plot(xvalues, Fi, label=f'F({modei}, {modej})')
+                ax.plot(xvalues, Fsi, label=f'Fs({modei}, {modej})')
 
         for ax in axes.ravel():
             ax.grid(True)
+            ax.set_ylim([-0.2, None])
+            ax.legend()
 
         if len(modes) == 2:
             #ax = axes[0, 0]
             #axes.plot(xvalues, Fi, label='F')
             ax.set_ylabel(f'Zimmerman Flutter Margin Criterion')
             ax.set_xlabel(xlabel)
+
+            title = self._get_title(nlines=1)
+            title += f'\nModes: {modes[0]}, {modes[1]}'
+            plt.suptitle(title)
+
         else:
             fig.suptitle(f'Zimmerman Flutter Margin Criterion')
             # fig = plt.figure()
@@ -1533,8 +1553,8 @@ class FlutterResponse:
             # ax2.plot(x, y ** 2, 'tab:orange')
             # ax3.plot(x + 1, -y, 'tab:green')
             # ax4.plot(x + 2, -y ** 2, 'tab:red')
-            for ax in axes:
-                ax.label_outer()
+            # for ax in axes.ravel():
+            #     ax.label_outer()
         if show:
             plt.show()
         return fig

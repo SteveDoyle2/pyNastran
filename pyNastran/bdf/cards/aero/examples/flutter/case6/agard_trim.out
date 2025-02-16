@@ -1,0 +1,455 @@
+
+                                                                   **                 
+                                                       ***        **                  
+                                                      ***        **             ***   
+                                                      **        **            ******  
+                                           ****       **       **          ******     
+                                           ****      **       **         *****        
+                                            ***      **      **        *****                *
+                                            ***      **     **       ****            *********
+                                    *       ***      *     **     ****          ****************
+                                   ***       ***     *    **    ****       **************
+                                  *****      ***     *   **   ***   *********** 
+                                  ******      **    *   **  **      ******** 
+                                   ******     **    *  **                 ********************
+                                     *****     **   ***        ZONA          ***  *******************
+                               *      *****    **   *       AEROELASTIC        **        ************
+                               **       ****    *  *      SOFTWARE SYSTEM       *****            ****
+                               ****      ****   ***                              *******
+                              *******     ****   *                                *********
+                              *********     ***  *          -  ZAERO  -           ***  *******
+                                 *********   *****          VERSION 9.3           ***    *********
+                                    ********   ***       Z93-64-062124-iz1t       *****    **********
+                              *         ******  **                                ******     *********
+                               ****        ********   RELEASE DATE: JUN-2024     *********     *******
+                               *********       *****                            ***********      ****
+                               ***************   ****   LICENSE NO.            *****  ******       *
+                                **********************                        ******   ****** 
+                                            ************                    ********   ********
+                                                    *******             *************   *********
+                                  ********************************************* ******  **********
+                                   ********************    *******************  ******   ********
+                                    *************        ***************  ****  *******   *****
+                                     *******         *********** ******  *****  *******   ****
+                                      *          ************  *******  ******  ********   *
+                                             **************  ********  *******  ********
+                                           **************   ********   ******   ********
+                                              ********    *********   *******   *****
+                                                ****    **********   ********   ***
+                                                  *   ***********   *********
+                                                          ******    *******
+
+
+
+
+                    THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET OF ZONA TECHNOLOGY, INC.  THE RECEIPT OR
+                POSSESSION OF THIS PROGRAM DOES NOT CONVEY ANY RIGHTS TO REPRODUCE OR DISCLOSE ITS CONTENTS, OR TO
+               MANUFACTURE, USE, OR SELL ANYTHING HEREIN, IN WHOLE OR IN PART, WITHOUT THE SPECIFIC WRITTEN CONSENT
+                                                       OF ZONA TECHNOLOGY, INC.
+
+
+
+
+                                              * * * PROGRAM STARTED ON 01/31/2025 AT 12:40:10 * * *
+
+
+
+                                                  E X E C U T I V E  C O N T R O L  S U M M A R Y
+
+                                  |...1...|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|..10...|
+
+
+                                  ASSIGN FEM=agardwek.mod,BOUNDARY=SYM,FORM=FREE                                  
+                                  CEND                                                                            
+
+
+                                                       C A S E  C O N T R O L  S U M M A R Y 
+
+                                                D O U B L E  P R E C I S I O N  C O M P U T A T I O N 
+
+                                        M A X I M U M  A L L O C A B L E  M E M O R Y  =1600  M E G A B Y T E S
+
+                                  |...1...|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|..10...|
+
+
+                                  TITLE = AGARD445.6 WEAKENED WING TRIM ANALYSIS FOR ZTAW METHOD                  
+                                  ECHO = SORT                                                                     
+                                  SUBCASE = 1                                                                     
+                                  SUBTITLE = STEADY DOWNWASH WEIGHTING MATRIX METHOD                              
+                                  LABEL =  MACH 0.954                                                             
+                                  TRIM =  100                                                                     
+                                  BEGIN BULK                                                                      
+
+
+                                                       S O R T E D   B U L K   D A T A   E C H O
+                    CARD
+                    COUNT         |...1...|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|..10...|
+
+
+                        1 -       AEFACT  10      0.0     16.45   27.25   37.75   47.75   57.15   65.75   +AE1    
+                        2 -       +AE1    73.5    80.     85.     90.     100.                                    
+                        3 -       AEFACT  1001    0.      0.5     .75     1.25    2.5     5.      7.5     +A1     
+                        4 -       +A1     10.     15.     20.     25.     30.     35.     40.     45.     +A2     
+                        5 -       +A2     50.     55.     60.     65.     70.     75.     80.     85.     +A3     
+                        6 -       +A3     90.     95.     100.                                                    
+                        7 -       AEFACT  1002    0.      .304    .368    .469    .647    .875    1.059   +B1     
+                        8 -       +B1     1.213   1.459   1.645   1.789   1.892   1.962   1.997   1.996   +B2     
+                        9 -       +B2     1.954   1.868   1.743   1.586   1.402   1.195   .967    .729    +B3     
+                       10 -       +B3     .49     .25     0.                                                      
+                       11 -       AEFACT  1003    0.      0.      0.      0.      0.      0.      0.      +C1     
+                       12 -       +C1     0.      0.      0.      0.      0.      0.      0.      0.      +C2     
+                       13 -       +C2     0.      0.      0.      0.      0.      0.      0.      0.      +C3     
+                       14 -       +C3     0.      0.      0.                                                      
+                       15 -       AEROZ           YES     NO      SLIN    IN      21.996  1.0     1.0             
+                       16 -       CAERO7  1001    WING            12      21      10              1001    +CA1    
+                       17 -       +CA1    0.0     0.0     0.0     21.996  0       0                       +CA2    
+                       18 -       +CA2    31.866  30.0    0.0     14.496  0       0                               
+                       19 -       CELLBOX 60001           25      4       50001                                   
+                       20 -               27.866  30.0    22.496          33.866  36.     22.496                  
+                       21 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       22 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       23 -       CELLWNG 10001   1001    1       3               20001                           
+                       24 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       25 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       26 -               2       4.      4.              2       4.      4.                      
+                       27 -       CELLWNG 20001   1001    3       5       10001   30001                           
+                       28 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       29 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       30 -               2       4.      4.              2       4.      4.                      
+                       31 -       CELLWNG 30001   1001    5       7       20001   40001                           
+                       32 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       33 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       34 -               2       4.      4.              2       4.      4.                      
+                       35 -       CELLWNG 40001   1001    7       9       30001   50001                           
+                       36 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       37 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       38 -               2       4.      4.              2       4.      4.                      
+                       39 -       CELLWNG 50001   1001    9       12      40001   60001                           
+                       40 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       41 -               7       20.0    20.0    0.      0.      COS     4       6               
+                       42 -               2       4.      4.              2       4.      4.                      
+                       43 -       CORD2R  1               0.0     0.0     0.0     0.0     1.0     0.0             
+                       44 -               1.0     1.0     0.0                                                     
+                       45 -       CORD2R  10              5.49    0.0     0.0     5.49    0.0     1.              
+                       46 -               6.49    -1.0    0.0                                                     
+                       47 -       DMI     SMHH    0       2       1               DMIS    5       5               
+                       48 -       DMIS    SMHH    1       1       0.0                                             
+                       49 -       INPCFD  5       -1      15      IUDP3D  AGARD445.GRID   AGARDM0954A5.SOL        
+                       50 -       LOADMOD 11      ZSHEAR  10      1       10                                      
+                       51 -       LOADMOD 12      ZSHEAR  10      2       10                                      
+                       52 -       LOADMOD 13      ZSHEAR  10      3       10                                      
+                       53 -       LOADMOD 14      ZSHEAR  10      4       10                                      
+                       54 -       LOADMOD 15      ZSHEAR  10      5       10                                      
+                       55 -       LOADMOD 16      ZSHEAR  10      6       10                                      
+                       56 -       LOADMOD 17      ZSHEAR  10      7       10                                      
+                       57 -       LOADMOD 18      ZSHEAR  10      8       10                                      
+                       58 -       LOADMOD 19      ZSHEAR  10      9       10                                      
+                       59 -       LOADMOD 20      ZSHEAR  10      10      10                                      
+                       60 -       LOADMOD 21      ZSHEAR  10      11      10                                      
+                       61 -       LOADMOD 41      YMOMENT 10      1       10                                      
+                       62 -       LOADMOD 42      YMOMENT 10      2       10                                      
+                       63 -       LOADMOD 43      YMOMENT 10      3       10                                      
+                       64 -       LOADMOD 44      YMOMENT 10      4       10                                      
+                       65 -       LOADMOD 45      YMOMENT 10      5       10                                      
+                       66 -       LOADMOD 46      YMOMENT 10      6       10                                      
+                       67 -       LOADMOD 47      YMOMENT 10      7       10                                      
+                       68 -       LOADMOD 48      YMOMENT 10      8       10                                      
+                       69 -       LOADMOD 49      YMOMENT 10      9       10                                      
+                       70 -       LOADMOD 50      YMOMENT 10      10      10                                      
+                       71 -       LOADMOD 51      YMOMENT 10      11      10                                      
+                       72 -       MKAEROZ 90      0.954   3       5       SAVE    AGARDTRIM.AIC           +MK1    
+                       73 -       +MK1    0.0     .01                                                             
+                       74 -       OMITCFD 15              TECPLOT CFD-SURFACE.PLT SOL_M954_A05.PLT                
+                       75 -               1       37      181     1       30      1       37                      
+                       76 -       PAFOIL7 1001    1001    1002    1003    0.0     1002    1003    0.0             
+                       77 -       PANLST2 1       1001    1001    THRU    1020                                    
+                       78 -       PANLST2 2       1001    1021    THRU    1040                                    
+                       79 -       PANLST2 3       1001    1041    THRU    1060                                    
+                       80 -       PANLST2 4       1001    1061    THRU    1080                                    
+                       81 -       PANLST2 5       1001    1081    THRU    1100                                    
+                       82 -       PANLST2 6       1001    1101    THRU    1120                                    
+                       83 -       PANLST2 7       1001    1121    THRU    1140                                    
+                       84 -       PANLST2 8       1001    1141    THRU    1160                                    
+                       85 -       PANLST2 9       1001    1161    THRU    1180                                    
+                       86 -       PANLST2 10      1001    1181    THRU    1200                                    
+                       87 -       PANLST2 11      1001    1201    THRU    1220                                    
+                       88 -       PANLST3 1000    WING                                                            
+                       89 -       SET1    10      1                                                               
+                       90 -       SET1    60      1       THRU    121                                             
+                       91 -       SET1    100     11      12      13      14      15      16      17              
+                       92 -               18      19      20      21      41      42      43      44              
+                       93 -               45      46      47      48      49      50      51                      
+                       94 -       SPLINE1 10      WING            1000    60                                      
+                       95 -       TRIM    100     90      1200.   0       0       2.27607 0.0     .0310559+T1     
+                       96 -       +T1     .031081 16100.  502484.40.0     1811849.-7555.340.0     2309364.+T2     
+                       97 -       +T2     G       NONE    NONE    FREE    NONE    NONE    NONE    100     +T3     
+                       98 -       +T3     100     0.5                                                             
+                       99 -       TRIMFLT 5       5       0.5                                                     
+                      100 -       TRIMFNC 11      AERO    LOADMOD RHS     11              ZSHEAR-1                
+                      101 -       TRIMFNC 12      AERO    LOADMOD RHS     12              ZSHEAR-2                
+                      102 -       TRIMFNC 13      AERO    LOADMOD RHS     13              ZSHEAR-3                
+                      103 -       TRIMFNC 14      AERO    LOADMOD RHS     14              ZSHEAR-4                
+                      104 -       TRIMFNC 15      AERO    LOADMOD RHS     15              ZSHEAR-5                
+                      105 -       TRIMFNC 16      AERO    LOADMOD RHS     16              ZSHEAR-6                
+                      106 -       TRIMFNC 17      AERO    LOADMOD RHS     17              ZSHEAR-7                
+                      107 -       TRIMFNC 18      AERO    LOADMOD RHS     18              ZSHEAR-8                
+                      108 -       TRIMFNC 19      AERO    LOADMOD RHS     19              ZSHEAR-9                
+                      109 -       TRIMFNC 20      AERO    LOADMOD RHS     20              ZSHEAR-10               
+                      110 -       TRIMFNC 21      AERO    LOADMOD RHS     21              ZSHEAR-11               
+                      111 -       TRIMFNC 41      AERO    LOADMOD RHS     41              YMOMENT-1               
+                      112 -       TRIMFNC 42      AERO    LOADMOD RHS     42              YMOMENT-2               
+                      113 -       TRIMFNC 43      AERO    LOADMOD RHS     43              YMOMENT-3               
+                      114 -       TRIMFNC 44      AERO    LOADMOD RHS     44              YMOMENT-4               
+                      115 -       TRIMFNC 45      AERO    LOADMOD RHS     45              YMOMENT-5               
+                      116 -       TRIMFNC 46      AERO    LOADMOD RHS     46              YMOMENT-6               
+                      117 -       TRIMFNC 47      AERO    LOADMOD RHS     47              YMOMENT-7               
+                      118 -       TRIMFNC 48      AERO    LOADMOD RHS     48              YMOMENT-8               
+                      119 -       TRIMFNC 49      AERO    LOADMOD RHS     49              YMOMENT-9               
+                      120 -       TRIMFNC 50      AERO    LOADMOD RHS     50              YMOMENT-10              
+                      121 -       TRIMFNC 51      AERO    LOADMOD RHS     51              YMOMENT-11              
+                      122 -       TRIMVAR 100     ALPHA   -10.    +10.                                            
+                      123 -       ENDDATA
+
+
+
+   ========================================================================================================================
+
+     SYMMETRIC (OR ASYMMETRIC) FINITE ELEMENT MODAL RESULTS ARE SUCCESSFULLY READ IN FROM FILE agardwek.mod                                                                    
+     RIGID BODY DEGREES OF FREEDOM (DEFINED IN THE FEM BASIC COORDINATE SYSTEM) =       0
+
+            MODE      EXTRACTION      EIGENVALUE              FREQUENCY                      GENERALIZED        
+                        ORDER         (RAD/S)**2         (RAD/S)            (HZ)            MASS       STIFFNESS
+               1               1     0.36127E+04     0.60106E+02     0.95662E+01     0.10000E+01     0.36127E+04
+               2               2     0.57503E+05     0.23980E+03     0.38165E+02     0.10000E+01     0.57503E+05
+               3               3     0.92283E+05     0.30378E+03     0.48348E+02     0.10000E+01     0.92283E+05
+               4               4     0.33085E+06     0.57519E+03     0.91545E+02     0.10000E+01     0.33085E+06
+               5               5     0.55075E+06     0.74213E+03     0.11811E+03     0.10000E+01     0.55075E+06
+
+      MASS UNIT AND LENGTH UNIT OF THE FEM MODEL ARE IN: LBF/  AND  IN   ,  RESPECTIVELY
+
+   ========================================================================================================================
+
+
+ **** CFD MESH ON FILE: AGARD445.GRID    FROM BULK DATA CARD INPCFD   WITH ID=       5 HAS BEEN SUCCESSFULLY IMPORTED ****
+
+ TOTAL CFD BLOCKS=       1 NUMBER OF GRID POINTS=         1007097 IMAX,JMAX,KMAX OF EACH BLOCK ARE:
+ BLOCK:   1, IMAX=    217, JMAX=     91, KMAX=     51     BLOCK:
+
+
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.00000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.01000 HAS BEEN COMPUTED AND SAVED
+
+
+
+ *** AERODYNAMIC DATA OF MKAEROZ IDMK=      90 IS SAVED ON FILE= AGARDTRIM.AIC
+
+
+
+
+
+
+
+
+                                             ****************************************
+                                             *                                      *
+                                             *       SUBCASE       =        1       *
+                                             *       DISCIPLINE    = TRIM           *
+                                             *       BULK ENTRY ID =      100       *
+                                             *                                      *
+                                             ****************************************
+
+
+
+                                   S U M M A R Y   O F   T R I M   E V A L U A T I O N
+
+         TITLE   = AGARD445.6 WEAKENED WING TRIM ANALYSIS FOR ZTAW METHOD                  
+         SUBTITLE= STEADY DOWNWASH WEIGHTING MATRIX METHOD                                 
+         LABEL   = MACH 0.954                                                              
+
+ MACH NUMBER =  0.9540. STEADY AERODYNAMICS COMPUTED BY MKAEROZ BULK DATA CARD WITH IDMK=      90 AT K=0.0
+ DYNAMIC PRESSURE= 0.12000E+04  LBF/IN**2  
+
+                                      D E T E R M I N E D   T R I M   S Y S T E M
+
+ TRIM TYPE = SYMMETRIC FLIGHT CONDITION. NUMBER OF TRIM DEGREES OF FREEDOM=  1
+ TRIM DEGREES OF FREEDOM ARE:  NZ    
+
+
+ LONGITUDINAL (OR ASYMMETRIC) AERODYNAMIC STABILITY DERIVATIVES OF BOTH SIDES OF THE AIRCRAFT AT MACH=  0.9540
+ REFC=     21.9960 REFB=      1.0000 REFS=         1.0000 MOMENT CENTER(X,Y,Z)=      0.0000      0.0000      0.0000
+
+ -------------------------------------------------------------------------------------------------------------------------------
+ | IDVAR  | LABEL  | DRAG COEFFICIENT| SIDE FORCE COEFF| LIFT COEFFICIENT|ROLL MOMENT COEFF|PITCH MOMENT COEF| YAW MOMENT COEFF|
+ |        |        |  RIGID |FLEXIBLE|  RIGID |FLEXIBLE|  RIGID |FLEXIBLE|  RIGID |FLEXIBLE|  RIGID |FLEXIBLE|  RIGID |FLEXIBLE|
+ -------------------------------------------------------------------------------------------------------------------------------
+ |     100|ALPHA   | 0.00000| 0.00000| 0.00000| 0.00000|79.16854| 6.60755| 0.00000| 0.00000|-70.0543|-2.06261| 0.00000| 0.00000|
+ |  UNITS= 1/DEG   | E/R= 0.10000E+01| E/R= 0.10000E+01| E/R= 0.83462E-01| E/R= 0.10000E+01| E/R= 0.29443E-01| E/R= 0.10000E+01|
+ -------------------------------------------------------------------------------------------------------------------------------
+
+
+                          T R I M   R E S U L T S   O F   T R I M   E X E C U T I V E   C O N T R O L  =      100
+
+    NUMBER OF TRIM DEGREES OF FREEDOM =  1    XCG =   0.2276E+01  YCG =   0.0000E+00  ZCG =   0.3106E-01
+
+                  LABEL  SYMMETRY FLAG                  FLEXIBLE                                       RIGID                 
+      COMPUTED:   NZ         SYMMETRIC   2.4624E-01 G        7.9227E+00 IN  /S/S      2.9504E+00 G        9.4926E+01 IN  /S/S
+
+    NUMBER OF TRIM VARIABLES =     1
+
+                IDVAR  LABEL      SYMMETRY FLAG      FLEXIBLE       RIGID      UNITS    LOWER LIMIT   UPPER LIMIT SATISFIED?
+ USER INPUT:      100  ALPHA          SYMMETRIC    5.00000E-01   5.00000E-01   DEGREES -1.00000E+01   1.00000E+01       YES
+
+
+     S U M M A R Y   O F   T O T A L   A E R O D Y N A M I C   F O R C E S   A N D   M O M E N T S
+
+                 COEFFICIENTS             FLEXIBLE               RIGID     UNITS
+            INDUCED DRAG(CDL):             0.03363             0.34544     FX/REFS/Q
+            DRAG AT TRIM(CD0):             0.00000             0.00000     FX/REFS/Q
+               SIDE FORCE(CY):             0.00000             0.00000     FY/REFS/Q
+                     LIFT(CL):             3.30377            39.58427     FZ/REFS/Q
+              ROLL MOMENT(CR):             0.00000             0.00000     MX/REFS/REFB/Q
+             PITCH MOMENT(CM):            -1.03130           -35.02716     MY/REFS/REFC/Q
+               YAW MOMENT(CN):             0.00000             0.00000     MZ/REFS/REFB/Q
+    CD DUE TO LE SUCTION(CDT):            -0.00074            -0.00991     FX/REFS/Q
+    CM DUE TO LE SUCTION(CMT):             0.00000             0.00000     MY/REFS/REFC/Q
+    CN DUE TO LE SUCTION(CNT):             0.00000             0.00000     MZ/REFS/REFB/Q
+
+
+   M O D A L   C O O R D I N A T E S   S O L U T I O N   O F       5   S Y M M E T R I C   M O D E S
+ IN DMI BULK DATA FORMAT. THIS CAN BE USED AS THE INITIAL CONDITION OF THE TRANSIENT RESPONSE ANALYSIS
+DMI     SMODAL  0       2       2               DMIL           5       1
+DMIL              SMODAL               1               1+5.667791880E-02+CONT   
++CONT   +7.366746367E-03-4.186479453E-03+1.085420073E-03+9.617399700E-06
+
+
+      V A L U E S   O F   T R I M   F U N C T I O N S   R E F E R R E D   T O   B Y   S E T 1  =      100
+
+  TRIM FUNCTION ID  TYPE    LABEL   RHS      ISSET    IASET   FLEXIBLE VALUES      RIGID VALUES        REMARK     
+                11  AERO  LOADMOD   RHS         11                0.14511E+04       0.44580E+04     ZSHEAR-1        
+                12  AERO  LOADMOD   RHS         12                0.47457E+03       0.29495E+04     ZSHEAR-2        
+                13  AERO  LOADMOD   RHS         13                0.16011E+03       0.28641E+04     ZSHEAR-3        
+                14  AERO  LOADMOD   RHS         14                0.21257E+02       0.26931E+04     ZSHEAR-4        
+                15  AERO  LOADMOD   RHS         15               -0.40011E+02       0.24620E+04     ZSHEAR-5        
+                16  AERO  LOADMOD   RHS         16               -0.70148E+02       0.21472E+04     ZSHEAR-6        
+                17  AERO  LOADMOD   RHS         17               -0.34243E+02       0.18035E+04     ZSHEAR-7        
+                18  AERO  LOADMOD   RHS         18               -0.11368E+02       0.13789E+04     ZSHEAR-8        
+                19  AERO  LOADMOD   RHS         19                0.17499E+00       0.94849E+03     ZSHEAR-9        
+                20  AERO  LOADMOD   RHS         20                0.23073E+02       0.82021E+03     ZSHEAR-10       
+                21  AERO  LOADMOD   RHS         21                0.77173E+01       0.12255E+04     ZSHEAR-11       
+                41  AERO  LOADMOD   RHS         41                0.17818E+04      -0.96571E+04     YMOMENT-1       
+                42  AERO  LOADMOD   RHS         42                0.15569E+04      -0.37366E+04     YMOMENT-2       
+                43  AERO  LOADMOD   RHS         43                0.58470E+03      -0.19782E+04     YMOMENT-3       
+                44  AERO  LOADMOD   RHS         44               -0.43042E+03      -0.74334E+03     YMOMENT-4       
+                45  AERO  LOADMOD   RHS         45               -0.57286E+03       0.14175E+03     YMOMENT-5       
+                46  AERO  LOADMOD   RHS         46               -0.20698E+03       0.78170E+03     YMOMENT-6       
+                47  AERO  LOADMOD   RHS         47               -0.18703E+03       0.11925E+04     YMOMENT-7       
+                48  AERO  LOADMOD   RHS         48               -0.42361E+02       0.13145E+04     YMOMENT-8       
+                49  AERO  LOADMOD   RHS         49                0.22943E+02       0.11656E+04     YMOMENT-9       
+                50  AERO  LOADMOD   RHS         50               -0.86338E+02       0.12281E+04     YMOMENT-10      
+                51  AERO  LOADMOD   RHS         51                0.21527E+03       0.22220E+04     YMOMENT-11      
+
+
+
+ D E R I V A T I V E S   O F   22  T R I M   F U N C T I O N S   W I T H   R E S P E C T   T O   1  T R I M   V A R I A B L E S
+
+ * * * TRIM FUNCTION WITH ID=      11, TYPE=AERO, LABEL=LOADMOD , ISSET=11      , IASET=        , REMARK=ZSHEAR-1        * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.29023E+04         0.89161E+04         0.32551E+00
+
+ * * * TRIM FUNCTION WITH ID=      12, TYPE=AERO, LABEL=LOADMOD , ISSET=12      , IASET=        , REMARK=ZSHEAR-2        * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.94915E+03         0.58991E+04         0.16090E+00
+
+ * * * TRIM FUNCTION WITH ID=      13, TYPE=AERO, LABEL=LOADMOD , ISSET=13      , IASET=        , REMARK=ZSHEAR-3        * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.32022E+03         0.57283E+04         0.55902E-01
+
+ * * * TRIM FUNCTION WITH ID=      14, TYPE=AERO, LABEL=LOADMOD , ISSET=14      , IASET=        , REMARK=ZSHEAR-4        * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.42514E+02         0.53863E+04         0.78931E-02
+
+ * * * TRIM FUNCTION WITH ID=      15, TYPE=AERO, LABEL=LOADMOD , ISSET=15      , IASET=        , REMARK=ZSHEAR-5        * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG          -0.80022E+02         0.49240E+04        -0.16251E-01
+
+ * * * TRIM FUNCTION WITH ID=      16, TYPE=AERO, LABEL=LOADMOD , ISSET=16      , IASET=        , REMARK=ZSHEAR-6        * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG          -0.14030E+03         0.42944E+04        -0.32670E-01
+
+ * * * TRIM FUNCTION WITH ID=      17, TYPE=AERO, LABEL=LOADMOD , ISSET=17      , IASET=        , REMARK=ZSHEAR-7        * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG          -0.68486E+02         0.36070E+04        -0.18987E-01
+
+ * * * TRIM FUNCTION WITH ID=      18, TYPE=AERO, LABEL=LOADMOD , ISSET=18      , IASET=        , REMARK=ZSHEAR-8        * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG          -0.22737E+02         0.27577E+04        -0.82447E-02
+
+ * * * TRIM FUNCTION WITH ID=      19, TYPE=AERO, LABEL=LOADMOD , ISSET=19      , IASET=        , REMARK=ZSHEAR-9        * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.34998E+00         0.18970E+04         0.18450E-03
+
+ * * * TRIM FUNCTION WITH ID=      20, TYPE=AERO, LABEL=LOADMOD , ISSET=20      , IASET=        , REMARK=ZSHEAR-10       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.46147E+02         0.16404E+04         0.28131E-01
+
+ * * * TRIM FUNCTION WITH ID=      21, TYPE=AERO, LABEL=LOADMOD , ISSET=21      , IASET=        , REMARK=ZSHEAR-11       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.15435E+02         0.24509E+04         0.62975E-02
+
+ * * * TRIM FUNCTION WITH ID=      41, TYPE=AERO, LABEL=LOADMOD , ISSET=41      , IASET=        , REMARK=YMOMENT-1       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.35636E+04        -0.19314E+05        -0.18450E+00
+
+ * * * TRIM FUNCTION WITH ID=      42, TYPE=AERO, LABEL=LOADMOD , ISSET=42      , IASET=        , REMARK=YMOMENT-2       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.31138E+04        -0.74732E+04        -0.41666E+00
+
+ * * * TRIM FUNCTION WITH ID=      43, TYPE=AERO, LABEL=LOADMOD , ISSET=43      , IASET=        , REMARK=YMOMENT-3       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.11694E+04        -0.39564E+04        -0.29557E+00
+
+ * * * TRIM FUNCTION WITH ID=      44, TYPE=AERO, LABEL=LOADMOD , ISSET=44      , IASET=        , REMARK=YMOMENT-4       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG          -0.86084E+03        -0.14867E+04         0.57903E+00
+
+ * * * TRIM FUNCTION WITH ID=      45, TYPE=AERO, LABEL=LOADMOD , ISSET=45      , IASET=        , REMARK=YMOMENT-5       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG          -0.11457E+04         0.28350E+03        -0.40414E+01
+
+ * * * TRIM FUNCTION WITH ID=      46, TYPE=AERO, LABEL=LOADMOD , ISSET=46      , IASET=        , REMARK=YMOMENT-6       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG          -0.41396E+03         0.15634E+04        -0.26478E+00
+
+ * * * TRIM FUNCTION WITH ID=      47, TYPE=AERO, LABEL=LOADMOD , ISSET=47      , IASET=        , REMARK=YMOMENT-7       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG          -0.37406E+03         0.23850E+04        -0.15684E+00
+
+ * * * TRIM FUNCTION WITH ID=      48, TYPE=AERO, LABEL=LOADMOD , ISSET=48      , IASET=        , REMARK=YMOMENT-8       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG          -0.84722E+02         0.26289E+04        -0.32227E-01
+
+ * * * TRIM FUNCTION WITH ID=      49, TYPE=AERO, LABEL=LOADMOD , ISSET=49      , IASET=        , REMARK=YMOMENT-9       * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.45886E+02         0.23312E+04         0.19683E-01
+
+ * * * TRIM FUNCTION WITH ID=      50, TYPE=AERO, LABEL=LOADMOD , ISSET=50      , IASET=        , REMARK=YMOMENT-10      * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG          -0.17268E+03         0.24562E+04        -0.70302E-01
+
+ * * * TRIM FUNCTION WITH ID=      51, TYPE=AERO, LABEL=LOADMOD , ISSET=51      , IASET=        , REMARK=YMOMENT-11      * * *
+  TRIMVAR ID     LABEL     UNITS   FLEXIBLE DERIVATIVE    RIGID DERIVATIVE      FLEXIBLE/RIGID
+         100     ALPHA     1/DEG           0.43054E+03         0.44441E+04         0.96879E-01
+
+
+
+                                             ****************************************
+                                             ***                                  ***
+                                             ***  Z A E R O   T E R M I N A T E D ***
+                                             ***                                  ***
+                                             ***          N O R M A L L Y         ***
+                                             ***                                  ***
+                                             ***      12:49:13    01/31/2025      ***
+                                             ***                                  ***
+                                             ****************************************

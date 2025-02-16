@@ -14,6 +14,7 @@ from qtpy.QtWidgets import (
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory
 
+from pyNastran.utils.numpy_utils import float_types
 from pyNastran.utils.locale import func_str, func_str_or_none
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit
 from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text, get_combo_box_text
@@ -893,7 +894,10 @@ class AnimationWindow(PyDialog):
 
     def on_default_fps(self) -> None:
         """sets the default FPS"""
-        self.fps_edit.setValue(self._default_fps)
+        default_fps = self._default_fps
+        if not isinstance(self._default_fps, float_types):
+            default_fps = int(default_fps)
+        self.fps_edit.setValue(default_fps)
 
     def on_default_resolution(self) -> None:
         """sets the default image resolution scale factor"""
@@ -1361,7 +1365,7 @@ class AnimationWindow(PyDialog):
         fps, flag3 = check_float(self.fps_edit)
         if flag2 and flag3:
             self._default_time = time
-            self._default_fps = fps
+            self._default_fps = int(fps)
             self.settings.animation_time = time
             self.settings.animation_frame_rate = fps
 

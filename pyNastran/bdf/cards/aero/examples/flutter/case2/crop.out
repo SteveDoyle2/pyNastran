@@ -1,0 +1,1113 @@
+
+                                                                   **                 
+                                                       ***        **                  
+                                                      ***        **             ***   
+                                                      **        **            ******  
+                                           ****       **       **          ******     
+                                           ****      **       **         *****        
+                                            ***      **      **        *****                *
+                                            ***      **     **       ****            *********
+                                    *       ***      *     **     ****          ****************
+                                   ***       ***     *    **    ****       **************
+                                  *****      ***     *   **   ***   *********** 
+                                  ******      **    *   **  **      ******** 
+                                   ******     **    *  **                 ********************
+                                     *****     **   ***        ZONA          ***  *******************
+                               *      *****    **   *       AEROELASTIC        **        ************
+                               **       ****    *  *      SOFTWARE SYSTEM       *****            ****
+                               ****      ****   ***                              *******
+                              *******     ****   *                                *********
+                              *********     ***  *          -  ZAERO  -           ***  *******
+                                 *********   *****          VERSION 9.3           ***    *********
+                                    ********   ***       Z93-64-062124-iz1t       *****    **********
+                              *         ******  **                                ******     *********
+                               ****        ********   RELEASE DATE: JUN-2024     *********     *******
+                               *********       *****                            ***********      ****
+                               ***************   ****   LICENSE NO.            *****  ******       *
+                                **********************                        ******   ****** 
+                                            ************                    ********   ********
+                                                    *******             *************   *********
+                                  ********************************************* ******  **********
+                                   ********************    *******************  ******   ********
+                                    *************        ***************  ****  *******   *****
+                                     *******         *********** ******  *****  *******   ****
+                                      *          ************  *******  ******  ********   *
+                                             **************  ********  *******  ********
+                                           **************   ********   ******   ********
+                                              ********    *********   *******   *****
+                                                ****    **********   ********   ***
+                                                  *   ***********   *********
+                                                          ******    *******
+
+
+
+
+                    THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET OF ZONA TECHNOLOGY, INC.  THE RECEIPT OR
+                POSSESSION OF THIS PROGRAM DOES NOT CONVEY ANY RIGHTS TO REPRODUCE OR DISCLOSE ITS CONTENTS, OR TO
+               MANUFACTURE, USE, OR SELL ANYTHING HEREIN, IN WHOLE OR IN PART, WITHOUT THE SPECIFIC WRITTEN CONSENT
+                                                       OF ZONA TECHNOLOGY, INC.
+
+
+
+
+                                              * * * PROGRAM STARTED ON 01/31/2025 AT 12:21:17 * * *
+
+
+
+                                                  E X E C U T I V E  C O N T R O L  S U M M A R Y
+
+                                  |...1...|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|..10...|
+
+
+                                  ASSIGN FEM='crop.f06',PRINT=0,FORM=MSC,BOUND=SYM                                
+                                  CEND                                                                            
+
+
+                                                       C A S E  C O N T R O L  S U M M A R Y 
+
+                                                D O U B L E  P R E C I S I O N  C O M P U T A T I O N 
+
+                                        M A X I M U M  A L L O C A B L E  M E M O R Y  =1600  M E G A B Y T E S
+
+                                  |...1...|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|..10...|
+
+
+                                  TITLE= SAMPLE WING-BODY FLUTTER DEMO CASE                                       
+                                  ECHO = SORT                                                                     
+                                  SUBCASE = 1                                                                     
+                                  SUBTITLE=ZONA6 & ZONA7 METHODS                                                  
+                                  LABEL= MATCH POINT ANALYSIS AT SEA LEVEL FROM M=0.7 TO M=1.2                    
+                                  FLUTTER=100                                                                     
+                                  BEGIN BULK                                                                      
+
+
+                                                       S O R T E D   B U L K   D A T A   E C H O
+                    CARD
+                    COUNT         |...1...|...2...|...3...|...4...|...5...|...6...|...7...|...8...|...9...|..10...|
+
+
+                        1 -       ACOORD  20      -100.   0.0     0.0     0.0     0.0                             
+                        2 -       AEROZ   10      YES     YES     SLIN    IN      100.0   200.    10500.  +AERO   
+                        3 -       +AERO   33.333  0.      0.                                                      
+                        4 -       BODY7   201     FUSELAGE        20      1       201                             
+                        5 -       CAERO7  101     WING            6       6                               +CA1    
+                        6 -       +CA1    0.0     30.0    0.0     100.0   0       201                     +CA2    
+                        7 -       +CA2    50.0    100.0   0.0     50.0    0       0                               
+                        8 -       CORD2R  10              0.      0.      0.      0.      0.      1.      +C1     
+                        9 -       +C1     0.      1.0     0.                                                      
+                       10 -       FIXHATM 100     0.0     0       SLUG    FT      1.0     0       5       +FIX1   
+                       11 -       +FIX1   70      80      90      95      105     110     120                     
+                       12 -       FLUTTER 100     SYM     100     0       0       0       0       0               
+                       13 -       MKAEROZ 70      0.7     0               SAVE    SAMPLE70        0       +MK1    
+                       14 -       +MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2    
+                       15 -       +MK2    0.8     0.9     1.0                                                     
+                       16 -       MKAEROZ 80      0.8     0               SAVE    SAMPLE80        0       +MK1    
+                       17 -       +MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2    
+                       18 -       +MK2    0.8     0.9     1.0                                                     
+                       19 -       MKAEROZ 90      0.9     0               SAVE    SAMPLE90        0       +MK1    
+                       20 -       +MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2    
+                       21 -       +MK2    0.8     0.9     1.0                                                     
+                       22 -       MKAEROZ 95      0.95    0               SAVE    SAMPLE95        0       +MK1    
+                       23 -       +MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2    
+                       24 -       +MK2    0.8     0.9     1.0                                                     
+                       25 -       MKAEROZ 105     1.05    0               SAVE    SAMPLE105       0       +MK1    
+                       26 -       +MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2    
+                       27 -       +MK2    0.8     0.9     1.0                                                     
+                       28 -       MKAEROZ 110     1.10    0               SAVE    SAMPLE110       0       +MK1    
+                       29 -       +MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2    
+                       30 -       +MK2    0.8     0.9     1.0                                                     
+                       31 -       MKAEROZ 120     1.20    0               SAVE    SAMPLE120       0       +MK1    
+                       32 -       +MK1    0.0     0.1     0.2     0.3     0.4     0.5     0.6     0.7     +MK2    
+                       33 -       +MK2    0.8     0.9     1.0                                                     
+                       34 -       PANLST2 102     101     101     THRU    125                                     
+                       35 -       PANLST2 112     201     201     THRU    240                                     
+                       36 -       PLTAERO 10                      TECPLOT PLTAE   RO.PLT          YES             
+                       37 -       PLTMODE 10      SYM     1               .3      TECPLOT MODE1.PLT               
+                       38 -       PLTMODE 20      SYM     2               .3      PATRAN  MODE2.PLT               
+                       39 -       PLTVG   11      100             M               PLTVG.100                       
+                       40 -       SEGMESH 201     11      5                                               +SE1    
+                       41 -       +SE1    1       0.0     0.0     0.0                                     +SE2    
+                       42 -       +SE2    1       20.0    0.0     17.0                                    +SE3    
+                       43 -       +SE3    1       40.0    0.0     25.0                                    +SE4    
+                       44 -       +SE4    1       60.0    0.0     28.0                                    +SE5    
+                       45 -       +SE5    1       80.0    0.0     29.5                                    +SE6    
+                       46 -       +SE6    1       100.0   0.0     30.0                                    +SE7    
+                       47 -       +SE7    1       120.0   0.0     30.0                                    +SE8    
+                       48 -       +SE8    1       140.0   0.0     30.0                                    +SE9    
+                       49 -       +SE9    1       160.0   0.0     30.0                                    +SE10   
+                       50 -       +SE10   1       180.0   0.0     30.0                                    +SE11   
+                       51 -       +SE11   1       200.0   0.0     30.0                                            
+                       52 -       SET1    103     10101   10102   10103   10104   10201   10202   10203   +S1     
+                       53 -       +S1     10204   10301   10302   10303   10304   10401   10402   10403   +S2     
+                       54 -       +S2     10404                                                                   
+                       55 -       SPLINE0 102     FUSELAGE        112                                             
+                       56 -       SPLINE1 101     WING            102     103     0.0     0.01                    
+                       57 -       ENDDATA
+
+
+
+   ========================================================================================================================
+
+     SYMMETRIC (OR ASYMMETRIC) FINITE ELEMENT MODAL RESULTS ARE SUCCESSFULLY READ IN FROM FILE crop.f06                                                                        
+     RIGID BODY DEGREES OF FREEDOM (DEFINED IN THE FEM BASIC COORDINATE SYSTEM) =       0
+
+            MODE      EXTRACTION      EIGENVALUE              FREQUENCY                      GENERALIZED        
+                        ORDER         (RAD/S)**2         (RAD/S)            (HZ)            MASS       STIFFNESS
+               1               1     0.83999E+03     0.28983E+02     0.46127E+01     0.10000E+01     0.83999E+03
+               2               2     0.54016E+04     0.73496E+02     0.11697E+02     0.10000E+01     0.54016E+04
+               3               3     0.43164E+05     0.20776E+03     0.33066E+02     0.10000E+01     0.43164E+05
+               4               4     0.73417E+05     0.27096E+03     0.43124E+02     0.10000E+01     0.73417E+05
+               5               5     0.20082E+06     0.44812E+03     0.71321E+02     0.10000E+01     0.20082E+06
+
+      MASS UNIT AND LENGTH UNIT OF THE FEM MODEL ARE IN: LBF/  AND  IN   ,  RESPECTIVELY
+
+   ========================================================================================================================
+
+
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   0.00000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   0.10000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   0.20000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   0.30000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   0.40000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   0.50000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   0.60000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   0.70000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   0.80000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   0.90000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      70 AT REDUCED FREQUENCY=   1.00000 HAS BEEN COMPUTED AND SAVED
+
+
+
+ *** AERODYNAMIC DATA OF MKAEROZ IDMK=      70 IS SAVED ON FILE= SAMPLE70
+
+
+
+
+
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   0.00000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   0.10000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   0.20000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   0.30000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   0.40000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   0.50000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   0.60000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   0.70000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   0.80000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   0.90000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      80 AT REDUCED FREQUENCY=   1.00000 HAS BEEN COMPUTED AND SAVED
+
+
+
+ *** AERODYNAMIC DATA OF MKAEROZ IDMK=      80 IS SAVED ON FILE= SAMPLE80
+
+
+
+
+
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.00000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.10000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.20000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.30000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.40000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.50000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.60000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.90000 K=  0.7000, THERE ARE       45 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.17546E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.87728E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.70000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.90000 K=  0.8000, THERE ARE       50 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.15352E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.76762E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.80000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.90000 K=  0.9000, THERE ARE       55 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.13647E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.68233E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   0.90000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.90000 K=  1.0000, THERE ARE       60 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.12282E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.61410E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      90 AT REDUCED FREQUENCY=   1.00000 HAS BEEN COMPUTED AND SAVED
+
+
+
+ *** AERODYNAMIC DATA OF MKAEROZ IDMK=      90 IS SAVED ON FILE= SAMPLE90
+
+
+
+
+
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   0.00000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   0.10000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   0.20000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.95000 K=  0.3000, THERE ARE       45 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.18855E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.94277E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   0.30000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.95000 K=  0.4000, THERE ARE       55 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.14142E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.70708E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   0.40000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.95000 K=  0.5000, THERE ARE       60 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.11313E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.56566E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   0.50000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.95000 K=  0.6000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.94277E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.47138E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   0.60000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.95000 K=  0.7000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.80809E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.40404E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   0.70000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.95000 K=  0.8000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.70708E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.35354E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   0.80000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.95000 K=  0.9000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.62851E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.31426E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   0.90000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 0.95000 K=  1.0000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.56566E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.28283E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=      95 AT REDUCED FREQUENCY=   1.00000 HAS BEEN COMPUTED AND SAVED
+
+
+
+ *** AERODYNAMIC DATA OF MKAEROZ IDMK=      95 IS SAVED ON FILE= SAMPLE95
+
+
+
+
+
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   0.00000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   0.10000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   0.20000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.05000 K=  0.3000, THERE ARE       50 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.16226E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.81132E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   0.30000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.05000 K=  0.4000, THERE ARE       60 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.12170E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.60849E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   0.40000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.05000 K=  0.5000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.97359E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.48679E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   0.50000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.05000 K=  0.6000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.81132E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.40566E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   0.60000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.05000 K=  0.7000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.69542E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.34771E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   0.70000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.05000 K=  0.8000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.60849E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.30425E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   0.80000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.05000 K=  0.9000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.54088E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.27044E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   0.90000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.05000 K=  1.0000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.48679E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.24340E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     105 AT REDUCED FREQUENCY=   1.00000 HAS BEEN COMPUTED AND SAVED
+
+
+
+ *** AERODYNAMIC DATA OF MKAEROZ IDMK=     105 IS SAVED ON FILE= SAMPLE105
+
+
+
+
+
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   0.00000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   0.10000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   0.20000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   0.30000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   0.40000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.10000 K=  0.5000, THERE ARE       45 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.18175E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.90873E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   0.50000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.10000 K=  0.6000, THERE ARE       50 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.15145E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.75727E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   0.60000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.10000 K=  0.7000, THERE ARE       60 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.12982E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.64909E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   0.70000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.10000 K=  0.8000, THERE ARE       60 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.11359E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.56795E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   0.80000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.10000 K=  0.9000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.10097E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.50485E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   0.90000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.10000 K=  1.0000, THERE ARE       65 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+        111,        112,        113,        114,        115,        116,        117,        118,        119,        120,
+        121,        122,        123,        124,        125,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.90873E+01
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.45436E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     110 AT REDUCED FREQUENCY=   1.00000 HAS BEEN COMPUTED AND SAVED
+
+
+
+ *** AERODYNAMIC DATA OF MKAEROZ IDMK=     110 IS SAVED ON FILE= SAMPLE110
+
+
+
+
+
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   0.00000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   0.10000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   0.20000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   0.30000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   0.40000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   0.50000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   0.60000 HAS BEEN COMPUTED AND SAVED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   0.70000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.20000 K=  0.8000, THERE ARE       40 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.19999E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.99993E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   0.80000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.20000 K=  0.9000, THERE ARE       45 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.17777E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.88883E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   0.90000 HAS BEEN COMPUTED AND SAVED
+
+
+ *** USER WARNING MESSAGE *** AT MACH= 1.20000 K=  1.0000, THERE ARE       50 NUMBER OF AEROBOXES WHOSE CHORD LENGTH ARE TOO LARGE.
+ THEIR IDS=
+        201,        202,        203,        204,        205,        206,        207,        208,        209,        210,
+        211,        212,        213,        214,        215,        216,        217,        218,        219,        220,
+        221,        222,        223,        224,        225,        226,        227,        228,        229,        230,
+        231,        232,        233,        234,        235,        236,        237,        238,        239,        240,
+        101,        102,        103,        104,        105,        106,        107,        108,        109,        110,
+
+ THE LARGEST CHORD IS THE AEROBOX WITH ID=     201 WHOSE CHORD=  0.2000E+02
+ THE ABOVE LARGE CHORD LENGTH MAY GIVE SINGULAR AIC MATRIX
+ TO AVOID SINGULAR AIC MATRIX, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.15999E+02
+ TO ENSURE CONVERGED SOLUTION, PLEASE REDUCE CHORD LENGTH TO AT LEAST  0.79994E+01
+ IN ADDITION, DEFINING NEGATIVE REDUCED FREQUENCY IN THE MKAEROZ BULK DATA CARD
+ TO INCREASE THE GAUSSIAN INTEGRATION POINTS IS RECOMMENDED
+
+ *** AIC MATRIX OF MKAEROZ BULK DATA CARD WITH IDMK=     120 AT REDUCED FREQUENCY=   1.00000 HAS BEEN COMPUTED AND SAVED
+
+
+
+ *** AERODYNAMIC DATA OF MKAEROZ IDMK=     120 IS SAVED ON FILE= SAMPLE120
+
+
+
+
+
+
+
+
+                                             ****************************************
+                                             *                                      *
+                                             *       SUBCASE       =        1       *
+                                             *       DISCIPLINE    = FLUTTER        *
+                                             *       BULK ENTRY ID =      100       *
+                                             *                                      *
+                                             ****************************************
+
+
+
+   S U M M A R Y   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N   O F   F L U T T E R   C A R D   I D  =     100
+
+         TITLE   = SAMPLE WING-BODY FLUTTER DEMO CASE                                      
+         SUBTITLE= ZONA6 & ZONA7 METHODS                                                   
+         LABEL   = MATCH POINT ANALYSIS AT SEA LEVEL FROM M=0.7 TO M=1.2                   
+
+
+
+                    S U M M A R Y   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+             ***  THERE IS NO DIVERGENCE DYNAMIC PRESSURE BELOW THE HIGHEST INPUT DYNAMIC PRESSURE:  0.2133E+04 (SLUG/FT/S**2)  ***
+
+                        E N D   O F   S T A T I C   D I V E R G E N C E   D Y N A M I C   P R E S S U R E   E V A L U A T I O N
+
+
+
+
+ **** WARNING *** AT SPEED =    781.4800 DENSITY=  0.2377E-02 MACH NUMBER= 0.7000                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.1000E+01 IS USED TO OBTAIN THE LAST  3 MODES           
+
+ **** WARNING *** AT SPEED =    893.1200 DENSITY=  0.2377E-02 MACH NUMBER= 0.8000                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.1000E+01 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1004.7600 DENSITY=  0.2377E-02 MACH NUMBER= 0.9000                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.1000E+01 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1060.5800 DENSITY=  0.2377E-02 MACH NUMBER= 0.9500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.1000E+01 IS USED TO OBTAIN THE LAST  2 MODES           
+
+ **** WARNING *** AT SPEED =   1172.2200 DENSITY=  0.2377E-02 MACH NUMBER= 1.0500                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.1000E+01 IS USED TO OBTAIN THE LAST  1 MODES           
+
+ **** WARNING *** AT SPEED =   1228.0400 DENSITY=  0.2377E-02 MACH NUMBER= 1.1000                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.1000E+01 IS USED TO OBTAIN THE LAST  1 MODES           
+
+ **** WARNING *** AT SPEED =   1339.6800 DENSITY=  0.2377E-02 MACH NUMBER= 1.2000                                               
+ REDUCED FREQUENCY IS NOT HIGH ENOUGH, EXTRAPOLATION OUTSIDE OF KMAX=  0.1000E+01 IS USED TO OBTAIN THE LAST  1 MODES           
+
+ MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXHATM ID=     100 WITH NKSTEP=   25
+ ALTITUDE = 0.0000E+00 (FT), ATMOS TABLE=STANDARD, REFERENCE LENGTH (L) = 8.3333E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+  AT    7 MACH NUMBERS:
+      0.7000      0.8000      0.9000      0.9500      1.0500      1.1000      1.2000
+
+ LENGTH UNIT IS CONVERTED FROM   IN     OF THE FEM MODEL TO   FT     OF THE FLUTTER ANALYSIS
+
+ MASS   UNIT IS CONVERTED FROM   LBF/   OF THE FEM MODEL TO   SLUG   OF THE FLUTTER ANALYSIS
+
+
+ THE FOLLOWING V-G-F TABLE LISTS    5 NUMBER OF STRUCTURAL MODES (  1 -  5 ) AND    0 NUMBER OF AERODYNAMIC LAG ROOTS (  0 -  0 )
+
+
+                                               SUMMARY     MODES  1 -  4
+
+   UNITS    UNITS    UNITS          MODE NO.  1              MODE NO.  2              MODE NO.  3              MODE NO.  4
+    NONE   SLUG/     NONE       STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE          STRUCTURAL MODE
+           FT**3               MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00%     MODAL DAMPING= 0.00% 
+   V/VREF  DENSITY     MACH         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00   0.0000    0.0000   4.613 INFINT    0.0000  11.697 INFINT    0.0000  33.066 INFINT    0.0000  43.124 INFINT
+ 781.4800 2.376-03   0.7000   -0.1656   5.807 0.1945   -0.0839  10.674 0.3576   -0.0189  32.534 1.0899   -0.0137  42.149 1.4120
+ 893.1200 2.376-03   0.8000   -0.1851   6.479 0.1899   -0.1469  10.166 0.2979   -0.0243  32.398 0.9496   -0.0213  41.970 1.2302
+ 1004.760 2.376-03   0.9000   -0.0462   7.689 0.2003   -0.4097   9.705 0.2528   -0.0328  32.200 0.8390   -0.0366  41.638 1.0849
+ 1060.580 2.376-03   0.9500    0.0692   7.894 0.1948   -0.3597  10.542 0.2602   -0.0372  32.095 0.7922   -0.1239  41.226 1.0176
+ 1172.220 2.376-03   1.0500    0.0804   8.265 0.1845   -0.3478  10.693 0.2388   -0.0540  32.148 0.7179   -0.0416  42.211 0.9427
+ 1228.040 2.376-03   1.1000    0.1110   8.749 0.1865   -0.3640  10.371 0.2210   -0.0611  32.116 0.6846   -0.0435  42.063 0.8967
+ 1339.680 2.376-03   1.2000    0.1137   9.514 0.1859   -0.3430  10.316 0.2015   -0.0712  32.142 0.6281   -0.0425  41.772 0.8163
+
+
+                                               SUMMARY     MODES  5 -  5
+
+   UNITS    UNITS    UNITS          MODE NO.  5              MODE NO.
+    NONE   SLUG/     NONE       STRUCTURAL MODE                                                                           
+           FT**3               MODAL DAMPING= 0.00%                                                                            
+   V/VREF  DENSITY     MACH         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+   0.0000 0.000+00   0.0000    0.0000  71.321 INFINT
+ 781.4800 2.376-03   0.7000   -0.0065  71.051 2.3802
+ 893.1200 2.376-03   0.8000   -0.0094  71.015 2.0816
+ 1004.760 2.376-03   0.9000   -0.0123  71.055 1.8514
+ 1060.580 2.376-03   0.9500   -0.0684  68.872 1.7000
+ 1172.220 2.376-03   1.0500   -0.0226  71.432 1.5953
+ 1228.040 2.376-03   1.1000   -0.0186  71.362 1.5213
+ 1339.680 2.376-03   1.2000   -0.0149  71.363 1.3945
+
+ MATCHED POINT FLUTTER ANALYSIS RESULTING FROM BULK DATA CARD FIXHATM ID=     100 WITH NKSTEP=   25
+ ALTITUDE = 0.0000E+00 (FT), ATMOS TABLE=STANDARD, REFERENCE LENGTH (L) = 8.3333E+00/2.0 (FT), VREF= 1.0000E+00 (FT/SEC)
+
+
+    1 NUMBER OF FLUTTER MODES ARE FOUND.
+ FLUTTER SPEED, FREQUENCY, AND DYNAMIC PRESSURE AS A FUNCTION OF ASSUMED STRUCTURAL DAMPING
+
+
+ -------------------------------------------------------------------------------------------------------------------------------
+ | FLUTTER AT MODE NO.:   1 | G= 0.00% | G= 0.50% | G= 1.00% | G= 1.50% | G= 2.00% | G= 2.50% | G= 3.00% | G= 3.50% | G= 4.00% |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |  MACH |UNITS=    NONE    |   0.9200 |   0.9222 |   0.9244 |   0.9265 |   0.9287 |   0.9309 |   0.9330 |   0.9352 |   0.9374 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | SPEED |UNITS=  FT/  SEC  | 1027.123 | 1029.540 | 1031.959 | 1034.377 | 1036.795 | 1039.213 | 1041.632 | 1044.050 | 1046.468 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | V/VREF|UNITS=    NONE    | 1027.123 | 1029.540 | 1031.959 | 1034.377 | 1036.795 | 1039.213 | 1041.632 | 1044.050 | 1046.468 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |  FREQ |UNITS=      HZ    |   7.7710 |   7.7799 |   7.7889 |   7.7978 |   7.8067 |   7.8156 |   7.8245 |   7.8335 |   7.8424 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ | DYN P |UNITS=SLUG/FT/S**2| 1.254+03 | 1.260+03 | 1.266+03 | 1.272+03 | 1.278+03 | 1.284+03 | 1.290+03 | 1.296+03 | 1.302+03 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |DENSITY|UNITS=SLUG/FT**3  | 2.376-03 | 2.376-03 | 2.376-03 | 2.376-03 | 2.376-03 | 2.376-03 | 2.376-03 | 2.376-03 | 2.376-03 |
+ -------------------------------------------------------------------------------------------------------------------------------
+ |FOR FIXHATM BULK DATA CARD, FLUTTER MODE TRACKING IS NOT ACTIVATED.                                                          |
+ -------------------------------------------------------------------------------------------------------------------------------
+
+
+
+          * * * *  F R E Q U E N C Y   V E R S U S   M A C H   N U M B E R    F O R   T H E   F I R S T    5   M O D E S * * * *
+      HZ          
+   80.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        E                                                               E        E        E            E    E        E           
+   70.0 +                                                                                                                        
+        |                                                                                     E                                  
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+   60.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+   50.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        D                                                                                                                        
+        |                                                               D        D        D   D        D    D        D           
+   40.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        C                                                                                                                        
+        |                                                               C        C        C   C        C    C        C           
+   30.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+   20.0 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        B                                                                                                                        
+   10.0 +                                                               B        B        B   B        B    B        B           
+        |                                                                                 A   A        A    A                    
+        |                                                               A        A                                               
+        A                                                                                                                        
+        |                                                                                                                        
+    0.0 +-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                       M A C H   N U M B E R  ( X 1.320E+00 )  ( UNITS=   NONE     )
+
+
+
+            * * * *  D A M P I N G   V E R S U S   M A C H   N U M B E R    F O R   T H E   F I R S T    5   M O D E S * * * *
+
+    0.2 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+    0.1 +                                                                                                   A        A           
+        |                                                                                                                        
+        |                                                                                              A                         
+        |                                                                                     A                                  
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+    0.0 E-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
+        |                                                               E        E        E                          E           
+        |                                                               C        D                     E    E                    
+        |                                                                                 D   C        D    D        D           
+        |                                                                                              C    C                    
+        |                                                                                     E                      C           
+   -0.1 +                                                               B                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                     D                                  
+        |                                                                        B                                               
+        |                                                               A                                                        
+        |                                                                                                                        
+   -0.2 +                                                                        A                                               
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+   -0.3 +                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                                        
+        |                                                                                                            B           
+        |                                                                                     B        B                         
+        |                                                                                                   B                    
+   -0.4 +                                                                                                                        
+        |                                                                                                                        
+        0.0         0.1         0.2         0.3         0.4         0.5         0.6         0.7         0.8         0.9         1.      
+                                                       M A C H   N U M B E R  ( X 1.320E+00 )  ( UNITS=   NONE     )
+
+
+
+
+
+                              E N D   O F   G - M E T H O D   F L U T T E R   E V A L U A T I O N
+
+
+
+                                             ****************************************
+                                             ***                                  ***
+                                             ***  Z A E R O   T E R M I N A T E D ***
+                                             ***                                  ***
+                                             ***          N O R M A L L Y         ***
+                                             ***                                  ***
+                                             ***      12:21:38    01/31/2025      ***
+                                             ***                                  ***
+                                             ****************************************
