@@ -892,7 +892,7 @@ def get_real_solid_cases(element_id: np.ndarray,
     assert isinstance(require_results, bool), require_results
     solids, word, subcase_id, analysis_code = _get_solids(
         model, key, is_stress, prefix)
-    assert len(solids) > 0, solids
+    #assert len(solids) > 0, solids
 
     solid_cases = []
     for solid_case in solids:
@@ -904,7 +904,7 @@ def get_real_solid_cases(element_id: np.ndarray,
             continue
         solid_cases.append(solid_case)
 
-    assert len(solid_cases) > 0, solid_cases
+    #assert len(solid_cases) > 0, solid_cases
     return solid_cases, subcase_id
 
 def _get_solids(results: OP2,
@@ -934,19 +934,18 @@ def _get_solids(results: OP2,
         ]
         word = 'Stress'
     else:
-        bbb
         strain = results.op2_results.strain
         cards = [
             strain.ctetra_strain, strain.cpenta_strain, strain.chexa_strain, # strain.cpyram_strain,
         ]
         word = 'Strain'
     cards = [card for card in cards if card]
-    assert len(cards) > 0, cards
+    #assert len(cards) > 0, cards
 
     cards2 = []
     for result in cards:
         if key not in result:
             continue
         cards2.append(result[key])
-    assert len(cards2) > 0, cards2
+    #assert len(cards2) > 0, cards2
     return cards2, word, subcase_id, analysis_code

@@ -507,8 +507,7 @@ class DispForceVectorResults(VectorResultsCommon):
             #'methods_keys': keys_b,
         #}
         assert transform in transforms, transform
-
-        self.component_indices = get_component_indices(method_keys, self.is_real)
+        self.component_indices = get_component_indices(methods_keys, self.is_real)
 
         # handle confusing data (can't plot a scalar for 2 components)
         if len(self.component_indices) > 1 and min_max_method == 'Value':

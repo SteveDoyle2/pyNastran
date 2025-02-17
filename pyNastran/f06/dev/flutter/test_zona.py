@@ -5,6 +5,7 @@ from pyNastran.f06.dev.flutter.read_zona_out import read_zona_out
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_DIR = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples' / 'flutter'
 
+
 class TestZona(unittest.TestCase):
     def test_zona_case1_out(self):
         zona_out_filename = MODEL_DIR / 'case1' / 'ha145e.out'

@@ -1475,6 +1475,9 @@ class FlutterResponse:
         e = (beta1 + beta2) / 2
         Fs = b ** 2
         Fs0 = Fs[0]
+        if Fs0 == 0.0:
+            warnings.warn(f'Fs0=0 imode1={imode1:d} imode2={imode2:d}')
+            Fs0 = 1.0
 
         F = 1/Fs0 * (1 - a**2) * (b**2 + c * (d + e**2))
         return F, Fs
@@ -1494,6 +1497,7 @@ class FlutterResponse:
         plot_type : str; default='tas'
            tas, eas, alt, kfreq, 1/kfreq, freq, damp, eigr, eigi, q, mach
         """
+        print('plot_zimmerman')
         modes, imodes = _get_modes_imodes(self.modes, modes)
         imodes = np.array([0, 1, 0, 1])
         nmodes = len(imodes)
@@ -1505,12 +1509,12 @@ class FlutterResponse:
         if fig is None or 1:
             fig = plt.figure()  # figsize=(12,9), self.subcase
             if nmodes == 2:
-                print('nmodesA')
+                #print('nmodesA')
                 ax = fig.gca()
                 axes = np.array([[fig.gca()]])
             else:
-                print('nmodesB')
-                print(nmodes, '*******')
+                #print('nmodesB')
+                #print(nmodes, '*******')
                 fig, axes = plt.subplots(ncols=nmodes-1, nrows=nmodes-1)
                 # print(axes[0])
                 # print(axes[1])
@@ -1523,9 +1527,11 @@ class FlutterResponse:
         xvalues = self.results[0, :, ix]
         print(f'imodes = {imodes}')
         for i, imodei, modei in zip(count(), imodes, modes):
-            for j, jmodei, modej in zip(count(), imodes[i+1:], modes):
+            for j, jmodei, modej in zip(count(), imodes[i+1:], modes[i+1:]):
                 if modei == modej:
                     continue
+                # if imodei == jmodei:
+                #     continue
                 Fi, Fsi = self.calculate_zimmerman(imodei, jmodei)
                 print(axes)
                 print((i, j), (int(jmodei), int(jmodei)), f'shape={axes.shape}')
