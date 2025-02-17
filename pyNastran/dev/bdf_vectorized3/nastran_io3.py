@@ -39,6 +39,7 @@ from .alt_actor_builder import (
     create_alt_spcs, create_alt_axes,
     create_monpnt, create_plotels)
 from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
 from pyNastran.op2.result_objects.stress_object import _get_nastran_header
 from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap, NastranKey
 
@@ -233,15 +234,17 @@ class Nastran3:
 
         #results = model.res
         name_results = [
-            ('Displacement', model.displacements),
-            ('Eigenvector', model.eigenvectors),
-            ('Temperature', model.temperatures),
-            ('Velocity', model.velocities),
-            ('Acceleration', model.accelerations),
+            ('Displacement', model.displacements, 'disp'),
+            ('Eigenvector', model.eigenvectors, 'disp'),
+            ('Temperature', model.temperatures, 'temp'),
+            ('Velocity', model.velocities, 'disp'),
+            ('Acceleration', model.accelerations, 'disp'),
+            ('SPC Forces', model.spc_forces, 'force'),
+            ('MPC Forces', model.mpc_forces, 'force'),
         ]
 
         subcases = set([])
-        for (res_name, results) in name_results:
+        for (res_name, results, deflects_str) in name_results:
             for key, case in results.items():
                 subcases.add(key)
 
@@ -1552,7 +1555,7 @@ def _load_stress_strain(element_cards: list,
 
 def _load_oug(model: OP2,
               name: str,
-              name_results: list[tuple[str, Any]],
+              name_results_deflects: list[tuple[str, Any, str]],
               key: NastranKey,
               subcase: Subcase,
               subcase_form: Form,
@@ -1570,35 +1573,52 @@ def _load_oug(model: OP2,
     """
     del name
     #print(f'name_results = {name_results}')
-    for (res_name, results) in name_results:
+    for (res_name, results, deflects_str) in name_results_deflects:
         if subcase not in results:
             continue
         case = results[subcase]
-        #print('key =', key)
+        #print('key =', res_name, deflects_str)
         subcase_id = key # [0]
 
         uname = f'{res_name}Results'
         ntimes = case.data.shape[0]
         res_form = _get_res_form(subcase_form, res_name, ntimes)
 
-        t123_offset = 0
-        if t123_offset == 0:
-            title1 = res_name + ' T_XYZ'
-        else:
-            assert t123_offset == 3, t123_offset
-            title1 = res_name + ' R_XYZ'
-        #title1 = f'v2 {title1}'
+        for t123_offset in [0, 3]:
+            if t123_offset == 0:
+                title1 = res_name + ' T_XYZ'
+            else:
+                assert t123_offset == 3, t123_offset
+                title1 = res_name + ' R_XYZ'
+            #title1 = f'v2 {title1}'
 
-        deflects = True
-        if deflects:
-            nastran_res2 = DisplacementResults2(
-                subcase_id, node_id, xyz_cid0, case,
-                title=res_name,
-                t123_offset=t123_offset,
-                dim_max=dim_max,
-                data_format='%g', nlabels=None, labelsize=None,
-                ncolors=None, colormap='', set_max_min=False,
-                uname=uname)
+            if deflects_str == 'disp':
+                nastran_res2 = DisplacementResults2(
+                    subcase_id, node_id, xyz_cid0, case,
+                    title=res_name,
+                    t123_offset=t123_offset,
+                    dim_max=dim_max,
+                    data_format='%g', nlabels=None, labelsize=None,
+                    ncolors=None, colormap='', set_max_min=False,
+                    uname=uname)
+            elif deflects_str == 'force':
+                force_index_to_base_title_annotation = {
+                    0: {'title': 'F_', 'corner': 'F_'},
+                    3: {'title': 'M_', 'corner': 'M_'},
+                }
+                methods_txyz_rxyz = ['Fx', 'Fy', 'Fz', 'Mx', 'My', 'Mz']
+                nastran_res2 = ForceResults2(
+                    subcase_id, node_id, xyz_cid0, case,
+                    title=res_name,
+                    t123_offset=t123_offset,
+                    methods_txyz_rxyz=methods_txyz_rxyz,
+                    index_to_base_title_annotation=force_index_to_base_title_annotation,
+                    dim_max=dim_max,
+                    data_format='%g', nlabels=None, labelsize=None,
+                    ncolors=None, colormap='', set_max_min=False,
+                    uname=res_name)
+            else:  # pragma: no cover
+                raise RuntimeError((name, deflects_str))
 
             headers2 = []
             for itime in range(ntimes):
@@ -1624,11 +1644,11 @@ def _load_oug(model: OP2,
 
 def _get_res_form(subcase_form: Form, res_name: str,
                  ntimes: int) -> Form:
-    if ntimes == 1:
-        res_form = subcase_form
-    else:
-        res_form: Form = []
-        subcase_form.append((res_name, None, res_form))
+    # if ntimes == 1:
+    #     res_form = subcase_form
+    # else:
+    res_form: Form = []
+    subcase_form.append((res_name, None, res_form))
     return res_form
 
 def get_case_headers(case) -> tuple[bool, list[str]]:

@@ -1,9 +1,13 @@
 import os
 import unittest
 import pathlib
-#import numpy as np
+import numpy as np
 
 import pyNastran
+from pyNastran.op2.op2_geom import read_op2_geom
+from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
+
 #from pyNastran.dev.bdf_vectorized3.test.test_bdf import main as test_bdf
 #from pyNastran.dev.op2_vectorized3.test.test_op2 import main as test_op2
 
@@ -130,6 +134,70 @@ class TestGuiModels(unittest.TestCase):
         op2_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.op2'
         #run_nastran_gui(bdf_filename)
         run_nastran_gui_results(bdf_filename, op2_filename)
+
+    def test_solid_bending_disp(self):
+        op2_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.op2'
+        model = read_op2_geom(op2_filename, debug=None)
+        subcase_id = 1
+
+        nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = model.get_xyz_in_coord_array()
+        node_id = nid_cp_cd[:, 0]
+        assert xyz_cid0.shape == (72, 3), xyz_cid0.shape
+        disp = DisplacementResults2.add_from_displacements(
+            model.displacements, subcase_id, node_id, xyz_cid0,
+        )
+        #disp.set_coords(model.coords)
+        #disp.set_coordiate_system(1)
+        disp.set_translations([0, 1, 2], 'Magnitude')
+        itime = 0
+        res_name = 'junk'
+        xyz, deflected_xyz = disp.get_vector_result(
+            itime, res_name, scale=1.0, return_dense=True)
+        assert xyz.shape == (72, 3), xyz.shape
+        assert deflected_xyz.shape == (72, 3), deflected_xyz.shape
+
+        #title = 'title'
+        tetra_stress = model.op2_results.stress.ctetra_stress[subcase_id]
+        element_id = np.array(list(model.elements))
+        element_id.sort()
+        #cases = [tetra_stress]
+
+        #result_dict = {}
+        # stress = SolidStrainStressResults2.add_stress(
+        #     subcase_id, model, node_id, element_id, cases,
+        #     result_dict, title)
+        assert len(model.op2_results.stress.ctetra_stress) > 0
+        stress = SolidStrainStressResults2.add_stress(
+            subcase_id, model, model, element_id)
+        #print(f'layer_indices={stress.layer_indices}')
+        #print(f'min_max_method={stress.min_max_method!r}')
+        #print(f'nodal_combine={stress.nodal_combine!r}')
+
+        for result_name in ['xx', 'yy', 'zz', 'xy', 'yz', 'xz',
+                            'von_mises']:
+            case_tuple = stress.get_case_tuple(itime, result_name)
+
+            #iresult = 0
+            #header = ''
+            #case_tuple = (itime, iresult, header)
+            stress.set_to_centroid()
+            fringe = stress.get_fringe_result(itime, case_tuple)
+            assert len(fringe) == len(element_id), fringe.shape
+            out = stress.get_annotation(itime, case_tuple)
+        assert out == 'Solid von Mises (Centroid, ): von Mises', f'out={out!r}'
+
+        stress.set_to_node(nodal_combine='Absolute Max')
+        fringe2 = stress.get_fringe_result(itime, case_tuple)
+        assert len(fringe2) == len(node_id), fringe2.shape
+        out = stress.get_annotation(itime, case_tuple)
+        assert out == 'Solid von Mises (Corner, Absolute Max, ): von Mises', f'out={out!r}'
+
+        stress.set_to_node(nodal_combine='Mean')
+        out = stress.get_annotation(itime, case_tuple)
+        assert out == 'Solid von Mises (Corner, Mean, ): von Mises', f'out={out!r}'
+        fringe3 = stress.get_fringe_result(itime, case_tuple)
+        assert not(np.array_equal(fringe2, fringe3))
+
     def test_isat1(self):
         bdf_filename = MODEL_PATH / 'iSat' / 'ISat_Dploy_Sm.dat'
         run_nastran_gui(bdf_filename)

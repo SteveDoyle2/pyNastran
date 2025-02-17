@@ -378,7 +378,8 @@ class TestF06Flutter(unittest.TestCase):
                 '--modal', ivel, mode,
                 '--mag_tol', '0.1',
                 '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv',
-                '--ncol', '2']
+                '--ncol', '2',
+            ]
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 

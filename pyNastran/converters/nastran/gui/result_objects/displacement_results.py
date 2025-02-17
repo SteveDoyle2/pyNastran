@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-from .vector_results import DispForceVectorResults
+from .vector_results import DispForceVectorResults, get_component_indices
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.result_objects.table_object import (
@@ -95,6 +95,36 @@ class DisplacementResults2(DispForceVectorResults):
         self.location = 'node'
         str(self)
 
+    @classmethod
+    def add_from_displacements(cls, displacements: dict,
+                               subcase_id: int, node_id, xyz):
+        case = displacements[subcase_id]
+        t123_offset = 0
+        out = DisplacementResults2(
+            subcase_id, node_id, xyz, dxyz=case,
+            title='title', t123_offset=t123_offset)
+        out.inode_result = np.searchsorted(
+            case.node_gridtype[:, 0], node_id)
+        assert len(out.inode_result) == 72, out.inode_result
+        return out
+
+    def set_translations(self, translations, value_str: str='Magnitude'):
+        """
+        translations:
+        [0, 1, 2]
+        """
+        self.component_indices = tuple(translations)
+        assert len(translations) <= 3, translations
+        #self.component_indices = np.array(translations, dtype='int32')
+        min_max_method = value_str.title()
+        #method_keys = []
+        # is_real = self.is_real
+        # self.component_indices = get_component_indices(method_keys, is_real)
+
+        min_max_methods = ['Magnitude', 'Value']
+        assert min_max_method in min_max_methods, (min_max_methods, min_max_methods)
+        self.min_max_method = min_max_method
+
     def _calculate_scale(self, itime: int, res_name: str) -> float:
         fringe_data = self._get_fringe_data_sparse(itime, res_name)
 
@@ -136,9 +166,12 @@ class DisplacementResults2(DispForceVectorResults):
         return self.xyz, dxyz * scale
 
     def get_vector_result(self, itime: int, res_name: str,
+                          scale: Optional[float]=None,
                           return_dense: bool=True) -> tuple[np.ndarray, np.ndarray]:
         """returns dense data"""
-        scale = self.get_scale(itime, res_name)
+        if scale is None:
+            scale = self.get_scale(itime, res_name)
+
         if self.is_real:
             dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
             assert dxyz.ndim == 2, dxyz
