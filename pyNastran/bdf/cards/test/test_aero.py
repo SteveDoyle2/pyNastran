@@ -38,6 +38,7 @@ ROOTPATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(ROOTPATH, '..', 'models')
 TEST_PATH = os.path.join(ROOTPATH, 'bdf', 'cards', 'test')
 AERO_PATH = Path(MODEL_PATH) / 'aero'
+ZONA_PATH = AERO_PATH / 'zona'
 
 COMMENT_BAD = 'this is a bad comment'
 COMMENT_GOOD = 'this is a good comment\n'
@@ -3011,7 +3012,7 @@ class TestAero(unittest.TestCase):
     def test_zona_1(self):
         """zona explicit test"""
         log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
-        bdf_filename = AERO_PATH / 'f16_ma41.bdf'
+        bdf_filename = ZONA_PATH / 'f16_ma41.bdf'
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
@@ -3024,7 +3025,7 @@ class TestAero(unittest.TestCase):
     def test_zona_2(self):
         """zona explicit test"""
         log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
-        bdf_filename = AERO_PATH / 'ztran.bdf'
+        bdf_filename = ZONA_PATH / 'ztran.bdf'
         model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
