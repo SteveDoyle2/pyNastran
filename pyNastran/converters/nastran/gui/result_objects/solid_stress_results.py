@@ -24,7 +24,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
                  node_id: np.ndarray,
                  element_id: np.ndarray,
                  cases: list[RealSolidArray],
-                 result: str,
+                 result_dict: dict[int | str, Any],
                  title: str,
                  #dim_max: float=1.0,
                  data_format: str='%g',
@@ -40,12 +40,24 @@ class SolidStrainStressResults2(VectorResultsCommon):
         ----------
         subcase_id : int
             the flag that points to self.subcases for a message
+        model : BDF
+            the geometry model
+        node_id: (nnode,) int np.ndarray
+            all the nodes ids in the model
+        element_id: (nelement,) int np.ndarray
+            all the element ids in the model
+        cases: list[RealSolidArray]
+            all the solid stress/strain cases for a given subcase
+        result_dict: dict[int | str, Any]
+            mapping of the result types
+        title: str
+            the legend title
+        data_format: str='%g'
+            ???
+        is_variable_data_format: bool=False
+            ???
         headers : list[str]
             the sidebar word
-        titles : list[str]
-            the legend title
-        xyz : (nnodes, 3)
-            the nominal xyz locations
         data_formats : str
             the type of data result (e.g. '%i', '%.2f', '%.3f')
         ncolors : int; default=None
@@ -103,7 +115,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
 
         # local case object
         #self.cases = cases
-        self.result = result
+        self.result_dict = result_dict
 
         self.data_type = case.data.dtype.str # '<c8', '<f4'
         self.is_real = True if self.data_type in ['<f4', '<f8'] else False
@@ -155,6 +167,34 @@ class SolidStrainStressResults2(VectorResultsCommon):
         str(self)
 
     @classmethod
+    def add_stress(cls,
+                   subcase_id: int,
+                   model: BDF,
+                   model_results: OP2,
+                   element_id: np.ndarray,):
+                   #is_variable_data_format: bool=False,
+                   #prefix='stress'):
+        out = cls.load_from_code(
+            subcase_id, model, model_results, element_id,
+            is_stress=True,
+            require_results=True)
+        return out
+
+    @classmethod
+    def add_strain(cls,
+                   subcase_id: int,
+                   model: BDF,
+                   model_results: OP2,
+                   element_id: np.ndarray,):
+                   #is_variable_data_format: bool=False,
+                   #prefix='stress'):
+        out = cls.load_from_code(
+            subcase_id, model, model_results, element_id,
+            is_stress=False,
+            require_results=True)
+        return out
+
+    @classmethod
     def load_from_code(cls,
                        subcase_id: int,
                        model: BDF,
@@ -165,11 +205,12 @@ class SolidStrainStressResults2(VectorResultsCommon):
                        #prefix='stress',
                        require_results: bool=True):
         """the intention of this method is to not use the gui"""
+        assert is_stress, is_stress
         solid_cases, subcase_id = get_real_solid_cases(
             element_id,
             model_results,
             subcase_id,
-            is_stress=True,
+            is_stress=is_stress,
             prefix='',
             require_results=require_results)
 
@@ -243,6 +284,18 @@ class SolidStrainStressResults2(VectorResultsCommon):
         #}
         # if Both is selected, only use Both
         # methods = ['Both', 'Top', 'Bottom']
+        self._method_keys_to_layer_indices(methods_keys)
+
+        # doesn't matter cause it's already nodal
+        #assert min_max_method in min_max_methods, min_max_method
+        assert nodal_combine in combine_methods, nodal_combine
+        #self.min_max_method = min_max_method
+        self.nodal_combine = nodal_combine
+        self.transform = transform
+
+    def _method_keys_to_layer_indices(self,
+                                      methods_keys: Optional[list[int]]=None,
+                                      ) -> tuple[int, ...]:
         default_indices = self._get_default_layer_indicies()
         if methods_keys is None or len(methods_keys) == 0:
             # default; Centroid
@@ -255,13 +308,11 @@ class SolidStrainStressResults2(VectorResultsCommon):
             indices = (0, )
         self.layer_indices = indices
         #self.layer_indices = (1, )
-
-        # doesn't matter cause it's already nodal
-        #assert min_max_method in min_max_methods, min_max_method
-        assert nodal_combine in combine_methods, nodal_combine
-        #self.min_max_method = min_max_method
-        self.nodal_combine = nodal_combine
-        self.transform = transform
+    def set_to_centroid(self):
+        self.layer_indices = (0, )
+    def set_to_node(self, nodal_combine: str):
+        self.layer_indices = (1, )
+        self._set_nodal_combine_transform(nodal_combine)
 
     def has_methods_table(self, i: int, res_name: str) -> bool:
         return True
@@ -280,6 +331,12 @@ class SolidStrainStressResults2(VectorResultsCommon):
         #}
         #return True, out
         return False, {}
+    def _set_nodal_combine_transform(self, nodal_combine: str) -> None:
+        itime = -1
+        res_name = ''
+        junk, allowed = self.has_nodal_combine_transform(itime, res_name)
+        assert nodal_combine in allowed, f'nodal_combine={nodal_combine!r} is not allowed; allowed={allowed}'
+        self.nodal_combine = nodal_combine
     def has_nodal_combine_transform(self, i: int, res_name: str) -> tuple[bool, list[str]]:
         """elemental -> nodal (only applies for Corner)"""
         return True, ['Absolute Max', 'Mean', 'Max', 'Min',
@@ -303,7 +360,6 @@ class SolidStrainStressResults2(VectorResultsCommon):
         nodal_combine = 'Nodal Max'
         returns 'Solid Stress (Center, Absolute Max; Max, Static): sigma11'
 
-
         returns 'Solid Stress (Centroid, Static): sigma11'
         """
         # overwrite itime based on linked_scale factor
@@ -322,7 +378,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
             raise RuntimeError(self.layer_indices)
         self.layer_indices
 
-        result = get_solid_result(self.result, iresult, index=1)
+        result = get_solid_result(self.result_dict, iresult, index=1)
 
         title = self.get_legend_title(itime, case_tuple)
         if layer_str == 'Centroid':
@@ -370,7 +426,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
         #self.result
         #method = method_ + ', '.join(str(idx) for idx in (self.layer_indices+1))
         #title = f'{self.title} {method}'
-        result = get_solid_result(self.result, iresult, index=0)
+        result = get_solid_result(self.result_dict, iresult, index=0)
         return result
 
     def _get_real_data(self, case_tuple: CaseTuple) -> np.ndarray:
@@ -397,6 +453,54 @@ class SolidStrainStressResults2(VectorResultsCommon):
 
         assert len(data.shape) == 1, data.shape
         return data
+
+    def get_case_tuple(self, itime: int, result_name: str,
+                       ) -> tuple[int, int | str, str]:
+        assert itime <= self.centroid_data.shape[0]
+        result_name = result_name.lower()
+        if result_name in self.result_dict:
+            iresult = result_name
+
+        # result_dict = {
+        #     0: ('Normal XX', 'XX'),
+        #     1: ('Normal YY', 'YY'),
+        #     2: ('Normal ZZ', 'ZZ'),
+        #     3: ('Shear XY', 'XY'),
+        #     4: ('Shear YZ', 'YZ'),
+        #     5: ('Shear XZ', 'XZ'),
+        #     6: ('Max Principal', 'Max Principal'),
+        #     8: ('Min Principal', 'Min Principal'),
+        #     7: ('Mid Principal', 'Mid Principal'),
+        #     9: ('von Mises', 'von Mises'),
+        #     'max_shear': ('Max Shear', 'Max Shear'),
+        # }
+        elif result_name in (0, 'xx', 'normal xx'):
+            iresult = 0
+        elif result_name in (1, 'yy', 'normal yy'):
+            iresult = 1
+        elif result_name in (2, 'zz', 'normal zz'):
+            iresult = 2
+        elif result_name in (3, 'xy', 'shear xy'):
+            iresult = 3
+        elif result_name in (4, 'yz', 'shear xy'):
+            iresult = 4
+        elif result_name in (5, 'xz', 'shear xz'):
+            iresult = 5
+            #     6: ('Max Principal', 'Max Principal'),
+            #     8: ('Min Principal', 'Min Principal'),
+            #     7: ('Mid Principal', 'Mid Principal'),
+            #     9: ('von Mises', 'von Mises'),
+            #     'max_shear': ('Max Shear', 'Max Shear'),
+        elif result_name in {'von_mises', 'max_shear'}:
+            iresult = result_name if result_name in self.result_dict else 9
+            # is_von_mises = solid_case.is_von_mises
+            # assert isinstance(is_von_mises, bool), is_von_mises
+            # von_misesi = 9 if is_von_mises else 'von_mises'
+            # max_sheari = 9 if not is_von_mises else 'max_shear'
+            # iresult = result_name
+        else:  # pragma: no cover
+            raise RuntimeError(result_name)
+        return (itime, iresult, '')
 
     def _get_centroid_result(self, itime: int,
                              iresult: int | str) -> np.ndarray:
@@ -657,7 +761,7 @@ class SolidStrainStressResults2(VectorResultsCommon):
         return msg
 
 
-def get_solid_result(result: dict[int | str, Any],
+def get_solid_result(result_dict: dict[int | str, Any],
                      iresult: int | str, index: int) -> str:
     """
     values
@@ -665,7 +769,7 @@ def get_solid_result(result: dict[int | str, Any],
     ('sAbs Principal', 'Abs Principal')
     """
     assert index in (0, 1), index
-    results = result[iresult]
+    results = result_dict[iresult]
     return results[index]
 
 def setup_centroid_node_data(cases: list[RealSolidArray],
@@ -788,6 +892,7 @@ def get_real_solid_cases(element_id: np.ndarray,
     assert isinstance(require_results, bool), require_results
     solids, word, subcase_id, analysis_code = _get_solids(
         model, key, is_stress, prefix)
+    assert len(solids) > 0, solids
 
     solid_cases = []
     for solid_case in solids:
@@ -798,6 +903,8 @@ def get_real_solid_cases(element_id: np.ndarray,
         if len(common_eids) == 0:
             continue
         solid_cases.append(solid_case)
+
+    assert len(solid_cases) > 0, solid_cases
     return solid_cases, subcase_id
 
 def _get_solids(results: OP2,
@@ -827,15 +934,19 @@ def _get_solids(results: OP2,
         ]
         word = 'Stress'
     else:
+        bbb
         strain = results.op2_results.strain
         cards = [
             strain.ctetra_strain, strain.cpenta_strain, strain.chexa_strain, # strain.cpyram_strain,
         ]
         word = 'Strain'
+    cards = [card for card in cards if card]
+    assert len(cards) > 0, cards
 
     cards2 = []
     for result in cards:
         if key not in result:
             continue
         cards2.append(result[key])
+    assert len(cards2) > 0, cards2
     return cards2, word, subcase_id, analysis_code

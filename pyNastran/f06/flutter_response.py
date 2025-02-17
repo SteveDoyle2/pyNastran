@@ -410,13 +410,16 @@ class FlutterResponse:
             # npoint, nvelocity, 3?
             #self.eigr_eigi_velocity = self.eigenvector.reshape(nmodes, nvelocity, 3)
             # nmodes_mpf, npoint, nvelocity?
-            if 0:
-                eigenvector, eigr_eigi_velocity = reshape_eigenvectors(
+            reshape_eigenvectors = True
+            if reshape_eigenvectors:
+                eigenvector, eigr_eigi_velocity = _reshape_eigenvectors(
                     self.eigenvector, self.eigr_eigi_velocity)
                 self.eigenvector = eigenvector
                 self.eigr_eigi_velocity = eigr_eigi_velocity
                 assert len(self.eigenvector) and len(self.eigr_eigi_velocity), (len(self.eigenvector), len(self.eigr_eigi_velocity))
                 #= self.eigenvector.reshape(nmodes, nmodes, nvelocity)
+            assert eigr_eigi_velocity.ndim == 3, eigr_eigi_velocity
+            assert eigr_eigi_velocity.shape[2] == 3, eigr_eigi_velocity
 
             nvelocity = results.shape
 
@@ -939,6 +942,7 @@ class FlutterResponse:
         #eigr_eigi_velocity:
         #[[-9.88553e-02  1.71977e+01  1.52383e+02]
         # [-1.71903e-01  6.60547e+01  1.52383e+02]]
+        assert self.eigr_eigi_velocity.ndim == 3, self.eigr_eigi_velocity.shape
         nvel, nmode = self.eigr_eigi_velocity.shape[:2]
         assert ivel < nvel, f'ivel={ivel} nvel={nvel}'
         assert mode <= nmode, f'mode={mode} nmode={nmode}'
@@ -950,6 +954,7 @@ class FlutterResponse:
             eigr_eigi_velocity = self.eigr_eigi_velocity[ivel, imode, :]
         except IndexError:
             raise RuntimeError(f'eigr_eigi_velocity.shape=(ivel, imode, :)={self.eigr_eigi_velocity.shape}; ivel={ivel} nvel={nvel} imode={imode}')
+        #print(f'eigr_eigi_velocity = {eigr_eigi_velocity}')
         eigri, eigii, velocityi = eigr_eigi_velocity
 
         omega_damping = eigri
@@ -1518,7 +1523,7 @@ class FlutterResponse:
         xvalues = self.results[0, :, ix]
         print(f'imodes = {imodes}')
         for i, imodei, modei in zip(count(), imodes, modes):
-            for j, jmodei, modej in enumerate(count(), imodes[i+1:], modes):
+            for j, jmodei, modej in zip(count(), imodes[i+1:], modes):
                 if modei == modej:
                     continue
                 Fi, Fsi = self.calculate_zimmerman(imodei, jmodei)
@@ -2738,9 +2743,9 @@ def _show_save_clear_close(fig: plt.Figure,
         plt.close()
 
 
-def reshape_eigenvectors(eigenvectors: np.array,
-                         eigr_eigi_vel: np.array,
-                         incorrect_shape: bool=False) -> np.ndarray:
+def _reshape_eigenvectors(eigenvectors: np.array,
+                          eigr_eigi_vel: np.array,
+                          incorrect_shape: bool=False) -> np.ndarray:
     """
     Parameters
     ----------

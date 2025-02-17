@@ -319,6 +319,8 @@ class VectorResultsCommon(GuiResultCommon):
         itime, case_flag = self.get_case_flag(itime, res_name)
         if self.linked_scale_factor:
             itime = 0
+
+        # TODO: how is this filled?
         scales = self.scales[case_flag]
         scale = scales[itime]
         if is_blank(scale):
@@ -460,7 +462,7 @@ class DispForceVectorResults(VectorResultsCommon):
         #  global node ids
         self.node_id = node_id
 
-        self.data_type = self.case.data.dtype.str # '<c8', '<f4'
+        self.data_type = self.case.data.dtype.str  # '<c8', '<f4'
         self.is_real = True if self.data_type in ['<f4', '<f8'] else False
         #self.is_real = case.data.dtype.name in {'float32', 'float64'}
         self.is_complex = not self.is_real
@@ -506,11 +508,7 @@ class DispForceVectorResults(VectorResultsCommon):
         #}
         assert transform in transforms, transform
 
-        if self.is_real:
-            component_indices = _get_real_component_indices(methods_keys)
-        else:
-            component_indices = _get_complex_component_indices(methods_keys)
-        self.component_indices = component_indices
+        self.component_indices = get_component_indices(method_keys, self.is_real)
 
         # handle confusing data (can't plot a scalar for 2 components)
         if len(self.component_indices) > 1 and min_max_method == 'Value':
@@ -524,7 +522,6 @@ class DispForceVectorResults(VectorResultsCommon):
         str(self)
 
     #--------------------------------------------------------------
-
     def get_methods(self, itime: int, res_name: str) -> list[str]:
         if self.is_real:
             i0 = self.t123_offset
@@ -708,7 +705,8 @@ class DispForceVectorResults(VectorResultsCommon):
         assert len(dxyz) > 0, dxyz
         return dxyz, idxs
 
-    def get_vector_data_dense(self, itime: int, res_name: str) -> tuple[np.ndarray, int, Any]:
+    def get_vector_data_dense(self, itime: int,
+                              res_name: str) -> tuple[np.ndarray, int, Any]:
         """calculates a dense vector"""
         itime, case_flag = self.get_case_flag(itime, res_name)
         dxyz_sparse, unused_idx = self._get_vector_data_sparse(itime, res_name)
@@ -784,6 +782,15 @@ class DispForceVectorResults(VectorResultsCommon):
         self._set_default_from_fringe(itime, case_flag, fringe_result,
                                       is_sparse=False)
         return fringe_result, vector_result
+
+
+def get_component_indices(methods_keys: list[int],
+                          is_real: bool) -> np.ndarray:
+    if is_real:
+        component_indices = _get_real_component_indices(methods_keys)
+    else:
+        component_indices = _get_complex_component_indices(methods_keys)
+    return component_indices
 
 
 def get_fringe_value_array(component_indices: tuple[int, ...],
