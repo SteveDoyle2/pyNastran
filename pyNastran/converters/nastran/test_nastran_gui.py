@@ -1944,7 +1944,7 @@ class TestNastranGUI(unittest.TestCase):
 
 
     def test_gui_zona_model_1(self):
-        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
+        bdf_filename = MODEL_PATH / 'aero' / 'zona' / 'f16_ma41.bdf'
         test = NastranGUI()
         test.log = SimpleLogger(level='error', encoding='utf-8')
         test.load_nastran_geometry(bdf_filename)
