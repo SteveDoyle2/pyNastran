@@ -72,13 +72,13 @@ def out_dict_to_results(out_dict: dict,
         # ref_dict = {'MACH': (0.8, ''), 'ATMOS TABLE': ('STANDARD', ''),
         #             'REFERENCE LENGTH (L)': (1.0, 'in'),
         #             'VREF': (2.0, 'in/s')}
-        print('ref_dict = ', ref_dict)
+        #print('ref_dict = ', ref_dict)
         vref, velocity_units = ref_dict['VREF']
         atmos_table = ref_dict['ATMOS TABLE'][0]
         assert atmos_table == 'STANDARD', atmos_table
         mach = ref_dict['MACH'][0]
         #alt, altitude_units = ref_dict['ALT']
-        print(f'vref={vref}; velocity_units={velocity_units}')
+        #print(f'vref={vref}; velocity_units={velocity_units}')
         velocity = header_data[:, 0] * vref
         density = header_data[:, 1]
         q = 0.5 * density * velocity ** 2
@@ -101,7 +101,7 @@ def out_dict_to_results(out_dict: dict,
             mach = ref_dict['MACH'][0]
         else:
             raise RuntimeError(f'V,q; {ref_dict}')
-        print(f'density = {density}')
+        log.debug(f'density = {density}')
     else:  # pragma: no cover
         raise NotImplementedError(header_name)
 
@@ -116,8 +116,8 @@ def out_dict_to_results(out_dict: dict,
         altitude_units = 'm'
         dynamic_pressure_units = 'Pa'
 
-    print(f'out_dict = {list(out_dict.keys())}')
-    print(f'out_dict[header] = {out_dict['header']}')
+    #print(f'out_dict = {list(out_dict.keys())}')
+    #print(f'out_dict[header] = {out_dict['header']}')
     in_units = {
         'velocity': velocity_units,
         'density': density_units,

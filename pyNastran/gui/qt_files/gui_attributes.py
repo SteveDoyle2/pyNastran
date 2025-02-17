@@ -202,7 +202,7 @@ class GuiAttributes:
         #self.format = ''
         debug = inputs['debug']
         self.debug = debug
-        assert debug in [True, False], 'debug=%s' % debug
+        assert debug in [True, False, None], 'debug=%s' % debug
 
         #-------------
         # format

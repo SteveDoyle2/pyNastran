@@ -1507,6 +1507,7 @@ class GuiQtCommon(GuiAttributes):
                         self._is_forces = True
                         scale = obj.get_scale(i, res_name)
                         xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+
                         self._update_forces(vector_data, scale)
                         self.icase_vector = icase
 
