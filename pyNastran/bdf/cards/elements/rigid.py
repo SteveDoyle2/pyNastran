@@ -687,7 +687,8 @@ class RBE1(RigidElementBase):  # maybe not done, needs testing
     +------+-----+-----+-----+-------+-----+-----+-----+
     """
     type = 'RBE1'
-    _properties = ['Gmi_node_ids', 'Gni_node_ids', 'dependent_nodes', 'independent_nodes']
+    _properties = ['Gmi_node_ids', 'Gni_node_ids',
+                   'dependent_nodes', 'independent_nodes', 'nodes']
 
     @classmethod
     def _init_from_empty(cls):
@@ -853,6 +854,11 @@ class RBE1(RigidElementBase):  # maybe not done, needs testing
         return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
 
     @property
+    def nodes(self) -> list[int]:
+        """gets all the nodes that are used"""
+        return self.independent_nodes + self.dependent_nodes
+
+    @property
     def independent_nodes(self) -> list[int]:
         """gets the independent node ids"""
         # checked
@@ -917,7 +923,7 @@ class RBE2(RigidElementBase):
     """
     type = 'RBE2'
     _field_map = {1: 'eid', 2:'gn', 3:'cm'}
-    _properties = ['Gmi_node_ids', 'dependent_nodes', 'independent_nodes']
+    _properties = ['Gmi_node_ids', 'dependent_nodes', 'independent_nodes', 'nodes']
 
     @classmethod
     def _init_from_empty(cls):
@@ -1187,6 +1193,11 @@ class RBE2(RigidElementBase):
         return np.unique(non_unique_gmi_node_ids).tolist()
 
     @property
+    def nodes(self) -> list[int]:
+        """gets all the nodes that are used"""
+        return self.independent_nodes + self.dependent_nodes
+
+    @property
     def independent_nodes(self) -> list[int]:
         """gets the independent node ids"""
         nodes = [self.Gn()]
@@ -1236,7 +1247,7 @@ class RBE3(RigidElementBase):
     """
     type = 'RBE3'
     _properties = ['wt_cg_groups', 'ref_grid_id', 'Gijs_node_ids',
-                   'dependent_nodes', 'independent_nodes']
+                   'dependent_nodes', 'independent_nodes', 'nodes']
     _field_map = {4: 'refgrid', 5: 'refc',}
 
     @classmethod
@@ -1648,6 +1659,11 @@ class RBE3(RigidElementBase):
             gij = self._node_ids(nodes=gij, allow_empty_nodes=True)
             Gij.append(gij)
         self.Gijs = Gij
+
+    @property
+    def nodes(self) -> list[int]:
+        """gets all the nodes that are used"""
+        return self.independent_nodes + self.dependent_nodes
 
     @property
     def independent_nodes(self) -> list[int]:

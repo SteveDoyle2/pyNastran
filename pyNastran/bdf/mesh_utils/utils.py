@@ -5,6 +5,7 @@ defines:
     bdf renumber     IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
     bdf mirror       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
     bdf export_mcids IN_BDF_FILENAME [-o OUT_GEOM_FILENAME]\n'
+    bdf solid_dof    IN_BDF_FILENAME
     bdf split_cbars_by_pin_flags IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
     bdf flutter UNITS [-o OUT_BDF_FILENAME]
 
@@ -20,6 +21,7 @@ import numpy as np
 import pyNastran
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
+from pyNastran.bdf.mesh_utils.solid_dof import solid_dof
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
@@ -961,6 +963,45 @@ def cmd_line_export_mcids(argv=None, quiet=False) -> None:
                      export_xaxis=export_xaxis, export_yaxis=export_yaxis, iply=iply)
         model.log.info('wrote %s' % csv_filename)
 
+def cmd_line_solid_dof(argv=None, quiet: bool=False) -> None:
+    """command line interface to solid_dof"""
+    if argv is None:  # pragma: no cover
+        argv = sys.argv
+
+    msg = (
+        'Usage:\n'
+        '  bdf solid_dof IN_BDF_FILENAME\n'
+        '  bdf solid_dof -h | --help\n'
+        '  bdf solid_dof -v | --version\n'
+        '\n'
+
+        'Positional Arguments:\n'
+        '  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n'
+        '\n'
+
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
+    filter_no_args(msg, argv, quiet=quiet)
+
+    ver = str(pyNastran.__version__)
+    #type_defaults = {
+    #    '--nerrors' : [int, 100],
+    #}
+    data = docopt(msg, version=ver, argv=argv[1:])
+    if not quiet:  # pragma: no cover
+        print(data)
+    #size = 16
+    bdf_filename = data['IN_BDF_FILENAME']
+
+    #level = 'debug' if not quiet else 'warning'
+    #log = SimpleLogger(level=level, encoding='utf-8')
+    #model = read_bdf(bdf_filename, log=log, xref=False)
+
+    model, out_nids = solid_dof(bdf_filename)
+    model.log.info('done')
+
 def cmd_line_remove_unused(argv=None, quiet=False) -> None:
     """command line interface to remove_unused"""
     if argv is None:  # pragma: no cover
@@ -1388,6 +1429,7 @@ CMD_MAPS = {
     'collapse_quads': cmd_line_collapse_quads,
     'scale': cmd_line_scale,
     'export_mcids': cmd_line_export_mcids,
+    'solid_dof': cmd_line_solid_dof,
     'remove_unused': cmd_line_remove_unused,
     'split_cbars_by_pin_flags': cmd_line_split_cbars_by_pin_flag,
     'run_jobs': cmd_line_run_jobs,
