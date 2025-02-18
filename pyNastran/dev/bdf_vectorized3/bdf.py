@@ -4449,7 +4449,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 raise NotImplementedError(key)
 
         if hasattr(self, 'code_block'):
-            exec(self.code_block)
+            exec(self.code_block, sys._getframe().f_locals)
 
 #---------------------------------------------------------------------------------------------------
     # HDF5

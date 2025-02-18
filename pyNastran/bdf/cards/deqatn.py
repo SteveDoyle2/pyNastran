@@ -7,6 +7,7 @@ The capitalization of the sub-functions is important.
 """
 from __future__ import annotations
 import re
+import sys
 from typing import Any, Optional, TYPE_CHECKING
 import numpy as np
 from numpy import (
@@ -298,12 +299,14 @@ class DEQATN(BaseCard):  # needs work...
 
         self.func_str = func_str
         self.func_name = func_name
+
         try:
-            exec(func_str)
+            exec(func_str, locals=sys._getframe().f_locals)
         except SyntaxError:
             print(func_str)
             raise
         #print(locals().keys())
+
         func = locals()[func_name]
         setattr(self, func_name, func)
         #print(func)

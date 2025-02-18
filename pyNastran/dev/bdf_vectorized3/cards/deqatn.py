@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 from typing import TYPE_CHECKING
 from copy import deepcopy
 
@@ -148,7 +149,7 @@ class DEQATN(BaseCard):  # needs work...
         self.func_str = func_str
         self.func_name = func_name
         try:
-            exec(func_str)
+            exec(func_str, sys._getframe().f_locals)
         except SyntaxError:
             print(func_str)
             raise

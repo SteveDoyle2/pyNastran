@@ -160,7 +160,7 @@ class TestDEQATN(unittest.TestCase):
         func_str = 'def f(x, y, z):\n'
         func_str += '    c = 3\n'
         func_str += '    return x + y + z + c\n'
-        #func = exec(fnc_str)
+        #func = exec(fnc_str, sys._getframe().f_locals)
 
         #s = StringIO()
         #s.write(s)

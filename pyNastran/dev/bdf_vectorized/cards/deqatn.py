@@ -5,6 +5,7 @@ Defines the DEQATN class and sub-functions.
 The capitalization of the sub-functions is important.
 """
 from __future__ import annotations
+import sys
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -223,7 +224,7 @@ class DEQATN(BaseCard):  # needs work...
             self.eqs, default_values, str(self))
         self.func_str = func_str
         self.func_name = func_name
-        exec(func_str)
+        exec(func_str, sys._getframe().f_locals)
         #print(locals().keys())
         func = locals()[func_name]
         setattr(self, func_name, func)
