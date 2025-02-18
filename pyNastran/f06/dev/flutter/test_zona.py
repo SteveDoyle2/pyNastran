@@ -2,6 +2,7 @@ from pathlib import Path
 import unittest
 import pyNastran
 from pyNastran.f06.dev.flutter.read_zona_out import read_zona_out
+from pyNastran.f06.dev.flutter.read_zona_aic import read_zona_aic
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_DIR = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples' / 'flutter'
 
@@ -9,6 +10,8 @@ MODEL_DIR = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples' / 'flutter'
 class TestZona(unittest.TestCase):
     def test_zona_case1_out(self):
         zona_out_filename = MODEL_DIR / 'case1' / 'ha145e.out'
+        aic_filename = MODEL_DIR / 'case1' / 'HA145E_AIC.45'
+        read_zona_aic(aic_filename)
         responses, mass = read_zona_out(zona_out_filename, debug=None)
         assert len(responses) == 1, responses
         assert len(mass) == 0, mass

@@ -320,7 +320,9 @@ class BDFInputPy:
                         filename = os.path.splitext(filename)[0] + '.bdf'
                     if not filename.endswith('.bdf'):
                         raise RuntimeError(f'filename must end in bdf; {filename}')
-
+                    if not os.path.exists(filename):
+                        log.error(f'skipping {filename}')
+                        continue
                     _main_lines = self.get_main_lines(filename)
                     make_ilines = bulk_data_ilines is not None
                     all_lines, ilines = self.lines_to_deck_lines(_main_lines)

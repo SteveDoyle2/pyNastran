@@ -1,3 +1,4 @@
+$ pyNastran: version=zona
 ASSIGN FEM=f16anti.fre, PRINT =0, FORM = FREE, BOUND = ANTI                               
 CEND                                                                            
 $

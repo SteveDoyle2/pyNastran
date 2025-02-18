@@ -12,6 +12,7 @@ import numpy as np
 from cpylog import SimpleLogger
 
 import pyNastran
+from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, read_bdf
 from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.aero.aero import (
@@ -34,14 +35,16 @@ if IS_MATPLOTLIB:
     import matplotlib.pyplot as plt
 
 
-ROOTPATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(ROOTPATH, '..', 'models')
-TEST_PATH = os.path.join(ROOTPATH, 'bdf', 'cards', 'test')
-AERO_PATH = Path(MODEL_PATH) / 'aero'
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / '..' / 'models'
+TEST_PATH = PKG_PATH / 'bdf' / 'cards' / 'test'
+AERO_PATH = MODEL_PATH / 'aero'
 ZONA_PATH = AERO_PATH / 'zona'
-
+FLUTTER_DIR = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples' / 'flutter'
+assert FLUTTER_DIR.exists(), print_bad_path(FLUTTER_DIR)
 COMMENT_BAD = 'this is a bad comment'
 COMMENT_GOOD = 'this is a good comment\n'
+
 class TestAero(unittest.TestCase):
     """
     The Aero cards are:
@@ -1072,7 +1075,7 @@ class TestAero(unittest.TestCase):
         """checks the CAERO1/PAERO1/AEROS/AEFACT card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.bdf_filename = os.path.join(TEST_PATH, 'test_caero1_1.bdf')
+        model.bdf_filename = TEST_PATH / 'test_caero1_1.bdf'
         model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                                 nxref_errors=0, stop_on_xref_error=True)
 
@@ -1319,7 +1322,7 @@ class TestAero(unittest.TestCase):
         """checks the SPLINE1 card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.bdf_filename = os.path.join(TEST_PATH, 'test_spline1.bdf')
+        model.bdf_filename = TEST_PATH / 'test_spline1.bdf'
 
         eid = 1
         caero_id = 100
@@ -1406,7 +1409,7 @@ class TestAero(unittest.TestCase):
         """checks the SPLINE2 card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.bdf_filename = os.path.join(TEST_PATH, 'test_spline2.bdf')
+        model.bdf_filename = TEST_PATH / 'test_spline2.bdf'
         #+---------+------+-------+-------+-------+------+----+------+-----+
         #| SPLINE2 | EID  | CAERO |  ID1  |  ID2  | SETG | DZ | DTOR | CID |
         #|         | DTHX | DTHY  | None  | USAGE |      |    |      |     |
@@ -1489,7 +1492,7 @@ class TestAero(unittest.TestCase):
         """checks the CAERO2/PAERO2/AERO/AEFACT card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.bdf_filename = os.path.join(TEST_PATH, 'test_caero2_1.bdf')
+        model.bdf_filename = TEST_PATH / 'test_caero2_1.bdf'
         eid = 1
         pid = 10
         cp = 4
@@ -1672,7 +1675,7 @@ class TestAero(unittest.TestCase):
 
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.bdf_filename = os.path.join(TEST_PATH, 'test_caero3_1.bdf')
+        model.bdf_filename = TEST_PATH / 'test_caero3_1.bdf'
         coord = CORD2R.add_card(BDFCard(['CORD2R', cp, 0,
                                          0., 0., 0.,
                                          0., 0., 1.,
@@ -1806,7 +1809,7 @@ class TestAero(unittest.TestCase):
         """checks the CAERO4/PAERO4"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.bdf_filename = os.path.join(TEST_PATH, 'test_caero4_1.bdf')
+        model.bdf_filename = TEST_PATH / 'test_caero4_1.bdf'
         pid = 1001
         docs = []
         caocs = []
@@ -1906,14 +1909,14 @@ class TestAero(unittest.TestCase):
         card = ['PAERO5', pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus, ] + caoci
 
         model = BDF(debug=False)
-        #model.bdf_filename = os.path.join(TEST_PATH, 'test_caero5_1.bdf')
+        #model.bdf_filename = TEST_PATH / 'test_caero5_1.bdf'
         model.add_card(card, card[0], comment='', is_list=True,
                        has_none=True)
         paero5 = model.paeros[pid]
         paero5.raw_fields()
 
         model = BDF(debug=None)
-        model.bdf_filename = os.path.join(TEST_PATH, 'test_caero5_1.bdf')
+        model.bdf_filename = TEST_PATH / 'test_caero5_1.bdf'
         paero5 = model.add_paero5(pid, caoci, nalpha=0, lalpha=0, nxis=0, lxis=0,
                                   ntaus=0, ltaus=0, comment='paero5')
         paero5.validate()
@@ -1983,7 +1986,7 @@ class TestAero(unittest.TestCase):
         """checks the SPLINE3 card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.bdf_filename = os.path.join(TEST_PATH, 'test_spline3.bdf')
+        model.bdf_filename = TEST_PATH / 'test_spline3.bdf'
         eid = 100
         pid = 10
         igid = 1
@@ -2090,7 +2093,7 @@ class TestAero(unittest.TestCase):
         """checks the SPLINE4 card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.bdf_filename = os.path.join(TEST_PATH, 'test_spline4.bdf')
+        model.bdf_filename = TEST_PATH / 'test_spline4.bdf'
         eid = 1
         caero = 10
         aelist = 11
@@ -2148,7 +2151,7 @@ class TestAero(unittest.TestCase):
         """checks the SPLINE5 card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.bdf_filename = os.path.join(TEST_PATH, 'test_spline5.bdf')
+        model.bdf_filename = TEST_PATH / 'test_spline5.bdf'
         eid = 1
         caero = 10
         aelist = 11
@@ -2999,7 +3002,7 @@ class TestAero(unittest.TestCase):
         x43 = 0.5
         model.add_caero1(eid, pid, igroup, p1, x12, p4, x43, cp=0, nspan=10, lspan=0, nchord=10, lchord=0, comment='')
         model.add_paero1(pid)
-        caero_bdf_filename = os.path.join(TEST_PATH, 'caero.bdf')
+        caero_bdf_filename = TEST_PATH / 'caero.bdf'
         build_structure_from_caero(model, caero_bdf_filename)
 
         trim_load_cases = [
@@ -3034,7 +3037,7 @@ class TestAero(unittest.TestCase):
                        run_export_caero=False, run_test_bdf=False)
         model.zona.convert_to_nastran()
 
-    def test_zona_3(self):
+    def test_zona_model_1(self):
         """totally fake zona model"""
         bdf_file = get_zona_model()
 
@@ -3052,8 +3055,38 @@ class TestAero(unittest.TestCase):
         model.clear_attributes()
         model2 = read_bdf('zona.bdf', debug=None)
         os.remove('zona.bdf')
-
         model2.zona.convert_to_nastran()
+
+    def test_zona_case1_in(self):
+        zona_filename = FLUTTER_DIR / 'case1' / 'ha145e.out'
+        model = read_bdf(zona_filename, xref=False, debug=True)
+
+    def test_zona_case2_in(self):
+        zona_filename = FLUTTER_DIR / 'case2' / 'crop.inp'
+        model = read_bdf(zona_filename, xref=False, debug=True)
+
+    def test_zona_case3_in(self):
+        zona_filename = FLUTTER_DIR / 'case3' / 'ha145fb.out'
+        model = read_bdf(zona_filename, xref=False, debug=True)
+
+    def test_zona_case4_in(self):
+        zona_filename = FLUTTER_DIR / 'case4' / 'ha145g.out'
+        model = read_bdf(zona_filename, xref=False, debug=True)
+
+    def test_zona_case5_in(self):
+        zona_filename = FLUTTER_DIR / 'case5' / 'f16ma41.out'
+        model = read_bdf(zona_filename, xref=False, debug=True)
+    def test_zona_case6_in_trim(self):
+        zona_filename = FLUTTER_DIR / 'case6' / 'agard_trim.out'
+        model = read_bdf(zona_filename, xref=False, debug=True)
+
+    def test_zona_case6_in_tran(self):
+        zona_filename = FLUTTER_DIR / 'case6' / 'agardztran.out'
+        model = read_bdf(zona_filename, xref=False, debug=True)
+
+    def test_zona_case7_in(self):
+        zona_filename = FLUTTER_DIR / 'case7' / 'agardztaw.out'
+        model = read_bdf(zona_filename, xref=False, debug=True)
 
 def get_zona_model():
     bdf_file = StringIO()

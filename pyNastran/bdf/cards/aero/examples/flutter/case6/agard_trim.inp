@@ -1,3 +1,4 @@
+$ pyNastran: version=zona
 $ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
 $ THIS TRIM CASE GENERATES FORCE AND MOMENT OF CORRECTION MATRIX THAT   $
 $ ARE USED FOR THE ZTAW FORCE CORRECTION MATRIX METHOD                  $
