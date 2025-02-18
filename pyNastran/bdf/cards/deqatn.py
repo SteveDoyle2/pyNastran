@@ -299,9 +299,9 @@ class DEQATN(BaseCard):  # needs work...
 
         self.func_str = func_str
         self.func_name = func_name
-
+        exec_args = {'locals': sys._getframe().f_locals} if sys.version_info > (3, 13) else {}
         try:
-            exec(func_str, locals=sys._getframe().f_locals)
+            exec(func_str, **exec_args)
         except SyntaxError:
             print(func_str)
             raise
