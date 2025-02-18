@@ -479,7 +479,7 @@ class TestNastranGUI(unittest.TestCase):
         #self.settings.s
 
     def test_nastran_f16_aero(self):
-        dirname = ZONA_PATH / 'case5'
+        dirname = FLUTTER_PATH / 'case5'
         neu_filename = dirname / 'f16-aero.neu'
         test = NastranGUI()
         test.load_nastran_geometry(neu_filename)
