@@ -337,6 +337,7 @@ def _convert_elements(model: BDF,
 
         # TODO: NX-verify
         'CTRAX3', 'CTRAX6',
+        'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
         'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
         'CQUADX4', 'CQUADX8',
 

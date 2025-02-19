@@ -2145,7 +2145,6 @@ def hdf5_load_elements(model, elements_group, encoding):
                 'CPLSTS4' : model.add_cplsts4,
             }
             func = func_map[card_type]
-
             eids = _cast_array(elements['eid'])
             pids = _cast_array(elements['pid'])
             thetas = _cast_array(elements['theta'])

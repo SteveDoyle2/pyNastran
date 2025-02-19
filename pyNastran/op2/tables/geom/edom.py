@@ -2218,7 +2218,7 @@ class EDOM(GeomCommon):
                 pref = None
                 alpha = None
                 #flag3
-            else:
+            else:  # pragma: no cover
                 print(dvset_id, dvset_ptype1, dvset_ptype2, field, flag)
                 raise NotImplementedError(flag)
             pids = ints[i0+7:i1].tolist()

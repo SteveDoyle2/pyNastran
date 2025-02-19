@@ -1271,7 +1271,7 @@ class EDT:
                 paero3 = op2.add_paero3(pid, nbox, ncontrol_surfaces, x, y)
                 str(paero3)
                 n += n1
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(flag)
             #ncards += 1
         return n

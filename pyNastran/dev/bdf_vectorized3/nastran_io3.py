@@ -63,6 +63,7 @@ class Nastran3:
         self.gui = gui
         self.data_map = None
         self.save_results_model = False
+        self.stop_on_failure = False
 
         # filters
         self.etypes_filter = {} # TODO: doesn't work
@@ -85,7 +86,7 @@ class Nastran3:
         self.bar_lines = {}
         self.include_mass_in_geometry = True
 
-        #
+        # dictionary of filename to boolean (???)
         self.card_index = {}
 
     def get_nastran3_wildcard_geometry_results_functions(self) -> tuple:
@@ -495,6 +496,8 @@ class Nastran3:
                     element_id, property_id, self.card_index)
             except Exception as e:
                 log.error('failed creating material_ids results')
+                if self.stop_on_failure:
+                    raise
 
         form = [
             ('Geometry', None, geometry_form),
@@ -889,6 +892,29 @@ def gui_material_ids(model: BDF,
                      element_ids: np.ndarray,
                      property_ids: np.ndarray,
                      card_index: dict[str, tuple[int, int]]) -> int:
+    """
+    Parameters
+    ----------
+    model : BDF
+        the vectorized model
+    icase : int
+        the starting index for results
+    cases : dict[int, Any]
+        the cases
+    element_ids : (nelement,) int ndarray
+        the element ids
+    property_ids : (nelement,) int ndarray
+        the property ids
+    card_index : dict[card_type, tuple[i0, i1]]
+        card_type: str
+            the type of card
+        value: (i0, i1): (int, int):
+            the element/property index into the relevant type
+
+    card_index = {
+        'CQUAD4': (i0, i1)
+    }
+    """
     cards = (
         ('Rod', False, [model.conrod], []),
         ('Rod', True, [model.crod], [model.prod]),
@@ -934,7 +960,7 @@ def gui_material_ids(model: BDF,
                     #pcomp_material_id = np.full((neid, 4), 0, dtype=idtype)
                 elif flag == 'Solid':
                     material_id = np.full(neid, 0, dtype=idtype)
-                else:
+                else:  # pragma: no cover
                     raise RuntimeError(flag)
 
                 if flag != 'Shell':

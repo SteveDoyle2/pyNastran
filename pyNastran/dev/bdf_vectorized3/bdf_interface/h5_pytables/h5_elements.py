@@ -226,7 +226,7 @@ def _load_h5_cbar(elem: CBAR, data, element_id):
         iflag = (uflag == flag)
         if flag == 1:
             offt[iflag] = 'GGG'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(flag)
 
     #node_id = data['G']
@@ -273,7 +273,7 @@ def _load_h5_cbeam(elem: CBEAM, data, element_id):
         iflag = (uflag == flag)
         if flag == 1:
             offt[iflag] = 'GGG'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(flag)
 
     bit = np.full(len(element_id), -1, dtype='int32')

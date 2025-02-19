@@ -1816,7 +1816,7 @@ class TestShellsV3(unittest.TestCase):
         save_load_deck(model)
 
     def test_cplsts3(self):
-        model = BDF(debug=False)
+        model = BDF(debug=True)
         cplsts3 = model.cplsts3
         cplsts4 = model.cplsts4
         model.add_grid(1, [0., 0., 0.])

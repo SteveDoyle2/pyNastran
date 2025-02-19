@@ -928,7 +928,7 @@ class GEOM2:
             elif flag == 2:
                 g0 = g0_x1
                 x = None
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(flag)
 
             assert ga > 0, (ga, gb, gc)
@@ -1040,7 +1040,7 @@ class GEOM2:
             elif flag == 2:
                 g0 = g0_x1
                 x = None
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(flag)
             #print(eid, pid, ga, gb, gc, sa, sb, sc, g0, sum(other))
             #print(other)
@@ -2674,15 +2674,15 @@ class GEOM2:
         """
         op2: OP2Geom = self.op2
         op2.to_nx(' because CPLSTS4-NX was found')
-        ntotal = 64 * self.factor  # 16*4
-        struct_16i = Struct(mapfmt(op2._endian + b'6i f 4i i4f', self.size))
+        ntotal = 64 * self.factor  # 25*4
+        structi = Struct(mapfmt(op2._endian + b'6i f 4i i4f', self.size))
         ndatai = len(data)
         nelements = (ndatai - n) // ntotal
         leftover = (ndatai - n) % ntotal
         assert leftover == 0, leftover
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
-            out = struct_16i.unpack(edata)
+            out = structi.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  CPLSTS4=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, theta, undef8, undef9, undef10, undef11,

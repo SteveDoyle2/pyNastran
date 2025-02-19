@@ -159,7 +159,7 @@ def split_offt_vector(offt: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndar
     offt_vector = np.full(neids, '', dtype='|U1')
     offt_end_a = np.full(neids, '', dtype='|U1')
     offt_end_b = np.full(neids, '', dtype='|U1')
-    print(offt)
+    #print(offt)
     for i, (offt_vectori, offt_end_ai, offt_end_bi) in enumerate(offt):
         offt_vector[i] = offt_vectori
         offt_end_a[i] = offt_end_ai

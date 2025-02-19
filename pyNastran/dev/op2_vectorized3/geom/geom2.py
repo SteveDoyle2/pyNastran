@@ -911,7 +911,7 @@ class GEOM2:
             elif flag == 2:
                 g0 = g0_x1
                 x = None
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(flag)
             #print(eid, pid, ga, gb, gc, sa, sb, sc, g0, sum(other))
             #print(other)
@@ -1017,7 +1017,7 @@ class GEOM2:
             elif flag == 2:
                 g0 = g0_x1
                 x = None
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(flag)
             #print(eid, pid, ga, gb, gc, sa, sb, sc, g0, sum(other))
             #print(other)

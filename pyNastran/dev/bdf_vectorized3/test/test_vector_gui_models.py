@@ -30,6 +30,7 @@ class NastranGUI(Nastran3, FakeGUIMethods):
             inputs['debug'] = debug
         FakeGUIMethods.__init__(self, inputs=inputs)
         Nastran3.__init__(self, self)
+        #self.stop_on_failure = True
         self.build_fmts(['nastran3'], stop_on_failure=True)
 
 def run_nastran_gui(filename: str,
@@ -38,6 +39,7 @@ def run_nastran_gui(filename: str,
     assert os.path.exists(filename), filename
     filename = str(filename)
     test = NastranGUI(debug=debug)
+    test.stop_on_failure = True
     test.load_nastran3_geometry(filename)
     if filename.lower().endswith(('.op2', '.h5')) and load_results:
         test.load_nastran3_results(filename)

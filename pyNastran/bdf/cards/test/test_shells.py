@@ -862,6 +862,105 @@ class TestShells(unittest.TestCase):
 
         save_load_deck(model)
 
+    def test_cplsts3(self):
+        model = BDF(debug=False)
+        # cplsts3 = model.cplsts3
+        # cplsts4 = model.cplsts4
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        expected_tri_area = 0.5
+        expected_quad_area = 1.0
+
+        eid = 10
+        pid = 11
+        mid = 12
+        nids = [1, 2, 3]
+        cplsts3 = model.add_cplsts3(eid, pid, nids, theta=0.0, comment='')
+
+        eid += 1
+        nids = [1, 2, 3, 4]
+        cplsts4 = model.add_cplsts4(eid, pid, nids, theta=0.0, comment='')
+
+        t = 0.31
+        rho = 0.13
+        model.add_pplane(pid, mid, t=t, nsm=0.0, formulation_option=0, comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=rho)
+        # model.setup()
+        # assert len(cplsts3) == 1, cplsts3
+        # assert len(cplsts4) == 1, cplsts4
+
+        expected_tri_mass = t * expected_tri_area * rho
+        expected_quad_mass = t * expected_quad_area * rho
+
+        model.cross_reference()
+        areai = cplsts3.Area()
+        massi = cplsts3.Mass()
+        assert np.allclose(areai, expected_tri_area), (areai, expected_tri_area)
+        #assert np.allclose(massi, expected_tri_mass), (massi, expected_tri_mass)
+
+        areai = cplsts4.Area()
+        massi = cplsts4.Mass()
+        assert np.allclose(areai, expected_quad_area), (areai, expected_quad_area)
+        #assert np.allclose(massi, expected_quad_mass), (massi, expected_quad_mass)
+
+        save_load_deck(
+            model, run_remove_unused=False, run_mass_properties=False,
+            run_save_load_hdf5=False,
+        )
+
+    def test_cplstn34(self):
+        """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        pid = 4
+        eid = 3
+        nids = [1, 2, 3, 4]
+        cplsts4 = model.add_cplsts4(eid, pid, nids, comment='cplstn4')
+        cplsts4.flip_normal()
+
+        eid = 5
+        nids = [1, 2, 3]
+        mid = 10
+        cplsts3 = model.add_cplsts3(eid, pid, nids, comment='cplstn3')
+        cplsts3.flip_normal()
+
+        pplane = model.add_pplane(pid, mid, t=0.1, nsm=0.,
+                                  formulation_option=0, comment='pplane')
+        E = 1e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        cplsts3.repr_fields()
+        cplsts4.repr_fields()
+
+        cplsts3.raw_fields()
+        cplsts4.raw_fields()
+        pplane.raw_fields()
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        cplsts3.write_card(size=8)
+        cplsts4.write_card(size=8)
+        pplane.write_card(size=8)
+        model.cross_reference()
+        model.pop_xref_errors()
+        #cplstn3.write_card(size=8)
+        #cplstn4.write_card(size=8)
+
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(model)
+
     def test_cplstn34(self):
         """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""
         log = get_logger(level='warning')
@@ -900,6 +999,52 @@ class TestShells(unittest.TestCase):
         model._verify_bdf(xref=False)
         cplstn3.write_card(size=8)
         cplstn4.write_card(size=8)
+        pplane.write_card(size=8)
+        model.cross_reference()
+        model.pop_xref_errors()
+        #cplstn3.write_card(size=8)
+        #cplstn4.write_card(size=8)
+
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(model)
+
+    def test_cplsts68(self):
+        """tests a CPLSTS6, CPLSTS8/PSHELL/MAT8"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
+        pid = 4
+        eid = 3
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        cplsts8 = model.add_cplsts8(eid, pid, nids, comment='cplstn8')
+
+        eid = 5
+        nids = [1, 2, 3, 4, 5, 6]
+        mid = 10
+        cplsts6 = model.add_cplsts6(eid, pid, nids, comment='cplstn6')
+        pplane = model.add_pplane(pid, mid, t=0.1, nsm=0.,
+                                  formulation_option=0, comment='pplane')
+        E = 1e7
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        cplsts6.raw_fields()
+        cplsts8.raw_fields()
+        pplane.raw_fields()
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        cplsts6.write_card(size=8)
+        cplsts8.write_card(size=8)
         pplane.write_card(size=8)
         model.cross_reference()
         model.pop_xref_errors()
@@ -1431,7 +1576,7 @@ class TestShells(unittest.TestCase):
         g12 = 8900.
         nu12 = 0.25
 
-        model = BDF(debug=True, log=None, mode='msc')
+        model = BDF(debug=False, log=None, mode='msc')
         model.add_mat8(
             mid, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8, rho=0.,
             a1=0., a2=0., tref=0., Xt=0., Xc=None, Yt=0., Yc=None,
@@ -1457,7 +1602,7 @@ class TestShells(unittest.TestCase):
         nu12 = 0.26
         t = 1.0
 
-        model = BDF(debug=True, log=None, mode='msc')
+        model = BDF(debug=False, log=None, mode='msc')
         mat = model.add_mat8(
             mid, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8, rho=0.,
             a1=0., a2=0., tref=0., Xt=0., Xc=None, Yt=0., Yc=None,

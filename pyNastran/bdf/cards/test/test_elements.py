@@ -101,7 +101,7 @@ class TestElements(unittest.TestCase):
         model.cross_reference()
         save_load_deck(model)
 
-    def test_cweld_elemid(self):
+    def test_cweld_elemid_x(self):
         connectype = 'ELEMID'
         log = get_logger(level='debug')
         model = BDF(log=log)
@@ -184,7 +184,7 @@ class TestElements(unittest.TestCase):
         model.add_grid(33, [2., 0., 0.])
         save_load_deck(model)
 
-    def test_cweld_elemid(self):
+    def test_cweld_elemid_x_none(self):
         log = get_logger(level='warning')
         model = BDF(log=log)
         eid = 10

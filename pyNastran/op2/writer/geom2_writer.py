@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import struct
 from collections import defaultdict
 from struct import pack, Struct
 from typing import TYPE_CHECKING
@@ -93,6 +95,15 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
         # masses :
         'CONM1' : ((1401, 14, 63), b'3i 21f', 24),
         'CONM2' : ((1501, 15, 64), b'3i 10f', 13),
+        'CPLSTS3': ((8801, 88, 984), b'6i f 4i i3f i', 16),
+        'CPLSTS4': ((8401, 84, 985), b'6i f 4i i4f', 16),
+        'CPLSTS6': ((1801, 18, 986), b'2i 8i fi 4f 4i 4f', 24),
+        'CPLSTS8': ((3601, 36, 987), b'2i 8i fi 4f 4i 4f', 24),
+
+        'CPLSTN6': ((5801, 58, 982), b'2i 6i f 7i', 16),
+        'CPLSTN8': ((7201, 72, 983), b'2i 8i f 5i', 16),
+
+        'RADBC': ((12801, 128, 417), b'ifii', 4),
     }
     for name, eids in sorted(out.items()):
         nelements = len(eids)
@@ -605,71 +616,28 @@ def write_card(name, eids, spack, obj, op2_file, op2_ascii, endian):
         write_cgap(eids, spack, obj, op2_file, op2_ascii, endian)
 
     elif name in ['CQUAD4', 'CQUADR']:
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
-            nids = elem.node_ids
-            pid = elem.pid
-            #(eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
-             #t1, t2, t3, t4) = out
-            theta = get_theta_from_theta_mcid(elem.theta_mcid)
-            tflag = elem.tflag
-            #if tflag is None:
-                #tflag =
-            t1 = elem.T1 if elem.T1 is not None else -1.
-            t2 = elem.T2 if elem.T2 is not None else -1.
-            t3 = elem.T3 if elem.T3 is not None else -1.
-            t4 = elem.T4 if elem.T4 is not None else -1.
-            #assert t4 == -1.0, elem.T4
-            data = [eid, pid] + nids + [theta, elem.zoffset, 0,
-                                        tflag, t1, t2, t3, t4]
-            assert tflag in [0, 1], elem.get_stats()
-            #print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
-            op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
-            assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
-            #6i ff ii 4f
-            op2_file.write(spack.pack(*data))
+        write_cquad4_cquadr(eids, spack, obj, op2_file, op2_ascii, name)
     elif name == 'CQUAD8':  # current; not 2001
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
-            nids = [nid if nid is not None else 0
-                    for nid in elem.node_ids]
-            pid = elem.pid
-             #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
-              #t3, t4, theta, zoffs, tflag) = out # current
-            #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
-            #t1, t2, t3, t4, theta, zoffs) = out  # cquad8; 2001
-            theta = get_theta_from_theta_mcid(elem.theta_mcid)
-            tflag = elem.tflag if elem.tflag is not None else 0
-            t1 = elem.T1 if elem.T1 is not None else -1.
-            t2 = elem.T2 if elem.T2 is not None else -1.
-            t3 = elem.T3 if elem.T3 is not None else -1.
-            t4 = elem.T4 if elem.T4 is not None else -1.
-            data = [eid, pid] + nids + [t1, t2, t3, t4,
-                                        theta, elem.zoffset, tflag]
-            assert None not in data, '%s data=%s' % (name, data)
-            assert isinstance(elem.tflag, int), elem.get_stats()
-            assert elem.tflag in [-1, 0, 1], elem.get_stats()
-            #print('  CQUAD8 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
-            op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
-            op2_file.write(spack.pack(*data))
+        write_cquad8(eids, spack, obj, op2_file, op2_ascii, name)
     elif name == 'CTRIA6':  # current; not 2001
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
-            nids = [nid if nid is not None else 0
-                    for nid in elem.node_ids]
-            pid = elem.pid
-            #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag) = out
-            theta = get_theta_from_theta_mcid(elem.theta_mcid)
-            t1 = elem.T1 if elem.T1 is not None else -1.
-            t2 = elem.T2 if elem.T2 is not None else -1.
-            t3 = elem.T3 if elem.T3 is not None else -1.
-            data = [eid, pid] + nids + [t1, t2, t3,
-                                        theta, elem.zoffset, elem.tflag]
-            assert None not in data, '%s data=%s' % (name, data)
-            assert elem.tflag in [-1, 0, 1], elem.get_stats()
-            #print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
-            op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
-            op2_file.write(spack.pack(*data))
+        write_ctria6(eids, spack, obj, op2_file, op2_ascii, name)
+    elif name == 'CPLSTS3':
+        write_cplsts3(eids, spack, obj, op2_file, op2_ascii, name)
+    elif name == 'CPLSTS4':
+        write_cplsts4(eids, spack, obj, op2_file, op2_ascii, name)
+    elif name == 'CPLSTS6':
+        write_cplsts6(eids, spack, obj, op2_file, op2_ascii, name)
+    elif name == 'CPLSTS8':
+        write_cplsts8(eids, spack, obj, op2_file, op2_ascii, name)
+
+    elif name == 'CPLSTN6':
+        write_cplstn6(eids, spack, obj, op2_file, op2_ascii, name)
+    elif name == 'CPLSTN8':
+        write_cplstn8(eids, spack, obj, op2_file, op2_ascii, name)
+
+    elif name == 'RADBC':
+        write_radbc(eids, spack, obj, op2_file, op2_ascii, name)
+
     elif name == 'CTRIAX':
         for eid in sorted(eids):
             elem = obj.elements[eid]
@@ -905,6 +873,243 @@ def write_card(name, eids, spack, obj, op2_file, op2_ascii, endian):
             op2_file.write(spack.pack(*data))
     else:  # pragma: no cover
         raise NotImplementedError(name)
+
+
+def write_cquad4_cquadr(eids, spack, obj, op2_file, op2_ascii, name: str):
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        nids = elem.node_ids
+        pid = elem.pid
+        # (eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
+        # t1, t2, t3, t4) = out
+        theta = get_theta_from_theta_mcid(elem.theta_mcid)
+        tflag = elem.tflag
+        # if tflag is None:
+        # tflag =
+        t1 = elem.T1 if elem.T1 is not None else -1.
+        t2 = elem.T2 if elem.T2 is not None else -1.
+        t3 = elem.T3 if elem.T3 is not None else -1.
+        t4 = elem.T4 if elem.T4 is not None else -1.
+        # assert t4 == -1.0, elem.T4
+        data = [eid, pid] + nids + [theta, elem.zoffset, 0,
+                                    tflag, t1, t2, t3, t4]
+        assert tflag in [0, 1], elem.get_stats()
+        # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
+        # 6i ff ii 4f
+        op2_file.write(spack.pack(*data))
+
+def write_cquad8(eids, spack, obj, op2_file, op2_ascii, name: str):
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        nids = [nid if nid is not None else 0
+                for nid in elem.node_ids]
+        pid = elem.pid
+         #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
+          #t3, t4, theta, zoffs, tflag) = out # current
+        #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
+        #t1, t2, t3, t4, theta, zoffs) = out  # cquad8; 2001
+        theta = get_theta_from_theta_mcid(elem.theta_mcid)
+        tflag = elem.tflag if elem.tflag is not None else 0
+        t1 = elem.T1 if elem.T1 is not None else -1.
+        t2 = elem.T2 if elem.T2 is not None else -1.
+        t3 = elem.T3 if elem.T3 is not None else -1.
+        t4 = elem.T4 if elem.T4 is not None else -1.
+        data = [eid, pid] + nids + [t1, t2, t3, t4,
+                                    theta, elem.zoffset, tflag]
+        assert None not in data, '%s data=%s' % (name, data)
+        assert isinstance(elem.tflag, int), elem.get_stats()
+        assert elem.tflag in [-1, 0, 1], elem.get_stats()
+        #print('  CQUAD8 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        op2_file.write(spack.pack(*data))
+
+def write_ctria6(eids, spack, obj, op2_file, op2_ascii, name: str):
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        nids = [nid if nid is not None else 0
+                for nid in elem.node_ids]
+        pid = elem.pid
+        #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag) = out
+        theta = get_theta_from_theta_mcid(elem.theta_mcid)
+        t1 = elem.T1 if elem.T1 is not None else -1.
+        t2 = elem.T2 if elem.T2 is not None else -1.
+        t3 = elem.T3 if elem.T3 is not None else -1.
+        data = [eid, pid] + nids + [t1, t2, t3,
+                                    theta, elem.zoffset, elem.tflag]
+        assert None not in data, '%s data=%s' % (name, data)
+        assert elem.tflag in [-1, 0, 1], elem.get_stats()
+        #print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        op2_file.write(spack.pack(*data))
+
+def write_cplsts3(eids, spack, obj, op2_file, op2_ascii, name: str):
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        nids = elem.node_ids
+        pid = elem.pid
+        theta = elem.theta
+        tflag = elem.tflag
+        # if tflag is None:
+        # tflag =
+        t1 = elem.T1 if elem.T1 is not None else -1.
+        t2 = elem.T2 if elem.T2 is not None else -1.
+        t3 = elem.T3 if elem.T3 is not None else -1.
+        # t4 = elem.T4 if elem.T4 is not None else -1.
+        # assert t4 == -1.0, elem.T4
+        # (eid, pid, n1, n2, n3, undef6, theta,
+        #  undef8, undef9, undef10, undef11,
+        # tflag, t1, t2, t3, undef16) = out
+        data = [eid, pid] + nids + [0, theta, 0, 0, 0, 0,
+                                    tflag, t1, t2, t3, 0]
+        assert tflag in [0, 1], elem.get_stats()
+        # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
+        # 6i ff ii 4f
+        op2_file.write(spack.pack(*data))
+
+
+def write_cplsts4(eids, spack, obj, op2_file, op2_ascii, name: str):
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        nids = elem.node_ids
+        pid = elem.pid
+        theta = elem.theta
+        tflag = elem.tflag
+        # if tflag is None:
+        # tflag =
+        t1 = elem.T1 if elem.T1 is not None else -1.
+        t2 = elem.T2 if elem.T2 is not None else -1.
+        t3 = elem.T3 if elem.T3 is not None else -1.
+        t4 = elem.T4 if elem.T4 is not None else -1.
+        # assert t4 == -1.0, elem.T4
+        # (eid, pid, n1, n2, n3, n4, theta,
+        # undef8, undef9, undef10, undef11,
+        #  tflag, t1, t2, t3, t4) = out
+        data = [eid, pid] + nids + [theta, 0, 0, 0, 0,
+                                    tflag, t1, t2, t3, t4]
+        assert tflag in [0, 1], elem.get_stats()
+        # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
+        # 6i ff ii 4f
+        op2_file.write(spack.pack(*data))
+
+def write_cplsts6(eids, spack, obj, op2_file, op2_ascii, name: str):
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        nids = elem.node_ids
+        pid = elem.pid
+        theta = elem.theta
+        tflag = 0 #elem.tflag
+
+        t1 = t2 = t3 = -1.
+        t4 = t5 = t6 = -1.
+        # t1 = elem.T1 if elem.T1 is not None else -1.
+        # t2 = elem.T2 if elem.T2 is not None else -1.
+        # t3 = elem.T3 if elem.T3 is not None else -1.
+        # t4 = elem.T4 if elem.T4 is not None else -1.
+        # (eid, pid, n1, n2, n3, n4, n5, n6, undef7, undef8, theta,
+        #  tflag, t1, t2, t3, zero1,
+        #  zero2, zero3, zero4, zero5, t4, t5, t6, undef8b) = out
+        #nids = [n1, n2, n3, n4, n5, n6]
+        #undef = (zero1, zero2, zero3, zero4, zero5, undef7, undef8, undef8b)
+        #b'2i 8i fi 4f 4i 4f'
+        data = [eid, pid] + nids + [
+            0, 0,
+            theta, tflag,
+            t1, t2, t3, 0.,
+            0, 0, 0, 0,
+            t4, t5, t6, 0.,
+        ]
+        assert tflag in [0, 1], elem.get_stats()
+        # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
+        print(spack.format)
+        op2_file.write(spack.pack(*data))
+
+def write_cplsts8(eids, spack, obj, op2_file, op2_ascii, name: str):
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        nids = elem.node_ids
+        pid = elem.pid
+        theta = elem.theta
+        tflag = elem.tflag
+        # t1 = elem.T1 if elem.T1 is not None else -1.
+        # t2 = elem.T2 if elem.T2 is not None else -1.
+        # t3 = elem.T3 if elem.T3 is not None else -1.
+        # t4 = elem.T4 if elem.T4 is not None else -1.
+        t1 = t2 = t3 = t4 = -1.
+        t5 = t6 = t7 = t8 = -1.
+        #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta,
+        # tflag, t1, t2, t3, t4, zero1, zero2, zero3, zero4, t5, t6, t7, t8) = out
+        data = [eid, pid] + nids + [theta, tflag,
+                                    t1, t2, t3, t4,
+                                    0, 0, 0, 0,
+                                    t5, t6, t7, t8]
+        assert tflag in [0, 1], elem.get_stats()
+        # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
+        op2_file.write(spack.pack(*data))
+
+def write_cplstn6(eids, spack, obj, op2_file, op2_ascii, name: str):
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        nids = elem.node_ids
+        pid = elem.pid
+        theta = elem.theta
+        #(eid, pid, n1, n2, n3, n4, n5, n6, theta, *undef) = out
+        data = [eid, pid] + nids + [theta, 0, 0, 0, 0, 0, 0, 0]
+
+        # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
+        # 6i ff ii 4f
+        op2_file.write(spack.pack(*data))
+
+def write_cplstn8(eids, spack, obj, op2_file, op2_ascii, name: str):
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        nids = elem.node_ids
+        pid = elem.pid
+        theta = elem.theta
+        # t1 = elem.T1 if elem.T1 is not None else -1.
+        # t2 = elem.T2 if elem.T2 is not None else -1.
+        # t3 = elem.T3 if elem.T3 is not None else -1.
+        # t4 = elem.T4 if elem.T4 is not None else -1.
+        # assert t4 == -1.0, elem.T4
+        #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta, *undef) = out
+        data = [eid, pid] + nids + [theta, 0, 0, 0, 0, 0]
+
+        # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
+        # 6i ff ii 4f
+        op2_file.write(spack.pack(*data))
+
+def write_radbc(eids, spack, obj, op2_file, op2_ascii, name: str):
+    for eid in sorted(eids):
+        elem = obj.radbc[eid]
+        nids = elem.node_ids
+        pid = elem.pid
+        theta = elem.theta
+        # t1 = elem.T1 if elem.T1 is not None else -1.
+        # t2 = elem.T2 if elem.T2 is not None else -1.
+        # t3 = elem.T3 if elem.T3 is not None else -1.
+        # t4 = elem.T4 if elem.T4 is not None else -1.
+        # assert t4 == -1.0, elem.T4
+        #eid, famb, cntrlnd, nodamb = out
+        data = [eid, pid] + nids + [theta, 0, 0, 0, 0, 0]
+
+        # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
+        # 6i ff ii 4f
+        op2_file.write(spack.pack(*data))
 
 def get_theta_from_theta_mcid(theta_mcid: int | float) -> float:
     """the theta/mcid field is stored in a strange way"""
