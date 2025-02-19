@@ -512,7 +512,7 @@ def run_and_compare_fems(
                 stop=stop, name=name,
                 is_nominal=True,
             )
-            compare_old_vs_new(fem1, fem1_nominal, check_nodes=True, is_nominal=True)
+            compare_old_vs_new(fem1, fem1_nominal, check_nodes=True)
 
         if stop:
             if not quiet:
