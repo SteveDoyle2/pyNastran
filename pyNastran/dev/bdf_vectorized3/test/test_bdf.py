@@ -512,7 +512,7 @@ def run_and_compare_fems(
                 stop=stop, name=name,
                 is_nominal=True,
             )
-            compare_old_vs_new(fem1, fem1_nominal, check_nodes=True)
+            compare_old_vs_new(fem1, fem1_nominal, check_nodes=True, is_nominal=True)
 
         if stop:
             if not quiet:
@@ -1160,11 +1160,16 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
         the file encoding
     crash_cards : ???
         ???
+    is_nominal: bool
+        True:  use BDF()
+        False: use BDFv()
+        is_vectorized = not is_nominal
 
     """
-    if not is_nominal:
-        #print('not nominal')
-        fem1.is_strict_card_parser = False
+    #if not is_nominal:
+    #print('not nominal')
+    fem1.is_strict_card_parser = False
+
     #print(fem1, is_nominal)
     #print(fem1.is_strict_card_parser)
 
