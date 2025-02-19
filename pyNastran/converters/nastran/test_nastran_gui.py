@@ -444,7 +444,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
 PKG_PATH = Path(pyNastran.__path__[0])
 STL_PATH = PKG_PATH / 'converters' / 'stl'
 MODEL_PATH = PKG_PATH / '..' / 'models'
-
+FLUTTER_PATH = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples' / 'flutter'
 
 class TestNastranGUI(unittest.TestCase):
 
@@ -479,21 +479,21 @@ class TestNastranGUI(unittest.TestCase):
         #self.settings.s
 
     def test_nastran_f16_aero(self):
-        dirname = PKG_PATH / r'bdf' / 'cards' / 'aero' / 'examples' / 'flutter' / 'case5'
+        dirname = FLUTTER_PATH / 'case5'
         neu_filename = dirname / 'f16-aero.neu'
         test = NastranGUI()
         test.load_nastran_geometry(neu_filename)
         test.load_nastran_results(neu_filename)
 
     def test_nastran_flut_anti(self):
-        dirname = PKG_PATH / r'bdf' / 'cards' / 'aero' / 'examples' / 'flutter' / 'case5'
+        dirname = FLUTTER_PATH / 'case5'
         neu_filename = dirname / 'flut_anti.neu'
         test = NastranGUI()
         test.load_nastran_geometry(neu_filename)
         test.load_nastran_results(neu_filename)
 
     def test_nastran_cp_anti(self):
-        dirname = PKG_PATH / r'bdf' / 'cards' / 'aero' / 'examples' / 'flutter' / 'case5'
+        dirname = FLUTTER_PATH / 'case5'
         neu_filename = dirname / 'cp2anti.neu'
         test = NastranGUI()
         test.load_nastran_geometry(neu_filename)
@@ -1944,7 +1944,7 @@ class TestNastranGUI(unittest.TestCase):
 
 
     def test_gui_zona_model_1(self):
-        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
+        bdf_filename = MODEL_PATH / 'aero' / 'zona' / 'f16_ma41.bdf'
         test = NastranGUI()
         test.log = SimpleLogger(level='error', encoding='utf-8')
         test.load_nastran_geometry(bdf_filename)

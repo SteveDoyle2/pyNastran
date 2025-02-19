@@ -38,6 +38,10 @@ from .alt_actor_builder import (
     create_alt_conm2_grids, create_alt_rbe2_grids, create_alt_rbe3_grids,
     create_alt_spcs, create_alt_axes,
     create_monpnt, create_plotels)
+from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
+from pyNastran.op2.result_objects.stress_object import _get_nastran_header
+from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap, NastranKey
 
 IS_TABLES = True
 if IS_TABLES:
@@ -208,6 +212,11 @@ class Nastran3:
         log = model.log
         if not hasattr(self, 'node_id'):
             log.error(f'missing node_id; load the geometry')
+            return
+
+        gui = self.gui
+        settings: Settings = gui.settings
+        nastran_settings: NastranSettings = settings.nastran_settings
 
         xyz_cid0 = self.xyz_cid0
         node_id = self.node_id
@@ -225,40 +234,48 @@ class Nastran3:
 
         #results = model.res
         name_results = [
-            ('Displacement', model.displacements),
-            ('Eigenvector', model.eigenvectors),
-            ('Temperature', model.temperatures),
-            ('Velocity', model.velocities),
-            ('Acceleration', model.accelerations),
+            ('Displacement', model.displacements, 'disp'),
+            ('Eigenvector', model.eigenvectors, 'disp'),
+            ('Temperature', model.temperatures, 'temp'),
+            ('Velocity', model.velocities, 'disp'),
+            ('Acceleration', model.accelerations, 'disp'),
+            ('SPC Forces', model.spc_forces, 'force'),
+            ('MPC Forces', model.mpc_forces, 'force'),
         ]
 
         subcases = set([])
-        for (res_name, results) in name_results:
+        for (res_name, results, deflects_str) in name_results:
             for key, case in results.items():
                 subcases.add(key)
 
         # SORT1
+        #print(f'subcases = {subcases}')
         for subcase in subcases:
             subcase_form: Form = []
             #print(subcase)
-            form.append((f'Subcase {subcase}', None, subcase_form))
             icase = _load_oug(model, name, name_results,
                               key, subcase, subcase_form,
                               cases, icase,
                               node_id, xyz_cid0, dim_max)
-            icase = _load_stress_strain(
-                self.element_cards,
-                self.model, model, name,
-                key, subcase, subcase_form,
-                cases, icase,
-                element_id, is_stress=True)
-            icase = _load_stress_strain(
-                self.element_cards,
-                self.model, model, name,
-                key, subcase, subcase_form,
-                cases, icase,
-                element_id, is_stress=False)
+            if nastran_settings.stress:
+                icase = _load_stress_strain(
+                    self.element_cards,
+                    self.model, model, name,
+                    key, subcase, subcase_form,
+                    cases, icase,
+                    element_id, is_stress=True)
 
+            if nastran_settings.strain:
+                icase = _load_stress_strain(
+                    self.element_cards,
+                    self.model, model, name,
+                    key, subcase, subcase_form,
+                    cases, icase,
+                    element_id, is_stress=False)
+
+            if len(subcase_form):
+                form.append((f'Subcase {subcase}', None, subcase_form))
+                print(form)
             #('Geometry', None, geometry_form),
 
             #e = ('Subcase 1', None,
@@ -1127,6 +1144,7 @@ def _set_quality(icase: int, cases: dict[int, Any],
     if not nastran_settings.is_element_quality:
         return mean_edge_length, icase, quality_form
 
+
     if not np.array_equal(element_id, element_id_quality):
         missing_ids = np.setdiff1d(element_id_quality, element_id)
         extra_ids = np.setdiff1d(element_id, element_id_quality)
@@ -1175,7 +1193,7 @@ def _load_stress_strain(element_cards: list,
                         bdf_model: BDF,
                         op2_model: OP2,
                         name: str,
-                        key: tuple[int, int, int, int, int, str, str],
+                        key: NastranKey,
                         subcase: Subcase,
                         subcase_form: Form,
                         cases: Cases, icase: int,
@@ -1189,6 +1207,7 @@ def _load_stress_strain(element_cards: list,
 
     is_strain = not is_stress
     # collect all the stresses
+    #result_form = _get_res_form(subcase_form, 'Stress', ntimes)
     result_form = []
     if is_stress:
         stress_form = ('Stress', None, result_form)
@@ -1459,8 +1478,8 @@ def _load_stress_strain(element_cards: list,
                 omax[ielement0] = omaxi
                 omin[ielement0] = omini
                 del omaxi, omini
-                x = 1
-        elif etype in {'CTRIA3', 'CTRIAR', 'CQUAD4', 'CQUADR', 'CTRIA6', 'CQUAD8'}:
+        elif etype in {'CTRIA3', 'CTRIAR', 'CQUAD4', 'CQUADR',
+                       'CTRIA6', 'CQUAD8'}:
             for result in results_cases:
                 if result.is_complex:
                     continue
@@ -1487,7 +1506,7 @@ def _load_stress_strain(element_cards: list,
                 oxx[ielement0] = oyyi
                 oxx[ielement0] = txyi
                 del nnodei, oxxi, oyyi, txyi, upper, lower
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(etype)
         assert len(oxx) == nelements
         nelement0 += element.n
@@ -1526,6 +1545,8 @@ def _load_stress_strain(element_cards: list,
         icase, cases, result_form, subcase_id,
         o+vm_word, von_mises)
     #del name_results
+    # if len(result_form) == 1:
+    #     stress_form.append(result_form[0])
     if len(result_form):
         formi = subcase_form
         formi.append(stress_form)
@@ -1534,8 +1555,8 @@ def _load_stress_strain(element_cards: list,
 
 def _load_oug(model: OP2,
               name: str,
-              name_results: list[tuple[str, Any]],
-              key: tuple[int, int, int, int, int, str, str],
+              name_results_deflects: list[tuple[str, Any, str]],
+              key: NastranKey,
               subcase: Subcase,
               subcase_form: Form,
               cases: Cases, icase: int,
@@ -1551,57 +1572,94 @@ def _load_oug(model: OP2,
 
     """
     del name
-    for (res_name, results) in name_results:
+    #print(f'name_results = {name_results}')
+    for (res_name, results, deflects_str) in name_results_deflects:
         if subcase not in results:
             continue
-        res_form: Form = []
-        subcase_form.append((res_name, None, res_form))
-
         case = results[subcase]
-        scale_per_time, header_names = get_case_headers(case)
-
-        #print('key =', key)
-        nids = case.node_gridtype[:, 0]
-        inid = np.searchsorted(nids, node_id)
-        #isave = (node_id[inid] == nids)
-        #isave = None
-        ntimes = case.data.shape[0]
-        t123 = case.data[:, inid, :3]
-        assert t123.shape[2] == 3, t123.shape
-        #dxyz = t123[:, isave, :]
-        dxyz = t123
-
+        #print('key =', res_name, deflects_str)
         subcase_id = key # [0]
-        titles = [res_name] * ntimes # legend
-        headers = [res_name] * ntimes # sidebar
-        data_formats = ['%f'] * ntimes
-        unused_scalar = None
-        scales = get_vector_scales(
-            t123, ntimes, dim_max,
-            scale_per_time)
 
-        assert dxyz.shape[2] == 3, dxyz.shape
-        res = DisplacementResults(
-            subcase_id, titles, headers,
-            xyz_cid0, dxyz, unused_scalar, scales,
-            data_formats=data_formats, nlabels=None, labelsize=None, ncolors=None,
-            colormap='jet', set_max_min=True, uname=f'{res_name}Results')
+        uname = f'{res_name}Results'
+        ntimes = case.data.shape[0]
+        res_form = _get_res_form(subcase_form, res_name, ntimes)
 
-        for itime, header_name in enumerate(header_names):
-            #assert t123.shape[1] == 3, t123.shape
-            #dxyz = np.full((nnodes, 3), np.nan, dtype='float32')
-            #dxyz[isave, :] = t123[isave, :]
-            headers[itime] = f'Txyz {header_name}'
-            formi: Form = (header_name, icase, [])
-            cases[icase] = (res, (itime, res_name))
-            res_form.append(formi)
-            icase += 1
+        for t123_offset in [0, 3]:
+            if t123_offset == 0:
+                title1 = res_name + ' T_XYZ'
+            else:
+                assert t123_offset == 3, t123_offset
+                title1 = res_name + ' R_XYZ'
+            #title1 = f'v2 {title1}'
 
-        #form_dict[(key, itime)].append(formii)
+            if deflects_str == 'disp':
+                nastran_res2 = DisplacementResults2(
+                    subcase_id, node_id, xyz_cid0, case,
+                    title=res_name,
+                    t123_offset=t123_offset,
+                    dim_max=dim_max,
+                    data_format='%g', nlabels=None, labelsize=None,
+                    ncolors=None, colormap='', set_max_min=False,
+                    uname=uname)
+            elif deflects_str == 'force':
+                force_index_to_base_title_annotation = {
+                    0: {'title': 'F_', 'corner': 'F_'},
+                    3: {'title': 'M_', 'corner': 'M_'},
+                }
+                methods_txyz_rxyz = ['Fx', 'Fy', 'Fz', 'Mx', 'My', 'Mz']
+                nastran_res2 = ForceResults2(
+                    subcase_id, node_id, xyz_cid0, case,
+                    title=res_name,
+                    t123_offset=t123_offset,
+                    methods_txyz_rxyz=methods_txyz_rxyz,
+                    index_to_base_title_annotation=force_index_to_base_title_annotation,
+                    dim_max=dim_max,
+                    data_format='%g', nlabels=None, labelsize=None,
+                    ncolors=None, colormap='', set_max_min=False,
+                    uname=res_name)
+            else:  # pragma: no cover
+                raise RuntimeError((name, deflects_str))
+
+            headers2 = []
+            for itime in range(ntimes):
+                # mode = 2; freq = 75.9575 Hz
+                dt = case._times[itime]
+                header = _get_nastran_header(case, dt, itime)
+                #header_dict[(key, itime)] = header
+                #keys_map[key] = KeyMap(case.subtitle, case.label,
+                #                       case.superelement_adaptivity_index,
+                #                       case.pval_step)
+                headers2.append(header)
+                cases[icase] = (nastran_res2, (itime, title1))  # do I keep this???
+                formii: Form = (title1, icase, [])
+                #form_dict[(key, itime)].append(formii)
+                #print(f'adding formii={str(formii)} icase={icase}')
+                res_form.append(formii)
+                icase += 1
+            nastran_res2.headers = headers2
+            #form_dict[(key, itime)].append(formii)
         #form.append('')
+    #print(f'res_form = {res_form}')
     return icase
 
+def _get_res_form(subcase_form: Form, res_name: str,
+                 ntimes: int) -> Form:
+    # if ntimes == 1:
+    #     res_form = subcase_form
+    # else:
+    res_form: Form = []
+    subcase_form.append((res_name, None, res_form))
+    return res_form
+
 def get_case_headers(case) -> tuple[bool, list[str]]:
+    """
+    Returns
+    -------
+    scale_per_time : bool
+        is this transient-like
+    header_names : list[str]
+        the lower left description
+    """
     header_names = []
     if case.analysis_code == 1:
         scale_per_time = False
@@ -1634,7 +1692,7 @@ def get_case_headers(case) -> tuple[bool, list[str]]:
         damping, abs_freqs = complex_damping_frequency(eigr, eigi)
         for mode, eigri, eigii, freq, damping, in zip(case.modes, eigr, eigi, abs_freqs, damping):
             header_names.append(f'mode={mode} eigr={eigri:g} eigi={eigii:g} f={freq:g} Hz ζ={damping:g}')
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(case.analysis_code)
     return scale_per_time, header_names
 

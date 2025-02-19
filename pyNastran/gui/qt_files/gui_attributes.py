@@ -202,7 +202,7 @@ class GuiAttributes:
         #self.format = ''
         debug = inputs['debug']
         self.debug = debug
-        assert debug in [True, False], 'debug=%s' % debug
+        assert debug in [True, False, None], 'debug=%s' % debug
 
         #-------------
         # format
@@ -713,7 +713,7 @@ class GuiAttributes:
         if show_msg:
             self.log_command(txt)
         try:
-            exec(txt)
+            exec(txt, sys._getframe().f_locals)
         except TypeError as error:
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)

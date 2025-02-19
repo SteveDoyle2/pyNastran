@@ -410,13 +410,16 @@ class FlutterResponse:
             # npoint, nvelocity, 3?
             #self.eigr_eigi_velocity = self.eigenvector.reshape(nmodes, nvelocity, 3)
             # nmodes_mpf, npoint, nvelocity?
-            if 0:
-                eigenvector, eigr_eigi_velocity = reshape_eigenvectors(
+            reshape_eigenvectors = True
+            if reshape_eigenvectors:
+                eigenvector, eigr_eigi_velocity = _reshape_eigenvectors(
                     self.eigenvector, self.eigr_eigi_velocity)
                 self.eigenvector = eigenvector
                 self.eigr_eigi_velocity = eigr_eigi_velocity
                 assert len(self.eigenvector) and len(self.eigr_eigi_velocity), (len(self.eigenvector), len(self.eigr_eigi_velocity))
                 #= self.eigenvector.reshape(nmodes, nmodes, nvelocity)
+            assert eigr_eigi_velocity.ndim == 3, eigr_eigi_velocity
+            assert eigr_eigi_velocity.shape[2] == 3, eigr_eigi_velocity
 
             nvelocity = results.shape
 
@@ -939,6 +942,7 @@ class FlutterResponse:
         #eigr_eigi_velocity:
         #[[-9.88553e-02  1.71977e+01  1.52383e+02]
         # [-1.71903e-01  6.60547e+01  1.52383e+02]]
+        assert self.eigr_eigi_velocity.ndim == 3, self.eigr_eigi_velocity.shape
         nvel, nmode = self.eigr_eigi_velocity.shape[:2]
         assert ivel < nvel, f'ivel={ivel} nvel={nvel}'
         assert mode <= nmode, f'mode={mode} nmode={nmode}'
@@ -950,6 +954,7 @@ class FlutterResponse:
             eigr_eigi_velocity = self.eigr_eigi_velocity[ivel, imode, :]
         except IndexError:
             raise RuntimeError(f'eigr_eigi_velocity.shape=(ivel, imode, :)={self.eigr_eigi_velocity.shape}; ivel={ivel} nvel={nvel} imode={imode}')
+        #print(f'eigr_eigi_velocity = {eigr_eigi_velocity}')
         eigri, eigii, velocityi = eigr_eigi_velocity
 
         omega_damping = eigri
@@ -1470,6 +1475,9 @@ class FlutterResponse:
         e = (beta1 + beta2) / 2
         Fs = b ** 2
         Fs0 = Fs[0]
+        if Fs0 == 0.0:
+            warnings.warn(f'Fs0=0 imode1={imode1:d} imode2={imode2:d}')
+            Fs0 = 1.0
 
         F = 1/Fs0 * (1 - a**2) * (b**2 + c * (d + e**2))
         return F, Fs
@@ -1489,6 +1497,7 @@ class FlutterResponse:
         plot_type : str; default='tas'
            tas, eas, alt, kfreq, 1/kfreq, freq, damp, eigr, eigi, q, mach
         """
+        print('plot_zimmerman')
         modes, imodes = _get_modes_imodes(self.modes, modes)
         imodes = np.array([0, 1, 0, 1])
         nmodes = len(imodes)
@@ -1500,12 +1509,12 @@ class FlutterResponse:
         if fig is None or 1:
             fig = plt.figure()  # figsize=(12,9), self.subcase
             if nmodes == 2:
-                print('nmodesA')
+                #print('nmodesA')
                 ax = fig.gca()
                 axes = np.array([[fig.gca()]])
             else:
-                print('nmodesB')
-                print(nmodes, '*******')
+                #print('nmodesB')
+                #print(nmodes, '*******')
                 fig, axes = plt.subplots(ncols=nmodes-1, nrows=nmodes-1)
                 # print(axes[0])
                 # print(axes[1])
@@ -1518,9 +1527,11 @@ class FlutterResponse:
         xvalues = self.results[0, :, ix]
         print(f'imodes = {imodes}')
         for i, imodei, modei in zip(count(), imodes, modes):
-            for j, jmodei, modej in enumerate(count(), imodes[i+1:], modes):
+            for j, jmodei, modej in zip(count(), imodes[i+1:], modes[i+1:]):
                 if modei == modej:
                     continue
+                # if imodei == jmodei:
+                #     continue
                 Fi, Fsi = self.calculate_zimmerman(imodei, jmodei)
                 print(axes)
                 print((i, j), (int(jmodei), int(jmodei)), f'shape={axes.shape}')
@@ -2738,9 +2749,9 @@ def _show_save_clear_close(fig: plt.Figure,
         plt.close()
 
 
-def reshape_eigenvectors(eigenvectors: np.array,
-                         eigr_eigi_vel: np.array,
-                         incorrect_shape: bool=False) -> np.ndarray:
+def _reshape_eigenvectors(eigenvectors: np.array,
+                          eigr_eigi_vel: np.array,
+                          incorrect_shape: bool=False) -> np.ndarray:
     """
     Parameters
     ----------

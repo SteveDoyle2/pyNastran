@@ -125,12 +125,36 @@ class ForceResults2(DispForceVectorResults):
 
     def get_vector_result(self, itime: int, res_name: str,
                           ) -> tuple[np.ndarray, np.ndarray]:
-        dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
-        assert dxyz.ndim == 2, dxyz.shape
         scale = self.get_scale(itime, res_name)
-        deflected_xyz = dxyz * scale
-        #deflected_xyz = self.xyz + scale * dxyz
-        return self.xyz, deflected_xyz
+        if self.is_real:
+            dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
+            assert dxyz.ndim == 2, dxyz.shape
+            xyz = self.xyz
+            deflected_xyz = dxyz * scale
+            #deflected_xyz = self.xyz + scale * dxyz
+            #return self.xyz, deflected_xyz
+        else:
+            phase = self.get_phase(itime, res_name)
+            xyz, deflected_xyz = self.get_vector_result_by_scale_phase(
+                itime, res_name, scale, phase)
+        return xyz, deflected_xyz
+
+    def _get_complex_displacements_by_phase(self, itime: int, res_name: str,
+                                            phase: float=0.) -> np.ndarray:
+        """
+        Get force for a complex result.
+
+        e^(i*theta) = cos(theta) + 1j*sin(theta)
+        """
+        dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
+        assert dxyz.ndim == 2, dxyz
+
+        theta = np.radians(phase)
+        if self.is_real:
+            dxyz_out = dxyz * np.cos(theta)
+        else:
+            dxyz_out = dxyz.real * np.cos(theta) + dxyz.imag * np.sin(theta)
+        return dxyz_out
 
     def get_vector_result_by_scale_phase(self, itime: int, res_name: str,
                                          scale: float,
@@ -157,16 +181,17 @@ class ForceResults2(DispForceVectorResults):
             the deflected state
 
         """
+        assert isinstance(itime, int), (itime, phase)
         assert self.dim == 3, self.dim
         assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             dxyz, itime, case_flag = self.get_vector_data_dense(itime, res_name)
             deflected_xyz = self.xyz + scale * dxyz
         else:
-            assert isinstance(itime, int), (itime, phase)
             assert isinstance(phase, float), (itime, phase)
-            dxyz, unused_idxs = self._get_complex_displacements_by_phase(itime, res_name, phase)
-            deflected_xyz = self.xyz + scale * dxyz
+            dxyz = self._get_complex_displacements_by_phase(
+                itime, res_name, phase)
+            deflected_xyz = self.xyz + scale * dxyz.real
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return self.xyz, deflected_xyz
 

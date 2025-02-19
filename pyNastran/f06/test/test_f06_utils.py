@@ -38,7 +38,7 @@ from pyNastran.f06.parse_flutter import (
     plot_flutter_f06, make_flutter_plots, make_flutter_response,
     FlutterResponse,
 )
-from pyNastran.f06.flutter_response import reshape_eigenvectors
+from pyNastran.f06.flutter_response import _reshape_eigenvectors
 from pyNastran.f06.parse_trim import read_f06_trim
 from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 from pyNastran.op2.op2 import OP2
@@ -88,7 +88,7 @@ class TestF06Flutter(unittest.TestCase):
         eigr_eigi_vel_expected = np.zeros((nvel, nmode, 3))
         assert eigr_eigi_vel.shape == (nmode*nvel, 3), eigr_eigi_vel.shape
 
-        eigenvectors2, eigr_eigi_vel2 = reshape_eigenvectors(
+        eigenvectors2, eigr_eigi_vel2 = _reshape_eigenvectors(
             eigenvectors, eigr_eigi_vel, incorrect_shape=True)
         assert eigenvectors2.dtype == eigenvectors_expected.dtype, (eigenvectors2.dtype, eigenvectors_expected.dtype)
         assert eigenvectors2.shape == eigenvectors_expected.shape, (eigenvectors2.shape, eigenvectors_expected.shape)
@@ -139,7 +139,7 @@ class TestF06Flutter(unittest.TestCase):
         eigr_eigi_vel_expected[ivel+2, 1, :] = eigr_eigi_vel[5, :]
         eigr_eigi_vel_expected[ivel+3, 0, :] = eigr_eigi_vel[6, :]
         eigr_eigi_vel_expected[ivel+3, 1, :] = eigr_eigi_vel[7, :]
-        eigenvectors2, eigr_eigi_vel2 = reshape_eigenvectors(
+        eigenvectors2, eigr_eigi_vel2 = _reshape_eigenvectors(
             eigenvectors, eigr_eigi_vel)
         assert np.allclose(eigr_eigi_vel2.shape, eigr_eigi_vel_expected.shape)
         assert np.allclose(eigenvectors2, eigenvectors_expected)
@@ -378,7 +378,8 @@ class TestF06Flutter(unittest.TestCase):
                 '--modal', ivel, mode,
                 '--mag_tol', '0.1',
                 '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv',
-                '--ncol', '2']
+                '--ncol', '2',
+            ]
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 

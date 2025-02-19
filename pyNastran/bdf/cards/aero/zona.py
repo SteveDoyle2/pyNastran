@@ -1139,12 +1139,18 @@ class MKAEROZ(BaseCard):
         sid = integer(card, 1, 'IDMK')
         mach = double(card, 2, 'MACH')
         method = integer(card, 3, 'METHOD')
-        flt_id = integer(card, 4, 'IDFLT')
+        flt_id = integer_or_blank(card, 4, 'IDFLT')
         save = string_or_blank(card, 5, 'SAVE')
-        filename_a = filename_or_blank(card, 6, 'FILENAMEA', '')
-        filename_b = filename_or_blank(card, 7, 'FILENAMEB', '')
+        #print(f'card = {card}')
+        field6 = card.field(6)
+        field7 = card.field(7)
+        field6_str = '' if field6 is None else field6
+        field7_str = '' if field7 is None else field7
+        filename = (field6_str + field7_str).rstrip()
+        #filename_a = filename_or_blank(card, 6, 'FILENAMEA', '')
+        #filename_b = filename_or_blank(card, 7, 'FILENAMEB', '')
         #print(filename_a, filename_b)
-        filename = (filename_a + filename_b).rstrip()
+        #filename = (filename_a + filename_b).rstrip()
         print_flag = integer_or_blank(card, 8, 'PRINT_FLAG', 0)
         freqs = []
         ifreq = 1

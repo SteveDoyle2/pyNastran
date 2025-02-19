@@ -1,3 +1,4 @@
+$ pyNastran: version=zona
 $ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * $
 $ THIS CASE DEMONSTRATES THE ZTAW MODULE FOR AIC CORRECTION ON AGARD 445$
 $ WEAKENED WING USING FIVE METHODS:                                     $

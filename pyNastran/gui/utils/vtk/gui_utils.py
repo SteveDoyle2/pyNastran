@@ -87,7 +87,7 @@ def set_grid_mapper(grid_mapper: vtkDataSetMapper,
     elif issubdtype(case.dtype, np.floating):
         vtk_data_type = VTK_FLOAT
         grid_mapper.InterpolateScalarsBeforeMappingOff()
-    elif case.dtype.name == 'complex64':
+    elif case.dtype.name in {'complex64', 'complex128'}:
         if phase:
             phaser = np.radians(phase)
             case = (np.cos(phaser) * case.real + np.sin(phaser) * case.imag).real

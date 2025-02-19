@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Optional, Any
 import numpy as np
 from cpylog import get_logger
 
@@ -108,13 +108,18 @@ class MockResWidget:
 class FakeGUIMethods(GuiVTKCommon):
     """all the methods in here are faked"""
     def __init__(self, inputs=None):
+        inputs_default = {
+            'magnify': 1,
+            'debug': False,
+            'console': True,
+            'is_groups': True,
+        }
         if inputs is None:
-            inputs = {
-                'magnify' : 1,
-                'debug' : False,
-                'console' : True,
-                'is_groups' : True,
-            }
+            inputs = inputs_default
+        for key, value in inputs_default.items():
+            if key not in inputs:
+                inputs[key] = value
+
         self.rend = vtkRenderer()
         GuiVTKCommon.__init__(self, inputs=inputs)
         self.fake_init()
@@ -128,11 +133,12 @@ class FakeGUIMethods(GuiVTKCommon):
             'inputs' : inputs,
             'res_widget' : res_widget
         }
+        debug = inputs['debug']
         #GuiAttributes.__init__(self, **kwds)
         #GuiVTKCommon.__init__(self, **kwds)
         self.res_widget = res_widget
         self.vtk_interactor = VTKInteractor()
-        self.debug = False
+        self.debug = debug
         self._form = []
         #self.geometry_actors = {
             #'main' : vtkActor(),
@@ -164,7 +170,8 @@ class FakeGUIMethods(GuiVTKCommon):
         #}
         #self._add_alt_actors = _add_alt_actors
 
-        level = 'debug' if self.debug else 'info'
+        #level = 'debug' if self.debug else 'info'
+        level = 'warning' if debug is None else 'debug' if debug else 'info'
         self.log = get_logger(log=None, level=level)
 
         self.corner_text_actors[0] = vtkTextActor()

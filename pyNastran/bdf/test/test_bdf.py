@@ -11,8 +11,9 @@ import os
 import sys
 import traceback
 import warnings
-from typing import Optional, Any
 from io import StringIO
+from pathlib import PurePath
+from typing import Optional, Any
 
 import numpy as np
 from cpylog import get_logger2, SimpleLogger, WarningRedirector
@@ -698,6 +699,10 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
     if crash_cards is None:
         crash_cards = []
     check_path(bdf_filename, 'bdf_filename')
+    if isinstance(out_model, PurePath):
+        out_model = str(out_model)
+    if isinstance(bdf_filename, PurePath):
+        bdf_filename = str(bdf_filename)
     base, ext = os.path.splitext(out_model)
     try:
         if '.pch' in bdf_filename:
