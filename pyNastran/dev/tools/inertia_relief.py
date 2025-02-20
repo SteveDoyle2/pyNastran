@@ -3,30 +3,95 @@ import numpy as np
 from scipy.integrate import cumulative_trapezoid
 import matplotlib.pyplot as plt
 
-def inertia_relief(x: np.ndarray,
-                   exterior_force: np.ndarray,
-                   mass: np.ndarray,
-                   g: Optional[float]=None,
-                   xcg: Optional[float]=None,
-                   inertia_cg: Optional[np.ndarray]=None,
-                   include_linear_inertia: bool=True,
-                   include_angular_inertia: bool=True,
-                   mass_units: str='slinch',
-                   length_units: str='in',
-                   force_units: str='lbf',
-                   accel_units: Optional[str]=None,
-                   inertia_units: Optional[str]=None,
-                   case: str='',
-                   show: bool=True,
-                   locations: dict[str, float]=None,
-                   plot_differential: bool=True,
-                   plot_integrated: bool=True):
+def inertia_relief3(xyz: np.ndarray,
+                    exterior_force: np.ndarray,
+                    mass: np.ndarray,
+                    g: Optional[float]=None,
+                    xyz_cg: Optional[float]=None,
+                    inertia_cg: Optional[np.ndarray]=None,
+                    include_linear_inertia: bool=True,
+                    include_angular_inertia: bool=True,
+                    mass_units: str='slinch',
+                    length_units: str='in',
+                    force_units: str='lbf',
+                    accel_units: Optional[str]=None,
+                    inertia_units: Optional[str]=None,
+                    case: str='',
+                    show: bool=True,
+                    locations: dict[str, float]=None,
+                    plot_differential: bool=True,
+                    plot_integrated: bool=True):
+    """
+    Parameters
+    ----------
+    xyz : (n, 3) float array
+        the xyz station
+    xyz_cg : (3, ) float array
+        the center of gravity of the vehicle
+    exterior_force : (n, 3) float array
+        differential force
+    exterior_moment : (n, 3) float array
+        differential moment
+    mass : (n, ) float array
+        differential mass
+        mass has units of slinch, slug, kg, lbm
+    inertia_cg : (n, ) float array
+        differential inertia about the cg
+        inertia has units of slinch-in^2, slug-ft^2, kg-m^2
+    g : float; default=None -> sum(F)/m
+        the gravity to use for inertia relief
+        probably should be positive (a=F/m) to apply inertia relief
+        in the opposite direction
+        slinch: 12*32.174=386.088
+    mass_units / length_units / force_units: str
+        used for prints
+    accel_units / inertia_units : Optional[str]
+        automatically calculated; used for prints
+    locations : dict[str, float] | None
+        locations to identify key locations (e.g., nose, wing LE, tail)
+    """
+    if locations is None:
+        locations = {}
+    assert isinstance(locations, dict), locations
+    assert isinstance(xyz, np.ndarray), type(xyz)
+    assert isinstance(mass, np.ndarray), type(mass)
+    assert isinstance(exterior_force, np.ndarray), type(exterior_force)
+
+    moment_units, accel_units, alpha_units, inertia_units = _get_units(
+        mass_units, length_units, force_units,
+        accel_units=accel_units,
+        inertia_units=inertia_units)
+
+    sum_mass = mass.sum()
+    xyz_cg, dxcg, inertia_cgi, sum_inertia_cg = _get_mass_cg_inertia3(
+        xyz, xyz_cg, mass, sum_mass,
+        inertia_cg=inertia_cg)
+    del inertia_cg, xyz_cg
+
+def inertia_relief1(x: np.ndarray,
+                    exterior_force: np.ndarray,
+                    mass: np.ndarray,
+                    g: Optional[float]=None,
+                    x_cg: Optional[float]=None,
+                    inertia_cg: Optional[np.ndarray]=None,
+                    include_linear_inertia: bool=True,
+                    include_angular_inertia: bool=True,
+                    mass_units: str='slinch',
+                    length_units: str='in',
+                    force_units: str='lbf',
+                    accel_units: Optional[str]=None,
+                    inertia_units: Optional[str]=None,
+                    case: str='',
+                    show: bool=True,
+                    locations: dict[str, float]=None,
+                    plot_differential: bool=True,
+                    plot_integrated: bool=True):
     """
     Parameters
     ----------
     x : (n, ) float array
-        the station
-    xcg : float
+        the xyz station
+    x_cg : float
         the center of gravity of the vehicle
     exterior_force : (n, ) float array
         differential force
@@ -59,25 +124,19 @@ def inertia_relief(x: np.ndarray,
     assert x.ndim == 1, x
     assert mass.ndim == 1, mass.shape
 
+    moment_units, accel_units, alpha_units, inertia_units = _get_units(
+        mass_units, length_units, force_units,
+        accel_units=accel_units,
+        inertia_units=inertia_units)
+
     sum_mass = mass.sum()
-    xcgi = _get_xcg(x, xcg, mass, sum_mass)
-    del xcg
-
-    dxcg, inertia_cgi = _get_inertia(x, xcgi, mass, inertia_cg)
-    del inertia_cg
-
-    sum_inertia_cg = inertia_cgi.sum()
+    xcgi, dxcg, inertia_cgi, sum_inertia_cg = _get_mass_cg_inertia1(
+        x, x_cg, mass, sum_mass,
+        inertia_cg=inertia_cg)
 
     exterior_moment = exterior_force * dxcg # fintegrate(exterior_force, x=x)
     sum_exterior_force = exterior_force.sum()
     sum_exterior_moment = exterior_moment.sum()
-
-    if inertia_units is None:
-        inertia_units = f'{mass_units}-{length_units}^2'
-    if accel_units is None:
-        accel_units = f'{length_units}/s^2'
-    moment_units = f'{length_units}-{force_units}'
-    alpha_units = 'rad/s^2'
 
     #  F = m * a
     #  a = F / m
@@ -227,26 +286,100 @@ def inertia_relief(x: np.ndarray,
         plt.show()
     return out
 
-def _get_xcg(x: np.ndarray,
-             xcg: Optional[float],
-             mass: np.ndarray,
-             sum_mass: float) -> float:
-    if xcg is None:
-        xcgi = (x * mass).sum() / sum_mass
-    else:
-        assert isinstance(xcg, float), xcg
-        xcgi = xcg
-    return xcgi
+def _get_units(mass_units: str, length_units: str,
+               force_units: str,
+               accel_units: Optional[str]=None,
+               inertia_units: Optional[str]=None,
+               ) -> tuple[str, str, str, str]:
+    if inertia_units is None:
+        inertia_units = f'{mass_units}-{length_units}^2'
+    if accel_units is None:
+        accel_units = f'{length_units}/s^2'
+    moment_units = f'{length_units}-{force_units}'
+    alpha_units = 'rad/s^2'
+    return moment_units, accel_units, alpha_units, inertia_units
 
-def _get_inertia(x: np.ndarray, xcg: float,
-                 mass: np.ndarray,
-                 inertia_cg: Optional[np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
+def _get_mass_cg_inertia1(x: np.ndarray,
+                          x_cg: np.ndarray,
+                          mass: np.ndarray,
+                          sum_mass: float,
+                          inertia_cg=None):
+    assert x.ndim == 1, x
+    assert mass.ndim == 1, mass.shape
+    x_cgi = _get_x_cg(x, x_cg, mass, sum_mass)
+    dx_cg, inertia_cgi = _get_inertia1(x, x_cgi, mass, inertia_cg)
+    del inertia_cg
+    sum_inertia_cg = inertia_cgi.sum()
+    return x_cgi, dx_cg, inertia_cgi, sum_inertia_cg
+
+def _get_mass_cg_inertia3(xyz: np.ndarray,
+                          xyz_cg: np.ndarray,
+                          mass: np.ndarray,
+                          sum_mass: float,
+                          inertia_cg=None):
+    assert xyz.ndim == 2, xyz
+    assert mass.ndim == 2, mass.shape
+    xyz_cgi = _get_xyz_cg(xyz, xyz_cg, mass, sum_mass)
+    dxyz_cg, inertia_cgi = _get_inertia3(xyz, xyz_cgi, mass, inertia_cg)
+
+    sum_inertia_cg = inertia_cgi.sum(axis=1)
+    assert len(sum_inertia_cg) == 6, sum_inertia_cg
+    return xyz_cgi, dxyz_cg, inertia_cgi, sum_inertia_cg
+
+def _get_x_cg(x: np.ndarray,
+              x_cg: Optional[float],
+              mass: np.ndarray,
+              sum_mass: float) -> float:
+    if x_cg is None:
+        x_cgi = (x * mass).sum() / sum_mass
+    else:
+        assert isinstance(x_cg, float), x_cg
+        x_cgi = x_cg
+    return x_cgi
+
+def _get_xyz_cg(xyz: np.ndarray,
+                xyz_cg: Optional[float],
+                mass: np.ndarray,
+                sum_mass: float) -> float:
+    if xyz_cg is None:
+        xyz_cgi = (xyz * mass).sum() / sum_mass
+    else:
+        assert isinstance(xyz_cg, np.ndarray), xyz_cg
+        xyz_cgi = xyz_cg
+    return xyz_cgi
+
+def _get_inertia1(x: np.ndarray, xcg: float,
+                  mass: np.ndarray,
+                  inertia_cg: Optional[np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
     dxcg = x - xcg
     if inertia_cg is not None:
         inertia_cgi = inertia_cg
     else:
         inertia_cgi = mass * dxcg ** 2
     return dxcg, inertia_cgi
+
+def _get_inertia3(xyz: np.ndarray, xyz_cg: float,
+                  mass: np.ndarray,
+                  inertia_cg: Optional[np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
+    if inertia_cg is not None:
+        inertia_cgi = inertia_cg
+    else:
+        dxyz_cg = xyz - xyz_cg[np.newaxis, :]
+        dx = dxyz_cg[:, 0]
+        dy = dxyz_cg[:, 1]
+        dz = dxyz_cg[:, 2]
+        dx2 = dx * dx
+        dy2 = dy * dy
+        dz2 = dz * dz
+        rxx = dy2 + dz2
+        ryy = dx2 + dz2
+        rzz = dx2 + dy2
+        rxy = dx * dy
+        ryz = dy * dz
+        rxz = dx * dz
+        radius_gyration2 = np.column_stack([rxx, ryy, rzz, rxy, ryz, rxz])
+        inertia_cgi = mass[:, np.newaxis] * radius_gyration2
+    return dxyz_cg, inertia_cgi
 
 def _write_summary(data: dict[str, float], indent: str='  ') -> str:
     len_max_name = max((len(key) for key in data))
@@ -347,7 +480,7 @@ def test_inertia1():
 
     inertia_relief(
         x, exterior_force, mass, # inertia_cg=inertia_cg,
-        xcg=None,
+        xyz_cg=None,
         include_linear_inertia=True, include_angular_inertia=True,
         mass_units='slinch', length_units='in', force_units='lbf',
         plot_differential=True,
@@ -365,5 +498,18 @@ def test_inertia1():
     # )
     plt.show()
 
+def test_inertia3():
+    nx = 51
+    xyz = np.zeros((nx, 3), dtype='float64')
+    x = np.linspace(0., 10., num=51)
+    xyz[:, 0] = x
+    mass = np.ones(x.shape, dtype=x.dtype)
+    mass = np.ones(x.shape, dtype=x.dtype) + 0.1 * x
+
+    exterior_force = np.zeros((nx, 3), dtype='float64')
+    exterior_force[:, 0] = mass * 3.
+    inertia_relief(x, exterior_force, mass)
+
 if __name__ == '__main__':
-    test_inertia1()
+    #test_inertia1()
+    test_inertia3()
