@@ -280,6 +280,7 @@ def run_bdf(folder: str, bdf_filename: str,
             size: int=8, is_double: bool=False,
             hdf5: bool=False,
             is_lax_parser: bool=False,
+            allow_duplicates: bool=False,
             stop: bool=False, nastran: str='', post: int=-1,
             dynamic_vars=None,
             quiet: bool=False, dumplines: bool=False, dictsort: bool=False,
@@ -378,7 +379,7 @@ def run_bdf(folder: str, bdf_filename: str,
         punch=punch, mesh_form=mesh_form,
         print_stats=print_stats, encoding=encoding,
         sum_load=sum_load, size=size, is_double=is_double,
-        is_lax_parser=is_lax_parser,
+        is_lax_parser=is_lax_parser, allow_duplicates=allow_duplicates,
         stop=stop, nastran=nastran, post=post, hdf5=hdf5,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
@@ -415,6 +416,7 @@ def run_and_compare_fems(
         is_double: bool=False,
         save_file_structure: bool=False,
         is_lax_parser: bool=False,
+        allow_duplicates: bool=False,
         stop: bool=False,
         nastran: str='',
         post: int=-1,
@@ -445,6 +447,8 @@ def run_and_compare_fems(
     if is_lax_parser:
         fem1.log.warning('using lax card parser')
         fem1.is_strict_card_parser = False
+    if allow_duplicates:
+        fem1.log.warning('allowing card overwrites')
         fem1.allow_overwrites_set = {'GRID', 'CONM2'}
         fem1._make_card_parser()
     #fem1.use_new_deck_parser = True
@@ -2112,11 +2116,11 @@ def test_bdf_argparse(argv=None):
     version_group = parent_parser.add_mutually_exclusive_group()
 
     version_group_map = {
-        '--msc' : 'Assume MSC Nastran (default=True)',
-        '--nx' : 'Assume NX Nastran/Simcenter (default=False)',
-        '--optistruct' : 'Assume Altair OptiStruct (default=False)',
-        '--nasa95' : 'Assume Nastran 95 (default=False)',
-        '--mystran' : 'Assume Mystran (default=False)',
+        '--msc': 'Assume MSC Nastran (default=True)',
+        '--nx': 'Assume NX Nastran/Simcenter (default=False)',
+        '--optistruct': 'Assume Altair OptiStruct (default=False)',
+        '--nasa95': 'Assume Nastran 95 (default=False)',
+        '--mystran': 'Assume Mystran (default=False)',
     }
     for version, help_msg in version_group_map.items():
         version_group.add_argument(
@@ -2141,6 +2145,8 @@ def test_bdf_argparse(argv=None):
                                help='skip the processing of the caero mesh (default=False)')
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
+    parent_parser.add_argument('--duplicate', action='store_true',
+                               help='overwrite duplicates; takes the later card (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
                                help='prints debug messages (default=False)')
     # --------------------------------------------------------------------------
@@ -2373,6 +2379,7 @@ def main(argv=None):
             run_extract_bodies=False,
 
             is_lax_parser=data['lax'],
+            allow_duplicates=data['duplicate'],
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],
@@ -2424,6 +2431,7 @@ def main(argv=None):
             run_extract_bodies=False,
 
             is_lax_parser=data['lax'],
+            allow_duplicates=data['duplicate'],
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],

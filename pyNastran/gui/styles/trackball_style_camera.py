@@ -1,3 +1,22 @@
+"""
+Femap controls
+--------------
+Shift + Wheel: pitch
+Ctrl + Wheel: roll
+Shift + Ctrl + Wheel: yaw
+Ctrl + Mouse: Pan
+Shift + Mouse: Zoom
+Alt + Mouse: rotate about projected axis
+
+Trackball controls
+------------------
+Shift + Wheel: Zoom
+Ctrl + Wheel: Zoom
+Shift + Ctrl + Wheel: Zoom
+Ctrl + Mouse: Pan
+Shift + Mouse: Pan
+
+"""
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera, vtkInteractorStyleJoystickCamera

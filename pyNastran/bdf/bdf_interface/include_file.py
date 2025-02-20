@@ -18,8 +18,10 @@ IS_WINDOWS = 'nt' in os.name
 
 def get_include_filename(card_lines: list[str],
                          include_dirs: list[str],
+                         source_filename: str='',
                          is_windows: Optional[bool]=None,
-                         debug: bool=False) -> str:
+                         debug: bool=False,
+                         write_env_on_error: bool=False) -> str:
     """
     Parses an INCLUDE file split into multiple lines (as a list).
 
@@ -42,7 +44,7 @@ def get_include_filename(card_lines: list[str],
         the INCLUDE filename
 
     """
-    #print(f'card_lines = {card_lines}')
+    #print(f'card_lines={card_lines};\nsource_filename={source_filename!r}')
     if not isinstance(include_dirs, list):
         assert isinstance(include_dirs, PathLike), include_dirs
         #if str(include_dirs) == '':
@@ -73,23 +75,25 @@ def get_include_filename(card_lines: list[str],
     #if 1:
         msg = f'Could not find INCLUDE line:\n{card_lines}\n'
         msg += f'  filename: {os.path.abspath(filename_raw)}\n'
+        if source_filename:
+            msg += f'  source file: {os.path.abspath(source_filename)}\n'
         msg += f'  include_dirs:\n - ' + '\n - '.join(repr(val) for val in include_dirs) + '\n'
-        #if debug:
-        msg += '  environment:'
-        skip_keys = [
-            'LESSOPEN', 'LOGNAME', 'LS_COLORS',
-            'MAIL', 'NAME', 'XDG_SESSION_CLASS', 'XDG_DATA_DIRS',
-            'XDG_RUNTIME_DIR', 'XDG_SESSION_ID', 'XDG_SESSION_TYPE', 'DISPLAY',
-            'LANG', 'HOSTTYPE', 'MOTD_SHOWN', 'DEBUGINFOD_URLS', 'DISPLAY', 'USER',
-            'TERM', 'WSL_DISTRO_NAME', 'WSL_INTEROP', 'WT_PROFILE_ID', 'WT_SESSION',
-            'WSL2_GUI_APPS_ENABLED', 'WAYLAND_DISPLAY', 'PULSE_SERVER',
-        ]
-        for key, value in sorted(os.environ.items()):
-            if key in skip_keys:
-                continue
-            msg += f'  {key}: {value!r}\n'
-        #else:
-            #msg += f'  environment_keys: {list(key for key in os.environ)}'
+        if write_env_on_error:
+            msg += '  environment:'
+            skip_keys = [
+                'LESSOPEN', 'LOGNAME', 'LS_COLORS',
+                'MAIL', 'NAME', 'XDG_SESSION_CLASS', 'XDG_DATA_DIRS',
+                'XDG_RUNTIME_DIR', 'XDG_SESSION_ID', 'XDG_SESSION_TYPE', 'DISPLAY',
+                'LANG', 'HOSTTYPE', 'MOTD_SHOWN', 'DEBUGINFOD_URLS', 'DISPLAY', 'USER',
+                'TERM', 'WSL_DISTRO_NAME', 'WSL_INTEROP', 'WT_PROFILE_ID', 'WT_SESSION',
+                'WSL2_GUI_APPS_ENABLED', 'WAYLAND_DISPLAY', 'PULSE_SERVER',
+            ]
+            for key, value in sorted(os.environ.items()):
+                if key in skip_keys:
+                    continue
+                msg += f'  {key}: {value!r}\n'
+            #else:
+                #msg += f'  environment_keys: {list(key for key in os.environ)}'
         raise IOError(msg)
     return filename
 
