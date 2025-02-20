@@ -1,5 +1,6 @@
 from typing import Optional
 import numpy as np
+from cpylog import SimpleLogger
 from scipy.integrate import cumulative_trapezoid
 import matplotlib.pyplot as plt
 
@@ -50,12 +51,14 @@ def inertia_relief3(xyz: np.ndarray,
     locations : dict[str, float] | None
         locations to identify key locations (e.g., nose, wing LE, tail)
     """
+    log = SimpleLogger()
     if locations is None:
         locations = {}
     assert isinstance(locations, dict), locations
     assert isinstance(xyz, np.ndarray), type(xyz)
     assert isinstance(mass, np.ndarray), type(mass)
     assert isinstance(exterior_force, np.ndarray), type(exterior_force)
+    nx = len(mass)
 
     moment_units, accel_units, alpha_units, inertia_units = _get_units(
         mass_units, length_units, force_units,
@@ -63,10 +66,150 @@ def inertia_relief3(xyz: np.ndarray,
         inertia_units=inertia_units)
 
     sum_mass = mass.sum()
-    xyz_cg, dxcg, inertia_cgi, sum_inertia_cg = _get_mass_cg_inertia3(
+    xyz_cgi, dxyz_cg, inertia_cgi, sum_inertia_cg = _get_mass_cg_inertia3(
         xyz, xyz_cg, mass, sum_mass,
         inertia_cg=inertia_cg)
     del inertia_cg, xyz_cg
+
+    exterior_moment = exterior_force * dxyz_cg  # fintegrate(exterior_force, x=x)
+    sum_exterior_force = exterior_force.sum(axis=0)
+    sum_exterior_moment = exterior_moment.sum(axis=0)
+    assert len(sum_exterior_force) == 3, sum_exterior_force
+    assert len(sum_exterior_moment) == 3, sum_exterior_moment
+
+    #  F = m * a
+    #  a = F / m
+    exterior_accel = sum_exterior_force / sum_mass
+    assert len(exterior_accel) == 3, exterior_accel
+
+    # Mcg = Icg * alpha_cg
+    # rxx, ryy, rzz, rxy, rxz, ryz
+    #print(inertia_cgi.shape)
+    #--------------------------------------------
+    ixx = inertia_cgi[:, 0]
+    iyy = inertia_cgi[:, 1]
+    izz = inertia_cgi[:, 2]
+    ixy = inertia_cgi[:, 3]
+    ixz = inertia_cgi[:, 4]
+    iyz = inertia_cgi[:, 5]
+    #ixx, iyy, izz, ixy, ixz, iyz = inertia_cgi
+    Ixx, Iyy, Izz, Ixy, Ixz, Iyz = sum_inertia_cg
+
+    # adding a small amount of noise allows us to invert Imat
+    tol = 1e-16
+    Imat = np.array([
+        [Ixx, Ixy, Ixz],
+        [Ixy, Iyy, Iyz],
+        [Ixz, Iyz, Izz],
+    ], dtype='float64') + tol * np.eye(3)
+
+    # adding a small amount of noise allows us to invert Imati
+    Imati = np.zeros((nx, 3, 3), dtype='float64')
+    Imati[:, 0, 0] = ixx + tol
+    Imati[:, 0, 1] = Imati[:, 1, 0] = ixy
+    Imati[:, 0, 2] = Imati[:, 2, 0] = ixz
+    Imati[:, 1, 1] = iyy + tol
+    Imati[:, 1, 2] = Imati[:, 2, 1] = iyz
+    Imati[:, 2, 2] = izz + tol
+    #print(Imat)
+    assert Imat.shape == (3, 3), Imat.shape
+    #--------------------------------------------
+    # [Mx]    [Ixx, Ixy, Ixz] [alpha_x]
+    # [My]  = [Ixy, Iyy, Iyz] [alpha_y]
+    # [Mz]    [Ixz, Iyz, Izz] [alpha_z]
+    #
+    # [Ixx, Ixy, Ixz]^-1 [Mx]   [alpha_x]
+    # [Ixy, Iyy, Iyz]    [My] = [alpha_y]
+    # [Ixz, Iyz, Izz]    [Mz]   [alpha_z]
+    sum_exterior_moment = sum_exterior_moment.reshape(3, 1)
+    exterior_alpha_cg = np.linalg.solve(Imat, sum_exterior_moment) #/ sum_inertia_cg
+    sum_exterior_moment = sum_exterior_moment.flatten()
+    exterior_alpha_cg = exterior_alpha_cg.flatten()
+    assert len(exterior_alpha_cg) == 3, exterior_alpha_cg
+
+    if g is not None:
+        accel = g
+
+    if include_linear_inertia:
+        # Fi = mi * a
+        inertial_linear_force = -mass[:, np.newaxis] * exterior_accel
+        #inertial_linear_moment = fintegrate(inertial_linear_force, x=x)
+        inertial_linear_moment = inertial_linear_force * dxyz_cg
+    else:
+        inertial_linear_force = np.zeros(exterior_force.shape, dtype=exterior_force.dtype)
+        inertial_linear_moment = np.zeros(exterior_force.shape, dtype=exterior_force.dtype)
+    assert inertial_linear_force.shape == (nx, 3), inertial_linear_force.shape
+    assert inertial_linear_moment.shape == (nx, 3), inertial_linear_moment.shape
+
+    #--------
+    # Mx_cg            alpha_cg
+    # My_cg = [Imat] @ alpha_cg
+    # Mz_cg            alpha_cg
+    linear_force = exterior_force + inertial_linear_force
+    linear_moment = exterior_moment + inertial_linear_moment
+    sum_linear_force = linear_force.sum(axis=0)
+    sum_linear_moment = linear_moment.sum(axis=0)
+    assert len(sum_linear_force) == 3, sum_linear_force
+    assert len(sum_linear_moment) == 3, sum_linear_moment
+
+    #linear_alpha_cg = sum_linear_moment / sum_inertia_cg
+    linear_alpha_cg = np.linalg.solve(Imat, sum_linear_moment).flatten() #/ sum_inertia_cg
+
+    inertial_angular_force = np.zeros(exterior_force.shape, dtype=exterior_force.dtype)
+    log.info(f'dxyz_cg={type(dxyz_cg)} dxyz_cg.shape={str(dxyz_cg.shape)}')
+    if include_angular_inertia:
+        # Mcgi = -Icgi * alpha_cg
+        icg_positive = np.abs(dxyz_cg) > 0
+        #icg_positive = dxcg.abs() > 0
+        assert linear_alpha_cg.shape == (3,), linear_alpha_cg.shape
+        #inertial_angular_moment = -inertia_cgi * linear_alpha_cg
+        inertial_angular_moment = -Imati @ linear_alpha_cg
+        inertial_angular_force[icg_positive] = inertial_angular_moment[icg_positive] / dxyz_cg[icg_positive]
+    else:
+        inertial_angular_moment = np.zeros(exterior_force.shape, dtype=exterior_force.dtype)
+
+    #-------------------------------------------------------------------------------------
+    total_force = exterior_force + inertial_linear_force + inertial_angular_force
+    total_moment = exterior_moment + inertial_linear_moment + inertial_angular_moment
+    total_force_sum = total_force.sum(axis=0)
+    total_moment_sum = total_moment.sum(axis=0)
+
+    total_accel = total_force_sum / sum_mass
+    #total_alpha_cg = total_moment.sum(axis=0) / sum_inertia_cg
+    IImat = Imat[np.newaxis, :, :]
+    #print(IImat.shape)
+    #print(total_moment_sum.shape)
+    total_alpha_cg = np.linalg.solve(Imat, total_moment_sum) #/ sum_inertia_cg
+
+    assert len(total_force) == nx
+    assert len(total_moment) == nx
+
+    assert len(total_accel) == 3, total_accel
+    assert len(total_alpha_cg) == 3, total_alpha_cg
+    # print(f'  total_accel = {total_accel} {accel_units}')
+    # print(f'  total_alpha_cg = {total_alpha_cg} {accel_units}')
+
+    data_balanced = {
+        f'xyz_cg ({length_units})': xyz_cgi,
+        f'mass ({mass_units})': sum_mass,
+        f'inertia_cg ({inertia_units})': sum_inertia_cg,
+        f'exterior_force ({force_units})': sum_exterior_force,
+        f'exterior_moment_cg ({moment_units})': sum_exterior_moment,
+
+        f'total_force ({force_units})': total_force_sum,
+        f'total_moment_cg ({moment_units})': total_moment_sum,
+
+        f'exterior_accel ({accel_units})': exterior_accel,
+        f'exterior_alpha_cg ({alpha_units})': exterior_alpha_cg,
+        f'total_alpha_cg ({alpha_units})': total_alpha_cg,
+        f'total_accel ({accel_units})': total_accel,
+    }
+    msg = _write_summary(data_balanced, indent='  ')
+    log.info('Summary Balanced Loads')
+    log.info('\n' + msg)
+
+    print('done')
+
 
 def inertia_relief1(x: np.ndarray,
                     exterior_force: np.ndarray,
@@ -318,13 +461,16 @@ def _get_mass_cg_inertia3(xyz: np.ndarray,
                           sum_mass: float,
                           inertia_cg=None):
     assert xyz.ndim == 2, xyz
-    assert mass.ndim == 2, mass.shape
+    assert mass.ndim == 1, mass.shape
     xyz_cgi = _get_xyz_cg(xyz, xyz_cg, mass, sum_mass)
+    assert len(xyz_cgi) == 3, xyz_cgi
     dxyz_cg, inertia_cgi = _get_inertia3(xyz, xyz_cgi, mass, inertia_cg)
 
-    sum_inertia_cg = inertia_cgi.sum(axis=1)
+    sum_inertia_cg = inertia_cgi.sum(axis=0)
+    Ixx, Iyy, Izz, Ixy, Ixz, Iyz = sum_inertia_cg
     assert len(sum_inertia_cg) == 6, sum_inertia_cg
     return xyz_cgi, dxyz_cg, inertia_cgi, sum_inertia_cg
+
 
 def _get_x_cg(x: np.ndarray,
               x_cg: Optional[float],
@@ -342,10 +488,11 @@ def _get_xyz_cg(xyz: np.ndarray,
                 mass: np.ndarray,
                 sum_mass: float) -> float:
     if xyz_cg is None:
-        xyz_cgi = (xyz * mass).sum() / sum_mass
+        xyz_cgi = (xyz * mass[:, np.newaxis]).sum(axis=0) / sum_mass
     else:
         assert isinstance(xyz_cg, np.ndarray), xyz_cg
         xyz_cgi = xyz_cg
+    assert len(xyz_cgi) == 3, xyz_cgi
     return xyz_cgi
 
 def _get_inertia1(x: np.ndarray, xcg: float,
@@ -358,7 +505,8 @@ def _get_inertia1(x: np.ndarray, xcg: float,
         inertia_cgi = mass * dxcg ** 2
     return dxcg, inertia_cgi
 
-def _get_inertia3(xyz: np.ndarray, xyz_cg: float,
+def _get_inertia3(xyz: np.ndarray,
+                  xyz_cg: np.ndarray,
                   mass: np.ndarray,
                   inertia_cg: Optional[np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
     if inertia_cg is not None:
@@ -377,7 +525,7 @@ def _get_inertia3(xyz: np.ndarray, xyz_cg: float,
         rxy = dx * dy
         ryz = dy * dz
         rxz = dx * dz
-        radius_gyration2 = np.column_stack([rxx, ryy, rzz, rxy, ryz, rxz])
+        radius_gyration2 = np.column_stack([rxx, ryy, rzz, rxy, rxz, ryz])
         inertia_cgi = mass[:, np.newaxis] * radius_gyration2
     return dxyz_cg, inertia_cgi
 
@@ -478,7 +626,7 @@ def test_inertia1():
     exterior_force = mass * 3.
     #exterior_force = 2 * x
 
-    inertia_relief(
+    inertia_relief1(
         x, exterior_force, mass, # inertia_cg=inertia_cg,
         xyz_cg=None,
         include_linear_inertia=True, include_angular_inertia=True,
@@ -508,7 +656,7 @@ def test_inertia3():
 
     exterior_force = np.zeros((nx, 3), dtype='float64')
     exterior_force[:, 0] = mass * 3.
-    inertia_relief(x, exterior_force, mass)
+    inertia_relief3(xyz, exterior_force, mass)
 
 if __name__ == '__main__':
     #test_inertia1()
