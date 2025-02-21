@@ -367,10 +367,11 @@ class CBUSH(BushElement):
                 xa = ga_ref.get_position()
                 xb = gb_ref.get_position()
                 dx = np.linalg.norm(xb - xa)
-                if np.allclose(xa, xb):
+                if np.allclose(xa, xb) and cid is None:
                     warnings.warn(f'coincident CBUSH eid={self.eid}\n'
                                   f'nodes={self.nodes} dx={dx:g} '
-                                  f'cid={cid}; ocid={ocid}; {x_g0}\n{str(self)}')
+                                  f'cid={cid}; ocid={ocid}; x={self.x} g0={self.g0}\n'
+                                  f'{str(self)}')
 
     def Ga(self):
         if self.nodes_ref is not None:

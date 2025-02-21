@@ -580,6 +580,7 @@ class NSMADD(BaseCard):
         self.sid = sid
         self.sets = expand_thru(sets)
         self.sets.sort()
+        self.sets_ref = None
 
     def validate(self):
         usets = np.unique(self.sets)
