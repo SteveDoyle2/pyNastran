@@ -443,7 +443,12 @@ class GuiVTKCommon(GuiQtCommon):
         except AttributeError:
             return None
         points = cell.GetPoints()
-        assert nnodes > 0, f'nnodes={nnodes:d} cell_id={cell_id:d} cell={cell}'
+
+        if nnodes <= 0:
+            # nnodes=-1943744 cell_id=491980 cell=vtkEmptyCell
+            self.log.error(f'nnodes={nnodes:d} cell_id={cell_id:d} cell={cell}')
+            return None
+
         centroid = np.zeros(3, dtype=dtype)
         for ipoint in range(nnodes):
             point = np.array(points.GetPoint(ipoint), dtype=dtype)

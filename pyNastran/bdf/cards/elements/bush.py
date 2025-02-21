@@ -10,6 +10,7 @@ All bush elements are BushElement and Element objects.
 
 """
 from __future__ import annotations
+import warnings
 from typing import TYPE_CHECKING
 import numpy as np
 
@@ -355,6 +356,21 @@ class CBUSH(BushElement):
         assert isinstance(pid, integer_types), 'CBUSH: pid=%r' % pid
         assert isinstance(cid, integer_types) or cid is None, 'CBUSH: cid=%r' % cid
         assert isinstance(ocid, integer_types), 'CBUSH: ocid=%r' % ocid
+        if xref:
+            if gb is None:
+                warnings.warn(f'No GB for CBUSH eid={self.eid}\n'
+                              f'nodes={self.nodes} dx={dx:g} '
+                              f'cid={cid}; ocid={ocid}; x={self.x} g0={self.g0}\n'
+                              f'{str(self)}')
+            else:
+                ga_ref, gb_ref = self.nodes_ref
+                xa = ga_ref.get_position()
+                xb = gb_ref.get_position()
+                dx = np.linalg.norm(xb - xa)
+                if np.allclose(xa, xb):
+                    warnings.warn(f'coincident CBUSH eid={self.eid}\n'
+                                  f'nodes={self.nodes} dx={dx:g} '
+                                  f'cid={cid}; ocid={ocid}; {x_g0}\n{str(self)}')
 
     def Ga(self):
         if self.nodes_ref is not None:

@@ -9,6 +9,7 @@ All mass properties are PointProperty and Property objects.
 
 """
 from __future__ import annotations
+import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -579,6 +580,11 @@ class NSMADD(BaseCard):
         self.sid = sid
         self.sets = expand_thru(sets)
         self.sets.sort()
+
+    def validate(self):
+        usets = np.unique(self.sets)
+        if not len(self.sets) == len(usets):
+            warnings.warn(f'NSMADD sid={sid} has duplicate set ids\n{str(self.sets)}')
         self.sets_ref = None
 
     @classmethod

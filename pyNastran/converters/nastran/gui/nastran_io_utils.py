@@ -1,5 +1,7 @@
 from __future__ import annotations
 import os
+import sys
+import traceback
 from collections import defaultdict
 from typing import Any, Optional, cast, TYPE_CHECKING
 import numpy as np
@@ -158,10 +160,10 @@ def map_elements1_quality_helper(self,
     #    \ | /
     #      1
     _ctetra_faces = (
-        (0, 1, 2), # (1, 2, 3),
-        (0, 3, 1), # (1, 4, 2),
-        (0, 3, 2), # (1, 3, 4),
-        (1, 3, 2), # (2, 4, 3),
+        (0, 1, 2),  # (1, 2, 3),
+        (0, 3, 1),  # (1, 4, 2),
+        (0, 3, 2),  # (1, 3, 4),
+        (1, 3, 2),  # (2, 4, 3),
     )
 
     # these normals point inwards
@@ -176,11 +178,11 @@ def map_elements1_quality_helper(self,
     #   /      \ /
     # 1---------2
     _cpyram_faces = (
-        (0, 1, 2, 3), # (1, 2, 3, 4),
-        (1, 4, 2), # (2, 5, 3),
-        (2, 4, 3), # (3, 5, 4),
-        (0, 3, 4), # (1, 4, 5),
-        (0, 4, 1), # (1, 5, 2),
+        (0, 1, 2, 3),  # (1, 2, 3, 4),
+        (1, 4, 2),  # (2, 5, 3),
+        (2, 4, 3),  # (3, 5, 4),
+        (0, 3, 4),  # (1, 4, 5),
+        (0, 4, 1),  # (1, 5, 2),
     )
 
     # these normals point inwards
@@ -195,12 +197,12 @@ def map_elements1_quality_helper(self,
     # | /      \ /
     # 1---------2
     _cpenta_faces = (
-        (0, 2, 1), # (1, 3, 2),
-        (3, 4, 5), # (4, 5, 6),
+        (0, 2, 1),  # (1, 3, 2),
+        (3, 4, 5),  # (4, 5, 6),
 
-        (0, 1, 4, 3), # (1, 2, 5, 4), # bottom
-        (1, 2, 5, 4), # (2, 3, 6, 5), # right
-        (0, 3, 5, 2), # (1, 4, 6, 3), # left
+        (0, 1, 4, 3),  # (1, 2, 5, 4), # bottom
+        (1, 2, 5, 4),  # (2, 3, 6, 5), # right
+        (0, 3, 5, 2),  # (1, 4, 6, 3), # left
     )
 
     # these normals point inwards
@@ -213,12 +215,12 @@ def map_elements1_quality_helper(self,
     # | /   | /
     # 1-----2
     _chexa_faces = (
-        (4, 5, 6, 7), # (5, 6, 7, 8),
-        (0, 3, 2, 1), # (1, 4, 3, 2),
-        (1, 2, 6, 5), # (2, 3, 7, 6),
-        (2, 3, 7, 6), # (3, 4, 8, 7),
-        (0, 4, 7, 3), # (1, 5, 8, 4),
-        (0, 6, 5, 4), # (1, 7, 6, 5),
+        (4, 5, 6, 7),  # (5, 6, 7, 8),
+        (0, 3, 2, 1),  # (1, 4, 3, 2),
+        (1, 2, 6, 5),  # (2, 3, 7, 6),
+        (2, 3, 7, 6),  # (3, 4, 8, 7),
+        (0, 4, 7, 3),  # (1, 5, 8, 4),
+        (0, 6, 5, 4),  # (1, 7, 6, 5),
     )
     nid_to_pid_map = defaultdict(list)
     pid = 0
@@ -767,7 +769,6 @@ def map_elements1_quality_helper(self,
         elif etype == 'CBEND':
             pid = element.Pid()
             node_ids = element.node_ids
-            _set_nid_to_pid_map(nid_to_pid_map, pid, node_ids)
 
             # 2 points
             n1, n2 = np.searchsorted(nids, element.nodes)
@@ -775,13 +776,19 @@ def map_elements1_quality_helper(self,
             xyz2 = xyz_cid0[n2, :]
             #min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
                                     #element.nodes_ref[1].get_position())
-            eid_to_nid_map[eid] = node_ids
 
             g0 = element.g0 #_vector
             if not isinstance(g0, integer_types):
-                msg = 'CBEND: g0 must be an integer; g0=%s x=%s\n%s' % (
-                    g0, element.x, element)
-                raise NotImplementedError(msg)
+                log.warning('removing\n%s' % (element))
+                log.warning('removing CBEND/g0 eid=%s; %s' % (eid, element.type))
+                del self.eid_map[eid]
+                continue
+                # msg = 'CBEND: g0 must be an integer; g0=%s x=%s\n%s' % (
+                #     g0, element.x, element)
+                # raise NotImplementedError(msg)
+
+            _set_nid_to_pid_map(nid_to_pid_map, pid, node_ids)
+            eid_to_nid_map[eid] = node_ids
             # only supports g0 as an integer
             elem = vtkQuadraticEdge()
             point_ids = elem.GetPointIds()
@@ -2693,6 +2700,7 @@ def build_normals_quality(settings: Settings,
      - MaterialCoord
      - MaterialTheta
     """
+    log = model.log
     nastran_settings: NastranSettings = settings.nastran_settings
     colormap = settings.colormap
     #ielement = 0
@@ -2706,8 +2714,17 @@ def build_normals_quality(settings: Settings,
     element_dim = None
     nnodes_array = None
     if make_offset_normals_dim:
-        out = build_offset_normals_dims(model, eid_map, nelements)
-        normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array = out
+        try:
+            out = build_offset_normals_dims(model, eid_map, nelements)
+            normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array = out
+        except KeyError as error:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            log.error(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            log.error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            log.error(str(error))
+            make_offset_normals_dim = False
 
     # if not a flat plate
     #if min(nxs) == max(nxs) and min(nxs) != 0.0:
