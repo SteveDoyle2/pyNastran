@@ -11,15 +11,15 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<',
     if not hasattr(model, 'materials'):
         return
     nmaterials = len(model.materials) + len(model.thermal_materials)
+    #print(f'nmaterials={nmaterials}')
 
     # the code will crash if a something is in the out dict, but
     # not handled properly
     materials_to_skip = [
-        'MAT11',
         'MATS3', 'MATS8',
         'MATT3', 'MATT9',
         #  other
-        'NLPARM', 'NLPCI', 'TSTEPNL', 'MAT3D',
+        'NLPARM', 'NLPCI', 'MAT3D',
         'MATPOR',
         'RADBC',
     ]
@@ -40,10 +40,19 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<',
             model.log.warning(f'skipping MPT-{mtype}')
             continue
         out[mtype] = list(mat_dict.keys())
-    if len(model.nlparms):
-        out['NLPARM'] = model.nlparms.keys()
-    if len(model.nlpcis):
-        out['NLPCI'] = model.nlpcis.keys()
+
+    card_name_attrs = [
+        ('NLPARM', model.nlparms),
+        ('NLPCI', model.nlpcis),
+
+        # strangely TSTEPs are stored in the DYNAMIC table, but TSTEPNLs are
+        # stored in the MPT table
+        #'tstepnls' : ['TSTEPNL', 'TSTEP1'],
+        ('TSTEPNL', model.tstepnls),
+    ]
+    for card_name, data_dict in card_name_attrs:
+        keysi = list(data_dict.keys())
+        out[card_name] = keysi
 
     if len(model.bcs):
         #'bcs' : ['CONV', 'CONVM', 'RADBC', 'RADM', 'TEMPBC'],
@@ -60,13 +69,6 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<',
             #print(out['RADBC'])
             del objs
 
-    if len(model.tstepnls):
-        # strangely TSTEPs are stored in the DYNAMIC table, but TSTEPNLs are
-        # stored in the MPT table
-        #'tstepnls' : ['TSTEPNL', 'TSTEP1'],
-        out['TSTEPNL'] = model.tstepnls.keys()
-
-
     if nmaterials == 0 and len(out) == 0:
         return
     write_geom_header(b'MPT', op2_file, op2_ascii, endian=endian)
@@ -77,7 +79,6 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<',
     for mid, mat in model.thermal_materials.items():
         out[mat.type].append(mat.mid)
 
-
     for name, mids in sorted(out.items()):
         #model.log.debug('MPT %s %s' % (name, mids))
         nmaterials = len(mids)
@@ -87,38 +88,9 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<',
 
         #if nmaterials == 0:
             #continue
-        if name == 'MAT1':
-            nbytes = _write_mat1(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MAT2':
-            nbytes = _write_mat2(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MAT3':
-            nbytes = _write_mat3(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MAT4':
-            nbytes = _write_mat4(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MAT5':
-            nbytes = _write_mat5(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MAT8':
-            nbytes = _write_mat8(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MAT9':
-            nbytes = _write_mat9(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MAT10':
-            nbytes = _write_mat10(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
+        func = MATERIAL_MAP[name]
+        nbytes = func(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
 
-        elif name == 'MATS1':
-            nbytes = _write_mats1(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MATT1':
-            nbytes = _write_matt1(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MATT2':
-            nbytes = _write_matt2(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MATT4':
-            nbytes = _write_matt4(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MATT5':
-            nbytes = _write_matt5(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-        elif name == 'MATT8':
-            nbytes = _write_matt8(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
-
-        else:  # pragma: no cover
-            raise NotImplementedError(name)
         op2_file.write(pack('i', nbytes))
         itable -= 1
         data = [
@@ -132,6 +104,81 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<',
     #print('itable', itable)
     close_geom_table(op2_file, op2_ascii, itable)
     #-------------------------------------
+
+def _write_tstepnl(model, name, tstepnl_ids, nmaterials,
+                   op2_file, op2_ascii, endian):
+    """
+    TSTEPNL(3103,31,337)
+
+    NX 2019.2
+    23 KDAMP    I Flags to include differential stiffness to form structural damping
+    24 KUPDATE  I Method for dynamic matrix update
+    25 KUSTEP   I Number of iterations before the stiffness update
+    26 TINTOPT  I Time integration method
+    27 GAMMA   RS Amplitude decay factor for 2nd order transient integration
+
+    """
+    key = (3103, 31, 337)
+    nfields = 27
+    spack = Struct(endian + b'iif5i3f3if3i4f 4if')
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
+    for tstepnl_id in sorted(tstepnl_ids):
+        print('tstepnl_id =', tstepnl_id)
+        tstep = model.tstepnls[tstepnl_id]
+        #(sid, ndt, dt, no, method_int, kstep, max_iter, conv_int, eps_u, eps_p, eps_w,
+        #     max_div, max_qn, max_ls, fstress, max_bisect,
+         #    adjust, mstep, rb, max_r, utol, rtol_b,
+        #     kdamp, kupdate, kustep, tintopt, gamma)
+        method = tstep.method
+        if method == 'AUTO':
+            method_int = 1
+        elif method == 'TSTEP':
+            method_int = 2
+        elif method == 'ADAPT':
+            method_int = 3
+        else:  # pragma: no cover
+            raise NotImplementedError('tstepnl=%s method=%r' % (tstep.sid, method))
+
+        conv = tstep.conv
+        if conv == 'W':
+            conv_int = 1
+        elif conv == 'P':  # guess based on format
+            conv_int = 2
+        elif conv == 'PW':
+            conv_int = 3
+        elif conv == 'U':
+            conv_int = 4
+        elif conv == 'UPW':
+            conv_int = 7
+        #elif conv_int == 3:
+            #conv = 'ADAPT'
+        else:  # pragma: no cover
+            raise NotImplementedError('tstepnl=%s conv=%r' % (tstep.sid, conv))
+
+        #print(tstep.get_stats())
+        kstep = 0 if tstep.kstep == None else tstep.kstep
+        #min_iter = 0 if tstep.min_iter == None else tstep.min_iter
+        mstep = 0 if tstep.mstep == None else tstep.mstep
+
+        kdamp = 0
+        kupdate = 0
+        kustep = 0
+        tintopt = 0
+        gamma = 0.0
+        data = [tstep.sid, tstep.ndt, tstep.dt, tstep.no, method_int,
+                kstep, tstep.max_iter, conv_int,
+                tstep.eps_u, tstep.eps_p, tstep.eps_w,
+                tstep.max_div, tstep.max_qn, tstep.max_ls,
+                tstep.fstress, tstep.max_bisect,
+                tstep.adjust, mstep, tstep.rb, tstep.max_r,
+                tstep.utol, tstep.rtol_b,
+                # nx 2019
+                kdamp, kupdate, kustep,
+                tintopt, gamma]
+        assert None not in data, data
+        op2_ascii.write('  tstepnl_id=%s data=%s\n' % (tstepnl_id, data[1:]))
+        op2_file.write(spack.pack(*data))
+    return nbytes
 
 def _write_mat1(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MAT1"""
@@ -306,6 +353,28 @@ def _write_mat10(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
         #(mid, bulk, rho, c, ge) = out
         data = [mid, mat.bulk, mat.rho, mat.c, mat.ge]
         assert len(data) == nfields
+
+        #print('MAT10 -', data, len(data))
+        op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+def _write_mat11(model, name: str, mids: list[int], nmaterials: int,
+                 op2_file, op2_ascii, endian):
+    """writes the MAT11"""
+    key = (2903,29,371)
+    nfields = 32
+    spack = Struct(endian + b'i 15f 16i')
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
+    for mid in sorted(mids):
+        mat = model.materials[mid]
+        #(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
+             #rho, a1, a2, a3, tref, ge, ???) = out
+        data = [mid, mat.e1, mat.e2, mat.e3,
+                mat.nu12, mat.nu13, mat.nu23,
+                mat.g12, mat.g13, mat.g23,
+                mat.rho, mat.a1, mat.a2, mat.a3, mat.tref, mat.ge] + [0] * 16
+        assert len(data) == nfields, (len(data), nfields)
 
         #print('MAT10 -', data, len(data))
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
@@ -539,3 +608,24 @@ def _write_matt8(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
         op2_file.write(spack.pack(*data))
     return nbytes
+
+
+MATERIAL_MAP = {
+    'MAT1': _write_mat1,
+    'MAT2': _write_mat2,
+    'MAT3': _write_mat3,
+    'MAT4': _write_mat4,
+    'MAT5': _write_mat5,
+    'MAT8': _write_mat8,
+    'MAT9': _write_mat9,
+    'MAT10': _write_mat10,
+    'MAT11': _write_mat11,
+    'MATS1': _write_mats1,
+    'MATT1': _write_matt1,
+    'MATT2': _write_matt2,
+    'MATT4': _write_matt4,
+    'MATT5': _write_matt5,
+    'MATT8': _write_matt8,
+    'MATS1': _write_mats1,
+    'TSTEPNL': _write_tstepnl,
+}

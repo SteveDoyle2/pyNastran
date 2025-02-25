@@ -379,7 +379,7 @@ class AnimationWindow(PyDialog):
         self.gif_edit = QLineEdit(str(self._default_title + '.gif'))
         self.gif_button = QPushButton('Default')
         self.gif_edit.setToolTip('Name of the gif')
-        self.gif_button.setToolTip('Sets the name of the gif to %s.gif' % self._default_title)
+        self.gif_button.setToolTip(f'Sets the name of the gif to {self._default_title}.gif')
         if not IS_IMAGEIO:
             self.gif_label.setEnabled(False)
             self.gif_edit.setEnabled(False)
@@ -1265,6 +1265,7 @@ class AnimationWindow(PyDialog):
         #print(f'icase_fringe_start={icase_fringe_start} icase_fringe_end={icase_fringe_end} icase_fringe_delta={icase_fringe_delta}')
         #print(f'icase_disp_start={icase_disp_start} icase_disp_end={icase_disp_end} icase_disp_delta={icase_disp_delta}')
         #print(f'icase_vector_start={icase_vector_start} icase_vector_end={icase_vector_end} icase_vector_delta={icase_vector_delta}')
+        stop_animation_after_cycle = not animate_in_gui
         if self.is_gui:
             self.gui.make_gif(
                 gif_filename, scale, istep=istep,
@@ -1281,6 +1282,7 @@ class AnimationWindow(PyDialog):
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif,
                 stop_animation=stop_animation, animate_in_gui=animate_in_gui,
                 min_value=min_value, max_value=max_value,
+                stop_animation_after_cycle=stop_animation_after_cycle,
             )
 
         self.out_data['clicked_ok'] = True

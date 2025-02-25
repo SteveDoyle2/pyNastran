@@ -19,6 +19,7 @@ from .ept_writer import write_ept
 from .mpt_writer import write_mpt
 from .edt_writer import write_edt
 from .edom_writer import write_edom
+from .dynamic_writer import write_dynamic
 from .dit_writer import write_dit
 #from .dynamic_writer import write_dynamic
 from pyNastran.utils import PathLike, PurePath
@@ -179,6 +180,8 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
         write_ept(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'MPT' not in skips:    # materials
         write_mpt(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+    if 'DYNAMIC' not in skips:    # dynamics
+        write_dynamic(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
 
     if 'EDT' not in skips:  # aero
         write_edt(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)

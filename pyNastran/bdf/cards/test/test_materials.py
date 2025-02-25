@@ -531,7 +531,7 @@ class TestMaterials(unittest.TestCase):
                        run_remove_unused=False)
 
     def test_mat11_02(self):
-        model = BDF()
+        model = BDF(debug=None)
         mid = 1
         e1 = e2 = e3 = 1000.
         nu12 = nu13 = nu23 = 0.3

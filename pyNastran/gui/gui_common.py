@@ -1691,11 +1691,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                  time: float=2.0,
                  animation_profile: str='0 to scale',
                  nrepeat: int=0, fps: int=30, magnify: int=1,
-                 make_images: bool=True,
-                 delete_images: bool=False,
+                 make_images: bool=True, delete_images: bool=False,
                  make_gif: bool=True,
-                 stop_animation: bool=False,
-                 animate_in_gui: bool=True) -> bool:
+                 stop_animation: bool=False, animate_in_gui: bool=True,
+                 stop_animation_after_cycle: bool=True) -> bool:
         """
         Makes an animated gif
 
@@ -1847,7 +1846,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ))
 
         #animate_in_gui = True
-        self.stop_animation()
+        if stop_animation_after_cycle:
+            self.stop_animation()
+
         if len(icases_disp) == 1:
             pass
         elif animate_in_gui:
@@ -1861,7 +1862,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 f'    time={time}, animation_profile={animation_profile!r},\n'
                 f'    nrepeat={nrepeat}, magnify={magnify},\n'
                 f'    make_images={make_images}, delete_images={delete_images}, make_gif={make_gif},\n'
-                f'    fps={fps}, stop_animation={stop_animation}, animate_in_gui={animate_in_gui})\n'
+                f'    fps={fps}, stop_animation={stop_animation}, animate_in_gui={animate_in_gui},\n'
+                f'    stop_animation_after_cycle={stop_animation_after_cycle})\n'
             )
             self.log_command(msg)
             # onesided has no advantages for in-gui animations and creates confusion
@@ -1904,17 +1906,18 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 f'    make_images={make_images}, delete_images={delete_images},\n'
                 f'    make_gif={make_gif},\n'
                 f'    stop_animation={stop_animation},\n'
-                f'    animate_in_gui={animate_in_gui})\n'
+                f'    animate_in_gui={animate_in_gui},'
+                f'    stop_animation_after_cycle={stop_animation_after_cycle})\n'
             )
             self.log_command(msg)
 
         return is_failed
 
-    def _animate_in_gui(self, min_value, max_value,
-                        scales, phases,
-                        icases_fringe, icases_disp, icases_vector,
-                        animate_fringe, animate_vector,
-                        fps):
+    def _animate_in_gui(self, min_value: float, max_value: float,
+                        scales: list[float], phases: list[float],
+                        icases_fringe: int, icases_disp: int, icases_vector: int,
+                        animate_fringe: bool, animate_vector: bool,
+                        fps: int):
         """helper method for ``make_gif``"""
         callback = AnimationCallback(self, scales, phases,
                                      icases_fringe, icases_disp, icases_vector,
@@ -1949,7 +1952,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                          scale: float, phase: float,
                          animate_fringe: bool, unused_animate_vector: bool,
                          normalized_fringe_scale: Optional[float],
-                         min_value, max_value):
+                         min_value: float, max_value: float) -> bool:
         """applies the animation update callback"""
         #print('icase_fringe=%r icase_fringe0=%r' % (icase_fringe, icase_fringe0))
         arrow_scale = None  # self.glyph_scale_factor * scale
@@ -2050,13 +2053,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         is_valid = True
         return is_valid
 
-    def make_gif_helper(self, gif_filename, icases_fringe, icases_disp, icases_vector,
-                        scales, phases=None, isteps=None,
-                        animate_fringe=False, animate_vector=False,
+    def make_gif_helper(self, gif_filename: str,
+                        icases_fringe: int, icases_disp: int, icases_vector: int,
+                        scales: list[float], phases: Optional[: list[float]]=None,
+                        isteps=None,
+                        animate_fringe: bool=False, animate_vector: bool=False,
                         max_value=None, min_value=None,
-                        time=2.0, analysis_time=2.0, fps=30, magnify=1,
-                        onesided=True, nrepeat=0,
-                        make_images=True, delete_images=False, make_gif=True):
+                        time: float=2.0, analysis_time: float=2.0,
+                        fps: int=30, magnify: int=1,
+                        onesided: bool=True, nrepeat: int=0,
+                        make_images=True, delete_images=False, make_gif=True) -> bool:
         """
         Makes an animated gif
 

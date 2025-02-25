@@ -15,7 +15,10 @@ from pyNastran.bdf.cards.test.test_bars import TestBars
 from pyNastran.bdf.cards.test.test_beams import TestBeams
 from pyNastran.bdf.cards.test.test_contact import TestContact
 from pyNastran.bdf.cards.test.test_cyclic import TestCyclic
-from pyNastran.bdf.cards.test.test_dmig import TestDTI, TestDMIGReal, TestDMIGImag, TestDMIAX
+from pyNastran.bdf.cards.test.test_dmig import (
+    TestDTI, TestDMIGReal, TestDMIGImag, TestDMIAX,
+    TestMatrix, TestDMI,
+)
 from pyNastran.bdf.cards.test.test_elements import TestElements
 from pyNastran.bdf.cards.test.test_mass_elements import TestMassElements
 from pyNastran.bdf.cards.test.test_methods import TestMethods
@@ -39,4 +42,3 @@ from pyNastran.bdf.cards.test.test_base_card import TestBaseCard
 if __name__ == "__main__":  # pragma: no cover
     import unittest
     unittest.main()
-
