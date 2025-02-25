@@ -435,7 +435,11 @@ class BDFInputPy:
                     include_dirs.append(self.include_dir)
                 if self.read_includes:
                     bdf_filename2 = get_include_filename(
-                        include_lines, include_dirs=include_dirs)
+                        include_lines,
+                        source_filename=source_filename,
+                        include_dirs=include_dirs,
+                        write_env_on_error=False,
+                    )
 
                     # these are the lines associated with the 1st/2nd include file found
                     self.include_lines[jfile].append((include_lines, bdf_filename2))
@@ -693,16 +697,15 @@ class BDFInputPy:
             raise IOError(msg)
         bdf_filename = bdf_filename_inc
 
+        current_filename_str = f'active_file={self.active_filename!r}' if len(self.active_filenames) > 0 else ''
         if bdf_filename in self.active_filenames:
             active_filenames_str = '\n - '.join(self.active_filenames)
-            msg = 'bdf_filename=%s is already active.\nactive_filenames:\n - %s' \
-                  % (bdf_filename, active_filenames_str)
+            msg = (f'bdf_filename={bdf_filename} is already active.\n'
+                   f'{current_filename_str}active_filenames:\n - {active_filenames_str}')
             log.error(msg)
             raise RuntimeError(msg)
         elif os.path.isdir(bdf_filename):
-            current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
-            msg = 'Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
-                bdf_filename_inc, current_filename)
+            msg = f'Found a directory: bdf_filename={bdf_filename_inc!r}\n{current_filename_str}'
             log.error(msg)
             raise IOError(msg)
         elif not os.path.isfile(bdf_filename):

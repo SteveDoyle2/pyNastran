@@ -128,12 +128,12 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
     #eid_map = self.gui.eid_map
     assert eid_map is not None
     etype_to_nnodes_map = {
-        'CTRIA3' : 3, 'CTRIAR' : 3, 'CTRAX3' : 3,
+        'CTRIA3': 3, 'CTRIAR': 3, 'CTRAX3': 3,
         # no a CTRIAX really has 6 nodes because reasons...
-        'CTRIA6' : 6, 'CTRIAX' : 6, 'CTRIAX6' : 6, 'CTRAX6' : 6,
-        'CQUAD4' : 4, 'CQUADR' : 4, 'CSHEAR' : 4, 'CQUADX4' : 4,
-        'CQUAD8' : 8, 'CQUADX8' : 8,
-        'CQUAD' : 9, 'CQUADX' : 9,
+        'CTRIA6': 6, 'CTRIAX': 6, 'CTRIAX6': 6, 'CTRAX6': 6,
+        'CQUAD4': 4, 'CQUADR': 4, 'CSHEAR': 4, 'CQUADX4': 4,
+        'CQUAD8': 8, 'CQUADX8': 8,
+        'CQUAD': 9, 'CQUADX': 9,
         'CPLSTN3': 3, 'CPLSTN4': 4, 'CPLSTN6': 6, 'CPLSTN8': 8,
         'CPLSTS3': 3, 'CPLSTS4': 4, 'CPLSTS6': 6, 'CPLSTS8': 8,
 
@@ -143,7 +143,61 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
     }
     for eid, element in sorted(model.elements.items()):
         etype = element.type
-        if isinstance(element, ShellElement):
+        if etype == 'CTETRA':
+            ieid = eid_map.get(eid, -1)
+            element_dimi = 3
+            nnodesi = 4
+        elif etype == 'CPENTA':
+            ieid = eid_map.get(eid, -1)
+            element_dimi = 3
+            nnodesi = 6
+        elif etype == 'CPYRAM':
+            ieid = eid_map.get(eid, -1)
+            element_dimi = 3
+            nnodesi = 5
+        elif etype in {'CHEXA', 'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2'}:
+            ieid = eid_map.get(eid, -1)
+            element_dimi = 3
+            nnodesi = 8
+
+        elif etype in {'CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP', 'CTUBE'}:
+            ieid = eid_map.get(eid, -1)
+            element_dimi = 1
+            nnodesi = 2
+        elif etype in {'CBUSH', 'CBUSH1D', 'CBUSH2D',
+                       'CFAST', 'CVISC',
+                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'}:
+            ieid = eid_map.get(eid, -1)
+            element_dimi = 0
+            nnodesi = 2
+        elif etype == 'CHBDYG':
+            ieid = eid_map[eid]
+            surface_type = element.surface_type
+            if surface_type == 'AREA3':
+                nnodesi = 3
+                element_dimi = 2
+            elif surface_type == 'AREA4':
+                nnodesi = 4
+                element_dimi = 2
+            elif surface_type == 'AREA6':
+                nnodesi = 6
+                element_dimi = 2
+            elif surface_type == 'AREA8':
+                nnodesi = 8
+                element_dimi = 2
+            #elif surface_type == 'REV':
+                #nnodesi = 2 # ???
+                #element_dimi = 1 # ???
+            else:
+                element_dimi = -1
+                nnodesi = -1
+                print(f'element.type={element.type} doesnt have a dimension')
+        elif etype in {'CHBDYP', 'CAABSF', 'CBEND'}:
+            continue
+        elif isinstance(element, ShellElement):
+            if etype not in etype_to_nnodes_map:
+                log.warning(f'unexpected element ({etype}) in etype_to_nnodes_map\n{str(element)}')
             ieid = None
             element_dimi = 2
             #assert element.nodes_ref is not None, element.nodes_ref
@@ -182,8 +236,8 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
                 elif ptype in {'PSHEAR', 'PSOLID', 'PLSOLID', 'PPLANE', 'PMIC'}:
                     z0 = np.nan
                 else:
-                    raise NotImplementedError(f'prop={prop}\n'
-                                              f'ptype={ptype!r}') # PCOMPG
+                    # PCOMPG
+                    raise NotImplementedError(f'prop={prop}\n ptype={ptype!r}' )
 
             if z0 is None:
                 if etype in {'CTRIA3', 'CTRIAR'}:
@@ -236,12 +290,16 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
                     #node_ids = self.nodes[4:]
                     nnodesi = 8
                     z0 = np.nan
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError(element)
             else:
                 nnodesi = etype_to_nnodes_map[etype]
 
-            ieid = eid_map[eid]
+            try:
+                ieid = eid_map[eid]
+            except:
+                log.warning(f'failed to find shell element {element.type}={eid}\n{str(element)}')
+                continue
             normals[ieid, :] = normali
             if element.type in {'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8'}:
                 element_dim[ieid] = element_dimi
@@ -253,59 +311,6 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
             xoffset[ieid] = z0 * normali[0]
             yoffset[ieid] = z0 * normali[1]
             zoffset[ieid] = z0 * normali[2]
-
-        elif etype == 'CTETRA':
-            ieid = eid_map[eid]
-            element_dimi = 3
-            nnodesi = 4
-        elif etype == 'CPENTA':
-            ieid = eid_map[eid]
-            element_dimi = 3
-            nnodesi = 6
-        elif etype == 'CPYRAM':
-            ieid = eid_map[eid]
-            element_dimi = 3
-            nnodesi = 5
-        elif etype in {'CHEXA', 'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2'}:
-            ieid = eid_map[eid]
-            element_dimi = 3
-            nnodesi = 8
-
-        elif etype in {'CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP', 'CTUBE'}:
-            ieid = eid_map[eid]
-            element_dimi = 1
-            nnodesi = 2
-        elif etype in {'CBUSH', 'CBUSH1D', 'CBUSH2D',
-                       'CFAST', 'CVISC',
-                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'}:
-            ieid = eid_map[eid]
-            element_dimi = 0
-            nnodesi = 2
-        elif etype == 'CHBDYG':
-            ieid = eid_map[eid]
-            surface_type = element.surface_type
-            if surface_type == 'AREA3':
-                nnodesi = 3
-                element_dimi = 2
-            elif surface_type == 'AREA4':
-                nnodesi = 4
-                element_dimi = 2
-            elif surface_type == 'AREA6':
-                nnodesi = 6
-                element_dimi = 2
-            elif surface_type == 'AREA8':
-                nnodesi = 8
-                element_dimi = 2
-            #elif surface_type == 'REV':
-                #nnodesi = 2 # ???
-                #element_dimi = 1 # ???
-            else:
-                element_dimi = -1
-                nnodesi = -1
-                print(f'element.type={element.type} doesnt have a dimension')
-        elif etype in {'CHBDYP', 'CAABSF'}:
-            continue
         else:
             try:
                 ieid = eid_map[eid]
@@ -315,8 +320,11 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
                 raise
             element_dimi = -1
             nnodesi = -1
-            print(f'element.type={element.type} doesnt have a dimension')
+            log.warning(f'shell element.type={etype} doesnt have a dimension')
         assert ieid is not None
+        if ieid == -1:
+            # bad element; should have been filtered on an earlier step
+            continue
         element_dim[ieid] = element_dimi
         nnodes_array[ieid] = nnodesi
         #ielement += 1
