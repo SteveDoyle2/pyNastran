@@ -583,9 +583,9 @@ class Subcase:
                 raise NotImplementedError(key)
 
     def get_int_parameter(self, param_name: str, msg: str='',
-                          obj: bool=False) -> tuple[int, list[Any]]:
+                          obj: bool=False) -> int:
         """
-        Gets the [value, options] for a subcase.
+        Gets the value for a subcase.
 
         Parameters
         ----------
@@ -599,9 +599,6 @@ class Subcase:
         value : int
             the value of the parameter
             1 in LOAD = 1
-        options : list[varies]
-            the values in parentheses
-            ['PLOT', 'PRINT'] in STRESS(PLOT,PRINT) = ALL???
 
         .. code-block:: python
 
@@ -609,18 +606,20 @@ class Subcase:
            model.read_bdf(bdf_filename)
            case_control = model.case_control_deck
            subcase1 = case_control.subcases[1]
-           value, options = subcase1.get_int_parameter('LOAD')
+           value = subcase1.get_int_parameter('LOAD')
 
         """
         value, options = self.get_parameter(param_name, msg=msg, obj=obj)
         if not isinstance(value, integer_types):
-            raise TypeError('{param_name!r} = {value!r} and is not an integer')
-        return value, options
+            raise TypeError(f'{param_name!r}={value!r} and is not an integer')
+        if len(options):
+            raise TypeError(f'{param_name!r}={value!r}; options={options} should be empty; use get_parameter({param_name!r})')
+        return value
 
     def get_str_parameter(self, param_name: str, msg: str='',
-                          obj: bool=False) -> tuple[str, list[Any]]:
+                          obj: bool=False) -> str:
         """
-        Gets the [value, options] for a subcase.
+        Gets the value for a subcase.
 
         Parameters
         ----------
@@ -634,9 +633,6 @@ class Subcase:
         value : str
             the value of the parameter
             'ALL' in STRESS(PLOT,PRINT) = ALL
-        options : list[varies]
-            the values in parentheses
-            ['PLOT', 'PRINT'] in STRESS(PLOT,PRINT) = ALL
 
         .. code-block:: python
 
@@ -644,13 +640,15 @@ class Subcase:
            model.read_bdf(bdf_filename)
            case_control = model.case_control_deck
            subcase1 = case_control.subcases[1]
-           value, options = subcase1.get_str_parameter('STRESS')
+           value = subcase1.get_str_parameter('STRESS')
 
         """
         value, options = self.get_parameter(param_name, msg=msg, obj=obj)
         if not isinstance(value, str):
-            raise TypeError(f'{param_name!r} = {value!r} and is not a str')
-        return value, options
+            raise TypeError(f'{param_name!r}={value!r} and is not a str')
+        if len(options):
+            raise TypeError(f'{param_name!r}={value!r}; options={options} should be empty; use get_parameter({param_name!r})')
+        return value
 
     def get_parameter(self, param_name: str, msg: str='',
                       obj: bool=False) -> tuple[int | str, list[Any]]:
@@ -685,7 +683,7 @@ class Subcase:
         param_name = update_param_name(param_name)
         if param_name not in self.params:
             raise KeyError(f'{param_name} doesnt exist in subcase={self.id} in the case '
-                           f'control deck{msg}.')
+                           f'control deck{msg}.\n{str(self)}')
         value, options, param_type = self.params[param_name]
         #print('param_name=%r value=%s options=%s param_type=%r' % (
             #param_name, value, options, param_type))

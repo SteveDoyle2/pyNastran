@@ -120,7 +120,6 @@ class Nodes:
         nepoints = 0
         spoints = None
         epoints = None
-        nrings = len(self.model.ringaxs)
         if self.model.spoints:
             spoints = list(self.model.spoints)
             nspoints = len(spoints)
@@ -128,8 +127,8 @@ class Nodes:
             epoints = list(self.model.epoints)
             nepoints = len(epoints)
 
-        if nnodes + nspoints + nepoints + nrings == 0:
-            msg = 'nnodes=%s nspoints=%s nepoints=%s nrings=%s' % (nnodes, nspoints, nepoints, nrings)
+        if nnodes + nspoints + nepoints == 0:
+            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
             raise ValueError(msg)
 
         xyz_cp = np.zeros((nnodes + nspoints + nepoints, 3), dtype=fdtype)

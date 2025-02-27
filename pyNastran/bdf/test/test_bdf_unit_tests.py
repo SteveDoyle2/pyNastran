@@ -889,11 +889,11 @@ class TestBDFUnit(Tester):
         """checks axisymmetric model"""
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'd07d2.bdf')
         bdf_filename_test = os.path.join(MODEL_PATH, 'other', 'd07d2.test_bdf.bdf')
-        fem1 = read_bdf(bdf_filename, validate=True, xref=True, punch=False,
+        fem1 = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                         skip_cards=None, read_cards=None,
                         encoding=None, log=None, debug=False, mode='msc')
         fem1.write_bdf(bdf_filename_test)
-        fem2 = read_bdf(bdf_filename_test, debug=None)
+        fem2 = read_bdf(bdf_filename_test, debug=None, xref=False)
 
         diff_cards = compare(fem1, fem2, xref=True, check=False,
                              print_stats=True, quiet=True)

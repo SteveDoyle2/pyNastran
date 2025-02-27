@@ -885,12 +885,12 @@ class TABDMP1(Table):
 
         """
         table_id = integer(card, 1, 'tid')
-        Type = string_or_blank(card, 2, 'Type', 'G')
+        Type = string_or_blank(card, 2, 'Type', default='G')
         x, y = read_table(card, table_id, 'TABDMP1')
         return TABDMP1(table_id, x, y, Type=Type, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card, comment=''):
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
         """
         Adds a TABDMP1 card from ``BDF.add_card(...)``
 
@@ -903,7 +903,7 @@ class TABDMP1(Table):
 
         """
         table_id = integer(card, 1, 'tid')
-        Type = string_or_blank(card, 2, 'Type', 'G')
+        Type = string_or_blank(card, 2, 'Type', default='G')
         x, y = read_table_lax(card, table_id, 'TABDMP1')
         return TABDMP1(table_id, x, y, Type=Type, comment=comment)
 

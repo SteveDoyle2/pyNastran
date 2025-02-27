@@ -545,17 +545,15 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         nnodes = len(model.nodes)
         nspoints = len(model.spoints)
         nepoints = len(model.epoints)
-        ngridb = len(model.gridb)
         ncaero_cards = len(model.caeros)
 
         for superelement in model.superelement_models.values():
             nnodes += len(superelement.nodes)
             nspoints += len(superelement.spoints)
             nepoints += len(superelement.epoints)
-            ngridb += len(superelement.gridb)
             ncaero_cards += len(superelement.caeros)
 
-        ngui_nodes = nnodes + nspoints + nepoints + ngridb
+        ngui_nodes = nnodes + nspoints + nepoints
         if ngui_nodes + ncaero_cards == 0:
             msg = 'nnodes + nspoints + nepoints = 0\n'
             msg += 'card_count = %r' % str(model.card_count)

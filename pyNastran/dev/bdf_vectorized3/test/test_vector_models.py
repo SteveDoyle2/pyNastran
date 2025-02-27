@@ -127,11 +127,11 @@ class TestModels(unittest.TestCase):
 
     def test_models_random1(self):
         bdf_filename = MODEL_PATH / 'random' / 'random_test_bar_plus_tri.bdf'
-        args = ['test_bdf', str(bdf_filename), '--quiet']
+        args = ['test_bdf', str(bdf_filename), '--quiet', '--safe']
         test_bdf(args, show_args=False)
     def test_models_random2(self):
         bdf_filename = MODEL_PATH / 'random' / 'rms_tri_oesrmx1.bdf'
-        args = ['test_bdf', str(bdf_filename), '--quiet']
+        args = ['test_bdf', str(bdf_filename), '--quiet', '--safe']
         test_bdf(args, show_args=False)
 
     def test_models_freq_sine(self):

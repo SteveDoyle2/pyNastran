@@ -1124,6 +1124,34 @@ class FLUTTER(BaseCard):
         return self.comment + print_card_8(card)
 
 
+def gust_function(gust_model: str='von_karman', V: float=1.0):
+    """
+
+    Parameters
+    ----------
+    gust_model
+    V
+
+    Returns
+    -------
+
+    Sa(omega) = 2 * wg^2 * (L/V) * gust_function(gust_model, V=V)
+
+    """
+    if gust_model == 'von_karman':
+        k = 1.399
+        p = 1/3
+    elif gust_model == 'dryden':
+        k = 1.0
+        p = 0.5
+    else:  # pragma: no cover
+        raise NotImplementedError(gust_model)
+    q = (k * L * omega / V) ** 2
+    num = 1 + 2 * (p + 1) * q
+    denom = 1 + q ** (p + 1.5)
+    out = num / denom
+    return out
+
 class GUST(BaseCard):
     """
     Defines a stationary vertical gust for use in aeroelastic response
@@ -1139,7 +1167,7 @@ class GUST(BaseCard):
     """
     type = 'GUST'
     _field_map = {
-        1: 'sid', 2:'dload', 3:'wg', 4:'x0', 5:'V',
+        1: 'sid', 2: 'dload', 3: 'wg', 4: 'x0', 5: 'V',
     }
 
     @classmethod

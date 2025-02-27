@@ -514,8 +514,8 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename: str,
     op2.executive_control_lines = ['CEND\n']
     op2.validate()
     op2.write_bdf(bdf_filename, size=8)
-    op2.log.debug('bdf_filename = %s' % bdf_filename)
     xref = xref_safe is False
+    op2.log.debug(f'bdf_filename={bdf_filename}; xref_safe={xref_safe}; xref={xref}')
     if read_bdf:
         try:
             op2_bdf.read_bdf(bdf_filename, xref=xref)

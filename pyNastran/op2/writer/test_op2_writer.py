@@ -1,5 +1,6 @@
 import unittest
 import os
+from pathlib import Path
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -12,7 +13,7 @@ from pyNastran.op2.op2 import OP2
 #from pyNastran.op2.writer.op2_writer import OP2Writer
 
 PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
+MODEL_PATH = Path(os.path.abspath(os.path.join(PKG_PATH, '..', 'models')))
 
 
 class TestOP2Writer(unittest.TestCase):
@@ -247,7 +248,7 @@ class TestOP2Writer(unittest.TestCase):
     def test_write_elements_3(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='info', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'elements')
+        folder = MODEL_PATH / 'elements'
         op2_filename = os.path.join(folder, 'freq_random_elements.op2')
         op2_filename_debug = os.path.join(folder, 'freq_random_elements.debug.out')
         op2_filename_out = os.path.join(folder, 'freq_random_elements_out.op2')
@@ -258,10 +259,15 @@ class TestOP2Writer(unittest.TestCase):
             'force.cvisc_force', 'stress.cshear_stress', '*strain_energy',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
-                            exclude_results=exclude_results, log=log)
+                            exclude_results=exclude_results,
+                            xref=False, log=log)
+        op2.safe_cross_reference()
 
         op2.write_op2(op2_filename_out) #, is_mag_phase=False)
-        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out,
+                             xref=False, log=log)
+        op2b.safe_cross_reference()
+
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)

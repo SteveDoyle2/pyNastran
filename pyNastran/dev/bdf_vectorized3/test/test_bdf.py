@@ -1232,7 +1232,7 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
                 #get_dependent_nid_to_components(fem1)
 
                 #fem1.uncross_reference()
-                if safe_xref:
+                if safe_xref and hasattr(fem1, 'safe_cross_reference'):
                     log.debug('fem1.safe_cross_reference()')
                     fem1.safe_cross_reference()
                 else:
@@ -1250,7 +1250,7 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
                     modelv.idtype = 'int64'
                     modelv.is_strict_card_parser = False
                     modelv.read_bdf(fem1.bdf_filename, encoding=encoding, xref=False)
-                if safe_xref:
+                if safe_xref and hasattr(fem1, 'safe_cross_reference'):
                     fem1.safe_cross_reference()
                 elif xref:
                     _setup_xref(fem1, run_geom_check=run_geom_check)
@@ -1567,7 +1567,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
     sys.stdout.flush()
     try:
         fem2.read_bdf(out_model, xref=False, punch=punch, encoding=encoding)
-        if safe_xref:
+        if safe_xref and hasattr(fem2, 'safe_cross_reference'):
             fem2.safe_cross_reference()
         elif xref:
             _setup_xref(fem2, run_geom_check=run_geom_check)

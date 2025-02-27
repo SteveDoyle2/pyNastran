@@ -7802,7 +7802,7 @@ class TRIM(VectorizedBaseCard):
         #suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True
         #suport = []
         #if 'SUPORT1' in subcase:
-            #suport_id = subcase.get_int_parameter('SUPORT1')[0]
+            #suport_id = subcase.get_int_parameter('SUPORT1')
             #suport1 = fem.suport1[suport_id]
 
         suport = self.model.suport

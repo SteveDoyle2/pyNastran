@@ -438,7 +438,7 @@ class ACOORD(CoordBase):  # not done
                  origin: np.ndarray, delta: np.ndarray, theta: np.ndarray,
                  comment: str=''):
         """
-        Defines the CORD3G card
+        Defines the ACOORD card
 
         Parameters
         ----------
@@ -447,9 +447,9 @@ class ACOORD(CoordBase):  # not done
         origin : list[float]
             the xyz origin
         delta : float
-            pitch angle
+            pitch angle; enforced using a boundary condition
         theta : float
-            roll angle
+            roll angle; physically rolls the model
         comment : str; default=''
             a comment for the card
 
@@ -480,10 +480,9 @@ class ACOORD(CoordBase):  # not done
         origin_y = double(card, 3, 'origin_y')
         origin_z = double(card, 4, 'origin_z')
         origin = [origin_x, origin_y, origin_z]
-        delta = double(card, 5, 'delta')
-        theta = double(card, 6, 'theta')
-        dunno = double(card, 6, 'dunno')
-        assert len(card) <= 8, f'len(ACOORD card) = {len(card):d}\ncard={card}'
+        delta = double(card, 5, 'delta (pitch)')
+        theta = double(card, 6, 'theta (roll)')
+        assert len(card) <= 7, f'len(ACOORD card) = {len(card):d}\ncard={card}'
         return ACOORD(cid, origin, delta, theta, comment=comment)
 
     def setup(self):
@@ -586,14 +585,15 @@ class AESURFZ(BaseCard):
     type = 'AESURFZ'
 
     @property
-    def aesid(self):
+    def aesid(self) -> str:
         return self.label
     @property
     def alid1_ref(self):
         return None
 
-    def __init__(self, label, surface_type, cid, panlst, setg, actuator_tf,
-                 comment=''):
+    def __init__(self, label: str, surface_type: str, cid: int,
+                 panlst: int, setg: int, actuator_tf: int,
+                 comment: str=''):
         """
         Creates an AESURF card, which defines a control surface
 
@@ -1210,7 +1210,8 @@ class PANLST1(Spline):
     """
     type = 'PANLST1'
 
-    def __init__(self, eid, macro_id, box1, box2, comment=''):
+    def __init__(self, eid: int, macro_id: int, box1: int, box2: int,
+                 comment: str=''):
         """
         Creates a PANLST1 card
 
@@ -1228,14 +1229,14 @@ class PANLST1(Spline):
             self.comment = comment
 
         self.eid = eid
-        self.macro_id = macro_id # points to CAERO7 / BODY7
+        self.macro_id = macro_id  # points to CAERO7 / BODY7
         self.box1 = box1
         self.box2 = box2
         self.aero_element_ids = []
         self.caero_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PANLST3 card from ``BDF.add_card(...)``
 
@@ -1387,7 +1388,7 @@ class PANLST3(Spline):
     """
     type = 'PANLST3'
 
-    def __init__(self, eid, panel_groups, comment=''):
+    def __init__(self, eid: int, panel_groups, comment: str=''):
         """
         Creates a PANLST3 card
 
@@ -1399,7 +1400,7 @@ class PANLST3(Spline):
             a comment for the card
 
         """
-        # https://www.zonatech.com/Documentation/ZAERO_9.2_Users_3rd_Ed.pdf
+        # https://www.zonatech.com/Documentation/ZAERO_9.3_Users_Full_Electronic.pdf
         Spline.__init__(self)
         if comment:
             self.comment = comment
@@ -1410,7 +1411,7 @@ class PANLST3(Spline):
         self.caero_refs = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PANLST3 card from ``BDF.add_card(...)``
 
@@ -1428,11 +1429,11 @@ class PANLST3(Spline):
         for ifield in range(2, len(card)):
             name = string(card, ifield, f'group_{group_id:d}')
             panel_groups.append(name)
-        assert len(card) > 2, 'len(PANLST3 card) = %i; no panel_groups were defined\ncard=%s' % (len(card), card)
+        assert len(card) > 2, 'len(PANLST3 card)=%d; no panel_groups were defined\ncard=%s' % (len(card), card)
         return PANLST3(eid, panel_groups, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        msg = ', which is required by PANLST3 eid=%s' % self.eid
+        msg = ', which is required by PANLST3 eid=%d' % self.eid
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         caero_refs = []
         aero_element_ids = []
@@ -3149,11 +3150,13 @@ class TRIM_ZONA(BaseCard):
     """
     type = 'TRIM_ZONA'
     _field_map = {
-        1: 'sid', 2:'mach', 3:'q', 8:'aeqr',
+        1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     }
 
-    def __init__(self, sid, mkaeroz, q, cg, true_g, nxyz, pqr, loadset,
-                 labels, uxs, comment=''):
+    def __init__(self, sid: int, mkaeroz: int, q: float,
+                 cg: list[float], true_g: str,
+                 nxyz: list[float], pqr: list[float], loadset: Optional[int],
+                 labels: list[int], uxs: list[float], comment: str=''):
         """
         Creates a TRIM card for a static aero (144) analysis.
 
@@ -3163,10 +3166,11 @@ class TRIM_ZONA(BaseCard):
             the trim id; referenced by the Case Control TRIM field
         q : float
             dynamic pressure
-        true_g : float
-            ???
+        true_g : str
+            'TRUE': nxyz given in model units
+            'G':    nxyz given in g's
         nxyz : list[float]
-            ???
+            g loading in xyz directions
         pqr : list[float]
             [roll_rate, pitch_rate, yaw_rate]
         loadset : int
@@ -3176,7 +3180,8 @@ class TRIM_ZONA(BaseCard):
             defined by the TRIMFNC or TRIMADD bulk data card are computed
             and printed out.
         labels : list[str]
-            names of the fixed variables
+            points to a TRIMVAR
+            names of the fixed variables; TODO: why are these integers???
         uxs : list[float]
             values corresponding to labels
         comment : str; default=''
@@ -3200,6 +3205,7 @@ class TRIM_ZONA(BaseCard):
 
         #: The label identifying aerodynamic trim variables defined on an
         #: AESTAT or AESURF entry.
+        # points to a TRIMVAR
         self.labels = labels
 
         #: The magnitude of the aerodynamic extra point degree-of-freedom.
@@ -3207,7 +3213,7 @@ class TRIM_ZONA(BaseCard):
         self.uxs = uxs
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a TRIM card from ``BDF.add_card(...)``
 
@@ -3259,8 +3265,8 @@ class TRIM_ZONA(BaseCard):
         i = 25
         n = 1
         while i < len(card):
-            label = integer(card, i, 'label%i' % n)
-            ux = double_or_string(card, i + 1, 'ux%i' % n)
+            label = integer(card, i, 'label%d' % n)
+            ux = double_or_string(card, i + 1, 'ux%d' % n)
             if isinstance(ux, str):
                 assert ux == 'FREE', 'ux=%r' % ux
             #print('  label=%s ux=%s' % (label, ux))
@@ -3300,14 +3306,14 @@ class TRIM_ZONA(BaseCard):
         #self.aelinks = model.aelinks
         #self.aesurf = model.aesurf
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model: BDF):
         pass
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         pass
 
-    def convert_to_nastran(self, model):
+    def convert_to_nastran(self, model: BDF):
         mkaeroz_id = self.mkaeroz
         mkaeroz = model.zona.mkaeroz[mkaeroz_id]
         #print(mkaeroz)
@@ -3505,9 +3511,10 @@ class TRIMVAR(BaseCard):
 
     """
     type = 'TRIMVAR'
-    def __init__(self, var_id, label, lower, upper,
-                 trimlnk, dmi, sym, initial,
-                 dcd, dcy, dcl, dcr, dcm, dcn, comment=''):
+    def __init__(self, var_id: int, label: str, lower: float, upper: float,
+                 trimlnk: int, dmi: None, sym: int, initial: None,
+                 dcd: float, dcy: float, dcl: float,
+                 dcr: float, dcm: float, dcn: float, comment: str=''):
         """
         Creates a TRIMVAR card for a static aero (144) analysis.
 
@@ -3539,7 +3546,7 @@ class TRIMVAR(BaseCard):
         self.dcn = dcn
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment:  str=''):
         """
         Adds a TRIMVAR card from ``BDF.add_card(...)``
 
@@ -3577,14 +3584,14 @@ class TRIMVAR(BaseCard):
         #self.aelinks = model.aelinks
         #self.aesurf = model.aesurf
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model: BDF):
         pass
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         pass
 
-    def convert_to_nastran(self, model):
+    def convert_to_nastran(self, model: BDF):
         raise NotImplementedError()
         #mkaeroz_id = self.mkaeroz
         #mkaeroz = model.zona.mkaeroz[mkaeroz_id]
@@ -3601,7 +3608,7 @@ class TRIMVAR(BaseCard):
         #trim.validate()
         #return trim
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         """
         Gets the fields in their unmodified form
 
@@ -3647,7 +3654,8 @@ class FLUTTER_ZONA(Spline):
     """
     type = 'FLUTTER_ZONA'
 
-    def __init__(self, sid, sym, fix, nmode, tabdmp, mlist, conmlst, nkstep=25, comment=''):
+    def __init__(self, sid: int, sym: str, fix: int, nmode: int, tabdmp: int,
+                 mlist: int, conmlst: int, nkstep: int=25, comment: str=''):
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
         analysis.
@@ -3710,7 +3718,7 @@ class FLUTTER_ZONA(Spline):
         self.nkstep = nkstep
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FLUTTER card from ``BDF.add_card(...)``
 
@@ -3729,7 +3737,7 @@ class FLUTTER_ZONA(Spline):
         tabdmp = integer_or_blank(card, 5, 'tabdmp', default=0)
         mlist = integer_or_blank(card, 6, 'mlist')
         conmlst = integer_or_blank(card, 7, 'conmlst')
-        nkstep = integer_or_blank(card, 8, 'nkstep', 25)
+        nkstep = integer_or_blank(card, 8, 'nkstep', default=25)
         assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
         return FLUTTER_ZONA(sid, sym, fix, nmode, tabdmp, mlist, conmlst, nkstep,
                             comment=comment)
@@ -3767,7 +3775,7 @@ class FLUTTER_ZONA(Spline):
         #self.panlst_ref = None
         #self.setg_ref = None
 
-    def convert_to_nastran(self, model):
+    def convert_to_nastran(self, model: BDF):
         raise NotImplementedError()
 
     def raw_fields(self):

@@ -3030,7 +3030,7 @@ class TestAero(unittest.TestCase):
 
         # why doesn't this work?
         #if 'SUPORT1' in subcase:
-            #suport_id = subcase.get_int_parameter('SUPORT1')[0]
+            #suport_id = subcase.get_int_parameter('SUPORT1')
             #suport1 = fem.suport1[suport_id]
 
         with self.assertRaises(RuntimeError):

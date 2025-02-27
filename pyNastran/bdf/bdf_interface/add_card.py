@@ -37,12 +37,12 @@ from pyNastran.bdf.cards.elements.solid import (
 from pyNastran.bdf.cards.elements.rigid import (
     RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON)
 
-from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
-    AXIF, RINGFL,
-    AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX)
+# from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
+#     AXIF, RINGFL,
+#     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX)
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
-from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1, FORCEAX, PRESAX, TEMPAX
+from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1 #, FORCEAX, PRESAX, TEMPAX
 
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
@@ -227,8 +227,6 @@ CARD_MAP = {
     'GRID' : GRID,
     'SPOINT' : SPOINTs,
     'EPOINT' : EPOINTs,
-    'RINGAX' : RINGAX,
-    'POINTAX' : POINTAX,
     'POINT' : POINT,
     'SEQGP' : SEQGP,
     'GRIDB' : GRIDB,
@@ -250,8 +248,6 @@ CARD_MAP = {
     #'GMLOAD' : GMLOAD,
 
     'PLOTEL' : PLOTEL,
-    'RINGFL' : RINGFL,
-    'TEMPAX' : TEMPAX,
     'TEMPD' : TEMPD,
     'TEMPB3' : TEMPB3,
     'TEMPRB' : TEMPRB,
@@ -402,11 +398,6 @@ CARD_MAP = {
     'GENEL' : GENEL,
     #--------------------------------------
 
-    'CCONEAX' : CCONEAX,
-    'PCONEAX' : PCONEAX,
-    'AXIC' : AXIC,
-    'AXIF' : AXIF,
-
     'RBAR' : RBAR,
     'RBAR1' : RBAR1,
     'RBE1' : RBE1,
@@ -415,7 +406,6 @@ CARD_MAP = {
     'RROD' : RROD,
     'RSPLINE' : RSPLINE,
     'RSSCON' : RSSCON,
-
 
     ## there is no MAT6 or MAT7
     'MAT1' : MAT1,
@@ -474,7 +464,6 @@ CARD_MAP = {
     'SPC1' : SPC1,
     'SPCOFF' : SPCOFF,
     'SPCOFF1' : SPCOFF1,
-    'SPCAX' : SPCAX,
     'SPCADD' : SPCADD,
     'GMSPC' : GMSPC,
 
@@ -503,13 +492,11 @@ CARD_MAP = {
     'PLOAD2' : PLOAD2,
     'PLOAD4' : PLOAD4,
     'PLOADX1' : PLOADX1,
-    'FORCEAX' : FORCEAX,
     'RFORCE' : RFORCE,
     'RFORCE1' : RFORCE1,
     'SLOAD' : SLOAD,
     'SPCD' : SPCD,
     'QVOL' : QVOL,
-    'PRESAX' : PRESAX,
     'DEFORM' : DEFORM,
 
     'DLOAD' : DLOAD,
@@ -6903,55 +6890,6 @@ class AddCards(AddCoords, AddContact, AddBolts,
         genel = GENEL(eid, ul, ud, None, z, s)
         self._add_methods._add_element_object(genel)
         return genel
-
-    def add_axic(self, nharmonics, comment='') -> AXIC:
-        """Creates a AXIC card"""
-        axic = AXIC(nharmonics, comment=comment)
-        self._add_methods._add_axic_object(axic)
-        return axic
-
-    def add_pointax(self, nid, ringax, phi, comment='') -> POINTAX:
-        """Creates a POINTAX card"""
-        node = POINTAX(nid, ringax, phi, comment=comment)
-        self._add_methods._add_ringax_object(node)
-        return node
-
-    def add_ringax(self, nid, R, z, ps=None, comment='') -> RINGAX:
-        """Creates a RINGAX card"""
-        node = RINGAX(nid, R, z, ps=ps, comment=comment)
-        self._add_methods._add_ringax_object(node)
-        return node
-
-    def add_cconeax(self, eid, pid, rings, comment='') -> CCONEAX:
-        """Creates a CCONEAX card"""
-        elem = CCONEAX(eid, pid, rings, comment=comment)
-        self._add_methods._add_element_object(elem)
-        return elem
-
-    def add_pconeax(self, pid, mid1, t1=None, mid2=0, i=None, mid3=None, t2=None,
-                    nsm=0., z1=None, z2=None, phi=None, comment='') -> PCONEAX:
-        """Creates a PCONEAX card"""
-        prop = PCONEAX(pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
-                       comment=comment)
-        self._add_methods._add_property_object(prop)
-        return prop
-
-    def add_tempax(self, sid, ring, phi, temperature, comment='') -> TEMPAX:
-        """Creates a TEMPAX card"""
-        load = TEMPAX(sid, ring, phi, temperature, comment=comment)
-        self._add_methods._add_load_object(load)
-        return load
-
-    def add_presax(self, sid, pressure, rid1, rid2, phi1=0., phi2=360., comment='') -> PRESAX:
-        """Creates a PRESAX card"""
-        load = PRESAX(sid, pressure, rid1, rid2, phi1, phi2, comment=comment)
-        self._add_methods._add_load_object(load)
-        return load
-
-    def add_forceax(self, sid, ring_id, hid, scale, f_rtz, comment='') -> FORCEAX:
-        forceax = FORCEAX(sid, ring_id, hid, scale, f_rtz, comment=comment)
-        self._add_methods._add_load_object(forceax)
-        return forceax
 
     def add_ctrax3(self, eid, pid, nids, theta=0., comment='') -> CTRAX3:
         """Creates a CTRAX3 card"""

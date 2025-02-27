@@ -10,6 +10,7 @@ All static loads are defined in this file.  This includes:
 
 """
 from __future__ import annotations
+import warnings
 from typing import TYPE_CHECKING
 
 #from pyNastran.bdf.errors import CrossReferenceError
@@ -130,13 +131,50 @@ class RANDPS(RandomLoad):
             the BDF object
 
         """
+        if self.j and isinstance(self.j, integer_types):
+            # Subcase identification number of the excited load set
+            msg = f', which is required by RANDPS sid={self.sid:d}'
+            #self.tid = model.Table(self.tid, msg=msg)
+            subcase_j = model.subcases[self.j]
+            self.j_ref = subcase_j.get_int_parameter('DLOAD')
+
+        if self.k and isinstance(self.tid, integer_types):
+            # Subcase identification number of the applied load set
+            msg = f', which is required by RANDPS sid={self.sid:d}'
+            #self.tid = model.Table(self.tid, msg=msg)
+            subcase_k = model.subcases[self.k]
+            self.k_ref = subcase_k.get_int_parameter('DLOAD')
+
         if self.tid and isinstance(self.tid, integer_types):
             msg = f', which is required by RANDPS sid={self.sid:d}'
             #self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = model.RandomTable(self.tid, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
-        return self.cross_reference(model)
+        if self.j and isinstance(self.j, integer_types):
+            # Subcase identification number of the excited load set
+            #msg = f', which is required by RANDPS sid={self.sid:d}'
+            try:
+                subcase_j = model.subcases[self.j]
+                self.j_ref = subcase_j.get_int_parameter('DLOAD')
+            except Exception as error:
+                warnings.warn(f'error safe-xref of RANDPS\n{str(error)}')
+
+        if self.k and isinstance(self.tid, integer_types):
+            # Subcase identification number of the applied load set
+            #msg = f', which is required by RANDPS sid={self.sid:d}'
+            try:
+                subcase_k = model.subcases[self.k]
+                self.k_ref = subcase_k.get_int_parameter('DLOAD')
+            except Exception as error:
+                warnings.warn(f'error safe-xref of RANDPS\n{str(error)}')
+
+        if self.tid and isinstance(self.tid, integer_types):
+            msg = f', which is required by RANDPS sid={self.sid:d}'
+            try:
+                self.tid_ref = model.RandomTable(self.tid, msg=msg)
+            except Exception as error:
+                warnings.warn(f'error safe-xref of RANDPS\n{str(error)}')
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

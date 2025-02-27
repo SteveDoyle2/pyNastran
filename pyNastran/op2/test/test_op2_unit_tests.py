@@ -2539,8 +2539,8 @@ class TestOP2Main(Tester):
         checks test_vba.bdf, which tests NX Nastran vibroacoustics
         """
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'test_vba', 'test_vba.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx', 'test_vba', 'test_vba.op2')
+        bdf_filename = MODEL_PATH / 'nx' / 'test_vba' / 'test_vba.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'test_vba' / 'test_vba.op2'
 
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename, log=log)
@@ -2554,7 +2554,7 @@ class TestOP2Main(Tester):
         #save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
-        log = get_logger(level='debug')
+        #log = get_logger(level='debug')
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
                 write_f06=True, write_op2=True,
                 is_mag_phase=False,
@@ -2563,7 +2563,7 @@ class TestOP2Main(Tester):
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
+                build_pandas=True, log=log, xref_safe=True)
 
     def test_op2_superelement_1(self):
         """
@@ -2595,7 +2595,7 @@ class TestOP2Main(Tester):
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
+                build_pandas=True, xref_safe=True, log=log)
 
     def test_set_results(self):
         """tests setting only a subset of results"""

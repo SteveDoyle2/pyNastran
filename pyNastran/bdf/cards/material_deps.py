@@ -56,7 +56,7 @@ class MaterialDependenceThermal(MaterialDependence):
             mid_ref = model.TableM(slot, msg + f' for {key}')
             setattr(self, key + '_ref', mid_ref)
 
-    def _safe_xref_table(self, model, key: str, xref_errors, msg):
+    def _safe_xref_table(self, model, key: str, xref_errors, msg: str):
         slot = getattr(self, key)
         if slot is not None and slot in model.tables_m:
             mid_ref = model.safe_tablem(slot, self.mid, xref_errors, msg)
@@ -694,15 +694,15 @@ class MATT1(MaterialDependenceThermal):
         msg = ', which is required by MATT1 mid=%s' % self.mid
         self.mid_ref = model.safe_material(self.mid, self.mid, xref_errors, msg=msg)
 
-        self._safe_xref_table(model, 'e_table', msg=msg)
-        self._safe_xref_table(model, 'g_table', msg=msg)
-        self._safe_xref_table(model, 'nu_table', msg=msg)
-        self._safe_xref_table(model, 'rho_table', msg=msg)
-        self._safe_xref_table(model, 'a_table', msg=msg)
-        self._safe_xref_table(model, 'ge_table', msg=msg)
-        self._safe_xref_table(model, 'st_table', msg=msg)
-        self._safe_xref_table(model, 'sc_table', msg=msg)
-        self._safe_xref_table(model, 'ss_table', msg=msg)
+        self._safe_xref_table(model, 'e_table', xref_errors, msg=msg)
+        self._safe_xref_table(model, 'g_table', xref_errors, msg=msg)
+        self._safe_xref_table(model, 'nu_table', xref_errors, msg=msg)
+        self._safe_xref_table(model, 'rho_table', xref_errors, msg=msg)
+        self._safe_xref_table(model, 'a_table', xref_errors, msg=msg)
+        self._safe_xref_table(model, 'ge_table', xref_errors, msg=msg)
+        self._safe_xref_table(model, 'st_table', xref_errors, msg=msg)
+        self._safe_xref_table(model, 'sc_table', xref_errors, msg=msg)
+        self._safe_xref_table(model, 'ss_table', xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

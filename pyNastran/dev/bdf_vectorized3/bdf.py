@@ -2609,11 +2609,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RFORCE' : partial(self._prepare_card, self.rforce),
             'RFORCE1' : partial(self._prepare_card, self.rforce1),
 
-            # axisymmetric loads
-            #'PLOADX1' : partial(self._prepare_card, self.ploadx1),
-            #'FORCEAX' : (FORCEAX, add_methods._add_load_object),
-            #'PRESAX' : (PRESAX, add_methods._add_load_object),  # axisymmetric
-
             # thermal loads
             'QBDY1': partial(self._prepare_card, self.qbdy1),
             'QBDY2': partial(self._prepare_card, self.qbdy2),
@@ -3629,7 +3624,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         nnodes = self.grid.n # + self.spoint.n
         spoints = None
         epoints = None
-        nrings = len(self.ringaxs)
         nspoints = self.spoint.n
         nepoints = 0
         assert nnodes + nspoints > 0, (nnodes, nspoints)
@@ -3640,24 +3634,23 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         if nepoints:
             epoints = list(self.epoint.ids)
 
-        ngridb = len(self.gridb)
-        if nnodes + nspoints + nepoints + ngridb + nrings == 0:
-            msg = 'nnodes=%s nspoints=%s nepoints=%s nrings=%s' % (
-                nnodes, nspoints, nepoints, nrings)
+        if nnodes + nspoints + nepoints == 0:
+            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (
+                nnodes, nspoints, nepoints)
             raise ValueError(msg)
 
         if idtype == 'int32':
             try:
                 out = _set_nodes(self, spoints, epoints,
-                                 nnodes, nspoints, nepoints, ngridb,
+                                 nnodes, nspoints, nepoints,
                                  idtype, fdtype)
             except OverflowError:
                 out = _set_nodes(self, spoints, epoints,
-                                 nnodes, nspoints, nepoints, ngridb,
+                                 nnodes, nspoints, nepoints,
                                  'int64', fdtype)
         else:
             out = _set_nodes(self, spoints, epoints,
-                             nnodes, nspoints, nepoints, ngridb,
+                             nnodes, nspoints, nepoints,
                              idtype, fdtype)
         nid_cp_cd, xyz_cp, nids_cd_transform, nids_cp_transform = out
 
@@ -4937,13 +4930,13 @@ def _check_replicated_cards(replicated_cards):
 
 def _set_nodes(model: BDF,
                spoints, epoints,
-               nnodes: int, nspoints: int, nepoints: int, ngridb: int,
+               nnodes: int, nspoints: int, nepoints: int,
                idtype, fdtype):
     """helper method for ``get_displacement_index_xyz_cp_cd``"""
     i = 0
     nids_cd_transform = defaultdict(list)  # type: dict[int, np.ndarray]
     nids_cp_transform = defaultdict(list)  # type: dict[int, np.ndarray]
-    nxyz = nnodes + nspoints + nepoints + ngridb
+    nxyz = nnodes + nspoints + nepoints
     xyz_cp = np.zeros((nxyz, 3), dtype=fdtype)
     nid_cp_cd = np.zeros((nxyz, 3), dtype=idtype)
 
@@ -4957,20 +4950,6 @@ def _set_nodes(model: BDF,
     if nepoints:
         for nid in sorted(epoints):
             nid_cp_cd[i, 0] = nid
-            i += 1
-    if ngridb:
-        for nid, node in sorted(model.gridb.items()):
-            phi = node.phi
-            cd = node.cd
-            ringfl_id = node.ringfl
-            ringfl = model.ringfl[ringfl_id]
-            x = ringfl.xa  ## TODO: what about xb?
-            y = phi  ## TODO: is this really phi?
-            z = 0.
-            axif = model.axif
-            cp = axif.cid
-            nid_cp_cd[i, :] = [nid, cp, cd]
-            xyz_cp[i, :] = [x, y, z]
             i += 1
     return nid_cp_cd, xyz_cp, nids_cd_transform, nids_cp_transform
 

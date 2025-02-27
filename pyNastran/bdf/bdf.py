@@ -75,10 +75,10 @@ from .cards.elements.solid import (
 from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON, RigidElement
 from .cards.bolt import BOLT, BOLTLD, BOLTFOR, BOLTSEQ, BOLTFRC, BOLT_MSC
 
-from .cards.axisymmetric.axisymmetric import (
-    AXIF, RINGFL,
-    AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, )
-from .cards.axisymmetric.loads import PLOADX1, FORCEAX, PRESAX, TEMPAX
+# from .cards.axisymmetric.axisymmetric import (
+#     AXIF, RINGFL,
+#     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, )
+from .cards.axisymmetric.loads import PLOADX1  #, FORCEAX, PRESAX, TEMPAX
 from .cards.elements.axisymmetric_shells import (
     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
 from pyNastran.bdf.cards.elements.shell import (
@@ -221,7 +221,7 @@ SolidElement = CTETRA4 | CTETRA10 | CPENTA6 | CPENTA15 | \
 Element = (
     SpringElement | DamperElement |
     CVISC | CBUSH | CBUSH1D | CBUSH2D | CFAST | CWELD |
-    CGAP | GENEL | CCONEAX |
+    CGAP | GENEL |
     CROD | CTUBE | CONROD |
     CBAR | CBEAM | CBEAM3 | CBEND | CSHEAR |
     ShellElement |
@@ -241,7 +241,7 @@ Property = (
     PELAS | PELAST | PDAMP | PDAMPT | PDAMP5 | PMASS |
     PROD | PTUBE | PVISC |
     PBUSH | PBUSH1D | PBUSH2D | PGAP |
-    PRAC2D | PRAC3D | PCONEAX |
+    PRAC2D | PRAC3D |
     PBAR | PBARL | PBEAM | PBRSECT |
     PBEAML | PBCOMP | PBMSECT |
     PBEND | PBEAM3 |
@@ -715,14 +715,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #  nastran 95
             'PTRSHL', 'PQUAD1',
-            'PIHEX', # PQUAD4
+            'PIHEX',  # PQUAD4
 
-            # axixsymmetric
-            'CCONEAX', # element
-            'PCONEAX', # property
-            'AXIC', # axic
-            'AXIF', # axif
-            'FORCEAX', # loads
+            # axixsymmetric - removed
+            #'CCONEAX', # element
+            #'PCONEAX', # property
+            #'AXIC', # axic
+            #'AXIF', # axif
+            #'FORCEAX', # loads
 
             ## pdampt
             'PDAMPT',
@@ -787,8 +787,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'GMLOAD',  # loads
             #'GMCORD',  # coords
 
-            # axisymmetric
-            'PRESAX',
+            # axisymmetric - removed
+            #'PRESAX',
 
             #thermal
             'QVOL',
@@ -2383,8 +2383,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'GRID': (GRID, partial(add_methods._add_node_object, allow_overwrites='GRID' in self.allow_overwrites_set)),
             'SPOINT' : (SPOINTs, add_methods._add_spoint_object),
             'EPOINT' : (EPOINTs, add_methods._add_epoint_object),
-            'RINGAX' : (RINGAX, add_methods._add_ringax_object),
-            'POINTAX' : (POINTAX, add_methods._add_ringax_object),
             'POINT' : (POINT, add_methods._add_point_object),
             'SEQGP' : (SEQGP, add_methods._add_seqgp_object),
             'GRIDB' : (GRIDB, add_methods._add_gridb_object),
@@ -2522,15 +2520,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'GENEL' : (GENEL, add_methods._add_element_object),
 
-
             'PDAMPT' : (PDAMPT, add_methods._add_pdampt_object),
             'PBUSHT' : (PBUSHT, add_methods._add_pbusht_object),
 
-            'CCONEAX' : (CCONEAX, add_methods._add_element_object),
-            'PCONEAX' : (PCONEAX, add_methods._add_property_object),
-            'AXIC' : (AXIC, add_methods._add_axic_object),
-            'AXIF' : (AXIF, add_methods._add_axif_object),
-            'CYAX' : (CYAX, add_methods._add_cyax_object),
+            'CYAX' : (CYAX, add_methods._add_cyax_object),  # TODO: remove?
 
             'RBAR' : (RBAR, add_methods._add_rigid_element_object),
             'RBAR1' : (RBAR1, add_methods._add_rigid_element_object),
@@ -2634,9 +2627,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'QVOL' : (QVOL, add_methods._add_load_object),  # thermal
 
             # axisymmetric loads
-            'FORCEAX' : (FORCEAX, add_methods._add_load_object),
             'PLOADX1' : (PLOADX1, add_methods._add_load_object),
-            'PRESAX' : (PRESAX, add_methods._add_load_object),  # axisymmetric
 
             'DLOAD' : (DLOAD, add_methods._add_dload_object),
 
@@ -2884,7 +2875,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'DMIJ' : self._prepare_dmij,
             'DMIK' : self._prepare_dmik,
             'DMIJI' : self._prepare_dmiji,
-            'RINGFL' : self._prepare_ringfl,
 
             'DEQATN' : self._prepare_dequatn,
 
@@ -2894,7 +2884,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PELAS' : self._prepare_pelas,
             'PDAMP' : self._prepare_pdamp,
 
-            'TEMPAX' : self._prepare_tempax,
             'TEMPD' : self._prepare_tempd,
             'TEMPBC' : self._prepare_tempbc,
             'CONVM' : self._prepare_convm,
@@ -3116,15 +3105,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         for tempd in tempds:
             self._add_methods._add_tempd_object(tempd)
         return tempds
-
-    def _prepare_tempax(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[TEMPAX]:
-        """adds a TEMPAX"""
-        tempaxs = [TEMPAX.add_card(card_obj, 0, comment=comment)]
-        if card_obj.field(5):
-            tempaxs.append(TEMPAX.add_card(card_obj, 1, comment=''))
-        for tempax in tempaxs:
-            self._add_methods._add_load_object(tempax)
-        return tempaxs
 
     def _prepare_dequatn(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DEQATN:
         """adds a DEQATN"""
@@ -3416,7 +3396,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """see ``add_card``"""
         card_name = card_name.upper()
         #if card_name not in self.card_count:
-            #print(card_name)
         card_obj, unused_card = self.create_card_object(
             card_lines, card_name,
             is_list=is_list, has_none=has_none)
@@ -3562,7 +3541,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             xyz_cid0 = xyz_cid0[isort, :]
         return xyz_cid0
 
-    def _add_card_helper_ifile(self, ifile, card_obj, card, card_name, comment=''):
+    def _add_card_helper_ifile(self, ifile: int, card_obj, card, card_name: str, comment: str=''):
         """See ``_add_card_helper``"""
         if card_name == 'ECHOON':
             self.echo = True
@@ -3826,7 +3805,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         nepoints = 0
         spoints = None
         epoints = None
-        nrings = len(self.ringaxs)
         if self.spoints:
             spoints = list(self.spoints)
             nspoints = len(spoints)
@@ -3834,24 +3812,23 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             epoints = list(self.epoints)
             nepoints = len(epoints)
 
-        ngridb = len(self.gridb)
-        if nnodes + nspoints + nepoints + ngridb + nrings == 0:
-            msg = 'nnodes=%s nspoints=%s nepoints=%s nrings=%s' % (
-                nnodes, nspoints, nepoints, nrings)
+        if nnodes + nspoints + nepoints == 0:
+            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (
+                nnodes, nspoints, nepoints)
             raise ValueError(msg)
 
         if idtype == 'int32':
             try:
                 out = _set_nodes(self, spoints, epoints,
-                                 nnodes, nspoints, nepoints, ngridb,
+                                 nnodes, nspoints, nepoints,
                                  idtype, fdtype)
             except OverflowError:
                 out = _set_nodes(self, spoints, epoints,
-                                 nnodes, nspoints, nepoints, ngridb,
+                                 nnodes, nspoints, nepoints,
                                  'int64', fdtype)
         else:
             out = _set_nodes(self, spoints, epoints,
-                             nnodes, nspoints, nepoints, ngridb,
+                             nnodes, nspoints, nepoints,
                              idtype, fdtype)
         nid_cp_cd, xyz_cp, nids_cd_transform, nids_cp_transform = out
 
@@ -5192,13 +5169,13 @@ def _check_replicated_cards(replicated_cards):
 
 def _set_nodes(model: BDF,
                spoints, epoints,
-               nnodes: int, nspoints: int, nepoints: int, ngridb: int,
+               nnodes: int, nspoints: int, nepoints: int,
                idtype: str, fdtype: str):
     """helper method for ``get_displacement_index_xyz_cp_cd``"""
     i = 0
     nids_cd_transform: dict[int, np.ndarray] = defaultdict(list)
     nids_cp_transform: dict[int, np.ndarray] = defaultdict(list)
-    nxyz = nnodes + nspoints + nepoints + ngridb
+    nxyz = nnodes + nspoints + nepoints
     xyz_cp = np.zeros((nxyz, 3), dtype=fdtype)
     nid_cp_cd = np.zeros((nxyz, 3), dtype=idtype)
     for nid, node in sorted(model.nodes.items()):
@@ -5216,20 +5193,6 @@ def _set_nodes(model: BDF,
     if nepoints:
         for nid in sorted(epoints):
             nid_cp_cd[i, 0] = nid
-            i += 1
-    if ngridb:
-        for nid, node in sorted(model.gridb.items()):
-            phi = node.phi
-            cd = node.cd
-            ringfl_id = node.ringfl
-            ringfl = model.ringfl[ringfl_id]
-            x = ringfl.xa  ## TODO: what about xb?
-            y = phi  ## TODO: is this really phi?
-            z = 0.
-            axif = model.axif
-            cp = axif.cid
-            nid_cp_cd[i, :] = [nid, cp, cd]
-            xyz_cp[i, :] = [x, y, z]
             i += 1
     return nid_cp_cd, xyz_cp, nids_cd_transform, nids_cp_transform
 

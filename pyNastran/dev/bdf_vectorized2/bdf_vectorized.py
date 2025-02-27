@@ -3516,7 +3516,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         nepoints = 0
         spoints = None
         epoints = None
-        nrings = len(self.ringaxs)
         if self.spoints:
             spoints = list(self.spoints)
             nspoints = len(spoints)
@@ -3524,24 +3523,23 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             epoints = list(self.epoints)
             nepoints = len(epoints)
 
-        ngridb = len(self.gridb)
-        if nnodes + nspoints + nepoints + ngridb + nrings == 0:
-            msg = 'nnodes=%s nspoints=%s nepoints=%s nrings=%s' % (
-                nnodes, nspoints, nepoints, nrings)
+        if nnodes + nspoints + nepoints == 0:
+            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (
+                nnodes, nspoints, nepoints)
             raise ValueError(msg)
 
         if idtype == 'int32':
             try:
                 out = _set_nodes(self, spoints, epoints,
-                                 nnodes, nspoints, nepoints, ngridb,
+                                 nnodes, nspoints, nepoints,
                                  idtype, fdtype)
             except OverflowError:
                 out = _set_nodes(self, spoints, epoints,
-                                 nnodes, nspoints, nepoints, ngridb,
+                                 nnodes, nspoints, nepoints,
                                  'int64', fdtype)
         else:
             out = _set_nodes(self, spoints, epoints,
-                             nnodes, nspoints, nepoints, ngridb,
+                             nnodes, nspoints, nepoints,
                              idtype, fdtype)
         nid_cp_cd, xyz_cp, nids_cd_transform, nids_cp_transform = out
 

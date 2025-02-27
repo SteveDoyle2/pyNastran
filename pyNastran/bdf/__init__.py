@@ -152,8 +152,8 @@ BULK_DATA_CARDS = {
     'PLOADX1', 'RFORCE', 'RFORCE1',
     'SPCD', 'DEFORM',
 
-    # axisymmetric
-    'PRESAX',
+    # axisymmetric - removed
+    # 'PRESAX',
 
     #thermal
     'QVOL',
@@ -324,12 +324,13 @@ BULK_DATA_CARDS = {
 
 NASA_CARDS = {
     # axisymmetric
-    'CCONEAX', 'AXIC', 'MOMAX', 'PCONEAX', 'POINTAX', 'RINGAX',
+    #'CCONEAX', 'AXIC', 'MOMAX', 'PCONEAX', 'POINTAX', 'RINGAX',
     'CTRAPAX', 'PRESAX', 'PTRIAAX', 'CTRIAAX',
 
     # fluid
-    'AXIF', 'CFLUID2', 'CFLUID3', 'CFLUID4', 'RINGFL',
-    'BDYLIST', 'FSLIST', 'FLSYM', 'GRIDB',
+    #'AXIF',
+    'CFLUID2', 'CFLUID3', 'CFLUID4',  #'RINGFL',
+    'BDYLIST', 'FSLIST', 'FLSYM',  #'GRIDB',
     'PRESPT',
 
     # slot
