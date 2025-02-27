@@ -100,7 +100,7 @@ class MPT:
             (16303, 163, 981): ['MAT2SP', self.read_fake],
             (12000, 120, 108): ['CONTRLT', self.read_fake],
             (15603, 156, 967): ['MONCARL', self.read_fake],
-            (16803, 168, 1019):  ['MAT8', self.read_fake],
+            (16803, 168, 1019): ['MAT8', self.read_fake],
             (16503, 165, 983): ['MAT9', self.read_mat9],
         }
 

@@ -1,9 +1,19 @@
 """writes the MPT/MPTS table"""
+from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
+from typing import BinaryIO, TYPE_CHECKING
 
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_header
+from pyNastran.bdf.cards.dynamic import (
+    TSTEPNL, NLPARM, NLPARM_CONV_MAP, NLPARM_KMETHOD_MAP, NLPARM_INT_OUT_MAP,
+) # TSTEP
+CONV_NLPARM_MAP = {value: key for key, value in NLPARM_CONV_MAP.items()}
+KMETHOD_NLPARM_MAP = {value: key for key, value in NLPARM_KMETHOD_MAP.items()}
+INT_OUT_NLPARM_MAP = {value: key for key, value in NLPARM_INT_OUT_MAP.items()}
+if TYPE_CHECKING:
+    from pyNastran.op2.op2_geom import OP2Geom
 
 def write_mpt(op2_file, op2_ascii, model, endian=b'<',
               nastran_format: str='nx'):
@@ -19,7 +29,7 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<',
         'MATS3', 'MATS8',
         'MATT3', 'MATT9',
         #  other
-        'NLPARM', 'NLPCI', 'MAT3D',
+        'NLPCI', 'MAT3D',
         'MATPOR',
         'RADBC',
     ]
@@ -105,7 +115,7 @@ def write_mpt(op2_file, op2_ascii, model, endian=b'<',
     close_geom_table(op2_file, op2_ascii, itable)
     #-------------------------------------
 
-def _write_tstepnl(model, name, tstepnl_ids, nmaterials,
+def _write_tstepnl(model: BDF, name: str, tstepnl_ids, nmaterials,
                    op2_file, op2_ascii, endian):
     """
     TSTEPNL(3103,31,337)
@@ -180,7 +190,71 @@ def _write_tstepnl(model, name, tstepnl_ids, nmaterials,
         op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_mat1(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
+def _write_nlparm(model: OP2Geom, name: str,
+                  mids: list[int], nmaterials: int,
+                  op2_file: BinaryIO, op2_ascii, endian: bytes):
+    r"""
+    NLPARM(3003,30,286) - record 27
+
+    NX 2019.2
+    Word Name Type Description
+    1 SID       I Set identification number
+    2 NINC      I Number of increments
+    3 DT       RS Incremental time interval for creep analysis
+    4 KMETHOD   I Method for controlling stiffness updates
+    5 KSTEP     I Number of iterations before the stiffness update
+    6 MAXITER   I Limit on number of iterations for each load increment
+    7 CONV      I Flags to select convergence criteria
+    8 INTOUT    I Intermediate output flag
+    9 EPSU     RS Error tolerance for displacement U criterion
+    10 EPSP    RS Error tolerance for displacement P criterion
+    11 EPSW    RS Error tolerance for displacement W criterion
+    12 MAXDIV   I Limit on probable divergence conditions
+    13 MAXQN    I Maximum number of quasi-Newton correction vectors
+    14 MAXLS    I Maximum number of line searches
+    15 FSTRESS RS Fraction of effective stress
+    16 LSTOL   RS Line search tolerance
+    17 MAXBIS   I Maximum number of bisections
+    18 MAXR    RS Maximum ratio for the adjusted arc-length increment
+    19 RTOLB   RS Maximum value of incremental rotation
+
+    ndata = 80:
+              sid nic dt   km ks max con int  epu   epp   epw   mx mx  mx fstr  lso  mx mx    rtolb
+    ints    = (1, 10, 0,   1, 5, 25, -1, 0,   0.01, 0.01, 0.01, 3, 25, 4, 0.20, 0.5, 5, 20.0, 20.0, 0)
+    floats  = (1, 10, 0.0, 1, 5, 25, -1, 0.0, 0.01, 0.01, 0.01, 3, 25, 4, 0.20, 0.5, 5, 20.0, 20.0, 0.0)
+
+    # C:\MSC.Software\msc_nastran_runs\lcdf07a.op2
+    ints    = (10000001, 1, 0,   1, 500, 25, 14, 0,   0.01, 0.01, 0.01, 5, 25, 0,   0.2, 0.5, 5, 20.0, 20.0, 0)
+    floats  = (10000001, 1, 0.0, 1, 500, 25, 14, 0.0, 0.01, 0.01, 0.01, 5, 25, 0.0, 0.2, 0.5, 5, 20.0, 20.0, 0.0)
+
+    """
+    key = (3003, 30, 286)
+    nfields = 19
+    #s = Struct(mapfmt(op2._endian + b'iif5i3f3iffiff', self.size))
+    spack = Struct(endian + b'iif5i3f3iffiff')
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
+    for nlparm_id in sorted(mids):
+        nlparm = model.nlparms[nlparm_id]
+        ninc = 0 if nlparm.ninc is None else nlparm.ninc
+
+        conv_int = CONV_NLPARM_MAP[nlparm.conv]
+        kmethod_int = KMETHOD_NLPARM_MAP[nlparm.kmethod]
+        int_out_int = INT_OUT_NLPARM_MAP[nlparm.int_out]
+        data = [nlparm_id, ninc, nlparm.dt, kmethod_int, nlparm.kstep,
+                nlparm.max_iter, conv_int, int_out_int,
+                nlparm.eps_u, nlparm.eps_p,
+                nlparm.eps_w, nlparm.max_div, nlparm.max_qn, nlparm.max_ls,
+                nlparm.fstress, nlparm.ls_tol, nlparm.max_bisect, nlparm.max_r,
+                nlparm.rtol_b]
+        assert None not in data, data
+        op2_ascii.write(f'  NLPARM {nlparm_id}=%s data={data[1:]}\n')
+        op2_file.write(spack.pack(*data))
+    return nbytes
+
+
+def _write_mat1(model: OP2Geom, name: str,
+                mids: list[int], nmaterials: int,
+                op2_file: BinaryIO, op2_ascii, endian: bytes):
     """writes the MAT1"""
     key = (103, 1, 77)
     nfields = 12
@@ -628,4 +702,5 @@ MATERIAL_MAP = {
     'MATT8': _write_matt8,
     'MATS1': _write_mats1,
     'TSTEPNL': _write_tstepnl,
+    'NLPARM': _write_nlparm,
 }
