@@ -416,7 +416,7 @@ class TestLoads(unittest.TestCase):
                 continue
             #if isubcase != 17:
                 #continue
-            loadcase_id = subcase.get_parameter('LOAD')[0]
+            loadcase_id = subcase.get_int_parameter('LOAD')
             load = model.Load(loadcase_id, consider_load_combinations=True)[0]
             elem = load.eids_ref[0]
             g1 = load.g1_ref.nid
@@ -500,7 +500,7 @@ class TestLoads(unittest.TestCase):
         subcase_ids = [1, 2, 4, 5, 6] #  no 3, 7, 8
         for isubcase in subcase_ids:
             subcase = model.subcases[isubcase]
-            loadcase_id = subcase.get_parameter('LOAD')[0]
+            loadcase_id = subcase.get_int_parameter('LOAD')
             loads = model.get_reduced_loads(loadcase_id, consider_load_combinations=True)[0]
             load = loads[0]
             assert len(loads) == 1, 'subcase:\n%s\nloads=\n%s' % (subcase, loads)
@@ -553,7 +553,7 @@ class TestLoads(unittest.TestCase):
         for isubcase in subcase_ids:
             subcase = model.subcases[isubcase]
 
-            loadcase_id = subcase.get_parameter('LOAD')[0]
+            loadcase_id = subcase.get_int_parameter('LOAD')
             load = model.Load(loadcase_id)
             loadi = load[0]
             if loadi.type == 'PLOAD4':
@@ -615,7 +615,7 @@ class TestLoads(unittest.TestCase):
         for isubcase, subcase in sorted(model.subcases.items()):
             if isubcase == 0:
                 continue
-            loadcase_id = subcase.get_parameter('LOAD')[0]
+            loadcase_id = subcase.get_int_parameter('LOAD')
             load = model.loads[loadcase_id][0]
             elem = load.eids_ref[0]
             g1 = load.g1_ref.nid
@@ -725,7 +725,7 @@ class TestLoads(unittest.TestCase):
         for isubcase, subcase in sorted(model.subcases.items()):
             if isubcase == 0:
                 continue
-            loadcase_id = subcase.get_parameter('LOAD')[0]
+            loadcase_id = subcase.get_int_parameter('LOAD')
             load = model.loads[loadcase_id][0]
             elem = load.eids_ref[0]
             g1 = load.g1_ref.nid
@@ -818,7 +818,7 @@ class TestLoads(unittest.TestCase):
                 #continue
             ##if isubcase != 17:
                 ##continue
-            #loadcase_id = subcase.get_parameter('LOAD')[0]
+            #loadcase_id = subcase.get_int_parameter('LOAD')
             #load = model.loads[loadcase_id][0]
             #elem = load.eid
 

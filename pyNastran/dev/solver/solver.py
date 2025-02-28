@@ -19,7 +19,7 @@ from pyNastran.bdf.bdf import BDF, Subcase
 from pyNastran.f06.f06_writer import make_end
 from pyNastran.f06.f06_tables.oload_resultant import Resultant
 
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2_geom import OP2Geom
 from pyNastran.op2.op2_interface.op2_classes import (
     RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray,
     RealEigenvalues)
@@ -41,7 +41,7 @@ class Solver:
     def __init__(self, model: BDF):
         self.model = model
         self.superelement_id = 0
-        self.op2 = OP2(log=model.log, mode='nx')
+        self.op2 = OP2Geom(log=model.log, mode='nx')
         self.log = model.log
 
         d = date.today()
@@ -1211,7 +1211,7 @@ def remove_rows(Kgg: NDArrayNNfloat, aset: NDArrayNint, idtype='int32') -> NDArr
         ipositive = np.union1d(ipositive1, ipositive2)
         if isinstance(Kgg, lil_matrix):
             Kgg = Kgg.tocsc()
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(type(Kgg))
     all_rows = np.arange(Kgg.shape[0], dtype=idtype)
     inegative = np.setdiff1d(all_rows, ipositive)

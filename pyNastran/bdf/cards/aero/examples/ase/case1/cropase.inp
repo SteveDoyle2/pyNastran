@@ -1,0 +1,206 @@
+ASSIGN FEM='cropase.f06',PRINT=0,FORM=MSC,BOUND=SYM     
+DOUBLE
+DIAG 1,3                                                                 
+GENGUST
+CEND                                                                            
+TITLE= CROPASE WING-BODY ASE CASE 
+ECHO = SORT                       
+SUBCASE = 1  
+        SUBTITLE=OPEN-LOOP FLUTTER ANALYSIS, MACH NUMBER = 0.8
+        LABEL=FREQUENCY-DOMAIN APPROACH                     
+        ASE=100
+SUBCASE = 2  
+        SUBTITLE=OPEN-LOOP FLUTTER ANALYSIS, MACH NUMBER = 0.8
+        LABEL=STATE-SPACE APPROACH USING ROGER'S METHOD  
+        ASE=150
+SUBCASE = 3
+        SUBTITLE=OPEN-LOOP FLUTTER ANALYSIS, MACH NUMBER = 0.8
+        LABEL=STATE-SPACE APPROACH USING MODIFIED MINIMUM STATE METHOD  
+        ASE=200
+BEGIN BULK
+$-----------------------------------------------------------------------$
+$                                                                       $
+$                 * AERO PARAMETERS / FEM MODEL UNITS *                 $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$       ACSID   XZSYM   FLIP    FMMUNIT FMLUNIT REFC    REFB    REFS    $
+AEROZ   10      YES     YES     SLIN    IN      100.0   200.    10500.  +AERO
+$       REFX    REFY    REFZ
++AERO   33.333  0.      0.
+CORD2R  10              0.      0.      0.      0.      0.      1.      +C1
++C1     0.      1.0     0.
+$                                                                       $
+$                        * PLOT AERO MODEL BY PLTAERO *                 $
+$                                                                       $
+$PLTAERO 11      YES     0       TECPLOT AEROTECP.PLT    
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$                 * GEOMETRY INPUT OF WING AND FUSELAGE *               $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$                        * WING MACROELEMENT *                          $
+$                                                                       $
+$       WID     LABEL   ACOORD  NSPAN   NCHORD  LSPAN   ZTAIC   PAFOIL7 $
+CAERO7  101     WING            6       6                               +CA1
+$       XRL     YRL     ZRL     RCH     LRCHD   ATTCHR                  $
++CA1    0.0     30.0    0.0     100.0   0       201                     +CA2
+$       XRT     YRT     ZRT     TCH     LTCHD   ATTCHT                  $
++CA2    50.0    100.0   0.0     50.0    0       0     
+$                                                                       $
+$                        * BODY MACROELEMENT *                          $
+$                            ( FUSELAGE )                               $
+$                                                                       $
+$ TWO BODY7 BULK DATA CARDS ARE USED TO DEFINE THE FUSELAGE BODY7       $
+$ MACROELEMENTS.  EACH BODY7 COORDINATES ARE BASED ON A LOCAL COORDINATE$
+$ SYSTEM SPECIFIED BY THE ACCORD BULK DATA ENTRIES.  THE BODY-OF-       $
+$ REVOLUTION TYPE OF INPUT IS USED FOR THE FUSELAGE. TO SPECIFY THE     $
+$ CROSS-SECTIONAL RADIUS AND CAMBER (SEGMESH BULK DATA CARD).           $
+$                                                                       $
+$ COORDINATE SYSTEM FOR FUSELAGE                                        $
+$       ID      XORIGN  YORIGN  ZORIGN  DELTA   THETA                   $
+ACOORD  20      -100.   0.0     0.0     0.0     0.0
+$                                                                       $
+$       BID     LABEL   IPBODY7 ACOORD  NSEG    IDMESH1 IDMESH2 ETC     $
+BODY7   201     FUSELAGE        20      1       201
+$                                                                       $
+$       IDMESH  NAXIS   NRAD                                            $
+SEGMESH 201     11      5                                               +SE1
+$       ITYPE   X1      CAM1    YR1     ZR1     IDY1    IDZ1            $
++SE1    1       0.0     0.0     0.0                                     +SE2
++SE2    1       20.0    0.0     17.0                                    +SE3
++SE3    1       40.0    0.0     25.0                                    +SE4
++SE4    1       60.0    0.0     28.0                                    +SE5
++SE5    1       80.0    0.0     29.5                                    +SE6 
++SE6    1       100.0   0.0     30.0                                    +SE7 
++SE7    1       120.0   0.0     30.0                                    +SE8 
++SE8    1       140.0   0.0     30.0                                    +SE9 
++SE9    1       160.0   0.0     30.0                                    +SE10
++SE10   1       180.0   0.0     30.0                                    +SE11
++SE11   1       200.0   0.0     30.0                                    
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$              * SPLINE FROM FEM GRIDS TO AERODYNAMIC BOXES *           $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$                  * SURFACE SPLINE FIT ON THE WING *                   $
+$                                                                       $
+$       EID     MODEL   CP      SETK    SETG    DZ      EPS             $
+SPLINE1 101     WING            102     103     0.0     0.01
+LOADMOD 101     XSHEAR          102     103
+$                                                                       $
+$       SETID   MACROID BOX1    BOX2    ETC                             $
+PANLST2 102     101     101     THRU    125 
+$                                                                       $
+$       SID     G1      G2      ETC                                     $
+SET1    103     10101   10102   10103   10104   10201   10202   10203    +S1
++S1,10204,10301,10302,10303,10304,10401,10402,10403,+S2
++S2     10404
+$                                                                       $
+$               * ASSUME FUSELAGE NO MOTION USING SPLINE0 *             $
+$                                                                       $
+$       EID     MODEL   CP      SETK                                    $
+SPLINE0 102     FUSELAGE        112                          
+$                                                                       $
+$       SETID   MACROID BOX1    BOX2    ETC                             $
+PANLST2 112     201     201     THRU    240 
+$                                                                       $
+$                        * PLOT MODAL DATA BY PLTMODE *                 $
+$                                                                       $
+$PLTMODE 10      SYM     1               .3      TECPLOT MODE1.PLT     
+$PLTMODE 20      SYM     2               .3      PATRAN  MODE2.PLT    
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$ TWO MKAEROZ CARDS ARE USED.  THE FIRST ACTIVATES THE SUBSONIC METHOD  $
+$ (ZONA6) AND THE SECOND THE SUPERSONIC METHOD (ZONA7) - BASED ON THE   $
+$ INPUT MACH NUMBER.                                                    $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$       IDMK    MACH    METHOD  IDFLT   SAVE    <--FILENAME-->  PRINT   $
+MKAEROZ 80      0.8     0                                               +MK1
+$       FREQ1   FREQ2   ETC                                             $
++MK1    0.0     0.1     0.15    0.2     0.25    0.3     0.4     0.5     +MK2
++MK2    0.6     0.8     1.0
+$                                                                       $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                        * FLUTTER ANALYSIS *                           $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$       SETID   SYM     FIX     NMODE   TABDMP  MLIST   CONMLST FLTSEN  $
+FLUTTER 100     SYM     100     0       0       0       0       0       
+$                                                                       $
+$                * NON-MATCHED POINT FLUTTER ANALYSIS *                 $
+$                                                                       $
+$       SETID   IDMK    DEN     FTMUNIT FTLUNIT VREF    FLUTTF  PRINT   $
+FIXMDEN 100     80      1.143-07SLIN    IN      20.16   0       2       +FL1
+$       V1      V2      V3      ETC                                     $
++FL1    8000.   9000.   10000.  11000.  12000.  13000.  14000.  15000.  +FL2
++FL2    16000.  17000.  18000.0   
+$                                                                       $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$                          * ASE ANALYSIS *                             $
+$                                                                       $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$-----------------------------------------------------------------------$
+$           *  SUBCASE = 1 -- OPEN-LOOP FLUTTER ANALYSIS  *             $
+$         * USING FREQUENCY-DOMAIN APPROACH                       *     $
+$-----------------------------------------------------------------------$
+$                                                                       $
+$       SETID   IDCON   IDFLT   MLDSTAT RAAID   MARID                   $
+ASE     100             100                  
+PLTVG   100     100             Q               PLTVG_FRQ.DAT 
+$                                                                       $
+$-----------------------------------------------------------------------$
+$           *  SUBCASE = 2 -- OPEN-LOOP FLUTTER ANALYSIS  *             $
+$         * USING STATE-SPACE APPROACH WITH ROGER'S METHOD *            $
+$-----------------------------------------------------------------------$
+$       SETID   IDCON   IDFLT   MLDSTAT RAAID   MARID                   $
+ASE     150             100             150
+PLTVG   150     150             Q               PLTVG_ROGER.DAT 
+$               * RATIONAL AERODYNAMIC APPROXIMATION *                  $
+$       SETID   LAGID   ITMAX   APCID   APWID   DMATID                  $
+MINSTAT 150     150             10
+$                                                                       $
+$       SID     NLAG    R1                                              $
+AEROLAG 150     5       0.0
+$                                                                       $
+$       SID     DA0     DA1     DA2     NRP     NCP     FR(1)   FC(1)   $
+APCONST 10      1       -1      -1      1       1       1       1
+$                                                                       $
+$                        * PLOT RFA MATCHING *                          $
+PLTMIST 150     150     1        1                       ROGER11.DAT
+PLTMIST 151     150     1        2                       ROGER12.DAT
+PLTMIST 152     150     2        1                       ROGER21.DAT
+PLTMIST 153     150     2        2                       ROGER22.DAT
+$                                                                       $
+$-----------------------------------------------------------------------$
+$           *  SUBCASE = 3 -- OPEN-LOOP FLUTTER ANALYSIS  *             $
+$         * USING STATE-SPACE APPROACH WITH MINIMUM STATE METHOD *      $
+$-----------------------------------------------------------------------$
+$       SETID   IDCON   IDFLT   MLDSTAT RAAID   MARID                   $
+$                                                                       $
+$       SETID   IDCON   IDFLT   MLDSTAT RAAID   MARID                   $
+ASE     200             100             200
+PLTVG   200     200             Q               PLTVG_MIST.DAT 
+$       SETID   LAGID   ITMAX   APCID   APWID   DMATID                  $
+$               * RATIONAL AERODYNAMIC APPROXIMATION *                  $
+MINSTAT 200     200     100     10          
+$       SID     NLAG    R1                                              $
+AEROLAG 200     10      0.0
+$                                                                       $
+$                        * PLOT RFA MATCHING *                          $
+PLTMIST 200     200     1        1                       MIST11.DAT
+PLTMIST 201     200     1        2                       MIST12.DAT
+PLTMIST 202     200     2        1                       MIST21.DAT
+PLTMIST 203     200     2        2                       MIST22.DAT
+$                                                                       $
+$                                                                       $
+ENDDATA

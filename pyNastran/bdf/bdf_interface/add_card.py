@@ -7927,11 +7927,11 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_constraint_spcadd_object(spcadd)
         return spcadd
 
-    def add_spcax(self, conid, ringax, hid, component, enforced, comment='') -> SPCAX:
-        """Creates an SPCAX card"""
-        spcax = SPCAX(conid, ringax, hid, component, enforced, comment=comment)
-        self._add_methods._add_constraint_spc_object(spcax)
-        return spcax
+    # def add_spcax(self, conid, ringax, hid, component, enforced, comment='') -> SPCAX:
+    #     """Creates an SPCAX card"""
+    #     spcax = SPCAX(conid, ringax, hid, component, enforced, comment=comment)
+    #     self._add_methods._add_constraint_spc_object(spcax)
+    #     return spcax
 
     def add_gmspc(self, conid, component, entity, entity_id, comment='') -> GMSPC:
         """Creates a GMSPC card"""

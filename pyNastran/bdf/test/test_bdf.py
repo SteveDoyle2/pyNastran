@@ -931,7 +931,7 @@ def check_for_cd_frame(fem1: BDF) -> None:
 
     """
     is_grid_points = any([card_name in fem1.card_count
-                          for card_name in ['GRID', 'SPOINT', 'EPOINT', 'RINGAX']])
+                          for card_name in ['GRID', 'SPOINT', 'EPOINT']]) # , 'RINGAX'
     if is_grid_points:
         out = fem1.get_displacement_index_xyz_cp_cd(
             fdtype='float64', idtype='int64', sort_ids=True)
@@ -1470,7 +1470,7 @@ def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase
 
     ierror = require_cards(['FMETHOD'], log, soltype, sol, subcase,
                            RuntimeError, ierror, nerrors)
-    flutter_id = subcase.get_parameter('FMETHOD')[0]
+    flutter_id = subcase.get_int_parameter('FMETHOD')
     flutter = fem2.Flutter(flutter_id, msg=', which is required by test_bdf')
 
     #valid methods = [K, KE,

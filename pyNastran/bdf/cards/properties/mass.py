@@ -37,7 +37,7 @@ class NSMx(Property):
     #: Properties are:
     valid_properties = [
         'PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
-        'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D',
+        'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PRAC2D', # 'PCONEAX',
         'ELEMENT', 'PDUM8',
     ]
 
@@ -154,7 +154,7 @@ class NSM1x(Property):
     """Common class for NSM1 and NSML1"""
     valid_properties = [
         'PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
-        'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D',
+        'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PRAC2D', # 'PCONEAX',
         'ELEMENT',
     ]
 

@@ -648,9 +648,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'GRIDG'
 
             ## ringfl
-            'RINGFL',
+            #'RINGFL',
             ## ringaxs
-            'RINGAX', 'POINTAX',
+            #'RINGAX', 'POINTAX',
 
             ## masses
             'CONM1', 'CONM2',
@@ -754,7 +754,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MAT4', 'MAT5',
 
             ## spcs
-            'SPC', 'SPCADD', 'SPC1', 'SPCAX', 'SPCOFF', 'SPCOFF1',
+            'SPC', 'SPCADD', 'SPC1', 'SPCOFF', 'SPCOFF1', # 'SPCAX',
 
             ## mpcs
             'MPC', 'MPCADD',
@@ -825,7 +825,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MATCID',
 
             # temperature cards
-            'TEMP', 'TEMPD', 'TEMPB3', 'TEMPAX',
+            'TEMP', 'TEMPD', 'TEMPB3', #'TEMPAX',
             'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
             'CHBDYE', 'CHBDYG', 'CHBDYP',
             'PCONV', 'PCONVM', 'PHBDY',
@@ -2590,7 +2590,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SPC1' : (SPC1, add_methods._add_constraint_spc_object),
             'SPCOFF' : (SPCOFF, add_methods._add_constraint_spcoff_object),
             'SPCOFF1' : (SPCOFF1, add_methods._add_constraint_spcoff_object),
-            'SPCAX' : (SPCAX, add_methods._add_constraint_spc_object),
+            #'SPCAX' : (SPCAX, add_methods._add_constraint_spc_object),
             'SPCADD' : (SPCADD, add_methods._add_constraint_spcadd_object),
             ## parametric
             'GMSPC' : (GMSPC, add_methods._add_constraint_spc_object),

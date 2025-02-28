@@ -350,7 +350,7 @@ def set_spc_mpc_suport_grid(model: BDF,
     if 0:  # pragma: no cover
         for subcase_id, subcase in sorted(model.subcases.items()):
             if 'SPC' in subcase:
-                spc_id = subcase.get_parameter('SPC')[0]
+                spc_id = subcase.get_int_parameter('SPC')
                 if spc_id is not None:
                     nspcs = model.card_count['SPC'] if 'SPC' in model.card_count else 0
                     nspc1s = model.card_count['SPC1'] if 'SPC1' in model.card_count else 0
@@ -400,7 +400,7 @@ def set_spc_mpc_suport_grid(model: BDF,
     if 0:  # pragma: no cover
         for subcase_id, subcase in sorted(model.subcases.items()):
             if 'SPC' in subcase:
-                spc_id = subcase.get_parameter('SPC')[0]
+                spc_id = subcase.get_int_parameter('SPC')
                 if spc_id is not None and spc_id not in spc_ids_used:
                     spc_ids_used.add(spc_id)
                     nspcs = model.card_count['SPC'] if 'SPC' in model.card_count else 0
@@ -415,7 +415,7 @@ def set_spc_mpc_suport_grid(model: BDF,
 
             # rigid body elements and MPCs
             if 'MPC' in subcase:
-                mpc_id = subcase.get_parameter('MPC')[0]
+                mpc_id = subcase.get_int_parameter('MPC')
                 if mpc_id is not None and mpc_id not in mpc_ids_used:
                     mpc_ids_used.add(mpc_id)
 
@@ -434,7 +434,7 @@ def set_spc_mpc_suport_grid(model: BDF,
             # SUPORTs are node/dofs that deconstrained to allow rigid body motion
             # SUPORT1s are subcase-specific SUPORT cards
             if 'SUPORT1' in subcase.params:  ## TODO: should this be SUPORT?
-                suport_id = subcase.get_parameter('SUPORT1')[0]
+                suport_id = subcase.get_int_parameter('SUPORT1')
 
                 # TODO: is this line correct???
                 if 'SUPORT' in model.card_count or 'SUPORT1' in model.card_count:

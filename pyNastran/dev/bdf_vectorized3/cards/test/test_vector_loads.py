@@ -580,7 +580,7 @@ class TestLoads(unittest.TestCase):
                 continue
             #if isubcase != 17:
                 #continue
-            loadcase_id = subcase.get_parameter('LOAD')[0]
+            loadcase_id = subcase.get_int_parameter('LOAD')
             reduced_loads = get_reduced_static_load_from_load_id(model, loadcase_id)
             xyz_cid0 = model.grid.xyz_cid0()
 
@@ -707,7 +707,7 @@ class TestLoads(unittest.TestCase):
         subcase_ids = [1, 2, 4, 5, 6] #  no 3, 7, 8
         for isubcase in subcase_ids:
             subcase = model.subcases[isubcase]
-            loadcase_id = subcase.get_parameter('LOAD')[0]
+            loadcase_id = subcase.get_int_parameter('LOAD')
             #loads = model.get_reduced_loads(loadcase_id, consider_load_combinations=True)[0]
             loads = get_reduced_static_load_from_load_id(
                 model, loadcase_id, remove_missing_loads=False,
@@ -771,7 +771,7 @@ class TestLoads(unittest.TestCase):
         for isubcase in subcase_ids:
             subcase = model.subcases[isubcase]
 
-            loadcase_id = subcase.get_parameter('LOAD')[0]
+            loadcase_id = subcase.get_int_parameter('LOAD')
             load = get_reduced_static_load_from_load_id(model, loadcase_id)
 
             if len(load) == 0:
@@ -862,7 +862,7 @@ class TestLoads(unittest.TestCase):
         for isubcase, subcase in sorted(model.subcases.items()):
             if isubcase == 0:
                 continue
-            loadcase_id = subcase.get_parameter('LOAD')[0]
+            loadcase_id = subcase.get_int_parameter('LOAD')
 
             scale_factor, load_list = loads_dict[loadcase_id][0]
             load = load_list[0]
@@ -992,7 +992,7 @@ class TestLoads(unittest.TestCase):
         for isubcase, subcase in sorted(model.subcases.items()):
             if isubcase == 0:
                 continue
-            loadcase_id = subcase.get_parameter('LOAD')[0]
+            loadcase_id = subcase.get_int_parameter('LOAD')
 
             scale_factor, load_list = loads_dict[loadcase_id][0]
             load = load_list[0]

@@ -1980,7 +1980,7 @@ def _check_flutter_case(fem: BDFs, log: SimpleLogger, sol: int, subcase: Subcase
 
     ierror = require_cards(['FMETHOD'], log, soltype, sol, subcase,
                            RuntimeError, ierror, nerrors)
-    flutter_id = subcase.get_parameter('FMETHOD')[0]
+    flutter_id = subcase.get_int_parameter('FMETHOD')
     flutter = fem.Flutter(flutter_id, msg=', which is required by test_bdf')
 
     #valid methods = [K, KE,
@@ -2086,13 +2086,13 @@ def _check_case_sol_200(sol: int,
         log.warning('\n%s' % subcase)
 
     if 'DESSUB' in subcase:
-        value = subcase.get_parameter('DESSUB')[0]
+        value = subcase.get_int_parameter('DESSUB')
         if value not in fem2.dconstr.dconstr_id:
             msg = 'value=%s not in dconstrs; Allowed DCONSTRs=%s' % (
                 value, np.unique(fem2.dconstr.dconstr_id))
             log.error(msg)
     if 'DESGLB' in subcase:
-        value = subcase.get_parameter('DESGLB')[0]
+        value = subcase.get_int_parameter('DESGLB')
         if value not in fem2.dconstr.dconstr_id:
             msg = 'value=%s not in dconstrs; Allowed DCONSTRs=%s' % (
                 value, np.unique(fem2.dconstr.dconstr_id))
@@ -2253,11 +2253,11 @@ def _check_case_parameters(subcase: Subcase,
                 raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
 
     if 'TSTEPNL' in subcase:
-        tstepnl_id = subcase.get_parameter('TSTEPNL')[0]
+        tstepnl_id = subcase.get_int_parameter('TSTEPNL')
         assert tstepnl_id in fem.tstepnls, _tstep_msg(fem, subcase, tstepnl_id, tstep_type='nl')
 
     if 'SUPORT1' in subcase:
-        suport1_id = subcase.get_parameter('SUPORT1')[0]
+        suport1_id = subcase.get_int_parameter('SUPORT1')
         assert suport1_id in fem.suport, 'suport1_id=%s\n suport1=%s\n subcase:\n%s' % (suport1_id, str(fem.suport.write()), str(subcase))
 
     ierror = _check_case_parameters_aero(
@@ -2265,7 +2265,7 @@ def _check_case_parameters(subcase: Subcase,
         ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
 
     if 'METHOD' in subcase: # or 'CMETHOD' in subcase:
-        method_id = subcase.get_parameter('METHOD')[0]
+        method_id = subcase.get_int_parameter('METHOD')
         if method_id in fem.methods:
             unused_method = fem.methods[method_id]
         #elif method_id in fem.cMethods:
@@ -2281,7 +2281,7 @@ def _check_case_parameters(subcase: Subcase,
                            require_sol=False)
 
     if 'CMETHOD' in subcase:
-        cmethod_id = subcase.get_parameter('CMETHOD')[0]
+        cmethod_id = subcase.get_int_parameter('CMETHOD')
         if cmethod_id in fem.cMethods:
             unused_method = fem.cMethods[cmethod_id]
         #elif method_id in fem.cMethods:
@@ -2294,7 +2294,7 @@ def _check_case_parameters(subcase: Subcase,
                            require_sol=False)
 
     if 'RMETHOD' in subcase and 0:
-        rmethod_id = subcase.get_parameter('RMETHOD')[0]
+        rmethod_id = subcase.get_int_parameter('RMETHOD')
         if rmethod_id in fem.rotord:
             rotord = fem.rotord[rmethod_id]
         #elif rmethod_id in fem.cMethods:
@@ -2324,7 +2324,7 @@ def _check_case_parameters(subcase: Subcase,
     if 'LOAD' in subcase:
         cid_new = 0
         cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
-        loadcase_id = subcase.get_parameter('LOAD')[0]
+        loadcase_id = subcase.get_int_parameter('LOAD')
         force, moment = sum_forces_moments(fem, p0, loadcase_id, cid=cid_new, include_grav=False)
         unused_fvec = get_static_force_vector_from_subcase_id(fem, isubcase)
         eids = None
@@ -2346,7 +2346,7 @@ def _check_case_parameters(subcase: Subcase,
 
     if 'FREQUENCY' in subcase:
         # not positive on 107 - complex eigenvalues
-        freq_id = subcase.get_parameter('FREQUENCY')[0]
+        freq_id = subcase.get_int_parameter('FREQUENCY')
         freq = fem.frequencies[freq_id]
         allowed_sols = [26, 68, 76, 78, 88, 108, 101, 107, 111, 112, 118, 146, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'FREQUENCY', log, ierror, nerrors)
@@ -2357,14 +2357,14 @@ def _check_case_parameters(subcase: Subcase,
         #assert sol in [], sol
         #print(lseq)
     if 'SPC' in subcase:
-        spc_id = subcase.get_parameter('SPC')[0]
+        spc_id = subcase.get_int_parameter('SPC')
         fem.get_spcs(spc_id, stop_on_failure=False)
         fem.get_reduced_spcs(spc_id, stop_on_failure=False)
         fem.get_SPCx_node_ids_c1(spc_id, stop_on_failure=False)
         fem.get_SPCx_node_ids(spc_id, stop_on_failure=False)
 
     if 'MPC' in subcase and 0:
-        mpc_id = subcase.get_parameter('MPC')[0]
+        mpc_id = subcase.get_int_parameter('MPC')
         get_mpcs(fem, mpc_id, consider_mpcadd=True, stop_on_failure=False)
         fem.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=False)
         get_mpc_node_ids_c1(fem, mpc_id, consider_mpcadd=True, stop_on_failure=False)
@@ -2375,7 +2375,7 @@ def _check_case_parameters(subcase: Subcase,
         fem.get_reduced_nsms(nsm_id, stop_on_failure=False)
 
     if 'SDAMPING' in subcase:
-        sdamping_id = subcase.get_parameter('SDAMPING')[0]
+        sdamping_id = subcase.get_int_parameter('SDAMPING')
         sdamp_sols = {110, 111, 112, 145, 146, 200}
         if not sdamping_id in fem.tables_sdamping and fem.sol in sdamp_sols:
             msg = 'SDAMPING = %s; not in TABDMP1, but must since its SOL %i\n' % (
@@ -2389,7 +2389,7 @@ def _check_case_parameters(subcase: Subcase,
             raise RuntimeError(msg)
 
     if 'LOADSET' in subcase:
-        loadset_id = subcase.get_parameter('LOADSET')[0]
+        loadset_id = subcase.get_int_parameter('LOADSET')
         unused_lseq = fem.Load(loadset_id)
         fem.get_reduced_loads(loadset_id)
 
@@ -2399,12 +2399,12 @@ def _check_case_parameters(subcase: Subcase,
             153, 159, 200, 400, 401, 601, 700,
         ]
         ierror = check_sol(sol, subcase, allowed_sols, 'DLOAD', log, ierror, nerrors)
-        dload_id = subcase.get_parameter('DLOAD')[0]
+        dload_id = subcase.get_int_parameter('DLOAD')
         fem.get_reduced_dloads(dload_id)
         #if 'LOADSET' in subcase:
             #raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
         if 'IC' in subcase:
-            ic_val = subcase.get_parameter('IC')[0]
+            ic_val = subcase.get_int_parameter('IC')
             if ic_val != 0:
                 log.debug(f'IC={ic_val}')
                 tic = fem.tic.slice_card_by_id(ic_val)

@@ -24,8 +24,8 @@ def write_dynamic(op2_file: BinaryIO,
                   endian: bytes=b'<',
                   nastran_format: str='nx') -> None:
     """writes the DYNAMIC table"""
-    # if not hasattr(model, 'loads'):  # OP2
-    #     return
+    if not hasattr(model, 'delays'):  # OP2
+        return
     #card_types = [
         #'DESVAR', 'DCONSTR',
         #'DVMREL2', 'DVPREL2',

@@ -503,7 +503,7 @@ class Solver(OP2):
         for subcase_id, subcase in sorted(self.model.subcases.items()):
             self.log.info(subcase)
             if 'TITLE' in subcase:
-                self.title = subcase.get_parameter('TITLE')[0]
+                self.title = subcase.get_str_parameter('TITLE')
                 break
 
         # TODO: there is a bug with the Case Control Deck reading
@@ -2100,7 +2100,7 @@ class Solver(OP2):
             ## todo:  is this correct???
         else:
             # get the value, 1 is the options (SPC has no options)
-            spc_ids = [case.get_parameter('SPC')[0]]
+            spc_ids = [case.get_int_parameter('SPC')]
 
         if case.has_parameter('SPC') or has_spcs:
             for spc_id in spc_ids:
@@ -2139,7 +2139,7 @@ class Solver(OP2):
         mp_index = self.mp_index
         if 'MPC' in case:
             # get the value, 1 is the options (MPC has no options)
-            mpc_id = case.get_parameter('MPC')[0]
+            mpc_id = case.get_int_parameter('MPC')
             mpcs = model.MPC(mpc_id)
 
             iconstraint = mp_index

@@ -1070,14 +1070,14 @@ class TestShellsV3(unittest.TestCase):
         nids = [1, 2, 3, 4]
         model.add_cplsts4(eid, pid, nids, comment='cplstn4')
         cplsts4 = model.cplsts4
-        cplsts4.flip_normal()
+        #cplsts4.flip_normal()
 
         eid = 5
         nids = [1, 2, 3]
         mid = 10
         model.add_cplsts3(eid, pid, nids, comment='cplstn3')
-        cplsts3 = model.cplstns
-        cplstn3.flip_normal()
+        cplsts3 = model.cplsts3
+        #cplsts3.flip_normal()
 
         pplane = model.add_pplane(
             pid, mid, t=0.1, nsm=0.,

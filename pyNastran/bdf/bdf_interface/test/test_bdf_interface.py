@@ -16,7 +16,7 @@ class TestBDFInterface(unittest.TestCase):
 
         cards = model.get_cards_by_card_types(card_types, reset_type_to_slot_map=False,
                                               stop_on_missing_card=False)
-        assert cards == {'GRID' : []}, cards
+        assert cards == {'GRID': []}, cards
 
         card_types = 'GRID'
         with self.assertRaises(TypeError):
@@ -99,7 +99,7 @@ class TestBDFInterface(unittest.TestCase):
         independent_node_ids_c1, dependent_node_ids_c1 = out
         #print('independent_node_ids_c1 =', independent_node_ids_c1)
         #print('dependent_node_ids_c1 =', dependent_node_ids_c1)
-        assert independent_node_ids_c1 == {'4' : [11],}, independent_node_ids_c1
+        assert independent_node_ids_c1 == {'4': [11],}, independent_node_ids_c1
         assert dependent_node_ids_c1 == {}, dependent_node_ids_c1
 
     def test_loads(self):

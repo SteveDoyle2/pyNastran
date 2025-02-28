@@ -28,6 +28,11 @@ class TestZona(unittest.TestCase):
         assert len(responses) == 1, responses
         assert len(mass) == 0, mass
 
+    def test_zona_case4_f06(self):
+        from pyNastran.f06.parse_geom import parse_f06_geom
+        f06_filename = MODEL_DIR / 'case4' / 'ha145g.f06'
+        system_lines, exec_lines, case_lines, bulk_lines = parse_f06_geom(f06_filename)
+
     def test_zona_case4_out(self):
         zona_out_filename = MODEL_DIR / 'case4' / 'ha145g.out'
         responses, mass = read_zona_out(zona_out_filename, debug=None)
