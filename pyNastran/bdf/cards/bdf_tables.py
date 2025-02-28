@@ -22,6 +22,7 @@ All table cards are defined in this file.  This includes:
 
 """
 from __future__ import annotations
+import warnings
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
@@ -849,7 +850,6 @@ class TABLED5(Table):
 
         #yi = self.a * ((x - x1) / x2) ** n
         #return yi.sum()
-
 
 class TABDMP1(Table):
     type = 'TABDMP1'
@@ -2052,7 +2052,8 @@ def read_table(card: BDFCard, table_id: int, table_type: str) -> tuple[np.ndarra
     return x, y
 
 def read_table_lax(card: BDFCard, table_id: int,
-                   table_type: str) -> tuple[np.ndarray, np.ndarray]:
+                   table_type: str,
+                   require_endt: bool=True) -> tuple[np.ndarray, np.ndarray]:
     """common method for reading tables that handles SKIP"""
     nfields = len(card) - 1
     nterms = (nfields - 9) // 2
@@ -2069,7 +2070,11 @@ def read_table_lax(card: BDFCard, table_id: int,
         if xi == 'SKIP' or yi == 'SKIP':
             continue
         xy.append([xi, yi])
-    string(card, nfields, 'ENDT')
+
+    endt_value = card.field(nfields).strip()
+    if endt_value.upper() != 'ENDT':
+        warnings.warn(f'expected ENDT; found {endt_value!r}')
+        #string(card, nfields, 'ENDT')
     x, y = make_xy(table_id, table_type, xy)
     return x, y
 

@@ -1156,6 +1156,7 @@ class BDFAttributes:
             # zone
             'panlsts': ['PANLST1', 'PANLST2', 'PANLST3'],
             'pafoils': ['PAFOIL7'],
+            'attach': ['ATTACH'],
         }  # type: dict[str, list[str]]
         self._type_to_slot_map = self.get_rslot_map()
 

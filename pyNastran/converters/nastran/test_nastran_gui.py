@@ -1943,6 +1943,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename)
 
 
+class TestZonaGui(unittest.TestCase):
     def test_gui_zona_model_1(self):
         bdf_filename = MODEL_PATH / 'aero' / 'zona' / 'f16_ma41.bdf'
         test = NastranGUI()

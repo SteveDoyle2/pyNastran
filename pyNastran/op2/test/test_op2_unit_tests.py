@@ -1229,12 +1229,14 @@ class TestOP2Main(Tester):
     def test_ibulk(self):
         """this test will fail if IBULK talble doesn't work"""
         log = get_logger(level='warning')
-        unused_bdf_filename = os.path.abspath(os.path.join(
-            PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
-        f06_filename = os.path.abspath(os.path.join(
-            PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.test_op2.f06'))
-        op2_filename = os.path.abspath(os.path.join(
-            PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+        unused_bdf_filename = os.path.abspath(
+            PKG_PATH / 'op2' / 'test' / 'examples' / 'ibulk' / 'model1_sim1-solution_1.op2')
+        f06_filename = os.path.abspath(
+            PKG_PATH / 'op2' / 'test' / 'examples' / 'ibulk' /
+            'model1_sim1-solution_1.test_op2.f06')
+        op2_filename = os.path.abspath(
+            PKG_PATH / 'op2' / 'test' / 'examples' / 'ibulk' /
+            'model1_sim1-solution_1.op2')
         op2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
         op2.read_op2(op2_filename)
         op2.write_f06(f06_filename)
@@ -1548,10 +1550,6 @@ class TestOP2Main(Tester):
     def test_bdf_op2_thermal_02(self):
         """checks hd15306.bdf"""
         log = get_logger(level='warning')
-        #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
-        #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
-        #op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
-
         bdf_filename = MODEL_PATH / 'other' / 'hd15306.bdf'
         csv_filename = MODEL_PATH / 'other' / 'hd15306.csv'
         op2_filename = MODEL_PATH / 'other' / 'hd15306.op2'
@@ -2600,8 +2598,8 @@ class TestOP2Main(Tester):
     def test_set_results(self):
         """tests setting only a subset of results"""
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')
-        f06_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.test_op2.f06')
+        op2_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.op2'
+        f06_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.test_op2.f06'
 
         op2 = OP2(debug=False, log=log)
         op2.set_results('stress')
@@ -2640,9 +2638,9 @@ class TestOP2Main(Tester):
 
     def test_op2_solid_bending_01(self):
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'solid_bending')
-        op2_filename = os.path.join(folder, 'solid_bending.op2')
-        f06_filename = os.path.join(folder, 'solid_bending.test_op2.f06')
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
+        f06_filename = folder / 'solid_bending.test_op2.f06'
         debug = False
         #debug_file = 'solid_bending.debug.out'
         model = os.path.splitext(op2_filename)[0]
@@ -2850,9 +2848,9 @@ class TestOP2Main(Tester):
     def test_op2_frequency_solid_shell_bar_01_geom(self):
         """frequency test"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
-        f06_filename = os.path.join(folder, 'freq_solid_shell_bar.test_op2.f06')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'freq_solid_shell_bar.op2'
+        f06_filename = folder / 'freq_solid_shell_bar.test_op2.f06'
         unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True,
@@ -3856,9 +3854,9 @@ class TestOP2Main(Tester):
     def test_random_ctria3(self):
         """runs a random test"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'random')
-        op2_filename = os.path.join(folder, 'random_test_bar_plus_tri.op2')
-        f06_filename = os.path.join(folder, 'random_test_bar_plus_tri.test_op2.f06')
+        folder = MODEL_PATH / 'random'
+        op2_filename = folder / 'random_test_bar_plus_tri.op2'
+        f06_filename = folder / 'random_test_bar_plus_tri.test_op2.f06'
         op2 = read_op2_geom(op2_filename, debug=False, log=log)
 
         op2res = op2.op2_results

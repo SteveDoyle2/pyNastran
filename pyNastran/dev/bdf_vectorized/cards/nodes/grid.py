@@ -1,9 +1,9 @@
-from numpy import zeros, arange, where, argsort, unique, array
-
+import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
 
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank)
 from pyNastran.dev.bdf_vectorized.cards.vectorized_card import VectorizedCard
@@ -117,7 +117,7 @@ class GRID(VectorizedCard):
         VectorizedCard.__init__(self, model)
 
     def shrink(self, refcheck=True):
-        i = where(self.node_id == 0)[0]
+        i = np.where(self.node_id == 0)[0]
         self.resize(i[0], refcheck=refcheck)
 
     def allocate(self, card_count):
@@ -126,12 +126,12 @@ class GRID(VectorizedCard):
             self.n = ncards
             #print('ngrid=%s' % self.n)
             float_fmt = self.model.float_fmt
-            self.node_id = zeros(ncards, 'int32')
-            self.xyz = zeros((ncards, 3), float_fmt)
-            self.cp = zeros(ncards, 'int32')
-            self.cd = zeros(ncards, 'int32')
-            self.seid = zeros(ncards, 'int32')
-            self.ps = zeros(ncards, 'int32')
+            self.node_id = np.zeros(ncards, 'int32')
+            self.xyz = np.zeros((ncards, 3), float_fmt)
+            self.cp = np.zeros(ncards, 'int32')
+            self.cd = np.zeros(ncards, 'int32')
+            self.seid = np.zeros(ncards, 'int32')
+            self.ps = np.zeros(ncards, 'int32')
 
     #def size_check(f, *args, **kwargs):
         #print('size_check', f.__name__)
@@ -188,7 +188,7 @@ class GRID(VectorizedCard):
 
     def build(self):
         if self.n:
-            i = argsort(self.node_id)
+            i = np.argsort(self.node_id)
             self.node_id = self.node_id[i]
             self.cp = self.cp[i]
             self.xyz = self.xyz[i, :]
@@ -233,12 +233,12 @@ class GRID(VectorizedCard):
             return i
         #param_all = unique(param_data)
         i, n = _index_to_nslice(i, self.n)
-        out_index = array(n, dtype='int32')
+        out_index = np.array(n, dtype='int32')
         param_data_i = param_data[i]
 
         i0 = 0
         for parami in param:
-            j = where(param_data_i == parami)[0]
+            j = np.where(param_data_i == parami)[0]
             nj = len(j)
             out_index[i0:i0+nj] = j
             i0 += nj
@@ -255,21 +255,21 @@ class GRID(VectorizedCard):
         if i is None:
             xyz = self.xyz.copy()
             #n = slice(None, None)
-            n = arange(self.n)
+            n = np.arange(self.n)
         else:
             n = i
             xyz = self.xyz[n, :].copy()
 
         cpn = self.cp[n]
-        i = where(cpn != 0)[0]
+        i = np.where(cpn != 0)[0]
         if len(i):
             n2 = n[i]
-            cps = set(list(unique(cpn)))
+            cps = set(list(np.unique(cpn)))
             for cp in cps:
                 #print(self.model.coords)
                 T = self.model.coords.transform(cp)
                 #print('T[%s] = \n%s\n' % (cp, T))
-                j = where(self.cp[n] == cp)[0]
+                j = np.where(self.cp[n] == cp)[0]
                 #print('j = %s' % j)
 
                 #if j.max() > len(n2):
@@ -404,7 +404,7 @@ class GRID(VectorizedCard):
         #self.model.log.debug('self.node_id = %s' % self.node_id)
         #self.model.log.debug('node_id = %s' % node_id)
         #node_id = slice_to_iter(node_id)
-        i = where(self.node_id == node_id)[0]
+        i = np.where(self.node_id == node_id)[0]
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import unittest
 import numpy as np
 from cpylog import get_logger
@@ -9,8 +10,8 @@ from pyNastran.converters.avl.avl import read_avl
 from pyNastran.converters.avl.avl_io import AVL_IO
 
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'avl', 'examples')
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / 'converters' / 'avl' / 'examples'
 
 
 class AvlGUI(FakeGUIMethods):

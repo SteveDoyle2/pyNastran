@@ -1,5 +1,6 @@
 import os
 from io import StringIO
+from pathlib import Path
 import unittest
 from cpylog import SimpleLogger
 
@@ -14,16 +15,16 @@ from pyNastran.converters.nastran.nastran_to_tecplot import (
 from pyNastran.converters.tecplot.utils import merge_tecplot
 from pyNastran.converters.format_converter import cmd_line_format_converter
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models')
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / 'converters' / 'tecplot' / 'models'
 NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class TestTecplot(unittest.TestCase):
 
     def test_mode1(self):
-        tecplot_filename = os.path.join(PKG_PATH, 'bdf', 'cards', 'aero',
-                                        'examples', 'flutter', 'case1', 'mode1.dat')
+        tecplot_filename = (PKG_PATH / 'bdf' / 'cards' / 'aero' /
+                            'examples' / 'flutter' / 'case1' / 'mode1.dat')
         read_tecplot(tecplot_filename, filetype='ascii')
 
     def test_split_headers(self):

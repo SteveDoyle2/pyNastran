@@ -289,10 +289,10 @@ class TestOP2(unittest.TestCase):
     def test_ibulk(self):
         """this test will fail if IBULK talble doesn't work"""
         log = get_logger(level='warning')
-        dirname = os.path.join(PKG_PATH, 'op2', 'test', 'examples', 'ibulk')
-        unused_bdf_filename = os.path.abspath(os.path.join(dirname, 'model1_sim1-solution_1.op2'))
-        f06_filename = os.path.abspath(os.path.join(dirname, 'model1_sim1-solution_1.test_op2.f06'))
-        op2_filename = os.path.abspath(os.path.join(dirname, 'model1_sim1-solution_1.op2'))
+        dirname = PKG_PATH / 'op2' / 'test' / 'examples' / 'ibulk'
+        unused_bdf_filename = os.path.abspath(dirname / 'model1_sim1-solution_1.op2')
+        f06_filename = os.path.abspath(dirname / 'model1_sim1-solution_1.test_op2.f06')
+        op2_filename = os.path.abspath(dirname / 'model1_sim1-solution_1.op2')
         op2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
         op2.read_op2(op2_filename)
         op2.write_f06(f06_filename)
@@ -1783,8 +1783,8 @@ class TestOP2(unittest.TestCase):
     def test_set_results(self):
         """tests setting only a subset of results"""
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.op2')
-        f06_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.test_op2.f06')
+        op2_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.op2'
+        f06_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.test_op2.f06'
 
         op2 = OP2(debug=False, log=log)
         op2.set_results('stress')
@@ -1890,9 +1890,9 @@ class TestOP2(unittest.TestCase):
     def test_op2_solid_shell_bar_01_geom(self):
         """tests reading op2 geometry"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
-        f06_filename = os.path.join(folder, 'static_solid_shell_bar.test_op2.f06')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'static_solid_shell_bar.op2'
+        f06_filename = folder / 'static_solid_shell_bar.test_op2.f06')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True,
             write_f06=True, write_op2=False,
@@ -1939,7 +1939,7 @@ class TestOP2(unittest.TestCase):
             quiet=True, stop_on_failure=True,
             dev=False, log=log)
 
-        f06_filename = os.path.join(folder, 'buckling_solid_shell_bar.test_op2_sort2.f06')
+        f06_filename = folder / 'buckling_solid_shell_bar.test_op2_sort2.f06'
         op2.write_f06(f06_filename, is_mag_phase=False, is_sort1=False,
                       #delete_objects=True,
                       end_flag=False, quiet=True,
@@ -2001,9 +2001,9 @@ class TestOP2(unittest.TestCase):
     def test_op2_transient_solid_shell_bar_01_geom(self):
         """transient test"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
-        f06_filename = os.path.join(folder, 'transient_solid_shell_bar.test_op2.f06')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'transient_solid_shell_bar.op2'
+        f06_filename = folder / 'transient_solid_shell_bar.test_op2.f06'
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=False, write_op2=False,
@@ -2036,10 +2036,10 @@ class TestOP2(unittest.TestCase):
     def test_op2_transfer_function_01(self):
         """tests the transfer function cards work"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'transfer_function')
-        #bdf_filename = os.path.join(folder, 'actuator_tf_modeling.bdf')
-        op2_filename = os.path.join(folder, 'actuator_tf_modeling.op2')
-        f06_filename = os.path.join(folder, 'freq_solid_shell_bar.test_op2.f06')
+        folder = MODEL_PATH / 'transfer_function'
+        #bdf_filename = folder / 'actuator_tf_modeling.bdf'
+        op2_filename = folder / 'actuator_tf_modeling.op2'
+        f06_filename = folder / 'freq_solid_shell_bar.test_op2.f06'
 
         unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
 
@@ -2074,9 +2074,9 @@ class TestOP2(unittest.TestCase):
     def test_monpnt3(self):
         """creates the MONPNT3 table"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'aero', 'monpnt3')
-        op2_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.op2')
-        f06_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06')
+        folder = MODEL_PATH / 'aero' / 'monpnt3'
+        op2_filename = folder / 'Monitor_Points_data_LINE5000000_10FREQs.op2'
+        f06_filename = folder / 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06'
         op2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
         op2.read_op2(op2_filename)
         monitor3 = op2.op2_results.monitor3
@@ -2089,9 +2089,9 @@ class TestOP2(unittest.TestCase):
     def test_op2_nastran_2005r3b(self):
         """Nastran 2005r3 bug"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'modele_petite_zone')
-        op2_filename = os.path.join(folder, 'modele_petite_zone.op2')
-        f06_filename = os.path.join(folder, 'modele_petite_zone.test_op2.f06')
+        folder = MODEL_PATH / 'modele_petite_zone'
+        op2_filename = folder / 'modele_petite_zone.op2'
+        f06_filename = folder / 'modele_petite_zone.test_op2.f06'
         op2 = read_op2_geom(op2_filename, debug=False, log=log)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)

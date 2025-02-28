@@ -1518,7 +1518,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'mkaeros', 'monitor_points', 'suport',
         ]
         zona_cards_to_skip = ['STFLOW', 'TRIMVAR', 'AEROZ']
-        zona_slots_to_skip = ['panlsts', 'pafoils']
+        zona_slots_to_skip = ['panlsts', 'pafoils', 'attach']
         rslot_to_type_map = self.get_rslot_map()
 
         for card_name, cards_list in cards_dict.items():
