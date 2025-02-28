@@ -2505,7 +2505,7 @@ class TSTEPNL(BaseCard):
             method = 'TSTEP'
         elif method_int == 3:
             method = 'ADAPT'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('tstepnl=%s method_int=%r data=%s' % (sid, method_int, data))
 
         if conv_int == 1:
@@ -2520,7 +2520,7 @@ class TSTEPNL(BaseCard):
             conv = 'UPW'
         #elif conv_int == 3:
             #conv = 'ADAPT'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('tstepnl=%s conv_int=%r data=%s' % (sid, conv_int, data))
 
         min_iter = None  # not listed in DMAP 2005

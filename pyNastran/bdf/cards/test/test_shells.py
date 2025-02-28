@@ -913,8 +913,8 @@ class TestShells(unittest.TestCase):
             run_save_load_hdf5=False,
         )
 
-    def test_cplstn34(self):
-        """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""
+    def test_cplsts34(self):
+        """tests a CPLSTS3, CPLSTS4/PSHELL/MAT8"""
         log = get_logger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
@@ -924,13 +924,13 @@ class TestShells(unittest.TestCase):
         pid = 4
         eid = 3
         nids = [1, 2, 3, 4]
-        cplsts4 = model.add_cplsts4(eid, pid, nids, comment='cplstn4')
+        cplsts4 = model.add_cplsts4(eid, pid, nids, comment='cplsts4')
         cplsts4.flip_normal()
 
         eid = 5
         nids = [1, 2, 3]
         mid = 10
-        cplsts3 = model.add_cplsts3(eid, pid, nids, comment='cplstn3')
+        cplsts3 = model.add_cplsts3(eid, pid, nids, comment='cplsts3')
         cplsts3.flip_normal()
 
         pplane = model.add_pplane(pid, mid, t=0.1, nsm=0.,
@@ -959,7 +959,7 @@ class TestShells(unittest.TestCase):
 
         model.uncross_reference()
         model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=False)
 
     def test_cplstn34(self):
         """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""

@@ -1479,10 +1479,10 @@ class PAFOIL7(BaseCard):
     """
     type = 'PAFOIL7'
 
-    def __init__(self, pid, i_axial,
-                 i_thickness_root, i_camber_root, le_radius_root,
-                 i_thickness_tip, i_camber_tip, le_radius_tip,
-                 comment=''):
+    def __init__(self, pid: int, i_axial: str,
+                 i_thickness_root: int, i_camber_root: int, le_radius_root: float,
+                 i_thickness_tip: int, i_camber_tip: int, le_radius_tip: float,
+                 comment: str=''):
         """
         Defines a BODY7 card, which defines a slender body
         (e.g., fuselage/wingtip tank).
@@ -1538,14 +1538,14 @@ class PAFOIL7(BaseCard):
         self.i_axial_ref = None
 
     #@property
-    #def cp(self):
+    #def cp(self) -> int:
         #return self.acoord
     #@property
     #def cp_ref(self):
         #return self.acoord_ref
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PAFOIL7 card from ``BDF.add_card(...)``
 

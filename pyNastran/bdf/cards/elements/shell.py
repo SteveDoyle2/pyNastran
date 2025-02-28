@@ -3252,17 +3252,17 @@ class CPLSTS4(CPLSTx4):
 
         ::
 
-               1           1
-              * *   -->   * *
-             *   *       *   *
-            2-----3     3-----2
+            4-----3     2-----3
+            |     | --> |     |
+            |     |     |     |
+            1-----2     1-----4
 
         """
-        (n1, n2, n3) = self.nodes
-        self.nodes = [n1, n3, n2]
+        (n1, n2, n3, n4) = self.nodes
+        self.nodes = [n1, n4, n3, n2]
         if self.nodes_ref is not None:
-            (n1, n2, n3) = self.nodes_ref
-            self.nodes_ref = [n1, n3, n2]
+            (n1, n2, n3, n4) = self.nodes_ref
+            self.nodes_ref = [n1, n4, n3, n1]
 
     def _get_repr_defaults(self):
         tflag = set_blank_if_default(self.tflag, 0)
