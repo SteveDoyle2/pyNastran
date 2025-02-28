@@ -17,7 +17,7 @@ def solid_dof(bdf_filename: PathLike) -> tuple[BDF, np.ndarray]:
 
     """
     base, ext = os.path.splitext(bdf_filename)
-    nid_filename = base + '.solid_nids_constraint.blk'
+    nid_filename = base + '.solid_dof_constraint.blk'
     model = BDF()
     model.is_strict_card_parser = False
     model.read_bdf(bdf_filename, xref=False)
@@ -63,6 +63,6 @@ def solid_dof(bdf_filename: PathLike) -> tuple[BDF, np.ndarray]:
     with open(nid_filename, 'w') as nid_file:
         nid_file.write(f'$ add a 456 constraint onto every solid DOF not associated with another element\n')
         nid_file.write(f'$ out_nids = {out_nids_str}\n')
-        nid_file.write(f'$ >>> bdf solid_nids {bdf_filename}\n')
+        nid_file.write(f'$ >>> bdf solid_dof {bdf_filename}\n')
         nid_file.write(print_card_8(card))
     return model, out_nids

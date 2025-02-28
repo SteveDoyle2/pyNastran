@@ -682,8 +682,12 @@ class Subcase:
         """
         param_name = update_param_name(param_name)
         if param_name not in self.params:
+            try:
+                subcase = f'\n{str(self)}'
+            except AssertionError:
+                subcase = ''
             raise KeyError(f'{param_name} doesnt exist in subcase={self.id} in the case '
-                           f'control deck{msg}.\n{str(self)}')
+                           f'control deck{msg}.{subcase}')
         value, options, param_type = self.params[param_name]
         #print('param_name=%r value=%s options=%s param_type=%r' % (
             #param_name, value, options, param_type))

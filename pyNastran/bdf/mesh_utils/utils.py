@@ -1482,6 +1482,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--shift XYZ]\n'
         '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--subpanels] [--pid PID]\n'
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [-p PIN_FLAGS_CSV_FILENAME]\n'
+        '  bdf solid_dof                   IN_BDF_FILENAME\n'
         '  bdf stats                       IN_BDF_FILENAME [--punch]\n'
         '  bdf run_jobs                    BDF_FILENAME_DIRNAME [--exe NASTRAN_PATH] [--cleanup]\n'
     )
@@ -1511,6 +1512,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf flutter            -h | --help\n'
         '  bdf export_caero_mesh  -h | --help\n'
         '  bdf split_cbars_by_pin_flags    -h | --help\n'
+        '  bdf solid_dof                   -h | --help\n'
         '  bdf stats                       -h | --help\n'
         '  bdf run_jobs                    -h | --help\n'
     )
