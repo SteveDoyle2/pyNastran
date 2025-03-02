@@ -56,7 +56,8 @@ def run_nastran(bdf_filename: PathLike,
         os.chdir(bdf_directory)
 
     assert os.path.exists(bdf_filename), bdf_filename
-    #assert os.path.exists(nastran_cmd), nastran_cmd
+    if nastran_cmd != 'nastran':
+        assert os.path.exists(nastran_cmd), nastran_cmd
     nastran_cmd_str = str(nastran_cmd)
     call_args = [nastran_cmd_str, str(bdf_filename)] + keywords_list
     #print(f'call_args = {call_args}')
@@ -92,7 +93,7 @@ def _get_keywords_list(keywords: Optional[str | list[str] |
         keywords_list = keywords.split()
     else:
         if isinstance(keywords, (list, tuple)):
-            keywords_list = keywords
+            keywords_list = list(keywords)
         else:
             keywords_list = []
             for keyword, value in keywords.items():

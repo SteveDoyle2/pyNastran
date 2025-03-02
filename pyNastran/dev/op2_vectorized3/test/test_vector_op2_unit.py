@@ -290,9 +290,9 @@ class TestOP2(unittest.TestCase):
         """this test will fail if IBULK talble doesn't work"""
         log = get_logger(level='warning')
         dirname = PKG_PATH / 'op2' / 'test' / 'examples' / 'ibulk'
-        unused_bdf_filename = os.path.abspath(dirname / 'model1_sim1-solution_1.op2')
-        f06_filename = os.path.abspath(dirname / 'model1_sim1-solution_1.test_op2.f06')
-        op2_filename = os.path.abspath(dirname / 'model1_sim1-solution_1.op2')
+        unused_bdf_filename = dirname / 'model1_sim1-solution_1.op2'
+        f06_filename = dirname / 'model1_sim1-solution_1.test_op2.f06'
+        op2_filename = dirname / 'model1_sim1-solution_1.op2'
         op2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
         op2.read_op2(op2_filename)
         op2.write_f06(f06_filename)
@@ -1726,8 +1726,8 @@ class TestOP2(unittest.TestCase):
          - RBE2 tref for MSC 2021
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_RBE_tests', 'rigid_rbe2.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_RBE_tests', 'rigid_rbe2--v2021.1.op2')
+        bdf_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2.bdf'
+        op2_filename = MODEL_PATH / 'bugs' / 'msc_RBE_tests' / 'rigid_rbe2--v2021.1.op2'
 
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             #'', bdf_filename, log=log)
@@ -1754,8 +1754,8 @@ class TestOP2(unittest.TestCase):
     def test_op2_nasa_nastran_01(self):
         """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nasa_nastran', 'balsa_wingbox.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nasa_nastran', 'balsa_wingbox.op2')
+        bdf_filename = MODEL_PATH / 'nasa_nastran' / 'balsa_wingbox.bdf'
+        op2_filename = MODEL_PATH / 'nasa_nastran' / 'balsa_wingbox.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1808,9 +1808,9 @@ class TestOP2(unittest.TestCase):
 
     def test_op2_solid_bending_01(self):
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'solid_bending')
-        op2_filename = os.path.join(folder, 'solid_bending.op2')
-        f06_filename = os.path.join(folder, 'solid_bending.test_op2.f06')
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
+        f06_filename = folder / 'solid_bending.test_op2.f06'
         debug = False
         #debug_file = 'solid_bending.debug.out'
         model = os.path.splitext(op2_filename)[0]
@@ -1851,8 +1851,8 @@ class TestOP2(unittest.TestCase):
     @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_op2_solid_bending_02(self):
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'solid_bending')
-        op2_filename = os.path.join(folder, 'solid_bending.op2')
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
         op2 = OP2(debug=False, log=log, debug_file=None, mode=None)
         op2.load_as_h5 = True
         op2.read_op2(op2_filename=op2_filename, combine=True,
@@ -1864,9 +1864,9 @@ class TestOP2(unittest.TestCase):
     def test_op2_solid_bending_02_geom(self):
         log = get_logger(level='warning')
         #log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'solid_bending')
-        op2_filename = os.path.join(folder, 'solid_bending.op2')
-        hdf5_filename = os.path.join(folder, 'solid_bending.test_op2_solid_bending_02_geom.h5')
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
+        hdf5_filename = folder / 'solid_bending.test_op2_solid_bending_02_geom.h5'
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False, write_hdf5=False,
@@ -1892,7 +1892,7 @@ class TestOP2(unittest.TestCase):
         log = get_logger(level='warning')
         folder = MODEL_PATH / 'sol_101_elements'
         op2_filename = folder / 'static_solid_shell_bar.op2'
-        f06_filename = folder / 'static_solid_shell_bar.test_op2.f06')
+        f06_filename = folder / 'static_solid_shell_bar.test_op2.f06'
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True,
             write_f06=True, write_op2=False,
@@ -1908,8 +1908,8 @@ class TestOP2(unittest.TestCase):
     def test_op2_mode_solid_shell_bar_01_geom(self):
         """tests reading op2 geometry"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'mode_solid_shell_bar.op2'
         subcases = [1]
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
@@ -1926,8 +1926,8 @@ class TestOP2(unittest.TestCase):
     def test_op2_buckling_solid_shell_bar_01_geom(self):
         """single subcase buckling"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'buckling_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'buckling_solid_shell_bar.op2'
         subcases = 1
         op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases)
         op2, unused_is_passed = run_op2(
@@ -1951,8 +1951,8 @@ class TestOP2(unittest.TestCase):
     def test_op2_buckling_solid_shell_bar_02_geom(self):
         """multi subcase buckling"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'buckling2_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'buckling2_solid_shell_bar.op2'
         unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
         subcases = 1
         op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases, log=log)
@@ -2018,9 +2018,9 @@ class TestOP2(unittest.TestCase):
     def test_op2_frequency_solid_shell_bar_01_geom(self):
         """frequency test"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
-        f06_filename = os.path.join(folder, 'freq_solid_shell_bar.test_op2.f06')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'freq_solid_shell_bar.op2'
+        f06_filename = folder / 'freq_solid_shell_bar.test_op2.f06'
         unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True,
@@ -2099,9 +2099,8 @@ class TestOP2(unittest.TestCase):
     def test_op2_solid_shell_bar_01(self):
         """tests sol_101_elements/static_solid_shell_bar.op2"""
         log = get_logger(level='warning')
-        op2_filename = os.path.join('static_solid_shell_bar.op2')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, op2_filename)
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'static_solid_shell_bar.op2'
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -2205,9 +2204,9 @@ class TestOP2(unittest.TestCase):
     def test_op2_solid_shell_bar_01_straincurvature(self):
         """tests sol_101_elements/static_solid_shell_bar_straincurve.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        unused_bdf_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve.bdf')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        unused_bdf_filename = folder / 'static_solid_shell_bar_straincurve.bdf'
+        op2_filename = folder / 'static_solid_shell_bar_straincurve.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -2256,9 +2255,9 @@ class TestOP2(unittest.TestCase):
     def test_op2_solid_shell_bar_01_fiberdistance(self):
         """tests sol_101_elements/static_solid_shell_bar_fiberdist.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist.bdf')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        #bdf_filename = folder / 'static_solid_shell_bar_fiberdist.bdf'
+        op2_filename = folder / 'static_solid_shell_bar_fiberdist.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -2307,9 +2306,9 @@ class TestOP2(unittest.TestCase):
     def test_op2_solid_shell_bar_01_straincurvature_shear(self):
         """tests sol_101_elements/static_solid_shell_bar_straincurve_shear.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve_shear.bdf')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve_shear.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        #bdf_filename = (folder / 'static_solid_shell_bar_straincurve_shear.bdf'
+        op2_filename = folder / 'static_solid_shell_bar_straincurve_shear.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -2357,9 +2356,9 @@ class TestOP2(unittest.TestCase):
     def test_op2_solid_shell_bar_01_fiberdistance_shear(self):
         """tests sol_101_elements/static_solid_shell_bar_fiberdist_shear.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist_shear.bdf')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist_shear.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        #bdf_filename = folder / 'static_solid_shell_bar_fiberdist_shear.bdf'
+        op2_filename = folder / 'static_solid_shell_bar_fiberdist_shear.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -2407,8 +2406,8 @@ class TestOP2(unittest.TestCase):
     def test_op2_solid_shell_bar_mode(self):
         """tests sol_101_elements/mode_solid_shell_bar.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'mode_solid_shell_bar.op2'
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -2479,8 +2478,8 @@ class TestOP2(unittest.TestCase):
     def test_op2_solid_shell_bar_buckling(self):
         """tests sol_101_elements/buckling_solid_shell_bar.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'buckling_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'buckling_solid_shell_bar.op2'
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -2558,8 +2557,8 @@ class TestOP2(unittest.TestCase):
     def test_op2_solid_shell_bar_freq(self):
         """tests sol_101_elements/freq_solid_shell_bar.op2"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'freq_solid_shell_bar.op2'
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -2661,8 +2660,8 @@ class TestOP2(unittest.TestCase):
                        OQG1, OUGV1, OGPFB1, OEF1X, OES1X1, OSTR1X, OPG1
         """
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'transient_solid_shell_bar.op2'
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -2791,7 +2790,7 @@ class TestOP2(unittest.TestCase):
 
     def test_op2_autodesk_2(self):
         """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(MODEL_PATH, 'autodesk', '9zk6b5uuo.op2')
+        op2_filename = MODEL_PATH / 'autodesk' / '9zk6b5uuo.op2'
         log = get_logger(level='warning')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, write_f06=False,
@@ -2822,7 +2821,7 @@ class TestOP2(unittest.TestCase):
 
     def test_op2_autodesk_3(self):
         """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(MODEL_PATH, 'autodesk', 'nonlinear_beam.op2')
+        op2_filename = MODEL_PATH / 'autodesk' / 'nonlinear_beam.op2'
         log = get_logger(level='warning')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, write_f06=True,
@@ -2857,7 +2856,7 @@ class TestOP2(unittest.TestCase):
         Optistruct 2012 Tables : CASECC, GEOM1S, GEOM2S, GEOM3S, GEOM4S, EPTS, MPTS,
                                 OUGV1, OES1X
         """
-        op2_filename = os.path.join(MODEL_PATH, 'optistruct', 'hm14.op2')
+        op2_filename = MODEL_PATH / 'optistruct' / 'hm14.op2'
         make_geom = True
         write_bdf = False
         write_f06 = True
@@ -2916,7 +2915,7 @@ class TestOP2(unittest.TestCase):
         write_bdf = False
         write_f06 = False
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.op2')
+        op2_filename = MODEL_PATH / 'plate_py' / 'plate_py.op2'
         read_op2(op2_filename, log=log)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                 write_f06=write_f06,
@@ -2929,12 +2928,12 @@ class TestOP2(unittest.TestCase):
                 write_f06=write_f06,
                 log=log, stop_on_failure=True, quiet=True)
 
-        argv = ['test_op2', op2_filename, '-tgc', '--quiet', '--safe']
+        argv = ['test_op2', str(op2_filename), '-tgc', '--quiet', '--safe']
         test_op2(argv, show_args=False)
 
     def test_op2_good_sine_01(self):
         """tests freq_sine/good_sine.op2"""
-        op2_filename = os.path.join(MODEL_PATH, 'freq_sine', 'good_sine.op2')
+        op2_filename = MODEL_PATH / 'freq_sine' / 'good_sine.op2'
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -2974,9 +2973,8 @@ class TestOP2(unittest.TestCase):
 
     def test_op2_good_sine_02(self):
         """tests freq_sine/good_sine.op2"""
-        folder = os.path.abspath(os.path.join(MODEL_PATH))
-        bdf_filename = os.path.join(folder, 'freq_sine', 'good_sine.dat')
-        op2_filename = os.path.join(folder, 'freq_sine', 'good_sine.op2')
+        bdf_filename = MODEL_PATH / 'freq_sine' / 'good_sine.dat'
+        op2_filename = MODEL_PATH / 'freq_sine' / 'good_sine.op2'
         #make_geom = False
         #write_bdf = False
         #write_f06 = True
@@ -2997,9 +2995,8 @@ class TestOP2(unittest.TestCase):
 
     def _test_op2_bcell_01(self):
         """tests other/bcell9p0.op2"""
-        folder = os.path.abspath(os.path.join(MODEL_PATH))
-        bdf_filename = os.path.join(folder, 'other', 'bcell9p0.bdf')
-        op2_filename = os.path.join(folder, 'other', 'bcell9p0.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'bcell9p0.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'bcell9p0.op2'
         #make_geom = False
         #write_bdf = False
         #write_f06 = True
@@ -3033,8 +3030,8 @@ class TestOP2(unittest.TestCase):
 
     def test_cbar_orientation(self):
         """tests cbar_orientation.op2"""
-        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'cbar_orientation.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'cbar_orientation.op2')
+        bdf_filename = MODEL_PATH / 'unit' / 'bars' / 'cbar_orientation.bdf'
+        op2_filename = MODEL_PATH / 'unit' / 'bars' / 'cbar_orientation.op2'
         make_geom = True
         write_bdf = True
         write_f06 = True
@@ -3073,7 +3070,7 @@ class TestOP2(unittest.TestCase):
 
     def test_op2_cbush_01(self):
         """tests cbush/cbush.op2"""
-        op2_filename = os.path.join(MODEL_PATH, 'unit', 'cbush', 'cbush.op2')
+        op2_filename = MODEL_PATH / 'unit' / 'cbush' / 'cbush.op2'
         make_geom = True
         write_bdf = True
         write_f06 = True
@@ -3260,7 +3257,7 @@ class TestOP2(unittest.TestCase):
         log = get_logger(level='warning')
         folder = MODEL_PATH / 'random'
         op2_filename = folder / 'rms_tri_oesrmx1.op2'
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
         unused_op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
@@ -3290,7 +3287,7 @@ class TestOP2(unittest.TestCase):
     def test_ogs(self):
         """test grid_point_stresses"""
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'ogs', 'ogs.op2')
+        op2_filename = MODEL_PATH / 'ogs' / 'ogs.op2'
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
@@ -3305,8 +3302,8 @@ class TestOP2(unittest.TestCase):
     def test_ogstr(self):
         """test grid_point_strains"""
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'ogs', 'nx_ogstr.op2')
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2_filename = MODEL_PATH / 'ogs' / 'nx_ogstr.op2'
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -3325,7 +3322,7 @@ class TestOP2(unittest.TestCase):
         model = read_bdf(bdf_filename, debug=False, log=log)
         save_load_deck(model)
 
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -3339,9 +3336,9 @@ class TestOP2(unittest.TestCase):
     def test_ougv1pat(self):
         """test OUGV1PAT table"""
         log = get_logger(level='warning')
-        op2_filename1 = os.path.join(OP2_TEST_PATH, 'ougv1pat', 'winkel_2005r3_ougcord_basic.op2')
-        op2_filename2 = os.path.join(OP2_TEST_PATH, 'ougv1pat', 'winkel_2013.1_ougcord_basic.op2')
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2_filename1 = OP2_TEST_PATH / 'ougv1pat' / 'winkel_2005r3_ougcord_basic.op2'
+        op2_filename2 = OP2_TEST_PATH / 'ougv1pat' / 'winkel_2013.1_ougcord_basic.op2'
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -3363,8 +3360,8 @@ class TestOP2(unittest.TestCase):
     def test_msc_2014(self):
         """test MSC 2014 version"""
         log = get_logger(level='warning')
-        op2_filename1 = os.path.join(MODEL_PATH, 'bugs', 'msc_2014', 'sdof_crod_2014.op2')
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2_filename1 = MODEL_PATH / 'bugs' / 'msc_2014' / 'sdof_crod_2014.op2'
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -3378,8 +3375,8 @@ class TestOP2(unittest.TestCase):
     def test_msc_cfast(self):
         """test MSC 126-CFAST"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast.op2')
+        bdf_filename = MODEL_PATH / 'msc' / 'test_model_cfast.bdf'
+        op2_filename = MODEL_PATH / 'msc' / 'test_model_cfast.op2'
         model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
         bdf_filename_out = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast_out.bdf')
         model.write_bdf(bdf_filename_out)
@@ -3396,10 +3393,10 @@ class TestOP2(unittest.TestCase):
     def test_msc_dscmcol(self):
         """test MSC 126 DSCMCOL-matrix sensitivites"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_dscmcol', 'goland_final_test.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_dscmcol', 'goland_final_test.op2')
+        bdf_filename = MODEL_PATH / 'bugs' / 'msc_dscmcol' / 'goland_final_test.bdf'
+        op2_filename = MODEL_PATH / 'bugs' / 'msc_dscmcol' / 'goland_final_test.op2'
         model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
-        bdf_filename_out = os.path.join(MODEL_PATH, 'bugs', 'msc_dscmcol', 'test_goland_final_test.bdf')
+        bdf_filename_out = MODEL_PATH / 'bugs' / 'msc_dscmcol' / 'test_goland_final_test.bdf'
         model.write_bdf(bdf_filename_out)
         os.remove(bdf_filename_out)
 
@@ -3432,8 +3429,8 @@ class TestOP2(unittest.TestCase):
     def test_sol_106(self):
         """tests SOL 106 pandas bug"""
         log = get_logger(level='warning')
-        op2_filename1 = os.path.join(MODEL_PATH, 'bugs', 'sol_106_pandas', 'test.op2')
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2_filename1 = MODEL_PATH / 'bugs' / 'sol_106_pandas' / 'test.op2'
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         unused_op2 = read_op2_geom(op2_filename1, xref=False, log=log)
 
         WRITE_OP2 = False

@@ -1100,6 +1100,10 @@ class RBE2(RigidElementBase):
         self.cm = str(self.cm)
         assert isinstance(self.alpha, float_types), 'alpha=%r type=%s' % (self.alpha, type(self.alpha))
 
+        mixed_nodes = np.union1d(self.dependent_nodes, self.independent_nodes)
+        if len(mixed_nodes):
+            warnings.warn(f'RBE2 eid={self.eid}; mixed dependent/independent nodes = {mixed_nodes}')
+
     def convert_to_mpc(self, mpc_id: int) -> list[Any]:
         """
         .. math:: -A_i u_i + A_j u_j = 0
@@ -1400,6 +1404,10 @@ class RBE3(RigidElementBase):
         #print('Gmi =', self.Gmi)
         #print('Cmi =', self.Cmi)
         #print('Cmi =', self.Cmi)
+        mixed_nodes = np.union1d(self.dependent_nodes, self.independent_nodes)
+        if len(mixed_nodes):
+            warnings.warn(f'RBE3 eid={self.eid}; mixed dependent/independent nodes = {mixed_nodes}')
+
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):

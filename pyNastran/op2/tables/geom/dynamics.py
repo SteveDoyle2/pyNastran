@@ -824,6 +824,9 @@ class DYNAMICS(GeomCommon):
             ints    = (5, 0,   0,   10, 0,   0,   0,   0,   0,   1397965133,     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0)
             floats  = (5, 0.0, 0.0, 10, 0.0, 0.0, 0.0, 0.0, 0.0, 907333664768.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
+
+        EIGRL          1           450.0                                    MASS
+        EIGRL: sid=1 v1=0.0 v2=450.0 nd=0 msglvl=0 maxset=0 shfscl=0.0 flag1=0 flag2=1 norm=MASS alpha=0.0 nums=0
         """
         op2: OP2Geom = self.op2
         #op2.show_data(data[n:], types='ifs')
@@ -849,10 +852,10 @@ class DYNAMICS(GeomCommon):
             #large: sid=12 v1=0.0 v2=0.0 nd=1 msglvl=0 maxset=0 shfscl=0.0 flag1=0 flag2=-1 norm=b'MASS\x00\x00\x00\x00' alpha=0.0 nums=0
             #small: sid=12 v1=0.0 v2=0.0 nd=1 msglvl=0 maxset=0 shfscl=0.0 flag1=0 flag2=-1 norm=b'MASS\x00\x00\x00\x00' alpha=0.0 nums=538976288
 
-            #op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+            norm = norm.decode('latin1').rstrip('\x00 ')
+            #op2.log.warning(f'EIGRL: sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
                             #f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
 
-            norm = norm.decode('latin1').rstrip('\x00 ')
             #print('self._nastran_format =', self._nastran_format)
             if nums == 0: # and self._nastran_format == 'nx':
                 #op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
@@ -888,7 +891,7 @@ class DYNAMICS(GeomCommon):
             values = []
 
             assert flag1 in {-1, 0}, (flag1, flag2)
-            assert flag2 in {-1, 0}, (flag1, flag2)
+            assert flag2 in {-1, 0,  1}, (flag1, flag2)
             v1 = v1 if flag1 == 0 else None
             v2 = v2 if flag2 == 0 else None
 
