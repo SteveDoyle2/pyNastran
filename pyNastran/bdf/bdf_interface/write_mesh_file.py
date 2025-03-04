@@ -485,14 +485,14 @@ class WriteMeshs(WriteMesh):
         if self.points:
             write_bdfs_dict(bdf_files, self.points, size, is_double, is_long_ids)
 
-        if self._is_axis_symmetric:
-            if self.axic:
-                bdf_files[self.axic.ifile].write(self.axic.write_card(size, is_double))
-            if self.axif:
-                bdf_files[self.axif.ifile].write(self.axif.write_card(size, is_double))
-            write_bdfs_dict(bdf_files, self.ringaxs, size, is_double, is_long_ids)
-            write_bdfs_dict(bdf_files, self.ringfl, size, is_double, is_long_ids)
-            write_bdfs_dict(bdf_files, self.gridb, size, is_double, is_long_ids)
+        # if self._is_axis_symmetric:
+        #     if self.axic:
+        #         bdf_files[self.axic.ifile].write(self.axic.write_card(size, is_double))
+        #     if self.axif:
+        #         bdf_files[self.axif.ifile].write(self.axif.write_card(size, is_double))
+        #     write_bdfs_dict(bdf_files, self.ringaxs, size, is_double, is_long_ids)
+        #     write_bdfs_dict(bdf_files, self.ringfl, size, is_double, is_long_ids)
+        #     write_bdfs_dict(bdf_files, self.gridb, size, is_double, is_long_ids)
 
         self._write_grids_file(bdf_files, size=size, is_double=is_double)
         if self.seqgp:

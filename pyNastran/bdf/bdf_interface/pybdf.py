@@ -701,7 +701,9 @@ class BDFInputPy:
         if bdf_filename in self.active_filenames:
             active_filenames_str = '\n - '.join(self.active_filenames)
             msg = (f'bdf_filename={bdf_filename} is already active.\n'
-                   f'{current_filename_str}active_filenames:\n - {active_filenames_str}')
+                   f'{current_filename_str}\n'
+                   #f'referenced_file={referenced_file}\n'
+                   f'active_filenames:\n - {active_filenames_str}')
             log.error(msg)
             raise RuntimeError(msg)
         elif os.path.isdir(bdf_filename):

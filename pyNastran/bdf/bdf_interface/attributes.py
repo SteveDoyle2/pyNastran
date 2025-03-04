@@ -724,10 +724,10 @@ class BDFAttributes:
         self.zona = ZONA(self)
 
         # axisymmetric
-        self.axic: Optional[AXIC] = None
-        self.axif: Optional[AXIF] = None
-        self.ringfl: dict[int, RINGFL] = {}
-        self._is_axis_symmetric = False
+        # self.axic: Optional[AXIC] = None
+        # self.axif: Optional[AXIF] = None
+        # self.ringfl: dict[int, RINGFL] = {}
+        # self._is_axis_symmetric = False
 
         # cyclic
         self.cyax: Optional[CYAX] = None
@@ -827,25 +827,25 @@ class BDFAttributes:
         self.model_groups: dict[int, ModelGroup] = {}
         self._type_to_id_map: dict[int, list[Any]] = defaultdict(list)
         self._slot_to_type_map = {
-            'params' : ['PARAM'],
+            'params': ['PARAM'],
             'mdlprm': ['MDLPRM'],
-            'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
-            'points' : ['POINT'],
-            'ringaxs' : ['RINGAX', 'POINTAX'],
-            'ringfl' : ['RINGFL'],
-            'axic' : ['AXIC'],
-            'axif' : ['AXIF'],
-            'acmodl' : ['ACMODL'],
-            'grdset' : ['GRDSET'],
-            'gridb' : ['GRIDB'],
-            'seqgp' : ['SEQGP'],
-            'ao_element_flags' : ['CBARAO'],
+            'nodes': ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
+            'points': ['POINT'],
+            #'ringaxs': ['RINGAX', 'POINTAX'],
+            #'ringfl': ['RINGFL'],
+            # 'axic': ['AXIC'],
+            # 'axif': ['AXIF'],
+            'acmodl': ['ACMODL'],
+            'grdset': ['GRDSET'],
+            #'gridb': ['GRIDB'],
+            'seqgp': ['SEQGP'],
+            'ao_element_flags': ['CBARAO'],
             #'POINTAX', 'RINGAX',
 
             # CMASS4 lies in the QRG
-            'masses' : ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'],
+            'masses': ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'],
 
-            'elements' : [
+            'elements': [
                 'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                 # 'CELAS5',
                 'CBUSH', 'CBUSH1D', 'CBUSH2D',
@@ -874,15 +874,15 @@ class BDFAttributes:
                 # nastran95
                 'CTRSHL', #'CQUAD1'
             ],
-            'normals' : ['SNORM'],
-            'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1'],
-            'nsmadds' : ['NSMADD'],
-            'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON'],
-            'plotels' : ['PLOTEL', 'PLOTEL3', 'PLOTEL4'],
+            'normals': ['SNORM'],
+            'nsms': ['NSM', 'NSM1', 'NSML', 'NSML1'],
+            'nsmadds': ['NSMADD'],
+            'rigid_elements': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON'],
+            'plotels': ['PLOTEL', 'PLOTEL3', 'PLOTEL4'],
 
-            'properties_mass' : ['PMASS'],
+            'properties_mass': ['PMASS'],
             #'properties_acoustic' : ['PACABS'],
-            'properties' : [
+            'properties': [
                 #  acoustic
                 'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
 
@@ -903,41 +903,41 @@ class BDFAttributes:
                 'PIHEX', 'PCOMPS', 'PCOMPLS',
                 'PCONEAX',
             ],
-            'pdampt' : ['PDAMPT'],
-            'pelast' : ['PELAST'],
-            'pbusht' : ['PBUSHT'],
+            'pdampt': ['PDAMPT'],
+            'pelast': ['PELAST'],
+            'pbusht': ['PBUSHT'],
 
             # materials
-            'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
-                           'MAT3D', 'MATG',
-                           # acoustic
-                           'MATPOR'],
-            'hyperelastic_materials' : ['MATHE', 'MATHP'],
-            'creep_materials' : ['CREEP'],
-            'MATT1' : ['MATT1'],
-            'MATT2' : ['MATT2'],
-            'MATT3' : ['MATT3'],
-            'MATT4' : ['MATT4'], # thermal
-            'MATT5' : ['MATT5'], # thermal
-            'MATT8' : ['MATT8'],
-            'MATT9' : ['MATT9'],
-            'MATT11' : ['MATT11'],
-            'MATS1' : ['MATS1'],
+            'materials': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
+                          'MAT3D', 'MATG',
+                          # acoustic
+                          'MATPOR'],
+            'hyperelastic_materials': ['MATHE', 'MATHP'],
+            'creep_materials': ['CREEP'],
+            'MATT1': ['MATT1'],
+            'MATT2': ['MATT2'],
+            'MATT3': ['MATT3'],
+            'MATT4': ['MATT4'], # thermal
+            'MATT5': ['MATT5'], # thermal
+            'MATT8': ['MATT8'],
+            'MATT9': ['MATT9'],
+            'MATT11': ['MATT11'],
+            'MATS1': ['MATS1'],
             'MATDMG': ['MATDMG'],
-            'MATS3' : ['MATS3'],
-            'MATS8' : ['MATS8'],
-            'nxstrats' : ['NXSTRAT'],
+            'MATS3': ['MATS3'],
+            'MATS8': ['MATS8'],
+            'nxstrats': ['NXSTRAT'],
 
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
 
             # thermal materials
-            'thermal_materials' : ['MAT4', 'MAT5'],
+            'thermal_materials': ['MAT4', 'MAT5'],
 
             # spc/mpc constraints - TODO: is this correct?
-            'spcadds' : ['SPCADD'],
-            'spcs' : ['SPC', 'SPC1', 'SPCAX', 'GMSPC'],
-            'spcoffs' : ['SPCOFF', 'SPCOFF1'],
+            'spcadds': ['SPCADD'],
+            'spcs': ['SPC', 'SPC1', 'SPCAX', 'GMSPC'],
+            'spcoffs': ['SPCOFF', 'SPCOFF1'],
             'mpcadds' : ['MPCADD'],
             'mpcs' : ['MPC'],
             'suport' : ['SUPORT'],
@@ -1009,139 +1009,139 @@ class BDFAttributes:
             'panlsts' : ['PANLST1', 'PANLST2', 'PANLST3'],
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
-            'trims' : ['TRIM', 'TRIM2'],
-            'divergs' : ['DIVERG'],
+            'trims': ['TRIM', 'TRIM2'],
+            'divergs': ['DIVERG'],
 
             # coords
-            'coords' : ['CORD1R', 'CORD1C', 'CORD1S',
-                        'CORD2R', 'CORD2C', 'CORD2S',
-                        'GMCORD', 'ACOORD', 'CORD3G'],
+            'coords': ['CORD1R', 'CORD1C', 'CORD1S',
+                       'CORD2R', 'CORD2C', 'CORD2S',
+                       'GMCORD', 'ACOORD', 'CORD3G'],
             'matcid': ['MATCID'],
 
             # temperature cards
-            'tempds' : ['TEMPD'],
+            'tempds': ['TEMPD'],
 
-            'phbdys' : ['PHBDY'],
-            'convection_properties' : ['PCONV', 'PCONVM'],
+            'phbdys': ['PHBDY'],
+            'convection_properties': ['PCONV', 'PCONVM'],
 
             # stores thermal boundary conditions
             'bcs' : ['CONV', 'CONVM', 'RADBC', 'RADM', 'TEMPBC'],
 
 
             # dynamic cards
-            'dareas' : ['DAREA'],
-            'tics' : ['TIC'],
-            'dphases' : ['DPHASE'],
-            'nlparms' : ['NLPARM'],
-            'nlpcis' : ['NLPCI'],
-            'tsteps' : ['TSTEP'],
-            'tstepnls' : ['TSTEPNL', 'TSTEP1'],
-            'transfer_functions' : ['TF'],
-            'delays' : ['DELAY'],
-            'rotors' : ['ROTORG', 'ROTORD'],
+            'dareas': ['DAREA'],
+            'tics': ['TIC'],
+            'dphases': ['DPHASE'],
+            'nlparms': ['NLPARM'],
+            'nlpcis': ['NLPCI'],
+            'tsteps': ['TSTEP'],
+            'tstepnls': ['TSTEPNL', 'TSTEP1'],
+            'transfer_functions': ['TF'],
+            'delays': ['DELAY'],
+            'rotors': ['ROTORG', 'ROTORD'],
 
-            'frequencies' : ['FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5'],
+            'frequencies': ['FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5'],
 
             # direct matrix input cards
-            'dmig' : ['DMIG'],
-            'dmiax' : ['DMIAX'],
-            'dmij' : ['DMIJ'],
-            'dmiji' : ['DMIJI'],
-            'dmik' : ['DMIK'],
-            'dmi' : ['DMI'],
-            'dti' : ['DTI'],
+            'dmig': ['DMIG'],
+            'dmiax': ['DMIAX'],
+            'dmij': ['DMIJ'],
+            'dmiji': ['DMIJI'],
+            'dmik': ['DMIK'],
+            'dmi': ['DMI'],
+            'dti': ['DTI'],
 
             # optimzation
-            'dequations' : ['DEQATN'],
-            'dtable' : ['DTABLE'],
-            'dconstrs' : ['DCONSTR', 'DCONADD'],
-            'desvars' : ['DESVAR'],
-            'topvar' : ['TOPVAR'],
-            'ddvals' : ['DDVAL'],
-            'dlinks' : ['DLINK'],
-            'dresps' : ['DRESP1', 'DRESP2', 'DRESP3'],
-            'dvprels' : ['DVPREL1', 'DVPREL2'],
-            'dvmrels' : ['DVMREL1', 'DVMREL2'],
-            'dvcrels' : ['DVCREL1', 'DVCREL2'],
-            'dvgrids' : ['DVGRID'],
-            'doptprm' : ['DOPTPRM'],
-            'dscreen' : ['DSCREEN'],
+            'dequations': ['DEQATN'],
+            'dtable': ['DTABLE'],
+            'dconstrs': ['DCONSTR', 'DCONADD'],
+            'desvars': ['DESVAR'],
+            'topvar': ['TOPVAR'],
+            'ddvals': ['DDVAL'],
+            'dlinks': ['DLINK'],
+            'dresps': ['DRESP1', 'DRESP2', 'DRESP3'],
+            'dvprels': ['DVPREL1', 'DVPREL2'],
+            'dvmrels': ['DVMREL1', 'DVMREL2'],
+            'dvcrels': ['DVCREL1', 'DVCREL2'],
+            'dvgrids': ['DVGRID'],
+            'doptprm': ['DOPTPRM'],
+            'dscreen': ['DSCREEN'],
 
             # optimization - nx
-            'dmncon' : ['DMNCON'],
-            'dvtrels' : ['DVTREL1'],
-            'group' : ['GROUP'],
+            'dmncon': ['DMNCON'],
+            'dvtrels': ['DVTREL1'],
+            'group': ['GROUP'],
 
             # sets
-            'asets' : ['ASET', 'ASET1'],
-            'omits' : ['OMIT', 'OMIT1'],
-            'bsets' : ['BSET', 'BSET1'],
-            'qsets' : ['QSET', 'QSET1'],
-            'csets' : ['CSET', 'CSET1'],
-            'usets' : ['USET', 'USET1'],
-            'sets' : ['SET1', 'SET2', 'SET3'],
+            'asets': ['ASET', 'ASET1'],
+            'omits': ['OMIT', 'OMIT1'],
+            'bsets': ['BSET', 'BSET1'],
+            'qsets': ['QSET', 'QSET1'],
+            'csets': ['CSET', 'CSET1'],
+            'usets': ['USET', 'USET1'],
+            'sets': ['SET1', 'SET2', 'SET3'],
 
             # super-element sets
-            'se_bsets' : ['SEBSET', 'SEBSET1'],
-            'se_csets' : ['SECSET', 'SECSET1'],
-            'se_qsets' : ['SEQSET', 'SEQSET1'],
-            'se_usets' : ['SEUSET', 'SEUSET1'],
-            'se_sets' : ['SESET'],
-            'radset' : ['RADSET'],
-            'radcavs' : ['RADCAV', 'RADLST'],
-            'radmtx' : ['RADMTX'],
+            'se_bsets': ['SEBSET', 'SEBSET1'],
+            'se_csets': ['SECSET', 'SECSET1'],
+            'se_qsets': ['SEQSET', 'SEQSET1'],
+            'se_usets': ['SEUSET', 'SEUSET1'],
+            'se_sets': ['SESET'],
+            'radset': ['RADSET'],
+            'radcavs': ['RADCAV', 'RADLST'],
+            'radmtx': ['RADMTX'],
             # SEBSEP
 
             # acoustic
-            'acplnw' : ['ACPLNW'],
-            'amlreg' : ['AMLREG'],
-            'micpnt' : ['MICPNT'],
+            'acplnw': ['ACPLNW'],
+            'amlreg': ['AMLREG'],
+            'micpnt': ['MICPNT'],
 
             # parametric
-            'pset' : ['PSET'],
-            'pval' : ['PVAL'],
-            'gmcurv' : ['GMCURV'],
-            'gmsurf' : ['GMSURF'],
-            'feedge' : ['FEEDGE'],
-            'feface' : ['FEFACE'],
+            'pset': ['PSET'],
+            'pval': ['PVAL'],
+            'gmcurv': ['GMCURV'],
+            'gmsurf': ['GMSURF'],
+            'feedge': ['FEEDGE'],
+            'feface': ['FEFACE'],
 
             # tables
-            'tables' : [
+            'tables': [
                 'TABLEH1', 'TABLEHT',
                 'TABLES1', 'TABLEST',
-                ],
-            'tables_d' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLED5'],
-            'tables_m' : ['TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4'],
-            'tables_sdamping' : ['TABDMP1'],
-            'random_tables' : ['TABRND1', 'TABRNDG'],
+            ],
+            'tables_d': ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLED5'],
+            'tables_m': ['TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4'],
+            'tables_sdamping': ['TABDMP1'],
+            'random_tables': ['TABRND1', 'TABRNDG'],
 
             # initial conditions - sid (set ID)
             ##'TIC',  (in bdf_tables.py)
 
             # methods
-            'methods' : ['EIGB', 'EIGR', 'EIGRL'],
+            'methods': ['EIGB', 'EIGR', 'EIGRL'],
 
             # cMethods
-            'cMethods' : ['EIGC', 'EIGP'],
+            'cMethods': ['EIGC', 'EIGP'],
 
             # contact
-            'bcbodys' : ['BCBODY'],
-            'bcparas' : ['BCPARA'],
-            'bctparas' : ['BCTPARA'],
-            'bcrparas' : ['BCRPARA'],
-            'bctparms' : ['BCTPARM'],
+            'bcbodys': ['BCBODY'],
+            'bcparas': ['BCPARA'],
+            'bctparas': ['BCTPARA'],
+            'bcrparas': ['BCRPARA'],
+            'bctparms': ['BCTPARM'],
 
-            'bctadds' : ['BCTADD'],
-            'bctsets' : ['BCTSET'],
-            'bgadds' : ['BGADD'],
-            'bgsets' : ['BGSET'],
-            'bsurf' : ['BSURF'],
-            'bsurfs' : ['BSURFS'],
-            'bconp' : ['BCONP'],
-            'blseg' : ['BLSEG'],
-            'bfric' : ['BFRIC'],
-            'views' : ['VIEW'],
-            'view3ds' : ['VIEW3D'],
+            'bctadds': ['BCTADD'],
+            'bctsets': ['BCTSET'],
+            'bgadds': ['BGADD'],
+            'bgsets': ['BGSET'],
+            'bsurf': ['BSURF'],
+            'bsurfs': ['BSURFS'],
+            'bconp': ['BCONP'],
+            'blseg': ['BLSEG'],
+            'bfric': ['BFRIC'],
+            'views': ['VIEW'],
+            'view3ds': ['VIEW3D'],
 
             # nx bolts
             'bolt': ['BOLT'],
