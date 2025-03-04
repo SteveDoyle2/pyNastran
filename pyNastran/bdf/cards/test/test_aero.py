@@ -3012,6 +3012,7 @@ class TestAero(unittest.TestCase):
         build_trim_load_cases(model, trim_load_cases, aeqr=1.0)
 
 
+class TestAeroZona(unittest.TestCase):
     def test_zona_1(self):
         """zona explicit test"""
         log = SimpleLogger(level='error', encoding='utf-8')  # lots of zona errors
@@ -3058,7 +3059,7 @@ class TestAero(unittest.TestCase):
         model2.zona.convert_to_nastran()
 
     def test_zona_case1_in(self):
-        zona_filename = FLUTTER_DIR / 'case1' / 'ha145e.out'
+        zona_filename = FLUTTER_DIR / 'case1' / 'ha145e.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
 
     def test_zona_case2_in(self):
@@ -3066,26 +3067,26 @@ class TestAero(unittest.TestCase):
         model = read_bdf(zona_filename, xref=False, debug=True)
 
     def test_zona_case3_in(self):
-        zona_filename = FLUTTER_DIR / 'case3' / 'ha145fb.out'
+        zona_filename = FLUTTER_DIR / 'case3' / 'ha145fb.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
 
     def test_zona_case4_in(self):
-        zona_filename = FLUTTER_DIR / 'case4' / 'ha145g.out'
+        zona_filename = FLUTTER_DIR / 'case4' / 'ha145g.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
 
     def test_zona_case5_in(self):
-        zona_filename = FLUTTER_DIR / 'case5' / 'f16ma41.out'
+        zona_filename = FLUTTER_DIR / 'case5' / 'f16ma41.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
     def test_zona_case6_in_trim(self):
-        zona_filename = FLUTTER_DIR / 'case6' / 'agard_trim.out'
+        zona_filename = FLUTTER_DIR / 'case6' / 'agard_trim.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
 
     def test_zona_case6_in_tran(self):
-        zona_filename = FLUTTER_DIR / 'case6' / 'agardztran.out'
+        zona_filename = FLUTTER_DIR / 'case6' / 'agardztran.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
 
     def test_zona_case7_in(self):
-        zona_filename = FLUTTER_DIR / 'case7' / 'agardztaw.out'
+        zona_filename = FLUTTER_DIR / 'case7' / 'agardztaw.inp'
         model = read_bdf(zona_filename, xref=False, debug=True)
 
 def get_zona_model():

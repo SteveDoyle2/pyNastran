@@ -15,12 +15,14 @@ import numpy as np
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.utils.numpy_utils import integer_types
 
+from pyNastran.bdf.cards.bdf_tables import TABDMP1, read_table_lax
 from pyNastran.bdf.cards.aero.dynamic_loads import Aero
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
     filename_or_blank, string_or_blank, double_or_string, blank,
+    integer_or_string, integer_string_or_blank,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import (
     force_double_or_blank,
@@ -50,11 +52,14 @@ class ZONA:
         self.mkaeroz = {}
         self.trimvar = {}
         self.trimlnk = {}
+        self.attach = {}
+        self.plotaero = {} # PLOTMODE
+        self.plotmode = {} # PLOTMODE
         #: store PAFOIL7/PAFOIL8
         self.pafoil = {}
 
     @classmethod
-    def _init_from_self(cls, model):
+    def _init_from_self(cls, model: BDF):
         """helper method for dict_to_h5py"""
         return cls(model)
 
@@ -144,6 +149,8 @@ class ZONA:
             trimlnk._verify(xref)
         for pafoil in self.pafoil.values():
             pafoil._verify(xref)
+        for attach in self.attach.values():
+            attach._verify(xref)
 
     def validate(self):
         if self.model.nastran_format != 'zona':
@@ -158,6 +165,8 @@ class ZONA:
             trimlnk.validate()
         for pafoil in self.pafoil.values():
             pafoil.validate()
+        for attach in self.attach.values():
+            attach.validate()
 
     def PAFOIL(self, pid, msg=''):
         """gets a pafoil profile (PAFOIL7/PAFOIL8)"""
@@ -171,28 +180,41 @@ class ZONA:
         """updates for zona"""
         card_parser = self.model._card_parser
         add_methods = self.model._add_methods
-        card_parser['TRIM'] = (TRIM_ZONA, add_methods._add_trim_object)
-        card_parser['CAERO7'] = (CAERO7, add_methods._add_caero_object)
-        card_parser['AEROZ'] = (AEROZ, add_methods._add_aeros_object)
-        card_parser['AESURFZ'] = (AESURFZ, self._add_aesurfz_object)
-        card_parser['FLUTTER'] = (FLUTTER_ZONA, add_methods._add_flutter_object)
-        card_parser['SPLINE1'] = (SPLINE1_ZONA, add_methods._add_spline_object)
-        card_parser['SPLINE2'] = (SPLINE2_ZONA, add_methods._add_spline_object)
-        card_parser['SPLINE3'] = (SPLINE3_ZONA, add_methods._add_spline_object)
-        card_parser['PANLST1'] = (PANLST1, self._add_panlst_object)
-        card_parser['PANLST2'] = (PANLST2, self._add_panlst_object)
-        card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
-        card_parser['PAFOIL7'] = (PAFOIL7, self._add_pafoil_object)
-        card_parser['MKAEROZ'] = (MKAEROZ, self._add_mkaeroz_object)
-        card_parser['SEGMESH'] = (SEGMESH, add_methods._add_paero_object)
-        card_parser['BODY7'] = (BODY7, add_methods._add_caero_object)
-        card_parser['ACOORD'] = (ACOORD, add_methods._add_coord_object)
-        card_parser['TRIMVAR'] = (TRIMVAR, self._add_trimvar_object)
-        card_parser['TRIMLNK'] = (TRIMLNK, self._add_trimlnk_object)
+        card_parser2 = {
+            'TRIM': (TRIM_ZONA, add_methods._add_trim_object),
+            'TABDMP1': (TABDMP1_ZONA, add_methods._add_table_sdamping_object),
+            'CAERO7': (CAERO7, add_methods._add_caero_object),
+            'AEROZ': (AEROZ, add_methods._add_aeros_object),
+            'AESURFZ': (AESURFZ, self._add_aesurfz_object),
+            'FLUTTER': (FLUTTER_ZONA, add_methods._add_flutter_object),
+            'SPLINE1': (SPLINE1_ZONA, add_methods._add_spline_object),
+            'SPLINE2': (SPLINE2_ZONA, add_methods._add_spline_object),
+            'SPLINE3': (SPLINE3_ZONA, add_methods._add_spline_object),
+            'PANLST1': (PANLST1, self._add_panlst_object),
+            'PANLST2': (PANLST2, self._add_panlst_object),
+            'PANLST3': (PANLST3, self._add_panlst_object),
+            'PAFOIL7': (PAFOIL7, self._add_pafoil_object),
+            'MKAEROZ': (MKAEROZ, self._add_mkaeroz_object),
+            'SEGMESH': (SEGMESH, add_methods._add_paero_object),
+            'BODY7': (BODY7, add_methods._add_caero_object),
+            'ACOORD': (ACOORD, add_methods._add_coord_object),
+            'TRIMVAR': (TRIMVAR, self._add_trimvar_object),
+            'TRIMLNK': (TRIMLNK, self._add_trimlnk_object),
+            'ATTACH': (ATTACH, self._add_attach_object),
+            'PLTMODE': (PLTMODE, self._add_plotmode_object),
+            'PLTAERO': (PLTAERO, self._add_plotaero_object),
+            # card_name = PLTCP
+            # card_name = PLTFLUT
+            # card_name = PLTVG
+        }
+        card_parser.update(card_parser2)
         cards = [
-            'CAERO7', 'AEROZ', 'AESURFZ', 'PANLST1', 'PANLST2', 'PANLST3', 'PAFOIL7',
+            'CAERO7', 'AEROZ', 'AESURFZ', 'ATTACH',
+            'PANLST1', 'PANLST2', 'PANLST3', 'PAFOIL7',
             'SEGMESH', 'BODY7', 'ACOORD', 'MKAEROZ',
-            'TRIMVAR', 'TRIMLNK', 'FLUTTER']
+            'TRIMVAR', 'TRIMLNK', 'FLUTTER',
+            'PLTMODE', 'PLTAERO',
+        ]
         self.model.cards_to_read.update(set(cards))
 
     def _add_panlst_object(self, panlst: PANLST1 | PANLST2 | PANLST3) -> None:
@@ -244,6 +266,30 @@ class ZONA:
         self.trimlnk[key] = trimlnk
         self.model._type_to_id_map[trimlnk.type].append(key)
 
+    def _add_attach_object(self, attach: ATTACH) -> None:
+        """adds an ATTACH object"""
+        assert attach.attach_id not in self.attach
+        assert attach.attach_id > 0
+        key = attach.attach_id
+        self.attach[key] = attach
+        self.model._type_to_id_map[attach.type].append(key)
+
+
+    def _add_plotmode_object(self, plot: PLTMODE) -> None:
+        """adds an PLTMODE object"""
+        assert plot.set_id not in self.plotmode, str(plot)
+        assert plot.set_id > 0
+        key = plot.set_id
+        self.plotmode[key] = plot
+        self.model._type_to_id_map[plot.type].append(key)
+    def _add_plotaero_object(self, plot: PLTAERO) -> None:
+        """adds an PLTAERO object"""
+        assert plot.set_id not in self.plotaero, str(plot)
+        assert plot.set_id > 0
+        key = plot.set_id
+        self.plotaero[key] = plot
+        self.model._type_to_id_map[plot.type].append(key)
+
     def cross_reference(self):
         if self.model.nastran_format != 'zona':
             return
@@ -255,6 +301,8 @@ class ZONA:
             trimlnk.cross_reference(self.model)
         for unused_id, pafoil in self.pafoil.items():
             pafoil.cross_reference(self.model)
+        for unused_id, attach in self.attach.items():
+            attach.cross_reference(self.model)
         #for aeroz in self.aeroz.values():
             #aeroz.cross_reference(self.model)
 
@@ -279,6 +327,8 @@ class ZONA:
             bdf_file.write(trimlnk.write_card(size=size, is_double=is_double))
         for unused_id, pafoil in self.pafoil.items():
             bdf_file.write(pafoil.write_card(size=size, is_double=is_double))
+        for unused_id, attach in self.attach.items():
+            bdf_file.write(attach.write_card(size=size, is_double=is_double))
 
     def convert_to_nastran(self, save=True):
         """Converts a ZONA model to Nastran"""
@@ -482,7 +532,9 @@ class ACOORD(CoordBase):  # not done
         origin = [origin_x, origin_y, origin_z]
         delta = double(card, 5, 'delta (pitch)')
         theta = double(card, 6, 'theta (roll)')
-        assert len(card) <= 7, f'len(ACOORD card) = {len(card):d}\ncard={card}'
+        dunno = double_or_blank(card, 7, 'zero', default=0.0)
+        assert dunno == 0.0, blank(card, 7, 'unknown')
+        assert len(card) <= 8, f'len(ACOORD card) = {len(card):d}\ncard={card}'
         return ACOORD(cid, origin, delta, theta, comment=comment)
 
     def setup(self):
@@ -1184,6 +1236,59 @@ class MKAEROZ(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+class ATTACH(BaseCard):
+    """
+    Defines a rigid body connection between aerodynamic boxes and
+    structural finite element grid points.
+    """
+    type = 'ATTACH'
+    def __init__(self, attach_id: int, model: str,
+                 setk: int, refgrid: int, comment: str=''):
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+        self.attach_id = attach_id
+        self.model = model
+        self.setk = setk
+        self.refgrid = refgrid
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # ['ATTACH', '80', '80', '3023']
+        # ['ATTACH', '80', 'FFIN#1', '80', '3023']
+        attach_id = integer(card, 1, 'attach_id')
+        model = integer_string_or_blank(card, 2, 'model', default='NONE') # not used
+        if isinstance(model, integer_types):
+            setk = model
+            model = 'NONE'
+            refgrid = integer(card, 3, 'refgrid')
+        else:
+            setk = integer(card, 3, 'setk')  # PANLST1/2/3
+            refgrid = integer(card, 4, 'refgrid')
+        assert len(card) <= 5, f'len(ATTACH card) = {len(card):d}\ncard={card}'
+        return ATTACH(attach_id, model, setk, refgrid, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        return
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list[varies]
+          the fields that define the card
+
+        """
+        list_fields = ['ATTACH', self.attach_id, self.model, self.setk, self.refgrid]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
 class PANLST1(Spline):
     """
     Defines a set of aerodynamic boxes by the LABEL entry in CAERO7 or BODY7
@@ -1297,9 +1402,10 @@ class PANLST2(Spline):
     """
     type = 'PANLST2'
 
-    def __init__(self, eid, macro_id, box1, box2, comment=''):
+    def __init__(self, eid: int, macro_id: int, box1: int, box2: int,
+                 comment: str=''):
         """
-        Creates a PANLST1 card
+        Creates a PANLST2 card
 
         Parameters
         ----------
@@ -1322,9 +1428,9 @@ class PANLST2(Spline):
         self.caero_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a PANLST3 card from ``BDF.add_card(...)``
+        Adds a PANLST2 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -1335,7 +1441,6 @@ class PANLST2(Spline):
 
         """
         # SETID   MACROID BOX1    BOX2    ETC
-        print(card)
         eid = integer(card, 1, 'eid')
         macro_id = integer(card, 2, 'macro_id')
         box1 = integer(card, 3, 'box1')
@@ -1346,7 +1451,7 @@ class PANLST2(Spline):
         return PANLST2(eid, macro_id, box1, box2, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        msg = ', which is required by PANLST1 eid=%s' % self.eid
+        msg = ', which is required by PANLST2 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.macro_id, msg=msg)
         self.aero_element_ids = np.arange(self.box1, self.box2)
 
@@ -4198,6 +4303,166 @@ class SPLINE3_ZONA(Spline):
         """
         list_fields = ['SPLINE3', self.eid, self.model, self.cp, self.panlst, self.setg,
                        self.dz, self.eps]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class TABDMP1_ZONA(TABDMP1):
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a TABDMP1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        table_id = integer(card, 1, 'tid')
+        Type = string_or_blank(card, 2, 'Type', default='G')
+        x, y = read_table_lax(card, table_id, 'TABDMP1')
+        return TABDMP1(table_id, x, y, Type=Type, comment=comment)
+
+class PLTMODE(BaseCard):
+    """
+    """
+    type = 'PLTMODE'
+    def __init__(self, set_id: int, symmetry: str,
+                 mode: int, max_disp: float,
+                 format: str, filename: str,
+                 comment: str=''):
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+        self.set_id = set_id
+        self.mode = mode
+        self.symmetry = symmetry
+        self.max_disp = max_disp
+        self.format = format
+        self.filename = filename
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # remove None
+        fields = [field for field in card.card if field is not None]
+        card.card = fields
+        card.nfields = len(card.card)
+
+        #['PLTMODE', '27', 'ASYM', '7', '0.4', 'tecplot', 'MODE07.p', 'lt']
+        set_id = integer(card, 1, 'set_id')
+
+        symmetry = string(card, 2, 'sym/asym')
+        mode = integer(card, 3, 'mode')
+        max_disp = double(card, 4, 'max_disp')
+        assert symmetry in {'SYM', 'ASYM', 'ANTI'}, symmetry
+        # if max_disp is None:
+        #     ifield += 1
+        #     max_disp = double(card, ifield, 'max_disp')
+        #     ifield += 1
+        format = string(card, 5, 'format')
+        if format == 'TECP':
+            format = 'TECPLOT'
+        assert format in {'TECPLOT', 'FEMAP', 'NASTRAN', 'PATRAN'}, format
+
+        field6 = card.field(6)
+        field7 = card.field(7)
+        field6_str = '' if field6 is None else field6
+        field7_str = '' if field7 is None else field7
+        filename = (field6_str + field7_str).rstrip()
+        assert len(card) <= 8, f'len(PLTMODE card) = {len(card):d}\ncard={card}'
+        return PLTMODE(set_id, symmetry, mode, max_disp,
+                       format, filename, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        return
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list[varies]
+          the fields that define the card
+
+        """
+        list_fields = ['PLTMODE', self.set_id, self.mode, self.max_disp,
+                       self.format, self.filename]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+class PLTAERO(BaseCard):
+    """
+    """
+    type = 'PLTAERO'
+    def __init__(self, set_id: int, symmetry: str,
+                 mode: int, max_disp: float, filename: str,
+                 comment: str=''):
+        BaseCard.__init__(self)
+
+        if comment:
+            self.comment = comment
+        self.set_id = set_id
+        self.mode = mode
+        self.symmetry = symmetry
+        self.max_disp = max_disp
+        self.filename = filename
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        # remove None
+        #print(card)
+        #fields = [field for field in card.card if field is not None]
+        #card.card = fields
+        card.nfields = len(card.card)
+
+        #['PLTMODE', '27', 'ASYM', '7', '0.4', 'tecplot', 'MODE07.p', 'lt']
+        set_id = integer(card, 1, 'set_id')
+        id_flutter = string_or_blank(card, 2, 'id_flutter', default='')
+        assert id_flutter in {'YES', ''}, id_flutter
+
+        mode = integer_or_blank(card, 3, 'mode', default=1)
+        #ntime = integer(card, 4, 'ntime')
+        #max_disp = double(card, 4, 'max_disp')
+
+        format = string(card, 4, 'format')
+        if format == 'TECP':
+            format = 'TECPLOT'
+        assert format in {'TECPLOT', 'FEMAP', 'NASTRAN', 'PATRAN'}, format
+
+        field6 = card.field(5)
+        field7 = card.field(6)
+        field6_str = '' if field6 is None else field6
+        field7_str = '' if field7 is None else field7
+        filename = (field6_str + field7_str).rstrip()
+        assert len(card) <= 9, f'len(PLTAERO card) = {len(card):d}\ncard={card}'
+        max_disp = 0.
+        return PLTAERO(set_id, id_flutter, mode, max_disp, filename, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        return
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : list[varies]
+          the fields that define the card
+
+        """
+        list_fields = ['PLTAERO', self.set_id, self.mode, self.max_disp, self.filename]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

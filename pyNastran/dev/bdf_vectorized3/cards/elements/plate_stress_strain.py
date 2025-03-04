@@ -99,6 +99,10 @@ class PlateStressElement(Element):
                 #log.warning(prop.write(size=8))
         return thickness
 
+    def center_of_mass(self) -> np.ndarray:
+        """center_of_mass considers density"""
+        return self.centroid()
+
     def mass(self) -> np.ndarray:
         A = self.area()
         #t = self.total_thickness()

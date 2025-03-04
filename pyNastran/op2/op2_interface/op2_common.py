@@ -139,6 +139,8 @@ class OP2Common(Op2Codes, F06Writer):
                 self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
             else:
                 self.subcase = self.case_control_deck.subcases[self.isubcase]
+
+            # TODO: LOAD, RANDOM
             self.subcase.add_op2_data(self.data_code, word, self.log)
 
     def _device_code_(self) -> None:

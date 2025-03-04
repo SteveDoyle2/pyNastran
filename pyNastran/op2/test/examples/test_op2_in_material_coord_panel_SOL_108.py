@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import unittest
 import numpy as np
 from cpylog import get_logger
@@ -10,8 +11,8 @@ from pyNastran.op2.data_in_material_coord import (
     data_in_material_coord,
     get_eids_from_op2_vector, force_vectors, stress_vectors,
     strain_vectors)
-PKG_PATH = pyNastran.__path__[0]
-TEST_PATH = os.path.join(PKG_PATH, 'op2', 'test', 'examples', 'coord_transform')
+PKG_PATH = Path(pyNastran.__path__[0])
+TEST_PATH = PKG_PATH / 'op2' / 'test' / 'examples' / 'coord_transform'
 
 
 CASES = [

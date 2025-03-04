@@ -316,31 +316,51 @@ class BDFInputPy:
                     unused_fem, filename = header.split('=')
                     filename = filename.strip('"\'')
                     log.debug(f'reading {filename}')
-                    if filename.lower().endswith('.f06'):
-                        filename = os.path.splitext(filename)[0] + '.bdf'
-                    if not filename.endswith('.bdf'):
-                        raise RuntimeError(f'filename must end in bdf; {filename}')
-                    if not os.path.exists(filename):
-                        log.error(f'skipping {filename}')
+                    filename_lower = filename.lower()
+                    if filename_lower.endswith('.f06'):
+                        if os.path.exists(filename):
+                            log.debug(f'reading geom from f06: {filename}')
+                            from pyNastran.f06.parse_geom import parse_f06_geom
+                            out = parse_f06_geom(filename)
+                            (_system_lines, _executive_control_lines,
+                             _case_control_lines, bulk_data_lines2) = out
+                            is_bdf = False
+                            bulk_data_ilines2 = np.arange(len(bulk_data_ilines2))
+                            bulk_data_lines = bulk_data_lines2 + bulk_data_lines
+                            bulk_data_ilines = np.vstack([bulk_data_ilines2, bulk_data_ilines])
+                        else:
+                            log.debug(f'reading geom from bdf: {filename}')
+                            is_bdf = True
+                            filename = os.path.splitext(filename)[0] + '.bdf'
+                    else:
+                        if filename_lower.endswith(('.fre', '.mod')):
+                            continue
+                        is_bdf = True
+                        if not filename_lower.endswith('.bdf'):
+                            raise RuntimeError(f'filename must end in bdf; {filename}')
+
+                    if is_bdf:
+                        if not os.path.exists(filename):
+                            log.error(f'skipping {filename}; missing')
+                            continue
+                        _main_lines = self.get_main_lines(filename)
+                        make_ilines = bulk_data_ilines is not None
+                        all_lines, ilines = self.lines_to_deck_lines(_main_lines)
+                        if not make_ilines:
+                            ilines = None
+                        _out = _lines_to_decks(all_lines, ilines, punch, self.log,
+                                               keep_enddata=False,
+                                               consider_superelements=self.consider_superelements)
+                        (
+                            _system_lines, _executive_control_lines, _case_control_lines,
+                            bulk_data_lines2, bulk_data_ilines2,
+                            _superelement_lines, _superelement_ilines,
+                        ) = _out
+                        bulk_data_lines = bulk_data_lines2 + bulk_data_lines
+                        #print("bulk_data_ilines2 =", bulk_data_ilines2, bulk_data_ilines2.shape)
+                        #print("bulk_data_ilines =", bulk_data_ilines, bulk_data_ilines.shape)
+                        bulk_data_ilines = np.vstack([bulk_data_ilines2, bulk_data_ilines])
                         continue
-                    _main_lines = self.get_main_lines(filename)
-                    make_ilines = bulk_data_ilines is not None
-                    all_lines, ilines = self.lines_to_deck_lines(_main_lines)
-                    if not make_ilines:
-                        ilines = None
-                    _out = _lines_to_decks(all_lines, ilines, punch, self.log,
-                                           keep_enddata=False,
-                                           consider_superelements=self.consider_superelements)
-                    (
-                        _system_lines, _executive_control_lines, _case_control_lines,
-                        bulk_data_lines2, bulk_data_ilines2,
-                        _superelement_lines, _superelement_ilines,
-                    ) = _out
-                    bulk_data_lines = bulk_data_lines2 + bulk_data_lines
-                    #print("bulk_data_ilines2 =", bulk_data_ilines2, bulk_data_ilines2.shape)
-                    #print("bulk_data_ilines =", bulk_data_ilines, bulk_data_ilines.shape)
-                    bulk_data_ilines = np.vstack([bulk_data_ilines2, bulk_data_ilines])
-                    continue
                 elif header_upper.startswith('ASSIGN MATRIX'):
                     pass
                 elif header_upper.startswith('ASSIGN OUTPUT4'):

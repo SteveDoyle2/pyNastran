@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import unittest
 import numpy as np
 from cpylog import get_logger
@@ -13,8 +14,8 @@ from pyNastran.op2.data_in_material_coord import (
     get_eids_from_op2_vector, force_vectors, stress_vectors,
     strain_vectors, get_eid_to_theta_rad, get_eid_to_theta_rad2)
 
-PKG_PATH = pyNastran.__path__[0]
-TEST_PATH = os.path.join(PKG_PATH, 'op2', 'test', 'examples', 'coord_transform')
+PKG_PATH = Path(pyNastran.__path__[0])
+TEST_PATH = PKG_PATH / 'op2' / 'test' / 'examples' / 'coord_transform'
 
 
 CASES = [
@@ -69,10 +70,10 @@ class TestMaterialCoordReal(unittest.TestCase):
         log = get_logger(level='error')
         bdf = BDF(debug=False, log=log)
         op2 = OP2(debug=False, log=log, mode='msc')
-        basepath = os.path.join(TEST_PATH, 'coord_sys_new')
-        bdf_filename = os.path.join(basepath, 'coord_sys_new.bdf')
-        op2_filename = os.path.join(basepath, 'coord_sys_new.op2')
-        f06_filename = os.path.join(basepath, 'coord_sys_new.test.f06')
+        basepath = TEST_PATH / 'coord_sys_new'
+        bdf_filename = basepath / 'coord_sys_new.bdf'
+        op2_filename = basepath / 'coord_sys_new.op2'
+        f06_filename = basepath / 'coord_sys_new.test.f06'
         bdf.read_bdf(bdf_filename)
         op2.read_op2(op2_filename)
         log.level = 'debug'

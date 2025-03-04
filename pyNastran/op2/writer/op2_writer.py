@@ -183,7 +183,6 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     if 'MPT' not in skips:    # materials
         write_mpt(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'DYNAMIC' not in skips:    # dynamics
-        print('skips =', skips)
         write_dynamic(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
 
     if 'EDT' not in skips:  # aero
