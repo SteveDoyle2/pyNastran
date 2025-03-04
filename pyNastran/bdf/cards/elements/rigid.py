@@ -1100,7 +1100,7 @@ class RBE2(RigidElementBase):
         self.cm = str(self.cm)
         assert isinstance(self.alpha, float_types), 'alpha=%r type=%s' % (self.alpha, type(self.alpha))
 
-        mixed_nodes = np.union1d(self.dependent_nodes, self.independent_nodes)
+        mixed_nodes = np.intersect1d(self.dependent_nodes, self.independent_nodes)
         if len(mixed_nodes):
             warnings.warn(f'RBE2 eid={self.eid}; mixed dependent/independent nodes = {mixed_nodes}')
 
@@ -1404,7 +1404,7 @@ class RBE3(RigidElementBase):
         #print('Gmi =', self.Gmi)
         #print('Cmi =', self.Cmi)
         #print('Cmi =', self.Cmi)
-        mixed_nodes = np.union1d(self.dependent_nodes, self.independent_nodes)
+        mixed_nodes = np.intersect1d(self.dependent_nodes, self.independent_nodes)
         if len(mixed_nodes):
             warnings.warn(f'RBE3 eid={self.eid}; mixed dependent/independent nodes = {mixed_nodes}')
 

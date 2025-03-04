@@ -132,7 +132,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'monitor_points',
     ]
     skip_attrs = [
-        'model_groups',
+        'model_groups', 'allow_duplicate_element_rbe_mass',
         'active_filename', 'active_filenames', 'debug', # 'log',
         'reject_lines', 'is_strict_card_parser',
         'is_nx', 'is_msc', 'is_optistruct', 'is_zona', 'is_mystran', 'is_nasa95',
