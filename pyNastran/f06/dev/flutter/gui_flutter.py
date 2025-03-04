@@ -54,6 +54,8 @@ PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation'
               'zimmerman']
 UNITS_IN = ['english_in', 'english_kt', 'english_ft',
             'si', 'si_mm']
+MODE_SWITCH_METHODS = ['None', 'Frequency', 'Damping']
+
 UNITS_OUT = UNITS_IN
 
 #FONT_SIZE = 12
@@ -407,8 +409,12 @@ class FlutterGui(LoggableGui):
             ('plot_type', self.plot_type_pulldown, PLOT_TYPES),
             ('units_in', self.units_in_pulldown, UNITS_IN),
             ('units_out', self.units_out_pulldown, UNITS_OUT),
+            ('mode_switch_method', self.mode_switch_method_pulldown, MODE_SWITCH_METHODS),
         ]
         for key, pulldown_edit, values in pulldown_edits:
+            if key not in data:
+                #print(f'apply_settings: skipping key={key!r}')
+                continue
             value = data[key]
             index = values.index(value)
             pulldown_edit.setCurrentIndex(index)
@@ -503,6 +509,8 @@ class FlutterGui(LoggableGui):
             self._apply_settings(data)
         except Exception as e:
             self.log.error(f'failed to load {json_filename}\n{str(e)}')
+            print(traceback.format_exc())
+            #print(traceback.format_exception_only(e))
             #raise
             return
         self.log.info(f'finished loading {json_filename!r}')
@@ -709,6 +717,11 @@ class FlutterGui(LoggableGui):
         self.solution_type_pulldown = QComboBox(self)
         self.mode2_label = QLabel('Mode:', self)
         self.mode2_pulldown = QComboBox(self)
+
+        self.mode_switch_method_label = QLabel('Mode Switch Method:', self)
+        self.mode_switch_method_pulldown = QComboBox(self)
+        self.mode_switch_method_pulldown.addItems(MODE_SWITCH_METHODS)
+
         self.setup_modes()
         self.on_plot_type()
         self.on_enable_bdf()
@@ -793,6 +806,10 @@ class FlutterGui(LoggableGui):
         show_xaxis = not show_eigenvalue
         show_freq_tol = show_xaxis or show_root_locus
         show_crossing = show_xaxis
+        show_mode_switch = show_xaxis or show_root_locus
+
+        self.mode_switch_method_label.setVisible(show_mode_switch)
+        self.mode_switch_method_pulldown.setVisible(show_mode_switch)
 
         self.x_plot_type_label.setVisible(show_xaxis)
         self.x_plot_type_pulldown.setVisible(show_xaxis)
@@ -1035,6 +1052,10 @@ class FlutterGui(LoggableGui):
 
         grid.addWidget(self.point_removal_label, irow, 0)
         grid.addWidget(self.point_removal_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.mode_switch_method_label, irow, 0)
+        grid.addWidget(self.mode_switch_method_pulldown, irow, 1)
         irow += 1
 
         jrow = 0
@@ -1502,6 +1523,7 @@ class FlutterGui(LoggableGui):
                     damping_limit=damping_limit,
                     png_filename=png_filename,
                     point_removal=self.point_removal,
+                    mode_switch_method=self.mode_switch_method,
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
                 fig.canvas.draw()
@@ -1697,6 +1719,8 @@ class FlutterGui(LoggableGui):
 
         self.x_plot_type = self.x_plot_type_pulldown.currentText()
         self.plot_type = self.plot_type_pulldown.currentText()
+        self.mode_switch_method = self.mode_switch_method_pulldown.currentText()
+
         units_in = self.units_in_pulldown.currentText()
         units_out = self.units_out_pulldown.currentText()
         output_directory = self.output_directory_edit.text()
@@ -1773,6 +1797,7 @@ class FlutterGui(LoggableGui):
             'damping': damping,
             'eas_damping_lim': eas_damping_lim,
             'point_removal': point_removal,
+            'mode_switch_method': self.mode_switch_method,
         }
         self.units_in = units_in
         self.units_out = units_out

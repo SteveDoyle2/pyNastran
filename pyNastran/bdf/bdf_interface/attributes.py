@@ -472,10 +472,10 @@ class BDFAttributes:
         self.seqgp: Optional[SEQGP] = None
 
         ## stores RINGAX
-        self.ringaxs: dict[int, RINGAX] = {}
+        #self.ringaxs: dict[int, RINGAX] = {}  (removed)
 
         ## stores GRIDB
-        self.gridb: dict[int, GRIDB] = {}
+        #self.gridb: dict[int, GRIDB] = {}  (removed)
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)

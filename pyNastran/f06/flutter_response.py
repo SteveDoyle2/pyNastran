@@ -1570,6 +1570,27 @@ class FlutterResponse:
             plt.show()
         return fig
 
+    def _apply_mode_switch_method(self, mode_switch_method: str):
+        """
+        Performs mode switching
+
+        Parameters
+        ----------
+        mode_switch_method: str
+            None, Frequency, Damping
+
+        """
+        mode_switch_method = mode_switch_method.lower()
+        if mode_switch_method in ['', 'na', 'n/a', 'none']:
+            pass
+        elif mode_switch_method in ['frequency', 'freq']:
+            self.sort_modes_by_freq()
+        elif mode_switch_method in ['damping']:
+            self.sort_modes_by_damping()
+        else:
+            raise RuntimeError(f'mode_switch_method={mode_switch_method!r} '
+                               f'and must be [none, frequency, damping]')
+
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None,
                    modes=None,
                    plot_type: str='tas',
@@ -1588,7 +1609,7 @@ class FlutterResponse:
                    eas_range: Optional[tuple[float, float]]=None,
                    png_filename=None, show: bool=False,
                    point_removal: Optional[list[tuple[float, float]]]=None,
-                   ) -> tuple[plt.Figure, tuple[plt.Axes, plt.Axes]]:
+                   mode_switch_method: str='') -> tuple[plt.Figure, tuple[plt.Axes, plt.Axes]]:
         """
         Make a V-g and V-f plot
 
@@ -1627,9 +1648,12 @@ class FlutterResponse:
             range : tuple[float, float]
             points in the range will be removed; useful for deleting a single point based on EAS
             point_removal = [(400.0, 410.0),]
+        mode_switch_method: str
+            None, Frequency
 
         """
-        self.sort_modes_by_freq()
+        self._apply_mode_switch_method(mode_switch_method)
+
         #assert vl_limit is None or isinstance(vl_limit, float_types), vl_limit
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
         #self.fix()
@@ -1789,8 +1813,17 @@ class FlutterResponse:
             fig, show, png_filename, clear, close)
         return fig, (damp_axes, freq_axes)
 
-    def sort_modes_by_freq(self,
-                           debug: bool=True):
+    def sort_modes_by_damping(self, debug: bool=True):
+        index = self._result_by_mode(0, -1)
+        nresult = self.results.shape[2]
+        for ivel in index:
+            #freqs = self.results[:, ivel, self.idamping] * self.results[:, ivel, self.ifreq]
+            damping = self.results[:, ivel, self.idamping]
+            idamp_sort = np.argsort(damping)
+            for ires in range(nresult):
+                self.results[:, ivel, ires] = self.results[idamp_sort, ivel, ires]
+
+    def sort_modes_by_freq(self, debug: bool=True):
         index = self._result_by_mode(0, -1)
         nresult = self.results.shape[2]
         for ivel in index:
@@ -1803,8 +1836,6 @@ class FlutterResponse:
 
     def polyfit_modes(self):
         modes, imodes = _get_modes_imodes(self.modes, modes)
-
-
         #------------------------------------------------------
         # setup a linear extrapolation of the first 2 points
         # so we can bump the degree

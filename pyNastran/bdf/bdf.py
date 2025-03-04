@@ -2400,7 +2400,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'EPOINT': (EPOINTs, add_methods._add_epoint_object),
             'POINT': (POINT, add_methods._add_point_object),
             'SEQGP': (SEQGP, add_methods._add_seqgp_object),
-            #'GRIDB': (GRIDB, add_methods._add_gridb_object),
+            #'GRIDB': (GRIDB, add_methods._add_gridb_object),  # (removed)
 
             'PARAM': (PARAM, add_methods._add_param_object),
             'MDLPRM': (MDLPRM, add_methods._add_mdlprm_object),
