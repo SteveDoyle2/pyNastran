@@ -1623,6 +1623,11 @@ class FlutterResponse:
         filter_damping: bool; default=False
             filter crossings entirely outside the plot range
             useful for cleaning up the legend
+        point_removal : list[range]
+            range : tuple[float, float]
+            points in the range will be removed; useful for deleting a single point based on EAS
+            point_removal = [(400.0, 410.0),]
+
         """
         self.sort_modes_by_freq()
         #assert vl_limit is None or isinstance(vl_limit, float_types), vl_limit
@@ -2858,6 +2863,7 @@ def remove_excluded_points(vel: np.ndarray, damping: np.ndarray, freq: np.ndarra
     point_removal : list[range]
         range : tuple[float, float]
         points in the range will be removed; useful for deleting a single point based on EAS
+        point_removal = [(400.0, 410.0),]
 
     """
     if point_removal is None or len(point_removal) == 0:
@@ -2865,7 +2871,15 @@ def remove_excluded_points(vel: np.ndarray, damping: np.ndarray, freq: np.ndarra
 
     istack_list = []
     for (a, b) in point_removal:
-        i = ((vel <= a) | (b <= vel))
+
+        if a > 0 and b > 0:
+            i = ((vel <= a) | (b <= vel))
+        elif a > 0:
+            i = (vel <= a)
+        elif b > 0:
+            i = (b <= vel)
+        else:
+            continue
         istack_list.append(i)
     istack = np.column_stack(istack_list)
     islice = np.all(istack, axis=1)

@@ -372,6 +372,10 @@ class FlutterGui(LoggableGui):
             line_edit_min.setText(value0)
             line_edit_max.setText(value1)
 
+        point_removal = data.get('point_removal', [])
+        point_removal_str = get_point_removal_str(point_removal)
+        self.point_removal_edit.setText(point_removal_str)
+
         line_edits = [
             ('recent_files', 0, self.f06_filename_edit),
             ('freq_tol', -1, self.freq_tol_edit),
@@ -684,7 +688,7 @@ class FlutterGui(LoggableGui):
         self.eas_damping_lim_edit_max.setToolTip('Defines the flutter crossing range')
 
         self.point_removal_label = QLabel('Point Removal:', self)
-        self.point_removal_edit = QLineEdit('400:410,450:500', self)
+        self.point_removal_edit = QLineEdit('', self)
         self.point_removal_edit.setToolTip('Remove bad points from a mode; "400:410,450:500"')
 
         self.mode_label = QLabel('Mode:', self)
@@ -1601,19 +1605,7 @@ class FlutterGui(LoggableGui):
 
         # 595:596,600:601
         point_removal_str = self.point_removal_edit.text().strip()
-        point_removal = []
-        try:
-            point_removal_list = point_removal_str.split(',')
-            for point in point_removal_list:
-                a_str, b_str = point.split(':')
-                a = float(a_str)
-                b = float(b_str)
-                point_float = (a, b)
-                point_removal.append(point_float)
-        except Exception as e:
-            self.log.error(str(e))
-            # print(traceback.print_tb(e))
-            print(traceback.print_exception(e))
+        point_removal = point_removal_str_to_point_removal(point_removal_str, self.log)
 
         if is_passed_vl and vl is None:
             vl = -1.0
@@ -1832,6 +1824,59 @@ class FlutterGui(LoggableGui):
         print(f'WARNING: {msg}')
     def log_error(self, msg: str) -> None:
         print(f'ERROR:   {msg}')
+
+
+def get_point_removal_str(point_removal: list[tuple[float, float]]):
+    """
+    >>> point_removal = [[400.0, 410.0], [450.0, 500.0]]
+    point_removal_str = get_point_removal_str(point_removal)
+    >>> point_removal_str
+    '400:410,450:500'
+
+    >>> point_removal = [[450.0, -1.0]]
+    point_removal_str = get_point_removal_str(point_removal)
+    >>> point_removal_str
+    '450:'
+
+    >>> point_removal = [[-1.0, 500.0]]
+    point_removal_str = get_point_removal_str(point_removal)
+    >>> point_removal_str
+    ':500'
+    """
+    out = []
+    for mini, maxi in point_removal:
+        if mini > 0 and maxi > 0:
+            outi = f'{mini:g}:{maxi:g}'
+        elif mini > 0:
+            outi = f'{mini:g}:'
+        elif maxi > 0:
+            outi = f'{maxi:g}:'
+        else:
+            continue
+        out.append(outi)
+    point_removal_str = ','.join(out)
+    return point_removal_str
+
+
+def point_removal_str_to_point_removal(point_removal_str: str,
+                                       log: SimpleLogger) -> list[tuple[float, float]]:
+    point_removal = []
+    try:
+        point_removal_list = point_removal_str.split(',')
+        for ipoint, point in enumerate(point_removal_list):
+            sline = point.split(':')
+            assert len(sline) == 2, f'point_removal[{ipoint}]={sline}; point_removal={str(point_removal_list)}'
+            a_str = sline[0].strip()
+            b_str = sline[1].strip()
+            a = float(a_str) if a_str != '' else -1.0
+            b = float(b_str) if b_str != '' else -1.0
+            point_float = (a, b)
+            point_removal.append(point_float)
+    except Exception as e:
+        log.error(str(e))
+        # print(traceback.print_tb(e))
+        print(traceback.print_exception(e))
+    return point_removal
 
 def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
     items = list_widget.selectedItems()
