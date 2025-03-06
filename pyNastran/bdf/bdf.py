@@ -588,6 +588,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         assert debug in [True, False, None], f'debug={debug!r}'
         self.echo = False
         self.read_includes = True
+        self.skip_includes = []  # TODO: unused
         self._remove_disabled_cards = False
         self.use_new_deck_parser = True
 
@@ -999,6 +1000,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         self._nastran_format = mode
         map_version(self, mode)
+
+    def set_allow_duplicates(self, duplicate_cards: set[str]):
+        self.log.warning('allowing card overwrites')
+        self.allow_overwrites_set = duplicate_cards
+        self._make_card_parser()
+    def read_include_bdf(self, include_bdf: str):
+        raise NotImplementedError('read_include_bdf')
 
     def __getstate__(self):
         """clears out a few variables in order to pickle the object"""

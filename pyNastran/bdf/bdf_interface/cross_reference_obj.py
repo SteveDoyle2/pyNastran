@@ -1027,28 +1027,23 @@ def _check_caero_subpanel_overlap(model: BDF) -> int:
     # we don't need to check the ncaeros=1 case
     i = 0
     nsubpanels = 0
+    #print('eid, nsubpanelsi')
     min_maxs = np.zeros((ncaeros, 2), dtype='int32')
     for eid, caero in sorted(model.caeros.items()):
         min_maxs[i, :] = caero.min_max_eid
         npointsi, nsubpanelsi = caero.get_npanel_points_elements()
         nsubpanels += nsubpanelsi
         #print(caero)
-        #print(f'nsubpanelsi = {nsubpanelsi}')
-        print(eid, nsubpanelsi)
+        #print(eid, nsubpanelsi)
         i += 1
     nsubpanels_per_caeros = nsubpanels
     mins = min_maxs[:, 0]
     maxs = min_maxs[:, 1]
     delta = maxs - mins
-    print('delta:')
-    #for d in delta:
-        #print(d)
-    print(f'delta = {delta}')
-    #print(min_maxs)
+    #print('delta:')
+    #print(f'delta = {delta}')
     assert delta.min() > 0, delta
-    #asdf
     nsubpanels = delta.sum()
-    return
     assert nsubpanels == nsubpanels_per_caeros, f'nsubpanels={nsubpanels} != nsubpanels_per_caeros={nsubpanels_per_caeros}'
 
     isort = np.argsort(min_maxs.ravel())

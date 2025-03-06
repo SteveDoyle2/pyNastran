@@ -40,7 +40,8 @@ dict_cards = [
     'dareas',
     'dmig', 'dmiji', 'dmij', 'dmik', 'dmi', 'dmiax', 'dti',
     'dphases', 'delays',
-    'epoints', 'gridb',
+    'epoints',
+    'gridb',  # removed
     'nlparms', 'nlpcis',
     'normals',
     'nxstrats',

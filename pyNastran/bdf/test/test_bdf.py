@@ -449,9 +449,9 @@ def run_and_compare_fems(
         fem1.log.warning('using lax card parser')
         fem1.is_strict_card_parser = False
     if allow_duplicates:
-        fem1.log.warning('allowing card overwrites')
-        fem1.allow_overwrites_set = {'GRID', 'CONM2'}
-        fem1._make_card_parser()
+        duplicate_cards = {'GRID', 'CONM2'}
+        fem1.set_allow_duplicates(duplicate_cards)
+
     #fem1.use_new_deck_parser = True
     if version:
         map_version(fem1, version)
@@ -2261,7 +2261,7 @@ def get_test_bdf_usage_args_examples(encoding):
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
-        '              [--skip_loads] [--skip_mass]\n'
+        '              [--skip_loads] [--skip_mass] [--lax] [--duplicate]\n'
     )
     usage = (
         "Usage:\n"
@@ -2291,6 +2291,8 @@ def get_test_bdf_usage_args_examples(encoding):
         '  -c, --check    disables BDF checks.  Checks run the methods on \n'
         '                 every element/property to test them.  May fails if a \n'
         '                 card is fully not supported (default=False)\n'
+        '  --lax          dont be strict on float parsing\n'
+        '  --duplicate    overwrite duplicate GRIDs\n'
         '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
         #'  --loads        Disables forces/moments summation for the different subcases (default=True)\n'

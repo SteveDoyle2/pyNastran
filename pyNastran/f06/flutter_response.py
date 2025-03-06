@@ -594,7 +594,7 @@ class FlutterResponse:
                                                   alt_units='ft', nmax=20)
                 except Exception:
                     raise RuntimeError(f'failed to find altitude for density[{idensity}]='
-                                       f'{rho.ravel()[idensity]:g}')
+                                       f'{rho.ravel()[idensity]:g}; density_units_in={density_units_in!r}')
                 alt_ft.append(alt_fti)
             alt = np.array(alt_ft, dtype=rho.dtype).reshape(vel.shape) * ft_to_alt_unit
         else:

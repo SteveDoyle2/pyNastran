@@ -928,7 +928,7 @@ class WriteMesh(BDFAttributes):
             for unused_point_id, point in sorted(self.points.items()):
                 bdf_file.write(point.write_card(size, is_double))
 
-        # if self._is_axis_symmetric:
+        # if self._is_axis_symmetric:  # removed
         #     if self.axic:
         #         bdf_file.write(self.axic.write_card(size, is_double))
         #     if self.axif:

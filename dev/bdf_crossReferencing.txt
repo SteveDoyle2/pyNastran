@@ -447,33 +447,33 @@ PARAM   (???)
 -----------------------------------------------
 
 ----Axial Nodes----:
-RINGAX (not integrated)
-POINTAX
+RINGAX  (removed)
+POINTAX (removed)
 
 ----Axial Elements----:
 CTRIAX  (done)
 CTRIAX6 (done)
 CQUADX  (done)
-RINGAX
+RINGAX (removed)
 
 ----Axial Cone Elements/Properties----:
-CCONEAX
-PCONEAX
+CCONEAX (removed)
+PCONEAX (removed)
 
 ----Axial Loads----:
-FORCEAX
-PLOADX1  (no)
+FORCEAX (removed)
+PLOADX1  (done)
 MOMAX
-TEMPAX
-PRESAX
+TEMPAX (removed)
+PRESAX (removed)
 
 ----Axial Constraints----:
 MPCAX
-SPCAX   (???)
+SPCAX   (removed)
 SUPAX
 
 ----Axial Other----:
-AXIC
+AXIC   (removed)
 OMITAX
 SECTAX
 

@@ -831,13 +831,13 @@ class BDFAttributes:
             'mdlprm': ['MDLPRM'],
             'nodes': ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
             'points': ['POINT'],
-            #'ringaxs': ['RINGAX', 'POINTAX'],
-            #'ringfl': ['RINGFL'],
-            # 'axic': ['AXIC'],
-            # 'axif': ['AXIF'],
+            #'ringaxs': ['RINGAX', 'POINTAX'],  # removed
+            #'ringfl': ['RINGFL'],  # removed
+            # 'axic': ['AXIC'],  # removed
+            # 'axif': ['AXIF'],  # removed
             'acmodl': ['ACMODL'],
             'grdset': ['GRDSET'],
-            #'gridb': ['GRIDB'],
+            #'gridb': ['GRIDB'],  # removed
             'seqgp': ['SEQGP'],
             'ao_element_flags': ['CBARAO'],
             #'POINTAX', 'RINGAX',
@@ -851,7 +851,7 @@ class BDFAttributes:
                 'CBUSH', 'CBUSH1D', 'CBUSH2D',
 
                 'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                'CFAST', 'CWELD','GENEL',
+                'CFAST', 'CWELD', 'GENEL',
 
                 'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
                 'CTRIA3', 'CTRIA6', 'CTRIAR',
@@ -917,8 +917,8 @@ class BDFAttributes:
             'MATT1': ['MATT1'],
             'MATT2': ['MATT2'],
             'MATT3': ['MATT3'],
-            'MATT4': ['MATT4'], # thermal
-            'MATT5': ['MATT5'], # thermal
+            'MATT4': ['MATT4'],  # thermal
+            'MATT5': ['MATT5'],  # thermal
             'MATT8': ['MATT8'],
             'MATT9': ['MATT9'],
             'MATT11': ['MATT11'],
@@ -936,7 +936,7 @@ class BDFAttributes:
 
             # spc/mpc constraints - TODO: is this correct?
             'spcadds': ['SPCADD'],
-            'spcs': ['SPC', 'SPC1', 'SPCAX', 'GMSPC'],
+            'spcs': ['SPC', 'SPC1', 'GMSPC'],  # 'SPCAX' removed
             'spcoffs': ['SPCOFF', 'SPCOFF1'],
             'mpcadds' : ['MPCADD'],
             'mpcs' : ['MPC'],

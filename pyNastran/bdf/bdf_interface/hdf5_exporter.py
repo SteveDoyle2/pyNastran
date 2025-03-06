@@ -74,7 +74,8 @@ dict_int_obj_attrs: list[str] = [
     'dmig', 'dmiji', 'dmij', 'dmik', 'dmi', 'dmiax',
     'dti',
     'dphases', 'delays',
-    'epoints', 'gridb',
+    'epoints',
+    #'gridb',  (removed)
     'nlparms', 'nlpcis',
     'normals',
     'nxstrats',
@@ -98,7 +99,7 @@ dict_int_obj_attrs: list[str] = [
     'release',
 
     # axisymmetric
-    'ringaxs', 'ringfl',
+    #'ringaxs', 'ringfl', # removed
 
     # parametric
     'pset', 'gmcurv', 'feedge', 'feface', 'gmsurf',
@@ -109,7 +110,9 @@ dict_int_obj_attrs: list[str] = [
 
 scalar_obj_keys: list[str] = [
     # required----
-    'aero', 'aeros', 'axic', 'axif', 'cyax', 'baror', 'beamor',
+    'aero', 'aeros',
+    #'axic', 'axif',  # removed
+    'cyax', 'baror', 'beamor',
     'acmodl', 'modtrak',
     'doptprm',
     'dtable', 'grdset', 'radset', 'seqgp',

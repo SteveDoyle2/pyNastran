@@ -92,15 +92,48 @@ def make_flutter_response(f06_filename: PathLike,
     data = {}
     matrices = {}
 
+    is_heavy_debug = False
+    imax = 1000
+
+    break_list = [
+        'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O',
+        'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O',
+        'C A S E    C O N T R O L    E C H O',
+        'M O D E L   S U M M A R Y',
+        'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y',
+        # 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R',
+    ]
+
     log.info('f06_filename = %r' % f06_filename)
+    read_line_flag = True
     with open(f06_filename, 'r') as f06_file:
         while 1:
             nblank = 0
-            line = f06_file.readline()
-            iline += 1
-            #log.debug(f'A: line[{iline:d}] = {line!r}')
-            # if iline > 930:
-            #     asdf
+            if read_line_flag:
+                line = f06_file.readline()
+                iline += 1
+            else:
+                assert read_line_flag is False, read_line_flag
+                if is_heavy_debug:  # pragma: no cover
+                    log.debug(f'skipping iline={iline} line={line.rstrip()!r}')
+                read_line_flag = True
+
+            if is_heavy_debug:  # pragma: no cover
+                log.debug(f'A: line[{iline:d}] = {line!r}')
+                if iline > imax:
+                    raise RuntimeError(f'i > imax; {iline}')
+
+            for break_line in break_list:
+                if break_line in line:
+                    if is_heavy_debug:  # pragma: no cover
+                        log.debug(f'found break line={line}')
+                    while 'PAGE' not in line:
+                        line = f06_file.readline(); iline += 1
+                        continue
+                    if is_heavy_debug:  # pragma: no cover
+                        log.debug('end of page*')
+                    read_line_flag = False
+                    continue
 
             if 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line:
                 print(f'line = {line}')
@@ -126,8 +159,20 @@ def make_flutter_response(f06_filename: PathLike,
                    'FLUTTER  SUMMARY' not in line and
                    'EIGENVECTOR FROM THE' not in line):
                 line = f06_file.readline()
+
+                for word in break_list:
+                    if word in line:
+                        read_line_flag = False
+                        break
+                if not read_line_flag:
+                    if is_heavy_debug:  # pragma: no cover
+                        log.debug(f'per read_line_flag=False, breaking on iline={iline:d} {line.rstrip()!r}')
+                    break
+
                 iline += 1
-                #print(f'i={iline} {line.rstrip()}')
+                if is_heavy_debug:  # pragma: no cover
+                    log.debug(f'C i={iline} {line.rstrip()}')
+
                 if not line:
                     nblank += 1
                 else:
@@ -137,10 +182,16 @@ def make_flutter_response(f06_filename: PathLike,
                     break
             if nblank == 100:
                 break
+            if read_line_flag is False:
+                if is_heavy_debug:  # pragma: no cover
+                    log.debug('continue on read_line_flag=False')
+                continue
+
             #if 'FLUTTER  SUMMARY' in line:
                 #found_flutter_summary = True
 
-            #log.debug(f'B: line[{iline}] = {line!r}')
+            if is_heavy_debug:  # pragma: no cover
+                log.debug(f'B: line[{iline}] = {line!r}')
             if 'SUBCASE' in line[109:]:
                 #log.debug(f'B1: subcase')
                 ieigenvector = -1
@@ -183,18 +234,24 @@ def make_flutter_response(f06_filename: PathLike,
                 iline, line, opgwg = _read_opgwg(f06_file, iline, line)
                 data['opgwg'] = opgwg
 
-            #log.debug(f'C: line[{iline:d}]_FSa = {line}')
+            if is_heavy_debug:  # pragma: no cover
+                log.debug(f'C: line[{iline:d}]_FSa = {line}')
             last_line = None
             while 'FLUTTER  SUMMARY' not in line:
-                #log.debug('i=%s %s' % (iline, line.strip().replace('   ', ' ')))
+                if is_heavy_debug:   # pragma: no cover
+                    log.debug('i=%s %s' % (iline, line.strip().replace('   ', ' ')))
 
                 iline, line, ieigenvector, methodi = _check_for_eigenvector(
                     f06_file, iline, line, eigr_eigi_velocity_list,
                     matrices, eigenvectors, ieigenvector,
                     load_eigenvalues, log)
 
-                #short_line = line.strip().replace('   ', ' ')
-                #log.debug(f'i={iline} {short_line!r}')
+                short_line = line.strip().replace('   ', ' ')
+                if is_heavy_debug:  # pragma: no cover
+                    log.debug(f'i={iline} {short_line!r}')
+                    if iline > imax:
+                        raise RuntimeError(f'iline > imax; {iline:d}')
+
                 last_line = line
                 line = f06_file.readline()
 
@@ -206,7 +263,7 @@ def make_flutter_response(f06_filename: PathLike,
                     nblank += 1
                 if nblank == 100:
                     print(line.strip())
-                    log.warning('breaking on nblank=100')
+                    log.warning(f'breaking on nblank=100; iline={iline:d}')
                     break
 
             if '* * * END OF JOB * * *' in line:
