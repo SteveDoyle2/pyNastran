@@ -430,6 +430,7 @@ class BDFInputPy:
             the [ifile, iline] pair for each line in the file
 
         """
+        replace_includes = self.replace_includes
         nlines = len(lines)
         #bdf_filenames = [self.bdf_filename]
 
@@ -463,10 +464,17 @@ class BDFInputPy:
                 if self.read_includes:
                     bdf_filename2 = get_include_filename(
                         include_lines,
-                        source_filename=source_filename,
                         include_dirs=include_dirs,
+                        replace_includes=replace_includes,
+                        source_filename=source_filename,
                         write_env_on_error=False,
                     )
+                    if bdf_filename2 == '':
+                        # replace filename
+                        self.log.warning(f'dropping {include_lines}')
+                        lines[i] = f'$ removed {include_lines}\n'
+                        i += 1
+                        continue
 
                     # these are the lines associated with the 1st/2nd include file found
                     self.include_lines[jfile].append((include_lines, bdf_filename2))
@@ -524,7 +532,7 @@ class BDFInputPy:
         try:
             self._open_file_checks(bdf_filename2)
         except IOError:
-            crash_name = os.path.join(self.include_dir, 'pyNastran_crash.bdf')
+            crash_name = os.path.join(self.include_dir, 'pyNastran_include_error.bdf')
             _dump_file(crash_name, lines, j, self.encoding)
             msg = 'There was an invalid filename found while parsing.\n'
             msg += 'Check the end of %r\n' % crash_name

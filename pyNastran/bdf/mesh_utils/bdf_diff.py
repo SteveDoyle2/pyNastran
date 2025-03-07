@@ -6,7 +6,9 @@ from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import read_bdf, BDF, CaseControlDeck, Subcase
 
 scalar_obj_keys: list[str] = [
-    'aero', 'aeros', 'axic', 'axif', 'cyax', 'baror', 'beamor',
+    'aero', 'aeros',
+    #'axic', 'axif', # removed
+    'cyax', 'baror', 'beamor',
     'acmodl', 'modtrak',
     'doptprm',
     'dtable', 'grdset', 'radset', 'seqgp',
@@ -41,7 +43,7 @@ dict_cards = [
     'dmig', 'dmiji', 'dmij', 'dmik', 'dmi', 'dmiax', 'dti',
     'dphases', 'delays',
     'epoints',
-    'gridb',  # removed
+    #'gridb',  # removed
     'nlparms', 'nlpcis',
     'normals',
     'nxstrats',

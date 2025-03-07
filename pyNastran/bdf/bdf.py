@@ -1431,6 +1431,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._parse_primary_file_header(bdf_filename)
 
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
+                         replace_includes=self.replace_includes,
                          nastran_format=self.nastran_format,
                          consider_superelements=self.is_superelements,
                          log=self.log, debug=self.debug)
@@ -1517,7 +1518,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         #reject_cards = {'ADAPT'}
         singletons = {
-            'grdset', 'acmodl', 'mdlprm', 'cyax', 'axic',
+            'grdset', 'acmodl', 'mdlprm', 'cyax',
+            # 'axic', #removed
             'aero', 'aeros', 'doptprm', 'dtable', 'modtrak'}
         string_slots_many = ['dmi', 'dmig', 'dmij', 'dmiji', 'dmik', 'dmiax', 'dti']
         string_names = [

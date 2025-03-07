@@ -270,7 +270,7 @@ class CrossReference:
                 assert fa2j.shape == (nsubpanels, 1), f'nsubpanels={nsubpanels}; fa2j.shape={str(fa2j.shape)}'
             if 'WKK' in model.dmi:
                 wkk = model.dmi['WKK']
-                assert wkk.shape == (nsubpanels*2, nsubpanels*2), f'nsubpanels*2={nsubpanels*2}; wkk.shape={str(wkk.shape)}'
+                assert wkk.shape in [(nsubpanels*2, 1), (nsubpanels*2, nsubpanels*2)], f'nsubpanels*2={nsubpanels*2}; wkk.shape={str(wkk.shape)}'
 
             #'AERO',     ## aero
             #'AEROS',    ## aeros
