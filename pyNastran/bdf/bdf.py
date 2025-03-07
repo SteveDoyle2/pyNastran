@@ -588,7 +588,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         assert debug in [True, False, None], f'debug={debug!r}'
         self.echo = False
         self.read_includes = True
-        self.skip_includes = []  # TODO: unused
+        #self.skip_includes = []
+        # path to include as written in deck
+        self.replace_includes = {}  # TODO: unused
+
         self._remove_disabled_cards = False
         self.use_new_deck_parser = True
 
@@ -1344,6 +1347,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
                          nastran_format=self.nastran_format,
+                         replace_includes=self.replace_includes,
                          consider_superelements=self.is_superelements,
                          log=self.log, debug=self.debug)
         main_lines = obj.get_main_lines(self.bdf_filename)
@@ -4759,6 +4763,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
                          nastran_format=self.nastran_format,
+                         replace_includes=self.replace_includes,
                          log=self.log, debug=self.debug)
         obj.use_new_parser = self.use_new_deck_parser
 

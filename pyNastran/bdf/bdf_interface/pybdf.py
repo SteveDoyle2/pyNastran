@@ -147,6 +147,7 @@ class BDFInputPy:
     """BDF reader class that only handles lines and not building cards or parsing cards"""
     def __init__(self, read_includes: bool, dumplines: bool,
                  encoding: str, nastran_format: str='msc',
+                 replace_includes: Optional[dict[str, str]]=None,
                  consider_superelements: bool=True,
                  log: SimpleLogger=None, debug: bool=False):
         """
@@ -171,6 +172,12 @@ class BDFInputPy:
             used when testing; for the logger
 
         """
+        if replace_includes is None:
+            replace_includes = {}
+
+        # not used
+        self.replace_includes: dict[str, str] = replace_includes
+
         self.dumplines: bool = dumplines
         self.encoding: str = encoding
         self.nastran_format: str = nastran_format

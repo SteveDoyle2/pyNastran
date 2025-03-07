@@ -33,6 +33,7 @@ Crossing = tuple[float, float, float]
 def make_flutter_response(f06_filename: PathLike,
                           f06_units=None, out_units=None,
                           use_rhoref: bool=False,
+                          read_flutter: bool=True,
                           log: Optional[SimpleLogger]=None) -> tuple[dict[int, FlutterResponse],
                                                                dict[str, Any]]:
     """
@@ -106,6 +107,7 @@ def make_flutter_response(f06_filename: PathLike,
 
     log.info('f06_filename = %r' % f06_filename)
     read_line_flag = True
+    real_eigenvalues_list = []
     with open(f06_filename, 'r') as f06_file:
         while 1:
             nblank = 0
@@ -139,19 +141,11 @@ def make_flutter_response(f06_filename: PathLike,
                 print(f'line = {line}')
                 asdf
             elif 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
-                frequencies, Mhh, Bhh, Khh = read_real_eigenvalues(
+                real_eigenvaluesi = read_real_eigenvalues(
                     f06_file, log, line, iline)
-
-                isort = np.argsort(Khh)
-                # matrices['MHH'].append(np.diag(Mhh[isort]))
-                # matrices['BHH'].append(np.diag(Bhh[isort]))
-                # matrices['KHH'].append(np.diag(Khh[isort]))
-                if load_eigenvalues:
-                    matrices['freq'] = frequencies[isort]
-                    matrices['MHH'] = np.diag(Mhh[isort])
-                    matrices['BHH'] = np.diag(Bhh[isort])
-                    matrices['KHH'] = np.diag(Khh[isort])
-                del frequencies, Mhh, Bhh, Khh
+                real_eigenvalues_list.append(real_eigenvaluesi)
+                if real_eigenvalues_list is not None:
+                    real_eigenvalues_list = real_eigenvalues_list[0]
 
             while ('SUBCASE ' not in line and
                    'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' not in line and
@@ -244,7 +238,7 @@ def make_flutter_response(f06_filename: PathLike,
                 iline, line, ieigenvector, methodi = _check_for_eigenvector(
                     f06_file, iline, line, eigr_eigi_velocity_list,
                     matrices, eigenvectors, ieigenvector,
-                    load_eigenvalues, log)
+                    load_eigenvalues, log, real_eigenvalues_list)
 
                 short_line = line.strip().replace('   ', ' ')
                 if is_heavy_debug:  # pragma: no cover
@@ -400,23 +394,43 @@ def make_flutter_response(f06_filename: PathLike,
             #print('')
 
         log.debug('modes = %s' % modes)
-        #if not found_flutter_summary:
-            #print(line)
-            #raise RuntimeError("failed to find 'FLUTTER SUMMARY'")
-        response = FlutterResponse(
-            f06_filename, subcase, configuration, xysym, xzsym,
-            mach, density_ratio, method,
-            modes, results,
-            in_units=f06_units,
-            use_rhoref=use_rhoref,
-            eigenvector=eigenvectors_array,
-            eigr_eigi_velocity=eigr_eigi_velocity)
-        response.set_out_units(out_units)
-        flutters[subcase] = response
+        if read_flutter:
+            #if not found_flutter_summary:
+                #print(line)
+                #raise RuntimeError("failed to find 'FLUTTER SUMMARY'")
+            response = FlutterResponse(
+                f06_filename, subcase, configuration, xysym, xzsym,
+                mach, density_ratio, method,
+                modes, results,
+                in_units=f06_units,
+                use_rhoref=use_rhoref,
+                eigenvector=eigenvectors_array,
+                eigr_eigi_velocity=eigr_eigi_velocity)
+            response.set_out_units(out_units)
+            flutters[subcase] = response
+
+    if load_eigenvalues:
+        _fill_matrices(matrices, real_eigenvalues_list)
 
     if len(matrices):
         data['matrices'] = matrices
     return flutters, data
+
+
+def _fill_matrices(matrices: dict,
+                   real_eigenvalues_list: list[np.ndarray]) -> None:
+    real_eigenvalues = np.vstack(real_eigenvalues_list)
+    frequencies = real_eigenvalues[:, 0]
+    Mhh = real_eigenvalues[:, 1]
+    Bhh = real_eigenvalues[:, 2]
+    Khh = real_eigenvalues[:, 3]
+    isort = np.argsort(Khh)
+
+    matrices['freq'] = frequencies[isort]
+    matrices['MHH'] = np.diag(Mhh[isort])
+    matrices['BHH'] = np.diag(Bhh[isort])
+    matrices['KHH'] = np.diag(Khh[isort])
+
 
 def _read_opgwg(f06_file: TextIO, iline: int,
                 line: str) -> tuple[int, str, dict[str, np.ndarray]]:
@@ -1019,19 +1033,13 @@ def _check_for_eigenvector(f06_file: TextIO, iline: int, line: str,
                            eigenvectors: list[np.ndarray],
                            ieigenvector: int,
                            load_eigenvalues: bool,
-                           log: SimpleLogger) -> tuple[int, str, int]:
+                           log: SimpleLogger,
+                           real_eigenvalues_list: list[np.ndarray]) -> tuple[int, str, int]:
     methodi = ''
     if 'R E A L   E I G E N V A L U E S' in line:
-        frequencies, Mhh, Bhh, Khh = read_real_eigenvalues(
+        real_eigenvaluesi = read_real_eigenvalues(
             f06_file, log, line, iline)
-
-        isort = np.argsort(Khh)
-        if load_eigenvalues:
-            matrices['freq'] = frequencies[isort]
-            matrices['MHH'] = np.diag(Mhh[isort])
-            matrices['BHH'] = np.diag(Bhh[isort])
-            matrices['KHH'] = np.diag(Khh[isort])
-        del frequencies, Mhh, Bhh, Khh
+        real_eigenvalues_list.append(real_eigenvaluesi)
 
     elif 'EIGENVECTOR FROM THE' in line:
         # '                                               EIGENVECTOR FROM THE  PKNL METHOD

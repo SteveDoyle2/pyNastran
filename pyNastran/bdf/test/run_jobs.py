@@ -7,10 +7,9 @@ import argparse
 
 from cpylog import SimpleLogger
 import pyNastran
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import print_bad_path, PathLike
 from pyNastran.utils.nastran_utils import run_nastran
 from pyNastran.utils.dev import get_files_of_type
-
 
 def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     """
@@ -62,8 +61,8 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     return nfiles
 
 
-def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
-                             extensions: list[str],
+def get_bdf_filenames_to_run(bdf_filename_dirname: PathLike | list[PathLike],
+                             extensions: str | list[str],
                              recursive: bool=False) -> list[Path]:
     if isinstance(extensions, str):
         extensions = [extensions]
@@ -73,9 +72,18 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
 
     bdf_filename_dirname_list = bdf_filename_dirname
     if not isinstance(bdf_filename_dirname, list):
+        if isinstance(bdf_filename_dirname, str):
+            bdf_filename_dirname = Path(bdf_filename_dirname)
         assert isinstance(bdf_filename_dirname, Path), bdf_filename_dirname
         assert bdf_filename_dirname.exists(), bdf_filename_dirname
         bdf_filename_dirname_list = [bdf_filename_dirname]
+    elif isinstance(bdf_filename_dirname, str):
+        bdf_filename_dirname_list = [Path(bdf_filename_dirname)]
+    elif isinstance(bdf_filename_dirname, list):
+        bdf_filename_dirname_list = [Path(pathi) for pathi in bdf_filename_dirname]
+    #else:
+        #print(type(bdf_filename_dirname_list), bdf_filename_dirname_list)
+        #adsf
     del bdf_filename_dirname
 
     #----------------------------------------
@@ -118,8 +126,11 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
     return bdf_filenames_run
 
 
-def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
-             extensions: list[str], cleanup: bool=True,
+
+def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
+             nastran_exe: PathLike,
+             extensions: str | list[str],
+             cleanup: bool=True,
              recursive: bool=False,
              run: bool=True,
              log: SimpleLogger | str='debug') -> int:

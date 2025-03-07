@@ -10,12 +10,12 @@ from pyNastran.bdf.utils import (
     parse_femap_syntax,
     get_femap_property_comments_dict, get_femap_material_comments_dict)
 from pyNastran.bdf.test.run_jobs import get_bdf_filenames_to_run, cmd_line_run_jobs
+pkg_path = Path(pyNastran.__path__[0])
+model_path = pkg_path / '..' / 'models'
 
 
 class TestBdfUtils(unittest.TestCase):
-    def test_run_jobs(self):
-        pkg_path = Path(pyNastran.__path__[0])
-        model_path = pkg_path / '..' / 'models'
+    def test_run_jobs_path(self):
         nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str(model_path), '--cleanup', '-r', '--test'], quiet=True)
         nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str(model_path), '--cleanup', '-r', '--test'])
         assert nfiles >= 1, nfiles  # 105
@@ -24,8 +24,22 @@ class TestBdfUtils(unittest.TestCase):
         bdf_files = get_bdf_filenames_to_run(model_path, extensions, recursive=True)
         assert len(bdf_files) >= 10, len(bdf_files)  # 105
 
+        #bdf_files = get_bdf_filenames_to_run([model_path], extensions, recursive=True)
+        #assert len(bdf_files) >= 10, len(bdf_files)  # 105
+
+        #------------------------------
         bdf_files = get_bdf_filenames_to_run(model_path, extensions, recursive=False)
         assert len(bdf_files) == 1, len(bdf_files)
+
+    def test_run_jobs_str(self):
+        extensions = ['.dat', '.bdf']
+
+        # lists
+        bdf_files = get_bdf_filenames_to_run(str(model_path), extensions, recursive=True)
+        assert len(bdf_files) >= 10, len(bdf_files)  # 105
+
+        bdf_files = get_bdf_filenames_to_run([str(model_path)], extensions, recursive=True)
+        assert len(bdf_files) >= 10, len(bdf_files)  # 105
 
     def test_get_femap_comments_dict(self):
         """tests:
