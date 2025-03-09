@@ -1523,7 +1523,8 @@ class CBEND(LineElement):
         geom = 1
         return CBEND(eid, pid, nids, g0, x, geom, comment='')
 
-    def __init__(self, eid, pid, nids, g0, x, geom, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 g0, x, geom: int, comment: str=''):
         """
         Creates a CBEND card
 
@@ -1571,12 +1572,13 @@ class CBEND(LineElement):
         assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=%r' % self.geom
         self.ga_ref = None
         self.gb_ref = None
+        self.g0_ref = None
         self.pid_ref = None
         if self.g0 is not None:
             assert isinstance(self.g0, integer_types), self.get_stats()
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CBEND card from ``BDF.add_card(...)``
 
@@ -1645,6 +1647,218 @@ class CBEND(LineElement):
         #x2 = set_blank_if_default(self.x[1], 0.0)
         #x3 = set_blank_if_default(self.x[2], 0.0)
         return list(self.x)
+
+    def make_circle(self, origin, R: float, theta1, theta: float):
+        ntheta = 11
+        dtheta = theta
+        theta2 = theta1 - dtheta
+        theta0 = min(theta1, theta2)  # start
+        theta0d = theta0 + dtheta
+        #thetas = np.linspace(0., theta, ntheta)
+        #thetas = np.linspace(theta1, theta2, ntheta)
+        thetas = np.linspace(theta0, theta0d, ntheta)
+        #x0 = 0. #origin[0]
+        #y0 = 0. #origin[1]
+        x0 = origin[0]
+        y0 = origin[1]
+        #z0 = origin[2]
+        #zero = np.zeros(ntheta)
+        xy = np.column_stack([
+            x0 + R * np.sin(thetas),
+            y0 + R * np.cos(thetas), ])
+        return xy
+
+    def make_circle2(self, origin: np.ndarray,
+                     xform: np.ndarray,
+                     R: float,
+                     theta1: float, theta2: float,
+                     ntheta: int=11):
+        assert xform.shape == (3, 3), xform.shape
+        print(theta1, theta2)
+        thetas = np.linspace(theta1, theta2, num=ntheta)
+        thetas.sort()
+        print(f'thetas = {thetas}')
+        #x0 = 0. #origin[0]
+        #y0 = 0. #origin[1]
+        x0 = origin[0]
+        y0 = origin[1]
+        #z0 = origin[2]
+        #zero = np.zeros(ntheta)
+        xyz = np.column_stack([
+            R * np.cos(thetas),
+            R * np.sin(thetas),
+            np.zeros(ntheta),
+        ])
+        print('xform')
+        print(xform)
+        print(xyz.shape, xform.shape)
+        xyz_xform = xyz @ xform
+        print(xyz_xform.shape)
+        xyz_out = origin[np.newaxis, :] + xyz_xform
+        return xyz_out
+
+    def plot(self, ifig: int=1):
+        """
+        L = R*theta
+        m = rho*A*L = rho*A*R*theta
+        dm = rho*A*R * dtheta
+
+        ycg = int( R*sin(theta)*dm ) / m
+            = R^2*rho*A* int(sin(theta)*theta) / rho*A*R*theta
+            = R* int(sin(theta)*theta) / theta
+            Int = -theta* cos(theta) + sin(theta)
+            Int|pi = pi
+            = R* (-theta* cos(theta) + sin(theta)) / theta
+            = R* (sin(theta) -theta* cos(theta)) / theta
+            = R* (sin(theta)/theta -cos(theta))
+        """
+        import matplotlib.pyplot as plt
+        fig = plt.figure(ifig)
+        ax = fig.gca()
+        A = self.nodes_ref[0].get_position()
+        B = self.nodes_ref[1].get_position()
+        O = self.g0_ref.get_position()
+        half_point = (A + B) / 2
+        print(f'half_point = {half_point}')
+        print(f'geom = {self.geom}')
+        if self.geom == 2:
+            ba = B - A
+            oa = O - A
+            ob = O - B
+            n = np.cross(oa, ba)
+            v = np.cross(n, ba)
+            v /= np.linalg.norm(v)
+            print(f'n = {n}')
+            print(f'v = {v}')
+
+            denom = np.linalg.norm(ba) * np.linalg.norm(oa)
+            cos_theta = np.dot(ba, oa) / denom
+            print(f'cos_theta = {cos_theta:g}')
+            theta = np.arccos(cos_theta)
+            print(f'theta = {theta:g}')
+
+            crossa = half_point - A
+            y = np.linalg.norm(crossa)
+            h = y / np.tan(theta)
+            radius = np.sqrt(h**2 + y**2)
+            C = half_point + v * h
+            print(f'y = {y:g}')
+            print(f'h = {h:g}')
+            print(f'R = {radius:g}')
+            print(f'C,origin1 = {C}')
+            #(x-x0)^2 + (y-y0)^2 = r^2
+            #(x-x0)^2 + (y-y0)^2 = r^2
+            #(x-1)^2 + (y-2)^2 = R**2
+            #x0,y0 + Rs
+            ca = C - A
+            cb = C - B
+            ca_mag = np.linalg.norm(ca)
+            cb_mag = np.linalg.norm(cb)
+            cos_theta_inner = np.dot(ca, cb) / (ca_mag * cb_mag)
+            theta_inner = np.arccos(cos_theta_inner)
+            theta1 = np.arctan2(ob[1], ob[0])
+        elif self.geom == 3:
+            radius = self.pid_ref.rb
+            ao = O - A
+            ab = B - A
+            bo = O - B
+            ab_mag = np.linalg.norm(ab)
+            iaxis = ab / ab_mag
+            ab_mag_2 = ab_mag / 2
+            normal = np.cross(ao, ab)
+            normal /= np.linalg.norm(normal)
+
+            jaxis = np.cross(normal, ab)
+            jaxis /= np.linalg.norm(jaxis)
+            cos_theta = ab_mag_2 / radius
+            theta = np.arccos(cos_theta)
+            height = radius * np.sin(theta)
+            halfwidth = ab_mag_2
+            C = half_point + jaxis * height
+            #ac = C - A
+            #bc = C - B
+            # good but too obvious
+            # -height is very specific
+            # -> need an xform
+            # theta1 = np.arctan2(-height, halfwidth)
+            # theta2 = np.arctan2(-height, -halfwidth)
+            # about x
+            theta1 = np.arctan2(halfwidth, height)
+            theta2 = np.arctan2(-halfwidth, height)
+            #theta2 = -theta1
+            thetas = np.array([theta1, theta2])
+
+            # thetas = [ -70.52877937 -109.47122063]
+            #print('thetas', np.degrees(thetas))
+        else:  # pragma: no cover
+            raise RuntimeError(self.geom)
+        origin = C
+
+        #print(f'theta1 = {theta1}')
+        ax.plot(A[0], A[1], marker='o', label='A')
+        ax.plot(B[0], B[1], marker='o', label='B')
+        ax.plot(O[0], O[1], marker='o', label='O')
+        ax.plot(origin[0], origin[1], marker='o', label='C,origin')
+        # R cos(theta1) = h
+
+        #print('ijk')
+        #print(iaxis, jaxis, normal)
+        xform_out = np.column_stack([iaxis, jaxis, normal])
+        #ct = np.cos(theta1)
+        #st = np.sin(theta1)
+        # xform_cyl = np.column_stack([
+        #     [ct, st, 0.],
+        #     [-st, ct, 0.],
+        #     [0., 0., 1.]])
+        #
+        # kaxis = np.cross(jaxis, -iaxis)
+        # xform_cyl = np.column_stack([
+        #     jaxis, -iaxis, kaxis,])
+        xform_cyl = np.array([
+            [0., -1., 0.],
+            [1.,  0., 0.],
+            [0.,  0., 1.],
+        ])
+        # print('xform_cyl')
+        # print(xform_cyl)
+        xform = xform_out @ xform_cyl
+        ixform = np.where(np.abs(xform) < 0.0001)
+        xform[ixform] = 0.
+        xyz = self.make_circle2(origin, xform,
+                                radius, 0., 2*np.pi-0.0001, ntheta=41)
+        assert xyz.shape == (41, 3), xyz.shape
+        ax.plot(xyz[:, 0], xyz[:, 1], label='circle')
+        dxyz = xyz[1:,:] - xyz[:-1,:]
+        assert len(xyz) == len(dxyz) + 1
+        length = np.linalg.norm(dxyz, axis=1)
+        assert len(dxyz) == len(length), (len(dxyz), len(length))
+        length2 = 2 * np.pi * radius
+        print(f'length={length.sum()} length2={length2}')
+
+        xyz = self.make_circle2(origin, xform,
+                                radius, theta1, theta2, ntheta=51)
+        dxyz = xyz[1:,:] - xyz[:-1,:]
+        xyzi_cg = (xyz[1:,:] + xyz[:-1,:]) / 2
+        length = np.linalg.norm(dxyz, axis=1)
+        rho = 1.
+        area = 1.
+        nsm = 0.
+        mass = (rho * area + nsm) * length
+        xyz_cg = (mass[:, np.newaxis] * xyzi_cg).sum(axis=0) / mass.sum()
+        print(f'xyz_cg = {xyz_cg}')
+        ax.plot(xyz[:, 0], xyz[:, 1], label='theta', linewidth=7)
+
+        #xy = self.make_circle(origin, radius, theta1, theta_inner)
+        ax.plot(xyz[:, 0], xyz[:, 1], label='circle')
+        ax.plot(xyz_cg[0], xyz_cg[1],
+                marker='o', markersize=20,
+                label='CG')
+        ax.grid(True)
+        # ax.set_aspect('equal', adjustable='box')
+        ax.legend()
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        plt.show()
 
     def Length(self):
         # TODO: consider w1a and w1b in the length formulation
@@ -1759,12 +1973,16 @@ class CBEND(LineElement):
         #self.g0 = model.nodes[self.g0]
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
+        if self.g0 is not None:
+            self.g0_ref = model.Node(self.g0, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = f', which is required by CBEND ={self.eid:d}'
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
+        if self.g0 is not None:
+            self.g0_ref = model.Node(self.g0, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
@@ -1772,9 +1990,11 @@ class CBEND(LineElement):
         node_ids = self.node_ids
         self.ga = node_ids[0]
         self.gb = node_ids[1]
+        #self.g0 = node_ids[1]
         self.pid = self.Pid()
         self.ga_ref = None
         self.gb_ref = None
+        self.g0_ref = None
         self.pid_ref = None
 
     def Centroid(self):

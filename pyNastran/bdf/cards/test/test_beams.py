@@ -1401,6 +1401,62 @@ class TestBeams(unittest.TestCase):
         pbeam3.write_card()
         pbeam3.write_card(size=16)
 
+    def test_cbend_geom1_plot(self):
+        model = BDF(debug=False)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [2., 0., 0.])
+        model.add_grid(12, [1., -2., 0.])
+        eid = 2
+        pid = 3
+        nids = [10, 11]
+        g0 = 12
+        geom = 2
+        x = None
+        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
+
+        mid = 2
+        A = 1.0
+        i1 = 2.0
+        i2 = 3.0
+        j = 4.0
+        pbend1 = PBEND.add_beam_type_1(
+            pid, mid, A, i1, i2, j,
+            rb=None, theta_b=None,
+            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+            k1=None, k2=None, nsm=0.,
+            rc=0., zc=0., delta_n=0., comment='pbend1')
+        model.properties[pid] = pbend1
+        cbend.cross_reference(model)
+        #cbend.plot()
+
+    def test_cbend_geom3_plot(self):
+        model = BDF(debug=False)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [2., 0., 0.])
+        model.add_grid(12, [1., -2., 0.])
+        eid = 2
+        pid = 3
+        nids = [10, 11]
+        g0 = 12
+        geom = 3
+        x = None
+        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
+
+        mid = 2
+        A = 1.0
+        i1 = 2.0
+        i2 = 3.0
+        j = 4.0
+        pbend1 = PBEND.add_beam_type_1(
+            pid, mid, A, i1, i2, j,
+            rb=3.0, theta_b=None,
+            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+            k1=None, k2=None, nsm=0.,
+            rc=0., zc=0., delta_n=0., comment='pbend1')
+        model.properties[pid] = pbend1
+        cbend.cross_reference(model)
+        cbend.plot()
+
     def test_cbend(self):
         model = BDF(debug=False)
         model.add_grid(10, [1., 0., 0.])

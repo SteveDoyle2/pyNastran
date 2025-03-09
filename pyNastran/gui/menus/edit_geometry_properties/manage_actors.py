@@ -184,6 +184,7 @@ class Model(QtCore.QAbstractTableModel):
 
 
 class EditGeometryProperties(PyDialog):
+    show_representation_toggles = False
     force = True
     def __init__(self, data, gui_obj: EditGeometryPropertiesObject,
                  is_gui: bool=True, win_parent=None):
@@ -294,8 +295,10 @@ class EditGeometryProperties(PyDialog):
                                           "}")
 
         self.representation_label = QLabel('Representation:')
+        self.checkbox_toggle = QCheckBox('Toggle')
         self.checkbox_wire = QCheckBox('Wireframe')
         self.checkbox_surf = QCheckBox('Surface/Solid')
+        self.checkbox_point = QCheckBox('Point')
         #print('representation = %s' % self.representation)
         #self.check_point = QCheckBox()
 
@@ -524,6 +527,7 @@ class EditGeometryProperties(PyDialog):
 
         if self.representation != representation:
             self.representation = representation
+            self.on_set_representation()
             #if representation not in allowed_representations:
                 #msg = 'name=%r; representation=%r is invalid\nrepresentations=%r' % (
                     #name, representation, allowed_representations)
@@ -674,27 +678,48 @@ class EditGeometryProperties(PyDialog):
         irow += 1
 
         wire_surf_checkboxes = QButtonGroup(self)
-        wire_surf_checkboxes.addButton(self.checkbox_wire)
         wire_surf_checkboxes.addButton(self.checkbox_surf)
+        wire_surf_checkboxes.addButton(self.checkbox_wire)
+        wire_surf_checkboxes.addButton(self.checkbox_point)
+        for key, datai in self.out_data.items():
+            #print(key, datai)
+            self.representation = datai.representation
+            self.on_set_representation()
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.table, stretch=1)
         vbox.addLayout(grid)
 
         vbox1 = QVBoxLayout()
+        vbox1.addWidget(self.checkbox_toggle)
         vbox1.addWidget(self.checkbox_wire)
         vbox1.addWidget(self.checkbox_surf)
+        vbox1.addWidget(self.checkbox_point)
 
         vbox2 = QVBoxLayout()
         vbox2.addWidget(self.checkbox_show)
 
-        #vbox.addLayout(vbox1)
+        vbox.addLayout(vbox1)
         vbox.addLayout(vbox2)
 
         vbox.addStretch()
         #vbox.addWidget(self.check_apply)
         vbox.addLayout(ok_cancel_box)
         self.setLayout(vbox)
+
+    def on_set_representation(self) -> None:
+        is_point, is_surf, is_wire, is_follow = get_representation_flags(
+            self.representation)
+        if not self.show_representation_toggles:
+            is_point = False
+            is_surf = False
+            is_wire = False
+            is_follow = False
+
+        self.checkbox_toggle.setVisible(is_follow)
+        self.checkbox_wire.setVisible(is_wire)
+        self.checkbox_surf.setVisible(is_surf)
+        self.checkbox_point.setVisible(is_point)
 
     def set_connections(self) -> None:
         """creates the actions for the menu"""
@@ -719,7 +744,13 @@ class EditGeometryProperties(PyDialog):
         # closeEvent
 
     def keyPressEvent(self, event) -> None:
-        if event.key() == QtCore.Qt.Key_Escape:
+        key = event.key()
+        #print(f'key = {key!r}')
+        #if key in [QtCore.Qt.Key_Up, QtCore.Qt.Key_Left]:
+        #    up
+        #if key in [QtCore.Qt.Key_Down, QtCore.Qt.Key_Right]:
+        #    down
+        if key == QtCore.Qt.Key_Escape:
             self.close()
 
     def closeEvent(self, event) -> None:
@@ -893,6 +924,41 @@ def rounded_int(value: int | float) -> int:
     return int(round(value, 0))
 
 
+def get_representation_flags(representation: str) -> tuple[bool, bool, bool, bool]:
+    is_point = False
+    is_surf = False
+    is_wire = False
+    is_follow = False
+    if representation == 'coord':
+        pass
+    elif representation == 'main':
+        is_point = True
+        is_surf = True
+        is_wire = True
+        is_follow = False
+    elif representation == 'toggle':
+        is_point = True
+        is_surf = True
+        is_wire = True
+        is_follow = True
+    elif representation == 'point':
+        is_point = True
+    elif representation == 'wire':
+        is_wire = True
+    elif representation == 'surface':
+        is_surf = True
+    elif representation == 'wire+point':
+        is_point = True
+        is_wire = True
+    elif representation == 'wire+surf':
+        is_surf = True
+        is_wire = True
+    else:  # pragma: no cover
+        print(f'representation={representation!r}*****')
+        return
+        raise RuntimeError(self.representation)
+    return is_point, is_surf, is_wire, is_follow
+
 def main():  # pragma: no cover
     """gui independent way to test the program"""
     # kills the program when you hit Cntl+C from the command line
@@ -920,8 +986,9 @@ def main():  # pragma: no cover
     # * surface - always surface
     # * bar - this can use bar scale
     data = {
-        'font_size' : 8,
+        'font_size' : 18,
         'toggle' : AltGeometry(parent, 'toggle', color=green, line_width=3, opacity=0.2, representation='toggle'),
+        'coord': CoordProperties('label', 'xyz', True, 1.0),
         'wire' : AltGeometry(parent, 'wire', color=purple, line_width=4, opacity=0.3, representation='wire'),
         'wire+point' : AltGeometry(parent, 'wire+point', color=blue, line_width=2, opacity=0.1, bar_scale=1.0, representation='wire+point'),
         'wire+surf' : AltGeometry(parent, 'wire+surf', display='Surface', color=blue, line_width=2, opacity=0.1, bar_scale=1.0, representation='wire+surf'),

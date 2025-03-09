@@ -3020,9 +3020,10 @@ class PBEND(LineProperty):
         self.mid_ref = None
 
     @classmethod
-    def add_beam_type_1(cls, pid, mid,
-                        A, i1, i2, j,
-                        rb=None, theta_b=None,
+    def add_beam_type_1(cls, pid: int, mid: int,
+                        A: float, i1: float, i2: float, j: float,
+                        rb: Optional[float]=None,
+                        theta_b: Optional[float]=None,
                         c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
                         k1=None, k2=None,
                         nsm=0., rc=0., zc=0., delta_n=0., comment=''):
@@ -3178,7 +3179,7 @@ class PBEND(LineProperty):
                      #nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment=comment)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBEND card from ``BDF.add_card(...)``
 
