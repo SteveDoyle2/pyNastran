@@ -622,7 +622,7 @@ class TestAero(unittest.TestCase):
         eid = 10000000
         caero = model.add_caero1(eid, pid, igroup, p1, x12, p4, x43,
                                  cp=0, nspan=3, lspan=0, nchord=2, lchord=0, comment='')
-        npoints, nelements = caero.get_npanel_points_elements()
+        npoints, nelements = caero.get_panel_npoints_nelements()
         npoints_expected = 12 # 4*3
         nelements_expected = 6 # 2*3
 
@@ -662,7 +662,7 @@ class TestAero(unittest.TestCase):
                                   nchord=0, lchord=chord_aefact_id, comment='')
         model.cross_reference()
 
-        npoints, nelements = caero.get_npanel_points_elements()
+        npoints, nelements = caero.get_panel_npoints_nelements()
         npoints_expected = 12 # 4*3
         nelements_expected = 6 # 2*3
         assert npoints_expected == npoints
@@ -780,7 +780,7 @@ class TestAero(unittest.TestCase):
                                    nchord=2, lchord=0, comment='')
         model.cross_reference()
 
-        npoints, nelements = caero1a.get_npanel_points_elements()
+        npoints, nelements = caero1a.get_panel_npoints_nelements()
         npoints_expected = 12 # 4*3
         nelements_expected = 6 # 2*3
         assert npoints_expected == npoints
@@ -873,7 +873,7 @@ class TestAero(unittest.TestCase):
                                  cp=0, list_c1=None, list_c2=None, comment='')
         caero.validate()
         caero.cross_reference(model)
-        npoints, nelements = caero.get_npanel_points_elements()
+        npoints, nelements = caero.get_panel_npoints_nelements()
         npoints_expected = 24 # (2+1)*(7+1)
         nelements_expected = 14 # 2*7
 
@@ -923,7 +923,7 @@ class TestAero(unittest.TestCase):
         paero.validate()
         caero.validate()
         caero.cross_reference(model)
-        npoints, nelements = caero.get_npanel_points_elements()
+        npoints, nelements = caero.get_panel_npoints_nelements()
         npoints_expected = 6 # 4*3
         nelements_expected = 2 # 2*3
 
@@ -968,7 +968,7 @@ class TestAero(unittest.TestCase):
         caero.validate()
         caero.cross_reference(model)
 
-        npoints, nelements = caero.get_npanel_points_elements()
+        npoints, nelements = caero.get_panel_npoints_nelements()
         npoints_expected = (nspan + 1) * 2
         nelements_expected = nspan # 2*1
         assert npoints_expected == npoints
@@ -1034,7 +1034,7 @@ class TestAero(unittest.TestCase):
                                  p_airfoil=None, ztaic=None, comment='')
         model.cross_reference()
 
-        npoints, nelements = caero.get_npanel_points_elements()
+        npoints, nelements = caero.get_panel_npoints_nelements()
         npoints_expected = (nspan + 1) * (nchord + 1)
         nelements_expected = nspan * nchord
         #npoints_expected = 15 # 4*3
@@ -1200,7 +1200,7 @@ class TestAero(unittest.TestCase):
 
         paero.cross_reference(model)
         caero1c.cross_reference(model)
-        caero1c.get_npanel_points_elements()
+        caero1c.get_panel_npoints_nelements()
         caero1c.get_points()
         caero1c.panel_points_elements()
 
@@ -1735,7 +1735,7 @@ class TestAero(unittest.TestCase):
 
         npoints_expected = 33
         nelements_expected = 20
-        npoints, nelements = caero3b.get_npanel_points_elements()
+        npoints, nelements = caero3b.get_panel_npoints_nelements()
         assert npoints == npoints_expected
         assert nelements == nelements_expected
 
@@ -1839,7 +1839,7 @@ class TestAero(unittest.TestCase):
         bdf_card = BDFCard(card, has_none=True)
         caero4a = CAERO4.add_card(bdf_card, comment='msg')
         caero4a.validate()
-        npoints, nelements = caero4a.get_npanel_points_elements()
+        npoints, nelements = caero4a.get_panel_npoints_nelements()
         assert npoints == 10, npoints
         assert nelements == 4, nelements
         caero4a.write_card()
@@ -1951,7 +1951,7 @@ class TestAero(unittest.TestCase):
 
         #caero5.cross_reference(model)
         model.cross_reference()
-        unused_npoints, unused_nelements = caero5.get_npanel_points_elements()
+        unused_npoints, unused_nelements = caero5.get_panel_npoints_nelements()
         unused_points, unused_elements = caero5.panel_points_elements()
         caero5.write_card()
         #caero5.raw_fields()

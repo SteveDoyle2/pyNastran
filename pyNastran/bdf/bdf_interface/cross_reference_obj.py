@@ -1031,7 +1031,7 @@ def _check_caero_subpanel_overlap(model: BDF) -> int:
     min_maxs = np.zeros((ncaeros, 2), dtype='int32')
     for eid, caero in sorted(model.caeros.items()):
         min_maxs[i, :] = caero.min_max_eid
-        npointsi, nsubpanelsi = caero.get_npanel_points_elements()
+        npointsi, nsubpanelsi = caero.get_panel_npoints_nelements()
         nsubpanels += nsubpanelsi
         #print(caero)
         #print(eid, nsubpanelsi)

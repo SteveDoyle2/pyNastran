@@ -1979,10 +1979,10 @@ class CBEND(LineElement):
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = f', which is required by CBEND ={self.eid:d}'
-        self.ga_ref = model.Node(self.ga, msg=msg)
-        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.ga_ref = model.safe_node(self.ga, self.eid, xref_errors, msg=msg)
+        self.gb_ref = model.safe_node(self.gb, self.eid, xref_errors, msg=msg)
         if self.g0 is not None:
-            self.g0_ref = model.Node(self.g0, msg=msg)
+            self.g0_ref = model.safe_node(self.g0, self.eid, xref_errors, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:

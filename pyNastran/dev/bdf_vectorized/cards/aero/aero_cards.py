@@ -1872,7 +1872,7 @@ class CAERO1(BaseCard):
             raise RuntimeError(msg)
         return nchord, nspan
 
-    def get_npanel_points_elements(self, model):
+    def get_panel_npoints_nelements(self, model: BDF):
         """
         Gets the number of sub-points and sub-elements for the CAERO card
 
@@ -2832,7 +2832,7 @@ class CAERO5(BaseCard):
         p3 = p4 + np.array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
-    def get_npanel_points_elements(self, model):
+    def get_panel_npoints_nelements(self, model: BDF):
         msg = 'CAERO5 eid=%s nspan=%s lspan=%s' % (
             self.eid, self.nspan, self.lspan)
         if self.nspan == 0:

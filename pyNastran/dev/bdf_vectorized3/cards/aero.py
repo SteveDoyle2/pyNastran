@@ -896,7 +896,7 @@ class CAERO1(VectorizedBaseCard):
             nspan[ispan] = aefacti.nfractions - 1  # points -> boxes
         return nchord, nspan
 
-    def get_npanel_points_elements(self) -> tuple[int, int]:
+    def get_panel_npoints_nelements(self) -> tuple[int, int]:
         nchord, nspan = self.shape
 
         # nchord, nspan are number of boxes in the different directions
@@ -1613,7 +1613,7 @@ class CAERO3(VectorizedBaseCard):
         nspan = paero3.nbox
         return nchord, nspan
 
-    def get_npanel_points_elements(self) -> tuple[int, int]:
+    def get_panel_npoints_nelements(self) -> tuple[int, int]:
         nchord, nspan = self.shape
 
         #aefact = self.model.aefact
@@ -2064,7 +2064,7 @@ class CAERO4(VectorizedBaseCard):
             p3 = p4 + coord.transform_local_xyz_to_global(d43, coord_id)
         return p1, p2, p3, p4
 
-    def get_npanel_points_elements(self) -> tuple[int, int]:
+    def get_panel_npoints_nelements(self) -> tuple[int, int]:
         nchord, nspan = self.shape
 
         # nchord, nspan are number of boxes in the different directions
@@ -2353,7 +2353,7 @@ class CAERO5(VectorizedBaseCard):
             y.append(yi)
         return x, y
 
-    def get_npanel_points_elements(self) -> tuple[int, int]:
+    def get_panel_npoints_nelements(self) -> tuple[int, int]:
         #nchord = self.nchord.copy()
         nspan = self.nspan.copy()
         nchord = np.ones(nspan.size, dtype=nspan.dtype)
@@ -2658,7 +2658,7 @@ class CAERO7(VectorizedBaseCard):
             nspan[ispan] = aefacti.nfractions - 1  # points -> boxes
         return nchord, nspan
 
-    def get_npanel_points_elements(self) -> tuple[int, int]:
+    def get_panel_npoints_nelements(self) -> tuple[int, int]:
         nchord, nspan = self.shape
 
         # nchord, nspan are number of boxes in the different directions

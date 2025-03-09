@@ -3091,7 +3091,7 @@ class CAERO7(BaseCard):
             raise RuntimeError(msg)
         return nchord, nspan
 
-    def get_npanel_points_elements(self):
+    def get_panel_npoints_nelements(self):
         """
         Gets the number of sub-points and sub-elements for the CAERO card
 

@@ -194,7 +194,7 @@ class TestF06Flutter(unittest.TestCase):
         """tests plot_flutter_f06"""
         f06_filename = AERO_PATH / 'bah_plane' / 'bah_plane.f06'
         log = get_logger2(log=None, debug=None, encoding='utf-8')
-        log = get_logger2(log=None, debug=True, encoding='utf-8')
+        #log = get_logger2(log=None, debug=True, encoding='utf-8')
         flutters, data = plot_flutter_f06(
             f06_filename, show=False, close=True,
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True, plot_kfreq_damping=True,
@@ -206,6 +206,8 @@ class TestF06Flutter(unittest.TestCase):
         matrices['BHH']
         matrices['MHH']
         assert len(flutters) == 2, list(flutters.keys())
+        assert flutters[1].results.shape == (10, 22, 7), flutters[1].results.shape
+        assert flutters[2].results.shape == (10, 30, 7), flutters[2].results.shape
         fix_modes_2024(flutters[1])
         fix_modes_2024(flutters[2])
         # plot_flutter_f06(f06_filename, show=True, close=False,
@@ -220,7 +222,9 @@ class TestF06Flutter(unittest.TestCase):
         has issues with writing the subcase...
         """
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
-        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        #log = get_logger2(log=None, debug=None, encoding='utf-8')
+        log = get_logger2(log=None, debug=True, encoding='utf-8')
+
         plot_flutter_f06(
             f06_filename,
             modes=[2],
@@ -255,6 +259,7 @@ class TestF06Flutter(unittest.TestCase):
         matrices['BHH']
         matrices['KHH']
         flutter = flutters[1]
+        assert flutter.results.shape == (2, 93, 12), flutter.results.shape
         fix_modes_2024(flutter)
 
         if IS_MATPLOTLIB:

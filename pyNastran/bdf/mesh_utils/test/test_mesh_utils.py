@@ -200,11 +200,16 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         eid = 10
         pid = 11
         igroup = 1
-        model.add_caero1(eid, pid, igroup,
-                   p1=p1, x12=1.0,
-                   p4=p4, x43=1.0,
-                   nspan=2,
-                   nchord=2)
+        npanels = 0
+        caero = model.add_caero1(
+            eid, pid, igroup,
+            p1=p1, x12=1.0,
+            p4=p4, x43=1.0,
+            nspan=2, nchord=2)
+        npointsi, npanelsi = caero.get_panel_npoints_nelements()
+        assert npanelsi == 4, npanelsi
+        npanels += npanelsi
+
         model.add_paero1(pid)
         model.add_aero(velocity=0., cref=1.0, rho_ref=1.0)
         name = 'WKK'
@@ -218,7 +223,8 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         real_array = np.ones((len(Real), 1))
         model.add_dense_dmi(name, real_array, form, validate=True)
         export_caero_mesh(model, is_subpanel_model=True, )
-        save_load_deck(model, run_remove_unused=False)
+        save_load_deck(model, run_remove_unused=False,
+                       run_mirror=False)
 
     def test_export_caero_mesh_caero5_wtfact(self):
         """tests multiple ``bdf`` tools"""

@@ -1958,14 +1958,21 @@ class TestOP2Main(Tester):
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'api3.bdf'
         op2_filename = MODEL_PATH / 'other' / 'api3.op2'
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, run_skin_solids=False, log=log)
+        fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, run_skin_solids=False, log=log)
+        expected = {'ENDDATA': 1, 'PARAM': 4, 'MAT1': 1, 'RLOAD1': 1, 'TLOAD2': 1, 'TABLED1': 1, 'FREQ': 1, 'TSTEP': 1,
+         'RANDPS': 2, 'RANDT1': 1, 'TABRNDG': 1, 'GRID': 144, 'CBEAM': 2, 'SPC1': 35, 'FORCE': 48, 'MOMENT': 3,
+         'DAREA': 19, 'DESVAR': 6, 'DVPREL1': 6, 'PBEAM': 2, 'CQUAD4': 2, 'PSHELL': 6, 'CBAR': 2, 'PBAR': 2,
+         'CQUAD8': 4, 'CHEXA': 3, 'PSOLID': 2, 'CPENTA': 4, 'CBEND': 2, 'PBEND': 2, 'CTRIAR': 2, 'CTRIA3': 2,
+         'CTRIA6': 4, 'CQUADR': 2}
+        assert fem1.card_count == expected
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         model.safe_cross_reference()
-        save_load_deck(model, run_test_bdf=False, run_mass_properties=False)
+        save_load_deck(model, run_test_bdf=False, run_mass_properties=False,
+                       run_renumber=False)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,

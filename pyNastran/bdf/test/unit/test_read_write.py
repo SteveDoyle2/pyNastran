@@ -628,7 +628,8 @@ class TestReadWrite(unittest.TestCase):
         for pth in pths:
             print('-'*60)
             pth2 = get_include_filename(
-                [pth], include_dirs='', is_windows=True, debug=False)
+                [pth], include_dirs='', replace_includes={},
+                is_windows=True, debug=False)
             #if not os.path.exists(pth2):
                 #msg = 'Invalid Path\nold:  %r\nnew:  %r' % (pth, pth2)
                 #msg += print_bad_path(pth2)
@@ -637,7 +638,8 @@ class TestReadWrite(unittest.TestCase):
 
             #print('-'*60)
             pth2 = get_include_filename(
-                [pth], include_dirs='', is_windows=False, debug=False)
+                [pth], include_dirs='', replace_includes={},
+                is_windows=False, debug=False)
             #print('pth2 =', pth2, '\n')
         #filename_tokens = _split_to_tokens(r'\\nas3\dir1\dir2', is_windows=True)
 
@@ -696,9 +698,9 @@ class TestReadWrite(unittest.TestCase):
 
         pth = "INCLUDE 'Satellite_V02_base:Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"
         with self.assertRaises(SyntaxError):
-            pth2 = get_include_filename([pth], include_dirs=r'C:\dir\dir2', is_windows=True)
+            pth2 = get_include_filename([pth], include_dirs=r'C:\dir\dir2', replace_includes={}, is_windows=True)
         with self.assertRaises(SyntaxError):
-            pth2 = get_include_filename([pth], include_dirs=r'C:\dir\dir2', is_windows=False)
+            pth2 = get_include_filename([pth], include_dirs=r'C:\dir\dir2', replace_includes={}, is_windows=False)
 
         #print('Path:\nold:  %r\nnew:  %r' % (pth, pth2))
 
@@ -715,7 +717,7 @@ class TestReadWrite(unittest.TestCase):
 
         pth = "INCLUDE '%Satellite_V02_bddm%:Satellite_V02_Materiaux.blk'"
         pth2 = get_include_filename(
-            [pth], include_dirs='',
+            [pth], include_dirs='', replace_includes={},
             is_windows=True, debug=False)
         #print(pth2)
 

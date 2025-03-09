@@ -96,7 +96,11 @@ def make_flutter_response(f06_filename: PathLike,
     is_heavy_debug = False
     imax = 10000
 
+    read_list = [
+        'R E A L   E I G E N V A L U E S',
+    ]
     break_list = [
+        'THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET',
         'OLOAD    RESULTANT',
         'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O',
         'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O',
@@ -105,8 +109,8 @@ def make_flutter_response(f06_filename: PathLike,
         'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y',
         '* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',
         # 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R',
-        #'R E A L   E I G E N V A L U E S',
     ]
+    break_read_list = break_list + read_list
 
     log.info('f06_filename = %r' % f06_filename)
     read_line_flag = True
@@ -149,6 +153,9 @@ def make_flutter_response(f06_filename: PathLike,
                 real_eigenvaluesi = read_real_eigenvalues(
                     f06_file, log, line, iline)
                 real_eigenvalues_list.append(real_eigenvaluesi)
+            elif 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line:
+                iline, line, opgwg = _read_opgwg(f06_file, iline, line)
+                data['opgwg'] = opgwg
 
             while ('SUBCASE ' not in line and
                    'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' not in line and
@@ -157,7 +164,7 @@ def make_flutter_response(f06_filename: PathLike,
                    'EIGENVECTOR FROM THE' not in line):
                 line = f06_file.readline()
 
-                for word in break_list:
+                for word in break_read_list:
                     if word in line:
                         read_line_flag = False
                         break
@@ -240,7 +247,7 @@ def make_flutter_response(f06_filename: PathLike,
 
                 iline, line, ieigenvector, methodi = _check_for_eigenvector(
                     f06_file, iline, line, eigr_eigi_velocity_list,
-                    matrices, eigenvectors, ieigenvector,
+                    eigenvectors, ieigenvector,
                     load_eigenvalues, log, real_eigenvalues_list)
 
                 short_line = line.strip().replace('   ', ' ')
@@ -419,6 +426,7 @@ def make_flutter_response(f06_filename: PathLike,
     #assert len(real_eigenvalues_list)
     if len(matrices):
         data['matrices'] = matrices
+    matrices = data['matrices']
     return flutters, data
 
 
@@ -1034,7 +1042,6 @@ def _find_modes_to_keep(response: FlutterResponse,
 
 def _check_for_eigenvector(f06_file: TextIO, iline: int, line: str,
                            eigr_eigi_velocity_list: list[Crossing],
-                           matrices: dict[str, np.ndarray],
                            eigenvectors: list[np.ndarray],
                            ieigenvector: int,
                            load_eigenvalues: bool,

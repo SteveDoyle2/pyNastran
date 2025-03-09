@@ -944,7 +944,7 @@ class TestOP2(unittest.TestCase):
                 stop_on_failure=True, dev=False,
                 build_pandas=IS_PANDAS, log=log)
 
-    def test_bdf_op2_other_12(self):
+    def testv_bdf_op2_other_12(self):
         """checks api3.bdf, which is a ??? problem"""
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'api3.bdf'

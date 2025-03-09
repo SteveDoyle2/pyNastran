@@ -98,7 +98,7 @@ class NastranIO(NastranIO_xref):
                 nsub_points_caeros = 0
                 for key, caero in model.caeros.items():
                     if hasattr(caero, 'panel_points_elements'):
-                        npoints, nelements = caero.get_npanel_points_elements()
+                        npoints, nelements = caero.get_panel_npoints_nelements()
                         nsub_elements_caeros += npoints
                         nsub_points_caeros += nelements
                     else:

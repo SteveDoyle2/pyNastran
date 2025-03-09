@@ -88,6 +88,19 @@ it's not included with the official release, but is found in
 This should be hidden...
 --->
 
+### v1.5.0  has NOT been released (2024/3/25)
+
+BDF:
+ - removed axisymmetric cards deprecated in NX (AXIC, AXIF, CCONEAX, PCONEAX, PRESAX, TEMPAX, ...)
+ - added ```bdf run_jobs filename dirname --test```
+ - added 
+F06:
+ - added gui for flutter post-processing
+OP2:
+ - added NX trim/flutter tables
+ - added kinetic energy
+
+
 ### v1.4.1  has been released (2024/3/25)
 
 This is a mainly a bug fix release.  There's also a couple of new acoustic cards and MSC's STRESSA table that were added to fix some errors.

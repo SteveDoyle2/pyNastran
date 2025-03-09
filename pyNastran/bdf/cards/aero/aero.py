@@ -1455,7 +1455,7 @@ class CAERO1(BaseCard):
             out = self.p4[1]
         elif n == 15:
             out = self.p4[2]
-        else:
+        else:  # pragma: no cover
             raise KeyError('Field %r is an invalid CAERO1 entry.' % n)
         return out
 
@@ -2398,7 +2398,7 @@ class CAERO1(BaseCard):
             raise RuntimeError(msg)
         return nchord, nspan
 
-    def get_npanel_points_elements(self) -> tuple[int, int]:
+    def get_panel_npoints_nelements(self) -> tuple[int, int]:
         """
         Gets the number of sub-points and sub-elements for the CAERO card
 
@@ -3223,7 +3223,7 @@ class CAERO3(BaseCard):
         return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
         #return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
-    def get_npanel_points_elements(self) -> tuple[int, int]:
+    def get_panel_npoints_nelements(self) -> tuple[int, int]:
         """
         Gets the number of sub-points and sub-elements for the CAERO card
 
@@ -3573,7 +3573,7 @@ class CAERO4(BaseCard):
             raise RuntimeError(msg)
         return nchord, nspan
 
-    def get_npanel_points_elements(self):
+    def get_panel_npoints_nelements(self):
         """
         Gets the number of sub-points and sub-elements for the CAERO card
 
@@ -3876,7 +3876,7 @@ class CAERO5(BaseCard):
         p3 = p4 + np.array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
-    def get_npanel_points_elements(self):
+    def get_panel_npoints_nelements(self):
         msg = 'CAERO5 eid=%s nspan=%s lspan=%s' % (
             self.eid, self.nspan, self.lspan)
         if self.nspan == 0:
@@ -6884,7 +6884,7 @@ def get_caero_count(model: BDF) -> tuple[int, int, int, int]:
     # sorting doesn't matter here because we're just trying to size the array
     for caero in model.caeros.values():
         if hasattr(caero, 'panel_points_elements'):
-            npoints, ncelements = caero.get_npanel_points_elements()
+            npoints, ncelements = caero.get_panel_npoints_nelements()
             ncaeros_sub += npoints
             ncaero_sub_points += ncelements
         elif isinstance(caero, CAERO2) or caero.type == 'BODY7':
