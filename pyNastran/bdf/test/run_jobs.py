@@ -7,16 +7,16 @@ import argparse
 
 from cpylog import SimpleLogger
 import pyNastran
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import print_bad_path, PathLike
 from pyNastran.utils.nastran_utils import run_nastran
 from pyNastran.utils.dev import get_files_of_type
-
 
 def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     """
     run_nastran_job dirname
     run_nastran_job filename.bdf -x C:\bin\nastran.exe
     run_nastran_job .            -x C:\bin\nastran.exe --cleanup -r --test
+    run_nastran_job filename.bdf filename2.bdf
     """
     FILE = os.path.abspath(__file__)
     if argv is None:
@@ -25,9 +25,10 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
         argv = [FILE] + argv[2:]  # ['run_jobs'] + sys.argv[2:]
     if not quiet:
         print(f'argv = {argv}')
+    #print(f'argv = {argv}')
 
     parser = argparse.ArgumentParser(prog='run_jobs')
-    parser.add_argument("bdf_dirname_filename", help='path to Nastran filename')
+    parser.add_argument('bdf_dirname_filename', nargs='+', help='path to Nastran filename')
     #parser.add_argument('-o', '--overwrite', default=False, help='overwrite files')
     parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran execuable')
     parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
@@ -42,7 +43,8 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
         print(args)
     run = args.test
     recursive = args.recursive
-    bdf_filename_dirname = Path(args.bdf_dirname_filename)
+    #print(args)
+    bdf_filename_dirname = [Path(filenamei) for filenamei in args.bdf_dirname_filename]
     nastran_exe = args.exe
     # if nastran_exe is None:
     #     nastran_exe = 'nastran'
@@ -62,8 +64,8 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     return nfiles
 
 
-def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
-                             extensions: list[str],
+def get_bdf_filenames_to_run(bdf_filename_dirname: PathLike | list[PathLike],
+                             extensions: str | list[str],
                              recursive: bool=False) -> list[Path]:
     if isinstance(extensions, str):
         extensions = [extensions]
@@ -73,9 +75,18 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
 
     bdf_filename_dirname_list = bdf_filename_dirname
     if not isinstance(bdf_filename_dirname, list):
+        if isinstance(bdf_filename_dirname, str):
+            bdf_filename_dirname = Path(bdf_filename_dirname)
         assert isinstance(bdf_filename_dirname, Path), bdf_filename_dirname
         assert bdf_filename_dirname.exists(), bdf_filename_dirname
         bdf_filename_dirname_list = [bdf_filename_dirname]
+    elif isinstance(bdf_filename_dirname, str):
+        bdf_filename_dirname_list = [Path(bdf_filename_dirname)]
+    elif isinstance(bdf_filename_dirname, list):
+        bdf_filename_dirname_list = [Path(pathi) for pathi in bdf_filename_dirname]
+    #else:
+        #print(type(bdf_filename_dirname_list), bdf_filename_dirname_list)
+        #adsf
     del bdf_filename_dirname
 
     #----------------------------------------
@@ -118,8 +129,11 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: Path | list[Path],
     return bdf_filenames_run
 
 
-def run_jobs(bdf_filename_dirname: Path, nastran_exe: str | Path,
-             extensions: list[str], cleanup: bool=True,
+
+def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
+             nastran_exe: PathLike,
+             extensions: str | list[str],
+             cleanup: bool=True,
              recursive: bool=False,
              run: bool=True,
              log: SimpleLogger | str='debug') -> int:

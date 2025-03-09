@@ -33,6 +33,7 @@ Crossing = tuple[float, float, float]
 def make_flutter_response(f06_filename: PathLike,
                           f06_units=None, out_units=None,
                           use_rhoref: bool=False,
+                          read_flutter: bool=True,
                           log: Optional[SimpleLogger]=None) -> tuple[dict[int, FlutterResponse],
                                                                dict[str, Any]]:
     """
@@ -92,33 +93,62 @@ def make_flutter_response(f06_filename: PathLike,
     data = {}
     matrices = {}
 
+    is_heavy_debug = False
+    imax = 10000
+
+    break_list = [
+        'OLOAD    RESULTANT',
+        'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O',
+        'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O',
+        'C A S E    C O N T R O L    E C H O',
+        'M O D E L   S U M M A R Y',
+        'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y',
+        '* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',
+        # 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R',
+        #'R E A L   E I G E N V A L U E S',
+    ]
+
     log.info('f06_filename = %r' % f06_filename)
+    read_line_flag = True
+    real_eigenvalues_list = []
     with open(f06_filename, 'r') as f06_file:
         while 1:
             nblank = 0
-            line = f06_file.readline()
-            iline += 1
-            #log.debug(f'A: line[{iline:d}] = {line!r}')
-            # if iline > 930:
-            #     asdf
+            if read_line_flag:
+                line = f06_file.readline()
+                iline += 1
+            else:
+                assert read_line_flag is False, read_line_flag
+                if is_heavy_debug:  # pragma: no cover
+                    log.debug(f'skipping iline={iline} line={line.rstrip()!r}')
+                read_line_flag = True
+
+            if '* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *' in line:
+                break
+            if is_heavy_debug:  # pragma: no cover
+                log.debug(f'A: line[{iline:d}] = {line!r}')
+                if iline > imax:
+                    raise RuntimeError(f'i > imax; {iline}')
+
+            for break_line in break_list:
+                if break_line in line:
+                    if is_heavy_debug:  # pragma: no cover
+                        log.debug(f'found break iline={iline}; line={line}')
+                    while 'PAGE' not in line:
+                        line = f06_file.readline(); iline += 1
+                        continue
+                    if is_heavy_debug:  # pragma: no cover
+                        log.debug('end of page*')
+                    read_line_flag = False
+                    continue
 
             if 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line:
                 print(f'line = {line}')
                 asdf
             elif 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
-                frequencies, Mhh, Bhh, Khh = read_real_eigenvalues(
+                real_eigenvaluesi = read_real_eigenvalues(
                     f06_file, log, line, iline)
-
-                isort = np.argsort(Khh)
-                # matrices['MHH'].append(np.diag(Mhh[isort]))
-                # matrices['BHH'].append(np.diag(Bhh[isort]))
-                # matrices['KHH'].append(np.diag(Khh[isort]))
-                if load_eigenvalues:
-                    matrices['freq'] = frequencies[isort]
-                    matrices['MHH'] = np.diag(Mhh[isort])
-                    matrices['BHH'] = np.diag(Bhh[isort])
-                    matrices['KHH'] = np.diag(Khh[isort])
-                del frequencies, Mhh, Bhh, Khh
+                real_eigenvalues_list.append(real_eigenvaluesi)
 
             while ('SUBCASE ' not in line and
                    'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' not in line and
@@ -126,8 +156,20 @@ def make_flutter_response(f06_filename: PathLike,
                    'FLUTTER  SUMMARY' not in line and
                    'EIGENVECTOR FROM THE' not in line):
                 line = f06_file.readline()
+
+                for word in break_list:
+                    if word in line:
+                        read_line_flag = False
+                        break
+                if not read_line_flag:
+                    if is_heavy_debug:  # pragma: no cover
+                        log.debug(f'per read_line_flag=False, breaking on iline={iline:d} {line.rstrip()!r}')
+                    break
+
                 iline += 1
-                #print(f'i={iline} {line.rstrip()}')
+                if is_heavy_debug:  # pragma: no cover
+                    log.debug(f'C i={iline} {line.rstrip()}')
+
                 if not line:
                     nblank += 1
                 else:
@@ -137,10 +179,16 @@ def make_flutter_response(f06_filename: PathLike,
                     break
             if nblank == 100:
                 break
+            if read_line_flag is False:
+                if is_heavy_debug:  # pragma: no cover
+                    log.debug('continue on read_line_flag=False')
+                continue
+
             #if 'FLUTTER  SUMMARY' in line:
                 #found_flutter_summary = True
 
-            #log.debug(f'B: line[{iline}] = {line!r}')
+            if is_heavy_debug:  # pragma: no cover
+                log.debug(f'B: line[{iline}] = {line!r}')
             if 'SUBCASE' in line[109:]:
                 #log.debug(f'B1: subcase')
                 ieigenvector = -1
@@ -183,18 +231,24 @@ def make_flutter_response(f06_filename: PathLike,
                 iline, line, opgwg = _read_opgwg(f06_file, iline, line)
                 data['opgwg'] = opgwg
 
-            #log.debug(f'C: line[{iline:d}]_FSa = {line}')
+            if is_heavy_debug:  # pragma: no cover
+                log.debug(f'C: line[{iline:d}]_FSa = {line}')
             last_line = None
             while 'FLUTTER  SUMMARY' not in line:
-                #log.debug('i=%s %s' % (iline, line.strip().replace('   ', ' ')))
+                if is_heavy_debug:   # pragma: no cover
+                    log.debug('i=%s %s' % (iline, line.strip().replace('   ', ' ')))
 
                 iline, line, ieigenvector, methodi = _check_for_eigenvector(
                     f06_file, iline, line, eigr_eigi_velocity_list,
                     matrices, eigenvectors, ieigenvector,
-                    load_eigenvalues, log)
+                    load_eigenvalues, log, real_eigenvalues_list)
 
-                #short_line = line.strip().replace('   ', ' ')
-                #log.debug(f'i={iline} {short_line!r}')
+                short_line = line.strip().replace('   ', ' ')
+                if is_heavy_debug:  # pragma: no cover
+                    log.debug(f'i={iline} {short_line!r}')
+                    if iline > imax:
+                        raise RuntimeError(f'iline > imax; {iline:d}')
+
                 last_line = line
                 line = f06_file.readline()
 
@@ -206,7 +260,7 @@ def make_flutter_response(f06_filename: PathLike,
                     nblank += 1
                 if nblank == 100:
                     print(line.strip())
-                    log.warning('breaking on nblank=100')
+                    log.warning(f'breaking on nblank=100; iline={iline:d}')
                     break
 
             if '* * * END OF JOB * * *' in line:
@@ -343,23 +397,45 @@ def make_flutter_response(f06_filename: PathLike,
             #print('')
 
         log.debug('modes = %s' % modes)
-        #if not found_flutter_summary:
-            #print(line)
-            #raise RuntimeError("failed to find 'FLUTTER SUMMARY'")
-        response = FlutterResponse(
-            f06_filename, subcase, configuration, xysym, xzsym,
-            mach, density_ratio, method,
-            modes, results,
-            in_units=f06_units,
-            use_rhoref=use_rhoref,
-            eigenvector=eigenvectors_array,
-            eigr_eigi_velocity=eigr_eigi_velocity)
-        response.set_out_units(out_units)
-        flutters[subcase] = response
+        if read_flutter:
+            #if not found_flutter_summary:
+                #print(line)
+                #raise RuntimeError("failed to find 'FLUTTER SUMMARY'")
+            response = FlutterResponse(
+                f06_filename, subcase, configuration, xysym, xzsym,
+                mach, density_ratio, method,
+                modes, results,
+                in_units=f06_units,
+                use_rhoref=use_rhoref,
+                eigenvector=eigenvectors_array,
+                eigr_eigi_velocity=eigr_eigi_velocity)
+            response.set_out_units(out_units)
+            flutters[subcase] = response
 
+    if load_eigenvalues and len(real_eigenvalues_list):
+        _fill_matrices(matrices, real_eigenvalues_list)
+
+    assert load_eigenvalues
+    #assert len(real_eigenvalues_list)
     if len(matrices):
         data['matrices'] = matrices
     return flutters, data
+
+
+def _fill_matrices(matrices: dict,
+                   real_eigenvalues_list: list[np.ndarray]) -> None:
+    real_eigenvalues = np.vstack(real_eigenvalues_list)
+    frequencies = real_eigenvalues[:, 0]
+    Mhh = real_eigenvalues[:, 1]
+    Bhh = real_eigenvalues[:, 2]
+    Khh = real_eigenvalues[:, 3]
+    isort = np.argsort(Khh)
+
+    matrices['freq'] = frequencies[isort]
+    matrices['MHH'] = np.diag(Mhh[isort])
+    matrices['BHH'] = np.diag(Bhh[isort])
+    matrices['KHH'] = np.diag(Khh[isort])
+
 
 def _read_opgwg(f06_file: TextIO, iline: int,
                 line: str) -> tuple[int, str, dict[str, np.ndarray]]:
@@ -632,7 +708,7 @@ def plot_flutter_f06(f06_filename: PathLike,
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
     assert ivelocity is None or isinstance(ivelocity, integer_types), ivelocity
     #assert mode is None or isinstance(mode, integer_types), mode
-    flutters, mass = make_flutter_response(
+    flutters, mass_lama = make_flutter_response(
         f06_filename, f06_units=f06_units, out_units=out_units,
         use_rhoref=use_rhoref, log=log)
 
@@ -655,7 +731,7 @@ def plot_flutter_f06(f06_filename: PathLike,
                            kfreq_damping_filename=kfreq_damping_filename,
                            subcases=subcases,
                            show=show, clear=clear, close=close)
-    return flutters, mass
+    return flutters, mass_lama
 
 def make_flutter_plots(modes: list[int],
                        flutters: dict[int, FlutterResponse],
@@ -962,19 +1038,13 @@ def _check_for_eigenvector(f06_file: TextIO, iline: int, line: str,
                            eigenvectors: list[np.ndarray],
                            ieigenvector: int,
                            load_eigenvalues: bool,
-                           log: SimpleLogger) -> tuple[int, str, int]:
+                           log: SimpleLogger,
+                           real_eigenvalues_list: list[np.ndarray]) -> tuple[int, str, int]:
     methodi = ''
     if 'R E A L   E I G E N V A L U E S' in line:
-        frequencies, Mhh, Bhh, Khh = read_real_eigenvalues(
+        real_eigenvaluesi = read_real_eigenvalues(
             f06_file, log, line, iline)
-
-        isort = np.argsort(Khh)
-        if load_eigenvalues:
-            matrices['freq'] = frequencies[isort]
-            matrices['MHH'] = np.diag(Mhh[isort])
-            matrices['BHH'] = np.diag(Bhh[isort])
-            matrices['KHH'] = np.diag(Khh[isort])
-        del frequencies, Mhh, Bhh, Khh
+        real_eigenvalues_list.append(real_eigenvaluesi)
 
     elif 'EIGENVECTOR FROM THE' in line:
         # '                                               EIGENVECTOR FROM THE  PKNL METHOD

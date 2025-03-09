@@ -8048,8 +8048,17 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_method_object(method)
         return method
 
-    def add_eigrl(self, sid, v1=None, v2=None, nd=None, msglvl=0, maxset=None, shfscl=None,
-                  norm=None, options=None, values=None, comment='') -> EIGRL:
+    def add_eigrl(self, sid: int,
+                  v1: Optional[float]=None,
+                  v2: Optional[float]=None,
+                  nd: Optional[int]=None,
+                  msglvl: int=0,
+                  maxset: Optional[int]=None,
+                  shfscl: Optional[int]=None,
+                  norm: Optional[str]=None,
+                  options: Optional[list]=None,
+                  values: Optional[list]=None,
+                  comment: str='') -> EIGRL:
         """
         Adds an EIGRL card
 
@@ -8079,8 +8088,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
             a comment for the card
 
         """
-        method = EIGRL(sid, v1, v2, nd, msglvl, maxset, shfscl, norm, options,
-                       values, comment=comment)
+        method = EIGRL(sid, v1, v2, nd, msglvl, maxset, shfscl, norm,
+                       options, values, comment=comment)
         self._add_methods._add_method_object(method)
         return method
 

@@ -1484,7 +1484,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [-p PIN_FLAGS_CSV_FILENAME]\n'
         '  bdf solid_dof                   IN_BDF_FILENAME\n'
         '  bdf stats                       IN_BDF_FILENAME [--punch]\n'
-        '  bdf run_jobs                    BDF_FILENAME_DIRNAME [--exe NASTRAN_PATH] [--cleanup]\n'
+        '  bdf run_jobs                    BDF_FILENAME_DIRNAME [FILE...] [--exe NASTRAN_PATH] [--cleanup]\n'
     )
 
     if dev:

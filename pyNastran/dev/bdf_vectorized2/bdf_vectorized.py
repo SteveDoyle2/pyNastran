@@ -703,7 +703,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MAT4', 'MAT5',
 
             ## spcs
-            'SPC', 'SPCADD', 'SPC1', 'SPCAX', 'SPCOFF', 'SPCOFF1',
+            'SPC', 'SPCADD', 'SPC1', 'SPCOFF', 'SPCOFF1',  # 'SPCAX', removed
             'GMSPC',
 
             ## mpcs

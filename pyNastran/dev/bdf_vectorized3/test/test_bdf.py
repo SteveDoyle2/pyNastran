@@ -2865,6 +2865,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}]\n'
         '              [--skip_nominal] [--skip_loads] [--skip_mass] [--skip_equivalence]\n'
+        '              [--lax] [--duplicate]\n'
     )
     usage = (
         "Usage:\n"
@@ -2901,6 +2902,8 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_nominal_bar  skip the nominal model bar comparison (default=False)\n'
         '  --skip_loads   skip the loads summation calculations (default=False)\n'
         '  --skip_mass    skip the mass properties calculations (default=False)\n'
+        '  --lax          dont be strict on float parsing\n'
+        '  --duplicate    overwrite duplicate GRIDs\n'
         '  --skip_equivalence  skips the nodal equivalencing (default=False)\n'
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
         f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n'

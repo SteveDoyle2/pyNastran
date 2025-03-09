@@ -262,43 +262,43 @@ class AddMethods:
         else:
             raise RuntimeError('nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, model.nodes[key], node))
 
-    def _add_gridb_object(self, node: GRIDB, allow_overwrites: bool=False) -> None:
-        """adds a GRIDB card"""
-        key = node.nid
-        model = self.model
-        assert key > 0, 'eid=%s node=%s' % (key, node)
-        if key in self.model.gridb and not allow_overwrites:
-            assert node.nid not in model.gridb, 'nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, model.gridb[key], node)
-        model.gridb[key] = node
-        model._type_to_id_map[node.type].append(key)
-        model._is_axis_symmetric = True
+    # def _add_gridb_object(self, node: GRIDB, allow_overwrites: bool=False) -> None:
+    #     """adds a GRIDB card"""
+    #     key = node.nid
+    #     model = self.model
+    #     assert key > 0, 'eid=%s node=%s' % (key, node)
+    #     if key in self.model.gridb and not allow_overwrites:
+    #         assert node.nid not in model.gridb, 'nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, model.gridb[key], node)
+    #     model.gridb[key] = node
+    #     model._type_to_id_map[node.type].append(key)
+    #     model._is_axis_symmetric = True
 
-    def _add_ringfl_object(self, ringfl: RINGFL, allow_overwrites: bool=False) -> None:
-        """adds a RINGFL card"""
-        key = ringfl.ringfl
-        assert key > 0, 'eid=%s ringfl=%s' % (key, ringfl)
-        if key in self.model.ringfl and not allow_overwrites:
-            assert ringfl.ringfl not in self.model.ringfl, 'ringfl=%s\nold_ringfl=\n%snew_ringfl=\n%s' % (ringfl.ringfl, self.model.ringfl[key], ringfl)
-        self.model.ringfl[key] = ringfl
-        self.model._type_to_id_map[ringfl.type].append(key)
-        self.model._is_axis_symmetric = True
+    # def _add_ringfl_object(self, ringfl: RINGFL, allow_overwrites: bool=False) -> None:
+    #     """adds a RINGFL card"""
+    #     key = ringfl.ringfl
+    #     assert key > 0, 'eid=%s ringfl=%s' % (key, ringfl)
+    #     if key in self.model.ringfl and not allow_overwrites:
+    #         assert ringfl.ringfl not in self.model.ringfl, 'ringfl=%s\nold_ringfl=\n%snew_ringfl=\n%s' % (ringfl.ringfl, self.model.ringfl[key], ringfl)
+    #     self.model.ringfl[key] = ringfl
+    #     self.model._type_to_id_map[ringfl.type].append(key)
+    #     self.model._is_axis_symmetric = True
 
-    def _add_ringax_object(self, ringax: RINGAX | POINTAX,
-                           allow_overwrites: bool=False) -> None:
-        """adds a RINGAX card"""
-        key = ringax.nid
-        model = self.model
-        if key in self.model.ringaxs and not allow_overwrites:
-            if not ringax == model.ringaxs[key]:
-                assert ringax.nid not in model.ringaxs, 'nid=%s\nold_ringax=\n%snew_ringax=\n%s' % (ringax.nid, model.ringaxs[key], ringax)
-            else:
-                #print('RINGAX was duplicated...nid=%s; ringax=\n%s' % (key, ringax))
-                pass
-        else:
-            assert key > 0, 'nid=%s ringax=%s' % (key, ringax)
-            model.ringaxs[key] = ringax
-            model._type_to_id_map[ringax.type].append(key)
-        model._is_axis_symmetric = True
+    # def _add_ringax_object(self, ringax: RINGAX | POINTAX,
+    #                        allow_overwrites: bool=False) -> None:
+    #     """adds a RINGAX card"""
+    #     key = ringax.nid
+    #     model = self.model
+    #     if key in self.model.ringaxs and not allow_overwrites:
+    #         if not ringax == model.ringaxs[key]:
+    #             assert ringax.nid not in model.ringaxs, 'nid=%s\nold_ringax=\n%snew_ringax=\n%s' % (ringax.nid, model.ringaxs[key], ringax)
+    #         else:
+    #             #print('RINGAX was duplicated...nid=%s; ringax=\n%s' % (key, ringax))
+    #             pass
+    #     else:
+    #         assert key > 0, 'nid=%s ringax=%s' % (key, ringax)
+    #         model.ringaxs[key] = ringax
+    #         model._type_to_id_map[ringax.type].append(key)
+    #     model._is_axis_symmetric = True
 
     def _add_seqgp_object(self, seqgp: SEQGP) -> None:
         """adds an SEQGP card"""

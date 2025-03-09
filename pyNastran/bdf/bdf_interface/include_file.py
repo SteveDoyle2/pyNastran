@@ -18,6 +18,7 @@ IS_WINDOWS = 'nt' in os.name
 
 def get_include_filename(card_lines: list[str],
                          include_dirs: list[str],
+                         replace_includes: dict[str, str],
                          source_filename: str='',
                          is_windows: Optional[bool]=None,
                          debug: bool=False,
@@ -54,6 +55,10 @@ def get_include_filename(card_lines: list[str],
         is_windows = IS_WINDOWS
 
     filename_raw = parse_include_lines(card_lines)
+    if filename_raw in replace_includes:
+        filename_raw = replace_includes[filename_raw]
+        if len(filename_raw) == 0:
+            return filename_raw
 
     ninclude_dirs = len(include_dirs)
     for include_dir in include_dirs:

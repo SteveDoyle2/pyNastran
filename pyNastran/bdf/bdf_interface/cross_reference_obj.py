@@ -256,21 +256,21 @@ class CrossReference:
         if model.aeros:
             model.aeros.cross_reference(model)
 
-        if check_caero_element_ids:  # only support CAERO1
-            ncaeros = len(model.caeros)
-            if ncaeros > 1:
-                # we don't need to check the ncaeros=1 case
-                i = 0
-                min_maxs = np.zeros((ncaeros, 2), dtype='int32')
-                for unused_eid, caero in sorted(model.caeros.items()):
-                    min_maxs[i, :] = caero.min_max_eid
-                    i += 1
-                isort = np.argsort(min_maxs.ravel())
-                expected = np.arange(ncaeros * 2, dtype='int32')
-                if not np.array_equal(isort, expected):
-                    msg = 'CAERO element ids are inconsistent\n'
-                    msg += 'isort = %s' % str(isort)
-                    raise RuntimeError(msg)
+        if len(model.caeros) and 'WKK' in model.dmi:
+            check_caero_element_ids = True
+
+        if check_caero_element_ids:
+            nsubpanels = _check_caero_subpanel_overlap(model)
+
+            if 'W2GJ' in model.dmi:
+                w2gj = model.dmi['W2GJ']
+                assert w2gj.shape == (nsubpanels, 1), f'nsubpanels={nsubpanels}; w2gj.shape={str(w2gj.shape)}'
+            if 'FA2J' in model.dmi:
+                fa2j = model.dmi['FA2J']
+                assert fa2j.shape == (nsubpanels, 1), f'nsubpanels={nsubpanels}; fa2j.shape={str(fa2j.shape)}'
+            if 'WKK' in model.dmi:
+                wkk = model.dmi['WKK']
+                assert wkk.shape in [(nsubpanels*2, 1), (nsubpanels*2, nsubpanels*2)], f'nsubpanels*2={nsubpanels*2}; wkk.shape={str(wkk.shape)}'
 
             #'AERO',     ## aero
             #'AEROS',    ## aeros
@@ -1015,3 +1015,41 @@ class CrossReference:
                         #raise
         for node in model.nodes.values():
             node.elements_ref = nodes[node.nid]
+
+def _check_caero_subpanel_overlap(model: BDF) -> int:
+    """
+    only support CAERO1
+    check that subpanel ids don't overlap
+    """
+    ncaeros = len(model.caeros)
+    if ncaeros == 0:
+        return 0
+    # we don't need to check the ncaeros=1 case
+    i = 0
+    nsubpanels = 0
+    #print('eid, nsubpanelsi')
+    min_maxs = np.zeros((ncaeros, 2), dtype='int32')
+    for eid, caero in sorted(model.caeros.items()):
+        min_maxs[i, :] = caero.min_max_eid
+        npointsi, nsubpanelsi = caero.get_npanel_points_elements()
+        nsubpanels += nsubpanelsi
+        #print(caero)
+        #print(eid, nsubpanelsi)
+        i += 1
+    nsubpanels_per_caeros = nsubpanels
+    mins = min_maxs[:, 0]
+    maxs = min_maxs[:, 1]
+    delta = maxs - mins
+    #print('delta:')
+    #print(f'delta = {delta}')
+    assert delta.min() > 0, delta
+    nsubpanels = delta.sum()
+    assert nsubpanels == nsubpanels_per_caeros, f'nsubpanels={nsubpanels} != nsubpanels_per_caeros={nsubpanels_per_caeros}'
+
+    isort = np.argsort(min_maxs.ravel())
+    expected = np.arange(ncaeros * 2, dtype='int32')
+    if not np.array_equal(isort, expected):
+        msg = 'CAERO element ids are inconsistent\n'
+        msg += 'isort = %s' % str(isort)
+        raise RuntimeError(msg)
+    return nsubpanels

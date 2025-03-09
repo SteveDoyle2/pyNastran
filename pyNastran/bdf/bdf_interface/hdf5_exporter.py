@@ -74,7 +74,8 @@ dict_int_obj_attrs: list[str] = [
     'dmig', 'dmiji', 'dmij', 'dmik', 'dmi', 'dmiax',
     'dti',
     'dphases', 'delays',
-    'epoints', 'gridb',
+    'epoints',
+    #'gridb',  (removed)
     'nlparms', 'nlpcis',
     'normals',
     'nxstrats',
@@ -98,7 +99,7 @@ dict_int_obj_attrs: list[str] = [
     'release',
 
     # axisymmetric
-    'ringaxs', 'ringfl',
+    #'ringaxs', 'ringfl', # removed
 
     # parametric
     'pset', 'gmcurv', 'feedge', 'feface', 'gmsurf',
@@ -109,7 +110,9 @@ dict_int_obj_attrs: list[str] = [
 
 scalar_obj_keys: list[str] = [
     # required----
-    'aero', 'aeros', 'axic', 'axif', 'cyax', 'baror', 'beamor',
+    'aero', 'aeros',
+    #'axic', 'axif',  # removed
+    'cyax', 'baror', 'beamor',
     'acmodl', 'modtrak',
     'doptprm',
     'dtable', 'grdset', 'radset', 'seqgp',
@@ -123,7 +126,7 @@ scalar_keys: list[str] = [
 
     # basic types----
     'bdf_filename',
-    '_auto_reject', '_encoding', '_iparse_errors', '_is_axis_symmetric', '_is_cards_dict',
+    '_auto_reject', '_encoding', '_iparse_errors', '_is_cards_dict',
     '_is_dynamic_syntax', '_is_long_ids', '_ixref_errors', '_nastran_format', '_nparse_errors',
     '_nxref_errors', '_sol', '_stop_on_duplicate_error', '_stop_on_parsing_error',
     #'_stop_on_xref_error',

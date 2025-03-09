@@ -119,7 +119,8 @@ def compare_materials(fem1: BDF, fem2: BDF) -> None:
 
 def compare_card_content(fem1: BDF, fem2: BDF) -> None:
     check_obj_names = [
-        'params', 'nodes', 'spoints', 'epoints', 'points', 'gridb',
+        'params', 'nodes', 'spoints', 'epoints', 'points',
+        #'gridb', # removed
         #'elements', 'rigid_elements',
         'nsms', 'nsmadds',
         'properties', 'properties_mass', 'materials', 'creep_materials',

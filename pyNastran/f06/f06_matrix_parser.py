@@ -81,15 +81,8 @@ def _read_f06_matrices(f06_file: TextIO,
             continue
 
         if 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
-            frequencies, Mhh, Bhh, Khh = read_real_eigenvalues(f06_file, log, line, i)
-            isort = np.argsort(Khh)
-            #matrices['MHH'].append(np.diag(Mhh[isort]))
-            #matrices['BHH'].append(np.diag(Bhh[isort]))
-            #matrices['KHH'].append(np.diag(Khh[isort]))
-            matrices['MHH'] = np.diag(Mhh[isort])
-            matrices['BHH'] = np.diag(Bhh[isort])
-            matrices['KHH'] = np.diag(Khh[isort])
-            del Mhh, Bhh, Khh
+            real_eigenvaluesi = read_real_eigenvalues(f06_file, log, line, i)
+            real_eigenvalues_list.append(real_eigenvaluesi)
 
         if line.startswith('0    TABLE'):
             table_name, table, line, i = _read_table(f06_file, line, i, log)
@@ -152,10 +145,7 @@ def _compress_matrices(matrices: dict[str, list[np.ndarray]]) -> dict[str, np.nd
 
 def read_real_eigenvalues(f06_file: TextIO,
                           log: SimpleLogger,
-                          line: str, i: int) -> tuple[np.ndarray,
-                                                      np.ndarray,
-                                                      np.ndarray,
-                                                      np.ndarray]:
+                          line: str, i: int) -> np.ndarray:
     """
     Starts with line='R E A L   E I G E N V A L U E S'
 
@@ -205,7 +195,8 @@ def read_real_eigenvalues(f06_file: TextIO,
     Mhh = np.array(Mhh_list, dtype='float64')
     Bhh = np.array(Bhh_list, dtype='float64')
     Khh = np.array(Khh_list, dtype='float64')
-    return frequencies, Mhh, Bhh, Khh
+    out = np.column_stack([frequencies, Mhh, Bhh, Khh])
+    return out
 
 
 def _read_matrix(f06_file: TextIO,

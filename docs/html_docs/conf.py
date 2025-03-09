@@ -586,19 +586,19 @@ exclusions = (
     '_add_bsurf_object',
     '_add_bsurfs_object',
     '_add_caero_object',
-    '_add_axif_object',
+    #'_add_axif_object', # removed
     '_add_baror_object',
     '_add_bconp_object',
     '_add_beamor_object',
     '_add_blseg_object',
     '_add_csuper_object',
     '_add_csupext_object',
-    '_add_gridb_object',
+    #'_add_gridb_object', # removed
     '_add_normal_object',
     '_add_radcav_object',
     '_add_radmtx_object',
     '_add_radset_object',
-    '_add_ringfl_object',
+    #'_add_ringfl_object', # removed
     '_add_sebndry_object',
     '_add_sebulk_object',
     '_add_seconct_object',

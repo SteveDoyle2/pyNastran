@@ -30,7 +30,8 @@ def get_bdf_stats(model: BDF, return_type: str='string',
 
     """
     card_dict_groups = [
-        'params', 'nodes', 'spoints', 'epoints', 'points', 'gridb',
+        'params', 'nodes', 'spoints', 'epoints', 'points',
+        #'gridb', # (removed)
         'coords',
 
         'elements', 'ao_element_flags', 'normals', 'rigid_elements', 'plotels',
@@ -45,7 +46,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'matcid', 'MATDMG',
 
         # axisysmmetric
-        'ringaxs', 'ringfl',
+        #'ringaxs', 'ringfl', (removed)
 
         # dynamic cards
         'dareas', 'delays', 'dphases', 'nlparms', 'nlpcis',
@@ -115,8 +116,9 @@ def get_bdf_stats(model: BDF, return_type: str='string',
     ]
     scalar_attrs = [
         'app',
-        'aero', 'aeros', 'grdset', # handled below
-        'axic', 'axif', 'cyax', 'modtrak',
+        'aero', 'aeros', 'grdset',  # handled below
+        #'axic', 'axif',  # (removed)
+        'cyax', 'modtrak',
         'mdlprm',
 
         # not handled
@@ -132,11 +134,12 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'monitor_points',
     ]
     skip_attrs = [
-        'model_groups',
-        'active_filename', 'active_filenames', 'debug', # 'log',
+        'model_groups', 'allow_duplicate_element_rbe_mass',
+        'active_filename', 'active_filenames', 'debug',  # 'log',
         'reject_lines', 'is_strict_card_parser',
         'is_nx', 'is_msc', 'is_optistruct', 'is_zona', 'is_mystran', 'is_nasa95',
         'is_bdf_vectorized', 'dumplines', 'values_to_skip',
+        'replace_includes',
         'system_command_lines', 'executive_control_lines', 'case_control_lines',
         'case_control_deck',
         'is_superelements', 'special_cards', 'units',

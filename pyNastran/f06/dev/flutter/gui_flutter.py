@@ -54,6 +54,8 @@ PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation'
               'zimmerman']
 UNITS_IN = ['english_in', 'english_kt', 'english_ft',
             'si', 'si_mm']
+MODE_SWITCH_METHODS = ['None', 'Frequency', 'Damping']
+
 UNITS_OUT = UNITS_IN
 
 #FONT_SIZE = 12
@@ -372,6 +374,10 @@ class FlutterGui(LoggableGui):
             line_edit_min.setText(value0)
             line_edit_max.setText(value1)
 
+        point_removal = data.get('point_removal', [])
+        point_removal_str = get_point_removal_str(point_removal)
+        self.point_removal_edit.setText(point_removal_str)
+
         line_edits = [
             ('recent_files', 0, self.f06_filename_edit),
             ('freq_tol', -1, self.freq_tol_edit),
@@ -403,8 +409,12 @@ class FlutterGui(LoggableGui):
             ('plot_type', self.plot_type_pulldown, PLOT_TYPES),
             ('units_in', self.units_in_pulldown, UNITS_IN),
             ('units_out', self.units_out_pulldown, UNITS_OUT),
+            ('mode_switch_method', self.mode_switch_method_pulldown, MODE_SWITCH_METHODS),
         ]
         for key, pulldown_edit, values in pulldown_edits:
+            if key not in data:
+                #print(f'apply_settings: skipping key={key!r}')
+                continue
             value = data[key]
             index = values.index(value)
             pulldown_edit.setCurrentIndex(index)
@@ -499,6 +509,8 @@ class FlutterGui(LoggableGui):
             self._apply_settings(data)
         except Exception as e:
             self.log.error(f'failed to load {json_filename}\n{str(e)}')
+            print(traceback.format_exc())
+            #print(traceback.format_exception_only(e))
             #raise
             return
         self.log.info(f'finished loading {json_filename!r}')
@@ -684,7 +696,7 @@ class FlutterGui(LoggableGui):
         self.eas_damping_lim_edit_max.setToolTip('Defines the flutter crossing range')
 
         self.point_removal_label = QLabel('Point Removal:', self)
-        self.point_removal_edit = QLineEdit('400:410,450:500', self)
+        self.point_removal_edit = QLineEdit('', self)
         self.point_removal_edit.setToolTip('Remove bad points from a mode; "400:410,450:500"')
 
         self.mode_label = QLabel('Mode:', self)
@@ -705,6 +717,11 @@ class FlutterGui(LoggableGui):
         self.solution_type_pulldown = QComboBox(self)
         self.mode2_label = QLabel('Mode:', self)
         self.mode2_pulldown = QComboBox(self)
+
+        self.mode_switch_method_label = QLabel('Mode Switch Method:', self)
+        self.mode_switch_method_pulldown = QComboBox(self)
+        self.mode_switch_method_pulldown.addItems(MODE_SWITCH_METHODS)
+
         self.setup_modes()
         self.on_plot_type()
         self.on_enable_bdf()
@@ -789,6 +806,10 @@ class FlutterGui(LoggableGui):
         show_xaxis = not show_eigenvalue
         show_freq_tol = show_xaxis or show_root_locus
         show_crossing = show_xaxis
+        show_mode_switch = show_xaxis or show_root_locus
+
+        self.mode_switch_method_label.setVisible(show_mode_switch)
+        self.mode_switch_method_pulldown.setVisible(show_mode_switch)
 
         self.x_plot_type_label.setVisible(show_xaxis)
         self.x_plot_type_pulldown.setVisible(show_xaxis)
@@ -1031,6 +1052,10 @@ class FlutterGui(LoggableGui):
 
         grid.addWidget(self.point_removal_label, irow, 0)
         grid.addWidget(self.point_removal_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.mode_switch_method_label, irow, 0)
+        grid.addWidget(self.mode_switch_method_pulldown, irow, 1)
         irow += 1
 
         jrow = 0
@@ -1498,6 +1523,7 @@ class FlutterGui(LoggableGui):
                     damping_limit=damping_limit,
                     png_filename=png_filename,
                     point_removal=self.point_removal,
+                    mode_switch_method=self.mode_switch_method,
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
                 fig.canvas.draw()
@@ -1601,19 +1627,7 @@ class FlutterGui(LoggableGui):
 
         # 595:596,600:601
         point_removal_str = self.point_removal_edit.text().strip()
-        point_removal = []
-        try:
-            point_removal_list = point_removal_str.split(',')
-            for point in point_removal_list:
-                a_str, b_str = point.split(':')
-                a = float(a_str)
-                b = float(b_str)
-                point_float = (a, b)
-                point_removal.append(point_float)
-        except Exception as e:
-            self.log.error(str(e))
-            # print(traceback.print_tb(e))
-            print(traceback.print_exception(e))
+        point_removal = point_removal_str_to_point_removal(point_removal_str, self.log)
 
         if is_passed_vl and vl is None:
             vl = -1.0
@@ -1705,6 +1719,8 @@ class FlutterGui(LoggableGui):
 
         self.x_plot_type = self.x_plot_type_pulldown.currentText()
         self.plot_type = self.plot_type_pulldown.currentText()
+        self.mode_switch_method = self.mode_switch_method_pulldown.currentText()
+
         units_in = self.units_in_pulldown.currentText()
         units_out = self.units_out_pulldown.currentText()
         output_directory = self.output_directory_edit.text()
@@ -1781,6 +1797,7 @@ class FlutterGui(LoggableGui):
             'damping': damping,
             'eas_damping_lim': eas_damping_lim,
             'point_removal': point_removal,
+            'mode_switch_method': self.mode_switch_method,
         }
         self.units_in = units_in
         self.units_out = units_out
@@ -1832,6 +1849,59 @@ class FlutterGui(LoggableGui):
         print(f'WARNING: {msg}')
     def log_error(self, msg: str) -> None:
         print(f'ERROR:   {msg}')
+
+
+def get_point_removal_str(point_removal: list[tuple[float, float]]):
+    """
+    >>> point_removal = [[400.0, 410.0], [450.0, 500.0]]
+    point_removal_str = get_point_removal_str(point_removal)
+    >>> point_removal_str
+    '400:410,450:500'
+
+    >>> point_removal = [[450.0, -1.0]]
+    point_removal_str = get_point_removal_str(point_removal)
+    >>> point_removal_str
+    '450:'
+
+    >>> point_removal = [[-1.0, 500.0]]
+    point_removal_str = get_point_removal_str(point_removal)
+    >>> point_removal_str
+    ':500'
+    """
+    out = []
+    for mini, maxi in point_removal:
+        if mini > 0 and maxi > 0:
+            outi = f'{mini:g}:{maxi:g}'
+        elif mini > 0:
+            outi = f'{mini:g}:'
+        elif maxi > 0:
+            outi = f'{maxi:g}:'
+        else:
+            continue
+        out.append(outi)
+    point_removal_str = ','.join(out)
+    return point_removal_str
+
+
+def point_removal_str_to_point_removal(point_removal_str: str,
+                                       log: SimpleLogger) -> list[tuple[float, float]]:
+    point_removal = []
+    try:
+        point_removal_list = point_removal_str.split(',')
+        for ipoint, point in enumerate(point_removal_list):
+            sline = point.split(':')
+            assert len(sline) == 2, f'point_removal[{ipoint}]={sline}; point_removal={str(point_removal_list)}'
+            a_str = sline[0].strip()
+            b_str = sline[1].strip()
+            a = float(a_str) if a_str != '' else -1.0
+            b = float(b_str) if b_str != '' else -1.0
+            point_float = (a, b)
+            point_removal.append(point_float)
+    except Exception as e:
+        log.error(str(e))
+        # print(traceback.print_tb(e))
+        print(traceback.print_exception(e))
+    return point_removal
 
 def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
     items = list_widget.selectedItems()

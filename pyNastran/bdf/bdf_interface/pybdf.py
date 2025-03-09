@@ -147,6 +147,7 @@ class BDFInputPy:
     """BDF reader class that only handles lines and not building cards or parsing cards"""
     def __init__(self, read_includes: bool, dumplines: bool,
                  encoding: str, nastran_format: str='msc',
+                 replace_includes: Optional[dict[str, str]]=None,
                  consider_superelements: bool=True,
                  log: SimpleLogger=None, debug: bool=False):
         """
@@ -171,6 +172,12 @@ class BDFInputPy:
             used when testing; for the logger
 
         """
+        if replace_includes is None:
+            replace_includes = {}
+
+        # not used
+        self.replace_includes: dict[str, str] = replace_includes
+
         self.dumplines: bool = dumplines
         self.encoding: str = encoding
         self.nastran_format: str = nastran_format
@@ -423,6 +430,7 @@ class BDFInputPy:
             the [ifile, iline] pair for each line in the file
 
         """
+        replace_includes = self.replace_includes
         nlines = len(lines)
         #bdf_filenames = [self.bdf_filename]
 
@@ -456,10 +464,17 @@ class BDFInputPy:
                 if self.read_includes:
                     bdf_filename2 = get_include_filename(
                         include_lines,
-                        source_filename=source_filename,
                         include_dirs=include_dirs,
+                        replace_includes=replace_includes,
+                        source_filename=source_filename,
                         write_env_on_error=False,
                     )
+                    if bdf_filename2 == '':
+                        # replace filename
+                        self.log.warning(f'dropping {include_lines}')
+                        lines[i] = f'$ removed {include_lines}\n'
+                        i += 1
+                        continue
 
                     # these are the lines associated with the 1st/2nd include file found
                     self.include_lines[jfile].append((include_lines, bdf_filename2))
@@ -517,7 +532,7 @@ class BDFInputPy:
         try:
             self._open_file_checks(bdf_filename2)
         except IOError:
-            crash_name = os.path.join(self.include_dir, 'pyNastran_crash.bdf')
+            crash_name = os.path.join(self.include_dir, 'pyNastran_include_error.bdf')
             _dump_file(crash_name, lines, j, self.encoding)
             msg = 'There was an invalid filename found while parsing.\n'
             msg += 'Check the end of %r\n' % crash_name
@@ -721,7 +736,9 @@ class BDFInputPy:
         if bdf_filename in self.active_filenames:
             active_filenames_str = '\n - '.join(self.active_filenames)
             msg = (f'bdf_filename={bdf_filename} is already active.\n'
-                   f'{current_filename_str}active_filenames:\n - {active_filenames_str}')
+                   f'{current_filename_str}\n'
+                   #f'referenced_file={referenced_file}\n'
+                   f'active_filenames:\n - {active_filenames_str}')
             log.error(msg)
             raise RuntimeError(msg)
         elif os.path.isdir(bdf_filename):

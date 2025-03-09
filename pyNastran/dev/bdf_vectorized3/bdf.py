@@ -850,15 +850,15 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #------------------------------------------------------------------
             # axixsymmetric
-            #'CCONEAX', # element
-            #'PCONEAX', # property
-            #'AXIC', # axic
-            #'AXIF', # axif
+            #'CCONEAX', # element (removed)
+            #'PCONEAX', # property (removed)
+            #'AXIC', # axic (removed)
+            #'AXIF', # axif (removed)
 
-            #'FORCEAX', # loads
-            #'PRESAX', # loads
+            #'FORCEAX', # loads (removed)
+            #'PRESAX', # loads (removed)
             #'PLOADX1',
-            #'SPCAX', # spcs
+            #'SPCAX', # spcs (removed)
 
             #------------------------------------------------------------------
             ## parametric
