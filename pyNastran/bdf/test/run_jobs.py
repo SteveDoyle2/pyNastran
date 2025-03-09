@@ -16,6 +16,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     run_nastran_job dirname
     run_nastran_job filename.bdf -x C:\bin\nastran.exe
     run_nastran_job .            -x C:\bin\nastran.exe --cleanup -r --test
+    run_nastran_job filename.bdf filename2.bdf
     """
     FILE = os.path.abspath(__file__)
     if argv is None:
@@ -24,9 +25,10 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
         argv = [FILE] + argv[2:]  # ['run_jobs'] + sys.argv[2:]
     if not quiet:
         print(f'argv = {argv}')
+    #print(f'argv = {argv}')
 
     parser = argparse.ArgumentParser(prog='run_jobs')
-    parser.add_argument("bdf_dirname_filename", help='path to Nastran filename')
+    parser.add_argument('bdf_dirname_filename', nargs='+', help='path to Nastran filename')
     #parser.add_argument('-o', '--overwrite', default=False, help='overwrite files')
     parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran execuable')
     parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
@@ -41,7 +43,8 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
         print(args)
     run = args.test
     recursive = args.recursive
-    bdf_filename_dirname = Path(args.bdf_dirname_filename)
+    #print(args)
+    bdf_filename_dirname = [Path(filenamei) for filenamei in args.bdf_dirname_filename]
     nastran_exe = args.exe
     # if nastran_exe is None:
     #     nastran_exe = 'nastran'

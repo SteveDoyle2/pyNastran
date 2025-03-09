@@ -16,8 +16,9 @@ model_path = pkg_path / '..' / 'models'
 
 class TestBdfUtils(unittest.TestCase):
     def test_run_jobs_path(self):
-        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str(model_path), '--cleanup', '-r', '--test'], quiet=True)
-        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str(model_path), '--cleanup', '-r', '--test'])
+        str_model_path = str(model_path)
+        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str_model_path, '--cleanup', '-r', '--test'], quiet=True)
+        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str_model_path, '--cleanup', '-r', '--test'])
         assert nfiles >= 1, nfiles  # 105
 
         extensions = ['.dat', '.bdf']
@@ -33,12 +34,15 @@ class TestBdfUtils(unittest.TestCase):
 
     def test_run_jobs_str(self):
         extensions = ['.dat', '.bdf']
+        str_model_path = str(model_path)
 
-        # lists
-        bdf_files = get_bdf_filenames_to_run(str(model_path), extensions, recursive=True)
+        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str_model_path, str_model_path, '--cleanup', '-r', '--test'])
+
+        bdf_files = get_bdf_filenames_to_run(str_model_path, extensions, recursive=True)
         assert len(bdf_files) >= 10, len(bdf_files)  # 105
 
-        bdf_files = get_bdf_filenames_to_run([str(model_path)], extensions, recursive=True)
+        # lists
+        bdf_files = get_bdf_filenames_to_run([str_model_path], extensions, recursive=True)
         assert len(bdf_files) >= 10, len(bdf_files)  # 105
 
     def test_get_femap_comments_dict(self):

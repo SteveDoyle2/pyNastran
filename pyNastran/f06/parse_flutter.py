@@ -94,15 +94,18 @@ def make_flutter_response(f06_filename: PathLike,
     matrices = {}
 
     is_heavy_debug = False
-    imax = 1000
+    imax = 10000
 
     break_list = [
+        'OLOAD    RESULTANT',
         'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O',
         'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O',
         'C A S E    C O N T R O L    E C H O',
         'M O D E L   S U M M A R Y',
         'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y',
+        '* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',
         # 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R',
+        #'R E A L   E I G E N V A L U E S',
     ]
 
     log.info('f06_filename = %r' % f06_filename)
@@ -120,6 +123,8 @@ def make_flutter_response(f06_filename: PathLike,
                     log.debug(f'skipping iline={iline} line={line.rstrip()!r}')
                 read_line_flag = True
 
+            if '* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *' in line:
+                break
             if is_heavy_debug:  # pragma: no cover
                 log.debug(f'A: line[{iline:d}] = {line!r}')
                 if iline > imax:
@@ -128,7 +133,7 @@ def make_flutter_response(f06_filename: PathLike,
             for break_line in break_list:
                 if break_line in line:
                     if is_heavy_debug:  # pragma: no cover
-                        log.debug(f'found break line={line}')
+                        log.debug(f'found break iline={iline}; line={line}')
                     while 'PAGE' not in line:
                         line = f06_file.readline(); iline += 1
                         continue
@@ -144,8 +149,6 @@ def make_flutter_response(f06_filename: PathLike,
                 real_eigenvaluesi = read_real_eigenvalues(
                     f06_file, log, line, iline)
                 real_eigenvalues_list.append(real_eigenvaluesi)
-                if real_eigenvalues_list is not None:
-                    real_eigenvalues_list = real_eigenvalues_list[0]
 
             while ('SUBCASE ' not in line and
                    'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' not in line and
@@ -409,9 +412,11 @@ def make_flutter_response(f06_filename: PathLike,
             response.set_out_units(out_units)
             flutters[subcase] = response
 
-    if load_eigenvalues:
+    if load_eigenvalues and len(real_eigenvalues_list):
         _fill_matrices(matrices, real_eigenvalues_list)
 
+    assert load_eigenvalues
+    #assert len(real_eigenvalues_list)
     if len(matrices):
         data['matrices'] = matrices
     return flutters, data
@@ -703,7 +708,7 @@ def plot_flutter_f06(f06_filename: PathLike,
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
     assert ivelocity is None or isinstance(ivelocity, integer_types), ivelocity
     #assert mode is None or isinstance(mode, integer_types), mode
-    flutters, mass = make_flutter_response(
+    flutters, mass_lama = make_flutter_response(
         f06_filename, f06_units=f06_units, out_units=out_units,
         use_rhoref=use_rhoref, log=log)
 
@@ -726,7 +731,7 @@ def plot_flutter_f06(f06_filename: PathLike,
                            kfreq_damping_filename=kfreq_damping_filename,
                            subcases=subcases,
                            show=show, clear=clear, close=close)
-    return flutters, mass
+    return flutters, mass_lama
 
 def make_flutter_plots(modes: list[int],
                        flutters: dict[int, FlutterResponse],
