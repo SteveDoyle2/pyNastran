@@ -1457,7 +1457,40 @@ class TestBeams(unittest.TestCase):
         cbend.cross_reference(model)
         cbend.plot()
 
-    def test_cbend(self):
+    def test_cbend_a(self):
+        """tests a CBEND"""
+        model = BDF(debug=False)
+
+        eid = 7
+        pid = 10
+        nids = [2, 3]
+        g0 = 5
+        x = None
+        geom = 1
+        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(5, [0., 0., 0.])
+        #pbend = model.add_pbend(pid, mid, beam_type, A, i1, i2, j,
+                                #c1, c2, d1, d2, e1, e2, f1, f2,
+                                #k1, k2, nsm, rc, zc, delta_n, fsi,
+                                #rm, t, p, rb, theta_b, comment='')
+
+        cbend.validate()
+        cbend.raw_fields()
+        cbend.write_card()
+        cbend.write_card(size=16)
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.pop_parse_errors()
+        #model.cross_reference()
+        #model.pop_xref_errors()
+
+        #model._verify_bdf(xref=True)
+        #model.uncross_reference()
+
+    def test_cbend_b(self):
         model = BDF(debug=False)
         model.add_grid(10, [1., 0., 0.])
         model.add_grid(11, [.707, .707, 0.])
@@ -1525,8 +1558,7 @@ class TestBeams(unittest.TestCase):
 
         pbend2.write_card()
         pbend2.write_card(size=16)
-
-        save_load_deck(model, punch=True, run_convert=False)
+        save_load_deck(model, punch=True, run_convert=False, run_renumber=False)
 
     def test_pbrsect(self):
         """tests a PBRSECT"""

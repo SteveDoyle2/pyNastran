@@ -1616,7 +1616,7 @@ class CBEND(LineElement):
         return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         #data = [[eid, pid, ga, gb, geom], [f, x1, x2, x3]]
         #data = [[eid, pid, ga, gb, geom], [f, g0]]
 
