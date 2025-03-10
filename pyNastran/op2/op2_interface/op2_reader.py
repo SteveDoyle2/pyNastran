@@ -4204,7 +4204,7 @@ def read_ovg(op2_reader: OP2Reader) -> None:
             break
 
         data = op2_reader._read_record(debug=False)  # table 3
-        self.show_data(data)
+        #self.show_data(data)
         out = structi.unpack(data)
 
         #1  ACODE(C)    I Device code + 10*Approach Code
