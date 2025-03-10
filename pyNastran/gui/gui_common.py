@@ -2055,7 +2055,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def make_gif_helper(self, gif_filename: str,
                         icases_fringe: int, icases_disp: int, icases_vector: int,
-                        scales: list[float], phases: Optional[: list[float]]=None,
+                        scales: list[float], phases: Optional[list[float]]=None,
                         isteps=None,
                         animate_fringe: bool=False, animate_vector: bool=False,
                         max_value=None, min_value=None,
