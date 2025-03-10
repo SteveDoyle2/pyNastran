@@ -914,14 +914,16 @@ def _create_mid_map(model, mid):
     return mid_map, all_materials
 
 
-def _get_bdf_model(bdf_filename, cards_to_skip=None, log=None, debug=False):
+def _get_bdf_model(bdf_filename: PathLike | BDF | StringIO,
+                   punch: bool=True,
+                   cards_to_skip=None, log=None, debug: bool=False):
     """helper method"""
     if isinstance(bdf_filename, BDF):
         model = bdf_filename
     else:
         model = BDF(log=log, debug=debug)
         model.disable_cards(cards_to_skip)
-        model.read_bdf(bdf_filename)
+        model.read_bdf(bdf_filename, punch=punch)
     return model
 
 

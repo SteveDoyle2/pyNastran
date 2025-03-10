@@ -891,6 +891,54 @@ def cmd_line_scale(argv=None, quiet=False) -> None:
     scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=bdf_filename_out, log=log)
 
 
+def cmd_line_remove_comments(argv=None, quiet: bool=False) -> None:
+    if argv is None:  # pragma: no cover
+        argv = sys.argv
+
+    import argparse
+    parent_parser = argparse.ArgumentParser(
+        #prog = 'pyNastranGUI',
+        #usage = usage,
+        #description='A foo that bars',
+        #epilog="And that's how you'd foo a bar",
+        #formatter_class=argparse.RawDescriptionHelpFormatter,
+        #description=textwrap.dedent(text),
+        #version=pyNastran.__version__,
+        #add_help=False,
+    )
+    # positional arguments
+    parent_parser.add_argument('scale', type=str)
+    parent_parser.add_argument('INPUT', help='path to output BDF/DAT/NAS file', type=str)
+    parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
+
+    parent_parser.add_argument('-q', '--quiet', help='prints debug messages (default=True)', action='store_true')
+    #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
+    parent_parser.add_argument('-v', '--version', action='version',
+                               version=pyNastran.__version__)
+
+    args = parent_parser.parse_args(args=argv[1:])
+    if args.quiet:
+        quiet = args.quiet
+    if not quiet:  # pragma: no cover
+        print(args)
+
+    scales: list[float] = []
+    terms: list[str] = []
+    bdf_filename = args.INPUT
+    bdf_filename_out = args.OUTPUT
+    if bdf_filename_out is None:
+        bdf_filename_base, ext = os.path.splitext(bdf_filename)
+        bdf_filename_out = '%s.nocomments%s' % (bdf_filename_base, ext)
+
+    #assert bdf_filename_out is not None
+
+    from pyNastran.bdf.mesh_utils.bdf_remove_comments import bdf_remove_comments
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
+    bdf_remove_comments(bdf_filename, bdf_filename_out=bdf_filename_out, log=log)
+
+
 def cmd_line_export_mcids(argv=None, quiet=False) -> None:
     """command line interface to export_mcids"""
     if argv is None:  # pragma: no cover
@@ -1423,6 +1471,7 @@ CMD_MAPS = {
     'merge': cmd_line_merge,
     'equivalence': cmd_line_equivalence,
     'renumber': cmd_line_renumber,
+    'remove_comments': cmd_line_remove_comments,
     'mirror': cmd_line_mirror,
     'convert': cmd_line_convert,
     'delete_bad_shells': cmd_line_delete_bad_shells,
