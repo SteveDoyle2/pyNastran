@@ -1,0 +1,1552 @@
+1
+ 
+ 
+ 
+ 
+                                                             
+                    Unpublished Work. © 2023 Siemens        
+                         All Rights Reserved.                
+                                                             
+               This software and related documentation are   
+                    proprietary to Siemens Industry          
+                             Software Inc.                   
+                                                             
+              Siemens and the Siemens logo are registered    
+             trademarks of Siemens Trademark GmbH & Co. KG.  
+            Simcenter is a trademark, or registered trademark
+                of Siemens Industry Software Inc. or its     
+             subsidiaries in the United States and in other  
+             countries.  Simcenter NASTRAN is a registered   
+               trademark of Siemens Industry Software Inc.   
+            All other trademarks, registered trademarks or   
+               service marks belong to their respective      
+                        holders.                             
+                                                             
+           LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED
+           - RIGHTS RESERVED UNDER THE COPYRIGHT LAWS OF THE 
+            UNITED STATES. This computer software and related
+               computer software documentation have been     
+            developed exclusively at private expense and are 
+           provided subject to the following rights:  If this
+               computer software and computer  software      
+            documentation qualify as "commercial items" (as  
+             that term is defined in FAR 2.101), their use,  
+            duplication or disclosure by the U.S. Government 
+           is subject to the protections and restrictions as 
+            set forth in the Siemens commercial license for  
+            software and/or documentation, as prescribed in  
+           FAR 12.212 and FAR 27.405(b)(2)(i) (for civilian  
+             agencies) and in DFARS 227.7202-1(a) and DFARS  
+           227.7202-3(a) (for the Department of Defense), or 
+           any successor or similar regulation, as applicable
+           or as amended from time to time.  If this computer
+           software and computer documentation do not qualify
+            as "commercial items", then they are "restricted 
+           computer software" and are provided with "restric-
+            tive rights", and their use, duplication or dis- 
+            closure by the U.S. Government is subject to the 
+            protections and restrictions as set forth in FAR 
+           27.404(b) and FAR 52-227-14 (for civilian agencies
+           ), and DFARS 227.7203-5(c) and DFARS 252.227-7014 
+           (for the Department of Defense), or any successor 
+           or similar regulation, as applicable or as amended
+           from time to time. Siemens Industry Software Inc. 
+           5800 Granite Parkway, Suite 600, Plano, TX 75024  
+ 
+
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *   Simcenter Nastran 2306.5000   * *
+                * *                                 * *
+                * *      VERSION - 23065.5029       * *
+                * *                                 * *
+                * *          AUG 25, 2023           * *
+                * *                                 * *
+                * *                                 * *
+                * *Intel64 Family 6 Model 186 Stepp * *
+                * *                                 * *
+                * *MODEL 13th Gen Intel(R) Core(TM) * *
+                * *                                 * *
+                * *           Windows 10            * *
+                * *                                 * *
+                * *       Compiled for X86-64       * *
+                * *                                 * *
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+1 
+  
+                      Welcome to Simcenter Nastran
+                      ----------------------------
+  
+  
+ This "news" information can be turned off by setting "news=no" in the runtime
+ configuration (RC) file.  The "news" keyword can be set in the system RC file
+ for global, or multi-user control, and in a local file for local control.
+ Individual jobs can be controlled by setting news to yes or no on the command
+ line.
+1                                                                             MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE     1
+                                                                                                                                    
+0                                                                                                                                   
+0
+0
+0
+ 
+ *** USER INFORMATION MESSAGE 7555 (GMTSTS)
+     FINITE ELEMENT GEOMETRY CHECK RESULTS EXCEED TOLERANCE LEVELS FOR THE FOLLOWING ELEMENTS.
+     USER ACTION: USE THE GEOMCHECK (EXECUTIVE CONTROL STATEMENT) KEYWORD=VALUE TO CHANGE TOLERANCE VALUES IF DESIRED.
+     A MAXIMUM OF        100 SKEW ANGLE (SA)      TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED AND INDICATED BY xxxx.
+     A MAXIMUM OF        100 MIN INT. ANGLE (IA)  TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED AND INDICATED BY xxxx.
+     A MAXIMUM OF        100 MAX INT. ANGLE (IA)  TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED AND INDICATED BY xxxx.
+     A MAXIMUM OF        100 WARPING FACTOR (WF)  TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED AND INDICATED BY xxxx.
+     A MAXIMUM OF        100 TAPER RATIO (TR)     TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED AND INDICATED BY xxxx.
+     A MAXIMUM OF        100 ASPECT RATIO (AR)    TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED AND INDICATED BY xxxx.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE     7
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:  SA =  30.00, IA(MIN) =  30.00, IA(MAX) = 150.00, WF =   0.05, TR =   0.50, AR = 100.00
+ (xxxx = LIMIT VIOLATED)
+ ELEMENT TYPE       ID          SKEW ANGLE      MIN INT. ANGLE    MAX INT. ANGLE    WARPING FACTOR      TAPER RATIO      ASPECT RATIO  
+    QUAD4        1291        35.37             24.59 xxxx       137.01              0.00              0.46              2.40     
+    QUAD4        1596        38.31             25.46 xxxx       144.33              0.00              0.48              3.01     
+    QUAD4        1633        44.77             37.99            150.21 xxxx         0.00              0.37              1.51     
+    QUAD4        2642        27.61 xxxx        24.19 xxxx       165.42 xxxx         0.00              0.47              1.46     
+    QUAD4        2651        23.92 xxxx        20.23 xxxx       158.33 xxxx         0.00              0.20              1.67     
+    QUAD4        2652        32.39             21.66 xxxx       150.96 xxxx         0.00              0.43              5.59     
+    QUAD4        2653        31.47             27.74 xxxx       155.66 xxxx         0.00              0.22              1.54     
+    QUAD4        2659        29.19 xxxx        25.61 xxxx       164.82 xxxx         0.00              0.48              1.44     
+    QUAD4        2668        25.18 xxxx        21.31 xxxx       157.22 xxxx         0.00              0.20              1.66     
+    QUAD4        2669        34.26             22.95 xxxx       149.43              0.00              0.43              5.34     
+    QUAD4        2670        33.20             29.34 xxxx       154.29 xxxx         0.00              0.22              1.52     
+    QUAD4        2966        34.91             28.51 xxxx       144.13              0.00              0.24              1.73     
+    QUAD4        2982        36.04             29.45 xxxx       142.86              0.00              0.24              1.67     
+    QUAD4        3103        35.17             30.48            153.31 xxxx         0.00              0.28              1.53     
+    QUAD4        3150        35.52             30.79            152.98 xxxx         0.00              0.28              1.53     
+    QUAD4        3430        29.94 xxxx        29.89 xxxx       150.17 xxxx         0.00              0.00              1.02     
+    QUAD4        3432        29.79 xxxx        29.79 xxxx       150.32 xxxx         0.00              0.00              1.02     
+    QUAD4        3434        29.73 xxxx        29.65 xxxx       150.40 xxxx         0.00              0.00              1.02     
+    QUAD4        3436        29.80 xxxx        29.57 xxxx       150.34 xxxx         0.00              0.01              1.02     
+    QUAD4        3438        30.11             29.63 xxxx       150.05 xxxx         0.00              0.02              1.04     
+    QUAD4        3440        30.88             29.92 xxxx       149.19              0.00              0.03              1.11     
+    QUAD4        3494        49.90             39.30            150.16 xxxx         0.00              0.39              2.06     
+    QUAD4        3522        35.70             29.53 xxxx       149.84              0.00              0.14              2.36     
+    QUAD4        3653        21.69 xxxx        21.33 xxxx       166.30 xxxx         0.00              0.37              1.07     
+    QUAD4        3654        29.18 xxxx        29.04 xxxx       158.55 xxxx         0.00              0.27              1.09     
+    QUAD4        3657        12.29 xxxx        10.72 xxxx       171.33 xxxx         0.00              0.35              1.81     
+    QUAD4        3658        14.37 xxxx        13.01 xxxx       169.07 xxxx         0.00              0.25              1.25     
+    QUAD4        3659        18.66 xxxx        17.71 xxxx       165.72 xxxx         0.01              0.25              1.20     
+    QUAD4        3661        21.75 xxxx        19.42 xxxx       164.64 xxxx         0.00              0.32              1.41     
+    QUAD4        3662        16.70 xxxx        15.32 xxxx       169.60 xxxx         0.00              0.44              2.16     
+    QUAD4        3664        31.93             28.69 xxxx       157.15 xxxx         0.00              0.29              1.35     
+    QUAD4        3668        21.49 xxxx        21.17 xxxx       166.53 xxxx         0.00              0.38              1.07     
+    QUAD4        3669        28.74 xxxx        28.57 xxxx       159.02 xxxx         0.00              0.28              1.08     
+    QUAD4        3670        36.75             36.60            150.31 xxxx         0.00              0.20              1.17     
+    QUAD4        3672        12.23 xxxx        10.69 xxxx       171.52 xxxx         0.00              0.36              1.82     
+    QUAD4        3673        14.22 xxxx        12.90 xxxx       169.31 xxxx         0.00              0.26              1.24     
+    QUAD4        3674        18.20 xxxx        17.27 xxxx       166.97 xxxx         0.00              0.29              1.18     
+    QUAD4        3675        29.82 xxxx        27.10 xxxx       160.96 xxxx         0.01              0.38              1.22     
+    QUAD4        3676        21.69 xxxx        19.44 xxxx       164.74 xxxx         0.00              0.32              1.41     
+    QUAD4        3677        16.59 xxxx        15.24 xxxx       169.81 xxxx         0.00              0.45              2.16     
+    QUAD4        3679        31.63             28.54 xxxx       157.41 xxxx         0.00              0.29              1.32     
+    QUAD4        3743        64.86             38.05            152.93 xxxx         0.00              0.53 xxxx         2.78     
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE     8
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:  SA =  30.00, IA(MIN) =  30.00, IA(MAX) = 150.00, WF =   0.05, TR =   0.50, AR = 100.00
+ (xxxx = LIMIT VIOLATED)
+ ELEMENT TYPE       ID          SKEW ANGLE      MIN INT. ANGLE    MAX INT. ANGLE    WARPING FACTOR      TAPER RATIO      ASPECT RATIO  
+    QUAD4        3753        28.32 xxxx        18.56 xxxx       141.96              0.00              0.55 xxxx         3.39     
+    QUAD4        3754        31.93             25.68 xxxx       164.13 xxxx         0.00              0.50              1.80     
+    QUAD4        3755        43.32             32.11            152.00 xxxx         0.00              0.31              2.62     
+    QUAD4        3764        34.26             33.70            153.38 xxxx         0.00              0.24              1.32     
+    QUAD4        3765        28.66 xxxx        26.52 xxxx       154.13 xxxx         0.00              0.14              1.66     
+    QUAD4        3766        30.12             25.74 xxxx       149.31              0.00              0.21              2.70     
+    QUAD4        3769        31.56             20.79 xxxx       148.77              0.00              0.51 xxxx         6.26     
+    QUAD4        3770        24.59 xxxx        19.29 xxxx       159.27 xxxx         0.00              0.26              1.83     
+    QUAD4        3951        30.66             27.25 xxxx       157.00 xxxx         0.00              0.24              2.15     
+    QUAD4        3952        19.81 xxxx        16.64 xxxx       166.85 xxxx         0.00              0.31              2.10     
+    QUAD4        3953        11.73 xxxx         9.38 xxxx       171.57 xxxx         0.00              0.32              1.74     
+    QUAD4        3959        31.29             29.14 xxxx       155.96 xxxx         0.00              0.25              2.15     
+    QUAD4        3960        23.07 xxxx        21.19 xxxx       164.65 xxxx         0.00              0.39              2.78     
+    QUAD4        3967        33.90             30.18            154.29 xxxx         0.00              0.24              2.16     
+    QUAD4        3968        21.97 xxxx        18.46 xxxx       165.20 xxxx         0.00              0.30              2.11     
+    QUAD4        3969        12.86 xxxx        10.26 xxxx       170.83 xxxx         0.00              0.32              1.75     
+    QUAD4        3975        34.28             32.02            153.50 xxxx         0.00              0.25              2.15     
+    QUAD4        3976        25.27 xxxx        23.24 xxxx       163.11 xxxx         0.00              0.38              2.78     
+    QUAD4        4361        29.94 xxxx        29.46 xxxx       150.38 xxxx         0.00              0.02              1.18     
+    QUAD4        4363        30.88             29.66 xxxx       149.36              0.00              0.04              1.28     
+    QUAD4        4391        28.83 xxxx        28.01 xxxx       151.49 xxxx         0.00              0.03              1.18     
+    QUAD4        4392        30.26             30.07            150.27 xxxx         0.00              0.02              1.14     
+    QUAD4        4394        30.60             29.90 xxxx       149.54              0.00              0.03              1.11     
+    QUAD4        4395        30.45             29.47 xxxx       151.98 xxxx         0.00              0.09              1.12     
+    QUAD4        4400        30.06             29.14 xxxx       150.11 xxxx         0.00              0.03              1.07     
+    QUAD4        4401        29.27 xxxx        28.42 xxxx       150.86 xxxx         0.00              0.03              1.13     
+    QUAD4        4433        29.82 xxxx        28.97 xxxx       150.46 xxxx         0.00              0.03              1.22     
+    QUAD4        4437        31.52             30.56            150.83 xxxx         0.00              0.08              1.15     
+    QUAD4        4442        30.75             29.77 xxxx       149.24              0.00              0.03              1.08     
+    QUAD4        4443        29.77 xxxx        28.97 xxxx       150.39 xxxx         0.00              0.03              1.10     
+    QUAD4        4449        44.88             28.88 xxxx       151.65 xxxx         0.00              0.25              4.15     
+    QUAD4        4460        32.31             25.91 xxxx       154.78 xxxx         0.00              0.24              1.75     
+    QUAD4        4462        26.83 xxxx        22.19 xxxx       152.70 xxxx         0.00              0.22              2.10     
+    QUAD4        4463        24.13 xxxx        20.94 xxxx       157.96 xxxx         0.01              0.15              1.40     
+    QUAD4        4472        31.85             27.00 xxxx       152.99 xxxx         0.00              0.13              1.92     
+    QUAD4        4474        47.78             35.02            152.99 xxxx         0.00              0.40              2.55     
+    QUAD4        4481        55.11             37.71            150.21 xxxx         0.00              0.41              2.87     
+    QUAD4        4488        36.12             26.28 xxxx       139.88              0.00              0.40              2.26     
+    QUAD4        4495        24.87 xxxx        21.23 xxxx       155.21 xxxx         0.01              0.18              1.48     
+    QUAD4        4496        30.90             25.31 xxxx       151.67 xxxx         0.00              0.20              2.08     
+    QUAD4        4497        32.05             25.78 xxxx       152.05 xxxx         0.01              0.19              2.39     
+    QUAD4        4533        37.16             32.58            152.92 xxxx         0.00              0.32              1.56     
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE     9
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:  SA =  30.00, IA(MIN) =  30.00, IA(MAX) = 150.00, WF =   0.05, TR =   0.50, AR = 100.00
+ (xxxx = LIMIT VIOLATED)
+ ELEMENT TYPE       ID          SKEW ANGLE      MIN INT. ANGLE    MAX INT. ANGLE    WARPING FACTOR      TAPER RATIO      ASPECT RATIO  
+    QUAD4        4582        37.35             32.76            152.78 xxxx         0.00              0.32              1.56     
+    QUAD4        4671        46.81             41.31            151.26 xxxx         0.00              0.40              1.44     
+    QUAD4        4694        32.87             28.31 xxxx       146.63              0.00              0.17              1.42     
+    QUAD4        4712        48.49             42.65            150.31 xxxx         0.00              0.40              1.46     
+    QUAD4        4735        33.34             28.75 xxxx       146.40              0.00              0.17              1.39     
+    QUAD4        4736        53.44             33.34            135.22              0.00              0.52 xxxx         5.55     
+    QUAD4        4739        41.03             36.38            157.42 xxxx         0.00              0.46              1.38     
+    QUAD4        4746        35.20             28.15 xxxx       146.46              0.00              0.28              1.94     
+    QUAD4        4747        64.32             40.67            126.91              0.00              0.51 xxxx         4.53     
+    QUAD4        4750        45.57             41.93            154.38 xxxx         0.00              0.46              1.30     
+    QUAD4        4791        51.81             35.47            112.55              0.07 xxxx         0.55 xxxx         3.70     
+    QUAD4        4902        38.53             36.59            158.40 xxxx         0.00              0.45              1.18     
+    QUAD4        4908        34.05             30.60            151.58 xxxx         0.00              0.22              1.75     
+    QUAD4        4909        40.67             28.56 xxxx       140.78              0.00              0.45              5.45     
+    QUAD4        4911        61.62             36.89            132.61              0.00              0.53 xxxx         5.44     
+    QUAD4        4913        36.87             34.85            159.96 xxxx         0.00              0.47              1.18     
+    QUAD4        4918        35.85             34.28            150.56 xxxx         0.02              0.22              1.27     
+    QUAD4        4919        32.88             29.70 xxxx       152.56 xxxx         0.00              0.22              1.78     
+    QUAD4        4920        39.32             27.58 xxxx       142.14              0.00              0.45              5.68     
+    QUAD4        4922        59.79             35.40            134.63              0.00              0.53 xxxx         5.68     
+    QUAD4        4930        41.44             25.76 xxxx       123.30              0.00              0.65 xxxx         3.39     
+    QUAD4        4937        46.55             29.23 xxxx       114.65              0.00              0.65 xxxx         3.20     
+    QUAD4        5048        48.04             44.37            150.40 xxxx         0.01              0.41              1.31     
+    QUAD4        5059        43.86             39.33            154.17 xxxx         0.01              0.43              1.37     
+    QUAD4        5176        24.07 xxxx        21.17 xxxx       159.67 xxxx         0.00              0.24              2.06     
+    QUAD4        5177        24.02 xxxx        22.32 xxxx       158.63 xxxx         0.00              0.14              1.49     
+    QUAD4        5178        24.08 xxxx        23.01 xxxx       158.02 xxxx         0.00              0.10              1.30     
+    QUAD4        5179        24.30 xxxx        23.73 xxxx       157.44 xxxx         0.00              0.08              1.22     
+    QUAD4        5180        24.93 xxxx        24.84 xxxx       156.64 xxxx         0.00              0.07              1.19     
+    QUAD4        5181        26.10 xxxx        25.90 xxxx       155.40 xxxx         0.00              0.06              1.20     
+    QUAD4        5182        27.14 xxxx        26.94 xxxx       153.84 xxxx         0.00              0.04              1.17     
+    QUAD4        5185        31.56             29.99 xxxx       152.61 xxxx         0.00              0.18              1.87     
+    QUAD4        5186        29.17 xxxx        26.66 xxxx       155.29 xxxx         0.00              0.26              2.60     
+    QUAD4        5188        26.76 xxxx        25.97 xxxx       159.39 xxxx         0.00              0.23              1.16     
+    QUAD4        5189        27.55 xxxx        26.52 xxxx       156.70 xxxx         0.00              0.16              1.09     
+    QUAD4        5190        27.62 xxxx        26.79 xxxx       155.16 xxxx         0.00              0.11              1.11     
+    QUAD4        5191        27.30 xxxx        26.83 xxxx       154.59 xxxx         0.00              0.07              1.13     
+    QUAD4        5192        27.19 xxxx        27.08 xxxx       154.22 xxxx         0.00              0.05              1.17     
+    QUAD4        5193        27.85 xxxx        27.56 xxxx       153.49 xxxx         0.00              0.05              1.22     
+    QUAD4        5194        28.59 xxxx        28.29 xxxx       152.12 xxxx         0.00              0.03              1.16     
+    QUAD4        5195        32.16             31.97            153.36 xxxx         0.00              0.18              1.33     
+    QUAD4        5196        32.78             32.21            152.05 xxxx         0.00              0.15              1.15     
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:  SA =  30.00, IA(MIN) =  30.00, IA(MAX) = 150.00, WF =   0.05, TR =   0.50, AR = 100.00
+ (xxxx = LIMIT VIOLATED)
+ ELEMENT TYPE       ID          SKEW ANGLE      MIN INT. ANGLE    MAX INT. ANGLE    WARPING FACTOR      TAPER RATIO      ASPECT RATIO  
+    QUAD4        5199        29.64 xxxx        29.48 xxxx       151.39 xxxx         0.00              0.04              1.15     
+    QUAD4        5200        29.40 xxxx        29.10 xxxx       151.54 xxxx         0.00              0.03              1.23     
+    QUAD4        5201        29.75 xxxx        29.45 xxxx       150.58 xxxx         0.00              0.01              1.13     
+    QUAD4        5218        83.60             66.48            104.66              0.06 xxxx         0.35              2.02     
+    QUAD4        5223        32.66             29.81 xxxx       149.92              0.00              0.10              1.22     
+    QUAD4        5225        30.33             28.74 xxxx       152.59 xxxx         0.00              0.14              1.78     
+    QUAD4        5226        30.06             27.49 xxxx       150.95 xxxx         0.00              0.15              2.47     
+    QUAD4        5227        37.14             29.12 xxxx       147.54              0.00              0.23              4.96     
+    QUAD4        5230        25.99 xxxx        20.92 xxxx       156.39 xxxx         0.00              0.21              3.54     
+    QUAD4        5231        21.35 xxxx        19.36 xxxx       159.11 xxxx         0.00              0.13              1.93     
+    QUAD4        5232        20.72 xxxx        19.64 xxxx       160.65 xxxx         0.00              0.09              1.46     
+    QUAD4        5233        21.23 xxxx        20.70 xxxx       160.35 xxxx         0.00              0.08              1.25     
+    QUAD4        5234        22.42 xxxx        22.39 xxxx       159.24 xxxx         0.00              0.08              1.17     
+    QUAD4        5235        24.06 xxxx        23.83 xxxx       157.60 xxxx         0.00              0.07              1.16     
+    QUAD4        5236        25.65 xxxx        25.59 xxxx       155.62 xxxx         0.00              0.05              1.15     
+    QUAD4        5237        23.40 xxxx        20.61 xxxx       160.26 xxxx         0.00              0.24              2.06     
+    QUAD4        5238        23.45 xxxx        21.83 xxxx       159.19 xxxx         0.00              0.14              1.50     
+    QUAD4        5239        23.61 xxxx        22.61 xxxx       158.50 xxxx         0.00              0.10              1.31     
+    QUAD4        5240        23.92 xxxx        23.42 xxxx       157.89 xxxx         0.00              0.08              1.23     
+    QUAD4        5241        24.58 xxxx        24.54 xxxx       157.03 xxxx         0.00              0.07              1.21     
+    QUAD4        5242        25.79 xxxx        25.53 xxxx       155.78 xxxx         0.00              0.06              1.22     
+    QUAD4        5243        26.94 xxxx        26.81 xxxx       154.10 xxxx         0.00              0.04              1.20     
+    QUAD4        5247        28.37 xxxx        25.93 xxxx       155.96 xxxx         0.00              0.26              2.62     
+    QUAD4        5249        26.00 xxxx        25.29 xxxx       159.95 xxxx         0.00              0.23              1.16     
+    QUAD4        5250        26.95 xxxx        26.02 xxxx       157.24 xxxx         0.00              0.16              1.09     
+    QUAD4        5251        27.15 xxxx        26.38 xxxx       155.61 xxxx         0.00              0.11              1.12     
+    QUAD4        5252        26.89 xxxx        26.48 xxxx       155.00 xxxx         0.00              0.08              1.15     
+    QUAD4        5253        26.81 xxxx        26.76 xxxx       154.65 xxxx         0.00              0.06              1.19     
+    QUAD4        5254        27.47 xxxx        27.13 xxxx       153.91 xxxx         0.00              0.05              1.25     
+    QUAD4        5255        28.23 xxxx        28.01 xxxx       152.52 xxxx         0.00              0.03              1.19     
+    QUAD4        5260        29.09 xxxx        29.01 xxxx       151.96 xxxx         0.00              0.04              1.17     
+    QUAD4        5261        28.87 xxxx        28.53 xxxx       152.13 xxxx         0.00              0.03              1.27     
+    QUAD4        5262        29.21 xxxx        29.01 xxxx       151.18 xxxx         0.00              0.02              1.16     
+    QUAD4        5269        29.86 xxxx        29.61 xxxx       150.28 xxxx         0.00              0.01              1.15     
+    QUAD4        5287        29.89 xxxx        27.38 xxxx       151.24 xxxx         0.00              0.15              2.50     
+    QUAD4        5291        25.18 xxxx        20.28 xxxx       157.10 xxxx         0.00              0.21              3.55     
+    QUAD4        5292        20.74 xxxx        18.84 xxxx       159.76 xxxx         0.00              0.13              1.93     
+    QUAD4        5293        20.24 xxxx        19.21 xxxx       161.21 xxxx         0.00              0.09              1.46     
+    QUAD4        5294        20.79 xxxx        20.32 xxxx       160.82 xxxx         0.00              0.08              1.26     
+    QUAD4        5295        21.96 xxxx        21.94 xxxx       159.72 xxxx         0.00              0.08              1.18     
+    QUAD4        5296        23.62 xxxx        23.31 xxxx       158.10 xxxx         0.00              0.07              1.19     
+    QUAD4        5297        25.36 xxxx        25.21 xxxx       156.07 xxxx         0.00              0.06              1.17     
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    11
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:  SA =  30.00, IA(MIN) =  30.00, IA(MAX) = 150.00, WF =   0.05, TR =   0.50, AR = 100.00
+ (xxxx = LIMIT VIOLATED)
+ ELEMENT TYPE       ID          SKEW ANGLE      MIN INT. ANGLE    MAX INT. ANGLE    WARPING FACTOR      TAPER RATIO      ASPECT RATIO  
+    QUAD4        5570        29.59 xxxx        29.24 xxxx       150.59 xxxx         0.00              0.01              1.14     
+    QUAD4        5574        27.48 xxxx        26.46 xxxx       153.05 xxxx         0.00              0.04              1.24     
+    QUAD4        5575        28.95 xxxx        28.20 xxxx       151.44 xxxx         0.00              0.03              1.13     
+    QUAD4        5576        29.93 xxxx        29.43 xxxx       151.09 xxxx         0.00              0.04              1.04     
+    QUAD4        5577        29.57 xxxx        29.17 xxxx       151.33 xxxx         0.00              0.03              1.04     
+    QUAD4        5578        26.35 xxxx        24.27 xxxx       153.64 xxxx         0.00              0.09              1.34     
+    QUAD4        5579        28.20 xxxx        27.10 xxxx       153.00 xxxx         0.00              0.05              1.12     
+    QUAD4        5580        29.71 xxxx        29.13 xxxx       151.85 xxxx         0.00              0.05              1.05     
+    QUAD4        8289        56.50             47.29            114.82              0.10 xxxx         0.21              1.46     
+    QUAD4        8485        33.38             25.76 xxxx       139.91              0.08 xxxx         0.35              3.74     
+    QUAD4       10217        60.68             33.74            139.27              0.00              0.50 xxxx         6.93     
+    QUAD4       10244        66.91             38.01            138.38              0.00              0.51 xxxx         6.25     
+    QUAD4       20005        80.42             57.80            119.97              0.00              0.51 xxxx         1.99     
+    QUAD4       20008        88.62             57.14            130.08              0.00              0.50 xxxx         2.30     
+    QUAD4       20009        72.87             43.15            129.67              0.00              0.59 xxxx         2.65     
+    QUAD4       20022        89.99             69.51            118.17              0.00              0.51 xxxx         2.75     
+    QUAD4       20151        64.42             54.47            120.55              0.11 xxxx         0.27              1.37     
+    QUAD4       20527        83.74             68.77            134.29              0.01              0.52 xxxx         1.76     
+    QUAD4       20844        79.79             69.63            118.87              0.05 xxxx         0.33              1.51     
+    QUAD4       20845        77.88             68.50             99.21              0.07 xxxx         0.15              1.27     
+    QUAD4       20853        73.66             65.95            109.60              0.07 xxxx         0.12              1.25     
+    QUAD4       20858        72.27             66.77            110.00              0.07 xxxx         0.11              1.18     
+    QUAD4       20861        83.09             79.13             99.68              0.08 xxxx         0.10              1.15     
+    QUAD4       20863        75.38             71.27            103.78              0.07 xxxx         0.05              1.09     
+    QUAD4       20865        76.05             73.52            116.42              0.06 xxxx         0.24              1.24     
+    QUAD4       20867        68.74             65.40            110.31              0.10 xxxx         0.13              1.08     
+    QUAD4       21393        77.70             70.22            136.89              0.00              0.51 xxxx         1.82     
+    QUAD4       21762        88.33             71.31            122.63              0.00              0.64 xxxx         4.74     
+ *** USER INFORMATION MESSAGE 7555 (GMTSTS)
+     FINITE ELEMENT GEOMETRY CHECK RESULTS EXCEED TOLERANCE LEVELS FOR THE FOLLOWING ELEMENTS.
+     A MAXIMUM OF        100 SKEW ANGLE (SA)      TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED AND INDICATED BY xxxx.
+     A MAXIMUM OF        100 MAX INT. ANGLE (IA)  TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED AND INDICATED BY xxxx.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    12
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:     SKEW  =  10.00, IA(MAX) = 160.00 (xxxx = LIMIT VIOLATED)
+ ELEMENT TYPE       ID          SKEW ANGLE      MAX INT. ANGLE 
+    TRIA3        1418         8.40 xxxx        92.55     
+    TRIA3        1653         9.25 xxxx        85.84     
+    TRIA3        1749         6.60 xxxx        88.82     
+    TRIA3        2362         6.62 xxxx        89.83     
+    TRIA3        2639         7.07 xxxx        91.01     
+    TRIA3        3663         8.49 xxxx       161.36 xxxx
+    TRIA3        3678         8.47 xxxx       161.43 xxxx
+    TRIA3        3961         8.30 xxxx       156.36     
+    TRIA3        3977         8.94 xxxx       154.36     
+    TRIA3        8635         6.92 xxxx       161.31 xxxx
+    TRIA3        8657         6.71 xxxx       161.81 xxxx
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    13
+                                                                                                                                    
+0                                                                                                                                   
+
+
+                            E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y
+                                        TOTAL NUMBER OF TIMES TOLERANCES WERE EXCEEDED
+ ELEMENT     SKEW    ASPECT/       MINIMUM       MAXIMUM    SURFACE/FACE  THICKNESS/     EDGE POINT    EDGE POINT       JACOBIAN
+ TYPE        ANGLE  TAPER RATIO  INTER. ANGLE  INTER. ANGLE  WARP FACTOR  OFFSET RATIO  LENGTH RATIO  INCLUDED ANGLE  DETERMINANT
+ BAR           N/A        N/A           N/A           N/A           N/A             0           N/A           N/A           N/A     
+ QUAD4         195         19           271           288            13           N/A           N/A           N/A           N/A     
+ TRIA3          11        N/A           N/A             4           N/A           N/A           N/A           N/A           N/A     
+
+         N/A IN THE ABOVE TABLE INDICATES TESTS THAT ARE NOT APPLICABLE TO THE ELEMENT TYPE AND WERE NOT PERFORMED.
+         FOR ALL ELEMENTS WHERE GEOMETRY TEST RESULTS HAVE EXCEEDED TOLERANCES,
+
+         QUAD4    ELEMENT ID     8656 PRODUCED SMALLEST SKEW ANGLE       OF       9.20 (TOLERANCE =       30.00).
+         QUAD4    ELEMENT ID     4930 PRODUCED LARGEST  TAPER RATIO      OF       0.65 (TOLERANCE =        0.50).
+         QUAD4    ELEMENT ID     8656 PRODUCED SMALLEST INTERIOR ANGLE   OF       7.46 (TOLERANCE =       30.00).
+         QUAD4    ELEMENT ID     8634 PRODUCED LARGEST  INTERIOR ANGLE   OF     173.35 (TOLERANCE =      150.00).
+         QUAD4    ELEMENT ID    20151 PRODUCED LARGEST  WARP FACTOR      OF       0.11 (TOLERANCE =        0.05).
+         TRIA3    ELEMENT ID     1749 PRODUCED SMALLEST SKEW ANGLE       OF       6.60 (TOLERANCE =       10.00).
+         TRIA3    ELEMENT ID     8657 PRODUCED LARGEST  INTERIOR ANGLE   OF     161.81 (TOLERANCE =      160.00).
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    14
+                                                                                                                                    
+0                                                                                                                                   
+                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
+0                                                     REFERENCE POINT =        0
+                                                                M O
+                      *  1.126151E+05 -2.113822E-13  1.014197E-14 -1.109153E-11  2.699087E+06 -1.696184E+07 *
+                      * -2.113822E-13  1.126151E+05 -2.390160E-13 -2.699087E+06  1.911794E-10  9.753988E+07 *
+                      *  1.014197E-14 -2.390160E-13  1.126151E+05  1.696184E+07 -9.753988E+07 -1.801117E-10 *
+                      * -1.109153E-11 -2.699087E+06  1.696184E+07  5.971281E+09 -1.708981E+10 -3.319136E+09 *
+                      *  2.699087E+06  1.911794E-10 -9.753988E+07 -1.708981E+10  9.751461E+10 -8.680294E+08 *
+                      * -1.696184E+07  9.753988E+07 -1.801117E-10 -3.319136E+09 -8.680294E+08  1.021078E+11 *
+                                                                 S
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  1.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+                               DIRECTION
+                          MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
+                                  X            1.126151E+05     -9.849066E-17  1.506179E+02  2.396737E+01
+                                  Y            1.126151E+05      8.661351E+02  1.697635E-15  2.396737E+01
+                                  Z            1.126151E+05      8.661351E+02  1.506179E+02 -1.599357E-15
+                                                                I(S)
+                                           *  3.351835E+09  2.398566E+09  9.813623E+08 *
+                                           *  2.398566E+09  1.296721E+10  4.614987E+08 *
+                                           *  9.813623E+08  4.614987E+08  1.507034E+10 *
+                                                                I(Q)
+                                           *  1.519138E+10                             *
+                                           *                2.695712E+09               *
+                                           *                              1.350229E+10 *
+                                                                 Q
+                                           * -5.161795E-02 -9.693819E-01  2.400716E-01 *
+                                           * -1.492223E-01 -2.302066E-01 -9.616328E-01 *
+                                           *  9.874555E-01 -8.546155E-02 -1.327706E-01 *
+
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    15
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OGPWG    WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 0                 0                 0                 0                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      254 WORDS.)
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    16
+                                                                                                                                    
+0                                                                                                                                   
+0 RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00                             
+ ^^^ USER INFORMATION MESSAGE (XMCE1)    
+ ^^^ USING ALTERNATE MULTIPOINT CONSTRAINT ELIMINATION   
+ *** USER INFORMATION MESSAGE - SINGULARITIES FOUND USING EIGENVALUE METHOD
+ ***    7114 SINGULARITIES FOUND      7114 SINGULARITIES ELIMINATED
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: DEFAULT, ORDERING METHOD USED: MMD
+ *** USER INFORMATION MESSAGE 3035 (SOLVER)
+                                  FOR DATA BLOCK   KLR     
+    SUPPORT PT.NO.             EPSILON             STRAIN   ENERGY     EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1          4.4416334E-08          2.5967893E-07                 
+                2          4.4416334E-08          3.4015024E-01                 
+ *** USER WARNING MESSAGE 3035 (SOLVER)
+    THE VALUES OF EPSILON AND STRAIN ENERGY SHOULD BE NUMERICAL ZERO. THE LARGE VALUES INDICATE
+    THAT THE SUPORT DEGREES OF FREEDOM ARE NOT PROPERLY SPECIFIED AS TO BE CAPABLE OF SUPPORTING
+    RIGID BODY MOTION. SET SYSTEM CELL 505 TO 1 TO OVERRIDE FTL MESSAGE.
+ *** SYSTEM INFORMATION MESSAGE 6581 (ORTHOG)
+      PERFORMING HOUSEHOLDER ORTHOGONALIZATION
+ *** SYSTEM INFORMATION MESSAGE 6412 (ORTHRS)
+      RANK DEFICIENCY HAS BEEN DETECTED IN DATA BLOCK U2LY
+ ^^^ USER INFORMATION MESSAGE 9023 (AEFBS)   
+ ^^^ MAXIMUM LOAD EPSILON FROM RITZ SOLUTION IS   2.025965E-05 
+ ^^^ USER INFORMATION MESSAGE 9038 (AEFBS)   
+ ^^^ FOR STATIC AERO ITERATIVE SOLUTION,         1 ITERATIONS USED FOR MATRIX P3       MAXIMUM LOAD EPSILON IS  9.351272E-07 
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    17
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+    N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S
+
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                         MACH = 7.8900E-01                    Q = 1.5000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                TRANSFORMATION FROM BASIC TO REFERENCE COORDINATES:
+
+              { X }        [  1.0000   0.0000   0.0000  ]  { X }         { 0.0000E+00 }
+              { Y }    =   [  0.0000   1.0000   0.0000  ]  { Y }      +  { 0.0000E+00 }
+              { Z }REF     [  0.0000   0.0000   1.0000  ]  { Z }BAS      { 0.0000E+00 }
+
+
+
+
+    CONTROLLER STATE: INTERCEPT ONLY, ALL CONTROLLERS ARE ZERO
+
+    TRIM VARIABLE   COEFFICIENT              RIGID                         ELASTIC                          INERTIAL
+                                   UNSPLINED        SPLINED       RESTRAINED      UNRESTRAINED     RESTRAINED      UNRESTRAINED
+
+    REF. COEFF.      CX         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00    -1.360849E-16   -1.067730E-15
+                     CY         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CZ         2.510945E-14    2.433406E-14     8.780411E-15    2.561675E-14     4.893129E-15    2.561675E-14
+                     CMX        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CMY       -2.025861E-13   -1.961815E-13    -7.456074E-14   -2.085430E-13    -3.733517E-14   -2.085430E-13
+                     CMZ        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+
+    ANGLEA           CX         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     3.402122E-16   -1.284227E-01
+                     CY         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CZ         3.818543E+00    3.732117E+00    -1.957005E-01    3.960996E+00    -1.226684E-14    3.960996E+00
+                     CMX        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CMY       -2.940275E+01   -2.868879E+01     1.824203E+00   -3.089539E+01     9.356263E-14   -3.089539E+01
+                     CMZ        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+
+    PITCH            CX         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00    -6.804244E-17   -3.228399E+00
+                     CY         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CZ         7.604772E+01    7.370462E+01     9.645222E+00    7.758674E+01     2.457904E-15    7.758674E+01
+                     CMX        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CMY       -6.133650E+02   -5.940112E+02    -9.262667E+01   -6.314225E+02    -1.874249E-14   -6.314225E+02
+                     CMZ        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+
+    URDD3            CX         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00    -2.802667E-10   -5.065011E-16
+                     CY         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CZ         1.196100E-14    1.159478E-14     1.697944E-01    1.217582E-14     1.021355E-01    1.217582E-14
+                     CMX        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CMY       -9.651655E-14   -9.349161E-14    -1.318002E+00   -9.908517E-14    -6.747001E-01   -9.908517E-14
+                     CMZ        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    18
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+    TRIM VARIABLE   COEFFICIENT              RIGID                         ELASTIC                          INERTIAL
+                                   UNSPLINED        SPLINED       RESTRAINED      UNRESTRAINED     RESTRAINED      UNRESTRAINED
+
+    URDD5            CX         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     2.451487E+00   -4.617164E-17
+                     CY         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CZ         1.100809E-15    1.067313E-15    -1.006980E+02    1.126753E-15    -8.845318E+01    1.126753E-15
+                     CMX        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CMY       -8.846917E-15   -8.570240E-15     7.903168E+02   -9.143580E-15     6.745947E+02   -9.143580E-15
+                     CMZ        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+
+    TFLAP            CX         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     8.165093E-16   -2.980423E-02
+                     CY         0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CZ         5.446103E-01    5.287380E-01     3.273239E-01    3.566317E-01    -2.944949E-14    3.566317E-01
+                     CMX        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+                     CMY       -5.280177E+00   -5.149053E+00    -3.120622E+00   -3.453463E+00     2.246102E-13   -3.453463E+00
+                     CMZ        0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00     0.000000E+00    0.000000E+00
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    19
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+          N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S
+
+
+
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                         MACH = 7.8900E-01                    Q = 1.5000E+00
+
+          CONTROL SURFACE = TFLAP        REFERENCE CHORD LENGTH =  1.000000E+00     REFERENCE AREA =  1.000000E+00
+
+              TRIM VARIABLE               RIGID                             ELASTIC                            INERTIAL
+                                                                 RESTRAINED      UNRESTRAINED         RESTRAINED      UNRESTRAINED
+              AT REFERENCE        -1.755193E-08                -1.012858E-08   -3.274050E-08         0.000000E+00    0.000000E+00
+              ANGLEA              -1.182591E+06                 1.878529E+05   -3.780457E+06         0.000000E+00    0.000000E+00
+              PITCH               -5.310635E+07                -1.626132E+07   -9.906901E+07         0.000000E+00    0.000000E+00
+              URDD3               -8.998529E-09                -7.873939E+04   -1.591768E-08         0.000000E+00    0.000000E+00
+              URDD5               -6.830205E-10                 8.565215E+07   -1.381070E-09         0.000000E+00    0.000000E+00
+              TFLAP               -5.072132E+06                -2.845695E+06   -3.332897E+06         0.000000E+00    0.000000E+00
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    20
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+                                                  INTERMEDIATE MATRIX ... HP      
+
+
+                                                            COLUMN      1
+     1                                               7.131568E-15      -6.899674E-15                                              2
+
+                                                            COLUMN      2
+     1                                              -6.717832E-01      -1.048562E+00                                              2
+
+                                                            COLUMN      3
+     1                                               5.555927E+01      -1.662946E+01                                              2
+
+                                                            COLUMN      4
+     1                                              -4.941548E-01      -4.519821E-02                                              2
+
+                                                            COLUMN      5
+     1                                               2.064145E+02       2.569947E+01                                              2
+
+                                                            COLUMN      6
+     1                                               2.497670E+00       5.641732E-03                                              2
+
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    21
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+                                                  INTERMEDIATE MATRIX ... UX      
+
+
+                                                            COLUMN      1
+     1         1.000000E+00       1.047265E-01       0.000000E+00       2.500000E+00       0.000000E+00      -4.541439E-01        6
+
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    22
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+                                                  INTERMEDIATE MATRIX ... UXIFV   
+
+
+                                                            COLUMN      1
+     1         1.349417E+00       1.047265E-01       7.147061E-16      -4.541439E-01       2.500000E+00      -6.779603E-16        6
+
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    23
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+          TRIM ALGORITHM USED: LINEAR TRIM SOLUTION WITHOUT REDUNDANT CONTROL SURFACES.                                           
+
+
+                                                      AEROELASTIC TRIM VARIABLES
+
+                                  ID     LABEL                 TYPE        TRIM STATUS      VALUE OF UX
+
+                                         INTERCEPT          RIGID BODY           FIXED      1.000000E+00
+                                 500     ANGLEA             RIGID BODY            FREE      1.047265E-01  RADIANS         
+                                 501     PITCH              RIGID BODY           FIXED      0.000000E+00  NONDIMEN. RATE  
+                                 502     URDD3              RIGID BODY           FIXED      2.500000E+00  LOAD FACTOR     
+                                 503     URDD5              RIGID BODY           FIXED      0.000000E+00  LOAD FACTOR     
+                              110000     TFLAP         CONTROL SURFACE            FREE     -4.541439E-01  RADIANS         
+
+
+                                           CONTROL SURFACE POSITION AND HINGE MOMENT RESULTS
+
+                            ACTIVE LIMITS ARE FLAGGED WITH AN (A),  VIOLATED LIMITS ARE FLAGGED WITH A (V).
+
+                                                POSITION                                         HINGE MOMENT
+          CONTROL SURFACE      LOWER LIMIT       VALUE         UPPER LIMIT        LOWER LIMIT       VALUE         UPPER LIMIT
+              TFLAP          -1.570796E+00   -4.541439E-01    1.570796E+00            N/A        1.672770E+06         N/A      
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    24
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                        TRANSFORMATION FROM REFERENCE TO WIND AXES:
+                                ANGLE OF ATTACK   =  1.047265E-01 RADIANS ( 6.000390E+00 DEGREES)
+                                ANGLE OF SIDESLIP =  0.000000E+00 RADIANS ( 0.000000E+00 DEGREES)
+
+                                      { X }          [  0.994521  0.000000  0.104535 ]  { X }
+                                      { Y }          [  0.000000  1.000000  0.000000 ]  { Y }
+                                      { Z }WIND =    [ -0.104535  0.000000  0.994521 ]  { Z }REF
+
+
+    STRUCTURAL  MONITOR POINT TOTAL VEHICLE COEFFICIENTS:
+          AXIS         RIGID AIR  +  RESTRAINED INCR.  -  INERTIAL  +   RIGID-APPLIED + RESTRAINED INCR.  =  BALANCE
+          ----         ---------     ----------------     --------      -------------   ----------------     -------
+    BODY  CX          0.000000E+00     0.000000E+00    -7.006654E-10     0.000000E+00     0.000000E+00     7.006654E-10
+    WIND  CD          1.575644E-02     1.093545E-02     2.669190E-02     0.000000E+00     0.000000E+00     6.968266E-10
+ 
+    BODY  CY          2.343944E-19    -4.998146E-19    -7.889549E-14     0.000000E+00     0.000000E+00     7.889522E-14
+    WIND  CY-WIND     2.343944E-19    -4.998146E-19    -7.889549E-14     0.000000E+00     0.000000E+00     7.889522E-14
+ 
+    BODY  CZ          1.507286E-01     1.046102E-01     2.553388E-01     0.000000E+00     0.000000E+00     5.551115E-17
+    WIND  CL          1.499028E-01     1.040371E-01     2.539398E-01     0.000000E+00     0.000000E+00    -7.324419E-11
+ 
+    BODY  CMX         5.440206E-02     9.372279E-03     1.506397E-02     0.000000E+00     0.000000E+00     4.871037E-02
+    WIND  CM-ROLL     5.410400E-02     9.320930E-03     1.498144E-02     0.000000E+00     0.000000E+00     4.844350E-02
+ 
+    BODY  CMY        -6.660668E-01    -1.020683E+00    -1.686750E+00     0.000000E+00     0.000000E+00     0.000000E+00
+    WIND  CM-PITCH   -6.660668E-01    -1.020683E+00    -1.686750E+00     0.000000E+00     0.000000E+00     0.000000E+00
+ 
+    BODY  CMZ         4.877596E-19    -1.890926E-19     8.808008E-11     0.000000E+00     0.000000E+00    -8.808008E-11
+    WIND  CM-YAW     -5.686931E-03    -9.797332E-04    -1.574715E-03     0.000000E+00     0.000000E+00    -5.091949E-03
+ 
+
+
+    AERODYNAMIC MONITOR POINT TOTAL VEHICLE COEFFICIENTS:
+          AXIS         RIGID AIR  +  RESTRAINED INCR.  -  INERTIAL  +   RIGID-APPLIED + RESTRAINED INCR.  =  BALANCE
+          ----         ---------     ----------------     --------      -------------   ----------------     -------
+    BODY  CX          0.000000E+00     0.000000E+00           N/A              N/A              N/A        0.000000E+00
+    WIND  CD          1.594908E-02     1.126990E-02           N/A              N/A              N/A        2.721898E-02
+ 
+    BODY  CY          2.343944E-19    -4.998146E-19           N/A              N/A              N/A       -2.654202E-19
+    WIND  CY-WIND     2.343944E-19    -4.998146E-19           N/A              N/A              N/A       -2.654202E-19
+ 
+    BODY  CZ          1.525714E-01     1.078096E-01           N/A              N/A              N/A        2.603810E-01
+    WIND  CL          1.517355E-01     1.072189E-01           N/A              N/A              N/A        2.589544E-01
+ 
+    BODY  CMX         5.447660E-02     9.502789E-03           N/A              N/A              N/A        6.397939E-02
+    WIND  CM-ROLL     5.417813E-02     9.450725E-03           N/A              N/A              N/A        6.362886E-02
+ 
+    BODY  CMY        -6.812881E-01    -1.047114E+00           N/A              N/A              N/A       -1.728402E+00
+    WIND  CM-PITCH   -6.812881E-01    -1.047114E+00           N/A              N/A              N/A       -1.728402E+00
+ 
+    BODY  CMZ         4.877596E-19    -1.890926E-19           N/A              N/A              N/A        2.986670E-19
+    WIND  CM-YAW     -5.694723E-03    -9.933761E-04           N/A              N/A              N/A       -6.688099E-03
+ 
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    25
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                            AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS
+
+                                                             AERODYNAMIC PRES.       AERODYNAMIC
+                                         GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT
+                                           1     LS           -1.503107E+00        -2.254661E+00            110000
+                                           2     LS           -5.135166E-01        -7.702749E-01            110001
+                                           3     LS           -2.077546E-01        -3.116319E-01            110002
+                                           4     LS           -1.554620E+00        -2.331930E+00            110003
+                                           5     LS           -5.399990E-01        -8.099985E-01            110004
+                                           6     LS           -2.272348E-01        -3.408522E-01            110005
+                                           7     LS           -1.574213E+00        -2.361320E+00            110006
+                                           8     LS           -5.452015E-01        -8.178022E-01            110007
+                                           9     LS           -2.340131E-01        -3.510197E-01            110008
+                                          10     LS           -1.550244E+00        -2.325365E+00            110009
+                                          11     LS           -5.160126E-01        -7.740189E-01            110010
+                                          12     LS           -2.194534E-01        -3.291801E-01            110011
+                                          13     LS           -1.586356E+00        -2.379533E+00            110100
+                                          14     LS           -4.686524E-01        -7.029786E-01            110101
+                                          15     LS           -1.903155E-01        -2.854732E-01            110102
+                                          16     LS            3.413810E-02         5.120715E-02            200000
+                                          17     LS           -7.441049E-02        -1.116157E-01            200001
+                                          18     LS           -2.321233E-01        -3.481849E-01            200002
+                                          19     LS           -5.285042E-01        -7.927563E-01            200003
+                                          20     LS            3.857596E-02         5.786394E-02            200004
+                                          21     LS           -6.704353E-02        -1.005653E-01            200005
+                                          22     LS           -2.218836E-01        -3.328254E-01            200006
+                                          23     LS           -5.163693E-01        -7.745539E-01            200007
+                                          24     LS            4.796924E-02         7.195385E-02            200008
+                                          25     LS           -5.207209E-02        -7.810813E-02            200009
+                                          26     LS           -2.024535E-01        -3.036803E-01            200010
+                                          27     LS           -4.802297E-01        -7.203446E-01            200011
+                                          28     LS            5.612014E-02         8.418021E-02            200012
+                                          29     LS           -2.700688E-02        -4.051033E-02            200013
+                                          30     LS           -1.823182E-01        -2.734774E-01            200014
+                                          31     LS           -3.969809E-01        -5.954713E-01            200015
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZIB = Z INTERFERENCE BODY ELEMENT,  ZSB = Z SLENDER BODY ELEMENT,
+                                                        YIB = Y INTERFERENCE BODY ELEMENT,  YSB = Y SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    26
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                            AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS
+
+                                                             AERODYNAMIC PRES.       AERODYNAMIC
+                                         GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT
+                                          32     LS            2.558246E-01         3.837369E-01            210001
+                                          33     LS            2.131304E-01         3.196956E-01            210002
+                                          34     LS            2.131356E-01         3.197034E-01            210003
+                                          35     LS            2.244352E-01         3.366527E-01            210004
+                                          36     LS            2.416222E-01         3.624334E-01            210005
+                                          37     LS            2.454745E-01         3.682118E-01            210006
+                                          38     LS            2.162628E-01         3.243942E-01            210007
+                                          39     LS            1.389108E-01         2.083662E-01            210008
+                                          40     LS            3.711979E-01         5.567969E-01            210009
+                                          41     LS            2.472428E-01         3.708643E-01            210010
+                                          42     LS            2.343390E-01         3.515085E-01            210011
+                                          43     LS            2.435134E-01         3.652700E-01            210012
+                                          44     LS            2.560194E-01         3.840291E-01            210013
+                                          45     LS            2.541526E-01         3.812289E-01            210014
+                                          46     LS            2.217775E-01         3.326662E-01            210015
+                                          47     LS            1.435641E-01         2.153462E-01            210016
+                                          48     LS            4.823929E-01         7.235894E-01            210017
+                                          49     LS            2.946089E-01         4.419134E-01            210018
+                                          50     LS            2.741644E-01         4.112465E-01            210019
+                                          51     LS            2.800602E-01         4.200903E-01            210020
+                                          52     LS            2.798430E-01         4.197645E-01            210021
+                                          53     LS            2.661877E-01         3.992816E-01            210022
+                                          54     LS            2.267588E-01         3.401382E-01            210023
+                                          55     LS            1.489734E-01         2.234601E-01            210024
+                                          56     LS            6.061176E-01         9.091764E-01            210025
+                                          57     LS            3.718005E-01         5.577008E-01            210026
+                                          58     LS            3.424852E-01         5.137278E-01            210027
+                                          59     LS            3.221553E-01         4.832330E-01            210028
+                                          60     LS            2.989390E-01         4.484085E-01            210029
+                                          61     LS            2.857064E-01         4.285596E-01            210030
+                                          62     LS            2.389511E-01         3.584267E-01            210031
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZIB = Z INTERFERENCE BODY ELEMENT,  ZSB = Z SLENDER BODY ELEMENT,
+                                                        YIB = Y INTERFERENCE BODY ELEMENT,  YSB = Y SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    27
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                            AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS
+
+                                                             AERODYNAMIC PRES.       AERODYNAMIC
+                                         GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT
+                                          63     LS            1.591649E-01         2.387473E-01            210032
+                                          64     LS            6.593367E-01         9.890050E-01            400000
+                                          65     LS            4.568232E-01         6.852349E-01            400001
+                                          66     LS            3.940554E-01         5.910831E-01            400002
+                                          67     LS            3.194791E-01         4.792186E-01            400003
+                                          68     LS            2.399385E-01         3.599077E-01            400004
+                                          69     LS            1.515817E-01         2.273725E-01            400005
+                                          70     LS            1.609538E-02         2.414307E-02            400006
+                                          71     LS           -2.166491E-01        -3.249737E-01            400007
+                                          72     LS            9.042352E-01         1.356353E+00            600000
+                                          73     LS            5.306055E-01         7.959083E-01            600001
+                                          74     LS            4.556475E-01         6.834713E-01            600002
+                                          75     LS            3.778983E-01         5.668475E-01            600003
+                                          76     LS            2.928766E-01         4.393150E-01            600004
+                                          77     LS            1.921754E-01         2.882631E-01            600005
+                                          78     LS            1.058820E-01         1.588230E-01            600006
+                                          79     LS            3.739794E-03         5.609690E-03            600007
+                                          80     LS           -1.636759E-01        -2.455138E-01            600008
+                                          81     LS           -3.443555E-01        -5.165333E-01            600009
+                                          82     LS            1.091576E+00         1.637364E+00            600010
+                                          83     LS            6.609852E-01         9.914779E-01            600011
+                                          84     LS            4.957986E-01         7.436978E-01            600012
+                                          85     LS            4.001828E-01         6.002742E-01            600013
+                                          86     LS            3.182129E-01         4.773194E-01            600014
+                                          87     LS            2.262524E-01         3.393786E-01            600015
+                                          88     LS            1.337590E-01         2.006385E-01            600016
+                                          89     LS            3.686487E-02         5.529730E-02            600017
+                                          90     LS           -7.004008E-02        -1.050601E-01            600018
+                                          91     LS           -1.415317E-01        -2.122976E-01            600019
+                                          92     LS            1.259912E+00         1.889868E+00            700000
+                                          93     LS            6.287750E-01         9.431624E-01            700001
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZIB = Z INTERFERENCE BODY ELEMENT,  ZSB = Z SLENDER BODY ELEMENT,
+                                                        YIB = Y INTERFERENCE BODY ELEMENT,  YSB = Y SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    28
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                            AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS
+
+                                                             AERODYNAMIC PRES.       AERODYNAMIC
+                                         GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT
+                                          94     LS            4.614946E-01         6.922419E-01            700002
+                                          95     LS            3.469510E-01         5.204264E-01            700003
+                                          96     LS            2.387677E-01         3.581515E-01            700004
+                                          97     LS            1.366433E-01         2.049650E-01            700005
+                                          98     LS            3.465589E-02         5.198383E-02            700006
+                                          99     LS           -4.981988E-02        -7.472982E-02            700007
+                                         100     LS            1.372383E+00         2.058575E+00            700008
+                                         101     LS            7.011656E-01         1.051748E+00            700009
+                                         102     LS            5.230238E-01         7.845357E-01            700010
+                                         103     LS            3.902842E-01         5.854264E-01            700011
+                                         104     LS            2.722228E-01         4.083342E-01            700012
+                                         105     LS            1.677946E-01         2.516919E-01            700013
+                                         106     LS            7.424851E-02         1.113728E-01            700014
+                                         107     LS            7.002263E-04         1.050339E-03            700015
+                                         108     LS            1.533671E+00         2.300506E+00            700016
+                                         109     LS            8.090748E-01         1.213612E+00            700017
+                                         110     LS            5.914778E-01         8.872166E-01            700018
+                                         111     LS            4.314022E-01         6.471034E-01            700019
+                                         112     LS            3.061839E-01         4.592758E-01            700020
+                                         113     LS            2.016495E-01         3.024742E-01            700021
+                                         114     LS            1.130257E-01         1.695385E-01            700022
+                                         115     LS            4.080546E-02         6.120819E-02            700023
+                                         116     LS            1.799310E+00         2.698964E+00            700024
+                                         117     LS            9.625662E-01         1.443849E+00            700025
+                                         118     LS            6.530403E-01         9.795605E-01            700026
+                                         119     LS            4.731713E-01         7.097569E-01            700027
+                                         120     LS            3.431315E-01         5.146973E-01            700028
+                                         121     LS            2.369822E-01         3.554734E-01            700029
+                                         122     LS            1.514103E-01         2.271155E-01            700030
+                                         123     LS            8.113639E-02         1.217046E-01            700031
+                                         124     LS            1.880608E+00         2.820912E+00            800000
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZIB = Z INTERFERENCE BODY ELEMENT,  ZSB = Z SLENDER BODY ELEMENT,
+                                                        YIB = Y INTERFERENCE BODY ELEMENT,  YSB = Y SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    29
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                            AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS
+
+                                                             AERODYNAMIC PRES.       AERODYNAMIC
+                                         GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT
+                                         125     LS            8.084656E-01         1.212698E+00            800001
+                                         126     LS            5.169343E-01         7.754015E-01            800002
+                                         127     LS            3.532439E-01         5.298658E-01            800003
+                                         128     LS            2.326969E-01         3.490454E-01            800004
+                                         129     LS            1.320434E-01         1.980651E-01            800005
+                                         130     LS            1.922160E+00         2.883240E+00            800006
+                                         131     LS            8.450141E-01         1.267521E+00            800007
+                                         132     LS            5.441560E-01         8.162340E-01            800008
+                                         133     LS            3.756217E-01         5.634325E-01            800009
+                                         134     LS            2.552082E-01         3.828122E-01            800010
+                                         135     LS            1.497900E-01         2.246850E-01            800011
+                                         136     LS            1.976307E+00         2.964460E+00            800012
+                                         137     LS            8.796899E-01         1.319535E+00            800013
+                                         138     LS            5.714329E-01         8.571494E-01            800014
+                                         139     LS            4.003830E-01         6.005745E-01            800015
+                                         140     LS            2.775461E-01         4.163191E-01            800016
+                                         141     LS            1.656217E-01         2.484326E-01            800017
+                                         142     LS            2.011828E+00         3.017742E+00            900000
+                                         143     LS            9.074714E-01         1.361207E+00            900001
+                                         144     LS            5.935414E-01         8.903121E-01            900002
+                                         145     LS            4.139370E-01         6.209055E-01            900003
+                                         146     LS            2.832688E-01         4.249033E-01            900004
+                                         147     LS            1.699411E-01         2.549117E-01            900005
+                                         148     LS            2.034758E+00         3.052137E+00            900006
+                                         149     LS            9.161937E-01         1.374291E+00            900007
+                                         150     LS            5.987713E-01         8.981569E-01            900008
+                                         151     LS            4.178708E-01         6.268062E-01            900009
+                                         152     LS            2.876387E-01         4.314581E-01            900010
+                                         153     LS            1.717467E-01         2.576200E-01            900011
+                                         154     LS            2.059351E+00         3.089026E+00            900012
+                                         155     LS            9.243460E-01         1.386519E+00            900013
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZIB = Z INTERFERENCE BODY ELEMENT,  ZSB = Z SLENDER BODY ELEMENT,
+                                                        YIB = Y INTERFERENCE BODY ELEMENT,  YSB = Y SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    30
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                            AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS
+
+                                                             AERODYNAMIC PRES.       AERODYNAMIC
+                                         GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT
+                                         156     LS            6.035214E-01         9.052821E-01            900014
+                                         157     LS            4.230922E-01         6.346384E-01            900015
+                                         158     LS            2.933705E-01         4.400558E-01            900016
+                                         159     LS            1.752783E-01         2.629175E-01            900017
+                                         160     LS            2.082803E+00         3.124205E+00            900018
+                                         161     LS            9.323035E-01         1.398455E+00            900019
+                                         162     LS            6.091011E-01         9.136516E-01            900020
+                                         163     LS            4.293009E-01         6.439514E-01            900021
+                                         164     LS            2.986375E-01         4.479563E-01            900022
+                                         165     LS            1.774662E-01         2.661993E-01            900023
+                                         166     LS            2.095308E+00         3.142961E+00           1000000
+                                         167     LS            9.461892E-01         1.419284E+00           1000001
+                                         168     LS            6.199993E-01         9.299989E-01           1000002
+                                         169     LS            4.322955E-01         6.484433E-01           1000003
+                                         170     LS            2.942733E-01         4.414099E-01           1000004
+                                         171     LS            1.734329E-01         2.601494E-01           1000005
+                                         172     LS            2.116323E+00         3.174485E+00           1000006
+                                         173     LS            9.531034E-01         1.429655E+00           1000007
+                                         174     LS            6.227326E-01         9.340989E-01           1000008
+                                         175     LS            4.333052E-01         6.499578E-01           1000009
+                                         176     LS            2.956317E-01         4.434476E-01           1000010
+                                         177     LS            1.739240E-01         2.608859E-01           1000011
+                                         178     LS            2.135913E+00         3.203870E+00           1000012
+                                         179     LS            9.580190E-01         1.437029E+00           1000013
+                                         180     LS            6.236666E-01         9.354999E-01           1000014
+                                         181     LS            4.337328E-01         6.505993E-01           1000015
+                                         182     LS            2.966273E-01         4.449409E-01           1000016
+                                         183     LS            1.745430E-01         2.618145E-01           1000017
+                                         184     LS            2.152778E+00         3.229168E+00           1000018
+                                         185     LS            9.615042E-01         1.442256E+00           1000019
+                                         186     LS            6.226966E-01         9.340449E-01           1000020
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZIB = Z INTERFERENCE BODY ELEMENT,  ZSB = Z SLENDER BODY ELEMENT,
+                                                        YIB = Y INTERFERENCE BODY ELEMENT,  YSB = Y SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    31
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                            AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS
+
+                                                             AERODYNAMIC PRES.       AERODYNAMIC
+                                         GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT
+                                         187     LS            4.327597E-01         6.491396E-01           1000021
+                                         188     LS            2.957093E-01         4.435639E-01           1000022
+                                         189     LS            1.726182E-01         2.589273E-01           1000023
+                                         190     LS            2.158468E+00         3.237701E+00           1100000
+                                         191     LS            9.622810E-01         1.443421E+00           1100001
+                                         192     LS            6.209442E-01         9.314163E-01           1100002
+                                         193     LS            4.255881E-01         6.383821E-01           1100003
+                                         194     LS            2.841544E-01         4.262316E-01           1100004
+                                         195     LS            1.623713E-01         2.435570E-01           1100005
+                                         196     LS            2.157296E+00         3.235944E+00           1100006
+                                         197     LS            9.538492E-01         1.430774E+00           1100007
+                                         198     LS            6.079086E-01         9.118629E-01           1100008
+                                         199     LS            4.096907E-01         6.145360E-01           1100009
+                                         200     LS            2.685139E-01         4.027708E-01           1100010
+                                         201     LS            1.509180E-01         2.263771E-01           1100011
+                                         202     LS            2.145776E+00         3.218664E+00           1100012
+                                         203     LS            9.344846E-01         1.401727E+00           1100013
+                                         204     LS            5.824069E-01         8.736104E-01           1100014
+                                         205     LS            3.822419E-01         5.733628E-01           1100015
+                                         206     LS            2.443039E-01         3.664558E-01           1100016
+                                         207     LS            1.346699E-01         2.020049E-01           1100017
+                                         208     LS            2.109827E+00         3.164741E+00           1100018
+                                         209     LS            8.920284E-01         1.338043E+00           1100019
+                                         210     LS            5.329326E-01         7.993990E-01           1100020
+                                         211     LS            3.348861E-01         5.023291E-01           1100021
+                                         212     LS            2.070453E-01         3.105680E-01           1100022
+                                         213     LS            1.117902E-01         1.676854E-01           1100023
+                                         214     LS            2.016587E+00         3.024881E+00           1100024
+                                         215     LS            7.943576E-01         1.191536E+00           1100025
+                                         216     LS            4.347072E-01         6.520608E-01           1100026
+                                         217     LS            2.565745E-01         3.848617E-01           1100027
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZIB = Z INTERFERENCE BODY ELEMENT,  ZSB = Z SLENDER BODY ELEMENT,
+                                                        YIB = Y INTERFERENCE BODY ELEMENT,  YSB = Y SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    32
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                            AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS
+
+                                                             AERODYNAMIC PRES.       AERODYNAMIC
+                                         GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT
+                                         218     LS            1.538033E-01         2.307049E-01           1100028
+                                         219     LS            8.203680E-02         1.230552E-01           1100029
+                                         220     LS            1.741628E+00         2.612442E+00           1100030
+                                         221     LS            5.339527E-01         8.009291E-01           1100031
+                                         222     LS            2.538224E-01         3.807337E-01           1100032
+                                         223     LS            1.447777E-01         2.171666E-01           1100033
+                                         224     LS            8.720872E-02         1.308131E-01           1100034
+                                         225     LS            4.714262E-02         7.071393E-02           1100035
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZIB = Z INTERFERENCE BODY ELEMENT,  ZSB = Z SLENDER BODY ELEMENT,
+                                                        YIB = Y INTERFERENCE BODY ELEMENT,  YSB = Y SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    33
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                             AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS
+
+    GROUP  GRID ID  LABEL        T1                T2                T3                R1                R2                R3
+        1   110000   LS     0.000000E+00      0.000000E+00     -7.755068E+03      0.000000E+00     -1.204249E+05      0.000000E+00
+        1   110001   LS     0.000000E+00      0.000000E+00     -2.649416E+03      0.000000E+00     -4.114157E+04      0.000000E+00
+        1   110002   LS     0.000000E+00      0.000000E+00     -1.071881E+03      0.000000E+00     -1.664474E+04      0.000000E+00
+        1   110003   LS     0.000000E+00      0.000000E+00     -7.346135E+03      0.000000E+00     -1.044789E+05      0.000000E+00
+        1   110004   LS     0.000000E+00      0.000000E+00     -2.551688E+03      0.000000E+00     -3.629085E+04      0.000000E+00
+        1   110005   LS     0.000000E+00      0.000000E+00     -1.073765E+03      0.000000E+00     -1.527140E+04      0.000000E+00
+        1   110006   LS     0.000000E+00      0.000000E+00     -6.755508E+03      0.000000E+00     -8.725443E+04      0.000000E+00
+        1   110007   LS     0.000000E+00      0.000000E+00     -2.339653E+03      0.000000E+00     -3.021905E+04      0.000000E+00
+        1   110008   LS     0.000000E+00      0.000000E+00     -1.004233E+03      0.000000E+00     -1.297072E+04      0.000000E+00
+        1   110009   LS     0.000000E+00      0.000000E+00     -5.979837E+03      0.000000E+00     -6.942466E+04      0.000000E+00
+        1   110010   LS     0.000000E+00      0.000000E+00     -1.990443E+03      0.000000E+00     -2.310863E+04      0.000000E+00
+        1   110011   LS     0.000000E+00      0.000000E+00     -8.465092E+02      0.000000E+00     -9.827796E+03      0.000000E+00
+        1   110100   LS     0.000000E+00      0.000000E+00     -4.337394E+03      0.000000E+00     -4.075343E+04      0.000000E+00
+        1   110101   LS     0.000000E+00      0.000000E+00     -1.281384E+03      0.000000E+00     -1.203967E+04      0.000000E+00
+        1   110102   LS     0.000000E+00      0.000000E+00     -5.203582E+02      0.000000E+00     -4.889199E+03      0.000000E+00
+        1   200000   LS     0.000000E+00      0.000000E+00      1.772247E+02      0.000000E+00      2.769137E+03      0.000000E+00
+        1   200001   LS     0.000000E+00      0.000000E+00     -3.862951E+02      0.000000E+00     -6.035860E+03      0.000000E+00
+        1   200002   LS     0.000000E+00      0.000000E+00     -1.205046E+03      0.000000E+00     -1.882885E+04      0.000000E+00
+        1   200003   LS     0.000000E+00      0.000000E+00     -2.743680E+03      0.000000E+00     -4.287000E+04      0.000000E+00
+        1   200004   LS     0.000000E+00      0.000000E+00      2.002635E+02      0.000000E+00      3.129117E+03      0.000000E+00
+        1   200005   LS     0.000000E+00      0.000000E+00     -3.480502E+02      0.000000E+00     -5.438284E+03      0.000000E+00
+        1   200006   LS     0.000000E+00      0.000000E+00     -1.151888E+03      0.000000E+00     -1.799825E+04      0.000000E+00
+        1   200007   LS     0.000000E+00      0.000000E+00     -2.680683E+03      0.000000E+00     -4.188567E+04      0.000000E+00
+        1   200008   LS     0.000000E+00      0.000000E+00      2.490278E+02      0.000000E+00      3.891059E+03      0.000000E+00
+        1   200009   LS     0.000000E+00      0.000000E+00     -2.703274E+02      0.000000E+00     -4.223865E+03      0.000000E+00
+        1   200010   LS     0.000000E+00      0.000000E+00     -1.051019E+03      0.000000E+00     -1.642217E+04      0.000000E+00
+        1   200011   LS     0.000000E+00      0.000000E+00     -2.493068E+03      0.000000E+00     -3.895418E+04      0.000000E+00
+        1   200012   LS     0.000000E+00      0.000000E+00      2.913424E+02      0.000000E+00      4.552226E+03      0.000000E+00
+        1   200013   LS     0.000000E+00      0.000000E+00     -1.402037E+02      0.000000E+00     -2.190683E+03      0.000000E+00
+        1   200014   LS     0.000000E+00      0.000000E+00     -9.464881E+02      0.000000E+00     -1.478888E+04      0.000000E+00
+        1   200015   LS     0.000000E+00      0.000000E+00     -2.060889E+03      0.000000E+00     -3.220139E+04      0.000000E+00
+        1   210001   LS     0.000000E+00      0.000000E+00      2.936738E+03      0.000000E+00      1.014666E+05      0.000000E+00
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZSB =  Z SLENDER BODY ELEMENT,  YSB =  Y SLENDER BODY ELEMENT,
+                                                       ZYSB = ZY SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    34
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                             AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS
+
+    GROUP  GRID ID  LABEL        T1                T2                T3                R1                R2                R3
+        1   210002   LS     0.000000E+00      0.000000E+00      2.446630E+03      0.000000E+00      8.453297E+04      0.000000E+00
+        1   210003   LS     0.000000E+00      0.000000E+00      2.446689E+03      0.000000E+00      8.453503E+04      0.000000E+00
+        1   210004   LS     0.000000E+00      0.000000E+00      2.576403E+03      0.000000E+00      8.901673E+04      0.000000E+00
+        1   210005   LS     0.000000E+00      0.000000E+00      2.773702E+03      0.000000E+00      9.583357E+04      0.000000E+00
+        1   210006   LS     0.000000E+00      0.000000E+00      2.817924E+03      0.000000E+00      9.736149E+04      0.000000E+00
+        1   210007   LS     0.000000E+00      0.000000E+00      2.482589E+03      0.000000E+00      8.577537E+04      0.000000E+00
+        1   210008   LS     0.000000E+00      0.000000E+00      1.594626E+03      0.000000E+00      5.509559E+04      0.000000E+00
+        1   210009   LS     0.000000E+00      0.000000E+00      3.764953E+03      0.000000E+00      1.149340E+05      0.000000E+00
+        1   210010   LS     0.000000E+00      0.000000E+00      2.507712E+03      0.000000E+00      7.655380E+04      0.000000E+00
+        1   210011   LS     0.000000E+00      0.000000E+00      2.376833E+03      0.000000E+00      7.255839E+04      0.000000E+00
+        1   210012   LS     0.000000E+00      0.000000E+00      2.469885E+03      0.000000E+00      7.539904E+04      0.000000E+00
+        1   210013   LS     0.000000E+00      0.000000E+00      2.596731E+03      0.000000E+00      7.927129E+04      0.000000E+00
+        1   210014   LS     0.000000E+00      0.000000E+00      2.577796E+03      0.000000E+00      7.869327E+04      0.000000E+00
+        1   210015   LS     0.000000E+00      0.000000E+00      2.249425E+03      0.000000E+00      6.866896E+04      0.000000E+00
+        1   210016   LS     0.000000E+00      0.000000E+00      1.456129E+03      0.000000E+00      4.445175E+04      0.000000E+00
+        1   210017   LS     0.000000E+00      0.000000E+00      4.247915E+03      0.000000E+00      1.125863E+05      0.000000E+00
+        1   210018   LS     0.000000E+00      0.000000E+00      2.594303E+03      0.000000E+00      6.875917E+04      0.000000E+00
+        1   210019   LS     0.000000E+00      0.000000E+00      2.414270E+03      0.000000E+00      6.398759E+04      0.000000E+00
+        1   210020   LS     0.000000E+00      0.000000E+00      2.466188E+03      0.000000E+00      6.536362E+04      0.000000E+00
+        1   210021   LS     0.000000E+00      0.000000E+00      2.464276E+03      0.000000E+00      6.531293E+04      0.000000E+00
+        1   210022   LS     0.000000E+00      0.000000E+00      2.344028E+03      0.000000E+00      6.212591E+04      0.000000E+00
+        1   210023   LS     0.000000E+00      0.000000E+00      1.996820E+03      0.000000E+00      5.292354E+04      0.000000E+00
+        1   210024   LS     0.000000E+00      0.000000E+00      1.311848E+03      0.000000E+00      3.476910E+04      0.000000E+00
+        1   210025   LS     0.000000E+00      0.000000E+00      4.527175E+03      0.000000E+00      1.017730E+05      0.000000E+00
+        1   210026   LS     0.000000E+00      0.000000E+00      2.777029E+03      0.000000E+00      6.242890E+04      0.000000E+00
+        1   210027   LS     0.000000E+00      0.000000E+00      2.558069E+03      0.000000E+00      5.750658E+04      0.000000E+00
+        1   210028   LS     0.000000E+00      0.000000E+00      2.406222E+03      0.000000E+00      5.409299E+04      0.000000E+00
+        1   210029   LS     0.000000E+00      0.000000E+00      2.232816E+03      0.000000E+00      5.019474E+04      0.000000E+00
+        1   210030   LS     0.000000E+00      0.000000E+00      2.133980E+03      0.000000E+00      4.797287E+04      0.000000E+00
+        1   210031   LS     0.000000E+00      0.000000E+00      1.784758E+03      0.000000E+00      4.012221E+04      0.000000E+00
+        1   210032   LS     0.000000E+00      0.000000E+00      1.188824E+03      0.000000E+00      2.672533E+04      0.000000E+00
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZSB =  Z SLENDER BODY ELEMENT,  YSB =  Y SLENDER BODY ELEMENT,
+                                                       ZYSB = ZY SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    35
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                             AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS
+
+    GROUP  GRID ID  LABEL        T1                T2                T3                R1                R2                R3
+        1   400000   LS     0.000000E+00      0.000000E+00      5.069485E+03      0.000000E+00      1.339453E+05      0.000000E+00
+        1   400001   LS     0.000000E+00      0.000000E+00      3.512407E+03      0.000000E+00      9.280438E+04      0.000000E+00
+        1   400002   LS     0.000000E+00      0.000000E+00      3.029800E+03      0.000000E+00      8.005299E+04      0.000000E+00
+        1   400003   LS     0.000000E+00      0.000000E+00      2.456400E+03      0.000000E+00      6.490268E+04      0.000000E+00
+        1   400004   LS     0.000000E+00      0.000000E+00      1.844831E+03      0.000000E+00      4.874389E+04      0.000000E+00
+        1   400005   LS     0.000000E+00      0.000000E+00      1.165476E+03      0.000000E+00      3.079406E+04      0.000000E+00
+        1   400006   LS     0.000000E+00      0.000000E+00      1.237536E+02      0.000000E+00      3.269802E+03      0.000000E+00
+        1   400007   LS     0.000000E+00      0.000000E+00     -1.665764E+03      0.000000E+00     -4.401261E+04      0.000000E+00
+        1   600000   LS     0.000000E+00      0.000000E+00      5.532689E+03      0.000000E+00      1.132950E+05      0.000000E+00
+        1   600001   LS     0.000000E+00      0.000000E+00      3.246584E+03      0.000000E+00      6.648152E+04      0.000000E+00
+        1   600002   LS     0.000000E+00      0.000000E+00      2.787943E+03      0.000000E+00      5.708976E+04      0.000000E+00
+        1   600003   LS     0.000000E+00      0.000000E+00      2.312224E+03      0.000000E+00      4.734827E+04      0.000000E+00
+        1   600004   LS     0.000000E+00      0.000000E+00      1.792007E+03      0.000000E+00      3.669559E+04      0.000000E+00
+        1   600005   LS     0.000000E+00      0.000000E+00      1.175852E+03      0.000000E+00      2.407836E+04      0.000000E+00
+        1   600006   LS     0.000000E+00      0.000000E+00      6.478539E+02      0.000000E+00      1.326635E+04      0.000000E+00
+        1   600007   LS     0.000000E+00      0.000000E+00      2.288245E+01      0.000000E+00      4.685725E+02      0.000000E+00
+        1   600008   LS     0.000000E+00      0.000000E+00     -1.001474E+03      0.000000E+00     -2.050756E+04      0.000000E+00
+        1   600009   LS     0.000000E+00      0.000000E+00     -2.106987E+03      0.000000E+00     -4.314557E+04      0.000000E+00
+        1   600010   LS     0.000000E+00      0.000000E+00      5.652769E+03      0.000000E+00      9.796884E+04      0.000000E+00
+        1   600011   LS     0.000000E+00      0.000000E+00      3.422939E+03      0.000000E+00      5.932338E+04      0.000000E+00
+        1   600012   LS     0.000000E+00      0.000000E+00      2.567513E+03      0.000000E+00      4.449788E+04      0.000000E+00
+        1   600013   LS     0.000000E+00      0.000000E+00      2.072363E+03      0.000000E+00      3.591638E+04      0.000000E+00
+        1   600014   LS     0.000000E+00      0.000000E+00      1.647878E+03      0.000000E+00      2.855959E+04      0.000000E+00
+        1   600015   LS     0.000000E+00      0.000000E+00      1.171657E+03      0.000000E+00      2.030613E+04      0.000000E+00
+        1   600016   LS     0.000000E+00      0.000000E+00      6.926763E+02      0.000000E+00      1.200486E+04      0.000000E+00
+        1   600017   LS     0.000000E+00      0.000000E+00      1.909062E+02      0.000000E+00      3.308619E+03      0.000000E+00
+        1   600018   LS     0.000000E+00      0.000000E+00     -3.627054E+02      0.000000E+00     -6.286092E+03      0.000000E+00
+        1   600019   LS     0.000000E+00      0.000000E+00     -7.329276E+02      0.000000E+00     -1.270246E+04      0.000000E+00
+        1   700000   LS     0.000000E+00      0.000000E+00      6.403144E+03      0.000000E+00      1.188103E+05      0.000000E+00
+        1   700001   LS     0.000000E+00      0.000000E+00      3.195569E+03      0.000000E+00      5.929379E+04      0.000000E+00
+        1   700002   LS     0.000000E+00      0.000000E+00      2.345415E+03      0.000000E+00      4.351917E+04      0.000000E+00
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZSB =  Z SLENDER BODY ELEMENT,  YSB =  Y SLENDER BODY ELEMENT,
+                                                       ZYSB = ZY SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    36
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                             AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS
+
+    GROUP  GRID ID  LABEL        T1                T2                T3                R1                R2                R3
+        1   700003   LS     0.000000E+00      0.000000E+00      1.763279E+03      0.000000E+00      3.271765E+04      0.000000E+00
+        1   700004   LS     0.000000E+00      0.000000E+00      1.213469E+03      0.000000E+00      2.251591E+04      0.000000E+00
+        1   700005   LS     0.000000E+00      0.000000E+00      6.944508E+02      0.000000E+00      1.288553E+04      0.000000E+00
+        1   700006   LS     0.000000E+00      0.000000E+00      1.761286E+02      0.000000E+00      3.268067E+03      0.000000E+00
+        1   700007   LS     0.000000E+00      0.000000E+00     -2.531953E+02      0.000000E+00     -4.698039E+03      0.000000E+00
+        1   700008   LS     0.000000E+00      0.000000E+00      6.115825E+03      0.000000E+00      9.950447E+04      0.000000E+00
+        1   700009   LS     0.000000E+00      0.000000E+00      3.124642E+03      0.000000E+00      5.083792E+04      0.000000E+00
+        1   700010   LS     0.000000E+00      0.000000E+00      2.330779E+03      0.000000E+00      3.792177E+04      0.000000E+00
+        1   700011   LS     0.000000E+00      0.000000E+00      1.739244E+03      0.000000E+00      2.829751E+04      0.000000E+00
+        1   700012   LS     0.000000E+00      0.000000E+00      1.213121E+03      0.000000E+00      1.973747E+04      0.000000E+00
+        1   700013   LS     0.000000E+00      0.000000E+00      7.477520E+02      0.000000E+00      1.216593E+04      0.000000E+00
+        1   700014   LS     0.000000E+00      0.000000E+00      3.308776E+02      0.000000E+00      5.383378E+03      0.000000E+00
+        1   700015   LS     0.000000E+00      0.000000E+00      3.120455E+00      0.000000E+00      5.076981E+01      0.000000E+00
+        1   700016   LS     0.000000E+00      0.000000E+00      5.874712E+03      0.000000E+00      8.215785E+04      0.000000E+00
+        1   700017   LS     0.000000E+00      0.000000E+00      3.099154E+03      0.000000E+00      4.334167E+04      0.000000E+00
+        1   700018   LS     0.000000E+00      0.000000E+00      2.265651E+03      0.000000E+00      3.168512E+04      0.000000E+00
+        1   700019   LS     0.000000E+00      0.000000E+00      1.652483E+03      0.000000E+00      2.310997E+04      0.000000E+00
+        1   700020   LS     0.000000E+00      0.000000E+00      1.172835E+03      0.000000E+00      1.640209E+04      0.000000E+00
+        1   700021   LS     0.000000E+00      0.000000E+00      7.724165E+02      0.000000E+00      1.080225E+04      0.000000E+00
+        1   700022   LS     0.000000E+00      0.000000E+00      4.329439E+02      0.000000E+00      6.054721E+03      0.000000E+00
+        1   700023   LS     0.000000E+00      0.000000E+00      1.563050E+02      0.000000E+00      2.185925E+03      0.000000E+00
+        1   700024   LS     0.000000E+00      0.000000E+00      5.766122E+03      0.000000E+00      6.746362E+04      0.000000E+00
+        1   700025   LS     0.000000E+00      0.000000E+00      3.084669E+03      0.000000E+00      3.609062E+04      0.000000E+00
+        1   700026   LS     0.000000E+00      0.000000E+00      2.092753E+03      0.000000E+00      2.448521E+04      0.000000E+00
+        1   700027   LS     0.000000E+00      0.000000E+00      1.516339E+03      0.000000E+00      1.774116E+04      0.000000E+00
+        1   700028   LS     0.000000E+00      0.000000E+00      1.099610E+03      0.000000E+00      1.286543E+04      0.000000E+00
+        1   700029   LS     0.000000E+00      0.000000E+00      7.594404E+02      0.000000E+00      8.885453E+03      0.000000E+00
+        1   700030   LS     0.000000E+00      0.000000E+00      4.852141E+02      0.000000E+00      5.677005E+03      0.000000E+00
+        1   700031   LS     0.000000E+00      0.000000E+00      2.600121E+02      0.000000E+00      3.042142E+03      0.000000E+00
+        1   800000   LS     0.000000E+00      0.000000E+00      8.591128E+03      0.000000E+00      1.165279E+05      0.000000E+00
+        1   800001   LS     0.000000E+00      0.000000E+00      3.693290E+03      0.000000E+00      5.009486E+04      0.000000E+00
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZSB =  Z SLENDER BODY ELEMENT,  YSB =  Y SLENDER BODY ELEMENT,
+                                                       ZYSB = ZY SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    37
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                             AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS
+
+    GROUP  GRID ID  LABEL        T1                T2                T3                R1                R2                R3
+        1   800002   LS     0.000000E+00      0.000000E+00      2.361496E+03      0.000000E+00      3.203074E+04      0.000000E+00
+        1   800003   LS     0.000000E+00      0.000000E+00      1.613714E+03      0.000000E+00      2.188801E+04      0.000000E+00
+        1   800004   LS     0.000000E+00      0.000000E+00      1.063023E+03      0.000000E+00      1.441857E+04      0.000000E+00
+        1   800005   LS     0.000000E+00      0.000000E+00      6.032100E+02      0.000000E+00      8.181789E+03      0.000000E+00
+        1   800006   LS     0.000000E+00      0.000000E+00      8.116841E+03      0.000000E+00      1.017683E+05      0.000000E+00
+        1   800007   LS     0.000000E+00      0.000000E+00      3.568301E+03      0.000000E+00      4.473906E+04      0.000000E+00
+        1   800008   LS     0.000000E+00      0.000000E+00      2.297846E+03      0.000000E+00      2.881020E+04      0.000000E+00
+        1   800009   LS     0.000000E+00      0.000000E+00      1.586164E+03      0.000000E+00      1.988719E+04      0.000000E+00
+        1   800010   LS     0.000000E+00      0.000000E+00      1.077685E+03      0.000000E+00      1.351193E+04      0.000000E+00
+        1   800011   LS     0.000000E+00      0.000000E+00      6.325289E+02      0.000000E+00      7.930594E+03      0.000000E+00
+        1   800012   LS     0.000000E+00      0.000000E+00      7.662673E+03      0.000000E+00      8.821334E+04      0.000000E+00
+        1   800013   LS     0.000000E+00      0.000000E+00      3.410795E+03      0.000000E+00      3.926536E+04      0.000000E+00
+        1   800014   LS     0.000000E+00      0.000000E+00      2.215600E+03      0.000000E+00      2.550617E+04      0.000000E+00
+        1   800015   LS     0.000000E+00      0.000000E+00      1.552393E+03      0.000000E+00      1.787128E+04      0.000000E+00
+        1   800016   LS     0.000000E+00      0.000000E+00      1.076121E+03      0.000000E+00      1.238839E+04      0.000000E+00
+        1   800017   LS     0.000000E+00      0.000000E+00      6.421600E+02      0.000000E+00      7.392600E+03      0.000000E+00
+        1   900000   LS     0.000000E+00      0.000000E+00      5.443150E+03      0.000000E+00      5.843987E+04      0.000000E+00
+        1   900001   LS     0.000000E+00      0.000000E+00      2.455231E+03      0.000000E+00      2.636036E+04      0.000000E+00
+        1   900002   LS     0.000000E+00      0.000000E+00      1.605870E+03      0.000000E+00      1.724128E+04      0.000000E+00
+        1   900003   LS     0.000000E+00      0.000000E+00      1.119937E+03      0.000000E+00      1.202410E+04      0.000000E+00
+        1   900004   LS     0.000000E+00      0.000000E+00      7.664049E+02      0.000000E+00      8.228434E+03      0.000000E+00
+        1   900005   LS     0.000000E+00      0.000000E+00      4.597884E+02      0.000000E+00      4.936475E+03      0.000000E+00
+        1   900006   LS     0.000000E+00      0.000000E+00      5.235723E+03      0.000000E+00      5.346137E+04      0.000000E+00
+        1   900007   LS     0.000000E+00      0.000000E+00      2.357497E+03      0.000000E+00      2.407214E+04      0.000000E+00
+        1   900008   LS     0.000000E+00      0.000000E+00      1.540724E+03      0.000000E+00      1.573216E+04      0.000000E+00
+        1   900009   LS     0.000000E+00      0.000000E+00      1.075241E+03      0.000000E+00      1.097917E+04      0.000000E+00
+        1   900010   LS     0.000000E+00      0.000000E+00      7.401356E+02      0.000000E+00      7.557440E+03      0.000000E+00
+        1   900011   LS     0.000000E+00      0.000000E+00      4.419287E+02      0.000000E+00      4.512483E+03      0.000000E+00
+        1   900012   LS     0.000000E+00      0.000000E+00      5.026281E+03      0.000000E+00      4.868137E+04      0.000000E+00
+        1   900013   LS     0.000000E+00      0.000000E+00      2.256062E+03      0.000000E+00      2.185078E+04      0.000000E+00
+        1   900014   LS     0.000000E+00      0.000000E+00      1.473022E+03      0.000000E+00      1.426675E+04      0.000000E+00
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZSB =  Z SLENDER BODY ELEMENT,  YSB =  Y SLENDER BODY ELEMENT,
+                                                       ZYSB = ZY SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    38
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                             AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS
+
+    GROUP  GRID ID  LABEL        T1                T2                T3                R1                R2                R3
+        1   900015   LS     0.000000E+00      0.000000E+00      1.032646E+03      0.000000E+00      1.000156E+04      0.000000E+00
+        1   900016   LS     0.000000E+00      0.000000E+00      7.160329E+02      0.000000E+00      6.935040E+03      0.000000E+00
+        1   900017   LS     0.000000E+00      0.000000E+00      4.278039E+02      0.000000E+00      4.143437E+03      0.000000E+00
+        1   900018   LS     0.000000E+00      0.000000E+00      4.807694E+03      0.000000E+00      4.403773E+04      0.000000E+00
+        1   900019   LS     0.000000E+00      0.000000E+00      2.152018E+03      0.000000E+00      1.971215E+04      0.000000E+00
+        1   900020   LS     0.000000E+00      0.000000E+00      1.405976E+03      0.000000E+00      1.287852E+04      0.000000E+00
+        1   900021   LS     0.000000E+00      0.000000E+00      9.909470E+02      0.000000E+00      9.076920E+03      0.000000E+00
+        1   900022   LS     0.000000E+00      0.000000E+00      6.893393E+02      0.000000E+00      6.314240E+03      0.000000E+00
+        1   900023   LS     0.000000E+00      0.000000E+00      4.096418E+02      0.000000E+00      3.752255E+03      0.000000E+00
+        1  1000000   LS     0.000000E+00      0.000000E+00      4.562071E+03      0.000000E+00      3.941630E+04      0.000000E+00
+        1  1000001   LS     0.000000E+00      0.000000E+00      2.060119E+03      0.000000E+00      1.779943E+04      0.000000E+00
+        1  1000002   LS     0.000000E+00      0.000000E+00      1.349912E+03      0.000000E+00      1.166324E+04      0.000000E+00
+        1  1000003   LS     0.000000E+00      0.000000E+00      9.412284E+02      0.000000E+00      8.132213E+03      0.000000E+00
+        1  1000004   LS     0.000000E+00      0.000000E+00      6.407153E+02      0.000000E+00      5.535780E+03      0.000000E+00
+        1  1000005   LS     0.000000E+00      0.000000E+00      3.776120E+02      0.000000E+00      3.262568E+03      0.000000E+00
+        1  1000006   LS     0.000000E+00      0.000000E+00      4.333616E+03      0.000000E+00      3.521424E+04      0.000000E+00
+        1  1000007   LS     0.000000E+00      0.000000E+00      1.951679E+03      0.000000E+00      1.585902E+04      0.000000E+00
+        1  1000008   LS     0.000000E+00      0.000000E+00      1.275176E+03      0.000000E+00      1.036187E+04      0.000000E+00
+        1  1000009   LS     0.000000E+00      0.000000E+00      8.872833E+02      0.000000E+00      7.209917E+03      0.000000E+00
+        1  1000010   LS     0.000000E+00      0.000000E+00      6.053680E+02      0.000000E+00      4.919119E+03      0.000000E+00
+        1  1000011   LS     0.000000E+00      0.000000E+00      3.561458E+02      0.000000E+00      2.893982E+03      0.000000E+00
+        1  1000012   LS     0.000000E+00      0.000000E+00      4.096981E+03      0.000000E+00      3.118485E+04      0.000000E+00
+        1  1000013   LS     0.000000E+00      0.000000E+00      1.837615E+03      0.000000E+00      1.398731E+04      0.000000E+00
+        1  1000014   LS     0.000000E+00      0.000000E+00      1.196280E+03      0.000000E+00      9.105683E+03      0.000000E+00
+        1  1000015   LS     0.000000E+00      0.000000E+00      8.319603E+02      0.000000E+00      6.332604E+03      0.000000E+00
+        1  1000016   LS     0.000000E+00      0.000000E+00      5.689726E+02      0.000000E+00      4.330830E+03      0.000000E+00
+        1  1000017   LS     0.000000E+00      0.000000E+00      3.347979E+02      0.000000E+00      2.548370E+03      0.000000E+00
+        1  1000018   LS     0.000000E+00      0.000000E+00      3.850395E+03      0.000000E+00      2.732818E+04      0.000000E+00
+        1  1000019   LS     0.000000E+00      0.000000E+00      1.719718E+03      0.000000E+00      1.220570E+04      0.000000E+00
+        1  1000020   LS     0.000000E+00      0.000000E+00      1.113736E+03      0.000000E+00      7.904744E+03      0.000000E+00
+        1  1000021   LS     0.000000E+00      0.000000E+00      7.740211E+02      0.000000E+00      5.493615E+03      0.000000E+00
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZSB =  Z SLENDER BODY ELEMENT,  YSB =  Y SLENDER BODY ELEMENT,
+                                                       ZYSB = ZY SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    39
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                             AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS
+
+    GROUP  GRID ID  LABEL        T1                T2                T3                R1                R2                R3
+        1  1000022   LS     0.000000E+00      0.000000E+00      5.288968E+02      0.000000E+00      3.753845E+03      0.000000E+00
+        1  1000023   LS     0.000000E+00      0.000000E+00      3.087397E+02      0.000000E+00      2.191280E+03      0.000000E+00
+        1  1100000   LS     0.000000E+00      0.000000E+00      2.940190E+03      0.000000E+00      1.949867E+04      0.000000E+00
+        1  1100001   LS     0.000000E+00      0.000000E+00      1.310786E+03      0.000000E+00      8.692834E+03      0.000000E+00
+        1  1100002   LS     0.000000E+00      0.000000E+00      8.458289E+02      0.000000E+00      5.609344E+03      0.000000E+00
+        1  1100003   LS     0.000000E+00      0.000000E+00      5.797215E+02      0.000000E+00      3.844580E+03      0.000000E+00
+        1  1100004   LS     0.000000E+00      0.000000E+00      3.870654E+02      0.000000E+00      2.566929E+03      0.000000E+00
+        1  1100005   LS     0.000000E+00      0.000000E+00      2.211767E+02      0.000000E+00      1.466793E+03      0.000000E+00
+        1  1100006   LS     0.000000E+00      0.000000E+00      2.753689E+03      0.000000E+00      1.711274E+04      0.000000E+00
+        1  1100007   LS     0.000000E+00      0.000000E+00      1.217545E+03      0.000000E+00      7.566406E+03      0.000000E+00
+        1  1100008   LS     0.000000E+00      0.000000E+00      7.759674E+02      0.000000E+00      4.822233E+03      0.000000E+00
+        1  1100009   LS     0.000000E+00      0.000000E+00      5.229513E+02      0.000000E+00      3.249870E+03      0.000000E+00
+        1  1100010   LS     0.000000E+00      0.000000E+00      3.427456E+02      0.000000E+00      2.129985E+03      0.000000E+00
+        1  1100011   LS     0.000000E+00      0.000000E+00      1.926399E+02      0.000000E+00      1.197157E+03      0.000000E+00
+        1  1100012   LS     0.000000E+00      0.000000E+00      2.555066E+03      0.000000E+00      1.481220E+04      0.000000E+00
+        1  1100013   LS     0.000000E+00      0.000000E+00      1.112730E+03      0.000000E+00      6.450706E+03      0.000000E+00
+        1  1100014   LS     0.000000E+00      0.000000E+00      6.934966E+02      0.000000E+00      4.020330E+03      0.000000E+00
+        1  1100015   LS     0.000000E+00      0.000000E+00      4.551516E+02      0.000000E+00      2.638599E+03      0.000000E+00
+        1  1100016   LS     0.000000E+00      0.000000E+00      2.909030E+02      0.000000E+00      1.686419E+03      0.000000E+00
+        1  1100017   LS     0.000000E+00      0.000000E+00      1.603572E+02      0.000000E+00      9.296207E+02      0.000000E+00
+        1  1100018   LS     0.000000E+00      0.000000E+00      2.331424E+03      0.000000E+00      1.254282E+04      0.000000E+00
+        1  1100019   LS     0.000000E+00      0.000000E+00      9.857187E+02      0.000000E+00      5.303064E+03      0.000000E+00
+        1  1100020   LS     0.000000E+00      0.000000E+00      5.889069E+02      0.000000E+00      3.168258E+03      0.000000E+00
+        1  1100021   LS     0.000000E+00      0.000000E+00      3.700593E+02      0.000000E+00      1.990881E+03      0.000000E+00
+        1  1100022   LS     0.000000E+00      0.000000E+00      2.287914E+02      0.000000E+00      1.230874E+03      0.000000E+00
+        1  1100023   LS     0.000000E+00      0.000000E+00      1.235316E+02      0.000000E+00      6.645874E+02      0.000000E+00
+        1  1100024   LS     0.000000E+00      0.000000E+00      2.055545E+03      0.000000E+00      1.020086E+04      0.000000E+00
+        1  1100025   LS     0.000000E+00      0.000000E+00      8.097037E+02      0.000000E+00      4.018239E+03      0.000000E+00
+        1  1100026   LS     0.000000E+00      0.000000E+00      4.431053E+02      0.000000E+00      2.198956E+03      0.000000E+00
+        1  1100027   LS     0.000000E+00      0.000000E+00      2.615312E+02      0.000000E+00      1.297876E+03      0.000000E+00
+        1  1100028   LS     0.000000E+00      0.000000E+00      1.567746E+02      0.000000E+00      7.780102E+02      0.000000E+00
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZSB =  Z SLENDER BODY ELEMENT,  YSB =  Y SLENDER BODY ELEMENT,
+                                                       ZYSB = ZY SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    40
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+                         CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+
+                                             AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS
+
+    GROUP  GRID ID  LABEL        T1                T2                T3                R1                R2                R3
+        1  1100029   LS     0.000000E+00      0.000000E+00      8.362167E+01      0.000000E+00      4.149812E+02      0.000000E+00
+        1  1100030   LS     0.000000E+00      0.000000E+00      1.625997E+03      0.000000E+00      7.390662E+03      0.000000E+00
+        1  1100031   LS     0.000000E+00      0.000000E+00      4.985021E+02      0.000000E+00      2.265848E+03      0.000000E+00
+        1  1100032   LS     0.000000E+00      0.000000E+00      2.369705E+02      0.000000E+00      1.077105E+03      0.000000E+00
+        1  1100033   LS     0.000000E+00      0.000000E+00      1.351655E+02      0.000000E+00      6.143696E+02      0.000000E+00
+        1  1100034   LS     0.000000E+00      0.000000E+00      8.141868E+01      0.000000E+00      3.700734E+02      0.000000E+00
+        1  1100035   LS     0.000000E+00      0.000000E+00      4.401269E+01      0.000000E+00      2.000514E+02      0.000000E+00
+
+          *** LABEL NOTATIONS:  LS = LIFTING SURFACE,   ZSB =  Z SLENDER BODY ELEMENT,  YSB =  Y SLENDER BODY ELEMENT,
+                                                       ZYSB = ZY SLENDER BODY ELEMENT.
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    41
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                              S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+
+        CONTROLLER STATE:
+        ANGLEA   =   1.0473E-01        URDD3    =   2.5000E+00        TFLAP    =  -4.5414E-01
+
+        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               
+        LABEL = Full Vehicle Integrated Loads                           
+        CID =        1          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00
+
+          AXIS      RIGID AIR       ELASTIC REST.      INERTIAL      RIGID APPLIED    REST. APPLIED   
+          ----    -------------    -------------    -------------    -------------    -------------   
+           CX     0.000000E+00     0.000000E+00    -7.714327E-04     0.000000E+00     0.000000E+00
+           CY     2.580682E-13    -2.922276E-13    -8.686393E-08     0.000000E+00     0.000000E+00
+           CZ     1.659522E+05     2.811280E+05     2.811280E+05     0.000000E+00     0.000000E+00
+           CMX    1.531198E+08     1.794990E+08     4.239899E+07     0.000000E+00     0.000000E+00
+           CMY   -9.614081E+07    -2.434674E+08    -2.434674E+08     0.000000E+00     0.000000E+00
+           CMZ    1.372846E-09     8.406272E-10     2.479099E-01     0.000000E+00     0.000000E+00
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    42
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+                              A E R O D Y N A M I C   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S
+                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                           MACH = 7.890000E-01                Q = 1.500000E+00
+
+        CONTROLLER STATE:
+        ANGLEA   =   1.0473E-01        URDD3    =   2.5000E+00        TFLAP    =  -4.5414E-01
+
+        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               
+        LABEL = Full Vehicle Integrated Loads                           
+        CID =        1          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00
+
+          AXIS      RIGID AIR       ELASTIC REST.  
+          ----    -------------    -------------   
+           CX     0.000000E+00     0.000000E+00
+           CY     2.580682E-13    -2.922276E-13
+           CZ     1.679811E+05     2.866794E+05
+           CMX    1.533296E+08     1.800762E+08
+           CMY   -9.833787E+07    -2.494794E+08
+           CMZ    1.372846E-09     8.406272E-10
+
+        MONITOR POINT NAME = TFLAP             COMPONENT = 110000            CLASS = HINGE MOMENT              
+        LABEL = TFLAP    - Control Surface Hinge Moment                 
+        CID =   110000          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00
+
+          AXIS      RIGID AIR       ELASTIC REST.  
+          ----    -------------    -------------   
+           CMY    3.269444E+06     1.672770E+06
+
+        MONITOR POINT NAME =     AERO          COMPONENT = AERO              CLASS = GENERAL                   
+        LABEL = AERO                                                    
+        CID =        0          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00
+
+          AXIS      RIGID AIR       ELASTIC REST.  
+          ----    -------------    -------------   
+           CX     0.000000E+00     0.000000E+00
+           CY     0.000000E+00     0.000000E+00
+           CZ     6.376149E+04     6.492183E+04
+           CMX    6.681116E+07     6.790742E+07
+           CMY   -8.126484E+07    -8.269534E+07
+           CMZ    0.000000E+00     0.000000E+00
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OAEROP   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      900 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     1076 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OAEROF   WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102                 1                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =     1800 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =     1976 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OAEROTV  WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      206 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OAERCSHM WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102                 1                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      184 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OAEROSCD WRITTEN ON FORTRAN UNIT  12, TRL =
+                    101                 1                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      228 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      404 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPBN2)
+     DATA BLOCK OAEROHMD WRITTEN ON FORTRAN UNIT  12, TRL =
+                    102                 1                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    65538 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      218 WORDS.)
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    43
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4110 (OUTPBN2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    44
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     28
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+1                                        * * * END OF JOB * * *
+ 
+ 
