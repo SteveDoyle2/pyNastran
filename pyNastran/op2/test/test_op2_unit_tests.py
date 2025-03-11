@@ -752,6 +752,7 @@ class TestSATKOP2(Tester):
 class TestNX(Tester):
     def test_op2_bwb_trim(self):
         log = SimpleLogger(level='warning')
+        #log = SimpleLogger(level='debug')
         BWB_PATH = MODEL_PATH / 'bwb'
         op2_filename = BWB_PATH / 'bwb_saero_trim.op2'
         read_op2(op2_filename, log=log)

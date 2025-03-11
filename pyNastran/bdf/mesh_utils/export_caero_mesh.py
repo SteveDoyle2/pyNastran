@@ -73,7 +73,6 @@ def export_caero_mesh(model: BDF,
         bdf_file.write(loads)
         _write_properties(model, bdf_file, pid_method=pid_method)
 
-
         for caero_eid, caero in sorted(model.caeros.items()):
             #assert caero_eid != 1, 'CAERO eid=1 is reserved for non-flaps'
             scaero = str(caero).rstrip().split('\n')
@@ -137,10 +136,10 @@ def export_caero_mesh(model: BDF,
             inid += npoints
 
         # aluminum
-        E = 350e9 # 350 GPa
+        E = 350e9  # 350 GPa
         #G = None
         nu = 0.3
-        rho = 2700. # 2700 kg/m^3
+        rho = 2700.  # 2700 kg/m^3
         bdf_file.write(f'MAT1,{mid},{E},,{nu},{rho}\n')
         bdf_file.write('ENDDATA\n')
     return

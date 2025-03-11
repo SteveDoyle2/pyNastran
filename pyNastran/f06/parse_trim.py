@@ -11,7 +11,6 @@ TrimVariables = dict[str, TrimVariable]
 
 #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
 
-WRITE_FILE = False
 MONTHS = {'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'}
 SKIP_FLAGS = [
     'This software and related documentation are',
@@ -66,11 +65,13 @@ class MonitorLoads:
 
 class TrimResults:
     def __init__(self):
-        # aero_pressure[(subcase, subtitle)] = (grid_id, loads)
-        self.aero_pressure: dict[tuple[str, str], tuple[np.ndarray, np.ndarray]] = {}
+        self.metadata = {}
 
-        # aero_force[(subcase, subtitle)] = (grid_id, loads)
-        self.aero_force: dict[tuple[str, str], tuple[np.ndarray, np.ndarray]] = {}
+        # aero_pressure[subcase] = (grid_id, loads)
+        self.aero_pressure: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+
+        # aero_force[subcase] = (grid_id, loads)
+        self.aero_force: dict[int, tuple[np.ndarray, np.ndarray]] = {}
         self.structural_monitor_loads: dict[int, MonitorLoads] = {}
 
         # controller_state = {'ALPHA': 2.0}
@@ -97,10 +98,11 @@ class TrimResults:
         return msg
 
 
+
 def read_f06_trim(f06_filename: str,
                   log: Optional[SimpleLogger]=None,
                   nlines_max: int=1_000_000,
-                  debug: bool=False) -> TrimResults:
+                  debug: bool=False) -> dict[str, TrimResults]:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
     log = get_logger2(log=log, debug=debug, encoding='utf-8')
     dirname = os.path.dirname(os.path.abspath(f06_filename))
@@ -109,12 +111,33 @@ def read_f06_trim(f06_filename: str,
     with open(f06_filename, 'r') as f06_file:
         trim_results, tables, matrices = _read_f06_trim(f06_file, log, nlines_max, dirname,
                                                         debug=debug)
+
+    aero_pressure = {}
+    aero_force = {}
+    for subcase, press_data in trim_results.aero_pressure.items():
+        #print(type(press_data), len(press_data))
+        all_nids = []
+        all_data = []
+        for nid, datai in press_data:
+            all_nids.append(nid)
+            all_data.append(datai)
+        nids2 = np.hstack(all_nids)
+        data2 = np.vstack(all_data)
+        print(f'nnodes={len(nids2)}')
+        aero_pressure[subcase] = (nids2, data2)
+    trim_results.aero_pressure = aero_pressure
+
+    out = {
+        'trim_results': trim_results,
+    }
     if len(tables):
+        out['tables'] = tables
         log.info('found the following tables in the f06: %s' % (list(tables)))
     if len(matrices):
+        out['matrices'] = matrices
         log.info('found the following matrices in the f06: %s' % (list(matrices)))
     str(trim_results)
-    return trim_results
+    return out
 
 
 def _skip_to_page_stamp_and_rewind(f06_file: TextIO, line: str, i: int,
@@ -634,6 +657,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
 
     """
     isubcase = int(subcase)
+    del subcase
     #'CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
     line = f06_file.readline()
     i += 1
@@ -642,10 +666,27 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     line = f06_file.readline()
     i += 1
     assert 'MACH' in line, line.strip()
+    sline = line.strip().split()
+    # ['MACH', '=', '7.890000E-01', 'Q', '=', '1.500000E+00']
+    assert sline[0] == 'MACH', sline
+    assert sline[3] == 'Q', sline
+    mach = float(sline[2])
+    q = float(sline[5])
 
     line = f06_file.readline()
     i += 1
     assert 'CHORD' in line, line.strip()
+    sline = line.strip().split()
+    ['CHORD', '=', '1.3110E+02', 'SPAN', '=', '2.5564E+03', 'AREA', '=', '7.3400E+05']
+    assert sline[0] == 'CHORD', sline
+    assert sline[3] == 'SPAN', sline
+    assert sline[6] == 'AREA', sline
+    cref = float(sline[2])
+    bref = float(sline[5])
+    sref = float(sline[8])
+    trim_results.metadata[isubcase] = {
+        'mach': mach, 'q': q,
+        'cref': cref, 'bref': bref, 'sref': sref}
 
     unused_line1 = f06_file.readline()
     line2 = f06_file.readline()
@@ -665,49 +706,26 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     if 'AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS' in line3:
         line, i, grid_id, Cp_pressure = _read_aerostatic_data_recover_output_table_pressure(
             f06_file, line3, i, nlines_max, log)
-        pressure_filename = os.path.join(dirname, f'pressure_{ipressure:d}.csv')
         nelement, nresult = Cp_pressure.shape
 
-        trim_results.aero_pressure[(subcase, subtitle)] = (grid_id, Cp_pressure)
-        if WRITE_FILE:
-            include_force_q = False
-            if include_force_q:
-                header = '# grid(%i), Cp, pressure, force_q\n'
-                dx = 0.05
-                dy = 0.25
-                area = dx * dy
-                pressure_q = Cp_pressure[:, 1]
-                force_q = pressure_q * area
-                force_q = force_q.reshape((nelement, 1))
-                Cp_pressure = np.hstack([Cp_pressure, force_q])
-                unused_total_area = nelement * area
-                nresult += 1
-            else:
-                header = '# grid(%i), Cp, pressure\n'
+        if subtitle:
+            trim_results.metadata[isubcase]['subtitle'] = subtitle
+        if isubcase not in trim_results.aero_pressure:
+            trim_results.aero_pressure[isubcase] = []
 
-            with open(pressure_filename, 'w') as file_obj:
-                file_obj.write(header)
-                fmt = (',%s' * nresult) + '\n'
-                for nid, data in zip(grid_id, Cp_pressure.tolist()):
-                    msg = f'{nid:d}' + fmt % tuple(data)
-                    file_obj.write(msg)
+        trim_results.aero_pressure[isubcase].append((grid_id, Cp_pressure))
         ipressure += 1
 
     elif 'AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS' in line3:
         line, i, grid_id, loads = _read_aerostatic_data_recover_output_table_force(
             f06_file, line3, i, nlines_max, log)
 
-        trim_results.aero_force[(subcase, subtitle)] = (grid_id, loads)
-        if WRITE_FILE:
-            force_filename = os.path.join(dirname, f'force_{iforce:d}.csv')
-            header = '# grid(%i), fx, fy, fz, mx, my, mz\n'
-            nresults = loads.shape[1]
-            with open(force_filename, 'w') as file_obj:
-                file_obj.write(header)
-                fmt = ('%s,' * nresults).rstrip(',') + '\n'
-                for nid, data in zip(grid_id, loads.tolist()):
-                    msg = f'{nid:d},' + fmt % tuple(data)
-                    file_obj.write(msg)
+        if subtitle:
+            trim_results.metadata[isubcase]['subtitle'] = subtitle
+        if isubcase not in trim_results.aero_force:
+            trim_results.aero_force[isubcase] = []
+
+        trim_results.aero_force[isubcase].append((grid_id, loads))
         iforce += 1
     else:
         raise NotImplementedError(line3.strip())
@@ -751,7 +769,12 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
     grid_id = np.zeros(ndata, dtype='int32')
     Cp_pressure = np.zeros((ndata, 2), dtype='float64')
     for i, line in enumerate(data_lines):
-        grid_str, label, Cp_str, pressure_str = line.split()
+        sline = line.split()
+        #print(sline)
+        if len(sline) == 4:  # MSC
+            grid_str, label, Cp_str, pressure_str = sline
+        else:  # NX
+            grid_str, label, Cp_str, pressure_str, eid_str = sline
         grid = int(grid_str)
         Cp = float(Cp_str)
         pressure = float(pressure_str)
@@ -811,12 +834,3 @@ def _read_aerostatic_data_recover_output_table_force(f06_file: TextIO,
         force_moment_float = [float(val) for val in force_moment]
         loads[i] = force_moment_float
     return line, i, grid_id, loads
-
-
-def main() -> None:
-    f06_filename = r'C:\NASA\ase2\ar9_caero.f06'
-    read_f06_trim(f06_filename, log=None, nlines_max=1_000_000)
-
-
-if __name__ == '__main__':
-    main()

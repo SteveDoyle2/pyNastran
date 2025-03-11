@@ -160,8 +160,8 @@ class OP2Reader:
             b'OAEROSCD': (partial(read_oaeroscd, self), 'stability and control derivatives'),
             b'OAERCSHM': (partial(read_oaercshm, self), 'control surface position & hinge moment'),
             b'OAEROHMD': (partial(read_oaerohmd, self), 'hinge moment derivatives'),
-            # b'OAEROP',  # aero pressure
-            # b'OAEROF',  # aero forces
+            b'OAEROP': (partial(read_oaerop, self), 'aero pressures'),
+            b'OAEROF': (partial(read_oaerof, self), 'aero forces'),
 
             b'INTMOD' : (self.read_intmod, '???'),
             b'HISADD' : (partial(read_hisadd, self), 'optimization history; op2_results.responses.convergence_data'),
@@ -4441,6 +4441,255 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
     if not hasattr(op2.op2_results, 'trim_variables'):
         op2.op2_results.trim_variables = {}
     op2.op2_results.trim_variables[subcase_id] = trim_vars
+
+    #if hasattr(op2, 'aeros'):
+        #op2.add_trim(trim_id, mach, q, cref=cref, bref=bref, sref=sref)
+        # is_xysym = aero.is_symmetric_xy
+        # is_xzsym = aero.is_symmetric_xz
+    return
+
+def read_oaerof(op2_reader: OP2Reader) -> None:
+    """aero box forces"""
+    op2: OP2 = op2_reader.op2
+    log = op2.log
+    endian = op2_reader._endian
+    size = op2_reader.size
+    #factor: int = op2_reader.factor
+    assert size == 4, size
+    op2.table_name = op2_reader._read_table_name(rewind=False)
+
+    #if op2.read_mode == 1 or is_not_saved_result:
+    op2_reader.read_markers([-1])
+
+    #(101, 1, 0, 0, 0, 0, 0)
+    data = op2_reader._read_record(debug=False)
+
+    #n = 8
+    #'OAEROP  '
+    #op2_reader._skip_record()
+    op2_reader.read_3_markers([-2, 1, 0])
+    data = op2_reader._read_record(debug=False)
+    assert data == b'OAEROF  ', data
+
+    #print('id,mach,rho,velocity???')
+    #print('id?,kfreq?,damping,velocity')
+    itable = -3
+    if op2_reader.read_mode == 1:
+        _skip_table(op2_reader, itable)
+        return
+
+    #6: f
+    #7: f
+    #                              Ma q aero ? ? ? c.b.Sref ?            subcase title subtitle
+    structi = Struct(endian + b'5i f  f 8s   i i i fff      35i 128s    128s  128s')
+    while 1:
+
+        #       trimid    coord
+        # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
+        # AEROS   1       1       131.0   2556.4  734000.01       0
+        op2_reader.read_3_markers([itable, 1, 0])
+        itablei = op2_reader.get_marker1()
+        if itablei == 0:
+            break
+
+        data = op2_reader._read_record(debug=False)  # table 3
+        #ni = -128*3
+        #print(op2.show_data(data[:12*4]))
+        #print(op2.show_data(data[15*4:ni]))
+        out = structi.unpack(data)
+
+        #1  ACODE(C)    I Device code + 10*Approach Code
+        #2  TCODE(C)    I 2002
+        #3  METHOD      I Method flag; 1=K, 2=KE, 3=PK, 4=PKNL
+        #4  SUBCASE     I Subcase identification number
+        #5  POINTID     I Device code + 10*Point identification number
+        #6  MACH       RS
+        #8  KFREQ      RS Reduced frequency – METHOD = K
+        #9  FCODE       I Format Code = '1'
+        #10 NUMWDE      I Number of words per entry in DATA record, set to 4
+        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
+        # 12 UNDEF(39)    None
+        #(60, 2002, 4, 1, 10, 1039199643, 1067257355, 0, 1, 4, 1)
+        (acode, tcode, method_int, subcase_id,
+         point_device, mach, q, aerosg2d, numwide, zero, coord,
+         cref, bref, sref, *outi,
+         title, subtitle, subcase) = out
+        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
+                  f'  cbs_ref=[{cref},{bref},{sref}]')
+        assert zero == 0, zero
+        assert max(outi) == 0, outi
+        assert min(outi) == 0, outi
+
+        device_code = acode % 10
+        #imode10 = point_device
+        #assert device_code == 0, (acode, device_code)
+        #point_id = point_device // 10
+
+        title = title.strip()
+        subtitle = subtitle.strip()
+        subcase = subcase.strip()
+        trim_vars = {}
+
+        #print(f'title = {title!r}')
+        #print(f'subtitle = {subtitle!r}')
+        #print(f'subcase = {subcase!r}')
+
+        assert acode == 12, acode
+        assert tcode == 102, tcode
+        assert numwide == 8, numwide
+
+        op2_reader.read_3_markers([itable-1, 1, 0])
+        data = op2_reader._read_record(debug=False)  # table 4
+        idata = 0
+        encoding = b'<'
+        structi2 = Struct(encoding + b'i 4s 6f')
+        trim_pressures = {}
+        grid_ids = []
+        labels = []
+        forces = []
+        while idata*4 < len(data):
+            datai = data[idata*4:(idata+numwide)*4]
+            #print(op2.show_data(datai))
+            nid, label, *force = structi2.unpack(datai)
+            #print(nid, label, *force)
+            grid_ids.append(nid)
+            labels.append(label.rstrip().decode('latin1'))
+            forces.append(force)
+            idata += numwide
+        itable -= 2
+
+    op2_reader.read_markers([0])
+    if not hasattr(op2.op2_results, 'trim_forces'):
+        op2.op2_results.trim_forces = {}
+    trim_forces = {
+        'nid': np.array(grid_ids, dtype='int32'),
+        'label': np.array(labels),
+        'force': np.array(forces, dtype='float64'),
+    }
+    op2.op2_results.trim_forces[subcase_id] = trim_forces
+    return
+
+def read_oaerop(op2_reader: OP2Reader) -> None:
+    """aero box pressures"""
+    op2: OP2 = op2_reader.op2
+    log = op2.log
+    endian = op2_reader._endian
+    size = op2_reader.size
+    #factor: int = op2_reader.factor
+    assert size == 4, size
+    op2.table_name = op2_reader._read_table_name(rewind=False)
+
+    #if op2.read_mode == 1 or is_not_saved_result:
+    op2_reader.read_markers([-1])
+
+    #(101, 1, 0, 0, 0, 0, 0)
+    data = op2_reader._read_record(debug=False)
+
+    #n = 8
+    #'OAEROP  '
+    #op2_reader._skip_record()
+    op2_reader.read_3_markers([-2, 1, 0])
+    data = op2_reader._read_record(debug=False)
+    assert data == b'OAEROP  ', data
+
+    #print('id,mach,rho,velocity???')
+    #print('id?,kfreq?,damping,velocity')
+    itable = -3
+    if op2_reader.read_mode == 1:
+        _skip_table(op2_reader, itable)
+        return
+
+    #6: f
+    #7: f
+    #                              Ma q aero ? ? ? c.b.Sref ?            subcase title subtitle
+    structi = Struct(endian + b'5i f  f 8s   i i i fff      35i 128s    128s  128s')
+    while 1:
+
+        #       trimid    coord
+        # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
+        # AEROS   1       1       131.0   2556.4  734000.01       0
+        op2_reader.read_3_markers([itable, 1, 0])
+        itablei = op2_reader.get_marker1()
+        if itablei == 0:
+            break
+
+        data = op2_reader._read_record(debug=False)  # table 3
+        #ni = -128*3
+        #print(op2.show_data(data[:12*4]))
+        #print(op2.show_data(data[15*4:ni]))
+        out = structi.unpack(data)
+
+        #1  ACODE(C)    I Device code + 10*Approach Code
+        #2  TCODE(C)    I 2002
+        #3  METHOD      I Method flag; 1=K, 2=KE, 3=PK, 4=PKNL
+        #4  SUBCASE     I Subcase identification number
+        #5  POINTID     I Device code + 10*Point identification number
+        #6  MACH       RS
+        #8  KFREQ      RS Reduced frequency – METHOD = K
+        #9  FCODE       I Format Code = '1'
+        #10 NUMWDE      I Number of words per entry in DATA record, set to 4
+        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
+        # 12 UNDEF(39)    None
+        #(60, 2002, 4, 1, 10, 1039199643, 1067257355, 0, 1, 4, 1)
+        (acode, tcode, method_int, subcase_id,
+         point_device, mach, q, aerosg2d, numwide, zero, coord,
+         cref, bref, sref, *outi,
+         title, subtitle, subcase) = out
+        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
+                  f'  cbs_ref=[{cref},{bref},{sref}]')
+        assert zero == 0, zero
+        assert max(outi) == 0, outi
+        assert min(outi) == 0, outi
+
+        device_code = acode % 10
+        #imode10 = point_device
+        #assert device_code == 0, (acode, device_code)
+        #point_id = point_device // 10
+
+        title = title.strip()
+        subtitle = subtitle.strip()
+        subcase = subcase.strip()
+        trim_vars = {}
+
+        #print(f'title = {title!r}')
+        #print(f'subtitle = {subtitle!r}')
+        #print(f'subcase = {subcase!r}')
+
+        assert acode == 12, acode
+        assert tcode == 101, tcode
+        assert numwide == 4, numwide
+
+        op2_reader.read_3_markers([itable-1, 1, 0])
+        data = op2_reader._read_record(debug=False)  # table 4
+        idata = 0
+        encoding = b'<'
+        structi2 = Struct(encoding + b'i 4s ff')
+        trim_pressures = {}
+        grid_ids = []
+        labels = []
+        Cp = []
+        pressure = []
+        while idata*4 < len(data):
+            datai = data[idata*4:(idata+numwide)*4]
+            #print(op2.show_data(datai))
+            nid, label, aero_pressure_coeff, aero_pressure = structi2.unpack(datai)
+            grid_ids.append(nid)
+            labels.append(label.rstrip().decode('latin1'))
+            Cp.append(aero_pressure_coeff)
+            pressure.append(aero_pressure)
+            idata += numwide
+        itable -= 2
+
+    op2_reader.read_markers([0])
+    if not hasattr(op2.op2_results, 'trim_pressures'):
+        op2.op2_results.trim_pressures = {}
+    trim_pressures = {
+        'nid': np.array(grid_ids, dtype='int32'),
+        'label': np.array(labels),
+        'Cp': np.array(Cp, dtype='float64'),
+        'pressure': np.array(pressure, dtype='float64'),
+    }
+    op2.op2_results.trim_pressures[subcase_id] = trim_pressures
 
     #if hasattr(op2, 'aeros'):
         #op2.add_trim(trim_id, mach, q, cref=cref, bref=bref, sref=sref)

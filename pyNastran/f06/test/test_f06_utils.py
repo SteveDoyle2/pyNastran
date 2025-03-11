@@ -40,6 +40,7 @@ from pyNastran.f06.parse_flutter import (
 )
 from pyNastran.f06.flutter_response import _reshape_eigenvectors
 from pyNastran.f06.parse_trim import read_f06_trim
+from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
 from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
@@ -711,6 +712,23 @@ class TestF06Utils(unittest.TestCase):
         plot_sol_200(f06_filename, png_filename=png_filename,
                      show=True)
 
+    def test_f06_trim_bwb(self):
+        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.bdf'
+        subpanel_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
+        f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.f06'
+        loads_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.blk'
+        model = read_bdf(bdf_filename)
+        export_caero_mesh(
+            model,
+            caero_bdf_filename=subpanel_caero_filename,
+            is_subpanel_model=True,
+            pid_method='caero',
+            write_panel_xyz=True)
+
+        trim_results = f06_to_pressure_loads(
+            f06_filename, subpanel_caero_filename, loads_filename,
+            log=None, nlines_max=1_000_000, debug=None)
+
     def test_f06_trim_freedlm(self):
         """tests read_f06_trim"""
         bdf_filename = AERO_PATH / 'freedlm' / 'freedlm.bdf'
@@ -728,7 +746,7 @@ class TestF06Utils(unittest.TestCase):
 
         f06_filename = AERO_PATH / 'freedlm' / 'freedlm.f06'
         trim_results = read_f06_trim(f06_filename,
-                                     log=None, nlines_max=1_000_000, debug=None)
+                                     log=None, nlines_max=1_000_000, debug=None)['trim_results']
         assert len(trim_results.aero_force.keys()) == 2
         assert len(trim_results.aero_pressure.keys()) == 2
         assert len(trim_results.controller_state.keys()) == 2
@@ -749,7 +767,7 @@ class TestF06Utils(unittest.TestCase):
         """tests read_f06_trim"""
         f06_filename = AERO_PATH / 'aerobeam.f06'
         trim_results = read_f06_trim(f06_filename,
-                                     log=None, nlines_max=1_000_000, debug=None)
+                                     log=None, nlines_max=1_000_000, debug=None)['trim_results']
         assert len(trim_results.aero_force.keys()) == 0
         assert len(trim_results.aero_pressure.keys()) == 0
         assert len(trim_results.controller_state.keys()) == 2
@@ -760,7 +778,7 @@ class TestF06Utils(unittest.TestCase):
         #"""tests read_f06_trim"""
         #f06_filename = MODEL_PATH / 'aero' / 'cpmopt.f06'
         #trim_results = read_f06_trim(f06_filename,
-        #                             log=None, nlines_max=1_000_000, debug=None)
+        #                             log=None, nlines_max=1_000_000, debug=None)['trim_results']
         #assert len(trim_results.aero_force.keys()) == 0
         #assert len(trim_results.aero_pressure.keys()) == 0
         #assert len(trim_results.controller_state.keys()) == 4
