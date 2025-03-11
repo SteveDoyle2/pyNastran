@@ -4,6 +4,7 @@ import datetime
 from pathlib import Path
 import time
 import argparse
+from typing import Optional
 
 from cpylog import SimpleLogger
 import pyNastran
@@ -33,6 +34,8 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran execuable')
     parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
     parser.add_argument('-r', '--recursive', action='store_true', help='recursively search for directories')
+    parser.add_argument('--args', help='additional arguments')
+
     parser.add_argument('--test', action='store_false', help='skip run the jobs')
     #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
     parser.add_argument('-v', '--version', action='version',
@@ -44,6 +47,12 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     run = args.test
     recursive = args.recursive
     #print(args)
+    nastran_args = args.args
+    if nastran_args is None or len(nastran_args) == 0:
+        keywords = []
+    else:
+        keywords = nastran_args.split()
+
     bdf_filename_dirname = [Path(filenamei) for filenamei in args.bdf_dirname_filename]
     nastran_exe = args.exe
     # if nastran_exe is None:
@@ -60,6 +69,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     nfiles = run_jobs(
         bdf_filename_dirname, nastran_exe,
         extensions=extensions, cleanup=cleanup,
+        keywords=keywords,
         recursive=recursive, run=run, log=level)
     return nfiles
 
@@ -135,6 +145,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
              extensions: str | list[str],
              cleanup: bool=True,
              recursive: bool=False,
+             keywords: Optional[str | list[str] | dict[str, str]]=None,
              run: bool=True,
              log: SimpleLogger | str='debug') -> int:
     """
@@ -189,7 +200,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         log.debug(f'ETA:{eta}; time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr; time/run={t_run_min:.1f} min')
         log.info(f'running  {ifile+1}/{nfiles}={percent0:.0f}%: {str(bdf_filename)}')
         return_code, call_args = run_nastran(bdf_filename, nastran_cmd=nastran_exe,
-                                             cleanup=cleanup, run=run)
+                                             keywords=keywords, cleanup=cleanup, run=run)
         log.debug(f'finished {ifile+1}/{nfiles}={percent1:.0f}%: {str(bdf_filename)}; return_code={return_code}')
 
         # if 0:

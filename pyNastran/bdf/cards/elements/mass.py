@@ -1280,7 +1280,7 @@ class CONM2(PointMassElement):
 
         #: Coordinate system identification number.
         #: For CID of -1; see X1, X2, X3 below.
-        #: (Integer > -1; Default = 0)
+        #: (Integer >= -1; Default=0)
         self.cid = cid
 
         #: Mass value. (Real)
