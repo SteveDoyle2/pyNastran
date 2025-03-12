@@ -1,6 +1,7 @@
 import os
 import sys
 import datetime
+from itertools import count
 from pathlib import Path
 import time
 import argparse
@@ -34,9 +35,15 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran execuable')
     parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
     parser.add_argument('-r', '--recursive', action='store_true', help='recursively search for directories')
+    parser.add_argument('--nofolder', action='store_true', help='dont show the directory path')
     parser.add_argument('--args', help='additional arguments')
 
+    file_group = parser.add_mutually_exclusive_group(required=False)
+    file_group.add_argument('--infile', help='run only files listed in the file; overwrites bdf_dirname_filename')
+    file_group.add_argument('--outfile', help='skip run the jobs')
+
     parser.add_argument('--test', action='store_false', help='skip run the jobs')
+    parser.add_argument('--debug', action='store_true', help='more debugging')
     #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
     parser.add_argument('-v', '--version', action='version',
                         version=pyNastran.__version__)
@@ -44,8 +51,11 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     args = parser.parse_args(args=argv[1:])
     if not quiet:  # pragma: no cover
         print(args)
+
+    show_folder = not args.nofolder
     run = args.test
     recursive = args.recursive
+    debug = args.debug
     #print(args)
     nastran_args = args.args
     if nastran_args is None or len(nastran_args) == 0:
@@ -53,7 +63,13 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     else:
         keywords = nastran_args.split()
 
-    bdf_filename_dirname = [Path(filenamei) for filenamei in args.bdf_dirname_filename]
+    if args.infile is not None:
+        assert os.path.exists(args.infile), print_bad_path(args.infile)
+        with open(args.infile, 'r') as txt_file:
+            lines = [line.strip() for line in txt_file.readlines()]
+        bdf_filename_dirname = [Path(filenamei) for filenamei in lines]
+    else:
+        bdf_filename_dirname = [Path(filenamei) for filenamei in args.bdf_dirname_filename]
     nastran_exe = args.exe
     # if nastran_exe is None:
     #     nastran_exe = 'nastran'
@@ -66,11 +82,14 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     extensions = ['.dat', '.bdf']
 
     level = 'warning' if quiet else 'debug'
+    out_filename = '' if args.outfile is None else args.outfile
     nfiles = run_jobs(
         bdf_filename_dirname, nastran_exe,
         extensions=extensions, cleanup=cleanup,
-        keywords=keywords,
-        recursive=recursive, run=run, log=level)
+        keywords=keywords, show_folder=show_folder,
+        recursive=recursive, run=run,
+        out_filename=out_filename,
+        debug=debug, log=level)
     return nfiles
 
 
@@ -146,7 +165,10 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
              cleanup: bool=True,
              recursive: bool=False,
              keywords: Optional[str | list[str] | dict[str, str]]=None,
+             show_folder: bool=True,
              run: bool=True,
+             out_filename: str='',
+             debug: bool=False,
              log: SimpleLogger | str='debug') -> int:
     """
     Runs a series of jobs in a specific folder
@@ -161,6 +183,8 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     -------
     nfiles: int
         the number of files
+    out_filename: str
+        path to file to write list of jobs
 
     TODO: remove failed jobs from the time estimator
     """
@@ -171,12 +195,31 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     #print(bdf_filenames, len(bdf_filenames))
 
     bdf_filenames_str = [str(bdf_filename) for bdf_filename in bdf_filenames]
-    log.info(f'bdf_filenames = {bdf_filenames_str}')
-    for bdf_filename in bdf_filenames:
+    bdf_filenames_str_short = [os.path.basename(bdf_filename) for bdf_filename in bdf_filenames]
+    if show_folder:
+        log.info(f'bdf_filenames = {bdf_filenames_str}')
+    else:
+        log.info(f'bdf_filenames = {bdf_filenames_str_short}')
+
+    widthcases = len(str(len(bdf_filenames))) + 1
+    quiet = False
+    for ifile, bdf_filename, bdf_filenames_str_short in zip(count(), bdf_filenames, bdf_filenames_str_short):
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
+        if debug:
+            ifile_str = f'{ifile}:'
+            if show_folder:
+                print(f'{ifile_str:{widthcases}s} {bdf_filename}')
+            else:
+                print(f'{ifile_str:{widthcases}s} {bdf_filenames_str_short}')
+
+    if out_filename:
+        with open(out_filename, 'w') as out_file:
+            for bdf_filename in bdf_filenames:
+                out_file.write(f'{str(bdf_filename)}\n')
 
     nfiles = len(bdf_filenames)
     eta = 'N/A'
+    eta_next = 'N/A'
     t_run_min = 0.
     t_est_min = 0.
     t_est_hr = 0.
@@ -197,10 +240,11 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         percent0 = ifile / nfiles * 100
         percent1 = (ifile + 1) / nfiles * 100
 
-        log.debug(f'ETA:{eta}; time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr; time/run={t_run_min:.1f} min')
+        log.debug(f'ETA:{eta}; time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr; time/run={t_run_min:.1f} min; ETA next:{eta_next}')
         log.info(f'running  {ifile+1}/{nfiles}={percent0:.0f}%: {str(bdf_filename)}')
         return_code, call_args = run_nastran(bdf_filename, nastran_cmd=nastran_exe,
-                                             keywords=keywords, cleanup=cleanup, run=run)
+                                             keywords=keywords, cleanup=cleanup, run=run,
+                                             debug=debug)
         log.debug(f'finished {ifile+1}/{nfiles}={percent1:.0f}%: {str(bdf_filename)}; return_code={return_code}')
 
         # if 0:
@@ -208,12 +252,15 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         # else:
         #     dt = 20. * 60. * (ifile + 1)
 
-        t_run_min = dt / (ifile + 1) / 60
+        t_est_next = dt / 60.
+        t_run_min = dt / (ifile + 1) / 60.
         t_est_sec = dt * nfiles_remaining1 / (ifile + 1)
         t_est_min = t_est_sec / 60.
         t_est_hr = t_est_min / 60.
         new = datetime.datetime.now() + datetime.timedelta(minutes=t_est_min)
+        nexti = datetime.datetime.now() + datetime.timedelta(minutes=t_est_next)
         eta = new.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
+        eta_next = nexti.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
     log.info('done')
     return nfiles
 
