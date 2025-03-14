@@ -28,7 +28,7 @@ def f06_to_pressure_loads(f06_filename: str,
     #print('trim_results.aero_pressure', trim_results.aero_pressure)
 
     with open(loads_filename, 'w') as loads_file:
-        for subcase, datai in trim_results.aero_pressure.items():
+        for subcase, apress in trim_results.aero_pressure.items():
             element_pressures = defaultdict(list)
             metadatai = metadata[subcase]
             subtitle = metadatai.get('subtitle', '')
@@ -37,15 +37,19 @@ def f06_to_pressure_loads(f06_filename: str,
             cref = metadatai['cref']
             bref = metadatai['bref']
             sref = metadatai['sref']
-            nids, cp_pressure = datai
+            nids = apress.nodes
+            nnids = len(nids)
+            pressure = apress.pressure
+            assert pressure.shape == (nnids,)
             #                    AERODYNAMIC PRES.       AERODYNAMIC
             # GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT
             # 156     LS            6.035214E-01         9.052821E-01            900014
-            for nid, (cp, p) in zip(nids, cp_pressure):
+            for nid, cp in zip(nids, apress.cp):
                 #print(nid, cp, q)
                 eids = nid_to_eid_map[nid]
                 for eid in eids:
                     element_pressures[eid].append(cp)
+
             comment = f'$ subtitle={subtitle!r}\n'
             comment += f'$ mach={mach:g} q={q:g}\n'
             comment += f'$ bref={cref:g} bref{bref:g} sref={sref:g}\n'

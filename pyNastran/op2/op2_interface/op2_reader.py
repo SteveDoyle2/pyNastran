@@ -52,6 +52,9 @@ from cpylog import SimpleLogger
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
 from pyNastran.f06.flutter_response import FlutterResponse
+from pyNastran.f06.f06_tables.trim import (
+    MonitorLoads, TrimResults, ControllerState,
+    AeroPressure, AeroForce)
 
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError, EmptyRecordError
 from pyNastran.op2.result_objects.eqexin import EQEXIN
@@ -4544,29 +4547,37 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
         encoding = b'<'
         structi2 = Struct(encoding + b'i 4s 6f')
         trim_pressures = {}
-        grid_ids = []
-        labels = []
-        forces = []
+        grid_list = []
+        label_list = []
+        force_list = []
         while idata*4 < len(data):
             datai = data[idata*4:(idata+numwide)*4]
             #print(op2.show_data(datai))
-            nid, label, *force = structi2.unpack(datai)
+            nid, labeli, *forcei = structi2.unpack(datai)
             #print(nid, label, *force)
-            grid_ids.append(nid)
-            labels.append(label.rstrip().decode('latin1'))
-            forces.append(force)
+            grid_list.append(nid)
+            label_list.append(labeli.rstrip().decode('latin1'))
+            force_list.append(forcei)
             idata += numwide
         itable -= 2
 
     op2_reader.read_markers([0])
     if not hasattr(op2.op2_results, 'trim_forces'):
         op2.op2_results.trim_forces = {}
-    trim_forces = {
-        'nid': np.array(grid_ids, dtype='int32'),
-        'label': np.array(labels),
-        'force': np.array(forces, dtype='float64'),
-    }
-    op2.op2_results.trim_forces[subcase_id] = trim_forces
+    # trim_forces = {
+    #     'nid': np.array(grid_ids, dtype='int32'),
+    #     'label': np.array(labels),
+    #     'force': np.array(forces, dtype='float64'),
+    # }
+    nodes = np.array(grid_list, dtype='int32'),
+    label = np.array(label_list),
+    force = np.array(force_list, dtype='float64'),
+
+    aforce = AeroForce(
+        subcase, title, subtitle,
+        mach, q, cref, bref, sref,
+        nodes, force)
+    op2.op2_results.trim_forces[subcase_id] = aforce
     return
 
 def read_oaerop(op2_reader: OP2Reader) -> None:
@@ -4649,7 +4660,6 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         title = title.strip()
         subtitle = subtitle.strip()
         subcase = subcase.strip()
-        trim_vars = {}
 
         #print(f'title = {title!r}')
         #print(f'subtitle = {subtitle!r}')
@@ -4664,32 +4674,39 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         idata = 0
         encoding = b'<'
         structi2 = Struct(encoding + b'i 4s ff')
-        trim_pressures = {}
-        grid_ids = []
-        labels = []
-        Cp = []
-        pressure = []
+
+        grid_list = []
+        label_list = []
+        cp_list = []
+        pressure_list = []
         while idata*4 < len(data):
             datai = data[idata*4:(idata+numwide)*4]
             #print(op2.show_data(datai))
             nid, label, aero_pressure_coeff, aero_pressure = structi2.unpack(datai)
-            grid_ids.append(nid)
-            labels.append(label.rstrip().decode('latin1'))
-            Cp.append(aero_pressure_coeff)
-            pressure.append(aero_pressure)
+            grid_list.append(nid)
+            label_list.append(label.rstrip().decode('latin1'))
+            cp_list.append(aero_pressure_coeff)
+            pressure_list.append(aero_pressure)
             idata += numwide
         itable -= 2
 
     op2_reader.read_markers([0])
     if not hasattr(op2.op2_results, 'trim_pressures'):
         op2.op2_results.trim_pressures = {}
-    trim_pressures = {
-        'nid': np.array(grid_ids, dtype='int32'),
-        'label': np.array(labels),
-        'Cp': np.array(Cp, dtype='float64'),
-        'pressure': np.array(pressure, dtype='float64'),
-    }
-    op2.op2_results.trim_pressures[subcase_id] = trim_pressures
+    # trim_pressures = {
+    #     'nid': np.array(grid_list, dtype='int32'),
+    #     'label': np.array(label_list),
+    #     'Cp': np.array(cp_list, dtype='float64'),
+    #     'pressure': np.array(pressure_list, dtype='float64'),
+    # }
+    nodes = np.array(grid_list, dtype='int32')
+    cp = np.array(cp_list, dtype='float64')
+    pressure = np.array(pressure_list, dtype='float64')
+    apress = AeroPressure(
+        subcase, title, subtitle,
+        mach, q, cref, bref, sref,
+        nodes, cp, pressure)
+    op2.op2_results.trim_pressures[subcase_id] = apress
 
     #if hasattr(op2, 'aeros'):
         #op2.add_trim(trim_id, mach, q, cref=cref, bref=bref, sref=sref)

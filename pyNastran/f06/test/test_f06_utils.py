@@ -755,10 +755,14 @@ class TestF06Utils(unittest.TestCase):
         keys = list(trim_results.aero_pressure)
         key0 = keys[0]
         #print(f'keys = {list(trim_results.aero_pressure.keys())}')
-        eids, press = trim_results.aero_pressure[key0]
-        print(len(trim_results.aero_force[key0]))
+        apress = trim_results.aero_pressure[key0]
+        print(trim_results.aero_force[key0])
+        nids = apress.nodes
+        press = apress.pressure
 
-        nids, force = trim_results.aero_force[key0]
+        aforce = trim_results.aero_force[key0]
+        nids = aforce.nodes
+        force = aforce.force
         #print(eids)
         #print(press)
         #print(f'npressure = {len(press)}')

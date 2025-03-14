@@ -4,7 +4,9 @@ import numpy as np
 #import scipy.sparse
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.utils import print_bad_path
-from pyNastran.f06.f06_tables.trim import MonitorLoads, TrimResults, ControllerState
+from pyNastran.f06.f06_tables.trim import (
+    MonitorLoads, TrimResults, ControllerState,
+    AeroPressure, AeroForce)
 
 
 #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
@@ -50,11 +52,14 @@ def read_f06_trim(f06_filename: str,
         trim_results, tables, matrices = _read_f06_trim(f06_file, log, nlines_max, dirname,
                                                         debug=debug)
 
-    aero_pressure = {}
-    aero_force = {}
+    stacked_aero_pressure = _stack_data_dict(trim_results.aero_pressure)
+    stacked_aero_force = _stack_data_dict(trim_results.aero_force)
 
-    trim_results.aero_pressure = _stack_data_dict(trim_results.aero_pressure)
-    trim_results.aero_force = _stack_data_dict(trim_results.aero_force)
+    for subcase, aero_pressure in stacked_aero_pressure.items():
+        trim_results.aero_pressure[subcase] = AeroPressure.from_f06(
+            subcase, *aero_pressure)
+    for subcase, aero_force in stacked_aero_force.items():
+        trim_results.aero_force[subcase] = AeroForce.from_f06(subcase, *aero_force)
 
     out = {
         'trim_results': trim_results,

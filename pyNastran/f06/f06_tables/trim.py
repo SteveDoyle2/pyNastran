@@ -27,15 +27,97 @@ class MonitorLoads:
         return msg
 
 
+class AeroPressure:
+    def __init__(self, subcase: int, title: str, subtitle: str,
+                 mach: float, q: float,
+                 cref: float, bref: float, sref: float,
+                 nodes: np.ndarray,
+                 cp: np.ndarray, pressure: np.ndarray):
+        self.subcase = subcase
+        self.title = title
+        self.subtitle = subtitle
+        self.mach = mach
+        self.q = q
+        self.cref = cref
+        self.bref = bref
+        self.sref = sref
+
+        self.nodes = nodes
+        self.pressure = pressure
+        self.cp = cp
+
+    @classmethod
+    def from_f06(self, subcase: int,
+                 nodes: np.ndarray,
+                 cp_pressure: np.ndarray):
+        title = ''
+        subtitle = ''
+        mach = np.nan
+        q = np.nan
+        cref = np.nan
+        bref = np.nan
+        sref = np.nan
+        apress = AeroPressure(
+            subcase, title, subtitle,
+            mach, q,
+            cref, bref, sref,
+            nodes,
+            cp_pressure[:, 0], cp_pressure[:, 1])
+        return apress
+
+    def __repr__(self) -> str:
+        nnids = len(self.nodes)
+        msg = (
+            'AeroPressure:\n'
+            f' - nodes ({nnids})\n'
+            f' - cp ({nnids})\n'
+            f' - pressure ({nnids})'
+        )
+        return msg
+
+class AeroForce:
+    def __init__(self, subcase: int, title: str, subtitle: str,
+                 mach: float, q: float,
+                 cref: float, bref: float, sref: float,
+                 nodes: np.ndarray,
+                 force: np.ndarray):
+        self.subcase = subcase
+        self.title = title
+        self.subtitle = subtitle
+        self.mach = mach
+        self.q = q
+        self.cref = cref
+        self.bref = bref
+        self.sref = sref
+
+        self.nodes = nodes
+        self.force = force
+
+    @classmethod
+    def from_f06(self, subcase: int,
+                 nodes: np.ndarray,
+                 force: np.ndarray):
+        return AeroForce(subcase, nodes, force)
+
+    def __repr__(self) -> str:
+        nnids = len(self.nodes)
+        msg = (
+            'AeroForce:\n'
+            f' - nodes ({nnids})\n'
+            f' - force ({nnids}, 6)'
+        )
+        return msg
+
+
 class TrimResults:
     def __init__(self):
         self.metadata = {}
 
-        # aero_pressure[subcase] = (grid_id, loads)
-        self.aero_pressure: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+        # aero_pressure[subcase] = AeroPressure(...)
+        self.aero_pressure: dict[int, AeroPressure] = {}
 
-        # aero_force[subcase] = (grid_id, loads)
-        self.aero_force: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+        # aero_force[subcase] = AeroForce(...)
+        self.aero_force: dict[int, AeroForce] = {}
         self.structural_monitor_loads: dict[int, MonitorLoads] = {}
 
         # controller_state = {'ALPHA': 2.0}
