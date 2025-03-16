@@ -2331,7 +2331,9 @@ class Add1dElements:
         self._add_methods._add_element_object(elem)
         return elem
 
-    def add_pbush(self, pid, k, b, ge, rcv=None, mass=None, comment='') -> PBUSH:
+    def add_pbush(self, pid: int,
+                  k=None, b=None, ge=None,
+                  rcv=None, mass=None, comment: str='') -> PBUSH:
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -2359,7 +2361,9 @@ class Add1dElements:
             a comment for the card
 
         """
-        prop = PBUSH(pid, k, b, ge, rcv=rcv, mass=mass, comment=comment)
+        t = None
+        prop = PBUSH(pid, k, b, ge, rcv=rcv, mass=mass, t=t,
+                     comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
 

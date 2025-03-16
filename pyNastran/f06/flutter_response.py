@@ -1446,7 +1446,6 @@ class FlutterResponse:
 
     def calculate_zimmerman(self, imode1: int, imode2: int) -> tuple[np.ndarray, np.ndarray]:
         """
-        Not validated
         https://ntrs.nasa.gov/api/citations/19830003800/downloads/19830003800.pdf
         """
         # lambda1 = beta1 +/- j*omega1

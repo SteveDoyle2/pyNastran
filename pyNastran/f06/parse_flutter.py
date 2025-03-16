@@ -140,7 +140,12 @@ def make_flutter_response(f06_filename: PathLike,
                         log.debug(f'found break iline={iline}; line={line}')
                     while 'PAGE' not in line:
                         line = f06_file.readline(); iline += 1
+                        if len(line) == 0:
+                            nblank += 1
+                            if nblank == 100:
+                                raise RuntimeError('too many blank lines')
                         continue
+                    nblank = 0
                     if is_heavy_debug:  # pragma: no cover
                         log.debug('end of page*')
                     read_line_flag = False
