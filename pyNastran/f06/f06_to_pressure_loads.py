@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import Optional
+import numpy as np
 
 from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import read_bdf, print_card_8
