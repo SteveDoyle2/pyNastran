@@ -1,4 +1,5 @@
 import os
+import warnings
 import subprocess
 from typing import Optional
 from pyNastran.utils import PathLike
@@ -8,7 +9,8 @@ def run_nastran(bdf_filename: PathLike,
                 nastran_cmd: PathLike='nastran',
                 keywords: Optional[str | list[str] | dict[str, str]]=None,
                 run: bool=True, run_in_bdf_dir: bool=True,
-                cleanup: bool=False) -> tuple[Optional[int], list[str]]:
+                cleanup: bool=False,
+                debug: bool=False) -> tuple[Optional[int], list[str]]:
     """
     Call a nastran subprocess with the given filename
 
@@ -60,7 +62,10 @@ def run_nastran(bdf_filename: PathLike,
         assert os.path.exists(nastran_cmd), nastran_cmd
     nastran_cmd_str = str(nastran_cmd)
     call_args = [nastran_cmd_str, str(bdf_filename)] + keywords_list
-    #print(f'call_args = {call_args}')
+    if '=' in str(bdf_filename):
+        warnings.warn(f'Nastran cant run files with an = sign in them; {str(bdf_filename)}')
+    if debug:
+        print(f'call_args = {call_args}')
     return_code = None
     if run:
         return_code = subprocess.call(call_args)

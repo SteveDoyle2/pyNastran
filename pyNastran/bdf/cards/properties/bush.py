@@ -133,8 +133,9 @@ class PBUSH(BushingProperty):
         #5 : 'j', 'J' : 'j',
     #}
 
-    def __init__(self, pid, k, b, ge, rcv=None, mass=None,
-                 t=None, comment=''):
+    def __init__(self, pid: int,
+                  k=None, b=None, ge=None,
+                  rcv=None, mass=None, t=None, comment: str=''):
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -171,6 +172,12 @@ class PBUSH(BushingProperty):
         BushingProperty.__init__(self)
         if comment:
             self.comment = comment
+        if k is None:
+            k = []
+        if b is None:
+            b = []
+        if ge is None:
+            ge = []
 
         #: Property ID
         self.pid = pid
