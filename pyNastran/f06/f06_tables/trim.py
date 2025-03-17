@@ -97,7 +97,19 @@ class AeroForce:
     def from_f06(self, subcase: int,
                  nodes: np.ndarray,
                  force: np.ndarray):
-        return AeroForce(subcase, nodes, force)
+        title = ''
+        subtitle = ''
+        mach = np.nan
+        q = np.nan
+        cref = np.nan
+        bref = np.nan
+        sref = np.nan
+        aforce = AeroForce(
+            subcase, title, subtitle,
+            mach, q,
+            cref, bref, sref,
+            nodes, force)
+        return aforce
 
     def __repr__(self) -> str:
         nnids = len(self.nodes)

@@ -406,17 +406,20 @@ class MainWindow(GuiCommon, NastranIO):
         self.cycle_results(case)
         self.on_set_camera_data(camera, show_log=False)
 
-    def closeEvent(self, *args):
-        """
-        Handling saving state before application when application is
-        being closed.
-        """
+    def _save_settings(self):
+        """writes the json file"""
         qsettings = QSettingsLike2()
         qsettings.clear()
         self.settings.save(qsettings)
         if hasattr(qsettings, 'save_json'):
             qsettings.save_json()
 
+    def closeEvent(self, *args):
+        """
+        Handling saving state before application when application is
+        being closed.
+        """
+        self._save_settings()
         q_app = QApplication.instance()
         if q_app is None:
             sys.exit()

@@ -55,11 +55,11 @@ basic = {
 }
 old_axisymmetric_structure = {
     # axixsymmetric
-    'CCONEAX', # element
-    'PCONEAX', # property
-    'AXIC', # axic
-    'AXIF', # axif
-    'FORCEAX', # loads
+    #'CCONEAX', # element - removed
+    #'PCONEAX', # property - removed
+    #'AXIC', # axic - removed
+    #'AXIF', # axif - removed
+    #'FORCEAX', # loads - removed
 }
 
 axisymmetric_structure = {
@@ -91,7 +91,6 @@ structure = {
     'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
     'CGAP',
     'GENEL',
-
 
     ## properties
     'PMASS',
@@ -146,7 +145,6 @@ nonlinear_materials = {
 
     ## tables
     'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
-
 
     # nonlinear elastic temperature dependent materials (e.g. creep)
     # sees TABLES1

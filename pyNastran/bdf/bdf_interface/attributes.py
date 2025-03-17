@@ -40,7 +40,8 @@ if TYPE_CHECKING:  # pragma: no cover
         TABDMP1,
         TF, DELAY, #DPHASE,
         # axisymmetric
-        RINGAX, CYAX, AXIF, RINGFL, CYJOIN, AXIC,
+        # RINGAX, AXIF, RINGFL, AXIC,  # removed
+        CYJOIN, CYAX,
         # shells
         SNORM,
         #CQUAD4, CQUAD8, CQUADR, CQUAD,

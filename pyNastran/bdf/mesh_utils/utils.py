@@ -46,7 +46,7 @@ from .cmd_line.create_flutter import cmd_line_create_flutter
 from .cmd_line.utils import filter_no_args
 
 
-def cmd_line_create_vectorized_numbered(argv=None, quiet=False):  # pragma: no cover
+def cmd_line_create_vectorized_numbered(argv=None, quiet: bool=False):  # pragma: no cover
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
@@ -312,12 +312,12 @@ def cmd_line_stats(argv=None, quiet: bool=False) -> None:
     from pyNastran.bdf.bdf import read_bdf
     model = read_bdf(bdf_filename, validate=True, xref=True, punch=punch,
                      encoding=None, log=log, debug=True, mode='msc')
+    msg = model.get_bdf_stats()
+    if not quiet:  # pragma: no cover
+        print(msg)
 
-    print(model.get_bdf_stats())
-    #for card_name, ncards in model.card_count.items():
 
-
-def cmd_line_bin(argv=None, quiet=False) -> None:  # pragma: no cover
+def cmd_line_bin(argv=None, quiet: bool=False) -> None:  # pragma: no cover
     """bins the model into nbins"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -427,7 +427,7 @@ def cmd_line_bin(argv=None, quiet=False) -> None:  # pragma: no cover
 
 
 
-def cmd_line_renumber(argv=None, quiet=False) -> None:
+def cmd_line_renumber(argv=None, quiet: bool=False) -> None:
     """command line interface to bdf_renumber"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -715,7 +715,7 @@ def cmd_line_flip_shell_normals(argv=None, quiet: bool=False) -> None:
                     is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
 
 
-def cmd_line_convert(argv=None, quiet=False) -> None:
+def cmd_line_convert(argv=None, quiet: bool=False) -> None:
     """command line interface to bdf_merge"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -804,7 +804,44 @@ def cmd_line_convert(argv=None, quiet=False) -> None:
     model.write_bdf(bdf_filename_out)
 
 
-def cmd_line_scale(argv=None, quiet=False) -> None:
+def cmd_line_inclzip(argv=None, quiet: bool=False) -> None:
+    if argv is None:  # pragma: no cover
+        argv = sys.argv
+
+    import argparse
+    parent_parser = argparse.ArgumentParser(
+        #prog = 'pyNastranGUI',
+        #usage = usage,
+        #description='A foo that bars',
+        #epilog="And that's how you'd foo a bar",
+        #formatter_class=argparse.RawDescriptionHelpFormatter,
+        #description=textwrap.dedent(text),
+        #version=pyNastran.__version__,
+        #add_help=False,
+    )
+    # positional arguments
+    parent_parser.add_argument('inclzip', type=str)
+    parent_parser.add_argument('INPUT', help='path to output BDF/DAT/NAS file', type=str)
+    parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
+    args = parent_parser.parse_args(args=argv[1:])
+    if not quiet:  # pragma: no cover
+        print(args)
+
+    bdf_filename = args.INPUT
+    bdf_filename_out = args.OUTPUT
+    if bdf_filename_out is None:
+        bdf_filename_base, ext = os.path.splitext(bdf_filename)
+    bdf_filename_out = f'{bdf_filename_base}.zip{ext}'
+
+    from pyNastran.bdf.bdf import read_bdf
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
+    model = read_bdf(bdf_filename, log=log, punch=None,
+                     validate=False, xref=False,)
+    model.write_bdf(bdf_filename_out)
+
+def cmd_line_scale(argv=None, quiet: bool=False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
@@ -856,7 +893,7 @@ def cmd_line_scale(argv=None, quiet=False) -> None:
     bdf_filename_out = args.OUTPUT
     if bdf_filename_out is None:
         bdf_filename_base, ext = os.path.splitext(bdf_filename)
-        bdf_filename_out = '%s.scaled%s' % (bdf_filename_base, ext)
+        bdf_filename_out = f'{bdf_filename_base}.scaled{ext}'
 
     #assert bdf_filename_out is not None
     if args.mass:
@@ -939,7 +976,7 @@ def cmd_line_remove_comments(argv=None, quiet: bool=False) -> None:
     bdf_remove_comments(bdf_filename, bdf_filename_out=bdf_filename_out, log=log)
 
 
-def cmd_line_export_mcids(argv=None, quiet=False) -> None:
+def cmd_line_export_mcids(argv=None, quiet: bool=False) -> None:
     """command line interface to export_mcids"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -1006,10 +1043,10 @@ def cmd_line_export_mcids(argv=None, quiet=False) -> None:
     model.safe_cross_reference()
 
     for iply in iplies:
-        csv_filename = csv_filename_base + '_ply=%i.csv' % iply
+        csv_filename = csv_filename_base + f'_ply={iply:d}.csv'
         export_mcids(model, csv_filename,
                      export_xaxis=export_xaxis, export_yaxis=export_yaxis, iply=iply)
-        model.log.info('wrote %s' % csv_filename)
+        model.log.info(f'wrote {csv_filename}')
 
 def cmd_line_solid_dof(argv=None, quiet: bool=False) -> None:
     """command line interface to solid_dof"""
@@ -1050,7 +1087,7 @@ def cmd_line_solid_dof(argv=None, quiet: bool=False) -> None:
     model, out_nids = solid_dof(bdf_filename)
     model.log.info('done')
 
-def cmd_line_remove_unused(argv=None, quiet=False) -> None:
+def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
     """command line interface to remove_unused"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -1092,7 +1129,7 @@ def cmd_line_remove_unused(argv=None, quiet=False) -> None:
         abs_name = os.path.abspath(bdf_filename)
         dirname = os.path.dirname(abs_name)
         basename = os.path.basename(abs_name)
-        out_bdf_filename = os.path.join(dirname, 'clean_' + basename)
+        out_bdf_filename = os.path.join(dirname, f'clean_{basename}')
 
     from pyNastran.bdf.bdf import read_bdf
 
@@ -1113,7 +1150,7 @@ def cmd_line_remove_unused(argv=None, quiet=False) -> None:
                      #export_xaxis=export_xaxis, export_yaxis=export_yaxis, iply=iply)
         #model.log.info('wrote %s' % csv_filename)
 
-def cmd_line_free_faces(argv=None, quiet=False) -> None:
+def cmd_line_free_faces(argv=None, quiet: bool=False) -> None:
     """command line interface to bdf free_faces"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -1220,7 +1257,7 @@ def _get_is_double_large(data: dict[str, Any]) -> tuple[int, bool]:
         size = 8
     return size, is_double
 
-def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False) -> None:
+def cmd_line_split_cbars_by_pin_flag(argv=None, quiet: bool=False) -> None:
     """command line interface to split_cbars_by_pin_flag"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -1269,7 +1306,7 @@ def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False) -> None:
                             bdf_filename_out=bdf_filename_out,
                             punch=punch)
 
-def cmd_line_transform(argv=None, quiet=False) -> None:
+def cmd_line_transform(argv=None, quiet: bool=False) -> None:
     """command line interface to export_caero_mesh"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -1332,7 +1369,7 @@ def cmd_line_transform(argv=None, quiet=False) -> None:
         update_nodes(model, nid_cp_cd, xyz_cid0)
         model.write_bdf(bdf_filename_out)
 
-def cmd_line_filter(argv=None, quiet=False) -> None:  # pragma: no cover
+def cmd_line_filter(argv=None, quiet: bool=False) -> None:  # pragma: no cover
     """command line interface to bdf filter"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -1467,6 +1504,7 @@ def _union(xval, iunion, ix):
 
 
 CMD_MAPS = {
+    'inclzip': cmd_line_inclzip,
     'diff': cmd_line_diff,
     'merge': cmd_line_merge,
     'equivalence': cmd_line_equivalence,
@@ -1516,6 +1554,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf diff                        IN_BDF_FILENAME1 IN_BDF_FILENAME2 [--punch]\n'
         '  bdf merge                       (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL [--punch]\n'
+        '  bdf inclzip                     IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME] [--punch]\n'
         '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
         '  bdf remove_unused               IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch]\n'
         '  bdf filter                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--x YSIGN X] [--y YSIGN Y] [--z YSIGN Z]\n'
@@ -1533,7 +1572,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [-p PIN_FLAGS_CSV_FILENAME]\n'
         '  bdf solid_dof                   IN_BDF_FILENAME\n'
         '  bdf stats                       IN_BDF_FILENAME [--punch]\n'
-        '  bdf run_jobs                    BDF_FILENAME_DIRNAME [FILE...] [--exe NASTRAN_PATH] [--cleanup]\n'
+        '  bdf run_jobs                    BDF_FILENAME_DIRNAME [FILE...] [--exe NASTRAN_PATH] [--infile INFILE] [--outfile OUTFILE] [--test] [--debug] [--cleanup]\n'
     )
 
     if dev:
@@ -1545,6 +1584,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf diff               -h | --help\n'
         '  bdf merge              -h | --help\n'
         '  bdf equivalence        -h | --help\n'
+        '  bdf inclzip            -h | --help\n'
         '  bdf renumber           -h | --help\n'
         '  bdf remove_unused      -h | --help\n'
         '  bdf delete_bad_shells  -h | --help\n'

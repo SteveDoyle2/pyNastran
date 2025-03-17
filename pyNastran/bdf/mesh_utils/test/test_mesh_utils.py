@@ -10,6 +10,7 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.mesh_utils.map_pressure_to_caero import map_caero
 
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
@@ -53,6 +54,29 @@ DIRNAME = Path(os.path.dirname(__file__))
 
 
 class TestMeshUtilsCmdLine(unittest.TestCase):
+    def test_bwb_caero_map(self):
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        map_caero(bdf_filename)
+
+    def test_inclzip_bwb(self):
+        """tests ``inclzip``"""
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        args = ['bdf', 'inclzip', str(bdf_filename)]
+        cmd_line(args, quiet=True)
+
+    def test_stats_bwb(self):
+        """tests ``stats``"""
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        args = ['bdf', 'stats', str(bdf_filename)]
+        cmd_line(args, quiet=True)
+
+    def test_free_edges_bwb(self):
+        """tests ``free_edges``"""
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        args = ['bdf', 'free_edges', str(bdf_filename)]
+        cmd_line(args, quiet=True)
+
+
     def test_map_aero_model(self):
         """tests ``map_aero_model``"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
@@ -149,10 +173,11 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         #bdf free_faces [-d | -l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME
         #with self.assertRaises(SystemExit):
             #cmd_line(argv=['bdf', 'free_faces'])
-        bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
+        bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
         #log = SimpleLogger(level='info', encoding='utf-8')
-        skin_filename = os.path.join(DIRNAME, 'skin.bdf')
-        cmd_line(argv=['bdf', 'free_faces', bdf_filename, skin_filename], quiet=True)
+        skin_filename = DIRNAME / 'skin.bdf'
+        cmd_line(argv=['bdf', 'free_faces', str(bdf_filename), str(skin_filename)],
+                 quiet=True)
         os.remove(skin_filename)
 
     def test_exit(self):

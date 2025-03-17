@@ -1474,7 +1474,7 @@ class PreferencesWindow(PyDialog):
             return True
         return False
 
-    def on_apply(self, force=False):
+    def on_apply(self, force: bool=False):
         passed = self.on_validate()
 
         if (passed or force) and self.win_parent is not None:
@@ -1484,6 +1484,7 @@ class PreferencesWindow(PyDialog):
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
             self.win_parent.clipping_obj.apply_clipping(self.out_data)
+            self.win_parent._save_settings()
         return passed
 
     def on_ok(self):
@@ -1660,6 +1661,7 @@ def main():  # pragma: no cover
     main_window.show()
     # Enter the main loop
     app.exec_()
+
 
 if __name__ == "__main__":  # pragma: no cover
     main()

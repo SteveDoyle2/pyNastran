@@ -342,7 +342,7 @@ class Cart3D(Cart3dReaderWriter):
                 free_edges.append(edge)
         return np.array(free_edges, dtype='int32')
 
-    def read_cart3d(self, infilename, result_names=None):
+    def read_cart3d(self, infilename: PathLike, result_names=None):
         """extracts the points, elements, and Cp"""
         self.infilename = infilename
         self.log.info("---reading cart3d...%r---" % self.infilename)

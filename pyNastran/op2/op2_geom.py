@@ -29,7 +29,7 @@ from pyNastran.op2.tables.geom.contact import CONTACT
 
 from pyNastran.op2.tables.geom.dit import DIT
 from pyNastran.op2.tables.geom.dynamics import DYNAMICS
-from pyNastran.op2.tables.geom.axic import AXIC
+from pyNastran.op2.tables.geom.axic import AXIC  # removed
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.errors import DuplicateIDsError

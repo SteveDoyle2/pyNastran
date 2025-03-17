@@ -667,12 +667,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PIHEX', 'PCOMPS',
             # PQUAD4
 
-            # axixsymmetric
-            'CCONEAX', # element
-            'PCONEAX', # property
-            'AXIC', # axic
-            'AXIF', # axif
-            'FORCEAX', # loads
+            # axixsymmetric - removed
+            #'CCONEAX', # element - remved
+            #'PCONEAX', # property - remved
+            #'AXIC', # axic - remved
+            #'AXIF', # axif - remved
+            #'FORCEAX', # loads - remved
 
             ## pdampt
             'PDAMPT',

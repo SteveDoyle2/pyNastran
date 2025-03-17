@@ -584,6 +584,22 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     return int_id, name, Type, trim_status, ux, ux_unit
 
 
+def _read_metadata_header(f06_file: TextIO,
+                          i: int) -> tuple[int, str, str, str]:
+    #'CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
+    line = f06_file.readline()
+    i += 1
+    sline = line.strip().split()
+    assert sline[0] == 'CONFIGURATION', sline
+    aero_config = sline[2]  # 'AEROSG2D'
+    assert sline[3] == 'XY-SYMMETRY', sline
+    xy_symmetry = sline[5]  # ASYMMETRIC
+    assert sline[6] == 'XZ-SYMMETRY', sline
+    xz_symmetry = sline[8]  # ASYMMETRIC
+    assert xz_symmetry in {'ANTISYMMETRIC', 'ASYMMETRIC', 'SYMMETRIC'}, xz_symmetry
+    assert xy_symmetry in {'ANTISYMMETRIC', 'ASYMMETRIC', 'SYMMETRIC'}, xy_symmetry
+    return i, aero_config, xz_symmetry, xy_symmetry
+
 def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                                                 line: str, i: int, nlines_max: int,
                                                 trim_results: TrimResults,
@@ -607,10 +623,11 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     """
     isubcase = int(subcase)
     del subcase
-    #'CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
-    line = f06_file.readline()
-    i += 1
-    assert 'CONFIGURATION' in line, line.strip()
+
+    out = _read_metadata_header(f06_file, i)
+    (i, aero_config, xz_symmetry, xy_symmetry,
+     #mach, q,
+     ) = out
 
     line = f06_file.readline()
     i += 1
@@ -626,7 +643,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     i += 1
     assert 'CHORD' in line, line.strip()
     sline = line.strip().split()
-    ['CHORD', '=', '1.3110E+02', 'SPAN', '=', '2.5564E+03', 'AREA', '=', '7.3400E+05']
+    #['CHORD', '=', '1.3110E+02', 'SPAN', '=', '2.5564E+03', 'AREA', '=', '7.3400E+05']
     assert sline[0] == 'CHORD', sline
     assert sline[3] == 'SPAN', sline
     assert sline[6] == 'AREA', sline

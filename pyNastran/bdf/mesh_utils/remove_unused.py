@@ -520,8 +520,8 @@ def remove_unused(bdf_filename: PathLike,
         elif card_type in {'NSM', 'NSM1', 'NSML', 'NSML1'}:
             _store_nsm(model, ids, pids_used)
 
-        elif card_type in ['POINTAX', 'AXIC', 'RINGAX']:
-            pass
+        #elif card_type in ['POINTAX', 'AXIC', 'RINGAX']:  # removed
+            #pass
             #for eid in ids:
                 #elem = model.plotels[eid]
                 #nids_used.update(elem.node_ids)

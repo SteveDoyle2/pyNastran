@@ -156,6 +156,7 @@ def run(regenerate=True, make_geom=False, combine=True,
         compare=True, short_stats=False, write_hdf5=True):
     # works
     files = get_files_of_type('tests', '.op2')
+    print(' '.join(sys.argv))
 
     folders_file1 = os.path.join(PKG_PATH, 'bdf', 'test', 'tests', 'foldersRead.txt')
     folders_file2 = os.path.join(PKG_PATH, 'op2', 'test', 'folders_read.txt')
@@ -315,6 +316,7 @@ def main():
         save_cases=save_cases, write_f06=write_f06, write_op2=write_op2,
         write_hdf5=write_hdf5, short_stats=short_stats,
         build_pandas=build_pandas, compare=compare, debug=debug)
+
 
 if __name__ == '__main__':   # pragma: no cover
     main()

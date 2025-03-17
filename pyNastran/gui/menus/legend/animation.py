@@ -476,9 +476,9 @@ class AnimationWindow(PyDialog):
         #horizontal_vertical_group.addButton(self.animate_time_radio)
         #horizontal_vertical_group.addButton(self.animate_freq_sweeep_radio)
 
-        # animate in gui
-        self.animate_in_gui_checkbox = QCheckBox('Animate In GUI?')
-        self.animate_in_gui_checkbox.setChecked(True)
+        # save a GIF
+        self.save_animation_checkbox = QCheckBox('Save Animation?')
+        self.save_animation_checkbox.setChecked(False)
 
         # make images
         self.make_images_checkbox = QCheckBox('Make images?')
@@ -569,9 +569,9 @@ class AnimationWindow(PyDialog):
 
         self.cancel_button.clicked.connect(self.on_cancel)
 
-        self.animate_in_gui_checkbox.clicked.connect(self.on_animate_in_gui)
-        self.animate_in_gui_checkbox.setChecked(True)
-        self.on_animate_in_gui()
+        self.save_animation_checkbox.clicked.connect(self.on_save_animation)
+        self.save_animation_checkbox.setChecked(False)
+        self.on_save_animation()
 
 
     def on_time_checkbox_disp(self) -> None:
@@ -605,9 +605,8 @@ class AnimationWindow(PyDialog):
         self.icase_vector_label.setEnabled(is_checked)
         self.icase_vector_edit.setEnabled(enable_edit)
 
-    def on_animate_in_gui(self) -> None:
-        animate_in_gui = self.animate_in_gui_checkbox.isChecked()
-        enable = not animate_in_gui
+    def on_save_animation(self) -> None:
+        enable = self.save_animation_checkbox.isChecked()
         if HIDE_WHEN_INACTIVE:
             self.make_images_checkbox.setVisible(enable)
             self.delete_images_checkbox.setVisible(enable)
@@ -1045,7 +1044,7 @@ class AnimationWindow(PyDialog):
         #grid2.addWidget(self.animate_time_radio, 8, 2)
         #grid2.addWidget(self.animate_freq_sweeep_radio, 8, 3)
 
-        grid2.addWidget(self.animate_in_gui_checkbox, irow, 0)
+        grid2.addWidget(self.save_animation_checkbox, irow, 0)
         irow += 1
 
         grid2.addWidget(self.resolution_label, irow, 0)

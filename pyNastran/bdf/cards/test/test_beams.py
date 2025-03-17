@@ -1401,165 +1401,6 @@ class TestBeams(unittest.TestCase):
         pbeam3.write_card()
         pbeam3.write_card(size=16)
 
-    def test_cbend_geom1_plot(self):
-        model = BDF(debug=False)
-        model.add_grid(10, [0., 0., 0.])
-        model.add_grid(11, [2., 0., 0.])
-        model.add_grid(12, [1., -2., 0.])
-        eid = 2
-        pid = 3
-        nids = [10, 11]
-        g0 = 12
-        geom = 2
-        x = None
-        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
-
-        mid = 2
-        A = 1.0
-        i1 = 2.0
-        i2 = 3.0
-        j = 4.0
-        pbend1 = PBEND.add_beam_type_1(
-            pid, mid, A, i1, i2, j,
-            rb=None, theta_b=None,
-            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
-            k1=None, k2=None, nsm=0.,
-            rc=0., zc=0., delta_n=0., comment='pbend1')
-        model.properties[pid] = pbend1
-        cbend.cross_reference(model)
-        #cbend.plot()
-
-    def test_cbend_geom3_plot(self):
-        model = BDF(debug=False)
-        model.add_grid(10, [0., 0., 0.])
-        model.add_grid(11, [2., 0., 0.])
-        model.add_grid(12, [1., -2., 0.])
-        eid = 2
-        pid = 3
-        nids = [10, 11]
-        g0 = 12
-        geom = 3
-        x = None
-        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
-
-        mid = 2
-        A = 1.0
-        i1 = 2.0
-        i2 = 3.0
-        j = 4.0
-        pbend1 = PBEND.add_beam_type_1(
-            pid, mid, A, i1, i2, j,
-            rb=3.0, theta_b=None,
-            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
-            k1=None, k2=None, nsm=0.,
-            rc=0., zc=0., delta_n=0., comment='pbend1')
-        model.properties[pid] = pbend1
-        cbend.cross_reference(model)
-        cbend.plot()
-
-    def test_cbend_a(self):
-        """tests a CBEND"""
-        model = BDF(debug=False)
-
-        eid = 7
-        pid = 10
-        nids = [2, 3]
-        g0 = 5
-        x = None
-        geom = 1
-        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
-        model.add_grid(2, [0., 0., 0.])
-        model.add_grid(3, [0., 0., 0.])
-        model.add_grid(5, [0., 0., 0.])
-        #pbend = model.add_pbend(pid, mid, beam_type, A, i1, i2, j,
-                                #c1, c2, d1, d2, e1, e2, f1, f2,
-                                #k1, k2, nsm, rc, zc, delta_n, fsi,
-                                #rm, t, p, rb, theta_b, comment='')
-
-        cbend.validate()
-        cbend.raw_fields()
-        cbend.write_card()
-        cbend.write_card(size=16)
-
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.pop_parse_errors()
-        #model.cross_reference()
-        #model.pop_xref_errors()
-
-        #model._verify_bdf(xref=True)
-        #model.uncross_reference()
-
-    def test_cbend_b(self):
-        model = BDF(debug=False)
-        model.add_grid(10, [1., 0., 0.])
-        model.add_grid(11, [.707, .707, 0.])
-        model.add_grid(12, [0., 1., 0.])
-        eid = 2
-        pid = 3
-        nids = [10, 11]
-        g0 = 12
-        geom = 1
-
-        mid = 100
-
-        # The center of curvature lies on the line AO (or its
-        # extension) or vector v.
-        #
-        #      0
-        #     /
-        #    +
-        #   / \
-        #  A   R   B
-        #    ------
-        #      --   <---- curve A-B
-        #
-        x = None
-        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
-
-        A = 1.0
-        i1 = 2.0
-        i2 = 3.0
-        j = 4.0
-        pbend1 = PBEND.add_beam_type_1(
-            pid, mid, A, i1, i2, j,
-            rb=None, theta_b=None,
-            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
-            k1=None, k2=None, nsm=0.,
-            rc=0., zc=0., delta_n=0., comment='pbend1')
-
-        fsi = 1
-        rm = 0.2
-        t = 0.4
-        #p = 0.5
-        #rb = 0.6
-        #theta_b = 0.7
-        pbend2 = PBEND.add_beam_type_2(
-            pid, mid, fsi, rm, t,
-            p=None, rb=None, theta_b=None,
-            nsm=0., rc=0., zc=0., comment='')
-        model.properties[pid] = pbend1
-
-        #model.add_pbend(pid, mid, beam_type, A, i1, i2, j,
-                        #c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
-                        #nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment='')
-        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
-        model.validate()
-        model.cross_reference()
-        model.pop_xref_errors()
-
-        model.uncross_reference()
-
-        cbend.write_card()
-        cbend.write_card(size=16)
-
-        pbend1.write_card()
-        pbend1.write_card(size=16)
-
-        pbend2.write_card()
-        pbend2.write_card(size=16)
-        save_load_deck(model, punch=True, run_convert=False, run_renumber=False)
-
     def test_pbrsect(self):
         """tests a PBRSECT"""
         model = BDF(debug=False)
@@ -1960,8 +1801,169 @@ class TestBeams(unittest.TestCase):
         assert cbeam.get_field(14) == -7.
         assert cbeam.get_field(15) == -8.
         assert cbeam.get_field(16) == -9.
-
         #print(cbeam)
+
+
+class TestBend(unittest.TestCase):
+    def test_cbend_geom1_plot(self):
+        model = BDF(debug=False)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [2., 0., 0.])
+        model.add_grid(12, [1., -2., 0.])
+        eid = 2
+        pid = 3
+        nids = [10, 11]
+        g0 = 12
+        geom = 2
+        x = None
+        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
+
+        mid = 2
+        A = 1.0
+        i1 = 2.0
+        i2 = 3.0
+        j = 4.0
+        pbend1 = PBEND.add_beam_type_1(
+            pid, mid, A, i1, i2, j,
+            rb=None, theta_b=None,
+            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+            k1=None, k2=None, nsm=0.,
+            rc=0., zc=0., delta_n=0., comment='pbend1')
+        model.properties[pid] = pbend1
+        cbend.cross_reference(model)
+        #cbend.plot()
+
+    def test_cbend_geom3_plot(self):
+        model = BDF(debug=False)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [2., 0., 0.])
+        model.add_grid(12, [1., -2., 0.])
+        eid = 2
+        pid = 3
+        nids = [10, 11]
+        g0 = 12
+        geom = 3
+        x = None
+        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
+
+        mid = 2
+        A = 1.0
+        i1 = 2.0
+        i2 = 3.0
+        j = 4.0
+        pbend1 = PBEND.add_beam_type_1(
+            pid, mid, A, i1, i2, j,
+            rb=3.0, theta_b=None,
+            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+            k1=None, k2=None, nsm=0.,
+            rc=0., zc=0., delta_n=0., comment='pbend1')
+        model.properties[pid] = pbend1
+        cbend.cross_reference(model)
+        cbend.plot()
+
+    def test_cbend_a(self):
+        """tests a CBEND"""
+        model = BDF(debug=False)
+
+        eid = 7
+        pid = 10
+        nids = [2, 3]
+        g0 = 5
+        x = None
+        geom = 1
+        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(5, [0., 0., 0.])
+        #pbend = model.add_pbend(pid, mid, beam_type, A, i1, i2, j,
+                                #c1, c2, d1, d2, e1, e2, f1, f2,
+                                #k1, k2, nsm, rc, zc, delta_n, fsi,
+                                #rm, t, p, rb, theta_b, comment='')
+
+        cbend.validate()
+        cbend.raw_fields()
+        cbend.write_card()
+        cbend.write_card(size=16)
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.pop_parse_errors()
+        #model.cross_reference()
+        #model.pop_xref_errors()
+
+        #model._verify_bdf(xref=True)
+        #model.uncross_reference()
+
+    def test_cbend_b(self):
+        model = BDF(debug=False)
+        model.add_grid(10, [1., 0., 0.])
+        model.add_grid(11, [.707, .707, 0.])
+        model.add_grid(12, [0., 1., 0.])
+        eid = 2
+        pid = 3
+        nids = [10, 11]
+        g0 = 12
+        geom = 1
+
+        mid = 100
+
+        # The center of curvature lies on the line AO (or its
+        # extension) or vector v.
+        #
+        #      0
+        #     /
+        #    +
+        #   / \
+        #  A   R   B
+        #    ------
+        #      --   <---- curve A-B
+        #
+        x = None
+        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
+
+        A = 1.0
+        i1 = 2.0
+        i2 = 3.0
+        j = 4.0
+        pbend1 = PBEND.add_beam_type_1(
+            pid, mid, A, i1, i2, j,
+            rb=None, theta_b=None,
+            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+            k1=None, k2=None, nsm=0.,
+            rc=0., zc=0., delta_n=0., comment='pbend1')
+
+        fsi = 1
+        rm = 0.2
+        t = 0.4
+        #p = 0.5
+        #rb = 0.6
+        #theta_b = 0.7
+        pbend2 = PBEND.add_beam_type_2(
+            pid, mid, fsi, rm, t,
+            p=None, rb=None, theta_b=None,
+            nsm=0., rc=0., zc=0., comment='')
+        model.properties[pid] = pbend1
+
+        #model.add_pbend(pid, mid, beam_type, A, i1, i2, j,
+                        #c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                        #nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment='')
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+        model.validate()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        model.uncross_reference()
+
+        cbend.write_card()
+        cbend.write_card(size=16)
+
+        pbend1.write_card()
+        pbend1.write_card(size=16)
+
+        pbend2.write_card()
+        pbend2.write_card(size=16)
+        save_load_deck(model, punch=True, run_convert=False, run_renumber=False)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

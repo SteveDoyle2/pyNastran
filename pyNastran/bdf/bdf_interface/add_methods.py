@@ -27,9 +27,9 @@ if TYPE_CHECKING:  # pragma: no cover
     #)
     from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
 
-    from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
-        AXIF, RINGFL,
-        AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
+    #from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
+        #AXIF, RINGFL,
+        #AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
     #from pyNastran.bdf.cards.elements.axisymmetric_shells import (
         #CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
     from pyNastran.bdf.cards.elements.shell import (
@@ -921,7 +921,8 @@ class AddMethods:
     def _add_load_object(self, load: (FORCE | FORCE1 | FORCE2 | MOMENT | MOMENT1 | MOMENT2 |
                                       PLOAD | PLOAD1 | PLOAD2 | PLOAD4 | PLOADX1 |
                                       GRAV | ACCEL | ACCEL1 | SPCD | SLOAD |
-                                      QBDY1 | QBDY2 | QBDY3 | QVOL | TEMPAX | PRESAX |
+                                      QBDY1 | QBDY2 | QBDY3 | QVOL |
+                                      # TEMPAX | PRESAX |  # removed
                                       RFORCE | RFORCE1 | LOADCYN | LOADCYH | DEFORM |
                                       GMLOAD)) -> None:
         """adds a load object to a load case"""
@@ -1145,17 +1146,17 @@ class AddMethods:
         if self.model.beamor is None:
             self.model.beamor = beamor
 
-    def _add_axic_object(self, axic: AXIC) -> None:
-        """adds an AXIC object"""
-        # only one AXIC card allowed
-        assert self.model.axic is None, '\naxic=\n%s old=\n%s' % (axic, self.model.axic)
-        self.model.axic = axic
+    #def _add_axic_object(self, axic: AXIC) -> None:
+        #"""adds an AXIC object"""
+        ## only one AXIC card allowed
+        #assert self.model.axic is None, '\naxic=\n%s old=\n%s' % (axic, self.model.axic)
+        #self.model.axic = axic
 
-    def _add_axif_object(self, axif: AXIF) -> None:
-        """adds an AXIF object"""
-        # only one AXIC card allowed
-        assert self.model.axif is None, '\naxif=\n%s old=\n%s' % (axif, self.model.axif)
-        self.model.axif = axif
+    #def _add_axif_object(self, axif: AXIF) -> None:
+        #"""adds an AXIF object"""
+        ## only one AXIC card allowed
+        #assert self.model.axif is None, '\naxif=\n%s old=\n%s' % (axif, self.model.axif)
+        #self.model.axif = axif
 
     def _add_acmodl_object(self, acmodl: ACMODL) -> None:
         """adds a ACMODL object"""

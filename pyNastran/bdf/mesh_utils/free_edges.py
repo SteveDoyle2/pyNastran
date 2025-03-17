@@ -10,7 +10,8 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
-def free_edges(model: BDF, eids: Optional[list[int]]=None, maps=None) -> list[tuple[int, int]]:
+def free_edges(model: BDF, eids: Optional[list[int]]=None,
+               maps=None) -> list[tuple[int, int]]:
     """
     Gets the free edges for shell elements.
     A free edge is an edge that is only connected to 1 shell element.
