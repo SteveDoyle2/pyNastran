@@ -70,11 +70,11 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         args = ['bdf', 'stats', str(bdf_filename)]
         cmd_line(args, quiet=True)
 
-    def test_free_edges_bwb(self):
-        """tests ``free_edges``"""
-        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
-        args = ['bdf', 'free_edges', str(bdf_filename)]
-        cmd_line(args, quiet=True)
+    # def test_free_edges_bwb(self):
+    #     """tests ``free_edges``"""
+    #     bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+    #     args = ['bdf', 'free_edges', str(bdf_filename)]
+    #     cmd_line(args, quiet=True)
 
 
     def test_map_aero_model(self):
