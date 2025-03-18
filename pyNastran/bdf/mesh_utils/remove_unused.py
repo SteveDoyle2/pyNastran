@@ -810,7 +810,7 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
     else:
         raise NotImplementedError(card_type)
 
-def _store_nsm(model, ids, pids_used):
+def _store_nsm(model: BDF, ids: np.ndarray, pids_used: np.ndarray) -> None:
     """helper for ``remove_unused``"""
     for nsm_id in ids:
         nsms = model.nsms[nsm_id]
@@ -818,7 +818,7 @@ def _store_nsm(model, ids, pids_used):
             idsi = nsm.ids
 
             if nsm.nsm_type in ['PROD', 'PBARL', 'PBEAML',
-                                'PSHELL', 'PCOMP', ]:
+                                'PSHELL', 'PCOMP', 'PCOMPG']:
                 if len(idsi) == 1 and idsi[0] == 'ALL':
                     idsi = list(model.properties.keys())
                     #raise NotImplementedError('found ALL...\n%s' % str(nsm))

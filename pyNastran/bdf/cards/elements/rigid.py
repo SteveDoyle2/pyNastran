@@ -955,7 +955,7 @@ class RBE2(RigidElementBase):
 
     def __init__(self, eid: int,
                  gn: int,  # independent
-                 cm: str, Gmi: list[int], # dependent
+                 cm: str, Gmi: list[int],  # dependent
                  alpha: float=0.0, tref: float=0.0,
                  comment: str=''):
         """
@@ -1050,6 +1050,7 @@ class RBE2(RigidElementBase):
         for i in range(len(card) - 4 - n):
             gmi = integer(card, j + i, 'Gm%i' % (i + 1))
             Gmi.append(gmi)
+        Gmi.sort()
         return RBE2(eid, gn, cm, Gmi, alpha=alpha, tref=tref, comment=comment)
 
     @classmethod
@@ -1475,6 +1476,7 @@ class RBE3(RigidElementBase):
                 assert compi is not None
                 assert len(Gij) > 0, Gij
                 assert Gij[0] is not None, Gij
+                Gij.sort()
                 weights.append(wt)
                 comps.append(compi)
                 Gijs.append(Gij)

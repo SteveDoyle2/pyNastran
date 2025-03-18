@@ -5,6 +5,14 @@ from typing import Optional
 from pyNastran.utils import PathLike
 
 
+KEYWORDS_CHECK = {
+    'old': ['yes', 'no'],
+    'bat': ['yes', 'no'],
+    'news': ['yes', 'no'],
+    'notify': ['yes', 'no'],
+    #'mem=15gb'
+    #'parallel=4'
+}
 def run_nastran(bdf_filename: PathLike,
                 nastran_cmd: PathLike='nastran',
                 keywords: Optional[str | list[str] | dict[str, str]]=None,
@@ -93,7 +101,7 @@ def run_nastran(bdf_filename: PathLike,
 def _get_keywords_list(keywords: Optional[str | list[str] |
                                           dict[str, str]]=None) -> list[str]:
     if keywords is None:
-        keywords_list = ['scr=yes', 'bat=no', 'old=no', 'news=no', 'notify=no'] # 'mem=1024mb',
+        keywords_list = ['scr=yes', 'bat=no', 'old=no', 'news=no', 'notify=no']  # 'mem=1024mb',
     elif isinstance(keywords, str):
         keywords_list = keywords.split()
     else:
@@ -105,4 +113,19 @@ def _get_keywords_list(keywords: Optional[str | list[str] |
                 if value is None:
                     continue
                 keywords_list.append(f'{keyword}={value}')
+
+    for keyword_value in keywords_list:
+        keyword, value = keyword_value.upper().split('=', 1)
+        if keyword == 'parallel':
+            value_int = int(value)
+        elif keyword == 'mem':
+            assert value.endswith(('MB', 'GB')), value
+            num_str = value[:-2]
+            num = float(num_str)
+        elif keyword in KEYWORDS_CHECK:
+            expected_values = KEYWORDS_CHECK[keyword]
+            assert value.lower() in expected_values, f'keyword={keyword} value={value}; expected={expected_values}'
+        else:
+            warnings.warn(f'unsupported keyword; {keyword!r}={value!r}')
+
     return keywords_list

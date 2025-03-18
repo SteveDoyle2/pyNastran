@@ -828,7 +828,7 @@ def cmd_line_inclzip(argv=None, quiet: bool=False) -> None:
     parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
     parent_parser.add_argument('--lax', action='store_false', help='lax card parser')
     parent_parser.add_argument('--punch', action='store_true', help='assume a punch file')
-    parent_parser.add_argument('--allow_dup', help='lax card parser')
+    parent_parser.add_argument('--allow_dup', help='allow duplicate cards -> "GRID,CONM2"')
     args = parent_parser.parse_args(args=argv[1:])
     if not quiet:  # pragma: no cover
         print(args)
@@ -1113,7 +1113,7 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
 
     msg = (
         'Usage:\n'
-        '  bdf remove_unused IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch]\n'
+        '  bdf remove_unused IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--lax]\n'
         '  bdf remove_unused -h | --help\n'
         '  bdf remove_unused -v | --version\n'
         '\n'
@@ -1150,9 +1150,14 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
         basename = os.path.basename(abs_name)
         out_bdf_filename = os.path.join(dirname, f'clean_{basename}')
 
-    from pyNastran.bdf.bdf import read_bdf
+    is_strict_card_parser = not data['--lax']
+    from pyNastran.bdf.bdf import BDF
+    model = BDF(log=log)
+    if not is_strict_card_parser:
+        log.warning('using lax card parser')
+        model.is_strict_card_parser = is_strict_card_parser
 
-    model = read_bdf(bdf_filename, punch=punch, log=log, xref=False)
+    model.read_bdf(bdf_filename, punch=punch, xref=False)
     #model.cross_reference()
     remove_unused(model,
                   remove_nids=True, remove_cids=True,
