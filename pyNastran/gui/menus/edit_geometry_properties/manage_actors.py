@@ -931,6 +931,8 @@ def get_representation_flags(representation: str) -> tuple[bool, bool, bool, boo
     is_follow = False
     if representation == 'coord':
         pass
+    elif representation == 'bar':
+        pass
     elif representation == 'main':
         is_point = True
         is_surf = True
