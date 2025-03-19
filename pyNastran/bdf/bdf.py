@@ -1725,7 +1725,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                             msg += str(elem)
                     msg += '\n'
                     is_error = True
-                    raise DuplicateIDsError(msg)
 
             if self._duplicate_properties:
                 duplicate_pids = [prop.pid for prop in self._duplicate_properties]
