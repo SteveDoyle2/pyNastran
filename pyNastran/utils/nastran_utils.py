@@ -2,7 +2,7 @@ import os
 import warnings
 import subprocess
 from typing import Optional
-from pyNastran.utils import PathLike
+from pyNastran.utils import PathLike, print_bad_path
 
 
 KEYWORDS_CHECK = {
@@ -122,10 +122,12 @@ def _get_keywords_list(keywords: Optional[str | list[str] |
             assert value.endswith(('MB', 'GB')), value
             num_str = value[:-2]
             num = float(num_str)
+        elif keyword == 'sdirectory':
+            path = value
+            assert os.path.exists(path), print_bad_path(path)
         elif keyword in KEYWORDS_CHECK:
             expected_values = KEYWORDS_CHECK[keyword]
             assert value.lower() in expected_values, f'keyword={keyword} value={value}; expected={expected_values}'
         else:
             warnings.warn(f'unsupported keyword; {keyword!r}={value!r}')
-
     return keywords_list
