@@ -252,7 +252,7 @@ class AddMethods:
             model.nodes[key] = node
             model._type_to_id_map[node.type].append(key)
         elif node == model.nodes[key]:
-            pass
+            model.log.warning(f'replacing equivalent node:\n{node}')
         elif allow_overwrites:
             model.log.warning(f'replacing node:\n{model.nodes[key]}with:\n{node}')
             model.nodes[key] = node
@@ -438,7 +438,7 @@ class AddMethods:
             model.elements[key] = elem
             model._type_to_id_map[elem.type].append(key)
         elif elem == model.elements[key]:
-            pass
+            model.log.warning(f'replacing equivalent element:\n{elem}')
         elif allow_overwrites:
             model.log.warning(f'replacing elements:\n{model.elements[key]}with:\n{elem}')
             model.elements[key] = elem

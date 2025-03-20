@@ -2039,11 +2039,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             #subtitle = data.subtitle
             #label = data.label
 
+            settings: Settings = self.settings
             is_legend_shown = self.scalar_bar.is_shown
+            is_horizontal = settings.is_horizontal_scalar_bar
             self.update_scalar_bar(result_type, min_value, max_value,
                                    data_format,
                                    nlabels=nlabels, labelsize=labelsize,
                                    ncolors=ncolors, colormap=colormap,
+                                   is_horizontal=is_horizontal,
                                    is_shown=is_legend_shown)
 
             #obj.get_vector_array_by_phase(i, name, )

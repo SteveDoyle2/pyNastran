@@ -30,6 +30,7 @@ def solid_dof(bdf_filename: BDF | PathLike,
         model.read_bdf(bdf_filename, xref=False)
     #nids = np.array(list(model.nodes), dtype='int32')
 
+    log = model.log
     solid_nids_set = set([])
     associated_nids_set = set([])
 
@@ -68,6 +69,7 @@ def solid_dof(bdf_filename: BDF | PathLike,
 
     out_nids_str = ' '.join([str(val) for val in out_nids])
     if nid_filename is not None:
+        log.info(f'writing {nid_filename}')
         with open(nid_filename, 'w') as nid_file:
             nid_file.write(f'$ add a 456 constraint onto every solid DOF not associated with another element\n')
             nid_file.write(f'$ out_nids = {out_nids_str}\n')

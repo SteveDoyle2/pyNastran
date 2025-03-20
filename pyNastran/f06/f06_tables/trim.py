@@ -1,3 +1,4 @@
+from collections import defaultdict
 import numpy as np
 TrimVariable = tuple[int, str, str, float, str]
 ControllerState = dict[str, float]
@@ -64,6 +65,24 @@ class AeroPressure:
             nodes,
             cp_pressure[:, 0], cp_pressure[:, 1])
         return apress
+
+    def get_element_pressure(self, nid_to_eid_map: dict[int, list[int]]):
+        """
+                           AERODYNAMIC PRES.       AERODYNAMIC
+        GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT
+        156     LS            6.035214E-01         9.052821E-01            900014
+        """
+        element_pressures = defaultdict(list)
+        nids = self.nodes
+        nnids = len(nids)
+        pressure = self.pressure
+        assert pressure.shape == (nnids,)
+        for nid, cp in zip(nids, self.cp):
+            # print(nid, cp, q)
+            eids = nid_to_eid_map[nid]
+            for eid in eids:
+                element_pressures[eid].append(cp)
+        return dict(element_pressures)
 
     def __repr__(self) -> str:
         nnids = len(self.nodes)

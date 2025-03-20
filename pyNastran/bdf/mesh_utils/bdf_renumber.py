@@ -916,6 +916,7 @@ def _create_mid_map(model, mid):
 
 def _get_bdf_model(bdf_filename: PathLike | BDF | StringIO,
                    punch: bool=False,
+                   xref: bool=True,
                    cards_to_skip=None, log=None, debug: bool=False):
     """helper method"""
     if isinstance(bdf_filename, BDF):
@@ -923,7 +924,7 @@ def _get_bdf_model(bdf_filename: PathLike | BDF | StringIO,
     else:
         model = BDF(log=log, debug=debug)
         model.disable_cards(cards_to_skip)
-        model.read_bdf(bdf_filename, punch=punch)
+        model.read_bdf(bdf_filename, punch=punch, xref=xref)
     return model
 
 

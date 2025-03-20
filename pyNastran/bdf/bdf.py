@@ -1725,7 +1725,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                             msg += str(elem)
                     msg += '\n'
                     is_error = True
-                    raise DuplicateIDsError(msg)
 
             if self._duplicate_properties:
                 duplicate_pids = [prop.pid for prop in self._duplicate_properties]
@@ -1798,7 +1797,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             if self.xref_obj._stop_on_xref_error:
                 msg += 'There are parsing errors.\n\n'
                 for (card, an_error) in self._stored_parse_errors:
-                    msg += '%scard=%s\n' % (an_error[0], card)
+                    msg += 'card=%s\n' % card
                     msg += 'xref error: %s\n\n' % an_error[0]
                     is_error = True
 

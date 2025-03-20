@@ -36,11 +36,12 @@ SKIP_ATTRS = {
     'rsolmap_to_str', 'special_cards', 'system_command_lines',
     'read_includes', 'save_file_structure', 'sol', 'sol_iline',
     'use_new_deck_parser', 'wtmass', 'xref_obj',
-    'zona',
+    'zona', 'punch',
 }
 
 def bdf_remove_comments(bdf_filename: PathLike | BDF | StringIO,
                         bdf_filename_out: str,
+                        #xref: bool=True,
                         size: int=8, is_double: bool=False,
                         log: Optional[SimpleLogger]=None,
                         debug: bool=False) -> BDF:
@@ -71,6 +72,7 @@ def bdf_remove_comments(bdf_filename: PathLike | BDF | StringIO,
     assert isinstance(is_double, bool), is_double
     cards_to_skip = []
     model = _get_bdf_model(bdf_filename, punch=None,
+                           xref=False,
                            cards_to_skip=cards_to_skip,
                            log=log, debug=debug)
 
@@ -103,7 +105,7 @@ def bdf_remove_comments(bdf_filename: PathLike | BDF | StringIO,
             pass
         else:
             if not hasattr(dict_list_scalar, 'comment'):
-                print(attr)
+                #print(attr)
                 continue
             assert hasattr(dict_list_scalar, 'comment'), (attr, value, type(value))
             dict_list_scalar.comment = ''

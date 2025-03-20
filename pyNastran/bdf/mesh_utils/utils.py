@@ -10,10 +10,11 @@ defines:
     bdf flutter UNITS [-o OUT_BDF_FILENAME]
 
 """
+from __future__ import annotations
 import os
 import sys
 from io import StringIO
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from cpylog import SimpleLogger
 from docopt import docopt
 import numpy as np
@@ -44,6 +45,8 @@ from .cmd_line.bdf_equivalence import cmd_line_equivalence
 from .cmd_line.export_caero_mesh import cmd_line_export_caero_mesh
 from .cmd_line.create_flutter import cmd_line_create_flutter
 from .cmd_line.utils import filter_no_args
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
 
 def cmd_line_create_vectorized_numbered(argv=None, quiet: bool=False):  # pragma: no cover
@@ -823,22 +826,35 @@ def cmd_line_inclzip(argv=None, quiet: bool=False) -> None:
     parent_parser.add_argument('inclzip', type=str)
     parent_parser.add_argument('INPUT', help='path to output BDF/DAT/NAS file', type=str)
     parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
+    parent_parser.add_argument('--lax', action='store_false', help='lax card parser')
+    parent_parser.add_argument('--punch', action='store_true', help='assume a punch file')
+    parent_parser.add_argument('--allow_dup', help='allow duplicate cards -> "GRID,CONM2"')
     args = parent_parser.parse_args(args=argv[1:])
     if not quiet:  # pragma: no cover
         print(args)
 
     bdf_filename = args.INPUT
     bdf_filename_out = args.OUTPUT
+    is_strict_card_parser = args.lax
+    punch = args.punch
+    duplicate_cards = args.allow_dup.split(',') if args.allow_dup else []
+
     if bdf_filename_out is None:
         bdf_filename_base, ext = os.path.splitext(bdf_filename)
     bdf_filename_out = f'{bdf_filename_base}.zip{ext}'
 
-    from pyNastran.bdf.bdf import read_bdf
-
+    from pyNastran.bdf.bdf import BDF
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8')
-    model = read_bdf(bdf_filename, log=log, punch=None,
-                     validate=False, xref=False,)
+    model = BDF(log=log)
+    if not is_strict_card_parser:
+        log.warning('using lax card parser')
+        model.is_strict_card_parser = is_strict_card_parser
+    if duplicate_cards:
+        #duplicate_cards = {'GRID', 'CONM2'}
+        model.set_allow_duplicates(duplicate_cards)
+    model.read_bdf(bdf_filename, punch=punch,
+                   validate=False, xref=False,)
     model.write_bdf(bdf_filename_out)
 
 def cmd_line_scale(argv=None, quiet: bool=False) -> None:
@@ -928,7 +944,7 @@ def cmd_line_scale(argv=None, quiet: bool=False) -> None:
     scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=bdf_filename_out, log=log)
 
 
-def cmd_line_remove_comments(argv=None, quiet: bool=False) -> None:
+def cmd_line_remove_comments(argv=None, quiet: bool=False) -> BDF:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
@@ -944,11 +960,12 @@ def cmd_line_remove_comments(argv=None, quiet: bool=False) -> None:
         #add_help=False,
     )
     # positional arguments
-    parent_parser.add_argument('scale', type=str)
+    parent_parser.add_argument('remove_comments', type=str)
     parent_parser.add_argument('INPUT', help='path to output BDF/DAT/NAS file', type=str)
     parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
+    #parent_parser.add_argument('--noxref', action='store_true', help='skips cross-referencing (default=True)')
 
-    parent_parser.add_argument('-q', '--quiet', help='prints debug messages (default=True)', action='store_true')
+    parent_parser.add_argument('-q', '--quiet', action='store_true', help='prints debug messages (default=True)')
     #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
     parent_parser.add_argument('-v', '--version', action='version',
                                version=pyNastran.__version__)
@@ -959,21 +976,22 @@ def cmd_line_remove_comments(argv=None, quiet: bool=False) -> None:
     if not quiet:  # pragma: no cover
         print(args)
 
-    scales: list[float] = []
-    terms: list[str] = []
+    #xref = not args.noxref
     bdf_filename = args.INPUT
     bdf_filename_out = args.OUTPUT
     if bdf_filename_out is None:
         bdf_filename_base, ext = os.path.splitext(bdf_filename)
         bdf_filename_out = '%s.nocomments%s' % (bdf_filename_base, ext)
 
-    #assert bdf_filename_out is not None
-
     from pyNastran.bdf.mesh_utils.bdf_remove_comments import bdf_remove_comments
 
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8')
-    bdf_remove_comments(bdf_filename, bdf_filename_out=bdf_filename_out, log=log)
+    model = bdf_remove_comments(
+        bdf_filename, bdf_filename_out=bdf_filename_out,
+        #xref=xref,
+        log=log)
+    return model
 
 
 def cmd_line_export_mcids(argv=None, quiet: bool=False) -> None:
@@ -1095,7 +1113,7 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
 
     msg = (
         'Usage:\n'
-        '  bdf remove_unused IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch]\n'
+        '  bdf remove_unused IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--lax]\n'
         '  bdf remove_unused -h | --help\n'
         '  bdf remove_unused -v | --version\n'
         '\n'
@@ -1132,9 +1150,14 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
         basename = os.path.basename(abs_name)
         out_bdf_filename = os.path.join(dirname, f'clean_{basename}')
 
-    from pyNastran.bdf.bdf import read_bdf
+    is_strict_card_parser = not data['--lax']
+    from pyNastran.bdf.bdf import BDF
+    model = BDF(log=log)
+    if not is_strict_card_parser:
+        log.warning('using lax card parser')
+        model.is_strict_card_parser = is_strict_card_parser
 
-    model = read_bdf(bdf_filename, punch=punch, log=log, xref=False)
+    model.read_bdf(bdf_filename, punch=punch, xref=False)
     #model.cross_reference()
     remove_unused(model,
                   remove_nids=True, remove_cids=True,

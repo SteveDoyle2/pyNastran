@@ -30,6 +30,11 @@ USAGE_145 = (
     f'[--noline] [--nopoints] [--ncol NCOL] {EXPORTS} '
     '[--modal IVEL MODE] [--freq_tol FREQ_TOL]  [--mag_tol MAG_TOL]\n'
 )
+USAGE_144 = (
+    'Usage:\n'
+    '  f06 plot_144 F06_FILENAME SUBPANEL_CAERO_FILENAME\n'
+)
+
 USAGE_200 = (
     'Usage:\n'
     '  f06 plot_200 F06_FILENAME\n'
@@ -37,6 +42,68 @@ USAGE_200 = (
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.f06.flutter_response import FlutterResponse
+
+def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
+                       log: Optional[SimpleLogger]=None):
+    """the interface to ``f06 plot_144`` on the command line"""
+    import os
+    from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
+    if argv is None:  # pragma: no cover
+        argv = sys.argv
+
+    # is_gui = '--gui' in argv
+    # if is_gui:
+    #     argv.remove('--gui')
+    #     from pyNastran.f06.dev.flutter.gui_flutter import main as gui_flutter
+    #
+    # if len(argv) == 2 and is_gui:
+    #     gui_flutter()
+    #     return
+
+    msg = (
+        USAGE_144 +
+        '  f06 plot_144 -h | --help\n'
+        '  f06 plot_144 -v | --version\n'
+        '\n'
+
+        'Positional Arguments:\n'
+        '  F06_FILENAME             path to input F06 file\n'
+        '  SUBPANEL_CAERO_FILENAME  path to input CAERO file\n'
+        '\n'
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+        '\n'
+        'Examples:\n'
+        '  f06 plot_144 model.f06\n'
+
+    )
+    if len(argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    assert docopt_version >= '0.9.0', docopt_version
+    data = docopt(msg, version=ver, argv=argv[1:])
+    f06_filename = data['F06_FILENAME']
+    subpanel_caero_filename = data['SUBPANEL_CAERO_FILENAME']
+
+    dirname = os.path.dirname(f06_filename)
+    loads_filename = os.path.join(dirname, 'loads.inc')
+    base = os.path.splitext(f06_filename)[0]
+    if f06_filename.lower().endswith(('.bdf', '.op2')):
+        f06_filename = base + '.f06'
+    from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
+    nid_csv_filename = os.path.join(dirname, 'nid_pyNastran.csv')
+    eid_csv_filename = os.path.join(dirname, 'eid_pyNastran.csv')
+    loads = f06_to_pressure_loads(f06_filename,
+                                  subpanel_caero_filename,
+                                  loads_filename,
+                                  nid_csv_filename=nid_csv_filename,
+                                  eid_csv_filename=eid_csv_filename,
+                                  log=None,
+                                  nlines_max=1_000_000,
+                                  debug=False)
+    return loads
 
 def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
                           log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
@@ -478,8 +545,9 @@ def cmd_line(argv=None, plot: bool=True, show: bool=True,
         argv = sys.argv
 
     msg = (
-        USAGE_145 + USAGE_200 +
+        USAGE_144 + USAGE_145 + USAGE_200 +
         '\n'
+        '  f06 plot_144 -h | --help\n'
         '  f06 plot_145 -h | --help\n'
         '  f06 plot_200 -h | --help\n'
         '  f06 -v | --version\n'
@@ -489,7 +557,9 @@ def cmd_line(argv=None, plot: bool=True, show: bool=True,
         sys.exit(msg)
 
     #assert sys.argv[0] != 'bdf', msg
-    if argv[1] == 'plot_145':
+    if argv[1] == 'plot_144':
+        cmd_line_plot_trim(argv=argv, plot=plot, show=show, log=log)
+    elif argv[1] == 'plot_145':
         cmd_line_plot_flutter(argv=argv, plot=plot, show=show, log=log)
     elif argv[1] == 'plot_200':
         cmd_line_plot_optimization(argv=argv, plot=plot, show=show, log=log)
