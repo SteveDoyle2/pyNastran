@@ -827,9 +827,7 @@ def cmd_line_inclzip(argv=None, quiet: bool=False) -> None:
     parent_parser.add_argument('inclzip', type=str)
     parent_parser.add_argument('INPUT', help='path to output BDF/DAT/NAS file', type=str)
     parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
-    parent_parser.add_argument('--lax', action='store_false', help='lax card parser')
-    parent_parser.add_argument('--punch', action='store_true', help='assume a punch file')
-    parent_parser.add_argument('--allow_dup', help='allow duplicate cards -> "GRID,CONM2"')
+    _add_parser_arguments(parent_parser, ['--punch', '--lax', '--allow_dup'])
     args = parent_parser.parse_args(args=argv[1:])
     if not quiet:  # pragma: no cover
         print(args)
@@ -1517,11 +1515,10 @@ def cmd_line_rbe3_to_rbe2(argv=None, quiet: bool=False) -> None:
     parser.add_argument('-o', '--out', help='path to output Nastran filename')
 
     file_group = parser.add_mutually_exclusive_group(required=False)
-    file_group.add_argument('--infile', help='run only files listed in the file; overwrites bdf_dirname_filename')
+    file_group.add_argument('--infile', help='defines list of RBE3s to update')
     # file_group.add_argument('--outfile', help='skip run the jobs')
 
-    parser.add_argument('--punch', action='store_true', help='set as a punch file')
-    parser.add_argument('--lax', action='store_true', help='lax card parser')
+    _add_parser_arguments(parser, ['--punch', '--lax'])
     # parser.add_argument('--test', action='store_false', help='skip run the jobs')
     # parser.add_argument('--debug', action='store_true', help='more debugging')
     # parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
@@ -1548,6 +1545,7 @@ def cmd_line_rbe3_to_rbe2(argv=None, quiet: bool=False) -> None:
     # debug = args.debug
 
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.mesh_utils.rbe_tools import rbe3_to_rbe2
     model = BDF(log=log)
     if args.lax:
         log.warning('using lax card parser')
@@ -1564,51 +1562,84 @@ def cmd_line_rbe3_to_rbe2(argv=None, quiet: bool=False) -> None:
     rbe3_to_rbe2(model, eids_to_fix)
     model.write_bdf(bdf_filename_out, write_header=False)
 
-def rbe3_to_rbe2(model: BDF, eids_to_fix: list[int]) -> None:
-    rigid_elements2 = {}
-    from pyNastran.bdf.cards.elements.rigid import RBE2
-    for eid, elem in model.rigid_elements.items():
-        if eid not in eids_to_fix:
-            warnings.warn(f'skipping eid={eid} because its not an element to fix\n{str(elem)}')
-            rigid_elements2[eid] = elem
-            continue
-        if elem.type not in {'RBE3'}:
-            warnings.warn(f'skipping eid={eid} because its not an RBE3\n{str(elem)}')
-            rigid_elements2[eid] = elem
-            continue
+def _add_parser_arguments(parser, args: list[str]) -> None:
+    # parent_parser.add_argument('--lax', action='store_false', help='lax card parser')
+    for arg in args:
+        if arg == '--punch':
+            parser.add_argument('--punch', action='store_true', help='assume a punch file')
+        elif arg == '--lax':
+            parser.add_argument('--lax', action='store_true', help='lax card parser')
+        elif arg == '--allow_dup':
+            parser.add_argument('--allow_dup', help='allow duplicate cards -> "GRID,CONM2"')
+        else:
+            raise RuntimeError(arg)
 
-        # ---RBE3---
-        #   Gijs   : [[4407195, 4407212, 4407280, 4407288]]
-        #   independent_nodes : [4407195, 4407212, 4407280, 4407288]
-        #
-        #   Cmi    : []
-        #   Gmi    : []
-        #   Gmi_node_ids : []
-        #
-        #   comps  : ['123']
-        #   dependent_nodes : [10913]
-        #   eid    : 11913
-        #   nodes  : [4407195, 4407212, 4407280, 4407288, 10913]
-        #   ref_grid_id : 10913
-        #   refc   : '123456'
-        #   refgrid : 10913
-        #   weights : [1.0]
-        #   wt_cg_groups : [(1.0, '123', [4407195, 4407212, 4407280, 4407288])]
-        assert len(elem.Gmi) == 0, elem.Gmi
-        assert elem.comps == ['123'], elem.comps
-        assert elem.refc == '123456', elem.refc
-        assert elem.weights == [1.0], elem.weights
-        assert len(elem.comps) == 1
-        ind = elem.independent_nodes
-        dep = elem.dependent_nodes
-        gn = elem.refgrid  # ind; was dep
-        cm = '123456'
-        Gmi = elem.independent_nodes
-        elem = RBE2(eid, gn, cm, Gmi,
-                    tref=elem.tref, alpha=elem.alpha,
-                    comment=elem.comment.strip())
-        rigid_elements2[eid] = elem
-    model.rigid_elements = rigid_elements2
+def cmd_line_merge_rbe2(argv=None, quiet: bool=False) -> None:
+    """
+    merge_rbe2 filename.bdf
+    """
+    import argparse
+    FILE = os.path.abspath(__file__)
+    if argv is None:
+        argv = sys.argv[1:]  # ['run_jobs'] + sys.argv[2:]
+    else:
+        argv = [FILE] + argv[2:]  # ['run_jobs'] + sys.argv[2:]
+    if not quiet:
+        print(f'argv = {argv}')
+    # print(f'argv = {argv}')
+
+    parser = argparse.ArgumentParser(prog='merge_rbe2')
+    parser.add_argument('bdf_filename', help='path to Nastran filename')
+    parser.add_argument('-o', '--out', help='path to output Nastran filename')
+
+    file_group = parser.add_mutually_exclusive_group(required=False)
+    file_group.add_argument('--infile', help='defines list of RBE2s to update')
+    # file_group.add_argument('--outfile', help='skip run the jobs')
+
+    _add_parser_arguments(parser, ['--punch', '--lax'])
+    # parser.add_argument('--test', action='store_false', help='skip run the jobs')
+    # parser.add_argument('--debug', action='store_true', help='more debugging')
+    # parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
+    parser.add_argument('-v', '--version', action='version',
+                        version=pyNastran.__version__)
+
+    args = parser.parse_args(args=argv[1:])
+    if not quiet:  # pragma: no cover
+        print(args)
+
+    bdf_filename = args.bdf_filename
+    bdf_filename_out = args.out
+    infile = args.infile
+    print(f'infile = {infile!r}')
+
+    from cpylog import SimpleLogger
+    from pyNastran.utils import print_bad_path
+    log = SimpleLogger(level='debug')
+
+    base, ext = os.path.splitext(bdf_filename)
+    if bdf_filename_out is None:
+        bdf_filename_out = f'{base}.out{ext}'
+    assert args.punch is True, args
+    # debug = args.debug
+
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.mesh_utils.rbe_tools import merge_rbe2
+    model = BDF(log=log)
+    if args.lax:
+        log.warning('using lax card parser')
+        model.is_strict_card_parser = False
+    model.read_bdf(bdf_filename, punch=args.punch, xref=False)
+
+    if infile is None:
+        eids_to_fix = list(model.rigid_elements)
+    else:
+        assert os.path.exists(infile), print_bad_path(infile)
+        eids_to_fix = np.loadtxt(infile, dtype='int32').flatten().tolist()
+    log.info(f'eids_to_fix = {eids_to_fix}')
+
+    merge_rbe2(model, eids_to_fix)
+    model.write_bdf(bdf_filename_out, write_header=False)
+
 
 def cmd_line_filter(argv=None, quiet: bool=False) -> None:  # pragma: no cover
     """command line interface to bdf filter"""
@@ -1763,6 +1794,7 @@ CMD_MAPS = {
     'split_cbars_by_pin_flags': cmd_line_split_cbars_by_pin_flag,
     'run_jobs': cmd_line_run_jobs,
     'rbe3_to_rbe2': cmd_line_rbe3_to_rbe2,
+    'merge_rbe2': cmd_line_merge_rbe2,
 
     'export_caero_mesh': cmd_line_export_caero_mesh,
     'transform': cmd_line_transform,
@@ -1815,6 +1847,8 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [-p PIN_FLAGS_CSV_FILENAME]\n'
         '  bdf solid_dof                   IN_BDF_FILENAME\n'
         '  bdf stats                       IN_BDF_FILENAME [--punch]\n'
+        '  bdf rbe3_to_rbe2                IN_BDF_FILENAME [--infile INFILE] [--punch] [--lax]\n'
+        '  bdf merge_rbe2                  IN_BDF_FILENAME [--infile INFILE] [--punch] [--lax]\n'
         '  bdf run_jobs                    BDF_FILENAME_DIRNAME [FILE...] [--exe NASTRAN_PATH] [--infile INFILE] [--outfile OUTFILE] [--test] [--debug] [--cleanup]\n'
     )
 
@@ -1842,6 +1876,9 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf transform          -h | --help\n'
         '  bdf filter             -h | --help\n'
         '  bdf flutter            -h | --help\n'
+        '  bdf rbe3_to_rbe2       -h | --help\n'
+        '  bdf merge_rbe2         -h | --help\n'
+
         '  bdf export_caero_mesh  -h | --help\n'
         '  bdf split_cbars_by_pin_flags    -h | --help\n'
         '  bdf solid_dof                   -h | --help\n'
@@ -1868,6 +1905,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
             func = CMD_MAPS[method]
         except KeyError:
             print(argv)
+            print(f'method={method!r} not found')
             sys.exit(msg)
         func(argv, quiet=quiet)
 

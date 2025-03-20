@@ -281,7 +281,7 @@ def _mass_properties(model: BDF, elements: list[Element], masses: list[int],
             if element.type in mass_inertia:
                 centroid, m, dI = element.centroid_mass_inertia()
                 di_list = [dI[0][0], dI[1][1], dI[2][2], dI[0][1], dI[0][2], dI[1][2]]
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, inertia)
+                mass = increment_inertia(centroid, reference_point, m, mass, cg, inertia)
                 inertia = [i1 + di for i1, di in zip(inertia, di_list)]
                 continue
 
@@ -312,7 +312,7 @@ def _mass_properties(model: BDF, elements: list[Element], masses: list[int],
                 model.log.warning("could not get the inertia for element/property\n%s%s" % (
                     element, element.pid_ref))
                 continue
-            mass = _increment_inertia(p, reference_point, m, mass, cg, inertia)
+            mass = increment_inertia(p, reference_point, m, mass, cg, inertia)
 
     if mass:
         cg /= mass
@@ -402,25 +402,40 @@ def _mass_properties_no_xref(model: BDF, elements: list[int], masses: list[int],
         I = transform_inertia(mass, cg, xyz_ref, xyz_ref2, I)
     return mass, cg, I
 
-def _increment_inertia(centroid: np.ndarray, reference_point: np.ndarray,
-                       m: float, mass: float,
-                       cg: np.ndarray,
-                       inertia: np.ndarray) -> float:
-    """helper method"""
-    if m == 0.:
+def increment_inertia(centroidi: np.ndarray, reference_point: np.ndarray,
+                      massi: float, mass: float,
+                      mass_cg: np.ndarray,
+                      inertia: np.ndarray) -> float:
+    """
+    helper method
+
+    centroidi: (3,) float np.ndarray
+        delta value
+    reference_point : (3,) float np.ndarray
+        origin
+    massi : float
+        delta value
+    mass : float
+        total value
+    mass_cg: (3,) float np.ndarray
+        total value
+    inertia: (6,) float np.ndarray
+        total value; [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+    """
+    if massi == 0.:
         return mass
-    (x, y, z) = centroid - reference_point
+    (x, y, z) = centroidi - reference_point
     x2 = x * x
     y2 = y * y
     z2 = z * z
-    inertia[0] += m * (y2 + z2)  # Ixx
-    inertia[1] += m * (x2 + z2)  # Iyy
-    inertia[2] += m * (x2 + y2)  # Izz
-    inertia[3] += m * x * y      # Ixy
-    inertia[4] += m * x * z      # Ixz
-    inertia[5] += m * y * z      # Iyz
-    mass += m
-    cg += m * centroid
+    inertia[0] += massi * (y2 + z2)  # Ixx
+    inertia[1] += massi * (x2 + z2)  # Iyy
+    inertia[2] += massi * (x2 + y2)  # Izz
+    inertia[3] += massi * x * y      # Ixy
+    inertia[4] += massi * x * z      # Ixz
+    inertia[5] += massi * y * z      # Iyz
+    mass += massi
+    mass_cg += massi * centroidi
     return mass
 
 def mass_properties_nsm(model: BDF, element_ids=None, mass_ids=None, nsm_id=None,
@@ -533,7 +548,7 @@ def mass_properties_nsm(model: BDF, element_ids=None, mass_ids=None, nsm_id=None
     all_mass_ids.sort()
 
     #element_nsms, property_nsms = _get_nsm_data(model, nsm_id, debug=debug)
-    #def _increment_inertia0(centroid, reference_point, m, mass, cg, I):
+    #def increment_inertia0(centroid, reference_point, m, mass, cg, I):
         #"""helper method"""
         #(x, y, z) = centroid - reference_point
         #mass += m
@@ -665,7 +680,7 @@ def _get_mass_nsm(model: BDF,
                 #msg = 'mass_new=%s mass_old=%s\n%s' % (massi, elem.Mass(), str(elem))
                 #raise RuntimeError(msg)
             if eid in element_ids_set:
-                mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, massi, mass, cg, I)
     elif etype == 'CTUBE':
         eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
@@ -684,7 +699,7 @@ def _get_mass_nsm(model: BDF,
                 #msg = 'mass_new=%s mass_old=%s\n%s' % (massi, elem.Mass(), str(elem))
                 #raise RuntimeError(msg)
             if eid in element_ids_set:
-                mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, massi, mass, cg, I)
     elif etype == 'CBAR':
         mass = _get_cbar_mass(
             model, xyz, element_ids_set, all_eids,
@@ -735,7 +750,7 @@ def _get_mass_nsm(model: BDF,
                     str(centroid), str(elem.Centroid()), str(elem))
                 raise RuntimeError(msg)
             if eid in element_ids_set:
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CSHEAR':
         mass = _get_cshear_mass(
@@ -750,7 +765,7 @@ def _get_mass_nsm(model: BDF,
             centroid, m, dI = elem.centroid_mass_inertia()
             di_list = [dI[0][0], dI[1][1], dI[2][2], dI[0][1], dI[0][2], dI[1][2]]
             if eid in mass_ids_set:
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
                 I = [i1 + di for i1, di in zip(I, di_list)]
 
     elif etype in {'CONM1', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'}:
@@ -760,7 +775,7 @@ def _get_mass_nsm(model: BDF,
             m = elem.Mass()
             centroid = elem.Centroid()
             if eid in mass_ids_set:
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
     elif etype == 'CTETRA':
         eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
@@ -776,7 +791,7 @@ def _get_mass_nsm(model: BDF,
                     #str(centroid), str(elem.Centroid()), str(elem))
                 #raise RuntimeError(msg)
             if eid in element_ids_set:
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CPYRAM':
         eids2 = get_sub_eids(all_eids, eids, etype)
@@ -804,7 +819,7 @@ def _get_mass_nsm(model: BDF,
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
                 #elem.eid, 'CPYRAM', m, elem.Rho(), volume))
             if eid in element_ids_set:
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CPENTA':
         eids2 = get_sub_eids(all_eids, eids, etype)
@@ -826,7 +841,7 @@ def _get_mass_nsm(model: BDF,
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
                 #elem.eid, 'CPENTA', m, elem.Rho(), volume))
             if eid in element_ids_set:
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype in ['CHEXA', 'CHEXA1', 'CHEXA2']:
         eids2 = get_sub_eids(all_eids, eids, etype)
@@ -853,7 +868,7 @@ def _get_mass_nsm(model: BDF,
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
                 #elem.eid, 'CHEXA', m, elem.Rho(), volume))
             if eid in element_ids_set:
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CBEND':
         model.log.info('elem.type=%s mass is innaccurate' % etype)
@@ -864,7 +879,7 @@ def _get_mass_nsm(model: BDF,
             m = elem.Mass()
             centroid = elem.Centroid()
             if eid in element_ids_set:
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CQUADX':
         pass
@@ -915,7 +930,7 @@ def _mass_catch_all(model: BDF, etype: str, etypes_skipped: set[str],
             model.log.info('elem.type=%r is not supported in new '
                            'mass properties method' % elem.type)
             if eid in element_ids:
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+                mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype not in etypes_skipped:
             model.log.info('elem.type=%s doesnt have mass' % elem.type)
             etypes_skipped.add(etype)
@@ -948,7 +963,7 @@ def _get_cbar_mass(model: BDF, xyz: dict[int, np.ndarray],
                 #str(centroid), str(elem.Centroid()), str(elem))
             #raise RuntimeError(msg)
         if eid in element_ids_set:
-            mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
+            mass = increment_inertia(centroid, reference_point, massi, mass, cg, I)
     return mass
 
 def _get_cbeam_mass(model, xyz, element_ids, all_eids,
@@ -1231,7 +1246,7 @@ def _get_tri_mass(model: BDF,
                 str(centroid), str(elem.Centroid()), str(elem))
             raise RuntimeError(msg)
         if eid in element_ids:
-            mass = _increment_inertia(centroid, reference_point, massi, mass, cg, inertia)
+            mass = increment_inertia(centroid, reference_point, massi, mass, cg, inertia)
     return mass
 
 def _get_quad_mass(model: BDF, xyz: dict[int, np.ndarray], element_ids: set[int], all_eids: np.ndarray,
@@ -1320,7 +1335,7 @@ def _get_quad_mass(model: BDF, xyz: dict[int, np.ndarray], element_ids: set[int]
             #raise RuntimeError(msg)
         #print('eid=%s type=%s mass=%s; area=%s mpa=%s'  % (elem.eid, elem.type, m, area, mpa))
         if eid in element_ids:
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, inertia)
+            mass = increment_inertia(centroid, reference_point, m, mass, cg, inertia)
     return mass
 
 def _get_cshear_mass(model: BDF,
@@ -1356,7 +1371,7 @@ def _get_cshear_mass(model: BDF,
                 #str(centroid), str(elem.Centroid()), str(elem))
             #raise RuntimeError(msg)
         if eid in element_ids_set:
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
     return mass
 
 def _setup_apply_nsm(area_eids_pids: dict[str, np.ndarray],
@@ -1520,7 +1535,7 @@ def _combine_prop_weighted_area_length_simple(model: BDF,
                 eid, word, areai, nsm_value, m, word, areai))
         #elem = model.elements[eid]
         #assert np.allclose(m, elem.Mass()), elem.get_stats()
-        mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+        mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
     if debug:  # pragma: no cover
         model.log.debug('mass = %s' % mass)
     return mass
@@ -1565,7 +1580,7 @@ def _combine_prop_weighted_area_length(
                 model.log.debug('  %si=%s %s_sum=%s nsm_value=%s mass=%s' % (
                     word, areai*area_sum, word, area_sum, nsm_value, m))
             #assert np.allclose(m, elem.Mass()), elem.get_stats()
-            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+            mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
     return mass
 
 def _apply_nsm(model: BDF, nsm_id: int,
@@ -2044,7 +2059,7 @@ def _nsm1_element(model: BDF, nsm: NSM1,
         #if debug:  # pragma: no cover
             #print('  eid=%s %si=%s %snsm_value=%s mass=%s' % (
                 #eid, word, area_lengthi, area_sum_str, nsm_value, massi))
-        mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
+        mass = increment_inertia(centroid, reference_point, massi, mass, cg, I)
     return mass
 
 def _get_sym_axis(model, sym_axis):

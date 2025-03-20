@@ -182,7 +182,7 @@ def _mass_matrix_rod(model: BDF,
         Mgg[j3, j3] = mass_mat2[5, 5]
 
         #centroid = (xyz[n1] + xyz[n2]) / 2.
-        #mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+        #mass = increment_inertia(centroid, reference_point, m, mass, cg, I)
 
 def _mass_matrix_cmass2(model: BDF,
                        Mgg: sp.sparse.dok_matrix,
