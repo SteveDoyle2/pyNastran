@@ -957,7 +957,7 @@ class RBE2(RigidElementBase):
                  gn: int,  # independent
                  cm: str, Gmi: list[int],  # dependent
                  alpha: float=0.0, tref: float=0.0,
-                 comment: str=''):
+                 comment: str='', sort: bool=False):
         """
         Creates an RBE2 element
 
@@ -982,6 +982,9 @@ class RBE2(RigidElementBase):
         RigidElementBase.__init__(self)
         if comment:
             self.comment = comment
+        if sort:
+            Gmi.sort()
+
         #: Element identification number
         self.eid = eid
 
@@ -1050,7 +1053,6 @@ class RBE2(RigidElementBase):
         for i in range(len(card) - 4 - n):
             gmi = integer(card, j + i, 'Gm%i' % (i + 1))
             Gmi.append(gmi)
-        Gmi.sort()
         return RBE2(eid, gn, cm, Gmi, alpha=alpha, tref=tref, comment=comment)
 
     @classmethod
@@ -1269,7 +1271,8 @@ class RBE3(RigidElementBase):
     def __init__(self, eid: int, refgrid: int, refc: str,
                  weights: list[float], comps: list[str], Gijs: list[int],
                  Gmi=None, Cmi=None,
-                 alpha: float=0.0, tref: float=0.0, comment: str=''):
+                 alpha: float=0.0, tref: float=0.0,
+                 comment: str='', sort: bool=False):
         """
         Creates an RBE3 element
 
@@ -1476,7 +1479,6 @@ class RBE3(RigidElementBase):
                 assert compi is not None
                 assert len(Gij) > 0, Gij
                 assert Gij[0] is not None, Gij
-                Gij.sort()
                 weights.append(wt)
                 comps.append(compi)
                 Gijs.append(Gij)

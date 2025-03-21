@@ -1,13 +1,13 @@
+import warnings
 from collections import defaultdict
 import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.elements.mass import CONM2
-from pyNastran.bdf.cards.elements.rigid import RBE2
+from pyNastran.bdf.cards.elements.rigid import RBE2, RBE3
 from pyNastran.bdf.mesh_utils.mass_properties import increment_inertia, transform_inertia
 
 def rbe3_to_rbe2(model: BDF, eids_to_fix: list[int]) -> None:
     rigid_elements2 = {}
-    from pyNastran.bdf.cards.elements.rigid import RBE2
     for eid, elem in model.rigid_elements.items():
         if eid not in eids_to_fix:
             warnings.warn(f'skipping eid={eid} because its not an element to fix\n{str(elem)}')
@@ -52,6 +52,46 @@ def rbe3_to_rbe2(model: BDF, eids_to_fix: list[int]) -> None:
     model.rigid_elements = rigid_elements2
 
 
+def rbe2_to_rbe3(model: BDF, eids_to_fix: list[int]) -> None:
+    rigid_elements2 = {}
+    for eid, elem in model.rigid_elements.items():
+        if eid not in eids_to_fix:
+            warnings.warn(f'skipping eid={eid} because its not an element to fix\n{str(elem)}')
+            rigid_elements2[eid] = elem
+            continue
+        if elem.type not in {'RBE2'}:
+            warnings.warn(f'skipping eid={eid} because its not an RBE2\n{str(elem)}')
+            rigid_elements2[eid] = elem
+            continue
+
+        # ---RBE2---
+        #   Gmi    : [1, 2]
+        #   cm     : '123456'
+        #   gn     : 10
+        assert len(elem.Gmi) > 0, elem.Gmi
+        assert elem.cm == '123456', elem.cm
+        # ind = elem.independent_nodes
+        # dep = elem.dependent_nodes
+        # gn = elem.refgrid  # ind; was dep
+        # cm = '123456'
+        # Gmi = elem.independent_nodes
+        # elem = RBE2(eid, gn, cm, Gmi,
+        #             tref=elem.tref, alpha=elem.alpha,
+        #             comment=elem.comment.strip())
+        refgrid = elem.gn
+        refc = elem.cm
+        weights = [1.0]
+        comps = ['123']
+        Gijs = [elem.dependent_nodes]
+        elem = RBE3(
+            eid, refgrid, refc, weights, comps, Gijs,
+            alpha=elem.alpha, tref=elem.tref,
+            comment=elem.comment)
+        #print(elem)
+        rigid_elements2[eid] = elem
+    model.rigid_elements = rigid_elements2
+
+
 def merge_rbe2(model: BDF, rbe_eids_to_fix: list[int]) -> None:
     log = model.log
     eid_to_dependent_nodes = {}
@@ -70,19 +110,19 @@ def merge_rbe2(model: BDF, rbe_eids_to_fix: list[int]) -> None:
             dependent_nid_to_eids_map[nid].add(eid)
         nrigid += 1
     dependent_nid_to_eids_map = dict(dependent_nid_to_eids_map)
-    print(f'dependent_nid_to_eids_map = {dependent_nid_to_eids_map}')
+    #print(f'dependent_nid_to_eids_map = {dependent_nid_to_eids_map}')
 
     eid_to_nids_map = get_eid_to_nid_map(eid_to_dependent_nodes, dependent_nid_to_eids_map)
     eid_to_nids_map = get_eid_to_nid_map(eid_to_nids_map, dependent_nid_to_eids_map)
     eid_to_nids_map = get_eid_to_nid_map(eid_to_nids_map, dependent_nid_to_eids_map)
-    print(f'eid_to_nids_map = {eid_to_nids_map}')
+    #print(f'eid_to_nids_map = {eid_to_nids_map}')
 
     nids_to_eids_map = defaultdict(list)
     for eid, nids in eid_to_nids_map.items():
         nids_list = list(nids)
         nids_list.sort()
         nids_to_eids_map[tuple(nids_list)].append(eid)
-    print(f'nids_to_eids_map = {set(nids_to_eids_map)}')
+    #print(f'nids_to_eids_map = {set(nids_to_eids_map)}')
 
     mass_nid_to_elem_map: dict[int, CONM2] = {}
     for eid, mass_elem in model.masses.items():
@@ -188,23 +228,3 @@ def get_eid_to_nid_map(
                 nids2 = eid_to_nids_map[eid2]
                 eid_to_nids_map2[eid].update(nids2)
     return dict(eid_to_nids_map2)
-
-def main():
-    model = BDF()
-    model.add_grid(1, [0., 0., 0.])
-    model.add_grid(2, [0., 0., 0.])
-    model.add_grid(3, [0., 0., 0.])
-    model.add_grid(4, [0., 0., 0.])
-    model.add_grid(5, [0., 0., 0.])
-
-    model.add_grid(10, [0., 0., 0.])
-    model.add_grid(11, [0., 0., 0.])
-    model.add_grid(12, [0., 0., 0.])
-    model.add_rbe2(1, 10, '123456', [1, 2])
-    model.add_rbe2(2, 11, '123456', [2, 3])
-    model.add_rbe2(3, 12, '123456', [4, 5])
-
-    merge_rbe2(model)
-
-if __name__ == '__main__':
-    main()

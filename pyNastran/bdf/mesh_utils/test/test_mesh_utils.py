@@ -40,6 +40,8 @@ from pyNastran.bdf.mesh_utils.map_aero_model import map_aero_model
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
 from pyNastran.bdf.mesh_utils.cmd_line.bdf_merge import cmd_line_merge
 from pyNastran.bdf.mesh_utils.dvxrel import get_dvprel_ndarrays
+from pyNastran.bdf.mesh_utils.rbe_tools import (
+    merge_rbe2, rbe3_to_rbe2, rbe2_to_rbe3)
 
 
 TEST_DIR = (Path(__file__) / '..').resolve()
@@ -51,6 +53,57 @@ np.set_printoptions(edgeitems=3, infstr='inf',
                     linewidth=75, nanstr='nan', precision=3,
                     suppress=True, threshold=1000, formatter=None)
 DIRNAME = Path(os.path.dirname(__file__))
+
+
+class TestRbeTools(unittest.TestCase):
+
+    def test_rbe2_to_rbe3_to_rbe2(self):
+        model = BDF()
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(4, [0., 0., 0.])
+        model.add_grid(5, [0., 0., 0.])
+
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [2., 0., 0.])
+        model.add_conm2(1, 10, 1.0)
+        model.add_conm2(2, 11, 1.0)
+        model.add_conm2(3, 12, 1.0)
+        model.add_rbe2(1, 10, '123456', [1, 2])
+        model.add_rbe2(2, 11, '123456', [2, 3])
+        model.add_rbe2(3, 12, '123456', [4, 5])
+        rbe_eids_to_fix = list(model.rigid_elements)
+        rbe2_to_rbe3(model, rbe_eids_to_fix)
+        rbe3_to_rbe2(model, rbe_eids_to_fix)
+
+    def test_merge_rbe2(self):
+        model = BDF()
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(4, [0., 0., 0.])
+        model.add_grid(5, [0., 0., 0.])
+
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [2., 0., 0.])
+        model.add_conm2(1, 10, 1.0)
+        model.add_conm2(2, 11, 1.0)
+        model.add_conm2(3, 12, 1.0)
+        model.add_rbe2(1, 10, '123456', [1, 2])
+        model.add_rbe2(2, 11, '123456', [2, 3])
+        model.add_rbe2(3, 12, '123456', [4, 5])
+        rbe_eids_to_fix = list(model.rigid_elements)
+        assert len(model.nodes) == 8, len(model.nodes)
+        assert len(model.rigid_elements) == 3, len(model.rigid_elements)
+        assert len(model.masses) == 3, len(model.masses)
+
+        merge_rbe2(model, rbe_eids_to_fix)
+        assert len(model.nodes) == 8, len(model.nodes)
+        assert len(model.rigid_elements) == 2, len(model.rigid_elements)
+        assert len(model.masses) == 2, len(model.masses)
 
 
 class TestMeshUtilsCmdLine(unittest.TestCase):
