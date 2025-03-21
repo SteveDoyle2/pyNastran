@@ -135,6 +135,7 @@ def out_dict_to_results(out_dict: dict,
     for imode, mode in enumerate(modes):
         # g, f(Hz), k
         data = out_dict[mode]
+        print(f'data = {data}')
         g_freq_k = np.array(data, dtype='float64')
         damping = g_freq_k[:, 0]
         freq = g_freq_k[:, 1]
@@ -334,6 +335,15 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
     #  V/VREF  DENSITY     MACH         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
     #  0.0000 0.000+00   0.0000    0.0000   4.502 INFINT    0.0000   4.704 INFINT    0.0000   5.675 INFINT    0.0000   5.970 INFINT
     #  0.0100 1.146-07   0.0100    0.0000   4.502 8.7162    0.0000   4.704 9.1072    0.0000   5.67510.9868   -0.0004   5.96711.5524
+
+    #    UNITS    UNITS    UNITS          MODE NO.145              MODE NO.146              MODE NO.147              MODE NO.148
+    #     NONE   SLIN/   SLIN/        AERODYNAMIC LAG          AERODYNAMIC LAG          AERODYNAMIC LAG          AERODYNAMIC LAG
+    #            IN**3   IN/S**2
+    #    V/VREF  DENSITY    DYN P         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V
+    #    0.0000 0.000+00 0.000+00    0.0000   0.000 INFINT    0.0000   0.000 INFINT    0.0000   0.000 INFINT    0.0000   0.000 INFINT
+    #  12176.50 5.082-08 3.767+00   -2.4527   0.000 0.0000   -2.4527   0.000 0.0000  -184439.   0.000 0.0000  -24662.2   0.003 0.0000
+    #  12702.30 7.284-08 5.876+00   -2.4526   0.000 0.0000   -2.4526   0.000 0.0000  -521511.   0.000 0.0000  0.000000   0.000 0.0000
+    #  13151.00 9.788-08 8.464+00  -516766.   0.000 0.0000  ********   0.000 0.0000   -6.8127   0.000 0.0000   -4.3530   0.000 0.0000
 
 def get_mode_sline(line: str) -> list[int]:
     """

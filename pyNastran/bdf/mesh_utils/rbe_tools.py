@@ -91,21 +91,25 @@ def merge_rbe2(model: BDF, rbe_eids_to_fix: list[int]) -> None:
             continue
         #print(elem.get_stats())
         mass_nid_to_elem_map[mass_elem.nid] = mass_elem
+        mass_elem.cross_reference(model)
 
     for dep_nids_tuple, eids in nids_to_eids_map.items():
         eid0 = eids[0]
         elem0: RBE2 = model.rigid_elements[eid0]
         indep_nid0 = elem0.gn
-        mass_elem0 = mass_nid_to_elem_map[indep_nid0]
+
         log.info(f'eids={eids}; dep_nids={dep_nids_tuple}\n')
         if len(eids) == 1:
             log.debug('skipping\n' + str(elem0))
-            log.debug('\n' + str(mass_elem0))
+            #log.debug('\n' + str(mass_elem0))
             continue
+
+        mass_elem0 = mass_nid_to_elem_map[indep_nid0]
+        mass_node0 = mass_elem0.nid_ref
         log.info('baseline:\n' + str(elem0))
         log.info('\n' + str(mass_elem0))
 
-        comments = []
+        mass_comments = []
         reference_point = np.zeros(3, dtype='float64')
         mass_cg = np.zeros(3, dtype='float64')
         mass = 0.
@@ -117,9 +121,12 @@ def merge_rbe2(model: BDF, rbe_eids_to_fix: list[int]) -> None:
             indep_nid = rigid_elemi.gn
             mass_elem: CONM2 = mass_nid_to_elem_map[indep_nid]
             massi = mass_elem.mass
-            centroidi = mass_elem.X
+            mass_node = mass_elem.nid_ref
+            centroidi = mass_elem.X + mass_node.get_position()
+            log.debug(f'massi={massi}; centroidi={centroidi}')
             I11, I21, I22, I31, I32, I33 = mass_elem.I
             mass = increment_inertia(centroidi, reference_point, massi, mass, mass_cg, inertia)
+            log.debug(f'mass_cg={mass_cg}')
             #[Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
             inertia[0] += I11  # Ixx
             inertia[1] += I22  # Iyy
@@ -128,7 +135,7 @@ def merge_rbe2(model: BDF, rbe_eids_to_fix: list[int]) -> None:
             inertia[4] += I31  # Ixz
             inertia[5] += I32  # Iyz
             if mass_elem.comment:
-                comments.append(mass_elem.comment)
+                mass_comments.append(mass_elem.comment)
 
         # cleanup old elements
         log.warning('removing')
@@ -143,18 +150,30 @@ def merge_rbe2(model: BDF, rbe_eids_to_fix: list[int]) -> None:
             del model.masses[mass_eid]
 
         # update the CONM2 mass
+        log.debug(f'mass = {mass}')
         if mass:
             cg = mass_cg / mass
         else:
             cg = mass_cg
-        print(f'mass = {mass}')
-        mass_elem0.X = cg
+        log.debug(f'cg = {cg}')
+
+        inertia2 = transform_inertia(mass, cg, reference_point, cg, inertia)
+        Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia2
+        mass_comments.append(f'Ixx={Ixx:g} Iyy={Iyy:g} Izz={Izz:g}\nIxy={Ixy:g} Ixz={Ixz:g} Iyz={Iyz:g}\n')
+        if mass_comments:
+            mass_elem0.comment = ''.join(mass_comments[::-1])
+
+        mass_elem0.X = np.zeros(3, dtype='float64')
         mass_elem0.mass = mass
-        mass_elem0.I = inertia
+        mass_node0.comment = f'xyz=[{cg[0]:g},{cg[1]:g},{cg[2]:g}]'
+        mass_node0.xyz = cg
+        # FEMAP Mass Table: 'Ixx, Iyy, Izz, Ixy, Iyz, Izx'
+        mass_elem0.I = [Ixx, Ixy, Iyy, Ixz, Iyz, Izz]
 
         elem0.Gmi = list(dep_nids_tuple)
         log.info('\n' + str(elem0))
         log.info('\n' + str(mass_elem0))
+        log.debug('---------------------')
     return
 
 def get_eid_to_nid_map(
