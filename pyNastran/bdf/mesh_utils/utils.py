@@ -383,12 +383,16 @@ def cmd_line_bin(argv=None, quiet: bool=False) -> None:  # pragma: no cover
     if not quiet:  # pragma: no cover
         print(data)
 
-    import matplotlib.pyplot as plt
     from pyNastran.bdf.bdf import read_bdf
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8')
-
     model = read_bdf(bdf_filename, log=log)
+    bin_model(model, axis1, axis2, cid=cid, nbins=nbins, debug=quiet)
+
+
+def bin_model(model: BDF, axis1: int, axis2: int,
+              cid: int=0, nbins: int=10, debug: bool=False) -> None:
+    import matplotlib.pyplot as plt
     xyz_cid = model.get_xyz_in_coord(cid=cid, fdtype='float64')
     y = xyz_cid[:, axis1]
     z = xyz_cid[:, axis2]
@@ -415,7 +419,7 @@ def cmd_line_bin(argv=None, quiet: bool=False) -> None:  # pragma: no cover
         y1i += dy
     zs_max = np.array(zs_max)
     zs_min = np.array(zs_min)
-    if not quiet:  # pragma: no cover
+    if not debug:  # pragma: no cover
         print('ys = %s' % ys)
         print('zs_max = %s' % zs_max)
         print('zs_min = %s' % zs_min)
@@ -428,7 +432,6 @@ def cmd_line_bin(argv=None, quiet: bool=False) -> None:  # pragma: no cover
     plt.grid(True)
     plt.legend()
     plt.show()
-
 
 
 def cmd_line_renumber(argv=None, quiet: bool=False) -> None:
@@ -674,7 +677,14 @@ def cmd_line_flip_shell_normals(argv=None, quiet: bool=False) -> None:
     model.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
                             nxref_errors=100, stop_on_xref_error=False)
     model = read_bdf(bdf_filename, punch=punch, log=log, xref=False)
+    flip_shell_normals(model, zero_zoffset)
+    model.write_bdf(bdf_filename_out, encoding=None,
+                    size=size, nodes_size=16, elements_size=8, loads_size=8,
+                    is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
 
+
+def flip_shell_normals(model: BDF, zero_zoffset: float) -> None:
+    log = model.log
     skip_elements = {
         # nothing to convert (verified)
         'CCONEAX',
@@ -696,7 +706,6 @@ def cmd_line_flip_shell_normals(argv=None, quiet: bool=False) -> None:
 
         # acoustic
         'CHACAB',
-
     }
 
     shells = {
@@ -713,10 +722,6 @@ def cmd_line_flip_shell_normals(argv=None, quiet: bool=False) -> None:
             pass
         else:
             log.warning(f'cannot flip {elem_type}')
-
-    model.write_bdf(bdf_filename_out, encoding=None,
-                    size=size, nodes_size=16, elements_size=8, loads_size=8,
-                    is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
 
 
 def cmd_line_convert(argv=None, quiet: bool=False) -> None:
@@ -1562,6 +1567,73 @@ def cmd_line_rbe3_to_rbe2(argv=None, quiet: bool=False) -> None:
     rbe3_to_rbe2(model, eids_to_fix)
     model.write_bdf(bdf_filename_out, write_header=False)
 
+
+def cmd_line_rbe2_to_rbe3(argv=None, quiet: bool=False) -> None:
+    """
+    rbe3_to_rbe2 filename.bdf
+    """
+    import argparse
+    FILE = os.path.abspath(__file__)
+    if argv is None:
+        argv = sys.argv[1:]  # ['run_jobs'] + sys.argv[2:]
+    else:
+        argv = [FILE] + argv[2:]  # ['run_jobs'] + sys.argv[2:]
+    if not quiet:
+        print(f'argv = {argv}')
+    # print(f'argv = {argv}')
+
+    parser = argparse.ArgumentParser(prog='rbe2_to_rbe3')
+    parser.add_argument('bdf_filename', help='path to Nastran filename')
+    parser.add_argument('-o', '--out', help='path to output Nastran filename')
+
+    file_group = parser.add_mutually_exclusive_group(required=False)
+    file_group.add_argument('--infile', help='defines list of RBE3s to update')
+    # file_group.add_argument('--outfile', help='skip run the jobs')
+
+    _add_parser_arguments(parser, ['--punch', '--lax'])
+    # parser.add_argument('--test', action='store_false', help='skip run the jobs')
+    # parser.add_argument('--debug', action='store_true', help='more debugging')
+    # parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
+    parser.add_argument('-v', '--version', action='version',
+                        version=pyNastran.__version__)
+
+    args = parser.parse_args(args=argv[1:])
+    if not quiet:  # pragma: no cover
+        print(args)
+
+    bdf_filename = args.bdf_filename
+    bdf_filename_out = args.out
+    infile = args.infile
+    print(f'infile = {infile!r}')
+
+    from cpylog import SimpleLogger
+    from pyNastran.utils import print_bad_path
+    log = SimpleLogger(level='debug')
+
+    base, ext = os.path.splitext(bdf_filename)
+    if bdf_filename_out is None:
+        bdf_filename_out = f'{base}.out{ext}'
+    assert args.punch is True, args
+    # debug = args.debug
+
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.mesh_utils.rbe_tools import rbe2_to_rbe3
+    model = BDF(log=log)
+    if args.lax:
+        log.warning('using lax card parser')
+        model.is_strict_card_parser = False
+    model.read_bdf(bdf_filename, punch=args.punch, xref=False)
+
+    if infile is None:
+        eids_to_fix = list(model.rigid_elements)
+    else:
+        assert os.path.exists(infile), print_bad_path(infile)
+        eids_to_fix = np.loadtxt(infile, dtype='int32').flatten().tolist()
+    log.info(f'eids_to_fix = {eids_to_fix}')
+    rbe2_to_rbe3(model, eids_to_fix)
+    model.write_bdf(bdf_filename_out, write_header=False)
+
+
 def _add_parser_arguments(parser, args: list[str]) -> None:
     # parent_parser.add_argument('--lax', action='store_false', help='lax card parser')
     for arg in args:
@@ -1794,6 +1866,7 @@ CMD_MAPS = {
     'split_cbars_by_pin_flags': cmd_line_split_cbars_by_pin_flag,
     'run_jobs': cmd_line_run_jobs,
     'rbe3_to_rbe2': cmd_line_rbe3_to_rbe2,
+    'rbe2_to_rbe3': cmd_line_rbe2_to_rbe3,
     'merge_rbe2': cmd_line_merge_rbe2,
 
     'export_caero_mesh': cmd_line_export_caero_mesh,
