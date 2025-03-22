@@ -1541,7 +1541,7 @@ def cmd_line_rbe3_to_rbe2(argv=None, quiet: bool=False) -> None:
     base, ext = os.path.splitext(bdf_filename)
     if bdf_filename_out is None:
         bdf_filename_out = f'{base}.out{ext}'
-    assert args.punch is True, args
+    #assert args.punch is True, args
     # debug = args.debug
 
     from pyNastran.bdf.bdf import BDF

@@ -9050,12 +9050,18 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_dmig_object(dmig)
         return dmig
 
-    def add_dmi_w2gj(self, tin: int, tout: int, nrows: int,
-                GCj, GCi, Real, comment: str='') -> DMI:
-        """Creates a DMI,W2GJ card"""
+    def add_dmi_w2gj(self, tin: int, tout: int,
+                     nrows: int, GCj,
+                     Real, comment: str='') -> DMI:
+        """
+        Creates a DMI,W2GJ card. The angle in radians is defined at:
+         - CAERO1: 1/2 chord, 1/2 span
+         - CAERO2: 1/2 chord
+        """
         name = 'W2GJ'
         form = 'rectangular'
         ncols = 1
+        GCi = np.ones(nrows, dtype='int32')
         dmi = DMI(name, form, tin, tout, nrows, ncols, GCj, GCi, Real,
                   comment=comment)
         self._add_methods._add_dmi_object(dmi)

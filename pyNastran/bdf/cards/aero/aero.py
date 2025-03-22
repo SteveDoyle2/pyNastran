@@ -2603,7 +2603,7 @@ class CAERO2(BaseCard):
             raise KeyError('Field %r is an invalid CAERO2 entry.' % n)
         return out
 
-    def _update_field_helper(self, n, value):
+    def _update_field_helper(self, n: int, value):
         """
         Updates complicated parameters on the CAERO2 card
 
@@ -2740,7 +2740,7 @@ class CAERO2(BaseCard):
         assert isinstance(self.igroup, integer_types) and self.igroup > 0, f'CAERO2: igroup={self.igroup}'
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CAERO2 card from ``BDF.add_card(...)``
 
@@ -2777,7 +2777,7 @@ class CAERO2(BaseCard):
             return self.cp_ref.cid
         return self.cp
 
-    def Pid(self):
+    def Pid(self) -> int:
         if self.pid_ref is not None:
             return self.pid_ref.pid
         return self.pid
@@ -2793,23 +2793,23 @@ class CAERO2(BaseCard):
             aefact_ids.append(lint)
         return aefact_ids
 
-    def Lsb(self):  # AEFACT
+    def Lsb(self) -> Optional[int]:  # AEFACT
         if self.lsb_ref is not None:
             return self.lsb_ref.sid
         return self.lsb
 
-    def Lint(self):  # AEFACT
+    def Lint(self) -> Optional[int]:  # AEFACT
         if self.lint_ref is not None:
             return self.lint_ref.sid
         return self.lint
 
     @property
-    def nboxes(self):
+    def nboxes(self) -> int:
         if self.nsb > 0:
             return self.nsb
         return len(self.lsb_ref.fractions) # AEFACT
 
-    def _init_ids(self, dtype='int32'):
+    def _init_ids(self, dtype: str='int32'):
         self.box_ids = np.arange(0, self.nboxes, dtype=dtype)
 
     def cross_reference(self, model: BDF) -> None:
@@ -2859,7 +2859,7 @@ class CAERO2(BaseCard):
         self.lsb_ref = None
         self.ascid_ref = None
 
-    def get_points(self):
+    def get_points(self) -> tuple[np.ndarray, np.ndarray]:
         """creates a 1D representation of the CAERO2"""
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
@@ -2867,6 +2867,23 @@ class CAERO2(BaseCard):
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
         return [p1, p2]
+
+    def get_panel_npoints_nelements(self) -> tuple[int, int]:
+        station = self.get_station()
+        nx = len(station) - 1
+        npoints = len(station)
+        return npoints, nx
+
+    def get_station(self) -> np.ndarray:
+        if self.nsb == 0:
+            station = self.lsb_ref.fractions
+            nx = len(station) - 1
+            #print('xstation = ', xstation)
+        else:
+            nx = self.nsb
+            station = np.linspace(0., nx, num=nx+1) # *dx?
+        assert nx > 0, 'nx=%s' % nx
+        return station
 
     def get_points_elements_3d(self):
         """
@@ -2877,6 +2894,8 @@ class CAERO2(BaseCard):
 
         """
         paero2 = self.pid_ref
+        station_new = self.get_station()
+        nx_new = len(station_new) - 1
 
         if self.nsb == 0:
             xstation = self.lsb_ref.fractions
@@ -2886,7 +2905,7 @@ class CAERO2(BaseCard):
             nx = self.nsb
             station = np.linspace(0., nx, num=nx+1) # *dx?
         assert nx > 0, 'nx=%s' % nx
-
+        assert nx == nx_new, (nx, nx_new)
 
         #print('paero2 - pid=%s lrsb=%s lrib=%s' % (paero2.pid, paero2.lrsb, paero2.lrib))
         if paero2.lrsb in [0, None]:
@@ -2948,7 +2967,7 @@ class CAERO2(BaseCard):
         assert xyz is not None, str(self)
         return xyz, elems
 
-    def set_points(self, points):
+    def set_points(self, points: tuple[np.ndarray, np.ndarray]):
         self.p1 = np.asarray(points[0])
         p2 = np.asarray(points[1])
         x12 = p2 - self.p1

@@ -74,9 +74,19 @@ class TestRbeTools(unittest.TestCase):
         model.add_rbe2(1, 10, '123456', [1, 2])
         model.add_rbe2(2, 11, '123456', [2, 3])
         model.add_rbe2(3, 12, '123456', [4, 5])
+        bdf_filename1 = DIRNAME / 'rbe3_test_1.bdf'
+        bdf_filename2 = DIRNAME / 'rbe3_test_2.bdf'
+        bdf_filename3 = DIRNAME / 'rbe3_test_3.bdf'
+        model.write_bdf(bdf_filename1)
         rbe_eids_to_fix = list(model.rigid_elements)
         rbe2_to_rbe3(model, rbe_eids_to_fix)
         rbe3_to_rbe2(model, rbe_eids_to_fix)
+        args = ['bdf', 'rbe3_to_rbe2', str(bdf_filename1), '-o', str(bdf_filename2)]
+        cmd_line(args, quiet=True)
+        args = ['bdf', 'rbe3_to_rbe2', str(bdf_filename2), '-o', str(bdf_filename3)]
+        cmd_line(args, quiet=True)
+        for fname in [bdf_filename1, bdf_filename2, bdf_filename3]:
+            os.remove(fname)
 
     def test_merge_rbe2(self):
         model = BDF()
@@ -321,9 +331,8 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         tin = tout = 'float32'
         nrows = 1
         GCj = [101]
-        GCi = [1]
         Real = [np.radians(5.)]
-        model.add_dmi_w2gj(tin, tout, nrows, GCj, GCi, Real)
+        model.add_dmi_w2gj(tin, tout, nrows, GCj, Real)
         #print(model.caeros)
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_subpanels.bdf',
                 '--pid', 'aesurf', '--subpanels']
