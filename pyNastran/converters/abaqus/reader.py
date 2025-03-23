@@ -1328,7 +1328,7 @@ def read_generic_section(iline: int, line0: str, lines: list[str],
     line = ''
     lines_out = []
     line = lines[iline]
-    while '*' not in line:
+    while '*' not in line and iline < len(lines):
         lines_out.append(line)
         iline += 1
         line = lines[iline]

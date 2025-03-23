@@ -19,7 +19,7 @@ from pyNastran.bdf.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
     PLOAD, PLOAD2, PLOAD4)
 from pyNastran.bdf.cards.thermal.loads import TEMP, QVOL, QBDY1, QBDY2, QBDY3, QHBDY
-from pyNastran.bdf.cards.aero.aero import CAERO1, SPLINE1
+from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2, SPLINE1
 from pyNastran.bdf.cards.bdf_sets import SET1 #, SET3
 from pyNastran.bdf.bdf import BDF, MPC
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
@@ -876,9 +876,14 @@ def _mirror_aero(model: BDF,
      - AEROS
       - doesn't consider sideslip
      - CAERO1
+      - flips the normal (p1/p4)
       - doesn't consider sideslip
       - considers Cp
       - considers lchord/lspan/nchord/nspan
+      - considers W2GJ
+     - CAERO2
+      - considers orient
+      - considers W2GJ
      - SPLINE1
        - handle boxes
      - SET1
@@ -895,7 +900,7 @@ def _mirror_aero(model: BDF,
      - AERO
      - AEFORCE
      - AEPRES
-     - CAERO2/3/4/5
+     - CAERO3/4/5
      - PAERO1/2/3/4/5
      - AESURFS
 
@@ -939,7 +944,6 @@ def _mirror_aero(model: BDF,
         w2gj0 = model.dmi['W2GJ'].Real
     if ncaero_subpanels:
         w2gj = [w2gj0]
-    print(f'w2gj = {w2gj}')
 
     isubpanel_offset = 0
     caero_id_offset = 0
@@ -992,6 +996,35 @@ def _mirror_aero(model: BDF,
                 # we flip the normal so if we ever use W2GJ it's going to be consistent
                 caero_new.flip_normal()
                 caeros.append(caero_new)
+            elif caero.type == 'CAERO2':
+                npoints, nelements = caero.get_panel_npoints_nelements()
+                p1 = caero.get_leading_edge_points()[0]
+                p1 = p1.copy()
+
+                w2gji = w2gj0[isubpanel_offset:isubpanel_offset+nelements]
+                #print(f'w2gji = {w2gji}')
+                isubpanel_offset += nelements
+                if plane == 'xz': # flip the y
+                    if np.allclose(p1[1], 0.):
+                        log.error(f'skipping {plane} symmetric panel; p1={p1}')
+                        continue
+                    p1[1] *= -1.
+                elif plane == 'xy':
+                    if np.allclose(p1[2], 0.):
+                        log.error(f'skipping {plane} symmetric panel; p1={p1}')
+                        continue
+                    p1[2] *= -1.
+                else:  # pragma: no cover
+                    raise NotImplementedError(f'plane={plane!r} not supported in CAERO1')
+                eid2 = caero.eid + caero_id_offset
+                caero_new = CAERO2(
+                    eid2, caero.pid, caero.igroup,
+                    p1, caero.x12, cp=0,
+                    nsb=caero.nsb, lsb=caero.lsb,
+                    nint=caero.nint, lint=caero.lint)
+                w2gj.append(w2gji)
+                caeros.append(caero_new)
+
             else:  # pragma: no cover
                 log.error('skipping (only supports CAERO1):\n%s' % caero.rstrip())
 
@@ -1001,7 +1034,6 @@ def _mirror_aero(model: BDF,
     if len(w2gj):
         hstack_w2gj = np.hstack(w2gj)
         abs_w2gj = np.abs(hstack_w2gj)
-        print(f'abs_w2gj = {abs_w2gj}')
         if abs_w2gj.max() > 0.:
             dmi_w2gj = model.dmi['W2GJ']
             nrows = len(hstack_w2gj)

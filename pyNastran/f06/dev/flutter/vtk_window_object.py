@@ -130,7 +130,7 @@ class VtkWindowObject:
             'dt_ms': self.dt_ms,
             'nphase': self.nphase,
         }
-        print(f'data = {data}')
+        #print(f'data = {data}')
         if self.window_shown in {True, False}:
             self.window_shown = True
             self.window.set_data(data)

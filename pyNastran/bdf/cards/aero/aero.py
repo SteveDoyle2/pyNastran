@@ -2633,8 +2633,10 @@ class CAERO2(BaseCard):
         x12 = 10.
         return CAERO2(eid, pid, igroup, p1, x12, cp=0, nsb=0, nint=0, lsb=0, lint=0, comment='')
 
-    def __init__(self, eid, pid, igroup, p1, x12,
-                 cp=0, nsb=0, nint=0, lsb=0, lint=0, comment=''):
+    def __init__(self, eid: int, pid: int, igroup: int,
+                 p1: np.ndarray, x12: float,
+                 cp: int=0, nsb: int=0, nint: int=0,
+                 lsb: int=0, lint: int=0, comment: str=''):
         """
         Defines a CAERO2 card, which defines a slender body
         (e.g., fuselage/wingtip tank).
@@ -2867,6 +2869,9 @@ class CAERO2(BaseCard):
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
         return [p1, p2]
+
+    def get_leading_edge_points(self) -> [np.ndarray]:
+        return [self.get_points()[0]]
 
     def get_panel_npoints_nelements(self) -> tuple[int, int]:
         station = self.get_station()

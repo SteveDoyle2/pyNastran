@@ -24,11 +24,12 @@ if TYPE_CHECKING:
 
 
 SKIP_ATTRS = {
-    'active_filenames', 'allow_duplicate_element_rbe_mass',
+    'active_filenames', 'include_filenames',
+    'allow_duplicate_element_rbe_mass',
     'allow_overwrites_set', 'card_count', 'has_enddata',
     'cards_to_read', 'case_control_deck', 'case_control_lines',
     'executive_control_lines', 'debug', 'is_bdf_vectorized',
-    'is_msc', 'is_nx', 'is_optistruct', 'is_nasa95', 
+    'is_msc', 'is_nx', 'is_optistruct', 'is_nasa95',
     'is_zona', 'is_mystran',
     'is_superelements',
     'is_strict_card_parser', 'nid_map',
@@ -100,7 +101,7 @@ def bdf_remove_comments(bdf_filename: PathLike | BDF | StringIO,
                     # dict[card]
                     assert hasattr(value, 'comment'), (attr, value)
                     value.comment = ''
- 
+
         elif isinstance(dict_list_scalar, PathLike):
             pass
         else:
