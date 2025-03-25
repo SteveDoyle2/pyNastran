@@ -193,9 +193,13 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             mesh_form='combined', is_folder=False, print_stats=False,
             encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
-            nerrors=0, dev=False, crash_cards=None, safe_xref=True, run_pickle=False, safe=False,
-            stop_on_failure=True):
+            quiet: bool=False, dumplines: bool=False,
+            dictsort: bool=False, run_extract_bodies: bool=False,
+            nerrors=0, dev: bool=False,
+            crash_cards=None,
+            cards_to_ignore=None,
+            safe_xref: bool=True, run_pickle: bool=False, safe: bool=False,
+            stop_on_failure: bool=True):
     """
     Runs a single BDF
 
@@ -253,6 +257,11 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         False : doesn't crash; useful for running many tests
     run_pickle : bool; default=True
         tests pickling
+    crash_cards: list[str]; default=None
+        crash on cards to find specific cards
+    cards_to_ignore: list[str]; default=None
+        don't read specific cards
+
     """
     if not quiet:
         print('debug = %s' % debug)
@@ -260,6 +269,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         dynamic_vars = {}
     if crash_cards is None:
         crash_cards = []
+    if cards_to_ignore is None:
+        cards_to_ignore = []
 
     # TODO: why do we need this?
     bdf_model = str(bdf_filename)
@@ -279,7 +290,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         stop=stop, nastran=nastran, post=post,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
-        nerrors=nerrors, dev=dev, crash_cards=crash_cards,
+        nerrors=nerrors, dev=dev,
+        crash_cards=crash_cards,
+        cards_to_ignore=cards_to_ignore,
         safe_xref=safe_xref,
         run_extract_bodies=run_extract_bodies, run_pickle=run_pickle,
         stop_on_failure=stop_on_failure,
@@ -288,20 +301,26 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
 def run_and_compare_fems(
         bdf_model, out_model, debug=False, xref=True, check=True,
-        punch=False, mesh_form='combined',
-        print_stats=False, encoding=None,
-        sum_load=True, size=8, is_double=False,
-        stop=False, nastran='', post=-1, dynamic_vars=None,
-        quiet=False, dumplines=False, dictsort=False,
-        nerrors=0, dev=False, crash_cards=None,
-        safe_xref=True, run_extract_bodies=False, run_pickle=False,
-        stop_on_failure=True,
+        punch: bool=False, mesh_form: str='combined',
+        print_stats: bool=False, encoding=None,
+        sum_load: bool=True, size: int=8, is_double: bool=False,
+        stop: bool=False,
+        nastran='', post: int=-1,
+        dynamic_vars=None,
+        quiet: bool=False, dumplines: bool=False, dictsort: bool=False,
+        nerrors=0, dev=False,
+        crash_cards=None, cards_to_ignore=None,
+        safe_xref: bool=True,
+        run_extract_bodies: bool=False, run_pickle: bool=False,
+        stop_on_failure: bool=True,
     ):
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
     fem1 = BDF(debug=debug, log=None)
 
+    if cards_to_ignore:
+        fem1.disable_cards(cards_to_ignore)
     fem1.set_error_storage(nparse_errors=nerrors, stop_on_parsing_error=True,
                            nxref_errors=nerrors, stop_on_xref_error=True)
     if dynamic_vars:
@@ -1027,7 +1046,7 @@ def test_bdfv_argparse(argv=None):
 
     args2 = argparse_to_dict(args)
     optional_args = [
-        'double', 'large', 'crash', 'quiet', 'profile',
+        'double', 'large', 'crash', 'ignore', 'quiet', 'profile',
         'xref', 'safe', 'check', 'punch', 'loads', 'stop', 'encoding',
         'dumplines', 'dictsort', 'nerrors', 'pickle', 'hdf5',
     ]
@@ -1056,6 +1075,9 @@ def main():
     crash_cards = []
     if data['--crash']:
         crash_cards = data['--crash'].split(',')
+    cards_to_ignore = []
+    if data['--ignore']:
+        cards_to_ignore = data['--ignore'].split(',')
 
     #print(data)
     debug = True
@@ -1084,6 +1106,7 @@ def main():
             nerrors=data['--nerrors'],
             encoding=data['--encoding'],
             crash_cards=crash_cards,
+            cards_to_ignore=cards_to_ignore,
             run_extract_bodies=False,
             run_pickle=data['--pickle'],
             safe_xref=data['--safe'],
@@ -1128,6 +1151,7 @@ def main():
             nerrors=data['--nerrors'],
             encoding=data['--encoding'],
             crash_cards=crash_cards,
+            cards_to_ignore=cards_to_ignore,
             run_extract_bodies=False,
             run_pickle=data['--pickle'],
             safe_xref=data['--safe'],

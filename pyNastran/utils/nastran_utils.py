@@ -114,12 +114,15 @@ def _get_keywords_list(keywords: Optional[str | list[str] |
                     continue
                 keywords_list.append(f'{keyword}={value}')
 
+    allowed_keywords = list(KEYWORDS_CHECK) + ['parallel', 'mem', 'sdirectory']
+    allowed_keywords.sort()
     for keyword_value in keywords_list:
-        keyword, value = keyword_value.upper().split('=', 1)
+        keyword, value = keyword_value.split('=', 1)
+        keyword = keyword.lower()
         if keyword == 'parallel':
             value_int = int(value)
         elif keyword == 'mem':
-            assert value.endswith(('MB', 'GB')), value
+            assert value.upper().endswith(('MB', 'GB')), value
             num_str = value[:-2]
             num = float(num_str)
         elif keyword == 'sdirectory':
@@ -129,5 +132,5 @@ def _get_keywords_list(keywords: Optional[str | list[str] |
             expected_values = KEYWORDS_CHECK[keyword]
             assert value.lower() in expected_values, f'keyword={keyword} value={value}; expected={expected_values}'
         else:
-            warnings.warn(f'unsupported keyword; {keyword!r}={value!r}')
+            warnings.warn(f'unsupported keyword; {keyword!r}={value!r}; allowed={allowed_keywords}')
     return keywords_list

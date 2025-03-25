@@ -292,7 +292,8 @@ def run_bdf(folder: str, bdf_filename: str,
             run_skin_solids: bool=True,
             run_export_caero: bool=True,
             save_file_structure: bool=False,
-            nerrors=0, dev: bool=False, crash_cards=None,
+            nerrors=0, dev: bool=False,
+            crash_cards=None, cards_to_ignore=None,
             safe_xref: bool=False, run_pickle: bool=False,
             version: Optional[str]=None,
             validate_case_control: bool=True,
@@ -356,6 +357,10 @@ def run_bdf(folder: str, bdf_filename: str,
         False : doesn't crash; useful for running many tests
     run_pickle : bool; default=True
         tests pickling
+    crash_cards: list[str]; default=None
+        crash on cards to find specific cards
+    cards_to_ignore: list[str]; default=None
+        don't read specific cards
 
     """
     if not quiet:
@@ -364,6 +369,8 @@ def run_bdf(folder: str, bdf_filename: str,
         dynamic_vars = {}
     if crash_cards is None:
         crash_cards = []
+    if cards_to_ignore is None:
+        cards_to_ignore = []
 
     bdf_model = bdf_filename
     if not quiet:
@@ -383,7 +390,8 @@ def run_bdf(folder: str, bdf_filename: str,
         stop=stop, nastran=nastran, post=post, hdf5=hdf5,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
-        nerrors=nerrors, dev=dev, crash_cards=crash_cards,
+        nerrors=nerrors, dev=dev,
+        crash_cards=crash_cards, cards_to_ignore=cards_to_ignore,
         safe_xref=safe_xref,
         version=version,
         limit_mesh_opt=limit_mesh_opt,
@@ -428,6 +436,7 @@ def run_and_compare_fems(
         nerrors: int=0,
         dev: bool=False,
         crash_cards=None,
+        cards_to_ignore=None,
         version: Optional[str]=None,
         limit_mesh_opt: bool=False,
         safe_xref: bool=True,
@@ -459,6 +468,8 @@ def run_and_compare_fems(
 
     fem1.set_error_storage(nparse_errors=nerrors, stop_on_parsing_error=True,
                            nxref_errors=nerrors, stop_on_xref_error=True)
+    if cards_to_ignore:
+        fem1.disable_cards(cards_to_ignore)
     if dynamic_vars:
         fem1.set_dynamic_syntax(dynamic_vars)
 
@@ -2166,6 +2177,8 @@ def test_bdf_argparse(argv=None):
     #'Developer:\n'
     parent_parser.add_argument('--crash', nargs=1, type=str,
                                help='Crash on specific cards (e.g. CGEN,EGRID)')
+    parent_parser.add_argument('--ignore', nargs=1, type=str,
+                                  help='Ignores specific cards (e.g. DMI,RBE2)\n')
 
     parent_parser.add_argument('--dumplines', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
@@ -2260,7 +2273,7 @@ def get_test_bdf_usage_args_examples(encoding):
     formats = '--msc|--nx|--optistruct|--nasa95|--mystran'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
-        f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
+        f'              [--ignore I] [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
         '              [--skip_loads] [--skip_mass] [--lax] [--duplicate]\n'
     )
     usage = (
@@ -2305,6 +2318,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '\n'
         'Developer:\n'
         '  --crash C     Crash on specific cards (e.g. CGEN,EGRID)\n'
+        '  --ignore I    Ignores specific cards (e.g. DMI,PBAR)\n'
         '  --stop        Stop after first read/write (default=False)\n'
         '  --dumplines   Writes the BDF exactly as read with the INCLUDEs processed\n'
         '                (pyNastran_dump.bdf)\n'
@@ -2362,11 +2376,16 @@ def main(argv=None):
     else:
         size = 8
 
+    #print(data)
     crash_cards = []
     if data['crash']:
         crash_cards = data['crash'].split(',')
+    cards_to_ignore = []
+    if data['ignore']:
+        ignore_data = data['ignore']
+        assert len(ignore_data) == 1, data
+        cards_to_ignore = ignore_data[0].split(',')
 
-    #print(data)
     debug = True
     if data['quiet']:
         debug = None
@@ -2402,6 +2421,7 @@ def main(argv=None):
             nerrors=data['nerrors'],
             encoding=data['encoding'],
             crash_cards=crash_cards,
+            cards_to_ignore=cards_to_ignore,
             run_pickle=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
@@ -2454,6 +2474,7 @@ def main(argv=None):
             nerrors=data['nerrors'],
             encoding=data['encoding'],
             crash_cards=crash_cards,
+            cards_to_ignore=cards_to_ignore,
             run_pickle=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],

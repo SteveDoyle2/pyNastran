@@ -960,6 +960,8 @@ class StrainEnergy:
         self.cgap_strain_energy = {}
         self.cdum8_strain_energy = {}
         self.cbush_strain_energy = {}
+        self.cbush1d_strain_energy = {}
+        self.cbush2d_strain_energy = {}
         #self.chexa8fd_strain_energy = {}
         self.dmig_strain_energy = {}
         self.genel_strain_energy = {}
@@ -990,7 +992,7 @@ class StrainEnergy:
             'cbar_strain_energy', 'cbeam_strain_energy', 'cbeam3_strain_energy',
 
             'cgap_strain_energy',
-            'cbush_strain_energy',
+            'cbush_strain_energy', 'cbush1d_strain_energy', 'cbush2d_strain_energy',
             'celas1_strain_energy', 'celas2_strain_energy',
             'celas3_strain_energy', 'celas4_strain_energy',
 

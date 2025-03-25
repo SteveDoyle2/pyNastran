@@ -56,6 +56,8 @@ RESULT_NAME_MAP = {
 
     'GAP' : 'cgap',
     'BUSH' : 'cbush',
+    'BUSH1D' : 'cbush1d',
+    'BUSH2D' : 'cbush2d',
     'ELAS1' : 'celas1',
     'ELAS2' : 'celas2',
     'ELAS3' : 'celas3',

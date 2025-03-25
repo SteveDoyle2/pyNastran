@@ -27,7 +27,7 @@ def stl_to_nastran(stl_filename: PathLike | STL,
         model.read_stl(stl_filename)
     elif isinstance(stl_filename, STL):
         model = stl_filename
-    else:
+    else:  # pragma: no cover
         raise TypeError('stl_filename must be a string or STL; type=%s' % type(stl_filename))
 
     nid = nnodes_offset + 1

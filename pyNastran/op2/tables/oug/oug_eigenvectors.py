@@ -64,7 +64,7 @@ class RealEigenvectorArray(RealTableArray):
         assert np.allclose(data, data2)
         self.data = data
 
-    def get_phi(self):
+    def get_phi(self) -> np.ndarray:
         """
         gets the eigenvector matrix
 
@@ -81,7 +81,7 @@ class RealEigenvectorArray(RealTableArray):
         return phi_transpose.T
 
     @classmethod
-    def phi_to_data(cls, phi):
+    def phi_to_data(cls, phi: np.ndarray) -> np.ndarray:
         """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
         ndof, nmodes = phi.shape
         nnodes = ndof // 6
@@ -90,10 +90,38 @@ class RealEigenvectorArray(RealTableArray):
         data = phi2.reshape(nmodes, nnodes, 6)
         return data
 
-    def set_phi(self, phi):
+    def set_phi(self, phi: np.ndarray) -> None:
         """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
         self.data = self.phi_to_data(phi)
 
+    def mac(self, obj) -> np.ndarray:
+        """
+        Parameters
+        ----------
+        obj : RealEigenvectorArray
+            defines the phi2 matrix
+
+        Returns
+        -------
+        mac_matrix: (nmodes1, nnodes2) float array
+            the MAC matrix
+
+        It is important to note that the mode shapes should be normalized
+        before calculating the MAC. Also, the number of degrees of
+        freedom (rows) in both mode shape matrices must be the same.
+
+        """
+        phi1 = self.get_phi()
+        phi2 = self.get_phi()
+        nmodes1, ndof1 = phi1.shape
+        nmodes2, ndof2 = phi1.shape
+        assert ndof1 == ndof2, (ndof1, ndof2)
+        mac_matrix = np.zeros((nmodes1, nmodes2), dtype='float64')
+        for i in range(nmodes1):
+            for j in range(nmodes2):
+                #mac_matrix[i, j]= np.abs(phia[:, i].T @ phib[:, j])**2 / ((phia[:, i].T @ phia[:, i]) * (phib[:, j].T @ phib[:, j]))
+                mac_matrix[i, j] = np.abs(phi1[:, i].T @ phi2[:, j])**2 / ((phi1[:, i].T @ phi1[:, i]) * (phi2[:, j].T @ phi2[:, j]))
+        return mac_matrix
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):

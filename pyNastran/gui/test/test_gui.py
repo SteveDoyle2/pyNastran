@@ -61,6 +61,7 @@ class FakeGUI(FakeGUIMethods, NastranIO):
         elif hasattr(self, load_geometry_name):
             # self.load_nastran_geometry(bdf_filename, None)
             getattr(self, load_geometry_name)(input_filename)
+            cls = self
         else:
             msg = f"load_geometry_name={load_geometry_name} doesn't exist"
             raise NotImplementedError(msg)

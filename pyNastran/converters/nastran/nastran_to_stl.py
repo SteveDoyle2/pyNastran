@@ -9,6 +9,7 @@ defines:
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.converters.stl.stl import STL
+from pyNastran.utils import PathLike
 
 def nastran_to_stl_filename(bdf_filename, stl_filename, is_binary=False, log=None):
     """Converts a Nastran model to an STL"""
@@ -33,7 +34,7 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_o
         should the code stop if an error is encountered
 
     """
-    if isinstance(bdf_filename, str):
+    if isinstance(bdf_filename, PathLike):
         model = read_bdf(bdf_filename, log=log)
     else:
         model = bdf_filename
