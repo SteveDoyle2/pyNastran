@@ -1328,9 +1328,12 @@ def read_generic_section(iline: int, line0: str, lines: list[str],
     line = ''
     lines_out = []
     line = lines[iline]
-    while '*' not in line and iline < len(lines):
+    while '*' not in line:
         lines_out.append(line)
         iline += 1
+        if iline == len(lines):
+            # hack if the deck isn't closed off
+            break
         line = lines[iline]
 
     if require_lines_out:

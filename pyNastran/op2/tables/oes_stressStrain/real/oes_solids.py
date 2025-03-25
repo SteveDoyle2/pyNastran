@@ -120,6 +120,28 @@ class RealSolidArray(OES_Object):
         self.data[:, :, :6] *= 1. / factor
         self.update_data_components()
 
+    def slice_data(self, slice_elements: np.ndarray) -> int:
+        assert slice_elements is not None, slice_elements
+        eids = self.element_cid[:, 0]
+        common_eids = np.intersect1d(eids, slice_elements)
+        icommon = np.searchsorted(eids, common_eids)
+        ntotal = len(icommon)
+        ncommon = ntotal
+
+        neids = self.element_cid.shape[0]
+        nnodes_per_element = self.nnodes_per_element
+        self.element_cid = self.element_cid[icommon, :]
+        element_node = self.element_node.reshape(neids, nnodes_per_element, 2)
+        self.element_node = element_node[icommon, :].reshape(ncommon*nnodes_per_element, 2)
+
+        ntime, neids_nnodes_per_element, nresults = self.data.shape
+        data = self.data.reshape(ntime, neids, nnodes_per_element, nresults)
+        data_slice = data[:, icommon, :, :]
+        self.data = data_slice.reshape(ntime, ncommon * nnodes_per_element, nresults)
+        self.ntotal = ntotal
+        return ntotal
+
+
     def build(self):
         """sizes the vectorized attributes of the RealSolidArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))

@@ -2,6 +2,8 @@ import os
 import numpy as np
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+
 
 def map_caero(bdf_filename: PathLike):
     model = read_bdf(bdf_filename, xref=False)
@@ -10,19 +12,41 @@ def map_caero(bdf_filename: PathLike):
     neid = len(model.elements)
     nodes, xyz = model_to_node_xyz(model)
     out = model_to_tri_quads(model, nodes, xyz)
-    quad_centroid = out['CQUAD4']['centroid']
-    x = quad_centroid[:, 0]
-    z = quad_centroid[:, 2]
-    quad_pressure = np.sin(x/1000)*10 + z * 100.
+    quad = out['CQUAD4']
+    quad_area = quad['area']
+    quad_centroid = quad['centroid']
+    quad_normal = quad['normal']
+    tri = out['CTRIA3']
+    tri_area = tri['area']
+    tri_centroid = tri['centroid']
+    tri_normal = tri['normal']
+
+    area = np.hstack([tri_area, quad_area])
+    centroid = np.vstack([tri_centroid, quad_centroid])
+    normal = np.vstack([tri_normal, quad_normal])
+
+    x = centroid[:, 0]
+    z = centroid[:, 2]
+    pressure = np.sin(x/1000)*10 + z * 100.
+    force = (pressure * area)[:, np.newaxis] * normal
+    print(centroid.shape, force.shape)
+    moment = np.cross(centroid, force, axis=1)
 
     #-----------------------------------------------
     base, ext = os.path.splitext(bdf_filename)
     caero_bdf_filename = f'{base}.caero{ext}'
-    from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+    int_pts_list = []
+    for caero_id, caero in model.caeros.items():
+        caero.cross_reference(model)
+        int_pt = caero.panel_integration_point()
+        int_pts_list.extend(int_pt)
+    int_pts = np.vstack(int_pts_list)
+
     export_caero_mesh(model, caero_bdf_filename, is_subpanel_model=True,
                       write_panel_xyz=False)
-    caero_model = read_bdf(caero_bdf_filename, xref=False)
+
     #-----------------------------------------------
+    caero_model = read_bdf(caero_bdf_filename, xref=False)
     caero_nodes, caero_xyz = model_to_node_xyz(caero_model)
     quad_to_tri_model(caero_model)
     out_caero = model_to_tri_quads(caero_model, caero_nodes, caero_xyz)
@@ -31,9 +55,37 @@ def map_caero(bdf_filename: PathLike):
     assert len(tri_nodes) > 0
     itri_nodes = np.searchsorted(caero_nodes, tri_nodes)
     tri_centroid = tri['centroid']
-    n1 = caero_xyz[itri_nodes[:, 0], :]
-    n2 = caero_xyz[itri_nodes[:, 1], :]
-    n3 = caero_xyz[itri_nodes[:, 2], :]
+    caero_xyz1 = caero_xyz[itri_nodes[:, 0], :]
+    caero_xyz2 = caero_xyz[itri_nodes[:, 1], :]
+    caero_xyz3 = caero_xyz[itri_nodes[:, 2], :]
+
+    # n1 = tri_xyz[:, 0, :]
+    # n2 = tri_xyz[:, 1, :]
+    # n3 = tri_xyz[:, 2, :]
+    # in1 = point_in_trangle(xyz1, caero_xyz1, caero_xyz2, caero_xyz3)
+    # in2 = point_in_trangle(xyz2, caero_xyz1, caero_xyz2, caero_xyz3)
+    # in3 = point_in_trangle(xyz3, caero_xyz1, caero_xyz2, caero_xyz3)
+
+    # xyz1 = quad_xyz[:, 0, :]
+    # xyz2 = quad_xyz[:, 1, :]
+    # xyz3 = quad_xyz[:, 2, :]
+    # xyz4 = quad_xyz[:, 3, :]
+    i = 0
+    for caero_xyz1i, caero_xyz2i, caero_xyz3i in zip(caero_xyz1, caero_xyz2, caero_xyz3):
+        icross = i // 2
+        ref_pt = int_pts[icross, :]
+        assert caero_xyz1i.shape == (3, ), caero_xyz1i.shape
+        ini = point_in_trangle(
+            centroid,
+            caero_xyz1i,
+            caero_xyz2i,
+            caero_xyz3i)
+        if ini is None:  # TODO: bug?
+            continue
+        dxyz = centroid[ini, :] - ref_pt[np.newaxis, :]
+        dforce = force[ini, :]
+        dmoment = np.cross(dxyz, dforce, axis=1)
+        i += 1
     assert len(tri_centroid) > 0
 
 def quad_to_tri_model(model: BDF) -> None:
@@ -101,6 +153,7 @@ def model_to_tri_quads(model: BDF,
         assert tri_centroid.shape == (ntri, 3), (ntri, tri_xyz.shape)
         out['CTRIA3'] = {
             'nodes': tri_nodes,
+            'xyz': tri_xyz,
             'centroid': tri_centroid,
             'area': tri_area,
             'normal': tri_normal,
@@ -123,23 +176,42 @@ def model_to_tri_quads(model: BDF,
         assert quad_centroid.shape == (nquad, 3), (nquad, quad_xyz.shape)
         out['CQUAD4'] = {
             'nodes': quad_nodes,
+            'xyz': quad_xyz,
             'centroid': quad_centroid,
             'area': quad_area,
             'normal': quad_normal,
         }
     return out
 
-def point_in_trangle(xyz, xyz1, xyz2, xyz3):
+def point_in_trangle(xyz: np.ndarray,
+                     xyz1: np.ndarray,
+                     xyz2: np.ndarray,
+                     xyz3: np.ndarray):
     x = xyz[:, 0]
     y = xyz[:, 1]
-    x1 = xyz1[:, 0]
-    x2 = xyz2[:, 0]
-    x3 = xyz3[:, 0]
-    y1 = xyz1[:, 1]
-    y2 = xyz2[:, 1]
-    y3 = xyz3[:, 1]
+    x1 = xyz1[0]
+    x2 = xyz2[0]
+    x3 = xyz3[0]
+    y1 = xyz1[1]
+    y2 = xyz2[1]
+    y3 = xyz3[1]
+    dx23 = x2 - x3
+    dx21 = x2 - x1
+    dy21 = y2 - y1
+    dy32 = y3 - y2
+    dx31 = x3 - x1
+    dy31 = y3 - y1
+    denom = dx23*dy21 - dx21*dy31
+    if denom == 0.:
+        return None
+    # print('denom =', denom)
+    u = (dx23*(y-y1) - (x-x1)*dy21) / denom
+    v = (dx31*(y-y2) - (x-x2)*dy32) / denom
 
     #Calculate u, v using the following formulas:
-    u = ((x2-x3)(y-y1) - (x-x1)(y2-y1)) / ((x2-x3)(y2-y1) - (x2-x1)(y3-y1))
-    v = ((x3-x1)(y-y2) - (x-x2)(y3-y2)) / ((x2-x3)(y2-y1) - (x2-x1)(y3-y1))
+    # u = ((x2-x3)(y-y1) - (x-x1)(y2-y1)) / ((x2-x3)(y2-y1) - (x2-x1)(y3-y1))
+    # v = ((x3-x1)(y-y2) - (x-x2)(y3-y2)) / ((x2-x3)(y2-y1) - (x2-x1)(y3-y1))
     #If u >= 0, v >= 0, and 1-u-v >= 0, then P is inside the triangle.
+    w = 1 - u - v
+    in_tri = ((u >= 0) & (v >= 0) & (w >= 0))
+    return in_tri

@@ -2483,6 +2483,44 @@ class CAERO1(BaseCard):
         self.p1 = np.asarray(self.p1)
         self.p4 = np.asarray(self.p4)
 
+    def panel_integration_point(self) -> np.ndarray:
+        """
+        Finally, consider the j-set of aerodynamic control points.
+        The j-set is not a user set; it is a notational set to
+        identify aerodynamic matrices used in the solution processing.
+        Physically, these are points on the structure where the downwash
+        vectors are computed. As with the k-set, the location of these
+         points is a function of the aerodynamic method employed:
+        - For Doublet-Lattice boxes, the control point is at the
+          75% chordwise station and spanwise center of the box (CAERO1; M<1)
+        - For ZONA51 boxes, the control point is at the
+          95% chordwise station and the spanwise center of the box (CAERO1; M>1)
+        - For Doublet-Lattice interference and slender body elements,
+          the control point is along the axis of the element and at
+          50% of its length  (CAERO2)
+        - For all other theories, the aerodynamic control points are
+          at the same physical location as the aerodynamic grid points
+          discussed above
+        """
+        if self.cp_ref is None:
+            assert self.cp is None, f'cp={self.cp}; cp_ref=None'
+        points, elements = self.panel_points_elements()
+        n1 = elements[:, 0]
+        n2 = elements[:, 1]
+        n3 = elements[:, 2]
+        n4 = elements[:, 3]
+        p1 = points[n1, :]
+        p4 = points[n2, :]
+        p2 = points[n3, :]
+        p3 = points[n4, :]
+        le = (p1 + p4) * 0.5  # halfspan
+        te = (p2 + p3) * 0.5
+        chord = te[:, 0] - le[:, 0]
+
+        int_pt = le.copy()
+        int_pt[:, 0] += chord * 0.75
+        return int_pt
+
     def shift(self, dxyz) -> None:
         """shifts the aero panel"""
         self.p1 += dxyz

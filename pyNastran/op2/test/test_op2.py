@@ -148,6 +148,8 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
             dev: bool=False, xref_safe: bool=False,
             post: Any=None, load_as_h5: bool=False,
             is_testing: bool=False,
+            slice_nodes=None,
+            slice_elements=None,
             name: str='') -> tuple[OP2, bool]:
     """
     Runs an OP2
@@ -337,6 +339,11 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
         op2.object_methods()
         if not combine:
             op2.get_key_order()
+
+        if slice_nodes is not None:
+            op2.slice_data(slice_nodes, slice_elements)
+            op2_nv.slice_data(slice_nodes, slice_elements)
+
         if not quiet:
             print(f'---stats for {op2_filename}---')
             print(op2.get_op2_stats(short=short_stats))
@@ -564,6 +571,8 @@ def get_test_op2_data(argv=None) -> dict[str, str]:
     parent_parser.add_argument('-f', '--write_f06', action='store_true', help="Writes the f06 to fem.test_op2.f06")
     parent_parser.add_argument('-d', '--write_hdf5', action='store_true', help="Writes the h5 to fem.test_op2.h5")
     parent_parser.add_argument('-o', '--write_op2', action='store_true', help="Writes the op2 to fem.test_op2.op2")
+    parent_parser.add_argument('--node', help="Limits the results based on nodes (e.g., displacement)")
+    parent_parser.add_argument('--element', help="Limits the results based on elements (e.g., stress)")
 
     parent_parser.add_argument('-z', '--is_mag_phase', action='store_true', help="F06 Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)")
     parent_parser.add_argument('--load_hdf5', action='store_true', help='loads the data into an HDF5 file')
@@ -582,8 +591,9 @@ def get_test_op2_data(argv=None) -> dict[str, str]:
 
     nasa95 = '|--nasa95' if is_dev else ''
     version = f'[--nx|--autodesk{nasa95}]'
-    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
-    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5]'
+    pre_options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [--node NIDFILE] [--element EIDFILE]'
+    #options = f'{pre_options} [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
+    options = f'{pre_options} [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5]'
     if is_dev:
         line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
     else:
@@ -654,7 +664,7 @@ def get_test_op2_data(argv=None) -> dict[str, str]:
         #sys.exit(msg)
 
     from pyNastran.utils.arg_handling import argparse_to_dict, update_message # swap_key
-    update_message(parent_parser, usage, args, examples)
+    #update_message(parent_parser, usage, args, examples)
 
     #try:
         #args = parent_parser.parse_args(args=argv)
@@ -682,8 +692,9 @@ def get_test_op2_data(argv) -> dict[str, str]:
     msg = "Usage:  "
     nasa95 = '|--nasa95' if is_dev else ''
     version = f'[--nx|--optistruct|--autodesk{nasa95}]'
-    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
-    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5] [--debug]'
+    pre_options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [--node NIDFILE] [--element EIDFILE]'
+    #options = f'{pre_options} [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
+    options = f'{pre_options} [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5] [--debug]'
     if is_dev:
         line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
     else:
@@ -717,6 +728,8 @@ def get_test_op2_data(argv) -> dict[str, str]:
         "                         Real/Imaginary (still stores Real/Imag); [default: False]\n"
         "  --load_hdf5            Load as HDF5 (default=False)\n"
         "  -p, --pandas           Enables pandas dataframe building; [default: False]\n"
+        "  --node NIDFILE         Limits the results based on nodes (e.g., displacement)\n"
+        "  --element EIDFILE      Limits the results based on elements (e.g., stress)\n"
         "  --debug                Sets the debug flag [default: False]\n"
     )
     if is_dev:
@@ -752,7 +765,7 @@ def get_test_op2_data(argv) -> dict[str, str]:
 
     data = docopt(msg, version=ver, argv=argv[1:])
     data2 = _update_data2(data, is_dev)
-    #print("data", data)
+    print("data", data)
     return data2
 
 def _update_data(data, is_dev: bool):
@@ -773,7 +786,7 @@ def _update_data(data, is_dev: bool):
         data['subcase'] = None
     return data
 
-def _update_data2(data, is_dev: bool):
+def _update_data2(data: dict[str, Any], is_dev: bool):
     if not is_dev:
         # just set the defaults for these so we don't need special code later
         data['--profile'] = False
@@ -828,6 +841,12 @@ def set_versions(op2s: list[OP2],
         for op2 in op2s:
             op2.post = -4
 
+def loadtxt_if_data(filename) -> Optional[np.ndarray]:
+    if filename is None:
+        return None
+    ids = np.loadtxt(filename, dtype='int32')
+    return ids
+
 def main(argv=None, show_args: bool=True) -> None:
     """the interface for test_op2"""
     if argv is None:  # pragma: no cover
@@ -841,6 +860,9 @@ def main(argv=None, show_args: bool=True) -> None:
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
 
+    #print(data)
+    slice_nodes = loadtxt_if_data(data['node'])
+    slice_elements = loadtxt_if_data(data['element'])
     time0 = time.time()
 
     if data['profile']:
@@ -874,6 +896,8 @@ def main(argv=None, show_args: bool=True) -> None:
             safe=data['safe'],
             post=data['post'],
             is_testing=data['test'],
+            slice_nodes=slice_nodes,
+            slice_elements=slice_elements,
         )
         prof.dump_stats('op2.profile')
 
@@ -910,6 +934,8 @@ def main(argv=None, show_args: bool=True) -> None:
             xref_safe=data['safe'],
             post=data['post'],
             is_testing=data['test'],
+            slice_nodes=slice_nodes,
+            slice_elements=slice_elements,
         )
     print("dt = %f" % (time.time() - time0))
 

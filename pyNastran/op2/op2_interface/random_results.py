@@ -115,7 +115,7 @@ class RandomObjects:
         self.ctria6_composite_strain = {}
         self.ctriar_composite_strain = {}
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             'displacements', 'velocities', 'accelerations', 'pressures',
             'load_vectors', 'spc_forces', 'mpc_forces',
@@ -153,9 +153,11 @@ class RandomObjects:
             'cbush_force',
             'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
             'cvisc_force',
-
         ]
+        if not include_class:
+            return tables
         return [self.prefix + table + self.postfix for table in tables]
+
 
 class PSDObjects:
     """storage class for the ATO objects"""
