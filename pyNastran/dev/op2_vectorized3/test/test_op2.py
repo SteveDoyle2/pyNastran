@@ -256,7 +256,7 @@ def run_op2(op2_filename: str, make_geom: bool=False,
 
     debug_file = None
     model = os.path.splitext(op2_filename)[0]
-    if binary_debug or write_op2:
+    if binary_debug:  # or write_op2:
         debug_file = model + '.debug.out'
     #print('debug_file = %r' % debug_file, os.getcwd())
 
@@ -365,6 +365,7 @@ def run_op2(op2_filename: str, make_geom: bool=False,
             if total_case_count > 0:
                 #print('------------------------------')
                 op2a = OP2(debug_file='debug.out', log=log)
+                op2a = OP2(log=log)
                 op2a.log.debug(f'testing written OP2: {op2_filename2}')
                 op2a.use_vector = False
                 op2a.read_op2(op2_filename2)
