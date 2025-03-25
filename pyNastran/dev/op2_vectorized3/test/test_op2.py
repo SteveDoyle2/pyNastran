@@ -547,6 +547,8 @@ def get_test_op2_data(argv) -> dict[str, str]:
         "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
         "  -d, --write_hdf5       Writes the h5 to fem.test_op2.h5\n"
         "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
+        "  --node NIDFILE         Limits the results based on nodes (e.g., displacement)\n"
+        "  --element EIDFILE      Limits the results based on elements (e.g., stress)\n"
         "  -z, --is_mag_phase     F06 Writer writes Magnitude/Phase instead of\n"
         "                         Real/Imaginary (still stores Real/Imag); [default: False]\n"
         "  --load_hdf5            Load as HDF5 (default=False)\n"

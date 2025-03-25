@@ -135,7 +135,7 @@ def out_dict_to_results(out_dict: dict,
     for imode, mode in enumerate(modes):
         # g, f(Hz), k
         data = out_dict[mode]
-        print(f'data = {data}')
+        #print(f'data = {data}')
         g_freq_k = np.array(data, dtype='float64')
         damping = g_freq_k[:, 0]
         freq = g_freq_k[:, 1]
@@ -442,6 +442,7 @@ def split_flutter_values(line: str,
     """
     '   V/VREF  DENSITY     MACH         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V         G   F(HZ) K=WL/V'
     '   0.0000 0.000+00   0.0000    0.0000   9.738 INFINT    0.0000  10.169 INFINT    0.0000  12.790 INFINT    0.0000  15.084 INFINT'
+
     Parameters
     ----------
     line
@@ -488,6 +489,9 @@ def split_flutter_values(line: str,
             continue
         if value in {'INFINT', '+INFINT'}:
             value_out = np.inf #'INFINT'
+        elif '*' in value:
+            assert value == '********', f'value_out={value_out!r}; values2={values2}'
+            value_out = np.nan
         else:
             try:
                 value_out = cast_float(value)

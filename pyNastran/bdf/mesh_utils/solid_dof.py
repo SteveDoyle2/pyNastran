@@ -7,7 +7,8 @@ import numpy as np
 
 def solid_dof(bdf_filename: BDF | PathLike,
               nid_filename: Optional[PathLike]=None,
-              spc_id: int=100) -> tuple[BDF, np.ndarray]:
+              spc_id: int=100,
+              log=None) -> tuple[BDF, np.ndarray]:
     """
     Get all solid nodes not associated with other elements
 
@@ -25,9 +26,7 @@ def solid_dof(bdf_filename: BDF | PathLike,
     else:
         base, ext = os.path.splitext(bdf_filename)
         nid_filename = base + '.solid_dof_constraint.blk'
-        model = BDF()
-        model.is_strict_card_parser = False
-        model.read_bdf(bdf_filename, xref=False)
+        read_bdf(bdf_filename, log=log, xref=False)
     #nids = np.array(list(model.nodes), dtype='int32')
 
     log = model.log

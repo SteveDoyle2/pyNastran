@@ -29,6 +29,8 @@ from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, T
 from pyNastran.bdf.cards.aero.utils import build_trim_load_cases
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh # build_structure_from_caero
+from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
+
 
 IS_MATPLOTLIB = False
 if IS_MATPLOTLIB:
@@ -64,6 +66,93 @@ class TestAero(unittest.TestCase):
      * PAERO1 / PAERO2 / PAERO3
      * SPLINE1 / SPLINE2 / SPLINE4 / SPLINE5
     """
+
+    def test_caero1_symmetric(self):
+        """
+        verifies flipping the caero1 flips
+        the order of p1/p4
+        """
+        model = BDF(debug=False)
+        igroup = 1
+        p1 = [0., 0., 0.]
+        x12 = 2.
+        p4 = [0., 5., 0.]
+        x43 = 1.
+        model.add_aeros(1.0, 1.0, 1.0)
+        caero = model.add_caero1(
+            1001, 1, igroup,
+            p1, x12, p4, x43, nspan=5, nchord=5)
+        model.add_paero1(1)
+        assert np.allclose(caero.p1, p1), caero.p1
+        npoints, nelements = caero.get_panel_npoints_nelements()
+        assert np.allclose(npoints, 36), npoints
+        assert np.allclose(nelements, 25), nelements
+        tin = tout = 'float32'
+        GCj = np.arange(1, 25+1)
+        assert len(GCj) == 25
+        assert GCj.min() == 1
+        assert GCj.max() == 25
+        Real = np.ones(nelements, dtype='float64') * 1.2
+        nrow = len(GCj)
+        dmi = model.add_dmi_w2gj(
+            tin, tout,
+            nrow, GCj, Real,
+            comment='w2gj')
+
+        bdf_mirror(model)
+        assert len(model.paeros) == 1, model.paeros
+        assert len(model.caeros) == 2, model.caeros
+        assert list(model.caeros) == [1001, 2026], model.caeros
+        caerob = model.caeros[2026]
+        assert np.allclose(caerob.p1, p1), caerob.p1
+        npoints, nelements = caerob.get_panel_npoints_nelements()
+        assert np.allclose(npoints, 36), npoints
+        assert np.allclose(nelements, 25), nelements
+        dmi2 = model.dmi['W2GJ']
+        assert dmi2.nrows == 50, dmi2
+
+    def test_caero2_symmetric(self):
+        model = BDF(debug=False)
+        igroup = 1
+        p1 = [0., 1., 0.]
+        x12 = 2.
+        model.add_aeros(1.0, 1.0, 1.0)
+        caero = model.add_caero2(
+            1001, 1, igroup, p1, x12,
+            nint=1, nsb=7)
+        thi = []
+        thn = []
+        model.add_paero2(
+            1, 'XZ', 4.0, 1.0,
+            thi, thn,
+        )
+        assert np.allclose(caero.p1, p1), caero.p1
+        npoints, nelements = caero.get_panel_npoints_nelements()
+        assert np.allclose(npoints, 8), npoints
+        assert np.allclose(nelements, 7), nelements
+        tin = tout = 'float32'
+        GCj = np.arange(1, 7+1)
+        assert len(GCj) == 7
+        assert GCj.min() == 1
+        assert GCj.max() == 7
+        Real = np.ones(nelements, dtype='float64') * 1.2
+        nrow = len(GCj)
+        dmi = model.add_dmi_w2gj(
+            tin, tout,
+            nrow, GCj, Real,
+            comment='w2gj')
+
+        bdf_mirror(model)
+        assert len(model.paeros) == 1, model.paeros
+        assert len(model.caeros) == 2, model.caeros
+        assert list(model.caeros) == [1001, 1007], model.caeros
+        caerob = model.caeros[1007]
+        assert np.allclose(caerob.p1, [0., -1., 0.]), caerob.p1
+        npoints, nelements = caerob.get_panel_npoints_nelements()
+        assert np.allclose(npoints, 8), npoints
+        assert np.allclose(nelements, 7), nelements
+        dmi2 = model.dmi['W2GJ']
+        assert dmi2.nrows == 14, dmi2
 
     def test_aestat_1(self):
         log = SimpleLogger(level='warning')

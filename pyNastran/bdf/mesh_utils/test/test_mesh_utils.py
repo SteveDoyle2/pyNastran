@@ -74,9 +74,19 @@ class TestRbeTools(unittest.TestCase):
         model.add_rbe2(1, 10, '123456', [1, 2])
         model.add_rbe2(2, 11, '123456', [2, 3])
         model.add_rbe2(3, 12, '123456', [4, 5])
+        bdf_filename1 = DIRNAME / 'rbe3_test_1.bdf'
+        bdf_filename2 = DIRNAME / 'rbe3_test_2.bdf'
+        bdf_filename3 = DIRNAME / 'rbe3_test_3.bdf'
+        model.write_bdf(bdf_filename1)
         rbe_eids_to_fix = list(model.rigid_elements)
         rbe2_to_rbe3(model, rbe_eids_to_fix)
         rbe3_to_rbe2(model, rbe_eids_to_fix)
+        args = ['bdf', 'rbe3_to_rbe2', str(bdf_filename1), '-o', str(bdf_filename2)]
+        cmd_line(args, quiet=True)
+        args = ['bdf', 'rbe3_to_rbe2', str(bdf_filename2), '-o', str(bdf_filename3)]
+        cmd_line(args, quiet=True)
+        for fname in [bdf_filename1, bdf_filename2, bdf_filename3]:
+            os.remove(fname)
 
     def test_merge_rbe2(self):
         model = BDF()
@@ -106,29 +116,10 @@ class TestRbeTools(unittest.TestCase):
         assert len(model.masses) == 2, len(model.masses)
 
 
-class TestMeshUtilsCmdLine(unittest.TestCase):
+class TestMeshUtilsAero(unittest.TestCase):
     def test_bwb_caero_map(self):
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         map_caero(bdf_filename)
-
-    def test_inclzip_bwb(self):
-        """tests ``inclzip``"""
-        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
-        args = ['bdf', 'inclzip', str(bdf_filename)]
-        cmd_line(args, quiet=True)
-
-    def test_stats_bwb(self):
-        """tests ``stats``"""
-        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
-        args = ['bdf', 'stats', str(bdf_filename)]
-        cmd_line(args, quiet=True)
-
-    # def test_free_edges_bwb(self):
-    #     """tests ``free_edges``"""
-    #     bdf_filename = BWB_PATH / 'bwb_saero.bdf'
-    #     args = ['bdf', 'free_edges', str(bdf_filename)]
-    #     cmd_line(args, quiet=True)
-
 
     def test_map_aero_model(self):
         """tests ``map_aero_model``"""
@@ -143,104 +134,6 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
 
         map_aero_model(model_old, model_new, bdf_filename_out,
                        remove_new_aero_cards=True)
-
-    def test_bdf_stats(self):
-        """tests ```bdf stats```"""
-        bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
-        args = ['bdf', 'stats', str(bdf_filename)]
-        cmd_line(args, quiet=True)
-
-    def test_bdf_diff(self):
-        """tests ```bdf diff```"""
-        bdf_filename1 = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
-        bdf_filename2 = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.bdf'
-        args = ['bdf', 'diff', str(bdf_filename1), str(bdf_filename2)]
-        cmd_line(args, quiet=True)
-
-    def test_free_edges(self):
-        """Finds the free_edges
-
-        4-----3---5
-        |   / |
-        |  /  |
-        | /   |
-        1-----2
-        """
-        log = SimpleLogger(level='warning')
-        model = BDF(debug=False, log=log, mode='msc')
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [1., 1., 0.])
-        model.add_grid(4, [0., 1., 0.])
-        model.add_grid(5, [1., 1., 1.])  # 1,3,5
-        model.add_ctria3(1, 1, [1, 2, 3])
-
-
-        edges1 = free_edges(model, eids=None, maps=None)
-        edges2 = non_paired_edges(model, eids=None, maps=None)
-        assert edges1 == [(1, 2), (2, 3), (1, 3)]
-        assert edges2 == [(1, 2), (2, 3), (1, 3)]
-
-        edges1 = free_edges(model, eids=[1], maps=None)
-        edges2 = non_paired_edges(model, eids=[1], maps=None)
-        assert edges1 == [(1, 2), (2, 3), (1, 3)]
-        assert edges2 == [(1, 2), (2, 3), (1, 3)]
-
-        model.add_ctria3(2, 1, [1, 3, 4])
-        edges1 = free_edges(model, eids=None, maps=None)
-        edges2 = non_paired_edges(model, eids=None, maps=None)
-        assert edges1 == [(1, 2), (2, 3), (3, 4), (1, 4)], edges1
-        assert edges2 == [(1, 2), (2, 3), (3, 4), (1, 4)], edges2
-
-        # edge (1, 3) is associated with 3 elements, so it's not free,
-        # but it's not paired (an edge with only 2 elements)
-        model.add_ctria3(3, 1, [1, 3, 5])
-        edges1 = free_edges(model, eids=None, maps=None)
-        edges2 = non_paired_edges(model, eids=None, maps=None)
-        assert edges1 == [(1, 2), (2, 3),         (3, 4), (1, 4), (3, 5), (1, 5)], edges1
-        assert edges2 == [(1, 2), (2, 3), (1, 3), (3, 4), (1, 4), (3, 5), (1, 5)], edges2
-
-        bdf_filename = TEST_DIR / 'test_free_edges.bdf'
-        model.write_bdf(bdf_filename)
-        args = ['bdf', 'collapse_quads', str(bdf_filename), '--punch', '--size', '16']
-        cmd_line(args, quiet=True)
-
-        bdf_filename = TEST_DIR / 'test_free_edges_quad.bdf'
-        bdf_filename_out = TEST_DIR / 'test_free_edges_quad.bdf'
-        model.add_grid(100, [0., 0., 0.])
-        model.add_cquad4(100, 1, [1, 2, 3, 1])
-        model.write_bdf(bdf_filename)
-        args2 = ['bdf', 'collapse_quads', str(bdf_filename), '--punch',
-                '-o', str(bdf_filename_out)]
-        cmd_line(args2, quiet=True)
-
-        #bdf flip_shell_normals IN_BDF_FILENAME[-o OUT_BDF_FILENAME] [--punch][--zero_zoffset]
-        args3 = ['bdf', 'flip_shell_normals', str(bdf_filename_out), '--punch']
-        cmd_line(args3, quiet=True)
-
-        args4 = ['bdf', 'remove_unused', str(bdf_filename_out), '--punch']
-        cmd_line(args4, quiet=True)
-
-    def test_free_faces(self):
-        """CTETRA10"""
-        #bdf free_faces [-d | -l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME
-        #with self.assertRaises(SystemExit):
-            #cmd_line(argv=['bdf', 'free_faces'])
-        bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
-        #log = SimpleLogger(level='info', encoding='utf-8')
-        skin_filename = DIRNAME / 'skin.bdf'
-        cmd_line(argv=['bdf', 'free_faces', str(bdf_filename), str(skin_filename)],
-                 quiet=True)
-        os.remove(skin_filename)
-
-    def test_exit(self):
-        """tests totally failing to run"""
-        with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf'], quiet=True)
-
-        for cmd in CMD_MAPS:
-            with self.assertRaises(SystemExit):
-                cmd_line(argv=['bdf', cmd], quiet=True)
 
     def test_export_caero_mesh_caero1_wkk(self):
         model = BDF(debug=None)
@@ -321,9 +214,8 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         tin = tout = 'float32'
         nrows = 1
         GCj = [101]
-        GCi = [1]
         Real = [np.radians(5.)]
-        model.add_dmi_w2gj(tin, tout, nrows, GCj, GCi, Real)
+        model.add_dmi_w2gj(tin, tout, nrows, GCj, Real)
         #print(model.caeros)
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_subpanels.bdf',
                 '--pid', 'aesurf', '--subpanels']
@@ -421,10 +313,159 @@ class TestMeshUtilsCmdLine(unittest.TestCase):
         os.remove('caero_no_sub.bdf')
 
 
+class TestMeshUtilsCmdLine(unittest.TestCase):
+    def test_solid_dof(self):
+        bdf_filename = TEST_DIR / 'solid_dof.bdf'
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0., 1., 0.])
+        model.add_grid(4, [0., 0., 1.])
+        model.add_ctetra(10, 1, [1, 2, 3, 4])
+        model.add_psolid(1, 1)
+        model.add_mat1(1, 3.0e7, None, 0.3)
+        model.write_bdf(bdf_filename)
+
+        args = ['bdf', 'solid_dof', str(bdf_filename)]
+        model, out_nids = cmd_line(args, quiet=True)
+        assert len(out_nids) == 4, out_nids
+
+        model.add_grid(5, [0., 0., 1.])
+        rbe2 = model.add_rbe2(10, 4, '123456', 5)
+        model.write_bdf(bdf_filename)
+        model, out_nids = cmd_line(args, quiet=True)
+        assert len(out_nids) == 3, out_nids
+
+        model.add_conm2(12, 2, 1.0)
+        model.write_bdf(bdf_filename)
+        model, out_nids = cmd_line(args, quiet=True)
+        assert len(out_nids) == 2, out_nids
+
+        model.add_conrod(100, 1, [1, 2])
+        model.write_bdf(bdf_filename)
+        model, out_nids = cmd_line(args, quiet=True)
+        assert len(out_nids) == 1, out_nids
+
+        os.remove(bdf_filename)
+
+    def test_inclzip_bwb(self):
+        """tests ``inclzip``"""
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        args = ['bdf', 'inclzip', str(bdf_filename)]
+        cmd_line(args, quiet=True)
+
+    def test_stats_bwb(self):
+        """tests ``stats``"""
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        args = ['bdf', 'stats', str(bdf_filename)]
+        cmd_line(args, quiet=True)
+
+    # def test_free_edges_bwb(self):
+    #     """tests ``free_edges``"""
+    #     bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+    #     args = ['bdf', 'free_edges', str(bdf_filename)]
+    #     cmd_line(args, quiet=True)
+
+    def test_bdf_stats(self):
+        """tests ```bdf stats```"""
+        bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
+        args = ['bdf', 'stats', str(bdf_filename)]
+        cmd_line(args, quiet=True)
+
+    def test_bdf_diff(self):
+        """tests ```bdf diff```"""
+        bdf_filename1 = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
+        bdf_filename2 = MODEL_PATH / 'sol_101_elements' / 'mode_solid_shell_bar.bdf'
+        args = ['bdf', 'diff', str(bdf_filename1), str(bdf_filename2)]
+        cmd_line(args, quiet=True)
+
+    def test_free_edges(self):
+        """Finds the free_edges
+
+        4-----3---5
+        |   / |
+        |  /  |
+        | /   |
+        1-----2
+        """
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=False, log=log, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(5, [1., 1., 1.])  # 1,3,5
+        model.add_ctria3(1, 1, [1, 2, 3])
+
+        edges1 = free_edges(model, eids=None, maps=None)
+        edges2 = non_paired_edges(model, eids=None, maps=None)
+        assert edges1 == [(1, 2), (2, 3), (1, 3)]
+        assert edges2 == [(1, 2), (2, 3), (1, 3)]
+
+        edges1 = free_edges(model, eids=[1], maps=None)
+        edges2 = non_paired_edges(model, eids=[1], maps=None)
+        assert edges1 == [(1, 2), (2, 3), (1, 3)]
+        assert edges2 == [(1, 2), (2, 3), (1, 3)]
+
+        model.add_ctria3(2, 1, [1, 3, 4])
+        edges1 = free_edges(model, eids=None, maps=None)
+        edges2 = non_paired_edges(model, eids=None, maps=None)
+        assert edges1 == [(1, 2), (2, 3), (3, 4), (1, 4)], edges1
+        assert edges2 == [(1, 2), (2, 3), (3, 4), (1, 4)], edges2
+
+        # edge (1, 3) is associated with 3 elements, so it's not free,
+        # but it's not paired (an edge with only 2 elements)
+        model.add_ctria3(3, 1, [1, 3, 5])
+        edges1 = free_edges(model, eids=None, maps=None)
+        edges2 = non_paired_edges(model, eids=None, maps=None)
+        assert edges1 == [(1, 2), (2, 3),         (3, 4), (1, 4), (3, 5), (1, 5)], edges1
+        assert edges2 == [(1, 2), (2, 3), (1, 3), (3, 4), (1, 4), (3, 5), (1, 5)], edges2
+
+        bdf_filename = TEST_DIR / 'test_free_edges.bdf'
+        model.write_bdf(bdf_filename)
+        args = ['bdf', 'collapse_quads', str(bdf_filename), '--punch', '--size', '16']
+        cmd_line(args, quiet=True)
+
+        bdf_filename = TEST_DIR / 'test_free_edges_quad.bdf'
+        bdf_filename_out = TEST_DIR / 'test_free_edges_quad.bdf'
+        model.add_grid(100, [0., 0., 0.])
+        model.add_cquad4(100, 1, [1, 2, 3, 1])
+        model.write_bdf(bdf_filename)
+        args2 = ['bdf', 'collapse_quads', str(bdf_filename), '--punch',
+                '-o', str(bdf_filename_out)]
+        cmd_line(args2, quiet=True)
+
+        #bdf flip_shell_normals IN_BDF_FILENAME[-o OUT_BDF_FILENAME] [--punch][--zero_zoffset]
+        args3 = ['bdf', 'flip_shell_normals', str(bdf_filename_out), '--punch']
+        cmd_line(args3, quiet=True)
+
+        args4 = ['bdf', 'remove_unused', str(bdf_filename_out), '--punch']
+        cmd_line(args4, quiet=True)
+
+    def test_free_faces(self):
+        """CTETRA10"""
+        #bdf free_faces [-d | -l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME
+        #with self.assertRaises(SystemExit):
+            #cmd_line(argv=['bdf', 'free_faces'])
+        bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
+        #log = SimpleLogger(level='info', encoding='utf-8')
+        skin_filename = DIRNAME / 'skin.bdf'
+        cmd_line(argv=['bdf', 'free_faces', str(bdf_filename), str(skin_filename)],
+                 quiet=True)
+        os.remove(skin_filename)
+
+    def test_exit(self):
+        """tests totally failing to run"""
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf'], quiet=True)
+
+        for cmd in CMD_MAPS:
+            with self.assertRaises(SystemExit):
+                cmd_line(argv=['bdf', cmd], quiet=True)
+
 
 class TestMeshUtils(unittest.TestCase):
     """various mesh_utils tests"""
-
     def test_dvxrel(self):
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
@@ -639,6 +680,19 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         args = ['bdf', 'delete_bad_shells', str(bdf_filename)]
         cmd_line(args, quiet=True)
+
+    def test_bdf_remove_comments(self):
+        """tests ```bdf remove_comments```"""
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        args = ['bdf', 'remove_comments', str(bdf_filename)]
+        cmd_line(args, quiet=True)
+
+    def test_bdf_list_conm2(self):
+        """tests ```bdf list_conm2```"""
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        args = ['bdf', 'list_conm2', str(bdf_filename)]
+        cmd_line(args, quiet=True)
+
 
     def test_breakdown_01(self):
         """run the various breakdowns"""

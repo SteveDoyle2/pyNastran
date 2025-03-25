@@ -15,12 +15,13 @@ import os
 import sys
 import warnings
 from io import StringIO
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 from cpylog import SimpleLogger
 from docopt import docopt
 import numpy as np
 
 import pyNastran
+from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.solid_dof import solid_dof
@@ -46,7 +47,7 @@ from .cmd_line.bdf_equivalence import cmd_line_equivalence
 from .cmd_line.export_caero_mesh import cmd_line_export_caero_mesh
 from .cmd_line.create_flutter import cmd_line_create_flutter
 from .cmd_line.utils import filter_no_args
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
@@ -179,7 +180,9 @@ def cmd_line_delete_bad_shells(argv=None, quiet: bool=False) -> None:
     data = docopt(msg, version=ver, argv=argv[1:])
     bdf_filename, punch, log = _get_bdf_filename_punch_log(data, quiet)
 
-    bdf_out_filename = 'fixed_quality.bdf'
+    bdf_filename_out = get_bdf_outfilename(
+        bdf_filename, bdf_filename_out=None,
+        tag='fixedquality')
 
     #TOLERANCE LIMITS ARE:
     #   SA = 30.00
@@ -244,7 +247,6 @@ def cmd_line_delete_bad_shells(argv=None, quiet: bool=False) -> None:
     #if bdf_filename_out is None:
         #bdf_filename_out = 'merged.bdf'
     size = 8
-    #from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
     from pyNastran.bdf.bdf import read_bdf
 
     model = read_bdf(bdf_filename, validate=True, xref=True, punch=punch,
@@ -253,7 +255,7 @@ def cmd_line_delete_bad_shells(argv=None, quiet: bool=False) -> None:
                       min_theta=min_theta, max_theta=max_theta, max_skew=skew,
                       max_aspect_ratio=max_aspect_ratio, max_taper_ratio=max_taper_ratio,
                       max_warping=max_warping)
-    model.write_bdf(bdf_out_filename, size=size,
+    model.write_bdf(bdf_filename_out, size=size,
                     nodes_size=16, elements_size=16, loads_size=8)
 
 def _apply_float_values_to_dict(data: dict[str, Any],
@@ -839,7 +841,7 @@ def cmd_line_inclzip(argv=None, quiet: bool=False) -> None:
 
     bdf_filename = args.INPUT
     bdf_filename_out = args.OUTPUT
-    is_strict_card_parser = args.lax
+    is_strict_card_parser = not args.lax
     punch = args.punch
     duplicate_cards = args.allow_dup.split(',') if args.allow_dup else []
 
@@ -847,18 +849,15 @@ def cmd_line_inclzip(argv=None, quiet: bool=False) -> None:
         bdf_filename_base, ext = os.path.splitext(bdf_filename)
     bdf_filename_out = f'{bdf_filename_base}.zip{ext}'
 
-    from pyNastran.bdf.bdf import BDF
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8')
-    model = BDF(log=log)
-    if not is_strict_card_parser:
-        log.warning('using lax card parser')
-        model.is_strict_card_parser = is_strict_card_parser
-    if duplicate_cards:
-        #duplicate_cards = {'GRID', 'CONM2'}
-        model.set_allow_duplicates(duplicate_cards)
-    model.read_bdf(bdf_filename, punch=punch,
-                   validate=False, xref=False,)
+
+    model = read_lax_bdf(
+        bdf_filename, punch=args.punch, xref=False,
+        validate=False,
+        is_strict_card_parser=not args.lax,
+        duplicate_cards=duplicate_cards,
+        log=log)
     model.write_bdf(bdf_filename_out)
 
 def cmd_line_scale(argv=None, quiet: bool=False) -> None:
@@ -1057,10 +1056,10 @@ def cmd_line_export_mcids(argv=None, quiet: bool=False) -> None:
         if not quiet:  # pragma: no cover
             print('iplies = %s' % iplies)
 
-    from pyNastran.bdf.bdf import read_bdf
-
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8')
+
+    from pyNastran.bdf.bdf import read_bdf
     model = read_bdf(bdf_filename, log=log, xref=False)
     model.safe_cross_reference()
 
@@ -1071,7 +1070,8 @@ def cmd_line_export_mcids(argv=None, quiet: bool=False) -> None:
         model.log.info(f'wrote {csv_filename}')
 
 
-def cmd_line_solid_dof(argv=None, quiet: bool=False) -> None:
+def cmd_line_solid_dof(argv=None, quiet: bool=False,
+                       ) -> tuple[BDF, np.ndarray]:
     """command line interface to solid_dof"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -1103,12 +1103,39 @@ def cmd_line_solid_dof(argv=None, quiet: bool=False) -> None:
     #size = 16
     bdf_filename = data['IN_BDF_FILENAME']
 
-    #level = 'debug' if not quiet else 'warning'
-    #log = SimpleLogger(level=level, encoding='utf-8')
-    #model = read_bdf(bdf_filename, log=log, xref=False)
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
 
-    model, out_nids = solid_dof(bdf_filename)
+    from pyNastran.bdf.bdf import BDF
+    model = BDF(log=log)
+    model.is_strict_card_parser = False
+    model.read_bdf(bdf_filename, xref=False)
+
+    model, out_nids = solid_dof(model)
     model.log.info('done')
+    return model, out_nids
+
+def read_lax_bdf(bdf_filename: str,
+                 punch: bool=False,
+                 validate: bool=True,
+                 xref: bool=True,
+                 is_strict_card_parser: bool=False,
+                 cards_to_read: list[str]=None,
+                 duplicate_cards: list[str]=None,
+                 log=None) -> BDF:
+    from pyNastran.bdf.bdf import BDF
+    model = BDF(log=log)
+    if not is_strict_card_parser:
+        log.warning('using lax card parser')
+        model.is_strict_card_parser = is_strict_card_parser
+    if cards_to_read:
+        model.enable_cards(cards_to_read)
+    if duplicate_cards:
+        #duplicate_cards = {'GRID', 'CONM2'}
+        model.set_allow_duplicates(duplicate_cards)
+    model.read_bdf(bdf_filename, punch=punch,
+                   validate=validate, xref=xref)
+    return model
 
 def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
     """command line interface to remove_unused"""
@@ -1155,13 +1182,10 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
         out_bdf_filename = os.path.join(dirname, f'clean_{basename}')
 
     is_strict_card_parser = not data['--lax']
-    from pyNastran.bdf.bdf import BDF
-    model = BDF(log=log)
-    if not is_strict_card_parser:
-        log.warning('using lax card parser')
-        model.is_strict_card_parser = is_strict_card_parser
-
-    model.read_bdf(bdf_filename, punch=punch, xref=False)
+    model = read_lax_bdf(
+        bdf_filename, punch=punch, xref=False,
+        is_strict_card_parser=is_strict_card_parser,
+        log=log)
     #model.cross_reference()
     remove_unused(model,
                   remove_nids=True, remove_cids=True,
@@ -1215,6 +1239,7 @@ def cmd_line_list_conm2(argv=None, quiet=False) -> None:
     parent_parser = argparse.ArgumentParser()
     # positional arguments
     parent_parser.add_argument('BDF_FILENAME', help='path to input BDF/DAT/NAS file', type=str)
+    _add_parser_arguments(parent_parser, ['--lax'])
 
     size_group = parent_parser.add_mutually_exclusive_group()
     size_group.add_argument('--scale', help='scales the mass')
@@ -1233,27 +1258,33 @@ def cmd_line_list_conm2(argv=None, quiet=False) -> None:
         for key, value in sorted(data.items()):
             print("%-12s = %r" % (key.strip('--'), value))
 
-    import time
-    time0 = time.time()
+    # import time
+    # time0 = time.time()
 
     #size, is_double = _get_is_double_large(data)
     print(data)
     bdf_filename = data['BDF_FILENAME']
     mass_scale = 1.
-    if 'scale' in data:
+    if 'scale' in data and data['scale'] is not None:
         mass_scale = float(data['scale'])
     print(f'mass_scale = {mass_scale}')
 
-    read_cards = [
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
+    list_conm2(bdf_filename, mass_scale, log=log)
+
+def list_conm2(bdf_filename: PathLike,
+               mass_scale: float=1.0,
+               log: Optional[SimpleLogger]=None):
+    cards_to_cards = [
         'GRID', 'CONM2',
         'CORD1R', 'CORD1S', 'CORD1C',
         'CORD2R', 'CORD2S', 'CORD2C',
     ]
-    from pyNastran.bdf.bdf import read_bdf, BDF
-    model = BDF()
-    model.is_strict_card_parser = False
-    model.enable_cards(read_cards)
-    model.read_bdf(bdf_filename, xref=False)
+    model = read_lax_bdf(
+        bdf_filename, punch=False, validate=True,
+        xref=False, is_strict_card_parser=False,
+        cards_to_read=cards_to_cards, log=log)
 
     nids_list = []
     eids_list = []
@@ -1277,7 +1308,6 @@ def cmd_line_list_conm2(argv=None, quiet=False) -> None:
         elem.I *= mass_scale
         print(node)
         print(elem)
-
     #level = 'debug' if not quiet else 'warning'
     #log = SimpleLogger(level=level, encoding='utf-8')
 
@@ -1355,7 +1385,6 @@ def cmd_line_free_faces(argv=None, quiet: bool=False) -> None:
     skin_filename = data['SKIN_FILENAME']
 
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
-
     tol = 1e-005
     bdf_filename_merged = 'merged.bdf'
     level = 'debug' if not quiet else 'warning'
@@ -1501,6 +1530,14 @@ def cmd_line_transform(argv=None, quiet: bool=False) -> None:
         model.write_bdf(bdf_filename_out)
 
 
+def get_bdf_outfilename(bdf_filename: str,
+                        bdf_filename_out: Optional[str]=None,
+                        tag: str='out') -> str:
+    base, ext = os.path.splitext(bdf_filename)
+    if bdf_filename_out is None:
+        bdf_filename_out = f'{base}.{tag}{ext}'
+    return bdf_filename_out
+
 def cmd_line_rbe3_to_rbe2(argv=None, quiet: bool=False) -> None:
     """
     rbe3_to_rbe2 filename.bdf
@@ -1539,29 +1576,23 @@ def cmd_line_rbe3_to_rbe2(argv=None, quiet: bool=False) -> None:
     infile = args.infile
     print(f'infile = {infile!r}')
 
-    from cpylog import SimpleLogger
-    from pyNastran.utils import print_bad_path
     log = SimpleLogger(level='debug')
+    bdf_filename_out = get_bdf_outfilename(
+        bdf_filename, bdf_filename_out,
+        tag='out')
 
-    base, ext = os.path.splitext(bdf_filename)
-    if bdf_filename_out is None:
-        bdf_filename_out = f'{base}.out{ext}'
-    assert args.punch is True, args
+    #assert args.punch is True, args
     # debug = args.debug
 
-    from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.mesh_utils.rbe_tools import rbe3_to_rbe2
-    model = BDF(log=log)
-    if args.lax:
-        log.warning('using lax card parser')
-        model.is_strict_card_parser = False
-    model.read_bdf(bdf_filename, punch=args.punch, xref=False)
 
-    if infile is None:
-        eids_to_fix = list(model.rigid_elements)
-    else:
-        assert os.path.exists(infile), print_bad_path(infile)
-        eids_to_fix = np.loadtxt(infile, dtype='int32').flatten().tolist()
+    model = read_lax_bdf(
+        bdf_filename, punch=args.punch, xref=False,
+        is_strict_card_parser=not args.lax,
+        log=log)
+
+    eids_to_fix = load_ints_from_defaults(
+        model.rigid_elements, infile)
     log.info(f'eids_to_fix = {eids_to_fix}')
 
     rbe3_to_rbe2(model, eids_to_fix)
@@ -1684,34 +1715,35 @@ def cmd_line_merge_rbe2(argv=None, quiet: bool=False) -> None:
     infile = args.infile
     print(f'infile = {infile!r}')
 
-    from cpylog import SimpleLogger
     from pyNastran.utils import print_bad_path
     log = SimpleLogger(level='debug')
 
-    base, ext = os.path.splitext(bdf_filename)
-    if bdf_filename_out is None:
-        bdf_filename_out = f'{base}.out{ext}'
-    assert args.punch is True, args
+    bdf_filename_out = get_bdf_outfilename(
+        bdf_filename, bdf_filename_out=None,
+        tag='out')
     # debug = args.debug
 
-    from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.mesh_utils.rbe_tools import merge_rbe2
-    model = BDF(log=log)
-    if args.lax:
-        log.warning('using lax card parser')
-        model.is_strict_card_parser = False
-    model.read_bdf(bdf_filename, punch=args.punch, xref=False)
-
-    if infile is None:
-        eids_to_fix = list(model.rigid_elements)
-    else:
-        assert os.path.exists(infile), print_bad_path(infile)
-        eids_to_fix = np.loadtxt(infile, dtype='int32').flatten().tolist()
+    model = read_lax_bdf(
+        bdf_filename, punch=args.punch, xref=False,
+        is_strict_card_parser=not args.lax,
+        log=log)
+    eids_to_fix = load_ints_from_defaults(
+        model.rigid_elements, infile)
     log.info(f'eids_to_fix = {eids_to_fix}')
 
     merge_rbe2(model, eids_to_fix)
     model.write_bdf(bdf_filename_out, write_header=False)
 
+
+def load_ints_from_defaults(ids_dict: dict[int, Any],
+                            infilename: Optional[str]) -> list[int]:
+    if infilename is None:
+        eids_to_fix = list(ids_dict)
+    else:
+        assert os.path.exists(infilename), print_bad_path(infilename)
+        eids_to_fix = np.loadtxt(infilename, dtype='int32').flatten().tolist()
+    return eids_to_fix
 
 def cmd_line_filter(argv=None, quiet: bool=False) -> None:  # pragma: no cover
     """command line interface to bdf filter"""
@@ -1980,7 +2012,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
             print(argv)
             print(f'method={method!r} not found')
             sys.exit(msg)
-        func(argv, quiet=quiet)
+        return func(argv, quiet=quiet)
 
 
 if __name__ == '__main__':  # pragma: no cover

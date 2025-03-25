@@ -1048,6 +1048,58 @@ class OP2(OP2_Scalar, OP2Writer):
         self.subcase_key = subcase_key2
         #print('subcase_key = %s' % self.subcase_key)
 
+    def slice_data(self, slice_nodes: Optional[np.ndarray],
+                   slice_elements: Optional[np.ndarray]) -> None:
+        """
+        removes specific nodes/elements from a result
+        node/element ids not within the result slice of the object will be removed
+        elemental results do not consider that nodes may be excluded
+        TODO: very limited
+        """
+        if slice_nodes is None and slice_elements is None:
+            return
+        NODE_RESULTS = [
+            'displacements', 'velocities', 'accelerations',
+            'spc_forces', 'mpc_forces', 'eigenvectors',
+        ]
+        for table_type in NODE_RESULTS:
+            res_dict = getattr(self, table_type)
+            for key, res in res_dict.items():
+                #print(''.join(res.get_stats()))
+                # TODO: delete bad results
+                ncommon = res.slice_data(slice_nodes)
+                #print(''.join(res.get_stats()))
+        del table_type
+
+        op2_results = self.op2_results
+        GROUP_NAMES = [
+            'ato', 'crm', 'nrl', 'psd',
+            'stress', 'strain', 'strain_energy',
+        ]
+        for group_name in GROUP_NAMES:
+            group = getattr(self.op2_results, group_name)
+            table_types = group.get_table_types(include_class=False)
+            for table_type in table_types:
+                if not hasattr(group, table_type):
+                    continue
+                res_dict = getattr(group, table_type)
+                if len(res_dict) == 0:
+                    continue
+                for key, res in res_dict.items():
+                    if not hasattr(res, 'slice_data'):
+                        self.log.warning(f'skipping slice_data for {group_name}:{table_type}')
+                        continue
+                    # print(''.join(res.get_stats()))
+                    # TODO: delete bad results
+                    if table_type in NODE_RESULTS:
+                        if slice_nodes is None:
+                            continue
+                        ncommon = res.slice_data(slice_nodes)
+                    else:
+                        if slice_elements is None:
+                            continue
+                        ncommon = res.slice_data(slice_elements)
+
     def get_key_order(self) -> list[NastranKey]:
         """
         Returns

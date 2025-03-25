@@ -2668,6 +2668,12 @@ class TestOP2Main(Tester):
                 write_f06=True,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
                 load_as_h5=False, log=log)
+        run_op2(op2_filename, write_bdf=False,
+                write_f06=True,
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
+                slice_nodes=[1,2,3],
+                slice_elements=[4,5,6],
+                load_as_h5=False, log=log)
         assert os.path.exists(debug_file), os.listdir(folder)
 
         op2 = run_op2(op2_filename, make_geom=False, write_bdf=False,

@@ -256,6 +256,17 @@ class TableArray(ScalarObject):  # displacement style table
     def data_type(self):
         raise NotImplementedError()
 
+    def slice_data(self, slice_nodes: np.ndarray) -> int:
+        assert slice_nodes is not None, slice_nodes
+        nodes = self.node_gridtype[:, 0]
+        common_nodes = np.intersect1d(nodes, slice_nodes)
+        icommon = np.searchsorted(nodes, common_nodes)
+        ntotal = len(icommon)
+        self.node_gridtype = self.node_gridtype[icommon, :]
+        self.data = self.data[:, icommon, :]
+        self.ntotal = ntotal
+        return ntotal
+
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
