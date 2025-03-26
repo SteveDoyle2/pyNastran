@@ -187,12 +187,12 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         path to file to write list of jobs
 
     TODO: remove failed jobs from the time estimator
+    TODO: handle overwriting op2 files (currently requires you
+          delete bad/old files regardless of old=no flag
     """
-    # log = SimpleLogger(level='debug')
     log = SimpleLogger(log) if isinstance(log, str) else log
     bdf_filenames = get_bdf_filenames_to_run(
         bdf_filename_dirname, extensions, recursive=recursive)
-    #print(bdf_filenames, len(bdf_filenames))
 
     bdf_filenames_str = [str(bdf_filename) for bdf_filename in bdf_filenames]
     bdf_filenames_str_short = [os.path.basename(bdf_filename) for bdf_filename in bdf_filenames]
@@ -200,6 +200,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         msg = '\n - '.join(bdf_filenames_str)
     else:
         msg = '\n - '.join(bdf_filenames_str_short)
+    #log.info(f'bdf_filenames = {bdf_filenames_str}')
     log.info(f'bdf_filenames:\n - {msg}')
 
     widthcases = len(str(len(bdf_filenames))) + 1
@@ -249,19 +250,18 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
                                              keywords=keywords, cleanup=cleanup, run=run,
                                              debug=debug, log=log)
         log.debug(f'finished {ifile+1}/{nfiles}={percent1:.0f}%: {str(bdf_filename)}; return_code={return_code}')
+        time.sleep(5)
 
-        # if 0:
         dt = time.time() - t0
-        # else:
-        #     dt = 20. * 60. * (ifile + 1)
-
-        t_est_next = dt / 60.
         t_run_min = dt / (ifile + 1) / 60.
         t_est_sec = dt * nfiles_remaining1 / (ifile + 1)
         t_est_min = t_est_sec / 60.
         t_est_hr = t_est_min / 60.
-        new = datetime.datetime.now() + datetime.timedelta(minutes=t_est_min)
-        nexti = datetime.datetime.now() + datetime.timedelta(minutes=t_est_next)
+        now = datetime.datetime.now()
+        new = now + datetime.timedelta(minutes=t_est_min)
+        nexti = now + datetime.timedelta(minutes=t_run_min)
+        print(f't_est_total(s) = {t_est_min*60:.6g}')
+        print(f't_est_next(s)  = {t_run_min*60:.6g}')
         eta = new.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
         eta_next = nexti.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
     log.info('done')

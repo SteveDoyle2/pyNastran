@@ -60,6 +60,13 @@ class OGPWG:
         op2 = self.op2
         if op2.read_mode == 1:
             return ndata
+
+        result_name = 'grid_point_weight'
+        if op2._results.is_not_saved(result_name):
+            return ndata
+        op2._results._found_result(result_name)
+
+        slot = op2.get_result(result_name)
         #print('  num_wide = %r' % self.num_wide)
         size = op2.size
         fmt_mo = mapfmt(b'36f', size)
@@ -102,6 +109,6 @@ class OGPWG:
             superelement_adaptivity_index=op2.superelement_adaptivity_index,
         )
         str(weight)
-        op2.grid_point_weight[op2.superelement_adaptivity_index] = weight
+        slot[op2.superelement_adaptivity_index] = weight
         #del self.reference_point
         return ndata
