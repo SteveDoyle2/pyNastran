@@ -775,7 +775,7 @@ class AEPARM(BaseCard):
     """
     type = 'AEPARM'
     _field_map = {
-        1: 'id', 2:'label', 3:'units'
+        1: 'id', 2: 'label', 3: 'units'
     }
 
     @classmethod

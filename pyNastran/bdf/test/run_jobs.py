@@ -197,20 +197,23 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     bdf_filenames_str = [str(bdf_filename) for bdf_filename in bdf_filenames]
     bdf_filenames_str_short = [os.path.basename(bdf_filename) for bdf_filename in bdf_filenames]
     if show_folder:
-        log.info(f'bdf_filenames = {bdf_filenames_str}')
+        msg = '\n - '.join(bdf_filenames_str)
     else:
-        log.info(f'bdf_filenames = {bdf_filenames_str_short}')
+        msg = '\n - '.join(bdf_filenames_str_short)
+    log.info(f'bdf_filenames:\n - {msg}')
 
     widthcases = len(str(len(bdf_filenames))) + 1
-    quiet = False
+    msg2 = ''
     for ifile, bdf_filename, bdf_filenames_str_short in zip(count(), bdf_filenames, bdf_filenames_str_short):
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
         if debug:
-            ifile_str = f'{ifile}:'
+            ifile_str = f'{ifile+1}:'
             if show_folder:
-                print(f'{ifile_str:{widthcases}s} {bdf_filename}')
+                msg2 += f'{ifile_str:{widthcases}s} {bdf_filename}\n'
             else:
-                print(f'{ifile_str:{widthcases}s} {bdf_filenames_str_short}')
+                msg2 += f'{ifile_str:{widthcases}s} {bdf_filenames_str_short}\n'
+    if msg2:
+        log.debug(f'bdf_filenames:\n{msg2}')
 
     if out_filename:
         with open(out_filename, 'w') as out_file:
@@ -244,7 +247,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         log.info(f'running  {ifile+1}/{nfiles}={percent0:.0f}%: {str(bdf_filename)}')
         return_code, call_args = run_nastran(bdf_filename, nastran_cmd=nastran_exe,
                                              keywords=keywords, cleanup=cleanup, run=run,
-                                             debug=debug)
+                                             debug=debug, log=log)
         log.debug(f'finished {ifile+1}/{nfiles}={percent1:.0f}%: {str(bdf_filename)}; return_code={return_code}')
 
         # if 0:

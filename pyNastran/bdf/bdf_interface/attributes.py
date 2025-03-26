@@ -23,7 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover
         PARAM, MDLPRM,
         # grids/points
         POINT, SPOINT, EPOINT,
-        GRDSET, SEQGP, GRIDB,
+        GRDSET, SEQGP, # GRIDB,
         # bar
         BAROR, BEAMOR,
         CBARAO, CBEAMAO,

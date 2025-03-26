@@ -159,7 +159,7 @@ from pyNastran.bdf.cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
-from pyNastran.bdf.cards.nodes import GRDSET # , GRID, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
+from pyNastran.bdf.cards.nodes import GRDSET # , GRID, SPOINTs, EPOINTs, POINT, SEQGP
 from pyNastran.bdf.cards.aero.aero import (
     AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,

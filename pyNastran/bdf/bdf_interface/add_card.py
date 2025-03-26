@@ -95,7 +95,7 @@ from pyNastran.bdf.cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATS1, MATDMG)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
-from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
+from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
 
 from pyNastran.bdf.cards.aero.aero import (
     AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
@@ -229,7 +229,7 @@ CARD_MAP = {
     'EPOINT' : EPOINTs,
     'POINT' : POINT,
     'SEQGP' : SEQGP,
-    'GRIDB' : GRIDB,
+    #'GRIDB' : GRIDB,  # removed-axisymmetric
 
     'PARAM' : PARAM,
 

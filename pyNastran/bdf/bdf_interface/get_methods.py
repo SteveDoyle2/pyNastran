@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
         BDF, Element, Property, Material, ThermalMaterial, RigidElement,
         CAEROs, PAEROs, SPLINEs)
     from pyNastran.bdf.cards.coordinate_systems import Coord
-    from pyNastran.bdf.cards.nodes import POINT, GRID, SPOINT, EPOINT # , SPOINTs, EPOINTs, SEQGP, GRIDB
+    from pyNastran.bdf.cards.nodes import POINT, GRID, SPOINT, EPOINT # , SPOINTs, EPOINTs, SEQGP
     from pyNastran.bdf.cards.aero.aero import (
         #AECOMP, AECOMPL
         AEFACT, AELINK,

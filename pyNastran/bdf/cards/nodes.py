@@ -45,7 +45,6 @@ from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
-#u = str
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import Coord
@@ -583,7 +582,7 @@ class GRDSET(BaseCard):
     type = 'GRDSET'
 
     #: allows the get_field method and update_field methods to be used
-    _field_map = {2:'cp', 6:'cd', 7:'ps', 8:'seid'}
+    _field_map = {2: 'cp', 6: 'cd', 7: 'ps', 8: 'seid'}
 
     @classmethod
     def _init_from_empty(cls):
@@ -801,162 +800,6 @@ class GRDSET(BaseCard):
         return print_card_8(card)
 
 
-class GRIDB(BaseCard):
-    """defines the GRIDB class"""
-    type = 'GRIDB'
-
-    #: allows the get_field method and update_field methods to be used
-    _field_map = {1: 'nid', 4:'phi', 6:'cd', 7:'ps', 8:'idf'}
-
-    def __init__(self, nid, phi, cd, ps, ringfl, comment=''):
-        """
-        Creates the GRIDB card
-        """
-        if comment:
-            self.comment = comment
-        #Node.__init__(self)
-
-        #: node ID
-        self.nid = nid
-        self.phi = phi
-        # analysis coordinate system
-        self.cd = cd
-        #: local SPC constraint
-        self.ps = ps
-        #: ringfl
-        self.ringfl = ringfl
-
-        assert self.nid > 0, 'nid=%s' % self.nid
-        assert self.phi >= 0, 'phi=%s' % self.phi
-        assert self.cd >= 0, 'cd=%s' % self.cd
-        assert self.ringfl >= 0, 'ringfl=%s' % self.ringfl
-        self.cd_ref = None
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        """
-        Adds a GRIDB card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-
-        """
-        nid = integer(card, 1, 'nid')
-        phi = double(card, 4, 'phi')
-        cd = integer(card, 6, 'cd')
-        ps = components_or_blank(card, 7, 'ps', '')
-        idf = integer(card, 8, 'ringfl/idf')
-        return GRIDB(nid, phi, cd, ps, idf, comment=comment)
-
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        """
-        Adds a GRIDB card from the OP2
-
-        Parameters
-        ----------
-        data : list[varies]
-            a list of fields defined in OP2 format
-        comment : str; default=''
-            a comment for the card
-
-        """
-        nid = data[0]
-        phi = data[1]
-        cd = data[2]
-        ps = data[3]
-        idf = data[4]
-        return GRIDB(nid, phi, cd, ps, idf, comment=comment)
-
-    def _verify(self, xref):
-        """
-        Verifies all methods for this object work
-
-        Returns
-        -------
-        xref : bool
-            has this model been cross referenced
-
-        """
-        pass
-
-    def Cd(self):
-        """
-        Gets the output coordinate system
-
-        Returns
-        -------
-        cd : int
-            the output coordinate system
-
-        """
-        if self.cd_ref is None:
-            return self.cd
-        return self.cd_ref.cid
-
-    def raw_fields(self):
-        """
-        Gets the fields in their unmodified form
-
-        Returns
-        -------
-        fields : list[varies]
-            the fields that define the card
-
-        """
-        list_fields = ['GRIDB', self.nid, None, None, self.phi, None,
-                       self.Cd(), self.ps, self.ringfl]
-        return list_fields
-
-    def get_position(self):
-        ## TODO: fixme
-        return np.array([0., 0., 0.])
-
-    def repr_fields(self):
-        """
-        Gets the fields in their simplified form
-
-        Returns
-        -------
-        fields : list[varies]
-            the fields that define the card
-
-        """
-        #phi = set_blank_if_default(self.phi, 0.0)
-        cd = set_blank_if_default(self.Cd(), 0)
-        ps = set_blank_if_default(self.ps, 0)
-        idf = set_blank_if_default(self.ringfl, 0)
-        list_fields = ['GRIDB', self.nid, None, None, self.phi, None, cd, ps,
-                       idf]
-        return list_fields
-
-    def write_card(self, size: int=8, is_double: bool=False) -> str:
-        """
-        The writer method used by BDF.write_card
-
-        Parameters
-        ----------
-        size : int; default=8
-            the size of the card (8/16)
-        is_double : bool; default=False
-            should this card be written with double precision
-
-        Returns
-        -------
-        msg : str
-            the card as a string
-
-        """
-        card = self.repr_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        return self.comment + print_card_16(card)
-
-
 class GRID(BaseCard):
     """
     +------+-----+----+----+----+----+----+----+------+
@@ -1026,7 +869,7 @@ class GRID(BaseCard):
     type = 'GRID'
 
     #: allows the get_field method and update_field methods to be used
-    _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
+    _field_map = {1: 'nid', 2: 'cp', 6: 'cd', 7: 'ps', 8: 'seid'}
 
     def _get_field_helper(self, n: int):
         """
@@ -1693,7 +1536,7 @@ class POINT(BaseCard):
 
     """
     type = 'POINT'
-    _field_map = {1: 'nid', 2:'cp'}
+    _field_map = {1: 'nid', 2: 'cp'}
 
     def _get_field_helper(self, n: int) -> float:
         """
