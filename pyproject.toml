@@ -92,6 +92,7 @@ classifiers = [
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
 ]
 #include = [
 #    'gui/icons/*.png',
@@ -226,13 +227,13 @@ requires = [
 # the block, version_file, or local_scheme does this...
 # - Block Only:   pyNastran-1.1.0.post2275+<git>-py3-none-any.whl
 # - Local_scheme: same...
-# 
+#
 # Conclusion:
 # - "pip wheel ." pulls the version from setup.py
 # - invents a version if setup.py doesn't exist
 # - version_file doesn't seem to do a whole lot
 # - the version comes from the __init__.py regardless of
-#   setup.py being directly called or not 
+#   setup.py being directly called or not
 [tool.setuptools_scm]
 version_file = "pyNastran/_version.py"
 local_scheme = 'no-local-version'

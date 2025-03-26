@@ -147,7 +147,11 @@ def merge_rbe2(model: BDF, rbe_eids_to_fix: list[int]) -> None:
 
         indep_nid0 = elem0.gn
         mass_elem0 = mass_nid_to_elem_map[indep_nid0]
-        merge_rbe2(model, elem0, mass_elem0=mass_elem0)
+        _merge_rbe2(
+            model, eids,
+            dep_nids_tuple,
+            mass_nid_to_elem_map,
+            elem0, mass_elem0=mass_elem0)
     return
 
 
@@ -161,8 +165,12 @@ def _get_mass_elem_from_node_id(model: BDF, indep_nid0: int,
     return mass_elem0
 
 
-def merge_rbe2(model: BDF,
-               elem0: RBE2, mass_elem0: CONM2 = None) -> None:
+def _merge_rbe2(model: BDF,
+                eids: list[int],
+                dep_nids_tuple: tuple[int, ...],
+                mass_nid_to_elem_map: dict[int, CONM2],
+                elem0: RBE2,
+                mass_elem0: CONM2=None) -> None:
     log = model.log
     indep_nid0 = elem0.gn
     mass_elem0 = _get_mass_elem_from_node_id(
