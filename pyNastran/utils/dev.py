@@ -13,7 +13,7 @@ from pyNastran.utils import PathLike
 
 
 def get_files_of_type(dirname: str, extension: str='.txt',
-                      max_size: float=100., limit_file: str='no_dig.txt',
+                      max_size_mb: float=100., limit_file: str='no_dig.txt',
                       skip_folder_file: str='skip_folder.txt') -> list[str]:
     """
     Gets the list of all the files with a given extension in the specified directory
@@ -24,7 +24,7 @@ def get_files_of_type(dirname: str, extension: str='.txt',
         the directory name
     extension : str; default='.txt'
         list of filetypes to get
-    max_size : float; default=100.0
+    max_size_mb : float; default=100.0
         >0.0: size in MB for max file size
         <=0.0: no limit
     limit_file : str; default=no_dig.txt
@@ -62,19 +62,48 @@ def get_files_of_type(dirname: str, extension: str='.txt',
         filename = os.path.join(dirname, filenamei)
         if os.path.isdir(filename):
             if allow_digging:
-                filenames2 += get_files_of_type(filename, extension, max_size)
+                filenames2 += get_files_of_type(filename, extension, max_size_mb)
                 #assert len(filenames2) > 0, dirnamei
             else:
                 print('no digging in filename=%s; dirname=%s' % (filename, dirname))
         elif (os.path.isfile(filename) and
               os.path.splitext(filenamei)[1].endswith(extension) and
-              max_size <= 0.0):
+              max_size_mb <= 0.0):
             filenames2.append(filename)
         elif (os.path.isfile(filename) and
               os.path.splitext(filenamei)[1].endswith(extension) and
-              os.path.getsize(filename) / 1048576. <= max_size):
+              os.path.getsize(filename) / 1048576. <= max_size_mb):
             filenames2.append(filename)
     return filenames2
+
+
+def get_files_of_types(dirname: str, extensions: list[str],
+                       max_size_mb: float=0.) -> list[str]:
+    """
+    Gets a recursive list of files with specific file extensions
+
+    Parameters
+    ----------
+    dirname : str
+        the directory name
+    extensions : list[str]
+        list of filetypes to get
+    max_size_mb : float; default=100.0
+        >0.0: size in MB for max file size
+        <=0.0: no limit
+
+    Returns
+    -------
+    files : list[str]
+        list of all the files with a given extension in the specified directory
+
+    """
+    assert isinstance(extensions, list), f'extensions={extensions} must be a list'
+    fnames = []
+    for extension in extensions:
+        fnamesi = get_files_of_type(dirname, extension, max_size_mb)
+        fnames.extend(fnamesi)
+    return fnames
 
 
 def list_print(lst: list[Any], float_fmt: str='%-4.2f') -> str:

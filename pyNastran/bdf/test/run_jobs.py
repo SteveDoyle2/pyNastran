@@ -250,7 +250,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
                                              keywords=keywords, cleanup=cleanup, run=run,
                                              debug=debug, log=log)
         log.debug(f'finished {ifile+1}/{nfiles}={percent1:.0f}%: {str(bdf_filename)}; return_code={return_code}')
-        time.sleep(5)
+        #time.sleep(5)
 
         dt = time.time() - t0
         t_run_min = dt / (ifile + 1) / 60.

@@ -96,13 +96,13 @@ class TestUtils(unittest.TestCase):
         """tests the get_files_of_type function"""
         model_path = os.path.join('some_incorrect_path')
         files = get_files_of_type(
-            model_path, extension='.op2', max_size=1.0,
+            model_path, extension='.op2', max_size_mb=1.0,
             limit_file='no_dig.txt')
         assert len(files) == 0, files
 
         model_path = os.path.join(PKG_PATH, '..', 'models')
         op2_files = get_files_of_type(
-            model_path, extension='.op2', max_size=1.0,
+            model_path, extension='.op2', max_size_mb=1.0,
             limit_file='no_dig.txt')
         assert len(op2_files) > 0, op2_files
         #assert len(op2_files) == 98, len(op2_files)

@@ -95,10 +95,10 @@ def main():
 
     max_size = 4.2 # MB
     dirname = r'C:\MSC.Software\msc_nastran_docs_2020\tpl'
-    files2 = get_files_of_type(dirname, '.bdf', max_size=max_size)
-    files2 += get_files_of_type(dirname, '.nas', max_size=max_size)
-    files2 += get_files_of_type(dirname, '.dat', max_size=max_size)
-    files2 += get_files_of_type(dirname, '.ecd', max_size=max_size)
+    files2 = get_files_of_type(dirname, '.bdf', max_size_mb=max_size)
+    files2 += get_files_of_type(dirname, '.nas', max_size_mb=max_size)
+    files2 += get_files_of_type(dirname, '.dat', max_size_mb=max_size)
+    files2 += get_files_of_type(dirname, '.ecd', max_size_mb=max_size)
     files2 = list(set(files2))
     files2.sort()
 
