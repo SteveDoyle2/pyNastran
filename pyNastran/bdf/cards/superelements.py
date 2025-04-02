@@ -870,7 +870,7 @@ class CSUPER(BaseCard):
         self.seid = seid
         self.psid = psid
         #:  Identifiers of grids points. (Integer > 0)
-        self.nodes = expand_thru(nodes)
+        self.nodes = expand_thru(nodes, set_fields=False)
         self.nodes_ref = None
 
     @classmethod
