@@ -2297,7 +2297,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
                     assert len(methods) == 2, methods
                     table_mapper[_key] = methods
             #is_added = True
+            #print(f'mapper = {table_mapper}')
             return table_mapper
+        assert hasattr(self, '_get_table_mapper'), 'missing _get_table_mapper'
         self._get_table_mapper = func
 
     def _update_generalized_tables(self, tables: dict[bytes, Any]) -> None:

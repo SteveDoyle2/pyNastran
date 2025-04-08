@@ -2,6 +2,7 @@ import numpy as np
 
 def volume_ctetra(n1: np.ndarray, n2: np.ndarray,
                   n3: np.ndarray, n4: np.ndarray) -> np.ndarray:
+    """is this signed volume?"""
     #volume = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
     n14 = n1 - n4
     n24 = n2 - n4

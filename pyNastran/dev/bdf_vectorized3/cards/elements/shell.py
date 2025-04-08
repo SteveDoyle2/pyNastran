@@ -1317,6 +1317,19 @@ class CQUAD4(ShellElement):
         """
         raise NotImplementedError()
 
+    def split_to_ctria3(self) -> np.ndarray:
+        """TODO: support quadratic faces"""
+        base_nodes = self.base_nodes
+        n1 = base_nodes[:, 0]
+        n2 = base_nodes[:, 1]
+        n3 = base_nodes[:, 2]
+        n4 = base_nodes[:, 3]
+        # get faces
+        tri1 = np.column_stack([n1, n2, n3])
+        tri2 = np.column_stack([n1, n3, n4])
+        tris = np.vstack([tri1, tri2])
+        return tris
+
     def convert(self, xyz_scale: float=1.0,
                 **kwargs):
         self.zoffset *= xyz_scale

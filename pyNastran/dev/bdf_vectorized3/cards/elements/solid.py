@@ -239,6 +239,7 @@ class CTETRA(SolidElement):
         return
 
     def volume(self) -> np.ndarray:
+        """is this signed volume?"""
         xyz = self.model.grid.xyz_cid0()
         nid = self.model.grid.node_id
         nodes = self.base_nodes
@@ -687,6 +688,42 @@ class SolidHex(SolidElement):
             return midside_nodes
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
+
+    def faces(self, sort_faces: bool=False):
+        """TODO: support quadratic faces"""
+        base_nodes = self.base_nodes
+        n1 = base_nodes[:, 0]
+        n2 = base_nodes[:, 1]
+        n3 = base_nodes[:, 2]
+        n4 = base_nodes[:, 3]
+        n5 = base_nodes[:, 4]
+        n6 = base_nodes[:, 5]
+        n7 = base_nodes[:, 6]
+        n8 = base_nodes[:, 7]
+        # get faces
+        face1 = np.column_stack([n1, n2, n3, n4])
+        face2 = np.column_stack([n1, n2, n6, n5])
+        face3 = np.column_stack([n2, n3, n7, n6])
+        face4 = np.column_stack([n3, n4, n8, n7])
+        face5 = np.column_stack([n4, n1, n5, n8])
+        face6 = np.column_stack([n5, n6, n7, n8])
+        faces = np.vstack([face1, face2, face3, face4, face5, face6])
+
+        if sort_faces:
+            pass
+            # "sort" faces to start from the min
+
+            # "sort" faces to be positively increasing
+            #face_a = face[:, 1]
+            #face_b = face[:, -1]
+
+        #1: [nodes[0], nodes[1], nodes[2], nodes[3]],  # 1 2 3 4
+        #2: [nodes[0], nodes[1], nodes[5], nodes[4]],  # 1 2 6 5
+        #3: [nodes[1], nodes[2], nodes[6], nodes[5]],  # 2 3 7 6
+        #4: [nodes[2], nodes[3], nodes[7], nodes[6]],  # 3 4 8 7
+        #5: [nodes[3], nodes[0], nodes[4], nodes[7]],  # 4 1 5 8
+        #6: [nodes[4], nodes[5], nodes[6], nodes[7]],  # 5 6 7 8
+        return faces
 
     @parse_check
     def write_file(self, bdf_file: TextIOLike,
