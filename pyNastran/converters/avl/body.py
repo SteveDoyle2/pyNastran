@@ -11,7 +11,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.converters.avl.surface import Surface
 
 
-
 class Body:
     """
     BODY

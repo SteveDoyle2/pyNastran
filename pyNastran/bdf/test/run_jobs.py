@@ -1,3 +1,7 @@
+"""
+TODO: support old=no
+TODO: don't filter op2s (kinda the same thing)
+"""
 import os
 import sys
 import datetime
@@ -102,27 +106,68 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: PathLike | list[PathLike],
     for ext in extensions:
         assert ext.startswith('.'), extensions
 
-    bdf_filename_dirname_list = bdf_filename_dirname
+    bdf_filename_dirname_list_in = bdf_filename_dirname
     if not isinstance(bdf_filename_dirname, list):
         if isinstance(bdf_filename_dirname, str):
             bdf_filename_dirname = Path(bdf_filename_dirname)
         assert isinstance(bdf_filename_dirname, Path), bdf_filename_dirname
         assert bdf_filename_dirname.exists(), bdf_filename_dirname
-        bdf_filename_dirname_list = [bdf_filename_dirname]
+        bdf_filename_dirname_list_in = [bdf_filename_dirname]
     elif isinstance(bdf_filename_dirname, str):
-        bdf_filename_dirname_list = [Path(bdf_filename_dirname)]
+        bdf_filename_dirname_list_in = [Path(bdf_filename_dirname)]
     elif isinstance(bdf_filename_dirname, list):
-        bdf_filename_dirname_list = [Path(pathi) for pathi in bdf_filename_dirname]
+        bdf_filename_dirname_list_in = [Path(pathi) for pathi in bdf_filename_dirname]
     #else:
         #print(type(bdf_filename_dirname_list), bdf_filename_dirname_list)
         #adsf
     del bdf_filename_dirname
 
     #----------------------------------------
+    bdf_filename_dirname_list_out = _deglob(bdf_filename_dirname_list_in, recursive=recursive)
+    del bdf_filename_dirname_list_in
+
+    bdf_filenames = _directory_to_files(bdf_filename_dirname_list_out)
+    del bdf_filename_dirname_list_out
+
+    bdf_filenames_run = []
+    for bdf_filename in bdf_filenames:
+        assert bdf_filename.exists(), print_bad_path(bdf_filename)
+        base, ext = os.path.splitext(str(bdf_filename))
+        op2_filename = Path(base + '.op2')
+        if op2_filename.exists():
+            continue
+        bdf_filenames_run.append(bdf_filename)
+    assert len(bdf_filenames_run) > 0, bdf_filenames_run
+    return bdf_filenames_run
+
+def _deglob(bdf_filename_dirname_list_in: list[Path],
+            recursive: bool=False) -> list[Path]:
+    """handle globbing"""
+    pwd = Path(os.getcwd())
+    #print(f"pwd = {str(pwd)}")
+    bdf_filename_dirname_list_out: list[Path] = []
+    for bdf_filename_dirnamei in bdf_filename_dirname_list_in:
+        if '*' in str(bdf_filename_dirnamei):
+            print(f'bdf_filename_dirnamei={bdf_filename_dirnamei!r}; recursive={recursive}')
+            if recursive:
+                outi = pwd.rglob(str(bdf_filename_dirnamei))
+            else:
+                outi = pwd.glob(str(bdf_filename_dirnamei))
+            outi = list(outi)
+            for outii in outi:
+                print(f'  outi = {outii}')
+            bdf_filename_dirname_list_out.extend(outi)
+        else:
+            bdf_filename_dirname_list_out.append(bdf_filename_dirnamei)
+    return bdf_filename_dirname_list_out
+
+
+def _directory_to_files(bdf_filename_dirname_list: list[Path]) -> list[Path]:
     bdf_filenames: list[Path] = []
     for bdf_filename_dirnamei in bdf_filename_dirname_list:
         assert bdf_filename_dirnamei.exists(), bdf_filename_dirnamei
         if bdf_filename_dirnamei.is_dir():
+            print('dir...')
             dirname = Path(os.path.abspath(bdf_filename_dirnamei))
             if recursive:
                 bdf_filenamesi = []
@@ -141,23 +186,12 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: PathLike | list[PathLike],
             assert len(bdf_filenamesi) > 0, dirname
 
         elif bdf_filename_dirnamei.is_file():
+            #print(f'file {bdf_filename_dirnamei}')
             bdf_filenamesi = [bdf_filename_dirnamei]
         else:  # pragma: no cover
             raise NotImplementedError(bdf_filename_dirnamei)
         bdf_filenames.extend(bdf_filenamesi)
-
-    bdf_filenames_run = []
-    for bdf_filename in bdf_filenames:
-        assert bdf_filename.exists(), print_bad_path(bdf_filename)
-        base, ext = os.path.splitext(str(bdf_filename))
-        op2_filename = Path(base + '.op2')
-        if op2_filename.exists():
-            continue
-        bdf_filenames_run.append(bdf_filename)
-    assert len(bdf_filenames_run) > 0, bdf_filenames_run
-    return bdf_filenames_run
-
-
+    return bdf_filenames
 
 def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
              nastran_exe: PathLike,
@@ -260,8 +294,8 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         now = datetime.datetime.now()
         new = now + datetime.timedelta(minutes=t_est_min)
         nexti = now + datetime.timedelta(minutes=t_run_min)
-        print(f't_est_total(s) = {t_est_min*60:.6g}')
-        print(f't_est_next(s)  = {t_run_min*60:.6g}')
+        #print(f't_est_total(s) = {t_est_min*60:.6g}')
+        #print(f't_est_next(s)  = {t_run_min*60:.6g}')
         eta = new.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
         eta_next = nexti.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
     log.info('done')
