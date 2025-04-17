@@ -86,7 +86,6 @@ it's not included with the official release, but is found in
 ``pyNastran.dev.bdf_vectorized3``, so not my first attempt :)
 
 This should be hidden...
---->
 
 ### v1.5.0  has NOT been released (2024/3/25)
 
@@ -99,6 +98,7 @@ F06:
 OP2:
  - added NX trim/flutter tables
  - added kinetic energy
+--->
 
 
 ### v1.4.1  has been released (2024/3/25)
