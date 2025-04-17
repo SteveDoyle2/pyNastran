@@ -4329,6 +4329,14 @@ def _skip_table(op2_reader: OP2Reader, itable: int) -> None:
 
         data = op2_reader._skip_record()  # table 3
         op2_reader.read_3_markers([itable - 1, 1, 0])
+
+        next_marker = op2_reader.get_marker1(rewind=True)
+        if next_marker == itable-2:
+            op2_reader.read_3_markers([itable-2, 1, 0])
+            next_marker2 = op2_reader.get_marker1(rewind=False)
+            #log.debug(f'{op2.table_name}; exit on marker={next_marker2}')
+            return
+
         data = op2_reader._read_record()  # table 4
         itable -= 2
     op2_reader.read_markers([0])
@@ -4361,7 +4369,7 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
     #print('id,mach,rho,velocity???')
     #print('id?,kfreq?,damping,velocity')
     itable = -3
-    if op2_reader.read_mode == 1 and 0:
+    if op2_reader.read_mode == 1:
         _skip_table(op2_reader, itable)
         return
 
@@ -4436,8 +4444,9 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         op2_reader.read_3_markers([itable-1, 1, 0])
         next_marker = op2_reader.get_marker1(rewind=True)
         if next_marker == itable-2:
-            op2_reader.read_3_markers([itable-2, 1, 0, 0])
-            log.debug(f'{op2.table_name}; exit on marker={next_marker}')
+            op2_reader.read_3_markers([itable-2, 1, 0])
+            next_marker2 = op2_reader.get_marker1(rewind=False)
+            #log.debug(f'{op2.table_name}; exit on marker={next_marker2}')
             return
 
         data = op2_reader._read_record(debug=False)  # table 4
@@ -4892,7 +4901,7 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
     assert data == b'OAERCSHM', data
 
     itable = -3
-    if op2_reader.read_mode == 1 and 0:
+    if op2_reader.read_mode == 1:
         _skip_table(op2_reader, itable)
         return
 
@@ -4955,8 +4964,8 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
         next_marker = op2_reader.get_marker1(rewind=True)
         if next_marker == itable-2:  # -5
             op2_reader.read_3_markers([itable-2, 1, 0], macro_rewind=False)
-            next_marker = op2_reader.get_marker1(rewind=False)
-            log.debug(f'{op2.table_name}; exit on marker={next_marker}')
+            next_marker2 = op2_reader.get_marker1(rewind=False)
+            #log.debug(f'{op2.table_name}; exit on marker={next_marker2}')
             return
         #op2_reader.show(80, types='ifs')
         data = op2_reader._read_record(debug=False)  # table 4
