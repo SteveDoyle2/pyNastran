@@ -43,7 +43,7 @@ import sys
 from copy import deepcopy
 from itertools import count
 from functools import partial
-from struct import unpack, Struct # , error as struct_error
+from struct import unpack, Struct  # , error as struct_error
 from typing import Optional, Callable, TYPE_CHECKING
 
 import numpy as np
@@ -2501,8 +2501,10 @@ class OP2Reader:
         ----------
         n : int
             number of markers to get
-        rewind : bool
+        rewind : bool; default=True
             should the file be returned to the starting point
+        macro_rewind : bool; default=False
+            print flag for debugging
 
         Returns
         -------
@@ -2736,8 +2738,12 @@ class OP2Reader:
             op2.f.seek(na)
             op2.n = na
             if nrecord == 4:
-                self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
-                raise EmptyRecordError('nrecord=4')
+                if op2.allow_empty_records:
+                    self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
+                    raise EmptyRecordError('nrecord=4')
+                else:
+                    self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
+                    raise FortranMarkerError('EmptyRecord: nrecord=4')
             self.log.error(f'marker0={marker0} nrecord={nrecord}')
             raise FortranMarkerError('marker0=%s*4 len(record)=%s; table_name=%r' % (
                 marker0*4, len(record), op2.table_name))
@@ -3340,7 +3346,10 @@ class OP2Reader:
                 #self.read_3_markers([1, 0], macro_rewind=False)
                 #self.show(500, types='ifs', endian=None, force=False)
                 self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
-                raise EmptyRecordError('nrecord=4')
+                if op2.allow_empty_records:
+                    raise EmptyRecordError('nrecord=4')
+                else:
+                    raise RuntimeError('EmptyRecord: nrecord=4')
             self.log.error(f'marker0={marker0} nrecord={nrecord}')
             #self.show(500, types='ifs', endian=None, force=False)
             #self.show(record, types='ifs', endian=None, force=False)
@@ -4352,7 +4361,7 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
     #print('id,mach,rho,velocity???')
     #print('id?,kfreq?,damping,velocity')
     itable = -3
-    if op2_reader.read_mode == 1:
+    if op2_reader.read_mode == 1 and 0:
         _skip_table(op2_reader, itable)
         return
 
@@ -4378,23 +4387,31 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
 
         #1  ACODE(C)    I Device code + 10*Approach Code
         #2  TCODE(C)    I 2002
-        #3  METHOD      I Method flag; 1=K, 2=KE, 3=PK, 4=PKNL
-        #4  SUBCASE     I Subcase identification number
-        #5  POINTID     I Device code + 10*Point identification number
-        #6  MACH       RS
-        #8  KFREQ      RS Reduced frequency – METHOD = K
-        #9  FCODE       I Format Code = '1'
-        #10 NUMWDE      I Number of words per entry in DATA record, set to 4
-        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
-        # 12 UNDEF(39)    None
-        #(60, 2002, 4, 1, 10, 1039199643, 1067257355, 0, 1, 4, 1)
+        # 3 DATCOD I Data code = 0
+        # 4 SUBCASE I Subcase identification number
+        # 5 UNDEF None
+        # 6 MACHNUM RS Mach number
+        # 7 Q RS Dynamic pressure
+        # 8 CONFIG(2) CHAR4 Aerodynamic configuration name
+        # 10 NUMWDE I Number of words per entry in DATA, set to 8
+        # 11 SYMXY I Aerodynamic configuration XY symmetry
+        #     -1 = SYMMETRIC
+        #      0 = ASYMMETRIC
+        #      1 = ANTISYMMETRIC
+        # 12 SYMXZ I Aerodynamic configuration XZ symmetry
+        #      -1 = ANTISYMMETRIC
+        #       0 = ASYMMETRIC
+        #       1 = SYMMETRIC
+        # 13 CHORD RS Reference chord length
+        # 14 SPAN  RS Reference span length
+        # 15 AREA  RS Reference area
+        # 16 UNDEF(35) None
         (acode, tcode, method_int, subcase_id,
-         point_device, mach, q, aerosg2d, numwide, zero, coord,
+         point_device, mach, q, aerosg2d, numwide, symxy, symxz,
          cref, bref, sref, *outi,
          title, subtitle, subcase) = out
-        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
-                  f'  cbs_ref=[{cref},{bref},{sref}]')
-        assert zero == 0, zero
+        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy} symxz={symxz}\n'
+                    f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
         assert max(outi) == 0, outi
         assert min(outi) == 0, outi
 
@@ -4417,6 +4434,12 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         assert numwide == 5, numwide
 
         op2_reader.read_3_markers([itable-1, 1, 0])
+        next_marker = op2_reader.get_marker1(rewind=True)
+        if next_marker == itable-2:
+            op2_reader.read_3_markers([itable-2, 1, 0, 0])
+            log.debug(f'{op2.table_name}; exit on marker={next_marker}')
+            return
+
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
         encoding = b'<'
@@ -4518,7 +4541,7 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
          cref, bref, sref, *outi,
          title, subtitle, subcase) = out
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
-                  f'  cbs_ref=[{cref},{bref},{sref}]')
+                  f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
         assert zero == 0, zero
         assert max(outi) == 0, outi
         assert min(outi) == 0, outi
@@ -4647,7 +4670,7 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
          cref, bref, sref, *outi,
          title, subtitle, subcase) = out
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
-                  f'  cbs_ref=[{cref},{bref},{sref}]')
+                  f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
         assert zero == 0, zero
         assert max(outi) == 0, outi
         assert min(outi) == 0, outi
@@ -4770,14 +4793,23 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
         #8  KFREQ      RS Reduced frequency – METHOD = K
         #9  FCODE       I Format Code = '1'
         #10 NUMWDE      I Number of words per entry in DATA record, set to 4
-        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
-        # 12 UNDEF(39)    None
+        #
+        # 11 SYMXY I Aerodynamic configuration XY symmetry
+        #    -1 = SYMMETRIC
+        #     0 = ASYMMETRIC
+        #     1 = ANTISYMMETRIC
+        # 12 SYMXZ I Aerodynamic configuration XZ symmetry
+        #    -1 = ANTISYMMETRIC
+        #     0 = ASYMMETRIC
+        #     1 = SYMMETRIC
+        # 13 CHORD RS Reference chord length
+        # 14 SPAN RS Reference span length
+        # 15 AREA RS Reference area
         (acode, tcode, method_int, subcase_id,
-         point_device, mach, q, aerosg2d, numwide, zero, coord,
+         point_device, mach, q, aerosg2d, numwide, symxy, symxz,
          *outi,
          title, subtitle, subcase) = out
-        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}')
-        assert zero == 0, zero
+        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
         assert max(outi) == 0, outi
         assert min(outi) == 0, outi
 
@@ -4860,14 +4892,13 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
     assert data == b'OAERCSHM', data
 
     itable = -3
-    if op2_reader.read_mode == 1:
+    if op2_reader.read_mode == 1 and 0:
         _skip_table(op2_reader, itable)
         return
 
     #                              Ma q aero ? ? ? cbs_ref zero subcase title subtitle
     structi = Struct(endian + b'5i f  f 8s   i i i 3f      35i  128s    128s  128s')
     while 1:
-
         #       trimid    coord
         # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
         # AEROS   1       1       131.0   2556.4  734000.01       0
@@ -4898,8 +4929,8 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
          cref, bref, sref, *outi,
          title, subtitle, subcase) = out
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}')
-        log.debug(f'  cbs_ref=[{cref},{bref},{sref}]')
-        assert zero == 0, zero
+        log.debug(f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
+        #assert zero == 0, zero
         assert max(outi) == 0, outi
         assert min(outi) == 0, outi
 
@@ -4916,12 +4947,18 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
         #print(f'title = {title!r}')
         #print(f'subtitle = {subtitle!r}')
         #print(f'subcase = {subcase!r}')
-
         assert acode == 12, acode
         assert tcode == 104, tcode
         assert numwide == 8, numwide
 
         op2_reader.read_3_markers([itable-1, 1, 0])
+        next_marker = op2_reader.get_marker1(rewind=True)
+        if next_marker == itable-2:  # -5
+            op2_reader.read_3_markers([itable-2, 1, 0], macro_rewind=False)
+            next_marker = op2_reader.get_marker1(rewind=False)
+            log.debug(f'{op2.table_name}; exit on marker={next_marker}')
+            return
+        #op2_reader.show(80, types='ifs')
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
         encoding = b'<'
@@ -4999,24 +5036,37 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
         out = structi.unpack(data)
 
         #1  ACODE(C)    I Device code + 10*Approach Code
-        #2  TCODE(C)    I 2002
-        #3  METHOD      I Method flag; 1=K, 2=KE, 3=PK, 4=PKNL
-        #4  SUBCASE     I Subcase identification number
-        #5  POINTID     I Device code + 10*Point identification number
-        #6  MACH       RS
-        #8  KFREQ      RS Reduced frequency – METHOD = K
-        #9  FCODE       I Format Code = '1'
-        #10 NUMWDE      I Number of words per entry in DATA record, set to 4
-        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
-        # 12 UNDEF(39)    None
+        #2  TCODE(C)    I 105
+        # 3 DATCOD I Data code = 0
+        # 4 SUBCASE I Subcase identification number
+        # 5 UNDEF None
+        # 6 MACHNUM RS Mach number
+        # 7 Q RS Dynamic pressure
+        # 8 CONFIG(2) CHAR4 Aerodynamic configuration name
+        # 10 NUMWDE I Number of words per entry in DATA, set to 8
+        # 11 SYMXY I Aerodynamic configuration XY symmetry
+        # -1 = SYMMETRIC
+        # 0 = ASYMMETRIC
+        # 1 = ANTISYMMETRIC
+        # 12 SYMXZ I Aerodynamic configuration XZ symmetry
+        # -1 = ANTISYMMETRIC
+        # 0 = ASYMMETRIC
+        # 1 = SYMMETRIC
+        # 13 CHORD RS Reference chord length
+        # 14 SPAN RS Reference span length
+        # 15 AREA RS Reference area
+        # 16 CNTLSURF(2) CHAR4 Control surface
+        # 18 REFCORDL RS Reference chord length
+        # 19 REFAREA RS Reference area
+        # 20 UNDEF(31) None
+
         (acode, tcode, method_int, subcase_id,
-         point_device, mach, q, aerosg2d, numwide, zero, coord,
+         point_device, mach, q, aerosg2d, numwide, symxy, symxz,
          name, one_a, one_b, *outi,
          title, subtitle, subcase) = out
         #print(op2.show_data(data[14*4:15*4]))
-        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}')
+        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
         log.debug(f'  name=[{name}]')
-        assert zero == 0, zero
         assert one_a == 1, one_a
         assert one_b == 1, one_b
         assert max(outi) == 0, outi

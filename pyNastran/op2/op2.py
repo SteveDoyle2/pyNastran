@@ -85,6 +85,7 @@ class OP2(OP2_Scalar, OP2Writer):
         # In general, this should be False because it does a pretty solid job
         # of catching Fatal Errors (assuming you didn't fail on a GEOMCHECK).
         self.stop_on_unclosed_file = True
+        self.allow_empty_records = False
 
         # you can pass a few more tests if you add the OP2 table name (i.e., OUGV1)
         # to the result key, but rarely do you want to do it
