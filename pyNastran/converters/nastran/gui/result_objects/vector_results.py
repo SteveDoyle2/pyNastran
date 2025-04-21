@@ -780,6 +780,10 @@ class DispForceVectorResults(VectorResultsCommon):
 
         self._set_default_from_fringe(itime, case_flag, fringe_result,
                                       is_sparse=False)
+
+        inan = np.isnan(fringe_result)
+        if len(inan):
+            vector_result[inan, :] = 0.
         return fringe_result, vector_result
 
 

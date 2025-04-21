@@ -1,7 +1,7 @@
 """tests the NastranIO class"""
 from __future__ import annotations
 import os
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from vtkmodules.vtkCommonDataModel import vtkPointData, vtkCellData
 from vtkmodules.vtkCommonCore import vtkFloatArray
@@ -236,7 +236,7 @@ def _save_layered_table_results(icase: int,
     return vtk_array
 
 def nastran_to_vtk(bdf_filename: str | BDF,
-                   op2_filename: str | OP2,
+                   op2_filename: Optional[str | OP2],
                    vtu_filename: str,
                    log_level: str='error',
                    compression_level: int=5) -> vtkUnstructuredGrid:

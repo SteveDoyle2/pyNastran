@@ -120,16 +120,41 @@ class TestOpenMDAO(unittest.TestCase):
         model.nodes[57] = node
         #print()
         str(node)
+        str(node.rstrip())
+        model.update_card('GRID', 57, 'cp', 1000)
+        str(node.rstrip())
+        model.update_card('GRID', 57, 'x1', 10000.)
+        model.update_card('GRID', 57, 'x2', 11000.)
+        model.update_card('GRID', 57, 'x3', 12000.)
+        model.update_card('GRID', 57, 'cd', 900)
+        model.update_card('GRID', 57, 'seid', 2)
+
+        #print(node)
+        # On GRID 100, set Cp (2) to 11
         model.update_card('GRID', 57, 2, 11) # cp
         str(node)
+
+        # On GRID 100, set Cp (2) to 12
         model.update_card('GRID', 57, 2, 12) # cp
         str(node)
+
+        # On GRID 100, set X (3) to 43.
         model.update_card('GRID', 57, 3, 13.) # x
         str(node)
+        # On GRID 100, set Y (4) to 14.
         model.update_card('GRID', 57, 4, 14.) # y
         str(node)
-        model.update_card('GRID', 57, 4, 14.) # y
+        # On GRID 100, set Z (5) to 15.
+        model.update_card('GRID', 57, 5, 15.) # Z
         str(node)
+
+        #|   1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
+        #+======+=====+====+====+====+====+====+====+======+
+        #| GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID |
+
+        # On GRID 67, set CD (6) to 32
+        model.update_card('GRID', 57, 6, 32) # CD
+        print(node)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -482,7 +482,8 @@ def get_volume_breakdown(model: BDF, property_ids=None,
             raise RuntimeError(msg)
     return pids_to_volume
 
-def get_mass_breakdown(model: BDF, property_ids=None,
+def get_mass_breakdown(model: BDF,
+                       property_ids: list[int]=None,
                        stop_if_no_mass: bool=True,
                        detailed: bool=False) -> Any:
     """
@@ -513,6 +514,7 @@ def get_mass_breakdown(model: BDF, property_ids=None,
     TODO: What about CONRODs, CONM2s
         #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
 
+    ..note:: WTMASS is not considered
     """
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=False,
