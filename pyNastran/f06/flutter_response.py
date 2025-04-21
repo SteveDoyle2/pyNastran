@@ -182,7 +182,7 @@ class FlutterResponse:
         modes = None
         mach = 0.0
         density_ratio = 1.0
-        assert method == 'PKNL', method
+        assert method in {'PKNL', 'PK', 'KE'}, method
         nmodes, npoints, five = fdata.shape
         assert five == 5, fdata.shape
 

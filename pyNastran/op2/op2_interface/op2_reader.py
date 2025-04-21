@@ -134,26 +134,26 @@ class OP2Reader:
         fread_matrix_matpool = partial(read_matrix_matpool, self)
         self.mapped_tables = {
             b'RST': (self.read_rst, 'restart file?'),
-            b'GPL' : (self.read_gpl, 'grid point list'),
-            b'GPLS' : (self.read_gpls, 'grid point list (superelement)'),
+            b'GPL': (self.read_gpl, 'grid point list'),
+            b'GPLS': (self.read_gpls, 'grid point list (superelement)'),
 
             # GPDT  - Grid point definition table
-            b'GPDT' : (fread_gpdt, 'grid point locations'),
-            b'GPDTS' : (fread_gpdt, 'grid point locations (superelement)'),
+            b'GPDT': (fread_gpdt, 'grid point locations'),
+            b'GPDTS': (fread_gpdt, 'grid point locations (superelement)'),
 
             # BGPDT - Basic grid point definition table.
-            b'BGPDT' : (fread_bgpdt, 'grid points in cid=0 frame'),
-            b'BGPDTS' : (fread_bgpdt, 'grid points in cid=0 (superelement)'),
-            b'BGPDTOLD' : (fread_bgpdt, 'grid points in cid=0 frame'),
-            b'BGPDTVU' : (fread_bgpdt, 'VU grid points in cid=0 frame'),
+            b'BGPDT': (fread_bgpdt, 'grid points in cid=0 frame'),
+            b'BGPDTS': (fread_bgpdt, 'grid points in cid=0 (superelement)'),
+            b'BGPDTOLD': (fread_bgpdt, 'grid points in cid=0 frame'),
+            b'BGPDTVU': (fread_bgpdt, 'VU grid points in cid=0 frame'),
 
             # optimization
-            b'DESCYC' : (partial(read_descyc, self), 'design iteration'),
-            b'DBCOPT' : (partial(read_dbcopt, self), 'design variable history table'),
-            b'DSCMCOL' : (partial(read_dscmcol, self), 'creates op2_results.responses.dscmcol'),
-            b'DESTAB' :  (partial(read_destab, self), 'creates op2_results.responses.desvars'),
+            b'DESCYC': (partial(read_descyc, self), 'design iteration'),
+            b'DBCOPT': (partial(read_dbcopt, self), 'design variable history table'),
+            b'DSCMCOL': (partial(read_dscmcol, self), 'creates op2_results.responses.dscmcol'),
+            b'DESTAB':  (partial(read_destab, self), 'creates op2_results.responses.desvars'),
 
-            #b'MEFF' : self.read_meff,
+            #b'MEFF': self.read_meff,
 
             # flutter
             b'OVG': (partial(read_ovg, self), 'aeroelastic velocity; creates op2_results.vg_vf_responses'),
@@ -166,68 +166,68 @@ class OP2Reader:
             b'OAEROP': (partial(read_oaerop, self), 'aero pressures'),
             b'OAEROF': (partial(read_oaerof, self), 'aero forces'),
 
-            b'INTMOD' : (self.read_intmod, '???'),
-            b'HISADD' : (partial(read_hisadd, self), 'optimization history; op2_results.responses.convergence_data'),
-            #b'MEF1' : (self.read_extdb, 'external superlelement matrix'),
-            b'EXTDB' : (fread_extdb, 'external superlelements'),
-            b'OMM2' : (self.read_omm2, 'max/min table'),
-            b'STDISP' : (self.read_stdisp, 'aero-structural displacement?'),
-            b'TOL' : (self.read_tol, 'time output list?'),
-            b'PCOMPT' : (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry'),
-            b'PCOMPTS' : (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry (superelement)'),
-            b'MONITOR' : (self.read_monitor, 'MONITOR point output'),
-            b'AEMONPT' : (self.read_aemonpt, 'aero matrix'),
-            b'FOL' : (self.read_fol, 'frequency output list'),
-            b'FRL' : (self.read_frl, 'frequency response list'),
-            b'SDF' : (self.read_sdf, 'aero-structural displacement?'),
-            b'IBULK' : (self.read_ibulk, 'explicit bulk data'),
-            b'ICASE' : (self.read_icase, 'explicit case control'),
+            b'INTMOD': (self.read_intmod, '???'),
+            b'HISADD': (partial(read_hisadd, self), 'optimization history; op2_results.responses.convergence_data'),
+            #b'MEF1': (self.read_extdb, 'external superlelement matrix'),
+            b'EXTDB': (fread_extdb, 'external superlelements'),
+            b'OMM2': (self.read_omm2, 'max/min table'),
+            b'STDISP': (self.read_stdisp, 'aero-structural displacement?'),
+            b'TOL': (self.read_tol, 'time output list?'),
+            b'PCOMPT': (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry'),
+            b'PCOMPTS': (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry (superelement)'),
+            b'MONITOR': (self.read_monitor, 'MONITOR point output'),
+            b'AEMONPT': (self.read_aemonpt, 'aero matrix'),
+            b'FOL': (self.read_fol, 'frequency output list'),
+            b'FRL': (self.read_frl, 'frequency response list'),
+            b'SDF': (self.read_sdf, 'aero-structural displacement?'),
+            b'IBULK': (self.read_ibulk, 'explicit bulk data'),
+            b'ICASE': (self.read_icase, 'explicit case control'),
             b'CASECC': (self.read_casecc, 'case control'),
             b'XCASECC': (self.read_xcasecc, 'case control'),
 
-            b'CDDATA' : (self.read_cddata, 'Cambell diagram'),
-            b'CMODEXT' : (partial(read_cmodext, self), 'Component mode synthesis - external'),
+            b'CDDATA': (self.read_cddata, 'Cambell diagram'),
+            b'CMODEXT': (partial(read_cmodext, self), 'Component mode synthesis - external'),
 
             #MSC
             #msc / units_mass_spring_damper
-            b'UNITS' : (self._read_units, 'units'),
+            b'UNITS': (self._read_units, 'units'),
             #b'CPHSF': self._read_cphsf,
 
             # element matrices
-            #b'KELM' : self._read_element_matrix,
-            #b'MELM' : self._read_element_matrix,
-            #b'BELM' : self._read_element_matrix,
-            #b'KELMP' : self._read_element_matrix,
-            #b'MELMP' : self._read_element_matrix,
+            #b'KELM': self._read_element_matrix,
+            #b'MELM': self._read_element_matrix,
+            #b'BELM': self._read_element_matrix,
+            #b'KELMP': self._read_element_matrix,
+            #b'MELMP': self._read_element_matrix,
 
             # element dictionaries
-            b'KDICT' : (self._read_dict, 'matrix'),
-            b'MDICT' : (self._read_dict, 'matrix'),
-            b'BDICT' : (self._read_dict, 'matrix'),
-            b'KDICTP' : (self._read_dict, 'matrix'),
-            b'MDICTP' : (self._read_dict, 'matrix'),
-            b'KDICTDS' : (self._read_dict, 'matrix'),
-            b'KDICTX' : (self._read_dict, 'matrix'),
-            b'XDICT' : (self._read_dict, 'matrix'),
-            b'XDICTB' : (self._read_dict, 'matrix'),
-            b'XDICTDS' : (self._read_dict, 'matrix'),
-            b'XDICTX' : (self._read_dict, 'matrix'),
+            b'KDICT': (self._read_dict, 'matrix'),
+            b'MDICT': (self._read_dict, 'matrix'),
+            b'BDICT': (self._read_dict, 'matrix'),
+            b'KDICTP': (self._read_dict, 'matrix'),
+            b'MDICTP': (self._read_dict, 'matrix'),
+            b'KDICTDS': (self._read_dict, 'matrix'),
+            b'KDICTX': (self._read_dict, 'matrix'),
+            b'XDICT': (self._read_dict, 'matrix'),
+            b'XDICTB': (self._read_dict, 'matrix'),
+            b'XDICTDS': (self._read_dict, 'matrix'),
+            b'XDICTX': (self._read_dict, 'matrix'),
 
             # coordinate system transformation matrices
-            b'CSTM' : (self.read_cstm, 'coordinate transforms'),
-            b'CSTMS' : (self.read_cstm, 'coordinate transforms (superelement)'),
+            b'CSTM': (self.read_cstm, 'coordinate transforms'),
+            b'CSTMS': (self.read_cstm, 'coordinate transforms (superelement)'),
             b'TRMBD': (partial(read_trmbd, self), 'euler angles for transforming from material to (deformed) basic csys'),
             b'TRMBU': (partial(read_trmbu, self), 'euler angles for transforming from material to (undeformed) basic csys'),
 
             b'R1TABRG': (partial(read_r1tabrg, self), 'DRESP1 optimization table'),
             # Qualifier info table???
-            b'QUALINFO' : (self.read_qualinfo, 'Qualifier info table'),
+            b'QUALINFO': (self.read_qualinfo, 'Qualifier info table'),
 
             # Equivalence between external and internal grid/scalar numbers
-            b'EQEXIN' : (self.read_eqexin, 'internal/external ids'),
-            b'EQEXINS' : (self.read_eqexin, 'internal/external ids (superelement)'),
+            b'EQEXIN': (self.read_eqexin, 'internal/external ids'),
+            b'EQEXINS': (self.read_eqexin, 'internal/external ids (superelement)'),
 
-            b'XSOP2DIR' : (self.read_xsop2dir, 'list of external superelement matrices?'),
+            b'XSOP2DIR': (self.read_xsop2dir, 'list of external superelement matrices?'),
             b'TUG1': (fread_tug1, 'table Displacement g-set sort 1'),
             b'TEF1': (fread_tug1, 'table element forces sort 1'),
             b'TES1': (fread_tug1, 'table stress sort 1'),
@@ -253,11 +253,11 @@ class OP2Reader:
             b'MBQG1': (fread_mef1, 'external superelement'),
             b'MK4QG1': (fread_mef1, 'external superelement'),
 
-            b'MATPOOL' : (fread_matrix_matpool, 'matrices'),
+            b'MATPOOL': (fread_matrix_matpool, 'matrices'),
 
             #b'OBC1': (self.read_obc1, 'Contact pressures and tractions at grid points'),
             #b'OBG1': (self.read_obc1, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
-            b'PTMIC' : (self._read_ptmic, 'property of VATV microphone points'),
+            b'PTMIC': (self._read_ptmic, 'property of VATV microphone points'),
 
             # OVG: Table of aeroelastic x-y plot data for V-g or V-f curves
             b'MKLIST': (self._read_mklist, 'M/K aero pairs'),
@@ -265,9 +265,9 @@ class OP2Reader:
         desc_map = {
             b'PERF': 'aero matrix',
             b'META': 'string matrix',
-            b'TUG1' : 'external superelement',
-            b'TQG1' : 'external superelement',
-            b'MKQG1' : 'external superelement',
+            b'TUG1': 'external superelement',
+            b'TQG1': 'external superelement',
+            b'MKQG1': 'external superelement',
             b'MATRV': 'external superelement',
             b'MUG1B': 'external superelement',
             #b'MEF1': 'external superelement',
@@ -829,11 +829,11 @@ class OP2Reader:
                 assert cd in [0, 2], cd
                 assert ind_dof == 0, ind_dof
                 monitor = {
-                    'name' : name,
-                    'cp' : cp,
-                    'cd' : cd,
-                    'xyz' : [x, y, z],
-                    'comps' : comps,
+                    'name': name,
+                    'cp': cp,
+                    'cd': cd,
+                    'xyz': [x, y, z],
+                    'comps': comps,
                 }
                 op2.monitor_data.append(monitor)
             self.read_3_markers([itable, 1, 0])
@@ -2196,7 +2196,7 @@ class OP2Reader:
             # (101, 102, 103)
             pass
             #self.show_data(data, types='ifs', endian=None)
-        elif 0: # pramga: no cover
+        elif 0:  # pramga: no cover
             i = 0
             j = 0
             nbytes = 128
@@ -2450,10 +2450,10 @@ class OP2Reader:
                 time = time_bytes.decode(encoding)
                 print(mass, force, length, time)
                 fields = {
-                    'mass' : mass,
-                    'force' : force,
-                    'length' : length,
-                    'time' : time, }
+                    'mass': mass,
+                    'force': force,
+                    'length': length,
+                    'time': time, }
                 op2.add_dti('UNITS', fields)
             else:
                 raise RuntimeError(f'ndata={len(data)} (expected 40); data={data!r}')
@@ -3884,10 +3884,10 @@ class OP2Reader:
             if self.load_as_h5:
                 assert self.h5_file is not None, self.h5_file
             op2.data_code = {
-                '_encoding' : self._encoding,
-                'load_as_h5' : self.load_as_h5,
-                'h5_file' : self.h5_file,
-                'size' : self.size,
+                '_encoding': self._encoding,
+                'load_as_h5': self.load_as_h5,
+                'h5_file': self.h5_file,
+                'size': self.size,
             }
             op2.obj = None
             data, ndata = self._read_record_ndata()
@@ -4278,17 +4278,34 @@ def read_ovg(op2_reader: OP2Reader) -> None:
         data = op2_reader._read_record(debug=False)  # table 4
         fdata = np.frombuffer(data, dtype=op2.fdtype8)
         idata = np.frombuffer(data, dtype=op2.idtype8)
-        velocity, is_complexf, damping, freq = fdata
-        is_complex = idata[1]
-        assert is_complex in {0, 1}, f'fdata={fdata} idata={idata} is_complex={is_complex}'
-        #print(velocity, damping, freq)
+        nvalues = len(fdata) // 4
 
         if imode != imode_old:
             datafs.append(dataf)
             modes.append(imode)
             imode_old = imode
             dataf = []
-        dataf.append([rho, mach, velocity, damping, freq])
+
+        if nvalues == 4:
+            velocity, is_complexf, damping, freq = fdata
+            is_complex = idata[1]
+            assert is_complex in {0, 1}, f'fdata={fdata} idata={idata} is_complex={is_complex}'
+            dataf.append([rho, mach, velocity, damping, freq])
+        else:
+            assert len(fdata) % 4 == 0, len(fdata)
+            fdata = fdata.reshape(nvalues, 4)
+            idata = idata.reshape(nvalues, 4)
+            velocity = fdata[:, 0]
+            is_complexf = idata[:, 1]  # flag for if complex modes were output; 0=NO, 1=YES
+            damping = fdata[:, 2]      # g
+            freq = fdata[:, 3]
+            assert is_complexf.min() in {0, 1}, is_complexf.min()
+            assert is_complexf.max() in {0, 1}, is_complexf.max()
+
+            #rho = np.ones(numwide, dtype=velocity.dtype) * rho
+            #mach = np.ones(numwide, dtype=velocity.dtype) * mach
+            for velocityi, dampingi, freqi in zip(velocity, damping, freq):
+                dataf.append([rho, mach, velocityi, dampingi, freqi])
         itable -= 2
     datafs.append(dataf)
     op2_reader.read_markers([0])
@@ -4299,7 +4316,6 @@ def read_ovg(op2_reader: OP2Reader) -> None:
     cref = 1.0
     is_xysym = False
     is_xzsym = False
-
     if hasattr(op2, 'aero') and op2.aero is not None:
         aero = op2.aero
         cref = aero.cref
