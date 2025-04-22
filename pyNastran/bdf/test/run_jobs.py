@@ -126,7 +126,8 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: PathLike | list[PathLike],
     bdf_filename_dirname_list_out = _deglob(bdf_filename_dirname_list_in, recursive=recursive)
     del bdf_filename_dirname_list_in
 
-    bdf_filenames = _directory_to_files(bdf_filename_dirname_list_out)
+    bdf_filenames = _directory_to_files(
+        bdf_filename_dirname_list_out, extensions, recursive)
     del bdf_filename_dirname_list_out
 
     bdf_filenames_run = []
@@ -162,7 +163,8 @@ def _deglob(bdf_filename_dirname_list_in: list[Path],
     return bdf_filename_dirname_list_out
 
 
-def _directory_to_files(bdf_filename_dirname_list: list[Path]) -> list[Path]:
+def _directory_to_files(bdf_filename_dirname_list: list[PathLike],
+                        extensions: list[str], recursive: bool) -> list[Path]:
     bdf_filenames: list[Path] = []
     for bdf_filename_dirnamei in bdf_filename_dirname_list:
         assert bdf_filename_dirnamei.exists(), bdf_filename_dirnamei
@@ -173,7 +175,7 @@ def _directory_to_files(bdf_filename_dirname_list: list[Path]) -> list[Path]:
                 bdf_filenamesi = []
                 for ext in extensions:
                     files = get_files_of_type(
-                        dirname, extension=ext, max_size=0.)  # no size limit (in MB)
+                        dirname, extension=ext, max_size_mb=0.0)  # no size limit (in MB)
                     bdf_filenamesi += [Path(fname) for fname in files
                                        if ('.test_bdf.' not in os.path.basename(fname) and
                                            '.test_op2.' not in os.path.basename(fname))]
