@@ -2161,12 +2161,16 @@ def test_bdf_argparse(argv=None):
                                help='the encoding method (default=%r)\n' % encoding)
     #parent_parser.add_argument('--skip_nominal', action='store_true',
                                #help='skip the nominal model comparison (default=False)')
+
     parent_parser.add_argument('--skip_loads', action='store_true',
                                help='skip loads calcuations (default=False)')
     parent_parser.add_argument('--skip_mass', action='store_true',
                                help='skip mass calcuations (default=False)')
     parent_parser.add_argument('--skip_aero', action='store_true',
                                help='skip the processing of the caero mesh (default=False)')
+    parent_parser.add_argument('--skip_skin', action='store_true',
+                               help='skip the solid skinning (default=False)')
+
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
     parent_parser.add_argument('--duplicate', action='store_true',
@@ -2335,6 +2339,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_loads   skip the loads summation calculations (default=False)\n'
         '  --skip_mass    skip the mass properties calculations (default=False)\n'
         '  --skip_aero    skip the processing of the caero mesh (default=False)\n'
+        '  --skip_skin    skip the solid skinning (default=False)\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2366,6 +2371,7 @@ def main(argv=None):
     data['run_loads'] = not data['skip_loads']
     data['run_mass'] = not data['skip_mass']
     data['run_export_caero'] = not data['skip_aero']
+    data['run_skin_solids'] = not data['skip_skin']
 
     is_double = False
     if data['double']:
@@ -2410,6 +2416,7 @@ def main(argv=None):
             #run_loads=data['run_loads'],
             run_mass=data['run_mass'],
             run_export_caero=data['run_export_caero'],
+            run_skin_solids=data['run_skin_solids'],
             run_extract_bodies=False,
 
             is_lax_parser=data['lax'],
@@ -2463,6 +2470,7 @@ def main(argv=None):
             sum_load=data['run_loads'],
             run_mass=data['run_mass'],
             run_export_caero=data['run_export_caero'],
+            run_skin_solids=data['run_skin_solids'],
             run_extract_bodies=False,
 
             is_lax_parser=data['lax'],

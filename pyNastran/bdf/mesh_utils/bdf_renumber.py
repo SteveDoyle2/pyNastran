@@ -28,6 +28,7 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
                  starting_id_dict: Optional[dict[str, int]]=None,
                  round_ids: bool=False,
                  cards_to_skip: Optional[list[str]]=None,
+                 punch: bool=False,
                  log: Optional[SimpleLogger]=None,
                  debug: bool=False) -> BDF:
     """
@@ -200,30 +201,30 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
     assert size in [8, 16], size
     assert isinstance(is_double, bool), is_double
     starting_id_dict_default = {
-        'cid' : 1,
-        'nid' : 1,
-        'eid' : 1,
-        'pid' : 1,
-        'mid' : 1,
-        'spc_id' : 1,
-        'mpc_id' : 1,
-        'load_id' : 1,
-        'set_id' : 1,
-        'dload_id' : 1,
+        'cid': 1,
+        'nid': 1,
+        'eid': 1,
+        'pid': 1,
+        'mid': 1,
+        'spc_id': 1,
+        'mpc_id': 1,
+        'load_id': 1,
+        'set_id': 1,
+        'dload_id': 1,
 
-        'method_id' : 1,
-        'cmethod_id' : 1,
-        'spline_id' : 1,
-        'caero_id' : 1,
-        'table_id' : 1,
-        'flfact_id' : 1,
-        'flutter_id' : 1,
-        'freq_id' : 1,
-        'tstep_id' : 1,
-        'tstepnl_id' : 1,
-        'suport_id' : 1,
-        'suport1_id' : 1,
-        'tf_id' : 1,
+        'method_id': 1,
+        'cmethod_id': 1,
+        'spline_id': 1,
+        'caero_id': 1,
+        'table_id': 1,
+        'flfact_id': 1,
+        'flutter_id': 1,
+        'freq_id': 1,
+        'tstep_id': 1,
+        'tstepnl_id': 1,
+        'suport_id': 1,
+        'suport1_id': 1,
+        'tf_id': 1,
     }
     # fill up starting_id_dict
     if starting_id_dict is None:
@@ -364,7 +365,8 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
     #suport_map = {}
     suport1_map = {}
 
-    model = _get_bdf_model(bdf_filename, cards_to_skip=cards_to_skip, log=log, debug=debug)
+    model = _get_bdf_model(bdf_filename, cards_to_skip=cards_to_skip,
+                           punch=punch, log=log, debug=debug)
 
     nid_map, unused_reverse_nid_map = _create_nid_maps(model, starting_id_dict, nid)
     mid_map, all_materials = _create_mid_map(model, mid)
@@ -587,51 +589,51 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
     temp_map = load_map # wrong???
 
     mapper = {
-        'elements' : eid_map,
-        'masses' : mass_id_map,
-        'rigid_elements' : rigid_elements_map,
-        'nodes' : nid_map,
-        'coords' : cid_map,
-        'materials' : mid_map,
-        'properties' : properties_map,
-        'properties_mass' : properties_mass_map,
-        'spcs' : spc_map,
-        'mpcs' : mpc_map,
-        'METHOD' : method_map,
-        'CMETHOD' : cmethod_map,
-        'FLFACT' : flfact_map,
-        'FMETHOD' : flutter_map,
-        'FREQUENCY' : freq_map,
-        'sets' : set_map,
-        'splines' : spline_id_map,
-        'caeros' : caero_id_map,
+        'elements': eid_map,
+        'masses': mass_id_map,
+        'rigid_elements': rigid_elements_map,
+        'nodes': nid_map,
+        'coords': cid_map,
+        'materials': mid_map,
+        'properties': properties_map,
+        'properties_mass': properties_mass_map,
+        'spcs': spc_map,
+        'mpcs': mpc_map,
+        'METHOD': method_map,
+        'CMETHOD': cmethod_map,
+        'FLFACT': flfact_map,
+        'FMETHOD': flutter_map,
+        'FREQUENCY': freq_map,
+        'sets': set_map,
+        'splines': spline_id_map,
+        'caeros': caero_id_map,
 
-        'DLOAD' : dload_map,
-        'RANDOM' : dload_map, # RANDPS, RANDT1
-        'LOAD' : load_map,
-        'LOADSET' : lseq_map,
-        'CLOAD' : lseq_map,
-        'TSTEP' : tstep_map,
-        'TSTEPNL' : tstepnl_map,
-        'SUPORT1' : suport1_map,
-        'NLPARM' : nlparm_map,
-        'SDAMPING' : table_sdamping_map,
-        'DESSUB' : dessub_map,
-        'DESOBJ' : dresp_map,
-        'GUST' : gust_map,
-        'TRIM' : trim_map,
-        'IC' : tic_map,
-        'CSSCHD' : csschd_map,
-        'TFL' : tranfer_function_map,
-        #'DESSUB' : dessub_map,
+        'DLOAD': dload_map,
+        'RANDOM': dload_map, # RANDPS, RANDT1
+        'LOAD': load_map,
+        'LOADSET': lseq_map,
+        'CLOAD': lseq_map,
+        'TSTEP': tstep_map,
+        'TSTEPNL': tstepnl_map,
+        'SUPORT1': suport1_map,
+        'NLPARM': nlparm_map,
+        'SDAMPING': table_sdamping_map,
+        'DESSUB': dessub_map,
+        'DESOBJ': dresp_map,
+        'GUST': gust_map,
+        'TRIM': trim_map,
+        'IC': tic_map,
+        'CSSCHD': csschd_map,
+        'TFL': tranfer_function_map,
+        #'DESSUB': dessub_map,
         # bad...
-        'TEMPERATURE(LOAD)' : temp_map,
-        'TEMPERATURE(INITIAL)' : temp_map,
-        #'DATAREC' : datarec_map,
-        #'ADAPT' : adapt_map,
-        #'SUPER' : super_map,
-        #'BOUTPUT' : boutput_map,
-        #'OUTRCV' : outrcv_map,
+        'TEMPERATURE(LOAD)': temp_map,
+        'TEMPERATURE(INITIAL)': temp_map,
+        #'DATAREC': datarec_map,
+        #'ADAPT': adapt_map,
+        #'SUPER': super_map,
+        #'BOUTPUT': boutput_map,
+        #'OUTRCV': outrcv_map,
     }
     #print('****suport1_map', suport1_map)
     #print('****dessub_map', dessub_map)
@@ -679,14 +681,14 @@ def get_renumber_starting_ids_from_model(model: BDF) -> dict[str, int]:
     ])
     mids = model.material_ids
     starting_id_dict = {
-        'cid' : max(model.coords) + 1,
-        'nid' : max(model.point_ids) + 1,
-        'eid' : eid_max + 1,
-        'pid' : pid_max + 1,
-        'mid' : max(mids) + 1 if mids else 1,
-        'set_id' : max(model.sets) + 1 if model.sets else 1,
-        'spline_id' : max(model.splines) + 1 if model.splines else 1,
-        'caero_id' : max(caero.box_ids[-1, -1]
+        'cid': max(model.coords) + 1,
+        'nid': max(model.point_ids) + 1,
+        'eid': eid_max + 1,
+        'pid': pid_max + 1,
+        'mid': max(mids) + 1 if mids else 1,
+        'set_id': max(model.sets) + 1 if model.sets else 1,
+        'spline_id': max(model.splines) + 1 if model.splines else 1,
+        'caero_id': max(caero.box_ids[-1, -1]
                          for caero in model.caeros.values()) + 1 if model.caeros else 1,
     }
     return starting_id_dict
@@ -696,31 +698,31 @@ def get_starting_ids_dict_from_mapper(model, mapper):
     starting_id_dict2 = {}
     missed_keys = []
     name_map = {
-        'nodes' : 'nid',
-        'elements' : 'eid',
-        'properties' : 'pid',
-        'materials' : 'mid',
-        'coords' : 'cid',
-        'TFL' : 'tf_id',
-        'FREQUENCY' : 'freq_id',
-        'splines' : 'spline_id',
-        'METHOD' : 'method_id',
-        'CMETHOD' : 'cmethod_id',
-        'caeros' : 'caero_id',
-        'TSTEP' : 'tstep_id',
-        'TSTEPNL' : 'tstepnl_id',
-        'FLFACT' : 'flfact_id',
-        'FMETHOD' : 'flutter_id',
-        'spcs' : 'spc_id',
-        'mpcs' : 'mpc_id',
-        'LOAD' : 'load_id',
-        'DLOAD' : 'dload_id', 'RANDOM' : 'dload_id',
-        'SUPORT' : 'suport_id',
-        'SUPORT1' : 'suport1_id',
-        'sets' : 'set_id',
+        'nodes': 'nid',
+        'elements': 'eid',
+        'properties': 'pid',
+        'materials': 'mid',
+        'coords': 'cid',
+        'TFL': 'tf_id',
+        'FREQUENCY': 'freq_id',
+        'splines': 'spline_id',
+        'METHOD': 'method_id',
+        'CMETHOD': 'cmethod_id',
+        'caeros': 'caero_id',
+        'TSTEP': 'tstep_id',
+        'TSTEPNL': 'tstepnl_id',
+        'FLFACT': 'flfact_id',
+        'FMETHOD': 'flutter_id',
+        'spcs': 'spc_id',
+        'mpcs': 'mpc_id',
+        'LOAD': 'load_id',
+        'DLOAD': 'dload_id', 'RANDOM': 'dload_id',
+        'SUPORT': 'suport_id',
+        'SUPORT1': 'suport1_id',
+        'sets': 'set_id',
 
         # other valid names in starting_id_dict
-        #'table_id' : 1,
+        #'table_id': 1,
     }
     #print('------------------------------------')
     for key, old_new_map in mapper.items():
@@ -792,11 +794,11 @@ def superelement_renumber(bdf_filename: PathLike | BDF,
     """
     if starting_id_dict is None:
         starting_id_dict = {
-            'cid' : 1,
-            'nid' : 1,
-            'eid' : 1,
-            'pid' : 1,
-            'mid' : 1,
+            'cid': 1,
+            'nid': 1,
+            'eid': 1,
+            'pid': 1,
+            'mid': 1,
         }
 
     model = _get_bdf_model(bdf_filename, cards_to_skip=cards_to_skip, log=log, debug=debug)
@@ -828,8 +830,18 @@ def superelement_renumber(bdf_filename: PathLike | BDF,
     return model #, mapper
 
 
-def _create_nid_maps(model, starting_id_dict, nid):
-    """builds the nid_maps"""
+def _create_nid_maps(model: BDF,
+                     starting_id_dict: dict[int, int],
+                     nid: int) -> tuple[dict[int, int], dict[int, int]]:
+    """builds the nid_maps
+
+    Returns
+    -------
+    nid_map : dict[int, int]
+        ???
+    reverse_nid_map : dict[int, int]
+        ???
+    """
     nid_map = {}
     reverse_nid_map = {}
 
@@ -854,13 +866,13 @@ def _create_nid_maps(model, starting_id_dict, nid):
         for nidi in nids_spoints_epoints:
             if nidi in spoints or nidi in epoints:
                 pass
-                #print('sid=%s -> %s' % (nid, i))
+                #print('sid=%s -> %s' % (nidi, i))
                 #i += 1
             else:
                 while i in spoints or i in epoints:
                     #print('*bump')
                     i += 1
-                #print('nid=%s -> %s' % (nid, i))
+                #print('nid=%s -> %s' % (nidi, i))
                 nid_map[nidi] = i
                 reverse_nid_map[i] = nidi
                 i += 1
@@ -1101,8 +1113,8 @@ def _update_case_control(model: BDF,
     # unified system that uses the same key
     # for bdf_merge and _update_case_control
     case_control_card_to_pynastran_key = {
-        'MPC' : 'mpcs',
-        'SPC' : 'spcs',
+        'MPC': 'mpcs',
+        'SPC': 'spcs',
     }
 
     elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE', 'EKE']

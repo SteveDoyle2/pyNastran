@@ -3480,7 +3480,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                                                  is_list=False, has_none=has_none)
         self._add_card_helper(card_obj, card, card_name, comment)
 
-    def get_xyz_in_coord_no_xref(self, cid=0, fdtype='float64', sort_ids=True):
+    def get_xyz_in_coord_no_xref(self, cid: int=0, fdtype: str='float64',
+                                 sort_ids: bool=True) -> tuple[np.ndarray, np.ndarray]:
         """see get_xyz_in_coord"""
         npoints, nids, all_nodes = self._get_npoints_nids_allnids()
 
@@ -3532,7 +3533,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             raise ValueError(msg)
         return npoints, nids, all_nodes
 
-    def get_xyz_in_coord(self, cid: int=0, fdtype: str='float64', sort_ids: bool=True):
+    def get_xyz_in_coord(self, cid: int=0, fdtype: str='float64',
+                         sort_ids: bool=True) -> np.ndarray:
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -3569,7 +3571,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             xyz_cid0 = xyz_cid0[isort, :]
         return xyz_cid0
 
-    def _add_card_helper_ifile(self, ifile: int, card_obj, card, card_name: str, comment: str=''):
+    def _add_card_helper_ifile(self, ifile: int, card_obj, card, card_name: str,
+                               comment: str=''):
         """See ``_add_card_helper``"""
         if card_name == 'ECHOON':
             self.echo = True

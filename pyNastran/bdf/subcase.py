@@ -713,6 +713,11 @@ class Subcase:
             )
             raise TypeError(msg)
 
+    def remove_parameter(self, key: str) -> None:
+        if self.has_parameter(key):
+            del self.params[key]
+        # TODO: warning?
+
     def add(self, key: str, value: Any, options: list[Any], param_type: str) -> None:
         self._validate_param_type(param_type)
         self._add_data(key, value, options, param_type)

@@ -85,6 +85,7 @@ class OP2(OP2_Scalar, OP2Writer):
         # In general, this should be False because it does a pretty solid job
         # of catching Fatal Errors (assuming you didn't fail on a GEOMCHECK).
         self.stop_on_unclosed_file = True
+        self.allow_empty_records = False
 
         # you can pass a few more tests if you add the OP2 table name (i.e., OUGV1)
         # to the result key, but rarely do you want to do it
@@ -842,6 +843,11 @@ class OP2(OP2_Scalar, OP2Writer):
            }
 
         """
+        #self.log.info('---self.get_key_order()---')
+        #for key in self.get_key_order(filter_keys=True):
+            #self.log.info('  %s' % str(key))
+        self.get_key_order(filter_keys=True)
+
         self.combine = combine
         result_types = self.get_table_types()
         results_to_skip = (
@@ -1100,7 +1106,7 @@ class OP2(OP2_Scalar, OP2Writer):
                             continue
                         ncommon = res.slice_data(slice_elements)
 
-    def get_key_order(self) -> list[NastranKey]:
+    def get_key_order(self, filter_keys=False) -> list[NastranKey]:
         """
         Returns
         -------
@@ -1235,7 +1241,8 @@ class OP2(OP2_Scalar, OP2Writer):
         if len(keys3) == 0:
             self.log.warning('No results...\n' + self.get_op2_stats(short=True))
         #assert len(keys3) > 0, keys3
-        return keys3
+        keys_out = _filter_keys(keys3, filter_keys=filter_keys)
+        return keys_out
 
     def print_subcase_key(self) -> None:
         self.log.info('---self.subcase_key---')
@@ -1426,6 +1433,63 @@ def _inlist_int_tuple(case_key: int | tuple,
             if key == case_key:
                 return True
     return found_case_key
+
+
+def _filter_keys(keys: list, filter_keys: bool=True) -> list:
+    """
+    Reduce the number of case keys to simplify post-processing
+    TODO: ignore SORT2 for now
+
+    Parameters
+    -------
+    keys : list
+        all the keys to consider
+
+    Returns
+    -------
+    keys_out : list
+         a reduced set of keys; the max optimization id is kept
+
+    >>> keys = [(1, 1, 1, 1,  0, '', ''),
+                (1, 1, 1, 55, 0, '', ''), ]
+    >>> keys_out = _filter_keys(keys)
+    >>> keys_out
+    [(1, 1, 1, 55, 0, '', '')]
+
+    """
+    if not filter_keys:
+        return keys
+
+    keys_out = []
+    flag_to_keys = defaultdict(list)
+
+    # fill keys_to_flag
+    for key in keys:
+        (isubcase, analysis_code, sort_method, count, ogs,  # ints
+         superelement_adaptivity_index, pval_step) = key
+        flag = (isubcase, analysis_code, ogs, superelement_adaptivity_index, pval_step)
+        flag_to_keys[flag].append(key)
+
+    # reduce keys_to_flag
+    for flag, flagged_keys in flag_to_keys.items():
+        if len(flagged_keys) == 1:
+            key0 = flagged_keys[0]
+            keys_out.append(key0)
+        else:
+            flagged_keys_temp = defaultdict(list)
+            for key in flagged_keys:
+                (isubcase, analysis_code, sort_method, count, ogs,  # ints
+                 superelement_adaptivity_index, pval_step) = key
+                del isubcase, analysis_code, ogs, superelement_adaptivity_index, pval_step
+                # sort_method, count
+                flagged_keys_temp[count].append(key)
+            flagged_keys_temp = dict(flagged_keys_temp)
+            max_count = max(flagged_keys_temp)
+            key_out = flagged_keys_temp[max_count]
+            assert len(key_out) == 1, key_out
+            keys_out.append(key_out[0])
+    return keys_out
+
 
 def read_op2(op2_filename: Optional[str]=None,
              load_geometry: bool=False,

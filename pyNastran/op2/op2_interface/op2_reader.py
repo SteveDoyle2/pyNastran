@@ -43,7 +43,7 @@ import sys
 from copy import deepcopy
 from itertools import count
 from functools import partial
-from struct import unpack, Struct # , error as struct_error
+from struct import unpack, Struct  # , error as struct_error
 from typing import Optional, Callable, TYPE_CHECKING
 
 import numpy as np
@@ -134,26 +134,26 @@ class OP2Reader:
         fread_matrix_matpool = partial(read_matrix_matpool, self)
         self.mapped_tables = {
             b'RST': (self.read_rst, 'restart file?'),
-            b'GPL' : (self.read_gpl, 'grid point list'),
-            b'GPLS' : (self.read_gpls, 'grid point list (superelement)'),
+            b'GPL': (self.read_gpl, 'grid point list'),
+            b'GPLS': (self.read_gpls, 'grid point list (superelement)'),
 
             # GPDT  - Grid point definition table
-            b'GPDT' : (fread_gpdt, 'grid point locations'),
-            b'GPDTS' : (fread_gpdt, 'grid point locations (superelement)'),
+            b'GPDT': (fread_gpdt, 'grid point locations'),
+            b'GPDTS': (fread_gpdt, 'grid point locations (superelement)'),
 
             # BGPDT - Basic grid point definition table.
-            b'BGPDT' : (fread_bgpdt, 'grid points in cid=0 frame'),
-            b'BGPDTS' : (fread_bgpdt, 'grid points in cid=0 (superelement)'),
-            b'BGPDTOLD' : (fread_bgpdt, 'grid points in cid=0 frame'),
-            b'BGPDTVU' : (fread_bgpdt, 'VU grid points in cid=0 frame'),
+            b'BGPDT': (fread_bgpdt, 'grid points in cid=0 frame'),
+            b'BGPDTS': (fread_bgpdt, 'grid points in cid=0 (superelement)'),
+            b'BGPDTOLD': (fread_bgpdt, 'grid points in cid=0 frame'),
+            b'BGPDTVU': (fread_bgpdt, 'VU grid points in cid=0 frame'),
 
             # optimization
-            b'DESCYC' : (partial(read_descyc, self), 'design iteration'),
-            b'DBCOPT' : (partial(read_dbcopt, self), 'design variable history table'),
-            b'DSCMCOL' : (partial(read_dscmcol, self), 'creates op2_results.responses.dscmcol'),
-            b'DESTAB' :  (partial(read_destab, self), 'creates op2_results.responses.desvars'),
+            b'DESCYC': (partial(read_descyc, self), 'design iteration'),
+            b'DBCOPT': (partial(read_dbcopt, self), 'design variable history table'),
+            b'DSCMCOL': (partial(read_dscmcol, self), 'creates op2_results.responses.dscmcol'),
+            b'DESTAB':  (partial(read_destab, self), 'creates op2_results.responses.desvars'),
 
-            #b'MEFF' : self.read_meff,
+            #b'MEFF': self.read_meff,
 
             # flutter
             b'OVG': (partial(read_ovg, self), 'aeroelastic velocity; creates op2_results.vg_vf_responses'),
@@ -166,68 +166,68 @@ class OP2Reader:
             b'OAEROP': (partial(read_oaerop, self), 'aero pressures'),
             b'OAEROF': (partial(read_oaerof, self), 'aero forces'),
 
-            b'INTMOD' : (self.read_intmod, '???'),
-            b'HISADD' : (partial(read_hisadd, self), 'optimization history; op2_results.responses.convergence_data'),
-            #b'MEF1' : (self.read_extdb, 'external superlelement matrix'),
-            b'EXTDB' : (fread_extdb, 'external superlelements'),
-            b'OMM2' : (self.read_omm2, 'max/min table'),
-            b'STDISP' : (self.read_stdisp, 'aero-structural displacement?'),
-            b'TOL' : (self.read_tol, 'time output list?'),
-            b'PCOMPT' : (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry'),
-            b'PCOMPTS' : (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry (superelement)'),
-            b'MONITOR' : (self.read_monitor, 'MONITOR point output'),
-            b'AEMONPT' : (self.read_aemonpt, 'aero matrix'),
-            b'FOL' : (self.read_fol, 'frequency output list'),
-            b'FRL' : (self.read_frl, 'frequency response list'),
-            b'SDF' : (self.read_sdf, 'aero-structural displacement?'),
-            b'IBULK' : (self.read_ibulk, 'explicit bulk data'),
-            b'ICASE' : (self.read_icase, 'explicit case control'),
+            b'INTMOD': (self.read_intmod, '???'),
+            b'HISADD': (partial(read_hisadd, self), 'optimization history; op2_results.responses.convergence_data'),
+            #b'MEF1': (self.read_extdb, 'external superlelement matrix'),
+            b'EXTDB': (fread_extdb, 'external superlelements'),
+            b'OMM2': (self.read_omm2, 'max/min table'),
+            b'STDISP': (self.read_stdisp, 'aero-structural displacement?'),
+            b'TOL': (self.read_tol, 'time output list?'),
+            b'PCOMPT': (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry'),
+            b'PCOMPTS': (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry (superelement)'),
+            b'MONITOR': (self.read_monitor, 'MONITOR point output'),
+            b'AEMONPT': (self.read_aemonpt, 'aero matrix'),
+            b'FOL': (self.read_fol, 'frequency output list'),
+            b'FRL': (self.read_frl, 'frequency response list'),
+            b'SDF': (self.read_sdf, 'aero-structural displacement?'),
+            b'IBULK': (self.read_ibulk, 'explicit bulk data'),
+            b'ICASE': (self.read_icase, 'explicit case control'),
             b'CASECC': (self.read_casecc, 'case control'),
             b'XCASECC': (self.read_xcasecc, 'case control'),
 
-            b'CDDATA' : (self.read_cddata, 'Cambell diagram'),
-            b'CMODEXT' : (partial(read_cmodext, self), 'Component mode synthesis - external'),
+            b'CDDATA': (self.read_cddata, 'Cambell diagram'),
+            b'CMODEXT': (partial(read_cmodext, self), 'Component mode synthesis - external'),
 
             #MSC
             #msc / units_mass_spring_damper
-            b'UNITS' : (self._read_units, 'units'),
+            b'UNITS': (self._read_units, 'units'),
             #b'CPHSF': self._read_cphsf,
 
             # element matrices
-            #b'KELM' : self._read_element_matrix,
-            #b'MELM' : self._read_element_matrix,
-            #b'BELM' : self._read_element_matrix,
-            #b'KELMP' : self._read_element_matrix,
-            #b'MELMP' : self._read_element_matrix,
+            #b'KELM': self._read_element_matrix,
+            #b'MELM': self._read_element_matrix,
+            #b'BELM': self._read_element_matrix,
+            #b'KELMP': self._read_element_matrix,
+            #b'MELMP': self._read_element_matrix,
 
             # element dictionaries
-            b'KDICT' : (self._read_dict, 'matrix'),
-            b'MDICT' : (self._read_dict, 'matrix'),
-            b'BDICT' : (self._read_dict, 'matrix'),
-            b'KDICTP' : (self._read_dict, 'matrix'),
-            b'MDICTP' : (self._read_dict, 'matrix'),
-            b'KDICTDS' : (self._read_dict, 'matrix'),
-            b'KDICTX' : (self._read_dict, 'matrix'),
-            b'XDICT' : (self._read_dict, 'matrix'),
-            b'XDICTB' : (self._read_dict, 'matrix'),
-            b'XDICTDS' : (self._read_dict, 'matrix'),
-            b'XDICTX' : (self._read_dict, 'matrix'),
+            b'KDICT': (self._read_dict, 'matrix'),
+            b'MDICT': (self._read_dict, 'matrix'),
+            b'BDICT': (self._read_dict, 'matrix'),
+            b'KDICTP': (self._read_dict, 'matrix'),
+            b'MDICTP': (self._read_dict, 'matrix'),
+            b'KDICTDS': (self._read_dict, 'matrix'),
+            b'KDICTX': (self._read_dict, 'matrix'),
+            b'XDICT': (self._read_dict, 'matrix'),
+            b'XDICTB': (self._read_dict, 'matrix'),
+            b'XDICTDS': (self._read_dict, 'matrix'),
+            b'XDICTX': (self._read_dict, 'matrix'),
 
             # coordinate system transformation matrices
-            b'CSTM' : (self.read_cstm, 'coordinate transforms'),
-            b'CSTMS' : (self.read_cstm, 'coordinate transforms (superelement)'),
+            b'CSTM': (self.read_cstm, 'coordinate transforms'),
+            b'CSTMS': (self.read_cstm, 'coordinate transforms (superelement)'),
             b'TRMBD': (partial(read_trmbd, self), 'euler angles for transforming from material to (deformed) basic csys'),
             b'TRMBU': (partial(read_trmbu, self), 'euler angles for transforming from material to (undeformed) basic csys'),
 
             b'R1TABRG': (partial(read_r1tabrg, self), 'DRESP1 optimization table'),
             # Qualifier info table???
-            b'QUALINFO' : (self.read_qualinfo, 'Qualifier info table'),
+            b'QUALINFO': (self.read_qualinfo, 'Qualifier info table'),
 
             # Equivalence between external and internal grid/scalar numbers
-            b'EQEXIN' : (self.read_eqexin, 'internal/external ids'),
-            b'EQEXINS' : (self.read_eqexin, 'internal/external ids (superelement)'),
+            b'EQEXIN': (self.read_eqexin, 'internal/external ids'),
+            b'EQEXINS': (self.read_eqexin, 'internal/external ids (superelement)'),
 
-            b'XSOP2DIR' : (self.read_xsop2dir, 'list of external superelement matrices?'),
+            b'XSOP2DIR': (self.read_xsop2dir, 'list of external superelement matrices?'),
             b'TUG1': (fread_tug1, 'table Displacement g-set sort 1'),
             b'TEF1': (fread_tug1, 'table element forces sort 1'),
             b'TES1': (fread_tug1, 'table stress sort 1'),
@@ -253,11 +253,11 @@ class OP2Reader:
             b'MBQG1': (fread_mef1, 'external superelement'),
             b'MK4QG1': (fread_mef1, 'external superelement'),
 
-            b'MATPOOL' : (fread_matrix_matpool, 'matrices'),
+            b'MATPOOL': (fread_matrix_matpool, 'matrices'),
 
             #b'OBC1': (self.read_obc1, 'Contact pressures and tractions at grid points'),
             #b'OBG1': (self.read_obc1, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
-            b'PTMIC' : (self._read_ptmic, 'property of VATV microphone points'),
+            b'PTMIC': (self._read_ptmic, 'property of VATV microphone points'),
 
             # OVG: Table of aeroelastic x-y plot data for V-g or V-f curves
             b'MKLIST': (self._read_mklist, 'M/K aero pairs'),
@@ -265,9 +265,9 @@ class OP2Reader:
         desc_map = {
             b'PERF': 'aero matrix',
             b'META': 'string matrix',
-            b'TUG1' : 'external superelement',
-            b'TQG1' : 'external superelement',
-            b'MKQG1' : 'external superelement',
+            b'TUG1': 'external superelement',
+            b'TQG1': 'external superelement',
+            b'MKQG1': 'external superelement',
             b'MATRV': 'external superelement',
             b'MUG1B': 'external superelement',
             #b'MEF1': 'external superelement',
@@ -829,11 +829,11 @@ class OP2Reader:
                 assert cd in [0, 2], cd
                 assert ind_dof == 0, ind_dof
                 monitor = {
-                    'name' : name,
-                    'cp' : cp,
-                    'cd' : cd,
-                    'xyz' : [x, y, z],
-                    'comps' : comps,
+                    'name': name,
+                    'cp': cp,
+                    'cd': cd,
+                    'xyz': [x, y, z],
+                    'comps': comps,
                 }
                 op2.monitor_data.append(monitor)
             self.read_3_markers([itable, 1, 0])
@@ -2196,7 +2196,7 @@ class OP2Reader:
             # (101, 102, 103)
             pass
             #self.show_data(data, types='ifs', endian=None)
-        elif 0: # pramga: no cover
+        elif 0:  # pramga: no cover
             i = 0
             j = 0
             nbytes = 128
@@ -2450,10 +2450,10 @@ class OP2Reader:
                 time = time_bytes.decode(encoding)
                 print(mass, force, length, time)
                 fields = {
-                    'mass' : mass,
-                    'force' : force,
-                    'length' : length,
-                    'time' : time, }
+                    'mass': mass,
+                    'force': force,
+                    'length': length,
+                    'time': time, }
                 op2.add_dti('UNITS', fields)
             else:
                 raise RuntimeError(f'ndata={len(data)} (expected 40); data={data!r}')
@@ -2501,8 +2501,10 @@ class OP2Reader:
         ----------
         n : int
             number of markers to get
-        rewind : bool
+        rewind : bool; default=True
             should the file be returned to the starting point
+        macro_rewind : bool; default=False
+            print flag for debugging
 
         Returns
         -------
@@ -2736,8 +2738,12 @@ class OP2Reader:
             op2.f.seek(na)
             op2.n = na
             if nrecord == 4:
-                self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
-                raise EmptyRecordError('nrecord=4')
+                if op2.allow_empty_records:
+                    self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
+                    raise EmptyRecordError('nrecord=4')
+                else:
+                    self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
+                    raise FortranMarkerError('EmptyRecord: nrecord=4')
             self.log.error(f'marker0={marker0} nrecord={nrecord}')
             raise FortranMarkerError('marker0=%s*4 len(record)=%s; table_name=%r' % (
                 marker0*4, len(record), op2.table_name))
@@ -3340,7 +3346,10 @@ class OP2Reader:
                 #self.read_3_markers([1, 0], macro_rewind=False)
                 #self.show(500, types='ifs', endian=None, force=False)
                 self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
-                raise EmptyRecordError('nrecord=4')
+                if op2.allow_empty_records:
+                    raise EmptyRecordError('nrecord=4')
+                else:
+                    raise RuntimeError('EmptyRecord: nrecord=4')
             self.log.error(f'marker0={marker0} nrecord={nrecord}')
             #self.show(500, types='ifs', endian=None, force=False)
             #self.show(record, types='ifs', endian=None, force=False)
@@ -3875,10 +3884,10 @@ class OP2Reader:
             if self.load_as_h5:
                 assert self.h5_file is not None, self.h5_file
             op2.data_code = {
-                '_encoding' : self._encoding,
-                'load_as_h5' : self.load_as_h5,
-                'h5_file' : self.h5_file,
-                'size' : self.size,
+                '_encoding': self._encoding,
+                'load_as_h5': self.load_as_h5,
+                'h5_file': self.h5_file,
+                'size': self.size,
             }
             op2.obj = None
             data, ndata = self._read_record_ndata()
@@ -4269,17 +4278,34 @@ def read_ovg(op2_reader: OP2Reader) -> None:
         data = op2_reader._read_record(debug=False)  # table 4
         fdata = np.frombuffer(data, dtype=op2.fdtype8)
         idata = np.frombuffer(data, dtype=op2.idtype8)
-        velocity, is_complexf, damping, freq = fdata
-        is_complex = idata[1]
-        assert is_complex in {0, 1}, f'fdata={fdata} idata={idata} is_complex={is_complex}'
-        #print(velocity, damping, freq)
+        nvalues = len(fdata) // 4
 
         if imode != imode_old:
             datafs.append(dataf)
             modes.append(imode)
             imode_old = imode
             dataf = []
-        dataf.append([rho, mach, velocity, damping, freq])
+
+        if nvalues == 4:
+            velocity, is_complexf, damping, freq = fdata
+            is_complex = idata[1]
+            assert is_complex in {0, 1}, f'fdata={fdata} idata={idata} is_complex={is_complex}'
+            dataf.append([rho, mach, velocity, damping, freq])
+        else:
+            assert len(fdata) % 4 == 0, len(fdata)
+            fdata = fdata.reshape(nvalues, 4)
+            idata = idata.reshape(nvalues, 4)
+            velocity = fdata[:, 0]
+            is_complexf = idata[:, 1]  # flag for if complex modes were output; 0=NO, 1=YES
+            damping = fdata[:, 2]      # g
+            freq = fdata[:, 3]
+            assert is_complexf.min() in {0, 1}, is_complexf.min()
+            assert is_complexf.max() in {0, 1}, is_complexf.max()
+
+            #rho = np.ones(numwide, dtype=velocity.dtype) * rho
+            #mach = np.ones(numwide, dtype=velocity.dtype) * mach
+            for velocityi, dampingi, freqi in zip(velocity, damping, freq):
+                dataf.append([rho, mach, velocityi, dampingi, freqi])
         itable -= 2
     datafs.append(dataf)
     op2_reader.read_markers([0])
@@ -4290,7 +4316,6 @@ def read_ovg(op2_reader: OP2Reader) -> None:
     cref = 1.0
     is_xysym = False
     is_xzsym = False
-
     if hasattr(op2, 'aero') and op2.aero is not None:
         aero = op2.aero
         cref = aero.cref
@@ -4320,6 +4345,14 @@ def _skip_table(op2_reader: OP2Reader, itable: int) -> None:
 
         data = op2_reader._skip_record()  # table 3
         op2_reader.read_3_markers([itable - 1, 1, 0])
+
+        next_marker = op2_reader.get_marker1(rewind=True)
+        if next_marker == itable-2:
+            op2_reader.read_3_markers([itable-2, 1, 0])
+            next_marker2 = op2_reader.get_marker1(rewind=False)
+            #log.debug(f'{op2.table_name}; exit on marker={next_marker2}')
+            return
+
         data = op2_reader._read_record()  # table 4
         itable -= 2
     op2_reader.read_markers([0])
@@ -4378,23 +4411,31 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
 
         #1  ACODE(C)    I Device code + 10*Approach Code
         #2  TCODE(C)    I 2002
-        #3  METHOD      I Method flag; 1=K, 2=KE, 3=PK, 4=PKNL
-        #4  SUBCASE     I Subcase identification number
-        #5  POINTID     I Device code + 10*Point identification number
-        #6  MACH       RS
-        #8  KFREQ      RS Reduced frequency – METHOD = K
-        #9  FCODE       I Format Code = '1'
-        #10 NUMWDE      I Number of words per entry in DATA record, set to 4
-        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
-        # 12 UNDEF(39)    None
-        #(60, 2002, 4, 1, 10, 1039199643, 1067257355, 0, 1, 4, 1)
+        # 3 DATCOD I Data code = 0
+        # 4 SUBCASE I Subcase identification number
+        # 5 UNDEF None
+        # 6 MACHNUM RS Mach number
+        # 7 Q RS Dynamic pressure
+        # 8 CONFIG(2) CHAR4 Aerodynamic configuration name
+        # 10 NUMWDE I Number of words per entry in DATA, set to 8
+        # 11 SYMXY I Aerodynamic configuration XY symmetry
+        #     -1 = SYMMETRIC
+        #      0 = ASYMMETRIC
+        #      1 = ANTISYMMETRIC
+        # 12 SYMXZ I Aerodynamic configuration XZ symmetry
+        #      -1 = ANTISYMMETRIC
+        #       0 = ASYMMETRIC
+        #       1 = SYMMETRIC
+        # 13 CHORD RS Reference chord length
+        # 14 SPAN  RS Reference span length
+        # 15 AREA  RS Reference area
+        # 16 UNDEF(35) None
         (acode, tcode, method_int, subcase_id,
-         point_device, mach, q, aerosg2d, numwide, zero, coord,
+         point_device, mach, q, aerosg2d, numwide, symxy, symxz,
          cref, bref, sref, *outi,
          title, subtitle, subcase) = out
-        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
-                  f'  cbs_ref=[{cref},{bref},{sref}]')
-        assert zero == 0, zero
+        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy} symxz={symxz}\n'
+                    f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
         assert max(outi) == 0, outi
         assert min(outi) == 0, outi
 
@@ -4417,6 +4458,13 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         assert numwide == 5, numwide
 
         op2_reader.read_3_markers([itable-1, 1, 0])
+        next_marker = op2_reader.get_marker1(rewind=True)
+        if next_marker == itable-2:
+            op2_reader.read_3_markers([itable-2, 1, 0])
+            next_marker2 = op2_reader.get_marker1(rewind=False)
+            #log.debug(f'{op2.table_name}; exit on marker={next_marker2}')
+            return
+
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
         encoding = b'<'
@@ -4518,7 +4566,7 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
          cref, bref, sref, *outi,
          title, subtitle, subcase) = out
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
-                  f'  cbs_ref=[{cref},{bref},{sref}]')
+                  f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
         assert zero == 0, zero
         assert max(outi) == 0, outi
         assert min(outi) == 0, outi
@@ -4647,7 +4695,7 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
          cref, bref, sref, *outi,
          title, subtitle, subcase) = out
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
-                  f'  cbs_ref=[{cref},{bref},{sref}]')
+                  f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
         assert zero == 0, zero
         assert max(outi) == 0, outi
         assert min(outi) == 0, outi
@@ -4770,14 +4818,23 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
         #8  KFREQ      RS Reduced frequency – METHOD = K
         #9  FCODE       I Format Code = '1'
         #10 NUMWDE      I Number of words per entry in DATA record, set to 4
-        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
-        # 12 UNDEF(39)    None
+        #
+        # 11 SYMXY I Aerodynamic configuration XY symmetry
+        #    -1 = SYMMETRIC
+        #     0 = ASYMMETRIC
+        #     1 = ANTISYMMETRIC
+        # 12 SYMXZ I Aerodynamic configuration XZ symmetry
+        #    -1 = ANTISYMMETRIC
+        #     0 = ASYMMETRIC
+        #     1 = SYMMETRIC
+        # 13 CHORD RS Reference chord length
+        # 14 SPAN RS Reference span length
+        # 15 AREA RS Reference area
         (acode, tcode, method_int, subcase_id,
-         point_device, mach, q, aerosg2d, numwide, zero, coord,
+         point_device, mach, q, aerosg2d, numwide, symxy, symxz,
          *outi,
          title, subtitle, subcase) = out
-        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}')
-        assert zero == 0, zero
+        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
         assert max(outi) == 0, outi
         assert min(outi) == 0, outi
 
@@ -4867,7 +4924,6 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
     #                              Ma q aero ? ? ? cbs_ref zero subcase title subtitle
     structi = Struct(endian + b'5i f  f 8s   i i i 3f      35i  128s    128s  128s')
     while 1:
-
         #       trimid    coord
         # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
         # AEROS   1       1       131.0   2556.4  734000.01       0
@@ -4898,8 +4954,8 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
          cref, bref, sref, *outi,
          title, subtitle, subcase) = out
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}')
-        log.debug(f'  cbs_ref=[{cref},{bref},{sref}]')
-        assert zero == 0, zero
+        log.debug(f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
+        #assert zero == 0, zero
         assert max(outi) == 0, outi
         assert min(outi) == 0, outi
 
@@ -4916,12 +4972,18 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
         #print(f'title = {title!r}')
         #print(f'subtitle = {subtitle!r}')
         #print(f'subcase = {subcase!r}')
-
         assert acode == 12, acode
         assert tcode == 104, tcode
         assert numwide == 8, numwide
 
         op2_reader.read_3_markers([itable-1, 1, 0])
+        next_marker = op2_reader.get_marker1(rewind=True)
+        if next_marker == itable-2:  # -5
+            op2_reader.read_3_markers([itable-2, 1, 0], macro_rewind=False)
+            next_marker2 = op2_reader.get_marker1(rewind=False)
+            #log.debug(f'{op2.table_name}; exit on marker={next_marker2}')
+            return
+        #op2_reader.show(80, types='ifs')
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
         encoding = b'<'
@@ -4999,24 +5061,37 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
         out = structi.unpack(data)
 
         #1  ACODE(C)    I Device code + 10*Approach Code
-        #2  TCODE(C)    I 2002
-        #3  METHOD      I Method flag; 1=K, 2=KE, 3=PK, 4=PKNL
-        #4  SUBCASE     I Subcase identification number
-        #5  POINTID     I Device code + 10*Point identification number
-        #6  MACH       RS
-        #8  KFREQ      RS Reduced frequency – METHOD = K
-        #9  FCODE       I Format Code = '1'
-        #10 NUMWDE      I Number of words per entry in DATA record, set to 4
-        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
-        # 12 UNDEF(39)    None
+        #2  TCODE(C)    I 105
+        # 3 DATCOD I Data code = 0
+        # 4 SUBCASE I Subcase identification number
+        # 5 UNDEF None
+        # 6 MACHNUM RS Mach number
+        # 7 Q RS Dynamic pressure
+        # 8 CONFIG(2) CHAR4 Aerodynamic configuration name
+        # 10 NUMWDE I Number of words per entry in DATA, set to 8
+        # 11 SYMXY I Aerodynamic configuration XY symmetry
+        # -1 = SYMMETRIC
+        # 0 = ASYMMETRIC
+        # 1 = ANTISYMMETRIC
+        # 12 SYMXZ I Aerodynamic configuration XZ symmetry
+        # -1 = ANTISYMMETRIC
+        # 0 = ASYMMETRIC
+        # 1 = SYMMETRIC
+        # 13 CHORD RS Reference chord length
+        # 14 SPAN RS Reference span length
+        # 15 AREA RS Reference area
+        # 16 CNTLSURF(2) CHAR4 Control surface
+        # 18 REFCORDL RS Reference chord length
+        # 19 REFAREA RS Reference area
+        # 20 UNDEF(31) None
+
         (acode, tcode, method_int, subcase_id,
-         point_device, mach, q, aerosg2d, numwide, zero, coord,
+         point_device, mach, q, aerosg2d, numwide, symxy, symxz,
          name, one_a, one_b, *outi,
          title, subtitle, subcase) = out
         #print(op2.show_data(data[14*4:15*4]))
-        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}')
+        log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
         log.debug(f'  name=[{name}]')
-        assert zero == 0, zero
         assert one_a == 1, one_a
         assert one_b == 1, one_b
         assert max(outi) == 0, outi

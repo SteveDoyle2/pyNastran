@@ -783,9 +783,21 @@ class CTRIA3(ShellElement):
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
+
     def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         normal = tri_area_centroid_normal(self.model.grid, self.nodes)
         return normal
+
+    def edges(self) -> np.ndarray:
+        n1 = self.nodes[:, 0]
+        n2 = self.nodes[:, 1]
+        n3 = self.nodes[:, 2]
+        e1 = np.column_stack([n1, n2])
+        e2 = np.column_stack([n2, n3])
+        e3 = np.column_stack([n3, n1])
+        edges = np.vstack([e1, e2, e3])
+        edges.sort(axis=1)
+        return edges
 
     @property
     def base_nodes(self) -> np.ndarray:
@@ -1305,6 +1317,19 @@ class CQUAD4(ShellElement):
         """
         raise NotImplementedError()
 
+    def split_to_ctria3(self) -> np.ndarray:
+        """TODO: support quadratic faces"""
+        base_nodes = self.base_nodes
+        n1 = base_nodes[:, 0]
+        n2 = base_nodes[:, 1]
+        n3 = base_nodes[:, 2]
+        n4 = base_nodes[:, 3]
+        # get faces
+        tri1 = np.column_stack([n1, n2, n3])
+        tri2 = np.column_stack([n1, n3, n4])
+        tris = np.vstack([tri1, tri2])
+        return tris
+
     def convert(self, xyz_scale: float=1.0,
                 **kwargs):
         self.zoffset *= xyz_scale
@@ -1498,6 +1523,19 @@ class CQUAD4(ShellElement):
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
+
+    def edges(self) -> np.ndarray:
+        n1 = self.nodes[:, 0]
+        n2 = self.nodes[:, 1]
+        n3 = self.nodes[:, 2]
+        n4 = self.nodes[:, 3]
+        e1 = np.column_stack([n1, n2])
+        e2 = np.column_stack([n2, n3])
+        e3 = np.column_stack([n3, n4])
+        e4 = np.column_stack([n4, n1])
+        edges = np.vstack([e1, e2, e3, e4])
+        edges.sort(axis=1)
+        return edges
 
     def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         normal = quad_area_centroid_normal(self.model.grid, self.nodes)

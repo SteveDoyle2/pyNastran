@@ -27,7 +27,7 @@ import copy
 from struct import Struct, pack
 from itertools import count
 import warnings
-from typing import TextIO
+from typing import TextIO, Optional
 
 import numpy as np
 
@@ -1890,7 +1890,8 @@ class ComplexTableArray(TableArray):
             page_num += 1
         return page_num
 
-    def write_sort1_as_sort2(self, f06_file, page_num, page_stamp, header, words, is_mag_phase):
+    def write_sort1_as_sort2(self, f06_file: TextIO, page_num: int,
+                             page_stamp, header, words, is_mag_phase):
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
 
@@ -1979,8 +1980,8 @@ class ComplexTableArray(TableArray):
             #page_num += 1
         #return page_num
 
-    def write_op2(self, op2_file, fascii, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file: BinaryIO, fascii: TextIO, itable: int, new_result,
+                  date, is_mag_phase=False, endian: str='>'):
         """writes an OP2"""
         import inspect
         allowed_tables = [
@@ -2139,7 +2140,12 @@ class ComplexTableArray(TableArray):
         #return page_num
 
     def plot_freq(self, nids: np.ndarray, dof: int,
-                  mag_unit='', ifig: int=1):
+                  mag_unit='', scale: float=1.0,
+                  labels: Optional[list[str]]=None,
+                  yscale: str='log', ifig: int=1):
+        if labels is None:
+            nnodes = len(nids)
+            labels = [None] * nnodes
         import matplotlib.pyplot as plt
         fig = plt.figure(ifig)
         nrows = 2
@@ -2155,15 +2161,16 @@ class ComplexTableArray(TableArray):
 
         assert len(inids) == len(nids)
         tag = ' (excitation)'
-        for i, nid in enumerate(nids):
+        for i, nid, label in zip(count(), nids, labels):
             # ax1.loglog(freq, mag[:, i, idof], label=f'N={nid} dof={dof}')
             # ax2.semilogx(freq, phase[:, i, idof])
 
-            ax1.semilogy(freq, mag[:, i, idof], label=f'N={nid} dof={dof}{tag}')
+            ax1.plot(freq, scale*mag[:, i, idof], label=f'N={nid} dof={dof}{tag} {label}')
             #ax1.plot(freq, mag[:, i, idof], label=f'N={nid} dof={dof}{tag}')
             ax2.plot(freq, phase[:, i, idof])
             tag = ''
 
+        ax1.set_yscale(yscale)
         ax1.legend()
         ax1.grid()
         ax2.grid()
@@ -2178,7 +2185,8 @@ class ComplexTableArray(TableArray):
 
     def plot_tf(self, nids_in: int | list[int],
                 nids_out: int | list[int],
-                dof: int, ifig: int=1):
+                dof: int,
+                yscale: str='log', ifig: int=1):
         if isinstance(nids_out, integer_types):
             nids_out = [nids_out]
         nout = len(nids_out)
@@ -2208,14 +2216,13 @@ class ComplexTableArray(TableArray):
 
         # nid_in, nid_out = nids
         # inid_in, inid_out = inids
-
         for inid, nid_out, nid_in in zip(count(), nids_out, nids_in):
-            ax1.semilogy(freq, mag[:, inid, idof], label=f'TF({nid_out}/{nid_in}); dof={dof}')
+            ax1.plot(freq, mag[:, inid, idof], label=f'TF({nid_out}/{nid_in}); dof={dof}')
             # ax1.loglog(freq, mag[:, idof], label=f'TF; dof={dof}')
             # ax2.semilogx(freq, phase[:, idof])
-
             #ax1.plot(freq, mag[:, idof], label=f'TF; dof={dof}')
             ax2.plot(freq, phase[:, inid, idof])
+        ax1.set_yscale(yscale)
 
         ax1.legend()
         ax1.grid()
@@ -2237,12 +2244,12 @@ def index_str_to_axis(index_str: str) -> int:
         j = 3
     elif index_str in ['phase', 'p']:
         j = 4
-    else:
-        raise ValueError('index_str=%r' % index_str)
+    else:  # pragma: no cover
+        raise ValueError(f'index_str={index_str!r}')
     return j
 
-def set_complex_table(cls, data_code, is_sort1, isubcase,
-                      node_gridtype, data, times):
+def set_complex_table(cls, data_code, is_sort1: bool, isubcase: int,
+                      node_gridtype: np.ndarray, data: np.ndarray, times: np.ndarray):
     assert node_gridtype.ndim == 2, node_gridtype.shape
     ntimes = data.shape[0]
     nnodes = data.shape[1]
@@ -2261,7 +2268,7 @@ def set_complex_table(cls, data_code, is_sort1, isubcase,
     obj._times = times
     return obj
 
-def pandas_extract_rows(data_frame, ugridtype_str, index_names):
+def pandas_extract_rows(data_frame, ugridtype_str: np.ndarray, index_names: list[str]):
     """removes the t2-t6 for S and E points"""
     import pandas as pd
     letter_dims = [

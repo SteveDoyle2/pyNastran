@@ -23,6 +23,7 @@ import numpy as np
 import pyNastran
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
+from pyNastran.bdf.mesh_utils.bdf_renumber_exclude import bdf_renumber_exclude
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.solid_dof import solid_dof
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model
@@ -441,7 +442,7 @@ def cmd_line_renumber(argv=None, quiet: bool=False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    options = '[--nid NID] [--eid EID] [--pid PID] [--mid MID]'
+    options = '[--nid NID] [--eid EID] [--pid PID] [--mid MID] [--punch]'
     # TODO: add punch?
     msg = (
         "Usage:\n"
@@ -462,7 +463,7 @@ def cmd_line_renumber(argv=None, quiet: bool=False) -> None:
         '--pid PID       starting property id\n'
         '--mid MID       starting material id\n'
         '--superelement  calls superelement_renumber\n'
-        #'--punch         flag to identify a *.pch/*.inc file\n'
+        '--punch         flag to identify a *.pch/*.inc file\n'
         '--size SIZE     set the field size (default=16)\n\n'
 
         'Info:\n'
@@ -482,7 +483,8 @@ def cmd_line_renumber(argv=None, quiet: bool=False) -> None:
     bdf_filename, punch, log = _get_bdf_filename_punch_log(data, quiet)
     bdf_filename_out = data['OUT_BDF_FILENAME']
     if bdf_filename_out is None:
-        bdf_filename_out = 'renumber.bdf'
+        base, ext = os.path.splitext(bdf_filename)
+        bdf_filename_out = f'{base}.renumber{ext}'
 
     size = 16
     if data['--size']:
@@ -514,7 +516,7 @@ def cmd_line_renumber(argv=None, quiet: bool=False) -> None:
                               starting_id_dict=starting_id_dict, #round_ids=False,
                               cards_to_skip=cards_to_skip, log=log)
     else:
-        bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
+        bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False, punch=punch,
                      starting_id_dict=starting_id_dict, round_ids=False,
                      cards_to_skip=cards_to_skip, log=log)
 

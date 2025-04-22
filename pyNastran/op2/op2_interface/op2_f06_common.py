@@ -320,180 +320,180 @@ class OP2_F06_Common:
 
     # ------------------------------------------------------------------
     # strain
-    @property
-    def celas1_strain(self):
-        self.deprecated('model.celas1_strain', 'model.op2_results.strain.celas1_strain', '1.4')
-        return self.op2_results.strain.celas1_strain
-    @property
-    def celas2_strain(self):
-        self.deprecated('model.celas2_strain', 'model.op2_results.strain.celas2_strain', '1.4')
-        return self.op2_results.strain.celas2_strain
-    @property
-    def celas3_strain(self):
-        self.deprecated('model.celas3_strain', 'model.op2_results.strain.celas3_strain', '1.4')
-        return self.op2_results.strain.celas3_strain
-    @property
-    def celas4_strain(self):
-        self.deprecated('model.celas4_strain', 'model.op2_results.strain.celas4_strain', '1.4')
-        return self.op2_results.strain.celas4_strain
-
-    @property
-    def crod_strain(self):
-        self.deprecated('model.crod_strain', 'model.op2_results.strain.crod_strain', '1.4')
-        return self.op2_results.strain.crod_strain
-    @property
-    def ctube_strain(self):
-        self.deprecated('model.ctube_strain', 'model.op2_results.strain.ctube_strain', '1.4')
-        return self.op2_results.strain.crod_strain
-    @property
-    def conrod_strain(self):
-        self.deprecated('model.conrod_strain', 'model.op2_results.strain.conrod_strain', '1.4')
-        return self.op2_results.strain.conrod_strain
-
-    @property
-    def cbar_strain(self):
-        self.deprecated('model.cbar_strain', 'model.op2_results.strain.cbar_strain', '1.4')
-        return self.op2_results.strain.cbar_strain
-    @property
-    def cbeam_strain(self):
-        self.deprecated('model.cbeam_strain', 'model.op2_results.strain.cbeam_strain', '1.4')
-        return self.op2_results.strain.cbeam_strain
-    @property
-    def cbend_strain(self):
-        self.deprecated('model.cbend_strain', 'model.op2_results.strain.cbend_strain', '1.4')
-        return self.op2_results.strain.cbend_strain
-
-    @property
-    def cquad4_strain(self):
-        self.deprecated('model.cquad4_strain', 'model.op2_results.strain.cquad4_strain', '1.4')
-        return self.op2_results.strain.cquad4_strain
-    @property
-    def cquad8_strain(self):
-        self.deprecated('model.cquad8_strain', 'model.op2_results.strain.cquad8_strain', '1.4')
-        return self.op2_results.strain.cquad8_strain
-    @property
-    def cquadr_strain(self):
-        self.deprecated('model.cquadr_strain', 'model.op2_results.strain.cquadr_strain', '1.4')
-        return self.op2_results.strain.cquadr_strain
-
-    @property
-    def ctria3_strain(self):
-        self.deprecated('model.ctria3_strain', 'model.op2_results.strain.ctria3_strain', '1.4')
-        return self.op2_results.strain.ctria3_strain
-    @property
-    def ctria6_strain(self):
-        self.deprecated('model.ctria6_strain', 'model.op2_results.strain.ctria6_strain', '1.4')
-        return self.op2_results.strain.ctria6_strain
-    @property
-    def ctriar_strain(self):
-        self.deprecated('model.ctriar_strain', 'model.op2_results.strain.ctriar_strain', '1.4')
-        return self.op2_results.strain.ctriar_strain
-    @property
-    def ctriax_strain(self):
-        self.deprecated('model.ctriax_strain', 'model.op2_results.strain.ctriax_strain', '1.4')
-        return self.op2_results.strain.ctriax_strain
-    @property
-    def ctriax6_strain(self):
-        self.deprecated('model.ctriax6_strain', 'model.op2_results.strain.ctriax6_strain', '1.4')
-        return self.op2_results.strain.ctriax6_strain
-
-    @property
-    def ctetra_strain(self):
-        self.deprecated('model.ctetra_strain', 'model.op2_results.strain.ctetra_strain', '1.4')
-        return self.op2_results.strain.ctetra_strain
-    @property
-    def cpenta_strain(self):
-        self.deprecated('model.cpenta_strain', 'model.op2_results.strain.cpenta_strain', '1.4')
-        return self.op2_results.strain.cpenta_strain
-    @property
-    def chexa_strain(self):
-        self.deprecated('model.chexa_strain', 'model.op2_results.strain.chexa_strain', '1.4')
-        return self.op2_results.strain.chexa_strain
-    @property
-    def cpyram_strain(self):
-        self.deprecated('model.cpyram_strain', 'model.op2_results.strain.cpyram_strain', '1.4')
-        return self.op2_results.strain.cpyram_strain
-
-    @property
-    def cplstn3_strain(self):
-        self.deprecated('model.cplstn3_strain', 'model.op2_results.strain.cplstn3_strain', '1.4')
-        return self.op2_results.strain.cplstn3_strain
-    @property
-    def cplstn4_strain(self):
-        self.deprecated('model.cplstn4_strain', 'model.op2_results.strain.cplstn4_strain', '1.4')
-        return self.op2_results.strain.cplstn4_strain
-    @property
-    def cplstn6_strain(self):
-        self.deprecated('model.cplstn6_strain', 'model.op2_results.strain.cplstn6_strain', '1.4')
-        return self.op2_results.strain.cplstn6_strain
-    @property
-    def cplstn8_strain(self):
-        self.deprecated('model.cplstn8_strain', 'model.op2_results.strain.cplstn8_strain', '1.4')
-        return self.op2_results.strain.cplstn8_strain
-
-    @property
-    def cplsts3_strain(self):
-        self.deprecated('model.cplsts3_strain', 'model.op2_results.strain.cplsts3_strain', '1.4')
-        return self.op2_results.strain.cplsts3_strain
-    @property
-    def cplsts4_strain(self):
-        self.deprecated('model.cplsts4_strain', 'model.op2_results.strain.cplsts4_strain', '1.4')
-        return self.op2_results.strain.cplsts4_strain
-    @property
-    def cplsts6_strain(self):
-        self.deprecated('model.cplsts6_strain', 'model.op2_results.strain.cplsts6_strain', '1.4')
-        return self.op2_results.strain.cplsts6_strain
-    @property
-    def cplsts8_strain(self):
-        self.deprecated('model.cplsts8_strain', 'model.op2_results.strain.cplsts8_strain', '1.4')
-        return self.op2_results.strain.cplsts8_strain
-
-    @property
-    def cshear_strain(self):
-        self.deprecated('model.cshear_strain', 'model.op2_results.stress.cshear_strain', '1.4')
-        return self.op2_results.strain.cshear_strain
-    @property
-    def cweld_strain(self):
-        self.deprecated('model.cweld_strain', 'model.op2_results.stress.cweld_strain', '1.4')
-        return self.op2_results.strain.cweld_strain
-    @property
-    def cbush_strain(self):
-        self.deprecated('model.cbush_strain', 'model.op2_results.stress.cbush_strain', '1.4')
-        return self.op2_results.strain.cbush_strain
-    @property
-    def cfast_strain(self):
-        self.deprecated('model.cfast_strain', 'model.op2_results.stress.cfast_strain', '1.4')
-        return self.op2_results.strain.cfast_strain
-    @property
-    def cbar_strain_10nodes(self):
-        self.deprecated('model.cbar_strain_10nodes', 'model.op2_results.strain.cbar_strain_10nodes', '1.4')
-        return self.op2_results.strain.cbar_strain_10nodes
-
-    @property
-    def chexa_composite_strain(self):
-        self.deprecated('model.chexa_composite_strain', 'model.op2_results.strain.chexa_composite_strain', '1.4')
-        return self.op2_results.strain.chexa_composite_strain
-    @property
-    def cpenta_composite_strain(self):
-        self.deprecated('model.cpenta_composite_strain', 'model.op2_results.strain.cpenta_composite_strain', '1.4')
-        return self.op2_results.strain.cpenta_composite_strain
-    @property
-    def hyperelastic_cquad4_strain(self):
-        self.deprecated('model.hyperelastic_cquad4_strain', 'model.op2_results.strain.hyperelastic_cquad4_strain', '1.4')
-        return self.op2_results.strain.hyperelastic_cquad4_strain
-
-    @chexa_composite_strain.setter
-    def chexa_composite_strain(self, chexa_composite_strain):
-        self.deprecated('model.chexa_composite_strain', 'model.op2_results.strain.chexa_composite_strain', '1.4')
-        self.op2_results.strain.chexa_composite_strain = chexa_composite_strain
-    @cpenta_composite_strain.setter
-    def cpenta_composite_strain(self, cpenta_composite_strain):
-        self.deprecated('model.cpenta_composite_strain', 'model.op2_results.strain.cpenta_composite_strain', '1.4')
-        self.op2_results.strain.cpenta_composite_strain = cpenta_composite_strain
-    @hyperelastic_cquad4_strain.setter
-    def hyperelastic_cquad4_strain(self, hyperelastic_cquad4_strain):
-        self.deprecated('model.hyperelastic_cquad4_strain', 'model.op2_results.strain.hyperelastic_cquad4_strain', '1.4')
-        self.op2_results.strain.hyperelastic_cquad4_strain = hyperelastic_cquad4_strain
+    # @property
+    # def celas1_strain(self):
+    #     self.deprecated('model.celas1_strain', 'model.op2_results.strain.celas1_strain', '1.4')
+    #     return self.op2_results.strain.celas1_strain
+    # @property
+    # def celas2_strain(self):
+    #     self.deprecated('model.celas2_strain', 'model.op2_results.strain.celas2_strain', '1.4')
+    #     return self.op2_results.strain.celas2_strain
+    # @property
+    # def celas3_strain(self):
+    #     self.deprecated('model.celas3_strain', 'model.op2_results.strain.celas3_strain', '1.4')
+    #     return self.op2_results.strain.celas3_strain
+    # @property
+    # def celas4_strain(self):
+    #     self.deprecated('model.celas4_strain', 'model.op2_results.strain.celas4_strain', '1.4')
+    #     return self.op2_results.strain.celas4_strain
+    #
+    # @property
+    # def crod_strain(self):
+    #     self.deprecated('model.crod_strain', 'model.op2_results.strain.crod_strain', '1.4')
+    #     return self.op2_results.strain.crod_strain
+    # @property
+    # def ctube_strain(self):
+    #     self.deprecated('model.ctube_strain', 'model.op2_results.strain.ctube_strain', '1.4')
+    #     return self.op2_results.strain.crod_strain
+    # @property
+    # def conrod_strain(self):
+    #     self.deprecated('model.conrod_strain', 'model.op2_results.strain.conrod_strain', '1.4')
+    #     return self.op2_results.strain.conrod_strain
+    #
+    # @property
+    # def cbar_strain(self):
+    #     self.deprecated('model.cbar_strain', 'model.op2_results.strain.cbar_strain', '1.4')
+    #     return self.op2_results.strain.cbar_strain
+    # @property
+    # def cbeam_strain(self):
+    #     self.deprecated('model.cbeam_strain', 'model.op2_results.strain.cbeam_strain', '1.4')
+    #     return self.op2_results.strain.cbeam_strain
+    # @property
+    # def cbend_strain(self):
+    #     self.deprecated('model.cbend_strain', 'model.op2_results.strain.cbend_strain', '1.4')
+    #     return self.op2_results.strain.cbend_strain
+    #
+    # @property
+    # def cquad4_strain(self):
+    #     self.deprecated('model.cquad4_strain', 'model.op2_results.strain.cquad4_strain', '1.4')
+    #     return self.op2_results.strain.cquad4_strain
+    # @property
+    # def cquad8_strain(self):
+    #     self.deprecated('model.cquad8_strain', 'model.op2_results.strain.cquad8_strain', '1.4')
+    #     return self.op2_results.strain.cquad8_strain
+    # @property
+    # def cquadr_strain(self):
+    #     self.deprecated('model.cquadr_strain', 'model.op2_results.strain.cquadr_strain', '1.4')
+    #     return self.op2_results.strain.cquadr_strain
+    #
+    # @property
+    # def ctria3_strain(self):
+    #     self.deprecated('model.ctria3_strain', 'model.op2_results.strain.ctria3_strain', '1.4')
+    #     return self.op2_results.strain.ctria3_strain
+    # @property
+    # def ctria6_strain(self):
+    #     self.deprecated('model.ctria6_strain', 'model.op2_results.strain.ctria6_strain', '1.4')
+    #     return self.op2_results.strain.ctria6_strain
+    # @property
+    # def ctriar_strain(self):
+    #     self.deprecated('model.ctriar_strain', 'model.op2_results.strain.ctriar_strain', '1.4')
+    #     return self.op2_results.strain.ctriar_strain
+    # @property
+    # def ctriax_strain(self):
+    #     self.deprecated('model.ctriax_strain', 'model.op2_results.strain.ctriax_strain', '1.4')
+    #     return self.op2_results.strain.ctriax_strain
+    # @property
+    # def ctriax6_strain(self):
+    #     self.deprecated('model.ctriax6_strain', 'model.op2_results.strain.ctriax6_strain', '1.4')
+    #     return self.op2_results.strain.ctriax6_strain
+    #
+    # @property
+    # def ctetra_strain(self):
+    #     self.deprecated('model.ctetra_strain', 'model.op2_results.strain.ctetra_strain', '1.4')
+    #     return self.op2_results.strain.ctetra_strain
+    # @property
+    # def cpenta_strain(self):
+    #     self.deprecated('model.cpenta_strain', 'model.op2_results.strain.cpenta_strain', '1.4')
+    #     return self.op2_results.strain.cpenta_strain
+    # @property
+    # def chexa_strain(self):
+    #     self.deprecated('model.chexa_strain', 'model.op2_results.strain.chexa_strain', '1.4')
+    #     return self.op2_results.strain.chexa_strain
+    # @property
+    # def cpyram_strain(self):
+    #     self.deprecated('model.cpyram_strain', 'model.op2_results.strain.cpyram_strain', '1.4')
+    #     return self.op2_results.strain.cpyram_strain
+    #
+    # @property
+    # def cplstn3_strain(self):
+    #     self.deprecated('model.cplstn3_strain', 'model.op2_results.strain.cplstn3_strain', '1.4')
+    #     return self.op2_results.strain.cplstn3_strain
+    # @property
+    # def cplstn4_strain(self):
+    #     self.deprecated('model.cplstn4_strain', 'model.op2_results.strain.cplstn4_strain', '1.4')
+    #     return self.op2_results.strain.cplstn4_strain
+    # @property
+    # def cplstn6_strain(self):
+    #     self.deprecated('model.cplstn6_strain', 'model.op2_results.strain.cplstn6_strain', '1.4')
+    #     return self.op2_results.strain.cplstn6_strain
+    # @property
+    # def cplstn8_strain(self):
+    #     self.deprecated('model.cplstn8_strain', 'model.op2_results.strain.cplstn8_strain', '1.4')
+    #     return self.op2_results.strain.cplstn8_strain
+    #
+    # @property
+    # def cplsts3_strain(self):
+    #     self.deprecated('model.cplsts3_strain', 'model.op2_results.strain.cplsts3_strain', '1.4')
+    #     return self.op2_results.strain.cplsts3_strain
+    # @property
+    # def cplsts4_strain(self):
+    #     self.deprecated('model.cplsts4_strain', 'model.op2_results.strain.cplsts4_strain', '1.4')
+    #     return self.op2_results.strain.cplsts4_strain
+    # @property
+    # def cplsts6_strain(self):
+    #     self.deprecated('model.cplsts6_strain', 'model.op2_results.strain.cplsts6_strain', '1.4')
+    #     return self.op2_results.strain.cplsts6_strain
+    # @property
+    # def cplsts8_strain(self):
+    #     self.deprecated('model.cplsts8_strain', 'model.op2_results.strain.cplsts8_strain', '1.4')
+    #     return self.op2_results.strain.cplsts8_strain
+    #
+    # @property
+    # def cshear_strain(self):
+    #     self.deprecated('model.cshear_strain', 'model.op2_results.stress.cshear_strain', '1.4')
+    #     return self.op2_results.strain.cshear_strain
+    # @property
+    # def cweld_strain(self):
+    #     self.deprecated('model.cweld_strain', 'model.op2_results.stress.cweld_strain', '1.4')
+    #     return self.op2_results.strain.cweld_strain
+    # @property
+    # def cbush_strain(self):
+    #     self.deprecated('model.cbush_strain', 'model.op2_results.stress.cbush_strain', '1.4')
+    #     return self.op2_results.strain.cbush_strain
+    # @property
+    # def cfast_strain(self):
+    #     self.deprecated('model.cfast_strain', 'model.op2_results.stress.cfast_strain', '1.4')
+    #     return self.op2_results.strain.cfast_strain
+    # @property
+    # def cbar_strain_10nodes(self):
+    #     self.deprecated('model.cbar_strain_10nodes', 'model.op2_results.strain.cbar_strain_10nodes', '1.4')
+    #     return self.op2_results.strain.cbar_strain_10nodes
+    #
+    # @property
+    # def chexa_composite_strain(self):
+    #     self.deprecated('model.chexa_composite_strain', 'model.op2_results.strain.chexa_composite_strain', '1.4')
+    #     return self.op2_results.strain.chexa_composite_strain
+    # @property
+    # def cpenta_composite_strain(self):
+    #     self.deprecated('model.cpenta_composite_strain', 'model.op2_results.strain.cpenta_composite_strain', '1.4')
+    #     return self.op2_results.strain.cpenta_composite_strain
+    # @property
+    # def hyperelastic_cquad4_strain(self):
+    #     self.deprecated('model.hyperelastic_cquad4_strain', 'model.op2_results.strain.hyperelastic_cquad4_strain', '1.4')
+    #     return self.op2_results.strain.hyperelastic_cquad4_strain
+    #
+    # @chexa_composite_strain.setter
+    # def chexa_composite_strain(self, chexa_composite_strain):
+    #     self.deprecated('model.chexa_composite_strain', 'model.op2_results.strain.chexa_composite_strain', '1.4')
+    #     self.op2_results.strain.chexa_composite_strain = chexa_composite_strain
+    # @cpenta_composite_strain.setter
+    # def cpenta_composite_strain(self, cpenta_composite_strain):
+    #     self.deprecated('model.cpenta_composite_strain', 'model.op2_results.strain.cpenta_composite_strain', '1.4')
+    #     self.op2_results.strain.cpenta_composite_strain = cpenta_composite_strain
+    # @hyperelastic_cquad4_strain.setter
+    # def hyperelastic_cquad4_strain(self, hyperelastic_cquad4_strain):
+    #     self.deprecated('model.hyperelastic_cquad4_strain', 'model.op2_results.strain.hyperelastic_cquad4_strain', '1.4')
+    #     self.op2_results.strain.hyperelastic_cquad4_strain = hyperelastic_cquad4_strain
 
     # ------------------------------------------------------------------
     # Strain Energy - Getter
@@ -886,164 +886,164 @@ class OP2_F06_Common:
 
     #-------------------------------------------------------------------
     # Strain - Getter
-    @celas1_strain.setter
-    def celas1_strain(self, celas1_strain):
-        self.deprecated('model.celas1_strain', 'model.op2_results.strain.celas1_strain', '1.4')
-        self.op2_results.strain.celas1_strain = celas1_strain
-    @celas2_strain.setter
-    def celas2_strain(self, celas2_strain):
-        self.deprecated('model.celas2_strain', 'model.op2_results.strain.celas2_strain', '1.4')
-        self.op2_results.strain.celas2_strain = celas2_strain
-    @celas3_strain.setter
-    def celas3_strain(self, celas3_strain):
-        self.deprecated('model.celas3_strain', 'model.op2_results.strain.celas3_strain', '1.4')
-        self.op2_results.strain.celas3_strain = celas3_strain
-    @celas4_strain.setter
-    def celas4_strain(self, celas4_strain):
-        self.deprecated('model.celas4_strain', 'model.op2_results.strain.celas4_strain', '1.4')
-        self.op2_results.strain.celas4_strain = celas4_strain
-
-    @cbush_strain.setter
-    def cbush_strain(self, cbush_strain):
-        self.deprecated('model.cbush_strain', 'model.op2_results.strain.cbush_strain', '1.4')
-        self.op2_results.strain.cbush_strain = cbush_strain
-
-    @crod_strain.setter
-    def crod_strain(self, crod_strain):
-        self.deprecated('model.crod_strain', 'model.op2_results.strain.crod_strain', '1.4')
-        self.op2_results.strain.crod_strain = crod_strain
-    @ctube_strain.setter
-    def ctube_strain(self, ctube_strain):
-        self.deprecated('model.ctube_strain', 'model.op2_results.strain.ctube_strain', '1.4')
-        self.op2_results.strain.crod_strain = ctube_strain
-    @conrod_strain.setter
-    def conrod_strain(self, conrod_strain):
-        self.deprecated('model.conrod_strain', 'model.op2_results.strain.conrod_strain', '1.4')
-        self.op2_results.strain.conrod_strain = conrod_strain
-
-    @cquad4_strain.setter
-    def cquad4_strain(self, cquad4_strain):
-        self.deprecated('model.cquad4_strain', 'model.op2_results.strain.cquad4_strain', '1.4')
-        self.op2_results.strain.cquad4_strain = cquad4_strain
-    @cquad8_strain.setter
-    def cquad8_strain(self, cquad8_strain):
-        self.deprecated('model.cquad8_strain', 'model.op2_results.strain.cquad8_strain', '1.4')
-        self.op2_results.strain.cquad8_strain = cquad8_strain
-    @cquadr_strain.setter
-    def cquadr_strain(self, cquadr_strain):
-        self.deprecated('model.cquadr_strain', 'model.op2_results.strain.cquadr_strain', '1.4')
-        self.op2_results.strain.cquadr_strain = cquadr_strain
-
-    @ctetra_strain.setter
-    def ctria3_strain(self, ctria3_strain):
-        self.deprecated('model.ctria3_strain', 'model.op2_results.strain.ctria3_strain', '1.4')
-        self.op2_results.strain.ctria3_strain = ctria3_strain
-    @ctria6_strain.setter
-    def ctria6_strain(self, ctria6_strain):
-        self.deprecated('model.ctria6_strain', 'model.op2_results.strain.ctria6_strain', '1.4')
-        self.op2_results.strain.ctria6_strain = ctria6_strain
-    @ctriar_strain.setter
-    def ctriar_strain(self, ctriar_strain):
-        self.deprecated('model.ctriar_strain', 'model.op2_results.strain.ctriar_strain', '1.4')
-        self.op2_results.strain.ctriar_strain = ctriar_strain
-    @ctriax_strain.setter
-    def ctriax_strain(self, ctriax_strain):
-        self.deprecated('model.ctriax_strain', 'model.op2_results.strain.ctriax_strain', '1.4')
-        self.op2_results.strain.ctriax_strain = ctriax_strain
-    @ctriax6_strain.setter
-    def ctriax6_strain(self, ctriax6_strain):
-        self.deprecated('model.ctriax6_strain', 'model.op2_results.strain.ctriax6_strain', '1.4')
-        self.op2_results.strain.ctriax6_strain = ctriax6_strain
-
-    @ctetra_strain.setter
-    def ctetra_strain(self, ctetra_strain):
-        self.deprecated('model.ctetra_strain', 'model.op2_results.strain.ctetra_strain', '1.4')
-        self.op2_results.strain.ctetra_strain = ctetra_strain
-    @chexa_strain.setter
-    def chexa_strain(self, chexa_strain):
-        self.deprecated('model.chexa_strain', 'model.op2_results.strain.chexa_strain', '1.4')
-        self.op2_results.strain.chexa_strain = chexa_strain
-    @cpenta_strain.setter
-    def cpenta_strain(self, cpenta_strain):
-        self.deprecated('model.cpenta_strain', 'model.op2_results.strain.cpenta_strain', '1.4')
-        self.op2_results.strain.cpenta_strain = cpenta_strain
-    @cpyram_strain.setter
-    def cpyram_strain(self, cpyram_strain):
-        self.deprecated('model.cpyram_strain', 'model.op2_results.strain.cpyram_strain', '1.4')
-        self.op2_results.strain.cpyram_strain = cpyram_strain
-    @cfast_strain.setter
-    def cfast_strain(self, cfast_strain):
-        self.deprecated('model.cfast_strain', 'model.op2_results.strain.cfast_strain', '1.4')
-        self.op2_results.strain.cfast_strain = cfast_strain
-
-    @property
-    def ctria3_composite_strain(self):
-        self.deprecated('model.ctria3_composite_strain', 'model.op2_results.strain.ctria3_composite_strain', '1.4')
-        return self.op2_results.strain.ctria3_composite_strain
-    @property
-    def ctria6_composite_strain(self):
-        self.deprecated('model.ctria6_composite_strain', 'model.op2_results.strain.ctria6_composite_strain', '1.4')
-        return self.op2_results.strain.ctria6_composite_strain
-    @property
-    def ctriar_composite_strain(self):
-        self.deprecated('model.ctriar_composite_strain', 'model.op2_results.strain.ctriar_composite_strain', '1.4')
-        return self.op2_results.strain.ctriar_composite_strain
-
-    @property
-    def cquad4_composite_strain(self):
-        self.deprecated('model.cquad4_composite_strain', 'model.op2_results.strain.cquad4_composite_strain', '1.4')
-        return self.op2_results.strain.ctria3_composite_strain
-    @property
-    def cquad8_composite_strain(self):
-        self.deprecated('model.cquad8_composite_strain', 'model.op2_results.strain.cquad8_composite_strain', '1.4')
-        return self.op2_results.strain.cquad8_composite_strain
-    @property
-    def cquadr_composite_strain(self):
-        self.deprecated('model.cquadr_composite_strain', 'model.op2_results.strain.cquadr_composite_strain', '1.4')
-        return self.op2_results.strain.cquadr_composite_strain
-
-    @ctria3_composite_strain.setter
-    def ctria3_composite_strain(self, ctria3_composite_strain):
-        self.deprecated('model.ctria3_composite_strain', 'model.op2_results.strain.ctria3_composite_strain', '1.4')
-        self.op2_results.strain.ctria3_composite_strain = ctria3_composite_strain
-    @ctria6_composite_strain.setter
-    def ctria6_composite_strain(self, ctria6_composite_strain):
-        self.deprecated('model.ctria6_composite_strain', 'model.op2_results.strain.ctria6_composite_strain', '1.4')
-        self.op2_results.strain.ctria3_composite_strain = ctria6_composite_strain
-    @ctriar_composite_strain.setter
-    def ctriar_composite_strain(self, ctriar_composite_strain):
-        self.deprecated('model.ctriar_composite_strain', 'model.op2_results.strain.ctriar_composite_strain', '1.4')
-        self.op2_results.strain.ctriar_composite_strain = ctriar_composite_strain
-
-    @cquad4_composite_strain.setter
-    def cquad4_composite_strain(self, cquad4_composite_strain):
-        self.deprecated('model.cquad4_composite_strain', 'model.op2_results.strain.cquad4_composite_strain', '1.4')
-        self.op2_results.strain.cquad4_composite_strain = cquad4_composite_strain
-    @cquad8_composite_strain.setter
-    def cquad8_composite_strain(self, cquad8_composite_strain):
-        self.deprecated('model.cquad8_composite_strain', 'model.op2_results.strain.cquad8_composite_strain', '1.4')
-        self.op2_results.strain.cquad8_composite_strain = cquad8_composite_strain
-    @ctriar_composite_strain.setter
-    def cquadr_composite_strain(self, cquadr_composite_strain):
-        self.deprecated('model.cquadr_composite_strain', 'model.op2_results.strain.cquadr_composite_strain', '1.4')
-        self.op2_results.strain.cquadr_composite_strain = cquadr_composite_strain
-
-    @cshear_strain.setter
-    def cshear_strain(self, cshear_strain):
-        self.deprecated('model.cshear_strain', 'model.op2_results.stress.cshear_strain', '1.4')
-        self.op2_results.strain.cshear_strain = cshear_strain
-    @cweld_strain.setter
-    def cweld_strain(self, cweld_strain):
-        self.deprecated('model.cweld_strain', 'model.op2_results.stress.cweld_strain', '1.4')
-        self.op2_results.strain.cweld_strain = cweld_strain
-    @cbar_strain_10nodes.setter
-    def cbar_strain_10nodes(self, cbar_strain_10nodes):
-        self.deprecated('model.cbar_strain_10nodes', 'model.op2_results.strain.cbar_strain_10nodes', '1.4')
-        self.op2_results.strain.cbar_strain_10nodes = cbar_strain_10nodes
-    @cbeam_strain.setter
-    def cbeam_strain(self, cbeam_strain):
-        self.deprecated('model.cbeam_strain', 'model.op2_results.strain.cbeam_strain', '1.4')
-        self.op2_results.strain.cbeam_strain = cbeam_strain
+    # @celas1_strain.setter
+    # def celas1_strain(self, celas1_strain):
+    #     self.deprecated('model.celas1_strain', 'model.op2_results.strain.celas1_strain', '1.4')
+    #     self.op2_results.strain.celas1_strain = celas1_strain
+    # @celas2_strain.setter
+    # def celas2_strain(self, celas2_strain):
+    #     self.deprecated('model.celas2_strain', 'model.op2_results.strain.celas2_strain', '1.4')
+    #     self.op2_results.strain.celas2_strain = celas2_strain
+    # @celas3_strain.setter
+    # def celas3_strain(self, celas3_strain):
+    #     self.deprecated('model.celas3_strain', 'model.op2_results.strain.celas3_strain', '1.4')
+    #     self.op2_results.strain.celas3_strain = celas3_strain
+    # @celas4_strain.setter
+    # def celas4_strain(self, celas4_strain):
+    #     self.deprecated('model.celas4_strain', 'model.op2_results.strain.celas4_strain', '1.4')
+    #     self.op2_results.strain.celas4_strain = celas4_strain
+    #
+    # @cbush_strain.setter
+    # def cbush_strain(self, cbush_strain):
+    #     self.deprecated('model.cbush_strain', 'model.op2_results.strain.cbush_strain', '1.4')
+    #     self.op2_results.strain.cbush_strain = cbush_strain
+    #
+    # @crod_strain.setter
+    # def crod_strain(self, crod_strain):
+    #     self.deprecated('model.crod_strain', 'model.op2_results.strain.crod_strain', '1.4')
+    #     self.op2_results.strain.crod_strain = crod_strain
+    # @ctube_strain.setter
+    # def ctube_strain(self, ctube_strain):
+    #     self.deprecated('model.ctube_strain', 'model.op2_results.strain.ctube_strain', '1.4')
+    #     self.op2_results.strain.crod_strain = ctube_strain
+    # @conrod_strain.setter
+    # def conrod_strain(self, conrod_strain):
+    #     self.deprecated('model.conrod_strain', 'model.op2_results.strain.conrod_strain', '1.4')
+    #     self.op2_results.strain.conrod_strain = conrod_strain
+    #
+    # @cquad4_strain.setter
+    # def cquad4_strain(self, cquad4_strain):
+    #     self.deprecated('model.cquad4_strain', 'model.op2_results.strain.cquad4_strain', '1.4')
+    #     self.op2_results.strain.cquad4_strain = cquad4_strain
+    # @cquad8_strain.setter
+    # def cquad8_strain(self, cquad8_strain):
+    #     self.deprecated('model.cquad8_strain', 'model.op2_results.strain.cquad8_strain', '1.4')
+    #     self.op2_results.strain.cquad8_strain = cquad8_strain
+    # @cquadr_strain.setter
+    # def cquadr_strain(self, cquadr_strain):
+    #     self.deprecated('model.cquadr_strain', 'model.op2_results.strain.cquadr_strain', '1.4')
+    #     self.op2_results.strain.cquadr_strain = cquadr_strain
+    #
+    # @ctetra_strain.setter
+    # def ctria3_strain(self, ctria3_strain):
+    #     self.deprecated('model.ctria3_strain', 'model.op2_results.strain.ctria3_strain', '1.4')
+    #     self.op2_results.strain.ctria3_strain = ctria3_strain
+    # @ctria6_strain.setter
+    # def ctria6_strain(self, ctria6_strain):
+    #     self.deprecated('model.ctria6_strain', 'model.op2_results.strain.ctria6_strain', '1.4')
+    #     self.op2_results.strain.ctria6_strain = ctria6_strain
+    # @ctriar_strain.setter
+    # def ctriar_strain(self, ctriar_strain):
+    #     self.deprecated('model.ctriar_strain', 'model.op2_results.strain.ctriar_strain', '1.4')
+    #     self.op2_results.strain.ctriar_strain = ctriar_strain
+    # @ctriax_strain.setter
+    # def ctriax_strain(self, ctriax_strain):
+    #     self.deprecated('model.ctriax_strain', 'model.op2_results.strain.ctriax_strain', '1.4')
+    #     self.op2_results.strain.ctriax_strain = ctriax_strain
+    # @ctriax6_strain.setter
+    # def ctriax6_strain(self, ctriax6_strain):
+    #     self.deprecated('model.ctriax6_strain', 'model.op2_results.strain.ctriax6_strain', '1.4')
+    #     self.op2_results.strain.ctriax6_strain = ctriax6_strain
+    #
+    # @ctetra_strain.setter
+    # def ctetra_strain(self, ctetra_strain):
+    #     self.deprecated('model.ctetra_strain', 'model.op2_results.strain.ctetra_strain', '1.4')
+    #     self.op2_results.strain.ctetra_strain = ctetra_strain
+    # @chexa_strain.setter
+    # def chexa_strain(self, chexa_strain):
+    #     self.deprecated('model.chexa_strain', 'model.op2_results.strain.chexa_strain', '1.4')
+    #     self.op2_results.strain.chexa_strain = chexa_strain
+    # @cpenta_strain.setter
+    # def cpenta_strain(self, cpenta_strain):
+    #     self.deprecated('model.cpenta_strain', 'model.op2_results.strain.cpenta_strain', '1.4')
+    #     self.op2_results.strain.cpenta_strain = cpenta_strain
+    # @cpyram_strain.setter
+    # def cpyram_strain(self, cpyram_strain):
+    #     self.deprecated('model.cpyram_strain', 'model.op2_results.strain.cpyram_strain', '1.4')
+    #     self.op2_results.strain.cpyram_strain = cpyram_strain
+    # @cfast_strain.setter
+    # def cfast_strain(self, cfast_strain):
+    #     self.deprecated('model.cfast_strain', 'model.op2_results.strain.cfast_strain', '1.4')
+    #     self.op2_results.strain.cfast_strain = cfast_strain
+    #
+    # @property
+    # def ctria3_composite_strain(self):
+    #     self.deprecated('model.ctria3_composite_strain', 'model.op2_results.strain.ctria3_composite_strain', '1.4')
+    #     return self.op2_results.strain.ctria3_composite_strain
+    # @property
+    # def ctria6_composite_strain(self):
+    #     self.deprecated('model.ctria6_composite_strain', 'model.op2_results.strain.ctria6_composite_strain', '1.4')
+    #     return self.op2_results.strain.ctria6_composite_strain
+    # @property
+    # def ctriar_composite_strain(self):
+    #     self.deprecated('model.ctriar_composite_strain', 'model.op2_results.strain.ctriar_composite_strain', '1.4')
+    #     return self.op2_results.strain.ctriar_composite_strain
+    #
+    # @property
+    # def cquad4_composite_strain(self):
+    #     self.deprecated('model.cquad4_composite_strain', 'model.op2_results.strain.cquad4_composite_strain', '1.4')
+    #     return self.op2_results.strain.ctria3_composite_strain
+    # @property
+    # def cquad8_composite_strain(self):
+    #     self.deprecated('model.cquad8_composite_strain', 'model.op2_results.strain.cquad8_composite_strain', '1.4')
+    #     return self.op2_results.strain.cquad8_composite_strain
+    # @property
+    # def cquadr_composite_strain(self):
+    #     self.deprecated('model.cquadr_composite_strain', 'model.op2_results.strain.cquadr_composite_strain', '1.4')
+    #     return self.op2_results.strain.cquadr_composite_strain
+    #
+    # @ctria3_composite_strain.setter
+    # def ctria3_composite_strain(self, ctria3_composite_strain):
+    #     self.deprecated('model.ctria3_composite_strain', 'model.op2_results.strain.ctria3_composite_strain', '1.4')
+    #     self.op2_results.strain.ctria3_composite_strain = ctria3_composite_strain
+    # @ctria6_composite_strain.setter
+    # def ctria6_composite_strain(self, ctria6_composite_strain):
+    #     self.deprecated('model.ctria6_composite_strain', 'model.op2_results.strain.ctria6_composite_strain', '1.4')
+    #     self.op2_results.strain.ctria3_composite_strain = ctria6_composite_strain
+    # @ctriar_composite_strain.setter
+    # def ctriar_composite_strain(self, ctriar_composite_strain):
+    #     self.deprecated('model.ctriar_composite_strain', 'model.op2_results.strain.ctriar_composite_strain', '1.4')
+    #     self.op2_results.strain.ctriar_composite_strain = ctriar_composite_strain
+    #
+    # @cquad4_composite_strain.setter
+    # def cquad4_composite_strain(self, cquad4_composite_strain):
+    #     self.deprecated('model.cquad4_composite_strain', 'model.op2_results.strain.cquad4_composite_strain', '1.4')
+    #     self.op2_results.strain.cquad4_composite_strain = cquad4_composite_strain
+    # @cquad8_composite_strain.setter
+    # def cquad8_composite_strain(self, cquad8_composite_strain):
+    #     self.deprecated('model.cquad8_composite_strain', 'model.op2_results.strain.cquad8_composite_strain', '1.4')
+    #     self.op2_results.strain.cquad8_composite_strain = cquad8_composite_strain
+    # @ctriar_composite_strain.setter
+    # def cquadr_composite_strain(self, cquadr_composite_strain):
+    #     self.deprecated('model.cquadr_composite_strain', 'model.op2_results.strain.cquadr_composite_strain', '1.4')
+    #     self.op2_results.strain.cquadr_composite_strain = cquadr_composite_strain
+    #
+    # @cshear_strain.setter
+    # def cshear_strain(self, cshear_strain):
+    #     self.deprecated('model.cshear_strain', 'model.op2_results.stress.cshear_strain', '1.4')
+    #     self.op2_results.strain.cshear_strain = cshear_strain
+    # @cweld_strain.setter
+    # def cweld_strain(self, cweld_strain):
+    #     self.deprecated('model.cweld_strain', 'model.op2_results.stress.cweld_strain', '1.4')
+    #     self.op2_results.strain.cweld_strain = cweld_strain
+    # @cbar_strain_10nodes.setter
+    # def cbar_strain_10nodes(self, cbar_strain_10nodes):
+    #     self.deprecated('model.cbar_strain_10nodes', 'model.op2_results.strain.cbar_strain_10nodes', '1.4')
+    #     self.op2_results.strain.cbar_strain_10nodes = cbar_strain_10nodes
+    # @cbeam_strain.setter
+    # def cbeam_strain(self, cbeam_strain):
+    #     self.deprecated('model.cbeam_strain', 'model.op2_results.strain.cbeam_strain', '1.4')
+    #     self.op2_results.strain.cbeam_strain = cbeam_strain
 
     # ------------------------------------------------------------------
     # Force - Getter

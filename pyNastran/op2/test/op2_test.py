@@ -125,7 +125,7 @@ def get_files_from_directories(dirnames: list[str], file_type: str,
     for move_dir in dirnames:
         print('move_dir = %s' % move_dir)
         #assert os.path.exists(move_dir), '%s doesnt exist' % move_dir
-        files_in_dir = get_files_of_type(move_dir, file_type, max_size=max_size)
+        files_in_dir = get_files_of_type(move_dir, file_type, max_size_mb=max_size)
         files2 += files_in_dir
         #print('nfiles = %s/%s' % (len(files_in_dir), len(files2)))
     #print('nfiles = %s' % len(files2))

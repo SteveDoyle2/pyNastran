@@ -587,7 +587,7 @@ def _format_comment(comment: str) -> str:
                     for comment_line in comment.rstrip().split('\n')])
 
 
-def _node_ids(card, nodes=None, allow_empty_nodes: bool=False, msg: str='') -> Any:
+def _node_ids(card, nodes=None, allow_empty_nodes: bool=False, msg: str='') -> list[int]:
     try:
         if not nodes:
             nodes = card.nodes
