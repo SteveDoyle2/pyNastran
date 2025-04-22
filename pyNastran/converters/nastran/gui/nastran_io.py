@@ -2845,7 +2845,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
           - EigenvectorXYZ
           - Stress
         """
-        keys = model.get_key_order()
+        keys = model.get_key_order(filter_keys=False)
         assert keys is not None, keys
         #print('keys_order =', keys)
         #print(model.op2_results.scalars)
