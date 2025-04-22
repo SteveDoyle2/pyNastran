@@ -26,8 +26,8 @@ from pyNastran.converters.nastran.gui.result_objects.simple_table_results import
 from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
 from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2, _composite_method_map
 
-from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
-from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.gui.gui_objects.force_results import ForceResults2
+from pyNastran.gui.gui_objects.displacement_results import DisplacementResults2
 from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2, DERIVATION_METHODS as shell_derivation_methods
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 

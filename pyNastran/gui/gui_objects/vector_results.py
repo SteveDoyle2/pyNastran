@@ -31,8 +31,33 @@ COMPLEX_DEFAULT_INDICES = tuple(list(IDX_REAL) + list(IDX_IMAG))
         #tooltip: int
         #derivation: list[str]
 
+class Case:
+    def __init__(self, data: np.ndarray):
+        self.data = data
 
 class VectorResultsCommon(GuiResultCommon):
+    @classmethod
+    def from_dxyz(cls,
+                  subcase_id: int,
+                  title: str,
+                  dxyz: np.ndarray,
+                  # dxyz: RealTableArray | ComplexTableArray,
+                  ntitles: int,
+                  data_format: str = '%g',
+                  is_variable_data_format: bool = False,
+                  nlabels=None, labelsize=None, ncolors=None,
+                  colormap: str = '',
+                  # set_max_min: bool=False,
+                  uname: str = 'VectorResults2'):
+        case = Case(dxyz)
+        obj = cls.__int__(
+            subcase_id, title, case,
+            is_variable_data_format=False,
+            data_format=data_format, nlabels=nlabels,
+            ncolors=ncolors, colormap=colormap,
+            uname=uname)
+        return obj
+
     def __init__(self,
                  subcase_id: int,
                  title: str,

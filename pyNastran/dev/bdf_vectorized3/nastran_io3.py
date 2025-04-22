@@ -38,8 +38,8 @@ from .alt_actor_builder import (
     create_alt_conm2_grids, create_alt_rbe2_grids, create_alt_rbe3_grids,
     create_alt_spcs, create_alt_axes,
     create_monpnt, create_plotels)
-from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
-from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
+from pyNastran.gui.gui_objects.displacement_results import DisplacementResults2
+from pyNastran.gui.gui_objects.force_results import ForceResults2
 from pyNastran.op2.result_objects.stress_object import _get_nastran_header
 from pyNastran.converters.nastran.gui.types import KeysMap, KeyMap, NastranKey
 

@@ -6,7 +6,7 @@ import numpy as np
 
 import pyNastran
 from pyNastran.op2.op2_geom import read_op2_geom
-from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
+from pyNastran.gui.gui_objects.displacement_results import DisplacementResults2
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 
 #from pyNastran.dev.bdf_vectorized3.test.test_bdf import main as test_bdf
