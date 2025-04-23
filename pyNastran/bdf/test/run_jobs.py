@@ -256,7 +256,18 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         with open(out_filename, 'w') as out_file:
             for bdf_filename in bdf_filenames:
                 out_file.write(f'{str(bdf_filename)}\n')
+    nfiles = run_jobs_by_filenames(
+        bdf_filenames, nastran_exe, log,
+        cleanup=cleanup,)
+    return nfiles
 
+
+def run_jobs_by_filenames(bdf_filenames: list[PathLike],
+                          nastran_exe: PathLike,
+                          log: SimpleLogger,
+                          cleanup: bool=True,
+                          run: bool=True,
+                          debug: bool=False) -> int:
     nfiles = len(bdf_filenames)
     eta = 'N/A'
     eta_next = 'N/A'
@@ -264,15 +275,18 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     t_est_min = 0.
     t_est_hr = 0.
     t0 = time.time()
+
+    msg = f'{nfiles}/{nfiles}=100%:'
+    nmsg = len(msg)
     for ifile, bdf_filename in enumerate(bdf_filenames):
         if not os.path.exists(bdf_filename):
-            log.warning(f'skipping {str(bdf_filename)} because {bdf_filename} doesnt exist')
+            log.warning(f'skipping {str(bdf_filename)!r} because {bdf_filename!r} doesnt exist')
             continue
 
         base = os.path.splitext(str(bdf_filename))[0]
         op2_filename = base + '.op2'
         if os.path.exists(op2_filename):
-            log.warning(f'skipping {str(bdf_filename)} because {op2_filename} already exists')
+            log.warning(f'skipping {str(bdf_filename)!r} because {op2_filename!r} already exists')
             continue
 
         #nfiles_remaining0 = nfiles - ifile
@@ -281,11 +295,13 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         percent1 = (ifile + 1) / nfiles * 100
 
         log.debug(f'ETA:{eta}; time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr; time/run={t_run_min:.1f} min; ETA next:{eta_next}')
-        log.info(f'running  {ifile+1}/{nfiles}={percent0:.0f}%: {str(bdf_filename)}')
+        msgi = f'{ifile+1}/{nfiles}={percent0:.0f}%:'
+        log.info(f'running  {msgi:<{nmsg}} {str(bdf_filename)}')
         return_code, call_args = run_nastran(bdf_filename, nastran_cmd=nastran_exe,
                                              keywords=keywords, cleanup=cleanup, run=run,
                                              debug=debug, log=log)
-        log.debug(f'finished {ifile+1}/{nfiles}={percent1:.0f}%: {str(bdf_filename)}; return_code={return_code}')
+        msgi = f'{ifile+1}/{nfiles}={percent1:.0f}%:'
+        log.debug(f'finished {msgi:<{nmsg}} {str(bdf_filename)}; return_code={return_code}')
         #time.sleep(5)
 
         dt = time.time() - t0
