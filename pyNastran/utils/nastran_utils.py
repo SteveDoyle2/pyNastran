@@ -12,6 +12,7 @@ KEYWORDS_CHECK = {
     'notify': ['yes', 'no'],  # make nastran beep
     'fpe': ['yes', 'no'],  # ???
     'msgbell': ['yes', 'no'],  # ???
+    'scr': ['yes', 'no'],
     #'mem=15gb'
     #'parallel=4'
 }

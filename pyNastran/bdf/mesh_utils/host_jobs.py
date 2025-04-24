@@ -13,12 +13,13 @@ from typing import Optional
 from cpylog import SimpleLogger, FileLogger
 import pyNastran
 from pyNastran.utils import print_bad_path, PathLike
-from pyNastran.bdf.test.run_jobs import run_jobs_by_filenames
+#from pyNastran.bdf.test.run_jobs import run_jobs_by_filenames
 
 def cmd_line_host_jobs(argv=None, quiet: bool=False) -> int:
     """
     host_jobs dirname
-    host_jobs dirname1 dirname2
+    host_jobs dirname1 dirname2  # TODO: add me
+    bdf host_jobs . --test
     """
     FILE = os.path.abspath(__file__)
     if argv is None:
@@ -32,9 +33,10 @@ def cmd_line_host_jobs(argv=None, quiet: bool=False) -> int:
     parser = argparse.ArgumentParser(prog='run_jobs')
     parser.add_argument('host_dirname', nargs='+', help='path to Nastran filename')
     #parser.add_argument('-o', '--overwrite', default=False, help='overwrite files')
-    parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran execuable')
-    parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
-    parser.add_argument('--args', help='additional arguments')
+    #parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran execuable')
+    #parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
+    #parser.add_argument('--args', help='additional arguments')
+    parser.add_argument('--test', action='store_false', help='skip run the jobs')
     #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
     parser.add_argument('-v', '--version', action='version',
                         version=pyNastran.__version__)
@@ -44,46 +46,58 @@ def cmd_line_host_jobs(argv=None, quiet: bool=False) -> int:
         print(args)
 
     show_folder = False #not args.nofolder
-    run = False  # args.test
+    run = args.test
     debug = True  # args.debug
     #print(args)
-    nastran_args = args.args
-    if nastran_args is None or len(nastran_args) == 0:
-        keywords = []
-    else:
-        keywords = nastran_args.split()
+    #nastran_args = args.args
+    #if nastran_args is None or len(nastran_args) == 0:
+        #keywords = []
+    #else:
+        #keywords = nastran_args.split()
 
     host_dirname = args.host_dirname
 
-    nastran_exe = args.exe
-    if '.bat' in nastran_exe or '.exe' in nastran_exe:
-        nastran_exe = Path(nastran_exe)
-        assert nastran_exe.exists(), print_bad_path(nastran_exe)
-        assert nastran_exe.is_file(), nastran_exe
+    #nastran_exe = args.exe
+    # if '.bat' in nastran_exe or '.exe' in nastran_exe:
+    #     nastran_exe = Path(nastran_exe)
+    #     assert nastran_exe.exists(), print_bad_path(nastran_exe)
+    #     assert nastran_exe.is_file(), nastran_exe
 
-    cleanup = args.cleanup
+    #cleanup = args.cleanup
     #extensions = ['.dat', '.bdf']
 
     level = 'warning' if quiet else 'debug'
     #out_filename = '' if args.outfile is None else args.outfile
-    nfiles = host_jobs(
-        host_dirname, nastran_exe,
-        #extensions=extensions,
-        #cleanup=cleanup,
-        keywords=keywords,
-        #show_folder=show_folder,
-        run=run,
-        #out_filename=out_filename,
-        debug=debug, log=level)
+    username = getpass.getuser().lower()
+    hosting_filenames = []
+    for dirname in host_dirname:
+        hosting_filename = os.path.join(dirname, f'hosting_{username}.txt')
+        hosting_filenames.append(hosting_filename)
+        with open(hosting_filename, 'w') as hosting_file:
+            pass
+    try:
+        nfiles = host_jobs(
+            host_dirname,
+            #extensions=extensions,
+            #cleanup=cleanup,
+            #show_folder=show_folder,
+            run=run,
+            #out_filename=out_filename,
+            debug=debug, log=level)
+    except:
+        for hosting_filename in hosting_filenames:
+            remove_file(hosting_filename)
+        nfiles = 0
+
+    for hosting_filename in hosting_filenames:
+        remove_file(hosting_filename)
     return nfiles
 
 
 def host_jobs(host_dirnames: PathLike,  # | list[PathLike],
-              #nastran_exe: PathLike,
               #extensions: str | list[str],
               cleanup: bool=True,
               #recursive: bool=False,
-              keywords: Optional[str | list[str] | dict[str, str]]=None,
               #show_folder: bool=True,
               run: bool=True,
               out_filename: str='',
@@ -119,9 +133,11 @@ def host_jobs(host_dirnames: PathLike,  # | list[PathLike],
         print(f'i = {i}')
         #-------------------------------------------------------------
         # update the exe files
-        exe_paths_dict = load_exe_paths(
-            exe_paths_filename, exe_paths_dict, exe_path_timestamp)
-        #nastran_exe = exe_paths_dict.get('nastran', 'nastran')
+        try:
+            exe_paths_dict, exe_path_timestamp = load_exe_paths(
+                exe_paths_filename, exe_paths_dict, exe_path_timestamp)
+        except:
+            continue
 
         #-------------------------------------------------------------
         # get the list of files
@@ -148,18 +164,18 @@ def host_jobs(host_dirnames: PathLike,  # | list[PathLike],
             for iarg, args in enumerate(command_line_args_list):
                 log.info(f'  args[{iarg}] = {args}')
             log.debug(f'  rename {fname} -> _{fname}')
-            #shutil.copyfile(run_filename1, run_filename2)
-            remove_file(run_filename2)
-            #rename_file(run_filename1, run_filename2)
 
+            remove_file(run_filename2)
+            if run:
+                rename_file(run_filename1, run_filename2)
             nfiles = run_jobs_by_filenames(
                 command_line_args_list, exe_paths_dict, log, #cleanup=cleanup,
                 run=run)
             #asdf
         time.sleep(2)
         i += 1
-        if i == 10:
-            break
+        # if i == 10:
+        #     break
 
 def get_files_to_run(files_to_check: list[PathLike],
                      tag: str,) -> list[PathLike]:
@@ -224,7 +240,7 @@ def load_input_filenames(run_filename1: PathLike) -> list[list[str]]:
 
 def load_exe_paths(exe_paths_filename: PathLike,
                    exe_paths_dict_old: dict[str, str],
-                   exe_path_timestamp: str) -> dict[str, str]:
+                   exe_path_timestamp: str) -> tuple[dict[str, str], str]:
     """
     Loads the paths to the different exe's (e.g., nastran, python).
 
@@ -242,24 +258,23 @@ def load_exe_paths(exe_paths_filename: PathLike,
     -------
 
     """
-    if exe_path_timestamp == '':
-        pass
-    else:
-        asdf
+    print(f'exe_path_timestamp={exe_path_timestamp!r} check')
+    # if exe_path_timestamp == '':
+    #     pass
+    # else:
+    #     print(f'exe_path_timestamp={exe_path_timestamp!r} exists...')
 
     exe_paths_dict = {}
     if not os.path.exists(exe_paths_filename):
         print(f'{str(exe_paths_filename)} does not exist')
-        return exe_paths_dict
+        return exe_paths_dict, ''
 
     modified_time = time.ctime(os.path.getmtime(exe_paths_filename))
     print(f'modified_time = {modified_time}; type={type(modified_time)}')
     if modified_time == exe_path_timestamp:
-        return exe_paths_dict_old
+        return exe_paths_dict_old, exe_path_timestamp
 
     #print("created: %s" % time.ctime(os.path.getctime(file)))
-
-
     with open(exe_paths_filename, 'r') as file_obj:
         lines = file_obj.readlines()
     for line in lines:
@@ -270,7 +285,7 @@ def load_exe_paths(exe_paths_filename: PathLike,
         name, path = line.split(':', 1)
         exe_paths_dict[name] = path.strip()
     print(f'exe_paths_dict = {exe_paths_dict}')
-    return exe_paths_dict
+    return exe_paths_dict, modified_time
 
 
 def run_jobs_by_filenames(command_line_args: list[list[str]],
@@ -291,6 +306,7 @@ def run_jobs_by_filenames(command_line_args: list[list[str]],
 
     msg = f'{nfiles}/{nfiles}=100%:'
     nmsg = len(msg)
+    #assert run is False, run
     for ifile, call_args in enumerate(command_line_args):
         # update nastran -> C:\bin\nastran.bat
         call0 = call_args[0]
@@ -304,14 +320,14 @@ def run_jobs_by_filenames(command_line_args: list[list[str]],
         percent1 = (ifile + 1) / nfiles * 100
 
         log.debug(f'ETA:{eta}; time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr; time/run={t_run_min:.1f} min; ETA next:{eta_next}')
-        msgi = f'{ifile+1}/{nfiles}={percent0:.0f}%:'
-        log.info(f'running  {msgi:<{nmsg}} {str(call_args)}')
+        msg0 = f'{ifile+1}/{nfiles}={percent0:.0f}%:'
+        log.info(f'running  {msg0:<{nmsg}} {str(call_args)}')
 
         return_code = None
         if run:
             return_code = subprocess.call(call_args)
-        msgi = f'{ifile+1}/{nfiles}={percent1:.0f}%:'
-        log.debug(f'finished {msgi:{nmsg}} {str(call_args)}; return_code={return_code}')
+        msg1 = f'{ifile+1}/{nfiles}={percent1:.0f}%:'
+        log.debug(f'finished {msg1:{nmsg}} {str(call_args)}; return_code={return_code}')
         #time.sleep(5)
 
         dt = time.time() - t0

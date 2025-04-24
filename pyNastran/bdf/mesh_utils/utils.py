@@ -42,6 +42,8 @@ from pyNastran.bdf.mesh_utils.free_faces import write_skin_solid_faces
 from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
 
 from pyNastran.bdf.test.run_jobs import cmd_line_run_jobs
+#from pyNastran.bdf.test.host_jobs import cmd_line_host_jobs
+from pyNastran.bdf.mesh_utils.host_jobs import cmd_line_host_jobs
 from .cmd_line.bdf_diff import cmd_line_diff
 from .cmd_line.bdf_merge import cmd_line_merge
 from .cmd_line.bdf_equivalence import cmd_line_equivalence
@@ -1899,6 +1901,7 @@ CMD_MAPS = {
     'remove_unused': cmd_line_remove_unused,
     'split_cbars_by_pin_flags': cmd_line_split_cbars_by_pin_flag,
     'run_jobs': cmd_line_run_jobs,
+    'host_jobs': cmd_line_host_jobs,
     'rbe3_to_rbe2': cmd_line_rbe3_to_rbe2,
     'rbe2_to_rbe3': cmd_line_rbe2_to_rbe3,
     'merge_rbe2': cmd_line_merge_rbe2,

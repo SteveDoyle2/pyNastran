@@ -2,8 +2,11 @@
 TODO: support old=no
 TODO: don't filter op2s (kinda the same thing)
 """
+# pep8: disable=E252
 import os
 import sys
+import copy
+import shlex
 import datetime
 from itertools import count
 from pathlib import Path
@@ -16,6 +19,7 @@ import pyNastran
 from pyNastran.utils import print_bad_path, PathLike
 from pyNastran.utils.nastran_utils import run_nastran
 from pyNastran.utils.dev import get_files_of_type
+
 
 def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     """
@@ -66,14 +70,14 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
         keywords = []
     else:
         keywords = nastran_args.split()
-
+    extensions = ['.dat', '.bdf']
     if args.infile is not None:
-        assert os.path.exists(args.infile), print_bad_path(args.infile)
-        with open(args.infile, 'r') as txt_file:
-            lines = [line.strip() for line in txt_file.readlines()]
-        bdf_filename_dirname = [Path(filenamei) for filenamei in lines]
+        bdf_filename_dirname, all_keywords_list = load_infile(args.infile, extensions)
+        print(f'bdf_filename_dirname = {bdf_filename_dirname}')
     else:
         bdf_filename_dirname = [Path(filenamei) for filenamei in args.bdf_dirname_filename]
+        all_keywords_list: list[str] = keywords
+
     nastran_exe = args.exe
     # if nastran_exe is None:
     #     nastran_exe = 'nastran'
@@ -83,18 +87,48 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
         assert nastran_exe.is_file(), nastran_exe
 
     cleanup = args.cleanup
-    extensions = ['.dat', '.bdf']
-
     level = 'warning' if quiet else 'debug'
     out_filename = '' if args.outfile is None else args.outfile
     nfiles = run_jobs(
         bdf_filename_dirname, nastran_exe,
         extensions=extensions, cleanup=cleanup,
-        keywords=keywords, show_folder=show_folder,
+        keywords=all_keywords_list, show_folder=show_folder,
         recursive=recursive, run=run,
         out_filename=out_filename,
         debug=debug, log=level)
     return nfiles
+
+
+def load_infile(infilename: str,
+                extensions: list[str]) -> tuple[list[str], list[list[str]]]:
+    assert os.path.exists(infilename), print_bad_path(infilename)
+    with open(infilename, 'r') as txt_file:
+        lines = [line.strip() for line in txt_file.readlines()]
+    #bdf_filename_dirname = [Path(filenamei) for filenamei in lines]
+
+    all_call_args = []
+    all_keywords_list = []
+    bdf_filename_dirname = []
+    for line in lines:
+        line = line.strip()
+        if len(line) == 0:
+            continue
+        call_args = shlex.split(line)
+        all_call_args.append(call_args)
+        name = ''
+        keywords_list = []
+        for arg in call_args[1:]:
+            base, ext = os.path.splitext(arg)
+            ext = ext.lower()
+            if ext in extensions:
+                assert name == '', (name, arg)
+                name = arg
+            else:
+                keywords_list.append(arg)
+        bdf_filename_dirname.append(Path(name))
+        all_keywords_list.append(keywords_list)
+
+    return bdf_filename_dirname, all_keywords_list
 
 
 def get_bdf_filenames_to_run(bdf_filename_dirname: PathLike | list[PathLike],
@@ -140,6 +174,7 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: PathLike | list[PathLike],
         bdf_filenames_run.append(bdf_filename)
     assert len(bdf_filenames_run) > 0, bdf_filenames_run
     return bdf_filenames_run
+
 
 def _deglob(bdf_filename_dirname_list_in: list[Path],
             recursive: bool=False) -> list[Path]:
@@ -195,12 +230,13 @@ def _directory_to_files(bdf_filename_dirname_list: list[PathLike],
         bdf_filenames.extend(bdf_filenamesi)
     return bdf_filenames
 
+
 def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
              nastran_exe: PathLike,
              extensions: str | list[str],
              cleanup: bool=True,
              recursive: bool=False,
-             keywords: Optional[str | list[str] | dict[str, str]]=None,
+             keywords: Optional[str | list[str] | dict[str, str] | list[list[str]]]=None,
              show_folder: bool=True,
              run: bool=True,
              out_filename: str='',
@@ -226,6 +262,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     TODO: handle overwriting op2 files (currently requires you
           delete bad/old files regardless of old=no flag
     """
+    #print(f'**keywords= {keywords}')
     log = SimpleLogger(log) if isinstance(log, str) else log
     bdf_filenames = get_bdf_filenames_to_run(
         bdf_filename_dirname, extensions, recursive=recursive)
@@ -252,22 +289,44 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     if msg2:
         log.debug(f'bdf_filenames:\n{msg2}')
 
+    # if out_filename:
+    #     with open(out_filename, 'w') as out_file:
+    #         for bdf_filename in bdf_filenames:
+    #             out_file.write(f'{str(bdf_filename)}\n')
+    nfiles, all_call_args = run_jobs_by_filenames(
+        bdf_filenames, nastran_exe, keywords, log,
+        cleanup=cleanup, run=run)
+
     if out_filename:
         with open(out_filename, 'w') as out_file:
-            for bdf_filename in bdf_filenames:
-                out_file.write(f'{str(bdf_filename)}\n')
-    nfiles = run_jobs_by_filenames(
-        bdf_filenames, nastran_exe, log,
-        cleanup=cleanup,)
+            for call_args in all_call_args:
+                assert len(call_args) > 0, call_args
+
+                # write the output arg
+                out = ''
+                for arg in call_args:
+                    if os.path.exists(arg):
+                        arg = os.path.relpath(arg, start='.')
+                    if isinstance(arg, str) and ' ' in arg:
+                        out += f'{arg!r} '
+                    else:
+                        out += f'{arg} '
+                out = out.strip()
+                #out = str(all_call_args)[1:-1]
+                #out_file.write(f'{str(bdf_filename)}\n')
+                out_file.write(f'{out}\n')
+
     return nfiles
 
 
 def run_jobs_by_filenames(bdf_filenames: list[PathLike],
                           nastran_exe: PathLike,
+                          keywords: list[str],
                           log: SimpleLogger,
                           cleanup: bool=True,
                           run: bool=True,
-                          debug: bool=False) -> int:
+                          debug: bool=False) -> tuple[int, list[list[str]]]:
+    assert run is False, run
     nfiles = len(bdf_filenames)
     eta = 'N/A'
     eta_next = 'N/A'
@@ -276,9 +335,21 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
     t_est_hr = 0.
     t0 = time.time()
 
+    all_call_args = []
     msg = f'{nfiles}/{nfiles}=100%:'
     nmsg = len(msg)
+    is_keywords_list = False
+    if isinstance(keywords, list):
+        keywords0 = keywords[0]
+        is_keywords_list = isinstance(keywords0, list)
+    if is_keywords_list:
+        #print(f'keywords0 = {keywords0}')
+        assert len(keywords) == len(bdf_filenames), f'keywords={keywords} \nbdf_filenames={bdf_filenames}'
+
     for ifile, bdf_filename in enumerate(bdf_filenames):
+        keywordsi = keywords[ifile] if is_keywords_list else keywords
+        print(f'keywords[{ifile}] = {keywordsi}')
+
         if not os.path.exists(bdf_filename):
             log.warning(f'skipping {str(bdf_filename)!r} because {bdf_filename!r} doesnt exist')
             continue
@@ -294,14 +365,15 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
         percent0 = ifile / nfiles * 100
         percent1 = (ifile + 1) / nfiles * 100
 
-        log.debug(f'ETA:{eta}; time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr; time/run={t_run_min:.1f} min; ETA next:{eta_next}')
-        msgi = f'{ifile+1}/{nfiles}={percent0:.0f}%:'
-        log.info(f'running  {msgi:<{nmsg}} {str(bdf_filename)}')
+        log.debug(f'ETA:{eta}; time remaining: {t_est_min:.0f} min = {t_est_hr:.1f} hr; '
+                  f'time/run={t_run_min:.1f} min; ETA next:{eta_next}')
+        msg0 = f'{ifile+1}/{nfiles}={percent0:.0f}%:'
+        log.info(f'running  {msg0:<{nmsg}} {str(bdf_filename)}')
         return_code, call_args = run_nastran(bdf_filename, nastran_cmd=nastran_exe,
-                                             keywords=keywords, cleanup=cleanup, run=run,
+                                             keywords=keywordsi, cleanup=cleanup, run=run,
                                              debug=debug, log=log)
-        msgi = f'{ifile+1}/{nfiles}={percent1:.0f}%:'
-        log.debug(f'finished {msgi:<{nmsg}} {str(bdf_filename)}; return_code={return_code}')
+        msg1 = f'{ifile+1}/{nfiles}={percent1:.0f}%:'
+        log.debug(f'finished {msg1:<{nmsg}} {str(bdf_filename)}; return_code={return_code}')
         #time.sleep(5)
 
         dt = time.time() - t0
@@ -316,8 +388,9 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
         #print(f't_est_next(s)  = {t_run_min*60:.6g}')
         eta = new.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
         eta_next = nexti.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
+        all_call_args.append(call_args)
     log.info('done')
-    return nfiles
+    return nfiles, all_call_args
 
 
 if __name__ == '__main__':
