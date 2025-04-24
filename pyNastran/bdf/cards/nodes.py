@@ -908,11 +908,11 @@ class GRID(BaseCard):
             the value for the appropriate field
 
         """
-        if n == 3:
+        if n in {3, 'x1'}:
             self.xyz[0] = value
-        elif n == 4:
+        elif n in {4, 'x2'}:
             self.xyz[1] = value
-        elif n == 5:
+        elif n in {5, 'x3'}:
             self.xyz[2] = value
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))

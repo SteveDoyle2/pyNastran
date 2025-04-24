@@ -2,8 +2,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.femutils.utils import safe_norm
-from .vector_results import DispForceVectorResults # , _to_dense_vector
+#from pyNastran.femutils.utils import safe_norm
+from pyNastran.gui.gui_objects.vector_results import (
+    DispForceVectorResults)  # _to_dense_vector
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.result_objects.table_object import (

@@ -149,6 +149,10 @@ class BDFMethods(BDFAttributes):
         #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
 
         """
+        # self.deprecated(
+        #     'model.get_mass_breakdown(...)',
+        #     'from pyNastran.bdf.mesh_utils.breakdowns import get_mass_breakdown' \
+        #     'get_mass_breakdown', '1.5')
         pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = get_mass_breakdown(
             self, property_ids=property_ids,
             stop_if_no_mass=stop_if_no_mass, detailed=True)

@@ -846,7 +846,7 @@ class OP2(OP2_Scalar, OP2Writer):
         #self.log.info('---self.get_key_order()---')
         #for key in self.get_key_order(filter_keys=True):
             #self.log.info('  %s' % str(key))
-        self.get_key_order(filter_keys=True)
+        #self.get_key_order(filter_keys=True)
 
         self.combine = combine
         result_types = self.get_table_types()
@@ -1106,7 +1106,7 @@ class OP2(OP2_Scalar, OP2Writer):
                             continue
                         ncommon = res.slice_data(slice_elements)
 
-    def get_key_order(self, filter_keys=False) -> list[NastranKey]:
+    def get_key_order(self, filter_keys: bool=False) -> list[NastranKey]:
         """
         Returns
         -------
@@ -1180,6 +1180,7 @@ class OP2(OP2_Scalar, OP2Writer):
         pval_steps = set()
 
         used_keys = set([])
+        print(f'keys_order = {keys}')
         for key in keys:
             try:
                 len(key)  # vg_vf_response uses a single integer
@@ -1456,15 +1457,42 @@ def _filter_keys(keys: list, filter_keys: bool=True) -> list:
     >>> keys_out
     [(1, 1, 1, 55, 0, '', '')]
 
+    keys2 = [(1, 2, 1, 0, 0, '', ''),
+             (1, 2, 2, 0, 0, '', ''),]
+    >>> keys_out2 = _filter_keys(keys2)
+    >>> keys_out2
+    [(1, 2, 1, 0, 0, '', ''),
+     (1, 2, 2, 0, 0, '', ''),]
+
+    keys3 = [
+        (1, 2, 1, 0, 0, '', ''),
+       #(1, 2, 2, 0, 0, '', ''),
+        (1, 2, 1, 0, 0, '', 'RANDOM  103'),
+       #(1, 2, 2, 0, 0, '', 'RANDOM  103'),
+        (1, 5, 1, 0, 0, '', ''),
+       #(1, 5, 2, 0, 0, '', ''),
+        (1, 5, 1, 0, 0, '', 'RANDOM  103'),
+       #(1, 5, 2, 0, 0, '', 'RANDOM  103'),
+        (3, 2, 1, 0, 0, '', ''),
+       #(3, 2, 2, 0, 0, '', ''),
+        (3, 2, 1, 0, 0, '', 'RANDOM  103'),
+       #(3, 2, 2, 0, 0, '', 'RANDOM  103'),
+        (3, 5, 1, 0, 0, '', ''),
+       #(3, 5, 2, 0, 0, '', ''),
+        (3, 5, 1, 0, 0, '', 'RANDOM  103'),
+       #(3, 5, 2, 0, 0, '', 'RANDOM  103')]
+
     """
     if not filter_keys:
         return keys
 
+    print(keys)
     keys_out = []
     flag_to_keys = defaultdict(list)
 
     # fill keys_to_flag
     for key in keys:
+        assert isinstance(key, tuple), key
         (isubcase, analysis_code, sort_method, count, ogs,  # ints
          superelement_adaptivity_index, pval_step) = key
         flag = (isubcase, analysis_code, ogs, superelement_adaptivity_index, pval_step)
@@ -1486,8 +1514,8 @@ def _filter_keys(keys: list, filter_keys: bool=True) -> list:
             flagged_keys_temp = dict(flagged_keys_temp)
             max_count = max(flagged_keys_temp)
             key_out = flagged_keys_temp[max_count]
-            assert len(key_out) == 1, key_out
-            keys_out.append(key_out[0])
+            assert len(key_out) >= 1, key_out
+            keys_out.extend(key_out)
     return keys_out
 
 

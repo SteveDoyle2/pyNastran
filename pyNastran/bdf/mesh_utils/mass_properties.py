@@ -174,9 +174,12 @@ def _mass_properties_elements_init(model: BDF,
     return element_ids, elements, mass_ids, masses
 
 def mass_properties(model: BDF,
-                    element_ids=None, mass_ids=None,
-                    reference_point=None,
-                    sym_axis=None, scale=None, inertia_reference: str='cg'):
+                    element_ids: Optional[list[int]]=None,
+                    mass_ids: Optional[list[int]]=None,
+                    reference_point: Optional[np.ndarray]=None,
+                    sym_axis: Optional[str]=None,
+                    scale: Optional[float]=None,
+                    inertia_reference: str='cg'):
     """
     Calculates mass properties in the global system about the
     reference point, while considering WTMASS.
@@ -438,10 +441,16 @@ def increment_inertia(centroidi: np.ndarray, reference_point: np.ndarray,
     mass_cg += massi * centroidi
     return mass
 
-def mass_properties_nsm(model: BDF, element_ids=None, mass_ids=None, nsm_id=None,
-                        reference_point=None,
-                        sym_axis=None, scale=None, inertia_reference: str='cg',
-                        xyz_cid0_dict=None, debug: bool=False) -> tuple[float, np.ndarray, np.ndarray]:
+def mass_properties_nsm(model: BDF,
+                        element_ids: Optional[list[int]]=None,
+                        mass_ids: Optional[list[int]]=None,
+                        nsm_id=None,
+                        reference_point: Optional[np.ndarray]=None,
+                        sym_axis: Optional[str]=None,
+                        scale: Optional[float]=None,
+                        inertia_reference: str='cg',
+                        xyz_cid0_dict=None,
+                        debug: bool=False) -> tuple[float, np.ndarray, np.ndarray]:
     """
     Calculates mass properties in the global system about the
     reference point.  Considers NSM, NSM1, NSML, NSML1, and WTMASS.
@@ -1379,9 +1388,7 @@ def _setup_apply_nsm(area_eids_pids: dict[str, np.ndarray],
                      nsm_centroids_area: dict[str, np.ndarray],
                      length_eids_pids: dict[str, np.ndarray],
                      lengths: dict[str, np.ndarray],
-                     nsm_centroids_length: dict[str, np.ndarray]) -> tuple[
-                         #all_eids_pids, area_length, is_area_array, nsm_centroids
-                         np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+                     nsm_centroids_length: dict[str, np.ndarray]) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Sets up the non-structural mass processing
 
@@ -2062,7 +2069,7 @@ def _nsm1_element(model: BDF, nsm: NSM1,
         mass = increment_inertia(centroid, reference_point, massi, mass, cg, I)
     return mass
 
-def _get_sym_axis(model, sym_axis):
+def _get_sym_axis(model: BDF, sym_axis: str | list[str] | tuple[str] | set[str]):
     """update the sym_axis"""
     if isinstance(sym_axis, str):
         sym_axis_set = {sym_axis.lower()}
@@ -2102,9 +2109,12 @@ def _get_sym_axis(model, sym_axis):
             raise RuntimeError(msg)
     return list(sym_axis_set)
 
-def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
+def _apply_mass_symmetry(model: BDF, sym_axis: str, scale: float,
+                         mass: float,
+                         cg: np.ndarray, inertia: np.ndarray,
+                         ) -> tuple[float, np.ndarray, np.ndarray]:
     """
-    Scales the mass & moement of inertia based on the symmetry axes
+    Scales the mass & moment of inertia based on the symmetry axes
     and the PARAM WTMASS card
 
     """
@@ -2151,15 +2161,20 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
     if scale is None:
         scale = wtmass
         if scale != 1.0:
-            model.log.info('WTMASS scale = %r' % scale)
+            model.log.info(f'WTMASS scale = {scale!r}')
     mass *= scale
     inertia *= scale
     return mass, cg, inertia
 
 #-------------------------------------------------------------------------------
-def mass_properties_breakdown(model: BDF, element_ids=None, mass_ids=None, nsm_id=None,
+def mass_properties_breakdown(model: BDF,
+                              element_ids=None,
+                              mass_ids=None,
+                              nsm_id=None,
                               reference_point=None,
-                              sym_axis=None, scale=None, inertia_reference='cg',
+                              sym_axis: Optional[str]=None,
+                              scale: Optional[float]=None,
+                              inertia_reference: str='cg',
                               debug=False):
     """Gets an incomplete breakdown the mass properties on a per element basis"""
     reference_point, is_cg = _update_reference_point(
@@ -2186,7 +2201,6 @@ def mass_properties_breakdown(model: BDF, element_ids=None, mass_ids=None, nsm_i
         iaxes[icid, :] = coord.i
         coords[icid, :, :] = coord.beta()
         icid += 1
-
 
     skip_elements = {
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -3027,7 +3041,6 @@ def _breakdown_property_dicts(model: BDF) -> tuple[dict[str, list[int]],
                                                    dict[str, list[int]],
                                                    dict[str, list[int]],]:
     """helper method"""
-
     #pids_per_length_dict, mass_per_length_dict, nsm_per_length_dict,
     #pids_per_area_dict, mass_per_area_dict, nsm_per_area_dict, thickness_dict,
     #pids_per_volume_dict, mass_per_volume_dict

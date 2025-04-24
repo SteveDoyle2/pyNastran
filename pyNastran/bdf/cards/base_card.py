@@ -164,6 +164,10 @@ class BaseCard:
           >>> node.update_field(3, 0.1)
 
         """
+        if isinstance(n, str) and hasattr(self, n):
+            setattr(self, n, value)
+            return
+
         try:
             key_name = self._field_map[n]
             setattr(self, key_name, value)

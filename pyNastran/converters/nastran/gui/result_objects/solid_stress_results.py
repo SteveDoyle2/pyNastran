@@ -8,8 +8,8 @@ from pyNastran.utils.mathematics import get_abs_max
 from .nodal_averaging import nodal_average, nodal_combine_map
 #from pyNastran.bdf.utils import write_patran_syntax_dict
 
-from .vector_results import VectorResultsCommon, filter_ids
 from .stress_reduction import von_mises_3d, max_shear
+from pyNastran.gui.gui_objects.vector_results import VectorResultsCommon, filter_ids
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.op2 import OP2

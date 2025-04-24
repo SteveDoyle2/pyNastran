@@ -1371,7 +1371,9 @@ class GuiQtCommon(GuiAttributes):
         self._xyz_nominal = xyz_nominal
         self._update_grid(vector_data)
 
-    def update_forces_by_icase_scale_phase(self, icase, arrow_scale, phase=0.0):
+    def update_forces_by_icase_scale_phase(self, icase: int,
+                                           arrow_scale: float,
+                                           phase: float=0.0) -> None:
         """
         Updates to the force state defined by the cases
 
@@ -1403,7 +1405,7 @@ class GuiQtCommon(GuiAttributes):
                           name_vector: tuple[int, int, str, str, float],
                           grid_result_vector: Optional[vtkTypeFloat32Array],
                           key: int, subtitle: str, label: str,
-                          min_value, max_value,
+                          min_value: float, max_value: float,
                           show_msg: bool):
         assert isinstance(key, integer_types), key
         (obj, (i, res_name)) = self.result_cases[key]
@@ -1474,9 +1476,9 @@ class GuiQtCommon(GuiAttributes):
 
                 cell_data.AddArray(vtk_array)
                 if show_msg:
-                    self.log_info('centroidal plotting vector=%s - subcase_id=%s '
-                                  'legend_title=%s subtitle=%s label=%s'
-                                  % (vector_size, subcase_id, legend_title, subtitle, label))
+                    self.log_info(
+                        f'centroidal plotting vector={vector_size} - subcase_id={subcase_id} '
+                        f'legend_title={legend_title!r} subtitle={subtitle} label={label!r}')
             elif location == 'node':
                 if self._names_storage.has_close_name(name):
                     point_data.RemoveArray(name_str)
@@ -1484,9 +1486,9 @@ class GuiQtCommon(GuiAttributes):
 
                 if vector_size == 1:
                     if show_msg:
-                        self.log_info('node plotting vector=%s - subcase_id=%s '
-                                      'legend_title=%s subtitle=%s label=%s"'
-                                      % (vector_size, subcase_id, legend_title, subtitle, label))
+                        self.log_info(
+                            f'node plotting vector={vector_size} - subcase_id={subcase_id} '
+                            f'legend_title={legend_title!r} subtitle={subtitle!r} label={label!r}"')
                     point_data.AddArray(vtk_array)
                 elif vector_size == 3:
                     #print('vector_size3; get, update')
@@ -1581,7 +1583,8 @@ class GuiQtCommon(GuiAttributes):
         self.grid_selected.Modified()
 
     def _update_elemental_vectors(self, forces_array: np.ndarray,
-                                  set_scalars: bool=True, scale=None) -> None:
+                                  set_scalars: bool=True,
+                                  scale=None) -> None:
         """changes the glyphs"""
         grid: vtkUnstructuredGrid = self.grid
         if scale is not None:

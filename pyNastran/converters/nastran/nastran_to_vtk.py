@@ -1,7 +1,7 @@
 """tests the NastranIO class"""
 from __future__ import annotations
 import os
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from vtkmodules.vtkCommonDataModel import vtkPointData, vtkCellData
 from vtkmodules.vtkCommonCore import vtkFloatArray
@@ -20,8 +20,8 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult, GridPointForceResult
 from pyNastran.gui.gui_objects.displacements import ForceTableResults, DisplacementResults # , ElementalTableResults
 from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
 from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
-from pyNastran.converters.nastran.gui.result_objects.displacement_results import DisplacementResults2
-from pyNastran.converters.nastran.gui.result_objects.force_results import ForceResults2
+from pyNastran.gui.gui_objects.displacement_results import DisplacementResults2
+from pyNastran.gui.gui_objects.force_results import ForceResults2
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.composite_stress_results import CompositeStrainStressResults2
 from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import PlateStrainStressResults2
@@ -236,7 +236,7 @@ def _save_layered_table_results(icase: int,
     return vtk_array
 
 def nastran_to_vtk(bdf_filename: str | BDF,
-                   op2_filename: str | OP2,
+                   op2_filename: Optional[str | OP2],
                    vtu_filename: str,
                    log_level: str='error',
                    compression_level: int=5) -> vtkUnstructuredGrid:

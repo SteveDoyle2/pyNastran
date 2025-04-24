@@ -192,8 +192,6 @@ def _transform_cylindrical_displacement(inode: np.ndarray,
     xyzi = xyz_cid0[inode, :]
     rtz_cid = coord.xyz_to_coord_array(xyzi)
 
-    #print('rtz_cid:')
-    #print(rtz_cid)
     thetad = rtz_cid[:, 1]
     thetar = np.radians(thetad)
     #print('thetad[cid=%s] = %s' % (coord.cid, thetad))

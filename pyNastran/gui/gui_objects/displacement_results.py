@@ -2,7 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-from .vector_results import DispForceVectorResults, get_component_indices
+from pyNastran.gui.gui_objects.vector_results import (
+    DispForceVectorResults)  # get_component_indices
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.result_objects.table_object import (

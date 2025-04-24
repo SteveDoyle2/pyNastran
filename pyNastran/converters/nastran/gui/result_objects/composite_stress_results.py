@@ -6,7 +6,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 from pyNastran.femutils.utils import pivot_table, unique2d, abs_nan_min_max, safe_nanstd # abs_min_max
 from pyNastran.bdf.utils import write_patran_syntax_dict
 
-from .vector_results import VectorResultsCommon, filter_ids
+from pyNastran.gui.gui_objects.vector_results import VectorResultsCommon, filter_ids
 from .nodal_averaging import nan_difference
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
