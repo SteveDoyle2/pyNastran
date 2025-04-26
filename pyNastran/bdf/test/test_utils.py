@@ -25,8 +25,8 @@ class TestBdfUtils(unittest.TestCase):
         bdf_files = get_bdf_filenames_to_run(model_path, extensions, recursive=True)
         assert len(bdf_files) >= 10, len(bdf_files)  # 105
 
-        #bdf_files = get_bdf_filenames_to_run([model_path], extensions, recursive=True)
-        #assert len(bdf_files) >= 10, len(bdf_files)  # 105
+        # bdf_files = get_bdf_filenames_to_run([model_path], extensions, recursive=True)
+        # assert len(bdf_files) >= 10, len(bdf_files)  # 105
 
         #------------------------------
         bdf_files = get_bdf_filenames_to_run(model_path, extensions, recursive=False)
@@ -55,10 +55,10 @@ class TestBdfUtils(unittest.TestCase):
         model.add_mat1(1, 3.0e7, None, 0.3, comment= 'Femap Material: fake material')
         model.add_mat1(2, 3.0e7, None, 0.3, comment= 'other comment')
         model.add_mat1(3, 3.0e7, None, 0.3, comment= '')
-        #word = 'Femap Material'
+        # word = 'Femap Material'
         get_femap_property_comments_dict(model.properties)
         out = get_femap_material_comments_dict(model.materials)
-        #{1: 'fake material'}
+        # {1: 'fake material'}
         print(out)
 
     def test_femap_syntax(self):
@@ -109,7 +109,7 @@ class TestBdfUtils(unittest.TestCase):
         msg = '#:1'
         with self.assertRaises(ValueError):
             output = parse_patran_syntax(msg, pound=None)
-        #assert array_equal(output, [1, 2, 3, 4, 5])
+        # assert array_equal(output, [1, 2, 3, 4, 5])
 
         msg = '1:#'
         output = parse_patran_syntax(msg, pound='5')
@@ -117,7 +117,7 @@ class TestBdfUtils(unittest.TestCase):
 
         # should this raise an error?
         msg = '#:1'
-        #with self.assertRaises(ValueError):
+        # with self.assertRaises(ValueError):
         output = parse_patran_syntax(msg, pound='5')
 
     def test_utils_parse_patran_syntax_dict_1(self):
@@ -176,17 +176,17 @@ class TestBdfUtils(unittest.TestCase):
         """tests parse_patran_syntax_dict"""
         node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
         type_map = {
-            'n' : 'Node',
-            'Node' : 'Node',
-            'e' : 'Element',
-            'Elm' : 'Element',
-            'Element' : 'Element',
+            'n': 'Node',
+            'Node': 'Node',
+            'e': 'Element',
+            'Elm': 'Element',
+            'Element': 'Element',
         }
 
         data = parse_patran_syntax_dict(node_sets, type_map)
         data_expected = {
-            'Element' : np.array([1, 2, 3]),
-            'Node' : np.array([2, 4, 6, 10, 11, 12, 13, 15]),
+            'Element': np.array([1, 2, 3]),
+            'Node': np.array([2, 4, 6, 10, 11, 12, 13, 15]),
         }
 
         data = parse_patran_syntax_dict_map(node_sets, type_map, msg='')
@@ -225,8 +225,8 @@ class TestBdfUtils(unittest.TestCase):
         eids = [1, 2]
         nids = [2, 5, 8]
         split_eids_along_nids(model, eids, nids)
-        #print(model.nodes)
-        #print(model.elements)
+        # print(model.nodes)
+        # print(model.elements)
         expected_element_nids = {
             1 : [7, 12, 11, 4],
             2 : [4, 11, 10, 1],

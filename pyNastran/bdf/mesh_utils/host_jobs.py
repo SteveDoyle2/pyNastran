@@ -306,7 +306,6 @@ def run_jobs_by_filenames(command_line_args: list[list[str]],
 
     msg = f'{nfiles}/{nfiles}=100%:'
     nmsg = len(msg)
-    #assert run is False, run
     for ifile, call_args in enumerate(command_line_args):
         # update nastran -> C:\bin\nastran.bat
         call0 = call_args[0]

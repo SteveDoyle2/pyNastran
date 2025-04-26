@@ -646,24 +646,30 @@ class NSMADD(BaseCard):
             the BDF object
         """
         msg = ', which is required by NSMADD=%s' % self.sid
-        nsms = []
-        for nsm in self.sets:
-            nsms.append(model.NSM(nsm, msg=msg))
+        nsms, failed_nsms = self._nsm_failed(model)
+        if failed_nsms:
+            nsm_list = list(model.nsms)
+            raise KeyError(f'failed_nsms={failed_nsms}; nsms={nsm_list}{msg}')
         self.sets_ref = nsms
 
-    def safe_cross_reference(self, model: BDF, debug=True):
-        nsms = []
+    def _nsm_failed(self, model: BDF) -> tuple[list[NSM], list[int]]:
         msg = ', which is required by NSMADD=%s' % self.sid
+        nsms = []
+        failed_nsms = []
         for nsm_id in self.sets:
             try:
                 nsm = model.NSM(nsm_id, msg=msg)
+                nsms.append(nsm)
             except KeyError:
-                if debug:
-                    msg = 'Couldnt find NSM=%i, which is required by NSMADD=%s' % (
-                        nsm_id, self.sid)
-                    print(msg)
-                continue
-            nsms.append(nsm)
+                failed_nsms.append(nsm_id)
+        return nsms, failed_nsms
+
+    def safe_cross_reference(self, model: BDF, debug: bool=True):
+        msg = ', which is required by NSMADD=%s' % self.sid
+        nsms, failed_nsms = self._nsm_failed(model)
+        if failed_nsms:
+            nsm_list = list(model.nsms)
+            model.log.warning(f'failed_nsms={failed_nsms}; nsms={nsm_list}{msg}')
         self.sets_ref = nsms
 
     def uncross_reference(self) -> None:

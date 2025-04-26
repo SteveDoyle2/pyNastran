@@ -5058,7 +5058,7 @@ def _echo_card(card, card_obj):
         else:
             print(print_card_16(card_obj).rstrip())
 
-def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True,
+def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
              xref: bool=True, punch: bool=False,
              save_file_structure: bool=False,
              skip_cards: Optional[list[str]]=None,

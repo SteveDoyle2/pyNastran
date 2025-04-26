@@ -326,7 +326,6 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
                           cleanup: bool=True,
                           run: bool=True,
                           debug: bool=False) -> tuple[int, list[list[str]]]:
-    assert run is False, run
     nfiles = len(bdf_filenames)
     eta = 'N/A'
     eta_next = 'N/A'
@@ -339,7 +338,7 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
     msg = f'{nfiles}/{nfiles}=100%:'
     nmsg = len(msg)
     is_keywords_list = False
-    if isinstance(keywords, list):
+    if isinstance(keywords, list) and len(keywords) > 0:
         keywords0 = keywords[0]
         is_keywords_list = isinstance(keywords0, list)
     if is_keywords_list:

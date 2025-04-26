@@ -77,6 +77,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.cross_reference_obj import CrossReference
 
+
 class XrefMesh(BDFAttributes):
     """Links up the various cards in the BDF."""
     def __init__(self) -> None:

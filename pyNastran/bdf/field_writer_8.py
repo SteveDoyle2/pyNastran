@@ -78,9 +78,9 @@ def print_scientific_8(value: float) -> str:
     leftover = 5 - len(exp2)
 
     if value < 0:
-        fmt = "%%1.%sf" % (leftover - 1)
+        fmt = "%%1.%df" % (leftover - 1)
     else:
-        fmt = "%%1.%sf" % leftover
+        fmt = "%%1.%df" % leftover
 
     svalue3 = fmt % value2
     svalue4 = svalue3.strip('0')
@@ -237,7 +237,7 @@ def print_field_8(value: Optional[int | float | str]) -> str:
 
     """
     if isinstance(value, int):
-        field = '%8i' % value
+        field = '%8d' % value
     elif isinstance(value, (float, float32, float64)):
         field = print_float_8(value)
     elif value is None:

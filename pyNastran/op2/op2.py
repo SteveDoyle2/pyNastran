@@ -31,7 +31,7 @@ import numpy as np
 
 #import pyNastran
 from pyNastran.utils import (
-    object_attributes, object_methods, ipython_info)
+    object_attributes, object_methods, ipython_info, PathLike)
 from pyNastran.utils.numpy_utils import integer_types
 
 from pyNastran.f06.errors import FatalError
@@ -1519,7 +1519,7 @@ def _filter_keys(keys: list, filter_keys: bool=True) -> list:
     return keys_out
 
 
-def read_op2(op2_filename: Optional[str]=None,
+def read_op2(op2_filename: Optional[PathLike]=None,
              load_geometry: bool=False,
              combine: bool=True,
              subcases: Optional[list[int]]=None,

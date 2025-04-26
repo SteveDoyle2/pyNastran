@@ -367,6 +367,7 @@ SATK_STR_PARAMS1 = {
     b'RDRBE',
 }
 STR_PARAMS_1 = SATK_STR_PARAMS1 | {
+    b'PRTMAXIM',
     b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
     b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
     b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
@@ -1715,7 +1716,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # =7 4 LOGICAL LOGIC*
 
             # ----------------
-            #wrong...
+            # wrong...
             # 1 PARAM(2) CHAR4
             # 3 I
             # =1 4 INT     I*
@@ -1737,7 +1738,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
                 #flag_str = 'str'
 
             # the first two entries are typically trash, then we can get values
-            if flag == 1: # int
+            if flag == 1:  # int
                 #self.show_data(data[i*xword:(i+4)*xword], types='isq', endian=None, force=False)
                 assert self.size in [4, 8], (key, self.size, flag)
                 #assert word in INT_PARAMS_1, f'word={word}'
@@ -1747,7 +1748,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
                 #i += 5
                 value, = structi.unpack(slot)
                 values = [value]
-            elif flag == 2: # float
+            elif flag == 2:  # float
                 assert self.size in [4, 8], (key, self.size, flag)
                 slot = data[(i+3)*xword:(i+4)*xword]
                 value, = structf.unpack(slot)
@@ -1755,7 +1756,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
                 #assert word in FLOAT_PARAMS_1, f'word={word}'
                 i += 4
 
-            elif flag == 3: # float / string
+            elif flag == 3:  # float / string
                 assert self.size in [4, 8], (key, self.size, flag)
                 #slot = data[(i+3)*xword:(i+4)*xword]
                 #i += 4
@@ -1765,11 +1766,16 @@ class OP2_Scalar(OP2Common, FortranFormat):
                     if self.size == 8:
                         bvalue = reshape_bytes_block(bvalue)
                     value = bvalue.decode('latin1').rstrip()
+                    #print(f'str_value = {value}')
                     if value:
                         if word == b'NXVER':
                             assert value.replace('.', '').isalnum(), f'{key} = {value!r}'
                         elif word == b'UNITSYS':
                             assert value.replace('-', '').isalnum(), f'{key} = {value!r}'
+                        elif word == b'PRTMAXIM':
+                            # NOTEST_ -> NO
+                            assert value in {'NOTEST_'}, value
+                            #pass\assert value.replace('-', '').isalnum(), f'{key} = {value!r}'
                         else:
                             assert value.isalnum(), f'{key} = {value!r}'
                 except AssertionError:
@@ -1807,7 +1813,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
                     assert word in FLOAT_PARAMS_2, f'word={word}'
                 i += 5
 
-            elif flag == 7: # logical/int
+            elif flag == 7:  # logical/int
                 assert self.size in [4, 8], (key, self.size, flag)
                 slot = data[(i+3)*xword:(i+4)*xword]
                 value, = structi.unpack(slot)
