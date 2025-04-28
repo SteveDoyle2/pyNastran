@@ -492,9 +492,11 @@ class CBAR(LineElement):
         h5_file.create_dataset('wa', data=wa)
         h5_file.create_dataset('wb', data=wb)
 
-    def __init__(self, eid, pid, nids,
-                 x, g0, offt='GGG',
-                 pa=0, pb=0, wa=None, wb=None, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 x: Optional[list[float]], g0: Optional[int], offt: str='GGG',
+                 pa: int=0, pb: int=0,
+                 wa: Optional[list[float]]=None,
+                 wb: Optional[list[float]]=None, comment: str=''):
         """
         Adds a CBAR card
 

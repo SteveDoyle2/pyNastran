@@ -12,8 +12,8 @@ import numpy as np
 from pyNastran.utils import PathLike
 
 
-def get_files_of_type(dirname: str, extension: str='.txt',
-                      max_size_mb: float=100., limit_file: str='no_dig.txt',
+def get_files_of_type(dirname: PathLike, extension: str='.txt',
+                      max_size_mb: float=100.0, limit_file: str='no_dig.txt',
                       skip_folder_file: str='skip_folder.txt') -> list[str]:
     """
     Gets the list of all the files with a given extension in the specified directory

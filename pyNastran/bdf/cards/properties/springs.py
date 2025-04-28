@@ -17,6 +17,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class SpringProperty(Property):
@@ -35,14 +36,14 @@ class PELAS(SpringProperty):
     """
     type = 'PELAS'
     _field_map = {
-        1: 'pid', 2:'k', 3:'ge', 4:'s',
+        1: 'pid', 2: 'k', 3: 'ge', 4: 's',
     }
     pname_fid_map = {
-        #2 : 'k', 'K' : 'k',
-        #3 : 'ge', 'GE' : 'ge',
-        #4 : 's', 'S' : 's',
-        'K1' : 'k',
-        'GE1' : 'ge',
+        # 2 : 'k', 'K' : 'k',
+        # 3 : 'ge', 'GE' : 'ge',
+        # 4 : 's', 'S' : 's',
+        'K1': 'k',
+        'GE1': 'ge',
     }
 
     @classmethod
@@ -51,7 +52,7 @@ class PELAS(SpringProperty):
         k = 1.
         return PELAS(pid, k, ge=0., s=0., comment='')
 
-    def __init__(self, pid, k, ge=0., s=0., comment=''):
+    def __init__(self, pid: int, k: float, ge: float=0., s: float=0., comment: str=''):
         """
         Creates a PELAS card
 
@@ -88,7 +89,7 @@ class PELAS(SpringProperty):
         self.pelast_ref = None
 
     @classmethod
-    def add_card(cls, card, icard=0, comment=''):
+    def add_card(cls, card: BDFCard, icard: int=0, comment: str=''):
         """
         Adds a PELAS card from ``BDF.add_card(...)``
 
@@ -110,7 +111,7 @@ class PELAS(SpringProperty):
         return PELAS(pid, k, ge, s, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data: list, comment: str=''):
         """
         Adds a PELAS card from the OP2
 
@@ -173,10 +174,10 @@ class PELAST(SpringProperty):
     """
     type = 'PELAST'
     _field_map = {
-        1: 'pid', 2:'tkid', 3:'tgeid', 4:'tknid',
+        1: 'pid', 2: 'tkid', 3: 'tgeid', 4: 'tknid',
     }
     pname_fid_map = {
-    'TKID' : 'tknid',
+        'TKID': 'tknid',
     }
 
     @classmethod
@@ -184,7 +185,8 @@ class PELAST(SpringProperty):
         pid = 1
         return PELAST(pid, tkid=0, tgeid=0, tknid=0, comment='')
 
-    def __init__(self, pid, tkid=0, tgeid=0, tknid=0, comment=''):
+    def __init__(self, pid, tkid: int=0, tgeid: int=0, tknid: int=0,
+                 comment: str=''):
         """
         Creates a PELAST card
 
@@ -192,11 +194,11 @@ class PELAST(SpringProperty):
         ----------
         pid : int
             property id
-        tkid : float
+        tkid : int; default=0
             TABLEDx that defines k vs. frequency
         tgeid : int; default=0
             TABLEDx that defines ge vs. frequency
-        s : float; default=0.
+        tknid : int; default=0
             TABLEDx that defines force vs. displacement
         comment : str; default=''
             a comment for the card
@@ -224,7 +226,7 @@ class PELAST(SpringProperty):
         self.tknid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PELAST card from ``BDF.add_card(...)``
 
@@ -243,13 +245,13 @@ class PELAST(SpringProperty):
         return PELAST(pid, tkid, tgeid, tknid, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data: list[int], comment: str=''):
         """
         Adds a PELAST card from the OP2
 
         Parameters
         ----------
-        data : list[varies]
+        data : list[int]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

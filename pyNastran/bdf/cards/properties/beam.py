@@ -1,5 +1,6 @@
 # coding: utf-8
 # pylint: disable=C0103
+# pep8: disable="E252,E265"
 """
 All beam properties are defined in this file.  This includes:
  *   PBEAM
@@ -13,7 +14,8 @@ Multi-segment beams are IntegratedLineProperty objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import TYPE_CHECKING
+import warnings
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 from numpy import unique, allclose, ndarray
 
@@ -71,7 +73,7 @@ class PBEAM(IntegratedLineProperty):
     type = 'PBEAM'
 
     #_opt_map = {
-        #'I1(B)' : 'i1',
+        #'I1(B)': 'i1',
         #'I1(B)',
     #}
     def update_by_pname_fid(self, pname_fid, value):
@@ -193,7 +195,7 @@ class PBEAM(IntegratedLineProperty):
                      comment='')
 
     def __init__(self, pid: int, mid: int,
-                 xxb, so: str, area: float,
+                 xxb: list[float], so: str, area: float,
                  i1: float, i2: float, i12: float, j: float,
                  nsm=None,
                  c1=None, c2=None, d1=None, d2=None,
@@ -1197,8 +1199,8 @@ class PBEAM(IntegratedLineProperty):
         try:
             J = self.J()
         except NotImplementedError:
-            msg = "J is not implemented for pid.type=%s pid.Type=%s" % (self.type, self.beam_type)
-            print(msg)
+            msg = f"J is not implemented for pid.type={self.type} pid.Type={self.beam_type}"
+            warnings.warn(msg)
             J = 0.0
         nsm = self.Nsm()
         assert isinstance(pid, int), 'PBEAM: pid=%r' % pid
@@ -1346,6 +1348,7 @@ class PBEAM(IntegratedLineProperty):
         card = self.repr_fields()
         return self.comment + print_card_16(card)
 
+
 def pbeam_op2_data_to_init(data):
     (pid, mid, unused_nsegs, unused_ccf, unused_x) = data[:5]
 
@@ -1483,6 +1486,7 @@ def update_pbeam_negative_integer(pname_fid):
     word = '%s(%d)' % (word, istation + 1)
     return word
 
+
 class PBEAML(IntegratedLineProperty):
     """
     +--------+---------+---------+---------+---------+---------+---------+---------+---------+
@@ -1527,6 +1531,7 @@ class PBEAML(IntegratedLineProperty):
         "HAT1": 5,
         "DBOX": 10,  # TODO: was 12???
     }  # for GROUP="MSCBML0"
+
     def update_by_pname_fid(self, pname_fid: str, value: float):
         if isinstance(pname_fid, int):
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
@@ -1592,7 +1597,8 @@ class PBEAML(IntegratedLineProperty):
                       so=None, nsm=None, group='MSCBML0', comment='')
 
     def __init__(self, pid: int, mid: int, beam_type: str,
-                 xxb, dims, so=None, nsm=None,
+                 xxb: list[float], dims: list[list[float]],
+                 so: Optional[list[str]]=None, nsm: Optional[list[float]]=None,
                  group: str='MSCBML0', comment: str=''):
         """
         Creates a PBEAML card
@@ -1675,8 +1681,9 @@ class PBEAML(IntegratedLineProperty):
 
         #dim0 = dims[0]
         #if beam_type == 'BOX':
-        #    w, h, *ts = dim0
-        #    print(f'I pid={pid}: type={beam_type}; h={h:.2f} w={w:.2f} ts={ts} I1={self.I11():.3f}  I2={self.I22():.3f}')
+            #w, h, *ts = dim0
+            #print(f'I pid={pid}: type={beam_type}; h={h:.2f} w={w:.2f} ts={ts} '
+                  #f'I1={self.I11():.3f} I2={self.I22():.3f}')
         #if beam_type == 'I':
         #    print(f'I pid={pid}: type={beam_type}; h={dim0[0]:.2f}')
         #assert len(xxb) == len(dim), f'xxb={xxb}; nsm={dim}'
@@ -1747,10 +1754,10 @@ class PBEAML(IntegratedLineProperty):
             # PBARL
             # 9. For DBOX section, the default value for DIM5 to DIM10 are
             #    based on the following rules:
-            #     a. DIM5, DIM6, DIM7 and DIM8 have a default value of
-            #        DIM4if not provided.
-            #     b. DIM9 and DIM10 have a default value of DIM6 if not
-            #        provided.
+            #     - DIM5, DIM6, DIM7 and DIM8 have a default value of
+            #       DIM4 if not provided.
+            #     - DIM9 and DIM10 have a default value of DIM6 if not
+            #       provided.
 
             #If any of the fields NSM(B), DIMi(B) are blank on the
             #continuation entry for End B, the values are set to the
