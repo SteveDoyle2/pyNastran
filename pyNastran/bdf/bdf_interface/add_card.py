@@ -42,7 +42,7 @@ from pyNastran.bdf.cards.elements.rigid import (
 #     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX)
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
-from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1 #, FORCEAX, PRESAX, TEMPAX
+from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1  # , FORCEAX, PRESAX, TEMPAX
 
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
