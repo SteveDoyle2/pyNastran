@@ -26,6 +26,8 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     run_nastran_job dirname
     run_nastran_job filename.bdf -x C:\bin\nastran.exe
     run_nastran_job .            -x C:\bin\nastran.exe --cleanup -r --test
+    run_nastran_job .    --outfile files_to_run.out --test -args "old=no mem=10gb"
+    run_nastran_job junk --infile  files_to_run.out
     run_nastran_job filename.bdf filename2.bdf
     """
     FILE = os.path.abspath(__file__)
@@ -43,7 +45,6 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran execuable')
     parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
     parser.add_argument('-r', '--recursive', action='store_true', help='recursively search for directories')
-    parser.add_argument('--nofolder', action='store_true', help='dont show the directory path')
     parser.add_argument('--args', help='additional arguments')
 
     file_group = parser.add_mutually_exclusive_group(required=False)
@@ -60,7 +61,6 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     if not quiet:  # pragma: no cover
         print(args)
 
-    show_folder = not args.nofolder
     run = args.test
     recursive = args.recursive
     debug = args.debug
@@ -92,7 +92,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     nfiles = run_jobs(
         bdf_filename_dirname, nastran_exe,
         extensions=extensions, cleanup=cleanup,
-        keywords=all_keywords_list, show_folder=show_folder,
+        keywords=all_keywords_list,
         recursive=recursive, run=run,
         out_filename=out_filename,
         debug=debug, log=level)
@@ -111,9 +111,10 @@ def load_infile(infilename: str,
     bdf_filename_dirname = []
     for line in lines:
         line = line.strip()
+        # print(line)
         if len(line) == 0:
             continue
-        call_args = shlex.split(line)
+        call_args = shlex.split(line, posix=False)
         all_call_args.append(call_args)
         name = ''
         keywords_list = []
@@ -122,7 +123,7 @@ def load_infile(infilename: str,
             ext = ext.lower()
             if ext in extensions:
                 assert name == '', (name, arg)
-                name = arg
+                name = os.path.abspath(arg)
             else:
                 keywords_list.append(arg)
         bdf_filename_dirname.append(Path(name))
@@ -204,7 +205,6 @@ def _directory_to_files(bdf_filename_dirname_list: list[PathLike],
     for bdf_filename_dirnamei in bdf_filename_dirname_list:
         assert bdf_filename_dirnamei.exists(), bdf_filename_dirnamei
         if bdf_filename_dirnamei.is_dir():
-            print('dir...')
             dirname = Path(os.path.abspath(bdf_filename_dirnamei))
             if recursive:
                 bdf_filenamesi = []
@@ -237,9 +237,8 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
              cleanup: bool=True,
              recursive: bool=False,
              keywords: Optional[str | list[str] | dict[str, str] | list[list[str]]]=None,
-             show_folder: bool=True,
              run: bool=True,
-             out_filename: str='',
+             out_filename: PathLike='',
              debug: bool=False,
              log: SimpleLogger | str='debug') -> int:
     """
@@ -255,7 +254,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     -------
     nfiles: int
         the number of files
-    out_filename: str
+    out_filename: str | Path
         path to file to write list of jobs
 
     TODO: remove failed jobs from the time estimator
@@ -269,10 +268,10 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
 
     bdf_filenames_str = [str(bdf_filename) for bdf_filename in bdf_filenames]
     bdf_filenames_str_short = [os.path.basename(bdf_filename) for bdf_filename in bdf_filenames]
-    if show_folder:
-        msg = '\n - '.join(bdf_filenames_str)
-    else:
-        msg = '\n - '.join(bdf_filenames_str_short)
+    # if show_folder:
+    msg = '\n - '.join(bdf_filenames_str)
+    # else:
+    #     msg = '\n - '.join(bdf_filenames_str_short)
     #log.info(f'bdf_filenames = {bdf_filenames_str}')
     log.info(f'bdf_filenames:\n - {msg}')
 
@@ -280,14 +279,14 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     msg2 = ''
     for ifile, bdf_filename, bdf_filenames_str_short in zip(count(), bdf_filenames, bdf_filenames_str_short):
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
-        if debug:
-            ifile_str = f'{ifile+1}:'
-            if show_folder:
-                msg2 += f'{ifile_str:{widthcases}s} {bdf_filename}\n'
-            else:
-                msg2 += f'{ifile_str:{widthcases}s} {bdf_filenames_str_short}\n'
-    if msg2:
-        log.debug(f'bdf_filenames:\n{msg2}')
+    #     if debug:
+    #         ifile_str = f'{ifile+1}:'
+    #         if show_folder:
+    #             msg2 += f'{ifile_str:{widthcases}s} {bdf_filename}\n'
+    #         else:
+    #             msg2 += f'{ifile_str:{widthcases}s} {bdf_filenames_str_short}\n'
+    # if msg2:
+    #     log.debug(f'bdf_filenames:\n{msg2}')
 
     # if out_filename:
     #     with open(out_filename, 'w') as out_file:
@@ -298,25 +297,31 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         cleanup=cleanup, run=run)
 
     if out_filename:
-        with open(out_filename, 'w') as out_file:
-            for call_args in all_call_args:
-                assert len(call_args) > 0, call_args
-
-                # write the output arg
-                out = ''
-                for arg in call_args:
-                    if os.path.exists(arg):
-                        arg = os.path.relpath(arg, start='.')
-                    if isinstance(arg, str) and ' ' in arg:
-                        out += f'{arg!r} '
-                    else:
-                        out += f'{arg} '
-                out = out.strip()
-                #out = str(all_call_args)[1:-1]
-                #out_file.write(f'{str(bdf_filename)}\n')
-                out_file.write(f'{out}\n')
-
+        _write_outfile(out_filename, all_call_args)
     return nfiles
+
+def _write_outfile(out_filename: PathLike,
+                   all_call_args: list[list[str]]) -> None:
+    # with open(out_filename, 'w') as out_file:
+    #     for bdf_filename in bdf_filenames:
+    #         out_file.write(f'{str(bdf_filename)}\n')
+    with open(out_filename, 'w') as out_file:
+        for call_args in all_call_args:
+            assert len(call_args) > 0, call_args
+
+            # write the output arg
+            out = ''
+            for arg in call_args:
+                if os.path.exists(arg):
+                    arg = os.path.relpath(arg, start='.')
+                if isinstance(arg, str) and ' ' in arg:
+                    out += f'{arg!r} '
+                else:
+                    out += f'{arg} '
+            out = out.strip()
+            #out = str(all_call_args)[1:-1]
+            #out_file.write(f'{str(bdf_filename)}\n')
+            out_file.write(f'{out}\n')
 
 
 def run_jobs_by_filenames(bdf_filenames: list[PathLike],
@@ -347,7 +352,7 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
 
     for ifile, bdf_filename in enumerate(bdf_filenames):
         keywordsi = keywords[ifile] if is_keywords_list else keywords
-        print(f'keywords[{ifile}] = {keywordsi}')
+        # print(f'keywords[{ifile}] = {keywordsi}')
 
         if not os.path.exists(bdf_filename):
             log.warning(f'skipping {str(bdf_filename)!r} because {bdf_filename!r} doesnt exist')

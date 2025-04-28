@@ -23,7 +23,6 @@ from notebook_to_markdown import create_rst_from_ipython_notebooks
 
 #bdf
 from pyNastran.bdf.test.all_tests import *
-from pyNastran.dev.bdf_vectorized2.bdfv_unit_tests import *
 
 #op2
 from pyNastran.op2.test.all_tests import *

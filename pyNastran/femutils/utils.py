@@ -141,7 +141,7 @@ def pivot_table(data, rows, cols, shape: int=0) -> tuple[np.ndarray, np.ndarray]
     cols_new, col_pos_new = np.unique(cols, return_inverse=True)
     nrows = len(rows_new)
     ncols = len(cols_new)
-    assert data.size <= (nrows * ncols * nresults), f'size={data.size} nrows={nrows} ncols={ncols} nresults={nresults}'
+    # assert data.size <= (nrows * ncols * nresults), f'size={data.size} nrows={nrows} ncols={ncols} nresults={nresults}'
 
     nshape = len(data.shape)
     if shape != 0:

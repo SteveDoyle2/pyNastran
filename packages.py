@@ -29,7 +29,6 @@ CONSOLE_SCRIPTS = [
 
     'test_bdfv = pyNastran.dev.bdf_vectorized3.test.test_bdf:main',
     #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
-    #'test_bdfv2 = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
     #'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
     #'nastran_to_code_aster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
 ]
