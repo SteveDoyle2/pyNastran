@@ -10,15 +10,15 @@ from pyNastran.bdf.utils import (
     parse_femap_syntax,
     get_femap_property_comments_dict, get_femap_material_comments_dict)
 from pyNastran.bdf.test.run_jobs import get_bdf_filenames_to_run, cmd_line_run_jobs
-#from pyNastran.bdf.test.host_jobs import cmd_line_host_jobs
+from pyNastran.bdf.mesh_utils.host_jobs import cmd_line_host_jobs
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 class TestBdfUtils(unittest.TestCase):
-    # def test_host_jobs(self):
-    #     str_model_path = str(MODEL_PATH)
-    #     nfiles = cmd_line_host_jobs(['bdf', 'host_jobs', str_model_path, '--test', '--nmax', '2'], quiet=True)
+    def test_host_jobs(self):
+        str_model_path = str(MODEL_PATH)
+        nfiles = cmd_line_host_jobs(['bdf', 'host_jobs', str_model_path, '--test', '--nmax', '2'], quiet=True)
 
     def test_run_jobs_path(self):
         str_model_path = str(MODEL_PATH)

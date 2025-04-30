@@ -32,6 +32,7 @@ INT_CARDS = (
     'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
     'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR',
     'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
+    'LINE', 'MAXLINES',
 )
 
 PLOTTABLE_TYPES = (
@@ -570,16 +571,20 @@ class Subcase:
 
         .. warning:: needs more validation
         """
+        # ECHO not really a str card...
+        STR_CARDS = {'ANALYSIS', 'SUBTITLE', 'LABEL', 'TITLE', 'ECHO', 'AESYMXY', 'AESYMXZ'}
         for key, param in self.params.items():
             (unused_value, options, unused_param_type) = param
-            if key in INT_CARDS or key in ('SUBTITLE', 'LABEL', 'TITLE', 'ECHO'):
+            if key in INT_CARDS or key in STR_CARDS:
                 pass
             elif key in PLOTTABLE_TYPES:
                 if suppress_to not in options:
                     param[1].append(suppress_to)
                 if 'PRINT' in options:
                     param[1].remove('PRINT')
-            else:
+                if 'PUNCH' in options:
+                    param[1].remove('PUNCH')
+            else:  # pragma: no cover
                 raise NotImplementedError(key)
 
     def get_int_parameter(self, param_name: str, msg: str='',
@@ -614,6 +619,8 @@ class Subcase:
             raise TypeError(f'{param_name!r}={value!r} and is not an integer')
         if len(options):
             raise TypeError(f'{param_name!r}={value!r}; options={options} should be empty; use get_parameter({param_name!r})')
+        # if param_name in INT_CARDS:
+        #     raise RuntimeError(f'{param_name} is not an integer parameter')
         return value
 
     def get_str_parameter(self, param_name: str, msg: str='',

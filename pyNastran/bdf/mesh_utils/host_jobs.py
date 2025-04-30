@@ -35,6 +35,7 @@ def cmd_line_host_jobs(argv=None, quiet: bool=False) -> int:
     #parser.add_argument('-o', '--overwrite', default=False, help='overwrite files')
     #parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran execuable')
     #parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
+    parser.add_argument('--nmax', type=int, default=0, help='define how many times the hosting loop will be run')
     #parser.add_argument('--args', help='additional arguments')
     parser.add_argument('--test', action='store_false', help='skip run the jobs')
     #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
@@ -46,6 +47,7 @@ def cmd_line_host_jobs(argv=None, quiet: bool=False) -> int:
         print(args)
 
     show_folder = False #not args.nofolder
+    nmax = args.nmax
     run = args.test
     debug = True  # args.debug
     #print(args)
@@ -82,6 +84,7 @@ def cmd_line_host_jobs(argv=None, quiet: bool=False) -> int:
             #cleanup=cleanup,
             #show_folder=show_folder,
             run=run,
+            nmax=nmax,
             #out_filename=out_filename,
             debug=debug, log=level)
     except:
@@ -99,6 +102,7 @@ def host_jobs(host_dirnames: PathLike,  # | list[PathLike],
               cleanup: bool=True,
               #recursive: bool=False,
               #show_folder: bool=True,
+              nmax: int=0,
               run: bool=True,
               out_filename: str='',
               debug: bool=False,
@@ -113,6 +117,11 @@ def host_jobs(host_dirnames: PathLike,  # | list[PathLike],
       - # comment
       - nastran: C:\bin\nastran.exe
 
+    Parameters
+    ----------
+    nmax : int; default=0
+        0:  no limit
+        >0: number of times the loop will be executed
     TODO: Arguments (e.g., scr=yes old=no is not supported)
     TODO: Only supports nastran
     TODO: support logging per job
@@ -129,6 +138,9 @@ def host_jobs(host_dirnames: PathLike,  # | list[PathLike],
     exe_paths_dict = {}
     exe_path_timestamp = ''
     while 1:
+        if i >= nmax:
+            log.warning(f'breaking on i={nmax:d}')
+            break
         print('-' * 20)
         print(f'i = {i}')
         #-------------------------------------------------------------

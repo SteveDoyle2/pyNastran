@@ -894,9 +894,9 @@ class TRIM(BaseCard):
             suport_dof_msg2 = '\nsuport_dofs (nid, comp):\n%s\n' % suport_dof_msg.rstrip(',')
 
         trim_labels = self.labels
-        aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]
-        aestat_labels = [aestat.label for aestat in aestats.values()]
-        aeparm_labels = [aeparm.label for aeparm in aeparms.values()]
+        aesurf_names = _fill_label_list(aesurf)
+        aestat_labels = _fill_label_list(aestats)
+        aeparm_labels = _fill_label_list(aeparms)
         naestat = len(aestat_labels)
         ntrim = len(trim_labels)
         trim_aesurf_common = list(set(trim_labels).intersection(set(aesurf_names)))
@@ -1164,3 +1164,10 @@ class TRIM2(TRIM):
         list_fields = self.raw_fields()
         list_fields[8] = aeqr
         return list_fields
+
+def _fill_label_list(aestat: dict) -> list[str]:
+    labels = []
+    for aestati in aestat.values():
+        if aestati.label not in labels:
+            labels.append(aestati.label)
+    return labels

@@ -1217,3 +1217,85 @@ def _rho_sos_for_alts(alts: np.ndarray,
     rho = np.array(rho_list, dtype=alts.dtype)
     sos = np.array(sos_list, dtype=alts.dtype)
     return rho, sos
+
+def create_atmosphere_table(quantities: list[str],
+                            alt_min: float, alt_max: float,
+                            nalt: int=0,
+                            dalt: float=0.0,
+                            ) -> np.array:
+    """
+    Parameters
+    ----------
+    alt_min: float
+    alt_max: float
+    nalt: int
+    dalt: float
+
+    out = create_atmosphere_table(quantities, alt_min=0, alt_max=10000, dalt=1000.)
+    out[:, 0]  # alt
+    [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+
+    """
+    allowed_quantities = [
+        'density', 'pressure', 'temperature', 'velocity',
+        'speed_of_sound', 'dynamic_viscosity',
+    ]
+    for quantity in quantities:
+        assert quantity in allowed_quantities, f'{quantity} is not a valid quantity; use {allowed_quantities}'
+    assert nalt == 0 or dalt == 0.0, f'nalt={nalt} dalt={dalt}'
+    assert nalt > 0 or dalt > 0.0, f'nalt={nalt} dalt={dalt}'
+    if nalt == 0:
+        alts = np.arange(alt_min, alt_max+dalt, dalt)
+    else:
+        alts = np.linspace(alt_min, alt_max, num=nalt)
+
+    nalti = len(alts)
+    out_list = [alts]
+    alt_units = 'ft'
+    density_units = 'slug/ft^3'
+    pressure_units = 'psf'
+    temperature_units = 'R'
+    velocity_units = 'ft/s'
+    dynamic_viscosity_units = '(lbf*s)/ft^2'
+    R = 1716.0  # english
+    for quantity in quantities:
+        out = np.full(nalti, np.nan, dtype='float64')
+        if quantity == 'density':
+            for ialt, alt in enumerate(alts):
+                out[ialt] = atm_density(alt, R, alt_units=alt_units, density_units=density_units)
+        elif quantity == 'pressure':
+            for ialt, alt in enumerate(alts):
+                out[ialt] = atm_pressure(alt, alt_units=alt_units, pressure_units=pressure_units)
+        elif quantity == 'temperature':
+            for ialt, alt in enumerate(alts):
+                out[ialt] = atm_temperature(alt, alt_units=alt_units, temperature_units=temperature_units)
+        elif quantity == 'speed_of_sound':
+            for ialt, alt in enumerate(alts):
+                out[ialt] = atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
+        elif quantity == 'dynamic_viscosity':
+            for ialt, alt in enumerate(alts):
+                val = atm_dynamic_viscosity_mu(alt, alt_units=alt_units, visc_units=dynamic_viscosity_units)
+        else:
+            raise NotImplementedError(quantity)
+        out_list.append(out)
+
+    out_array = np.column_stack(out_list)
+    return out_array
+
+
+def main():  # pragma: no cover
+    import os
+    dirname = os.path.dirname(__file__)
+    quantities = ['density', 'pressure', 'speed_of_sound']
+    x = create_atmosphere_table(
+        quantities,
+        0., 50000.,
+        dalt=1000.)
+    csv_filename = os.path.join(dirname, 'atmosphere.csv')
+    quantity_list = ['alt'] + quantities
+    header = ','.join(quantity_list)
+    np.savetxt(csv_filename, x, delimiter=',', header=header)
+
+
+if __name__ == '__main__':  # pragma: no cover
+    main()
