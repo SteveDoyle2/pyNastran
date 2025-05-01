@@ -19,6 +19,7 @@ import matplotlib.gridspec as gridspec
 
 from qtpy import QtCore
 from qtpy.compat import getopenfilename #, getsavefilename
+from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (
     QLabel, QWidget,
     QApplication, QMenu, QVBoxLayout, QLineEdit, QComboBox,
@@ -26,7 +27,7 @@ from qtpy.QtWidgets import (
     QAction,
     QCheckBox, #QRadioButton,
     QListWidgetItem, QAbstractItemView,
-    QListWidget, QSpinBox,
+    QListWidget, QSpinBox, QTabWidget, QToolButton,
 )
 # from qtpy.QtWidgets import (
 #     QMessageBox,
@@ -79,6 +80,7 @@ else:
     BASE_PATH = AERO_PATH / '2_mode_flutter'
     BDF_FILENAME = BASE_PATH / '0012_flutter.bdf'
     OP2_FILENAME = BASE_PATH / '0012_flutter.op2'
+USE_TABS = False
 
 
 class FlutterGui(LoggableGui):
@@ -139,11 +141,13 @@ class FlutterGui(LoggableGui):
         self.export_to_f06 = False
         self.export_to_zona = False
 
+        self.setup_lists()
         self.setup_widgets()
         self.setup_layout()
         self.on_load_settings()
+        ifile = -1
         if f06_filename:
-            self.f06_filename_edit.setText(f06_filename)
+            self.f06_filename_edit[ifile].setText(f06_filename)
             self._set_f06_default_names(f06_filename)
 
         self.setup_toolbar()
@@ -152,7 +156,7 @@ class FlutterGui(LoggableGui):
         self._set_window_title()
         self.on_font_size()
         self.on_plot_type()
-        self._set_f06_default_names(self.f06_filename_edit.text())
+        self._set_f06_default_names(self.f06_filename_edit[0].text())
         self.setAcceptDrops(True)
         #self.on_open_new_window()
         self.show()
@@ -164,13 +168,14 @@ class FlutterGui(LoggableGui):
             event.ignore()
 
     def dropEvent(self, event):
+        ifile = self.ifile
         filenames = [url.toLocalFile() for url in event.mimeData().urls()]
         for filename in filenames:
             flower = filename.lower()
             if flower.endswith(('.bdf', '.dat', '.blk', '.pch', '.inp')):
                 self.bdf_filename_edit.setText(filename)
             elif flower.endswith(('.f06', '.out')):
-                self.f06_filename_edit.setText(filename)
+                self.f06_filename_edit[ifile].setText(filename)
             elif flower.endswith(('.op2', '.h5')):
                 self.op2_filename_edit.setText(filename)
             else:
@@ -232,7 +237,7 @@ class FlutterGui(LoggableGui):
 
     def set_f06(self, ifile: int) -> None:
         f06_filename = self.recent_files[ifile]
-        self.f06_filename_edit.setText(f06_filename)
+        self.f06_filename_edit[self.ifile].setText(f06_filename)
         self.on_load_f06(None)
 
     def setup_modes(self):
@@ -336,11 +341,12 @@ class FlutterGui(LoggableGui):
                 assert hasattr(self, key), (key, value)
                 setattr(self, key, value)
 
+        ifile = self.ifile
         checkboxs = [
             ('use_rhoref', self.use_rhoref_checkbox),
-            ('show_points', self.show_points_checkbox),
-            ('show_mode_number', self.show_mode_number_checkbox),
-            ('show_lines', self.show_lines_checkbox),
+            ('show_points', self.show_points_checkbox[ifile]),
+            ('show_mode_number', self.show_mode_number_checkbox[ifile]),
+            ('show_lines', self.show_lines_checkbox[ifile]),
         ]
         # attrs aren't stored
         for (key, checkbox) in checkboxs:
@@ -348,7 +354,11 @@ class FlutterGui(LoggableGui):
                 continue
             val = data[key]
             assert isinstance(val, bool), (key, val)
-            checkbox.setChecked(val)
+            try:
+                checkbox.setChecked(val)
+            except AttributeError:  # pragma: no cover
+                print(key)
+                raise
 
         min_max_line_edits = [
             ('eas_lim', self.eas_lim_edit_min, self.eas_lim_edit_max),
@@ -379,7 +389,7 @@ class FlutterGui(LoggableGui):
         self.point_removal_edit.setText(point_removal_str)
 
         line_edits = [
-            ('recent_files', 0, self.f06_filename_edit),
+            ('recent_files', 0, self.f06_filename_edit[ifile]),
             ('freq_tol', -1, self.freq_tol_edit),
             ('freq_tol_remove', -1, self.freq_tol_remove_edit),
             ('mag_tol', -1, self.mag_tol_edit),
@@ -402,7 +412,11 @@ class FlutterGui(LoggableGui):
 
             #print('type(value) =', type(value))
             #print(f'{key+":":<10} values={values}[{index!r}]={value!r} -> {str_value!r}')
-            line_edit.setText(str_value)
+            try:
+                line_edit.setText(str_value)
+            except AttributeError:  # pragma: no cover
+                print(key)
+                raise
 
         pulldown_edits = [
             ('x_plot_type', self.x_plot_type_pulldown, X_PLOT_TYPES),
@@ -523,10 +537,149 @@ class FlutterGui(LoggableGui):
         else:
             self.setWindowTitle(f'Flutter Plot: {self.save_filename}')
 
+    def setup_lists(self):
+        self.f06_filename_label = []
+        self.f06_filename_edit = []
+        self.f06_filename_browse = []
+
+        self.bdf_filename_checkbox = []
+        self.bdf_filename_edit = []
+        self.bdf_filename_browse = []
+
+        self.op2_filename_checkbox = []
+        self.op2_filename_edit = []
+        self.op2_filename_browse = []
+
+        # self.use_rhoref_checkbox = []
+        #
+        # self.log_xscale_checkbox = []
+        # self.log_yscale1_checkbox = []
+        # self.log_yscale2_checkbox = []
+
+        self.show_points_checkbox = []
+        self.show_mode_number_checkbox = []
+        self.point_spacing_label = []
+        self.point_spacing_spinner = []
+        self.show_lines_checkbox = []
+
+        # self.index_lim_label = []
+        # self.index_lim_edit_min = []
+        # self.index_lim_edit_max = []
+        #
+        # self.eas_lim_label = []
+        # self.eas_lim_edit_min = []
+        # self.eas_lim_edit_max = []
+        #
+        # self.tas_lim_label = []
+        # self.tas_lim_edit_min = []
+        # self.tas_lim_edit_max = []
+        #
+        # self.mach_lim_label = []
+        # self.mach_lim_edit_min = []
+        # self.mach_lim_edit_max = []
+        #
+        # self.alt_lim_label = []
+        # self.alt_lim_edit_min = []
+        # self.alt_lim_edit_max = []
+        #
+        # self.q_lim_label = []
+        # self.q_lim_edit_min = []
+        # self.q_lim_edit_max = []
+        #
+        # self.rho_lim_label = []
+        # self.rho_lim_edit_min = []
+        # self.rho_lim_edit_max = []
+        #
+        # self.damp_lim_label = []
+        # self.damp_lim_edit_min = []
+        # self.damp_lim_edit_max = []
+        #
+        # self.freq_lim_label = []
+        # self.freq_lim_edit_min = []
+        # self.freq_lim_edit_max = []
+        #
+        # self.kfreq_lim_label = []
+        # self.kfreq_lim_edit_min = []
+        # self.kfreq_lim_edit_max = []
+        #
+        # self.ikfreq_lim_label = []
+        # self.ikfreq_lim_edit_min = []
+        # self.ikfreq_lim_edit_max = []
+        #
+        # self.eigr_lim_label = []
+        # self.eigr_lim_edit_min = []
+        # self.eigr_lim_edit_max = []
+        #
+        # self.eigi_lim_label = []
+        # self.eigi_lim_edit_min = []
+        # self.eigi_lim_edit_max = []
+        #
+        # #--------------------------------------------
+        # self.freq_tol_label = []
+        # self.freq_tol_edit = []
+        #
+        # self.mag_tol_label = []
+        # self.mag_tol_edit = []
+        #
+        # self.freq_tol_remove_label = []
+        # self.freq_tol_remove_edit = []
+        #
+        # self.subcase_label = []
+        # self.subcase_edit = []
+        # self.x_plot_type_label = []
+        # self.x_plot_type_pulldown = []
+        #
+        # self.plot_type_label = []
+        # self.plot_type_pulldown = []
+        #
+        # self.units_in_label = []
+        # self.units_in_pulldown = []
+        #
+        # self.units_out_label = []
+        # self.units_out_pulldown = []
+        #
+        # self.output_directory_label = []
+        # self.output_directory_edit = []
+        # self.output_directory_browse = []
+        #
+        # self.VL_label = []
+        # self.VL_edit = []
+        #
+        # self.VF_label = []
+        # self.VF_edit = []
+        #
+        # self.damping_label = []
+        # self.damping_edit = []
+        #
+        # self.eas_damping_lim_label = []
+        # self.eas_damping_lim_edit_min = []
+        # self.eas_damping_lim_edit_max = []
+        #
+        # self.point_removal_label = []
+        # self.point_removal_edit = []
+        #
+        # self.mode_label = []
+        # self.mode_edit = []
+        #
+        # self.velocity_label = []
+        # self.velocity_edit = []
+        #
+        # self.f06_load_button = []
+        # self.ok_button = []
+        #
+        # self.pop_vtk_gui_button = []
+        # self.solution_type_label = []
+        # self.solution_type_pulldown = []
+        # self.mode2_label = []
+        # self.mode2_pulldown = []
+        #
+        # self.mode_switch_method_label = []
+        # self.mode_switch_method_pulldown = []
+
     def setup_widgets(self) -> None:
-        self.f06_filename_label = QLabel('F06 Filename:', self)
-        self.f06_filename_edit = QLineEdit(self)
-        self.f06_filename_browse = QPushButton('Browse...', self)
+        self.f06_filename_label.append(QLabel('F06 Filename:', self))
+        self.f06_filename_edit.append(QLineEdit(self))
+        self.f06_filename_browse.append(QPushButton('Browse...', self))
 
         self.bdf_filename_checkbox = QCheckBox('BDF Filename:', self)
         self.bdf_filename_edit = QLineEdit(self)
@@ -554,19 +707,19 @@ class FlutterGui(LoggableGui):
         self.log_yscale1_checkbox.setChecked(False)
         self.log_yscale2_checkbox.setChecked(False)
 
-        self.show_points_checkbox = QCheckBox('Show Points', self)
-        self.show_mode_number_checkbox = QCheckBox('Show Mode Number', self)
-        self.point_spacing_label = QLabel('Point Spacing', self)
-        self.point_spacing_spinner = QSpinBox(self)
-        self.show_lines_checkbox = QCheckBox('Show Lines', self)
-        self.show_points_checkbox.setChecked(True)
-        self.show_lines_checkbox.setChecked(True)
-        self.show_points_checkbox.setToolTip('The points are symbols')
-        self.show_mode_number_checkbox.setToolTip('The points are the mode number')
-        self.point_spacing_spinner.setToolTip('Skip Every Nth Point; 0=Plot All')
-        self.point_spacing_spinner.setValue(0)
-        self.point_spacing_spinner.setMinimum(0)
-        self.point_spacing_spinner.setMaximum(30)
+        self.show_points_checkbox.append(QCheckBox('Show Points', self))
+        self.show_mode_number_checkbox.append(QCheckBox('Show Mode Number', self))
+        self.point_spacing_label.append(QLabel('Point Spacing', self))
+        self.point_spacing_spinner.append(QSpinBox(self))
+        self.show_lines_checkbox.append(QCheckBox('Show Lines', self))
+        self.show_points_checkbox[-1].setChecked(True)
+        self.show_lines_checkbox[-1].setChecked(True)
+        self.show_points_checkbox[-1].setToolTip('The points are symbols')
+        self.show_mode_number_checkbox[-1].setToolTip('The points are the mode number')
+        self.point_spacing_spinner[-1].setToolTip('Skip Every Nth Point; 0=Plot All')
+        self.point_spacing_spinner[-1].setValue(0)
+        self.point_spacing_spinner[-1].setMinimum(0)
+        self.point_spacing_spinner[-1].setMaximum(30)
 
         self.index_lim_label = QLabel('Index Limits:', self)
         self.index_lim_edit_min = QFloatEdit('0', self)
@@ -874,6 +1027,7 @@ class FlutterGui(LoggableGui):
         self.VL_edit.setVisible(show_eas_lim)
         self.VF_label.setVisible(show_eas_lim)
         self.VF_edit.setVisible(show_eas_lim)
+        ifile = self.ifile
 
         show_items = [
             (show_modal_participation, (
@@ -881,9 +1035,9 @@ class FlutterGui(LoggableGui):
                 self.velocity_label, self.velocity_edit,
                 self.mag_tol_label, self.mag_tol_edit)),
             (not show_modal_participation, (
-                self.point_spacing_label, self.point_spacing_spinner,
-                self.show_mode_number_checkbox,
-                self.show_lines_checkbox,
+                self.point_spacing_label[ifile], self.point_spacing_spinner[ifile],
+                self.show_mode_number_checkbox[ifile],
+                self.show_lines_checkbox[ifile],
                 self.log_xscale_checkbox,
                 self.log_yscale1_checkbox, self.log_yscale2_checkbox,
             ),),
@@ -893,6 +1047,29 @@ class FlutterGui(LoggableGui):
                 item.setVisible(show_hide)
 
     def setup_layout(self) -> None:
+        ifile = 0
+        if USE_TABS:
+            self.tabs = QTabWidget()
+            main_tab = QWidget()
+            tab_file1 = QWidget()
+            tab_plus = QWidget()
+            #self.add_button = QToolButton(self.parent(), text='+')
+            #self.add_button.clicked.connect(self.addClicked)
+            iwindow_compare = self.tabs.addTab(main_tab, 'Compare')
+            #window_compare.tabText()
+            # self.tabs.tabText(iwindow)
+            iwindow1 = self.tabs.addTab(tab_file1, 'File 1')
+            iwindow_plus = self.tabs.addTab(tab_plus, '+')
+            self.iwindows = [iwindow_compare, iwindow1, iwindow_plus]
+            # plus_icon = QIcon()
+            # pth = r'plus_zoom.png'
+            # plus_icon.addPixmap(QPixmap(pth), QIcon.Normal, QIcon.Off)
+
+            # tabs.setTabIcon(2, plus_icon)
+            # tabs.setTabIcon(1, plus_icon)
+            #self.f06_load_button.clicked.connect(self.on_load_f06)
+            self.tabs.currentChanged.connect(self.on_new_tab)
+            # window_plus = tabs.addTab(tab1, '+')
         if 0:
             hbox = QHBoxLayout()
             hbox.addWidget(self.f06_filename_label)
@@ -901,9 +1078,9 @@ class FlutterGui(LoggableGui):
         else:
             file_row = 0
             hbox = QGridLayout()
-            hbox.addWidget(self.f06_filename_label, file_row, 0)
-            hbox.addWidget(self.f06_filename_edit, file_row, 1)
-            hbox.addWidget(self.f06_filename_browse, file_row, 2)
+            hbox.addWidget(self.f06_filename_label[ifile], file_row, 0)
+            hbox.addWidget(self.f06_filename_edit[ifile], file_row, 1)
+            hbox.addWidget(self.f06_filename_browse[ifile], file_row, 2)
             file_row += 1
             hbox.addWidget(self.bdf_filename_checkbox, file_row, 0)
             hbox.addWidget(self.bdf_filename_edit, file_row, 1)
@@ -1065,13 +1242,13 @@ class FlutterGui(LoggableGui):
         grid_check.addWidget(self.log_yscale2_checkbox, jrow, 2)
         jrow += 1
 
-        grid_check.addWidget(self.show_points_checkbox, jrow, 0)
-        grid_check.addWidget(self.show_mode_number_checkbox, jrow, 1)
+        grid_check.addWidget(self.show_points_checkbox[ifile], jrow, 0)
+        grid_check.addWidget(self.show_mode_number_checkbox[ifile], jrow, 1)
         jrow += 1
-        grid_check.addWidget(self.point_spacing_label, jrow, 0)
-        grid_check.addWidget(self.point_spacing_spinner, jrow, 1)
+        grid_check.addWidget(self.point_spacing_label[ifile], jrow, 0)
+        grid_check.addWidget(self.point_spacing_spinner[ifile], jrow, 1)
         jrow += 1
-        grid_check.addWidget(self.show_lines_checkbox, jrow, 0)
+        grid_check.addWidget(self.show_lines_checkbox[ifile], jrow, 0)
         jrow += 1
 
         ok_cancel_hbox = QHBoxLayout()
@@ -1105,9 +1282,38 @@ class FlutterGui(LoggableGui):
             vbox2 = QHBoxLayout()
             vbox2.addWidget(self.modes_widget)
             vbox2.addLayout(vbox)
-        widget = QWidget()
-        widget.setLayout(vbox2)
-        self.setCentralWidget(widget)
+        if USE_TABS:
+            #tab_main.setLayout(vbox_main_tab)
+            tab_file1.setLayout(vbox2)
+            self.setCentralWidget(self.tabs)
+            tab_file1.activateWindow()
+        else:
+            widget = QWidget()
+            widget.setLayout(vbox2)
+            self.setCentralWidget(widget)
+
+    @property
+    def ifile(self) -> int:
+        """gets the active file index"""
+        if not USE_TABS:
+            return -1
+        index = self.tabs.currentIndex()
+        out = index - 1
+        return out
+
+    def on_new_tab(self):
+        """"
+        [compare, file1, +]
+        """
+        index = self.tabs.currentIndex()
+        ifile = len(self.iwindows) - 1
+        if index != ifile:
+            return
+        tab_plus = QWidget(self)
+        iwindow_file2 = self.iwindows[-1]
+        iwindow = self.tabs.addTab(tab_plus, '+')
+        self.iwindows.append(iwindow)
+        self.tabs.setTabText(iwindow_file2, f'File {ifile}')
 
     def _grid_modes(self) -> QGridLayout:
         irow = 0
@@ -1133,7 +1339,8 @@ class FlutterGui(LoggableGui):
         self.subcase_edit.currentIndexChanged.connect(self.on_subcase)
         self.bdf_filename_checkbox.stateChanged.connect(self.on_enable_bdf)
         self.op2_filename_checkbox.stateChanged.connect(self.on_enable_op2)
-        self.f06_filename_browse.clicked.connect(self.on_browse_f06)
+        for f06_filename_browse in self.f06_filename_browse:
+            f06_filename_browse.clicked.connect(self.on_browse_f06)
         self.bdf_filename_browse.clicked.connect(self.on_browse_bdf)
         self.op2_filename_browse.clicked.connect(self.on_browse_op2)
         #self.modes_widget.itemSelectionChanged.connect(self.on_modes)
@@ -1173,12 +1380,13 @@ class FlutterGui(LoggableGui):
 
     @dont_crash
     def on_load_f06(self, event) -> None:
-        f06_filename = os.path.abspath(self.f06_filename_edit.text())
+        ifile = self.ifile
+        f06_filename = os.path.abspath(self.f06_filename_edit[ifile].text())
         if not os.path.exists(f06_filename) or not os.path.isfile(f06_filename):
-            self.f06_filename_edit.setStyleSheet(QLINEEDIT_RED)
+            self.f06_filename_edit[ifile].setStyleSheet(QLINEEDIT_RED)
             self.log.error(f"can't find {f06_filename}")
             return
-        self.f06_filename_edit.setStyleSheet(QLINEEDIT_WHITE)
+        self.f06_filename_edit[ifile].setStyleSheet(QLINEEDIT_WHITE)
         f06_units = self.units_in_pulldown.currentText()
         out_units = self.units_out_pulldown.currentText()
 
@@ -1679,6 +1887,7 @@ class FlutterGui(LoggableGui):
         return modes
 
     def validate(self) -> bool:
+        ifile = self.ifile
         #self.log.warning('validate')
         (index_lim, eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim,
          ydamp_lim, freq_lim, kfreq_lim, ikfreq_lim,
@@ -1725,10 +1934,10 @@ class FlutterGui(LoggableGui):
         units_out = self.units_out_pulldown.currentText()
         output_directory = self.output_directory_edit.text()
 
-        self.show_lines = self.show_lines_checkbox.isChecked()
-        self.show_points = self.show_points_checkbox.isChecked()
-        self.show_mode_number = self.show_mode_number_checkbox.isChecked()
-        self.point_spacing = self.point_spacing_spinner.value()
+        self.show_lines = self.show_lines_checkbox[ifile].isChecked()
+        self.show_points = self.show_points_checkbox[ifile].isChecked()
+        self.show_mode_number = self.show_mode_number_checkbox[ifile].isChecked()
+        self.point_spacing = self.point_spacing_spinner[ifile].value()
         self.use_rhoref = self.use_rhoref_checkbox.isChecked()
 
         is_passed_modal_partipation = False

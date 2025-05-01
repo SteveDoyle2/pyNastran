@@ -139,7 +139,7 @@ def _get_keywords_list(keywords: Optional[str | list[str] |
 
     allowed_keywords = list(KEYWORDS_CHECK) + [
         'parallel', 'mem', 'sdirectory', 'sdir',
-        'buffsize', 'parallel']
+        'buffsize'] # CHEMIN={path}
     allowed_keywords.sort()
     for keyword_value in keywords_list:
         keyword, value = keyword_value.split('=', 1)
