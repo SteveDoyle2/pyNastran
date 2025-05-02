@@ -41,8 +41,8 @@ class AEROS(Aero):
     """
     type = 'AEROS'
     _field_map = {
-        1: 'acsid', 2:'rcsid', 3:'cRef', 4:'bRef', 5:'Sref',
-        6:'symXZ', 7:'symXY',
+        1: 'acsid', 2: 'rcsid', 3: 'cRef', 4: 'bRef', 5: 'Sref',
+        6: 'symXZ', 7: 'symXY',
     }
     _properties = ['is_anti_symmetric_xy', 'is_anti_symmetric_xz', 'is_symmetric_xy', 'is_symmetric_xz']
 
@@ -121,14 +121,14 @@ class AEROS(Aero):
         self.acsid_ref = None
         self.rcsid_ref = None
 
-    def Acsid(self):
+    def Acsid(self) -> int:
         """air velocity defined as moving into the +x direction"""
         try:
             return self.acsid_ref.cid
         except AttributeError:
             return self.acsid
 
-    def Rcsid(self):
+    def Rcsid(self) -> int:
         """rigid body coordinate system"""
         try:
             return self.rcsid_ref.cid
@@ -288,8 +288,9 @@ class AESTAT(BaseCard):
     type = 'AESTAT'
 
     _field_map = {
-        1: 'id', 2:'label',
+        1: 'id', 2: 'label',
     }
+
     @classmethod
     def _init_from_empty(cls):
         return AESTAT(1, 'name', comment='')
@@ -378,10 +379,10 @@ class CSSCHD(Aero):
     """
     type = 'CSSCHD'
     _field_map = {
-        1: 'sid', 2:'aesurf_id', 3:'lalpha', 4:'lmach', 5:'lschd',
+        1: 'sid', 2: 'aesurf_id', 3: 'lalpha', 4: 'lmach', 5: 'lschd',
     }
     _properties = ['is_anti_symmetric_xy', 'is_anti_symmetric_xz',
-                   'is_symmetric_xy', 'is_symmetric_xz'] ## TODO: remove these
+                   'is_symmetric_xy', 'is_symmetric_xz']  # TODO: remove these
 
     @classmethod
     def _init_from_empty(cls):
@@ -649,7 +650,7 @@ class TRIM(BaseCard):
     """
     type = 'TRIM'
     _field_map = {
-        1: 'sid', 2:'mach', 3:'q', 8:'aeqr',
+        1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     }
 
     def _get_field_helper(self, n):
@@ -915,7 +916,6 @@ class TRIM(BaseCard):
             aelink_labels += [aelink.label for aelink in aelinks[self.sid]]
         naelink = len(aelink_labels)
 
-
         ntrim_aesurf = 0
         labels = aestat_labels + aesurf_names + aeparm_labels
         msg = ''
@@ -1095,7 +1095,7 @@ class TRIM2(TRIM):
     """
     type = 'TRIM2'
     _field_map = {
-        1: 'sid', 2:'mach', 3:'q', 8:'aeqr',
+        1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     }
 
     @classmethod
@@ -1164,6 +1164,7 @@ class TRIM2(TRIM):
         list_fields = self.raw_fields()
         list_fields[8] = aeqr
         return list_fields
+
 
 def _fill_label_list(aestat: dict) -> list[str]:
     labels = []

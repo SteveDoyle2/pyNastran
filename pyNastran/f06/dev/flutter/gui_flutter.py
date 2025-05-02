@@ -1027,7 +1027,8 @@ class FlutterGui(LoggableGui):
         self.VL_edit.setVisible(show_eas_lim)
         self.VF_label.setVisible(show_eas_lim)
         self.VF_edit.setVisible(show_eas_lim)
-        ifile = self.ifile
+        #ifile = self.ifile
+        ifile = -1
 
         show_items = [
             (show_modal_participation, (

@@ -8,11 +8,12 @@ from cpylog import SimpleLogger
 KEYWORDS_CHECK = {
     'old': ['yes', 'no'],     # throw away old results
     'bat': ['yes', 'no'],     # linux only
-    'news': ['yes', 'no'],    # doesn't seem to work, but shrinks f06 size
+    'news': ['yes', 'no', 'auto'],    # doesn't seem to work, but shrinks f06 size
     'notify': ['yes', 'no'],  # make nastran beep
     'fpe': ['yes', 'no'],  # ???
     'msgbell': ['yes', 'no'],  # ???
-    'scr': ['yes', 'no'],
+    'scr': ['yes', 'no', 'mini', 'post'],
+    'endian': ['big', 'little'],
     #'mem=15gb'
     #'parallel=4'
 }
@@ -28,7 +29,8 @@ KEYWORDS_CHECK = {
 def run_nastran(bdf_filename: PathLike,
                 nastran_cmd: PathLike='nastran',
                 keywords: Optional[str | list[str] | dict[str, str]]=None,
-                run: bool=True, run_in_bdf_dir: bool=True,
+                run: bool=True,
+                run_in_bdf_dir: bool=True,
                 cleanup: bool=False,
                 debug: bool=False,
                 log: Optional[SimpleLogger]=None) -> tuple[Optional[int], list[str]]:
@@ -37,17 +39,19 @@ def run_nastran(bdf_filename: PathLike,
 
     Parameters
     ----------
-    bdf_filename : string
+    bdf_filename: string
         Filename of the Nastran .bdf file
-    keywords : str/dict/list of strings, optional
+    nastran_cmd: str; default='nastran'
+        path to Nastran executable
+    keywords: str/dict/list of strings, optional
         Default keywords are `'scr=yes'`, `'bat=no'`, `'old=no'`, and `'news=no'`
-    run : bool; default=True
-        let's you disable actually running Nastran to test out code/get the call arguments
-    run_in_local_dir : bool; default=True
-        True : output (e.g., *.f06) will go to the current working directory (default)
+    run: bool; default=True
+        lets you disable actually running Nastran to test out code/get the call arguments
+    run_in_bdf_dir: bool; default=True
+        True  : output (e.g., *.f06) will go to the current working directory (default)
         False : outputs (e.g., *.f06) will go to the input BDF directory
-    cleanup : bool; default=False
-        remove the *.asg, *asm, *.log, *.f04, and *.plt files
+    cleanup: bool; default=False
+        removes the *.asg, *.asm, *.log, *.f04, *.mon1, *.mon2 and *.plt files
 
     Returns
     -------
@@ -120,6 +124,7 @@ def run_nastran(bdf_filename: PathLike,
         os.chdir(pwd)
     return return_code, call_args
 
+
 def _get_keywords_list(keywords: Optional[str | list[str] |
                                           dict[str, str]]=None,
                        log: Optional[SimpleLogger]=None) -> list[str]:
@@ -139,7 +144,7 @@ def _get_keywords_list(keywords: Optional[str | list[str] |
 
     allowed_keywords = list(KEYWORDS_CHECK) + [
         'parallel', 'mem', 'sdirectory', 'sdir',
-        'buffsize'] # CHEMIN={path}
+        'buffsize']  # CHEMIN={path}
     allowed_keywords.sort()
     for keyword_value in keywords_list:
         keyword, value = keyword_value.split('=', 1)
@@ -153,10 +158,10 @@ def _get_keywords_list(keywords: Optional[str | list[str] |
             assert value.upper().endswith(('MB', 'GB')), value
             num_str = value[:-2]
             num = float(num_str)
-        elif keyword in {'sdirectory', 'sdir'}:
+        elif keyword in {'sdirectory', 'sdir'}:  # Directory for scratch files
             path = value
             assert os.path.exists(path), print_bad_path(path)
-        elif keyword == 'auth':
+        elif keyword in {'auth', 'authorize'}:
             pass
         elif keyword in KEYWORDS_CHECK:
             expected_values = KEYWORDS_CHECK[keyword]

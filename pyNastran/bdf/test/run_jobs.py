@@ -1,11 +1,10 @@
 """
 TODO: support old=no
-TODO: don't filter op2s (kinda the same thing)
 """
 # pep8: disable=E252
 import os
 import sys
-import copy
+# import copy
 import shlex
 import datetime
 from itertools import count
@@ -22,13 +21,14 @@ from pyNastran.utils.dev import get_files_of_type
 
 
 def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
-    """
+    r"""
     run_nastran_job dirname
-    run_nastran_job filename.bdf -x C:\bin\nastran.exe
-    run_nastran_job .            -x C:\bin\nastran.exe --cleanup -r --test
+    run_nastran_job fem.bdf -x C:\bin\nastran.exe
+    run_nastran_job .       -x C:\bin\nastran.exe --cleanup -r --test
     run_nastran_job .    --outfile files_to_run.out --test -args "old=no mem=10gb"
     run_nastran_job junk --infile  files_to_run.out
-    run_nastran_job filename.bdf filename2.bdf
+    run_nastran_job fem1.bdf fem2.bdf
+    run_nastran_job . --skip fem1.bdf fem2.bdf --all
     """
     FILE = os.path.abspath(__file__)
     if argv is None:
@@ -40,11 +40,13 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     #print(f'argv = {argv}')
 
     parser = argparse.ArgumentParser(prog='run_jobs')
-    parser.add_argument('bdf_dirname_filename', nargs='+', help='path to Nastran filename')
+    parser.add_argument('bdf_dirname_filename', nargs='+', help='path to Nastran filename/directory')
     #parser.add_argument('-o', '--overwrite', default=False, help='overwrite files')
-    parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran execuable')
+    parser.add_argument('-x', '--exe', default='nastran', help='path to Nastran executable')
     parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
     parser.add_argument('-r', '--recursive', action='store_true', help='recursively search for directories')
+    parser.add_argument('--skip', nargs='+', help='dont process specific files')
+    parser.add_argument('-a', '--all', help='dont skip files that have an op2')
     parser.add_argument('--args', help='additional arguments')
 
     file_group = parser.add_mutually_exclusive_group(required=False)
@@ -65,7 +67,9 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     recursive = args.recursive
     debug = args.debug
     #print(args)
+    skip_files = args.skip
     nastran_args = args.args
+    process_all = args.all
     if nastran_args is None or len(nastran_args) == 0:
         keywords = []
     else:
@@ -95,12 +99,14 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
         keywords=all_keywords_list,
         recursive=recursive, run=run,
         out_filename=out_filename,
+        skip_files=skip_files,
+        process_all=process_all,
         debug=debug, log=level)
     return nfiles
 
 
 def load_infile(infilename: str,
-                extensions: list[str]) -> tuple[list[str], list[list[str]]]:
+                extensions: list[str]) -> tuple[list[Path], list[list[str]]]:
     assert os.path.exists(infilename), print_bad_path(infilename)
     with open(infilename, 'r') as txt_file:
         lines = [line.strip() for line in txt_file.readlines()]
@@ -134,7 +140,8 @@ def load_infile(infilename: str,
 
 def get_bdf_filenames_to_run(bdf_filename_dirname: PathLike | list[PathLike],
                              extensions: str | list[str],
-                             recursive: bool=False) -> list[Path]:
+                             recursive: bool=False,
+                             process_all: bool=False) -> list[Path]:
     if isinstance(extensions, str):
         extensions = [extensions]
     assert isinstance(extensions, list), extensions
@@ -166,11 +173,12 @@ def get_bdf_filenames_to_run(bdf_filename_dirname: PathLike | list[PathLike],
     del bdf_filename_dirname_list_out
 
     bdf_filenames_run = []
+    allow_op2_skip = not process_all
     for bdf_filename in bdf_filenames:
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
         base, ext = os.path.splitext(str(bdf_filename))
         op2_filename = Path(base + '.op2')
-        if op2_filename.exists():
+        if op2_filename.exists() and allow_op2_skip:
             continue
         bdf_filenames_run.append(bdf_filename)
     assert len(bdf_filenames_run) > 0, bdf_filenames_run
@@ -239,32 +247,70 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
              keywords: Optional[str | list[str] | dict[str, str] | list[list[str]]]=None,
              run: bool=True,
              out_filename: PathLike='',
+             skip_files: PathLike | list[PathLike]='',
+             process_all: bool=False,
              debug: bool=False,
              log: SimpleLogger | str='debug') -> int:
     """
-    Runs a series of jobs in a specific folder
+    Runs a series of jobs in a specific folder with
+    specific file extensions
 
     Parameters
     ----------
+    bdf_filename_dirname: PathLike | list[PathLike]
+        a series of filenames or directories to process
+    nastran_exe: str, list[str]
+        the path to Nastran
+    extensions: str, list[str]
+        the file extensions that will be analyzed (*.dat, *.bdf)
     recursive: bool; default=False
         finds all bdf/dat files in all sub-directories
         NOTE: doesn't apply to files
+    out_filename: PathLike; default=''
+        file to load previously saved jobs
+    skip_files: PathLike | list[skip_files]; default=''
+        files that should be skipped
+    process_all: bool; default=False
+        True:  process all bdf/dat files in all sub-directories
+               other than those specified by skip_files
+        False: skip files that have op2s
+    run: bool; default=True
+        lets you disable actually running Nastran to test out code/get the call arguments
+    cleanup: bool; default=False
+        removes the *.asg, *.asm, *.log, *.f04, *.mon1, *.mon2 and *.plt files
+    debug: bool; default=False
+        print the call args
 
     Returns
     -------
     nfiles: int
         the number of files
-    out_filename: str | Path
-        path to file to write list of jobs
 
     TODO: remove failed jobs from the time estimator
-    TODO: handle overwriting op2 files (currently requires you
-          delete bad/old files regardless of old=no flag
     """
+    # out_filename: str | Path
+    #     path to file to write list of jobs
+    if skip_files == '':
+        skip_files = []
+    if isinstance(skip_files, PathLike):
+        skip_files = [skip_files]
+    skip_files_path: list[Path] = [Path(pth).absolute() for pth in skip_files]
+
+    #print(f'skip_files = {skip_files}')
     #print(f'**keywords= {keywords}')
     log = SimpleLogger(log) if isinstance(log, str) else log
-    bdf_filenames = get_bdf_filenames_to_run(
-        bdf_filename_dirname, extensions, recursive=recursive)
+    bdf_filenames: list[Path] = get_bdf_filenames_to_run(
+        bdf_filename_dirname, extensions, recursive=recursive,
+        process_all=process_all)
+
+    bdf_filenames_temp = []
+    for bdf_filename in bdf_filenames:
+        #print(f'bdf_filename={bdf_filename}')
+        if bdf_filename in skip_files_path:
+            log.warning(f'skipping bdf_filename={bdf_filename}')
+            continue
+        bdf_filenames_temp.append(bdf_filename)
+    bdf_filenames = bdf_filenames_temp
 
     bdf_filenames_str = [str(bdf_filename) for bdf_filename in bdf_filenames]
     bdf_filenames_str_short = [os.path.basename(bdf_filename) for bdf_filename in bdf_filenames]
@@ -276,7 +322,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     log.info(f'bdf_filenames:\n - {msg}')
 
     widthcases = len(str(len(bdf_filenames))) + 1
-    msg2 = ''
+    #msg2 = ''
     for ifile, bdf_filename, bdf_filenames_str_short in zip(count(), bdf_filenames, bdf_filenames_str_short):
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
     #     if debug:
@@ -294,11 +340,13 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     #             out_file.write(f'{str(bdf_filename)}\n')
     nfiles, all_call_args = run_jobs_by_filenames(
         bdf_filenames, nastran_exe, keywords, log,
-        cleanup=cleanup, run=run)
+        process_all=process_all, cleanup=cleanup,
+        run=run, debug=debug)
 
     if out_filename:
         _write_outfile(out_filename, all_call_args)
     return nfiles
+
 
 def _write_outfile(out_filename: PathLike,
                    all_call_args: list[list[str]]) -> None:
@@ -328,6 +376,7 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
                           nastran_exe: PathLike,
                           keywords: list[str],
                           log: SimpleLogger,
+                          process_all: bool=False,
                           cleanup: bool=True,
                           run: bool=True,
                           debug: bool=False) -> tuple[int, list[list[str]]]:
@@ -350,6 +399,7 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
         #print(f'keywords0 = {keywords0}')
         assert len(keywords) == len(bdf_filenames), f'keywords={keywords} \nbdf_filenames={bdf_filenames}'
 
+    allow_op2_skip = not process_all
     for ifile, bdf_filename in enumerate(bdf_filenames):
         keywordsi = keywords[ifile] if is_keywords_list else keywords
         # print(f'keywords[{ifile}] = {keywordsi}')
@@ -360,7 +410,7 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
 
         base = os.path.splitext(str(bdf_filename))[0]
         op2_filename = base + '.op2'
-        if os.path.exists(op2_filename):
+        if os.path.exists(op2_filename) and allow_op2_skip:
             log.warning(f'skipping {str(bdf_filename)!r} because {op2_filename!r} already exists')
             continue
 

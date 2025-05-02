@@ -5,6 +5,7 @@ from pyNastran.bdf.bdf import BDF, read_bdf, print_card_8
 from pyNastran.utils import PathLike
 import numpy as np
 
+
 def solid_dof(bdf_filename: BDF | PathLike,
               nid_filename: Optional[PathLike]=None,
               spc_id: int=100,
@@ -16,17 +17,19 @@ def solid_dof(bdf_filename: BDF | PathLike,
     ----------
     bdf_filename
     nid_filename
+    spc_id: int; default=100
+        the SPC ID
 
     Returns
     -------
 
     """
     if isinstance(bdf_filename, BDF):
-        model = bdf_filename
+        model = bdf_filename.bdf_filename
     else:
         base, ext = os.path.splitext(bdf_filename)
         nid_filename = base + '.solid_dof_constraint.blk'
-        read_bdf(bdf_filename, log=log, xref=False)
+        model = read_bdf(bdf_filename, log=log, xref=False)
     #nids = np.array(list(model.nodes), dtype='int32')
 
     log = model.log

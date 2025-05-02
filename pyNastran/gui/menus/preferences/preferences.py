@@ -36,7 +36,8 @@ from pyNastran.gui.gui_objects.settings import (
     ANNOTATION_COLOR, ANNOTATION_SIZE,
     CORNER_TEXT_COLOR, CORNER_TEXT_SIZE,
     HIGHLIGHT_COLOR, HIGHLIGHT_OPACITY, HIGHLIGHT_POINT_SIZE, HIGHLIGHT_LINE_WIDTH,
-    SHEAR_MOMENT_TORQUE_COLOR, SHEAR_MOMENT_TORQUE_OPACITY, SHEAR_MOMENT_TORQUE_POINT_SIZE, SHEAR_MOMENT_TORQUE_LINE_WIDTH,
+    SHEAR_MOMENT_TORQUE_COLOR, SHEAR_MOMENT_TORQUE_OPACITY,
+    SHEAR_MOMENT_TORQUE_POINT_SIZE, SHEAR_MOMENT_TORQUE_LINE_WIDTH,
     OPACITY_MIN, OPACITY_MAX,
     USE_PARALLEL_PROJECTION, IS_TRACKBALL_CAMERA,
     NASTRAN_BOOL_KEYS,
@@ -110,8 +111,8 @@ class PreferencesWindow(PyDialog):
         # an annotation is the marked/probe label
         self._default_annotation_size = ANNOTATION_SIZE
 
-        self._default_coord_scale = COORD_SCALE * 100. # * self.dim_max
-        self._default_coord_text_scale = COORD_TEXT_SCALE * 100. # * self.dim_max
+        self._default_coord_scale = COORD_SCALE * 100.  # * self.dim_max
+        self._default_coord_text_scale = COORD_TEXT_SCALE * 100.  # * self.dim_max
         self._default_clipping_min = data['min_clip']
         self._default_clipping_max = data['max_clip']
         #self._default_annotation_size = data['annotation_size'] # int
@@ -427,7 +428,6 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_constraints_checkbox = QCheckBox('Constraints')
         self.nastran_is_constraints_checkbox.setToolTip('Create actors for the constraints (SPC, MPC, SUPORT)')
         self.nastran_is_constraints_checkbox.setChecked(self._nastran_is_constraints)
-
 
         self.nastran_is_shell_mcids_checkbox = QCheckBox('Shell MCIDs')
         self.nastran_is_shell_mcids_checkbox.setToolTip('Calculate the Material Coordinate Systems for Shells')
@@ -1516,6 +1516,7 @@ def create_shear_moment_torque_edits(
 
     return opacity_edit, point_size_edit, line_width_edit, color_edit
 
+
 def create_point_size_edit(parent, value: float) -> QDoubleSpinBox:
     point_size_edit = QDoubleSpinBox(parent)
     point_size_edit.setValue(value)
@@ -1524,6 +1525,7 @@ def create_point_size_edit(parent, value: float) -> QDoubleSpinBox:
     point_size_edit.setSingleStep(0.5)
     return point_size_edit
 
+
 def create_line_width_edit(parent, value: float) -> QDoubleSpinBox:
     line_width_edit = QDoubleSpinBox(parent)
     line_width_edit.setValue(value)
@@ -1531,6 +1533,7 @@ def create_line_width_edit(parent, value: float) -> QDoubleSpinBox:
     #line_width_edit.setDecimals(2)
     #line_width_edit.setSingleStep(0.25)
     return line_width_edit
+
 
 def create_opacity_edit(parent, value: float) -> QDoubleSpinBox:
     opacity_edit = QDoubleSpinBox(parent)
@@ -1549,10 +1552,12 @@ def set_pushbutton_color(color_edit: QPushButtonColor,
         #"border:1px solid rgb(255, 170, 255); "
         "}")
 
+
 def check_float(cell: QDoubleSpinBox) -> tuple[str, bool]:
     text = cell.text()
     value = float_locale(text)
     return value, True
+
 
 def check_label_float(cell) -> tuple[Optional[float], bool]:
     text = cell.text()
@@ -1563,6 +1568,7 @@ def check_label_float(cell) -> tuple[Optional[float], bool]:
     except ValueError:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         return None, False
+
 
 def check_tuple_ints(cell) -> tuple[tuple[int, ...], bool]:
     text = cell.text()
@@ -1575,6 +1581,7 @@ def check_tuple_ints(cell) -> tuple[tuple[int, ...], bool]:
     except ValueError:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         return tuple(), False
+
 
 def on_nastran(self: PreferencesWindow,
                result_name: str) -> None:
@@ -1601,45 +1608,44 @@ def main():  # pragma: no cover
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-
     import sys
     # Someone is launching this directly
     # Create the QApplication
     app = QApplication(sys.argv)
     #The Main window
     data = {
-        'font_size' : 9,
+        'font_size': 9,
         'use_startup_directory': True,
-        'use_gradient_background' : True,
-        'background_color' : (0., 0., 0.), # black
-        'background_color2' : (1., 0., 1.), # purple
-        'coord_scale' : 0.05,
-        'coord_text_scale' : 1.0,
-        'show_corner_coord' : False,
-        'magnify' : 5,
+        'use_gradient_background': True,
+        'background_color': (0., 0., 0.),  # black
+        'background_color2': (1., 0., 1.),  # purple
+        'coord_scale': 0.05,
+        'coord_text_scale': 1.0,
+        'show_corner_coord': False,
+        'magnify': 5,
 
-        'corner_text_size' : 12,
-        'corner_text_color' : (0., 1., 0.), # green
+        'corner_text_size': 12,
+        'corner_text_color': (0., 1., 0.),  # green
 
-        'highlight_color' : (1., 1., 0.), # yellow
-        'highlight_opacity' : 0.8,
-        'highlight_point_size' : 10.0,
+        'highlight_color': (1., 1., 0.),  # yellow
+        'highlight_opacity': 0.8,
+        'highlight_point_size': 10.0,
 
         'is_trackball_camera': True,
         'use_parallel_projection': True,
-        'annotation_color' : (1., 0., 0.), # red
-        'annotation_size' : 11,
-        'picker_size' : 10.,
+        'annotation_color': (1., 0., 0.),  # red
+        'annotation_size': 11,
+        'picker_size': 10.,
 
         'caero_color': (0.2, 0.7, 0.4),
         'rbe_line_color': (0.5, 0.6, 0.7),
         'plotel_color': (0.5, 0.6, 0.7),
-        'nastran_version' : 'MSC',
+        'nastran_version': 'MSC',
 
-        'min_clip' : 0.,
-        'max_clip' : 10,
+        'min_clip': 0.,
+        'max_clip': 10,
 
-        'dim_max' : 502.,
+        'dim_max': 502.,
         #------------------------------------
         #other
         'cart3d_fluent_include': (),
