@@ -30,11 +30,11 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     run_nastran_job fem1.bdf fem2.bdf
     run_nastran_job . --skip fem1.bdf fem2.bdf --all
     """
-    FILE = os.path.abspath(__file__)
+    local_file = os.path.abspath(__file__)
     if argv is None:
         argv = sys.argv[1:]  # ['run_jobs'] + sys.argv[2:]
     else:
-        argv = [FILE] + argv[2:]  # ['run_jobs'] + sys.argv[2:]
+        argv = [local_file] + argv[2:]  # ['run_jobs'] + sys.argv[2:]
     if not quiet:
         print(f'argv = {argv}')
     #print(f'argv = {argv}')
@@ -266,6 +266,10 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     recursive: bool; default=False
         finds all bdf/dat files in all sub-directories
         NOTE: doesn't apply to files
+    keywords : str, list[str], dict[str, Any]
+        keywords = 'old=no'
+        keywords = ['old=no', 'parallel=8']
+        keywords = {'old': 'no', 'parallel': 8}
     out_filename: PathLike; default=''
         file to load previously saved jobs
     skip_files: PathLike | list[skip_files]; default=''
@@ -287,9 +291,8 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         the number of files
 
     TODO: remove failed jobs from the time estimator
+    TODO: add out_filenames to output
     """
-    # out_filename: str | Path
-    #     path to file to write list of jobs
     if skip_files == '':
         skip_files = []
     if isinstance(skip_files, PathLike):
@@ -321,8 +324,8 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     #log.info(f'bdf_filenames = {bdf_filenames_str}')
     log.info(f'bdf_filenames:\n - {msg}')
 
-    widthcases = len(str(len(bdf_filenames))) + 1
-    #msg2 = ''
+    # widthcases = len(str(len(bdf_filenames))) + 1
+    # msg2 = ''
     for ifile, bdf_filename, bdf_filenames_str_short in zip(count(), bdf_filenames, bdf_filenames_str_short):
         assert bdf_filename.exists(), print_bad_path(bdf_filename)
     #     if debug:
@@ -342,6 +345,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         bdf_filenames, nastran_exe, keywords, log,
         process_all=process_all, cleanup=cleanup,
         run=run, debug=debug)
+    assert isinstance(nfiles, int), nfiles
 
     if out_filename:
         _write_outfile(out_filename, all_call_args)

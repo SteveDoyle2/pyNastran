@@ -4,77 +4,81 @@ from typing import TYPE_CHECKING
 from struct import Struct
 import numpy as np
 
-from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
+from pyNastran.op2.tables.oee_energy.oee_objects import (
+    RealStrainEnergyArray, ComplexStrainEnergyArray,
+    RealKineticEnergyArray,)
+
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 RESULT_NAME_MAP = {
-    'BAR' : 'cbar',
-    'BEAM' : 'cbeam',
-    'BEND' : 'cbend',
-    'BEAM3' : 'cbeam3',
+    'BAR': 'cbar',
+    'BEAM': 'cbeam',
+    'BEND': 'cbend',
+    'BEAM3': 'cbeam3',
 
-    'ROD' : 'crod',
-    'TUBE' : 'ctube',
-    'CONROD' : 'conrod',
+    'ROD': 'crod',
+    'TUBE': 'ctube',
+    'CONROD': 'conrod',
 
-    'TRIA3' : 'ctria3',
-    'TRIAFD' : 'ctria3',
-    'TRIA3FD' : 'ctria3',
-    'TRIA6' : 'ctria6',
-    'TRIAX6' : 'ctriax6',
-    'CTRIA6N' : 'ctria6', # per JG
-    'TRIAR' : 'ctriar',
-    'TRIAX3FD' : 'ctriax',
-    'TRIAXFD' : 'ctriax',
+    'TRIA3': 'ctria3',
+    'TRIAFD': 'ctria3',
+    'TRIA3FD': 'ctria3',
+    'TRIA6': 'ctria6',
+    'TRIAX6': 'ctriax6',
+    'CTRIA6N': 'ctria6',  # per JG
+    'TRIAR': 'ctriar',
+    'TRIAX3FD': 'ctriax',
+    'TRIAXFD': 'ctriax',
 
-    'QUAD4' : 'cquad4',
-    'QUADFD' : 'cquad4',
-    'QUAD4FD' : 'cquad4',
-    'QUAD8' : 'cquad8',
-    'CQUAD8N' : 'cquad8', # guessed per JG
+    'QUAD4': 'cquad4',
+    'QUADFD': 'cquad4',
+    'QUAD4FD': 'cquad4',
+    'QUAD8': 'cquad8',
+    'CQUAD8N': 'cquad8',  # guessed per JG
     # TODO: this will probably be a problem someday...cquad8_nonlinear_strain_energy
-    'QUAD8N' : 'cquad8',
+    'QUAD8N': 'cquad8',
 
-    'QUADR' : 'cquadr',
-    'QUADXFD' : 'cquadx',
-    'QUADX4FD' : 'cquadx',
-    'SHEAR' : 'cshear',
+    'QUADR': 'cquadr',
+    'QUADXFD': 'cquadx',
+    'QUADX4FD': 'cquadx',
+    'SHEAR': 'cshear',
 
-    'TETRA' : 'ctetra',
-    'TETRAFD' : 'ctetra',
-    'TETRA4FD' : 'ctetra',
-    'PENTA' : 'cpenta',
-    'PENTAFD' : 'cpenta',
-    'PENTA6FD' : 'cpenta',
-    'HEXA' : 'chexa',
-    'HEXAFD' : 'chexa',
-    'HEXA8FD' : 'chexa',
-    'PYRAM' : 'cpyram',
-    'PYRA' : 'cpyram',
+    'TETRA': 'ctetra',
+    'TETRAFD': 'ctetra',
+    'TETRA4FD': 'ctetra',
+    'PENTA': 'cpenta',
+    'PENTAFD': 'cpenta',
+    'PENTA6FD': 'cpenta',
+    'HEXA': 'chexa',
+    'HEXAFD': 'chexa',
+    'HEXA8FD': 'chexa',
+    'PYRAM': 'cpyram',
+    'PYRA': 'cpyram',
 
-    'GAP' : 'cgap',
-    'BUSH' : 'cbush',
-    'BUSH1D' : 'cbush1d',
-    'BUSH2D' : 'cbush2d',
-    'ELAS1' : 'celas1',
-    'ELAS2' : 'celas2',
-    'ELAS3' : 'celas3',
-    'ELAS4' : 'celas4',
+    'GAP': 'cgap',
+    'BUSH': 'cbush',
+    'BUSH1D': 'cbush1d',
+    'BUSH2D': 'cbush2d',
+    'ELAS1': 'celas1',
+    'ELAS2': 'celas2',
+    'ELAS3': 'celas3',
+    'ELAS4': 'celas4',
 
-    'DUM8' : 'cdum8',
-    'DMIG' : 'dmig',
-    'GENEL' : 'genel',
-    'CONM2' : 'conm2',
-    'RBE1' : 'rbe1',
-    'RBE3' : 'rbe3',
-    'WELDP' : 'cweld',
-    'WELDC' : 'cweld',
-    'WELD' : 'cweld',
-    'FASTP' : 'cfast',
-    'SEAMP' : 'cseam',
+    'DUM8': 'cdum8',
+    'DMIG': 'dmig',
+    'GENEL': 'genel',
+    'CONM2': 'conm2',
+    'RBE1': 'rbe1',
+    'RBE3': 'rbe3',
+    'WELDP': 'cweld',
+    'WELDC': 'cweld',
+    'WELD': 'cweld',
+    'FASTP': 'cfast',
+    'SEAMP': 'cseam',
 }
+
 
 class ONR:
     def __init__(self, op2: OP2):
@@ -85,6 +89,7 @@ class ONR:
     @property
     def size(self) -> int:
         return self.op2.size
+
     @property
     def factor(self) -> int:
         return self.op2.factor
@@ -123,11 +128,11 @@ class ONR:
             prefix = 'strain_energy.'
         elif op2.table_name in [b'OEKE1']:
             prefix = 'kinetic_energy.'
-        elif op2.table_name in [b'RANEATC']: #, b'OSTRMS1C']:
+        elif op2.table_name in [b'RANEATC']:  #, b'OSTRMS1C']:
             op2.format_code = 1
             op2.sort_bits[0] = 0 # real
             prefix = 'RANEATC.'
-        elif op2.table_name in [b'RANCONS']: #, b'OSTRMS1C']:
+        elif op2.table_name in [b'RANCONS']:  #, b'OSTRMS1C']:
             op2.format_code = 1
             op2.sort_bits[0] = 0 # real
             prefix = 'RANCONS.'
@@ -490,6 +495,15 @@ class ONR:
 
         slot = op2.get_result(result_name)
 
+        if 'strain_energy' in result_name:
+            real_cls = RealStrainEnergyArray
+            complex_cls = ComplexStrainEnergyArray
+        elif 'kinetic_energy' in result_name:
+            real_cls = RealKineticEnergyArray
+            complex_cls = None
+        else:
+            raise NotImplementedError(result_name)
+
         #auto_return = False
         if op2.is_debug_file:
             op2.binary_debug.write('cvalares = %s\n' % op2.cvalres)
@@ -500,7 +514,7 @@ class ONR:
             ntotal = 16 * self.factor  # 4*4=16
             nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, RealStrainEnergyArray)
+                nelements, result_name, slot, real_cls)
 
             if auto_return:
                 #if obj.dt_temp is None or obj.itime is None and obj.dt_temp == dt:
@@ -549,13 +563,13 @@ class ONR:
                 n = real_strain_energy_4(op2, data, op2.sort_method,
                                          self.size, n, ntotal, nelements, dt)
         elif op2.format_code == 1 and op2.num_wide == 5:
-            assert op2.cvalres in [0, 1, 2], op2.cvalres # 0??
+            assert op2.cvalres in [0, 1, 2], op2.cvalres  # 0??
             ntotal = 20
             nnodes = ndata // ntotal
             nelements = nnodes
 
             auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, RealStrainEnergyArray)
+                nelements, result_name, slot, real_cls)
             if auto_return:
                 return nelements * op2.num_wide * 4
 
@@ -597,10 +611,12 @@ class ONR:
         elif op2.format_code in [2, 3] and op2.num_wide == 5:
             #ELEMENT-ID   STRAIN-ENERGY (MAG/PHASE)  PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
             #    5         2.027844E-10 /   0.0            1.2581            2.027844E-09
+            assert complex_cls is not None, op2.code_information()
+
             ntotal = 20
             nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, ComplexStrainEnergyArray)
+                nelements, result_name, slot, complex_cls)
             if auto_return:
                 return nelements * op2.num_wide * 4
 
@@ -630,7 +646,8 @@ class ONR:
                 n = complex_strain_energy_5(op2, data, op2.sort_method,
                                             self.size, n, ntotal, nelements, dt)
 
-        elif op2.format_code == 1 and op2.num_wide == 6:  ## TODO: figure this out...
+        elif op2.format_code == 1 and op2.num_wide == 6:
+            ## TODO: figure this out...
             ntotal = 24
             nelements = ndata // ntotal
             auto_return, is_vectorized = op2._create_oes_object4(
@@ -777,7 +794,8 @@ def real_strain_energy_4(op2: OP2,
             else:
                 eid = op2.nonlinear_factor
                 dt = eid_device
-            #print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} energy={energy:g} percent={percent:g} density={density:g}')
+            # print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} '
+            #       f'energy={energy:g} percent={percent:g} density={density:g}')
             if op2.is_debug_file:
                 op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
             sum_energy += energy
@@ -795,7 +813,8 @@ def real_strain_energy_4(op2: OP2,
             raise NotImplementedError(sort_method)
             #eid = op2.nonlinear_factor
             #dt = eid_device
-        #print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} energy={energy:g} percent={percent:g} density={density:g}')
+        # print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} '
+        #       f'energy={energy:g} percent={percent:g} density={density:g}')
         #if op2.is_debug_file:
             #op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
 
@@ -812,12 +831,14 @@ def real_strain_energy_4(op2: OP2,
             else:
                 eid = op2.nonlinear_factor
                 dt = eid_device
-            #print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} energy={energy} percent={percent:g} density={density:g}')
+            # print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} '
+            #       f'energy={energy} percent={percent:g} density={density:g}')
             if op2.is_debug_file:
                 op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
             obj.add_sort1(dt, eid, energy, percent, density)
             n += ntotal
     return n
+
 
 def complex_strain_energy_4(op2: OP2, data: bytes, sort_method: int,
                             size: int, n: int,

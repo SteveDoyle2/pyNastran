@@ -40,8 +40,10 @@ NX_TABLES = [
 
 # analysis: analysis_code
 # opt: optimization_counter
-RESULT_CODE_NAMES = ['subcase', 'analysis', 'sort', 'opt', 'ogs', 'superelement_adaptivity_index', 'pval_step']
+RESULT_CODE_NAMES = ['subcase', 'analysis', 'sort', 'opt', 'ogs',
+                     'superelement_adaptivity_index', 'pval_step']
 ResultCodeTuple = namedtuple('ResultCode', RESULT_CODE_NAMES)
+
 
 class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
@@ -54,7 +56,7 @@ class OP2Common(Op2Codes, F06Writer):
         #: 2 -   second pass
         self.read_mode = None
 
-        # Cross valdation flag so we can write:
+        # Cross valdation flag, so we can write:
         #   >>> modelA = OP2()
         #   >>> modelA.read_op2(op2_filename)
         #   >>> modelB = OP2()
@@ -223,14 +225,14 @@ class OP2Common(Op2Codes, F06Writer):
         #self.log.debug(f'format_code={self.format_code}; result_type (func7)={result_type}')
 
         if self.table_name in [b'OESRT']:
-            self.format_code = 1 # real
-            result_type = 0 # real
+            self.format_code = 1  # real
+            result_type = 0  # real
         elif self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X', b'OESNLBR2']:
             assert self.format_code in [-1, 1], self.format_code
             self.format_code = 1
-        elif result_type == 0: # real
-            self.format_code = 1 # real
-        elif result_type == 1: # imag
+        elif result_type == 0:  # real
+            self.format_code = 1  # real
+        elif result_type == 1:  # imag
             if self.format_code == 1:
                 # Nastran-ism:
                 #    DISP = ALL
@@ -247,8 +249,8 @@ class OP2Common(Op2Codes, F06Writer):
         #self.format_code = result_type + 1
 
         random_code = self.random_code if hasattr(self, 'random_code') else 0
-        RANDOM_TABLES = {}
-        if self.table_name in RANDOM_TABLES and random_code != 0:
+        _random_tables = {}
+        if self.table_name in _random_tables and random_code != 0:
             self.log.warning(f'{self.table_name} is a random table')
             raise RuntimeError(f'{self.table_name} is a random table')
         #if self.format_code == 0:
@@ -290,7 +292,7 @@ class OP2Common(Op2Codes, F06Writer):
             assert self.format_code in [1], self.code_information()
         elif self.analysis_code == 12:
             # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            assert self.format_code in [4], self.code_information() # invalid value
+            assert self.format_code in [4], self.code_information()  # invalid value
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
@@ -300,7 +302,7 @@ class OP2Common(Op2Codes, F06Writer):
             #print('self.format_code=%s orig=%s' % (self.format_code,
                                                    #self.format_code_original))
         if self.format_code in [2, 3]:  # complex
-            result_type = 1 # complex
+            result_type = 1  # complex
         self.result_type = result_type
 
     def _set_times_dtype(self) -> None:
@@ -514,7 +516,7 @@ class OP2Common(Op2Codes, F06Writer):
                     self.subtitle, self.superelement_adaptivity_index,
                     self.analysis_code, self.label]
         else:
-            raise  RuntimeError('isubcase is not defined')
+            raise RuntimeError('isubcase is not defined')
 
     def _write_debug_bits(self):
         """
@@ -1024,7 +1026,7 @@ class OP2Common(Op2Codes, F06Writer):
         obj = self.obj
 
         factor = self.factor
-        ntotal = 32 * factor # 32=4*8
+        ntotal = 32 * factor  # 32=4*8
         if self.use_vector and is_vectorized:
             n = nnodes * ntotal
             itotal2 = obj.itotal + nnodes
@@ -1181,7 +1183,7 @@ class OP2Common(Op2Codes, F06Writer):
         assert self.obj is not None
         obj = self.obj
 
-        ntotal = 32 * self.factor # 4 * 8
+        ntotal = 32 * self.factor  # 4 * 8
         if self.use_vector and is_vectorized:
             n = nnodes * ntotal
             itotal2 = obj.itotal + nnodes
@@ -1311,7 +1313,7 @@ class OP2Common(Op2Codes, F06Writer):
         assert flag in ['node', 'elem'], flag
         dt = self.nonlinear_factor
 
-        n = 0
+        #n = 0
         obj = self.obj
         ntotal = 56 * self.factor # 4 * 14
         if self.use_vector and is_vectorized:
@@ -1350,7 +1352,7 @@ class OP2Common(Op2Codes, F06Writer):
         dt = self.nonlinear_factor
         obj = self.obj
 
-        ntotal = 56 * self.factor # 4 * 14
+        ntotal = 56 * self.factor  # 4 * 14
         if self.use_vector and is_vectorized:
             n = nnodes * ntotal
             itotal = obj.itotal
@@ -1432,14 +1434,14 @@ class OP2Common(Op2Codes, F06Writer):
         #assert ndata % ntotal == 0
 
         obj = self.obj
-        ntotal = 56 * self.factor # 4 * 14
+        ntotal = 56 * self.factor  # 4 * 14
         if self.use_vector and is_vectorized:
             itime = obj.itime
             n = nnodes * ntotal
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
-            floats =np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 14).copy()
+            floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 14).copy()
             ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 14)
 
             self._set_sort2_time(obj, self._analysis_code_fmt, ints, floats)
@@ -1474,7 +1476,7 @@ class OP2Common(Op2Codes, F06Writer):
         node_id = self.nonlinear_factor
 
         obj = self.obj
-        ntotal = 56 * self.factor # 4 * 14
+        ntotal = 56 * self.factor  # 4 * 14
         if self.use_vector and is_vectorized:
             itime = obj.itime
             n = nnodes * ntotal
@@ -1682,14 +1684,14 @@ class OP2Common(Op2Codes, F06Writer):
     def factor(self):
         return self.op2_reader.factor
 
-    def parse_approach_code(self, data: bytes) -> None:
+    def parse_approach_code(self, data: bytes) -> int:
         if self.size == 4:
-            self.parse_approach_code4(data)
+            approach_code = self.parse_approach_code4(data)
         else:
-            self.parse_approach_code8(data)
+            approach_code = self.parse_approach_code8(data)
+        return approach_code
 
-
-    def parse_approach_code4(self, data: bytes) -> None:
+    def parse_approach_code4(self, data: bytes) -> int:
         """
         Function  Formula                                                Manual
         ========  =======                                                ======
@@ -1709,10 +1711,12 @@ class OP2Common(Op2Codes, F06Writer):
         """
         (approach_code, tCode, int3, isubcase) = unpack(self._endian + b'4i', data[:16])
         self._set_approach_code(approach_code, tCode, int3, isubcase)
+        return approach_code
 
-    def parse_approach_code8(self, data: bytes) -> None:
+    def parse_approach_code8(self, data: bytes) -> int:
         (approach_code, tCode, int3, isubcase) = unpack(self._endian + b'4q', data[:32])
         self._set_approach_code(approach_code, tCode, int3, isubcase)
+        return approach_code
 
     def _set_approach_code(self, approach_code: int, tCode: int, int3: int, isubcase: int) -> None:
         self.approach_code = approach_code
@@ -1792,7 +1796,7 @@ class OP2Common(Op2Codes, F06Writer):
             self.binary_debug.write('  %-14s = %r\n' % ('  table_code', self.table_code))
             self.binary_debug.write('  %-14s = %r\n' % ('  sort_code', self.sort_code))
         self._parse_sort_code()
-        assert self.sort_code in [0, 1, 2, 3, 4, 5, 6], self.sort_code #self.code_information()
+        assert self.sort_code in [0, 1, 2, 3, 4, 5, 6], self.sort_code  # self.code_information()
 
     def _parse_thermal_code(self):
         """
@@ -2125,7 +2129,7 @@ class OP2Common(Op2Codes, F06Writer):
                 #print("code = %s" % str(self.code))
 
                 try:
-                    self.obj = slot[self.code] # if this is failing, you probably set obj_vector to None...
+                    self.obj = slot[self.code]  # if this is failing, you probably set obj_vector to None...
                 except KeyError:
                     msg = f'Could not find key={self.code} in result={result_name!r}\n'
                     msg += f"There's probably an extra check for read_mode=1...{result_name}"
@@ -2133,7 +2137,7 @@ class OP2Common(Op2Codes, F06Writer):
                     raise
                 if not self.obj.table_name == self.table_name.decode('utf-8'):
                     print(self.obj)
-                    msg = 'obj.table_name=%s table_name=%s; this should not happen for read_mode=2' %  (
+                    msg = 'obj.table_name=%s table_name=%s; this should not happen for read_mode=2' % (
                         self.obj.table_name, self.table_name)
                     raise OverwriteTableError(msg)
 
@@ -2229,7 +2233,7 @@ class OP2Common(Op2Codes, F06Writer):
                     raise
                 if not self.obj.table_name == self.table_name.decode('utf-8'):
                     print(self.obj)
-                    msg = 'obj.table_name=%s table_name=%s; this should not happen for read_mode=2' %  (
+                    msg = 'obj.table_name=%s table_name=%s; this should not happen for read_mode=2' % (
                         self.obj.table_name, self.table_name)
                     raise OverwriteTableError(msg)
 
@@ -2328,7 +2332,7 @@ class OP2Common(Op2Codes, F06Writer):
             del self.struct_q, self.struct_8s
             if hasattr(self, 'struct_2i'):
                 del self.struct_2i
-            if hasattr(self, 'struct_3q'): # geom
+            if hasattr(self, 'struct_3q'):  # geom
                 del self.struct_3q
 
         elif hasattr(self, 'struct_2i'):
@@ -2336,6 +2340,7 @@ class OP2Common(Op2Codes, F06Writer):
         #out = [outi for outi in self.object_attributes() if 'struct_' in outi]
         #assert len(out) == 0, out
         x = 1
+
 
 def _cast_nonlinear_factor(value):
     """h5py is picky about it's data types"""
@@ -2348,9 +2353,10 @@ def _cast_nonlinear_factor(value):
         value = np.float32(value)
     elif isinstance(value, (np.int32, np.float32)):  # pragma: no cover
         pass
-    else: # pragma: no cover
+    else:  # pragma: no cover
         raise NotImplementedError(f'value={value} type={type(value)}')
     return value
+
 
 def _function1(value: int) -> int:
     """function1(value)"""
@@ -2358,27 +2364,33 @@ def _function1(value: int) -> int:
         return 2
     return 1
 
+
 def _function2(value: int) -> int:
     """function2(value)"""
     return value % 100
+
 
 def _function3(value: int) -> int:
     """function3(value)"""
     return value % 1000
 
+
 def _function4(value: int) -> int:
     """function4(value)"""
     return value // 10
 
+
 def _function5(value: int) -> int:
     """function5(value)"""
     return value % 10
+
 
 def _function6(value: int) -> int:
     """weird..."""
     if value != 8:
         return 0
     return 1
+
 
 def _function7(value: int) -> int:
     """function7(value)"""
@@ -2389,6 +2401,7 @@ def _function7(value: int) -> int:
     else:
         raise RuntimeError(value)
     return out
+
 
 def read_title_helper(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: bytes,
                       isubcase: int,
@@ -2449,7 +2462,7 @@ def read_title_helper(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: by
     return title, subtitle, subtitle_original, label, label2
 
 def parse_fba_subcase(title: str, subtitle: str, label: str,
-                      log: SimpleLogger) -> tuple[str, str]:
+                      log: SimpleLogger) -> tuple[str, str, str]:
 
     #log.error(f'title={title!r}')
     #log.error(f'subtitle={subtitle!r}')
@@ -2548,6 +2561,7 @@ def parse_fba_subcase(title: str, subtitle: str, label: str,
     label = f'{unit_label}; grid={comp_grid_1} comp={comp_num_1}'
     label2 = ''
     return subtitle, label, label_base
+
 
 def parse_frf_subcase(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: bytes,
                       title: str, subtitle: str, label: str, log: SimpleLogger) -> tuple[str, str, str]:

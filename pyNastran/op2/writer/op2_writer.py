@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 from cpylog import get_logger2
 
 #import pyNastran
@@ -30,8 +30,10 @@ if TYPE_CHECKING:  # pragma: no cover
 class TrashWriter:
     def __init__(self, *args, **kwargs):
         pass
+
     def write(self, data):
         pass
+
     def close(self):
         pass
 
@@ -57,7 +59,7 @@ class OP2Writer(OP2_F06_Common):
             the name of the F06 file to write
         post : int; default=-1
             the PARAM,POST flag
-        endian : bytes; default='<'
+        endian : bytes; default=b'<'
             little endian is strongly recommended
         includes : list[str]; default=None
             list of results to include; exclusive with skips; default for both includes/skips=None -> all included
@@ -103,6 +105,7 @@ class OP2Writer(OP2_F06_Common):
                 fop2_ascii.close()
             raise
         return total_case_count
+
 
 def _set_skips(model: OP2Writer,
                includes: Optional[list[str]],
@@ -156,7 +159,6 @@ def _set_skips(model: OP2Writer,
     return skips
 
 
-
 def _write_op2(op2_file, fop2_ascii, obj: OP2,
                skips: set[str],
                post: int=-1, endian: bytes=b'<',
@@ -205,6 +207,7 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     case_count, table_names = _write_result_tables(obj, op2_file, fop2_ascii, struct_3i, endian, skips)
     return case_count, table_names
 
+
 def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                          struct_3i,
                          endian, skips: set[str]) -> tuple[int, list[str]]:
@@ -238,22 +241,22 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
 
         # ---------------
         # random displacement-style tables
-        'OUGATO1', 'OUGCRM1', 'OUGNO1', 'OUGPSD1', 'OUGRMS1', # disp/vel/acc/eigenvector
+        'OUGATO1', 'OUGCRM1', 'OUGNO1', 'OUGPSD1', 'OUGRMS1',  # disp/vel/acc/eigenvector
         'OUGATO2', 'OUGCRM2', 'OUGNO2', 'OUGPSD2', 'OUGRMS2',
 
-        'OVGATO1', 'OVGCRM1', 'OVGNO1', 'OVGPSD1', 'OVGRMS1', # velocity
+        'OVGATO1', 'OVGCRM1', 'OVGNO1', 'OVGPSD1', 'OVGRMS1',  # velocity
         'OVGATO2', 'OVGCRM2', 'OVGNO2', 'OVGPSD2', 'OVGRMS2',
 
-        'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1', # acceleration
+        'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',  # acceleration
         'OAGATO2', 'OAGCRM2', 'OAGNO2', 'OAGPSD2', 'OAGRMS2',
 
-        'OQGATO1', 'OQGCRM1', 'OQGNO1', 'OQGPSD1', 'OQGRMS1', # spc/mpc forces
+        'OQGATO1', 'OQGCRM1', 'OQGNO1', 'OQGPSD1', 'OQGRMS1',  # spc/mpc forces
         'OQGATO2', 'OQGCRM2', 'OQGNO2', 'OQGPSD2', 'OQGRMS2',
 
-        'OQMATO1', 'OQMCRM1', 'OQMNO1', 'OQMPSD1', 'OQMRMS1', # mpc forces
+        'OQMATO1', 'OQMCRM1', 'OQMNO1', 'OQMPSD1', 'OQMRMS1',  # mpc forces
         'OQMATO2', 'OQMCRM2', 'OQMNO2', 'OQMPSD2', 'OQMRMS2',
 
-        'OPGATO1', 'OPGCRM1', 'OPGNO1', 'OPGPSD1', 'OPGRMS1', # load vector
+        'OPGATO1', 'OPGCRM1', 'OPGNO1', 'OPGPSD1', 'OPGRMS1',  # load vector
         'OPGATO2', 'OPGCRM2', 'OPGNO2', 'OPGPSD2', 'OPGRMS2',
 
         'OPRATO1', 'OPRCRM1', 'OPRNO1', 'OPRPSD1', # pressure
@@ -292,9 +295,9 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OSTRVM2',
         # ---------------
         # shock response spectra
-        'OUPV1', # displacment
-        'DOEF1', # force
-        'DOES1', # stress
+        'OUPV1',  # displacment
+        'DOEF1',  # force
+        'DOES1',  # stress
 
         # ---------------
         'OGPFB1',
@@ -340,7 +343,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         assert table_name in table_order, table_name
 
     total_case_count = 0
-    pretables = ['LAMA', 'BLAMA', ] # 'CLAMA'
+    pretables = ['LAMA', 'BLAMA', ]  # 'CLAMA'
     if 'eigenvalues' not in skips:
         for unused_title, eigenvalue in obj.eigenvalues.items():
             res_categories2[eigenvalue.table_name].append(eigenvalue)
@@ -395,7 +398,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                         #result.__class__.__name__, result.element_name))
                     #continue
                 isubcase = ''
-                if hasattr(result, 'isubcase'): # no for eigenvalues
+                if hasattr(result, 'isubcase'):  # no for eigenvalues
                     isubcase = result.isubcase
                     #print(f' {result.__class__.__name__} - isubcase={isubcase}')
 
@@ -451,6 +454,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     fop2_ascii.close()
     return total_case_count, table_names_found
 
+
 def _fix_subcase_id(key: int | tuple[Any], res: Any) -> None:
     """
     The subcase id may be inconsistent between the op2 result object
@@ -461,6 +465,7 @@ def _fix_subcase_id(key: int | tuple[Any], res: Any) -> None:
     if isinstance(key, tuple):
         subcase_id = key[0]
     res.isubcase = subcase_id
+
 
 def write_op2_header(model: OP2, op2_file, fop2_ascii,
                      struct_3i: Struct,
@@ -475,7 +480,7 @@ def write_op2_header(model: OP2, op2_file, fop2_ascii,
         model.date = (today.month, today.day, today.year)
 
     if post == -1:
-    #_write_markers(op2_file, op2_ascii, [3, 0, 7])
+        #_write_markers(op2_file, op2_ascii, [3, 0, 7])
         op2_file.write(struct_3i.pack(*[4, 3, 4,]))
         tape_code = b'NASTRAN FORT TAPE ID CODE - '
         if is_nx:

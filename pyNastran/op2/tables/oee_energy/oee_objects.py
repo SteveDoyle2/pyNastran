@@ -11,9 +11,17 @@ from pyNastran.op2.result_objects.op2_objects import set_as_sort1
 
 
 TABLE_NAME_TO_TABLE_CODE = {
-    'ONRGY1' : 18,
+    'ONRGY1': 18,
 }
-class RealStrainEnergyArray(BaseElement):
+element_name_to_element_type = {
+    'CELAS1': 11,
+    'CELAS2': 12,
+    'CELAS3': 13,
+    'CELAS4': 14,
+}
+
+
+class RealEnergyArray(BaseElement):
     """
     ::
 
@@ -57,12 +65,6 @@ class RealStrainEnergyArray(BaseElement):
     def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
-
-    def get_headers(self) -> list[str]:
-        headers = [
-            'strain_energy', 'percent', 'strain_energy_density'
-        ]
-        return headers
 
     def build(self):
         """sizes the vectorized attributes of the RealStrainEnergyArray"""
@@ -192,8 +194,8 @@ class RealStrainEnergyArray(BaseElement):
                 self.data_frame.columns.names = column_names
             except ValueError:
                 #print('headers =', headers)
-                print('self.cannot apply column_names=%s to RealStrainEnergyArray: %r' % (
-                    column_names, self.element_name))
+                print(f'self.cannot apply column_names={column_names} '
+                      f'to {self.class_name}: {self.element_name}')
 
             # remove empty rows
             assert self.data_frame is not None
@@ -207,7 +209,7 @@ class RealStrainEnergyArray(BaseElement):
         assert data.shape[0] == 1, data.shape
         assert data.shape[2] == 1, data.shape
 
-        analysis_code = 1 # static
+        analysis_code = 1  # static
         data_code = oee_data_code(table_name, analysis_code,
                                   is_sort1=is_sort1, is_random=is_random,
                                   random_code=random_code,
@@ -219,9 +221,9 @@ class RealStrainEnergyArray(BaseElement):
         assert data.ndim == 3, data.shape
         assert len(etot) == nmodes, etot
         assert nmodes == 1, data.shape
-        data_code['etotpos'] = etot # TODO: is this the right axis?
+        data_code['etotpos'] = etot  # TODO: is this the right axis?
         data_code['etotneg'] = etot * 0.
-        data_code['lsdvmns'] = [0] # TODO: ???
+        data_code['lsdvmns'] = [0]  # TODO: ???
         data_code['data_names'] = []
 
         # I'm only sure about the 1s in the strains and the
@@ -231,14 +233,7 @@ class RealStrainEnergyArray(BaseElement):
             #data_code['s_code'] = 0
         #else:
             #data_code['stress_bits'] = [0, 1, 0, 1]
-            #data_code['s_code'] = 1 # strain?
-        element_name_to_element_type = {
-            'CELAS1' : 11,
-            'CELAS2' : 12,
-            'CELAS3' : 13,
-            'CELAS4' : 14,
-        }
-
+            #data_code['s_code'] = 1  # strain?
         element_type = element_name_to_element_type[element_name]
         data_code['element_name'] = element_name
         data_code['element_type'] = element_type
@@ -354,18 +349,16 @@ class RealStrainEnergyArray(BaseElement):
         if self.element_name == 'DMIG':
             if not np.isnan(densityi):
                 raise RuntimeError(
-                    'RealStrainEnergyArray: itime=%s ielement=%s; '
-                    'dt=%s eid=%s energyi=%s percenti=%s densityi=%s' % (
-                        self.itime, self.ielement, dt, eid, energyi, percenti, densityi))
+                    f'{self.class_name}: itime={self.itime} ielement={self.ielement}; '
+                    f'dt={dt} eid={eid} energyi={energyi} percenti={percenti} densityi={densityi}')
             self.data[itime, self.ielement, :] = [energyi, percenti, np.nan]
         else:
             try:
                 #self.element_data_type[self.ielement] = etype
                 self.data[itime, self.ielement, :] = [energyi, percenti, densityi]
             except (ValueError, IndexError):
-                print('RealStrainEnergyArray: itime=%s ielement=%s; '
-                      'dt=%s eid=%s energyi=%s percenti=%s densityi=%s' % (
-                    self.itime, self.ielement, dt, eid, energyi, percenti, densityi))
+                print(f'{self.class_name}: itime={self.itime} ielement={self.ielement}; '
+                    f'dt={dt} eid={eid} energyi={energyi} percenti={percenti} densityi={densityi}')
                 raise
         self.ielement += 1
         self.itotal += 1
@@ -431,10 +424,11 @@ class RealStrainEnergyArray(BaseElement):
         if write_header:
             csv_file.write('# %s\n' % name)
             #'                                    ELEMENT-ID                  STRAIN-ENERGY     PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY\n'
-            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'StrainEnergy', 'Percent', 'StrainEnergyDensity', 'BLANK', 'BLANK', 'BLANK']
+            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'StrainEnergy',
+                       'Percent', 'StrainEnergyDensity', 'BLANK', 'BLANK', 'BLANK']
             csv_file.write('# ' + ','.join(headers) + '\n')
 
-        flag = 14 # strain energy
+        flag = 14  # strain energy
         isubcase = self.isubcase
         #times = self._times
 
@@ -466,17 +460,15 @@ class RealStrainEnergyArray(BaseElement):
             #total_set_energy = energy[itotal]
             #total_percent = percent.sum()
 
-
             #msg_temp2 = [msg_temp % (self.element_name, total_energy, itime + 1, total_set_energy)]
             #csv_file.write(''.join(header + msg_temp2))
-
 
             #fmt1 = ' ' * 36 + '%10s         %-13s                 %.4f             %s\n'
             #fmt1_nan = ' ' * 36 + '%10s         %-13s                 %.4f             %s\n'
             fmt = f'{flag}, {isubcase}, {itime}, %{eid_len}d, 0, 0, %s, %s, %s, 0, 0, 0\n'
 
-            #headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'StrainEnergy', 'Percent', 'StrainEnergyDensity', 'BLANK', 'BLANK', 'BLANK']
-
+            # headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'StrainEnergy',
+            #            'Percent', 'StrainEnergyDensity', 'BLANK', 'BLANK', 'BLANK']
             for (eid, energyi, percenti, densityi) in zip(eids, energy, percent, density):
                 if is_exponent_format:
                     [senergyi, percenti, sdensityi] = write_floats_13e_long([energyi, percenti, densityi])
@@ -597,7 +589,7 @@ class RealStrainEnergyArray(BaseElement):
 
     def write_op2(self, op2_file, op2_ascii, itable: int,
                   new_result, date,
-                  is_mag_phase: bool=False, endian: str='>'):
+                  is_mag_phase: bool=False, endian: bytes=b'>'):
         """writes an OP2"""
         import inspect
         from struct import Struct, pack
@@ -626,7 +618,6 @@ class RealStrainEnergyArray(BaseElement):
             struct1 = Struct(endian + b'4s 3f')
         else:  # pragma: no cover
             raise NotImplementedError(f'{self.class_name}: element.dtype.kind = {eids_dtype_kind!r}')
-
 
         for itime in range(self.ntimes):
             eids = self.element[itime, :]
@@ -676,7 +667,7 @@ class RealStrainEnergyArray(BaseElement):
         return itable
 
     def _write_table_3(self, op2_file, op2_ascii, new_result,
-                       itable, itime): #itable=-3, itime=0):
+                       itable, itime):
         import inspect
         from struct import pack
         frame = inspect.currentframe()
@@ -715,14 +706,14 @@ class RealStrainEnergyArray(BaseElement):
             #'???', 'Title', 'subtitle', 'label']
         #random_code = self.random_code
         format_code = self.format_code
-        s_code = 0 # self.s_code
+        s_code = 0  # self.s_code
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = 0
         title = b'%-128s' % self.title.encode('ascii')
         subtitle = b'%-128s' % self.subtitle.encode('ascii')
         label = b'%-128s' % self.label.encode('ascii')
-        ftable3 = b'50i 128s 128s 128s'
+        #ftable3 = b'50i 128s 128s 128s'
         #oCode = 0
         load_set = 0
         #print(self.code_information())
@@ -751,7 +742,7 @@ class RealStrainEnergyArray(BaseElement):
             #except AttributeError:  # pragma: no cover
                 #print(self)
                 #raise
-            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+            ftable3 = set_table3_field(ftable3, 5, b'f')  # field 5
         elif self.analysis_code == 6:
             #if hasattr(self, 'times'):
             try:
@@ -762,7 +753,7 @@ class RealStrainEnergyArray(BaseElement):
             except Exception:
                 print(self.get_stats())
                 raise NotImplementedError('cant find times or dts on analysis_code=8')
-            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+            ftable3 = set_table3_field(ftable3, 5, b'f')  # field 5
         #elif self.analysis_code == 7:  # pre-buckling
             #field5 = self.loadIDs[itime] # load set number
         #elif self.analysis_code == 8:  # post-buckling
@@ -791,15 +782,15 @@ class RealStrainEnergyArray(BaseElement):
             assert isinstance(field5, integer_types), type(field5)
         elif self.analysis_code == 10:  # nonlinear statics
             field5 = self.load_factors[itime]
-            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step
+            ftable3 = set_table3_field(ftable3, 5, b'f')  # field 5; load step
         #elif self.analysis_code == 11:  # old geometric nonlinear statics
             #field5 = self.loadIDs[itime] # load set number
         else:
             raise NotImplementedError(self.analysis_code)
         # we put these out of order, so we can set the element_name field
         # (that spans 2 fields) in the right order
-        ftable3 = set_table3_field(ftable3, 7, b'4s') # field 7
-        ftable3 = set_table3_field(ftable3, 6, b'4s') # field 7
+        ftable3 = set_table3_field(ftable3, 7, b'4s')  # field 7
+        ftable3 = set_table3_field(ftable3, 6, b'4s')  # field 6
         element_name0 = element_name[:4]
         element_name1 = element_name[4:]
         #str(self)
@@ -820,8 +811,36 @@ class RealStrainEnergyArray(BaseElement):
         fmt = b'i' + ftable3 + b'i'
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
-
         op2_file.write(pack(fmt, *data))
+
+
+class RealStrainEnergyArray(RealEnergyArray):
+    """
+    ::
+
+                                E L E M E N T   S T R A I N   E N E R G I E S
+
+      ELEMENT-TYPE = QUAD4     * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM   = 9.817708E+08
+      SUBCASE               1  * TOTAL ENERGY OF ALL ELEMENTS IN SET     1 = 4.192036E+08
+
+         ELEMENT-ID   STRAIN-ENERGY  PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
+                 12   2.291087E+07        2.3336            2.291087E+02
+                 13   1.582968E+07        1.6124            1.055312E+02
+                 14   6.576075E+07        6.6982            3.288037E+02
+    """
+    def get_headers(self) -> list[str]:
+        headers = [
+            'strain_energy', 'percent', 'strain_energy_density',
+        ]
+        return headers
+
+
+class RealKineticEnergyArray(RealEnergyArray):
+    def get_headers(self) -> list[str]:
+        headers = [
+            'kinetic_energy', 'percent', 'kinetic_energy_density',
+        ]
+        return headers
 
 
 class ComplexStrainEnergyArray(BaseElement):
@@ -998,7 +1017,6 @@ class ComplexStrainEnergyArray(BaseElement):
             if i > 0:
                 raise ValueError(msg)
 
-
         if not np.array_equal(self.data, table.data):  # pragma: no cover
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -1091,15 +1109,27 @@ class ComplexStrainEnergyArray(BaseElement):
     def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s', page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
-        msg_temp = (
-            '                               E L E M E N T   S T R A I N   E N E R G I E S   ( A V E R A G E )                 \n'
-            ' \n'
-            '                ELEMENT-TYPE = %-5s               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   %s\n'
-            '                SUBCASE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =   %s\n'
-            '0\n'
-            '                       ELEMENT-ID       STRAIN-ENERGY (MAG/PHASE)               PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY\n'
-            #'                                5       2.027844E-10 /   0.0                         1.2581              2.027844E-09'
-        )
+
+        if self.class_name == 'ComplexStrainEnergyArray':
+            msg_temp = (
+                '                               E L E M E N T   S T R A I N   E N E R G I E S   ( A V E R A G E )                 \n'
+                ' \n'
+                '                ELEMENT-TYPE = %-5s               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   %s\n'
+                '                SUBCASE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =   %s\n'
+                '0\n'
+                '                       ELEMENT-ID       STRAIN-ENERGY (MAG/PHASE)               PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY\n'
+                #'                                5       2.027844E-10 /   0.0                         1.2581              2.027844E-09'
+            )
+        else:
+            msg_temp = (
+                '                               E L E M E N T   K I N E T I C   E N E R G I E S   ( A V E R A G E )                 \n'
+                ' \n'
+                '                ELEMENT-TYPE = %-5s               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   %s\n'
+                '                SUBCASE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =   %s\n'
+                '0\n'
+                '                       ELEMENT-ID       KINETIC-ENERGY (MAG/PHASE)               PERCENT OF TOTAL    KINETIC-ENERGY-DENSITY\n'
+                #'                                5       2.027844E-10 /   0.0                         1.2581              2.027844E-09'
+            )
         ntimes = self.data.shape[0]
 
         #etype = self.element_data_type
@@ -1121,10 +1151,8 @@ class ComplexStrainEnergyArray(BaseElement):
             #total_set_energy = energy[itotal]
             #total_percent = percent.sum()
 
-
             msg_temp2 = [msg_temp % (self.element_name, total_energy, total_set_energy)]
             f06_file.write(''.join(header + msg_temp2))
-
 
             fmt1 = ' ' * 23 + '%10i      %-13s /  %-13s               %7.4f             %s\n'
             #fmt2 = '\n                        TYPE = %-8s SUBTOTAL       %13s                 %.4f\n'
@@ -1144,6 +1172,7 @@ class ComplexStrainEnergyArray(BaseElement):
             page_num += 1
             #break
         return page_num - 1
+
 
 def oee_data_code(table_name, analysis_code,
                   is_sort1=True, is_random=False,
@@ -1170,7 +1199,7 @@ def oee_data_code(table_name, analysis_code,
     #}
 
     table_code = TABLE_NAME_TO_TABLE_CODE[table_name]
-    sort_code = 1 # TODO: what should this be???
+    sort_code = 1  # TODO: what should this be???
 
     #table_code = tCode % 1000
     #sort_code = tCode // 1000
@@ -1181,22 +1210,22 @@ def oee_data_code(table_name, analysis_code,
     #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
     data_code = {
         'nonlinear_factor': None,
-        'approach_code' : approach_code,
-        'analysis_code' : analysis_code,
-        'sort_bits': [0, sort1_sort_bit, random_sort_bit], # real, sort1, random
-        'sort_method' : sort_method,
+        'approach_code': approach_code,
+        'analysis_code': analysis_code,
+        'sort_bits': [0, sort1_sort_bit, random_sort_bit],  # real, sort1, random
+        'sort_method': sort_method,
         'is_msc': is_msc,
         #'is_nasa95': is_nasa95,
-        'format_code': 1, # real
+        'format_code': 1,  # real
         'table_code': table_code,
         'tCode': tCode,
-        'table_name': table_name, ## TODO: should this be a string?
-        'device_code' : device_code,
-        'random_code' : random_code,
+        'table_name': table_name,  ## TODO: should this be a string?
+        'device_code': device_code,
+        'random_code': random_code,
         'thermal': 0,
-        'title' : title,
+        'title': title,
         'subtitle': subtitle,
         'label': label,
-        'num_wide' : 8, # displacement-style table
+        'num_wide': 8,  # displacement-style table
     }
     return data_code

@@ -98,12 +98,12 @@ class Results:
 
     def _get_sum_objects_map(self):
         sum_objs = {
-            'acoustic' : self.acoustic,
-            'responses' : self.responses,
-            'force' : self.force,
-            'thermal_load' : self.thermal_load,
-            'strain_energy' : self.strain_energy,
-            'kinetic_energy' : self.kinetic_energy,
+            'acoustic': self.acoustic,
+            'responses': self.responses,
+            'force': self.force,
+            'thermal_load': self.thermal_load,
+            'strain_energy': self.strain_energy,
+            'kinetic_energy': self.kinetic_energy,
             'stress': self.stress,
             'stressa': self.stressa,
             'strain': self.strain,
