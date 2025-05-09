@@ -1,10 +1,12 @@
 import os
 import sys
+from pathlib import Path
 from typing import Optional
 
 import pyNastran
 from pyNastran.utils.dev import get_files_of_type
-PKG_PATH = pyNastran.__path__[0]
+PKG_PATH = Path(pyNastran.__path__[0])
+
 
 def get_failed_files(filename):
     """Gets the list of failed files"""
@@ -124,11 +126,12 @@ def get_files_from_directories(dirnames: list[str], file_type: str,
     files2 = []
     for move_dir in dirnames:
         print('move_dir = %s' % move_dir)
+        sys.stdout.flush()
         #assert os.path.exists(move_dir), '%s doesnt exist' % move_dir
         files_in_dir = get_files_of_type(move_dir, file_type, max_size_mb=max_size)
         files2 += files_in_dir
         #print('nfiles = %s/%s' % (len(files_in_dir), len(files2)))
-    #print('nfiles = %s' % len(files2))
+    print('nfiles = %s' % len(files2))
     return files2
 
 def get_op2_model_directories(folders_filennames: list[str],
@@ -158,8 +161,8 @@ def run(regenerate=True, make_geom=False, combine=True,
     files = get_files_of_type('tests', '.op2')
     print(' '.join(sys.argv))
 
-    folders_file1 = os.path.join(PKG_PATH, 'bdf', 'test', 'tests', 'foldersRead.txt')
-    folders_file2 = os.path.join(PKG_PATH, 'op2', 'test', 'folders_read.txt')
+    folders_file1 = str(PKG_PATH / 'bdf' / 'test' / 'tests' / 'foldersRead.txt')
+    folders_file2 = str(PKG_PATH / 'op2' / 'test' / 'folders_read.txt')
 
     unused_isubcases = []
     binary_debug = [True, False]  # catch any errors
@@ -176,11 +179,13 @@ def run(regenerate=True, make_geom=False, combine=True,
         files2 = parse_skipped_cards('skipped_cards.out')
     elif regenerate or not os.path.exists(failed_cases_filename):
         dirnames = get_op2_model_directories([folders_file1, folders_file2], filter_simcenter)
+        dirnames = [dirname for dirname in dirnames
+                    if os.path.exists(dirname)]
 
-        #for dirname in dirnames2:
-            #print(dirname)
+        for dirname in dirnames:
+            print(dirname)
         files2 = get_files_from_directories(dirnames, '.op2', max_size=max_size)
-        files2 += files
+        files2.extend(files)
         assert len(files2) > 0, files2
     else:
         print(f'failed_cases_filename = {failed_cases_filename!r}')

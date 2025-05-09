@@ -45,7 +45,7 @@ def get_files_of_type(dirname: PathLike, extension: str='.txt',
         return filenames2
 
     if not isinstance(dirname, PathLike):
-        raise TypeError('dirname must be a PathLike object')
+        raise TypeError('dirname must be a Path/str object')
     if not isinstance(extension, str):
         raise TypeError(f'extension={extension!r} must be a str')
 
@@ -54,26 +54,29 @@ def get_files_of_type(dirname: PathLike, extension: str='.txt',
         print(f'found skip_file in dirname={dirname}')
         return filenames2
 
-    allow_digging = True
-    if limit_file in filenames:
-        allow_digging = False
+    # allow_digging = True
+    # if limit_file in filenames:
+    #     allow_digging = False
+    allow_digging = not(limit_file in filenames)
 
-    for filenamei in filenames:
+    # nfiles = len(filenames)
+    max_size_bytes = max_size_mb * 1024 ** 2
+    for i, filenamei in enumerate(filenames):
+        # if i>0 and i % 1000 == 0:
+        #     print(f'{i}/{nfiles}')
         filename = os.path.join(dirname, filenamei)
-        if os.path.isdir(filename):
+        if (os.path.splitext(filenamei)[1].endswith(extension) and
+            os.path.isfile(filename)):
+            if max_size_mb <= 0.0:
+                filenames2.append(filename)
+            elif os.path.getsize(filename) <= max_size_bytes:
+                filenames2.append(filename)
+        elif os.path.isdir(filename):
             if allow_digging:
-                filenames2 += get_files_of_type(filename, extension, max_size_mb)
+                filenames2.extend(get_files_of_type(filename, extension, max_size_mb))
                 #assert len(filenames2) > 0, dirnamei
             else:
                 print('no digging in filename=%s; dirname=%s' % (filename, dirname))
-        elif (os.path.isfile(filename) and
-              os.path.splitext(filenamei)[1].endswith(extension) and
-              max_size_mb <= 0.0):
-            filenames2.append(filename)
-        elif (os.path.isfile(filename) and
-              os.path.splitext(filenamei)[1].endswith(extension) and
-              os.path.getsize(filename) / 1048576. <= max_size_mb):
-            filenames2.append(filename)
     return filenames2
 
 
