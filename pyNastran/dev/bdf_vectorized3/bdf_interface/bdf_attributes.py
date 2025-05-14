@@ -1289,7 +1289,6 @@ class BDFAttributes:
         self.is_msc = True
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_nasa95 = False
         self.is_zona = False
 
     def set_as_nx(self) -> None:
@@ -1298,7 +1297,6 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_nasa95 = False
         self.is_zona = False
 
     def set_as_optistruct(self):
@@ -1307,7 +1305,6 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = True
         self.is_mystran = False
-        self.is_nasa95 = False
         self.is_zona = False
 
     def set_as_zona(self):
@@ -1316,7 +1313,6 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_nasa95 = False
         self.is_zona = True
 
     def set_as_mystran(self) -> None:
@@ -1325,19 +1321,8 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = True
-        self.is_nasa95 = False
         self.is_zona = False
         self._update_for_mystran()
-
-    def set_as_nasa95(self) -> None:
-        self._nastran_format = 'nasa95'
-        self.is_nx = False
-        self.is_msc = False
-        self.is_optistruct = False
-        self.is_mystran = False
-        self.is_nasa95 = True
-        self.is_zona = False
-        self._update_for_nasa95()
 
     # ------------------------------------------------------------------------
     # optimization

@@ -483,7 +483,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_nx = True
         self.is_msc = False
         self.is_autodesk = False
-        self.is_nasa95 = False
         self.is_optistruct = False
         self._nastran_format = 'nx'
 
@@ -491,7 +490,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_nx = False
         self.is_msc = True
         self.is_autodesk = False
-        self.is_nasa95 = False
         self.is_optistruct = False
         self._nastran_format = 'msc'
 
@@ -499,28 +497,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_nx = False
         self.is_msc = False
         self.is_autodesk = True
-        self.is_nasa95 = False
         self.is_optistruct = False
         self._nastran_format = 'autodesk'
-
-    def set_as_nasa95(self) -> None:
-        self.is_nx = False
-        self.is_msc = False
-        self.is_autodesk = False
-        self.is_optistruct = False
-        self.is_nasa95 = True
-        self._nastran_format = 'nasa95'
-        self._op2_readers.reader_oes._read_oes1_loads = self._op2_readers.reader_oes._read_oes1_loads_nasa95
-        self._op2_readers.reader_oef._read_oef1_loads = self._op2_readers.reader_oef._read_oef1_loads_nasa95
-
-        if hasattr(self, 'reader_geom2') and hasattr(self.reader_geom2, '_read_cquad4_nasa95'):
-            self.reader_geom2.geom2_map[(5408, 54, 261)] = ['CQUAD4', self.reader_geom2._read_cquad4_nasa95]
 
     def set_as_optistruct(self) -> None:
         self.is_nx = False
         self.is_msc = False
         self.is_autodesk = False
-        self.is_nasa95 = False
         self.is_optistruct = True
         self._nastran_format = 'optistruct'
 
@@ -666,10 +649,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
         satk_tables = {
             b'OUGPK1'  : [reader_ougpk._read_ougpk1_3, reader_ougpk._read_ougpk1_4, 'displacement/velocity/acceleration peak-to-peak'],
             b'OEFPK1'  : [reader_oefpk._read_oefpk1_3, reader_oefpk._read_oefpk1_4, 'element force peak-to-peak'],
-        }
-
-        nasa95_tables = {
-            b'OESC1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'composite stress'],
         }
 
         table_mapper_geometry = {
@@ -1433,7 +1412,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         table_mapper.update(table_mapper_geometry)
         table_mapper.update(table_mapper_random)
-        table_mapper.update(nasa95_tables)
         table_mapper.update(satk_tables)
         if self.is_nx and 0:  # pragma: no cover
             _table_mapper = {
@@ -2421,7 +2399,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
         del self.data_code['load_as_h5']
         del self.data_code['h5_file']
         del self.data_code['is_msc']
-        #del self.data_code['is_nasa95']
         del self.data_code['pval_step']
 
         # wrong

@@ -16,7 +16,8 @@ IS_WINDOWS = 'nt' in os.name
 #is_mac = 'darwin' in os.name
 
 
-def get_include_filename(card_lines: list[str],
+def get_include_filename(log,
+                         include_lines: list[str],
                          include_dirs: list[str],
                          replace_includes: dict[str, str],
                          source_filename: str='',
@@ -28,7 +29,7 @@ def get_include_filename(card_lines: list[str],
 
     Parameters
     ----------
-    card_lines : list[str]
+    include_lines : list[str]
         the list of lines in the include card (all the lines!)
     include_dirs : list[str]
         the include directory
@@ -45,6 +46,10 @@ def get_include_filename(card_lines: list[str],
         the INCLUDE filename
 
     """
+    for line in include_lines:
+        if len(line) > 72:
+            msg = '\n - '.join(include_lines)
+            log.warning(f'INCLUDE line={line!r} is too long (n={len(line)} for:\n - {msg}')
     #print(f'card_lines={card_lines};\nsource_filename={source_filename!r}')
     if not isinstance(include_dirs, list):
         assert isinstance(include_dirs, PathLike), include_dirs
@@ -54,7 +59,7 @@ def get_include_filename(card_lines: list[str],
     if is_windows is None:
         is_windows = IS_WINDOWS
 
-    filename_raw = parse_include_lines(card_lines)
+    filename_raw = parse_include_lines(include_lines)
     if filename_raw in replace_includes:
         filename_raw = replace_includes[filename_raw]
         if len(filename_raw) == 0:
@@ -78,7 +83,7 @@ def get_include_filename(card_lines: list[str],
             break
     else:
     #if 1:
-        msg = f'Could not find INCLUDE line:\n{card_lines}\n'
+        msg = f'Could not find INCLUDE line:\n{include_lines}\n'
         msg += f'  filename: {os.path.abspath(filename_raw)}\n'
         if source_filename:
             msg += f'  source file: {os.path.abspath(source_filename)}\n'

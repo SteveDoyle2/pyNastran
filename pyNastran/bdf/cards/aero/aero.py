@@ -119,7 +119,7 @@ class AECOMP(BaseCard):
         self.lists_ref = None
 
     def validate(self) -> None:
-        if not self.list_type in ['SET1', 'AELIST', 'CAERO', 'CMPID']:
+        if self.list_type not in ['SET1', 'AELIST', 'CAERO', 'CMPID']:
             msg = 'list_type=%r not in [SET1, AELIST, CAERO, CMPID]' % self.list_type
             raise RuntimeError(msg)
 
@@ -292,7 +292,7 @@ class AECOMPL(BaseCard):
         #self.labels_ref = None
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment: str='') -> AECOMP:
+    def add_card(cls, card: BDFCard, comment: str='') -> AECOMPL:
         """
         Adds an AECOMPL card from ``BDF.add_card(...)``
 
@@ -609,7 +609,6 @@ class AELINK(BaseCard):
                                    f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
             self.independent_labels_ref.append(independent_aelink)
 
-
     #def uncross_reference(self) -> None:
         #"""Removes cross-reference links"""
         #pass
@@ -791,7 +790,7 @@ class AEPARM(BaseCard):
 
         Parameters
         ----------
-        id : int
+        aeparm_id : int
             the unique id
         label : str
             the variable name
@@ -894,9 +893,9 @@ class AESURF(BaseCard):
     """
     type = 'AESURF'
     _field_map = {
-        1: 'aesid', 2:'label', 3:'cid1', 4:'alid1', 5:'cid2', 6:'alid2',
-        7:'eff', 8:'ldw', 9:'crefc', 10:'crefs', 11:'pllim', 12:'pulim',
-        13:'hmllim', 14:'hmulim', 15:'tqllim', '16':'tqulim',
+        1: 'aesid', 2: 'label', 3: 'cid1', 4: 'alid1', 5: 'cid2', 6: 'alid2',
+        7: 'eff', 8: 'ldw', 9: 'crefc', 10: 'crefs', 11: 'pllim', 12: 'pulim',
+        13: 'hmllim', 14: 'hmulim', 15: 'tqllim', '16': 'tqulim',
     }
 
     @classmethod
@@ -1356,6 +1355,7 @@ class AESURFS(BaseCard):
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
+
 CAERO1_MSG = """
 +--------+-----+-----+----+-------+--------+--------+--------+------+
 |   1    |  2  |  3  | 4  |   5   |   6    |    7   |   8    |   9  |
@@ -1364,6 +1364,7 @@ CAERO1_MSG = """
 +--------+-----+-----+----+-------+--------+--------+--------+------+
 |        |  X1 | Y1  | Z1 |  X12  |   X4   |   Y4   |   Z4   | X43  |
 +--------+-----+-----+----+-------+--------+--------+--------+------+""".strip()
+
 
 class CAERO1(BaseCard):
     """
@@ -1426,10 +1427,12 @@ class CAERO1(BaseCard):
     """
     type = 'CAERO1'
     _field_map = {
-        1: 'sid', 2:'pid', 3:'cp', 4:'nspan', 5:'nchord',
-        6:'lspan', 7:'lchord', 8:'igroup', 12:'x12', 16:'x43',
+        1: 'sid', 2: 'pid', 3: 'cp', 4: 'nspan', 5: 'nchord',
+        6: 'lspan', 7: 'lchord', 8: 'igroup', 12: 'x12', 16: 'x43',
     }
+
     _properties = ['_field_map', 'shape', 'xy', 'min_max_eid', 'npanels']
+
     def _get_field_helper(self, n):
         """
         Gets complicated parameters on the CAERO1 card
@@ -2204,14 +2207,14 @@ class CAERO1(BaseCard):
         TODO: not done...
 
         """
-        #p1x = np.array([self.p1[0], 0., 0.])
-        p1 = self.p1.copy() #- p1x
-        p4 = self.p4.copy() #- p1x
+        # p1x = np.array([self.p1[0], 0., 0.])
+        p1 = self.p1.copy()  # - p1x
+        p4 = self.p4.copy()  # - p1x
         p2 = p1 + np.array([self.x12, 0., 0.])
         p3 = p4 + np.array([self.x43, 0., 0.])
 
-        q1 = caero_project.p1.copy() #- p1x
-        q4 = caero_project.p4.copy() #- p1x
+        q1 = caero_project.p1.copy()  # - p1x
+        q4 = caero_project.p4.copy()  # - p1x
         q2 = q1 + np.array([caero_project.x12, 0., 0.])
         q3 = q4 + np.array([caero_project.x43, 0., 0.])
 
@@ -2611,8 +2614,8 @@ class CAERO2(BaseCard):
     """
     type = 'CAERO2'
     _field_map = {
-        1: 'sid', 2:'pid', 3:'cp', 4:'nsb', 5:'lsb',
-        6:'nint', 7:'lint', 8:'igroup', 12:'x12',
+        1: 'sid', 2: 'pid', 3: 'cp', 4: 'nsb', 5: 'lsb',
+        6: 'nint', 7: 'lint', 8: 'igroup', 12: 'x12',
     }
     _properties = ['nboxes']
 
@@ -2847,7 +2850,7 @@ class CAERO2(BaseCard):
     def nboxes(self) -> int:
         if self.nsb > 0:
             return self.nsb
-        return len(self.lsb_ref.fractions) # AEFACT
+        return len(self.lsb_ref.fractions)  # AEFACT
 
     def _init_ids(self, dtype: str='int32'):
         self.box_ids = np.arange(0, self.nboxes, dtype=dtype)
@@ -2921,7 +2924,7 @@ class CAERO2(BaseCard):
         if self.nsb == 0:
             station = self.lsb_ref.fractions
             nx = len(station) - 1
-            #print('xstation = ', xstation)
+            # print('xstation = ', xstation)
         else:
             nx = self.nsb
             station = np.linspace(0., nx, num=nx+1) # *dx?
@@ -3953,7 +3956,6 @@ class CAERO5(BaseCard):
         npoints = (nchord + 1) * (nspan + 1)
         return npoints, nelements
 
-
     @property
     def nboxes(self):
         if self.nspan > 0:
@@ -4112,7 +4114,8 @@ class MONPNT1(BaseCard):
         xyz = [0., 1., 2.]
         return MONPNT1(name, label, axes, aecomp_name, xyz, cp=0, cd=None, comment='')
 
-    def __init__(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None, comment=''):
+    def __init__(self, name: str, label: str, axes: int, aecomp_name: str,
+                 xyz: list[float], cp: int=0, cd: Optional[int]=None, comment: str=''):
         """
         Creates a MONPNT1 card
 
@@ -4163,7 +4166,7 @@ class MONPNT1(BaseCard):
         self.cd_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         name = string(card, 1, 'name')
 
         label_fields = [labeli for labeli in card[2:8] if labeli is not None]
@@ -4561,6 +4564,7 @@ class MONPNT3(BaseCard):
     def __repr__(self):
         return self.write_card()
 
+
 class MONDSP1(BaseCard):
     """
     +---------+---------+------+-----+-----+-------+------+----+--------+
@@ -4883,8 +4887,8 @@ class PAERO2(BaseCard):
     """
     type = 'PAERO2'
     _field_map = {
-        1: 'pid', 2:'orient', 3:'width', 4:'AR', 5:'lrsb', 6:'lrib',
-        #7: 'lth1', 8:'lth2',
+        1: 'pid', 2: 'orient', 3: 'width', 4: 'AR', 5: 'lrsb', 6: 'lrib',
+        #7: 'lth1', 8: 'lth2',
     }
     _properties = ['_field_map', 'lth1', 'lth2', ]
 
@@ -5691,6 +5695,7 @@ class Spline(BaseCard):
     def __init__(self):
         BaseCard.__init__(self)
 
+
 SPLINE1_MSG = """
 +---------+-------+-------+------+------+------+----+------+-------+
 |    1    |   2   |    3  |   4  |   5  |   6  |  7 |   8  |   9   |
@@ -5701,6 +5706,7 @@ SPLINE1_MSG = """
 +---------+-------+-------+------+------+------+----+------+-------+
 | SPLINE1 |   3   |  111  | 115  | 122  |  14  | 0. |      |       |
 +---------+-------+-------+------+------+------+----+------+-------+""".strip()
+
 
 class SPLINE1(Spline):
     """
@@ -5722,8 +5728,8 @@ class SPLINE1(Spline):
     """
     type = 'SPLINE1'
     _field_map = {
-        1: 'eid', 2:'caero', 3:'box1', 4:'box2', 5:'setg', 6:'dz',
-        7: 'method', 8:'usage', 9:'nelements', 10:'melements',
+        1: 'eid', 2: 'caero', 3: 'box1', 4: 'box2', 5: 'setg', 6: 'dz',
+        7: 'method', 8: 'usage', 9: 'nelements', 10: 'melements',
     }
     _properties = ['aero_element_ids']
 
@@ -5971,8 +5977,8 @@ class SPLINE2(Spline):
     """
     type = 'SPLINE2'
     _field_map = {
-        1: 'eid', 2:'caero', 3:'id1', 4:'id2', 5:'setg', 6:'dz',
-        7: 'dtor', 8:'cid', 9:'dthx', 10:'dthy',
+        1: 'eid', 2: 'caero', 3: 'id1', 4: 'id2', 5: 'setg', 6: 'dz',
+        7: 'dtor', 8: 'cid', 9: 'dthx', 10: 'dthy',
     }
     _properties = ['aero_element_ids']
 
@@ -6744,9 +6750,9 @@ class SPLINE5(Spline):
     type = 'SPLINE5'
     _properties = ['aero_element_ids']
     _field_map = {
-        1: 'eid', 2:'caero', 3:'aelist', 5:'setg', 6:'dz',
-        7: 'dtor', 8:'cid', 9:'thx', 10:'thy', 12:'usage',
-        13 : 'meth', 15 : 'ftype', 16 : 'rcore',
+        1: 'eid', 2: 'caero', 3: 'aelist', 5: 'setg', 6: 'dz',
+        7: 'dtor', 8: 'cid', 9: 'thx', 10: 'thy', 12: 'usage',
+        13: 'meth', 15: 'ftype', 16: 'rcore',
     }
 
     @classmethod
@@ -6823,6 +6829,7 @@ class SPLINE5(Spline):
         assert len(card) <= 17, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
         return SPLINE5(eid, caero, aelist, setg, thx, thy, dz=dz, dtor=dtor, cid=cid,
                        usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
+
     @property
     def aero_element_ids(self):
         return self.aelist_ref.elements
@@ -6970,6 +6977,7 @@ def get_caero_count(model: BDF) -> tuple[int, int, int, int]:
             raise NotImplementedError(msg)
     return ncaeros, ncaeros_sub, ncaeros_points, ncaero_sub_points
 
+
 def get_caero_points(model: BDF,
                      box_id_to_caero_element_map: dict[int, np.ndarray]) -> tuple[np.ndarray, bool]:
     has_caero = False
@@ -7005,6 +7013,7 @@ def get_caero_points(model: BDF,
         caero_points = np.empty((0, 3))
     return caero_points, has_caero
 
+
 def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
     """builds the CAERO subpanel grid in 3d space"""
     j = 0
@@ -7031,6 +7040,7 @@ def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
         points_array = np.vstack(points)
         elements_array = np.vstack(elements)
     return points_array, elements_array
+
 
 def build_caero_paneling(model: BDF) -> tuple[str, list[str], Any]:
     """

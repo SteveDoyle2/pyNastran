@@ -122,7 +122,8 @@ if TYPE_CHECKING:  # pragma: no cover
         DMIG, DMI, DMIJ, DMIK, DMIJI, DMIAX, DTI, DTI_UNITS)
     from pyNastran.bdf.subcase import Subcase
 
-BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'nasa95', 'mystran'}
+BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'mystran'}
+
 
 class BDFAttributes:
     """defines attributes of the BDF"""
@@ -136,7 +137,6 @@ class BDFAttributes:
         self.is_nx = False
         self.is_msc = False
         self.is_mystran = False
-        self.is_nasa95 = False
         self.is_optistruct = False
         self.is_zona = False
         self.save_file_structure = False
@@ -150,7 +150,6 @@ class BDFAttributes:
         self.is_msc = True
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_nasa95 = False
         self.is_zona = False
 
     def set_as_nx(self):
@@ -159,7 +158,6 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_nasa95 = False
         self.is_zona = False
 
     def set_as_optistruct(self):
@@ -168,7 +166,6 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = True
         self.is_mystran = False
-        self.is_nasa95 = False
         self.is_zona = False
 
     def set_as_zona(self):
@@ -177,7 +174,6 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = False
-        self.is_nasa95 = False
         self.is_zona = True
 
     def set_as_mystran(self):
@@ -186,19 +182,8 @@ class BDFAttributes:
         self.is_msc = False
         self.is_optistruct = False
         self.is_mystran = True
-        self.is_nasa95 = False
         self.is_zona = False
         self._update_for_mystran()
-
-    def set_as_nasa95(self):
-        self._nastran_format = 'nasa95'
-        self.is_nx = False
-        self.is_msc = False
-        self.is_optistruct = False
-        self.is_mystran = False
-        self.is_nasa95 = True
-        self.is_zona = False
-        self._update_for_nasa95()
 
     def __properties__(self):
         """the list of @property attributes"""
@@ -830,7 +815,7 @@ class BDFAttributes:
         self._slot_to_type_map = {
             'params': ['PARAM'],
             'mdlprm': ['MDLPRM'],
-            'nodes': ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
+            'nodes': ['GRID', 'SPOINT', 'EPOINT'],  # 'RINGAX',
             'points': ['POINT'],
             #'ringaxs': ['RINGAX', 'POINTAX'],  # removed
             #'ringfl': ['RINGFL'],  # removed
@@ -873,7 +858,7 @@ class BDFAttributes:
                 # acoustic
                 'CHACAB', 'CAABSF', 'CHACBR',
                 # nastran95
-                'CTRSHL', #'CQUAD1'
+                #'CTRSHL', 'CQUAD1'
             ],
             'normals': ['SNORM'],
             'nsms': ['NSM', 'NSM1', 'NSML', 'NSML1'],

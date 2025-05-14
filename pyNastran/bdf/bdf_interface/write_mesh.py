@@ -456,6 +456,7 @@ class WriteMesh(BDFAttributes):
     def _write_aero(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the aero cards"""
+
         if self.caeros or self.paeros or self.monitor_points or self.splines:
             bdf_file.write('$AERO\n')
             for (unused_id, caero) in sorted(self.caeros.items()):
@@ -464,8 +465,12 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(paero.write_card(size, is_double))
             for (unused_id, spline) in sorted(self.splines.items()):
                 bdf_file.write(spline.write_card(size, is_double))
+
+        if self.monitor_points or self.group:
             for monitor_point in self.monitor_points:
                 bdf_file.write(monitor_point.write_card(size, is_double))
+            for (unused_id, group) in sorted(self.group.items()):
+                bdf_file.write(group.write_card(size, is_double))
         self.zona.write_bdf(bdf_file, size=8, is_double=False)
 
     def _write_aero_control(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
@@ -1004,7 +1009,7 @@ class WriteMesh(BDFAttributes):
             self.dlinks or self.dequations or self.dtable is not None or
             self.dvgrids or self.dscreen or self.topvar or self.modtrak or
             # nx optimization
-            self.dvtrels or self.group or self.dmncon
+            self.dvtrels or self.dmncon
         )
         if is_optimization:
             bdf_file.write('$OPTIMIZATION\n')
@@ -1049,8 +1054,6 @@ class WriteMesh(BDFAttributes):
             # nx optimization
             for (unused_id, dvtrel) in sorted(self.dvtrels.items()):
                 bdf_file.write(dvtrel.write_card(size, is_double))
-            for (unused_id, group) in sorted(self.group.items()):
-                bdf_file.write(group.write_card(size, is_double))
             for (unused_id, dmncon) in sorted(self.dmncon.items()):
                 bdf_file.write(dmncon.write_card(size, is_double))
 

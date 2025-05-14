@@ -105,6 +105,7 @@ def remove_unused(bdf_filename: PathLike,
         'BCTSET', 'BFRIC',
 
         'TABRNDG', 'DTI', 'TABLEH1',
+        'GROUP',
     }
 
     # this are things that haven't been referenced yet

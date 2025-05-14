@@ -87,8 +87,6 @@ from pyNastran.bdf.cards.elements.shell import (
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
     CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
     SNORM,)
-from pyNastran.bdf.cards.elements.shell_nasa95 import (
-    CTRSHL, CQUAD1, PQUAD1)
 
 from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PTRSHL
 from .cards.elements.acoustic import (
@@ -582,7 +580,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             settings the logging object has
         mode : str; default='msc'
             the type of Nastran
-            valid_modes = {'msc', 'nx', 'mystran', 'nasa95', 'zona'}
+            valid_modes = {'msc', 'nx', 'mystran', 'zona'}
 
         """
         assert debug in [True, False, None], f'debug={debug!r}'
@@ -688,8 +686,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CTRIA3', 'CTRIA6', 'CTRIAR',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
             'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
-            'CTRSHL', 'CQUAD1',
             'SNORM',
+            # nastran95
+            #'CTRSHL', 'CQUAD1',
 
             'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', # plate strain
             'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8', # plate stress
@@ -725,8 +724,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PMIC',
 
             #  nastran 95
-            'PTRSHL', 'PQUAD1',
-            'PIHEX',  # PQUAD4
+            #'PTRSHL', 'PQUAD1',
+            #'PIHEX',  # PQUAD4
 
             # axixsymmetric - removed
             #'CCONEAX', # element
@@ -2461,9 +2460,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CBEND': (CBEND, add_methods._add_element_object),
             'PBEND': (PBEND, add_methods._add_property_object),
 
-            'CTRSHL': (CTRSHL, add_methods._add_element_object),  # nasa95
             'CTRIA3': (CTRIA3, add_methods._add_element_object),
-            'CQUAD1': (CQUAD1, add_methods._add_element_object),  # nasa95
             'CQUAD4': (CQUAD4, add_methods._add_element_object),
             'CQUAD': (CQUAD, add_methods._add_element_object),
             'CQUAD8': (CQUAD8, add_methods._add_element_object),
@@ -2481,8 +2478,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PCOMP': (PCOMP, add_methods._add_property_object),
             'PCOMPG': (PCOMPG, add_methods._add_property_object),
             'PSHELL': (PSHELL, add_methods._add_property_object),
-            'PTRSHL': (PTRSHL, add_methods._add_property_object),
-            'PQUAD1': (PQUAD1, add_methods._add_property_object),
+            #'PTRSHL': (PTRSHL, add_methods._add_property_object),  # removed
+            #'PQUAD1': (PQUAD1, add_methods._add_property_object),  # removed
             'PLPLANE': (PLPLANE, add_methods._add_property_object),
             'CPLSTN3': (CPLSTN3, add_methods._add_element_object),
             'CPLSTN4': (CPLSTN4, add_methods._add_element_object),
@@ -2498,11 +2495,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PSHEAR': (PSHEAR, add_methods._add_property_object),
 
             # nastran95
-            'CIHEX1': (CIHEX1, add_methods._add_element_object),
-            'CIHEX2': (CIHEX2, add_methods._add_element_object),
-            'CHEXA1': (CHEXA1, add_methods._add_element_object),
-            'CHEXA2': (CHEXA2, add_methods._add_element_object),
-            'PIHEX': (PIHEX, add_methods._add_property_object),
+            # 'CIHEX1': (CIHEX1, add_methods._add_element_object),
+            # 'CIHEX2': (CIHEX2, add_methods._add_element_object),
+            # 'CHEXA1': (CHEXA1, add_methods._add_element_object),
+            # 'CHEXA2': (CHEXA2, add_methods._add_element_object),
+            # 'PIHEX': (PIHEX, add_methods._add_property_object),
 
             # msc/nx
             'PSOLID': (PSOLID, add_methods._add_property_object),
@@ -2623,8 +2620,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## parametric
             'GMSPC': (GMSPC, add_methods._add_constraint_spc_object),
 
-            'SESUP': (SESUP, add_methods._add_sesuport_object), # pseudo-constraint
-            'SUPORT': (SUPORT, add_methods._add_suport_object), # pseudo-constraint
+            'SESUP': (SESUP, add_methods._add_sesuport_object),  # pseudo-constraint
+            'SUPORT': (SUPORT, add_methods._add_suport_object),  # pseudo-constraint
             'SUPORT1': (SUPORT1, add_methods._add_suport1_object),  # pseudo-constraint
 
             'FORCE': (FORCE, add_methods._add_load_object),
@@ -2664,8 +2661,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'TLOAD2': (TLOAD2, add_methods._add_dload_entry),
             'RLOAD1': (RLOAD1, add_methods._add_dload_entry),
             'RLOAD2': (RLOAD2, add_methods._add_dload_entry),
-            'RANDPS': (RANDPS, add_methods._add_dload_entry), # random
-            'RANDT1': (RANDT1, add_methods._add_dload_entry), # random
+            'RANDPS': (RANDPS, add_methods._add_dload_entry),  # random
+            'RANDT1': (RANDT1, add_methods._add_dload_entry),  # random
             'QVECT': (QVECT, add_methods._add_dload_entry),
 
             'FREQ': (FREQ, add_methods._add_freq_object),
@@ -2763,21 +2760,21 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'DSCREEN': (DSCREEN, add_methods._add_dscreen_object),
 
             'DTABLE': (DTABLE, add_methods._add_dtable_object),
-            'DRESP1': (DRESP1, add_methods._add_dresp_object), # dresps
+            'DRESP1': (DRESP1, add_methods._add_dresp_object),  # dresps
             'DRESP2': (DRESP2, add_methods._add_dresp_object),
             'DRESP3': (DRESP3, add_methods._add_dresp_object),
-            'DVCREL1': (DVCREL1, add_methods._add_dvcrel_object), # dvcrels
+            'DVCREL1': (DVCREL1, add_methods._add_dvcrel_object),  # dvcrels
             'DVCREL2': (DVCREL2, add_methods._add_dvcrel_object),
-            'DVPREL1': (DVPREL1, add_methods._add_dvprel_object), # dvprels
+            'DVPREL1': (DVPREL1, add_methods._add_dvprel_object),  # dvprels
             'DVPREL2': (DVPREL2, add_methods._add_dvprel_object),
-            'DVMREL1': (DVMREL1, add_methods._add_dvmrel_object), # ddvmrels
+            'DVMREL1': (DVMREL1, add_methods._add_dvmrel_object),  # ddvmrels
             'DVMREL2': (DVMREL2, add_methods._add_dvmrel_object),
-            'DVGRID': (DVGRID, add_methods._add_dvgrid_object), # dvgrids
+            'DVGRID': (DVGRID, add_methods._add_dvgrid_object),  # dvgrids
 
             # nx_opt
-            'DVTREL1': (DVTREL1, add_methods._add_dvtrel_object), # dvtrels
-            'GROUP': (GROUP, add_methods._add_group_object), # group
-            'DMNCON': (DMNCON, add_methods._add_dmncon_object), # dmncon
+            'DVTREL1': (DVTREL1, add_methods._add_dvtrel_object),  # dvtrels
+            'GROUP': (GROUP, add_methods._add_group_object),  # group
+            'DMNCON': (DMNCON, add_methods._add_dmncon_object),  # dmncon
 
             # tables
             'TABLES1': (TABLES1, add_methods._add_table_object),
@@ -4655,13 +4652,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         card_parser['PARAM'] = (PARAM_MYSTRAN, self._add_methods._add_param_object)
         self.add_param = self._add_param_mystran
 
-    def _update_for_nasa95(self) -> None:
-        """updates for nasa95"""
-        CARD_MAP['PARAM'] = PARAM_NASA95
-        card_parser = self._card_parser
-        card_parser['PARAM'] = (PARAM_NASA95, self._add_methods._add_param_object)
-        self.add_param = self._add_param_nasa95
-
     def _check_pynastran_header(self, lines: list[str],
                                 check_header: bool=True) -> None:
         """updates the $pyNastran: key=value variables"""
@@ -4677,7 +4667,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # key/value are lowercase
             if key == 'version':
-                assert value.lower() in {'msc', 'nx', 'optistruct', 'zona', 'nasa95', 'mystran'}, f'version={value!r} is not supported'
+                assert value.lower() in {'msc', 'nx', 'optistruct', 'zona', 'mystran'}, f'version={value!r} is not supported'
                 self.nastran_format = value
             elif key == 'encoding':
                 self._encoding = value
@@ -4998,7 +4988,7 @@ class BDF(BDF_):
             settings the logging object has
         mode : str; default='msc'
             the type of Nastran
-            valid_modes = {'msc', 'nx', 'nasa95', 'mystran', 'zona'}
+            valid_modes = {'msc', 'nx', 'mystran', 'zona'}
 
         """
         BDF_.__init__(self, debug=debug, log=log, mode=mode)
@@ -5295,12 +5285,11 @@ def map_version(fem: BDF, version: str) -> None:
         'nx': fem.set_as_nx,
         'optistruct': fem.set_as_optistruct,
         'mystran': fem.set_as_mystran,
-        'nasa95': fem.set_as_nasa95,
         'zona': fem.set_as_zona,
     }
     try:
         func = version_map[version]
-    except KeyError: # msc, nx, zona, nasa95, mystran
+    except KeyError: # msc, nx, zona, mystran
         fmts = ', '.join(version_map)
         msg = f'mode={version!r} is not supported; modes=[{fmts}]'
         raise RuntimeError(msg)
@@ -5311,8 +5300,6 @@ def map_update(fem: BDF, version: str) -> None:
         #self.zona.update_for_zona()
     #elif self.nastran_format == 'mystran':
         #self._update_for_mystran()
-    #elif self.nastran_format == 'nasa95':
-        #self._update_for_nasa95()
     #else:
         # msc / nx / optistruct
         #self._update_for_nastran()
@@ -5322,13 +5309,12 @@ def map_update(fem: BDF, version: str) -> None:
         'nx': fem._update_for_nastran,
         'optistruct': fem._update_for_optistruct,
         'mystran': fem._update_for_mystran,
-        'nasa95': fem._update_for_nasa95,
         'zona': fem.zona.update_for_zona,
     }
     try:
         func = version_map[version]
     except KeyError:
-        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zona, nasa95, mystran]'
+        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zona, mystran]'
         raise RuntimeError(msg)
     func()
 
@@ -5337,14 +5323,12 @@ def map_update(fem: BDF, version: str) -> None:
     #self.set_as_msc()
 #elif mode == 'nx':
     #self.set_as_nx()
-#elif mode == 'nasa95':
-    #self.set_as_nasa95()
 #elif mode == 'mystran':
     #self.set_as_mystran()
 #elif mode == 'zona':
     #self.set_as_zona()
 #else:  # pragma: no cover
-    #msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, nasa95, mystran]'
+    #msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, mystran]'
     #raise NotImplementedError(msg)
 
 

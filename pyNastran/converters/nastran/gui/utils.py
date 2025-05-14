@@ -7,6 +7,7 @@ from pyNastran.bdf.cards.elements.shell import ShellElement
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, CTRIA3, CTRIA6, CTRIAR, CQUAD4, CQUAD8, CQUADR, CQUAD
 
+
 def get_shell_material_coord(element: CTRIA3 | CTRIA6 | CTRIAR |
                                       CQUAD4 | CQUAD8 | CQUADR | CQUAD) -> tuple[int, float]:
     """
@@ -18,6 +19,7 @@ def get_shell_material_coord(element: CTRIA3 | CTRIA6 | CTRIAR |
         return -1, element.theta_mcid
     else:
         return element.theta_mcid, np.nan
+
 
 def get_nastran_gui_layer_word(i: int, ilayer: int, is_pshell_pcomp: bool) -> str:
     """gets the PSHELL/PCOMP layer word"""
@@ -38,6 +40,7 @@ def get_nastran_gui_layer_word(i: int, ilayer: int, is_pshell_pcomp: bool) -> st
         else:
             word += f'PCOMP: ilayer={ilayer:d}'
     return word
+
 
 def check_for_missing_control_surface_boxes(name: str, cs_box_ids: list[int],
                                             box_id_to_caero_element_map: dict[int, int],
@@ -64,6 +67,7 @@ def check_for_missing_control_surface_boxes(name: str, cs_box_ids: list[int],
         out_msg = store_error(log, store_msg, msg.rstrip())
     return boxes_to_show, out_msg
 
+
 def store_error(log, store_msg: bool, msg: str) -> str:
     out_msg = ''
     if store_msg:
@@ -72,6 +76,7 @@ def store_error(log, store_msg: bool, msg: str) -> str:
     else:
         log.warning(msg)
     return out_msg
+
 
 def store_warning(log, store_msg: bool, msg: str) -> str:
     out_msg = ''
@@ -88,6 +93,7 @@ def make_nid_map(nid_map: dict[int, int], nids: list[int]) -> dict[int, int]:
     for i, nid in enumerate(nids):
         nid_map[nid] = i
     return nid_map
+
 
 def get_elements_nelements_unvectorized(model: BDF) -> tuple[Any, int, list[dict[int, Any]]]:
     nelements = len(model.elements)
@@ -136,10 +142,10 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
         'CQUAD': 9, 'CQUADX': 9,
         'CPLSTN3': 3, 'CPLSTN4': 4, 'CPLSTN6': 6, 'CPLSTN8': 8,
         'CPLSTS3': 3, 'CPLSTS4': 4, 'CPLSTS6': 6, 'CPLSTS8': 8,
-
-        # nastran95
-        'CQUAD1': 4,
-        'CTRSHL': 6,
+        #
+        # # nastran95
+        # 'CQUAD1': 4,
+        # 'CTRSHL': 6,
     }
     for eid, element in sorted(model.elements.items()):
         etype = element.type
@@ -198,7 +204,7 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
         elif isinstance(element, ShellElement):
             if etype not in etype_to_nnodes_map:
                 log.warning(f'unexpected element ({etype}) in etype_to_nnodes_map\n{str(element)}')
-            ieid = None
+            #ieid = None
             element_dimi = 2
             #assert element.nodes_ref is not None, element.nodes_ref
             try:
@@ -231,13 +237,13 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
                     z0 = prop.z1
                 elif ptype in {'PCOMP', 'PCOMPG'}:
                     z0 = prop.z0
-                elif ptype in {'PLPLANE', 'PTRSHL', 'PQUAD1'}: # ? PTRSHL, PQUAD1
+                elif ptype in {'PLPLANE'}:  #, 'PTRSHL', 'PQUAD1'}:  # ? PTRSHL, PQUAD1
                     z0 = 0.
                 elif ptype in {'PSHEAR', 'PSOLID', 'PLSOLID', 'PPLANE', 'PMIC'}:
                     z0 = np.nan
                 else:
                     # PCOMPG
-                    raise NotImplementedError(f'prop={prop}\n ptype={ptype!r}' )
+                    raise NotImplementedError(f'prop={prop}\n ptype={ptype!r}')
 
             if z0 is None:
                 if etype in {'CTRIA3', 'CTRIAR'}:
@@ -283,9 +289,9 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
                     #node_ids = self.nodes[4:]
                     nnodesi = 4
                     z0 = np.nan
-                elif etype in 'CQUAD1':
-                    nnodesi = 4
-                    z0 = np.nan
+                # elif etype in 'CQUAD1':
+                #     nnodesi = 4
+                #     z0 = np.nan
                 elif etype == 'CQUADX8':
                     #node_ids = self.nodes[4:]
                     nnodesi = 8
@@ -330,6 +336,7 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
         #ielement += 1
     return normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array
 
+
 def build_map_centroidal_result(model: BDF, nid_map: dict[int, int],
                                 stop_on_failure: bool=True) -> None:
     """
@@ -352,6 +359,7 @@ def build_map_centroidal_result(model: BDF, nid_map: dict[int, int],
             raise
         raise
 
+
 def _build_map_centroidal_result(model: BDF, nid_map: dict[int, int]) -> None:
     """
     Sets up map_centroidal_result.  Used for:
@@ -372,28 +380,28 @@ def _build_map_centroidal_result(model: BDF, nid_map: dict[int, int]) -> None:
         'CGAP', 'CFAST', 'CVISC', 'CBUSH', 'CBUSH1D', 'CBUSH2D',
         'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',
         'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',
-        'CTRSHL',
+        #'CTRSHL',
     }
 
     springs_dampers = {'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4'}
     nnodes_map = {
-        'CTRIA6' : (3, 6),
-        'CQUAD8' : (4, 8),
-        'CQUAD' : (9, 9),
-        'CHEXA' : (8, 20),
-        'CTETRA' : (4, 10),
-        'CPENTA' : (6, 15),
-        'CPYRAM' : (5, 13),
-        'CQUADX' : (4, 9),
-        'CTRIAX' : (3, 6),
-        'CQUADX8' : (4, 8),
-        'CTRIAX6' : (3, 6),
+        'CTRIA6': (3, 6),
+        'CQUAD8': (4, 8),
+        'CQUAD': (9, 9),
+        'CHEXA': (8, 20),
+        'CTETRA': (4, 10),
+        'CPENTA': (6, 15),
+        'CPYRAM': (5, 13),
+        'CQUADX': (4, 9),
+        'CTRIAX': (3, 6),
+        'CQUADX8': (4, 8),
+        'CTRIAX6': (3, 6),
         # nastran 95
-        'CQUAD1' : (4, 4),
-        'CTRSHL' : (6, 6),
-        'CHEXA1' : (8, 8),
-        'CHEXA20' : (20, 20),
+        # 'CQUAD1': (4, 4),
+        # 'CTRSHL': (6, 6),
+        # 'CHEXA1': (8, 8),
+        # 'CHEXA20': (20, 20),
     }
     skip_cards = ['CAABSF', 'GENEL']
     #['CTRIA6', 'CQUAD8', 'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM', 'CQUADX', 'CTRIAX']
@@ -446,8 +454,8 @@ def _build_map_centroidal_result(model: BDF, nid_map: dict[int, int]) -> None:
     def map_centroidal_result(centroidal_data):
         """maps centroidal data onto nodal data"""
         nodal_data = np.zeros(nnodes, dtype=centroidal_data.dtype)
-        for unused_eid, datai, node_ids in zip(eids, centroidal_data, mapped_node_ids):
-            for nid in node_ids:
+        for unused_eid, datai, node_idsi in zip(eids, centroidal_data, mapped_node_ids):
+            for nid in node_idsi:
                 nodal_data[nid] += datai
         return nodal_data * inv_node_count
     model.map_centroidal_result = map_centroidal_result

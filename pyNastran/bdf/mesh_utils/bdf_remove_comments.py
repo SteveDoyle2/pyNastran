@@ -29,7 +29,7 @@ SKIP_ATTRS = {
     'allow_overwrites_set', 'card_count', 'has_enddata',
     'cards_to_read', 'case_control_deck', 'case_control_lines',
     'executive_control_lines', 'debug', 'is_bdf_vectorized',
-    'is_msc', 'is_nx', 'is_optistruct', 'is_nasa95',
+    'is_msc', 'is_nx', 'is_optistruct',
     'is_zona', 'is_mystran',
     'is_superelements',
     'is_strict_card_parser', 'nid_map',

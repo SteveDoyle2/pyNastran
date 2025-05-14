@@ -367,14 +367,12 @@ class OP2(OP2_Scalar, OP2Writer):
             # self.set_as_nx()
         # elif mode == 'autodesk':
             # self.set_as_autodesk()
-        if mode == 'nasa95':
-            self.set_as_nasa95()
         # else:
-            # raise NotImplementedError(f'mode={mode!r} must be msc, nx, autodesk, or nasa95.')
+            # raise NotImplementedError(f'mode={mode!r} must be msc, nx or autodesk.')
 
     def set_mode(self, mode: str) -> None:
         """
-        Sets the mode as 'msc', 'nx', 'autodesk', 'nasa95', or 'optistruct'
+        Sets the mode as 'msc', 'nx', 'autodesk', or 'optistruct'
         """
         if mode.lower() == 'msc':
             self.set_as_msc()
@@ -382,13 +380,11 @@ class OP2(OP2_Scalar, OP2Writer):
             self.set_as_nx()
         elif mode.lower() == 'autodesk':
             self.set_as_autodesk()
-        elif mode.lower() == 'nasa95':
-            self.set_as_nasa95()
-        elif mode.lower() == 'optistruct': # radioss,
+        elif mode.lower() == 'optistruct':  # radioss,
             self.set_as_optistruct()
         else:
             raise RuntimeError(f'mode={mode!r} and must be in [msc, nx, '
-                               f'autodesk, nasa95, optistruct]')
+                               f'autodesk, optistruct]')
 
     def to_nx(self, msg='') -> None:
         if self.is_msc:
@@ -1565,7 +1561,7 @@ def read_op2(op2_filename: Optional[PathLike]=None,
         (.. seealso:: import logging)
     mode : str; default=None -> 'msc'
         the version of the Nastran you're using
-        {nx, msc, autodesk, optistruct, nasa95}
+        {nx, msc, autodesk, optistruct}
     encoding : str
         the unicode encoding (default=None; system default)
 

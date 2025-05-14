@@ -89,8 +89,6 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import BDYOR
     #AXIF, RINGFL,
     #AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX)
 #from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1, FORCEAX, PRESAX, TEMPAX
-#from pyNastran.bdf.cards.elements.shell_nasa95 import (
-    #CTRSHL, CQUAD1, PQUAD1)
 
 #from .cards.properties.shell import PTRSHL
 #from .cards.elements.acoustic import (
@@ -538,7 +536,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             settings the logging object has
         mode : str; default='msc'
             the type of Nastran
-            valid_modes = {'msc', 'nx', 'mystran', 'nasa95', 'zona'}
+            valid_modes = {'msc', 'nx', 'mystran', 'zona'}
 
         """
         self.log = get_logger2(log=log, debug=debug)
@@ -4377,13 +4375,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         card_parser['PARAM'] = (PARAM_MYSTRAN, self._add_methods._add_param_object)
         self.add_param = self._add_param_mystran
 
-    def _update_for_nasa95(self):
-        """updates for nasa95"""
-        CARD_MAP['PARAM'] = PARAM_NASA95
-        card_parser = self._card_parser
-        card_parser['PARAM'] = (PARAM_NASA95, self._add_methods._add_param_object)
-        self.add_param = self._add_param_nasa95
-
     def _check_pynastran_header(self, lines: list[str],
                                 check_header: bool=True) -> None:
         """updates the $pyNastran: key=value variables"""
@@ -4399,7 +4390,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # key/value are lowercase
             if key == 'version':
-                assert value.lower() in ['msc', 'nx', 'optistruct', 'zona', 'nasa95', 'mystran'], f'version={value!r} is not supported'
+                assert value.lower() in ['msc', 'nx', 'optistruct', 'zona', 'mystran'], f'version={value!r} is not supported'
                 self.nastran_format = value
             elif key == 'encoding':
                 self._encoding = value
@@ -5029,12 +5020,11 @@ def map_version(fem: BDF, version: str):
         'nx': fem.set_as_nx,
         'optistruct': fem.set_as_optistruct,
         'mystran': fem.set_as_mystran,
-        'nasa95': fem.set_as_nasa95,
         'zona': fem.set_as_zona,
     }
     try:
         func = version_map[version]
-    except KeyError: # msc, nx, zona, nasa95, mystran
+    except KeyError: # msc, nx, zona, mystran
         fmts = ', '.join(version_map)
         msg = f'mode={version!r} is not supported; modes=[{fmts}]'
         raise RuntimeError(msg)
@@ -5045,8 +5035,6 @@ def map_update(fem: BDF, version: str):
         #self.zona.update_for_zona()
     #elif self.nastran_format == 'mystran':
         #self._update_for_mystran()
-    #elif self.nastran_format == 'nasa95':
-        #self._update_for_nasa95()
     #else:
         # msc / nx / optistruct
         #self._update_for_nastran()
@@ -5056,13 +5044,12 @@ def map_update(fem: BDF, version: str):
         'nx': fem._update_for_nastran,
         'optistruct': fem._update_for_optistruct,
         'mystran': fem._update_for_mystran,
-        'nasa95': fem._update_for_nasa95,
         'zona': fem.zona.update_for_zona,
     }
     try:
         func = version_map[version]
     except KeyError:
-        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zona, nasa95, mystran]'
+        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zona, mystran]'
         raise RuntimeError(msg)
     func()
 
@@ -5071,14 +5058,12 @@ def map_update(fem: BDF, version: str):
     #self.set_as_msc()
 #elif mode == 'nx':
     #self.set_as_nx()
-#elif mode == 'nasa95':
-    #self.set_as_nasa95()
 #elif mode == 'mystran':
     #self.set_as_mystran()
 #elif mode == 'zona':
     #self.set_as_zona()
 #else:  # pragma: no cover
-    #msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, nasa95, mystran]'
+    #msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, mystran]'
     #raise NotImplementedError(msg)
 
 

@@ -602,6 +602,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_paths_sat(self):
         """runs through the various satellite includes on windows and linux"""
+        log = SimpleLogger(level='warning')
         sat_path = (MODEL_PATH / 'Satellite_V02').absolute()
         paths = {
             'Satellite_V02_base': sat_path,
@@ -628,7 +629,7 @@ class TestReadWrite(unittest.TestCase):
         for pth in pths:
             print('-'*60)
             pth2 = get_include_filename(
-                [pth], include_dirs='', replace_includes={},
+                log, [pth], include_dirs='', replace_includes={},
                 is_windows=True, debug=False)
             #if not os.path.exists(pth2):
                 #msg = 'Invalid Path\nold:  %r\nnew:  %r' % (pth, pth2)
@@ -638,7 +639,7 @@ class TestReadWrite(unittest.TestCase):
 
             #print('-'*60)
             pth2 = get_include_filename(
-                [pth], include_dirs='', replace_includes={},
+                log, [pth], include_dirs='', replace_includes={},
                 is_windows=False, debug=False)
             #print('pth2 =', pth2, '\n')
         #filename_tokens = _split_to_tokens(r'\\nas3\dir1\dir2', is_windows=True)
@@ -687,6 +688,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_two_envs(self):
         """fails for two environment variables"""
+        log = SimpleLogger(level='warning')
         sat_path = (MODEL_PATH / 'Satellite_V02').absolute()
         paths = {
             'Satellite_V02_base': sat_path,
@@ -695,17 +697,17 @@ class TestReadWrite(unittest.TestCase):
             #'Satellite_V02_INCLUDE': sat_path / 'INCLUDE',
         }
         set_path_keys(paths)
-
         pth = "INCLUDE 'Satellite_V02_base:Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"
         with self.assertRaises(SyntaxError):
-            pth2 = get_include_filename([pth], include_dirs=r'C:\dir\dir2', replace_includes={}, is_windows=True)
+            pth2 = get_include_filename(log, [pth], include_dirs=r'C:\dir\dir2', replace_includes={}, is_windows=True)
         with self.assertRaises(SyntaxError):
-            pth2 = get_include_filename([pth], include_dirs=r'C:\dir\dir2', replace_includes={}, is_windows=False)
+            pth2 = get_include_filename(log, [pth], include_dirs=r'C:\dir\dir2', replace_includes={}, is_windows=False)
 
         #print('Path:\nold:  %r\nnew:  %r' % (pth, pth2))
 
     def test_dollar_envs(self):
         """tests sane environment variables"""
+        log = None
         sat_path = (MODEL_PATH / 'Satellite_V02').absolute()
         paths = {
             'Satellite_V02_base': sat_path,
@@ -717,12 +719,12 @@ class TestReadWrite(unittest.TestCase):
 
         pth = "INCLUDE '%Satellite_V02_bddm%:Satellite_V02_Materiaux.blk'"
         pth2 = get_include_filename(
-            [pth], include_dirs='', replace_includes={},
+            log, [pth], include_dirs='', replace_includes={},
             is_windows=True, debug=False)
         #print(pth2)
 
         #pth = "INCLUDE '$Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"
-        #pth2 = get_include_filename([pth], include_dir='', is_windows=False)
+        #pth2 = get_include_filename(log, [pth], include_dir='', is_windows=False)
         #print(pth2)
 
 def set_path_keys(paths: dict[str, Path]) -> None:

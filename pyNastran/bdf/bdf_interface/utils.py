@@ -126,6 +126,59 @@ def _to_fields_amlreg(card_lines: list[str]) -> list[str]:
     fields += _monpnt_line2_to_fields(line2)
     return fields
 
+def _to_fields_group(card_lines: list[str]) -> list[str]:
+    """
+    splits an GROUP
+
+
+    +-------+------+------------------------------------+
+    | GROUP | 10   | Assembly AA4                       |
+    +-------+------+------------------------------------+
+    |       | META | 100 RPM                            |
+    +-------+------+------------------------------------+
+    |       | META | Optionally continue the meta data  |
+    +-------+------+-----+------+-----+-----+---+---+---+
+    |       | GRID |  1  |  2   |  3  |  4  | 5 | 6 | 7 |
+    +-------+------+-----+------+-----+-----+---+---+---+
+    |       |      |  8  |      |     |     |   |   |   |
+    +-------+------+-----+------+-----+-----+---+---+---+
+    |       | GRID | 10  | THRU | 20  |     |   |   |   |
+    +-------+------+-----+------+-----+-----+---+---+---+
+    |       | GRID | 100 | THRU | 200 |     |   |   |   |
+    +-------+------+-----+------+-----+-----+---+---+---+
+    |       | GRID | 341 | THRU | 360 |  BY | 2 |   |   |
+    +-------+------+-----+------+-----+-----+---+---+---+
+    |       | ELEM | 30  | THRU | 40  |     |   |   |   |
+    +-------+------+-----+------+-----+-----+---+---+---+
+    |       | PROP | ALL |      |     |     |   |   |   |
+        +-------+------+-----+------+-----+-----+---+---+---+
+    """
+    #for iline, line in enumerate(card_lines):
+        #print(f'GROUP {iline}: {line!r}')
+
+    fields = _monpnt_line1_fields(card_lines[0])
+    for j, line in enumerate(card_lines[1:]):
+        line_strip = line.lstrip()
+        line = line.rstrip()
+        if line_strip.startswith('META'):
+            fieldsi = [
+                line[8:16], line[16:24], line[24:32], line[32:40], line[40:48],
+                line[48:56], line[56:64], line[64:72],
+            ]
+        elif line_strip.startswith(('GRID', 'ELEM', 'PROP')):
+            fieldsi = [
+                line[8:16], line[16:24], line[24:32], line[32:40], line[40:48],
+                line[48:56], line[56:64], line[64:72],
+            ]
+            # fieldsi = _expand_2_values_name(line)
+            # #print(fieldsi)
+        else:
+            raise NotImplementedError(line)
+        #print(f'GROUP fields[{j}]: fields={fieldsi}')
+        fields.extend(fieldsi)
+    #print(f'GROUP: fields={fields}')
+    return fields
+
 def _expand_2_values_name(line1: str) -> list[str]:
     """helper for AMLREG, MICPNT"""
     line1 = line1.rstrip()
@@ -157,9 +210,9 @@ def _to_fields_set1(card_lines: list[str], card_name: str) -> list[str]:
     for iline, line in enumerate(card_lines):
         if '\t' in line:
             line = expand_tabs(line)
-        print(f'line = {line}')
+        #print(f'line = {line}')
         line = line.rstrip('\n\r,')
-        print(f'line2 = {line}')
+        #print(f'line2 = {line}')
         if '*' in line:  # large field
             if ',' in line:  # csv
                 new_fields = line.split(',') #[:5]
@@ -280,6 +333,8 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
         return _to_fields_mntpnt1(card_lines)
     elif card_name in ['MONPNT3', 'MONSUMT']:
         return _to_fields_mntpnt3(card_lines)
+    elif card_name == 'GROUP':
+        return _to_fields_group(card_lines)
     elif card_name == 'AMLREG':
         return _to_fields_amlreg(card_lines)
     elif card_name == 'MICPNT':

@@ -29,8 +29,10 @@ from pyNastran.bdf.cards.base_card import BaseCard
     #break_word_by_trailing_parentheses_integer_ab)
     #collapse_thru_by_float, condense, build_thru_float)
 from pyNastran.bdf.cards.optimization import OptConstraint, DVXREL1, get_dvxrel1_coeffs
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, integer_or_string, integer_string_or_blank,
+    integer, integer_or_blank,  # integer_or_string,
+    integer_string_or_blank,
     double, double_or_blank, string, string_or_blank,
     #integer_double_or_blank, integer_double_string_or_blank,
     #double_string_or_blank, interpret_value, check_string, loose_string,
@@ -43,8 +45,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 #TODO: replace this with formula
-valid_pcomp_codes = [3, #3-z0
-                     #'Z0',
+valid_pcomp_codes = [3,  #3-z0
+                     # 'Z0',
                      # 13-t1, 14-theta1, 17-t2, 18-theta2
                      13, 14, 17, 18,
                      23, 24, 27, 28,
@@ -52,6 +54,7 @@ valid_pcomp_codes = [3, #3-z0
                      43, 44, 47, 48,
                      53, 54, 57, 58,
                      63, 64, 67, 68]
+
 
 def validate_dvcrel(validate, element_type, cp_name):
     """
@@ -111,6 +114,7 @@ def _check_dvcrel_options(cp_name, element_type, options):
             '%r is an invalid option for %s\n'
             'valid: [%s]' % (cp_name, element_type, ', '.join(soptions)))
         raise ValueError(msg)
+
 
 class DMNCON(OptConstraint):
     """
@@ -354,6 +358,7 @@ class DMNCON(OptConstraint):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+
 class GROUP(OptConstraint):
     """
     +-------+-------+-----------------------------------+
@@ -386,7 +391,10 @@ class GROUP(OptConstraint):
         #return DSCREEN(rtype, trs=-0.5, nstr=20, comment='')
 
     def __init__(self, group_id: int,
-                 nodes, elements, properties, comment=''):
+                 nodes, elements, properties,
+                 description: str='',
+                 meta: list[str] | str='',
+                 comment: str=''):
         """
         Creates a GROUP object
 
@@ -394,7 +402,7 @@ class GROUP(OptConstraint):
         ----------
         group_id : int
             Group identification number
-        meta : list[str]
+        meta : str | list[str]
             Optional character data to store with the group definition.
             META can be continued on multiple continuation lines.
             The META keyword in the 2nd field must appear on every line
@@ -409,18 +417,45 @@ class GROUP(OptConstraint):
         comment : str; default=''
             a comment for the card
 
+        +-------+------+------------------------------------+
+        | GROUP | 10   | Assembly AA4                       |
+        +-------+------+------------------------------------+
+        |       | META | 100 RPM                            |
+        +-------+------+------------------------------------+
+        |       | META | Optionally continue the meta data  |
+        +-------+------+-----+------+-----+-----+---+---+---+
+        |       | GRID |  1  |  2   |  3  |  4  | 5 | 6 | 7 |
+        +-------+------+-----+------+-----+-----+---+---+---+
+        |       |      |  8  |      |     |     |   |   |   |
+        +-------+------+-----+------+-----+-----+---+---+---+
+        |       | GRID | 10  | THRU | 20  |     |   |   |   |
+        +-------+------+-----+------+-----+-----+---+---+---+
+        |       | GRID | 100 | THRU | 200 |     |   |   |   |
+        +-------+------+-----+------+-----+-----+---+---+---+
+        |       | GRID | 341 | THRU | 360 |  BY | 2 |   |   |
+        +-------+------+-----+------+-----+-----+---+---+---+
+        |       | ELEM | 30  | THRU | 40  |     |   |   |   |
+        +-------+------+-----+------+-----+-----+---+---+---+
+        |       | PROP | ALL |      |     |     |   |   |   |
+        +-------+------+-----+------+-----+-----+---+---+---+
         """
         OptConstraint.__init__(self)
         if comment:
             self.comment = comment
+        if isinstance(meta, str):
+            meta = [meta]
+        else:
+            assert isinstance(meta, list), meta
 
+        self.description = description
+        self.meta = meta
         self.group_id = group_id
         self.nodes = nodes
         self.elements = elements
         self.properties = properties
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a GROUP card from ``BDF.add_card(...)``
 
@@ -435,13 +470,25 @@ class GROUP(OptConstraint):
         group_id = integer(card, 1, 'group_id')
         #assert len(card) <= 4, f'len(GROUP card) = {len(card):d}\ncard={card}'
         i = 9
+        description = ''
+        meta = []
         nodes = []
         elements = []
         properties = []
         nfields = len(card)
         while i < nfields:
             name = string_or_blank(card, i, 'name', default=None)
-            if name in ['GRID', 'ELEM', 'PROP']:
+            if name == 'META':
+                #print(card)
+                #print('*', card[i:i+6])
+                #label_fields = [labeli for labeli in card[2:8] if labeli is not None]
+                meta_fields = [labeli for labeli in card[i:i+6] if labeli is not None]
+                meta = ''.join(meta_fields).strip()
+                assert len(meta) <= 56, meta
+                i += 8
+                continue
+
+            if name in ('GRID', 'ELEM', 'PROP'):
                 j = 1
                 #i9 = i + 9
                 values = []
@@ -472,49 +519,92 @@ class GROUP(OptConstraint):
                 properties.append(values)
             else:
                 raise NotImplementedError(name)
-        return GROUP(group_id, nodes, elements, properties, comment=comment)
+        return GROUP(group_id, nodes, elements, properties,
+                     description=description, meta=meta, comment=comment)
 
     def raw_fields(self):
         list_fields = ['GROUP', self.group_id]
         return list_fields
 
-
     def _write_groupi(self, name: str, elem: list[int], list_fields):
-        elem0 = elem[:7]
-        list_fields.extend([name] + elem0)
-        i = len(elem0)
-        #print(name, i)
-        while i < len(elem):
-            list_fields.extend([None] + elem[i:i+7])
-            i += 7
-            #if i > 20:
-                #break
-        nleftover = i % 7
-        if nleftover != 0:
-            n_none = 7 - nleftover
-            #print(f' adding {n_none} Nones')
-            list_fields.extend([None] * n_none)
+        if isinstance(elem, list):
+            elem0 = elem[:7]
+            list_fields.extend([name] + elem0)
+            i = len(elem0)
+            #print(name, i)
+            while i < len(elem):
+                list_fields.extend([None] + elem[i:i+7])
+                i += 7
+            nleftover = i % 7
+            if nleftover != 0:
+                n_none = 7 - nleftover
+                #print(f' adding {n_none} Nones')
+                list_fields.extend([None] * n_none)
+        else:
+            raise TypeError(f'elem={elem!r} type={type(elem)}')
 
     def repr_fields(self):
         list_fields = ['GROUP', self.group_id, None, None, None, None,
                        None, None, None]
+        assert len(self.description) < 64, self.description
+        assert self.group_id < 100_000_000, self.group_id
 
-        for node in self.nodes:
-            self._write_groupi('GRID', node, list_fields)
-        for elem in self.elements:
-            self._write_groupi('ELEM', elem, list_fields)
-        for prop in self.properties:
-            self._write_groupi('PROP', prop, list_fields)
+        fit_to_56_width(list_fields, 2, self.description)
+        # line1 = self.comment + f'GROUP   {self.group_id:8d}{self.description:s}\n'
+
+        if len(self.meta):
+            assert isinstance(self.meta, list), self.meta
+            for meta in self.meta:
+                if meta.strip() == '':
+                    continue
+                i0 = len(list_fields) + 1  # +1 for META
+                list_fields += ['META', None, None, None, None, None, None, None]
+                fit_to_56_width(list_fields, i0, meta)
+
+        if len(self.nodes):
+            if isinstance(self.nodes[0], list):
+                for node in self.nodes:
+                    self._write_groupi('GRID', node, list_fields)
+            else:
+                self._write_groupi('GRID', self.nodes, list_fields)
+
+        if len(self.elements):
+            if isinstance(self.elements[0], list):
+                for elem in self.elements:
+                    self._write_groupi('ELEM', elem, list_fields)
+            else:
+                self._write_groupi('ELEM', self.elements, list_fields)
+        if len(self.properties):
+            if isinstance(self.properties[0], list):
+                for prop in self.properties:
+                    self._write_groupi('PROP', prop, list_fields)
+            else:
+                self._write_groupi('PROP', self.properties, list_fields)
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        if is_double:
-            return self.comment + print_card_double(card)
-        return self.comment + print_card_16(card)
+        #if size == 8:
+        return self.comment + print_card_8(card)
+        # if is_double:
+        #     return self.comment + print_card_double(card)
+        # return self.comment + print_card_16(card)
 
+
+def fit_to_56_width(list_fields: list, i0: int, word: str):
+    """make the output look nice"""
+    sdescription = word.strip()
+    if len(sdescription) < 56:
+        sdescription = f'{word:>56s}'
+    #print(f'sdescription = {sdescription!r}')
+    for i in range(7):
+        # 1+7
+        i1 = i * 8
+        i2 = (i + 1) * 8
+        chars = sdescription[i1:i2]
+        #print(f'{i} chars={chars!r}')
+        list_fields[i+i0] = chars
+    return list_fields
 
 
 class DVTREL1(BaseCard):

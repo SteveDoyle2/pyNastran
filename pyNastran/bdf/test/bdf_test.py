@@ -8,6 +8,7 @@ from pyNastran.bdf.test.test_bdf import run_lots_of_files
 from pyNastran.op2.test.op2_test import get_failed_files, get_all_files
 from pyNastran.utils.dev import get_files_of_type
 
+
 def remove_marc_files(filenames):
     """Marc files are not supported"""
     filenames2 = []
@@ -33,6 +34,7 @@ def remove_marc_files(filenames):
     # for fd in fds:
         # names.append(os.readlink('/proc/self/fd/%d' % fd))
     # return names
+
 
 def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
         sum_load: bool=True, sum_mass: bool=True, run_mcid: bool=True,
@@ -184,6 +186,7 @@ def main():
         run_skin_solids=run_skin_solids,
         is_lax_parser=is_lax_parser,
         xref=xref, crash_cards=crash_cards)
+
 
 if __name__ == '__main__':  # pragma: no cover
     main()

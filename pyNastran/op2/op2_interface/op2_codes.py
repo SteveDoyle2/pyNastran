@@ -262,8 +262,6 @@ class Op2Codes:
     def set_table_type(self) -> None:
         if self.is_msc:
             self.element_mapper = MSC_ELEMENTS
-        elif self.is_nasa95:
-            self.element_mapper = NASA95_ELEMENTS
         else:  # default
             self.element_mapper = NX_ELEMENTS
 
@@ -531,8 +529,6 @@ class Op2Codes:
             #msg += '  Optistruct\n'
         #elif self.is_autodesk:
             #msg += '  Autodesk/NEi Nastran\n'
-        elif self.is_nasa95:
-            msg += '  NASA 95 Nastran\n'
         else:
             msg += '  NX Nastran\n'
         #print msg

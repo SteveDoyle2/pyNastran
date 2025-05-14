@@ -133,7 +133,6 @@ def oug_data_code(table_name,
         'sort_bits': [0, sort1_sort_bit, random_sort_bit], # real, sort1, random
         'sort_method' : sort_method,
         'is_msc': is_msc,
-        #'is_nasa95': is_nasa95,
         'format_code': 1, # real
         'table_code': table_code,
         'tCode': tCode,

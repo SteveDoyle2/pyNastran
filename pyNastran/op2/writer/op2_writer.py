@@ -473,7 +473,6 @@ def write_op2_header(model: OP2, op2_file, fop2_ascii,
     """writes the op2 header"""
     is_nx = model.is_nx
     is_msc = model.is_msc
-    #is_nasa95 = model.is_nasa95
     is_optistruct = model.is_optistruct
     if model.date == (1, 1, 2000):  # (7, 24, 2020)
         today = datetime.datetime.today()

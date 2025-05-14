@@ -1760,47 +1760,6 @@ class TestShells(unittest.TestCase):
         assert np.allclose(jmat, jmat_expected), jmat
         assert np.allclose(normal, normal_expected), normal
 
-    def test_cquad1_ctrshl(self):
-        """NASA-95"""
-        from pyNastran.bdf.cards.elements.shell_nasa95 import CQUAD1, CTRSHL, PQUAD1
-        log = get_logger(level='warning')
-        model = BDF(log=log, mode='nasa95')
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [1., 1., 0.])
-        model.add_grid(4, [0., 1., 0.])
-
-        model.add_grid(11, [0.5, 0., 0.])
-        model.add_grid(12, [1., 0.5, 0.])
-        model.add_grid(13, [.5, .5, 0.])
-
-        nids = [1, 2, 3, 4]
-        eid = 1
-        pid = 10
-        mid = 20
-        theta = 1.0
-        quad = CQUAD1(eid, pid, nids, theta=theta, comment='quad')
-        model.elements[eid] = quad
-
-        nids = [1, 2, 3,
-                11, 12, 13]
-        tri = CTRSHL(eid, pid, nids, theta, comment='tri')
-        model.elements[eid] = tri
-
-        t = 0.1
-        pquad = PQUAD1(pid, mid1=mid, t_membrane=t, mid2=None, inertia=1.0,
-                       mid3=None, t_shear=0.833333, nsm=0.0, z1=None, z2=None, comment='')
-        model.properties[eid] = pquad
-
-        E = 30.e7
-        G = None
-        nu = 0.3
-        mat1 = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
-
-        save_load_deck(model, run_convert=False, run_test_bdf=False,
-                       run_mass_properties=False, run_op2_writer=False)
-
-
 
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     """makes a series of DVCREL1 and a DESVAR"""

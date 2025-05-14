@@ -655,10 +655,7 @@ MSC_RESULT_TABLES: list[bytes] = [b'ASSIG', b'ASEPS'] + [
     b'OGPSTRN', b'OGPFIN', b'OESRTN', b'OGPSRN',
 
     # msc/units_mass_spring_damper/units_mass_spring_damper/op2
-    b'UNITS', # b'CPHSF',
-
-    # nasa95
-    b'OQPC1', b'OUPVC1', b'OESC1',
+    b'UNITS',  # b'CPHSF',
 ]
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):  # pragma: no cover
     counter = Counter(MSC_RESULT_TABLES)

@@ -119,8 +119,6 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str,
     elif version == b'ADINAOUT':
         mode = 'adina'
         #print('version_str = ',version_str)
-    elif version == b'NASA95':
-        mode = 'nasa95'
     else:  # pragma: no cover
         raise RuntimeError(f'unknown version={version!r}')
     return mode, version_str

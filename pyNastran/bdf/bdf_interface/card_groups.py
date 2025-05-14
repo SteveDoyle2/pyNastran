@@ -267,7 +267,7 @@ cards_to_read = [
     ## nsmadds
     'NSMADD',
 
-    'CTRSHL',
+    #'CTRSHL',
 
     'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', # plate strain
     'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8', # plate stress

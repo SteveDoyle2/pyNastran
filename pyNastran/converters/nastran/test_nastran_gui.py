@@ -947,7 +947,7 @@ class TestNastranGUI(unittest.TestCase):
 
         # ['acoustic_flag', 'analysis_code', 'analysis_fmt', 'approach_code', 'class_name', 'data', 'data_code',
         #  'data_frame', 'data_names', 'dataframe', 'device_code', 'dt', 'format_code', 'gridtype_str', 'h5_file',
-        #  'headers', 'is_built', 'is_cid', 'is_complex', 'is_msc', 'is_nasa95', 'is_real', 'is_sort1', 'is_sort2',
+        #  'headers', 'is_built', 'is_cid', 'is_complex', 'is_msc', 'is_real', 'is_sort1', 'is_sort2',
         #  'isubcase', 'itime', 'itotal', 'label', 'load_as_h5', 'lsdvmn', 'lsdvmns', 'name', 'node_gridtype',
         #  'nonlinear_factor', 'ntimes', 'ntotal', 'num_wide', 'ogs', 'pval_step', 'random_code', 'result_name', 'size',
         #  'sort_bits', 'sort_code', 'sort_method', 'subtitle', 'subtitle_original', 'superelement_adaptivity_index',

@@ -52,7 +52,7 @@ else:
         except Exception:
             # git isn't installed
             ghash = 'no.checksum.error'
-            date_out = ('2024','8','xx')
+            date_out = ('2024', '8', 'xx')
         # 1.5.0+dev.0eccfa918
         return 'dev.%s' % ghash, date_out
 
@@ -66,7 +66,7 @@ else:
 
     months = {
         '1': 'JANUARY', '2': 'FEBRUARY', '3': 'MARCH',
-        '4': 'APRIL','5': 'MAY', '6': 'JUNE',
+        '4': 'APRIL', '5': 'MAY', '6': 'JUNE',
         '7': 'JULY', '8': 'AUGUST', '9': 'SEPTEMBER',
         '10': 'OCTOBER', '11': 'NOVEMBER', '12': 'DECEMBER',
     }

@@ -356,9 +356,9 @@ NASA_CARDS = {
     'CTRIM6',
     'CTRIARG',
 
-    'CTRIA1', 'CTRIA2', 'CQUAD1', 'CQUAD2',
-    'CTRMEM',
-    'CQDMEM', 'CQDMEM1', 'CQDMEM2',
+    #'CTRIA1', 'CTRIA2', 'CQUAD1', 'CQUAD2',
+    #'CTRMEM',
+    #'CQDMEM', 'CQDMEM1', 'CQDMEM2',
     'CTRIA3', 'CQUAD4',
 
     'CHEXA1', 'CHEXA2', 'CIHEX1', 'CIHEX2', 'CIHEX3',
@@ -377,7 +377,7 @@ NASA_CARDS = {
     'PIHEX',
 
     # no idea...
-    'CTRSHL', 'PTRSHL',
+    #'CTRSHL', 'PTRSHL',
     'CELBOW', 'PELBOW',
     'CIS2D8', 'PIS2D8',
     'CTRPLT1', 'PTRPLT1',

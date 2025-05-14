@@ -1480,90 +1480,6 @@ class OES(OP2Common2):
             raise NotImplementedError(op2.code_information())
         return n
 
-    def _read_oes1_loads_nasa95(self, data, ndata: int) -> tuple[int, Any, Any]:
-        """Reads OES1 subtable 4 for NASA 95"""
-        op2 = self.op2
-        prefix, postfix = self.get_oes_prefix_postfix()
-        result_type = op2.result_type
-        #self._apply_oes_ato_crm_psd_rms_no('') # TODO: just testing
-        n = 0
-        is_magnitude_phase = op2.is_magnitude_phase()
-        dt = op2.nonlinear_factor
-
-        if op2.is_stress:
-            result_name = 'stress'
-            #stress_name = 'STRESS'
-        else:
-            result_name = 'strain'
-            #stress_name = 'STRAIN'
-
-        if op2._results.is_not_saved(result_name):
-            return ndata
-        if op2.element_type in [1, 3, 10]:  # rods
-            # 1-CROD
-            # 3-CTUBE
-            # 10-CONROD
-            n, nelements, ntotal = self._oes_crod(data, ndata, dt, is_magnitude_phase,
-                                                  result_type, prefix, postfix)
-
-        #elif op2.element_type == 2: # CBEAM
-            #n, nelements, ntotal = self._oes_cbeam(data, ndata, dt, is_magnitude_phase,
-                                                   #result_type, prefix, postfix)
-
-        elif op2.element_type == 4: # CSHEAR
-            n, nelements, ntotal = self._oes_cshear(data, ndata, dt, is_magnitude_phase,
-                                                    result_type, prefix, postfix)
-
-        elif op2.element_type in {11, 12, 13, 14}:  # springs
-            # 11-CELAS1
-            # 12-CELAS2
-            # 13-CELAS3
-            # 14-CELAS4
-            n, nelements, ntotal = self._oes_celas(data, ndata, dt, is_magnitude_phase,
-                                                   result_type, prefix, postfix)
-
-        elif op2.element_type == 19:
-            # 19-CQUAD1
-            n, nelements, ntotal = self._oes_cquad4_33(data, ndata, dt, is_magnitude_phase,
-                                                       result_type, prefix, postfix)
-        elif op2.element_type == 34: # CBAR
-            n, nelements, ntotal = self._oes_cbar_34(data, ndata, dt, is_magnitude_phase,
-                                                     result_type, prefix, postfix)
-
-        elif op2.element_type == 64: # CQUAD4
-            op2.element_type = 33  # faking...
-            n, nelements, ntotal = self._oes_cquad4_33(data, ndata, dt, is_magnitude_phase,
-                                                       result_type, prefix, postfix)
-
-        elif op2.element_type == 83:
-            # 83: TRIA3
-            n, nelements, ntotal = self._oes_ctria3(data, ndata, dt, is_magnitude_phase,
-                                                    result_type, prefix, postfix)
-
-        #elif op2.element_type in [64, 70, 75, 82, 144]:  # bilinear plates
-            # 64-CQUAD8
-            # 70-CTRIAR
-            # 75-CTRIA6
-            # 82-CQUADR
-            # 144-CQUAD4-bilinear
-            #n, nelements, ntotal = self._oes_cquad4_144(data, ndata, dt, is_magnitude_phase,
-                                                        #result_type, prefix, postfix)
-        else:
-            #msg = 'sort1 Type=%s num=%s' % (op2.element_name, op2.element_type)
-            msg = op2.code_information()
-            print(msg)
-            return op2._not_implemented_or_skip(data, ndata, msg)
-
-        if nelements is None:
-            return n
-        assert ndata > 0, ndata
-        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, op2.element_type, op2.element_name)
-        #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (op2.element_name, ndata % ntotal, ndata % op2.num_wide, ndata, ntotal)
-        assert op2.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (op2.num_wide * 4, ntotal)
-        assert op2.thermal == 0, "thermal = %%s" % op2.thermal
-        assert n > 0, f'n = {n} result_name={result_name}'
-        return n
-
     def _read_oes1_loads(self, data, ndata: int):
         """Reads OES op2.thermal=0 stress/strain"""
         op2 = self.op2
@@ -4770,14 +4686,6 @@ class OES(OP2Common2):
         elif op2.element_type == 228:
             etype = 'cquadr'
             assert op2.num_wide in [17, 15], op2.code_information()
-
-        elif op2._nastran_format == 'nasa95':
-            if op2.element_type == 19:
-                etype = 'cquad1'
-            elif op2.element_type == 64:
-                etype = 'cquad4'
-            else:  # pragma: no cover
-                raise NotImplementedError(op2.code_information())
         else:  # pragma: no cover
             raise NotImplementedError(op2.code_information())
 

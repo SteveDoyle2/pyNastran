@@ -5822,25 +5822,6 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_param_object(param)
         return param
 
-    def _add_param_nasa95(self, key: str, values: list[int | float | str],
-                          comment: str='') -> PARAM_NASA95:
-        """
-        Creates a PARAM card
-
-        Parameters
-        ----------
-        key : str
-            the name of the PARAM
-        values : int/float/str/list
-            varies depending on the type of PARAM
-        comment : str; default=''
-            a comment for the card
-
-        """
-        param = PARAM_NASA95(key, values, comment=comment)
-        self._add_methods._add_param_object(param)
-        return param
-
     def add_plotel(self, eid: int, nodes: list[int], comment: str='') -> int:
         """
         Adds a PLOTEL card

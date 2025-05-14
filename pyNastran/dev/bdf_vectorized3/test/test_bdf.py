@@ -2736,7 +2736,6 @@ def test_bdf_argparse(argv=None):
         '--msc' : 'Assume MSC Nastran (default=True)',
         '--nx' : 'Assume NX Nastran/Simcenter (default=False)',
         #'--optistruct' : 'Assume Altair OptiStruct (default=False)',
-        #'--nasa95' : 'Assume Nastran 95 (default=False)',
         #'--mystran' : 'Assume Mystran (default=False)',
     }
     for version, help_msg in version_group_map.items():
@@ -2827,14 +2826,12 @@ def _set_version(args: Any):
         version = 'nx'
     #elif args['optistruct']:
         #version = 'optistruct'
-    #elif args['nasa95']:
-        #version = 'nasa95'
     #elif args['mystran']:
         #version = 'mystran'
     else:
         version = None
     args['version'] = version
-    del args['msc'], args['nx'] # , args['nasa95'], args['mystran'], args['optistruct']
+    del args['msc'], args['nx'] # , args['mystran'], args['optistruct']
 
 # defaults
 #check        = False
@@ -2859,7 +2856,7 @@ def _set_version(args: Any):
 
 def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
-    #formats = '--msc|--nx|--optistruct|--nasa95|--mystran'
+    #formats = '--msc|--nx|--optistruct|--mystran'
     formats = '--msc|--nx'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
@@ -2924,7 +2921,6 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --msc         Assume MSC Nastran\n'
         '  --nx          Assume NX Nastran\n'
         #'  --optistruct  Assume OptiStruct\n'
-        #'  --nasa95      Assume Nastran 95\n'
         #'  --mystran     Assume Mystran\n'
         '\n'
         'Info:\n'

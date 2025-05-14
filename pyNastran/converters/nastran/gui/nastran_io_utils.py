@@ -27,13 +27,10 @@ from pyNastran.femutils.nan import (
 from pyNastran.bdf.bdf import (
     BDF,
     #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-    CTRSHL,
     CTRAX3, CTRIAX6, CTRIAX, #CTRAX6,
     CQUADX4, CQUADX8, CQUADX,
     #CONM2,
     PCOMP, PCOMPG, PCOMPS, PCOMPLS,
-    # nastran95
-    CQUAD1,
     SET1, MONPNT1, CORD2R, AECOMP)
 
 from pyNastran.bdf.cards.elements.shell import (
@@ -314,7 +311,7 @@ def map_elements1_quality_helper(self,
             point_ids.SetId(1, n2)
             point_ids.SetId(2, n3)
             grid.InsertNextCell(elem.GetCellType(), point_ids)
-        elif isinstance(element, (CTRIAX6, CTRSHL)):
+        elif isinstance(element, CTRIAX6):
             # the CTRIAX6 is not a standard second-order triangle
             #
             # 5
@@ -356,8 +353,8 @@ def map_elements1_quality_helper(self,
             eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
             grid.InsertNextCell(elem.GetCellType(), point_ids)
 
-        elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4, CQUAD1)):
-            if isinstance(element, (CQUAD4, CQUADR, CQUAD1)):
+        elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
+            if isinstance(element, (CQUAD4, CQUADR)):
                 mcid, theta = get_shell_material_coord(element)
                 material_coord[i] = mcid
                 material_theta[i] = theta
@@ -1273,47 +1270,8 @@ def map_elements1_no_quality_helper(self,
             point_ids.SetId(2, n3)
             grid.InsertNextCell(elem.GetCellType(), point_ids)
 
-        elif isinstance(element, CTRSHL):  # nastran95
-            # the CTRIAX6 is not a standard second-order triangle
-            #
-            # 5
-            # |\
-            # |  \
-            # 6    4
-            # |     \
-            # |       \
-            # 1----2----3
-            #
-            #material_coord[i] = element.theta # TODO: no mcid
-            # midside nodes are required, nodes out of order
-            node_ids = element.node_ids
-            pid = element.Pid()
-            _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
-            if None not in node_ids and 0:
-                elem = vtkQuadraticTriangle()
-                point_ids = elem.GetPointIds()
-                point_ids.SetId(3, nid_map[node_ids[1]])
-                point_ids.SetId(4, nid_map[node_ids[3]])
-                point_ids.SetId(5, nid_map[node_ids[5]])
-            else:
-                elem = vtkTriangle()
-                point_ids = elem.GetPointIds()
-
-            n1 = nid_map[node_ids[0]]
-            n2 = nid_map[node_ids[2]]
-            n3 = nid_map[node_ids[4]]
-            #p1 = xyz_cid0[n1, :]
-            #p2 = xyz_cid0[n2, :]
-            #p3 = xyz_cid0[n3, :]
-            point_ids.SetId(0, n1)
-            point_ids.SetId(1, n2)
-            point_ids.SetId(2, n3)
-            eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
-
-            grid.InsertNextCell(elem.GetCellType(), point_ids)
-
-        elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CPLSTS4, CQUADX4, CQUAD1)):
-            if isinstance(element, (CQUAD4, CQUADR, CQUAD1)):
+        elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CPLSTS4, CQUADX4)):
+            if isinstance(element, (CQUAD4, CQUADR)):
                 mcid, theta = get_shell_material_coord(element)
                 material_coord[i] = mcid
                 material_theta[i] = theta
@@ -2054,7 +2012,7 @@ def create_ugrid_from_elements(gui: MainWindow,
             point_ids.SetId(1, n2)
             point_ids.SetId(2, n3)
             grid.InsertNextCell(elem.GetCellType(), point_ids)
-        elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CPLSTS4, CQUADX4, CQUAD1)):
+        elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CPLSTS4, CQUADX4)):
             node_ids = element.node_ids
             #eid_to_nid_map[eid] = node_ids
 

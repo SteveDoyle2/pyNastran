@@ -134,7 +134,6 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
             is_nx: Optional[bool]=None,
             is_optistruct: Optional[bool]=None,
             is_autodesk: Optional[bool]=None,
-            is_nasa95: Optional[bool]=None,
             delete_f06: bool=False, delete_op2: bool=False, delete_hdf5: bool=False,
             delete_debug_out: bool=False,
             build_pandas: bool=True,
@@ -187,10 +186,6 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
         None : guess
     is_autodesk : bool; default=None
         True : use Autodesk Nastran
-        False : use MSC Nastran
-        None : guess
-    is_nasa95 : bool; default=None
-        True : use NASA 95 Nastran
         False : use MSC Nastran
         None : guess
     delete_f06 : bool; default=False
@@ -281,7 +276,7 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
         op2_nv = OP2Geom(debug=debug, log=log, debug_file=debug_file)
         op2_bdf = OP2Geom(debug=debug, log=log)
         set_versions([op2, op2_nv, op2_bdf],
-                     is_nx, is_optistruct, is_autodesk, is_nasa95,
+                     is_nx, is_optistruct, is_autodesk,
                      post=post, is_testing=is_testing)
 
         if load_as_h5 and IS_HDF5:
@@ -298,7 +293,7 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
         op2_nv = OP2(debug=debug, log=log, debug_file=debug_file)
 
         set_versions([op2, op2_nv],
-                     is_nx, is_optistruct, is_autodesk, is_nasa95,
+                     is_nx, is_optistruct, is_autodesk,
                      post=post, is_testing=is_testing)
         if load_as_h5 and IS_HDF5:
             # you can't open the same h5 file twice
@@ -557,8 +552,6 @@ def get_test_op2_data(argv=None) -> dict[str, str]:
     format_group.add_argument('--msc', action='store_false', default=True, help='selects MSC Nastran')
     format_group.add_argument('--autodesk', action='store_false', default=False, help='selects Autodesk Nastran')
     format_group.add_argument('--nx', action='store_false', default=False, help='selects Simcenter/NX Nastran')
-    if is_dev:
-        format_group.add_argument('--nasa95', action='store_false', default=False, help='selects Nastran 95')
 
     parent_parser.add_argument('--post', default=-2, type=int, help='sets the PARAM,POST,x flag')
 
@@ -590,8 +583,7 @@ def get_test_op2_data(argv=None) -> dict[str, str]:
         parent_parser.add_argument('--test', action='store_true', help="Adds additional table checks")
 
 
-    nasa95 = '|--nasa95' if is_dev else ''
-    version = f'[--nx|--autodesk{nasa95}]'
+    version = f'[--nx|--autodesk]'
     pre_options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [--node NIDFILE] [--element EIDFILE]'
     #options = f'{pre_options} [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
     options = f'{pre_options} [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5]'
@@ -639,8 +631,6 @@ def get_test_op2_data(argv=None) -> dict[str, str]:
     args += "  -x <arg>, --exclude    Exclude specific results\n"
     args += "  --nx                   Assume NX Nastran\n"
     args += "  --autodesk             Assume Autodesk Nastran\n"
-    if is_dev:
-        args += "  --nasa95               Assume Nastran 95\n"
     args += "  --post POST            Set the PARAM,POST flag\n"
     args += "  --safe                 Safe cross-references BDF (default=False)\n"
 
@@ -691,8 +681,7 @@ def get_test_op2_data(argv) -> dict[str, str]:
     is_dev = 'dev' in ver
 
     msg = "Usage:  "
-    nasa95 = '|--nasa95' if is_dev else ''
-    version = f'[--nx|--optistruct|--autodesk{nasa95}]'
+    version = f'[--nx|--optistruct|--autodesk]'
     pre_options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [--node NIDFILE] [--element EIDFILE]'
     #options = f'{pre_options} [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
     options = f'{pre_options} [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5] [--debug]'
@@ -746,8 +735,6 @@ def get_test_op2_data(argv) -> dict[str, str]:
     msg += '  --nx                   Assume NX Nastran (Simcenter)\n'
     msg += '  --optistruct           Assume Altair Optistruct\n'
     msg += '  --autodesk             Assume Autodesk Nastran\n'
-    if is_dev:
-        msg += "  --nasa95               Assume Nastran 95\n"
 
     if is_dev:
         msg += (
@@ -775,7 +762,6 @@ def _update_data(data, is_dev: bool):
         data['profile'] = False
         data['write_xlsx'] = False
         data['nocombine'] = False
-        data['nasa95'] = False
 
     if 'geometry' not in data:
         data['geometry'] = False
@@ -793,7 +779,6 @@ def _update_data2(data: dict[str, Any], is_dev: bool):
         data['--profile'] = False
         data['--write_xlsx'] = False
         data['--nocombine'] = False
-        data['--nasa95'] = False
         data['--test'] = False
 
     if '--geometry' not in data:
@@ -815,12 +800,12 @@ def remove_file(filename):
 
 def set_versions(op2s: list[OP2],
                  is_nx: bool, is_optistruct: bool,
-                 is_autodesk: bool, is_nasa95: bool,
+                 is_autodesk: bool,
                  post: int=0, is_testing: bool=False) -> None:
     for op2 in op2s:
         op2.IS_TESTING = is_testing
 
-    if is_nx is None and is_autodesk is None and is_nasa95 is None:
+    if is_nx is None and is_autodesk is None:
         pass
     elif is_nx:
         for op2 in op2s:
@@ -831,9 +816,6 @@ def set_versions(op2s: list[OP2],
     elif is_autodesk:
         for op2 in op2s:
             op2.set_as_autodesk()
-    elif is_nasa95:
-        for op2 in op2s:
-            op2.set_as_nasa95()
     else:
         for op2 in op2s:
             op2.set_as_msc()
@@ -893,7 +875,6 @@ def main(argv=None, show_args: bool=True) -> None:
             is_nx=data['nx'],
             is_optistruct=data['optistruct'],
             is_autodesk=data['autodesk'],
-            is_nasa95=data['nasa95'],
             safe=data['safe'],
             post=data['post'],
             is_testing=data['test'],
@@ -931,7 +912,6 @@ def main(argv=None, show_args: bool=True) -> None:
             is_nx=data['nx'],
             is_optistruct=data['optistruct'],
             is_autodesk=data['autodesk'],
-            is_nasa95=data['nasa95'],
             xref_safe=data['safe'],
             post=data['post'],
             is_testing=data['test'],

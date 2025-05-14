@@ -292,13 +292,13 @@ class BDFInputPy:
                 additional_deck_lines[super_tuple] = super_lines
             del superelement_lines, superelement_ilines
 
-        if nastran_format in {'msc', 'nx', 'optistruct', 'nasa95', 'mystran'}:
+        if nastran_format in {'msc', 'nx', 'optistruct', 'mystran'}:
             pass
         elif nastran_format == 'zona':
             bulk_data_lines, bulk_data_ilines, system_lines = self._get_lines_zona(
                 system_lines, bulk_data_lines, bulk_data_ilines, punch)
         else:
-            msg = f'nastran_format={nastran_format!r} and must be msc, nx, optistruct, nasa95, mystran, or zona'
+            msg = f'nastran_format={nastran_format!r} and must be msc, nx, optistruct, mystran, or zona'
             raise NotImplementedError(msg)
 
         #for line in bulk_data_lines:
@@ -430,6 +430,7 @@ class BDFInputPy:
             the [ifile, iline] pair for each line in the file
 
         """
+        log = self.log
         replace_includes = self.replace_includes
         nlines = len(lines)
         #bdf_filenames = [self.bdf_filename]
@@ -463,7 +464,7 @@ class BDFInputPy:
                     include_dirs.append(self.include_dir)
                 if self.read_includes:
                     bdf_filename2 = get_include_filename(
-                        include_lines,
+                        log, include_lines,
                         include_dirs=include_dirs,
                         replace_includes=replace_includes,
                         source_filename=source_filename,
@@ -471,7 +472,7 @@ class BDFInputPy:
                     )
                     if bdf_filename2 == '':
                         # replace filename
-                        self.log.warning(f'dropping {include_lines}')
+                        log.warning(f'dropping {include_lines}')
                         lines[i] = f'$ removed {include_lines}\n'
                         i += 1
                         continue
@@ -1183,7 +1184,7 @@ def _lines_to_decks_main(lines: list[str],
     #---------------------------------------------
     current_lines = executive_control_lines
 
-    if nastran_format in {'msc', 'nx', 'nasa95', 'mystran', 'zona'}:
+    if nastran_format in {'msc', 'nx', 'mystran', 'zona'}:
         flag_word = 'executive'
         flag = 1  # start from executive control deck
     elif nastran_format == 'optistruct':

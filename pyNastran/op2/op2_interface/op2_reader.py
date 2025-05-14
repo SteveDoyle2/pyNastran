@@ -384,9 +384,6 @@ class OP2Reader:
         if mode == 'autodesk' or op2._nastran_format == 'autodesk':
             op2.post = -4
             mode = 'autodesk'
-        elif mode == 'nasa95' or op2._nastran_format == 'nasa95':
-            op2.post = -4
-            mode = 'nasa95'
         elif mode == 'optistruct' or op2._nastran_format == 'optistruct':
             op2.post = -4
             #pass # mode = 'optistruct'
@@ -660,7 +657,6 @@ class OP2Reader:
         fmt1 = mapfmt(self._endian + b'7i', self.size)
 
         idata = unpack(fmt1, data)
-        #if idata[0] == 101 and op2._nastran_format == 'nasa95':
         assert idata[0] == 101, idata
         unused_nnodes = idata[1]
         assert idata[2] == 0, idata

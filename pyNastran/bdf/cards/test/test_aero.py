@@ -3033,6 +3033,39 @@ class TestAero(unittest.TestCase):
         #model.add_monpnt3()
         save_load_deck(model)
 
+    def test_monpnt3_group(self):
+        model = BDF(debug=None)
+        group_id = 42
+        nodes = [1, 2, 3]
+        elements = [1]
+        properties = []
+        group = model.add_group(group_id, nodes, elements, properties,
+                                description='LABEL x=1, y=2, z=3.3',
+                                meta='meta attribute X=1')
+        print(group)
+        # card_lines = [
+        #     'MONPNT3 MP3A    MP3 at node 11 CP=225 CD=225',
+        #     '        123456  1       2       225     0.	0.	0.',
+        #     '        225',
+        # ]
+        # card_name = 'MONPNT3'
+        # model.add_card_lines(card_lines, card_name, comment='', has_none=True)
+        name = 'CAT'
+        label = 'LABEL x=1'
+        axes = 123
+        grid_set = 3
+        elem_set = 3
+        xyz = [0., 0., 0.]
+        monpnt3 = model.add_monpnt3(name, label, axes, grid_set, elem_set, xyz, cp=0, cd=0)
+        print(monpnt3)
+        # origin = [0., 0., 0.]
+        # zaxis = [0., 0., 1.]
+        # xzplane = [1., 0., 0.]
+        # cid = 225
+        # model.add_cord2r(cid, origin, zaxis, xzplane)
+        #model.add_monpnt3()
+        save_load_deck(model)
+
     def test_bah_plane_bdf(self):
         """tests the bah_plane"""
         bdf_filename = AERO_PATH / 'bah_plane' / 'bah_plane.bdf'

@@ -27,8 +27,6 @@ from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
-from pyNastran.bdf.cards.elements.shell_nasa95 import (
-    CTRSHL, CQUAD1, PQUAD1)
 from pyNastran.bdf.cards.elements.solid import (
     #CTETRA, CPYRAM, CPENTA, CHEXA,
     CIHEX1, CIHEX2, CHEXA1, CHEXA2,
@@ -330,14 +328,14 @@ CARD_MAP = {
     'PSHEAR': PSHEAR,
 
     # nastran95
-    'CQUAD1': CQUAD1,
-    'PQUAD1': PQUAD1,
-    'CTRSHL': CTRSHL,
-    'CIHEX1': CIHEX1,
-    'CIHEX2': CIHEX2,
-    'CHEXA1': CHEXA1,
-    'CHEXA2': CHEXA2,
-    'PIHEX': PIHEX,
+    #'CQUAD1': CQUAD1, # removed
+    #'PQUAD1': PQUAD1, # removed
+    #'CTRSHL': CTRSHL, # removed
+    # 'CIHEX1': CIHEX1, # removed
+    # 'CIHEX2': CIHEX2, # removed
+    # 'CHEXA1': CHEXA1, # removed
+    # 'CHEXA2': CHEXA2, # removed
+    # 'PIHEX': PIHEX, # removed
 
     # msc/nx
     'PSOLID': PSOLID,
@@ -6561,25 +6559,6 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_param_object(param)
         return param
 
-    def _add_param_nasa95(self, key: str, values: list[int | float | str],
-                          comment: str='') -> PARAM_NASA95:
-        """
-        Creates a PARAM card
-
-        Parameters
-        ----------
-        key : str
-            the name of the PARAM
-        values : int/float/str/list
-            varies depending on the type of PARAM
-        comment : str; default=''
-            a comment for the card
-
-        """
-        param = PARAM_NASA95(key, values, comment=comment)
-        self._add_methods._add_param_object(param)
-        return param
-
     def add_plotel(self, eid: int, nodes: list[int], comment: str='') -> PLOTEL:
         """
         Adds a PLOTEL card
@@ -8696,8 +8675,11 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_tf_object(tf)
         return tf
 
-    def add_group(self, group_id: int, nodes, elements, properties, comment: str='') -> GROUP:
-        group = GROUP(group_id, nodes, elements, properties, comment=comment)
+    def add_group(self, group_id: int, nodes, elements, properties,
+                  description: str='', meta='', comment: str='') -> GROUP:
+        group = GROUP(group_id, nodes, elements, properties,
+                      description=description,
+                      meta=meta, comment=comment)
         self._add_methods._add_group_object(group)
         return group
     # ------------------------------------------
