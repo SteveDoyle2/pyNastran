@@ -60,7 +60,7 @@ class BDFMethods(BDFAttributes):
             the pid to area dictionary
 
         TODO: What about CONRODs?
-        #'PBRSECT', 'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
+        #'PBRSECT', 'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PCOMPS',
 
         """
         pids_to_area = get_area_breakdown(self, property_ids=property_ids,
@@ -79,7 +79,6 @@ class BDFMethods(BDFAttributes):
         #'PBMSECT',
         #'PBEAM3',
         #'PBEND',
-        #'PIHEX',
 
         """
         return get_volume_breakdown(self, property_ids=property_ids,
@@ -110,7 +109,7 @@ class BDFMethods(BDFAttributes):
             CONM2s are listed here
 
         TODO: What about CONRODs?
-        #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
+        #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PCOMPS',
 
         """
         pids_to_mass, mass_type_to_mass = get_mass_breakdown(
@@ -146,7 +145,7 @@ class BDFMethods(BDFAttributes):
             CONM2s are listed here
 
         TODO: What about CONRODs?
-        #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
+        #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PCOMPS',
 
         """
         # self.deprecated(

@@ -59,7 +59,7 @@ from .cards.elements.elements import (
     CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL,
     PLOTEL, PLOTEL3, PLOTEL4, PLOTELs)
 from .cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
-from .cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
+from .cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
 from .cards.cyclic import CYAX, CYJOIN
 from .cards.msgmesh import CGEN
 
@@ -68,7 +68,6 @@ from .cards.properties.springs import PELAS, PELAST
 
 from .cards.elements.solid import (
     #CTETRA, CPYRAM, CPENTA, CHEXA,
-    CIHEX1, CIHEX2, CHEXA1, CHEXA2,
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
@@ -170,7 +169,7 @@ from .cards.bdf_sets import (
     SESET, #SEQSEP
     RADSET,
 )
-from .cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPRM
+from .cards.params import PARAM, PARAM_MYSTRAN, MDLPRM
 from .cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS, DMIAX
 from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                   TEMPRB, QVOL, QVECT)
@@ -231,10 +230,11 @@ Element = (
     SolidElement |
     CTRAX3 | CTRAX6 |
     # thermal
-    CHBDYE | CHBDYG | CHBDYP |
+    CHBDYE | CHBDYG | CHBDYP
     # Nastran 95
-    CIHEX1 | CIHEX2 |
-    CHEXA1 | CHEXA2)
+    #CIHEX1 | CIHEX2 |
+    #CHEXA1 | CHEXA2
+)
 Property = (
     PELAS | PELAST | PDAMP | PDAMPT | PDAMP5 | PMASS |
     PROD | PTUBE | PVISC |
@@ -245,8 +245,8 @@ Property = (
     PBEND | PBEAM3 |
     PSHEAR | PPLANE |
     PSHELL | PCOMP | PCOMPG |
-    PSOLID | PLSOLID | PIHEX | PCOMPS | PCOMPLS |
-    PTRSHL | PWELD
+    PSOLID | PLSOLID | PCOMPS | PCOMPLS |
+    PWELD
 )
 Material = (
         MAT1 | MAT2 | MAT3 | MAT8 | MAT9 | MAT10 | MAT11 |
@@ -698,7 +698,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PACABS', 'PAABSF', 'PACBAR', 'ACMODL',
 
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-            'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
+            #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2', # nastran95-removed
             'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
             'CGAP',
             'GENEL',
@@ -722,10 +722,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
             'PCOMPS', 'PCOMPLS',
             'PMIC',
-
-            #  nastran 95
-            #'PTRSHL', 'PQUAD1',
-            #'PIHEX',  # PQUAD4
 
             # axixsymmetric - removed
             #'CCONEAX', # element
@@ -2493,13 +2489,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'CSHEAR': (CSHEAR, add_methods._add_element_object),
             'PSHEAR': (PSHEAR, add_methods._add_property_object),
-
-            # nastran95
-            # 'CIHEX1': (CIHEX1, add_methods._add_element_object),
-            # 'CIHEX2': (CIHEX2, add_methods._add_element_object),
-            # 'CHEXA1': (CHEXA1, add_methods._add_element_object),
-            # 'CHEXA2': (CHEXA2, add_methods._add_element_object),
-            # 'PIHEX': (PIHEX, add_methods._add_property_object),
 
             # msc/nx
             'PSOLID': (PSOLID, add_methods._add_property_object),

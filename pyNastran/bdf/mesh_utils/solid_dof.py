@@ -25,14 +25,15 @@ def solid_dof(bdf_filename: BDF | PathLike,
 
     """
     if isinstance(bdf_filename, BDF):
-        model = bdf_filename.bdf_filename
+        model = bdf_filename
+        bdf_filename = model.bdf_filename
     else:
         base, ext = os.path.splitext(bdf_filename)
         nid_filename = base + '.solid_dof_constraint.blk'
         model = read_bdf(bdf_filename, log=log, xref=False)
+    log = model.log
     #nids = np.array(list(model.nodes), dtype='int32')
 
-    log = model.log
     solid_nids_set = set([])
     associated_nids_set = set([])
 

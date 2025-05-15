@@ -140,7 +140,7 @@ def get_area_breakdown(model: BDF,
         the pid to area dictionary
 
     TODO: What about CONRODs?
-        #'PBRSECT', 'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
+        #'PBRSECT', 'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PCOMPS',
 
     """
     pids_to_area = defaultdict(float)
@@ -161,9 +161,6 @@ def get_area_breakdown(model: BDF,
         #'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
         #'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
         #'PCOMPS', 'PCOMPLS', 'PVISC', 'PBCOMP', 'PBEND',
-
-        ## Nastran 95
-        #'PIHEX',
 
         ## lines - should be included
         #'PBEND', # 'PBEAM3',
@@ -295,7 +292,7 @@ def get_volume_breakdown(model: BDF,
                 #elem = model.elements[eid]
                 #volumei = elem.Volume()
                 #volumes.append(volumei)
-        #elif prop.type in ['PSOLID', 'PCOMPS', 'PCOMPLS', 'PLSOLID', 'PIHEX']:
+        #elif prop.type in ['PSOLID', 'PCOMPS', 'PCOMPLS', 'PLSOLID']:
             #for eid in eids:
                 #elem = model.elements[eid]
                 #if elem.type in ['CTETRA', 'CPENTA', 'CHEXA']:

@@ -144,9 +144,6 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
             key = (3101, 31, 219)
             nfields = 38
             spack = Struct(endian + b'i 6f i 4f 24i 2f')
-        elif name == 'PIHEX':
-            obj.log.warning('skipping PIHEX')
-            continue
         else:
             obj.log.warning(f'skipping {name}')
             continue

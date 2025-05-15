@@ -1365,8 +1365,8 @@ def hdf5_load_properties(model, properties_group, encoding):
                 model.add_pshell(pidi, mid1=mid1, t=ti, mid2=mid2, twelveIt3=twelveIt3i,
                                  mid3=mid3, tst=tsti, nsm=nsmi, z1=z1, z2=z2, mid4=mid4,
                                  comment='')
-        elif card_type in ['PSOLID', 'PIHEX']:
-            func = model.add_psolid if card_type == 'PSOLID' else model.add_pihex
+        elif card_type == 'PSOLID':
+            func = model.add_psolid
             pid = _cast_array(properties['pid'])
             mid = _cast_array(properties['mid'])
             cordm = _cast_array(properties['cordm'])

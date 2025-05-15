@@ -65,7 +65,7 @@ BULK_DATA_CARDS = {
     'SNORM',
 
     'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-    'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
+    #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2', # nastran95-removed
     'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
     'CGAP',
     'GENEL',
@@ -87,8 +87,8 @@ BULK_DATA_CARDS = {
 
     'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
     'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
-    'PIHEX', 'PCOMPS',
-    # PQUAD4
+    'PCOMPS',
+    # PQUAD4, PIHEX
 
     # axixsymmetric
     'CCONEAX', # element
@@ -356,25 +356,28 @@ NASA_CARDS = {
     'CTRIM6',
     'CTRIARG',
 
+    # nastran95
     #'CTRIA1', 'CTRIA2', 'CQUAD1', 'CQUAD2',
     #'CTRMEM',
     #'CQDMEM', 'CQDMEM1', 'CQDMEM2',
     'CTRIA3', 'CQUAD4',
 
-    'CHEXA1', 'CHEXA2', 'CIHEX1', 'CIHEX2', 'CIHEX3',
+    # nastran95-removed
+    #'CHEXA1', 'CHEXA2', 'CIHEX1', 'CIHEX2', 'CIHEX3',
+
     'CWEDGE', 'CTETRA',
     'GENEL', 'DMI', 'DMIG', 'DTI', 'PLOTEL',
 
     # rigid
-    'CRIGD1', 'CRIGD2', 'CRIGD3', 'CRIGDR',
+    #'CRIGD1', 'CRIGD2', 'CRIGD3', 'CRIGDR',
     'PBAR', 'PROD', 'PSHEAR', 'PTUBE',
-    'PTRIM6',
-    'PTRIA1', 'PTRIA2', 'PQUAD1', 'PQUAD2',
-    'PSHELL', 'PCOMP', 'PCOMP1', 'PCOMP2',
+    #'PTRIM6',
+    #'PTRIA1', 'PTRIA2', 'PQUAD1', 'PQUAD2',
+    'PSHELL', 'PCOMP', #'PCOMP1', 'PCOMP2',
 
-    'PTRMEM',
-    'PQDMEM', 'PQDMEM1', 'PQDMEM2',
-    'PIHEX',
+    #'PTRMEM',
+    #'PQDMEM', 'PQDMEM1', 'PQDMEM2',
+    #'PIHEX',
 
     # no idea...
     #'CTRSHL', 'PTRSHL',

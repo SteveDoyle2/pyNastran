@@ -687,15 +687,6 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
             min_edge_lengthi = np.linalg.norm(p2 - p1)
         #------------------------------
         # rare
-        #elif etype == 'CIHEX1':
-            #nids = elem.nodes
-            #pid = elem.pid
-            #cell_type = cell_type_hexa8
-            #inids = np.searchsorted(all_nids, nids)
-            #min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
-                #_chexa_faces, nids, nid_map, xyz_cid0)
-            #nnodes = 8
-            #dim = 3
         elif etype == 'CHBDYE':
             continue
             #self.eid_map[eid] = ieid

@@ -945,23 +945,3 @@ class PSOLID(Property):
         card = self.repr_fields()
         # this card has integers & strings, so it uses...
         return self.comment + print_card_8(card)
-
-
-class PIHEX(PSOLID):
-    type = 'PIHEX'
-    def __init__(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
-                 fctn='SMECH', comment=''):
-        PSOLID.__init__(self, pid, mid, cordm, integ, stress, isop,
-                        fctn, comment=comment)
-
-    def raw_fields(self):
-        fields = ['PIHEX', self.pid, self.Mid(), self.cordm, self.integ,
-                  self.stress, self.isop, self.fctn]
-        return fields
-
-    def repr_fields(self):
-        cordm = set_blank_if_default(self.cordm, 0)
-        fctn = set_blank_if_default(self.fctn, 'SMECH')
-        fields = ['PIHEX', self.pid, self.Mid(), cordm, self.integ,
-                  self.stress, self.isop, fctn]
-        return fields

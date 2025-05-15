@@ -523,7 +523,7 @@ def _convert_properties(model: BDF,
     Supports:  PELAS, PDAMP, PDAMP5, PVISC, PROD, PBAR, PBARL, PBEAM, PBEAML,
                PSHELL, PSHEAR, PCOMP, PCOMPG, PELAS, PTUBE, PBUSH,
                PCONEAX, PGAP, PBUSH1D
-    Skips : PSOLID, PLSOLID, PLPLANE, PIHEX
+    Skips : PSOLID, PLSOLID, PLPLANE
 
     Skips are unscaled (intentionally)
 
@@ -576,7 +576,7 @@ def _convert_properties(model: BDF,
     #log.debug('stress_scale (F/L^2) = %g\n' % stress_scale)
 
     skip_properties = {
-        'PSOLID', 'PLSOLID', 'PLPLANE', 'PIHEX',
+        'PSOLID', 'PLSOLID', 'PLPLANE',
 
         # TODO: NX-verify
         'PPLANE',

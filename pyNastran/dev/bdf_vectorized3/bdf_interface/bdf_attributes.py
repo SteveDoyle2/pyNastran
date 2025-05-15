@@ -1416,7 +1416,7 @@ class BDFAttributes:
             the pid to area dictionary
 
         TODO: What about CONRODs?
-            #'PBRSECT', 'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
+            #'PBRSECT', 'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PCOMPS',
 
         """
         pids_to_area = get_area_breakdown(
@@ -1446,7 +1446,6 @@ class BDFAttributes:
         #'PBMSECT',
         #'PBEAM3',
         #'PBEND',
-        #'PIHEX',
 
         """
         pids_to_volume = get_volume_breakdown(

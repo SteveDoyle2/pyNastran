@@ -2850,7 +2850,7 @@ def _breakdown_ctetra(xyz_cid0: np.ndarray, nids: np.ndarray,
 def _solid_density(pids_list: list[int],
                    pids_per_volume_dict: [dict, list[int]],
                    mass_per_volume_dict: dict[str, list[float]]) -> np.ndarray:
-    card_types = ['PSOLID', 'PIHEX']
+    card_types = ['PSOLID']
     pids_list_ = []
     rho_list_ = []
     for card_type in card_types:
@@ -3253,7 +3253,7 @@ def _breakdown_property_dicts(model: BDF) -> tuple[dict[str, list[int]],
             nsm_per_area_dict['shell'].append(prop.nsm)
             thickness_dict['shell'].append(thickness)
 
-        elif ptype in {'PSOLID', 'PIHEX'}:
+        elif ptype == 'PSOLID':
             pids_per_volume_dict[ptype].append(pid)
             mid_ref = prop.mid_ref
             rho = mid_ref.rho
