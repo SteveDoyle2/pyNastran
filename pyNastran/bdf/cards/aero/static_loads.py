@@ -295,13 +295,13 @@ class AESTAT(BaseCard):
     def _init_from_empty(cls):
         return AESTAT(1, 'name', comment='')
 
-    def __init__(self, aestat_id, label, comment=''):
+    def __init__(self, aestat_id: int, label: str, comment: str=''):
         """
         Creates an AESTAT card, which is a variable to be used in a TRIM analysis
 
         Parameters
         ----------
-        id : int
+        aestat_id : int
             unique id
         label : str
             name for the id
