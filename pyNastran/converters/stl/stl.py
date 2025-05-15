@@ -115,7 +115,6 @@ class STL:
         #assert self.nodes > 0, 'nodes=%s' % self.nodes
         #assert self.nelements > 0, 'nelements=%s' % self.nelements
 
-
     def write_binary_stl(self, stl_filename: str,
                          normalize_normal_vectors: bool=False,
                          stop_on_failure=True) -> None:
@@ -128,6 +127,7 @@ class STL:
             the filename to read
         normalize_normal_vectors : bool; default=False
             should the vectors be normalized
+
         """
         self._validate()
         with open(stl_filename, 'wb') as infile:
@@ -180,8 +180,9 @@ class STL:
         with open(stl_filename, 'rb') as infile:
             data = infile.read()
 
-        ndata = len(data)
         j = 0
+        ndata = len(data)
+        elements = np.zeros((0, 3), dtype='int32')
         while j < ndata:
             self.log.info(f'  read_binary_stl: j={j} ndata={ndata}')
             self.header = data[j:j+80]
@@ -191,8 +192,7 @@ class STL:
             inode = 0
             nodes_dict = {}
             assert nelements > 0, f'nelements={nelements}'
-            elements = np.zeros((nelements, 3), 'int32')
-
+            elements = np.zeros((nelements, 3), dtype='int32')
             s = Struct('12fH')
             for ielement in range(nelements):
                 (unused_nx, unused_ny, unused_nz, ax, ay, az, bx, by, bz,
@@ -224,14 +224,13 @@ class STL:
                 elements[ielement] = [i1, i2, i3]
                 j += 50
         assert inode > 0, inode
-        nnodes = inode + 1 # accounting for indexing
+        nnodes = inode + 1  # accounting for indexing
         self.elements = elements
 
         nodes = np.zeros((nnodes, 3), 'float64')
         for node, inode in nodes_dict.items():
             nodes[inode] = node
         self.nodes = nodes
-
 
     def _get_normals_data(self, elements):
         """
@@ -281,7 +280,7 @@ class STL:
                 raise RuntimeError(msg)
         return 0.5 * normals_norm
 
-    def get_normals(self, elements, stop_on_failure: bool=True):
+    def get_normals(self, elements: np.ndarray, stop_on_failure: bool=True):
         """
         Parameters
         ----------
@@ -309,7 +308,7 @@ class STL:
                 msg += 'Failed Elements: %s; n=%s\n' % (inan, len(inan))
                 raise RuntimeError(msg)
             # we need to divide our (n,3) array in 3 steps
-            normals = v123 # / normals_norm
+            normals = v123  # / normals_norm
             normals[:, 0] /= normals_norm
             normals[:, 1] /= normals_norm
             normals[:, 2] /= normals_norm
@@ -326,18 +325,17 @@ class STL:
 
             # we need to divide our (n,3) array in 3 steps
             if 0:
-                normals = v123 # / normals_norm
+                normals = v123  # / normals_norm
                 normals[:, 0] /= normals_norm
                 normals[:, 1] /= normals_norm
                 normals[:, 2] /= normals_norm
                 normals[inan, :] = -1.01
             else:
-                normals = v123 # / normals_norm
+                normals = v123  # / normals_norm
                 normals[inotnan, 0] /= normals_norm[inotnan]
                 normals[inotnan, 1] /= normals_norm[inotnan]
                 normals[inotnan, 2] /= normals_norm[inotnan]
         return normals
-
 
     def flip_normals(self, i=None) -> None:
         """
@@ -362,7 +360,7 @@ class STL:
         if i is None:
             self.elements = elements2
         else:
-            self.elements[i, :] = elements2 #[i, :]
+            self.elements[i, :] = elements2  # [i, :]
 
     def get_normals_at_nodes(self, normals=None, nid_to_eid=None):
         """
@@ -425,7 +423,7 @@ class STL:
         slots = np.where(ieq[:, 1:] < nnodes)
         replacer = np.unique(ieq[slots])
 
-        # update the duplcated node id with it's partner
+        # update the duplcated node id with its partner
         # we'll pick the minimum ID
         for r in replacer:
             ip = np.where(ieq[r, :] < nnodes)[0]
@@ -494,7 +492,6 @@ class STL:
             msg = 'endsolid\n'
             out.write(msg)
 
-
     def read_ascii_stl(self, stl_filename: str) -> None:
         """
         Reads an STL that's in ASCII format
@@ -505,9 +502,13 @@ class STL:
             ielement = 0
             nodes_dict = {}
             elements = []
+            iline = 1
             while line:
+                #print('-'*80)
+                #print(f'iline={iline}')
                 if 'solid' in line[:6].lower():
                     line = infile.readline()  # facet
+                    iline += 1
                     while 'facet' in line.strip()[:5].lower():
                         #facet normal -6.665299e-001 6.795624e-001 3.064844e-001
                         #   outer loop
@@ -516,24 +517,42 @@ class STL:
                         #      vertex 8.467505e-002 2.754588e-001 1.190215e+001
                         #   endloop
                         #endfacet
+                        #print('='*20)
+                        #print(f'iline={iline}')
+                        #print(f'facet_line={line}')
 
-                        infile.readline() # outer loop
-                        L1 = infile.readline().strip()
-                        L2 = infile.readline().strip()
-                        L3 = infile.readline().strip()
+                        word = infile.readline().strip()  # outer loop
+                        assert word.lower() == 'outer loop', f'Error: No "outer loop" found on line {iline+1}:\n{word}'
+                        iline += 1
 
-                        v1 = L1.split()[1:]
-                        v2 = L2.split()[1:]
-                        v3 = L3.split()[1:]
-                        infile.readline() # endloop
-                        infile.readline() # endfacet
+                        line1 = infile.readline().strip()
+                        line2 = infile.readline().strip()
+                        line3 = infile.readline().strip()
+                        #print(line1)
+                        #print(line2)
+                        #print(line3)
+                        assert 'vertex' in line1.lower(), f'Error: No vertex found on line {iline+1}:\n{line1}'
+                        assert 'vertex' in line2.lower(), f'Error: No vertex found on line {iline+2}:\n{line2}'
+                        assert 'vertex' in line3.lower(), f'Error: No vertex found on line {iline+3}:\n{line3}'
+                        iline += 3
+
+                        v1 = line1.split()[1:]
+                        v2 = line2.split()[1:]
+                        v3 = line3.split()[1:]
                         t1 = tuple(v1)
                         t2 = tuple(v2)
                         t3 = tuple(v3)
+                        assert len(v1) == 3, '%r' % line1
+                        assert len(v2) == 3, '%r' % line2
+                        assert len(v3) == 3, '%r' % line3
 
-                        assert len(v1) == 3, '%r' % L1
-                        assert len(v2) == 3, '%r' % L2
-                        assert len(v3) == 3, '%r' % L3
+                        word = infile.readline().strip()  # endloop
+                        #print(f'endloop_word = {word.strip()}')
+                        assert word.lower() == 'endloop', f'No endloop found on line {iline+1}:\n{word}'
+                        word = infile.readline()  # endfacet
+                        #print(f'endfacet_word = {word.strip()}')
+                        assert word.lower() == 'endfacet', f'No endfacet found on line {iline+2}:\n{word}'
+                        iline += 2
 
                         if t1 in nodes_dict:
                             i1 = nodes_dict[t1]
@@ -558,20 +577,24 @@ class STL:
                         element = [i1, i2, i3]
                         elements.append(element)
                         ielement += 1
-                        line = infile.readline()  # facet
+                        line = infile.readline().strip()  # facet normal  -1.665915e-01   1.653124e-01   3.903514e-01
+                        assert 'normal' in line.lower(), f'No normal found on line {iline+1}:\n{line}'
+                        iline += 1
                     #print "end of solid..."
                 elif 'endsolid' in line.lower():
                     line = infile.readline()
+                    iline += 1
                 elif line.strip() == '':
                     line = infile.readline()
+                    iline += 1
                 else:
                     self.log.error(line)
                     #line = f.readline()
-                    raise NotImplementedError(f'multiple solids are not supported; line={line!r}')
+                    raise NotImplementedError(f'Multiple solids are not supported on iline={iline+1}; line={line!r}')
                     #break
 
         assert inode > 0, inode
-        nnodes = inode + 1 # accounting for indexing
+        nnodes = inode + 1  # accounting for indexing
         self.elements = np.array(elements, 'int32')
         nodes = np.zeros((nnodes, 3), 'float64')
 
@@ -579,14 +602,16 @@ class STL:
             nodes[inode] = node
         self.nodes = nodes
 
-    def scale_nodes(self, xscale, yscale=None, zscale=None):
+    def scale_nodes(self, xscale: float,
+                    yscale: Optional[float]=None,
+                    zscale: Optional[float]=None) -> None:
         """
         Scales the model
 
         Parameters
         ----------
         xscale : float
-            the scaling factor for the x axis; also the default scaling factor
+            the scaling factor for the x-axis; also the default scaling factor
         yscale/zscale : float; default=xscale
             the scaling factors for the y/z axes
         """
@@ -598,13 +623,13 @@ class STL:
         self.nodes[:, 1] *= yscale
         self.nodes[:, 2] *= zscale
 
-    def shift_nodes(self, xshift, yshift, zshift):
+    def shift_nodes(self, xshift: float, yshift: float, zshift: float) -> None:
         """Shifts the model"""
         self.nodes[:, 0] += xshift
         self.nodes[:, 1] += yshift
         self.nodes[:, 2] += zshift
 
-    def flip_axes(self, axes, scale):
+    def flip_axes(self, axes: str, scale: float) -> None:
         """
         Swaps the axes
 
@@ -631,7 +656,7 @@ class STL:
             self.nodes[:, 0] = z * scale
             self.nodes[:, 2] = x * scale
 
-    def create_mirror_model(self, xyz, tol: float) -> None:
+    def create_mirror_model(self, xyz: str, tol: float) -> None:
         """
         Creates a mirror model.
 
@@ -674,7 +699,7 @@ class STL:
         elements3 = []
         for element in self.elements:
             # the 3 "y" locations for the element
-            epoints = nodes[element, xyzi] # [0]
+            epoints = nodes[element, xyzi]  # [0]
             je = np.where(epoints <= tol)[0]
             if len(je) < 3:  # not a symmetry element, so we save it
                 elements2.append(element)
