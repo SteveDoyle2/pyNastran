@@ -848,7 +848,8 @@ class BDFAttributes:
                 'CQUADX', 'CQUADX4', 'CQUADX8',
                 'CCONEAX',
 
-                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
+                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+                #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2', # nastran95-removed
                 'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
                 'CGAP',
 
@@ -886,7 +887,7 @@ class BDFAttributes:
                 'PLPLANE', 'PPLANE',
                 'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
                 'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
-                'PIHEX', 'PCOMPS', 'PCOMPLS',
+                'PCOMPS', 'PCOMPLS',
                 'PCONEAX',
             ],
             'pdampt': ['PDAMPT'],

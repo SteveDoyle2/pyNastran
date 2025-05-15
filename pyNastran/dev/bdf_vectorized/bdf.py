@@ -1647,8 +1647,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'CPYRAM' : (CPYRAM, self.add_element),
             #'CPENTA' : (CPENTA, self.add_element),
             #'CHEXA' : (CHEXA, self.add_element),
-            #'CIHEX1' : (CIHEX1, self.add_element),
-            #'PIHEX' : (PIHEX, self.add_property),
             #'PSOLID' : (PSOLID, self.add_property),
             #'PLSOLID' : (PLSOLID, self.add_property),
             #'PCOMPS' : (PCOMPS, self.add_property),

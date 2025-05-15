@@ -6209,34 +6209,6 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         elem = self.cquadx8.add(eid, pid, nids, theta=theta, comment=comment)
         return elem
 
-    #def add_cihex1(self, eid, pid, nids, comment: str='') -> CIHEX1:
-        #"""see CHEXA"""
-        #elem = CIHEX1(eid, pid, nids, comment=comment)
-        #self._add_methods._add_element_object(elem)
-        #return elem
-
-    #def add_cihex2(self, eid, pid, nids, comment: str='') -> CIHEX2:
-        #"""see CHEXA"""
-        #elem = CIHEX2(eid, pid, nids, comment=comment)
-        #return elem
-
-    #def add_chexa1(self, eid, mid, nids, comment: str='') -> CHEXA1:
-        #"""see CHEXA"""
-        #elem = CHEXA1(eid, mid, nids, comment=comment)
-        #return elem
-
-    #def add_chexa2(self, eid, mid, nids, comment: str='') -> CHEXA2:
-        #"""see CHEXA"""
-        #elem = CHEXA2(eid, mid, nids, comment=comment)
-        #return elem
-
-    #def add_pihex(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
-                  #fctn='SMECH', comment: str='') -> PIHEX:
-        #""".. seealso:: PSOLID"""
-        #prop = PIHEX(pid, mid, cordm=cordm, integ=integ, stress=stress, isop=isop,
-                     #fctn=fctn, comment=comment)
-        #return prop
-
     def add_nxstrat(self, sid, params, comment: str='') -> NXSTRAT:
         """Creates an NXSTRAT card"""
         nxstrat = NXSTRAT(sid, params, comment=comment)

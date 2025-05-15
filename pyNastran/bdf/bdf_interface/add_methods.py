@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.bolt import BOLT, BOLTFOR, BOLTSEQ, BOLTLD
     from pyNastran.bdf.cards.elements.elements import CFAST, CWELD, CGAP, CRAC2D, CRAC3D, PLOTELs, GENEL
     #from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
-    #from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
+    #from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
     #from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD
 
     #from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
@@ -21,7 +21,6 @@ if TYPE_CHECKING:  # pragma: no cover
 
     #from pyNastran.bdf.cards.elements.solid import (
     #    #CTETRA, CPYRAM, CPENTA, CHEXA,
-    #    CIHEX1, CIHEX2, CHEXA1, CHEXA2,
     #    CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     #    CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
     #)
@@ -586,7 +585,7 @@ class AddMethods:
           PELAS, PBUSH, PBUSH1D, PBUSH2D, PDAMP,
           PROD, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
           PSHELL, PCOMP, PCOMPG,
-          PSOLID, PLSOLID, PIHEX, PCOMPS, PCOMPLS
+          PSOLID, PLSOLID, PCOMPS, PCOMPLS
         """
         key = prop.pid
         assert key > 0, 'pid=%s prop=%s' % (key, prop)

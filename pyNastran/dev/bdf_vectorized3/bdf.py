@@ -76,13 +76,9 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import BDYOR
 
 #from pyNastran.bdf.cards.elements.elements import CRAC2D, CRAC3D
 #from pyNastran.bdf.cards.properties.properties import PRAC2D, PRAC3D
-#from pyNastran.bdf.cards.properties.solid import PIHEX
 #from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
 #from pyNastran.bdf.cards.msgmesh import CGEN
 
-#from pyNastran.bdf.cards.elements.solid import (
-    #CIHEX1, CIHEX2, CHEXA1, CHEXA2,
-#)
 #from pyNastran.bdf.cards.elements.rigid import RSPLINE, RSSCON
 
 #from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
@@ -866,12 +862,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # msgmesh
             #'GMLOAD',  # loads
             #'GMCORD',  # coords
-
-            #  nastran 95
-            #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
-            #'CTRSHL', 'CQUAD1',
-            #'PTRSHL', 'PQUAD1',
-            #'PIHEX', # PQUAD4
 
             # ringfl
             #'RINGFL',
@@ -2229,18 +2219,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'GMLOAD' : (GMLOAD, add_methods._add_load_object),  # basic loads
 
             #'PBEAM3' : (PBEAM3, add_methods._add_property_object),
-
-            # nastran95
-            #'CTRSHL' : (CTRSHL, add_methods._add_element_object),
-            #'CQUAD1' : (CQUAD1, add_methods._add_element_object),
-            #'PTRSHL' : (PTRSHL, add_methods._add_property_object),
-            #'PQUAD1' : (PQUAD1, add_methods._add_property_object),
-            #
-            #'CIHEX1' : (CIHEX1, add_methods._add_element_object),
-            #'CIHEX2' : (CIHEX2, add_methods._add_element_object),
-            #'CHEXA1' : (CHEXA1, add_methods._add_element_object),
-            #'CHEXA2' : (CHEXA2, add_methods._add_element_object),
-            #'PIHEX' : (PIHEX, add_methods._add_property_object),
 
             #'CRAC2D' : (CRAC2D, add_methods._add_element_object),
             #'PRAC2D' : (PRAC2D, add_methods._add_property_object),

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import pyNastran
-from pyNastran.utils.dev import get_files_of_type
+from pyNastran.utils.dev import get_files_of_type, get_files_of_types
 PKG_PATH = Path(pyNastran.__path__[0])
 
 
@@ -80,7 +80,8 @@ def get_directories(folders_file: str) -> list[str]:
             dirnames.append(move_dir)
     return dirnames
 
-def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> list[str]:
+def get_all_files(folders_file: str, file_types: list[str],
+                  max_size: float=4.2) -> list[str]:
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
 
@@ -88,7 +89,7 @@ def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> lis
     ----------
     folders_file : str
         path to the file with a list of folders
-    file_type : str
+    file_types : list[str]
         a file extension
     max_size : float; default=4.2
         size in MB for max file size
@@ -98,12 +99,11 @@ def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> lis
     filenames : list[str]
         a series of filenames that were found
     """
-    files2 = []
     dirnames = get_directories(folders_file)
-    files2 = get_files_from_directories(dirnames, file_type, max_size=max_size)
+    files2 = get_files_from_directories(dirnames, file_types, max_size=max_size)
     return files2
 
-def get_files_from_directories(dirnames: list[str], file_type: str,
+def get_files_from_directories(dirnames: list[str], file_types: list[str],
                                max_size: float=4.2) -> list[str]:
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
@@ -112,7 +112,7 @@ def get_files_from_directories(dirnames: list[str], file_type: str,
     ----------
     dirnames : list[str]
         paths to the file with a list of folders
-    file_type : str
+    file_types : list[str]
         a file extension
     max_size : float; default=4.2
         size in MB for max file size
@@ -128,11 +128,58 @@ def get_files_from_directories(dirnames: list[str], file_type: str,
         print('move_dir = %s' % move_dir)
         sys.stdout.flush()
         #assert os.path.exists(move_dir), '%s doesnt exist' % move_dir
-        files_in_dir = get_files_of_type(move_dir, file_type, max_size_mb=max_size)
+        files_in_dir = get_files_of_types(move_dir, file_types, max_size_mb=max_size)
         files2 += files_in_dir
         #print('nfiles = %s/%s' % (len(files_in_dir), len(files2)))
     print('nfiles = %s' % len(files2))
     return files2
+
+def get_files_of_types2(dirnames: list[str], extensions: list[str],
+                        max_size_mb: float=0.0,
+                        check_extension: bool=True,
+                        allow_digging: bool=True) -> list[str]:
+
+    max_size_bytes = int(max_size_mb * 1024 ** 2) + 1
+
+    files_out = []
+    if check_extension:
+        dirnames = list(set(dirnames))
+    for dirname in dirnames:
+        assert isinstance(dirname, str), dirname
+        fnames = os.listdir(dirname)
+        fnames = [os.path.join(dirname, fname) for fname in fnames]
+        for fname_dirname in fnames:
+            if os.path.isfile(fname_dirname):
+                files_out.append(fname_dirname)
+            elif os.path.isdir(fname_dirname):
+                if allow_digging:
+                    fnames2 = get_files_of_types2(
+                        [fname_dirname],
+                        extensions,
+                        max_size_mb=0.0,
+                        check_extension=False,
+                        allow_digging=allow_digging,
+                    )
+                    files_out.extend(fnames2)
+                    # assert len(filenames2) > 0, dirnamei
+                else:
+                    print(f'no digging in dirname={fname_dirname}')
+            else:
+                print(f'{fname_dirname!r} is not a file or directory')
+
+    if check_extension:
+        assert len(files_out) > 0, files_out
+        assert isinstance(extensions, (set, list, tuple)), extensions
+        extensions_set = set(extensions)
+        files_out = [fname for fname in files_out
+                     if os.path.splitext(fname)[1] in extensions_set]
+        assert len(files_out) > 0, files_out
+    if max_size_mb > 0.0:
+        files_out = [fname for fname in files_out
+                     if os.path.getsize(fname) < max_size_bytes]
+    if check_extension:
+        assert len(files_out) > 0, files_out
+    return files_out
 
 def get_op2_model_directories(folders_filennames: list[str],
                               filter_simcenter: bool) -> list[str]:
@@ -158,13 +205,14 @@ def run(regenerate=True, make_geom=False, combine=True,
         save_cases=True, debug=False, write_f06=True, write_op2=False,
         compare=True, short_stats=False, write_hdf5=True):
     # works
-    files = get_files_of_type('tests', '.op2')
+    #files = get_files_of_type('tests', '.op2')
+    files = get_files_of_types2(['tests'], ['.op2'])
     print(' '.join(sys.argv))
 
     folders_file1 = str(PKG_PATH / 'bdf' / 'test' / 'tests' / 'foldersRead.txt')
     folders_file2 = str(PKG_PATH / 'op2' / 'test' / 'folders_read.txt')
 
-    unused_isubcases = []
+    #unused_isubcases = []
     binary_debug = [True, False]  # catch any errors
     quiet = True
 
@@ -184,8 +232,10 @@ def run(regenerate=True, make_geom=False, combine=True,
 
         for dirname in dirnames:
             print(dirname)
-        files2 = get_files_from_directories(dirnames, '.op2', max_size=max_size)
-        files2.extend(files)
+        #files2 = get_files_from_directories(dirnames, ['.op2'], max_size=max_size)
+        files2 = get_files_of_types2(dirnames, ['.op2'], max_size_mb=max_size)
+        # files2 = [fname for fname in files2
+        #           if '.test_op2.' not in fname]
         assert len(files2) > 0, files2
     else:
         print(f'failed_cases_filename = {failed_cases_filename!r}')
@@ -241,7 +291,7 @@ def run(regenerate=True, make_geom=False, combine=True,
 
     seconds = time.time() - time0
     minutes = seconds / 60.
-    print("dt = %.2f seconds = %.2f minutes" % (seconds, minutes))
+    print(f'dt = {seconds:.2f} seconds = {minutes:.2f} minutes')
     ntotal = len(files)
     nfailed = len(failed_files)
     npassed = ntotal - nfailed
@@ -251,7 +301,7 @@ def run(regenerate=True, make_geom=False, combine=True,
         100. * npassed / float(ntotal),
         ntotal - npassed)
     print(msg)
-    sys.exit("%s\ndt = %.2f seconds = %.2f minutes" % (msg, seconds, minutes))
+    sys.exit(f'{msg}\ndt = {seconds:.2f} seconds = {minutes:.2f} minutes')
 
 
 def main():
@@ -261,7 +311,7 @@ def main():
 
     msg = "Usage:  "
     #is_release = False
-    is_dev = 'dev' in ver
+    #is_dev = 'dev' in ver
     msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [-x <arg>]... [--safe] [--skip_dataframe] [--nocombine]\n"
     msg += '        op2_test -h | --help\n'
     msg += '        op2_test -v | --version\n'

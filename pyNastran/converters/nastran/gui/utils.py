@@ -161,7 +161,7 @@ def build_offset_normals_dims(model: BDF, eid_map: dict[int, int],
             ieid = eid_map.get(eid, -1)
             element_dimi = 3
             nnodesi = 5
-        elif etype in {'CHEXA', 'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2'}:
+        elif etype == 'CHEXA':
             ieid = eid_map.get(eid, -1)
             element_dimi = 3
             nnodesi = 8

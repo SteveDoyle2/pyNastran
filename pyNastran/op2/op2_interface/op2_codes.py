@@ -57,92 +57,92 @@ SORT1_TABLES_STR = [name.decode('utf8') for name in SORT1_TABLES_BYTES]
 SORT2_TABLES_STR = [name.decode('utf8') for name in SORT2_TABLES_BYTES]
 NO_SORT_METHOD = [b'QHHA']
 
-NASA95_ELEMENTS = {
-    #             OES       OEF
-    1 : 'CROD  ',  # done   done
-    2 : 'C.....',
-    3 : 'CTUBE ',  # done   done
-    4 : 'CSHEAR',  # done   done
-    5 : 'CTWIST',
-    6 : 'CTRIA1',
-    7 : 'CTRBSC',
-    8 : 'CTRPLT',
-    9 : 'CTRMEM',
-    10 : 'CONROD', # done   done
-    11 : 'ELAS1',  # done   done
-    12 : 'ELAS2',  # done   done
-    13 : 'ELAS3',  # done   done
-    14 : 'ELAS4',  # done   done
-    15 : 'CQDPLT',
-    16 : 'CQDMEM',
-    17 : 'CTRIA2',
-    18 : 'CQUAD2',
-    19 : 'CQUAD1',
-    20 : 'CDAMP1', #        done
-    21 : 'CDAMP2', #        done
-    22 : 'CDAMP3', #        done
-    23 : 'CDAMP4', #        done
-    24 : 'CVISC',  #        done
-    25 : 'CMASS1',
-    26 : 'CMASS2',
-    27 : 'CMASS3',
-    28 : 'CMASS4',
-    29 : 'CONM1',
-    30 : 'CONM2',
-    31 : 'PLOTEL',
-    32 : 'C.....',
-    33 : 'C.....',
-    34 : 'CBAR',    # done   done
-    35 : 'CCONE',   #        done <--- CCONEAX
-    36 : 'CTRIARG',
-    37 : 'CTRAPRG',
-    38 : 'CTORDRG',
-    39 : 'CTETRA',
-    40 : 'CWEDGE',
-    41 : 'CHEXA1',
-    42 : 'CHEXA2',
-    43 : 'CFLUID2',
-    44 : 'CFLUID3',
-    45 : 'CFLUID4',
-    46 : 'CFLMASS',
-    47 : 'CAXIF2',
-    48 : 'CAXIF3',
-    49 : 'CAXIF4',
-    50 : 'CSLOT3',
-    51 : 'CSLOT4',
-    52 : 'CHBDY',
-    53 : 'CDUM1',
-    54 : 'CDUM2',
-    55 : 'CDUM3',
-    56 : 'CDUM4',
-    57 : 'CDUM5',
-    58 : 'CDUM6',
-    59 : 'CDUM7',
-    60 : 'CDUM8',
-    61 : 'CDUM9',
-    62 : 'CQDMEM1',
-    63 : 'CQDMEM2',
-    64 : 'CQUAD4',
-    65 : 'CIHEX1',
-    66 : 'CIHEX2',
-    67 : 'CIHEX3',
-    68 : 'CQUADTS',
-    69 : 'CTRIATS',
-    70 : 'CTRIAAX',
-    71 : 'CTRAPAX',
-    72 : 'CAERO1',
-    73 : 'CTRIM6',
-    74 : 'CTRPLT1',
-    75 : 'CTRSHL',
-    76 : 'CFHEX1',
-    77 : 'CFHEX2',
-    78 : 'CFTETRA',
-    79 : 'CFWEDGE',
-    80 : 'CIS2D8',
-    81 : 'CELBOW',
-    82 : 'CFTUBE',
-    83 : 'CTRIA3',  # done   done
-}
+# NASA95_ELEMENTS = {
+#     #             OES       OEF
+#     1 : 'CROD  ',  # done   done
+#     2 : 'C.....',
+#     3 : 'CTUBE ',  # done   done
+#     4 : 'CSHEAR',  # done   done
+#     5 : 'CTWIST',
+#     6 : 'CTRIA1',
+#     7 : 'CTRBSC',
+#     8 : 'CTRPLT',
+#     9 : 'CTRMEM',
+#     10 : 'CONROD', # done   done
+#     11 : 'ELAS1',  # done   done
+#     12 : 'ELAS2',  # done   done
+#     13 : 'ELAS3',  # done   done
+#     14 : 'ELAS4',  # done   done
+#     15 : 'CQDPLT',
+#     16 : 'CQDMEM',
+#     17 : 'CTRIA2',
+#     18 : 'CQUAD2',
+#     19 : 'CQUAD1',
+#     20 : 'CDAMP1', #        done
+#     21 : 'CDAMP2', #        done
+#     22 : 'CDAMP3', #        done
+#     23 : 'CDAMP4', #        done
+#     24 : 'CVISC',  #        done
+#     25 : 'CMASS1',
+#     26 : 'CMASS2',
+#     27 : 'CMASS3',
+#     28 : 'CMASS4',
+#     29 : 'CONM1',
+#     30 : 'CONM2',
+#     31 : 'PLOTEL',
+#     32 : 'C.....',
+#     33 : 'C.....',
+#     34 : 'CBAR',    # done   done
+#     35 : 'CCONE',   #        done <--- CCONEAX
+#     36 : 'CTRIARG',
+#     37 : 'CTRAPRG',
+#     38 : 'CTORDRG',
+#     39 : 'CTETRA',
+#     40 : 'CWEDGE',
+#     41 : 'CHEXA1',
+#     42 : 'CHEXA2',
+#     43 : 'CFLUID2',
+#     44 : 'CFLUID3',
+#     45 : 'CFLUID4',
+#     46 : 'CFLMASS',
+#     47 : 'CAXIF2',
+#     48 : 'CAXIF3',
+#     49 : 'CAXIF4',
+#     50 : 'CSLOT3',
+#     51 : 'CSLOT4',
+#     52 : 'CHBDY',
+#     53 : 'CDUM1',
+#     54 : 'CDUM2',
+#     55 : 'CDUM3',
+#     56 : 'CDUM4',
+#     57 : 'CDUM5',
+#     58 : 'CDUM6',
+#     59 : 'CDUM7',
+#     60 : 'CDUM8',
+#     61 : 'CDUM9',
+#     62 : 'CQDMEM1',
+#     63 : 'CQDMEM2',
+#     64 : 'CQUAD4',
+#     65 : 'CIHEX1',
+#     66 : 'CIHEX2',
+#     67 : 'CIHEX3',
+#     68 : 'CQUADTS',
+#     69 : 'CTRIATS',
+#     70 : 'CTRIAAX',
+#     71 : 'CTRAPAX',
+#     72 : 'CAERO1',
+#     73 : 'CTRIM6',
+#     74 : 'CTRPLT1',
+#     75 : 'CTRSHL',
+#     76 : 'CFHEX1',
+#     77 : 'CFHEX2',
+#     78 : 'CFTETRA',
+#     79 : 'CFWEDGE',
+#     80 : 'CIS2D8',
+#     81 : 'CELBOW',
+#     82 : 'CFTUBE',
+#     83 : 'CTRIA3',  # done   done
+# }
 ANALYSIS_CODE_MAP = {
     1 : 'Statics',
     2 : 'Normal modes or buckling (real eigenvalues)',

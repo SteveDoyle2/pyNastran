@@ -42,7 +42,7 @@ from pyNastran.bdf.cards.elements.shell import (
 )
 from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CTETRA10, CPENTA6, CPENTA15,
-    CHEXA8, CHEXA20, CIHEX1, CIHEX2, CHEXA1, CHEXA2,
+    CHEXA8, CHEXA20,
     CPYRAM5, CPYRAM13,
 )
 from pyNastran.bdf.mesh_utils.delete_bad_elements import (
@@ -549,7 +549,7 @@ def map_elements1_quality_helper(self,
             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                 _cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
 
-        elif isinstance(element, (CHEXA8, CIHEX1, CHEXA1)):
+        elif isinstance(element, CHEXA8):
             node_ids = element.node_ids
             pid = element.Pid()
             _set_nid_to_pid_map(nid_to_pid_map, pid, node_ids)
@@ -568,7 +568,7 @@ def map_elements1_quality_helper(self,
             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                 _chexa_faces, node_ids[:8], nid_map, xyz_cid0)
 
-        elif isinstance(element, (CHEXA20, CIHEX2)):
+        elif isinstance(element, CHEXA20):
             node_ids = element.node_ids
             pid = element.Pid()
             _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
@@ -1449,7 +1449,7 @@ def map_elements1_no_quality_helper(self,
             point_ids.SetId(5, nid_map[node_ids[5]])
             grid.InsertNextCell(elem.GetCellType(), point_ids)
 
-        elif isinstance(element, (CHEXA8, CIHEX1)):
+        elif isinstance(element, CHEXA8):
             node_ids = element.node_ids
             pid = element.Pid()
             _set_nid_to_pid_map(nid_to_pid_map, pid, node_ids)
@@ -1466,7 +1466,7 @@ def map_elements1_no_quality_helper(self,
             point_ids.SetId(7, nid_map[node_ids[7]])
             grid.InsertNextCell(12, point_ids)
 
-        elif isinstance(element, (CHEXA20, CIHEX2)):
+        elif isinstance(element, CHEXA20):
             node_ids = element.node_ids
             pid = element.Pid()
             _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)

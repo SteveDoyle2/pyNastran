@@ -1435,9 +1435,9 @@ class GetCard(GetMethods):
         elements_without_properties = {
             'CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4',
             'GENEL', 'CHACAB', 'CAABSF',
-            # nastran 95
-            'CHEXA1', 'CHEXA2',
-            'CIHEX1', 'CIHEX2',
+            # nastran 95-removed
+            #'CHEXA1', 'CHEXA2',
+            #'CIHEX1', 'CIHEX2',
         }
         thermal_elements = {'CHBDYP'}
         elements_without_properties.update(thermal_elements)

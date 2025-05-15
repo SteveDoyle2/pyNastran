@@ -81,7 +81,7 @@ from pyNastran.bdf.cards.aero.zona import CAERO7, BODY7
 #)
 #from pyNastran.bdf.cards.elements.solid import (
     #CTETRA4, CTETRA10, CPENTA6, CPENTA15,
-    #CHEXA8, CHEXA20, CIHEX1, CIHEX2, CHEXA1, CHEXA2,
+    #CHEXA8, CHEXA20,
     #CPYRAM5, CPYRAM13,
 #)
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids_all

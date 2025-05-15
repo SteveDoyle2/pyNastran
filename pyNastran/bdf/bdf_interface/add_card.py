@@ -20,7 +20,7 @@ from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
 from pyNastran.bdf.cards.elements.elements import (
     CFAST, CWELD, CGAP, CRAC2D, CRAC3D, PLOTEL, PLOTEL3, PLOTEL4, GENEL)
 from pyNastran.bdf.cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
-from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
+from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
 from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
 #from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD, GMLOAD
 
@@ -29,7 +29,6 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (
     #CTETRA, CPYRAM, CPENTA, CHEXA,
-    CIHEX1, CIHEX2, CHEXA1, CHEXA2,
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
@@ -6928,38 +6927,6 @@ class AddCards(AddCoords, AddContact, AddBolts,
         elem = CQUADX8(eid, pid, nids, theta=theta, comment=comment)
         self._add_methods._add_element_object(elem)
         return elem
-
-    def add_cihex1(self, eid, pid, nids, comment='') -> CIHEX1:
-        """see CHEXA"""
-        elem = CIHEX1(eid, pid, nids, comment=comment)
-        self._add_methods._add_element_object(elem)
-        return elem
-
-    def add_cihex2(self, eid, pid, nids, comment='') -> CIHEX2:
-        """see CHEXA"""
-        elem = CIHEX2(eid, pid, nids, comment=comment)
-        self._add_methods._add_element_object(elem)
-        return elem
-
-    def add_chexa1(self, eid, mid, nids, comment='') -> CHEXA1:
-        """see CHEXA"""
-        elem = CHEXA1(eid, mid, nids, comment=comment)
-        self._add_methods._add_element_object(elem)
-        return elem
-
-    def add_chexa2(self, eid, mid, nids, comment='') -> CHEXA2:
-        """see CHEXA"""
-        elem = CHEXA2(eid, mid, nids, comment=comment)
-        self._add_methods._add_element_object(elem)
-        return elem
-
-    def add_pihex(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
-                  fctn='SMECH', comment='') -> PIHEX:
-        """.. seealso:: PSOLID"""
-        prop = PIHEX(pid, mid, cordm=cordm, integ=integ, stress=stress, isop=isop,
-                     fctn=fctn, comment=comment)
-        self._add_methods._add_property_object(prop)
-        return prop
 
     def add_nxstrat(self, sid, params, comment='') -> NXSTRAT:
         """Creates an NXSTRAT card"""

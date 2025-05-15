@@ -8,8 +8,7 @@ dynamics, etc. problems.  The file formats were originally developed by MSC
 for a product now called MSC Nastran.  There have been many spinoff version
 of NASTRAN that have been created based on the 2001 source code release of
 MSC Nastran in 2002 after settlement with the FTC (Federal Trade Commisson).
-There is now NX Nastran and NEi Nastran, which are developed independently as well
-as the 1995 Natran `source code <https://github.com/nasa/NASTRAN-95>`_.
+There is now NX Nastran and NEi Nastran, which are developed independently.
 
 :mod:`pyNastran` is at it's core an API (Application Programming Interface) to
 the legacy formats used by Nastran.  These files include the BDF, F06, OP2, OP4,
