@@ -391,7 +391,7 @@ class GROUP(OptConstraint):
         #return DSCREEN(rtype, trs=-0.5, nstr=20, comment='')
 
     def __init__(self, group_id: int,
-                 nodes, elements, properties,
+                 nodes=None, elements=None, properties=None,
                  description: str='',
                  meta: list[str] | str='',
                  comment: str=''):
@@ -447,12 +447,19 @@ class GROUP(OptConstraint):
         else:
             assert isinstance(meta, list), meta
 
+        nodes = [] if nodes is None else nodes
+        elements = [] if elements is None else elements
+        properties = [] if properties is None else properties
+
         self.description = description
         self.meta = meta
         self.group_id = group_id
         self.nodes = nodes
         self.elements = elements
         self.properties = properties
+        assert len(nodes) >= 0, nodes
+        assert len(elements) >= 0, elements
+        assert len(properties) >= 0, properties
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -761,5 +768,3 @@ class DVTREL1(BaseCard):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
-
-

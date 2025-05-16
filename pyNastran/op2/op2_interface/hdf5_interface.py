@@ -1339,7 +1339,7 @@ def _load_table(result_name, h5_result, objs: tuple[Any], encoding: str,
         'table_code': _cast(h5_result.get('table_code')),
         'tCode': _cast(h5_result.get('tCode')),
         'sort_code': _cast(h5_result.get('sort_code')),
-        'thermal': _cast_str(h5_result.get('thermal'), encoding),
+        'thermal': _cast_optional_str(h5_result.get('thermal'), encoding),
         'subtitle': _cast_str(h5_result.get('subtitle'), encoding),
         'acoustic_flag': _cast(h5_result.get('acoustic_flag')),
         'stress_bits': _cast(h5_result.get('stress_bits')),
@@ -1403,8 +1403,8 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
             pass
         elif key in str_data_names:
             if debug:  # pragma: no cover
-                print('  *****key={key!r}')
-            datai = _cast_str(h5_result.get(key), encoding)
+                print(f'  *****key={key!r}')
+            datai = _cast_list_str(h5_result.get(key), encoding)
             setattr(obj, key, datai)
             setattr(obj, '_times', datai)
         elif key not in data_code:

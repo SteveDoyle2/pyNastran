@@ -1659,7 +1659,9 @@ def write_monpnt3(model: BDF | OP2Geom, name: str,
 
         xflag = 4
         axes = int(monitor.axes)
-        data = [name_bytes, label_bytes, axes, monitor.grid_set, monitor.elem_set, monitor.cp] + list(monitor.xyz) + [xflag, monitor.cd]
+        data = [name_bytes, label_bytes, axes,
+                monitor.node_set_group, monitor.elem_set_group, monitor.cp,
+                ] + list(monitor.xyz) + [xflag, monitor.cd]
         assert len(data) == 11, f'data={data} ndata={len(data)}'
         assert None not in data, data
         op2_ascii.write(f'  MONPNT3 data={data}\n')

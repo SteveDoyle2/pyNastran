@@ -8642,7 +8642,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_tf_object(tf)
         return tf
 
-    def add_group(self, group_id: int, nodes, elements, properties,
+    def add_group(self, group_id: int, nodes=None, elements=None, properties=None,
                   description: str='', meta='', comment: str='') -> GROUP:
         group = GROUP(group_id, nodes, elements, properties,
                       description=description,
@@ -8748,11 +8748,16 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_monpnt_object(monitor_point)
         return monitor_point
 
-    def add_monpnt3(self, name, label, axes, grid_set, elem_set, xyz,
-                    cp=0, cd=None, xflag=None, comment='') -> MONPNT3:
+    def add_monpnt3(self, name: str, label: str, axes: str, xyz: list[float],
+                    node_set_group: int=0, elem_set_group: int=0,
+                    cp: int=0, cd: Optional[int]=None, xflag: str='',
+                    comment: str='') -> MONPNT3:
         """Creates a MONPNT3 card"""
-        monitor_point = MONPNT3(name, label, axes, grid_set, elem_set, xyz,
-                                cp=cp, cd=cd, xflag=xflag, comment=comment)
+        assert len(xyz) == 3, xyz
+        monitor_point = MONPNT3(
+            name, label, axes, xyz,
+            node_set_group=node_set_group, elem_set_group=elem_set_group,
+            cp=cp, cd=cd, xflag=xflag, comment=comment)
         self._add_methods._add_monpnt_object(monitor_point)
         return monitor_point
 
