@@ -573,10 +573,18 @@ class GetMethods(BDFAttributes):
             return self.coords[cid]
         except KeyError:
             cids = np.array(list(self.coord_ids))
-            raise KeyError(f'cid={cid} not found{msg}.  Allowed Cids={cids}')
+            raise KeyError(f'cid={cid:d} not found{msg}.  Allowed Cids={cids}')
 
     #--------------------
     # AERO CARDS
+    def Group(self, group_id: int, msg: str='') -> Group:
+        """gets an Group"""
+        try:
+            return self.group[group_id]
+        except KeyError:
+            groups = np.array(list(self.group))
+            raise KeyError(f'group_id={group_id:d} not found{msg}.  Allowed groups={groups}')
+
     def AEList(self, aelist: int, msg: str='') -> AELIST:
         """gets an AELIST"""
         try:

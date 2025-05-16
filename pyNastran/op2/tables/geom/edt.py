@@ -2530,7 +2530,9 @@ class EDT:
                 xflag_str = xflag_map[xflag]
             except Exception:  # pragma: no cover
                 raise RuntimeError((name, label, xflag))
-            monpnt = MONPNT3(name, label, axes, grid_set, elem_set, xyz,
+
+            monpnt = MONPNT3(name, label, axes, xyz,
+                              grid_set, elem_set,
                               cp=cp, cd=cd, xflag=xflag_str, comment='')
             op2._add_methods._add_monpnt_object(monpnt)
             str(monpnt)

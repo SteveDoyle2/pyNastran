@@ -4393,7 +4393,6 @@ class OES(OP2Common2):
         #elif op2.format_code in [2, 3] and op2.num_wide == numwide_imag:  # imag
 
             ntotal = numwide_random * 4 * self.factor
-
             nelements = ndata // ntotal
             self.ntotal += nelements * nnodes
             #print(op2.read_mode, RealNonlinearSolidArray)
@@ -4406,6 +4405,39 @@ class OES(OP2Common2):
             nelements = ndata // ntotal
             obj = op2.obj
             n = oes_csolidnl_real(op2, data, obj, etype, nnodes, nelements, ntotal)
+
+        elif op2.format_code == 1 and op2.num_wide == 148 and op2.table_name == b'OESNLXR':
+            # 93 CHEXANL: numwide= 148
+            """
+            table_code    = 5   OESNLXR-OES - Element Stress
+            format_code   = 1   Real
+            result_type   = 0   Real
+            sort_method   = 1
+            sort_code     = 0
+            data_format = 0   Real
+            sort_type   = 0   Sort1
+            element_type  = 93  HEXANL-nonlinear
+            s_code        = 0   Coordinate Element - Stress Max Shear (Octahedral)
+            thermal       = 0   isHeatTransfer = False
+            num_wide      = 148
+            mode          = msc
+            MSC Nastran
+            """
+
+            ntotal = numwide_random * 4 * self.factor
+            nelements = ndata // ntotal
+            self.ntotal += nelements * nnodes
+            #print(op2.read_mode, RealNonlinearSolidArray)
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nelements, result_name, slot, RealNonlinearSolidArray)
+            is_vectorized = False
+            if auto_return:
+                op2._data_factor = nnodes
+                return nelements * ntotal, None, None
+
+            nelements = ndata // ntotal
+            obj = op2.obj
+            n = oes_csolidnl_real2(op2, data, obj, etype, nnodes, nelements, ntotal)
 
         else:  # pragma: no cover
             #msg = op2.code_information()
@@ -8149,6 +8181,71 @@ def oes_csolidnl_real(op2: OP2, data: bytes,
             add_sort_x(dt, eid, grid,
                        sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
                        ex, ey, ez, exy, eyz, exz)
+    return n
+
+def oes_csolidnl_real2(op2: OP2, data: bytes,
+                       obj: RealNonlinearSolidArray,
+                       etype: str, nnodes: int,
+                       nelements: int, ntotal: int) -> int:
+    """
+    CHEXANL-93: numwide=148
+
+    ints    = (1114966705, 1098931842, -1071264305, 1083531405, 984871043, -1096642019, 1113966650, 0, 0, 965664145, -1225233052, -1191133939, 947021982, 848429224, -1232869156, 28, 1114966705, 1086423187, -1115994092, 1083531405, 1046189386, -1096642019, 1114391715, 0, 0, 966030805, -1200231437, -1194704178, 947021982, 909257563, -1232869156, 2, 1112118021, 1086423187, 1071696426, 1083531405, 1046189386)
+    floats  = (61.260440826416016, 16.046146392822266, -2.590686559677124, 4.668035984039307, 0.0013728294288739562, -0.31752100586891174, 57.445533752441406, 0.0, 0.0, 0.0002724943042267114, -7.403710696962662e-06, -0.00012277458154130727, 5.7794728490989655e-05, 1.6996935414681502e-08, -3.93121263186913e-06, 3.923635700109488e-44, 61.260440826416016, 6.046945095062256, -0.06134803593158722, 4.668035984039307, 0.21443668007850647, -0.31752100586891174, 59.0670280456543, 0.0, 0.0, 0.00028316551470197737, -5.863229671376757e-05, -9.644553938414901e-05, 5.7794728490989655e-05, 2.6549303129286272e-06, -3.93121263186913e-06, 2.802596928649634e-45, 50.39357376098633, 6.046945095062256, 1.7561695575714111, 4.668035984039307, 0.21443668007850647)
+
+    long long (int64) = (1262, 35505394247, 4590115739184136192, -4671325677713558745, 4457716095520856730, 4613765041338051011, 0, -5348730756577215717, -5266552868828461795, 3885702173957508957, 4776510529487241217, -4619127091118449022, 4229988921545941133, 4772307475550060016, 0, 3957048521473279664, 4067428444384327055, 3961564176959275176)
+    doubles (float64) = (6.235e-321, 1.75419955395e-313, 0.07565224170684814, -0.00021451848339095714, 1.0546118125096879e-10, 2.9232716416565565, 0.0, -1.1488118377182976e-49, -3.5656856083418104e-44, 6.155326914365238e-49, 219681521664.00003, -0.6738749770474473, 6.442800820096073e-26, 114426724122.24194, 0.0, 3.6798672087015993e-44, 8.655715932865064e-37, 7.371738224188992e-44)
+
+
+    """
+    n = 0
+    size = op2.size
+    # if size == 4:
+    #     s1 = Struct(op2._endian + op2._analysis_code_fmt + b'4s')
+    #     s2 = Struct(op2._endian + b'i15f')
+    # else:
+    #     s1 = Struct(op2._endian + mapfmt8(op2._analysis_code_fmt) + b'8s')
+    #     s2 = Struct(op2._endian + b'q15d')
+    # n1 = 8 * op2.factor
+    # n2 = 64 * op2.factor
+    ntotal =  148 * op2.factor
+    print(f'factor = {op2.factor}')
+
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
+    for unused_i in range(nelements):  # 2+16*9 = 146 -> 146*4 = 584
+        edata = data[n:n+ntotal]
+        n += ntotal
+        op2.show_data(edata, types='qd')
+        continue
+
+        edata = data[n:n+n1]
+        n += n1
+
+        out = s1.unpack(edata)
+        if op2.is_debug_file:
+            op2.binary_debug.write('%s-%s - %s\n' % (etype, op2.element_type, str(out)))
+
+        (eid_device, unused_ctype) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        #print('%s-%s -eid=%s dt=%s %s\n' % (etype, op2.element_type, eid, dt, str(out)))
+
+        for unused_j in range(nnodes):
+            edata = data[n:n+n2]
+            n += n2
+            out = s2.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('%s-%sB - %s\n' % (etype, op2.element_type, str(out)))
+            #print('%s-%sB - %s\n' % (etype, op2.element_type, str(out)))
+            assert len(out) == 16
+
+            (grid,
+             sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
+             ex, ey, ez, exy, eyz, exz) = out
+            add_sort_x(dt, eid, grid,
+                       sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
+                       ex, ey, ez, exy, eyz, exz)
+    asdf
     return n
 
 

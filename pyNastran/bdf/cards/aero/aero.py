@@ -44,6 +44,24 @@ if TYPE_CHECKING:  # pragma: no cover
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
 
 
+def coord_id(coord_ref: Coord, cid: int) -> int:
+    if coord_ref is not None:
+        return coord_ref.cid
+    return cid
+
+
+def property_id(prop_ref, pid: int) -> int:
+    if prop_ref is not None:
+        return prop_ref.pid
+    return pid
+
+
+def aefact_id(aefact_ref: AEFACT, aefact_id: int) -> int:
+    if aefact_ref is not None:
+        return aefact_ref.sid
+    return aefact_id
+
+
 class AECOMP(BaseCard):
     """
     Defines a component for use in monitor point definition or external splines.
@@ -1838,14 +1856,10 @@ class CAERO1(BaseCard):
         return aefact_ids
 
     def Cp(self) -> int:
-        if self.cp_ref is not None:
-            return self.cp_ref.cid
-        return self.cp
+        return coord_id(self.cp_ref, self.cp)
 
     def Pid(self) -> int:
-        if self.pid_ref is not None:
-            return self.pid_ref.pid
-        return self.pid
+        return property_id(self.pid_ref, self.pid)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -2815,15 +2829,11 @@ class CAERO2(BaseCard):
                       cp=cp, nsb=nsb, nint=nint, lsb=lsb, lint=lint,
                       comment=comment)
 
-    def Cp(self):
-        if self.cp_ref is not None:
-            return self.cp_ref.cid
-        return self.cp
+    def Cp(self) -> int:
+        return coord_id(self.cp_ref, self.cp)
 
     def Pid(self) -> int:
-        if self.pid_ref is not None:
-            return self.pid_ref.pid
-        return self.pid
+        return property_id(self.pid_ref, self.pid)
 
     @property
     def aefact_ids(self) -> list[int]:
@@ -2836,15 +2846,11 @@ class CAERO2(BaseCard):
             aefact_ids.append(lint)
         return aefact_ids
 
-    def Lsb(self) -> Optional[int]:  # AEFACT
-        if self.lsb_ref is not None:
-            return self.lsb_ref.sid
-        return self.lsb
+    def Lsb(self) -> int:  # AEFACT
+        return aefact_id(self.lsb_ref, self.lsb)
 
-    def Lint(self) -> Optional[int]:  # AEFACT
-        if self.lint_ref is not None:
-            return self.lint_ref.sid
-        return self.lint
+    def Lint(self) -> int:  # AEFACT
+        return aefact_id(self.lint_ref, self.lint)
 
     @property
     def nboxes(self) -> int:
@@ -3359,15 +3365,11 @@ class CAERO3(BaseCard):
         #"""
         #paero2 = self.pid_ref
 
-    def Cp(self):
-        if self.cp_ref is not None:
-            return self.cp_ref.cid
-        return self.cp
+    def Cp(self) -> int:
+        return coord_id(self.cp_ref, self.cp)
 
-    def Pid(self):
-        if self.pid_ref is not None:
-            return self.pid_ref.pid
-        return self.pid
+    def Pid(self) -> int:
+        return property_id(self.pid_ref, self.pid)
 
     def List_w(self):
         if self.list_w_ref is not None:
@@ -3592,15 +3594,11 @@ class CAERO4(BaseCard):
         self.cp_ref = None
         self.lspan_ref = None
 
-    def Cp(self):
-        if self.cp_ref is not None:
-            return self.cp_ref.cid
-        return self.cp
+    def Cp(self) -> int:
+        return coord_id(self.cp_ref, self.cp)
 
-    def Pid(self):
-        if self.pid_ref is not None:
-            return self.pid_ref.pid
-        return self.pid
+    def Pid(self) -> int:
+        return property_id(self.pid_ref, self.pid)
 
     def _init_ids(self, dtype='int32'):
         """
@@ -4051,20 +4049,14 @@ class CAERO5(BaseCard):
                 point_name = f'p{pid}'
                 ax.annotate(point_name, point, ha='center')
 
-    def Cp(self):
-        if self.cp_ref is not None:
-            return self.cp_ref.cid
-        return self.cp
+    def Cp(self) -> int:
+        return coord_id(self.cp_ref, self.cp)
 
-    def Pid(self):
-        if self.pid_ref is not None:
-            return self.pid_ref.pid
-        return self.pid
+    def Pid(self) -> int:
+        return property_id(self.pid_ref, self.pid)
 
-    def LSpan(self):
-        if self.lspan_ref is not None:
-            return self.lspan_ref.sid
-        return self.lspan
+    def LSpan(self) -> int:
+        return aefact_id(self.lspan_ref, self.lspan)
 
     def repr_fields(self):
         """
@@ -4210,15 +4202,11 @@ class MONPNT1(BaseCard):
         self.cp_ref = None
         self.cd_ref = None
 
-    def Cp(self):
-        if self.cp_ref is not None:
-            return self.cp_ref.cid
-        return self.cp
+    def Cp(self) -> int:
+        return coord_id(self.cp_ref, self.cp)
 
-    def Cd(self):
-        if self.cd_ref is not None:
-            return self.cd_ref.cid
-        return self.cd
+    def Cd(self) -> int:
+        return coord_id(self.cd_ref, self.cd)
 
     def raw_fields(self):
         list_fields = [
@@ -4407,14 +4395,16 @@ class MONPNT3(BaseCard):
         grid_set = 10
         elem_set = 11
         xyz = [0., 1., 2.]
-        return MONPNT3(name, label, axes, grid_set, elem_set, xyz,
+        return MONPNT3(name, label, axes, xyz,
+                       node_set_group=grid_set, elem_set_group=elem_set,
                        cp=0, cd=None, xflag=None, comment='')
 
     def __init__(self, name: str, label: str, axes: str,
-                 grid_set_group: int | str,
-                 elem_set_group: int | str,
                  xyz: list[float],
-                 cp: int=0, cd=None, xflag=None, comment=''):
+                 node_set_group: int=0,
+                 elem_set_group: int=0,
+                 cp: int=0, cd: Optional[int]=None, xflag: str='',
+                 comment: str=''):
         """
         Parameters
         ----------
@@ -4425,24 +4415,21 @@ class MONPNT3(BaseCard):
             A string that identifies and labels the monitor point.
             (56 characters maximum)
         axes : str
-            Component axes about which to sum. (Integer; Any unique combination
+            Component axes about which to sum.
             of the integers 1 through 6 with no embedded blanks)
-        grid_set: int
-            Refers to a SET1 entry that has a list of grids to be included in the monitored point.
-        elem_set: int; default=0
-            Refers to a SET1 entry that has a list of elements to include at the monitored point.
-            optional
-        grid_group : str
-            GROUP entry that has a list of grids to be included in the monitor point.
-        elem_group : str; default=''
-            GROUP entry that has a list of elements to process at the monitor point.
+        node_set_group: int; default=0
+            MSC: Refers to a SET1  entry that has a list of grids to be included
+            NX:  Refers to a GROUP entry that has a list of grids to be included
+        elem_set_group: int; default=0
+            MSC: Refers to a SET1  entry that has a list of elements to be included
+            NX:  Refers to a GROUP entry that has a list of elements to be included
         cp : int; default=0
             The identification number of a coordinate system in which the X1, X2,
             and X3 coordinates are defined.
         xyz: list[float]
             The coordinates in the CP coordinate system about which the forces
             are to be summed.
-        xflag : str; deault=None -> no types excluded
+        xflag : str; deault='' -> no types excluded
             Exclusion flag excludes the indicated Grid Point Force types from
             summation at the monitor point.
             - "S": SPC forces are excluded.
@@ -4465,17 +4452,20 @@ class MONPNT3(BaseCard):
         self.label = label
         self.axes = axes
         #self.comp = comp
-        self.grid_set = grid_set_group
-        self.elem_set = elem_set_group
+        self.node_set_group = node_set_group
+        self.elem_set_group = elem_set_group
         self.xyz = xyz
         self.xflag = xflag
         self.cp = cp
         self.cd = cd
         self.cp_ref = None
         self.cd_ref = None
+        self.node_ref = None
+        self.elem_ref = None
+        assert len(self.xyz) == 3, xyz
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BaseCard, comment: str=''):
         name = string(card, 1, 'name')
 
         label_fields = [labeli for labeli in card[2:8] if labeli is not None]
@@ -4483,20 +4473,21 @@ class MONPNT3(BaseCard):
         assert len(label) <= 56, label
 
         axes = parse_components(card, 9, 'axes')
-        grid_set = integer_or_string(card, 10, 'grid_set')
-        if isinstance(grid_set, int):
-            elem_set = integer_or_blank(card, 11, 'elem_set', default=0)
-        else:
-            elem_set = string_or_blank(card, 11, 'elem_set', default='')
+        node_set = integer_or_blank(card, 10, 'node_set/group', default=0)
+        #if isinstance(grid_set, int):
+        elem_set = integer_or_blank(card, 11, 'elem_set/group', default=0)
+        # else:
+        #     elem_set = string_or_blank(card, 11, 'elem_set/group', default='')
         cp = integer_or_blank(card, 12, 'cp', default=0)
         xyz = [
             double_or_blank(card, 13, 'x', default=0.0),
             double_or_blank(card, 14, 'y', default=0.0),
             double_or_blank(card, 15, 'z', default=0.0),
         ]
-        xflag = string_or_blank(card, 16, 'xflag')
-        cd = integer_or_blank(card, 17, 'cd', cp)
-        return MONPNT3(name, label, axes, grid_set, elem_set, xyz,
+        xflag = string_or_blank(card, 16, 'xflag', default='')
+        cd = integer_or_blank(card, 17, 'cd', default=cp)
+        return MONPNT3(name, label, axes, xyz,
+                       node_set, elem_set,
                        cp=cp, cd=cd, xflag=xflag, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -4512,11 +4503,19 @@ class MONPNT3(BaseCard):
         msg = ', which is required by MONPNT3 name=%s' % self.name
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.cd_ref = model.Coord(self.cd, msg=msg)
+        if self.node_set_group > 0:
+            self.node_ref = model.Group(self.node_set_group, msg=msg)
+        if self.elem_set_group > 0:
+            self.elem_ref = model.Group(self.elem_set_group, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by MONPNT3 name=%s' % self.name
         self.cp_ref = model.safe_coord(self.cp, self.name, xref_errors, msg=msg)
         self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
+        if self.node_set_group > 0:
+            self.node_ref = model.Group(self.node_set_group, msg=msg)
+        if self.elem_set_group > 0:
+            self.elem_ref = model.Group(self.elem_set_group, msg=msg)
 
     def uncross_reference(self) -> None:
         self.cp = self.Cp()
@@ -4525,19 +4524,15 @@ class MONPNT3(BaseCard):
         self.cd_ref = None
 
     def Cp(self):
-        if self.cp_ref is not None:
-            return self.cp_ref.cid
-        return self.cp
+        return coord_id(self.cp_ref, self.cp)
 
     def Cd(self):
-        if self.cd_ref is not None:
-            return self.cd_ref.cid
-        return self.cd
+        return coord_id(self.cd_ref, self.cd)
 
     def raw_fields(self):
         list_fields = [
             'MONPNT3', self.name, self.label.strip(),
-            self.axes, self.grid_set, self.elem_set, self.Cp()
+            self.axes, self.node_set_group, self.elem_set_group, self.Cp()
             ] + list(self.xyz) + [self.xflag, self.Cd()]
         return list_fields
 
@@ -4554,7 +4549,7 @@ class MONPNT3(BaseCard):
         msg = 'MONPNT3 %-8s%s\n' % (self.name, self.label)
         msg += ('        %-8s%-8s%-8s%-8s%-8s%-8s%-8s%-8s\n'
                 '         %-8s' % (
-                    self.axes, self.grid_set, self.elem_set, cp,
+                    self.axes, self.node_set_group, self.elem_set_group, cp,
                     print_float_8(x), print_float_8(y), print_float_8(z),
                     xflag, cd
                 ))
@@ -4707,15 +4702,11 @@ class MONDSP1(BaseCard):
         self.cp_ref = None
         self.cd_ref = None
 
-    def Cp(self):
-        if self.cp_ref is not None:
-            return self.cp_ref.cid
-        return self.cp
+    def Cp(self) -> int:
+        return coord_id(self.cp_ref, self.cp)
 
-    def Cd(self):
-        if self.cd_ref is not None:
-            return self.cd_ref.cid
-        return self.cd
+    def Cd(self) -> int:
+        return coord_id(self.cd_ref, self.cd)
 
     def raw_fields(self):
         list_fields = [

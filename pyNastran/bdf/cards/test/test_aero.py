@@ -3003,9 +3003,13 @@ class TestAero(unittest.TestCase):
 
         grid_set = 43
         elem_set = 44
-        monpnt3 = model.add_monpnt3(name, label, axes, grid_set, elem_set,
-                                    xyz, cp=0, cd=None,
-                                    xflag=None, comment='monpnt3')
+        model.add_group(43, nodes=[1, 2])
+        model.add_group(44, nodes=[3, 4])
+        monpnt3 = model.add_monpnt3(name, label, axes, xyz,
+                                    node_set_group=grid_set,
+                                    elem_set_group=elem_set,
+                                    cp=0, cd=None,
+                                    xflag='', comment='monpnt3')
         monpnt3.raw_fields()
         monpnt3.validate()
 
@@ -3025,6 +3029,8 @@ class TestAero(unittest.TestCase):
         ]
         card_name = 'MONPNT3'
         model.add_card_lines(card_lines, card_name, comment='', has_none=True)
+        model.add_group(1, nodes=[1, 2])
+        model.add_group(2, nodes=[1, 2])
         origin = [0., 0., 0.]
         zaxis = [0., 0., 1.]
         xzplane = [1., 0., 0.]
@@ -3033,7 +3039,7 @@ class TestAero(unittest.TestCase):
         #model.add_monpnt3()
         save_load_deck(model)
 
-    def test_monpnt3_group(self):
+    def test_monpnt3_group_nx(self):
         model = BDF(debug=None)
         group_id = 42
         nodes = [1, 2, 3]
@@ -3042,7 +3048,6 @@ class TestAero(unittest.TestCase):
         group = model.add_group(group_id, nodes, elements, properties,
                                 description='LABEL x=1, y=2, z=3.3',
                                 meta='meta attribute X=1')
-        print(group)
         # card_lines = [
         #     'MONPNT3 MP3A    MP3 at node 11 CP=225 CD=225',
         #     '        123456  1       2       225     0.	0.	0.',
@@ -3053,10 +3058,16 @@ class TestAero(unittest.TestCase):
         name = 'CAT'
         label = 'LABEL x=1'
         axes = 123
-        grid_set = 3
+        node_set = 3
         elem_set = 3
         xyz = [0., 0., 0.]
-        monpnt3 = model.add_monpnt3(name, label, axes, grid_set, elem_set, xyz, cp=0, cd=0)
+
+        nodes = [1, 2, 3]
+        model.add_group(node_set, nodes)
+        monpnt3 = model.add_monpnt3(name, label, axes, xyz,
+                                    node_set, elem_set,
+                                    cp=0, cd=0)
+        model.cross_reference()
         print(monpnt3)
         # origin = [0., 0., 0.]
         # zaxis = [0., 0., 1.]
