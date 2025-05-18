@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import pyNastran
-from pyNastran.utils.dev import get_files_of_type, get_files_of_types
+from pyNastran.utils.dev import get_files_of_types # get_files_of_type,
 PKG_PATH = Path(pyNastran.__path__[0])
 
 
@@ -144,8 +144,13 @@ def get_files_of_types2(dirnames: list[str], extensions: list[str],
     files_out = []
     if check_extension:
         dirnames = list(set(dirnames))
+
     for dirname in dirnames:
+        print(dirname)
         assert isinstance(dirname, str), dirname
+        if not os.path.exists(dirname):
+            print(f'missing dirname {dirname}')
+            continue
         fnames = os.listdir(dirname)
         fnames = [os.path.join(dirname, fname) for fname in fnames]
         for fname_dirname in fnames:
@@ -200,15 +205,18 @@ def get_op2_model_directories(folders_filennames: list[str],
 def run(regenerate=True, make_geom=False, combine=True,
         write_bdf=False, build_pandas=True,
         xref_safe=False,
-        include_results: Optional[str]=None,
-        exclude_results: Optional[str]=None,
+        include_results: Optional[str] | list[str]=None,
+        exclude_results: Optional[str] | list[str]=None,
         save_cases=True, debug=False, write_f06=True, write_op2=False,
         compare=True, short_stats=False, write_hdf5=True):
     # works
     #files = get_files_of_type('tests', '.op2')
-    files = get_files_of_types2(['tests'], ['.op2'])
+    #dirname = os.path.dirname(__file__)
+    #test_dir = os.path.join(dirname, 'tests')
+    #files = get_files_of_types2([test_dir], ['.op2'])
     print(' '.join(sys.argv))
 
+    #files = []
     folders_file1 = str(PKG_PATH / 'bdf' / 'test' / 'tests' / 'foldersRead.txt')
     folders_file2 = str(PKG_PATH / 'op2' / 'test' / 'folders_read.txt')
 
@@ -222,7 +230,7 @@ def run(regenerate=True, make_geom=False, combine=True,
     #max_size = 4000. # MB
     max_size = 500. # MB
     filter_simcenter = False
-    failed_cases_filename = 'failed_cases%s%s.in' % (sys.version_info[:2])
+    failed_cases_filename = 'failed_cases%s%s.in' % tuple(sys.version_info[:2])
     if get_skip_cards:
         files2 = parse_skipped_cards('skipped_cards.out')
     elif regenerate or not os.path.exists(failed_cases_filename):

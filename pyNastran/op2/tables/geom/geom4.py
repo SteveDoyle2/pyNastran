@@ -535,7 +535,8 @@ class GEOM4(GeomCommon):
             #'RBAR', self.op2.reader_geom3._add_op2_rigid_element)
         return n
 
-    def _read_rbar_nx_28(self, card_obj, data: bytes, n: int) -> tuple[int, list[RBAR]]:
+    def _read_rbar_nx_28(self, card_obj, data: bytes,
+                         n: int) -> tuple[int, list[RBAR]]:
         """
         RBAR(6601,66,292) - Record 22 - NX version
 
@@ -1890,7 +1891,8 @@ def fill_rbe3_wt_comp_gijs(i: int, j: int,
     assert len(weights) > 0, weights
     return i, weights, comps, grids
 
-def _read_spcadd_mpcadd(model: OP2Geom, card_name: str, datai: np.ndarray) -> None:
+def _read_spcadd_mpcadd(model: OP2Geom, card_name: str,
+                        datai: np.ndarray) -> None:
     """
     reads a SPCADD/MPCADD card
 

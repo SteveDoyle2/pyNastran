@@ -1148,7 +1148,8 @@ def _setup_bar_grid_point_forces(log):
                      exclude_results=None, log=log)
     log = model.log
     gpforce = model.grid_point_forces[1]  # type: RealGridPointForcesArray
-    force = model.cbar_force[1]
+    forces = model.op2_results.force
+    force = forces.cbar_force[1]
     #['station', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2', 'axial', 'torque']
     headers = force.get_headers()
     #istation = headers.index('station')
@@ -1192,4 +1193,3 @@ def _setup_bar_grid_point_forces(log):
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
-

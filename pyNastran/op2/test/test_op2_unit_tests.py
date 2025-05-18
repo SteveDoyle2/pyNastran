@@ -26,8 +26,8 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf, CORD2R
-from pyNastran.op2.op2 import OP2, read_op2, FatalError, FortranMarkerError
+from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.op2.op2 import OP2, read_op2  #, FatalError, FortranMarkerError
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
@@ -288,22 +288,23 @@ class TestAutodeskOP2(Tester):
 
         assert len(op2.displacements) == 1
         assert len(op2.spc_forces) == 1
-        assert len(op2.ctetra_stress) == 1
+        stress = op2.op2_results.stress
+        assert len(stress.ctetra_stress) == 1
 
         isubcase = 1
-        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress = stress.ctetra_stress[isubcase]
         if IS_PANDAS:
             ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 810, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 810*5, 10), ctetra_stress.data.shape
 
-        assert len(op2.cpenta_stress) == 0
-        assert len(op2.chexa_stress) == 0
+        assert len(stress.cpenta_stress) == 0
+        assert len(stress.chexa_stress) == 0
         assert len(op2.grid_point_forces) == 0
 
     def test_op2_autodesk_2(self):
         """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(MODEL_PATH, 'autodesk', '9zk6b5uuo.op2')
+        op2_filename = MODEL_PATH / 'autodesk' / '9zk6b5uuo.op2'
         log = get_logger(level='warning')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, write_f06=False,
@@ -331,7 +332,7 @@ class TestAutodeskOP2(Tester):
 
     def test_op2_autodesk_3(self):
         """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(MODEL_PATH, 'autodesk', 'nonlinear_beam.op2')
+        op2_filename = MODEL_PATH / 'autodesk' / 'nonlinear_beam.op2'
         log = get_logger(level='warning')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, write_f06=True,
@@ -365,7 +366,7 @@ class TestOptistructOP2(Tester):
         Optistruct 2012 Tables : CASECC, GEOM1S, GEOM2S, GEOM3S, GEOM4S, EPTS, MPTS,
                                 OUGV1, OES1X
         """
-        op2_filename = os.path.join(MODEL_PATH, 'optistruct', 'hm14.op2')
+        op2_filename = MODEL_PATH / 'optistruct' / 'hm14.op2'
         make_geom = True
         write_bdf = False
         write_f06 = True
@@ -384,7 +385,7 @@ class TestOptistructOP2(Tester):
         isubcase = 1
 
         stress = op2.op2_results.stress
-        strain = op2.op2_results.strain
+        #strain = op2.op2_results.strain
         force = op2.op2_results.force
 
         # rod_force = force.crod_force[isubcase]
@@ -441,8 +442,8 @@ class TestSATKOP2(Tester):
     def test_bdf_op2_satk_1(self):
         """checks pn_mwe_s-solution_1.dat, which tests dynamics matrices"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'satk', 'pn_mwe_s-solution_1.dat')
-        op2_filename = os.path.join(MODEL_PATH, 'satk', 'pn_mwe_s-solution_1.op2')
+        bdf_filename = MODEL_PATH / 'satk' / 'pn_mwe_s-solution_1.dat'
+        op2_filename = MODEL_PATH / 'satk' / 'pn_mwe_s-solution_1.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -472,7 +473,7 @@ class TestSATKOP2(Tester):
         checks pn_mwe_s-response_dynamics_1-random_base_excitation_1.op2,
         which tests OUGPK1, OEFPK1 RMS results
         """
-        log = get_logger(level='info')
+        #log = get_logger(level='info')
         #bdf_filename = os.path.join(MODEL_PATH, 'satk', 'pn_mwe_s-solution_1.dat')
         op2_filename = os.path.join(MODEL_PATH, 'satk',
                                     'pn_mwe_s-response_dynamics_1-random_base_excitation_1.op2')
@@ -506,9 +507,9 @@ class TestSATKOP2(Tester):
     def test_bdf_op2_satk_3(self):
         """checks pn_mwe_s-sol_111.dat, which tests PSD tables"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'cbush_psd_bug', 'pn_mwe_s-sol_111.dat')
-        op2_filename = os.path.join(MODEL_PATH, 'cbush_psd_bug', 'pn_mwe_s-sol_111.op2')
-        op2_filename2 = os.path.join(MODEL_PATH, 'cbush_psd_bug', 'pn_mwe_s-rd_satk-rbe.op2')
+        bdf_filename = MODEL_PATH / 'cbush_psd_bug' / 'pn_mwe_s-sol_111.dat'
+        op2_filename = MODEL_PATH / 'cbush_psd_bug' / 'pn_mwe_s-sol_111.op2'
+        op2_filename2 = MODEL_PATH / 'cbush_psd_bug' / 'pn_mwe_s-rd_satk-rbe.op2'
 
         #  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -650,12 +651,12 @@ class TestSATKOP2(Tester):
             #sort1
             #freqs = [0.]; dtype=float32
 
-        op2.eigenvalues['']
+        str(op2.eigenvalues[''])
             #type=RealEigenvalues neigenvalues=8
             #title, extraction_order, eigenvalues, radians, cycles, generalized_mass, generalized_stiffness
 
-        op2.matrices['BHH']
-        op2.matrices['KHH']
+        str(op2.matrices['BHH'])
+        str(op2.matrices['KHH'])
             #Matrix['BHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=float64;   desc=symmetric
             #Matrix['KHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=complex128; desc=symmetric
 
@@ -726,7 +727,7 @@ class TestNX(Tester):
 
     def test_nx_flutter(self):
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'aero', 'flutter_bug', 'wing_b1.op2')
+        op2_filename = MODEL_PATH / 'aero' / 'flutter_bug' / 'wing_b1.op2'
         unused_op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True, read_bdf=True, write_f06=True,
             write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
@@ -738,8 +739,8 @@ class TestNX(Tester):
     def test_nx_glue_slide_distance(self):
         """test NX 2020 version"""
         log = get_logger(level='warning')
-        op2_filename = os.path.join(MODEL_PATH, 'nx', 'glue', 'n401gsh01.op2')
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2_filename = MODEL_PATH / 'nx' / 'glue' / 'n401gsh01.op2'
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -753,8 +754,8 @@ class TestNX(Tester):
     def test_nx_bolt(self):
         """test NX 2020 version"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'bolt', 's402bolt304.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx', 'bolt', 's402bolt304.op2')
+        bdf_filename = MODEL_PATH / 'nx' / 'bolt' / 's402bolt304.bdf'
+        op2_filename = MODEL_PATH / 'nx' / 'bolt' / 's402bolt304.op2'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -965,7 +966,7 @@ class TestMSC(Tester):
         """test MSC 2014 version"""
         log = get_logger(level='warning')
         op2_filename1 = MODEL_PATH / 'bugs' / 'msc_2014' / 'sdof_crod_2014.op2'
-        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -982,7 +983,7 @@ class TestMSC(Tester):
         bdf_filename = MODEL_PATH / 'msc' / 'test_model_cfast.bdf'
         op2_filename = MODEL_PATH / 'msc' / 'test_model_cfast.op2'
         model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
-        bdf_filename_out = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast_out.bdf')
+        bdf_filename_out = MODEL_PATH / 'msc' / 'test_model_cfast_out.bdf'
         model.write_bdf(bdf_filename_out)
         os.remove(bdf_filename_out)
 
@@ -1000,7 +1001,7 @@ class TestMSC(Tester):
         bdf_filename = MODEL_PATH / 'bugs' / 'msc_dscmcol' / 'goland_final_test.bdf'
         op2_filename = MODEL_PATH / 'bugs' / 'msc_dscmcol' / 'goland_final_test.op2'
         model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
-        bdf_filename_out = os.path.join(MODEL_PATH, 'bugs', 'msc_dscmcol', 'test_goland_final_test.bdf')
+        bdf_filename_out = MODEL_PATH / 'bugs' / 'msc_dscmcol' / 'test_goland_final_test.bdf'
         model.write_bdf(bdf_filename_out)
         os.remove(bdf_filename_out)
 
@@ -2336,8 +2337,8 @@ class TestOP2Main(Tester):
     def test_bdf_op2_other_26(self):
         """checks tr1091x.bdf, which tests RealBendForceArray"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'tr1091x.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'tr1091x.op2'
 
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -2374,8 +2375,8 @@ class TestOP2Main(Tester):
     def test_bdf_op2_other_27(self):
         """checks ac10804.bdf, which tests ComplexPlateStressArray"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'ac10804.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'ac10804.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'ac10804.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'ac10804.op2'
 
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -2410,8 +2411,8 @@ class TestOP2Main(Tester):
     def test_bdf_op2_other_28(self):
         """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'sdr11se_s2dclg.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'sdr11se_s2dclg.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -2439,8 +2440,8 @@ class TestOP2Main(Tester):
     def test_bdf_op2_other_30(self):
         """checks rot063akd2s_107.bdf, which tests CampbellDiagram"""
         log = get_logger(level='info')
-        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'rot063akd2s_107.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'rot063akd2s_107.op2')
+        #bdf_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -2468,8 +2469,8 @@ class TestOP2Main(Tester):
     def test_bdf_op2_other_31(self):
         """checks htrussx.bdf, which tests getting rid of the Panel"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'htrussx.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'htrussx.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'htrussx.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'htrussx.op2'
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -3698,8 +3699,8 @@ class TestOP2Main(Tester):
 
     def test_cbar_orientation(self):
         """tests cbar_orientation.op2"""
-        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'cbar_orientation.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'cbar_orientation.op2')
+        bdf_filename = MODEL_PATH / 'unit' / 'bars' / 'cbar_orientation.bdf'
+        op2_filename = MODEL_PATH / 'unit' / 'bars' / 'cbar_orientation.op2'
         make_geom = True
         write_bdf = True
         write_f06 = True
@@ -3738,7 +3739,7 @@ class TestOP2Main(Tester):
 
     def test_op2_cbush_01(self):
         """tests cbush/cbush.op2"""
-        op2_filename = os.path.join(MODEL_PATH, 'unit', 'cbush', 'cbush.op2')
+        op2_filename = MODEL_PATH / 'unit' / 'cbush' / 'cbush.op2'
         make_geom = True
         write_bdf = True
         write_f06 = True
@@ -3761,16 +3762,19 @@ class TestOP2Main(Tester):
             quiet=True, stop_on_failure=True, dev=False, xref_safe=False,
             post=None, load_as_h5=True)
         isubcase = 1
+        stress = op2.op2_results.stress
+        strain = op2.op2_results.strain
+        force = op2.op2_results.force
 
-        cbush_stress = op2.op2_results.stress.cbush_stress[isubcase]
+        cbush_stress = stress.cbush_stress[isubcase]
         assert cbush_stress.nelements == 1, cbush_stress.nelements
         assert cbush_stress.data.shape == (1, 1, 6), cbush_stress.data.shape
 
-        cbush_strain = op2.op2_results.strain.cbush_strain[isubcase]
+        cbush_strain = strain.cbush_strain[isubcase]
         assert cbush_strain.nelements == 1, cbush_strain.nelements
         assert cbush_strain.data.shape == (1, 1, 6), cbush_strain.data.shape
 
-        cbush_force = op2.cbush_force[isubcase]
+        cbush_force = force.cbush_force[isubcase]
         assert cbush_force.nelements == 1, cbush_force.nelements
         assert cbush_force.data.shape == (1, 1, 6), cbush_force.data.shape
         if IS_PANDAS:
@@ -3782,8 +3786,8 @@ class TestOP2Main(Tester):
     def test_cgap_01(self):
         """checks cc188b.bdf"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'cc188b.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'cc188b.op2')
+        bdf_filename = MODEL_PATH / 'other' / 'cc188b.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'cc188b.op2'
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
@@ -3805,8 +3809,8 @@ class TestOP2Main(Tester):
     def test_bdf_op2_cbush_nonlinear(self):
         """checks tr1091x.bdf, which tests RealBendForceArray"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(OP2_TEST_PATH, 'cbush_nonlinear', 'cbush_106_large_disp.bdf')
-        op2_filename = os.path.join(OP2_TEST_PATH, 'cbush_nonlinear', 'cbush_106_large_disp.op2')
+        bdf_filename = OP2_TEST_PATH / 'cbush_nonlinear' / 'cbush_106_large_disp.bdf'
+        op2_filename = OP2_TEST_PATH / 'cbush_nonlinear' / 'cbush_106_large_disp.op2'
 
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename, log=log)
