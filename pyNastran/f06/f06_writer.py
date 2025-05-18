@@ -20,6 +20,7 @@ from pyNastran.utils import object_attributes, PathLike, PurePath
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
+from pyNastran.op2.op2_interface.internal_utils import get_result_length
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet, add_results_of_exact_type
 from pyNastran.op2.result_objects.matrix import Matrix  #, MatrixDict
@@ -657,7 +658,7 @@ class F06Writer(OP2_F06_Common):
                 #else:
                     #is_compressed = True
 
-                res_length = model._get_result_length(res_types, res_key)
+                res_length = get_result_length(res_types, res_key)
                 if res_length == 0:
                     # skipped subcase; no saved results
                     continue
