@@ -51,8 +51,8 @@ else:
             date_out = (year, month, day)
         except Exception:
             # git isn't installed
-            ghash = 'no.checksum.error'
-            date_out = ('2024', '8', 'xx')
+            ghash = 'no.git.checksum'
+            date_out = ('2025', '5', 'xx')
         # 1.5.0+dev.0eccfa918
         return 'dev.%s' % ghash, date_out
 
@@ -78,7 +78,7 @@ __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'
 __desc__ = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __license__ = 'BSD-3'
-__copyright__ = f'Copyright {__license__}; 2011-2024'
+__copyright__ = f'Copyright {__license__}; 2011-2025'
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
