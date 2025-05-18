@@ -1752,6 +1752,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
                             assert value.replace('-', '').isalnum(), f'{key} = {value!r}'
                         elif word == b'PRTMAXIM':
                             # NOTEST_ -> NO
+                            #if value == 'NOTEST_':
+                                #value = 'NO'
                             assert value in {'NOTEST_'}, value
                             #pass\assert value.replace('-', '').isalnum(), f'{key} = {value!r}'
                         else:

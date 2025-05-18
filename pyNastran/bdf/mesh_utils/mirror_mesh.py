@@ -1029,7 +1029,7 @@ def _mirror_aero(model: BDF,
                 log.error('skipping (only supports CAERO1):\n%s' % caero.rstrip())
 
         for caero in caeros:
-            add_methods._add_caero_object(caero)
+            add_methods.add_caero_object(caero)
 
     if len(w2gj):
         hstack_w2gj = np.hstack(w2gj)
@@ -1090,9 +1090,9 @@ def _mirror_aero(model: BDF,
 
         add_methods = mirror_model._add_methods
         for spline in splines:
-            add_methods._add_spline_object(spline)
+            add_methods.add_spline_object(spline)
         for set_card in sets_to_add:
-            add_methods._add_set_object(set_card)
+            add_methods.add_set_object(set_card)
 
     aelist_id_offset = 0
     if len(model.aelists):

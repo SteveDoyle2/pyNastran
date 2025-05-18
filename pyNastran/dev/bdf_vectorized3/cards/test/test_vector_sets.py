@@ -488,8 +488,8 @@ class TestSets(unittest.TestCase):
                   1, 2, 3, 4, 5, 6, 7, 8, 10, 9]
         model.add_card(fields, 'USET1', comment='uset1')
         model.setup()
-        #add_methods._add_uset_object(uset1a)
-        #add_methods._add_uset_object(uset1b)
+        #add_methods.add_uset_object(uset1a)
+        #add_methods.add_uset_object(uset1b)
         uset.write()
 
         unused_useta = model.add_uset(
@@ -502,7 +502,7 @@ class TestSets(unittest.TestCase):
                   5, 4, 3, 2, 1]
         model.setup()
         model.add_card(fields, 'USET', comment='uset')
-        #add_methods._add_uset_object(useta)
+        #add_methods.add_uset_object(useta)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -536,8 +536,8 @@ class TestSets(unittest.TestCase):
         sebseta = sebset.slice_card_by_id(seid)
         unused_sebsetb = sebset.slice_card_by_id(seid+1)
         assert len(sebseta.component) == 5, sebseta.component
-        #add_methods._add_sebset_object(sebseta)
-        #add_methods._add_sebset_object(sebsetb)
+        #add_methods.add_sebset_object(sebseta)
+        #add_methods.add_sebset_object(sebsetb)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -594,7 +594,7 @@ class TestSets(unittest.TestCase):
                   1, 2, 3, 4, 5,
                   5, 4, 3, 2, 1]
         model.add_card(fields, 'SEQSET', comment='seqset')
-        #add_methods._add_seqset_object(seqsetb)
+        #add_methods.add_seqset_object(seqsetb)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -611,8 +611,8 @@ class TestSets(unittest.TestCase):
         #fields = ['SEUSET1', 'MYSET2',
                   #5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]
         #model.add_card(fields, 'SEUSET1', comment='seuset1')
-        #add_methods._add_seuset_object(seuset1a)
-        ##add_methods._add_uset_object(uset1b)
+        #add_methods.add_seuset_object(seuset1a)
+        ##add_methods.add_uset_object(uset1b)
         #seuset1.write()
 
         #useta = SEUSET('MYSET3', seid, [1, 2, 3, 4, 5], [5, 4, 3, 2, 1], comment='seuset')
@@ -620,7 +620,7 @@ class TestSets(unittest.TestCase):
                   #1, 2, 3, 4, 5,
                   #5, 4, 3, 2, 1]
         #model.add_card(fields, 'SEUSET', comment='seuset')
-        #add_methods._add_uset_object(useta)
+        #add_methods.add_uset_object(useta)
 
         #nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         #for nid in nids:

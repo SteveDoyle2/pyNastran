@@ -160,7 +160,7 @@ class EPT:
             ntables > 1 and
             pid in op2.properties and
             op2.properties[pid].type == prop.type)
-        op2._add_methods._add_property_object(prop, allow_overwrites=allow_overwrites)
+        op2._add_methods.add_property_object(prop, allow_overwrites=allow_overwrites)
 
     def _add_op2_property_mass(self, prop):
         """helper method for op2"""
@@ -174,12 +174,12 @@ class EPT:
             ntables > 1 and
             pid in op2.properties_mass and
             op2.properties_mass[pid].type == prop.type)
-        op2._add_methods._add_property_mass_object(prop, allow_overwrites=allow_overwrites)
+        op2._add_methods.add_property_mass_object(prop, allow_overwrites=allow_overwrites)
 
     def _add_pconv(self, prop: PCONV) -> None:
         if prop.pconid > 100000000:
             raise RuntimeError('bad parsing pconid > 100000000...%s' % str(prop))
-        self.op2._add_methods._add_convection_property_object(prop)
+        self.op2._add_methods.add_convection_property_object(prop)
 
 # HGSUPPR
 
@@ -947,7 +947,7 @@ class EPT:
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_nsm_nx, self._read_nsm_msc,
-            'NSM', op2._add_methods._add_nsm_object)
+            'NSM', op2._add_methods.add_nsm_object)
         return n
 
     def read_nsm_2(self, data: bytes, n: int) -> int:
@@ -1053,7 +1053,7 @@ class EPT:
             op2.log.info("MSC: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
                 sid, prop_set, pid, values))
             prop = NSM.add_op2_data([sid, prop_set, pid, value])
-            #op2._add_methods._add_nsm_object(prop)
+            #op2._add_methods.add_nsm_object(prop)
             properties.append(prop)
 
             # handle the trailing -1
@@ -1127,7 +1127,7 @@ class EPT:
                     prop = NSML.add_op2_data([sid, prop_set, pid, value])
 
                 #print(prop.rstrip(), pid, value)
-                #op2._add_methods._add_nsm_object(prop)
+                #op2._add_methods.add_nsm_object(prop)
                 properties.append(prop)
             #print('----')
 
@@ -1583,7 +1583,7 @@ class EPT:
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_pbend_nx, self._read_pbend_msc,
-            'PBEND', op2._add_methods._add_property_object)
+            'PBEND', op2._add_methods.add_property_object)
         return n
 
     def _read_pbend_msc(self, data: bytes, n: int) -> tuple[int, list[PBEND]]:
@@ -2188,7 +2188,7 @@ class EPT:
         }
         try:
             n = op2.reader_geom2._read_double_card(
-                card_name, card_obj, op2._add_methods._add_pbusht_object,
+                card_name, card_obj, op2._add_methods.add_pbusht_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -2881,7 +2881,7 @@ class EPT:
                 #print(out)
                 prop = PCONVM(pconid, mid, coeff, form=form, flag=flag,
                               expr=expr, exppi=expri, exppo=exppo, comment='')
-                op2._add_methods._add_convection_property_object(prop)
+                op2._add_methods.add_convection_property_object(prop)
             n += ntotal
         op2.card_count['PCONVM'] = nentries
         return n
@@ -3079,7 +3079,7 @@ class EPT:
                 op2.binary_debug.write('  PELAST=%s\n' % str(out))
             #(pid, tkid, tgeid, tknid) = out
             prop = PELAST.add_op2_data(out)
-            op2._add_methods._add_pelast_object(prop)
+            op2._add_methods.add_pelast_object(prop)
             n += ntotal
         op2.card_count['PELAST'] = nproperties
         return n
@@ -3118,7 +3118,7 @@ class EPT:
                 op2.binary_debug.write('  PHBDY=%s\n' % str(out))
             #(pid, af, d1, d2) = out
             prop = PHBDY.add_op2_data(out)
-            op2._add_methods._add_phbdy_object(prop)
+            op2._add_methods.add_phbdy_object(prop)
             n += 16
         op2.card_count['PHBDY'] = nproperties
         return n

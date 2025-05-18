@@ -166,7 +166,7 @@ class DYNAMICS(GeomCommon):
             assert print_flag in {0, 1}, print_flag
 
             # darea = DAREA.add_op2_data(data=out)
-            # op2._add_methods._add_darea_object(darea)
+            # op2._add_methods.add_darea_object(darea)
             n += ntotal
         op2.log.warning('geom skipping CAMPBLL')
         return n
@@ -250,7 +250,7 @@ class DYNAMICS(GeomCommon):
         """common method for reading NX/MSC ACSRCE"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
-                                             'ACSRCE', op2._add_methods._add_dload_entry)
+                                             'ACSRCE', op2._add_methods.add_dload_entry)
         return n
 
     def _read_acsrce_msc(self, data, n):
@@ -356,7 +356,7 @@ class DYNAMICS(GeomCommon):
             out = struc.unpack(edata)
             #(sid,p,c,a) = out
             darea = DAREA.add_op2_data(data=out)
-            op2._add_methods._add_darea_object(darea)
+            op2._add_methods.add_darea_object(darea)
             n += ntotal
         return n
 
@@ -382,7 +382,7 @@ class DYNAMICS(GeomCommon):
             if op2.is_debug_file:
                 op2.binary_debug.write('  DELAY=%s\n' % str(out))
             delay = DELAY(sid, nodes, components, delays)
-            op2._add_methods._add_delay_object(delay)
+            op2._add_methods.add_delay_object(delay)
             n += ntotal
         return n
 
@@ -455,7 +455,7 @@ class DYNAMICS(GeomCommon):
             if op2.is_debug_file:
                 op2.binary_debug.write('  DPHASE=%s\n' % str(out))
             delay = DPHASE(sid, nodes, components, delays)
-            op2._add_methods._add_dphase_object(delay)
+            op2._add_methods.add_dphase_object(delay)
             n += ntotal
         return n
 
@@ -546,7 +546,7 @@ class DYNAMICS(GeomCommon):
             method = method.strip().decode('latin1')
             norm = norm.strip().decode('latin1')
             eigb = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, g, c)
-            op2._add_methods._add_method_object(eigb)
+            op2._add_methods.add_method_object(eigb)
             n += ntotal
         return n
 
@@ -597,7 +597,7 @@ class DYNAMICS(GeomCommon):
                 method = method.strip().decode('latin1')
                 norm = norm.strip().decode('latin1')
                 eigb = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, g, c)
-                op2._add_methods._add_method_object(eigb)
+                op2._add_methods.add_method_object(eigb)
                 n += ntotal
             #return n
 
@@ -918,7 +918,7 @@ class DYNAMICS(GeomCommon):
         if op2.is_debug_file:
             op2.binary_debug.write('EPOINT=%s\n' % str(nids))
         epoint = EPOINTs.add_op2_data(list(nids))
-        op2._add_methods._add_epoint_object(epoint)
+        op2._add_methods.add_epoint_object(epoint)
         op2.increase_card_count('EPOINT', count_num=npoints)
         return len(data)
 
@@ -959,7 +959,7 @@ class DYNAMICS(GeomCommon):
                 op2.binary_debug.write('FREQ1=%s\n' % str(out))
             #print('out = %s' % str(out))
             freq = FREQ1(sid, f1, df, ndf=ndf)
-            op2._add_methods._add_freq_object(freq)
+            op2._add_methods.add_freq_object(freq)
             n += ntotal
         op2.increase_card_count('FREQ1', nentries)
         return n
@@ -1412,7 +1412,7 @@ class DYNAMICS(GeomCommon):
         """common method for reading NX/MSC RLOAD1"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
-                                             'RLOAD1', op2._add_methods._add_dload_entry)
+                                             'RLOAD1', op2._add_methods.add_dload_entry)
         return n
 
     def _read_randps_nx(self, data: bytes, n: int) -> tuple[int, list]:
@@ -1522,7 +1522,7 @@ class DYNAMICS(GeomCommon):
         """common method for reading NX/MSC RLOAD1"""
         op2: OP2Geom = self.op2
         n = op2.reader_geom2._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
-                                             'RLOAD1', op2._add_methods._add_dload_entry)
+                                             'RLOAD1', op2._add_methods.add_dload_entry)
         return n
 
     def _read_rload1_nx(self, data: bytes, n: int) -> tuple[int, list[RLOAD1]]:
@@ -1621,7 +1621,7 @@ class DYNAMICS(GeomCommon):
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_rload2_nx, self._read_rload2_msc,
-            'RLOAD2', op2._add_methods._add_dload_entry)
+            'RLOAD2', op2._add_methods.add_dload_entry)
         return n
 
     def _read_rload2_nx(self, data, n):
@@ -2136,7 +2136,7 @@ class DYNAMICS(GeomCommon):
             tf = TF(sid, nid, component, b0, b1, b2, nids, components, a)
             #if op2.is_debug_file:
                 #op2.binary_debug.write('%s\n' % str(tf))
-            op2._add_methods._add_tf_object(tf)
+            op2._add_methods.add_tf_object(tf)
             op2.increase_card_count('TF')
             n = n3
         return n
@@ -2200,7 +2200,7 @@ class DYNAMICS(GeomCommon):
         }
         #try:
         n = op2.reader_geom2._read_double_card(
-            card_name, card_obj, op2._add_methods._add_dload_entry,
+            card_name, card_obj, op2._add_methods.add_dload_entry,
             methods, data, n)
         #except DoubleCardError:
             #raise
@@ -2217,10 +2217,10 @@ class DYNAMICS(GeomCommon):
         #     n = op2.reader_geom2._read_dual_card(
         #         data, n,
         #         self._read_tload1_nx_24, self._read_tload1_msc_32,
-        #         'TLOAD1', op2._add_methods._add_dload_entry)
+        #         'TLOAD1', op2._add_methods.add_dload_entry)
         #     return n
         # for dload in dloads:
-        #     op2._add_methods._add_dload_entry(dload)
+        #     op2._add_methods.add_dload_entry(dload)
         # op2.card_count['TLOAD1'] = len(dloads)
         return n
 
@@ -2371,7 +2371,7 @@ class DYNAMICS(GeomCommon):
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_tload2_nx, self._read_tload2_msc,
-            'TLOAD2', op2._add_methods._add_dload_entry)
+            'TLOAD2', op2._add_methods.add_dload_entry)
         return n
 
     def _read_tload2_nx(self, data: bytes, n: int) -> tuple[int, list[TLOAD2]]:

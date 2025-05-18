@@ -151,7 +151,7 @@ class TestCoords(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         card = CORD2C(card)
-        add_methods._add_coord_object(card)
+        add_methods.add_coord_object(card)
 
         lines = [
             'CORD2R         4       3     10.      0.      5.     10.     90.      5.',
@@ -160,7 +160,7 @@ class TestCoords(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         card = CORD2R(card)
-        add_methods._add_coord_object(card)
+        add_methods.add_coord_object(card)
         model.cross_reference()
 
         cord2r = model.Coord(3)

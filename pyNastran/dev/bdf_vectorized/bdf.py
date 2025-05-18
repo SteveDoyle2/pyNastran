@@ -1587,14 +1587,14 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'EPOINT' : (EPOINTs, self.add_epoint),
             #'POINT' : (POINT, self.add_point),
 
-            'PARAM' : (PARAM, add_methods._add_param_object),
+            'PARAM' : (PARAM, add_methods.add_param_object),
 
             #'CORD2R' : (CORD2R, self._add_coord_object),
             #'CORD2C' : (CORD2C, self._add_coord_object),
             #'CORD2S' : (CORD2S, self._add_coord_object),
             #'GMCORD' : (GMCORD, self._add_coord_object),
 
-            'PLOTEL' : (PLOTEL, add_methods._add_plotel_object),
+            'PLOTEL' : (PLOTEL, add_methods.add_plotel_object),
 
             #'CONROD' : (CONROD, self.add_element),
             #'CROD' : (CROD, self.add_element),
@@ -1688,13 +1688,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             #'PCONEAX' : (PCONEAX, self.add_property),
 
-            'RBAR' : (RBAR, add_methods._add_rigid_element_object),
-            'RBAR1' : (RBAR1, add_methods._add_rigid_element_object),
-            'RBE1' : (RBE1, add_methods._add_rigid_element_object),
-            'RBE2' : (RBE2, add_methods._add_rigid_element_object),
-            'RBE3' : (RBE3, add_methods._add_rigid_element_object),
-            'RROD' : (RROD, add_methods._add_rigid_element_object),
-            'RSPLINE' : (RSPLINE, add_methods._add_rigid_element_object),
+            'RBAR' : (RBAR, add_methods.add_rigid_element_object),
+            'RBAR1' : (RBAR1, add_methods.add_rigid_element_object),
+            'RBE1' : (RBE1, add_methods.add_rigid_element_object),
+            'RBE2' : (RBE2, add_methods.add_rigid_element_object),
+            'RBE3' : (RBE3, add_methods.add_rigid_element_object),
+            'RROD' : (RROD, add_methods.add_rigid_element_object),
+            'RSPLINE' : (RSPLINE, add_methods.add_rigid_element_object),
 
 
             ## there is no MAT6 or MAT7
@@ -1784,8 +1784,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'FREQ2' : (FREQ2, self.add_FREQ),
             #'FREQ4' : (FREQ4, self.add_FREQ),
 
-            'DOPTPRM' : (DOPTPRM, add_methods._add_doptprm_object),
-            'DESVAR' : (DESVAR, add_methods._add_desvar_object),
+            'DOPTPRM' : (DOPTPRM, add_methods.add_doptprm_object),
+            'DESVAR' : (DESVAR, add_methods.add_desvar_object),
             # BCTSET
 
             #'TEMP' : (TEMP, self.add_thermal_load),
@@ -1802,75 +1802,75 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'PCONVM' : (PCONVM, self.add_convection_property),
 
             # aero
-            'AECOMP' : (AECOMP, add_methods._add_aecomp_object),
-            'AEFACT' : (AEFACT, add_methods._add_aefact_object),
-            'AELINK' : (AELINK, add_methods._add_aelink_object),
-            'AELIST' : (AELIST, add_methods._add_aelist_object),
-            'AEPARM' : (AEPARM, add_methods._add_aeparm_object),
-            'AESTAT' : (AESTAT, add_methods._add_aestat_object),
-            'AESURF' : (AESURF, add_methods._add_aesurf_object),
-            'AESURFS' : (AESURFS, add_methods._add_aesurfs_object),
+            'AECOMP' : (AECOMP, add_methods.add_aecomp_object),
+            'AEFACT' : (AEFACT, add_methods.add_aefact_object),
+            'AELINK' : (AELINK, add_methods.add_aelink_object),
+            'AELIST' : (AELIST, add_methods.add_aelist_object),
+            'AEPARM' : (AEPARM, add_methods.add_aeparm_object),
+            'AESTAT' : (AESTAT, add_methods.add_aestat_object),
+            'AESURF' : (AESURF, add_methods.add_aesurf_object),
+            'AESURFS' : (AESURFS, add_methods.add_aesurfs_object),
 
-            'CAERO1' : (CAERO1, add_methods._add_caero_object),
-            'CAERO2' : (CAERO2, add_methods._add_caero_object),
-            'CAERO3' : (CAERO3, add_methods._add_caero_object),
-            'CAERO4' : (CAERO4, add_methods._add_caero_object),
-            'CAERO5' : (CAERO5, add_methods._add_caero_object),
+            'CAERO1' : (CAERO1, add_methods.add_caero_object),
+            'CAERO2' : (CAERO2, add_methods.add_caero_object),
+            'CAERO3' : (CAERO3, add_methods.add_caero_object),
+            'CAERO4' : (CAERO4, add_methods.add_caero_object),
+            'CAERO5' : (CAERO5, add_methods.add_caero_object),
 
-            'PAERO1' : (PAERO1, add_methods._add_paero_object),
-            'PAERO2' : (PAERO2, add_methods._add_paero_object),
-            'PAERO3' : (PAERO3, add_methods._add_paero_object),
-            'PAERO4' : (PAERO4, add_methods._add_paero_object),
-            'PAERO5' : (PAERO5, add_methods._add_paero_object),
+            'PAERO1' : (PAERO1, add_methods.add_paero_object),
+            'PAERO2' : (PAERO2, add_methods.add_paero_object),
+            'PAERO3' : (PAERO3, add_methods.add_paero_object),
+            'PAERO4' : (PAERO4, add_methods.add_paero_object),
+            'PAERO5' : (PAERO5, add_methods.add_paero_object),
 
-            'SPLINE1' : (SPLINE1, add_methods._add_spline_object),
-            'SPLINE2' : (SPLINE2, add_methods._add_spline_object),
-            'SPLINE3' : (SPLINE3, add_methods._add_spline_object),
-            'SPLINE4' : (SPLINE4, add_methods._add_spline_object),
-            'SPLINE5' : (SPLINE5, add_methods._add_spline_object),
+            'SPLINE1' : (SPLINE1, add_methods.add_spline_object),
+            'SPLINE2' : (SPLINE2, add_methods.add_spline_object),
+            'SPLINE3' : (SPLINE3, add_methods.add_spline_object),
+            'SPLINE4' : (SPLINE4, add_methods.add_spline_object),
+            'SPLINE5' : (SPLINE5, add_methods.add_spline_object),
 
             # SOL 144
-            'AEROS' : (AEROS, add_methods._add_aeros_object),
-            'TRIM' : (TRIM, add_methods._add_trim_object),
-            'DIVERG' : (DIVERG, add_methods._add_diverg_object),
+            'AEROS' : (AEROS, add_methods.add_aeros_object),
+            'TRIM' : (TRIM, add_methods.add_trim_object),
+            'DIVERG' : (DIVERG, add_methods.add_diverg_object),
 
             # SOL 145
-            'AERO' : (AERO, add_methods._add_aero_object),
-            'FLUTTER' : (FLUTTER, add_methods._add_flutter_object),
-            'FLFACT' : (FLFACT, add_methods._add_flfact_object),
-            'MKAERO1' : (MKAERO1, add_methods._add_mkaero_object),
-            'MKAERO2' : (MKAERO2, add_methods._add_mkaero_object),
+            'AERO' : (AERO, add_methods.add_aero_object),
+            'FLUTTER' : (FLUTTER, add_methods.add_flutter_object),
+            'FLFACT' : (FLFACT, add_methods.add_flfact_object),
+            'MKAERO1' : (MKAERO1, add_methods.add_mkaero_object),
+            'MKAERO2' : (MKAERO2, add_methods.add_mkaero_object),
 
-            'GUST' : (GUST, add_methods._add_gust_object),
-            'CSSCHD' : (CSSCHD, add_methods._add_csschd_object),
-            'MONPNT1' : (MONPNT1, add_methods._add_monpnt_object),
-            'MONPNT2' : (MONPNT2, add_methods._add_monpnt_object),
-            'MONPNT3' : (MONPNT3, add_methods._add_monpnt_object),
+            'GUST' : (GUST, add_methods.add_gust_object),
+            'CSSCHD' : (CSSCHD, add_methods.add_csschd_object),
+            'MONPNT1' : (MONPNT1, add_methods.add_monpnt_object),
+            'MONPNT2' : (MONPNT2, add_methods.add_monpnt_object),
+            'MONPNT3' : (MONPNT3, add_methods.add_monpnt_object),
 
-            'NLPARM' : (NLPARM, add_methods._add_nlparm_object),
-            'NLPCI' : (NLPCI, add_methods._add_nlpci_object),
-            'TSTEP' : (TSTEP, add_methods._add_tstep_object),
-            'TSTEPNL' : (TSTEPNL, add_methods._add_tstepnl_object),
+            'NLPARM' : (NLPARM, add_methods.add_nlparm_object),
+            'NLPCI' : (NLPCI, add_methods.add_nlpci_object),
+            'TSTEP' : (TSTEP, add_methods.add_tstep_object),
+            'TSTEPNL' : (TSTEPNL, add_methods.add_tstepnl_object),
 
             #'TF' : (TF, self.add_TF),
             #'DELAY' : (DELAY, self.add_DELAY),
 
-            'DCONADD' : (DCONADD, add_methods._add_dconstr_object),
-            'DCONSTR' : (DCONSTR, add_methods._add_dconstr_object),
-            'DDVAL' : (DDVAL, add_methods._add_ddval_object),
-            'DLINK' : (DLINK, add_methods._add_dlink_object),
+            'DCONADD' : (DCONADD, add_methods.add_dconstr_object),
+            'DCONSTR' : (DCONSTR, add_methods.add_dconstr_object),
+            'DDVAL' : (DDVAL, add_methods.add_ddval_object),
+            'DLINK' : (DLINK, add_methods.add_dlink_object),
 
             #'DTABLE' : (DTABLE, self.add_dtable),
-            'DRESP1' : (DRESP1, add_methods._add_dresp_object),
-            'DRESP2' : (DRESP2, add_methods._add_dresp_object), # deqatn
-            'DRESP3' : (DRESP3, add_methods._add_dresp_object),
-            'DVCREL1' : (DVCREL1, add_methods._add_dvcrel_object), # dvcrels
-            'DVCREL2' : (DVCREL2, add_methods._add_dvcrel_object),
-            'DVPREL1' : (DVPREL1, add_methods._add_dvprel_object), # dvprels
-            'DVPREL2' : (DVPREL2, add_methods._add_dvprel_object),
-            'DVMREL1' : (DVMREL1, add_methods._add_dvmrel_object), # ddvmrels
-            'DVMREL2' : (DVMREL2, add_methods._add_dvmrel_object),
-            'DVGRID' : (DVGRID, add_methods._add_dvgrid_object), # dvgrids
+            'DRESP1' : (DRESP1, add_methods.add_dresp_object),
+            'DRESP2' : (DRESP2, add_methods.add_dresp_object), # deqatn
+            'DRESP3' : (DRESP3, add_methods.add_dresp_object),
+            'DVCREL1' : (DVCREL1, add_methods.add_dvcrel_object), # dvcrels
+            'DVCREL2' : (DVCREL2, add_methods.add_dvcrel_object),
+            'DVPREL1' : (DVPREL1, add_methods.add_dvprel_object), # dvprels
+            'DVPREL2' : (DVPREL2, add_methods.add_dvprel_object),
+            'DVMREL1' : (DVMREL1, add_methods.add_dvmrel_object), # ddvmrels
+            'DVMREL2' : (DVMREL2, add_methods.add_dvmrel_object),
+            'DVGRID' : (DVGRID, add_methods.add_dvgrid_object), # dvgrids
 
             #'TABLED1' : (TABLED1, self.add_table),
             #'TABLED2' : (TABLED2, self.add_table),
@@ -1888,46 +1888,46 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #'TABRND1' : (TABRND1, self.add_random_table),
             #'TABRNDG' : (TABRNDG, self.add_random_table),
 
-            'EIGB' : (EIGB, add_methods._add_method_object),
-            'EIGR' : (EIGR, add_methods._add_method_object),
-            'EIGRL' : (EIGRL, add_methods._add_method_object),
-            'EIGC' : (EIGC, add_methods._add_cmethod_object),
-            'EIGP' : (EIGP, add_methods._add_cmethod_object),
+            'EIGB' : (EIGB, add_methods.add_method_object),
+            'EIGR' : (EIGR, add_methods.add_method_object),
+            'EIGRL' : (EIGRL, add_methods.add_method_object),
+            'EIGC' : (EIGC, add_methods.add_cmethod_object),
+            'EIGP' : (EIGP, add_methods.add_cmethod_object),
 
-            'BCRPARA' : (BCRPARA, add_methods._add_bcrpara_object),
-            'BCTADD' : (BCTADD, add_methods._add_bctadd_object),
-            'BCTPARA' : (BCTPARA, add_methods._add_bctpara_object),
-            'BSURF' : (BSURF, add_methods._add_bsurf_object),
-            'BSURFS' : (BSURFS, add_methods._add_bsurfs_object),
+            'BCRPARA' : (BCRPARA, add_methods.add_bcrpara_object),
+            'BCTADD' : (BCTADD, add_methods.add_bctadd_object),
+            'BCTPARA' : (BCTPARA, add_methods.add_bctpara_object),
+            'BSURF' : (BSURF, add_methods.add_bsurf_object),
+            'BSURFS' : (BSURFS, add_methods.add_bsurfs_object),
 
-            'ASET' : (ASET, add_methods._add_aset_object),
-            'ASET1' : (ASET1, add_methods._add_aset_object),
+            'ASET' : (ASET, add_methods.add_aset_object),
+            'ASET1' : (ASET1, add_methods.add_aset_object),
 
-            'BSET' : (BSET, add_methods._add_bset_object),
-            'BSET1' : (BSET1, add_methods._add_bset_object),
+            'BSET' : (BSET, add_methods.add_bset_object),
+            'BSET1' : (BSET1, add_methods.add_bset_object),
 
-            'CSET' : (CSET, add_methods._add_cset_object),
-            'CSET1' : (CSET1, add_methods._add_cset_object),
+            'CSET' : (CSET, add_methods.add_cset_object),
+            'CSET1' : (CSET1, add_methods.add_cset_object),
 
-            'QSET' : (QSET, add_methods._add_qset_object),
-            'QSET1' : (QSET1, add_methods._add_qset_object),
+            'QSET' : (QSET, add_methods.add_qset_object),
+            'QSET1' : (QSET1, add_methods.add_qset_object),
 
-            'USET' : (USET, add_methods._add_uset_object),
-            'USET1' : (USET1, add_methods._add_uset_object),
+            'USET' : (USET, add_methods.add_uset_object),
+            'USET1' : (USET1, add_methods.add_uset_object),
 
-            'SET1' : (SET1, add_methods._add_set_object),
-            'SET3' : (SET3, add_methods._add_set_object),
+            'SET1' : (SET1, add_methods.add_set_object),
+            'SET3' : (SET3, add_methods.add_set_object),
 
-            'SESET' : (SESET, add_methods._add_seset_object),
+            'SESET' : (SESET, add_methods.add_seset_object),
 
-            'SEBSET' : (SEBSET, add_methods._add_sebset_object),
-            'SEBSET1' : (SEBSET1, add_methods._add_sebset_object),
+            'SEBSET' : (SEBSET, add_methods.add_sebset_object),
+            'SEBSET1' : (SEBSET1, add_methods.add_sebset_object),
 
-            'SECSET' : (SECSET, add_methods._add_secset_object),
-            'SECSET1' : (SECSET1, add_methods._add_secset_object),
+            'SECSET' : (SECSET, add_methods.add_secset_object),
+            'SECSET1' : (SECSET1, add_methods.add_secset_object),
 
-            'SEQSET' : (SEQSET, add_methods._add_seqset_object),
-            'SEQSET1' : (SEQSET1, add_methods._add_seqset_object),
+            'SEQSET' : (SEQSET, add_methods.add_seqset_object),
+            'SEQSET1' : (SEQSET1, add_methods.add_seqset_object),
 
             #'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
 
@@ -2174,26 +2174,26 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     def _prepare_cord1r(self, card, card_obj, comment=''):
         """adds a CORD1R"""
         class_instance = CORD1R.add_card(card_obj, comment=comment)
-        self._add_methods._add_coord_object(class_instance)
+        self._add_methods.add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1R.add_card(card_obj, icard=1, comment=comment)
-            self._add_methods._add_coord_object(class_instance)
+            self._add_methods.add_coord_object(class_instance)
 
     def _prepare_cord1c(self, card, card_obj, comment=''):
         """adds a CORD1C"""
         class_instance = CORD1C.add_card(card_obj, comment=comment)
-        self._add_methods._add_coord_object(class_instance)
+        self._add_methods.add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1C.add_card(card_obj, icard=1, comment=comment)
-            self._add_methods._add_coord_object(class_instance)
+            self._add_methods.add_coord_object(class_instance)
 
     def _prepare_cord1s(self, card, card_obj, comment=''):
         """adds a CORD1S"""
         class_instance = CORD1S.add_card(card_obj, comment=comment)
-        self._add_methods._add_coord_object(class_instance)
+        self._add_methods.add_coord_object(class_instance)
         if card_obj.field(5):
             class_instance = CORD1S.add_card(card_obj, icard=1, comment=comment)
-            self._add_methods._add_coord_object(class_instance)
+            self._add_methods.add_coord_object(class_instance)
 
     def _prepare_cord2(self, card, card_obj, comment=''):
         """adds a CORD2x"""

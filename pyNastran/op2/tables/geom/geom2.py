@@ -649,7 +649,7 @@ class GEOM2:
             nids = [n1, n2, n3, n4,
                     n5, n6, n7, n8, n9]
             elem = CQUADX(eid, pid, nids)
-            op2._add_methods._add_element_object(elem)
+            op2._add_methods.add_element_object(elem)
             n += ntotal
         op2.card_count['CQUADX'] = nelements
         return n
@@ -680,7 +680,7 @@ class GEOM2:
             for nid in elem.nodes:
                 if nid == -1:
                     assert nid > 0, elem
-        op2._add_methods._add_element_object(elem, allow_overwrites=False)
+        op2._add_methods.add_element_object(elem, allow_overwrites=False)
         #print(str(elem)[:-1])
 
 # 1-AEROQ4 (???)
@@ -2025,7 +2025,7 @@ class GEOM2:
             #op2.log.debug('  CHBDYE=%s' % str(out))
             data_in = [eid, eid2, side, iviewf, iviewb, radmidf, radmidb]
             elem = CHBDYE.add_op2_data(data_in)
-            op2._add_methods._add_thermal_element_object(elem)
+            op2._add_methods.add_thermal_element_object(elem)
             n += ntotal
         op2.card_count['CHBDYE'] = nelements
         return n
@@ -2050,7 +2050,7 @@ class GEOM2:
             data_in = [eid, Type, iviewf, iviewb, radmidf, radmidb,
                        g1, g2, g3, g4, g5, g6, g7, g8]
             elem = CHBDYG.add_op2_data(data_in)
-            op2._add_methods._add_thermal_element_object(elem)
+            op2._add_methods.add_thermal_element_object(elem)
             n += ntotal
         op2.card_count['CHBDYG'] = nelements
         return n
@@ -2085,7 +2085,7 @@ class GEOM2:
         if obj.eid in op2.elements:
             op2.reject_lines.append(obj.write_card(size=16))
         else:
-            op2._add_methods._add_element_object(obj)
+            op2._add_methods.add_element_object(obj)
         #raise RuntimeError('this should be overwritten by the BDF class')
 
     def read_chexa(self, data: bytes, n: int) -> int:
@@ -2179,7 +2179,7 @@ class GEOM2:
                 op2.binary_debug.write('  CMASS1=%s\n' % str(out))
             #(eid, pid, g1, g2, c1, c2) = out
             elem = CMASS1.add_op2_data(out)
-            op2._add_methods._add_mass_object(elem)
+            op2._add_methods.add_mass_object(elem)
             n += ntotal
         op2.card_count['CMASS1'] = nelements
         return n
@@ -2199,7 +2199,7 @@ class GEOM2:
                 op2.binary_debug.write('  CMASS2=%s\n' % str(out))
             #(eid, m, g1, g2, c1, c2) = out
             elem = CMASS2.add_op2_data(out)
-            op2._add_methods._add_mass_object(elem)
+            op2._add_methods.add_mass_object(elem)
             n += ntotal
         op2.card_count['CMASS2'] = nelements
         return n
@@ -2218,7 +2218,7 @@ class GEOM2:
                 op2.binary_debug.write('  CMASS3=%s\n' % str(out))
             #(eid, pid, s1, s2) = out
             elem = CMASS3.add_op2_data(out)
-            op2._add_methods._add_mass_object(elem)
+            op2._add_methods.add_mass_object(elem)
             n += 16
         op2.card_count['CMASS3'] = nelements
         return n
@@ -2235,7 +2235,7 @@ class GEOM2:
             out = struct_if2i.unpack(edata)
             #(eid, m,s 1, s2) = out
             elem = CMASS4.add_op2_data(out)
-            op2._add_methods._add_mass_object(elem)
+            op2._add_methods.add_mass_object(elem)
             n += 16
         op2.card_count['CMASS4'] = nelements
         return n
@@ -2280,7 +2280,7 @@ class GEOM2:
             #(eid, g, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
              #m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = out
             elem = CONM1.add_op2_data(out)
-            op2._add_methods._add_mass_object(elem)
+            op2._add_methods.add_mass_object(elem)
             n += ntotal
         op2.card_count['CONM1'] = nelements
         return n
@@ -2300,7 +2300,7 @@ class GEOM2:
                 op2.binary_debug.write('  CONM2=%s\n' % str(out))
             #(eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
             elem = CONM2.add_op2_data(out)
-            op2._add_methods._add_mass_object(elem)
+            op2._add_methods.add_mass_object(elem)
             n += ntotal
         op2.card_count['CONM2'] = nelements
         return n
@@ -2346,7 +2346,7 @@ class GEOM2:
 
         nelements = len(elements)
         for elem in elements:
-            op2._add_methods._add_thermal_bc_object(elem, elem.eid)
+            op2._add_methods.add_thermal_bc_object(elem, elem.eid)
         op2.card_count['CONV'] = nelements
         assert n == len(data), f'ndata={len(data)} n={n}'
         return n
@@ -2569,7 +2569,7 @@ class GEOM2:
             raise RuntimeError('CONVM is_six=%s is_seven=%s' % (is_six, is_seven))
         nelements = len(elements)
         for element in elements:
-            op2._add_methods._add_thermal_bc_object(element, element.eid)
+            op2._add_methods.add_thermal_bc_object(element, element.eid)
         op2.card_count['CONVM'] = nelements
         return n
 
@@ -5104,7 +5104,7 @@ class GEOM2:
                 op2.binary_debug.write('  PLOTEL=%s\n' % str(out))
             #(eid,n1,n2) = out
             elem = PLOTEL.add_op2_data(out)
-            op2._add_methods._add_plotel_object(elem)
+            op2._add_methods.add_plotel_object(elem)
             n += ntotal
         op2.card_count['PLOTEL'] = nelements
         return n
@@ -5137,7 +5137,7 @@ class GEOM2:
             eid, famb, cntrlnd, nodamb = out
             eids = eid
             boundary_condition = RADBC(nodamb, famb, cntrlnd, eids)
-            op2._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
+            op2._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
             n += ntotal
         op2.card_count['RADBC'] = nelements
         return n
@@ -5183,7 +5183,7 @@ class GEOM2:
         if op2.is_debug_file:
             op2.binary_debug.write('SPOINT=%s\n' % nids)
         spoint = SPOINTs.add_op2_data(nids)
-        op2._add_methods._add_spoint_object(spoint)
+        op2._add_methods.add_spoint_object(spoint)
         op2.card_count['SPOINT'] = npoints
         return len(data)
 

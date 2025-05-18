@@ -1087,14 +1087,14 @@ class EDT:
         try:
             n = op2.reader_geom2._read_double_card(
                 card_name, card_obj,
-                op2._add_methods._add_acmodl_object,
+                op2._add_methods.add_acmodl_object,
                 methods, data, n)
         except DoubleCardError:
             raise
         return n
 
         #n = self._read_dual_card(data, n, self._read_acmodl_nx, self._read_acmodl_msc,
-                                 #'ACMODL', op2._add_methods._add_acmodl_object)
+                                 #'ACMODL', op2._add_methods.add_acmodl_object)
         ##return self._read_acmodl_msc(data, n)
         #return n
 
@@ -1642,7 +1642,7 @@ class EDT:
         try:
             n = op2.reader_geom2._read_double_card(
                 card_name, card_obj,
-                op2._add_methods._add_spline_object,
+                op2._add_methods.add_spline_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -1752,7 +1752,7 @@ class EDT:
         }
         try:
             n = op2.reader_geom2._read_double_card(
-                card_name, card_obj, op2._add_methods._add_spline_object,
+                card_name, card_obj, op2._add_methods.add_spline_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -1891,7 +1891,7 @@ class EDT:
         try:
             n = op2.reader_geom2._read_double_card(
                 card_name, card_obj,
-                op2._add_methods._add_monpnt_object,
+                op2._add_methods.add_monpnt_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -2009,7 +2009,7 @@ class EDT:
             Type = reshape_bytes_block_size(eltype_bytes, self.size)
             nddl_item = reshape_bytes_block_size(item_bytes, self.size)
             monpnt = MONPNT2(name, label, table, Type, nddl_item, eid, comment='')
-            op2._add_methods._add_monpnt_object(monpnt)
+            op2._add_methods.add_monpnt_object(monpnt)
             str(monpnt)
             #print(monpnt)
             n += ntotal
@@ -2083,7 +2083,7 @@ class EDT:
                 raise RuntimeError((name, label, xflag))
             monpnt = MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                               cp=cp, cd=cd, xflag=xflag_str, comment='')
-            op2._add_methods._add_monpnt_object(monpnt)
+            op2._add_methods.add_monpnt_object(monpnt)
             str(monpnt)
             #print(monpnt)
             n += ntotal
@@ -2123,7 +2123,7 @@ class EDT:
             xyz = [x, y, z]
             monpnt = MONDSP1(name, label, axes, aecomp_name, xyz, cp=cp, cd=cd,
                              ind_dof='123', comment='')
-            op2._add_methods._add_monpnt_object(monpnt)
+            op2._add_methods.add_monpnt_object(monpnt)
             str(monpnt)
             n += ntotal
             monpnts.append(monpnt)
@@ -2190,7 +2190,7 @@ class EDT:
         op2.to_msc(' because MDLPRM-MSC was found')
         #monpnt = MONDSP1(name, label, axes, aecomp_name, xyz, cp=cp, cd=cd,
                          #ind_dof='123', comment='')
-        #op2._add_methods._add_monpnt_object(monpnt)
+        #op2._add_methods.add_monpnt_object(monpnt)
         return n # , monpnt1s
 
     def _read_aestat(self, data: bytes, n: int) -> int:

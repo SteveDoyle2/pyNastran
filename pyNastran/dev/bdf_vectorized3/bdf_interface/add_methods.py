@@ -34,7 +34,7 @@ class AddMethods:
         self.model = model
 
     # general values
-    def _add_param_object(self, param: PARAM, allow_overwrites: bool=False) -> None:
+    def add_param_object(self, param: PARAM, allow_overwrites: bool=False) -> None:
         """adds a PARAM object"""
         key = param.key
         model = self.model
@@ -50,7 +50,7 @@ class AddMethods:
             model.params[key] = param
             model._type_to_id_map[param.type].append(key)
 
-    def _add_mdlprm_object(self, mdlprm: MDLPRM, allow_overwrites: bool=False) -> None:
+    def add_mdlprm_object(self, mdlprm: MDLPRM, allow_overwrites: bool=False) -> None:
         """adds a MDLPRM object"""
         if self.model.mdlprm is None:
             self.model.mdlprm = mdlprm
@@ -64,7 +64,7 @@ class AddMethods:
         #model._type_to_id_map[param.type].append(key)
 
 
-    def _add_nxstrat_object(self, nxstrat: NXSTRAT) -> None:
+    def add_nxstrat_object(self, nxstrat: NXSTRAT) -> None:
         key = nxstrat.sid
         assert key not in self.model.nxstrats, 'nxstrats=%s nxstrat=%s' % (self.model.nxstrats, nxstrat)
         assert key > 0
@@ -74,7 +74,7 @@ class AddMethods:
     # SOL 101
 
     # SOL 103
-    def _add_method_object(self, method: EIGR | EIGRL | EIGB,
+    def add_method_object(self, method: EIGR | EIGRL | EIGB,
                            allow_overwrites: bool=False) -> None:
         """adds a EIGR/EIGRL object"""
         key = method.sid
@@ -87,7 +87,7 @@ class AddMethods:
             self.model._type_to_id_map[method.type].append(key)
 
     # SOL 107? - complex eigenvectors
-    def _add_cmethod_object(self, method: EIGC | EIGP,
+    def add_cmethod_object(self, method: EIGC | EIGP,
                             allow_overwrites: bool=False) -> None:
         """adds a EIGB/EIGC object"""
         key = method.sid
@@ -100,7 +100,7 @@ class AddMethods:
             self.model._type_to_id_map[method.type].append(key)
 
     # SOL xxx - frequency
-    def _add_freq_object(self, freq: FREQ | FREQ1 | FREQ2 | FREQ3 | FREQ4 | FREQ5) -> None:
+    def add_freq_object(self, freq: FREQ | FREQ1 | FREQ2 | FREQ3 | FREQ4 | FREQ5) -> None:
         key = freq.sid
         assert key > 0
         if key in self.model.frequencies:
@@ -114,7 +114,7 @@ class AddMethods:
             self.model._type_to_id_map[freq.type].append(key)
 
     # SOL xxx - transient
-    def _add_tstep_object(self, tstep: TSTEP | TSTEP1,
+    def add_tstep_object(self, tstep: TSTEP | TSTEP1,
                           allow_overwrites: bool=False) -> None:
         """adds a TSTEP object"""
         key = tstep.sid
@@ -126,7 +126,7 @@ class AddMethods:
             self.model.tsteps[key] = tstep
             self.model._type_to_id_map[tstep.type].append(key)
 
-    def _add_tstepnl_object(self, tstepnl: TSTEPNL,
+    def add_tstepnl_object(self, tstepnl: TSTEPNL,
                             allow_overwrites: bool=False) -> None:
         """adds a TSTEPNL object"""
         key = tstepnl.sid
@@ -139,7 +139,7 @@ class AddMethods:
             self.model._type_to_id_map[tstepnl.type].append(key)
 
     # nonlinear
-    def _add_nlparm_object(self, nlparm: NLPARM) -> None:
+    def add_nlparm_object(self, nlparm: NLPARM) -> None:
         """adds an NLPARM object"""
         key = nlparm.nlparm_id
         assert key not in self.model.nlparms
@@ -147,7 +147,7 @@ class AddMethods:
         self.model.nlparms[key] = nlparm
         self.model._type_to_id_map[nlparm.type].append(key)
 
-    def _add_nlpci_object(self, nlpci: NLPCI) -> None:
+    def add_nlpci_object(self, nlpci: NLPCI) -> None:
         """adds an NLPCI object"""
         key = nlpci.nlpci_id
         assert key not in self.model.nlpcis
@@ -157,14 +157,14 @@ class AddMethods:
 
     #---------------------------------------------------------------------------
     # SOL 144/145/146 - general aero
-    def _add_aero_object(self, aero: AERO) -> None:
+    def add_aero_object(self, aero: AERO) -> None:
         """adds an AERO object"""
         # only one AERO card allowed
         assert self.model.aero is None, '\naero=\n%s old=\n%s' % (aero, self.model.aero)
         self.model.aero = aero
         #self.model._type_to_id_map[aero.type].append(key)
 
-    def _add_aeros_object(self, aeros: AEROS) -> None:
+    def add_aeros_object(self, aeros: AEROS) -> None:
         """adds an AEROS object"""
         # only one AEROS card allowed
         assert self.model.aeros is None, '\naeros=\n%s old=\n%s' % (aeros, self.model.aeros)
@@ -174,48 +174,48 @@ class AddMethods:
     # SOL 144 - static aero
 
     # SOL 145 - flutter
-    def _add_mkaero_object(self, mkaero: MKAERO1 | MKAERO2) -> None:
+    def add_mkaero_object(self, mkaero: MKAERO1 | MKAERO2) -> None:
         """adds an MKAERO1/MKAERO2 object"""
         self.model.mkaeros.append(mkaero)
 
     #  matricies
-    def _add_dmi_object(self, dmi: DMI, allow_overwrites: bool=False) -> None:
+    def add_dmi_object(self, dmi: DMI, allow_overwrites: bool=False) -> None:
         """adds a DMI object"""
         name = dmi.name
         self.model.dmi[name] = dmi
         self.model._type_to_id_map[dmi.type].append(name)
 
-    def _add_dmig_object(self, dmig: DMIG, allow_overwrites: bool=False) -> None:
+    def add_dmig_object(self, dmig: DMIG, allow_overwrites: bool=False) -> None:
         """adds a DMIG object"""
         name = dmig.name
         self.model.dmig[name] = dmig
         self.model._type_to_id_map[dmig.type].append(name)
 
-    def _add_dmiax_object(self, dmiax: DMIAX, allow_overwrites: bool=False) -> None:
+    def add_dmiax_object(self, dmiax: DMIAX, allow_overwrites: bool=False) -> None:
         """adds a DMI object"""
         name = dmiax.name
         self.model.dmiax[name] = dmiax
         self.model._type_to_id_map[dmiax.type].append(name)
 
-    def _add_dmij_object(self, dmij: DMIJ, allow_overwrites: bool=False) -> None:
+    def add_dmij_object(self, dmij: DMIJ, allow_overwrites: bool=False) -> None:
         """adds a DMIJ object"""
         name = dmij.name
         self.model.dmij[name] = dmij
         self.model._type_to_id_map[dmij.type].append(name)
 
-    def _add_dmiji_object(self, dmiji: DMIJI, allow_overwrites: bool=False) -> None:
+    def add_dmiji_object(self, dmiji: DMIJI, allow_overwrites: bool=False) -> None:
         """adds a DMIJI object"""
         name = dmiji.name
         self.model.dmiji[name] = dmiji
         self.model._type_to_id_map[dmiji.type].append(name)
 
-    def _add_dmik_object(self, dmik: DMIK, allow_overwrites: bool=False) -> None:
+    def add_dmik_object(self, dmik: DMIK, allow_overwrites: bool=False) -> None:
         """adds a DMIK object"""
         name = dmik.name
         self.model.dmik[name] = dmik
         self.model._type_to_id_map[dmik.type].append(name)
 
-    def _add_dti_object(self, dti: DTI, allow_overwrites: bool=False) -> None:
+    def add_dti_object(self, dti: DTI, allow_overwrites: bool=False) -> None:
         """adds an DTI object"""
         name = dti.name
         model = self.model
@@ -228,19 +228,19 @@ class AddMethods:
             assert key not in old_dti.fields, 'key=%i old_fields=%s fields=%s' % (key, old_dti.fields, dti.fields)
             old_dti.fields[key] = dti.fields[key]
 
-    def _add_bctpara_object(self, card: BCTPARA, allow_overwrites: bool=False) -> None:
+    def add_bctpara_object(self, card: BCTPARA, allow_overwrites: bool=False) -> None:
         """adds an BCTPARA object"""
         key = card.csid
         self.model.bctpara[key] = card
         self.model._type_to_id_map[card.type].append(key)
 
-    def _add_bctparm_object(self, card: BCTPARM, allow_overwrites: bool=False) -> None:
+    def add_bctparm_object(self, card: BCTPARM, allow_overwrites: bool=False) -> None:
         """adds an BCTPARM object"""
         key = card.csid
         self.model.bctparm[key] = card
         self.model._type_to_id_map[card.type].append(key)
 
-    def _add_table_object(self, table: TABLEH1 | TABLEHT | TABLES1 | TABLEST) -> None:
+    def add_table_object(self, table: TABLEH1 | TABLEHT | TABLES1 | TABLEST) -> None:
         """adds a TABLES1, TABLEST object"""
         key = table.tid
         if key in self.model.tables:
@@ -251,7 +251,7 @@ class AddMethods:
         self.model.tables[key] = table
         self.model._type_to_id_map[table.type].append(key)
 
-    def _add_tabled_object(self, table: TABLED1 | TABLED2 | TABLED3 | TABLED4) -> None:
+    def add_tabled_object(self, table: TABLED1 | TABLED2 | TABLED3 | TABLED4) -> None:
         """adds a TABLED1, TABLED2, TABLED3, TABLED4 object"""
         key = table.tid
         assert key not in self.model.tables_d, '\ntabled=\n%s old_tabled=\n%s' % (
@@ -260,7 +260,7 @@ class AddMethods:
         self.model.tables_d[key] = table
         self.model._type_to_id_map[table.type].append(key)
 
-    def _add_tablem_object(self, table: TABLEM1 | TABLEM2 | TABLEM3 | TABLEM4) -> None:
+    def add_tablem_object(self, table: TABLEM1 | TABLEM2 | TABLEM3 | TABLEM4) -> None:
         """adds a TABLED1, TABLED2, TABLED3, TABLED4 object"""
         key = table.tid
         assert key not in self.model.tables_m, '\ntablem=\n%s old_tablem=\n%s' % (
@@ -269,7 +269,7 @@ class AddMethods:
         self.model.tables_m[key] = table
         self.model._type_to_id_map[table.type].append(key)
 
-    def _add_table_sdamping_object(self, table: TABDMP1) -> None:
+    def add_table_sdamping_object(self, table: TABDMP1) -> None:
         """adds a TABDMP1 object"""
         key = table.tid
         assert key not in self.model.tables_sdamping, '\nTable=\n%s oldTable=\n%s' % (
@@ -280,7 +280,7 @@ class AddMethods:
 
     #-----------------------------------------------------------
     # optimization
-    def _add_deqatn_object(self, deqatn: DEQATN, allow_overwrites: bool=False) -> None:
+    def add_deqatn_object(self, deqatn: DEQATN, allow_overwrites: bool=False) -> None:
         """adds an DEQATN object"""
         key = deqatn.equation_id
         assert key > 0, 'ID=%s deqatn\n%s' % (key, deqatn)
@@ -292,7 +292,7 @@ class AddMethods:
         model.dequations[key] = deqatn
         #model._type_to_id_map[deqatn.type].append(key)
 
-    def _add_dtable_object(self, dtable: DTABLE, allow_overwrites: bool=False) -> None:
+    def add_dtable_object(self, dtable: DTABLE, allow_overwrites: bool=False) -> None:
         """adds an DTABLE object"""
         model = self.model
         if model.dtable is not None:
@@ -303,6 +303,6 @@ class AddMethods:
             self.model.dtable = dtable
             #self.model._type_to_id_map[dtable.type].append(1)
 
-    def _add_doptprm_object(self, doptprm: DOPTPRM) -> None:
+    def add_doptprm_object(self, doptprm: DOPTPRM) -> None:
         """adds a DOPTPRM"""
         self.model.doptprm = doptprm

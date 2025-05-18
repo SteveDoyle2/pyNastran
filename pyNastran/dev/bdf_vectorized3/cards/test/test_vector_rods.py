@@ -252,7 +252,7 @@ class TestRods(unittest.TestCase):
         conrod_id = model.conrod.add_card(cardi, ifile=0)
         conrod = model.conrod
         #add_methods = model._add_methods
-        #add_methods._add_element_object(conrod)
+        #add_methods.add_element_object(conrod)
         model.setup(run_geom_check=False)
         card = model.Element(eid)[0]
         node_ids = card.nodes[0]
@@ -266,7 +266,7 @@ class TestRods(unittest.TestCase):
 
         model.setup(run_geom_check=False)
         crod = model.crod
-        #add_methods._add_element_object(crod)
+        #add_methods.add_element_object(crod)
         card = model.Element(eid+1)[0]
         node_ids = card.nodes[0]
         assert np.array_equal(node_ids, [nid1, nid2]), node_ids # probably wrong
@@ -304,26 +304,26 @@ class TestRods(unittest.TestCase):
         card = model._process_card(lines)
         cardi = BDFCard(card)
         ptube_id = ptube.add_card(cardi, ifile=0)
-        #add_methods._add_property_object(ptube)
+        #add_methods.add_property_object(ptube)
 
         lines = ['mat1,%i, %.2e, %.2e, %f, %f' % (mid, E, G, nu, rho)]
         card = model._process_card(lines)
         cardi = BDFCard(card)
         card = model.mat1.add_card(cardi, ifile=0)
         mat1 = model.mat1
-        #add_methods._add_structural_material_object(card)
+        #add_methods.add_structural_material_object(card)
 
         lines = ['grid,%i, %i, %f, %f, %f' % (nid1, 0, xyz1[0], xyz1[1], xyz1[2])]
         card = model._process_card(lines)
         cardi = BDFCard(card)
         card = model.grid.add_card(cardi, ifile=0)
-        #add_methods._add_node_object(card)
+        #add_methods.add_node_object(card)
 
         lines = ['grid,%i, %i, %f, %f, %f' % (nid2, 0, xyz2[0], xyz2[1], xyz2[2])]
         card = model._process_card(lines)
         cardi = BDFCard(card)
         card = model.grid.add_card(cardi, ifile=0)
-        #add_methods._add_node_object(card)
+        #add_methods.add_node_object(card)
 
         model.cross_reference()
         mass = L * (rho * A + nsm)

@@ -679,7 +679,7 @@ class EDT:
         out = struct.unpack(data[n:])
         acsid, velocity, cref, rho_ref, sym_xz, sym_xy = out
         aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
-        op2._add_methods._add_aero_object(aero, allow_overwrites=True)
+        op2._add_methods.add_aero_object(aero, allow_overwrites=True)
         #op2.add_aero(velocity, cref, rho_ref,
                      #acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
         n = 36
@@ -852,7 +852,7 @@ class EDT:
                 [x4, y4, z4], x43, cp=cp,
                 nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                 comment='')
-            add_methods._add_caero_object(caero, allow_overwrites=True)
+            add_methods.add_caero_object(caero, allow_overwrites=True)
             #op2.add_caero1(eid, pid, igid,
                            #[x1, y1, z1], x12,
                            #[x4, y4, z4], x43,
@@ -1084,7 +1084,7 @@ class EDT:
                 if body != 0:
                     caero_body_ids.append(body)
             paero1 = PAERO1(pid, caero_body_ids=caero_body_ids, comment='')
-            op2._add_methods._add_paero_object(paero1, allow_overwrites=True)
+            op2._add_methods.add_paero_object(paero1, allow_overwrites=True)
             #paero1 = op2.add_paero1(pid, caero_body_ids=caero_body_ids)
             str(paero1)
             #if caero_body_ids:
@@ -1385,14 +1385,14 @@ class EDT:
         try:
             n = op2.reader_geom2._read_double_card(
                 card_name, card_obj,
-                op2._add_methods._add_acmodl_object,
+                op2._add_methods.add_acmodl_object,
                 methods, data, n)
         except DoubleCardError:
             raise
         return n
 
         #n = self._read_dual_card(data, n, self._read_acmodl_nx, self._read_acmodl_msc,
-                                 #'ACMODL', op2._add_methods._add_acmodl_object)
+                                 #'ACMODL', op2._add_methods.add_acmodl_object)
         ##return self._read_acmodl_msc(data, n)
         #return n
 
@@ -1881,7 +1881,7 @@ class EDT:
                               dz=dz, method=method,
                             usage=usage, nelements=nelements,
                             melements=melements)
-            op2._add_methods._add_spline_object(spline1, allow_overwrites=True)
+            op2._add_methods.add_spline_object(spline1, allow_overwrites=True)
             #spline1 = op2.add_spline1(eid, caero, box1, box2, setg,
                                        #dz=dz, method=method,
                                        #usage=usage, nelements=nelements,
@@ -1930,7 +1930,7 @@ class EDT:
                 dz=dz, dtor=dtor, cid=cid,
                 dthx=dthx, dthy=dthy,
                 usage=usage)
-            op2._add_methods._add_spline_object(spline2, allow_overwrites=True)
+            op2._add_methods.add_spline_object(spline2, allow_overwrites=True)
 
             #spline2 = op2.add_spline2(
                 #eid, caero,
@@ -1982,7 +1982,7 @@ class EDT:
         try:
             n = op2.reader_geom2._read_double_card(
                 card_name, card_obj,
-                op2._add_methods._add_spline_object,
+                op2._add_methods.add_spline_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -2093,7 +2093,7 @@ class EDT:
         }
         try:
             n = op2.reader_geom2._read_double_card(
-                card_name, card_obj, op2._add_methods._add_spline_object,
+                card_name, card_obj, op2._add_methods.add_spline_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -2236,7 +2236,7 @@ class EDT:
         try:
             n = op2.reader_geom2._read_double_card(
                 card_name, card_obj,
-                op2._add_methods._add_monpnt_object,
+                op2._add_methods.add_monpnt_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -2419,7 +2419,7 @@ class EDT:
                     break
 
             monpnt = MONPNT2(name, label, tables, element_types, nddl_items, all_eids, comment='')
-            op2._add_methods._add_monpnt_object(monpnt)
+            op2._add_methods.add_monpnt_object(monpnt)
             str(monpnt)
             #print(monpnt)
             #monpnts.append(monpnt)
@@ -2453,7 +2453,7 @@ class EDT:
             Type = reshape_bytes_block_size(eltype_bytes, self.size)
             nddl_item = reshape_bytes_block_size(item_bytes, self.size)
             monpnt = MONPNT2(name, label, table, Type, nddl_item, eid, comment='')
-            op2._add_methods._add_monpnt_object(monpnt)
+            op2._add_methods.add_monpnt_object(monpnt)
             str(monpnt)
             #print(monpnt)
             n += ntotal
@@ -2534,7 +2534,7 @@ class EDT:
             monpnt = MONPNT3(name, label, axes, xyz,
                               grid_set, elem_set,
                               cp=cp, cd=cd, xflag=xflag_str, comment='')
-            op2._add_methods._add_monpnt_object(monpnt)
+            op2._add_methods.add_monpnt_object(monpnt)
             str(monpnt)
             #print(monpnt)
             n += ntotal
@@ -2574,7 +2574,7 @@ class EDT:
             xyz = [x, y, z]
             monpnt = MONDSP1(name, label, axes, aecomp_name, xyz, cp=cp, cd=cd,
                              ind_dof='123', comment='')
-            op2._add_methods._add_monpnt_object(monpnt)
+            op2._add_methods.add_monpnt_object(monpnt)
             str(monpnt)
             n += ntotal
             monpnts.append(monpnt)
@@ -2649,7 +2649,7 @@ class EDT:
         op2.to_msc(' because MDLPRM-MSC was found')
         #monpnt = MONDSP1(name, label, axes, aecomp_name, xyz, cp=cp, cd=cd,
                          #ind_dof='123', comment='')
-        #op2._add_methods._add_monpnt_object(monpnt)
+        #op2._add_methods.add_monpnt_object(monpnt)
         return n # , monpnt1s
 
     def read_aestat(self, data: bytes, n: int) -> int:
@@ -2762,7 +2762,7 @@ class EDT:
                 epsilon=epsilon,
                 omax=fmax,
                 validate=True)
-            op2._add_methods._add_flutter_object(flutter, allow_overwrites=True)
+            op2._add_methods.add_flutter_object(flutter, allow_overwrites=True)
             #op2.add_flutter(sid, method,
                             #density, mach, reduced_freq_velocity,
                             #imethod=imethod, # 'L'

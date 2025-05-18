@@ -955,7 +955,7 @@ class TestMSC(Tester):
         op2_filename1 =  folder / '3Delements' / 'non_linear' / 'cantilevered_plate_3d.op2'
         unused_op2, unused_is_passed = run_op2(
             op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
-            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
             exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
