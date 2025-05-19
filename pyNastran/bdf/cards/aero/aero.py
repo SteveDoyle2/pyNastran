@@ -44,24 +44,6 @@ if TYPE_CHECKING:  # pragma: no cover
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
 
 
-def coord_id(coord_ref: Coord, cid: int) -> int:
-    if coord_ref is not None:
-        return coord_ref.cid
-    return cid
-
-
-def property_id(prop_ref, pid: int) -> int:
-    if prop_ref is not None:
-        return prop_ref.pid
-    return pid
-
-
-def aefact_id(aefact_ref: AEFACT, aefact_id: int) -> int:
-    if aefact_ref is not None:
-        return aefact_ref.sid
-    return aefact_id
-
-
 class AECOMP(BaseCard):
     """
     Defines a component for use in monitor point definition or external splines.
@@ -1154,9 +1136,9 @@ class AESURF(BaseCard):
         if self.cid2:
             self.cid2 = coord_map[self.cid2]
 
-        self.aelist_idid1 = aelist_map[self.aelist_idid1]
+        self.aelist_id1 = aelist_map[self.aelist_id1]
         if self.aelist_id2:
-            self.aelist_id2 = aelist_map[self.alid2]
+            self.aelist_id2 = aelist_map[self.aelist_id2]
 
     def raw_fields(self):
         """
@@ -1345,15 +1327,11 @@ class AESURFS(BaseCard):
         self.list1_ref = None
         self.list2_ref = None
 
-    def List1(self):
-        if self.list1_ref is not None:
-            return self.list1_ref.sid
-        return self.list1
+    def List1(self) -> int:
+        return set_id(self.list1_ref, self.list1)
 
-    def List2(self):
-        if self.list2_ref is not None:
-            return self.list2_ref.sid
-        return self.list2
+    def List2(self) -> int:
+        return set_id(self.list2_ref, self.list2)
 
     def raw_fields(self):
         """
@@ -1666,7 +1644,7 @@ class CAERO1(BaseCard):
 
         if is_failed:
             msg += CAERO1_MSG
-            #msg += card_str:  # can't show this cause it's messed up due to bad types/length
+            #msg += card_str:  # can't show this because it's messed up due to bad types/length
             msg += self.get_stats()
             raise ValueError(msg)
 
@@ -1816,12 +1794,12 @@ class CAERO1(BaseCard):
                       cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                       comment=comment)
 
-    def flip_normal(self):
+    def flip_normal(self) -> None:
         """flips the CAERO1 normal vector"""
         self.p1, self.p4 = self.p4, self.p1
         self.x12, self.x43 = self.x43, self.x12
 
-    def _init_ids(self, dtype='int32'):
+    def _init_ids(self, dtype: str='int32') -> np.ndarray:
         """
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
 
@@ -1967,7 +1945,7 @@ class CAERO1(BaseCard):
         nchord, nspan = self.shape
         return [self.eid, self.eid + nchord * nspan]
 
-    def get_leading_edge_points(self):
+    def get_leading_edge_points(self) -> tuple[np.ndarray, np.ndarray]:
         """gets the leading edge points"""
         if self.cp_ref is None and self.cp == 0:
             p1 = self.p1
@@ -2368,7 +2346,7 @@ class CAERO1(BaseCard):
 
     def _get_box_x_chord_center(self, box_id: int, x_chord: float) -> np.ndarray:
         """
-        The the location of the x_chord of the box along the centerline.
+        The location of the x_chord of the box along the centerline.
         """
         if self.lchord != 0 or self.lspan != 0:
             raise NotImplementedError()
@@ -2391,12 +2369,12 @@ class CAERO1(BaseCard):
         raise IndexError(msg)
 
     @property
-    def npanels(self):
+    def npanels(self) -> int:
         nchord, nspan = self.shape
         return nchord * nspan
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[int, int]:
         """returns (nelements_nchord, nelements_span)"""
         if self.nchord == 0:
             x = self.lchord_ref.fractions
@@ -2423,7 +2401,7 @@ class CAERO1(BaseCard):
         -------
         npoints : int
             The number of nodes for the CAERO
-        nelmements : int
+        nelements : int
             The number of elements for the CAERO
 
         """
@@ -2477,7 +2455,7 @@ class CAERO1(BaseCard):
         """
         p1, p2, p3, p4 = self.get_points()
         x, y = self.xy
-        # We're reordering the points so we get the node ids and element ids
+        # We're reordering the points, so we get the node ids and element ids
         # to be consistent with Nastran.  This is only useful if you're plotting
         # aero panel forces
         #
@@ -2577,15 +2555,11 @@ class CAERO1(BaseCard):
                        list(self.p1) + [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
-    def get_LChord(self):
-        if self.lchord_ref is not None:
-            return self.lchord_ref.sid
-        return self.lchord
+    def get_LChord(self) -> int:
+        return aefact_id(self.lchord_ref, self.lchord)
 
-    def get_LSpan(self):
-        if self.lspan_ref is not None:
-            return self.lspan_ref.sid
-        return self.lspan
+    def get_LSpan(self) -> int:
+        return aefact_id(self.lspan_ref, self.lspan)
 
     def repr_fields(self):
         """
@@ -3371,20 +3345,14 @@ class CAERO3(BaseCard):
     def Pid(self) -> int:
         return property_id(self.pid_ref, self.pid)
 
-    def List_w(self):
-        if self.list_w_ref is not None:
-            return self.list_w_ref.sid
-        return self.list_w
+    def List_w(self) -> int:
+        return aefact_id(self.list_w_ref, self.list_w)
 
-    def List_c1(self):
-        if self.list_c1_ref is not None:
-            return self.list_c1_ref.sid
-        return self.list_c1
+    def List_c1(self) -> int:
+        return aefact_id(self.list_c1_ref, self.list_c1)
 
-    def List_c2(self):
-        if self.list_c2_ref is not None:
-            return self.list_c2_ref.sid
-        return self.list_c2
+    def List_c2(self) -> int:
+        return aefact_id(self.list_c2_ref, self.list_c2)
 
     def raw_fields(self):
         """
@@ -3713,9 +3681,7 @@ class CAERO4(BaseCard):
                 ax.annotate(point_name, point, ha='center')
 
     def get_LSpan(self) -> int:
-        if isinstance(self.lspan, integer_types):
-            return self.lspan
-        return self.lspan_ref.sid
+        return aefact_id(self.lspan_ref, self.lspan)
 
     def raw_fields(self):
         """
@@ -3787,9 +3753,12 @@ class CAERO5(BaseCard):
         return CAERO5(eid, pid, p1, x12, p4, x43,
                       cp=0, nspan=nspan, lspan=0, ntheory=0, nthick=0, comment='')
 
-    def __init__(self, eid, pid, p1, x12, p4, x43,
-                 cp=0, nspan=0, lspan=0, ntheory=0, nthick=0,
-                 comment=''):
+    def __init__(self, eid: int, pid: int,
+                 p1: list[float], x12: float,
+                 p4: list[float], x43: float,
+                 cp: int=0, nspan: int=0, lspan: int=0,
+                 ntheory: int=0, nthick: int=0,
+                 comment: str=''):
         """
         Defines a CAERO5 card, which defines elements for Piston theory
         (high supersonic flow where the normal Mach is less than 1).
@@ -3955,17 +3924,17 @@ class CAERO5(BaseCard):
         return npoints, nelements
 
     @property
-    def nboxes(self):
+    def nboxes(self) -> int:
         if self.nspan > 0:
             return self.nspan
-        return len(self.lspan_ref.fractions) # AEFACT
+        return len(self.lspan_ref.fractions)  # AEFACT
 
-    def _init_ids(self, dtype='int32'):
+    def _init_ids(self, dtype: str='int32') -> None:
         npanels = self.nboxes
         nspan = npanels
         #self.box_ids = np.arange(0, self.nboxes, dtype=dtype)
         self.box_ids = np.arange(self.eid, self.eid + npanels,
-                                 dtype=dtype).reshape(nspan, 1)# .T
+                                 dtype=dtype).reshape(nspan, 1)  # .T
 
     def panel_points_elements(self):
         p1, p2, p3, p4 = self.get_points()
@@ -4244,10 +4213,10 @@ class MONPNT2(BaseCard):
         name = 'WING'
         label = 'Wing Integrated Load to Butline'
         table = 'MYTABLE'
-        Type = 'CAT'
-        nddl_item = 'dog'
+        element_types = ['CAT']
+        nddl_item = ['dog']
         eid = 2
-        return MONPNT2(name, label, table, Type, nddl_item, eid, comment='')
+        return MONPNT2(name, label, table, element_types, nddl_item, eid, comment='')
 
     def __init__(self, name: str, label: str,
                  tables: list[str],
@@ -4397,9 +4366,9 @@ class MONPNT3(BaseCard):
         xyz = [0., 1., 2.]
         return MONPNT3(name, label, axes, xyz,
                        node_set_group=grid_set, elem_set_group=elem_set,
-                       cp=0, cd=None, xflag=None, comment='')
+                       cp=0, cd=None, xflag='', comment='')
 
-    def __init__(self, name: str, label: str, axes: str,
+    def __init__(self, name: str, label: str | int, axes: str,
                  xyz: list[float],
                  node_set_group: int=0,
                  elem_set_group: int=0,
@@ -4414,7 +4383,7 @@ class MONPNT3(BaseCard):
         label : str
             A string that identifies and labels the monitor point.
             (56 characters maximum)
-        axes : str
+        axes : str | int
             Component axes about which to sum.
             of the integers 1 through 6 with no embedded blanks)
         node_set_group: int; default=0
@@ -4446,6 +4415,8 @@ class MONPNT3(BaseCard):
             self.comment = comment
         if cd is None:
             cd = cp
+        if isinstance(axes, int):
+            axes = str(axes)
         xyz = np.asarray(xyz)
 
         self.name = name
@@ -4465,7 +4436,7 @@ class MONPNT3(BaseCard):
         assert len(self.xyz) == 3, xyz
 
     @classmethod
-    def add_card(cls, card: BaseCard, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         name = string(card, 1, 'name')
 
         label_fields = [labeli for labeli in card[2:8] if labeli is not None]
@@ -4523,10 +4494,10 @@ class MONPNT3(BaseCard):
         self.cp_ref = None
         self.cd_ref = None
 
-    def Cp(self):
+    def Cp(self) -> int:
         return coord_id(self.cp_ref, self.cp)
 
-    def Cd(self):
+    def Cd(self) -> int:
         return coord_id(self.cd_ref, self.cd)
 
     def raw_fields(self):
@@ -4556,7 +4527,7 @@ class MONPNT3(BaseCard):
         #card = self.repr_fields()
         return self.comment + msg.rstrip() + '\n'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.write_card()
 
 
@@ -4583,9 +4554,12 @@ class MONDSP1(BaseCard):
         axes = '6'
         aecomp_name = 'FLAP'
         xyz = [0., 1., 2.]
-        return MONDSP1(name, label, axes, aecomp_name, xyz, cp=0, cd=None, ind_dof='123', comment='')
+        return MONDSP1(name, label, axes, aecomp_name, xyz,
+                       cp=0, cd=None, ind_dof='123', comment='')
 
-    def __init__(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None, ind_dof='123', comment=''):
+    def __init__(self, name, label, axes, aecomp_name, xyz: list[float],
+                 cp: int=0, cd: Optional[int]=None,
+                 ind_dof: str='123', comment: str=''):
         """
         Creates a MONDSP1 card
 
@@ -5026,18 +5000,19 @@ class PAERO2(BaseCard):
         self.lrib_ref = None
 
     @property
-    def lth1(self):
+    def lth1(self) -> int:
         return self.lth[0]
+
     @property
-    def lth2(self):
+    def lth2(self) -> int:
         return self.lth[1]
 
     @lth1.setter
-    def lth1(self, lth1):
+    def lth1(self, lth1: int) -> None:
         self.lth[0] = lth1
 
     @lth2.setter
-    def lth2(self, lth2):
+    def lth2(self, lth2: int) -> None:
         self.lth[1] = lth2
 
     def validate(self):
@@ -5103,15 +5078,11 @@ class PAERO2(BaseCard):
 
     def Lrsb(self):
         """AEFACT id"""
-        if self.lrsb_ref is not None:
-            return self.lrsb_ref.sid
-        return self.lrsb
+        return aefact_id(self.lrsb_ref, self.lrsb)
 
     def Lrib(self):
         """AEFACT id"""
-        if self.lrib_ref is not None:
-            return self.lrib_ref.sid
-        return self.lrib
+        return aefact_id(self.lrib_ref, self.lrib)
 
     def raw_fields(self):
         """
@@ -5159,11 +5130,11 @@ class PAERO3(BaseCard):
     """
     type = 'PAERO3'
     _field_map = {
-        1: 'pid', 2:'orient', 3:'width', 4:'AR',
+        1: 'pid', 2: 'orient', 3: 'width', 4: 'AR',
     }
     _properties = ['npoints']
 
-    def _get_field_helper(self, n):
+    def _get_field_helper(self, n: int):
         """
         Gets complicated parameters on the PAERO3 card
 
@@ -5254,7 +5225,7 @@ class PAERO3(BaseCard):
 
     def validate(self):
         assert len(self.x) == len(self.y), 'nx=%s ny=%s' % (len(self.x), len(self.y))
-        assert len(self.x) <= 8, 'nx=%s'  % len(self.x)
+        assert len(self.x) <= 8, 'nx=%s' % len(self.x)
         for i, xi, yi in zip(count(), self.x, self.y):
             if xi is None or yi is None:
                 assert xi == yi, 'x%i=%s y%i=%s must be None or floats' % (i, xi, i, yi)
@@ -5299,7 +5270,7 @@ class PAERO3(BaseCard):
         pass
 
     @property
-    def npoints(self):
+    def npoints(self) -> int:
         return len(self.x)
 
     def raw_fields(self):
@@ -5320,6 +5291,7 @@ class PAERO3(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class PAERO4(BaseCard):
     """
@@ -5406,23 +5378,23 @@ class PAERO4(BaseCard):
         ----------
         PID : int
             Property identification number. (Integer > 0)
-        CLA : int; default=0
+        cla : int; default=0
             Select Prandtl-Glauert correction. (Integer = -1, 0, 1)
             -1 Compressibility correction made to lift curve slope data for a reference Mach number.
             0  No correction and no list needed. (Default)
             +1 No correction and lift curve slope provided by a list as a
                function of strip location and Mach number.
-        LCLA : int
+        lcla : int; default=0
             ID number of the AEFACT entry that lists the lift curve slope
             on all strips for each Mach number on the MKAEROi entry. See
             Remark 2 below. (Integer = 0 if CLA = 0, > 0 if CLA ≠ 0)
-        CIRC : int; default=0
+        circ : int; default=0
             Select Theodorsen’s function C(k) or the number of exponential
             coefficients used to approximate C(k).
             (Integer = 0, 1, 2, 3; Must be zero if CLA ≠ 0.)
             0 Theodorsen function.
             1, 2, 3 Approximate function with b0, b1, β1, ..., bn, βn n = 1, 2, 3.
-        LCIRC : int
+        lcirc : int; default=0
             Identification number of the AEFACT entry that lists the b, β values
             for each Mach number. See Remark 3, 4, and 5 below; variable b’s
             and β’s for each mi on the MKAEROi entry.
@@ -5466,11 +5438,11 @@ class PAERO4(BaseCard):
 
         """
         pid = integer(card, 1, 'pid')
-        cla = integer_or_blank(card, 2, 'cla', 0)
-        lcla = integer_or_blank(card, 3, 'lcla', 0) # ???
+        cla = integer_or_blank(card, 2, 'cla', default=0)
+        lcla = integer_or_blank(card, 3, 'lcla', default=0)  # ???
 
-        circ = integer_or_blank(card, 4, 'circ', 0)
-        lcirc = integer_or_blank(card, 5, 'lcirc', 0) # ???
+        circ = integer_or_blank(card, 4, 'circ', default=0)
+        lcirc = integer_or_blank(card, 5, 'lcirc', default=0)  # ???
         nfields = card.nfields
 
         j = 0
@@ -5598,17 +5570,14 @@ class PAERO5(BaseCard):
                       nalpha=nalpha, lalpha=lalpha, nxis=nxis, lxis=lxis,
                       ntaus=ntaus, ltaus=ltaus,
                       comment=comment)
-    @property
-    def lxis_id(self):
-        if self.lxis_ref is not None:
-            return  self.lxis_ref.sid
-        return self.lxis
 
     @property
-    def ltaus_id(self):
-        if self.ltaus_ref is not None:
-            return self.ltaus_ref.sid
-        return self.ltaus
+    def lxis_id(self) -> int:
+        return aefact_id(self.lxis_ref, self.lxis)
+
+    @property
+    def ltaus_id(self) -> int:
+        return aefact_id(self.ltaus_ref, self.ltaus)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -5848,15 +5817,11 @@ class SPLINE1(Spline):
     def aero_element_ids(self):
         return np.arange(self.box1, self.box2 + 1)
 
-    def CAero(self):
-        if self.caero_ref is not None:
-            return self.caero_ref.eid
-        return self.caero
+    def CAero(self) -> int:
+        return caero_id(self.caero_ref, self.caero)
 
-    def Set(self):
-        if self.setg_ref is not None:
-            return self.setg_ref.sid
-        return self.setg
+    def Set(self) -> int:
+        return set_id(self.setg_ref, self.setg)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -6143,19 +6108,13 @@ class SPLINE2(Spline):
         return np.arange(self.box1, self.box2 + 1)
 
     def Cid(self) -> int:
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+        return coord_id(self.cid_ref, self.cid)
 
     def CAero(self) -> int:
-        if self.caero_ref is not None:
-            return self.caero_ref.eid
-        return self.caero
+        return caero_id(self.caero_ref, self.caero)
 
     def Set(self) -> int:
-        if self.setg_ref is not None:
-            return self.setg_ref.sid
-        return self.setg
+        return set_id(self.setg_ref, self.setg)
 
     def raw_fields(self):
         """
@@ -6208,8 +6167,8 @@ class SPLINE3(Spline):
     type = 'SPLINE3'
     _properties = ['node_ids']
     _field_map = {
-        1: 'eid', 2:'caero', 3:'box_id',
-        7: 'a1', 8:'usage',
+        1: 'eid', 2: 'caero', 3: 'box_id',
+        7: 'a1', 8: 'usage',
     }
         #5:'g1', 6:'c1',
         #9:G2,C2,A2...
@@ -6278,9 +6237,9 @@ class SPLINE3(Spline):
             self.comment = comment
 
         if isinstance(nodes, integer_types):
-            nodes = [nodes]
+            nodes: list[int] = [nodes]
         if isinstance(displacement_components, integer_types):
-            displacement_components = [displacement_components]
+            displacement_components: list[int] = [displacement_components]
         if isinstance(coeffs, float):
             coeffs = [coeffs]
 
@@ -6311,7 +6270,7 @@ class SPLINE3(Spline):
             msg += 'nnodes=%s ncoeffs=%s must be equal\n' % (
                 len(self.nodes), len(self.coeffs))
 
-        for i, disp_component  in enumerate(self.displacement_components):
+        for i, disp_component in enumerate(self.displacement_components):
             if disp_component not in [0, 1, 2, 3, 4, 5, 6]:
                 if not isinstance(disp_component, integer_types):
                     msg += (
@@ -6404,10 +6363,8 @@ class SPLINE3(Spline):
         self.nodes_ref = None
         self.caero_ref = None
 
-    def CAero(self):
-        if self.caero_ref is not None:
-            return self.caero_ref.eid
-        return self.caero
+    def CAero(self) -> int:
+        return caero_id(self.caero_ref, self.caero)
 
     @property
     def node_ids(self):
@@ -6474,8 +6431,8 @@ class SPLINE4(Spline):
     type = 'SPLINE4'
     _properties = ['aero_element_ids']
     _field_map = {
-        1: 'eid', 2:'caero', 3:'aelist', 5:'setg', 6:'dz',
-        7: 'method', 8:'usage', 9:'nelements', 10:'melements',
+        1: 'eid', 2: 'caero', 3: 'aelist', 5: 'setg', 6: 'dz',
+        7: 'method', 8: 'usage', 9: 'nelements', 10: 'melements',
     }
 
     @classmethod
@@ -6605,19 +6562,13 @@ class SPLINE4(Spline):
                        nelements, melements, comment=comment)
 
     def CAero(self) -> int:
-        if self.caero_ref is not None:
-            return self.caero_ref.eid
-        return self.caero
+        return caero_id(self.caero_ref, self.caero)
 
     def AEList(self) -> int:
-        if self.aelist_ref is not None:
-            return self.aelist_ref.sid
-        return self.aelist
+        return aelist_id(self.aelist_ref, self.aelist)
 
     def Set(self) -> int:
-        if self.setg_ref is not None:
-            return self.setg_ref.sid
-        return self.setg
+        return set_id(self.setg_ref, self.setg)
 
     @property
     def aero_element_ids(self) -> list[int]:
@@ -6648,7 +6599,6 @@ class SPLINE4(Spline):
                 msg += str(self)
                 msg += str(self.setg_ref)
                 raise RuntimeError(msg)
-
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         """
@@ -6825,26 +6775,17 @@ class SPLINE5(Spline):
     def aero_element_ids(self):
         return self.aelist_ref.elements
 
+    def Cid(self) -> int:
+        return coord_id(self.cid_ref, self.cid)
 
-    def Cid(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+    def CAero(self) -> int:
+        return caero_id(self.caero_ref, self.caero)
 
-    def CAero(self):
-        if self.caero_ref is not None:
-            return self.caero_ref.eid
-        return self.caero
+    def AEList(self) -> int:
+        return aelist_id(self.aelist_ref, self.aelist)
 
-    def AEList(self):
-        if self.aelist_ref is not None:
-            return self.aelist_ref.sid
-        return self.aelist
-
-    def Set(self):
-        if self.setg_ref is not None:
-            return self.setg_ref.sid
-        return self.setg
+    def Set(self) -> int:
+        return set_id(self.setg_ref, self.setg)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -7154,6 +7095,43 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], Any]:
     #print(all_control_surface_name, caero_control_surface_names)
     return all_control_surface_name, caero_control_surface_names, out
 
+
 CAEROs = CAERO1 | CAERO2 | CAERO3 | CAERO4 | CAERO5
 PAEROs = PAERO1 | PAERO2 | PAERO3 | PAERO4 | PAERO5
 SPLINEs = SPLINE1 | SPLINE2 | SPLINE3 | SPLINE4 | SPLINE5
+
+
+def coord_id(coord_ref: Coord, cid: int) -> int:
+    if coord_ref is not None:
+        return coord_ref.cid
+    return cid
+
+
+def property_id(prop_ref: PAEROs, pid: int) -> int:
+    if prop_ref is not None:
+        return prop_ref.pid
+    return pid
+
+
+def caero_id(caero_ref: CAEROs, caero: int) -> int:
+    if caero_ref is not None:
+        return caero_ref.eid
+    return caero
+
+
+def set_id(setg_ref: SET1 | SET2, setg: int) -> int:
+    if setg_ref is not None:
+        return setg_ref.sid
+    return setg
+
+
+def aelist_id(aelist_ref: AELIST, aelist: int) -> int:
+    if aelist_ref is not None:
+        return aelist_ref.sid
+    return aelist
+
+
+def aefact_id(aefact_ref: AEFACT, aefact: int) -> int:
+    if aefact_ref is not None:
+        return aefact_ref.sid
+    return aefact

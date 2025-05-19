@@ -8748,7 +8748,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods._add_monpnt_object(monitor_point)
         return monitor_point
 
-    def add_monpnt3(self, name: str, label: str, axes: str, xyz: list[float],
+    def add_monpnt3(self, name: str, label: str, axes: str | int, xyz: list[float],
                     node_set_group: int=0, elem_set_group: int=0,
                     cp: int=0, cd: Optional[int]=None, xflag: str='',
                     comment: str='') -> MONPNT3:
