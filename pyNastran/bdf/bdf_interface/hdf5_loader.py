@@ -816,7 +816,7 @@ def hdf5_load_aelinks(model: BDF, group, encoding: str) -> None:
             aelink[j_int] = aelinki
             naelinks += 1
         for aelinki in aelink:
-            add_methods._add_aelink_object(aelinki)
+            add_methods.add_aelink_object(aelinki)
     model.card_count['AELINK'] = naelinks
 
 def hdf5_load_dloads(model: BDF, group, encoding: str) -> None:
@@ -1122,7 +1122,7 @@ def hdf5_load_dconstrs(model, group, encoding):
             for key in keys:
                 value = sub_group[key]
                 dconadd = _load_class(key, value, card_type, encoding)
-                add_methods._add_dconstr_object(dconadd)
+                add_methods.add_dconstr_object(dconadd)
                 #model.add_dconadd(oid, dconstrs, comment='')
         else:
             raise RuntimeError('error loading %s' % card_type)
@@ -1209,7 +1209,7 @@ def hdf5_load_usets(model, group, encoding):
             value = sub_groupi
             card_type = _cast(sub_groupi['type'])
             class_obj = _load_class(key, value, card_type, encoding)
-            add_methods._add_uset_object(class_obj)
+            add_methods.add_uset_object(class_obj)
             if card_type not in model.card_count:
                 model.card_count[card_type] = 1
             else:

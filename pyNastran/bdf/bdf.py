@@ -2307,11 +2307,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         add_methods = self._add_methods
 
         if self.allow_duplicate_element_rbe_mass:  # default
-            add_mass_object = add_methods._add_mass_object
-            add_rigid_element_object = add_methods._add_rigid_element_object
+            add_mass_object = add_methods.add_mass_object
+            add_rigid_element_object = add_methods.add_rigid_element_object
         else:
-            add_mass_object = add_methods._add_element_object
-            add_rigid_element_object = add_methods._add_element_object
+            add_mass_object = add_methods.add_element_object
+            add_rigid_element_object = add_methods.add_element_object
 
         self._card_parser = {
             #'=': (Crash, None),
@@ -2319,52 +2319,52 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #'CGEN': (CrashIgnore, None),
 
-            'SETREE': (SETREE, add_methods._add_setree_object),
-            'SENQSET': (SENQSET, add_methods._add_senqset_object),
-            'SEBULK': (SEBULK, add_methods._add_sebulk_object),
-            'RELEASE': (RELEASE, add_methods._add_release_object),
-            'SEBNDRY': (SEBNDRY, add_methods._add_sebndry_object),
-            'SEELT': (SEELT, add_methods._add_seelt_object),
-            'SELOC': (SELOC, add_methods._add_seloc_object),
-            'SEMPLN': (SEMPLN, add_methods._add_sempln_object),
-            'SECONCT': (SECONCT, add_methods._add_seconct_object),
-            'SELABEL': (SELABEL, add_methods._add_selabel_object),
-            'SEEXCLD': (SEEXCLD, add_methods._add_seexcld_object),
-            'CSUPER': (CSUPER, add_methods._add_csuper_object),
-            'CSUPEXT': (CSUPEXT, add_methods._add_csupext_object),
-            'SELOAD': (SELOAD, add_methods._add_seload_object),
+            'SETREE': (SETREE, add_methods.add_setree_object),
+            'SENQSET': (SENQSET, add_methods.add_senqset_object),
+            'SEBULK': (SEBULK, add_methods.add_sebulk_object),
+            'RELEASE': (RELEASE, add_methods.add_release_object),
+            'SEBNDRY': (SEBNDRY, add_methods.add_sebndry_object),
+            'SEELT': (SEELT, add_methods.add_seelt_object),
+            'SELOC': (SELOC, add_methods.add_seloc_object),
+            'SEMPLN': (SEMPLN, add_methods.add_sempln_object),
+            'SECONCT': (SECONCT, add_methods.add_seconct_object),
+            'SELABEL': (SELABEL, add_methods.add_selabel_object),
+            'SEEXCLD': (SEEXCLD, add_methods.add_seexcld_object),
+            'CSUPER': (CSUPER, add_methods.add_csuper_object),
+            'CSUPEXT': (CSUPEXT, add_methods.add_csupext_object),
+            'SELOAD': (SELOAD, add_methods.add_seload_object),
 
             ## acoustic
-            'CHACAB': (CHACAB, add_methods._add_element_object),
-            'CHACBR': (CHACBR, add_methods._add_element_object),
-            'CAABSF': (CAABSF, add_methods._add_element_object),
-            'PACABS': (PACABS, add_methods._add_acoustic_property_object),
-            'PAABSF': (PAABSF, add_methods._add_acoustic_property_object),
-            'PACBAR': (PACBAR, add_methods._add_acoustic_property_object),
-            'PMIC': (PMIC, add_methods._add_property_object),
-            'ACPLNW': (ACPLNW, add_methods._add_acplnw_object),
-            'AMLREG': (AMLREG, add_methods._add_amlreg_object),
-            'MATPOR': (MATPOR, add_methods._add_structural_material_object),
-            'MICPNT': (MICPNT, add_methods._add_micpnt_object),
+            'CHACAB': (CHACAB, add_methods.add_element_object),
+            'CHACBR': (CHACBR, add_methods.add_element_object),
+            'CAABSF': (CAABSF, add_methods.add_element_object),
+            'PACABS': (PACABS, add_methods.add_acoustic_property_object),
+            'PAABSF': (PAABSF, add_methods.add_acoustic_property_object),
+            'PACBAR': (PACBAR, add_methods.add_acoustic_property_object),
+            'PMIC': (PMIC, add_methods.add_property_object),
+            'ACPLNW': (ACPLNW, add_methods.add_acplnw_object),
+            'AMLREG': (AMLREG, add_methods.add_amlreg_object),
+            'MATPOR': (MATPOR, add_methods.add_structural_material_object),
+            'MICPNT': (MICPNT, add_methods.add_micpnt_object),
             #'PANEL': (Crash, None),
 
-            'BCONP': (BCONP, add_methods._add_bconp_object),
-            'BLSEG': (BLSEG, add_methods._add_blseg_object),
-            'BFRIC': (BFRIC, add_methods._add_bfric_object),
-            'MODTRAK': (MODTRAK, add_methods._add_modtrak_object),
+            'BCONP': (BCONP, add_methods.add_bconp_object),
+            'BLSEG': (BLSEG, add_methods.add_blseg_object),
+            'BFRIC': (BFRIC, add_methods.add_bfric_object),
+            'MODTRAK': (MODTRAK, add_methods.add_modtrak_object),
 
             #  nx contact
-            'BCPARA': (BCPARA, add_methods._add_bcpara_object),
-            'BCTPARM': (BCTPARM, add_methods._add_bctparam_object),
-            'BGADD': (BGADD, add_methods._add_bgadd_object),
-            'BGSET': (BGSET, add_methods._add_bgset_object),
-            'BCBODY': (BCBODY, add_methods._add_bcbody_object),
+            'BCPARA': (BCPARA, add_methods.add_bcpara_object),
+            'BCTPARM': (BCTPARM, add_methods.add_bctparam_object),
+            'BGADD': (BGADD, add_methods.add_bgadd_object),
+            'BGSET': (BGSET, add_methods.add_bgset_object),
+            'BCBODY': (BCBODY, add_methods.add_bcbody_object),
 
             # 'BOLT', 'BOLTFOR', 'BOLTFRC', 'BOLTLD', 'BOLTSEQ'
-            'BOLTFOR': (BOLTFOR, add_methods._add_boltfor_object),
-            'BOLTSEQ': (BOLTSEQ, add_methods._add_boltseq_object),
-            #'BOLTFRC': (BOLTFRC, add_methods._add_boltfrc_object),
-            #'BOLTLD': (BOLTLD, add_methods._add_boltld_object),
+            'BOLTFOR': (BOLTFOR, add_methods.add_boltfor_object),
+            'BOLTSEQ': (BOLTSEQ, add_methods.add_boltseq_object),
+            #'BOLTFRC': (BOLTFRC, add_methods.add_boltfrc_object),
+            #'BOLTLD': (BOLTLD, add_methods.add_boltld_object),
             'BOLTFRC': (Crash, None),
             'BOLTLD': (Crash, None),
 
@@ -2403,141 +2403,141 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'RADBND': (Crash, None),
 
             # nodes
-            'GRID': (GRID, partial(add_methods._add_node_object, allow_overwrites='GRID' in self.allow_overwrites_set)),
-            'SPOINT': (SPOINTs, add_methods._add_spoint_object),
-            'EPOINT': (EPOINTs, add_methods._add_epoint_object),
-            'POINT': (POINT, add_methods._add_point_object),
-            'SEQGP': (SEQGP, add_methods._add_seqgp_object),
-            #'GRIDB': (GRIDB, add_methods._add_gridb_object),  # (removed)
+            'GRID': (GRID, partial(add_methods.add_node_object, allow_overwrites='GRID' in self.allow_overwrites_set)),
+            'SPOINT': (SPOINTs, add_methods.add_spoint_object),
+            'EPOINT': (EPOINTs, add_methods.add_epoint_object),
+            'POINT': (POINT, add_methods.add_point_object),
+            'SEQGP': (SEQGP, add_methods.add_seqgp_object),
+            #'GRIDB': (GRIDB, add_methods.add_gridb_object),  # (removed)
 
-            'PARAM': (PARAM, add_methods._add_param_object),
-            'MDLPRM': (MDLPRM, add_methods._add_mdlprm_object),
+            'PARAM': (PARAM, add_methods.add_param_object),
+            'MDLPRM': (MDLPRM, add_methods.add_mdlprm_object),
 
-            'CORD2R': (CORD2R, add_methods._add_coord_object),
-            'CORD2C': (CORD2C, add_methods._add_coord_object),
-            'CORD2S': (CORD2S, add_methods._add_coord_object),
+            'CORD2R': (CORD2R, add_methods.add_coord_object),
+            'CORD2C': (CORD2C, add_methods.add_coord_object),
+            'CORD2S': (CORD2S, add_methods.add_coord_object),
 
-            'MATCID': (MATCID, add_methods._add_matcid_object),
+            'MATCID': (MATCID, add_methods.add_matcid_object),
 
             # parametric
-            'PSET': (PSET, add_methods._add_pset),
-            'PVAL': (PVAL, add_methods._add_pval),
-            'GMCURV': (GMCURV, add_methods._add_gmcurv),
-            'GMSURF': (GMSURF, add_methods._add_gmsurf),
-            'FEFACE': (FEFACE, add_methods._add_feface),
-            'FEEDGE': (FEEDGE, add_methods._add_feedge),
+            'PSET': (PSET, add_methods.add_pset),
+            'PVAL': (PVAL, add_methods.add_pval),
+            'GMCURV': (GMCURV, add_methods.add_gmcurv),
+            'GMSURF': (GMSURF, add_methods.add_gmsurf),
+            'FEFACE': (FEFACE, add_methods.add_feface),
+            'FEEDGE': (FEEDGE, add_methods.add_feedge),
 
             # msgmesh
-            #'GMCORD': (GMCORD, add_methods._add_coord_object), # coords
-            #'CGEN': (CGEN, add_methods._add_element_object),   # elements
-            #'GMLOAD': (GMLOAD, add_methods._add_load_object),  # basic loads
+            #'GMCORD': (GMCORD, add_methods.add_coord_object), # coords
+            #'CGEN': (CGEN, add_methods.add_element_object),   # elements
+            #'GMLOAD': (GMLOAD, add_methods.add_load_object),  # basic loads
 
-            'CONROD': (CONROD, add_methods._add_element_object),
-            'CROD': (CROD, add_methods._add_element_object),
-            'PROD': (PROD, add_methods._add_property_object),
-            'CTUBE': (CTUBE, add_methods._add_element_object),
-            'PTUBE': (PTUBE, add_methods._add_property_object),
+            'CONROD': (CONROD, add_methods.add_element_object),
+            'CROD': (CROD, add_methods.add_element_object),
+            'PROD': (PROD, add_methods.add_property_object),
+            'CTUBE': (CTUBE, add_methods.add_element_object),
+            'PTUBE': (PTUBE, add_methods.add_property_object),
 
-            'BAROR': (BAROR, add_methods._add_baror_object),
-            'CBARAO': (CBARAO, add_methods._add_ao_object),
-            'PBAR': (PBAR, add_methods._add_property_object),
-            'PBARL': (PBARL, add_methods._add_property_object),
-            'PBRSECT': (PBRSECT, add_methods._add_property_object),
+            'BAROR': (BAROR, add_methods.add_baror_object),
+            'CBARAO': (CBARAO, add_methods.add_ao_object),
+            'PBAR': (PBAR, add_methods.add_property_object),
+            'PBARL': (PBARL, add_methods.add_property_object),
+            'PBRSECT': (PBRSECT, add_methods.add_property_object),
 
-            'BEAMOR': (BEAMOR, add_methods._add_beamor_object),
-            'PBEAM': (PBEAM, add_methods._add_property_object),
-            'PBEAML': (PBEAML, add_methods._add_property_object),
-            'PBCOMP': (PBCOMP, add_methods._add_property_object),
-            'PBMSECT': (PBMSECT, add_methods._add_property_object),
+            'BEAMOR': (BEAMOR, add_methods.add_beamor_object),
+            'PBEAM': (PBEAM, add_methods.add_property_object),
+            'PBEAML': (PBEAML, add_methods.add_property_object),
+            'PBCOMP': (PBCOMP, add_methods.add_property_object),
+            'PBMSECT': (PBMSECT, add_methods.add_property_object),
 
-            'CBEAM3': (CBEAM3, add_methods._add_element_object),
-            'PBEAM3': (PBEAM3, add_methods._add_property_object),
+            'CBEAM3': (CBEAM3, add_methods.add_element_object),
+            'PBEAM3': (PBEAM3, add_methods.add_property_object),
 
-            'CBEND': (CBEND, add_methods._add_element_object),
-            'PBEND': (PBEND, add_methods._add_property_object),
+            'CBEND': (CBEND, add_methods.add_element_object),
+            'PBEND': (PBEND, add_methods.add_property_object),
 
-            'CTRIA3': (CTRIA3, add_methods._add_element_object),
-            'CQUAD4': (CQUAD4, add_methods._add_element_object),
-            'CQUAD': (CQUAD, add_methods._add_element_object),
-            'CQUAD8': (CQUAD8, add_methods._add_element_object),
-            'CQUADX': (CQUADX, add_methods._add_element_object),
-            'CQUADX4': (CQUADX4, add_methods._add_element_object),
-            'CQUADX8': (CQUADX8, add_methods._add_element_object),
-            'CQUADR': (CQUADR, add_methods._add_element_object),
-            'CTRIA6': (CTRIA6, add_methods._add_element_object),
-            'CTRIAR': (CTRIAR, add_methods._add_element_object),
-            'CTRAX3': (CTRAX3, add_methods._add_element_object),
-            'CTRAX6': (CTRAX6, add_methods._add_element_object),
-            'CTRIAX': (CTRIAX, add_methods._add_element_object),
-            'CTRIAX6': (CTRIAX6, add_methods._add_element_object),
-            'SNORM': (SNORM, add_methods._add_normal_object),
-            'PCOMP': (PCOMP, add_methods._add_property_object),
-            'PCOMPG': (PCOMPG, add_methods._add_property_object),
-            'PSHELL': (PSHELL, add_methods._add_property_object),
-            #'PTRSHL': (PTRSHL, add_methods._add_property_object),  # removed
-            #'PQUAD1': (PQUAD1, add_methods._add_property_object),  # removed
-            'PLPLANE': (PLPLANE, add_methods._add_property_object),
-            'CPLSTN3': (CPLSTN3, add_methods._add_element_object),
-            'CPLSTN4': (CPLSTN4, add_methods._add_element_object),
-            'CPLSTN6': (CPLSTN6, add_methods._add_element_object),
-            'CPLSTN8': (CPLSTN8, add_methods._add_element_object),
-            'CPLSTS3': (CPLSTS3, add_methods._add_element_object),
-            'CPLSTS4': (CPLSTS4, add_methods._add_element_object),
-            'CPLSTS6': (CPLSTS6, add_methods._add_element_object),
-            'CPLSTS8': (CPLSTS8, add_methods._add_element_object),
-            'PPLANE': (PPLANE, add_methods._add_property_object),
+            'CTRIA3': (CTRIA3, add_methods.add_element_object),
+            'CQUAD4': (CQUAD4, add_methods.add_element_object),
+            'CQUAD': (CQUAD, add_methods.add_element_object),
+            'CQUAD8': (CQUAD8, add_methods.add_element_object),
+            'CQUADX': (CQUADX, add_methods.add_element_object),
+            'CQUADX4': (CQUADX4, add_methods.add_element_object),
+            'CQUADX8': (CQUADX8, add_methods.add_element_object),
+            'CQUADR': (CQUADR, add_methods.add_element_object),
+            'CTRIA6': (CTRIA6, add_methods.add_element_object),
+            'CTRIAR': (CTRIAR, add_methods.add_element_object),
+            'CTRAX3': (CTRAX3, add_methods.add_element_object),
+            'CTRAX6': (CTRAX6, add_methods.add_element_object),
+            'CTRIAX': (CTRIAX, add_methods.add_element_object),
+            'CTRIAX6': (CTRIAX6, add_methods.add_element_object),
+            'SNORM': (SNORM, add_methods.add_normal_object),
+            'PCOMP': (PCOMP, add_methods.add_property_object),
+            'PCOMPG': (PCOMPG, add_methods.add_property_object),
+            'PSHELL': (PSHELL, add_methods.add_property_object),
+            #'PTRSHL': (PTRSHL, add_methods.add_property_object),  # removed
+            #'PQUAD1': (PQUAD1, add_methods.add_property_object),  # removed
+            'PLPLANE': (PLPLANE, add_methods.add_property_object),
+            'CPLSTN3': (CPLSTN3, add_methods.add_element_object),
+            'CPLSTN4': (CPLSTN4, add_methods.add_element_object),
+            'CPLSTN6': (CPLSTN6, add_methods.add_element_object),
+            'CPLSTN8': (CPLSTN8, add_methods.add_element_object),
+            'CPLSTS3': (CPLSTS3, add_methods.add_element_object),
+            'CPLSTS4': (CPLSTS4, add_methods.add_element_object),
+            'CPLSTS6': (CPLSTS6, add_methods.add_element_object),
+            'CPLSTS8': (CPLSTS8, add_methods.add_element_object),
+            'PPLANE': (PPLANE, add_methods.add_property_object),
 
-            'CSHEAR': (CSHEAR, add_methods._add_element_object),
-            'PSHEAR': (PSHEAR, add_methods._add_property_object),
+            'CSHEAR': (CSHEAR, add_methods.add_element_object),
+            'PSHEAR': (PSHEAR, add_methods.add_property_object),
 
             # msc/nx
-            'PSOLID': (PSOLID, add_methods._add_property_object),
-            'PLSOLID': (PLSOLID, add_methods._add_property_object),
-            'PCOMPS': (PCOMPS, add_methods._add_property_object),
-            'PCOMPLS': (PCOMPLS, add_methods._add_property_object),
+            'PSOLID': (PSOLID, add_methods.add_property_object),
+            'PLSOLID': (PLSOLID, add_methods.add_property_object),
+            'PCOMPS': (PCOMPS, add_methods.add_property_object),
+            'PCOMPLS': (PCOMPLS, add_methods.add_property_object),
 
-            'CELAS1': (CELAS1, add_methods._add_element_object),
-            'CELAS2': (CELAS2, add_methods._add_element_object),
-            'CELAS3': (CELAS3, add_methods._add_element_object),
-            'CELAS4': (CELAS4, add_methods._add_element_object),
-            'CVISC': (CVISC, add_methods._add_element_object),
-            'PELAST': (PELAST, add_methods._add_pelast_object),
+            'CELAS1': (CELAS1, add_methods.add_element_object),
+            'CELAS2': (CELAS2, add_methods.add_element_object),
+            'CELAS3': (CELAS3, add_methods.add_element_object),
+            'CELAS4': (CELAS4, add_methods.add_element_object),
+            'CVISC': (CVISC, add_methods.add_element_object),
+            'PELAST': (PELAST, add_methods.add_pelast_object),
 
-            'CDAMP1': (CDAMP1, add_methods._add_damper_object),
-            'CDAMP2': (CDAMP2, add_methods._add_damper_object),
-            'CDAMP3': (CDAMP3, add_methods._add_damper_object),
+            'CDAMP1': (CDAMP1, add_methods.add_damper_object),
+            'CDAMP2': (CDAMP2, add_methods.add_damper_object),
+            'CDAMP3': (CDAMP3, add_methods.add_damper_object),
             # CDAMP4 added later because the documentation is wrong
-            'CDAMP5': (CDAMP5, add_methods._add_damper_object),
-            'PDAMP5': (PDAMP5, add_methods._add_property_object),
+            'CDAMP5': (CDAMP5, add_methods.add_damper_object),
+            'PDAMP5': (PDAMP5, add_methods.add_property_object),
 
-            'CFAST': (CFAST, add_methods._add_damper_object),
-            'PFAST': (PFAST, add_methods._add_property_object),
+            'CFAST': (CFAST, add_methods.add_damper_object),
+            'PFAST': (PFAST, add_methods.add_property_object),
 
-            'CWELD': (CWELD, add_methods._add_damper_object),
-            'PWELD': (PWELD, add_methods._add_property_object),
+            'CWELD': (CWELD, add_methods.add_damper_object),
+            'PWELD': (PWELD, add_methods.add_property_object),
 
-            'CGAP': (CGAP, add_methods._add_element_object),
-            'PGAP': (PGAP, add_methods._add_property_object),
+            'CGAP': (CGAP, add_methods.add_element_object),
+            'PGAP': (PGAP, add_methods.add_property_object),
 
-            'CBUSH': (CBUSH, add_methods._add_damper_object),
-            'CBUSH1D': (CBUSH1D, add_methods._add_damper_object),
-            'CBUSH2D': (CBUSH2D, add_methods._add_damper_object),
-            'PBUSH': (PBUSH, add_methods._add_property_object),
-            'PBUSH1D': (PBUSH1D, add_methods._add_property_object),
-            'PBUSH2D': (PBUSH2D, add_methods._add_property_object),
+            'CBUSH': (CBUSH, add_methods.add_damper_object),
+            'CBUSH1D': (CBUSH1D, add_methods.add_damper_object),
+            'CBUSH2D': (CBUSH2D, add_methods.add_damper_object),
+            'PBUSH': (PBUSH, add_methods.add_property_object),
+            'PBUSH1D': (PBUSH1D, add_methods.add_property_object),
+            'PBUSH2D': (PBUSH2D, add_methods.add_property_object),
 
-            'CRAC2D': (CRAC2D, add_methods._add_element_object),
-            'PRAC2D': (PRAC2D, add_methods._add_property_object),
+            'CRAC2D': (CRAC2D, add_methods.add_element_object),
+            'PRAC2D': (PRAC2D, add_methods.add_property_object),
 
-            'CRAC3D': (CRAC3D, add_methods._add_element_object),
-            'PRAC3D': (PRAC3D, add_methods._add_property_object),
+            'CRAC3D': (CRAC3D, add_methods.add_element_object),
+            'PRAC3D': (PRAC3D, add_methods.add_property_object),
 
-            'GENEL': (GENEL, add_methods._add_element_object),
+            'GENEL': (GENEL, add_methods.add_element_object),
 
-            'PDAMPT': (PDAMPT, add_methods._add_pdampt_object),
-            'PBUSHT': (PBUSHT, add_methods._add_pbusht_object),
+            'PDAMPT': (PDAMPT, add_methods.add_pdampt_object),
+            'PBUSHT': (PBUSHT, add_methods.add_pbusht_object),
 
-            'CYAX': (CYAX, add_methods._add_cyax_object),  # TODO: remove?
+            'CYAX': (CYAX, add_methods.add_cyax_object),  # TODO: remove?
 
             'RBAR': (RBAR, add_rigid_element_object),
             'RBAR1': (RBAR1, add_rigid_element_object),
@@ -2550,45 +2550,45 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
 
             ## there is no MAT6 or MAT7
-            'MAT1': (MAT1, add_methods._add_structural_material_object),
-            'MAT2': (MAT2, add_methods._add_structural_material_object),
-            'MAT3': (MAT3, add_methods._add_structural_material_object),
-            'MAT8': (MAT8, add_methods._add_structural_material_object),
-            'MAT9': (MAT9, add_methods._add_structural_material_object),
-            'MAT10': (MAT10, add_methods._add_structural_material_object),
-            'MAT11': (MAT11, add_methods._add_structural_material_object),
-            'MAT3D': (MAT3D, add_methods._add_structural_material_object),
-            'EQUIV': (EQUIV, add_methods._add_structural_material_object),
-            'MATG': (MATG, add_methods._add_structural_material_object),
+            'MAT1': (MAT1, add_methods.add_structural_material_object),
+            'MAT2': (MAT2, add_methods.add_structural_material_object),
+            'MAT3': (MAT3, add_methods.add_structural_material_object),
+            'MAT8': (MAT8, add_methods.add_structural_material_object),
+            'MAT9': (MAT9, add_methods.add_structural_material_object),
+            'MAT10': (MAT10, add_methods.add_structural_material_object),
+            'MAT11': (MAT11, add_methods.add_structural_material_object),
+            'MAT3D': (MAT3D, add_methods.add_structural_material_object),
+            'EQUIV': (EQUIV, add_methods.add_structural_material_object),
+            'MATG': (MATG, add_methods.add_structural_material_object),
 
-            'MATHE': (MATHE, add_methods._add_hyperelastic_material_object),
-            'MATHP': (MATHP, add_methods._add_hyperelastic_material_object),
-            'MATEV': (MATEV, add_methods._add_structural_material_object),
-            'MAT4': (MAT4, add_methods._add_thermal_material_object),
-            'MAT5': (MAT5, add_methods._add_thermal_material_object),
+            'MATHE': (MATHE, add_methods.add_hyperelastic_material_object),
+            'MATHP': (MATHP, add_methods.add_hyperelastic_material_object),
+            'MATEV': (MATEV, add_methods.add_structural_material_object),
+            'MAT4': (MAT4, add_methods.add_thermal_material_object),
+            'MAT5': (MAT5, add_methods.add_thermal_material_object),
 
-            'MATS1': (MATS1, add_methods._add_material_dependence_object),
-            #'MATS3': (MATS3, add_methods._add_material_dependence_object),
-            #'MATS8': (MATS8, add_methods._add_material_dependence_object),
-            'MATT1': (MATT1, add_methods._add_material_dependence_object),
-            'MATT2': (MATT2, add_methods._add_material_dependence_object),
-            'MATT3': (MATT3, add_methods._add_material_dependence_object),
-            'MATT4': (MATT4, add_methods._add_material_dependence_object),
-            'MATT5': (MATT5, add_methods._add_material_dependence_object),
-            'MATT8': (MATT8, add_methods._add_material_dependence_object),
-            'MATT9': (MATT9, add_methods._add_material_dependence_object),
-            'MATT11': (MATT11, add_methods._add_material_dependence_object),
+            'MATS1': (MATS1, add_methods.add_material_dependence_object),
+            #'MATS3': (MATS3, add_methods.add_material_dependence_object),
+            #'MATS8': (MATS8, add_methods.add_material_dependence_object),
+            'MATT1': (MATT1, add_methods.add_material_dependence_object),
+            'MATT2': (MATT2, add_methods.add_material_dependence_object),
+            'MATT3': (MATT3, add_methods.add_material_dependence_object),
+            'MATT4': (MATT4, add_methods.add_material_dependence_object),
+            'MATT5': (MATT5, add_methods.add_material_dependence_object),
+            'MATT8': (MATT8, add_methods.add_material_dependence_object),
+            'MATT9': (MATT9, add_methods.add_material_dependence_object),
+            'MATT11': (MATT11, add_methods.add_material_dependence_object),
 
-            'MATDMG': (MATDMG, add_methods._add_material_dependence_object),
+            'MATDMG': (MATDMG, add_methods.add_material_dependence_object),
 
-            'NXSTRAT': (NXSTRAT, add_methods._add_nxstrat_object),
+            'NXSTRAT': (NXSTRAT, add_methods.add_nxstrat_object),
 
             # hasn't been verified, links up to MAT1, MAT2, MAT9 w/ same MID
-            'CREEP': (CREEP, add_methods._add_creep_material_object),
+            'CREEP': (CREEP, add_methods.add_creep_material_object),
 
-            'NSMADD': (NSMADD, add_methods._add_nsmadd_object),
-            'NSM1': (NSM1, add_methods._add_nsm_object),
-            'NSML1': (NSML1, add_methods._add_nsm_object),
+            'NSMADD': (NSMADD, add_methods.add_nsmadd_object),
+            'NSM1': (NSM1, add_methods.add_nsm_object),
+            'NSML1': (NSML1, add_methods.add_nsm_object),
 
             'CONM1': (CONM1, partial(add_mass_object, allow_overwrites='CONM1' in self.allow_overwrites_set)),
             'CONM2': (CONM2, partial(add_mass_object, allow_overwrites='CONM2' in self.allow_overwrites_set)),
@@ -2597,268 +2597,268 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CMASS3': (CMASS3, partial(add_mass_object, allow_overwrites='CMASS3' in self.allow_overwrites_set)),
             # CMASS4 - added later because documentation is wrong
 
-            'MPC': (MPC, add_methods._add_constraint_mpc_object),
-            'MPCADD': (MPCADD, add_methods._add_constraint_mpcadd_object),
+            'MPC': (MPC, add_methods.add_constraint_mpc_object),
+            'MPCADD': (MPCADD, add_methods.add_constraint_mpcadd_object),
 
-            'SPC': (SPC, add_methods._add_constraint_spc_object),
-            'SPC1': (SPC1, add_methods._add_constraint_spc_object),
-            'SPCOFF': (SPCOFF, add_methods._add_constraint_spcoff_object),
-            'SPCOFF1': (SPCOFF1, add_methods._add_constraint_spcoff_object),
-            #'SPCAX': (SPCAX, add_methods._add_constraint_spc_object),  # removed
-            'SPCADD': (SPCADD, add_methods._add_constraint_spcadd_object),
+            'SPC': (SPC, add_methods.add_constraint_spc_object),
+            'SPC1': (SPC1, add_methods.add_constraint_spc_object),
+            'SPCOFF': (SPCOFF, add_methods.add_constraint_spcoff_object),
+            'SPCOFF1': (SPCOFF1, add_methods.add_constraint_spcoff_object),
+            #'SPCAX': (SPCAX, add_methods.add_constraint_spc_object),  # removed
+            'SPCADD': (SPCADD, add_methods.add_constraint_spcadd_object),
             ## parametric
-            'GMSPC': (GMSPC, add_methods._add_constraint_spc_object),
+            'GMSPC': (GMSPC, add_methods.add_constraint_spc_object),
 
-            'SESUP': (SESUP, add_methods._add_sesuport_object),  # pseudo-constraint
-            'SUPORT': (SUPORT, add_methods._add_suport_object),  # pseudo-constraint
-            'SUPORT1': (SUPORT1, add_methods._add_suport1_object),  # pseudo-constraint
+            'SESUP': (SESUP, add_methods.add_sesuport_object),  # pseudo-constraint
+            'SUPORT': (SUPORT, add_methods.add_suport_object),  # pseudo-constraint
+            'SUPORT1': (SUPORT1, add_methods.add_suport1_object),  # pseudo-constraint
 
-            'FORCE': (FORCE, add_methods._add_load_object),
-            'FORCE1': (FORCE1, add_methods._add_load_object),
-            'FORCE2': (FORCE2, add_methods._add_load_object),
-            'MOMENT': (MOMENT, add_methods._add_load_object),
-            'MOMENT1': (MOMENT1, add_methods._add_load_object),
-            'MOMENT2': (MOMENT2, add_methods._add_load_object),
+            'FORCE': (FORCE, add_methods.add_load_object),
+            'FORCE1': (FORCE1, add_methods.add_load_object),
+            'FORCE2': (FORCE2, add_methods.add_load_object),
+            'MOMENT': (MOMENT, add_methods.add_load_object),
+            'MOMENT1': (MOMENT1, add_methods.add_load_object),
+            'MOMENT2': (MOMENT2, add_methods.add_load_object),
 
-            'LSEQ': (LSEQ, add_methods._add_lseq_object),
-            'LOAD': (LOAD, add_methods._add_load_combination_object),
-            'CLOAD': (CLOAD, add_methods._add_load_combination_object),
-            'LOADCYN': (LOADCYN, add_methods._add_load_object),
-            'LOADCYH': (LOADCYH, add_methods._add_load_object),
+            'LSEQ': (LSEQ, add_methods.add_lseq_object),
+            'LOAD': (LOAD, add_methods.add_load_combination_object),
+            'CLOAD': (CLOAD, add_methods.add_load_combination_object),
+            'LOADCYN': (LOADCYN, add_methods.add_load_object),
+            'LOADCYH': (LOADCYH, add_methods.add_load_object),
 
             # basic static loads
-            'GRAV': (GRAV, add_methods._add_load_object),
-            'ACCEL': (ACCEL, add_methods._add_load_object),
-            'ACCEL1': (ACCEL1, add_methods._add_load_object),
-            'PLOAD': (PLOAD, add_methods._add_load_object),
-            'PLOAD1': (PLOAD1, add_methods._add_load_object),
-            'PLOAD2': (PLOAD2, add_methods._add_load_object),
-            'PLOAD4': (PLOAD4, add_methods._add_load_object),
-            'RFORCE': (RFORCE, add_methods._add_load_object),
-            'RFORCE1': (RFORCE1, add_methods._add_load_object),
-            'SLOAD': (SLOAD, add_methods._add_load_object),
-            'SPCD': (SPCD, add_methods._add_load_object),  # enforced displacement
-            'QVOL': (QVOL, add_methods._add_load_object),  # thermal
+            'GRAV': (GRAV, add_methods.add_load_object),
+            'ACCEL': (ACCEL, add_methods.add_load_object),
+            'ACCEL1': (ACCEL1, add_methods.add_load_object),
+            'PLOAD': (PLOAD, add_methods.add_load_object),
+            'PLOAD1': (PLOAD1, add_methods.add_load_object),
+            'PLOAD2': (PLOAD2, add_methods.add_load_object),
+            'PLOAD4': (PLOAD4, add_methods.add_load_object),
+            'RFORCE': (RFORCE, add_methods.add_load_object),
+            'RFORCE1': (RFORCE1, add_methods.add_load_object),
+            'SLOAD': (SLOAD, add_methods.add_load_object),
+            'SPCD': (SPCD, add_methods.add_load_object),  # enforced displacement
+            'QVOL': (QVOL, add_methods.add_load_object),  # thermal
 
             # axisymmetric loads
-            'PLOADX1': (PLOADX1, add_methods._add_load_object),
+            'PLOADX1': (PLOADX1, add_methods.add_load_object),
 
-            'DLOAD': (DLOAD, add_methods._add_dload_object),
+            'DLOAD': (DLOAD, add_methods.add_dload_object),
 
-            'ACSRCE': (ACSRCE, add_methods._add_dload_entry),
-            'TLOAD1': (TLOAD1, add_methods._add_dload_entry),
-            'TLOAD2': (TLOAD2, add_methods._add_dload_entry),
-            'RLOAD1': (RLOAD1, add_methods._add_dload_entry),
-            'RLOAD2': (RLOAD2, add_methods._add_dload_entry),
-            'RANDPS': (RANDPS, add_methods._add_dload_entry),  # random
-            'RANDT1': (RANDT1, add_methods._add_dload_entry),  # random
-            'QVECT': (QVECT, add_methods._add_dload_entry),
+            'ACSRCE': (ACSRCE, add_methods.add_dload_entry),
+            'TLOAD1': (TLOAD1, add_methods.add_dload_entry),
+            'TLOAD2': (TLOAD2, add_methods.add_dload_entry),
+            'RLOAD1': (RLOAD1, add_methods.add_dload_entry),
+            'RLOAD2': (RLOAD2, add_methods.add_dload_entry),
+            'RANDPS': (RANDPS, add_methods.add_dload_entry),  # random
+            'RANDT1': (RANDT1, add_methods.add_dload_entry),  # random
+            'QVECT': (QVECT, add_methods.add_dload_entry),
 
-            'FREQ': (FREQ, add_methods._add_freq_object),
-            'FREQ1': (FREQ1, add_methods._add_freq_object),
-            'FREQ2': (FREQ2, add_methods._add_freq_object),
-            'FREQ3': (FREQ3, add_methods._add_freq_object),
-            'FREQ4': (FREQ4, add_methods._add_freq_object),
-            'FREQ5': (FREQ5, add_methods._add_freq_object),
+            'FREQ': (FREQ, add_methods.add_freq_object),
+            'FREQ1': (FREQ1, add_methods.add_freq_object),
+            'FREQ2': (FREQ2, add_methods.add_freq_object),
+            'FREQ3': (FREQ3, add_methods.add_freq_object),
+            'FREQ4': (FREQ4, add_methods.add_freq_object),
+            'FREQ5': (FREQ5, add_methods.add_freq_object),
 
-            'DOPTPRM': (DOPTPRM, add_methods._add_doptprm_object),
-            'DESVAR': (DESVAR, add_methods._add_desvar_object),
-            'TOPVAR': (TOPVAR, add_methods._add_topvar_object),
+            'DOPTPRM': (DOPTPRM, add_methods.add_doptprm_object),
+            'DESVAR': (DESVAR, add_methods.add_desvar_object),
+            'TOPVAR': (TOPVAR, add_methods.add_topvar_object),
             # BCTSET
 
-            'TEMPRB': (TEMPRB, add_methods._add_thermal_load_object),
-            'TEMP': (TEMP, add_methods._add_thermal_load_object),
-            'TEMPB3': (TEMPB3, add_methods._add_thermal_load_object),
-            'QBDY1': (QBDY1, add_methods._add_thermal_load_object),
-            'QBDY2': (QBDY2, add_methods._add_thermal_load_object),
-            'QBDY3': (QBDY3, add_methods._add_thermal_load_object),
-            'QHBDY': (QHBDY, add_methods._add_thermal_load_object),
-            'PHBDY': (PHBDY, add_methods._add_phbdy_object),
+            'TEMPRB': (TEMPRB, add_methods.add_thermal_load_object),
+            'TEMP': (TEMP, add_methods.add_thermal_load_object),
+            'TEMPB3': (TEMPB3, add_methods.add_thermal_load_object),
+            'QBDY1': (QBDY1, add_methods.add_thermal_load_object),
+            'QBDY2': (QBDY2, add_methods.add_thermal_load_object),
+            'QBDY3': (QBDY3, add_methods.add_thermal_load_object),
+            'QHBDY': (QHBDY, add_methods.add_thermal_load_object),
+            'PHBDY': (PHBDY, add_methods.add_phbdy_object),
 
-            'CHBDYE': (CHBDYE, add_methods._add_thermal_element_object),
-            'CHBDYG': (CHBDYG, add_methods._add_thermal_element_object),
-            'CHBDYP': (CHBDYP, add_methods._add_thermal_element_object),
-            'PCONV': (PCONV, add_methods._add_convection_property_object),
-            'PCONVM': (PCONVM, add_methods._add_convection_property_object),
+            'CHBDYE': (CHBDYE, add_methods.add_thermal_element_object),
+            'CHBDYG': (CHBDYG, add_methods.add_thermal_element_object),
+            'CHBDYP': (CHBDYP, add_methods.add_thermal_element_object),
+            'PCONV': (PCONV, add_methods.add_convection_property_object),
+            'PCONVM': (PCONVM, add_methods.add_convection_property_object),
 
-            'VIEW': (VIEW, add_methods._add_view_object),
-            'VIEW3D': (VIEW3D, add_methods._add_view3d_object),
+            'VIEW': (VIEW, add_methods.add_view_object),
+            'VIEW3D': (VIEW3D, add_methods.add_view3d_object),
 
             # aero
-            'AECOMP': (AECOMP, add_methods._add_aecomp_object),
-            'AECOMPL': (AECOMPL, add_methods._add_aecomp_object),
-            'AEFACT': (AEFACT, add_methods._add_aefact_object),
-            'AELINK': (AELINK, add_methods._add_aelink_object),
-            'AELIST': (AELIST, add_methods._add_aelist_object),
-            'AEPARM': (AEPARM, add_methods._add_aeparm_object),
-            'AESTAT': (AESTAT, add_methods._add_aestat_object),
-            'AESURF': (AESURF, add_methods._add_aesurf_object),
-            'AESURFS': (AESURFS, add_methods._add_aesurfs_object),
+            'AECOMP': (AECOMP, add_methods.add_aecomp_object),
+            'AECOMPL': (AECOMPL, add_methods.add_aecomp_object),
+            'AEFACT': (AEFACT, add_methods.add_aefact_object),
+            'AELINK': (AELINK, add_methods.add_aelink_object),
+            'AELIST': (AELIST, add_methods.add_aelist_object),
+            'AEPARM': (AEPARM, add_methods.add_aeparm_object),
+            'AESTAT': (AESTAT, add_methods.add_aestat_object),
+            'AESURF': (AESURF, add_methods.add_aesurf_object),
+            'AESURFS': (AESURFS, add_methods.add_aesurfs_object),
 
-            'CAERO1': (CAERO1, add_methods._add_caero_object),
-            'CAERO2': (CAERO2, add_methods._add_caero_object),
-            'CAERO3': (CAERO3, add_methods._add_caero_object),
-            'CAERO4': (CAERO4, add_methods._add_caero_object),
-            'CAERO5': (CAERO5, add_methods._add_caero_object),
+            'CAERO1': (CAERO1, add_methods.add_caero_object),
+            'CAERO2': (CAERO2, add_methods.add_caero_object),
+            'CAERO3': (CAERO3, add_methods.add_caero_object),
+            'CAERO4': (CAERO4, add_methods.add_caero_object),
+            'CAERO5': (CAERO5, add_methods.add_caero_object),
 
-            'PAERO1': (PAERO1, add_methods._add_paero_object),
-            'PAERO2': (PAERO2, add_methods._add_paero_object),
-            'PAERO3': (PAERO3, add_methods._add_paero_object),
-            'PAERO4': (PAERO4, add_methods._add_paero_object),
-            'PAERO5': (PAERO5, add_methods._add_paero_object),
+            'PAERO1': (PAERO1, add_methods.add_paero_object),
+            'PAERO2': (PAERO2, add_methods.add_paero_object),
+            'PAERO3': (PAERO3, add_methods.add_paero_object),
+            'PAERO4': (PAERO4, add_methods.add_paero_object),
+            'PAERO5': (PAERO5, add_methods.add_paero_object),
 
-            'SPLINE1': (SPLINE1, add_methods._add_spline_object),
-            'SPLINE2': (SPLINE2, add_methods._add_spline_object),
-            'SPLINE3': (SPLINE3, add_methods._add_spline_object),
-            'SPLINE4': (SPLINE4, add_methods._add_spline_object),
-            'SPLINE5': (SPLINE5, add_methods._add_spline_object),
+            'SPLINE1': (SPLINE1, add_methods.add_spline_object),
+            'SPLINE2': (SPLINE2, add_methods.add_spline_object),
+            'SPLINE3': (SPLINE3, add_methods.add_spline_object),
+            'SPLINE4': (SPLINE4, add_methods.add_spline_object),
+            'SPLINE5': (SPLINE5, add_methods.add_spline_object),
 
             # SOL 144
-            'AEROS': (AEROS, add_methods._add_aeros_object),
-            'TRIM': (TRIM, add_methods._add_trim_object),
-            'TRIM2': (TRIM2, add_methods._add_trim_object),
-            'DIVERG': (DIVERG, add_methods._add_diverg_object),
+            'AEROS': (AEROS, add_methods.add_aeros_object),
+            'TRIM': (TRIM, add_methods.add_trim_object),
+            'TRIM2': (TRIM2, add_methods.add_trim_object),
+            'DIVERG': (DIVERG, add_methods.add_diverg_object),
 
             # SOL 145
-            'AERO': (AERO, add_methods._add_aero_object),
-            'FLUTTER': (FLUTTER, add_methods._add_flutter_object),
-            'FLFACT': (FLFACT, add_methods._add_flfact_object),
-            'MKAERO1': (MKAERO1, add_methods._add_mkaero_object),
-            'MKAERO2': (MKAERO2, add_methods._add_mkaero_object),
+            'AERO': (AERO, add_methods.add_aero_object),
+            'FLUTTER': (FLUTTER, add_methods.add_flutter_object),
+            'FLFACT': (FLFACT, add_methods.add_flfact_object),
+            'MKAERO1': (MKAERO1, add_methods.add_mkaero_object),
+            'MKAERO2': (MKAERO2, add_methods.add_mkaero_object),
 
-            'GUST': (GUST, add_methods._add_gust_object),
-            'CSSCHD': (CSSCHD, add_methods._add_csschd_object),
-            'MONPNT1': (MONPNT1, add_methods._add_monpnt_object),
-            'MONPNT2': (MONPNT2, add_methods._add_monpnt_object),
-            'MONPNT3': (MONPNT3, add_methods._add_monpnt_object),
-            'MONDSP1': (MONDSP1, add_methods._add_monpnt_object),
+            'GUST': (GUST, add_methods.add_gust_object),
+            'CSSCHD': (CSSCHD, add_methods.add_csschd_object),
+            'MONPNT1': (MONPNT1, add_methods.add_monpnt_object),
+            'MONPNT2': (MONPNT2, add_methods.add_monpnt_object),
+            'MONPNT3': (MONPNT3, add_methods.add_monpnt_object),
+            'MONDSP1': (MONDSP1, add_methods.add_monpnt_object),
 
-            'NLPARM': (NLPARM, add_methods._add_nlparm_object),
-            'NLPCI': (NLPCI, add_methods._add_nlpci_object),
-            'TSTEP': (TSTEP, add_methods._add_tstep_object),
-            'TSTEP1': (TSTEP1, add_methods._add_tstepnl_object),
-            'TSTEPNL': (TSTEPNL, add_methods._add_tstepnl_object),
+            'NLPARM': (NLPARM, add_methods.add_nlparm_object),
+            'NLPCI': (NLPCI, add_methods.add_nlpci_object),
+            'TSTEP': (TSTEP, add_methods.add_tstep_object),
+            'TSTEP1': (TSTEP1, add_methods.add_tstepnl_object),
+            'TSTEPNL': (TSTEPNL, add_methods.add_tstepnl_object),
 
-            'TF': (TF, add_methods._add_tf_object),
-            'TIC': (TIC, add_methods._add_tic_object),
+            'TF': (TF, add_methods.add_tf_object),
+            'TIC': (TIC, add_methods.add_tic_object),
 
-            'DCONADD': (DCONADD, add_methods._add_dconstr_object),
-            'DCONSTR': (DCONSTR, add_methods._add_dconstr_object),
-            'DDVAL': (DDVAL, add_methods._add_ddval_object),
-            'DLINK': (DLINK, add_methods._add_dlink_object),
-            'DSCREEN': (DSCREEN, add_methods._add_dscreen_object),
+            'DCONADD': (DCONADD, add_methods.add_dconstr_object),
+            'DCONSTR': (DCONSTR, add_methods.add_dconstr_object),
+            'DDVAL': (DDVAL, add_methods.add_ddval_object),
+            'DLINK': (DLINK, add_methods.add_dlink_object),
+            'DSCREEN': (DSCREEN, add_methods.add_dscreen_object),
 
-            'DTABLE': (DTABLE, add_methods._add_dtable_object),
-            'DRESP1': (DRESP1, add_methods._add_dresp_object),  # dresps
-            'DRESP2': (DRESP2, add_methods._add_dresp_object),
-            'DRESP3': (DRESP3, add_methods._add_dresp_object),
-            'DVCREL1': (DVCREL1, add_methods._add_dvcrel_object),  # dvcrels
-            'DVCREL2': (DVCREL2, add_methods._add_dvcrel_object),
-            'DVPREL1': (DVPREL1, add_methods._add_dvprel_object),  # dvprels
-            'DVPREL2': (DVPREL2, add_methods._add_dvprel_object),
-            'DVMREL1': (DVMREL1, add_methods._add_dvmrel_object),  # ddvmrels
-            'DVMREL2': (DVMREL2, add_methods._add_dvmrel_object),
-            'DVGRID': (DVGRID, add_methods._add_dvgrid_object),  # dvgrids
+            'DTABLE': (DTABLE, add_methods.add_dtable_object),
+            'DRESP1': (DRESP1, add_methods.add_dresp_object),  # dresps
+            'DRESP2': (DRESP2, add_methods.add_dresp_object),
+            'DRESP3': (DRESP3, add_methods.add_dresp_object),
+            'DVCREL1': (DVCREL1, add_methods.add_dvcrel_object),  # dvcrels
+            'DVCREL2': (DVCREL2, add_methods.add_dvcrel_object),
+            'DVPREL1': (DVPREL1, add_methods.add_dvprel_object),  # dvprels
+            'DVPREL2': (DVPREL2, add_methods.add_dvprel_object),
+            'DVMREL1': (DVMREL1, add_methods.add_dvmrel_object),  # ddvmrels
+            'DVMREL2': (DVMREL2, add_methods.add_dvmrel_object),
+            'DVGRID': (DVGRID, add_methods.add_dvgrid_object),  # dvgrids
 
             # nx_opt
-            'DVTREL1': (DVTREL1, add_methods._add_dvtrel_object),  # dvtrels
-            'GROUP': (GROUP, add_methods._add_group_object),  # group
-            'DMNCON': (DMNCON, add_methods._add_dmncon_object),  # dmncon
+            'DVTREL1': (DVTREL1, add_methods.add_dvtrel_object),  # dvtrels
+            'GROUP': (GROUP, add_methods.add_group_object),  # group
+            'DMNCON': (DMNCON, add_methods.add_dmncon_object),  # dmncon
 
             # tables
-            'TABLES1': (TABLES1, add_methods._add_table_object),
-            'TABLEST': (TABLEST, add_methods._add_table_object),
-            'TABLEHT': (TABLEHT, add_methods._add_table_object),
-            'TABLEH1': (TABLEH1, add_methods._add_table_object),
+            'TABLES1': (TABLES1, add_methods.add_table_object),
+            'TABLEST': (TABLEST, add_methods.add_table_object),
+            'TABLEHT': (TABLEHT, add_methods.add_table_object),
+            'TABLEH1': (TABLEH1, add_methods.add_table_object),
 
             # dynamic tables
-            'TABLED1': (TABLED1, add_methods._add_tabled_object),
-            'TABLED2': (TABLED2, add_methods._add_tabled_object),
-            'TABLED3': (TABLED3, add_methods._add_tabled_object),
-            'TABLED4': (TABLED4, add_methods._add_tabled_object),
+            'TABLED1': (TABLED1, add_methods.add_tabled_object),
+            'TABLED2': (TABLED2, add_methods.add_tabled_object),
+            'TABLED3': (TABLED3, add_methods.add_tabled_object),
+            'TABLED4': (TABLED4, add_methods.add_tabled_object),
 
             # material tables
-            'TABLEM1': (TABLEM1, add_methods._add_tablem_object),
-            'TABLEM2': (TABLEM2, add_methods._add_tablem_object),
-            'TABLEM3': (TABLEM3, add_methods._add_tablem_object),
-            'TABLEM4': (TABLEM4, add_methods._add_tablem_object),
+            'TABLEM1': (TABLEM1, add_methods.add_tablem_object),
+            'TABLEM2': (TABLEM2, add_methods.add_tablem_object),
+            'TABLEM3': (TABLEM3, add_methods.add_tablem_object),
+            'TABLEM4': (TABLEM4, add_methods.add_tablem_object),
 
             # other tables
-            'TABDMP1': (TABDMP1, add_methods._add_table_sdamping_object),
-            'TABRND1': (TABRND1, add_methods._add_random_table_object),
-            'TABRNDG': (TABRNDG, add_methods._add_random_table_object),
+            'TABDMP1': (TABDMP1, add_methods.add_table_sdamping_object),
+            'TABRND1': (TABRND1, add_methods.add_random_table_object),
+            'TABRNDG': (TABRNDG, add_methods.add_random_table_object),
 
-            'EIGB': (EIGB, add_methods._add_method_object),
-            'EIGR': (EIGR, add_methods._add_method_object),
-            'EIGRL': (EIGRL, add_methods._add_method_object),
-            'EIGC': (EIGC, add_methods._add_cmethod_object),
-            'EIGP': (EIGP, add_methods._add_cmethod_object),
+            'EIGB': (EIGB, add_methods.add_method_object),
+            'EIGR': (EIGR, add_methods.add_method_object),
+            'EIGRL': (EIGRL, add_methods.add_method_object),
+            'EIGC': (EIGC, add_methods.add_cmethod_object),
+            'EIGP': (EIGP, add_methods.add_cmethod_object),
 
-            'BCRPARA': (BCRPARA, add_methods._add_bcrpara_object),
-            'BCTADD': (BCTADD, add_methods._add_bctadd_object),
-            'BCTPARA': (BCTPARA, add_methods._add_bctpara_object),
-            'BSURF': (BSURF, add_methods._add_bsurf_object),
-            'BSURFS': (BSURFS, add_methods._add_bsurfs_object),
+            'BCRPARA': (BCRPARA, add_methods.add_bcrpara_object),
+            'BCTADD': (BCTADD, add_methods.add_bctadd_object),
+            'BCTPARA': (BCTPARA, add_methods.add_bctpara_object),
+            'BSURF': (BSURF, add_methods.add_bsurf_object),
+            'BSURFS': (BSURFS, add_methods.add_bsurfs_object),
 
-            'RADCAV': (RADCAV, add_methods._add_radcav_object), #
-            #'RADLST': (RADLST, add_methods._add_radcav_object), # TestOP2.test_bdf_op2_thermal_02
-            #'RADMTX': (RADMTX, add_methods._add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
+            'RADCAV': (RADCAV, add_methods.add_radcav_object), #
+            #'RADLST': (RADLST, add_methods.add_radcav_object), # TestOP2.test_bdf_op2_thermal_02
+            #'RADMTX': (RADMTX, add_methods.add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
             #'RADMT': (Crash, None),
 
-            'ASET': (ASET, add_methods._add_aset_object),
-            'ASET1': (ASET1, add_methods._add_aset_object),
+            'ASET': (ASET, add_methods.add_aset_object),
+            'ASET1': (ASET1, add_methods.add_aset_object),
 
-            'BSET': (BSET, add_methods._add_bset_object),
-            'BSET1': (BSET1, add_methods._add_bset_object),
+            'BSET': (BSET, add_methods.add_bset_object),
+            'BSET1': (BSET1, add_methods.add_bset_object),
 
-            'CSET': (CSET, add_methods._add_cset_object),
-            'CSET1': (CSET1, add_methods._add_cset_object),
+            'CSET': (CSET, add_methods.add_cset_object),
+            'CSET1': (CSET1, add_methods.add_cset_object),
 
-            'QSET': (QSET, add_methods._add_qset_object),
-            'QSET1': (QSET1, add_methods._add_qset_object),
+            'QSET': (QSET, add_methods.add_qset_object),
+            'QSET1': (QSET1, add_methods.add_qset_object),
 
-            'USET': (USET, add_methods._add_uset_object),
-            'USET1': (USET1, add_methods._add_uset_object),
+            'USET': (USET, add_methods.add_uset_object),
+            'USET1': (USET1, add_methods.add_uset_object),
 
-            'OMIT': (OMIT, add_methods._add_omit_object),
-            'OMIT1': (OMIT1, add_methods._add_omit_object),
+            'OMIT': (OMIT, add_methods.add_omit_object),
+            'OMIT1': (OMIT1, add_methods.add_omit_object),
 
-            'SET1': (SET1, add_methods._add_set_object),
-            'SET2': (SET2, add_methods._add_set_object),
-            'SET3': (SET3, add_methods._add_set_object),
+            'SET1': (SET1, add_methods.add_set_object),
+            'SET2': (SET2, add_methods.add_set_object),
+            'SET3': (SET3, add_methods.add_set_object),
 
             # radset
-            'RADSET': (RADSET, add_methods._add_radset_object),
+            'RADSET': (RADSET, add_methods.add_radset_object),
 
             # superelement sets
-            'SESET': (SESET, add_methods._add_seset_object),
+            'SESET': (SESET, add_methods.add_seset_object),
 
-            'SEBSET': (SEBSET, add_methods._add_sebset_object),
-            'SEBSET1': (SEBSET1, add_methods._add_sebset_object),
+            'SEBSET': (SEBSET, add_methods.add_sebset_object),
+            'SEBSET1': (SEBSET1, add_methods.add_sebset_object),
 
-            'SECSET': (SECSET, add_methods._add_secset_object),
-            'SECSET1': (SECSET1, add_methods._add_secset_object),
+            'SECSET': (SECSET, add_methods.add_secset_object),
+            'SECSET1': (SECSET1, add_methods.add_secset_object),
 
-            'SEQSET': (SEQSET, add_methods._add_seqset_object),
-            'SEQSET1': (SEQSET1, add_methods._add_seqset_object),
+            'SEQSET': (SEQSET, add_methods.add_seqset_object),
+            'SEQSET1': (SEQSET1, add_methods.add_seqset_object),
 
-            #'SESUP': (SESUP, add_methods._add_sesup_object),  # pseudo-constraint
+            #'SESUP': (SESUP, add_methods.add_sesup_object),  # pseudo-constraint
 
-            #'SEUSET': (SEUSET, add_methods._add_seuset_object),
-            #'SEUSET1': (SEUSET1, add_methods._add_seuset_object),
+            #'SEUSET': (SEUSET, add_methods.add_seuset_object),
+            #'SEUSET1': (SEUSET1, add_methods.add_seuset_object),
 
             # BCTSET
-            'ROTORG': (ROTORG, add_methods._add_rotor_object),
-            'ROTORD': (ROTORD, add_methods._add_rotor_object),
+            'ROTORG': (ROTORG, add_methods.add_rotor_object),
+            'ROTORD': (ROTORD, add_methods.add_rotor_object),
 
-            'DAREA': (DAREA, add_methods._add_darea_object),
-            'DPHASE': (DPHASE, add_methods._add_dphase_object),
-            'DELAY': (DELAY, add_methods._add_delay_object),
+            'DAREA': (DAREA, add_methods.add_darea_object),
+            'DPHASE': (DPHASE, add_methods.add_dphase_object),
+            'DELAY': (DELAY, add_methods.add_delay_object),
 
-            'CYJOIN': (CYJOIN, add_methods._add_cyjoin_object),
+            'CYJOIN': (CYJOIN, add_methods.add_cyjoin_object),
 
-            'PLOTEL3': (PLOTEL3, add_methods._add_plotel_object),
-            'PLOTEL4': (PLOTEL4, add_methods._add_plotel_object),
+            'PLOTEL3': (PLOTEL3, add_methods.add_plotel_object),
+            'PLOTEL4': (PLOTEL4, add_methods.add_plotel_object),
         }
 
         self._card_parser_prepare = {
@@ -2985,7 +2985,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:
             bolt = BOLT_MSC.add_card(card_obj, comment=comment)
 
-        self._add_methods._add_bolt_object(bolt)
+        self._add_methods.add_bolt_object(bolt)
         return bolt
 
     def _prepare_plotel(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[PLOTEL]:
@@ -2995,19 +2995,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_obj.field(5):  # eid
             plotels.append(PLOTEL.add_card(card_obj, 1, comment=''))
         for plotel in plotels:
-            self._add_methods._add_plotel_object(plotel)
+            self._add_methods.add_plotel_object(plotel)
         return plotels
 
     def _prepare_cbar(self, unused_card: list[str], card_obj: BDFCard, comment='') -> CBAR:
         """adds a CBAR"""
         elem = CBAR.add_card(card_obj, baror=self.baror, comment=comment)
-        self._add_methods._add_element_object(elem)
+        self._add_methods.add_element_object(elem)
         return elem
 
     def _prepare_cbeam(self, unused_card: list[str], card_obj: BDFCard, comment='') -> CBEAM:
         """adds a CBEAM"""
         elem = CBEAM.add_card(card_obj, beamor=self.beamor, comment=comment)
-        self._add_methods._add_element_object(elem)
+        self._add_methods.add_element_object(elem)
         return elem
 
     def _prepare_ctetra(self, unused_card: list[str], card_obj: BDFCard, comment='') -> CTETRA4:
@@ -3016,7 +3016,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             elem = CTETRA4.add_card(card_obj, comment=comment)
         else:
             elem = CTETRA10.add_card(card_obj, comment=comment)
-        self._add_methods._add_element_object(elem)
+        self._add_methods.add_element_object(elem)
         return elem
 
     def _prepare_cpyram(self, unused_card: list[str], card_obj: BDFCard, comment='') -> CPYRAM5:
@@ -3025,7 +3025,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             elem = CPYRAM5.add_card(card_obj, comment=comment)
         else:
             elem = CPYRAM13.add_card(card_obj, comment=comment)
-        self._add_methods._add_element_object(elem)
+        self._add_methods.add_element_object(elem)
         return elem
 
     def _prepare_cpenta(self, unused_card: list[str], card_obj: BDFCard, comment='') -> CPENTA6:
@@ -3034,7 +3034,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             elem = CPENTA6.add_card(card_obj, comment=comment)
         else:
             elem = CPENTA15.add_card(card_obj, comment=comment)
-        self._add_methods._add_element_object(elem)
+        self._add_methods.add_element_object(elem)
         return elem
 
     def _prepare_chexa(self, unused_card: list[str], card_obj: BDFCard, comment='') -> CHEXA8:
@@ -3043,13 +3043,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             elem = CHEXA8.add_card(card_obj, comment=comment)
         else:
             elem = CHEXA20.add_card(card_obj, comment=comment)
-        self._add_methods._add_element_object(elem)
+        self._add_methods.add_element_object(elem)
         return elem
 
     def _prepare_bctset(self, unused_card: list[str], card_obj: BDFCard, comment='') -> BCTSET:
         """adds a BCTSET"""
         bctset = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
-        self._add_methods._add_bctset_object(bctset)
+        self._add_methods.add_bctset_object(bctset)
         return bctset
 
     def _prepare_grdset(self, unused_card: list[str], card_obj: BDFCard, comment='') -> GRDSET:
@@ -3063,7 +3063,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_obj.field(5):
             dampers.append(CDAMP4.add_card(card_obj, 1, comment=''))
         for damper in dampers:
-            self._add_methods._add_damper_object(damper)
+            self._add_methods.add_damper_object(damper)
         return dampers
 
     def _prepare_deform(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DEFORM:
@@ -3074,37 +3074,37 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_obj.field(6):
             loads.append(DEFORM.add_card(card_obj, 2, comment=comment))
         for loadi in loads:
-            self._add_methods._add_load_object(loadi)
+            self._add_methods.add_load_object(loadi)
         return loads
 
     def _prepare_tempbc(self, unused_card: list[str], card_obj: BDFCard, comment='') -> TEMPBC:
         """adds a TEMPBC"""
         boundary_condition = TEMPBC.add_card(card_obj, comment=comment)
-        self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
+        self._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.eid)
         return boundary_condition
 
     def _prepare_convm(self, unused_card: list[str], card_obj: BDFCard, comment='') -> CONVM:
         """adds a CONVM"""
         boundary_condition = CONVM.add_card(card_obj, comment=comment)
-        self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
+        self._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.eid)
         return boundary_condition
 
     def _prepare_conv(self, unused_card: list[str], card_obj: BDFCard, comment='') -> CONV:
         """adds a CONV"""
         boundary_condition = CONV.add_card(card_obj, comment=comment)
-        self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
+        self._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.eid)
         return boundary_condition
 
     def _prepare_radm(self, unused_card: list[str], card_obj: BDFCard, comment='') -> RADM:
         """adds a RADM"""
         boundary_condition = RADM.add_card(card_obj, comment=comment)
-        self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.radmid)
+        self._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.radmid)
         return boundary_condition
 
     def _prepare_radbc(self, unused_card: list[str], card_obj: BDFCard, comment='') -> RADBC:
         """adds a RADBC"""
         boundary_condition = RADBC.add_card(card_obj, comment=comment)
-        self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
+        self._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
         return boundary_condition
 
     def _prepare_tempd(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[TEMPD]:
@@ -3117,13 +3117,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 if card_obj.field(7):
                     tempds.append(TEMPD.add_card(card_obj, 3, comment=''))
         for tempd in tempds:
-            self._add_methods._add_tempd_object(tempd)
+            self._add_methods.add_tempd_object(tempd)
         return tempds
 
     def _prepare_dequatn(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DEQATN:
         """adds a DEQATN"""
         deqatn = DEQATN.add_card(card_obj, comment=comment)
-        self._add_methods._add_deqatn_object(deqatn)
+        self._add_methods.add_deqatn_object(deqatn)
         return deqatn
 
     def _prepare_dti(self, unused_card_name, card_obj, comment='') -> DTI:
@@ -3133,7 +3133,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             dti = DTI_UNITS.add_card(card_obj, comment=comment)
         else:
             dti = DTI.add_card(card_obj, comment=comment)
-        self._add_methods._add_dti_object(dti)
+        self._add_methods.add_dti_object(dti)
         return dti
 
     def _prepare_dmig(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIG:
@@ -3144,7 +3144,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if name == 'UACCEL':  # special DMIG card
             if field2 == 0:
                 dmig = DMIG_UACCEL.add_card(card_obj, comment=comment)
-                self._add_methods._add_dmig_object(dmig)
+                self._add_methods.add_dmig_object(dmig)
             else:
                 dmig = -1
                 self._dmig_temp[name].append((card_obj, comment))
@@ -3152,7 +3152,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             field2 = integer_or_string(card_obj, 2, 'flag')
             if field2 == 0:
                 dmig = DMIG.add_card(card_obj, comment=comment)
-                self._add_methods._add_dmig_object(dmig)
+                self._add_methods.add_dmig_object(dmig)
             else:
                 dmig = -1
                 self._dmig_temp[name].append((card_obj, comment))
@@ -3178,23 +3178,23 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _prepare_dmiax(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIAX:
         """adds a DMIAX"""
-        return self._prepare_dmix(DMIAX, self._add_methods._add_dmiax_object, card_obj, comment=comment)
+        return self._prepare_dmix(DMIAX, self._add_methods.add_dmiax_object, card_obj, comment=comment)
 
     def _prepare_dmi(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMI:
         """adds a DMI"""
-        return self._prepare_dmix(DMI, self._add_methods._add_dmi_object, card_obj, comment=comment)
+        return self._prepare_dmix(DMI, self._add_methods.add_dmi_object, card_obj, comment=comment)
 
     def _prepare_dmij(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIJ:
         """adds a DMIJ"""
-        return self._prepare_dmix(DMIJ, self._add_methods._add_dmij_object, card_obj, comment=comment)
+        return self._prepare_dmix(DMIJ, self._add_methods.add_dmij_object, card_obj, comment=comment)
 
     def _prepare_dmik(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIK:
         """adds a DMIK"""
-        return self._prepare_dmix(DMIK, self._add_methods._add_dmik_object, card_obj, comment=comment)
+        return self._prepare_dmix(DMIK, self._add_methods.add_dmik_object, card_obj, comment=comment)
 
     def _prepare_dmiji(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIJI:
         """adds a DMIJI"""
-        return self._prepare_dmix(DMIJI, self._add_methods._add_dmiji_object, card_obj, comment=comment)
+        return self._prepare_dmix(DMIJI, self._add_methods.add_dmiji_object, card_obj, comment=comment)
 
     def _prepare_cmass4(self, unused_card: list[str], card_obj: BDFCard, comment='') -> CMASS4:
         """adds a CMASS4"""
@@ -3202,7 +3202,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_obj.field(5):
             elements.append(CMASS4.add_card(card_obj, icard=1, comment=comment))
         for elem in elements:
-            self._add_methods._add_mass_object(elem)
+            self._add_methods.add_mass_object(elem)
         return elements
 
     def _prepare_pelas(self, unused_card: list[str], card_obj: BDFCard, comment='') -> PELAS:
@@ -3211,7 +3211,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_obj.field(5):
             properties.append(PELAS.add_card(card_obj, icard=1, comment=comment))
         for prop in properties:
-            self._add_methods._add_property_object(prop)
+            self._add_methods.add_property_object(prop)
         return properties
 
     def _prepare_nsm(self, unused_card: list[str], card_obj: BDFCard, comment='') -> NSM:
@@ -3226,7 +3226,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         for icard in range(ncards):
             nsms.append(NSM.add_card(card_obj, icard, comment=comment))
         for nsm in nsms:
-            self._add_methods._add_nsm_object(nsm)
+            self._add_methods.add_nsm_object(nsm)
         return nsms
 
     def _prepare_nsml(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[NSML]:
@@ -3240,7 +3240,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         for icard in range(ncards):
             nsms.append(NSML.add_card(card_obj, icard, comment=comment))
         for nsm in nsms:
-            self._add_methods._add_nsm_object(nsm)
+            self._add_methods.add_nsm_object(nsm)
         return nsms
 
     def _prepare_pvisc(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[PVISC]:
@@ -3249,7 +3249,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_obj.field(5):
             properties.append(PVISC.add_card(card_obj, icard=1, comment=comment))
         for prop in properties:
-            self._add_methods._add_property_object(prop)
+            self._add_methods.add_property_object(prop)
         return properties
 
     # def _prepare_ringfl(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[RINGFL]:
@@ -3260,7 +3260,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     #     if card_obj.field(5):
     #         rings.append(RINGFL.add_card(card_obj, icard=2, comment=comment))
     #     for ring in rings:
-    #         self._add_methods._add_ringfl_object(ring)
+    #         self._add_methods.add_ringfl_object(ring)
     #     return rings
 
     def _prepare_pdamp(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[PDAMP]:
@@ -3273,7 +3273,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_obj.field(7):
             properties.append(PDAMP.add_card(card_obj, icard=3, comment=comment))
         for prop in properties:
-            self._add_methods._add_property_object(prop)
+            self._add_methods.add_property_object(prop)
         return properties
 
     def _prepare_pmass(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[PMASS]:
@@ -3283,7 +3283,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             if card_obj.field(j):
                 properties.append(PMASS.add_card(card_obj, icard=i+1, comment=comment))
         for prop in properties:
-            self._add_methods._add_property_mass_object(prop)
+            self._add_methods.add_property_mass_object(prop)
         return properties
 
     def _prepare_cord1r(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[CORD1R]:
@@ -3292,7 +3292,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_obj.field(5):
             coords.append(CORD1R.add_card(card_obj, icard=1, comment=comment))
         for coord in coords:
-            self._add_methods._add_coord_object(coord)
+            self._add_methods.add_coord_object(coord)
         return coords
 
     def _prepare_cord1c(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[CORD1C]:
@@ -3301,7 +3301,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_obj.field(5):
             coords.append(CORD1C.add_card(card_obj, icard=1, comment=comment))
         for coord in coords:
-            self._add_methods._add_coord_object(coord)
+            self._add_methods.add_coord_object(coord)
         return coords
 
     def _prepare_cord1s(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[CORD1S]:
@@ -3310,12 +3310,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_obj.field(5):
             coords.append(CORD1S.add_card(card_obj, icard=1, comment=comment))
         for coord in coords:
-            self._add_methods._add_coord_object(coord)
+            self._add_methods.add_coord_object(coord)
         return coords
 
     def _prepare_acmodl(self, unused_card: list[str], card_obj: BDFCard, comment='') -> ACMODL:
         acmodl = ACMODL.add_card(card_obj, self._nastran_format, comment=comment)
-        self._add_methods._add_acmodl_object(acmodl)
+        self._add_methods.add_acmodl_object(acmodl)
 
     def add_card_ifile(self, ifile: int, card_lines: list[str], card_name: str,
                        comment: str='', is_list: bool=True, has_none: bool=True) -> Any:
@@ -4624,7 +4624,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # TODO: undo the changes for zona
         card_parser = self._card_parser
         CARD_MAP['PARAM'] = PARAM
-        card_parser['PARAM'] = (PARAM, self._add_methods._add_param_object)
+        card_parser['PARAM'] = (PARAM, self._add_methods.add_param_object)
         self.add_param = self._add_param_nastran
 
     def _update_for_optistruct(self) -> None:
@@ -4632,13 +4632,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._update_for_nastran() # copies this...
         card_parser = self._card_parser
         CARD_MAP['PBUSH_OPTISTRUCT'] = PBUSH_OPTISTRUCT
-        card_parser['PBUSH'] = (PBUSH_OPTISTRUCT, self._add_methods._add_property_object)
+        card_parser['PBUSH'] = (PBUSH_OPTISTRUCT, self._add_methods.add_property_object)
 
     def _update_for_mystran(self) -> None:
         """updates for mystran"""
         card_parser = self._card_parser
         CARD_MAP['PARAM'] = PARAM_MYSTRAN
-        card_parser['PARAM'] = (PARAM_MYSTRAN, self._add_methods._add_param_object)
+        card_parser['PARAM'] = (PARAM_MYSTRAN, self._add_methods.add_param_object)
         self.add_param = self._add_param_mystran
 
     def _check_pynastran_header(self, lines: list[str],

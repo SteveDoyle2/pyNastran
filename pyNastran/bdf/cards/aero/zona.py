@@ -181,28 +181,28 @@ class ZONA:
         card_parser = self.model._card_parser
         add_methods = self.model._add_methods
         card_parser2 = {
-            'TRIM': (TRIM_ZONA, add_methods._add_trim_object),
-            'TABDMP1': (TABDMP1_ZONA, add_methods._add_table_sdamping_object),
-            'CAERO7': (CAERO7, add_methods._add_caero_object),
-            'AEROZ': (AEROZ, add_methods._add_aeros_object),
-            'AESURFZ': (AESURFZ, self._add_aesurfz_object),
-            'FLUTTER': (FLUTTER_ZONA, add_methods._add_flutter_object),
-            'SPLINE1': (SPLINE1_ZONA, add_methods._add_spline_object),
-            'SPLINE2': (SPLINE2_ZONA, add_methods._add_spline_object),
-            'SPLINE3': (SPLINE3_ZONA, add_methods._add_spline_object),
-            'PANLST1': (PANLST1, self._add_panlst_object),
-            'PANLST2': (PANLST2, self._add_panlst_object),
-            'PANLST3': (PANLST3, self._add_panlst_object),
-            'PAFOIL7': (PAFOIL7, self._add_pafoil_object),
-            'MKAEROZ': (MKAEROZ, self._add_mkaeroz_object),
-            'SEGMESH': (SEGMESH, add_methods._add_paero_object),
-            'BODY7': (BODY7, add_methods._add_caero_object),
-            'ACOORD': (ACOORD, add_methods._add_coord_object),
-            'TRIMVAR': (TRIMVAR, self._add_trimvar_object),
-            'TRIMLNK': (TRIMLNK, self._add_trimlnk_object),
-            'ATTACH': (ATTACH, self._add_attach_object),
-            'PLTMODE': (PLTMODE, self._add_plotmode_object),
-            'PLTAERO': (PLTAERO, self._add_plotaero_object),
+            'TRIM': (TRIM_ZONA, add_methods.add_trim_object),
+            'TABDMP1': (TABDMP1_ZONA, add_methods.add_table_sdamping_object),
+            'CAERO7': (CAERO7, add_methods.add_caero_object),
+            'AEROZ': (AEROZ, add_methods.add_aeros_object),
+            'AESURFZ': (AESURFZ, self.add_aesurfz_object),
+            'FLUTTER': (FLUTTER_ZONA, add_methods.add_flutter_object),
+            'SPLINE1': (SPLINE1_ZONA, add_methods.add_spline_object),
+            'SPLINE2': (SPLINE2_ZONA, add_methods.add_spline_object),
+            'SPLINE3': (SPLINE3_ZONA, add_methods.add_spline_object),
+            'PANLST1': (PANLST1, self.add_panlst_object),
+            'PANLST2': (PANLST2, self.add_panlst_object),
+            'PANLST3': (PANLST3, self.add_panlst_object),
+            'PAFOIL7': (PAFOIL7, self.add_pafoil_object),
+            'MKAEROZ': (MKAEROZ, self.add_mkaeroz_object),
+            'SEGMESH': (SEGMESH, add_methods.add_paero_object),
+            'BODY7': (BODY7, add_methods.add_caero_object),
+            'ACOORD': (ACOORD, add_methods.add_coord_object),
+            'TRIMVAR': (TRIMVAR, self.add_trimvar_object),
+            'TRIMLNK': (TRIMLNK, self.add_trimlnk_object),
+            'ATTACH': (ATTACH, self.add_attach_object),
+            'PLTMODE': (PLTMODE, self.add_plotmode_object),
+            'PLTAERO': (PLTAERO, self.add_plotaero_object),
             # card_name = PLTCP
             # card_name = PLTFLUT
             # card_name = PLTVG
@@ -217,7 +217,7 @@ class ZONA:
         ]
         self.model.cards_to_read.update(set(cards))
 
-    def _add_panlst_object(self, panlst: PANLST1 | PANLST2 | PANLST3) -> None:
+    def add_panlst_object(self, panlst: PANLST1 | PANLST2 | PANLST3) -> None:
         """adds an PANLST1/PANLST2/PANLST3 object"""
         assert panlst.eid not in self.panlsts
         assert panlst.eid > 0
@@ -225,7 +225,7 @@ class ZONA:
         self.panlsts[key] = panlst
         self.model._type_to_id_map[panlst.type].append(key)
 
-    def _add_pafoil_object(self, pafoil: PAFOIL7) -> None:
+    def add_pafoil_object(self, pafoil: PAFOIL7) -> None:
         """adds an PAFOIL7/PAFOIL8 object"""
         assert pafoil.pid not in self.pafoil
         assert pafoil.pid > 0
@@ -233,7 +233,7 @@ class ZONA:
         self.pafoil[key] = pafoil
         self.model._type_to_id_map[pafoil.type].append(key)
 
-    def _add_aesurfz_object(self, aesurf: AESURFZ) -> None:
+    def add_aesurfz_object(self, aesurf: AESURFZ) -> None:
         """adds an AESURFZ object"""
         key = aesurf.aesid
         model = self.model
@@ -242,7 +242,7 @@ class ZONA:
         model.aesurf[key] = aesurf
         model._type_to_id_map[aesurf.type].append(key)
 
-    def _add_mkaeroz_object(self, mkaeroz: MKAEROZ) -> None:
+    def add_mkaeroz_object(self, mkaeroz: MKAEROZ) -> None:
         """adds an MKAEROZ object"""
         assert mkaeroz.sid not in self.mkaeroz
         assert mkaeroz.sid > 0
@@ -250,7 +250,7 @@ class ZONA:
         self.mkaeroz[key] = mkaeroz
         self.model._type_to_id_map[mkaeroz.type].append(key)
 
-    def _add_trimvar_object(self, trimvar: TRIMVAR) -> None:
+    def add_trimvar_object(self, trimvar: TRIMVAR) -> None:
         """adds an TRIMVAR object"""
         assert trimvar.var_id not in self.trimvar
         assert trimvar.var_id > 0
@@ -258,7 +258,7 @@ class ZONA:
         self.trimvar[key] = trimvar
         self.model._type_to_id_map[trimvar.type].append(key)
 
-    def _add_trimlnk_object(self, trimlnk: TRIMLNK) -> None:
+    def add_trimlnk_object(self, trimlnk: TRIMLNK) -> None:
         """adds an TRIMLNK object"""
         assert trimlnk.link_id not in self.trimlnk
         assert trimlnk.link_id > 0
@@ -266,7 +266,7 @@ class ZONA:
         self.trimlnk[key] = trimlnk
         self.model._type_to_id_map[trimlnk.type].append(key)
 
-    def _add_attach_object(self, attach: ATTACH) -> None:
+    def add_attach_object(self, attach: ATTACH) -> None:
         """adds an ATTACH object"""
         assert attach.attach_id not in self.attach
         assert attach.attach_id > 0
@@ -275,14 +275,14 @@ class ZONA:
         self.model._type_to_id_map[attach.type].append(key)
 
 
-    def _add_plotmode_object(self, plot: PLTMODE) -> None:
+    def add_plotmode_object(self, plot: PLTMODE) -> None:
         """adds an PLTMODE object"""
         assert plot.set_id not in self.plotmode, str(plot)
         assert plot.set_id > 0
         key = plot.set_id
         self.plotmode[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
-    def _add_plotaero_object(self, plot: PLTAERO) -> None:
+    def add_plotaero_object(self, plot: PLTAERO) -> None:
         """adds an PLTAERO object"""
         assert plot.set_id not in self.plotaero, str(plot)
         assert plot.set_id > 0
@@ -375,10 +375,10 @@ class ZONA:
                 raise NotImplementedError(caero)
             caeros[caero_id] = caero_new
 
-        self._add_caero2s(caero2s, add=False)
+        self.add_caero2s(caero2s, add=False)
         return caeros, caero2s, make_paero1
 
-    def _add_caero2s(self, caero2s, add=False):
+    def add_caero2s(self, caero2s, add=False):
         """Converts ZONA BODY7 to CAERO2/PAERO2/AEFACT"""
         model = self.model
         add_methods = model._add_methods
@@ -389,12 +389,12 @@ class ZONA:
             caero_new, paero2, aefact_xs, aefact_width, aefact_theta1, aefact_theta2 = out
             caero_body_ids.append(caero_id)
             if add:
-                add_methods._add_aefact_object(aefact_xs)
-                add_methods._add_aefact_object(aefact_width)
-                add_methods._add_aefact_object(aefact_theta1)
-                add_methods._add_aefact_object(aefact_theta2)
-                add_methods._add_paero_object(paero2)
-                add_methods._add_caero_object(caero_new)
+                add_methods.add_aefact_object(aefact_xs)
+                add_methods.add_aefact_object(aefact_width)
+                add_methods.add_aefact_object(aefact_theta1)
+                add_methods.add_aefact_object(aefact_theta2)
+                add_methods.add_paero_object(paero2)
+                add_methods.add_caero_object(caero_new)
         return
 
     def _convert_splines(self):
@@ -1236,6 +1236,7 @@ class MKAEROZ(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
 class ATTACH(BaseCard):
     """
     Defines a rigid body connection between aerodynamic boxes and
@@ -1288,6 +1289,7 @@ class ATTACH(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class PANLST1(Spline):
     """
@@ -1375,6 +1377,7 @@ class PANLST1(Spline):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class PANLST2(Spline):
     """
@@ -1465,6 +1468,7 @@ class PANLST2(Spline):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class PANLST3(Spline):
     """
@@ -1567,6 +1571,7 @@ class PANLST3(Spline):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class PAFOIL7(BaseCard):
     """
@@ -1789,6 +1794,7 @@ class PAFOIL7(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class BODY7(BaseCard):
     """
@@ -2338,6 +2344,7 @@ class BODY7(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
 class SEGMESH(BaseCard):
     """
     Defines a grid system for a body segment; referenced by the BODY7 bulk data card.
@@ -2589,6 +2596,7 @@ class SEGMESH(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class CAERO7(BaseCard):
     """

@@ -18,6 +18,8 @@ import numpy as np
 #from pyNastran.op2.op2_interface.result_set import ResultSet
 from pyNastran.utils import PathLike, PurePath
 from pyNastran.op2.result_objects.matrix import Matrix #, MatrixDict
+from pyNastran.op2.op2_interface.internal_utils import get_result_length
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
     from pyNastran.op2.tables.onmd import NormalizedMassDensity
@@ -402,7 +404,7 @@ class CSVWriter:
                 #else:
                     #is_compressed = True
 
-                res_length = model._get_result_length(res_types, res_key)
+                res_length = get_result_length(res_types, res_key)
                 if res_length == 0:
                     # skipped subcase; no saved results
                     continue

@@ -1643,7 +1643,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
             self.log.debug('found PARAM,NXVER -> setting as NX')
         return ndata2
 
-    def _read_pvto_4_helper(self, data: bytes, ndata: int) -> int:
+    def _read_pvto_4_helper(self, data: bytes, ndata: int,
+                            debug_param=False) -> int:
         """reads PARAM cards"""
         xword = (4 * self.factor)
         nvalues = ndata // xword
@@ -1665,11 +1666,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
             struct2f = Struct(b'dd')
 
         i = 0
-        #print('---------------------------')
+        if debug_param:  # pragma: no cover
+            print('---------------------------')
         #self.show_data(data, types='ifsqL')
         while i < nvalues:
-            #print('-----------------------------------------------------------')
-            #print('*i=%s nvalues=%s' % (i, nvalues))
+            if debug_param:  # pragma: no cover
+                print('-----------------------------------------------------------')
+                print('*i=%s nvalues=%s' % (i, nvalues))
             istart = i*xword
             #self.show_data(data[istart:istart+32], types='sqd')
             #self.show_data(data[istart:istart+64], types='sifqd')
@@ -1678,7 +1681,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             elif self.size == 8:
                 bword = data[istart:(i+2)*xword]
                 word = reshape_bytes_block(bword).rstrip()
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(self.size)
             key = word.decode('latin1')
             flag_data = data[(i+2)*xword:(i+3)*xword]
@@ -1705,7 +1708,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # =6 4 CMPLXD  CD
             # =7 4 LOGICAL LOGIC*
 
-            #print(f'word={word!r} flag={flag}')
+            if debug_param:  # pragma: no cover
+                print(f'word={word!r} flag={flag}')
             #word = s8.unpack(word)[0]#.decode(self._encoding)
 
             #if flag == 1:
@@ -1744,7 +1748,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
                     if self.size == 8:
                         bvalue = reshape_bytes_block(bvalue)
                     value = bvalue.decode('latin1').rstrip()
-                    #print(f'str_value = {value}')
+                    if debug_param:  # pragma: no cover
+                        print(f'str_value = {value}')
                     if value:
                         if word == b'NXVER':
                             assert value.replace('.', '').isalnum(), f'{key} = {value!r}'
@@ -1752,7 +1757,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
                             assert value.replace('-', '').isalnum(), f'{key} = {value!r}'
                         elif word == b'PRTMAXIM':
                             # NOTEST_ -> NO
-                            assert value in {'NOTEST_'}, value
+                            #if value == 'NOTEST_':
+                                #value = 'NO'
+                            check_param_strings(key, value, {'NOTEST_', 'YES', 'NO'})
                             #pass\assert value.replace('-', '').isalnum(), f'{key} = {value!r}'
                         else:
                             assert value.isalnum(), f'{key} = {value!r}'
@@ -2534,6 +2541,12 @@ def create_binary_debug(op2_filename: str, debug_file: str, log) -> tuple[bool, 
     else:
         is_debug_file = False
     return is_debug_file, binary_debug
+
+
+def check_param_strings(key: str, value: str, allowed_values: set[str]) -> None:
+    if value not in allowed_values:
+        raise ValueError(f'PARAM key={key!r} value={value} '
+                         f'not in allowed_values={allowed_values}')
 
 
 if __name__ == '__main__':  # pragma: no cover

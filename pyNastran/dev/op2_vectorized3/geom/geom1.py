@@ -661,7 +661,7 @@ class GEOM1:
             coord = CORD3G.add_op2_data(out)
             if op2.is_debug_file:
                 op2.binary_debug.write('  CORD3G=%s\n' % str(out))
-            op2._add_methods._add_coord_object(coord, allow_overwrites=False)
+            op2._add_methods.add_coord_object(coord, allow_overwrites=False)
             n += ntotal
         op2.increase_card_count('CORD3G', nentries)
         return n
@@ -941,7 +941,7 @@ class GEOM1:
             if op2.is_debug_file:
                 op2.binary_debug.write('  SEQGP=%s\n' % str(out))
             seqgp = SEQGP.add_op2_data(out)
-            op2._add_methods._add_seqgp_object(seqgp)
+            op2._add_methods.add_seqgp_object(seqgp)
             n += ntotal
         op2.increase_card_count('SEQGP', nentries)
         return n

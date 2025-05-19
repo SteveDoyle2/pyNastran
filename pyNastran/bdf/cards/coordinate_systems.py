@@ -1255,10 +1255,10 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
         coord = CORD2C(cid, origin, zaxis, xzplane, rid=rid, comment='')
     elif cord2_type == 'CORD2S':
         coord = CORD2S(cid, origin, zaxis, xzplane, rid=rid, comment='')
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(card)
     if add:
-        model._add_methods._add_coord_object(coord)
+        model._add_methods.add_coord_object(coord)
     return coord
 
 

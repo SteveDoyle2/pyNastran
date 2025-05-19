@@ -248,7 +248,8 @@ def get_packages() -> dict[str, str]:
 def get_version() -> dict[str, str]:
     """makes the version data"""
     sys_platform = sys.platform
-    localei, unused_encoding = locale.getdefaultlocale()
+    #localei, unused_encoding = locale.getdefaultlocale()
+    localei, unused_encoding = locale.getlocale()
     #try:
         #os_version = str(sys.getwindowsversion())
     #except Exception:

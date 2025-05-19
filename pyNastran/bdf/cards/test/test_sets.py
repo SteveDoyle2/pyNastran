@@ -149,8 +149,8 @@ class TestSets(unittest.TestCase):
                                 comment='aset1')
         aset1a.write_card()
         aset1b.write_card()
-        add_methods._add_aset_object(aset1a)
-        add_methods._add_aset_object(aset1b)
+        add_methods.add_aset_object(aset1a)
+        add_methods.add_aset_object(aset1b)
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         aseta = ASET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
@@ -175,8 +175,8 @@ class TestSets(unittest.TestCase):
         self.assertEqual(omit1a.components, 4)
         omit1b = OMIT1.add_card(BDFCard(['OMIT1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]),
                                 comment='omit1')
-        add_methods._add_omit_object(omit1a)
-        add_methods._add_omit_object(omit1b)
+        add_methods.add_omit_object(omit1a)
+        add_methods.add_omit_object(omit1b)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -207,16 +207,16 @@ class TestSets(unittest.TestCase):
                                 comment='bset1')
         bset1a.write_card()
         bset1b.write_card()
-        add_methods._add_bset_object(bset1a)
-        add_methods._add_bset_object(bset1b)
+        add_methods.add_bset_object(bset1a)
+        add_methods.add_bset_object(bset1b)
         #| BSET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         bseta = BSET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1], comment='bset')
         bsetb = BSET.add_card(BDFCard(['BSET',
                                        1, 2, 3, 4, 5,
                                        5, 4, 3, 2, 1]), comment='bset')
-        add_methods._add_bset_object(bseta)
-        add_methods._add_bset_object(bsetb)
+        add_methods.add_bset_object(bseta)
+        add_methods.add_bset_object(bsetb)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -236,16 +236,16 @@ class TestSets(unittest.TestCase):
                                 comment='cset1')
         cset1a.write_card()
         cset1b.write_card()
-        add_methods._add_cset_object(cset1a)
-        add_methods._add_cset_object(cset1b)
+        add_methods.add_cset_object(cset1a)
+        add_methods.add_cset_object(cset1b)
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         cseta = CSET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1], comment='cset')
         csetb = CSET.add_card(BDFCard(['CSET',
                                        1, 2, 3, 4, 5,
                                        5, 4, 3, 2, 1]), comment='cset')
-        add_methods._add_cset_object(cseta)
-        add_methods._add_cset_object(csetb)
+        add_methods.add_cset_object(cseta)
+        add_methods.add_cset_object(csetb)
         model.add_cset([1, 2, 3], '42', comment='cset')
         model.add_cset1([1, 2, 3], [1, 2, 3], comment='cset1')
 
@@ -265,8 +265,8 @@ class TestSets(unittest.TestCase):
         qset1a = QSET1([1, 'THRU', 10], 4, comment='qset')
         qset1b = QSET1.add_card(BDFCard(['QSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]),
                                 comment='qset1')
-        add_methods._add_qset_object(qset1a)
-        add_methods._add_qset_object(qset1b)
+        add_methods.add_qset_object(qset1a)
+        add_methods.add_qset_object(qset1b)
         qset1a.write_card()
         qset1b.write_card()
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
@@ -275,8 +275,8 @@ class TestSets(unittest.TestCase):
         qsetb = QSET.add_card(BDFCard(['QSET',
                                        1, 2, 3, 4, 5,
                                        5, 4, 3, 2, 1]), comment='qset')
-        add_methods._add_qset_object(qseta)
-        add_methods._add_qset_object(qsetb)
+        add_methods.add_qset_object(qseta)
+        add_methods.add_qset_object(qsetb)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -295,8 +295,8 @@ class TestSets(unittest.TestCase):
         fields = ['USET1', 'MYSET2',
                   5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]
         model.add_card(fields, 'USET1', comment='uset1')
-        add_methods._add_uset_object(uset1a)
-        #add_methods._add_uset_object(uset1b)
+        add_methods.add_uset_object(uset1a)
+        #add_methods.add_uset_object(uset1b)
         uset1a.write_card()
         #uset1b.write_card()
 
@@ -305,7 +305,7 @@ class TestSets(unittest.TestCase):
                   1, 2, 3, 4, 5,
                   5, 4, 3, 2, 1]
         model.add_card(fields, 'USET', comment='uset')
-        add_methods._add_uset_object(useta)
+        add_methods.add_uset_object(useta)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -325,8 +325,8 @@ class TestSets(unittest.TestCase):
                                 comment='sebset1')
         bset1a.write_card()
         bset1b.write_card()
-        add_methods._add_sebset_object(bset1a)
-        add_methods._add_sebset_object(bset1b)
+        add_methods.add_sebset_object(bset1a)
+        add_methods.add_sebset_object(bset1b)
         #| BSET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         sebseta = SEBSET(seid, [1, 2, 3, 4, 5], [5, 4, 3, 2, 1], comment='sebset')
@@ -334,8 +334,8 @@ class TestSets(unittest.TestCase):
                                        1, 2, 3, 4, 5,
                                        5, 4, 3, 2, 1]), comment='sebset')
         assert len(sebseta.components) == 5, sebseta.components
-        add_methods._add_sebset_object(sebseta)
-        add_methods._add_sebset_object(sebsetb)
+        add_methods.add_sebset_object(sebseta)
+        add_methods.add_sebset_object(sebsetb)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -356,16 +356,16 @@ class TestSets(unittest.TestCase):
                                     comment='secset1')
         secset1a.write_card()
         secset1b.write_card()
-        add_methods._add_secset_object(secset1a)
-        add_methods._add_secset_object(secset1b)
+        add_methods.add_secset_object(secset1a)
+        add_methods.add_secset_object(secset1b)
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         secseta = SECSET(seid, [1, 2, 3, 4, 5], [5, 4, 3, 2, 1], comment='secset')
         secsetb = SECSET.add_card(BDFCard(['SECSET', seid,
                                            1, 2, 3, 4, 5,
                                            5, 4, 3, 2, 1]), comment='secset')
-        add_methods._add_secset_object(secseta)
-        add_methods._add_secset_object(secsetb)
+        add_methods.add_secset_object(secseta)
+        add_methods.add_secset_object(secsetb)
         model.add_secset(seid, [1, 2, 3], '42', comment='secset')
         model.add_secset1(seid, [1, 2, 3], [1, 2, 3], comment='secset1')
 
@@ -386,7 +386,7 @@ class TestSets(unittest.TestCase):
         seqset1a = SEQSET1(seid, [1, 'THRU', 10], 4, comment='qset')
         model.add_card(['SEQSET1', seid, 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9],
                        'SEQSET1', comment='seqset1')
-        add_methods._add_seqset_object(seqset1a)
+        add_methods.add_seqset_object(seqset1a)
         seqset1a.write_card()
         #| SEQSET1 | SEID |  C  | ID1 | THRU | ID2 |
 
@@ -395,8 +395,8 @@ class TestSets(unittest.TestCase):
                   1, 2, 3, 4, 5,
                   5, 4, 3, 2, 1]
         model.add_card(fields, 'SEQSET', comment='seqset')
-        add_methods._add_seqset_object(seqseta)
-        #add_methods._add_seqset_object(seqsetb)
+        add_methods.add_seqset_object(seqseta)
+        #add_methods.add_seqset_object(seqsetb)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -412,8 +412,8 @@ class TestSets(unittest.TestCase):
         #fields = ['SEUSET1', 'MYSET2',
                   #5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]
         #model.add_card(fields, 'SEUSET1', comment='seuset1')
-        #add_methods._add_seuset_object(seuset1a)
-        ##add_methods._add_uset_object(uset1b)
+        #add_methods.add_seuset_object(seuset1a)
+        ##add_methods.add_uset_object(uset1b)
         #seuset1a.write_card()
         ##seuset1b.write_card()
 
@@ -422,7 +422,7 @@ class TestSets(unittest.TestCase):
                   #1, 2, 3, 4, 5,
                   #5, 4, 3, 2, 1]
         #model.add_card(fields, 'SEUSET', comment='seuset')
-        #add_methods._add_uset_object(useta)
+        #add_methods.add_uset_object(useta)
 
         #nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         #for nid in nids:

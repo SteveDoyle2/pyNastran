@@ -81,16 +81,16 @@ def map_aero_model(model_old: PathLike | BDF,
         add_methods = model_new._add_methods
         for paero_id, paero in model_old.paeros.items():
             paero.uncross_reference()
-            add_methods._add_paero_object(paero)
+            add_methods.add_paero_object(paero)
         for caero_id, caero in model_old.caeros.items():
             caero.uncross_reference()
-            add_methods._add_caero_object(caero)
+            add_methods.add_caero_object(caero)
         for spline_id, spline in model_old.splines.items():
             spline.uncross_reference()
-            add_methods._add_spline_object(spline)
+            add_methods.add_spline_object(spline)
         for set_id, set1 in model_old.sets.items():
             set1.uncross_reference()
-            add_methods._add_set_object(set1)
+            add_methods.add_set_object(set1)
             #print(set1.rstrip())
 
     coord_ids_list = []

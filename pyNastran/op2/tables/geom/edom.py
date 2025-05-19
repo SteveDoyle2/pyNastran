@@ -470,7 +470,7 @@ class EDOM(GeomCommon):
         try:
             n = op2.reader_geom2._read_double_card(
                 card_name, card_obj,
-                op2._add_methods._add_dconstr_object,
+                op2._add_methods.add_dconstr_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -665,7 +665,7 @@ class EDOM(GeomCommon):
         try:
             n = op2.reader_geom2._read_double_card(
                 card_name, card_obj,
-                op2._add_methods._add_doptprm_object,
+                op2._add_methods.add_doptprm_object,
                 methods, data, n)
         except DoubleCardError:  # pragma: no cover
             raise
@@ -1138,7 +1138,7 @@ class EDOM(GeomCommon):
                 if dvprel == dvprel_old:
                     pass
                 else:
-                    op2._add_methods._add_dvprel_object(dvprel)
+                    op2._add_methods.add_dvprel_object(dvprel)
                     ncards += 1
             dvprel.write_card_16()
             n += (i1 - i0 + 1) * size

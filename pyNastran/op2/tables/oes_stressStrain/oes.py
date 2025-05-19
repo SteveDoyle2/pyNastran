@@ -4423,8 +4423,10 @@ class OES(OP2Common2):
             mode          = msc
             MSC Nastran
             """
-
-            ntotal = numwide_random * 4 * self.factor
+            num_wide = op2.num_wide
+            assert num_wide == 148, num_wide
+            assert nnodes == 9, nnodes
+            ntotal = num_wide * 4 * self.factor
             nelements = ndata // ntotal
             self.ntotal += nelements * nnodes
             #print(op2.read_mode, RealNonlinearSolidArray)
@@ -4435,7 +4437,6 @@ class OES(OP2Common2):
                 op2._data_factor = nnodes
                 return nelements * ntotal, None, None
 
-            nelements = ndata // ntotal
             obj = op2.obj
             n = oes_csolidnl_real2(op2, data, obj, etype, nnodes, nelements, ntotal)
 
@@ -8190,62 +8191,72 @@ def oes_csolidnl_real2(op2: OP2, data: bytes,
     """
     CHEXANL-93: numwide=148
 
-    ints    = (1114966705, 1098931842, -1071264305, 1083531405, 984871043, -1096642019, 1113966650, 0, 0, 965664145, -1225233052, -1191133939, 947021982, 848429224, -1232869156, 28, 1114966705, 1086423187, -1115994092, 1083531405, 1046189386, -1096642019, 1114391715, 0, 0, 966030805, -1200231437, -1194704178, 947021982, 909257563, -1232869156, 2, 1112118021, 1086423187, 1071696426, 1083531405, 1046189386)
-    floats  = (61.260440826416016, 16.046146392822266, -2.590686559677124, 4.668035984039307, 0.0013728294288739562, -0.31752100586891174, 57.445533752441406, 0.0, 0.0, 0.0002724943042267114, -7.403710696962662e-06, -0.00012277458154130727, 5.7794728490989655e-05, 1.6996935414681502e-08, -3.93121263186913e-06, 3.923635700109488e-44, 61.260440826416016, 6.046945095062256, -0.06134803593158722, 4.668035984039307, 0.21443668007850647, -0.31752100586891174, 59.0670280456543, 0.0, 0.0, 0.00028316551470197737, -5.863229671376757e-05, -9.644553938414901e-05, 5.7794728490989655e-05, 2.6549303129286272e-06, -3.93121263186913e-06, 2.802596928649634e-45, 50.39357376098633, 6.046945095062256, 1.7561695575714111, 4.668035984039307, 0.21443668007850647)
-
-    long long (int64) = (1262, 35505394247, 4590115739184136192, -4671325677713558745, 4457716095520856730, 4613765041338051011, 0, -5348730756577215717, -5266552868828461795, 3885702173957508957, 4776510529487241217, -4619127091118449022, 4229988921545941133, 4772307475550060016, 0, 3957048521473279664, 4067428444384327055, 3961564176959275176)
-    doubles (float64) = (6.235e-321, 1.75419955395e-313, 0.07565224170684814, -0.00021451848339095714, 1.0546118125096879e-10, 2.9232716416565565, 0.0, -1.1488118377182976e-49, -3.5656856083418104e-44, 6.155326914365238e-49, 219681521664.00003, -0.6738749770474473, 6.442800820096073e-26, 114426724122.24194, 0.0, 3.6798672087015993e-44, 8.655715932865064e-37, 7.371738224188992e-44)
-
-
+    #           N O N L I N E A R   S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S     ( H E X A )
+    #
+    #                  CORNER                         STRESSES/ TOTAL STRAINS                          EQUIVALENT EFF. STRAIN  EFF. CREEP
+    #   ELEMENT-ID    GRID-ID      X           Y           Z           XY          YZ          ZX        STRESS   PLAS/NLELAS   STRAIN
+    # 0       126           0GRID CS  8 GP
+    #                  CENTER  1.4013E+00 -9.0308E-02 -6.7233E-01 -5.6193E-01  1.0790E-01  1.4249E-01  2.1154E+00   0.0         0.0
+    #                          7.7624E-06 -1.4714E-06 -5.0744E-06 -6.9572E-06  1.3360E-06  1.7642E-06
+    #            1          1  5.0394E+01  1.6046E+01 -1.7935E+00  4.6680E+00  1.3728E-03  6.0251E-01  4.6661E+01   0.0         0.0
+    #                          2.1961E-04  6.9815E-06 -1.0345E-04  5.7795E-05  1.6997E-08  7.4596E-06
+    #            2         27  6.1260E+01  1.6046E+01 -2.5907E+00  4.6680E+00  1.3728E-03 -3.1752E-01  5.7446E+01   0.0         0.0
+    #                          2.7249E-04 -7.4037E-06 -1.2277E-04  5.7795E-05  1.6997E-08 -3.9312E-06
+    #            3         28  6.1260E+01  6.0469E+00 -6.1348E-02  4.6680E+00  2.1444E-01 -3.1752E-01  5.9067E+01   0.0         0.0
+    #                          2.8317E-04 -5.8632E-05 -9.6446E-05  5.7795E-05  2.6549E-06 -3.9312E-06
+    #            4          2  5.0394E+01  6.0469E+00  1.7562E+00  4.6680E+00  2.1444E-01  6.0251E-01  4.7349E+01   0.0         0.0
+    #                          2.2882E-04 -4.5705E-05 -7.2267E-05  5.7795E-05  2.6549E-06  7.4596E-06
+    #            5        157 -4.4934E+01 -1.6609E+01 -1.7935E+00 -5.7919E+00  1.3728E-03  6.0251E-01  3.9283E+01   0.0         0.0
+    #                         -1.8768E-04 -1.2339E-05  7.9378E-05 -7.1709E-05  1.6997E-08  7.4596E-06
+    #            6        160 -6.1115E+01 -1.6609E+01 -2.5907E+00 -5.7919E+00  1.3728E-03 -3.1752E-01  5.3872E+01   0.0         0.0
+    #                         -2.6360E-04  1.1917E-05  9.8698E-05 -7.1709E-05  1.6997E-08 -3.9312E-06
+    #            7        159 -6.1115E+01 -5.8450E+00 -6.1348E-02 -5.7919E+00  2.1444E-01 -3.1752E-01  5.9237E+01   0.0         0.0
+    #                         -2.8259E-04  5.9562E-05  9.5365E-05 -7.1709E-05  2.6549E-06 -3.9312E-06
+    #            8        158 -4.4934E+01 -5.8450E+00  1.7562E+00 -5.7919E+00  2.1444E-01  6.0251E-01  4.4550E+01   0.0         0.0
+    #                         -2.0813E-04  3.3848E-05  8.0904E-05 -7.1709E-05  2.6549E-06  7.4596E-06
     """
     n = 0
     size = op2.size
-    # if size == 4:
-    #     s1 = Struct(op2._endian + op2._analysis_code_fmt + b'4s')
-    #     s2 = Struct(op2._endian + b'i15f')
-    # else:
-    #     s1 = Struct(op2._endian + mapfmt8(op2._analysis_code_fmt) + b'8s')
-    #     s2 = Struct(op2._endian + b'q15d')
-    # n1 = 8 * op2.factor
-    # n2 = 64 * op2.factor
-    ntotal =  148 * op2.factor
-    print(f'factor = {op2.factor}')
+    if size == 4:
+        struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i 4s i')
+        struct2 = Struct(b'i 15f')
+    else:
+        s1 = Struct(op2._endian + mapfmt8(op2._analysis_code_fmt) + b'q 8s q')
+        s2 = Struct(op2._endian + b'q15d')
+    # ntotal =  148 * op2.factor
+    # print(f'factor = {op2.factor}')
 
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):  # 2+16*9 = 146 -> 146*4 = 584
-        edata = data[n:n+ntotal]
-        n += ntotal
-        op2.show_data(edata, types='qd')
-        continue
-
+    n1 = 4 * size
+    n2 = 16 * size
+    assert nnodes == 9, nnodes
+    for unused_i in range(nelements):  # 4+16*9 = 148 -> 148*4 = 592
         edata = data[n:n+n1]
         n += n1
-
-        out = s1.unpack(edata)
+        out = struct1.unpack(edata)
         if op2.is_debug_file:
             op2.binary_debug.write('%s-%s - %s\n' % (etype, op2.element_type, str(out)))
 
-        (eid_device, unused_ctype) = out
+        eid_device, coord, grid, nnodesi = out
+        #print(eid_device, coord, grid, nnodesi)
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
         #print('%s-%s -eid=%s dt=%s %s\n' % (etype, op2.element_type, eid, dt, str(out)))
+        assert grid == b'GRID', grid
 
-        for unused_j in range(nnodes):
+        for j in range(nnodes):
             edata = data[n:n+n2]
             n += n2
-            out = s2.unpack(edata)
+            out = struct2.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('%s-%sB - %s\n' % (etype, op2.element_type, str(out)))
-            #print('%s-%sB - %s\n' % (etype, op2.element_type, str(out)))
-            assert len(out) == 16
-
+            #print('%s-%s -eid=%s dt=%s %s\n' % (etype, op2.element_type, eid, dt, str(out)))
             (grid,
              sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
              ex, ey, ez, exy, eyz, exz) = out
             add_sort_x(dt, eid, grid,
                        sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
                        ex, ey, ez, exy, eyz, exz)
-    asdf
     return n
 
 

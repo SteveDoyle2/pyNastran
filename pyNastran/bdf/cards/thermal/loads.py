@@ -1374,7 +1374,9 @@ class TEMPP1(BaseCard):
         t_stress = 10.
         return TEMPP1(sid, eid, tbar, tprime, t_stress, comment='')
 
-    def __init__(self, sid, eid, tbar, tprime, t_stress, comment=''):
+    def __init__(self, sid: int, eid: int,
+                 tbar: float, tprime: float, t_stress: float,
+                 comment: str=''):
         BaseCard.__init__(self)
         self.comment = comment
         self.sid = sid
@@ -1384,7 +1386,7 @@ class TEMPP1(BaseCard):
         self.t_stress = t_stress
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a TEMPP1 card from the OP2
 
@@ -1562,8 +1564,8 @@ class TEMPD(BaseCard):
     @classmethod
     def _init_from_empty(cls):
         sid = 1
-        temperatures = {1 : 1.0}
-        return TEMPD(sid, temperatures, comment='')
+        temperature = 1.0
+        return TEMPD(sid, temperature, comment='')
 
     def __init__(self, sid: int, temperature: float, comment: str=''):
         """

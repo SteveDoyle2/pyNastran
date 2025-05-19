@@ -110,7 +110,7 @@ def force_to_pressure(bdf_filename: str | BDF, bdf_filename_out=None,
                             g1=None, g34=None, cid=0, nvector=None,
                             surf_or_line='SURF', line_load_dir='NORM', comment='')
             #pressure_file.write(pload4.write_card(size=8, is_double=False))
-            add_methods._add_load_object(pload4)
+            add_methods.add_load_object(pload4)
 
     if clear_model:
         model2 = BDF()

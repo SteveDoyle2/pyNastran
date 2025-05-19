@@ -207,11 +207,11 @@ class GEOM4(GeomCommon):
 
     def read_aset(self, data: bytes, n: int) -> int:
         """ASET(5561,76,215) - Record 1"""
-        return self._read_xset(data, n, 'ASET', ASET, self.op2._add_methods._add_aset_object)
+        return self._read_xset(data, n, 'ASET', ASET, self.op2._add_methods.add_aset_object)
 
     def read_qset(self, data: bytes, n: int) -> int:
         """QSET(610, 6, 316) - Record 21"""
-        return self._read_xset(data, n, 'QSET', QSET, self.op2._add_methods._add_qset_object)
+        return self._read_xset(data, n, 'QSET', QSET, self.op2._add_methods.add_qset_object)
 
     def read_aset1(self, data: bytes, n: int) -> int:
         """
@@ -221,7 +221,7 @@ class GEOM4(GeomCommon):
                12345, 0, 1, 2, 3, -1,
                12345, 0, 8, 9)
         """
-        return self._read_xset1(data, n, 'ASET1', ASET1, self.op2._add_methods._add_aset_object)
+        return self._read_xset1(data, n, 'ASET1', ASET1, self.op2._add_methods.add_aset_object)
 
     def _read_xset(self, data: bytes, n: int, card_name: str,
                    cls: Type[ASET | BSET | CSET | QSET | OMIT],
@@ -404,16 +404,16 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def read_bset(self, data: bytes, n: int) -> int:
-        return self._read_xset(data, n, 'BSET', BSET, self.op2._add_methods._add_bset_object)
+        return self._read_xset(data, n, 'BSET', BSET, self.op2._add_methods.add_bset_object)
 
     def read_bset1(self, data: bytes, n: int) -> int:
-        return self._read_xset1(data, n, 'BSET1', BSET1, self.op2._add_methods._add_bset_object)
+        return self._read_xset1(data, n, 'BSET1', BSET1, self.op2._add_methods.add_bset_object)
 
     def read_cset(self, data: bytes, n: int) -> int:
-        return self._read_xset(data, n, 'CSET', CSET, self.op2._add_methods._add_cset_object)
+        return self._read_xset(data, n, 'CSET', CSET, self.op2._add_methods.add_cset_object)
 
     def read_cset1(self, data: bytes, n: int) -> int:
-        return self._read_xset1(data, n, 'CSET1', CSET1, self.op2._add_methods._add_cset_object)
+        return self._read_xset1(data, n, 'CSET1', CSET1, self.op2._add_methods.add_cset_object)
 
     def read_cyax(self, data: bytes, n: int) -> int:
         """CYAX(1510,15,328) - Record 8 """
@@ -489,7 +489,7 @@ class GEOM4(GeomCommon):
             if op2.is_debug_file:
                 op2.binary_debug.write('  MPC=%s\n' % str(mpc_data))
             mpci = MPC.add_op2_data((sid, nodes, components, coefficients))
-            op2._add_methods._add_constraint_mpc_object(mpci)
+            op2._add_methods.add_constraint_mpc_object(mpci)
 
             nentries += 1
         op2.increase_card_count('MPC', nentries)
@@ -506,11 +506,11 @@ class GEOM4(GeomCommon):
 
     def read_omit1(self, data: bytes, n: int) -> int:
         """OMIT1(4951,63,92) - Record 19"""
-        return self._read_xset1(data, n, 'OMIT1', OMIT1, self.op2._add_methods._add_omit_object)
+        return self._read_xset1(data, n, 'OMIT1', OMIT1, self.op2._add_methods.add_omit_object)
 
     def read_qset1(self, data: bytes, n: int) -> int:
         """QSET1(610,6,316) - Record 22"""
-        return self._read_xset1(data, n, 'QSET1', QSET1, self.op2._add_methods._add_qset_object)
+        return self._read_xset1(data, n, 'QSET1', QSET1, self.op2._add_methods.add_qset_object)
 
     def read_rbar(self, data: bytes, n: int) -> int:
         """RBAR(6601,66,292) - Record 22"""
@@ -535,7 +535,8 @@ class GEOM4(GeomCommon):
             #'RBAR', self.op2.reader_geom3._add_op2_rigid_element)
         return n
 
-    def _read_rbar_nx_28(self, card_obj, data: bytes, n: int) -> tuple[int, list[RBAR]]:
+    def _read_rbar_nx_28(self, card_obj, data: bytes,
+                         n: int) -> tuple[int, list[RBAR]]:
         """
         RBAR(6601,66,292) - Record 22 - NX version
 
@@ -940,7 +941,7 @@ class GEOM4(GeomCommon):
         """
         nbytes = self._read_superxset1(
             data, n,
-            'SEQSET1', SEQSET1, self.op2._add_methods._add_seqset_object,
+            'SEQSET1', SEQSET1, self.op2._add_methods.add_seqset_object,
             debug=True)
         #for seqset in self.se_qsets:
             #print(seqset)
@@ -976,7 +977,7 @@ class GEOM4(GeomCommon):
             if op2.is_debug_file:
                 op2.binary_debug.write('SPCOFF sid=%s id=%s c=%s dx=%s\n' % (sid, ID, c, dx))
             constraint = SPCOFF.add_op2_data([sid, ID, c, dx])
-            op2._add_methods._add_constraint_spcoff_object(constraint)
+            op2._add_methods.add_constraint_spcoff_object(constraint)
             n += 16
         return n
 
@@ -986,7 +987,7 @@ class GEOM4(GeomCommon):
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_spc_nx, self._read_spc_msc,
-            'SPC', op2._add_methods._add_constraint_spc_object)
+            'SPC', op2._add_methods.add_constraint_spc_object)
         return n
 
     def _read_spc_msc(self, data, n: int):
@@ -1139,7 +1140,7 @@ class GEOM4(GeomCommon):
             self._is_long_ids = True
         in_data = [components, nids]
         constraint = SPCOFF1.add_op2_data(in_data)
-        op2._add_methods._add_constraint_spcoff_object(constraint)
+        op2._add_methods.add_constraint_spcoff_object(constraint)
         op2.increase_card_count('SPCOFF1', 1)
         if thru_check and len(out) > 5:
             #card = out[5:]
@@ -1243,7 +1244,7 @@ class GEOM4(GeomCommon):
             return
         in_data = [sid, components, nids]
         constraint = SPC1.add_op2_data(in_data)
-        op2._add_methods._add_constraint_spc_object(constraint)
+        op2._add_methods.add_constraint_spc_object(constraint)
         op2.increase_card_count('SPC1', 1)
         if thru_check and len(out) > 5:
             #card = out[5:]
@@ -1263,7 +1264,7 @@ class GEOM4(GeomCommon):
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_spcd_nx, self._read_spcd_msc,
-            'SPCD', op2._add_methods._add_load_object)
+            'SPCD', op2._add_methods.add_load_object)
         return n
 
     def _read_spcd_nx(self, data, n):
@@ -1368,7 +1369,7 @@ class GEOM4(GeomCommon):
                 op2.binary_debug.write('  SUPORT=%s\n' % str(out))
                 #op2.log.info(out)
             suport = SUPORT.add_op2_data(out)
-            op2._add_methods._add_suport_object(suport) # extracts [sid, c]
+            op2._add_methods.add_suport_object(suport) # extracts [sid, c]
             n += ntotal
         return n
 
@@ -1386,7 +1387,7 @@ class GEOM4(GeomCommon):
                 assert out[i+1] == -1, out
                 suporti = SUPORT1.add_op2_data(suport)
                 #op2.log.info(suporti)
-                op2._add_methods._add_suport_object(suporti) # extracts [sid, nid, c]
+                op2._add_methods.add_suport_object(suporti) # extracts [sid, nid, c]
                 nsuports += 1
                 if op2.is_debug_file:
                     op2.binary_debug.write('  SUPORT1=%s\n' % str(suport))
@@ -1401,7 +1402,7 @@ class GEOM4(GeomCommon):
             op2.binary_debug.write('  SUPORT1=%s\n' % str(suport))
 
         suporti = SUPORT1.add_op2_data(suport)
-        op2._add_methods._add_suport_object(suporti) # extracts [sid, nid, c]
+        op2._add_methods.add_suport_object(suporti) # extracts [sid, nid, c]
         nsuports += 1
         op2.card_count['SUPORT1'] = nsuports
         assert n+nfields*4+8 == len(data), 'a=%s b=%s' % (n+nfields*4+8, len(data))
@@ -1429,7 +1430,7 @@ class GEOM4(GeomCommon):
                 op2.binary_debug.write('  USET=%s\n' % str(out))
             #(sid, id, component) = out
             set_obj = USET.add_op2_data(out)
-            op2._add_methods._add_uset_object(set_obj)
+            op2._add_methods.add_uset_object(set_obj)
             n += ntotal
         op2.increase_card_count('USET', len(op2.usets))
         return n
@@ -1520,13 +1521,13 @@ class GEOM4(GeomCommon):
             #print(in_data)
 
             constraint = USET1.add_op2_data(in_data)
-            op2._add_methods._add_uset_object(constraint)
+            op2._add_methods.add_uset_object(constraint)
         op2.card_count['USET1'] = nentries
         return len(data)
 
 
     def read_omit(self, data: bytes, n: int) -> int:
-        return self._read_xset(data, n, 'OMIT', OMIT, self.op2._add_methods._add_omit_object)
+        return self._read_xset(data, n, 'OMIT', OMIT, self.op2._add_methods.add_omit_object)
 
     def read_rtrplt(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RTRPLT in GEOM4')
@@ -1890,7 +1891,8 @@ def fill_rbe3_wt_comp_gijs(i: int, j: int,
     assert len(weights) > 0, weights
     return i, weights, comps, grids
 
-def _read_spcadd_mpcadd(model: OP2Geom, card_name: str, datai: np.ndarray) -> None:
+def _read_spcadd_mpcadd(model: OP2Geom, card_name: str,
+                        datai: np.ndarray) -> None:
     """
     reads a SPCADD/MPCADD card
 
@@ -1919,13 +1921,13 @@ def _read_spcadd_mpcadd(model: OP2Geom, card_name: str, datai: np.ndarray) -> No
         dataii = datai[:-1]
         if card_name == 'MPCADD':
             constraint = MPCADD.add_op2_data(dataii)
-            add_methods._add_constraint_mpcadd_object(constraint)
+            add_methods.add_constraint_mpcadd_object(constraint)
         elif card_name == 'SPCADD':
             constraint = SPCADD.add_op2_data(dataii)
-            add_methods._add_constraint_spcadd_object(constraint)
+            add_methods.add_constraint_spcadd_object(constraint)
         elif card_name == 'DCONADD':
             constraint = DCONADD.add_op2_data(dataii)
-            add_methods._add_dconstr_object(constraint)
+            add_methods.add_dconstr_object(constraint)
         else:  # pragma: no cover
             raise NotImplementedError(card_name)
 
@@ -1944,13 +1946,13 @@ def _read_spcadd_mpcadd(model: OP2Geom, card_name: str, datai: np.ndarray) -> No
         #print('%r %s' % (card_name, dataii))
         if card_name == 'MPCADD':
             constraint = MPCADD.add_op2_data(dataii)
-            add_methods._add_constraint_mpcadd_object(constraint)
+            add_methods.add_constraint_mpcadd_object(constraint)
         elif card_name == 'SPCADD':
             constraint = SPCADD.add_op2_data(dataii)
-            add_methods._add_constraint_spcadd_object(constraint)
+            add_methods.add_constraint_spcadd_object(constraint)
         elif card_name == 'DCONADD':
             constraint = DCONADD.add_op2_data(dataii)
-            add_methods._add_dconstr_object(constraint)
+            add_methods.add_dconstr_object(constraint)
         else:  # pragma: no cover
             raise NotImplementedError(card_name)
     model.increase_card_count(card_name, count_num=count_num)

@@ -1,15 +1,13 @@
 from __future__ import annotations
 import getpass
-from typing import Any, TYPE_CHECKING
-from numpy import unique, int32, int64
+from typing import TYPE_CHECKING
+from numpy import unique
 
-from pyNastran import is_release
-from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.utils import object_attributes
-from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
+from pyNastran.op2.op2_interface.internal_stats import get_op2_stats
 from pyNastran.op2.result_objects.op2_results import Results
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -71,10 +69,10 @@ class OP2_F06_Common:
         Examples
         --------
         **Example 1**
-        >>> self.eigenvectors = get_result('eigenvectors')
+        >>> self.eigenvectors = self.get_result('eigenvectors')
 
         **Example 2**
-        >>> self.ato.displacements = get_result('ato.displacements')
+        >>> self.ato.displacements = self.get_result('ato.displacements')
 
         """
         if '.' in result_name:
@@ -95,7 +93,7 @@ class OP2_F06_Common:
                 storage_obj = getattr(self.op2_results, result_name)
             return storage_obj
 
-    def del_result(self, result_name):
+    def del_result(self, result_name: str) -> None:
         """
         delattr, but considers sub-objects
         """
@@ -112,7 +110,7 @@ class OP2_F06_Common:
             try:
                 delattr(self, result_name)
             except AttributeError:
-                storage_obj = delattr(self.op2_results, result_name)
+                delattr(self.op2_results, result_name)
 
     def deprecated(self, old_name: str, new_name: str, deprecated_version: str):
         """allows for simple OP2 vectorization"""
@@ -120,193 +118,193 @@ class OP2_F06_Common:
 
     # ------------------------------------------------------------------
     # stress
-    @property
-    def celas1_stress(self):
-        self.deprecated('model.celas1_stress', 'model.op2_results.stress.celas1_stress', '1.4')
-        return self.op2_results.stress.celas1_stress
-    @property
-    def celas2_stress(self):
-        self.deprecated('model.celas2_stress', 'model.op2_results.stress.celas2_stress', '1.4')
-        return self.op2_results.stress.celas2_stress
-    @property
-    def celas3_stress(self):
-        self.deprecated('model.celas3_stress', 'model.op2_results.stress.celas3_stress', '1.4')
-        return self.op2_results.stress.celas3_stress
-    @property
-    def celas4_stress(self):
-        self.deprecated('model.celas4_stress', 'model.op2_results.stress.celas4_stress', '1.4')
-        return self.op2_results.stress.celas4_stress
-
-    @property
-    def crod_stress(self):
-        self.deprecated('model.crod_stress', 'model.op2_results.stress.crod_stress', '1.4')
-        return self.op2_results.stress.crod_stress
-    @property
-    def ctube_stress(self):
-        self.deprecated('model.ctube_stress', 'model.op2_results.stress.ctube_stress', '1.4')
-        return self.op2_results.stress.crod_stress
-    @property
-    def conrod_stress(self):
-        self.deprecated('model.conrod_stress', 'model.op2_results.stress.conrod_stress', '1.4')
-        return self.op2_results.stress.conrod_stress
-
-    @property
-    def cbar_stress(self):
-        self.deprecated('model.cbar_stress', 'model.op2_results.stress.cbar_stress', '1.4')
-        return self.op2_results.stress.cbar_stress
-    @property
-    def cbeam_stress(self):
-        self.deprecated('model.cbeam_stress', 'model.op2_results.stress.cbeam_stress', '1.4')
-        return self.op2_results.stress.cbeam_stress
-    @property
-    def cbend_stress(self):
-        self.deprecated('model.cbend_stress', 'model.op2_results.stress.cbend_stress', '1.4')
-        return self.op2_results.stress.cbend_stress
-
-    @property
-    def cquad4_stress(self):
-        self.deprecated('model.cquad4_stress', 'model.op2_results.stress.cquad4_stress', '1.4')
-        return self.op2_results.stress.cquad4_stress
-    @property
-    def cquad8_stress(self):
-        self.deprecated('model.cquad8_stress', 'model.op2_results.stress.cquad8_stress', '1.4')
-        return self.op2_results.stress.cquad8_stress
-    @property
-    def cquadr_stress(self):
-        self.deprecated('model.cquadr_stress', 'model.op2_results.stress.cquadr_stress', '1.4')
-        return self.op2_results.stress.cquadr_stress
-
-    @property
-    def ctria3_stress(self):
-        self.deprecated('model.ctria3_stress', 'model.op2_results.stress.ctria3_stress', '1.4')
-        return self.op2_results.stress.ctria3_stress
-    @property
-    def ctria6_stress(self):
-        self.deprecated('model.ctria6_stress', 'model.op2_results.stress.ctria6_stress', '1.4')
-        return self.op2_results.stress.ctria6_stress
-    @property
-    def ctriar_stress(self):
-        self.deprecated('model.ctriar_stress', 'model.op2_results.stress.ctriar_stress', '1.4')
-        return self.op2_results.stress.ctriar_stress
-    @property
-    def ctriax_stress(self):
-        return self.op2_results.stress.ctriax_stress
-
-    @property
-    def ctria3_composite_stress(self):
-        self.deprecated('model.ctria3_composite_stress', 'model.op2_results.stress.ctria3_composite_stress', '1.4')
-        return self.op2_results.stress.ctria3_composite_stress
-    @property
-    def ctria6_composite_stress(self):
-        self.deprecated('model.ctria6_composite_stress', 'model.op2_results.stress.ctria6_composite_stress', '1.4')
-        return self.op2_results.stress.ctria6_composite_stress
-    @property
-    def ctriar_composite_stress(self):
-        self.deprecated('model.ctriar_composite_stress', 'model.op2_results.stress.ctriar_composite_stress', '1.4')
-        return self.op2_results.stress.ctriar_composite_stress
-
-    @property
-    def cquad4_composite_stress(self):
-        self.deprecated('model.cquad4_composite_stress', 'model.op2_results.stress.cquad4_composite_stress', '1.4')
-        return self.op2_results.stress.cquad4_composite_stress
-    @property
-    def cquad8_composite_stress(self):
-        self.deprecated('model.cquad8_composite_stress', 'model.op2_results.stress.cquad8_composite_stress', '1.4')
-        return self.op2_results.stress.cquad8_composite_stress
-    @property
-    def cquadr_composite_stress(self):
-        self.deprecated('model.cquadr_composite_stress', 'model.op2_results.stress.cquadr_composite_stress', '1.4')
-        return self.op2_results.stress.cquadr_composite_stress
-
-    @property
-    def ctetra_stress(self):
-        self.deprecated('model.ctetra_stress', 'model.op2_results.stress.ctetra_stress', '1.4')
-        return self.op2_results.stress.ctetra_stress
-    @property
-    def chexa_stress(self):
-        self.deprecated('model.chexa_stress', 'model.op2_results.stress.chexa_stress', '1.4')
-        return self.op2_results.stress.chexa_stress
-    @property
-    def cpenta_stress(self):
-        self.deprecated('model.cpenta_stress', 'model.op2_results.stress.cpenta_stress', '1.4')
-        return self.op2_results.stress.cpenta_stress
-    @property
-    def cpyram_stress(self):
-        self.deprecated('model.cpyram_stress', 'model.op2_results.stress.cpyram_stress', '1.4')
-        return self.op2_results.stress.cpyram_stress
-
-    @property
-    def chexa_composite_stress(self):
-        self.deprecated('model.chexa_composite_stress', 'model.op2_results.stress.chexa_composite_stress', '1.4')
-        return self.op2_results.stress.chexa_composite_stress
-    @property
-    def cpenta_composite_stress(self):
-        self.deprecated('model.cpenta_composite_stress', 'model.op2_results.stress.cpenta_composite_stress', '1.4')
-        return self.op2_results.stress.cpenta_composite_stress
-
-    @property
-    def cshear_stress(self):
-        self.deprecated('model.cshear_stress', 'model.op2_results.stress.cshear_stress', '1.4')
-        return self.op2_results.stress.cshear_stress
-    @property
-    def cweld_stress(self):
-        self.deprecated('model.cweld_stress', 'model.op2_results.stress.cweld_stress', '1.4')
-        return self.op2_results.stress.cweld_stress
-    @property
-    def cbush_stress(self):
-        self.deprecated('model.cbush_stress', 'model.op2_results.stress.cbush_stress', '1.4')
-        return self.op2_results.stress.cbush_stress
-    @property
-    def cbar_stress_10nodes(self):
-        self.deprecated('model.cbar_stress_10nodes', 'model.op2_results.stress.cbar_stress_10nodes', '1.4')
-        return self.op2_results.stress.cbar_stress_10nodes
-    @property
-    def cfast_stress(self):
-        self.deprecated('model.cfast_stress', 'model.op2_results.stress.cfast_stress', '1.4')
-        return self.op2_results.stress.cfast_stress
-
-    @property
-    def cplstn3_stress(self):
-        self.deprecated('model.cplstn3_stress', 'model.op2_results.stress.cplstn3_stress', '1.4')
-        return self.op2_results.stress.cplstn3_stress
-    @property
-    def cplstn4_stress(self):
-        self.deprecated('model.cplstn4_stress', 'model.op2_results.stress.cplstn4_stress', '1.4')
-        return self.op2_results.stress.cplstn4_stress
-    @property
-    def cplstn6_stress(self):
-        self.deprecated('model.cplstn6_stress', 'model.op2_results.stress.cplstn6_stress', '1.4')
-        return self.op2_results.stress.cplstn6_stress
-    @property
-    def cplstn8_stress(self):
-        self.deprecated('model.cplstn8_stress', 'model.op2_results.stress.cplstn8_stress', '1.4')
-        return self.op2_results.stress.cplstn8_stress
-
-    @property
-    def cplsts3_stress(self):
-        self.deprecated('model.cplsts3_stress', 'model.op2_results.stress.cplsts3_stress', '1.4')
-        return self.op2_results.stress.cplsts3_stress
-    @property
-    def cplsts4_stress(self):
-        self.deprecated('model.cplsts4_stress', 'model.op2_results.stress.cplsts4_stress', '1.4')
-        return self.op2_results.stress.cplsts4_stress
-    @property
-    def cplsts6_stress(self):
-        self.deprecated('model.cplsts6_stress', 'model.op2_results.stress.cplsts6_stress', '1.4')
-        return self.op2_results.stress.cplsts6_stress
-    @property
-    def cplsts8_stress(self):
-        self.deprecated('model.cplsts8_stress', 'model.op2_results.stress.cplsts8_stress', '1.4')
-        return self.op2_results.stress.cplsts8_stress
-
-    @property
-    def hyperelastic_cquad4_stress(self):
-        self.deprecated('model.hyperelastic_cquad4_stress', 'model.op2_results.stress.hyperelastic_cquad4_stress', '1.4')
-        return self.op2_results.stress.hyperelastic_cquad4_stress
-    @property
-    def cbush1d_stress_strain(self):
-        self.deprecated('model.cbush1d_stress_strain', 'model.op2_results.stress.cbush1d_stress_strain', '1.4')
-        self.op2_results.stress.cbush1d_stress_strain
+    # @property
+    # def celas1_stress(self):
+    #     self.deprecated('model.celas1_stress', 'model.op2_results.stress.celas1_stress', '1.4')
+    #     return self.op2_results.stress.celas1_stress
+    # @property
+    # def celas2_stress(self):
+    #     self.deprecated('model.celas2_stress', 'model.op2_results.stress.celas2_stress', '1.4')
+    #     return self.op2_results.stress.celas2_stress
+    # @property
+    # def celas3_stress(self):
+    #     self.deprecated('model.celas3_stress', 'model.op2_results.stress.celas3_stress', '1.4')
+    #     return self.op2_results.stress.celas3_stress
+    # @property
+    # def celas4_stress(self):
+    #     self.deprecated('model.celas4_stress', 'model.op2_results.stress.celas4_stress', '1.4')
+    #     return self.op2_results.stress.celas4_stress
+    #
+    # @property
+    # def crod_stress(self):
+    #     self.deprecated('model.crod_stress', 'model.op2_results.stress.crod_stress', '1.4')
+    #     return self.op2_results.stress.crod_stress
+    # @property
+    # def ctube_stress(self):
+    #     self.deprecated('model.ctube_stress', 'model.op2_results.stress.ctube_stress', '1.4')
+    #     return self.op2_results.stress.crod_stress
+    # @property
+    # def conrod_stress(self):
+    #     self.deprecated('model.conrod_stress', 'model.op2_results.stress.conrod_stress', '1.4')
+    #     return self.op2_results.stress.conrod_stress
+    #
+    # @property
+    # def cbar_stress(self):
+    #     self.deprecated('model.cbar_stress', 'model.op2_results.stress.cbar_stress', '1.4')
+    #     return self.op2_results.stress.cbar_stress
+    # @property
+    # def cbeam_stress(self):
+    #     self.deprecated('model.cbeam_stress', 'model.op2_results.stress.cbeam_stress', '1.4')
+    #     return self.op2_results.stress.cbeam_stress
+    # @property
+    # def cbend_stress(self):
+    #     self.deprecated('model.cbend_stress', 'model.op2_results.stress.cbend_stress', '1.4')
+    #     return self.op2_results.stress.cbend_stress
+    #
+    # @property
+    # def cquad4_stress(self):
+    #     self.deprecated('model.cquad4_stress', 'model.op2_results.stress.cquad4_stress', '1.4')
+    #     return self.op2_results.stress.cquad4_stress
+    # @property
+    # def cquad8_stress(self):
+    #     self.deprecated('model.cquad8_stress', 'model.op2_results.stress.cquad8_stress', '1.4')
+    #     return self.op2_results.stress.cquad8_stress
+    # @property
+    # def cquadr_stress(self):
+    #     self.deprecated('model.cquadr_stress', 'model.op2_results.stress.cquadr_stress', '1.4')
+    #     return self.op2_results.stress.cquadr_stress
+    #
+    # @property
+    # def ctria3_stress(self):
+    #     self.deprecated('model.ctria3_stress', 'model.op2_results.stress.ctria3_stress', '1.4')
+    #     return self.op2_results.stress.ctria3_stress
+    # @property
+    # def ctria6_stress(self):
+    #     self.deprecated('model.ctria6_stress', 'model.op2_results.stress.ctria6_stress', '1.4')
+    #     return self.op2_results.stress.ctria6_stress
+    # @property
+    # def ctriar_stress(self):
+    #     self.deprecated('model.ctriar_stress', 'model.op2_results.stress.ctriar_stress', '1.4')
+    #     return self.op2_results.stress.ctriar_stress
+    # @property
+    # def ctriax_stress(self):
+    #     return self.op2_results.stress.ctriax_stress
+    #
+    # @property
+    # def ctria3_composite_stress(self):
+    #     self.deprecated('model.ctria3_composite_stress', 'model.op2_results.stress.ctria3_composite_stress', '1.4')
+    #     return self.op2_results.stress.ctria3_composite_stress
+    # @property
+    # def ctria6_composite_stress(self):
+    #     self.deprecated('model.ctria6_composite_stress', 'model.op2_results.stress.ctria6_composite_stress', '1.4')
+    #     return self.op2_results.stress.ctria6_composite_stress
+    # @property
+    # def ctriar_composite_stress(self):
+    #     self.deprecated('model.ctriar_composite_stress', 'model.op2_results.stress.ctriar_composite_stress', '1.4')
+    #     return self.op2_results.stress.ctriar_composite_stress
+    #
+    # @property
+    # def cquad4_composite_stress(self):
+    #     self.deprecated('model.cquad4_composite_stress', 'model.op2_results.stress.cquad4_composite_stress', '1.4')
+    #     return self.op2_results.stress.cquad4_composite_stress
+    # @property
+    # def cquad8_composite_stress(self):
+    #     self.deprecated('model.cquad8_composite_stress', 'model.op2_results.stress.cquad8_composite_stress', '1.4')
+    #     return self.op2_results.stress.cquad8_composite_stress
+    # @property
+    # def cquadr_composite_stress(self):
+    #     self.deprecated('model.cquadr_composite_stress', 'model.op2_results.stress.cquadr_composite_stress', '1.4')
+    #     return self.op2_results.stress.cquadr_composite_stress
+    #
+    # @property
+    # def ctetra_stress(self):
+    #     self.deprecated('model.ctetra_stress', 'model.op2_results.stress.ctetra_stress', '1.4')
+    #     return self.op2_results.stress.ctetra_stress
+    # @property
+    # def chexa_stress(self):
+    #     self.deprecated('model.chexa_stress', 'model.op2_results.stress.chexa_stress', '1.4')
+    #     return self.op2_results.stress.chexa_stress
+    # @property
+    # def cpenta_stress(self):
+    #     self.deprecated('model.cpenta_stress', 'model.op2_results.stress.cpenta_stress', '1.4')
+    #     return self.op2_results.stress.cpenta_stress
+    # @property
+    # def cpyram_stress(self):
+    #     self.deprecated('model.cpyram_stress', 'model.op2_results.stress.cpyram_stress', '1.4')
+    #     return self.op2_results.stress.cpyram_stress
+    #
+    # @property
+    # def chexa_composite_stress(self):
+    #     self.deprecated('model.chexa_composite_stress', 'model.op2_results.stress.chexa_composite_stress', '1.4')
+    #     return self.op2_results.stress.chexa_composite_stress
+    # @property
+    # def cpenta_composite_stress(self):
+    #     self.deprecated('model.cpenta_composite_stress', 'model.op2_results.stress.cpenta_composite_stress', '1.4')
+    #     return self.op2_results.stress.cpenta_composite_stress
+    #
+    # @property
+    # def cshear_stress(self):
+    #     self.deprecated('model.cshear_stress', 'model.op2_results.stress.cshear_stress', '1.4')
+    #     return self.op2_results.stress.cshear_stress
+    # @property
+    # def cweld_stress(self):
+    #     self.deprecated('model.cweld_stress', 'model.op2_results.stress.cweld_stress', '1.4')
+    #     return self.op2_results.stress.cweld_stress
+    # @property
+    # def cbush_stress(self):
+    #     self.deprecated('model.cbush_stress', 'model.op2_results.stress.cbush_stress', '1.4')
+    #     return self.op2_results.stress.cbush_stress
+    # @property
+    # def cbar_stress_10nodes(self):
+    #     self.deprecated('model.cbar_stress_10nodes', 'model.op2_results.stress.cbar_stress_10nodes', '1.4')
+    #     return self.op2_results.stress.cbar_stress_10nodes
+    # @property
+    # def cfast_stress(self):
+    #     self.deprecated('model.cfast_stress', 'model.op2_results.stress.cfast_stress', '1.4')
+    #     return self.op2_results.stress.cfast_stress
+    #
+    # @property
+    # def cplstn3_stress(self):
+    #     self.deprecated('model.cplstn3_stress', 'model.op2_results.stress.cplstn3_stress', '1.4')
+    #     return self.op2_results.stress.cplstn3_stress
+    # @property
+    # def cplstn4_stress(self):
+    #     self.deprecated('model.cplstn4_stress', 'model.op2_results.stress.cplstn4_stress', '1.4')
+    #     return self.op2_results.stress.cplstn4_stress
+    # @property
+    # def cplstn6_stress(self):
+    #     self.deprecated('model.cplstn6_stress', 'model.op2_results.stress.cplstn6_stress', '1.4')
+    #     return self.op2_results.stress.cplstn6_stress
+    # @property
+    # def cplstn8_stress(self):
+    #     self.deprecated('model.cplstn8_stress', 'model.op2_results.stress.cplstn8_stress', '1.4')
+    #     return self.op2_results.stress.cplstn8_stress
+    #
+    # @property
+    # def cplsts3_stress(self):
+    #     self.deprecated('model.cplsts3_stress', 'model.op2_results.stress.cplsts3_stress', '1.4')
+    #     return self.op2_results.stress.cplsts3_stress
+    # @property
+    # def cplsts4_stress(self):
+    #     self.deprecated('model.cplsts4_stress', 'model.op2_results.stress.cplsts4_stress', '1.4')
+    #     return self.op2_results.stress.cplsts4_stress
+    # @property
+    # def cplsts6_stress(self):
+    #     self.deprecated('model.cplsts6_stress', 'model.op2_results.stress.cplsts6_stress', '1.4')
+    #     return self.op2_results.stress.cplsts6_stress
+    # @property
+    # def cplsts8_stress(self):
+    #     self.deprecated('model.cplsts8_stress', 'model.op2_results.stress.cplsts8_stress', '1.4')
+    #     return self.op2_results.stress.cplsts8_stress
+    #
+    # @property
+    # def hyperelastic_cquad4_stress(self):
+    #     self.deprecated('model.hyperelastic_cquad4_stress', 'model.op2_results.stress.hyperelastic_cquad4_stress', '1.4')
+    #     return self.op2_results.stress.hyperelastic_cquad4_stress
+    # @property
+    # def cbush1d_stress_strain(self):
+    #     self.deprecated('model.cbush1d_stress_strain', 'model.op2_results.stress.cbush1d_stress_strain', '1.4')
+    #     self.op2_results.stress.cbush1d_stress_strain
 
     ##@property
     ##def ctriax6_stress(self):
@@ -497,392 +495,392 @@ class OP2_F06_Common:
 
     # ------------------------------------------------------------------
     # Strain Energy - Getter
-    @property
-    def celas1_strain_energy(self):
-        self.deprecated('model.celas1_strain_energy', 'model.op2_results.strain_energy.celas1_strain_energy', '1.4')
-        return self.op2_results.strain_energy.celas1_strain_energy
-    @property
-    def celas2_strain_energy(self):
-        self.deprecated('model.celas2_strain_energy', 'model.op2_results.strain_energy.celas2_strain_energy', '1.4')
-        return self.op2_results.strain_energy.celas2_strain_energy
-    @property
-    def celas3_strain_energy(self):
-        self.deprecated('model.celas3_strain_energy', 'model.op2_results.strain_energy.celas3_strain_energy', '1.4')
-        return self.op2_results.strain_energy.celas3_strain_energy
-    @property
-    def celas4_strain_energy(self):
-        self.deprecated('model.celas4_strain_energy', 'model.op2_results.strain_energy.celas4_strain_energy', '1.4')
-        return self.op2_results.strain_energy.celas4_strain_energy
-
-    @property
-    def crod_strain_energy(self):
-        self.deprecated('model.crod_strain_energy', 'model.op2_results.strain_energy.crod_strain_energy', '1.4')
-        return self.op2_results.strain_energy.crod_strain_energy
-    @property
-    def ctube_strain_energy(self):
-        self.deprecated('model.ctube_strain_energy', 'model.op2_results.strain_energy.ctube_strain_energy', '1.4')
-        return self.op2_results.strain_energy.crod_strain_energy
-    @property
-    def conrod_strain_energy(self):
-        self.deprecated('model.conrod_strain_energy', 'model.op2_results.strain_energy.conrod_strain_energy', '1.4')
-        return self.op2_results.strain_energy.conrod_strain_energy
-
-    @property
-    def cquad4_strain_energy(self):
-        self.deprecated('model.cquad4_strain_energy', 'model.op2_results.strain_energy.cquad4_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cquad4_strain_energy
-    @property
-    def cquad8_strain_energy(self):
-        self.deprecated('model.cquad8_strain_energy', 'model.op2_results.strain_energy.ctetra_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cquad8_strain_energy
-    @property
-    def cquadr_strain_energy(self):
-        self.deprecated('model.cquadr_strain_energy', 'model.op2_results.strain_energy.cquadr_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cquadr_strain_energy
-    @property
-    def cquadx_strain_energy(self):
-        self.deprecated('model.cquadx_strain_energy', 'model.op2_results.strain_energy.cquadx_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cquadx_strain_energy
-
-    @property
-    def ctria3_strain_energy(self):
-        self.deprecated('model.ctria3_strain_energy', 'model.op2_results.strain_energy.ctria3_strain_energy', '1.4')
-        return self.op2_results.strain_energy.ctria3_strain_energy
-    @property
-    def ctria6_strain_energy(self):
-        self.deprecated('model.ctria6_strain_energy', 'model.op2_results.strain_energy.ctria6_strain_energy', '1.4')
-        return self.op2_results.strain_energy.ctria6_strain_energy
-    @property
-    def ctriar_strain_energy(self):
-        self.deprecated('model.ctriar_strain_energy', 'model.op2_results.strain_energy.ctriar_strain_energy', '1.4')
-        return self.op2_results.strain_energy.ctriar_strain_energy
-    @property
-    def ctriax_strain_energy(self):
-        self.deprecated('model.ctriax_strain_energy', 'model.op2_results.strain_energy.ctriax_strain_energy', '1.4')
-        return self.op2_results.strain_energy.ctriax_strain_energy
-    @property
-    def ctriax6_strain_energy(self):
-        self.deprecated('model.ctriax6_strain_energy', 'model.op2_results.strain_energy.ctriax6_strain_energy', '1.4')
-        return self.op2_results.strain_energy.ctriax6_strain_energy
-
-    @property
-    def ctetra_strain_energy(self):
-        self.deprecated('model.ctetra_strain_energy', 'model.op2_results.strain_energy.ctetra_strain_energy', '1.4')
-        return self.op2_results.strain_energy.ctetra_strain_energy
-    @property
-    def cpenta_strain_energy(self):
-        self.deprecated('model.cpenta_strain_energy', 'model.op2_results.strain_energy.cpenta_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cpenta_strain_energy
-    @property
-    def chexa_strain_energy(self):
-        self.deprecated('model.chexa_strain_energy', 'model.op2_results.strain_energy.chexa_strain_energy', '1.4')
-        return self.op2_results.strain_energy.chexa_strain_energy
-    @property
-    def cpyram_strain_energy(self):
-        self.deprecated('model.cpyram_strain_energy', 'model.op2_results.strain_energy.cpyram_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cpyram_strain_energy
-
-    @property
-    def cbar_strain_energy(self):
-        self.deprecated('model.cbar_strain_energy', 'model.op2_results.strain_energy.cbar_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cbar_strain_energy
-    @property
-    def cbeam_strain_energy(self):
-        self.deprecated('model.cbeam_strain_energy', 'model.op2_results.strain_energy.cbeam_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cbeam_strain_energy
-    @property
-    def cbeam3_strain_energy(self):
-        self.deprecated('model.cbeam3_strain_energy', 'model.op2_results.strain_energy.cbeam3_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cbeam3_strain_energy
-    @property
-    def cbend_strain_energy(self):
-        self.deprecated('model.cbend_strain_energy', 'model.op2_results.strain_energy.cbend_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cbend_strain_energy
+    # @property
+    # def celas1_strain_energy(self):
+    #     self.deprecated('model.celas1_strain_energy', 'model.op2_results.strain_energy.celas1_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.celas1_strain_energy
+    # @property
+    # def celas2_strain_energy(self):
+    #     self.deprecated('model.celas2_strain_energy', 'model.op2_results.strain_energy.celas2_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.celas2_strain_energy
+    # @property
+    # def celas3_strain_energy(self):
+    #     self.deprecated('model.celas3_strain_energy', 'model.op2_results.strain_energy.celas3_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.celas3_strain_energy
+    # @property
+    # def celas4_strain_energy(self):
+    #     self.deprecated('model.celas4_strain_energy', 'model.op2_results.strain_energy.celas4_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.celas4_strain_energy
+    #
+    # @property
+    # def crod_strain_energy(self):
+    #     self.deprecated('model.crod_strain_energy', 'model.op2_results.strain_energy.crod_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.crod_strain_energy
+    # @property
+    # def ctube_strain_energy(self):
+    #     self.deprecated('model.ctube_strain_energy', 'model.op2_results.strain_energy.ctube_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.crod_strain_energy
+    # @property
+    # def conrod_strain_energy(self):
+    #     self.deprecated('model.conrod_strain_energy', 'model.op2_results.strain_energy.conrod_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.conrod_strain_energy
+    #
+    # @property
+    # def cquad4_strain_energy(self):
+    #     self.deprecated('model.cquad4_strain_energy', 'model.op2_results.strain_energy.cquad4_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cquad4_strain_energy
+    # @property
+    # def cquad8_strain_energy(self):
+    #     self.deprecated('model.cquad8_strain_energy', 'model.op2_results.strain_energy.ctetra_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cquad8_strain_energy
+    # @property
+    # def cquadr_strain_energy(self):
+    #     self.deprecated('model.cquadr_strain_energy', 'model.op2_results.strain_energy.cquadr_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cquadr_strain_energy
+    # @property
+    # def cquadx_strain_energy(self):
+    #     self.deprecated('model.cquadx_strain_energy', 'model.op2_results.strain_energy.cquadx_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cquadx_strain_energy
+    #
+    # @property
+    # def ctria3_strain_energy(self):
+    #     self.deprecated('model.ctria3_strain_energy', 'model.op2_results.strain_energy.ctria3_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.ctria3_strain_energy
+    # @property
+    # def ctria6_strain_energy(self):
+    #     self.deprecated('model.ctria6_strain_energy', 'model.op2_results.strain_energy.ctria6_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.ctria6_strain_energy
+    # @property
+    # def ctriar_strain_energy(self):
+    #     self.deprecated('model.ctriar_strain_energy', 'model.op2_results.strain_energy.ctriar_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.ctriar_strain_energy
+    # @property
+    # def ctriax_strain_energy(self):
+    #     self.deprecated('model.ctriax_strain_energy', 'model.op2_results.strain_energy.ctriax_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.ctriax_strain_energy
+    # @property
+    # def ctriax6_strain_energy(self):
+    #     self.deprecated('model.ctriax6_strain_energy', 'model.op2_results.strain_energy.ctriax6_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.ctriax6_strain_energy
+    #
+    # @property
+    # def ctetra_strain_energy(self):
+    #     self.deprecated('model.ctetra_strain_energy', 'model.op2_results.strain_energy.ctetra_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.ctetra_strain_energy
+    # @property
+    # def cpenta_strain_energy(self):
+    #     self.deprecated('model.cpenta_strain_energy', 'model.op2_results.strain_energy.cpenta_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cpenta_strain_energy
+    # @property
+    # def chexa_strain_energy(self):
+    #     self.deprecated('model.chexa_strain_energy', 'model.op2_results.strain_energy.chexa_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.chexa_strain_energy
+    # @property
+    # def cpyram_strain_energy(self):
+    #     self.deprecated('model.cpyram_strain_energy', 'model.op2_results.strain_energy.cpyram_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cpyram_strain_energy
+    #
+    # @property
+    # def cbar_strain_energy(self):
+    #     self.deprecated('model.cbar_strain_energy', 'model.op2_results.strain_energy.cbar_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cbar_strain_energy
+    # @property
+    # def cbeam_strain_energy(self):
+    #     self.deprecated('model.cbeam_strain_energy', 'model.op2_results.strain_energy.cbeam_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cbeam_strain_energy
+    # @property
+    # def cbeam3_strain_energy(self):
+    #     self.deprecated('model.cbeam3_strain_energy', 'model.op2_results.strain_energy.cbeam3_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cbeam3_strain_energy
+    # @property
+    # def cbend_strain_energy(self):
+    #     self.deprecated('model.cbend_strain_energy', 'model.op2_results.strain_energy.cbend_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cbend_strain_energy
 
     # ------------------------------------------------------
     # Strain Energy - Getter 2
-    @property
-    def cgap_strain_energy(self):
-        self.deprecated('model.cgap_strain_energy', 'model.op2_results.strain_energy.cgap_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cgap_strain_energy
-    @property
-    def cdamp1_strain_energy(self):
-        self.deprecated('model.cdamp1_strain_energy', 'model.op2_results.strain_energy.cdamp1_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cdamp1_strain_energy
-    @property
-    def cdamp2_strain_energy(self):
-        self.deprecated('model.cdamp2_strain_energy', 'model.op2_results.strain_energy.cdamp2_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cdamp2_strain_energy
-    @property
-    def cdamp3_strain_energy(self):
-        self.deprecated('model.cdamp3_strain_energy', 'model.op2_results.strain_energy.cdamp3_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cdamp3_strain_energy
-    @property
-    def cdamp4_strain_energy(self):
-        self.deprecated('model.cdamp4_strain_energy', 'model.op2_results.strain_energy.cdamp4_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cdamp4_strain_energy
-    @property
-    def cbush_strain_energy(self):
-        self.deprecated('model.cbush_strain_energy', 'model.op2_results.strain_energy.cbush_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cbush_strain_energy
-    @property
-    def dmig_strain_energy(self):
-        self.deprecated('model.dmig_strain_energy', 'model.op2_results.strain_energy.dmig_strain_energy', '1.4')
-        return self.op2_results.strain_energy.dmig_strain_energy
-    @property
-    def genel_strain_energy(self):
-        self.deprecated('model.genel_strain_energy', 'model.op2_results.strain_energy.genel_strain_energy', '1.4')
-        return self.op2_results.strain_energy.genel_strain_energy
-    @property
-    def cshear_strain_energy(self):
-        self.deprecated('model.cshear_strain_energy', 'model.op2_results.strain_energy.cshear_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cshear_strain_energy
-    @property
-    def conm2_strain_energy(self):
-        self.deprecated('model.conm2_strain_energy', 'model.op2_results.strain_energy.conm2_strain_energy', '1.4')
-        return self.op2_results.strain_energy.conm2_strain_energy
-    @property
-    def cdum8_strain_energy(self):
-        self.deprecated('model.cdum8_strain_energy', 'model.op2_results.strain_energy.cdum8_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cdum8_strain_energy
-    @property
-    def rbe1_strain_energy(self):
-        self.deprecated('model.rbe1_strain_energy', 'model.op2_results.strain_energy.rbe1_strain_energy', '1.4')
-        return self.op2_results.strain_energy.rbe1_strain_energy
-    @property
-    def rbe3_strain_energy(self):
-        self.deprecated('model.rbe3_strain_energy', 'model.op2_results.strain_energy.rbe3_strain_energy', '1.4')
-        return self.op2_results.strain_energy.rbe3_strain_energy
-    @property
-    def cweld_strain_energy(self):
-        self.deprecated('model.cweld_strain_energy', 'model.op2_results.strain_energy.cweld_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cweld_strain_energy
-    @property
-    def cfast_strain_energy(self):
-        self.deprecated('model.cfast_strain_energy', 'model.op2_results.strain_energy.cfast_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cfast_strain_energy
-    @property
-    def cseam_strain_energy(self):
-        self.deprecated('model.cseam_strain_energy', 'model.op2_results.strain_energy.cseam_strain_energy', '1.4')
-        return self.op2_results.strain_energy.cseam_strain_energy
+    # @property
+    # def cgap_strain_energy(self):
+    #     self.deprecated('model.cgap_strain_energy', 'model.op2_results.strain_energy.cgap_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cgap_strain_energy
+    # @property
+    # def cdamp1_strain_energy(self):
+    #     self.deprecated('model.cdamp1_strain_energy', 'model.op2_results.strain_energy.cdamp1_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cdamp1_strain_energy
+    # @property
+    # def cdamp2_strain_energy(self):
+    #     self.deprecated('model.cdamp2_strain_energy', 'model.op2_results.strain_energy.cdamp2_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cdamp2_strain_energy
+    # @property
+    # def cdamp3_strain_energy(self):
+    #     self.deprecated('model.cdamp3_strain_energy', 'model.op2_results.strain_energy.cdamp3_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cdamp3_strain_energy
+    # @property
+    # def cdamp4_strain_energy(self):
+    #     self.deprecated('model.cdamp4_strain_energy', 'model.op2_results.strain_energy.cdamp4_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cdamp4_strain_energy
+    # @property
+    # def cbush_strain_energy(self):
+    #     self.deprecated('model.cbush_strain_energy', 'model.op2_results.strain_energy.cbush_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cbush_strain_energy
+    # @property
+    # def dmig_strain_energy(self):
+    #     self.deprecated('model.dmig_strain_energy', 'model.op2_results.strain_energy.dmig_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.dmig_strain_energy
+    # @property
+    # def genel_strain_energy(self):
+    #     self.deprecated('model.genel_strain_energy', 'model.op2_results.strain_energy.genel_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.genel_strain_energy
+    # @property
+    # def cshear_strain_energy(self):
+    #     self.deprecated('model.cshear_strain_energy', 'model.op2_results.strain_energy.cshear_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cshear_strain_energy
+    # @property
+    # def conm2_strain_energy(self):
+    #     self.deprecated('model.conm2_strain_energy', 'model.op2_results.strain_energy.conm2_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.conm2_strain_energy
+    # @property
+    # def cdum8_strain_energy(self):
+    #     self.deprecated('model.cdum8_strain_energy', 'model.op2_results.strain_energy.cdum8_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cdum8_strain_energy
+    # @property
+    # def rbe1_strain_energy(self):
+    #     self.deprecated('model.rbe1_strain_energy', 'model.op2_results.strain_energy.rbe1_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.rbe1_strain_energy
+    # @property
+    # def rbe3_strain_energy(self):
+    #     self.deprecated('model.rbe3_strain_energy', 'model.op2_results.strain_energy.rbe3_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.rbe3_strain_energy
+    # @property
+    # def cweld_strain_energy(self):
+    #     self.deprecated('model.cweld_strain_energy', 'model.op2_results.strain_energy.cweld_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cweld_strain_energy
+    # @property
+    # def cfast_strain_energy(self):
+    #     self.deprecated('model.cfast_strain_energy', 'model.op2_results.strain_energy.cfast_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cfast_strain_energy
+    # @property
+    # def cseam_strain_energy(self):
+    #     self.deprecated('model.cseam_strain_energy', 'model.op2_results.strain_energy.cseam_strain_energy', '1.4')
+    #     return self.op2_results.strain_energy.cseam_strain_energy
     # ------------------------------------------------------------------
     # Strain Energy - Setter
 
-    @celas1_strain_energy.setter
-    def celas1_strain_energy(self, celas1_strain_energy):
-        self.deprecated('model.celas1_strain_energy', 'model.op2_results.strain_energy.celas1_strain_energy', '1.4')
-        self.op2_results.strain_energy.celas1_strain_energy = celas1_strain_energy
-    @celas2_strain_energy.setter
-    def celas2_strain_energy(self, celas2_strain_energy):
-        self.deprecated('model.celas2_strain_energy', 'model.op2_results.strain_energy.celas2_strain_energy', '1.4')
-        self.op2_results.strain_energy.celas2_strain_energy = celas2_strain_energy
-    @celas3_strain_energy.setter
-    def celas3_strain_energy(self, celas3_strain_energy):
-        self.deprecated('model.celas3_strain_energy', 'model.op2_results.strain_energy.celas3_strain_energy', '1.4')
-        self.op2_results.strain_energy.celas3_strain_energy = celas3_strain_energy
-    @celas4_strain_energy.setter
-    def celas4_strain_energy(self, celas4_strain_energy):
-        self.deprecated('model.celas4_strain_energy', 'model.op2_results.strain_energy.celas4_strain_energy', '1.4')
-        self.op2_results.strain_energy.celas4_strain_energy = celas4_strain_energy
+    # @celas1_strain_energy.setter
+    # def celas1_strain_energy(self, celas1_strain_energy):
+    #     self.deprecated('model.celas1_strain_energy', 'model.op2_results.strain_energy.celas1_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.celas1_strain_energy = celas1_strain_energy
+    # @celas2_strain_energy.setter
+    # def celas2_strain_energy(self, celas2_strain_energy):
+    #     self.deprecated('model.celas2_strain_energy', 'model.op2_results.strain_energy.celas2_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.celas2_strain_energy = celas2_strain_energy
+    # @celas3_strain_energy.setter
+    # def celas3_strain_energy(self, celas3_strain_energy):
+    #     self.deprecated('model.celas3_strain_energy', 'model.op2_results.strain_energy.celas3_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.celas3_strain_energy = celas3_strain_energy
+    # @celas4_strain_energy.setter
+    # def celas4_strain_energy(self, celas4_strain_energy):
+    #     self.deprecated('model.celas4_strain_energy', 'model.op2_results.strain_energy.celas4_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.celas4_strain_energy = celas4_strain_energy
 
 
-    @cdamp1_strain_energy.setter
-    def cdamp1_strain_energy(self, cdamp1_strain_energy):
-        self.deprecated('model.cdamp1_strain_energy', 'model.op2_results.strain_energy.cdamp1_strain_energy', '1.4')
-        self.op2_results.strain_energy.cdamp1_strain_energy = cdamp1_strain_energy
-    @cdamp2_strain_energy.setter
-    def cdamp2_strain_energy(self, cdamp2_strain_energy):
-        self.deprecated('model.cdamp2_strain_energy', 'model.op2_results.strain_energy.cdamp2_strain_energy', '1.4')
-        self.op2_results.strain_energy.cdamp2_strain_energy = cdamp2_strain_energy
-    @cdamp3_strain_energy.setter
-    def cdamp3_strain_energy(self, cdamp3_strain_energy):
-        self.deprecated('model.cdamp3_strain_energy', 'model.op2_results.strain_energy.cdamp3_strain_energy', '1.4')
-        self.op2_results.strain_energy.cdamp3_strain_energy = cdamp3_strain_energy
-    @cdamp4_strain_energy.setter
-    def cdamp4_strain_energy(self, cdamp4_strain_energy):
-        self.deprecated('model.cdamp4_strain_energy', 'model.op2_results.strain_energy.cdamp4_strain_energy', '1.4')
-        self.op2_results.strain_energy.cdamp4_strain_energy = cdamp4_strain_energy
-
-    @cgap_strain_energy.setter
-    def cgap_strain_energy(self, cgap_strain_energy):
-        self.deprecated('model.cgap_strain_energy', 'model.op2_results.strain_energy.cgap_strain_energy', '1.4')
-        self.op2_results.strain_energy.cgap_strain_energy = cgap_strain_energy
-    @cbush_strain_energy.setter
-    def cbush_strain_energy(self, cbush_strain_energy):
-        self.deprecated('model.cbush_strain_energy', 'model.op2_results.strain_energy.cbush_strain_energy', '1.4')
-        self.op2_results.strain_energy.cbush_strain_energy = cbush_strain_energy
-
-    @crod_strain_energy.setter
-    def crod_strain_energy(self, crod_strain_energy):
-        self.deprecated('model.crod_strain_energy', 'model.op2_results.strain_energy.crod_strain_energy', '1.4')
-        self.op2_results.strain_energy.crod_strain_energy = crod_strain_energy
-    @ctube_strain_energy.setter
-    def ctube_strain_energy(self, ctube_strain_energy):
-        self.deprecated('model.ctube_strain_energy', 'model.op2_results.strain_energy.ctube_strain_energy', '1.4')
-        self.op2_results.strain_energy.crod_strain_energy = ctube_strain_energy
-    @conrod_strain_energy.setter
-    def conrod_strain_energy(self, conrod_strain_energy):
-        self.deprecated('model.conrod_strain_energy', 'model.op2_results.strain_energy.conrod_strain_energy', '1.4')
-        self.op2_results.strain_energy.conrod_strain_energy = conrod_strain_energy
-
-    @cquad4_strain_energy.setter
-    def cquad4_strain_energy(self, cquad4_strain_energy):
-        self.deprecated('model.cquad4_strain_energy', 'model.op2_results.strain_energy.cquad4_strain_energy', '1.4')
-        self.op2_results.strain_energy.cquad4_strain_energy = cquad4_strain_energy
-    @cquad8_strain_energy.setter
-    def cquad8_strain_energy(self, cquad8_strain_energy):
-        self.deprecated('model.cquad8_strain_energy', 'model.op2_results.strain_energy.cquad8_strain_energy', '1.4')
-        self.op2_results.strain_energy.cquad8_strain_energy = cquad8_strain_energy
-    @cquadr_strain_energy.setter
-    def cquadr_strain_energy(self, cquadr_strain_energy):
-        self.deprecated('model.cquadr_strain_energy', 'model.op2_results.strain_energy.cquadr_strain_energy', '1.4')
-        self.op2_results.strain_energy.cquadr_strain_energy = cquadr_strain_energy
-    @cquadx_strain_energy.setter
-    def cquadx_strain_energy(self, cquadx_strain_energy):
-        self.deprecated('model.cquadx_strain_energy', 'model.op2_results.strain_energy.cquadx_strain_energy', '1.4')
-        self.op2_results.strain_energy.cquadx_strain_energy = cquadx_strain_energy
-
-    @ctetra_strain_energy.setter
-    def ctria3_strain_energy(self, ctria3_strain_energy):
-        self.deprecated('model.ctria3_strain_energy', 'model.op2_results.strain_energy.ctria3_strain_energy', '1.4')
-        self.op2_results.strain_energy.ctria3_strain_energy = ctria3_strain_energy
-    @ctria6_strain_energy.setter
-    def ctria6_strain_energy(self, ctria6_strain_energy):
-        self.deprecated('model.ctria6_strain_energy', 'model.op2_results.strain_energy.ctria6_strain_energy', '1.4')
-        self.op2_results.strain_energy.ctria6_strain_energy = ctria6_strain_energy
-    @ctriar_strain_energy.setter
-    def ctriar_strain_energy(self, ctriar_strain_energy):
-        self.deprecated('model.ctriar_strain_energy', 'model.op2_results.strain_energy.ctriar_strain_energy', '1.4')
-        self.op2_results.strain_energy.ctriar_strain_energy = ctriar_strain_energy
-    @ctetra_strain_energy.setter
-    def ctriax_strain_energy(self, ctriax_strain_energy):
-        self.deprecated('model.celas2_strain_energy', 'model.op2_results.strain_energy.celas2_strain_energy', '1.4')
-        self.op2_results.strain_energy.ctriax_strain_energy = ctriax_strain_energy
-    @ctetra_strain_energy.setter
-    def ctriax6_strain_energy(self, ctriax6_strain_energy):
-        self.deprecated('model.celas2_strain_energy', 'model.op2_results.strain_energy.celas2_strain_energy', '1.4')
-        self.op2_results.strain_energy.ctriax6_strain_energy = ctriax6_strain_energy
-
-    @ctetra_strain_energy.setter
-    def ctetra_strain_energy(self, ctetra_strain_energy):
-        self.deprecated('model.ctetra_strain_energy', 'model.op2_results.strain_energy.ctetra_strain_energy', '1.4')
-        self.op2_results.strain_energy.ctetra_strain_energy = ctetra_strain_energy
-    @chexa_strain_energy.setter
-    def chexa_strain_energy(self, chexa_strain_energy):
-        self.deprecated('model.chexa_strain_energy', 'model.op2_results.strain_energy.chexa_strain_energy', '1.4')
-        self.op2_results.strain_energy.chexa_strain_energy = chexa_strain_energy
-    @cpenta_strain_energy.setter
-    def cpenta_strain_energy(self, cpenta_strain_energy):
-        self.deprecated('model.cpenta_strain_energy', 'model.op2_results.strain_energy.cpenta_strain_energy', '1.4')
-        self.op2_results.strain_energy.cpenta_strain_energy = cpenta_strain_energy
-    @cpyram_strain_energy.setter
-    def cpyram_strain_energy(self, cpyram_strain_energy):
-        self.deprecated('model.cpyram_strain_energy', 'model.op2_results.strain_energy.cpyram_strain_energy', '1.4')
-        self.op2_results.strain_energy.cpyram_strain_energy = cpyram_strain_energy
-    @cfast_strain_energy.setter
-    def cfast_strain_energy(self, cfast_strain_energy):
-        self.deprecated('model.cfast_strain_energy', 'model.op2_results.strain_energy.cfast_strain_energy', '1.4')
-        self.op2_results.strain_energy.cfast_strain_energy = cfast_strain_energy
-    @cseam_strain_energy.setter
-    def cseam_strain_energy(self, cseam_strain_energy):
-        self.deprecated('model.cseam_strain_energy', 'model.op2_results.strain_energy.cseam_strain_energy', '1.4')
-        self.op2_results.strain_energy.cseam_strain_energy = cseam_strain_energy
-    @rbe3_strain_energy.setter
-    def rbe3_strain_energy(self, rbe3_strain_energy):
-        self.deprecated('model.rbe3_strain_energy', 'model.op2_results.strain_energy.rbe3_strain_energy', '1.4')
-        self.op2_results.strain_energy.rbe3_strain_energy = rbe3_strain_energy
+    # @cdamp1_strain_energy.setter
+    # def cdamp1_strain_energy(self, cdamp1_strain_energy):
+    #     self.deprecated('model.cdamp1_strain_energy', 'model.op2_results.strain_energy.cdamp1_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cdamp1_strain_energy = cdamp1_strain_energy
+    # @cdamp2_strain_energy.setter
+    # def cdamp2_strain_energy(self, cdamp2_strain_energy):
+    #     self.deprecated('model.cdamp2_strain_energy', 'model.op2_results.strain_energy.cdamp2_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cdamp2_strain_energy = cdamp2_strain_energy
+    # @cdamp3_strain_energy.setter
+    # def cdamp3_strain_energy(self, cdamp3_strain_energy):
+    #     self.deprecated('model.cdamp3_strain_energy', 'model.op2_results.strain_energy.cdamp3_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cdamp3_strain_energy = cdamp3_strain_energy
+    # @cdamp4_strain_energy.setter
+    # def cdamp4_strain_energy(self, cdamp4_strain_energy):
+    #     self.deprecated('model.cdamp4_strain_energy', 'model.op2_results.strain_energy.cdamp4_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cdamp4_strain_energy = cdamp4_strain_energy
+    #
+    # @cgap_strain_energy.setter
+    # def cgap_strain_energy(self, cgap_strain_energy):
+    #     self.deprecated('model.cgap_strain_energy', 'model.op2_results.strain_energy.cgap_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cgap_strain_energy = cgap_strain_energy
+    # @cbush_strain_energy.setter
+    # def cbush_strain_energy(self, cbush_strain_energy):
+    #     self.deprecated('model.cbush_strain_energy', 'model.op2_results.strain_energy.cbush_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cbush_strain_energy = cbush_strain_energy
+    #
+    # @crod_strain_energy.setter
+    # def crod_strain_energy(self, crod_strain_energy):
+    #     self.deprecated('model.crod_strain_energy', 'model.op2_results.strain_energy.crod_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.crod_strain_energy = crod_strain_energy
+    # @ctube_strain_energy.setter
+    # def ctube_strain_energy(self, ctube_strain_energy):
+    #     self.deprecated('model.ctube_strain_energy', 'model.op2_results.strain_energy.ctube_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.crod_strain_energy = ctube_strain_energy
+    # @conrod_strain_energy.setter
+    # def conrod_strain_energy(self, conrod_strain_energy):
+    #     self.deprecated('model.conrod_strain_energy', 'model.op2_results.strain_energy.conrod_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.conrod_strain_energy = conrod_strain_energy
+    #
+    # @cquad4_strain_energy.setter
+    # def cquad4_strain_energy(self, cquad4_strain_energy):
+    #     self.deprecated('model.cquad4_strain_energy', 'model.op2_results.strain_energy.cquad4_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cquad4_strain_energy = cquad4_strain_energy
+    # @cquad8_strain_energy.setter
+    # def cquad8_strain_energy(self, cquad8_strain_energy):
+    #     self.deprecated('model.cquad8_strain_energy', 'model.op2_results.strain_energy.cquad8_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cquad8_strain_energy = cquad8_strain_energy
+    # @cquadr_strain_energy.setter
+    # def cquadr_strain_energy(self, cquadr_strain_energy):
+    #     self.deprecated('model.cquadr_strain_energy', 'model.op2_results.strain_energy.cquadr_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cquadr_strain_energy = cquadr_strain_energy
+    # @cquadx_strain_energy.setter
+    # def cquadx_strain_energy(self, cquadx_strain_energy):
+    #     self.deprecated('model.cquadx_strain_energy', 'model.op2_results.strain_energy.cquadx_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cquadx_strain_energy = cquadx_strain_energy
+    #
+    # @ctetra_strain_energy.setter
+    # def ctria3_strain_energy(self, ctria3_strain_energy):
+    #     self.deprecated('model.ctria3_strain_energy', 'model.op2_results.strain_energy.ctria3_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.ctria3_strain_energy = ctria3_strain_energy
+    # @ctria6_strain_energy.setter
+    # def ctria6_strain_energy(self, ctria6_strain_energy):
+    #     self.deprecated('model.ctria6_strain_energy', 'model.op2_results.strain_energy.ctria6_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.ctria6_strain_energy = ctria6_strain_energy
+    # @ctriar_strain_energy.setter
+    # def ctriar_strain_energy(self, ctriar_strain_energy):
+    #     self.deprecated('model.ctriar_strain_energy', 'model.op2_results.strain_energy.ctriar_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.ctriar_strain_energy = ctriar_strain_energy
+    # @ctetra_strain_energy.setter
+    # def ctriax_strain_energy(self, ctriax_strain_energy):
+    #     self.deprecated('model.celas2_strain_energy', 'model.op2_results.strain_energy.celas2_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.ctriax_strain_energy = ctriax_strain_energy
+    # @ctetra_strain_energy.setter
+    # def ctriax6_strain_energy(self, ctriax6_strain_energy):
+    #     self.deprecated('model.celas2_strain_energy', 'model.op2_results.strain_energy.celas2_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.ctriax6_strain_energy = ctriax6_strain_energy
+    #
+    # @ctetra_strain_energy.setter
+    # def ctetra_strain_energy(self, ctetra_strain_energy):
+    #     self.deprecated('model.ctetra_strain_energy', 'model.op2_results.strain_energy.ctetra_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.ctetra_strain_energy = ctetra_strain_energy
+    # @chexa_strain_energy.setter
+    # def chexa_strain_energy(self, chexa_strain_energy):
+    #     self.deprecated('model.chexa_strain_energy', 'model.op2_results.strain_energy.chexa_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.chexa_strain_energy = chexa_strain_energy
+    # @cpenta_strain_energy.setter
+    # def cpenta_strain_energy(self, cpenta_strain_energy):
+    #     self.deprecated('model.cpenta_strain_energy', 'model.op2_results.strain_energy.cpenta_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cpenta_strain_energy = cpenta_strain_energy
+    # @cpyram_strain_energy.setter
+    # def cpyram_strain_energy(self, cpyram_strain_energy):
+    #     self.deprecated('model.cpyram_strain_energy', 'model.op2_results.strain_energy.cpyram_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cpyram_strain_energy = cpyram_strain_energy
+    # @cfast_strain_energy.setter
+    # def cfast_strain_energy(self, cfast_strain_energy):
+    #     self.deprecated('model.cfast_strain_energy', 'model.op2_results.strain_energy.cfast_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cfast_strain_energy = cfast_strain_energy
+    # @cseam_strain_energy.setter
+    # def cseam_strain_energy(self, cseam_strain_energy):
+    #     self.deprecated('model.cseam_strain_energy', 'model.op2_results.strain_energy.cseam_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.cseam_strain_energy = cseam_strain_energy
+    # @rbe3_strain_energy.setter
+    # def rbe3_strain_energy(self, rbe3_strain_energy):
+    #     self.deprecated('model.rbe3_strain_energy', 'model.op2_results.strain_energy.rbe3_strain_energy', '1.4')
+    #     self.op2_results.strain_energy.rbe3_strain_energy = rbe3_strain_energy
     # ------------------------------------------------------------------
     # Stress - Getter
-    @celas1_stress.setter
-    def celas1_stress(self, celas1_stress):
-        self.deprecated('model.celas1_stress', 'model.op2_results.stress.celas1_stress', '1.4')
-        self.op2_results.stress.celas1_stress = celas1_stress
-    @celas2_stress.setter
-    def celas2_stress(self, celas2_stress):
-        self.deprecated('model.celas2_stress', 'model.op2_results.stress.celas2_stress', '1.4')
-        self.op2_results.stress.celas2_stress = celas2_stress
-    @celas3_stress.setter
-    def celas3_stress(self, celas3_stress):
-        self.deprecated('model.celas3_stress', 'model.op2_results.stress.celas3_stress', '1.4')
-        self.op2_results.stress.celas3_stress = celas3_stress
-    @celas4_stress.setter
-    def celas4_stress(self, celas4_stress):
-        self.deprecated('model.celas4_stress', 'model.op2_results.stress.celas4_stress', '1.4')
-        self.op2_results.stress.celas4_stress = celas4_stress
-
-    @cbush_stress.setter
-    def cbush_stress(self, cbush_stress):
-        self.deprecated('model.cbush_stress', 'model.op2_results.stress.cbush_stress', '1.4')
-        self.op2_results.stress.cbush_stress = cbush_stress
-
-    @crod_stress.setter
-    def crod_stress(self, crod_stress):
-        self.deprecated('model.crod_stress', 'model.op2_results.stress.crod_stress', '1.4')
-        self.op2_results.stress.crod_stress = crod_stress
-    @ctube_stress.setter
-    def ctube_stress(self, ctube_stress):
-        self.deprecated('model.ctube_stress', 'model.op2_results.stress.ctube_stress', '1.4')
-        self.op2_results.stress.crod_stress = ctube_stress
-    @conrod_stress.setter
-    def conrod_stress(self, conrod_stress):
-        self.deprecated('model.conrod_stress', 'model.op2_results.stress.conrod_stress', '1.4')
-        self.op2_results.stress.conrod_stress = conrod_stress
-
-    @cquad4_stress.setter
-    def cquad4_stress(self, cquad4_stress):
-        self.deprecated('model.cquad4_stress', 'model.op2_results.stress.cquad4_stress', '1.4')
-        self.op2_results.stress.cquad4_stress = cquad4_stress
-    @cquad8_stress.setter
-    def cquad8_stress(self, cquad8_stress):
-        self.deprecated('model.cquad8_stress', 'model.op2_results.stress.cquad8_stress', '1.4')
-        self.op2_results.stress.cquad8_stress = cquad8_stress
-    @cquadr_stress.setter
-    def cquadr_stress(self, cquadr_stress):
-        self.deprecated('model.cquadr_stress', 'model.op2_results.stress.cquadr_stress', '1.4')
-        self.op2_results.stress.cquadr_stress = cquadr_stress
-
-    @ctria3_stress.setter
-    def ctria3_stress(self, ctria3_stress):
-        self.deprecated('model.ctria3_stress', 'model.op2_results.stress.ctria3_stress', '1.4')
-        self.op2_results.stress.ctria3_stress = ctria3_stress
-    @ctria6_stress.setter
-    def ctria6_stress(self, ctria6_stress):
-        self.deprecated('model.ctria6_stress', 'model.op2_results.stress.ctria6_stress', '1.4')
-        self.op2_results.stress.ctria6_stress = ctria6_stress
-    @ctriar_stress.setter
-    def ctriar_stress(self, ctriar_stress):
-        self.deprecated('model.ctriar_stress', 'model.op2_results.stress.ctriar_stress', '1.4')
-        self.op2_results.stress.ctriar_stress = ctriar_stress
-    @ctriax_stress.setter
-    def ctriax_stress(self, ctriax_stress):
-        self.deprecated('model.ctriax_stress', 'model.op2_results.stress.ctriax_stress', '1.4')
-        self.op2_results.stress.ctriax_stress = ctriax_stress
-
-    @ctetra_stress.setter
-    def ctetra_stress(self, ctetra_stress):
-        self.deprecated('model.ctetra_stress', 'model.op2_results.stress.ctetra_stress', '1.4')
-        self.op2_results.stress.ctetra_stress = ctetra_stress
-    @chexa_stress.setter
-    def chexa_stress(self, chexa_stress):
-        self.deprecated('model.chexa_stress', 'model.op2_results.stress.chexa_stress', '1.4')
-        self.op2_results.stress.chexa_stress = chexa_stress
-    @cpenta_stress.setter
-    def cpenta_stress(self, cpenta_stress):
-        self.deprecated('model.cpenta_stress', 'model.op2_results.stress.cpenta_stress', '1.4')
-        self.op2_results.stress.cpenta_stress = cpenta_stress
-    @cpyram_stress.setter
-    def cpyram_stress(self, cpyram_stress):
-        self.deprecated('model.cpyram_stress', 'model.op2_results.stress.cpyram_stress', '1.4')
-        self.op2_results.stress.cpyram_stress = cpyram_stress
-
-    @hyperelastic_cquad4_stress.setter
-    def hyperelastic_cquad4_stress(self, hyperelastic_cquad4_stress):
-        self.deprecated('model.hyperelastic_cquad4_stress', 'model.op2_results.stress.hyperelastic_cquad4_stress', '1.4')
-        self.op2_results.stress.hyperelastic_cquad4_stress = hyperelastic_cquad4_stress
-    @cbush1d_stress_strain.setter
-    def cbush1d_stress_strain(self, cbush1d_stress_strain):
-        self.deprecated('model.cbush1d_stress_strain', 'model.op2_results.stress.cbush1d_stress_strain', '1.4')
-        self.op2_results.stress.cbush1d_stress_strain = cbush1d_stress_strain
+    # @celas1_stress.setter
+    # def celas1_stress(self, celas1_stress):
+    #     self.deprecated('model.celas1_stress', 'model.op2_results.stress.celas1_stress', '1.4')
+    #     self.op2_results.stress.celas1_stress = celas1_stress
+    # @celas2_stress.setter
+    # def celas2_stress(self, celas2_stress):
+    #     self.deprecated('model.celas2_stress', 'model.op2_results.stress.celas2_stress', '1.4')
+    #     self.op2_results.stress.celas2_stress = celas2_stress
+    # @celas3_stress.setter
+    # def celas3_stress(self, celas3_stress):
+    #     self.deprecated('model.celas3_stress', 'model.op2_results.stress.celas3_stress', '1.4')
+    #     self.op2_results.stress.celas3_stress = celas3_stress
+    # @celas4_stress.setter
+    # def celas4_stress(self, celas4_stress):
+    #     self.deprecated('model.celas4_stress', 'model.op2_results.stress.celas4_stress', '1.4')
+    #     self.op2_results.stress.celas4_stress = celas4_stress
+    #
+    # @cbush_stress.setter
+    # def cbush_stress(self, cbush_stress):
+    #     self.deprecated('model.cbush_stress', 'model.op2_results.stress.cbush_stress', '1.4')
+    #     self.op2_results.stress.cbush_stress = cbush_stress
+    #
+    # @crod_stress.setter
+    # def crod_stress(self, crod_stress):
+    #     self.deprecated('model.crod_stress', 'model.op2_results.stress.crod_stress', '1.4')
+    #     self.op2_results.stress.crod_stress = crod_stress
+    # @ctube_stress.setter
+    # def ctube_stress(self, ctube_stress):
+    #     self.deprecated('model.ctube_stress', 'model.op2_results.stress.ctube_stress', '1.4')
+    #     self.op2_results.stress.crod_stress = ctube_stress
+    # @conrod_stress.setter
+    # def conrod_stress(self, conrod_stress):
+    #     self.deprecated('model.conrod_stress', 'model.op2_results.stress.conrod_stress', '1.4')
+    #     self.op2_results.stress.conrod_stress = conrod_stress
+    #
+    # @cquad4_stress.setter
+    # def cquad4_stress(self, cquad4_stress):
+    #     self.deprecated('model.cquad4_stress', 'model.op2_results.stress.cquad4_stress', '1.4')
+    #     self.op2_results.stress.cquad4_stress = cquad4_stress
+    # @cquad8_stress.setter
+    # def cquad8_stress(self, cquad8_stress):
+    #     self.deprecated('model.cquad8_stress', 'model.op2_results.stress.cquad8_stress', '1.4')
+    #     self.op2_results.stress.cquad8_stress = cquad8_stress
+    # @cquadr_stress.setter
+    # def cquadr_stress(self, cquadr_stress):
+    #     self.deprecated('model.cquadr_stress', 'model.op2_results.stress.cquadr_stress', '1.4')
+    #     self.op2_results.stress.cquadr_stress = cquadr_stress
+    #
+    # @ctria3_stress.setter
+    # def ctria3_stress(self, ctria3_stress):
+    #     self.deprecated('model.ctria3_stress', 'model.op2_results.stress.ctria3_stress', '1.4')
+    #     self.op2_results.stress.ctria3_stress = ctria3_stress
+    # @ctria6_stress.setter
+    # def ctria6_stress(self, ctria6_stress):
+    #     self.deprecated('model.ctria6_stress', 'model.op2_results.stress.ctria6_stress', '1.4')
+    #     self.op2_results.stress.ctria6_stress = ctria6_stress
+    # @ctriar_stress.setter
+    # def ctriar_stress(self, ctriar_stress):
+    #     self.deprecated('model.ctriar_stress', 'model.op2_results.stress.ctriar_stress', '1.4')
+    #     self.op2_results.stress.ctriar_stress = ctriar_stress
+    # @ctriax_stress.setter
+    # def ctriax_stress(self, ctriax_stress):
+    #     self.deprecated('model.ctriax_stress', 'model.op2_results.stress.ctriax_stress', '1.4')
+    #     self.op2_results.stress.ctriax_stress = ctriax_stress
+    #
+    # @ctetra_stress.setter
+    # def ctetra_stress(self, ctetra_stress):
+    #     self.deprecated('model.ctetra_stress', 'model.op2_results.stress.ctetra_stress', '1.4')
+    #     self.op2_results.stress.ctetra_stress = ctetra_stress
+    # @chexa_stress.setter
+    # def chexa_stress(self, chexa_stress):
+    #     self.deprecated('model.chexa_stress', 'model.op2_results.stress.chexa_stress', '1.4')
+    #     self.op2_results.stress.chexa_stress = chexa_stress
+    # @cpenta_stress.setter
+    # def cpenta_stress(self, cpenta_stress):
+    #     self.deprecated('model.cpenta_stress', 'model.op2_results.stress.cpenta_stress', '1.4')
+    #     self.op2_results.stress.cpenta_stress = cpenta_stress
+    # @cpyram_stress.setter
+    # def cpyram_stress(self, cpyram_stress):
+    #     self.deprecated('model.cpyram_stress', 'model.op2_results.stress.cpyram_stress', '1.4')
+    #     self.op2_results.stress.cpyram_stress = cpyram_stress
+    #
+    # @hyperelastic_cquad4_stress.setter
+    # def hyperelastic_cquad4_stress(self, hyperelastic_cquad4_stress):
+    #     self.deprecated('model.hyperelastic_cquad4_stress', 'model.op2_results.stress.hyperelastic_cquad4_stress', '1.4')
+    #     self.op2_results.stress.hyperelastic_cquad4_stress = hyperelastic_cquad4_stress
+    # @cbush1d_stress_strain.setter
+    # def cbush1d_stress_strain(self, cbush1d_stress_strain):
+    #     self.deprecated('model.cbush1d_stress_strain', 'model.op2_results.stress.cbush1d_stress_strain', '1.4')
+    #     self.op2_results.stress.cbush1d_stress_strain = cbush1d_stress_strain
 
     #-------------------------------------------------------------------
     # Strain - Getter
@@ -1047,58 +1045,58 @@ class OP2_F06_Common:
 
     # ------------------------------------------------------------------
     # Force - Getter
-    @property
-    def celas1_force(self):
-        self.deprecated('model.celas1_force', 'model.op2_results.force.celas1_force', '1.4')
-        return self.op2_results.force.celas1_force
-    @property
-    def celas2_force(self):
-        self.deprecated('model.celas2_force', 'model.op2_results.force.celas2_force', '1.4')
-        return self.op2_results.force.celas2_force
-    @property
-    def celas3_force(self):
-        self.deprecated('model.celas3_force', 'model.op2_results.force.celas3_force', '1.4')
-        return self.op2_results.force.celas3_force
-    @property
-    def celas4_force(self):
-        self.deprecated('model.celas4_force', 'model.op2_results.force.celas4_force', '1.4')
-        return self.op2_results.force.celas4_force
-
-    @property
-    def cdamp1_force(self):
-        self.deprecated('model.cdamp1_force', 'model.op2_results.force.cdamp1_force', '1.4')
-        return self.op2_results.force.cdamp1_force
-    @property
-    def cdamp2_force(self):
-        self.deprecated('model.cdamp2_force', 'model.op2_results.force.cdamp2_force', '1.4')
-        return self.op2_results.force.cdamp2_force
-    @property
-    def cdamp3_force(self):
-        self.deprecated('model.cdamp3_force', 'model.op2_results.force.cdamp3_force', '1.4')
-        return self.op2_results.force.cdamp3_force
-    @property
-    def cdamp4_force(self):
-        self.deprecated('model.cdamp4_force', 'model.op2_results.force.cdamp4_force', '1.4')
-        return self.op2_results.force.cdamp4_force
+    # @property
+    # def celas1_force(self):
+    #     self.deprecated('model.celas1_force', 'model.op2_results.force.celas1_force', '1.4')
+    #     return self.op2_results.force.celas1_force
+    # @property
+    # def celas2_force(self):
+    #     self.deprecated('model.celas2_force', 'model.op2_results.force.celas2_force', '1.4')
+    #     return self.op2_results.force.celas2_force
+    # @property
+    # def celas3_force(self):
+    #     self.deprecated('model.celas3_force', 'model.op2_results.force.celas3_force', '1.4')
+    #     return self.op2_results.force.celas3_force
+    # @property
+    # def celas4_force(self):
+    #     self.deprecated('model.celas4_force', 'model.op2_results.force.celas4_force', '1.4')
+    #     return self.op2_results.force.celas4_force
+    #
+    # @property
+    # def cdamp1_force(self):
+    #     self.deprecated('model.cdamp1_force', 'model.op2_results.force.cdamp1_force', '1.4')
+    #     return self.op2_results.force.cdamp1_force
+    # @property
+    # def cdamp2_force(self):
+    #     self.deprecated('model.cdamp2_force', 'model.op2_results.force.cdamp2_force', '1.4')
+    #     return self.op2_results.force.cdamp2_force
+    # @property
+    # def cdamp3_force(self):
+    #     self.deprecated('model.cdamp3_force', 'model.op2_results.force.cdamp3_force', '1.4')
+    #     return self.op2_results.force.cdamp3_force
+    # @property
+    # def cdamp4_force(self):
+    #     self.deprecated('model.cdamp4_force', 'model.op2_results.force.cdamp4_force', '1.4')
+    #     return self.op2_results.force.cdamp4_force
 
     # ------------------------------------------------------------------
     # Force - Setter
-    @celas1_force.setter
-    def celas1_force(self, celas1_force):
-        self.deprecated('model.cdamp1_force', 'model.op2_results.force.cdamp1_force', '1.4')
-        self.op2_results.force.celas1_force = celas1_force
-    @celas2_force.setter
-    def celas2_force(self, celas2_force):
-        self.deprecated('model.celas2_force', 'model.op2_results.force.celas2_force', '1.4')
-        self.op2_results.force.celas2_force = celas2_force
-    @celas3_force.setter
-    def celas3_force(self, celas3_force):
-        self.deprecated('model.celas3_force', 'model.op2_results.force.celas3_force', '1.4')
-        self.op2_results.force.celas3_force = celas3_force
-    @celas4_force.setter
-    def celas4_force(self, celas4_force):
-        self.deprecated('model.celas4_force', 'model.op2_results.force.celas4_force', '1.4')
-        self.op2_results.force.celas4_force = celas4_force
+    # @celas1_force.setter
+    # def celas1_force(self, celas1_force):
+    #     self.deprecated('model.cdamp1_force', 'model.op2_results.force.cdamp1_force', '1.4')
+    #     self.op2_results.force.celas1_force = celas1_force
+    # @celas2_force.setter
+    # def celas2_force(self, celas2_force):
+    #     self.deprecated('model.celas2_force', 'model.op2_results.force.celas2_force', '1.4')
+    #     self.op2_results.force.celas2_force = celas2_force
+    # @celas3_force.setter
+    # def celas3_force(self, celas3_force):
+    #     self.deprecated('model.celas3_force', 'model.op2_results.force.celas3_force', '1.4')
+    #     self.op2_results.force.celas3_force = celas3_force
+    # @celas4_force.setter
+    # def celas4_force(self, celas4_force):
+    #     self.deprecated('model.celas4_force', 'model.op2_results.force.celas4_force', '1.4')
+    #     self.op2_results.force.celas4_force = celas4_force
 
         #(model.cquad4_strain_energy, 'CQUAD4', True),
         #(model.cquad8_strain_energy, 'CQUAD8', True),
@@ -1137,237 +1135,237 @@ class OP2_F06_Common:
         #(model.cshear_strain_energy, 'CSHEAR', True),
         #(model.conm2_strain_energy, 'CONM2', False),
 
-    @cdamp1_force.setter
-    def cdamp1_force(self, cdamp1_force):
-        self.deprecated('model.cdamp1_force', 'model.op2_results.force.cdamp1_force', '1.4')
-        self.op2_results.force.cdamp1_force = cdamp1_force
-    @cdamp2_force.setter
-    def cdamp2_force(self, cdamp2_force):
-        self.deprecated('model.cdamp2_force', 'model.op2_results.force.cdamp2_force', '1.4')
-        self.op2_results.force.cdamp2_force = cdamp2_force
-    @cdamp3_force.setter
-    def cdamp3_force(self, cdamp3_force):
-        self.deprecated('model.cdamp3_force', 'model.op2_results.force.cdamp3_force', '1.4')
-        self.op2_results.force.cdamp3_force = cdamp3_force
-    @cdamp4_force.setter
-    def cdamp4_force(self, cdamp4_force):
-        self.deprecated('model.cdamp4_force', 'model.op2_results.force.cdamp4_force', '1.4')
-        self.op2_results.force.cdamp4_force = cdamp4_force
-
-    @property
-    def cgap_force(self):
-        self.deprecated('model.cgap_force', 'model.op2_results.force.cgap_force', '1.4')
-        return self.op2_results.force.cgap_force
-    @property
-    def cbush_force(self):
-        self.deprecated('model.cbush_force', 'model.op2_results.force.cbush_force', '1.4')
-        return self.op2_results.force.cbush_force
-    @property
-    def cweld_force(self):
-        self.deprecated('model.cweld_force', 'model.op2_results.force.cweld_force', '1.4')
-        return self.op2_results.force.cweld_force
-    @property
-    def cfast_force(self):
-        self.deprecated('model.cfast_force', 'model.op2_results.force.cfast_force', '1.4')
-        return self.op2_results.force.cfast_force
-    @property
-    def cbear_force(self):
-        self.deprecated('model.cbear_force', 'model.op2_results.force.cbear_force', '1.4')
-        return self.op2_results.force.cbear_force
-
-    @property
-    def cshear_force(self):
-        self.deprecated('model.cshear_force', 'model.op2_results.force.cshear_force', '1.4')
-        return self.op2_results.force.cshear_force
-    @property
-    def cbend_force(self):
-        self.deprecated('model.cbend_force', 'model.op2_results.force.cbend_force', '1.4')
-        return self.op2_results.force.cbend_force
-    @property
-    def cconeax_force(self):
-        self.deprecated('model.cconeax_force', 'model.op2_results.force.cconeax_force', '1.4')
-        return self.op2_results.force.cconeax_force
-
-    @property
-    def ctetra_pressure_force(self):
-        self.deprecated('model.ctetra_pressure_force', 'model.op2_results.force.ctetra_pressure_force', '1.4')
-        return self.op2_results.force.ctetra_pressure_force
-    @property
-    def cpenta_pressure_force(self):
-        self.deprecated('model.cpenta_pressure_force', 'model.op2_results.force.cpenta_pressure_force', '1.4')
-        return self.op2_results.force.cpenta_pressure_force
-    @property
-    def chexa_pressure_force(self):
-        self.deprecated('model.chexa_pressure_force', 'model.op2_results.force.chexa_pressure_force', '1.4')
-        return self.op2_results.force.chexa_pressure_force
-    @property
-    def cpyram_pressure_force(self):
-        self.deprecated('model.cpyram_pressure_force', 'model.op2_results.force.cpyram_pressure_force', '1.4')
-        return self.op2_results.force.cpyram_pressure_force
+    # @cdamp1_force.setter
+    # def cdamp1_force(self, cdamp1_force):
+    #     self.deprecated('model.cdamp1_force', 'model.op2_results.force.cdamp1_force', '1.4')
+    #     self.op2_results.force.cdamp1_force = cdamp1_force
+    # @cdamp2_force.setter
+    # def cdamp2_force(self, cdamp2_force):
+    #     self.deprecated('model.cdamp2_force', 'model.op2_results.force.cdamp2_force', '1.4')
+    #     self.op2_results.force.cdamp2_force = cdamp2_force
+    # @cdamp3_force.setter
+    # def cdamp3_force(self, cdamp3_force):
+    #     self.deprecated('model.cdamp3_force', 'model.op2_results.force.cdamp3_force', '1.4')
+    #     self.op2_results.force.cdamp3_force = cdamp3_force
+    # @cdamp4_force.setter
+    # def cdamp4_force(self, cdamp4_force):
+    #     self.deprecated('model.cdamp4_force', 'model.op2_results.force.cdamp4_force', '1.4')
+    #     self.op2_results.force.cdamp4_force = cdamp4_force
+    #
+    # @property
+    # def cgap_force(self):
+    #     self.deprecated('model.cgap_force', 'model.op2_results.force.cgap_force', '1.4')
+    #     return self.op2_results.force.cgap_force
+    # @property
+    # def cbush_force(self):
+    #     self.deprecated('model.cbush_force', 'model.op2_results.force.cbush_force', '1.4')
+    #     return self.op2_results.force.cbush_force
+    # @property
+    # def cweld_force(self):
+    #     self.deprecated('model.cweld_force', 'model.op2_results.force.cweld_force', '1.4')
+    #     return self.op2_results.force.cweld_force
+    # @property
+    # def cfast_force(self):
+    #     self.deprecated('model.cfast_force', 'model.op2_results.force.cfast_force', '1.4')
+    #     return self.op2_results.force.cfast_force
+    # @property
+    # def cbear_force(self):
+    #     self.deprecated('model.cbear_force', 'model.op2_results.force.cbear_force', '1.4')
+    #     return self.op2_results.force.cbear_force
+    #
+    # @property
+    # def cshear_force(self):
+    #     self.deprecated('model.cshear_force', 'model.op2_results.force.cshear_force', '1.4')
+    #     return self.op2_results.force.cshear_force
+    # @property
+    # def cbend_force(self):
+    #     self.deprecated('model.cbend_force', 'model.op2_results.force.cbend_force', '1.4')
+    #     return self.op2_results.force.cbend_force
+    # @property
+    # def cconeax_force(self):
+    #     self.deprecated('model.cconeax_force', 'model.op2_results.force.cconeax_force', '1.4')
+    #     return self.op2_results.force.cconeax_force
+    #
+    # @property
+    # def ctetra_pressure_force(self):
+    #     self.deprecated('model.ctetra_pressure_force', 'model.op2_results.force.ctetra_pressure_force', '1.4')
+    #     return self.op2_results.force.ctetra_pressure_force
+    # @property
+    # def cpenta_pressure_force(self):
+    #     self.deprecated('model.cpenta_pressure_force', 'model.op2_results.force.cpenta_pressure_force', '1.4')
+    #     return self.op2_results.force.cpenta_pressure_force
+    # @property
+    # def chexa_pressure_force(self):
+    #     self.deprecated('model.chexa_pressure_force', 'model.op2_results.force.chexa_pressure_force', '1.4')
+    #     return self.op2_results.force.chexa_pressure_force
+    # @property
+    # def cpyram_pressure_force(self):
+    #     self.deprecated('model.cpyram_pressure_force', 'model.op2_results.force.cpyram_pressure_force', '1.4')
+    #     return self.op2_results.force.cpyram_pressure_force
 
     # --------------------------------------------------
     # Force - Setter
-    @cgap_force.setter
-    def cgap_force(self, cgap_force):
-        self.deprecated('model.cgap_force', 'model.op2_results.force.cgap_force', '1.4')
-        self.op2_results.force.cgap_force = cgap_force
-    @cbush_force.setter
-    def cbush_force(self, cbush_force):
-        self.deprecated('model.cbush_force', 'model.op2_results.force.cbush_force', '1.4')
-        self.op2_results.force.cbush_force = cbush_force
-    @cweld_force.setter
-    def cweld_force(self, cweld_force):
-        self.deprecated('model.cweld_force', 'model.op2_results.force.cweld_force', '1.4')
-        self.op2_results.force.cweld_force = cweld_force
-    @cfast_force.setter
-    def cfast_force(self, cfast_force):
-        self.deprecated('model.cfast_force', 'model.op2_results.force.cfast_force', '1.4')
-        self.op2_results.force.cfast_force = cfast_force
-    @cbear_force.setter
-    def cbear_force(self, cbear_force):
-        self.deprecated('model.cbear_force', 'model.op2_results.force.cbear_force', '1.4')
-        self.op2_results.force.cbear_force = cbear_force
-
-    @cshear_force.setter
-    def cshear_force(self, cshear_force):
-        self.deprecated('model.cshear_force', 'model.op2_results.force.cshear_force', '1.4')
-        self.op2_results.force.cshear_force = cshear_force
-    @cbend_force.setter
-    def cbend_force(self, cbend_force):
-        self.deprecated('model.cbend_force', 'model.op2_results.force.cbend_force', '1.4')
-        self.op2_results.force.cbend_force = cbend_force
-    @cconeax_force.setter
-    def cconeax_force(self, cconeax_force):
-        self.deprecated('model.cconeax_force', 'model.op2_results.force.cconeax_force', '1.4')
-        self.op2_results.force.cconeax_force = cconeax_force
-
-    @property
-    def cvisc_force(self):
-        self.deprecated('model.cvisc_force', 'model.op2_results.force.cvisc_force', '1.4')
-        return self.op2_results.force.cvisc_force
-    @cvisc_force.setter
-    def cvisc_force(self, cvisc_force):
-        self.deprecated('model.cvisc_force', 'model.op2_results.force.cvisc_force', '1.4')
-        self.op2_results.force.cvisc_force = cvisc_force
-
-    @property
-    def crod_force(self):
-        self.deprecated('model.crod_force', 'model.op2_results.force.crod_force', '1.4')
-        return self.op2_results.force.crod_force
-    @property
-    def conrod_force(self):
-        self.deprecated('model.conrod_force', 'model.op2_results.force.conrod_force', '1.4')
-        return self.op2_results.force.conrod_force
-    @property
-    def ctube_force(self):
-        self.deprecated('model.ctube_force', 'model.op2_results.force.ctube_force', '1.4')
-        return self.op2_results.force.ctube_force
-
-    @property
-    def cbeam_force(self):
-        self.deprecated('model.cbeam_force', 'model.op2_results.force.cbeam_force', '1.4')
-        return self.op2_results.force.cbeam_force
-    @property
-    def cbar_force(self):
-        self.deprecated('model.cbar_force', 'model.op2_results.force.cbar_force', '1.4')
-        return self.op2_results.force.cbar_force
-    @property
-    def cbar_force_10nodes(self):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        return self.op2_results.force.cbar_force
-
-    @property
-    def ctria3_force(self):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        return self.op2_results.force.ctria3_force
-    @property
-    def ctria6_force(self):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        return self.op2_results.force.ctria6_force
-    @property
-    def ctriar_force(self):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        return self.op2_results.force.ctriar_force
-    @property
-    def cquad4_force(self):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        return self.op2_results.force.cquad4_force
-    @property
-    def cquad8_force(self):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        return self.op2_results.force.cquad8_force
-    @property
-    def cquadr_force(self):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        return self.op2_results.force.cquadr_force
-
-    @crod_force.setter
-    def crod_force(self, crod_force):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        self.op2_results.force.crod_force = crod_force
-    @conrod_force.setter
-    def conrod_force(self, conrod_force):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        self.op2_results.force.conrod_force = conrod_force
-    @ctube_force.setter
-    def ctube_force(self, ctube_force):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        self.op2_results.force.ctube_force = ctube_force
-
-    @cbeam_force.setter
-    def cbeam_force(self, cbeam_force):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        self.op2_results.force.cbeam_force = cbeam_force
-    @cbar_force.setter
-    def cbar_force(self, cbar_force):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        self.op2_results.force.cbar_force = cbar_force
-    @cbar_force_10nodes.setter
-    def cbar_force_10nodes(self, cbar_force_10nodes):
-        self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
-        self.op2_results.force.cbar_force = cbar_force_10nodes
-
-    @ctria3_force.setter
-    def ctria3_force(self, ctria3_force):
-        self.deprecated('model.ctria3_force', 'model.op2_results.force.ctria3_force', '1.4')
-        self.op2_results.force.ctria3_force = ctria3_force
-    @ctria6_force.setter
-    def ctria6_force(self, ctria6_force):
-        self.deprecated('model.ctria6_force', 'model.op2_results.force.ctria6_force', '1.4')
-        self.op2_results.force.ctria6_force = ctria6_force
-    @ctriar_force.setter
-    def ctriar_force(self, ctriar_force):
-        self.deprecated('model.ctriar_force', 'model.op2_results.force.ctriar_force', '1.4')
-        self.op2_results.force.ctriar_force = ctriar_force
-    @cquad4_force.setter
-    def cquad4_force(self, cquad4_force):
-        self.deprecated('model.cquad4_force', 'model.op2_results.force.cquad4_force', '1.4')
-        self.op2_results.force.cquad4_force = cquad4_force
-    @cquad8_force.setter
-    def cquad8_force(self, cquad8_force):
-        self.deprecated('model.cquad8_force', 'model.op2_results.force.cquad8_force', '1.4')
-        self.op2_results.force.cquad8_force = cquad8_force
-    @cquadr_force.setter
-    def cquadr_force(self, cquadr_force):
-        self.deprecated('model.cquadr_force', 'model.op2_results.force.cquadr_force', '1.4')
-        self.op2_results.force.cquadr_force = cquadr_force
-
-    @ctetra_pressure_force.setter
-    def ctetra_pressure_force(self, ctetra_pressure_force):
-        self.deprecated('model.ctetra_pressure_force', 'model.op2_results.force.ctetra_pressure_force', '1.4')
-        self.op2_results.force.ctetra_pressure_force = ctetra_pressure_force
-    @cpenta_pressure_force.setter
-    def cpenta_pressure_force(self, cpenta_pressure_force):
-        self.deprecated('model.cpenta_pressure_force', 'model.op2_results.force.cpenta_pressure_force', '1.4')
-        self.op2_results.force.cpenta_pressure_force = cpenta_pressure_force
-    @chexa_pressure_force.setter
-    def chexa_pressure_force(self, chexa_pressure_force):
-        self.deprecated('model.chexa_pressure_force', 'model.op2_results.force.chexa_pressure_force', '1.4')
-        self.op2_results.force.chexa_pressure_force = chexa_pressure_force
-    @cpyram_pressure_force.setter
-    def cpyram_pressure_force(self, cpyram_pressure_force):
-        self.deprecated('model.cpyram_pressure_force', 'model.op2_results.force.cpyram_pressure_force', '1.4')
-        self.op2_results.force.cpyram_pressure_force = cpyram_pressure_force
+    # @cgap_force.setter
+    # def cgap_force(self, cgap_force):
+    #     self.deprecated('model.cgap_force', 'model.op2_results.force.cgap_force', '1.4')
+    #     self.op2_results.force.cgap_force = cgap_force
+    # @cbush_force.setter
+    # def cbush_force(self, cbush_force):
+    #     self.deprecated('model.cbush_force', 'model.op2_results.force.cbush_force', '1.4')
+    #     self.op2_results.force.cbush_force = cbush_force
+    # @cweld_force.setter
+    # def cweld_force(self, cweld_force):
+    #     self.deprecated('model.cweld_force', 'model.op2_results.force.cweld_force', '1.4')
+    #     self.op2_results.force.cweld_force = cweld_force
+    # @cfast_force.setter
+    # def cfast_force(self, cfast_force):
+    #     self.deprecated('model.cfast_force', 'model.op2_results.force.cfast_force', '1.4')
+    #     self.op2_results.force.cfast_force = cfast_force
+    # @cbear_force.setter
+    # def cbear_force(self, cbear_force):
+    #     self.deprecated('model.cbear_force', 'model.op2_results.force.cbear_force', '1.4')
+    #     self.op2_results.force.cbear_force = cbear_force
+    #
+    # @cshear_force.setter
+    # def cshear_force(self, cshear_force):
+    #     self.deprecated('model.cshear_force', 'model.op2_results.force.cshear_force', '1.4')
+    #     self.op2_results.force.cshear_force = cshear_force
+    # @cbend_force.setter
+    # def cbend_force(self, cbend_force):
+    #     self.deprecated('model.cbend_force', 'model.op2_results.force.cbend_force', '1.4')
+    #     self.op2_results.force.cbend_force = cbend_force
+    # @cconeax_force.setter
+    # def cconeax_force(self, cconeax_force):
+    #     self.deprecated('model.cconeax_force', 'model.op2_results.force.cconeax_force', '1.4')
+    #     self.op2_results.force.cconeax_force = cconeax_force
+    #
+    # @property
+    # def cvisc_force(self):
+    #     self.deprecated('model.cvisc_force', 'model.op2_results.force.cvisc_force', '1.4')
+    #     return self.op2_results.force.cvisc_force
+    # @cvisc_force.setter
+    # def cvisc_force(self, cvisc_force):
+    #     self.deprecated('model.cvisc_force', 'model.op2_results.force.cvisc_force', '1.4')
+    #     self.op2_results.force.cvisc_force = cvisc_force
+    #
+    # @property
+    # def crod_force(self):
+    #     self.deprecated('model.crod_force', 'model.op2_results.force.crod_force', '1.4')
+    #     return self.op2_results.force.crod_force
+    # @property
+    # def conrod_force(self):
+    #     self.deprecated('model.conrod_force', 'model.op2_results.force.conrod_force', '1.4')
+    #     return self.op2_results.force.conrod_force
+    # @property
+    # def ctube_force(self):
+    #     self.deprecated('model.ctube_force', 'model.op2_results.force.ctube_force', '1.4')
+    #     return self.op2_results.force.ctube_force
+    #
+    # @property
+    # def cbeam_force(self):
+    #     self.deprecated('model.cbeam_force', 'model.op2_results.force.cbeam_force', '1.4')
+    #     return self.op2_results.force.cbeam_force
+    # @property
+    # def cbar_force(self):
+    #     self.deprecated('model.cbar_force', 'model.op2_results.force.cbar_force', '1.4')
+    #     return self.op2_results.force.cbar_force
+    # @property
+    # def cbar_force_10nodes(self):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     return self.op2_results.force.cbar_force
+    #
+    # @property
+    # def ctria3_force(self):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     return self.op2_results.force.ctria3_force
+    # @property
+    # def ctria6_force(self):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     return self.op2_results.force.ctria6_force
+    # @property
+    # def ctriar_force(self):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     return self.op2_results.force.ctriar_force
+    # @property
+    # def cquad4_force(self):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     return self.op2_results.force.cquad4_force
+    # @property
+    # def cquad8_force(self):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     return self.op2_results.force.cquad8_force
+    # @property
+    # def cquadr_force(self):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     return self.op2_results.force.cquadr_force
+    #
+    # @crod_force.setter
+    # def crod_force(self, crod_force):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     self.op2_results.force.crod_force = crod_force
+    # @conrod_force.setter
+    # def conrod_force(self, conrod_force):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     self.op2_results.force.conrod_force = conrod_force
+    # @ctube_force.setter
+    # def ctube_force(self, ctube_force):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     self.op2_results.force.ctube_force = ctube_force
+    #
+    # @cbeam_force.setter
+    # def cbeam_force(self, cbeam_force):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     self.op2_results.force.cbeam_force = cbeam_force
+    # @cbar_force.setter
+    # def cbar_force(self, cbar_force):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     self.op2_results.force.cbar_force = cbar_force
+    # @cbar_force_10nodes.setter
+    # def cbar_force_10nodes(self, cbar_force_10nodes):
+    #     self.deprecated('model.cbar_force_10nodes', 'model.op2_results.force.cbar_force_10nodes', '1.4')
+    #     self.op2_results.force.cbar_force = cbar_force_10nodes
+    #
+    # @ctria3_force.setter
+    # def ctria3_force(self, ctria3_force):
+    #     self.deprecated('model.ctria3_force', 'model.op2_results.force.ctria3_force', '1.4')
+    #     self.op2_results.force.ctria3_force = ctria3_force
+    # @ctria6_force.setter
+    # def ctria6_force(self, ctria6_force):
+    #     self.deprecated('model.ctria6_force', 'model.op2_results.force.ctria6_force', '1.4')
+    #     self.op2_results.force.ctria6_force = ctria6_force
+    # @ctriar_force.setter
+    # def ctriar_force(self, ctriar_force):
+    #     self.deprecated('model.ctriar_force', 'model.op2_results.force.ctriar_force', '1.4')
+    #     self.op2_results.force.ctriar_force = ctriar_force
+    # @cquad4_force.setter
+    # def cquad4_force(self, cquad4_force):
+    #     self.deprecated('model.cquad4_force', 'model.op2_results.force.cquad4_force', '1.4')
+    #     self.op2_results.force.cquad4_force = cquad4_force
+    # @cquad8_force.setter
+    # def cquad8_force(self, cquad8_force):
+    #     self.deprecated('model.cquad8_force', 'model.op2_results.force.cquad8_force', '1.4')
+    #     self.op2_results.force.cquad8_force = cquad8_force
+    # @cquadr_force.setter
+    # def cquadr_force(self, cquadr_force):
+    #     self.deprecated('model.cquadr_force', 'model.op2_results.force.cquadr_force', '1.4')
+    #     self.op2_results.force.cquadr_force = cquadr_force
+    #
+    # @ctetra_pressure_force.setter
+    # def ctetra_pressure_force(self, ctetra_pressure_force):
+    #     self.deprecated('model.ctetra_pressure_force', 'model.op2_results.force.ctetra_pressure_force', '1.4')
+    #     self.op2_results.force.ctetra_pressure_force = ctetra_pressure_force
+    # @cpenta_pressure_force.setter
+    # def cpenta_pressure_force(self, cpenta_pressure_force):
+    #     self.deprecated('model.cpenta_pressure_force', 'model.op2_results.force.cpenta_pressure_force', '1.4')
+    #     self.op2_results.force.cpenta_pressure_force = cpenta_pressure_force
+    # @chexa_pressure_force.setter
+    # def chexa_pressure_force(self, chexa_pressure_force):
+    #     self.deprecated('model.chexa_pressure_force', 'model.op2_results.force.chexa_pressure_force', '1.4')
+    #     self.op2_results.force.chexa_pressure_force = chexa_pressure_force
+    # @cpyram_pressure_force.setter
+    # def cpyram_pressure_force(self, cpyram_pressure_force):
+    #     self.deprecated('model.cpyram_pressure_force', 'model.op2_results.force.cpyram_pressure_force', '1.4')
+    #     self.op2_results.force.cpyram_pressure_force = cpyram_pressure_force
 
     # ------------------------------------------------------------------
     def __objects_vector_init__(self):
@@ -1469,7 +1467,6 @@ class OP2_F06_Common:
         self.nonlinear_cquad4_strain = {}
         self.nonlinear_ctria3_strain = {}
 
-
         #: OES - CELAS1 224, CELAS3 225,
         self.nonlinear_celas1_stress = {}
         self.nonlinear_celas3_stress = {}
@@ -1515,71 +1512,16 @@ class OP2_F06_Common:
         #self.applied_loads = {}       # tCode=19 thermal=0
         self.force_vectors = {}       # tCode=12 thermal=0
 
-    def _get_result_length(self, res_types, res_key):
-        """
-        gets the length of the output data so we can line up:
-
-          RealCRodStrain  - CROD
-          RealCTubeStrain - CTUBE
-
-        """
-        res_length = 0
-        for res_type in res_types:
-            if not res_type:
-                continue
-            key0 = next(iter(res_type))
-            if not isinstance(key0, integer_types) and not isinstance(res_key, integer_types):
-                if not type(key0) == type(res_key):
-                    msg = (
-                        'bad compression check...\n'
-                        'keys0=%s type(key0)=%s\n'
-                        'res_key=%s type(res_key)=%s' % (
-                            key0, type(key0), res_key, type(res_key))
-                    )
-                    raise RuntimeError(msg)
-
-            #print('res_type.keys()=%s' % res_type.keys())
-            # res_key_list = res_key[:-1] + [res_key[-1]]
-            # res_key = tuple(res_key_list)
-
-            if res_key in res_type:
-                # the res_key is
-                result = res_type[res_key]
-                class_name = result.__class__.__name__
-                res_length = max(len(class_name), res_length)
-                #print('continue')
-                #break
-                continue
-            elif len(res_type) != 0:
-                #print('  not valid')
-                # get the 0th key in the dictionary, where key0 is arbitrary
-                key0 = get_key0(res_type)
-                #print('  key0 = ', key0)
-
-                # extract displacement[0]
-                result = res_type[key0]
-
-                # get the class name
-                class_name = result.__class__.__name__
-                res_length = max(len(class_name), res_length)
-
-                if not is_release:
-                    print(' %s - results not found...key=%s' % (class_name, res_key))
-            else:  # empty result
-                #print('else')
-                pass
-        #print('res_length =', res_length)
-        return res_length
-
-    def remove_empty_results(self):
+    def remove_empty_results(self) -> None:
         table_names = self.get_table_types() + ['grid_point_weight', 'oload_resultant']
         for table_name in table_names:
             obj = self.get_result(table_name)
             if obj is None:
-                obj = self.del_result(table_name)
+                self.del_result(table_name)
             elif isinstance(obj, dict):
                 if len(obj) == 0:
-                    obj = self.del_result(table_name)
+                    self.del_result(table_name)
+                    #obj = None
                     #delattr(self, table_name)
                 else:
                     print('saving %s dict' % table_name)
@@ -1686,7 +1628,6 @@ class OP2_F06_Common:
                 if table_type in table_types[i+1:]:
                     msg += table_type + ', '
             raise AssertionError(msg)
-
         return table_types
 
     def _get_table_types_testing(self) -> list[str]:
@@ -1794,206 +1735,8 @@ class OP2_F06_Common:
         displacements[1]; RealDisplacementArray; [1, 72, 6]; [t1, t2, t3, r1, r2, r3]
 
         """
-        return _get_op2_stats(self, short=short)
+        return get_op2_stats(self, short=short)
 
 class Op2F06Attributes(OP2_F06_Common):
     def __init__(self):
         OP2_F06_Common.__init__(self)
-
-
-def _get_op2_stats(model: OP2, short: bool=False) -> str:
-    """see OP2.get_op2_stats(...)"""
-    msg = []
-    #msg += model.op2_results.responses.get_stats(short=short)
-
-    msg.extend(_write_params(model.params))
-    for key, weight in model.grid_point_weight.items():
-        msg += weight.get_stats(key, short=short)
-
-    msg += model.op2_results.psds.get_stats(short=short)
-
-    table_types = model._get_table_types_testing()
-
-    if short:
-        msg += _get_op2_stats_short(model, table_types, model.log)
-    else:
-        msg += _get_op2_stats_full(model, table_types, model.log)
-
-    if model.matrices:
-        msg.append('matrices:\n')
-        for unused_name, matrix in sorted(model.matrices.items()):
-            #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
-            msg.append('  ' + str(matrix) + '\n')
-
-    if model.matdicts:
-        msg.append('matdicts:\n')
-        for unused_name, matrix_dict in sorted(model.matdicts.items()):
-            #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
-            msg.append('  ' + str(matrix_dict) + '\n')
-    try:
-        return ''.join(msg)
-    except TypeError:
-        for msgi in msg:
-            print('TypeError...%r' % msgi.rstrip())
-            assert isinstance(msgi, str), msgi
-        raise
-    except UnicodeDecodeError:
-        for msgi in msg:
-            print('UnicodeDecodeError...%r' % msgi.rstrip())
-            assert isinstance(msgi, str), msgi
-        raise
-
-def _get_op2_stats_short(model: OP2, table_types: list[str],
-                         log: SimpleLogger) -> list[str]:
-    """helper for get_op2_stats(...)"""
-    msg = []
-    handled_previously = ['params', 'grid_point_weight', 'psds', 'cstm']
-    no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
-    for table_type in table_types:
-        #table_type_print = ''
-        if table_type in handled_previously:
-            continue
-        if table_type in ['gpdt', 'bgpdt', 'eqexin', 'monitor1', 'monitor3'] or table_type.startswith('responses.'):
-            obj = model.get_result(table_type)
-            if obj is None:
-                continue
-            elif isinstance(obj, dict):
-                msg.extend(_get_op2_results_stats_dict(obj, table_type, short=True))
-                continue
-            stats = obj.get_stats(short=True)
-            msg.extend(f'op2_results.{table_type}: ' + stats)  # TODO: a hack...not quite right...
-            continue
-
-        # # and not table_type.startswith('responses.')
-        table_type_print = 'op2_results.' + table_type if '.' in table_type else table_type
-        table = model.get_result(table_type)
-        if table_type == 'superelement_tables':
-            for key in table:
-                msg.append(f'{table_type_print}[{key}]\n')
-            continue
-
-        try:
-            sorted_tables = sorted(table.items(), key=_compare)
-        except AttributeError:
-            log.warning(f'table_type={table_type}; type(table)={type(table)}')
-            raise
-
-        for isubcase, subcase in sorted_tables:
-            class_name = subcase.__class__.__name__
-            if class_name in no_data_classes:
-                msg.append('%s[%r]\n' % (table_type_print, isubcase))
-            elif hasattr(subcase, 'data'):
-                #data = subcase.data
-                #shape = [int(i) for i in subcase.data.shape]
-                #headers = subcase.get_headers()
-                #headers_str = str(', '.join(headers))
-                #msg.append('%s[%s]; %s; %s; [%s]\n' % (
-                #table_type, isubcase, class_name, shape, headers_str))
-                msg.append('%s[%s]\n' % (table_type_print, isubcase))
-            elif table_type == 'params':  #  TODO: remove
-                msgi = str(subcase)
-            elif hasattr(subcase, 'get_stats'):
-                msgi = '%s[%s] # unvectorized\n' % (table_type_print, isubcase)
-                msg.append(msgi)
-            else:
-                msgi = 'skipping %r %s[%s]\n' % (class_name, table_type_print, isubcase)
-                msg.append(msgi)
-                #raise RuntimeError(msgi)
-    return msg
-
-def _get_op2_results_stats_dict(obj: dict[Any, Any],
-                                table_type: str, short: bool) -> list[str]:
-    msg = []
-    for key, obji in obj.items():
-        if isinstance(obji, list):
-            for iobj, objii in enumerate(obji):
-                stats = objii.get_stats(short=short)
-                msg.extend(f'op2_results.{table_type}[{key}][{iobj}]: ' + stats)
-        else:
-            stats = obji.get_stats(short=short)
-            msg.extend(f'op2_results.{table_type}[{key}]: ' + stats)
-    return msg
-
-def _get_op2_stats_full(model: OP2, table_types: list[str],
-                        log: SimpleLogger) -> list[str]:
-    """helper for get_op2_stats(...)"""
-    msg = []
-    handled_previously = ['params', 'grid_point_weight', 'psds']
-    for table_type in table_types:
-        table = model.get_result(table_type)
-        if table_type in handled_previously:
-            continue
-
-        skip_results = ('gpdt', 'bgpdt', 'eqexin', 'monitor1', 'monitor3', 'cstm')
-        if table_type in skip_results or table_type.startswith('responses.'):
-            obj = model.get_result(table_type)
-            if obj is None:
-                continue
-            elif isinstance(obj, dict):
-                msg.extend(_get_op2_results_stats_dict(obj, table_type, short=False))
-                continue
-
-            stats = obj.get_stats(short=False)
-            msg.extend(f'op2_results.{table_type}: ' + stats)  # TODO: a hack...not quite right...
-            continue
-
-        table_type_print = 'op2_results.' + table_type if '.' in table_type else table_type
-        op2_result_tables = [
-            #'vg_vf_response',
-            'superelement_tables',
-        ]
-        if table_type in op2_result_tables:
-            for key in table:
-                msg.append(f'{table_type_print}[{key}]\n')
-            continue
-
-        try:
-            for isubcase, subcase in sorted(table.items(), key=_compare):
-                class_name = subcase.__class__.__name__
-                if hasattr(subcase, 'get_stats'):
-                    try:
-                        stats = subcase.get_stats() # short=short
-                    except Exception:
-                        msgi = 'errored reading %s %s[%s]\n\n' % (
-                            class_name, table_type_print, isubcase)
-                        msg.append(msgi)
-                        raise
-                    else:
-                        msg.append(f'{table_type_print}[{isubcase}]\n')
-                        msg.extend(stats)
-                        msg.append('\n')
-                else:
-                    msgi = 'skipping %s %s[%s]\n\n' % (class_name, table_type_print, isubcase)
-                    msg.append(msgi)
-                    raise RuntimeError(msgi)
-        except Exception:
-            log.warning(f'table_type={table_type}; type(table)={type(table)}')
-            log.warning(str(table))
-            raise
-    return msg
-
-def _write_params(params: dict[str, Any]):
-    """helper for get_op2_stats(...)"""
-    if not params:
-        return []
-    msg = ['params:\n']
-    iparam = 0
-    for key, param in sorted(params.items()):
-        if len(param.values) == 1:
-            msg.append(f'  {key} = {param.values[0]!r}\n')
-        else:
-            msg.append(f'  {key} = {param.values}\n')
-        iparam += 1
-        if iparam > 10:
-            msg.append(f'  ...\n')
-            break
-    return msg
-
-COMPARE_KEYS = (int, int32, int64, str, bytes)
-def _compare(key_value):
-    """helper for get_op2_stats(...)"""
-    key = key_value[0]
-    if isinstance(key, COMPARE_KEYS):
-        return key
-    #print('key=%s type=%s' % (key, type(key)))
-    return key[0]

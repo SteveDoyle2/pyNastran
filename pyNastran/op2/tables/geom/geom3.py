@@ -35,7 +35,7 @@ class GEOM3:
             ntables > 1 and
             eid in op2.rigid_elements and
             op2.rigid_elements[eid].type == elem.type)
-        op2._add_methods._add_rigid_element_object(elem, allow_overwrites=allow_overwrites)
+        op2._add_methods.add_rigid_element_object(elem, allow_overwrites=allow_overwrites)
 
     @property
     def size(self) -> int:
@@ -387,7 +387,7 @@ class GEOM3:
             xyz = np.array([n1, n2, n3])
             force = FORCE(sid, g, f, cid=cid, xyz=xyz)
             force.validate()
-            op2._add_methods._add_load_object(force)
+            op2._add_methods.add_load_object(force)
             n += ntotal
         op2.card_count['FORCE'] = nentries
         return n
@@ -407,7 +407,7 @@ class GEOM3:
             if op2.is_debug_file:
                 op2.binary_debug.write('  FORCE1=%s\n' % str(out))
             load = FORCE1.add_op2_data([sid, g, f, n1, n2])
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += 20
         op2.card_count['FORCE1'] = nentries
         return n
@@ -426,7 +426,7 @@ class GEOM3:
             if op2.is_debug_file:
                 op2.binary_debug.write('  FORCE2=%s\n' % str(out))
             load = FORCE2.add_op2_data([sid, g, f, n1, n2, n3, n4])
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += 28
         op2.card_count['FORCE2'] = nentries
         return n
@@ -458,7 +458,7 @@ class GEOM3:
                 op2.binary_debug.write('  GRAV=%s\n' % str(out))
             #(sid, cid, a, n1, n2, n3, mb) = out
             grav = GRAV.add_op2_data(out)
-            op2._add_methods._add_load_object(grav)
+            op2._add_methods.add_load_object(grav)
             n += ntotal
         op2.card_count['GRAV'] = nentries
         return n
@@ -500,7 +500,7 @@ class GEOM3:
                     op2.binary_debug.write('       [%s,%s]\n' % (si, l1))
 
             load = LOAD(sid, s, Si, L1)
-            op2._add_methods._add_load_combination_object(load)
+            op2._add_methods.add_load_combination_object(load)
             nentries_actual += 1
             #count += 1
             #if count > 1000:
@@ -538,7 +538,7 @@ class GEOM3:
             if op2.is_debug_file:
                 op2.binary_debug.write('  LSEQ=%s\n' % str(out))
             load = LSEQ.add_op2_data(out)
-            op2._add_methods._add_lseq_object(load)
+            op2._add_methods.add_lseq_object(load)
             n += ntotal
         op2.card_count['LSEQ'] = nentries
         return n
@@ -560,7 +560,7 @@ class GEOM3:
                 op2.binary_debug.write('  MOMENT=%s\n' % str(out))
             #(sid, g, cid, m, n1, n2, n3) = out
             load = MOMENT.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += ntotal
         op2.card_count['MOMENT'] = nentries
         return n
@@ -580,7 +580,7 @@ class GEOM3:
                 op2.binary_debug.write('  MOMENT1=%s\n' % str(out))
             #(sid, g, m, n1, n2) = out
             load = MOMENT1.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += 20
         op2.card_count['MOMENT1'] = nentries
         return n
@@ -600,7 +600,7 @@ class GEOM3:
                 op2.binary_debug.write('  MOMENT2=%s\n' % str(out))
             #(sid, g, m, n1, n2, n3, n4) = out
             load = MOMENT2.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += 28
         op2.card_count['MOMENT2'] = nentries
         return n
@@ -620,7 +620,7 @@ class GEOM3:
                 op2.binary_debug.write('  PLOAD=%s\n' % str(out))
             #(sid, pressure, n1, n2, n3, n4) = out
             load = PLOAD.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += 24
         op2.card_count['PLOAD1'] = nentries
         return n
@@ -640,7 +640,7 @@ class GEOM3:
                 op2.binary_debug.write('  PLOAD1=%s\n' % str(out))
             #(sid, eid, load_type, scale, x1, p1, x2, p2) = out
             load = PLOAD1.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += ntotal
         op2.card_count['PLOAD1'] = nentries
         return n
@@ -660,7 +660,7 @@ class GEOM3:
                 op2.binary_debug.write('  PLOAD2=%s\n' % str(out))
             #(sid, p, eid) = out
             load = PLOAD2.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += 12
         op2.card_count['PLOAD2'] = nentries
         return n
@@ -678,7 +678,7 @@ class GEOM3:
                 op2.binary_debug.write('  PLOAD3=%s\n' % str(out))
             #(sid, p, eid, n1, n2) = out
             load = PLOAD3.add_op2_data(out)  # undefined
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += 20
         op2.card_count['PLOAD3'] = nloads
         return n
@@ -688,7 +688,7 @@ class GEOM3:
         n = self.op2.reader_geom2._read_dual_card(
             data, n,
             self._read_pload4_nx, self._read_pload4_msc,
-            'PLOAD4', self.op2._add_methods._add_load_object)
+            'PLOAD4', self.op2._add_methods.add_load_object)
         return n
 
     def _read_pload4_msc(self, data, n):  ## inconsistent with DMAP
@@ -802,7 +802,7 @@ class GEOM3:
             fields = ['PLOADX'] + list(out)
             op2.reject_lines.append(print_card_16(fields))
             #load = PLOADX.add_op2_data(out)
-            #op2._add_methods._add_load_object(load)
+            #op2._add_methods.add_load_object(load)
 
             #n += ntotal + 28 * self.factor
             n += ntotal
@@ -831,7 +831,7 @@ class GEOM3:
             if op2.is_debug_file:
                 op2.binary_debug.write('  PLOADX1=%s\n' % str(out))
             load = PLOADX1.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += 28
         op2.card_count['PLOADX1'] = nentries
         return n
@@ -853,7 +853,7 @@ class GEOM3:
                 op2.binary_debug.write('  QBDY1=%s\n' % str(out))
             #(sid, q0, eid) = out
             load = QBDY1.add_op2_data(out)
-            op2._add_methods._add_thermal_load_object(load)
+            op2._add_methods.add_thermal_load_object(load)
             n += 12
         op2.card_count['QBDY1'] = nentries
         return n
@@ -873,7 +873,7 @@ class GEOM3:
                 op2.binary_debug.write('  QBDY2=%s\n' % str(out))
             #(sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
             load = QBDY2.add_op2_data(out)
-            op2._add_methods._add_thermal_load_object(load)
+            op2._add_methods.add_thermal_load_object(load)
             n += 40
         op2.card_count['QBDY2'] = nentries
         return n
@@ -891,7 +891,7 @@ class GEOM3:
             out = struct_if2i.unpack(edata)
             #(sid, q0, cntrlnd, eid) = out
             load = QBDY3.add_op2_data(out)
-            op2._add_methods._add_thermal_load_object(load)
+            op2._add_methods.add_thermal_load_object(load)
             n += 16
         op2.card_count['QBDY3'] = nentries
         return n
@@ -913,7 +913,7 @@ class GEOM3:
             (sid, g, T) = out
             if g < 10000000:
                 load = TEMP.add_op2_data(out)
-                op2._add_methods._add_thermal_load_object(load)
+                op2._add_methods.add_thermal_load_object(load)
             else:
                 op2.log.debug('TEMP = %s' % str(out))
             n += ntotal
@@ -936,7 +936,7 @@ class GEOM3:
                 op2.binary_debug.write('  TEMPD=%s\n' % str(out))
             #(sid, T) = out
             load = TEMPD.add_op2_data(out)
-            op2._add_methods._add_tempd_object(load)
+            op2._add_methods.add_tempd_object(load)
             n += ntotal
         op2.card_count['TEMPD'] = nentries
         return n
@@ -965,7 +965,7 @@ class GEOM3:
             #(sid, flag, q0, af, n1-n8) = out
             load = QHBDY.add_op2_data(out)
             #self.add_thermal_load(load)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += ntotal
         op2.card_count['QHBDY'] = nentries
         return n
@@ -1009,7 +1009,7 @@ class GEOM3:
             load = QVECT.add_op2_data(out)
             str(load)
             #self.add_thermal_load(load)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += ntotal
         op2.card_count['QHBDY'] = nentries
         return n
@@ -1036,7 +1036,7 @@ class GEOM3:
                 op2.binary_debug.write('  QVOL=%s\n' % str(out))
             #(sid, qvol, cntrlnd, eid) = out
             load = QVOL.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += ntotal
         op2.card_count['QVOL'] = nentries
         return n
@@ -1053,7 +1053,7 @@ class GEOM3:
                 op2.binary_debug.write('  RFORCE=%s\n' % str(out))
             #(sid, nid, scale_factor) = out
             load = RFORCE.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += ntotal
         op2.card_count['RFORCE'] = nentries
         return n
@@ -1072,7 +1072,7 @@ class GEOM3:
                 op2.binary_debug.write('  SLOAD=%s\n' % str(out))
             #(sid, nid, scale_factor) = out
             load = SLOAD.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += ntotal
         op2.card_count['SLOAD'] = nentries
         return n
@@ -1097,7 +1097,7 @@ class GEOM3:
                 op2.binary_debug.write('  TEMPP1=%s\n' % str(out))
             #sid, eid, t, tprime, ts1, ts2 = data
             load = TEMPP1.add_op2_data(out)
-            op2._add_methods._add_load_object(load)
+            op2._add_methods.add_load_object(load)
             n += ntotal
         op2.card_count['TEMPP1'] = nloads
         return n
