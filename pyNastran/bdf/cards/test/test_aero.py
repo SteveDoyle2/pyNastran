@@ -2980,7 +2980,7 @@ class TestAero(unittest.TestCase):
 
     def test_monpnt(self):
         log = SimpleLogger(level='warning')
-        model = BDF(log=log)
+        model = BDF(log=log, mode='msc')
         name = 'test'
         label = 'test2'
         axes = '123'
@@ -3009,6 +3009,8 @@ class TestAero(unittest.TestCase):
                                     elem_set_group=elem_set,
                                     cp=0, cd=None,
                                     xflag='', comment='monpnt3')
+        model.add_set1(grid_set, [11, 12, 13])
+        model.add_set1(elem_set, [4, 5, 6])
         monpnt3.raw_fields()
         monpnt3.validate()
 

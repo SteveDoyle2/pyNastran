@@ -9060,7 +9060,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_dmig_object(dmig)
         return dmig
 
-    def add_dmi_w2gj(self, tin: int, tout: int,
+    def add_dmi_w2gj(self, tin: int | str, tout: int | str,
                      nrows: int, GCj,
                      Real, comment: str='') -> DMI:
         """
@@ -9077,7 +9077,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_dmi_object(dmi)
         return dmi
 
-    def add_dmi(self, name: str, form: int, tin: int, tout: int,
+    def add_dmi(self, name: str, form: int,
+                tin: int | str, tout: int | str,
                 nrows: int, ncols: int,
                 GCj, GCi,
                 Real, Complex=None, comment: str='') -> DMI:
