@@ -4504,18 +4504,30 @@ class MONPNT3(BaseCard):
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.cd_ref = model.Coord(self.cd, msg=msg)
         if self.node_set_group > 0:
-            self.node_ref = model.Group(self.node_set_group, msg=msg)
+            if model.is_msc:
+                model.Set(self.node_set_group, msg=msg)
+            else:
+                self.node_ref = model.Group(self.node_set_group, msg=msg)
         if self.elem_set_group > 0:
-            self.elem_ref = model.Group(self.elem_set_group, msg=msg)
+            if model.is_msc:
+                model.Set(self.elem_set_group, msg=msg)
+            else:
+                self.elem_ref = model.Group(self.elem_set_group, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by MONPNT3 name=%s' % self.name
         self.cp_ref = model.safe_coord(self.cp, self.name, xref_errors, msg=msg)
         self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
         if self.node_set_group > 0:
-            self.node_ref = model.Group(self.node_set_group, msg=msg)
+            if model.is_msc:
+                model.Set(self.node_set_group, msg=msg)
+            else:
+                self.node_ref = model.Group(self.node_set_group, msg=msg)
         if self.elem_set_group > 0:
-            self.elem_ref = model.Group(self.elem_set_group, msg=msg)
+            if model.is_msc:
+                model.Set(self.elem_set_group, msg=msg)
+            else:
+                self.elem_ref = model.Group(self.elem_set_group, msg=msg)
 
     def uncross_reference(self) -> None:
         self.cp = self.Cp()
