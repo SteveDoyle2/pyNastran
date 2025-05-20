@@ -317,7 +317,6 @@ class TestAero(unittest.TestCase):
         model.bdf_filename = 'test_aefact_1'
         save_load_deck(model)
 
-
     def test_aelink_1(self):
         log = SimpleLogger(level='warning')
         model = BDF(log=log)

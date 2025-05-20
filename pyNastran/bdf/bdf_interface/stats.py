@@ -191,7 +191,6 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         #new
         'bolt', 'boltld', 'boltfor', 'boltseq', 'boltfrc',
         'use_new_deck_parser', 'allow_overwrites_set', '_parse',
-
     ] + list_attrs + card_dict_groups + scalar_attrs
     missed_attrs = []
     for attr in model.object_attributes(filter_properties=True,
@@ -201,7 +200,6 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         missed_attrs.append(attr)
     if model.__class__.__name__ == 'BDF':
         assert missed_attrs == [], missed_attrs
-
 
     # These are ignored because they're lists
     #ignored_types = set([
