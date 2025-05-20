@@ -33,6 +33,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank, integer_or_string, integer_string_or_blank,
     interpret_value, parse_components, components_or_blank, blank)
+from pyNastran.bdf.bdf_interface.internal_get import (
+    set_group)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
@@ -4475,8 +4477,14 @@ class MONPNT3(BaseCard):
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.cd_ref = model.Coord(self.cd, msg=msg)
         if self.node_set_group > 0:
+            # if model.is_msc:
+            #     model.Set(self.node_set_group, msg=msg)
+            # else:
             self.node_ref = model.Group(self.node_set_group, msg=msg)
         if self.elem_set_group > 0:
+            # if model.is_msc:
+            #     model.Set(self.elem_set_group, msg=msg)
+            # else:
             self.elem_ref = model.Group(self.elem_set_group, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -4484,13 +4492,27 @@ class MONPNT3(BaseCard):
         self.cp_ref = model.safe_coord(self.cp, self.name, xref_errors, msg=msg)
         self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
         if self.node_set_group > 0:
+            # if model.is_msc:
+            #     model.Set(self.node_set_group, msg=msg)
+            # else:
             self.node_ref = model.Group(self.node_set_group, msg=msg)
         if self.elem_set_group > 0:
+            # if model.is_msc:
+            #     model.Set(self.elem_set_group, msg=msg)
+            # else:
             self.elem_ref = model.Group(self.elem_set_group, msg=msg)
+
+    def get_node_set_group(self) -> int:
+        return set_group(self.node_ref, self.node_set_group)
+
+    def get_elem_set_group(self) -> int:
+        return set_group(self.elem_ref, self.elem_set_group)
 
     def uncross_reference(self) -> None:
         self.cp = self.Cp()
         self.cd = self.Cd()
+        self.node_set_group = self.get_node_set_group()
+        self.elem_set_group = self.get_elem_set_group()
         self.cp_ref = None
         self.cd_ref = None
 
@@ -4503,7 +4525,8 @@ class MONPNT3(BaseCard):
     def raw_fields(self):
         list_fields = [
             'MONPNT3', self.name, self.label.strip(),
-            self.axes, self.node_set_group, self.elem_set_group, self.Cp()
+            self.axes, self.get_node_set_group(),
+            self.get_elem_set_group(), self.Cp()
             ] + list(self.xyz) + [self.xflag, self.Cd()]
         return list_fields
 
@@ -4520,7 +4543,8 @@ class MONPNT3(BaseCard):
         msg = 'MONPNT3 %-8s%s\n' % (self.name, self.label)
         msg += ('        %-8s%-8s%-8s%-8s%-8s%-8s%-8s%-8s\n'
                 '         %-8s' % (
-                    self.axes, self.node_set_group, self.elem_set_group, cp,
+                    self.axes, self.get_node_set_group(),
+                    self.get_elem_set_group(), cp,
                     print_float_8(x), print_float_8(y), print_float_8(z),
                     xflag, cd
                 ))
