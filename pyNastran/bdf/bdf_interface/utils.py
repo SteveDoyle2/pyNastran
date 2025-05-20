@@ -33,9 +33,10 @@ _REMOVED_LINES = [
 ]
 EXPECTED_HEADER_KEYS_CHECK = [
     'version', 'encoding', 'nnodes', 'nelements',
-    'punch', 'dumplines', 'is_superelements', # booleans
+    'punch', 'dumplines', 'is_superelements',  # booleans
 ]
 EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units', 'code-block']
+
 
 def _to_fields_mntpnt1(card_lines: list[str]) -> list[str]:
     """splits a MONPNT1"""
@@ -49,6 +50,7 @@ def _to_fields_mntpnt1(card_lines: list[str]) -> list[str]:
     #assert '*' not in line2, card_lines
     fields += _monpnt_line2_to_fields(line2)
     return fields
+
 
 def _to_fields_mntpnt3(card_lines: list[str]) -> list[str]:
     assert len(card_lines) in {2, 3}, card_lines
@@ -77,6 +79,7 @@ def _to_fields_mntpnt3(card_lines: list[str]) -> list[str]:
     #fields += _monpnt_line2_to_fields(line3)
     #return fields
 
+
 def _monpnt_line1_fields(line1: str) -> list[str]:
     """splits the first line of a MONPNT1/MONPNT3"""
 
@@ -96,6 +99,7 @@ def _monpnt_line1_fields(line1: str) -> list[str]:
     ]
     return fields
 
+
 def _monpnt_line2_to_fields(line2: str) -> list[str]:
     """splits a MONPNT3"""
     if '\t' in line2:
@@ -112,11 +116,13 @@ def _monpnt_line2_to_fields(line2: str) -> list[str]:
         ]
     return fields
 
+
 def _to_fields_micpnt(card_lines: list[str]) -> list[str]:
     """splits a MICPNT"""
     line1 = card_lines[0]
     fields = _expand_2_values_name(line1)
     return fields
+
 
 def _to_fields_amlreg(card_lines: list[str]) -> list[str]:
     """splits an AMLREG"""
@@ -125,6 +131,7 @@ def _to_fields_amlreg(card_lines: list[str]) -> list[str]:
     fields = _expand_2_values_name(line1)
     fields += _monpnt_line2_to_fields(line2)
     return fields
+
 
 def _to_fields_group(card_lines: list[str]) -> list[str]:
     """
@@ -179,6 +186,7 @@ def _to_fields_group(card_lines: list[str]) -> list[str]:
     #print(f'GROUP: fields={fields}')
     return fields
 
+
 def _expand_2_values_name(line1: str) -> list[str]:
     """helper for AMLREG, MICPNT"""
     line1 = line1.rstrip()
@@ -201,8 +209,8 @@ def _expand_2_values_name(line1: str) -> list[str]:
         #line1[24:32], line1[32:40], line1[40:48],
         #line1[48:56], line1[56:64], line1[64:72],
     ]
-
     return fields
+
 
 def _to_fields_set1(card_lines: list[str], card_name: str) -> list[str]:
     fields = []
@@ -215,7 +223,7 @@ def _to_fields_set1(card_lines: list[str], card_name: str) -> list[str]:
         #print(f'line2 = {line}')
         if '*' in line:  # large field
             if ',' in line:  # csv
-                new_fields = line.split(',') #[:5]
+                new_fields = line.split(',')  #[:5]
                 new_fields = [field.strip() for field in new_fields if field.strip()]
                 if iline > 0:
                     new_fields = [''] + new_fields
@@ -229,7 +237,7 @@ def _to_fields_set1(card_lines: list[str], card_name: str) -> list[str]:
                 end = line[72:].rstrip('+ ')
                 assert len(end) == 0, line
         else:  # small field
-            length_max = 9 #if iline == 0 else 8
+            length_max = 9  #if iline == 0 else 8
             if ',' in line:  # csv
                 new_fields = line.split(',') #[:9]
                 new_fields = [field.strip() for field in new_fields if field.strip()]
@@ -262,6 +270,7 @@ def _to_fields_set1(card_lines: list[str], card_name: str) -> list[str]:
         fields += new_fields
     warnings.warn(f'SET1 was too long; {fields}')
     return fields
+
 
 def to_fields_line0(card_line: str, card_name: str) -> list[str]:
     """
@@ -298,6 +307,7 @@ def to_fields_line0(card_line: str, card_name: str) -> list[str]:
                           line[64:72]]
     return new_fields
 
+
 def to_fields(card_lines: list[str], card_name: str) -> list[str]:
     """
     Converts a series of lines in a card into string versions of the field.
@@ -305,7 +315,7 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
 
     Parameters
     ----------
-    lines : list[str]
+    card_lines : list[str]
         the lines of the BDF card object
     card_name : str
         the card_name -> 'GRID'
@@ -322,7 +332,7 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
 
        >>> card_lines = ['GRID,1,,1.0,2.0,3.0']
        >>> card_name = 'GRID'
-       >>> fields = to_fields(lines, card_name)
+       >>> fields = to_fields(card_lines, card_name)
        >>> fields
        ['GRID', '1', '', '1.0', '2.0', '3.0']
 
@@ -404,6 +414,7 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
         fields += new_fields
     return fields
 
+
 def expand_tabs(line: str) -> str:
     """expands the tabs; breaks if you mix commas and tabs"""
     line = line.expandtabs()
@@ -412,6 +423,7 @@ def expand_tabs(line: str) -> str:
         msg = f'tabs and commas in the same line are not supported...\nline={line!r}'
         raise CardParseSyntaxError(msg)
     return line
+
 
 def parse_executive_control_deck(
         executive_control_lines: list[str]) -> tuple[Optional[int], Optional[str], Optional[int], str]:
@@ -560,7 +572,7 @@ def _parse_pynastran_header(line: str) -> tuple[Optional[str], Optional[str]]:
     #return lines2
 
 
-def print_filename(filename: PathLike, relpath: bool=True) -> str:
+def print_filename(filename: PathLike | StringIO, relpath: bool=True) -> str:
     """
     Takes a path such as C:/work/fem.bdf and locates the file using
     relative paths.  If it's on another drive, the path is not modified.
@@ -574,6 +586,8 @@ def print_filename(filename: PathLike, relpath: bool=True) -> str:
     -------
     filename_string : str
         a shortened representation of the filename
+    relpath: bool; default=True
+       should the relative path be returned
 
     """
     if isinstance(filename, StringIO):
@@ -612,6 +626,7 @@ def _parse_dynamic_syntax(key: str,
         raise KeyError(msg)
     return dict_of_vars[key]
 
+
 def _get_card_name(lines: list[str], active_filename: str) -> Optional[str]:
     """
     Returns the name of the card defined by the provided lines
@@ -636,6 +651,7 @@ def _get_card_name(lines: list[str], active_filename: str) -> Optional[str]:
         print(msg)
         raise CardParseSyntaxError(msg)
     return card_name.upper()
+
 
 def fill_dmigs(model: BDF) -> None:
     """fills the DMIx cards with the column data that's been stored"""

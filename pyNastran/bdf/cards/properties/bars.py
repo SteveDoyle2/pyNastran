@@ -15,7 +15,7 @@ second moment of area on wikipedia
 """
 from __future__ import annotations
 from itertools import count
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 from numpy import pi, array
 import numpy as np
 
@@ -23,7 +23,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, double_or_blank, string, string_or_blank,
-    blank, integer_or_double, #integer_or_blank,
+    blank, integer_or_double,  # integer_or_blank,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import (
     force_double, force_double_or_blank)
@@ -149,6 +149,7 @@ def _IAreaL(prop, dim):
         raise NotImplementedError(msg)
     return A, Iyy, Izz, Iyz
 
+
 class LineProperty(Property):
     def __init__(self):
         self.beam_type = None
@@ -249,6 +250,7 @@ def A_I1_I2_I12(prop, beam_type: str,
     assert A == prop.Area(), prop
     return A, I1, I2, I12
 
+
 def _bar_areaL(class_name: str, beam_type: str, dim: list[float],
                prop: Any) -> tuple[float, float, float, float]:
     """
@@ -328,6 +330,7 @@ def _bar_areaL(class_name: str, beam_type: str, dim: list[float],
     assert A > 0, 'beam_type=%r dim=%r A=%s\n%s' % (beam_type, dim, A, prop)
     return A, I1, I2, I12
 
+
 def rod_section(class_name, beam_type, dim, prop):
     # This is a circle if you couldn't tell...
     #   __C__
@@ -345,6 +348,7 @@ def rod_section(class_name, beam_type, dim, prop):
     I12 = 0.
     return A, I1, I2, I12
 
+
 def tube_section(class_type: str, beam_type: str, dim: np.ndarray, prop):
     r_outer, r_inner = dim
     assert r_outer > r_inner, 'TUBE; r_outer=%s r_inner=%s' % (r_outer, r_inner)
@@ -353,6 +357,7 @@ def tube_section(class_type: str, beam_type: str, dim: np.ndarray, prop):
     I2 = I1
     I12 = 0.
     return A, I1, I2, I12
+
 
 def tube2_section(class_type: str, beam_type: str, dim, prop):
     r_outer, thick = dim
@@ -365,6 +370,7 @@ def tube2_section(class_type: str, beam_type: str, dim, prop):
     I2 = I1
     I12 = 0.
     return A, I1, I2, I12
+
 
 def bar_section(class_type: str, beam_type: str, dim, prop):
     #per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
@@ -382,6 +388,7 @@ def bar_section(class_type: str, beam_type: str, dim, prop):
     I12 = 0.
     #J = b*h**3*(1/3. - 0.21*h/b*(1-h**4/(12*b**4)))
     return A, I1, I2, I12
+
 
 def box_section(class_name: str, beam_type: str, dim, prop):
     #
@@ -415,6 +422,7 @@ def box_section(class_name: str, beam_type: str, dim, prop):
     #j = (2*t2*t1*(b-t2)**2*(h-t1)**2)/(b*t2+h*t1-t2**2-t1**2)
     return A, I1, I2, I12
 
+
 def box1_section(class_name: str, beam_type: str, dim, prop):
     dim1, dim2, dim3, dim4, dim5, dim6 = dim
     h1 = dim3  # top
@@ -432,6 +440,7 @@ def box1_section(class_name: str, beam_type: str, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
+
 def cross_section(class_type: str, beam_type: str, dim, prop):
     dim1, dim2, dim3, dim4 = dim
     h1 = dim3
@@ -443,6 +452,7 @@ def cross_section(class_type: str, beam_type: str, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
+
 def h_section(class_name: str, beam_type: str, dim, prop):
     dim1, dim2, dim3, dim4 = dim
     h1 = dim3
@@ -453,6 +463,7 @@ def h_section(class_name: str, beam_type: str, dim, prop):
     A = h1 * w1 + h2 * w2
     I1 = I2 = I12 = None
     return A, I1, I2, I12
+
 
 def t_section(class_name: str, beam_type: str, dim, prop):
     # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
@@ -484,12 +495,13 @@ def t_section(class_name: str, beam_type: str, dim, prop):
     yna = hw*tw*(hw+tf)/(2*A)
     i1 = (
        (d*tf**3 + tw*hw**3) / 12. +
-       hw*tw*(yna + 0.5 * (hw +tf))**2 + d*tf*yna**2
+       hw*tw*(yna + 0.5 * (hw + tf))**2 + d*tf*yna**2
     )
     i2 = (tf*d**3 + hw*tw**3)/12.
     i12 = 0.
     #j = 1/3 * (tf**3*d + tw**3 * h)
     return A, i1, i2, i12
+
 
 def t1_section(class_name: str, beam_type: str, dim, prop):
     dim1, dim2, dim3, dim4 = dim
@@ -501,6 +513,7 @@ def t1_section(class_name: str, beam_type: str, dim, prop):
     A = h1 * w1 + h2 * w2
     I1 = I2 = I12 = None
     return A, I1, I2, I12
+
 
 def t2_section(class_name: str, beam_type: str, dim, prop):
     #       ^ y
@@ -532,6 +545,7 @@ def t2_section(class_name: str, beam_type: str, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
+
 def zee_section(class_name: str, beam_type: str, dim, prop):
     #  bflange bweb
     # <--d1-><--d2-->
@@ -554,6 +568,7 @@ def zee_section(class_name: str, beam_type: str, dim, prop):
     A = bflange * tflange + hall * bweb
     I1 = I2 = I12 = None
     return A, I1, I2, I12
+
 
 def hexa_section(class_name: str, beam_type: str, dim, prop):
     #     _______
@@ -578,6 +593,7 @@ def hexa_section(class_name: str, beam_type: str, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
+
 def hat_section(class_name: str, beam_type: str, dim, prop):
     #
     #        <--------d3------->
@@ -601,6 +617,7 @@ def hat_section(class_name: str, beam_type: str, dim, prop):
     A = wa * t + (2. * wc * t) + (2. * hb * t)
     I1 = I2 = I12 = None
     return A, I1, I2, I12
+
 
 def hat1_section(class_name: str, beam_type: str, dim, prop):
     # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
@@ -645,12 +662,12 @@ def hat1_section(class_name: str, beam_type: str, dim, prop):
     #*DIM4+DIM5, CAN NOT BE LARGER THAN THE HEIGHT OF
         #THE HAT, DIM2.
 
-
     #h1 = w  # upper, horizontal lower bar (see HAT)
     #w1 = w0 - w3
     #A = 2. * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
     I1 = I2 = I12 = None
     return A, I1, I2, I12
+
 
 def i_section(class_name: str, beam_type: str, dim, prop):
     # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
@@ -702,6 +719,7 @@ def i_section(class_name: str, beam_type: str, dim, prop):
     #CAN NOT BE GREATER THAT THE WEB HEIGHT, DIM1.
     return A, i1, i2, i12
 
+
 def i1_section(class_name: str, beam_type: str, dim, prop):
     #
     #  d1/2   d2  d1/2
@@ -739,6 +757,7 @@ def i1_section(class_name: str, beam_type: str, dim, prop):
     A = 2. * (h1 * w1) + h2 * w2
     I1 = I2 = I12 = None
     return A, I1, I2, I12
+
 
 def l_section(class_type: str, beam_type: str, dim, prop):
     # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
@@ -787,6 +806,7 @@ def l_section(class_type: str, beam_type: str, dim, prop):
     #yna = yc
     #zna = zc
     return A, i1, i2, i12
+
 
 def chan_section(class_name: str, beam_type: str, dim, prop):
     #
@@ -850,6 +870,7 @@ def chan_section(class_name: str, beam_type: str, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
+
 def chan1_section(class_name: str, beam_type: str, dim, prop):
     #
     # +--------+  ^
@@ -883,6 +904,7 @@ def chan1_section(class_name: str, beam_type: str, dim, prop):
     I1 = I2 = I12 = None
     return A, I1, I2, I12
 
+
 def chan2_section(class_name: str, beam_type: str, dim, prop):
     #  d1        d1
     # <-->      <-->
@@ -913,6 +935,7 @@ def chan2_section(class_name: str, beam_type: str, dim, prop):
     assert np.allclose(A, A3), 'A=%s A2=%s A3=%s' % (A, A2, A3)
     I1 = I2 = I12 = None
     return A, I1, I2, I12
+
 
 def dbox_section(class_name: str, beam_type: str, dim, prop):
     #DBOX = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
@@ -1076,21 +1099,21 @@ class PBAR(LineProperty):
     type = 'PBAR'
     pname_fid_map = {
         # 1-based
-        4 : 'A', 'A' : 'A',
-        5 : 'i1', 'I1' : 'i1',
-        6 : 'i2', 'I2' : 'i2',
-        7 : 'j', 'J' : 'j',
-        10 : 'c1',
-        11 : 'c2',
-        12 : 'd1',
-        13 : 'd2',
-        14 : 'e1',
-        15 : 'e2',
-        16 : 'f1',
-        17 : 'f2',
-        18 : 'k1',
-        19 : 'k1',
-        20 : 'i12', 'I12' : 'i12',
+        4: 'A', 'A': 'A',
+        5: 'i1', 'I1': 'i1',
+        6: 'i2', 'I2': 'i2',
+        7: 'j', 'J': 'j',
+        10: 'c1',
+        11: 'c2',
+        12: 'd1',
+        13: 'd2',
+        14: 'e1',
+        15: 'e2',
+        16: 'f1',
+        17: 'f2',
+        18: 'k1',
+        19: 'k1',
+        20: 'i12', 'i12': 'i12',
     }
 
     @classmethod
@@ -1508,6 +1531,7 @@ PBARL_MSG = '\n' + """
 |       | DIM9 | etc. |  NSM  |      |      |      |      |      |
 +-------+------+------+-------+------+------+------+------+------+""".strip()
 
+
 class PBARL(LineProperty):
     """
     .. todo:: doesnt support user-defined types
@@ -1550,7 +1574,7 @@ class PBARL(LineProperty):
 
         # approximate
         #'I', 'CHAN', 'T', 'CHAN1', 'T1', 'CHAN2', 'T2', 'L' and 'BOX1'.
-        'L' : 4,
+        'L': 4,
     }  # for GROUP="MSCBML0"
     #pname_fid_map = {
         #12 : 'DIM1',
@@ -1558,6 +1582,7 @@ class PBARL(LineProperty):
         #14 : 'DIM3',
         #15 : 'DIM3',
     #}
+
     def update_by_pname_fid(self, pname_fid, value):
         if isinstance(pname_fid, str) and pname_fid.startswith('DIM'):
             num = int(pname_fid[3:])
@@ -1722,7 +1747,6 @@ class PBARL(LineProperty):
         nsm = double_or_blank(card, 9 + ndim, 'nsm', default=0.0)
         return PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
 
-
     @classmethod
     def add_card_lax(cls, card: BDFCard, comment: str=''):
         """
@@ -1842,7 +1866,6 @@ class PBARL(LineProperty):
             mpl = self.MassPerLength()
             assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
 
-
     def get_cdef(self):
         r"""
         these axes are backwards...
@@ -1875,11 +1898,12 @@ class PBARL(LineProperty):
         return cdef
 
     @property
-    def Type(self):
+    def Type(self) -> str:
         """gets Type"""
         return self.beam_type
+
     @Type.setter
-    def Type(self, beam_type):
+    def Type(self, beam_type: str):
         """sets Type"""
         self.beam_type = beam_type
 
@@ -2178,10 +2202,10 @@ class PBRSECT(LineProperty):
         options = [('OUTP', 10)]
         return PBRSECT(pid, mid, form, options, comment='')
 
-    def _finalize_hdf5(self, encoding):
-        self.brps = {key : value for key, value in zip(*self.brps)}
-        self.ts = {key : value for key, value in zip(*self.ts)}
-        self.inps = {key : value for key, value in zip(*self.inps)}
+    def _finalize_hdf5(self, encoding: str):
+        self.brps = {key: value for key, value in zip(*self.brps)}
+        self.ts = {key: value for key, value in zip(*self.ts)}
+        self.inps = {key: value for key, value in zip(*self.inps)}
 
     def __init__(self, pid, mid, form, options, comment=''):
         LineProperty.__init__(self)
@@ -2325,9 +2349,9 @@ class PBRSECT(LineProperty):
         """
         class_name = self.__class__.__name__
         form_map = {
-            'GS' : 'General Section',
-            'OP' : 'Open Profile',
-            'CP' : 'Closed Profile',
+            'GS': 'General Section',
+            'OP': 'Open Profile',
+            'CP': 'Closed Profile',
         }
         formi = ' form=%s' % form_map[self.form]
         plot_arbitrary_section(
@@ -2412,7 +2436,6 @@ class PBRSECT(LineProperty):
         return self.write_card()
 
 
-
 def parse_pbrsect_options(pid: int, options: list[Any]):
     # ???
     outp = None
@@ -2472,6 +2495,7 @@ def parse_pbrsect_options(pid: int, options: list[Any]):
 
     return nsm, brps, inps, outp, ts
 
+
 class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
     """
     MSC
@@ -2529,15 +2553,21 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
                       cw=None, stress='GRID',
                       w=None, wy=None, wz=None, comment='')
 
-    def __init__(self, pid, mid, A, iz, iy, iyz=None, j=None, nsm=0.,
+    def __init__(self,
+                 pid: int, mid: int,
+                 A: float, iz: float, iy: float,
+                 iyz: float=0., j=None, nsm=0.,
                  so=None,
-                 cy=None, cz=None, dy=None, dz=None, ey=None, ez=None, fy=None, fz=None,
+                 cy: float=0., cz: float=0.,
+                 dy: float=0., dz: float=0.,
+                 ey: float=0., ez: float=0.,
+                 fy: float=0., fz: float=0.,
                  ky=1., kz=1.,
                  ny=None, nz=None, my=None, mz=None,
                  nsiy=None, nsiz=None, nsiyz=None,
                  cw=None, stress='GRID',
                  w=None, wy=None, wz=None,
-                 comment=''):
+                 comment: str=''):
         """
         Creates a PBEAM3 card
 
@@ -3480,6 +3510,7 @@ def get_beam_sections(line: str) -> list[str]:
         words.append(word)
     return words
 
+
 def write_arbitrary_beam_section(inps, ts, branch_paths, nsm, outp_id, core=None):
     """writes the PBRSECT/PBMSECT card"""
     end = ''
@@ -3514,6 +3545,7 @@ def write_arbitrary_beam_section(inps, ts, branch_paths, nsm, outp_id, core=None
     if end:
         end = end[:-2] + '\n'
     return end
+
 
 def plot_arbitrary_section(model, self,
                            inps, ts, branch_paths, nsm, outp_ref,
@@ -3603,7 +3635,7 @@ def plot_arbitrary_section(model, self,
     add_to_sections(sections, xy, out_points, x, y)
     #print('x=%s y=%s' % (x, y))
     ax.plot(x, y, '-o', label='OUTP')
-    all_points = {point_id : (xi, yi)
+    all_points = {point_id: (xi, yi)
                   for point_id, xi, yi in zip(out_points, x, y)}
     #print('out_points =', out_points)
     #print('all_points =', all_points)
@@ -3662,7 +3694,6 @@ def plot_arbitrary_section(model, self,
                 x = inp_xyz[:, 0]
                 y = inp_xyz[:, 1]
                 ax.plot(x, y, '--x', label='INP')
-
 
     if ts:
         _plot_rectangles(ax, sections, xy, ts)

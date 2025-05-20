@@ -4273,7 +4273,10 @@ class AddMaterial(BDFAttributes):
         self._add_methods.add_creep_material_object(mat)
         return mat
 
-    def add_mat1(self, mid: int, E: float, G: float, nu: float,
+    def add_mat1(self, mid: int,
+                 E: Optional[float],
+                 G: Optional[float],
+                 nu: Optional[float],
                  rho: float=0.0, alpha: float=0.0, tref: float=0.0, ge: float=0.0,
                  St: float=0.0, Sc: float=0.0, Ss: float=0.0,
                  mcsid: int=0, comment: str='') -> int:
@@ -4918,7 +4921,7 @@ class AddThermal(BDFAttributes):
         tempd = self.tempd.add(sid, temperature, comment=comment)
         return tempd
 
-    def add_qhbdy(self, sid: int, flag: int, q0: float, grids: list[int],
+    def add_qhbdy(self, sid: int, flag: str, q0: float, grids: list[int],
                   area_factor: Optional[float]=None, comment: str='') -> int:
         """
         Creates a QHBDY card
@@ -4954,8 +4957,8 @@ class AddThermal(BDFAttributes):
         load = self.qbdy2.add(sid, eid, qfluxs, comment=comment)
         return load
 
-    def add_qbdy3(self, sid: int, q0, cntrlnd: int, eids: list[int],
-                  comment: str='') -> int:
+    def add_qbdy3(self, sid: int, q0, eids: list[int],
+                  cntrlnd: int=0, comment: str='') -> int:
         """
         Creates a QBDY3 card
 
@@ -4974,7 +4977,7 @@ class AddThermal(BDFAttributes):
             a comment for the card
 
         """
-        load = self.qbdy3.add(sid, q0, cntrlnd, eids, comment=comment)
+        load = self.qbdy3.add(sid, q0, eids, cntrlnd=cntrlnd, comment=comment)
         return load
 
     def add_qvol(self, sid: int, qvol: float,

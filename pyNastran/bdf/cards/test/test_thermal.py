@@ -6,6 +6,7 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
 from cpylog import SimpleLogger
 
+
 class TestThermal(unittest.TestCase):
     def test_temp(self):
         """
@@ -28,7 +29,7 @@ class TestThermal(unittest.TestCase):
         temperatures = {}
 
         #make some entries but more than the 3 that fit on a line
-        for i in range(1,11):
+        for i in range(1, 11):
             temperatures[i] = float(i)
         temp = bdf.add_temp(temp_sid, temperatures)
         assert '        TEMP' not in str(temp), temp
@@ -185,7 +186,7 @@ class TestThermal(unittest.TestCase):
         q0 = 14.
         cntrlnd = 57
         eids = [1, 2]
-        qbdy3 = model.add_qbdy3(sid, q0, cntrlnd, eids, comment='qbdy3')
+        qbdy3 = model.add_qbdy3(sid, q0, eids, cntrlnd=cntrlnd, comment='qbdy3')
         qbdy3.raw_fields()
 
         temperature = 13.3
@@ -194,10 +195,9 @@ class TestThermal(unittest.TestCase):
         fields = ['TEMPD', 101, 1., 102, 2., 103, 3., 104, 4.]
         model.add_card(fields, 'TEMPD')
 
-
         temperatures = {
-            15 : 37.,
-            16 : 38.,
+            15: 37.,
+            16: 38.,
         }
         model.add_temp(sid, temperatures)
         #-------------------------

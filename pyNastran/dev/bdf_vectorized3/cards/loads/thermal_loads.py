@@ -55,7 +55,7 @@ class QHBDY(Load):
         #load.pressure = self.pressure[i, :]
         #return load
 
-    def add(self, sid: int, flag: int, q0: float, grids: list[int],
+    def add(self, sid: int, flag: str, q0: float, grids: list[int],
             area_factor: Optional[float]=None,
             ifile: int=0, comment: str='') -> int:
         """
@@ -497,7 +497,7 @@ class QBDY3(Load):
         #load.pressure = self.pressure[i, :]
         #return load
 
-    def add(self, sid: int, q0, cntrlnd: int, eids: list[int],
+    def add(self, sid: int, q0, eids: list[int], cntrlnd: int=0,
             ifile: int=0, comment: str='') -> int:
         """
         Creates a QBDY3 card

@@ -142,7 +142,7 @@ from pyNastran.bdf.cards.optimization import DOPTPRM
     #SEUSET, SEUSET1
     #SEQSEP
 #)
-from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPRM
+from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, MDLPRM
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS, DMIAX
 #from .bdf.cards.elements.thermal import BDYOR
 #from .cards.thermal.loads import (TEMPB3, TEMPRB)

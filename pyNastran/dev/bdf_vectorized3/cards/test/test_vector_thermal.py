@@ -110,10 +110,10 @@ class TestThermal(unittest.TestCase):
             Type = 'AREA3'
             chbdygi = CHBDYG(eid, Type, nodes,
                              iview_front=0, iview_back=0,
-                            rad_mid_front=0, rad_mid_back=0,
-                            comment='chbdyg')
+                             rad_mid_front=0, rad_mid_back=0,
+                             comment='chbdyg')
             with self.assertRaises(ValueError):
-                chbdyg.validate()
+                chbdygi.validate()
 
         iview = 10
         Type = 'AREA4'
@@ -140,7 +140,7 @@ class TestThermal(unittest.TestCase):
         Type = 'LINE'
         chbdyp = model.add_chbdyp(
             eid, pid, Type, g1, g2,
-            g0=0, gmid=None, ce=0,
+            g0=0, gmid=0, ce=0,
             iview_front=0, iview_back=0,
             rad_mid_front=0, rad_mid_back=0,
             e1=None, e2=None, e3=None,
@@ -162,7 +162,7 @@ class TestThermal(unittest.TestCase):
             pconid, mid, form=0,
             exponent_free_convection=0.0,
             free_convection_type=0,
-            table_id=None, chlen=None, gidin=None,
+            table_id=0, chlen=None, gidin=None,
             ce=0, e1=None, e2=None, e3=None,
             comment='pconv')
         #pconv.raw_fields()
@@ -223,7 +223,7 @@ class TestThermal(unittest.TestCase):
         q0 = 14.
         cntrlnd = 57
         eids = [1, 2]
-        qbdy3i = model.add_qbdy3(sid, q0, cntrlnd, eids, comment='qbdy3')
+        qbdy3i = model.add_qbdy3(sid, q0, eids, cntrlnd=cntrlnd, comment='qbdy3')
         #qbdy3i.raw_fields()
 
         icavity = 12
@@ -236,8 +236,8 @@ class TestThermal(unittest.TestCase):
         model.add_card(fields, 'TEMPD')
 
         temperatures = {
-            15 : 37.,
-            16 : 38.,
+            15: 37.,
+            16: 38.,
         }
         model.add_temp(sid, temperatures)
         model.setup()
@@ -380,6 +380,7 @@ class TestThermal(unittest.TestCase):
 
         model.validate()
         save_load_deck(model)
+
 
 if __name__ == '__main__':   # pragma: no cover
     unittest.main()

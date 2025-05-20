@@ -21,23 +21,24 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
-    filename_or_blank, string_or_blank, double_or_string, blank,
-    integer_or_string, integer_string_or_blank,
+    string_or_blank, double_or_string, blank,
+    # filename_or_blank, integer_or_string,
+    integer_string_or_blank,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import (
     force_double_or_blank,
 )
-from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO2, # PAERO1,
-                                           SPLINE1, AESURF, AELIST, # SPLINE2, SPLINE3,
+from pyNastran.bdf.cards.aero.aero import (Spline, CAERO1, CAERO2, PAERO2,  # PAERO1,
+                                           SPLINE1, AESURF, AELIST,  # SPLINE2, SPLINE3,
                                            AELINK, AEFACT)
 from pyNastran.bdf.cards.aero.static_loads import TRIM, AEROS
-from pyNastran.bdf.cards.aero.dynamic_loads import AERO # MKAERO1,
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO  # MKAERO1,
 from pyNastran.bdf.cards.aero.utils import (
     elements_from_quad, points_elements_from_quad_points, create_ellipse)
 from pyNastran.bdf.cards.coordinate_systems import CoordBase
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
-    from pyNastran.bdf.bdf_interface import BDFCard
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     import matplotlib
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
 
@@ -53,8 +54,8 @@ class ZONA:
         self.trimvar = {}
         self.trimlnk = {}
         self.attach = {}
-        self.plotaero = {} # PLOTMODE
-        self.plotmode = {} # PLOTMODE
+        self.plotaero = {}  # PLOTMODE
+        self.plotmode = {}  # PLOTMODE
         #: store PAFOIL7/PAFOIL8
         self.pafoil = {}
 
@@ -72,7 +73,7 @@ class ZONA:
         self.pafoil = {}
         #self.aeroz = {}
 
-    def object_attributes(self, mode:str='public', keys_to_skip: Optional[list[str]]=None,
+    def object_attributes(self, mode: str='public', keys_to_skip: Optional[list[str]]=None,
                           filter_properties: bool=False):
         """
         List the names of attributes of a class as strings. Returns public
@@ -274,7 +275,6 @@ class ZONA:
         self.attach[key] = attach
         self.model._type_to_id_map[attach.type].append(key)
 
-
     def add_plotmode_object(self, plot: PLTMODE) -> None:
         """adds an PLTMODE object"""
         assert plot.set_id not in self.plotmode, str(plot)
@@ -282,6 +282,7 @@ class ZONA:
         key = plot.set_id
         self.plotmode[key] = plot
         self.model._type_to_id_map[plot.type].append(key)
+
     def add_plotaero_object(self, plot: PLTAERO) -> None:
         """adds an PLTAERO object"""
         assert plot.set_id not in self.plotaero, str(plot)
@@ -480,6 +481,7 @@ class ACOORD(CoordBase):  # not done
     """
     type = 'ACOORD'
     Type = 'R'
+
     @property
     def rid(self):
         return None
@@ -639,6 +641,7 @@ class AESURFZ(BaseCard):
     @property
     def aesid(self) -> str:
         return self.label
+
     @property
     def alid1_ref(self):
         return None
@@ -985,7 +988,6 @@ class AEROZ(Aero):
         # H2F-aero=full; structure=half
         assert sym_xz in ['YES', 'NO', 'H2F'], 'sym_xz=%r' % flip
 
-
         # YES-structure=left,aero=right
         assert flip in ['YES', 'NO'], 'flip=%r' % flip
         assert fm_mass_unit in ['SLIN', 'LBM'], 'fm_mass_unit=%r' % fm_mass_unit
@@ -1145,8 +1147,10 @@ class AEROZ(Aero):
 
 class MKAEROZ(BaseCard):
     type = 'MKAEROZ'
-    def __init__(self, sid, mach, flt_id, filename, print_flag, freqs,
-                 method=0, save=None, comment=''):
+
+    def __init__(self, sid: int, mach: float, flt_id: int, filename: str,
+                 print_flag: int, freqs: list[float],
+                 method: int=0, save: Optional[str]=None, comment: str=''):
         """
         Parameters
         ==========
@@ -1207,7 +1211,7 @@ class MKAEROZ(BaseCard):
         freqs = []
         ifreq = 1
         for ifield in range(9, len(card)):
-            freq = double(card, ifield, 'FREQ%i'%  ifreq)
+            freq = double(card, ifield, 'FREQ%d' % ifreq)
             freqs.append(freq)
             ifreq += 1
         return MKAEROZ(sid, mach, flt_id, filename, print_flag, freqs,
@@ -1243,6 +1247,7 @@ class ATTACH(BaseCard):
     structural finite element grid points.
     """
     type = 'ATTACH'
+
     def __init__(self, attach_id: int, model: str,
                  setk: int, refgrid: int, comment: str=''):
         BaseCard.__init__(self)
@@ -1424,7 +1429,7 @@ class PANLST2(Spline):
             self.comment = comment
 
         self.eid = eid
-        self.macro_id = macro_id # points to CAERO7 / BODY7
+        self.macro_id = macro_id  # points to CAERO7 / BODY7
         self.box1 = box1
         self.box2 = box2
         self.aero_element_ids = []
@@ -1515,7 +1520,7 @@ class PANLST3(Spline):
             self.comment = comment
 
         self.eid = eid
-        self.panel_groups = panel_groups # points to CAERO7 / BODY7
+        self.panel_groups = panel_groups  # points to CAERO7 / BODY7
         self.aero_element_ids = []
         self.caero_refs = None
 
@@ -1749,8 +1754,6 @@ class PAFOIL7(BaseCard):
         """
         raise NotImplementedError('PAFOIL7: convert_to_nastran')
 
-
-
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -1824,7 +1827,8 @@ class BODY7(BaseCard):
     """
     type = 'BODY7'
 
-    def __init__(self, eid, label, pid, nseg, idmeshes, acoord=0, comment=''):
+    def __init__(self, eid: int, label: str, pid: int, nseg: int,
+                 idmeshes: list[int], acoord: int=0, comment: str=''):
         """
         Defines a BODY7 card, which defines a slender body
         (e.g., fuselage/wingtip tank).
@@ -1838,13 +1842,13 @@ class BODY7(BaseCard):
         pid  : int; default=0
             Identification number of PBODY7 bulk data card
             (specifying body wake and/or inlet aerodynamic boxes)
-        acoord : int; default=0
-            Identification number of ACOORD bulk data card
-            (specifying body center line location and orientation)
         nseg : int
             Number of body segments
         idmeshes : list[int]
             Identification number of SEGMESH bulk data card (specifying body segments).
+        acoord : int; default=0
+            Identification number of ACOORD bulk data card
+            (specifying body center line location and orientation)
         comment : str; default=''
             a comment for the card
 
@@ -1892,7 +1896,7 @@ class BODY7(BaseCard):
         label = string(card, 2, 'label')
         assert len(card) >= 3, f'len(BODY7 card) = {len(card):d}\ncard={card}'
         pid = integer_or_blank(card, 3, 'pid')
-        acoord = integer_or_blank(card, 4, 'acoord', 0)
+        acoord = integer_or_blank(card, 4, 'acoord', default=0)
         nseg = integer_or_blank(card, 5, 'nseg')
 
         idmeshes = []
@@ -2048,7 +2052,6 @@ class BODY7(BaseCard):
             xpoints += xs2
             yz_mean = []
 
-
             thetas = self._get_thetas()
             for itype, camber, yrad, zrad, idy_ref, idz_ref in zip(
                     itypes, cambers, yrads, zrads, idys_ref2, idzs_ref2):
@@ -2079,9 +2082,8 @@ class BODY7(BaseCard):
                         nint=0, lint=lint, comment=comment)
 
         #
-        lrsb = half_width_id # slender body
-        lrib = half_width_id # interference
-
+        lrsb = half_width_id  # slender body
+        lrib = half_width_id  # interference
 
         # theta arrays (AEFACTs)
         #lth1 = theta1_id
@@ -2093,14 +2095,13 @@ class BODY7(BaseCard):
         angles_fin = [20.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 160.0,
                       200.0, 220.0, 240.0, 260.0, 280.0, 300.0, 320.0, 340.0]
 
-
         aefact_xs = AEFACT(xs_id, xpoints_local, comment=dash+'Xs')
         aefact_width = AEFACT(half_width_id, half_widths, comment='half_widths')
         aefact_theta1 = AEFACT(theta1_id, angles_body, comment='angles_body')
         aefact_theta2 = AEFACT(theta2_id, angles_fin, comment='angles_fin')
 
         # which segments use theta1 array
-        lth = [1, 10] #nsegments] # t
+        lth = [1, 10]  # nsegments] # t
         thi = [1]
         thn = [1]
         paero2 = PAERO2(pid, orient, half_width, AR, thi, thn,
@@ -2375,12 +2376,17 @@ class SEGMESH(BaseCard):
     @property
     def pid(self) -> int:
         return self.segmesh_id
+
     @pid.setter
     def pid(self, segmesh_id: int) -> None:
         self.segmesh_id = segmesh_id
 
-    def __init__(self, segmesh_id, naxial, nradial, nose_radius, iaxis,
-                 itypes, xs, cambers, ys, zs, idys, idzs, comment=''):
+    def __init__(self, segmesh_id: int, naxial: int, nradial: int,
+                 nose_radius: float, iaxis: int,
+                 itypes: list[int],
+                 xs: list[float], cambers: list[float],
+                 ys: list[float], zs: list[float],
+                 idys: list[int], idzs: list[int], comment: str=''):
         """
         Defines a SEGMESH card, which defines a cross-section for a PBODY7.
 
@@ -2402,29 +2408,29 @@ class SEGMESH(BaseCard):
             The index of the axial station where the blunt nose ends.
             IAXIS is active only if ZONA7U (Hypersonic Aerodynamic
             Method) is used.
-        ITYPEi : int
+        itypes : int
             Type of input used to define the circumferential box cuts
             - 1 body of revolution
             - 2 elliptical body
             - 3 arbitrary body
-        Xi : list[float]
+        xs : list[float]
             X-location of the axial station; Xi must be in ascending
             order. (i.e., Xi+1 > Xi)
         cambers : list[float]
             Body camber at the Xi axial station. (Real)
-        YRi : list[float]
+        ys : list[float]
             Body cross-sectional radius if ITYPEi = 1 or the semi-axis length
             of the elliptical body parallel to the Y-axis if ITYPEi=2.
-        ZRi : list[float]
+        zs : list[float]
             The semi-axis length of the elliptical body parallel to the Z-axis.
-            Used only if ITYPEi=2. (Real)
-        IDYi : int
+            Used only if ITYPEi=2.
+        idys : int
             Identification number of AEFACT bulk data card that specifies
-            NRAD number of the Y-coordinate locations of the circumferential
+            nradial number of the Y-coordinate locations of the circumferential
             points at the Xi axial station. Use only if ITYPEi=3.
-        IDZi : int
+        idzs : int
             Identification number of AEFACT bulk data card that specifies
-            NRAD number of the Z-coordinate locations of the circumferential
+            nradial number of the Z-coordinate locations of the circumferential
             points at the Xi axial station. Use only if ITYPEi=3.
         comment : str; default=''
             a comment for the card
@@ -2461,7 +2467,7 @@ class SEGMESH(BaseCard):
                     self.xs, i+2, xi, i+1, xi_old, str(self)))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SEGMESH card from ``BDF.add_card(...)``
 
@@ -2489,13 +2495,13 @@ class SEGMESH(BaseCard):
         assert len(card) >= 9, f'len(SEGMESH card) = {len(card):d}\ncard={card}'
 
         for counter, ifield in enumerate(range(9, len(card), 8)):
-            itype = integer(card, ifield, 'itype%i' % (counter+1))
-            x = double_or_blank(card, ifield+1, 'itype%i' % (counter+1), 0.)
-            camber = double_or_blank(card, ifield+2, 'camber%i' % (counter+1), 0.)
-            y = double_or_blank(card, ifield+3, 'y%i' % (counter+1), 0.)
-            z = double_or_blank(card, ifield+4, 'z%i' % (counter+1), 0.)
-            idy = integer_or_blank(card, ifield+5, 'idy%i' % (counter+1))
-            idz = integer_or_blank(card, ifield+6, 'idz%i' % (counter+1))
+            itype = integer(card, ifield, 'itype%d' % (counter+1))
+            x = double_or_blank(card, ifield+1, 'itype%d' % (counter+1), default=0.)
+            camber = double_or_blank(card, ifield+2, 'camber%d' % (counter+1), default=0.)
+            y = double_or_blank(card, ifield+3, 'y%d' % (counter+1), default=0.)
+            z = double_or_blank(card, ifield+4, 'z%d' % (counter+1), default=0.)
+            idy = integer_or_blank(card, ifield+5, 'idy%d' % (counter+1))
+            idz = integer_or_blank(card, ifield+6, 'idz%d' % (counter+1))
             itypes.append(itype)
             xs.append(x)
             ys.append(y)
@@ -2503,22 +2509,22 @@ class SEGMESH(BaseCard):
             cambers.append(camber)
             idys.append(idy)
             idzs.append(idz)
-        assert len(itypes) == naxial, 'naxial=%s nradial=%s len(itypes)=%s' % (naxial, nradial, len(itypes))
+        assert len(itypes) == naxial, f'naxial={naxial:%d} nradial={nradial:%d} len(itypes)={len(itypes):%d}'
         return SEGMESH(segmesh_id, naxial, nradial, nose_radius, iaxis,
                        itypes, xs, cambers, ys, zs, idys, idzs, comment=comment)
 
-    def Cp(self):
+    def Cp(self) -> int:
         if self.cp_ref is not None:
             return self.cp_ref.cid
         return self.cp
 
-    def Pid(self):
+    def Pid(self) -> int:
         if self.pid_ref is not None:
             return self.pid_ref.pid
         return self.pid
 
     def cross_reference(self, model: BDF) -> None:
-        msg = ', which is required by SEGMESH eid=%s' % self.pid
+        msg = ', which is required by SEGMESH eid=%d' % self.pid
         idys_ref = []
         idzs_ref = []
         for idy in self.idys:
@@ -2559,7 +2565,7 @@ class SEGMESH(BaseCard):
         #x12 = p2 - self.p1
         #self.x12 = x12[0]
 
-    def shift(self, dxyz):
+    def shift(self, dxyz: np.ndarray) -> None:
         """shifts the aero panel"""
         self.p1 += dxyz
 
@@ -2631,11 +2637,8 @@ class CAERO7(BaseCard):
     ----------
     eid : int
         element id
-    pid : int, PAERO1
-        int : PAERO1 ID
-        PAERO1 : PAERO1 object (xref)
-    igid : int
-        Group number
+    p_airfoil : int
+        int : PAFOIL7 ID
     p1 : (1, 3) ndarray float
         xyz location of point 1 (leading edge; inboard)
     p4 : (1, 3) ndarray float
@@ -2667,12 +2670,17 @@ class CAERO7(BaseCard):
     """
     type = 'CAERO7'
     _field_map = {
-        1: 'sid', 2:'pid', 3:'cp', 4:'nspan', 5:'nchord',
-        6:'lspan', 7:'lchord', 8:'igid', 12:'x12', 16:'x43',
+        1: 'sid', 2: 'pid', 3: 'cp', 4: 'nspan', 5: 'nchord',
+        6: 'lspan', 7: 'lchord', 8: 'igid', 12: 'x12', 16: 'x43',
     }
 
-    def __init__(self, eid, label, p1, x12, p4, x43,
-                 cp=0, nspan=0, nchord=0, lspan=0, p_airfoil=None, ztaic=None, comment=''):
+    def __init__(self, eid: int, label: str,
+                 p1: np.ndarray, x12: float,
+                 p4: np.ndarray, x43: float,
+                 cp: int=0,
+                 nspan: int=0, nchord: int=0, lspan: int=0,
+                 p_airfoil: Optional[int]=None,
+                 ztaic: Optional[int]=None, comment: str=''):
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
         (e.g., wing/tail).
@@ -2681,11 +2689,8 @@ class CAERO7(BaseCard):
         ----------
         eid : int
             element id
-        pid : int, PAERO1
-            int : PAERO1 ID
-            PAERO1 : PAERO1 object (xref)
-        igroup : int
-            Group number
+        p_airfoil : int
+            int : PAFOIL7 ID
         p1 : (1, 3) ndarray float
             xyz location of point 1 (leading edge; inboard)
         p4 : (1, 3) ndarray float
@@ -3489,6 +3494,7 @@ class TRIM_ZONA(BaseCard):
         #card = self.repr_fields()
         #return self.comment + print_card_8(card)
 
+
 class TRIMLNK(BaseCard):
     """
     Defines a set of coefficient and trim variable identification
@@ -3504,6 +3510,7 @@ class TRIMLNK(BaseCard):
 
     """
     type = 'TRIMLNK'
+
     def __init__(self, link_id, sym, coeffs, var_ids, comment=''):
         """
         Creates a TRIMLNK card
@@ -3624,6 +3631,7 @@ class TRIMVAR(BaseCard):
 
     """
     type = 'TRIMVAR'
+
     def __init__(self, var_id: int, label: str, lower: float, upper: float,
                  trimlnk: int, dmi: None, sym: int, initial: None,
                  dcd: float, dcy: float, dcl: float,
@@ -4090,6 +4098,7 @@ class SPLINE1_ZONA(Spline):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
 class SPLINE2_ZONA(Spline):
     """
     Defines an infinite plate spline method for displacements and loads
@@ -4197,6 +4206,7 @@ class SPLINE2_ZONA(Spline):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class SPLINE3_ZONA(Spline):
     """
@@ -4337,10 +4347,12 @@ class TABDMP1_ZONA(TABDMP1):
         x, y = read_table_lax(card, table_id, 'TABDMP1')
         return TABDMP1(table_id, x, y, Type=Type, comment=comment)
 
+
 class PLTMODE(BaseCard):
     """
     """
     type = 'PLTMODE'
+
     def __init__(self, set_id: int, symmetry: str,
                  mode: int, max_disp: float,
                  format: str, filename: str,
@@ -4409,10 +4421,12 @@ class PLTMODE(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
 class PLTAERO(BaseCard):
     """
     """
     type = 'PLTAERO'
+
     def __init__(self, set_id: int, symmetry: str,
                  mode: int, max_disp: float, filename: str,
                  comment: str=''):

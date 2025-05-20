@@ -10,7 +10,7 @@ from typing import Optional, Any
 import numpy as np
 
 from pyNastran.utils import PathLike
-from pyNastran.utils.numpy_utils import integer_types #, integer_string_types
+from pyNastran.utils.numpy_utils import integer_types  #, integer_string_types
 from pyNastran.nptyping_interface import NDArray3float, NDArray66float
 from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -40,7 +40,7 @@ from pyNastran.bdf.cards.elements.rigid import (
 #     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX)
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
-from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1 #, FORCEAX, PRESAX, TEMPAX
+from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1  #, FORCEAX, PRESAX, TEMPAX
 
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
@@ -104,8 +104,8 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.zona import (
-    CAERO7, PAFOIL7,
-    #ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
+    CAERO7, PAFOIL7, BODY7, AESURFZ, ACOORD, MKAEROZ,
+    #AEROZ, MKAEROZ, PANLST1, PANLST3,
     #SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
     ZONA)
 
@@ -133,7 +133,7 @@ from pyNastran.bdf.cards.bdf_sets import (
     SESET,  #SEQSEP,
     RADSET,
 )
-from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPRM
+from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, MDLPRM
 from pyNastran.bdf.cards.dmig import (
     DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI,
     DMIG_UACCEL, DTI, DTI_UNITS,
@@ -742,10 +742,10 @@ CARD_MAP = {
     'ZONA': ZONA,
 }
 
+
 class AddCoords:
     def __init__(self, add_methods: AddMethods):
         self._add_methods = add_methods
-
 
     def add_cord2r(self, cid: int,
                    origin: Optional[list[float] | NDArray3float],
@@ -1597,6 +1597,7 @@ class Add0dElements:
         self._add_methods.add_property_object(prop)
         return prop
 
+
 class Add1dElements:
     def __init__(self, add_methods: AddMethods):
         self._add_methods = add_methods
@@ -1984,18 +1985,18 @@ class Add1dElements:
         return elem
 
     def add_pbeam(self, pid: int, mid: int,
-                 xxb: list[float], so: str, area: float,
-                 i1: float, i2: float, i12: float, j: float,
-                 nsm=None,
-                 c1=None, c2=None, d1=None, d2=None,
-                 e1=None, e2=None, f1=None, f2=None,
-                 k1: float=1., k2: float=1.,
-                 s1: float=0., s2: float=0.,
-                 nsia: float=0., nsib=None,
-                 cwa: float=0., cwb=None,
-                 m1a: float=0., m2a: float=0., m1b=None, m2b=None,
-                 n1a: float=0., n2a: float=0., n1b=None, n2b=None,
-                 comment: str='') -> PBEAM:
+                  xxb: list[float], so: str, area: float,
+                  i1: float, i2: float, i12: float, j: float,
+                  nsm=None,
+                  c1=None, c2=None, d1=None, d2=None,
+                  e1=None, e2=None, f1=None, f2=None,
+                  k1: float=1., k2: float=1.,
+                  s1: float=0., s2: float=0.,
+                  nsia: float=0., nsib=None,
+                  cwa: float=0., cwb=None,
+                  m1a: float=0., m2a: float=0., m1b=None, m2b=None,
+                  n1a: float=0., n2a: float=0., n1b=None, n2b=None,
+                  comment: str='') -> PBEAM:
         """
         .. todo:: fix 0th entry of self.so, self.xxb
 
@@ -2116,9 +2117,14 @@ class Add1dElements:
         self._add_methods.add_property_object(prop)
         return prop
 
-    def add_pbeam3(self, pid, mid, A, iz, iy, iyz=0., j=None, nsm=0.,
-                   cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0.,
-                   comment='') -> PBEAM3:
+    def add_pbeam3(self, pid: int, mid: int,
+                   A: float, iz: float, iy: float,
+                   iyz: float=0., j=None, nsm=0.,
+                   cy: float=0., cz: float=0.,
+                   dy: float=0., dz: float=0.,
+                   ey: float=0., ez: float=0.,
+                   fy: float=0., fz: float=0.,
+                   comment: str='') -> PBEAM3:
         """Creates a PBEAM3 card"""
         prop = PBEAM3(pid, mid, A, iz, iy, iyz=iyz, j=j, nsm=nsm,
                       cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
@@ -3478,7 +3484,7 @@ class AddAcoustic:
             Identification of the TABLEDi entry that defines the weighting function.
         cutfr : float
             Cutoff frequency for tables referenced above. (Real > 0.0)
-        B, K, M : float
+        b, k, m : float
             Equivalent damping, stiffness and mass values per unit area. (Real > 0.0)
 
         ..note:: tables are defined as a function of frequency in cycles/time
@@ -3727,8 +3733,8 @@ class AddMaterial:
         """Creates a MATDMG card"""
 
         mat = MATDMG(mid, ppf_model, y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
-                      b2, b3, a, litk, bigk, expn, tau, adel, plyuni, tid, hbar, dmax, pe,
-                      user, r01, ds, gic, giic, giiic, comment=comment)
+                     b2, b3, a, litk, bigk, expn, tau, adel, plyuni, tid, hbar, dmax, pe,
+                     user, r01, ds, gic, giic, giiic, comment=comment)
         self._add_methods.add_material_dependence_object(mat)
         return mat
 
@@ -4208,15 +4214,38 @@ class AddAero:
                    p4: np.ndarray, x43: float,
                    cp: int=0, nspan: int=0,
                    nchord: int=0, lspan: int=0,
-                   p_airfoil: Any=None, ztaic: Any=None, comment: str='') -> CAERO7:
+                   p_airfoil: Any=None, ztaic: Any=None,
+                   comment: str='') -> CAERO7:
         caero = CAERO7(eid, label, p1, x12, p4, x43,
                        cp=cp, nspan=nspan,
                        nchord=nchord, lspan=lspan,
-                       p_airfoil=p_airfoil, ztaic=ztaic, comment='')
+                       p_airfoil=p_airfoil, ztaic=ztaic, comment=comment)
         self._add_methods.add_caero_object(caero)
         return caero
 
-    def add_paero1(self, pid, caero_body_ids=None, comment='') -> PAERO1:
+    def add_pafoil7(self, pid: int, i_axial: str,
+                   i_thickness_root: int, i_camber_root: int, le_radius_root: float,
+                   i_thickness_tip: int, i_camber_tip: int, le_radius_tip: float,
+                   comment: str='') -> PAFOIL7:
+        pafoil = PAFOIL7(
+            pid, i_axial,
+            i_thickness_root, i_camber_root, le_radius_root,
+            i_thickness_tip, i_camber_tip, le_radius_tip,
+            comment=comment)
+        raise NotImplementedError('add PAFOIL7')
+        self._add_methods.add_paero_object(pafoil)
+        return pafoil
+    def add_body7(self, eid: int, label: str, pid: int, nseg: int,
+                  idmeshes: list[int], acoord: int=0, comment: str='') -> BODY7:
+        body = BODY7(
+            eid, label, pid, nseg,
+            idmeshes, acoord=acoord, comment=comment)
+        raise NotImplementedError('add BODY7')
+        return body
+
+    def add_paero1(self, pid: int,
+                   caero_body_ids: Optional[list[int]]=None,
+                   comment: str='') -> PAERO1:
         """
         Creates a PAERO1 card, which defines associated bodies for the
         panels in the Doublet-Lattice method.
@@ -5141,7 +5170,8 @@ class AddThermal:
         self._add_methods.add_thermal_load_object(load)
         return load
 
-    def add_qbdy3(self, sid, Q0, cntrlnd, eids, comment='') -> QBDY3:
+    def add_qbdy3(self, sid: int, q0: float, eids: list[int],
+                  cntrlnd: int=0, comment: str='') -> QBDY3:
         """
         Creates a QBDY3 card
 
@@ -5160,18 +5190,24 @@ class AddThermal:
             a comment for the card
 
         """
-        load = QBDY3(sid, Q0, cntrlnd, eids, comment=comment)
+        load = QBDY3(sid, q0, cntrlnd, eids, comment=comment)
         self._add_methods.add_thermal_load_object(load)
         return load
 
-    def add_qvol(self, sid, qvol, control_point, elements, comment='') -> QVOL:
+    def add_qvol(self, sid: int, qvol: float, control_point: int,
+                 elements: list[int],
+                 comment: str='') -> QVOL:
         """Creates a QVOL card"""
         load = QVOL(sid, qvol, control_point, elements, comment=comment)
         self._add_methods.add_load_object(load)
         return load
 
-    def add_qvect(self, sid, q0, eids, t_source=None,
-                  ce=0, vector_tableds=None, control_id=0, comment='') -> QVECT:
+    def add_qvect(self, sid: int, q0: float, eids: list[int],
+                  t_source: Optional[float]=None,
+                  ce: int=0,
+                  vector_tableds: Optional[list[int]]=None,
+                  control_id: int=0,
+                  comment: str='') -> QVECT:
         """
         Creates a QVECT card
 
@@ -8693,6 +8729,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_group_object(group)
         return group
     # ------------------------------------------
+
     def add_modtrak(self, sid, low_range, high_range, mt_filter, comment: str='') -> MODTRAK:
         modtrak = MODTRAK(sid, low_range, high_range, mt_filter, comment=comment)
         self._add_methods.add_modtrak_object(modtrak)
