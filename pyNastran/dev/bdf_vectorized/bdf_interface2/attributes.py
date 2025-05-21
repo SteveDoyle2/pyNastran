@@ -484,44 +484,44 @@ class BDFAttributes:
         self.aeros = None
 
         #: stores TRIM
-        self.trims = {}
+        self.trims: dict[key, TRIM] = {}
 
         #: stores DIVERG
-        self.divergs = {}
+        self.divergs: dict[key, DIVERG] = {}
 
         # ------ SOL 145 ------
         #: stores AERO
         self.aero = None
 
         #: stores FLFACT
-        self.flfacts = {}  #: .. todo:: can this be simplified ???
+        self.flfacts: dict[key, FLFACT] = {}  #: .. todo:: can this be simplified ???
         #: stores FLUTTER
-        self.flutters = {}
+        self.flutters: dict[key, FLUTTER] = {}
         #: mkaeros
         self.mkaeros = []
 
         # ------ SOL 146 ------
         #: stores GUST cards
-        self.gusts = {}
+        self.gusts: dict[key, GUST] = {}
         # ------------------------- thermal defaults -------------------------
         # BCs
         #: stores thermal boundary conditions - CONV,RADBC
-        self.bcs = {}    # type: dict[key, Any]
+        self.bcs: dict[key, CONV | RADBC] = {}
 
         #: stores PHBDY
         self.phbdys = {}  # type: dict[key, Any]
         #: stores convection properties - PCONV, PCONVM ???
-        self.convection_properties = {}  # type: dict[key, Any]
+        self.convection_properties: dict[key, PCONV] = {}
         #: stores TEMPD
-        self.tempds = {}  # type: dict[key, Any]
+        self.tempds: dict[key, TEMPD] = {}
 
         # -------------------------contact cards-------------------------------
-        self.bcrparas = {}  # type: dict[key, Any]
-        self.bctadds = {}  # type: dict[key, Any]
-        self.bctparas = {}  # type: dict[key, Any]
-        self.bctsets = {}  # type: dict[key, Any]
-        self.bsurf = {}  # type: dict[key, Any]
-        self.bsurfs = {}  # type: dict[key, Any]
+        self.bcrparas: dict[key, BCRPARA] = {}
+        self.bctadds: dict[key, BCTADD] = {}
+        self.bctparas: dict[key, BCTPARA] = {}
+        self.bctsets: dict[key, BCTSET] = {}
+        self.bsurf: dict[key, BURF] = {}
+        self.bsurfs: dict[key, BSURFS] = {}
 
         # ---------------------------------------------------------------------
 
@@ -830,18 +830,19 @@ class BDFAttributes:
             raise NotImplementedError('precision=%r' % precision)
 
     @property
-    def nastran_format(self):
+    def nastran_format(self) -> str:
         return self._nastran_format
 
     @nastran_format.setter
-    def nastran_format(self, nastran_format):
+    def nastran_format(self, nastran_format: str) -> None:
         fmt_lower = nastran_format.lower().strip()
         if fmt_lower not in ['nx', 'msc']:
             raise RuntimeError(nastran_format)
         self._nastran_format = fmt_lower
+        map_version(fmt_lower)
 
     @property
-    def is_long_ids(self):
+    def is_long_ids(self) -> bool:
         if self._nastran_format == 'nx':
             return True
         return False

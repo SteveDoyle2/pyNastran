@@ -21,6 +21,8 @@ from __future__ import annotations
 import math
 from itertools import count
 from collections import defaultdict, namedtuple
+import warnings
+
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
@@ -4476,31 +4478,16 @@ class MONPNT3(BaseCard):
         msg = ', which is required by MONPNT3 name=%s' % self.name
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.cd_ref = model.Coord(self.cd, msg=msg)
-        if self.node_set_group > 0:
-            # if model.is_msc:
-            #     model.Set(self.node_set_group, msg=msg)
-            # else:
-            self.node_ref = model.Group(self.node_set_group, msg=msg)
-        if self.elem_set_group > 0:
-            # if model.is_msc:
-            #     model.Set(self.elem_set_group, msg=msg)
-            # else:
-            self.elem_ref = model.Group(self.elem_set_group, msg=msg)
+        self.node_ref = xref_set_group(model, self.node_set_group, 'Node', msg)
+        self.elem_ref = xref_set_group(model, self.elem_set_group, 'Elem', msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by MONPNT3 name=%s' % self.name
         self.cp_ref = model.safe_coord(self.cp, self.name, xref_errors, msg=msg)
         self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
-        if self.node_set_group > 0:
-            # if model.is_msc:
-            #     model.Set(self.node_set_group, msg=msg)
-            # else:
-            self.node_ref = model.Group(self.node_set_group, msg=msg)
-        if self.elem_set_group > 0:
-            # if model.is_msc:
-            #     model.Set(self.elem_set_group, msg=msg)
-            # else:
-            self.elem_ref = model.Group(self.elem_set_group, msg=msg)
+
+        self.node_ref = xref_set_group(model, self.node_set_group, 'Node', msg)
+        self.elem_ref = xref_set_group(model, self.elem_set_group, 'Elem', msg)
 
     def get_node_set_group(self) -> int:
         return set_group(self.node_ref, self.node_set_group)
@@ -4553,6 +4540,25 @@ class MONPNT3(BaseCard):
 
     def __repr__(self) -> str:
         return self.write_card()
+
+
+def xref_set_group(model: BDF, set_group_id: int,
+                   xref_type: str, msg: str) -> Optional[SET1 | GROUP]:
+    if set_group_id > 0:
+        if model.is_msc:
+            set_group_ref = model.Set(set_group_id, msg=msg)
+            # {'Node', 'Point'}
+            if xref_type == 'Node':
+                set_group_ref.cross_reference_set(
+                    model, xref_type, msg=msg, allow_empty_nodes=False)
+            elif xref_type == 'Elem':
+                warnings.warn('skipping SET1/Elem xref')
+            else:  # pragma: no cover
+                raise RuntimeError(f'xref_type={xref_type!r}')
+        else:
+            set_group_ref = model.Group(set_group_id, msg=msg)
+        return set_group_ref
+    return None
 
 
 class MONDSP1(BaseCard):

@@ -70,7 +70,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
         units = ['ft', 'lbm', 's']
         convert(model, units_to, units)
 
-    model2 = BDF(log=model.log)
+    model2 = BDF(log=model.log)  # , mode=nastran_format
     #print(bdf_file.getvalue())
     if not remove_disabled_cards:
         model2._add_disabled_cards()
@@ -81,9 +81,12 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
     model2.get_bdf_stats()
     model2.write_bdf('model2.bdf')
 
+    # pulls nastran_format from the header
     model_parse = BDF(log=model.log)
     model_parse._parse = False
     model_parse.read_bdf('model2.bdf')
+    #head('model2.bdf')
+
     if run_test_bdf:
         folder = ''
         log_error = SimpleLogger(level='error', encoding='utf-8')
@@ -143,8 +146,15 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
 
     if run_remove_unused:
         remove_unused(model)
-
     return model3
+
+
+def head(filename: PathLike, nlines: int=20) -> None:  # pragma: no cover
+    with open(filename, 'r') as file_obj:
+        for i in range(nlines):
+            line = file_obj.readline().rstrip()
+            print(line)
+
 
 def read_write_op2_geom(model: BDF,
                         run_op2_writer: bool=True,

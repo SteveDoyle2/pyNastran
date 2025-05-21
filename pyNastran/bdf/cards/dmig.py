@@ -198,7 +198,7 @@ class DTI(BaseCard):
         #values = [valuei.decode(encoding) if isinstance(valuei, bytes) else (
         #    None if np.isnan(valuei) else valuei)
         #          for valuei in values]
-        self.fields = {key : value for key, value in zip(keys, values_str)}
+        self.fields = {key: value for key, value in zip(keys, values_str)}
         print('values_str', values_str)
         print('fields', self.fields)
         asdf

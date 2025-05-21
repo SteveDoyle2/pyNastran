@@ -1084,22 +1084,23 @@ class SET1(Set):
             #return True
         #return False
 
-    def symmetric_difference(self, set1):
+    def symmetric_difference(self, set1: SET1) -> np.ndarray:
         ids1 = set(self.get_ids())
         ids2 = set(set1.get_ids())
         return ids1.symmetric_difference(ids2)
 
-    def add_set(self, set1):
+    def add_set(self, set1: SET1) -> None:
         self.ids += set1.get_ids()
         self.clean_ids()
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         skin = []
         if self.is_skin:
             skin = ['SKIN']
         return ['SET1', self.sid] + skin + self.get_ids()
 
-    def cross_reference_set(self, model, xref_type: str, msg='', allow_empty_nodes=False):
+    def cross_reference_set(self, model, xref_type: str, msg='',
+                            allow_empty_nodes=False):
         """
         Cross links the card so referenced cards can be extracted directly
 

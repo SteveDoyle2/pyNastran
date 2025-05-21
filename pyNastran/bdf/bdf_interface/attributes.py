@@ -13,6 +13,7 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.cards.aero.zona import ZONA
 
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.model_group import ModelGroup
     from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11
     from pyNastran.bdf.bdf import (
@@ -1221,6 +1222,7 @@ class BDFAttributes:
         if fmt_lower not in BDF_FORMATS:
             raise RuntimeError(nastran_format)
         self._nastran_format = fmt_lower
+        map_version(self, fmt_lower)
 
     @property
     def is_long_ids(self) -> bool:
@@ -1432,3 +1434,45 @@ class BDFAttributes:
     # def dmijis(self, dmiji):
     #     self.deprecated('dmiji', 'dmiji', '1.5')
     #     self.dmiji = dmiji
+
+
+def map_version(fem: BDF, version: str) -> None:
+    version_map = {
+        'msc': fem.set_as_msc,
+        'nx': fem.set_as_nx,
+        'optistruct': fem.set_as_optistruct,
+        'mystran': fem.set_as_mystran,
+        'zona': fem.set_as_zona,
+    }
+    try:
+        func = version_map[version]
+    except KeyError:  # msc, nx, zona, mystran
+        fmts = ', '.join(version_map)
+        msg = f'mode={version!r} is not supported; modes=[{fmts}]'
+        raise RuntimeError(msg)
+    func()
+
+
+def map_update(fem: BDF, version: str) -> None:
+    #if self.nastran_format == 'zona':
+        #self.zona.update_for_zona()
+    #elif self.nastran_format == 'mystran':
+        #self._update_for_mystran()
+    #else:
+        # msc / nx / optistruct
+        #self._update_for_nastran()
+
+    map_version(fem, version)
+    version_map = {
+        'msc': fem._update_for_nastran,
+        'nx': fem._update_for_nastran,
+        'optistruct': fem._update_for_optistruct,
+        'mystran': fem._update_for_mystran,
+        'zona': fem.zona.update_for_zona,
+    }
+    try:
+        func = version_map[version]
+    except KeyError:
+        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zona, mystran]'
+        raise RuntimeError(msg)
+    func()

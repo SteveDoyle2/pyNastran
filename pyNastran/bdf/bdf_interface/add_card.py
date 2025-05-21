@@ -10,7 +10,7 @@ from typing import Optional, Any
 import numpy as np
 
 from pyNastran.utils import PathLike
-from pyNastran.utils.numpy_utils import integer_types  #, integer_string_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.nptyping_interface import NDArray3float, NDArray66float
 from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -40,7 +40,8 @@ from pyNastran.bdf.cards.elements.rigid import (
 #     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX)
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
-from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1  #, FORCEAX, PRESAX, TEMPAX
+from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1
+# FORCEAX, PRESAX, TEMPAX
 
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
@@ -4235,6 +4236,7 @@ class AddAero:
         raise NotImplementedError('add PAFOIL7')
         self._add_methods.add_paero_object(pafoil)
         return pafoil
+
     def add_body7(self, eid: int, label: str, pid: int, nseg: int,
                   idmeshes: list[int], acoord: int=0, comment: str='') -> BODY7:
         body = BODY7(
@@ -4310,7 +4312,9 @@ class AddAero:
         self._add_methods.add_paero_object(paero)
         return paero
 
-    def add_paero3(self, pid, nbox, ncontrol_surfaces, x, y, comment='') -> PAERO3:
+    def add_paero3(self, pid: int, nbox: int, ncontrol_surfaces: int,
+                   x: list[float], y: list[float],
+                   comment: str='') -> PAERO3:
         """
         Creates a PAERO3 card, which defines the number of Mach boxes
         in the flow direction and the location of cranks and control
@@ -5461,7 +5465,7 @@ class AddThermal:
         icavity: int
             Cavity identification number for grouping the radiant
             exchange faces of CHBDYi elements.
-        SHADE: str; default='BOTH'
+        shade: str; default='BOTH'
             Shadowing flag for the face of CHBDYi element.
             1/NONE:  face can neither shade nor be shaded by other faces.
             KSHD:  face can shade other faces.
@@ -5829,7 +5833,7 @@ class AddOptimization:
             optimization id
         prop_type : str
             property card name (e.g., PSHELL)
-        EID : int
+        eid : int
             element id
         cp_name : str/int
             optimization parameter as an element connectivity name (e.g., X1)
@@ -6264,6 +6268,7 @@ class AddOptimization:
         fields = ['BNDGRID', components] + values
         self.reject_card_lines('BNDGRID', print_card_8(fields).split('\n'), show_log=False)
 
+
 class AddSuperelements:
     def __init__(self, add_methods: AddMethods):
         self._add_methods = add_methods
@@ -6495,7 +6500,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         ----------
         nids : int
            the node ids
-        seqid : int/float
+        seqids : int/float
            the superelement id
         comment : str; default=''
             a comment for the card
@@ -6557,7 +6562,6 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_point_object(point)
         return point
 
-
     #def add_cgen(self, Type, field_eid, pid, field_id, th_geom_opt,
                  #eidl, eidh, t_abcd=None, direction='L', comment='') -> CGEN:
         #"""Creates a CGEN element card"""
@@ -6616,7 +6620,6 @@ class AddCards(AddCoords, AddContact, AddBolts,
         mdlprm = MDLPRM(mdlprm_dict, comment=comment)
         self._add_methods.add_mdlprm_object(mdlprm)
         return mdlprm
-
 
     def _add_param_mystran(self, key: str, values: list[int | float | str],
                            comment: str='') -> PARAM_MYSTRAN:
@@ -7111,7 +7114,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
             Load set identification number. See Remarks 1. and 4. (Integer > 0)
         scale : float
             Scale factor. See Remarks 2. and 8. (Real)
-        Si : list[float]
+        scale_factors : list[float]
             Scale factors. See Remarks 2., 7. and 8. (Real)
         load_ids : list[int]
             Load set identification numbers of RLOAD1, RLOAD2, TLOAD1,
@@ -7124,7 +7127,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_dload_object(load)
         return load
 
-    def add_darea(self, sid, nid, component, scale, comment='') -> DAREA:
+    def add_darea(self, sid: int, nid: int,
+                  component: str, scale: float, comment: str='') -> DAREA:
         """
         Creates a DAREA card
 
@@ -7669,7 +7673,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_load_object(load)
         return load
 
-    def add_accel1(self, sid, scale, N, nodes, cid=0, comment='') -> ACCEL1:
+    def add_accel1(self, sid: int, scale: float, N: list[float],
+                   nodes: list[int], cid: int=0, comment: str='') -> ACCEL1:
         """
         Creates an ACCEL1 card
 
@@ -7876,7 +7881,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_load_object(load)
         return load
 
-    def add_spc(self, conid :int, nodes: list[int], components: list[str],
+    def add_spc(self, conid: int, nodes: list[int], components: list[str],
                 enforced: list[float], comment: str='') -> SPC:
         """
         Creates an SPC card, which defines the degree of freedoms to be
@@ -8143,14 +8148,15 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_method_object(method)
         return method
 
-    def add_eigc(self, sid, method, grid, component, epsilon, neigenvalues,
-                 norm='MAX', # common
+    def add_eigc(self, sid: int, method: str, grid: int, component: int,
+                 epsilon: float, neigenvalues: int,
+                 norm: str='MAX',  # common
                  mblkszs=None, iblkszs=None, ksteps=None, NJIs=None,
                  alphaAjs=None, omegaAjs=None,
                  alphaBjs=None, omegaBjs=None,
                  LJs=None, NEJs=None, NDJs=None,
                  shift_r1=None, shift_i1=None, isrr_flag=None,
-                 nd1=None, comment='') -> EIGC:
+                 nd1=None, comment: str='') -> EIGC:
         """Creates an EIGC card"""
         method = EIGC(sid, method, grid, component, epsilon, neigenvalues, norm=norm,
                       mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
@@ -8170,7 +8176,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_cmethod_object(method)
         return method
 
-    def add_set1(self, sid, ids, is_skin=False, comment='') -> SET1:
+    def add_set1(self, sid: int, ids: list[int],
+                 is_skin: bool=False, comment: str='') -> SET1:
         """
         Creates a SET1 card, which defines a list of structural grid
         points or element identification numbers.

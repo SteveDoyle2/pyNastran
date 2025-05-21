@@ -17,18 +17,18 @@ from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, read_bdf
 from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.aero.aero import (
     AEFACT, AELIST, AEPARM,
-    CAERO1, CAERO2, CAERO3, CAERO4, #CAERO5,
-    PAERO1, PAERO2, PAERO4, #PAERO3, PAERO5,
+    CAERO1, CAERO2, CAERO3, CAERO4,  # CAERO5,
+    PAERO1, PAERO2, PAERO4,  # PAERO3, PAERO5,
     AESURF, AESURFS,
     AELINK, AECOMP,
-    SPLINE1, SPLINE2, #, SPLINE3, SPLINE4, SPLINE5
+    SPLINE1, SPLINE2,  # SPLINE3, SPLINE4, SPLINE5
     build_caero_paneling
 )
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.utils import build_trim_load_cases
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh # build_structure_from_caero
+from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh  # build_structure_from_caero
 from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 
 
@@ -46,6 +46,7 @@ FLUTTER_DIR = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples' / 'flutter'
 assert FLUTTER_DIR.exists(), print_bad_path(FLUTTER_DIR)
 COMMENT_BAD = 'this is a bad comment'
 COMMENT_GOOD = 'this is a good comment\n'
+
 
 class TestAero(unittest.TestCase):
     """
@@ -252,7 +253,6 @@ class TestAero(unittest.TestCase):
         lists = 42.0
         with self.assertRaises(TypeError):
             AECOMP(name, list_type, lists)
-
 
     def test_aefact_1(self):
         """checks the AEFACT card"""
@@ -3011,6 +3011,9 @@ class TestAero(unittest.TestCase):
                                     xflag='', comment='monpnt3')
         model.add_set1(grid_set, [11, 12, 13])
         model.add_set1(elem_set, [4, 5, 6])
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [10., 0., 0.])
+        model.add_grid(13, [20., 0., 0.])
         monpnt3.raw_fields()
         monpnt3.validate()
 
@@ -3020,9 +3023,33 @@ class TestAero(unittest.TestCase):
         model.uncross_reference()
         save_load_deck(model)
 
-    def test_monpnt3(self):
+    def test_monpnt3_msc(self):
         """tests a MONPNT3 with an equals sign"""
-        model = BDF(debug=None)
+        model = BDF(debug=None, mode='msc')
+        card_lines = [
+            'MONPNT3 MP3A    MP3 at node 11 CP=225 CD=225',
+            '        123456  1       2       225     0.	0.	0.',
+            '        225',
+        ]
+        card_name = 'MONPNT3'
+        model.add_card_lines(card_lines, card_name, comment='', has_none=True)
+        model.add_set1(1, [1, 2])
+        model.add_set1(2, [3, 4])
+
+        model.add_grid(1, [10., 0., 0.])
+        model.add_grid(2, [20., 0., 0.])
+
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        cid = 225
+        model.add_cord2r(cid, origin, zaxis, xzplane)
+        #model.add_monpnt3()
+        save_load_deck(model)
+
+    def test_monpnt3_nx(self):
+        """tests a MONPNT3 with an equals sign"""
+        model = BDF(debug=None, mode='nx')
         card_lines = [
             'MONPNT3 MP3A    MP3 at node 11 CP=225 CD=225',
             '        123456  1       2       225     0.	0.	0.',
@@ -3031,7 +3058,11 @@ class TestAero(unittest.TestCase):
         card_name = 'MONPNT3'
         model.add_card_lines(card_lines, card_name, comment='', has_none=True)
         model.add_group(1, nodes=[1, 2])
-        model.add_group(2, nodes=[1, 2])
+        model.add_group(2, nodes=[3, 4])
+
+        model.add_grid(1, [10., 0., 0.])
+        model.add_grid(2, [10., 0., 0.])
+
         origin = [0., 0., 0.]
         zaxis = [0., 0., 1.]
         xzplane = [1., 0., 0.]
@@ -3041,7 +3072,7 @@ class TestAero(unittest.TestCase):
         save_load_deck(model)
 
     def test_monpnt3_group_nx(self):
-        model = BDF(debug=None)
+        model = BDF(debug=None, mode='nx')
         group_id = 42
         nodes = [1, 2, 3]
         elements = [1]
@@ -3065,6 +3096,10 @@ class TestAero(unittest.TestCase):
 
         nodes = [1, 2, 3]
         model.add_group(node_set, nodes)
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [10., 0., 0.])
+        model.add_grid(3, [20., 0., 0.])
         monpnt3 = model.add_monpnt3(name, label, axes, xyz,
                                     node_set, elem_set,
                                     cp=0, cd=0)

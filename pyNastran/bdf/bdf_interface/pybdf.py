@@ -253,12 +253,11 @@ class BDFInputPy:
             ilines = None
 
         nastran_format = self.nastran_format
-
         #superelement_lines = {}
         #superelement_ilines = None
 
         log = self.log
-        if self.use_new_parser and nastran_format != 'optistruct': # make_ilines is False
+        if self.use_new_parser and nastran_format != 'optistruct':  # make_ilines is False
             out = lines_to_decks2(all_lines, ilines, punch, log,
                                   nastran_format=nastran_format)
             (system_lines, executive_control_lines, case_control_lines,

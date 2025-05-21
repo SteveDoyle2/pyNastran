@@ -38,6 +38,7 @@ from .bdf_interface.utils import (
     parse_executive_control_deck,
     fill_dmigs, _get_card_name, _parse_dynamic_syntax,
 )
+from pyNastran.bdf.bdf_interface.attributes import map_version, map_update
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 from .bdf_interface.replication import (
     to_fields_replication, get_nrepeats, int_replication, float_replication,
@@ -5267,58 +5268,6 @@ def _get_coords_to_update(coords: dict[int, Coord],
             #msg += str(cp)
         #raise RuntimeError(msg)
     return ncoords, cord1s_to_update_list, cord2s_to_update_list, nids_checked
-
-def map_version(fem: BDF, version: str) -> None:
-    version_map = {
-        'msc': fem.set_as_msc,
-        'nx': fem.set_as_nx,
-        'optistruct': fem.set_as_optistruct,
-        'mystran': fem.set_as_mystran,
-        'zona': fem.set_as_zona,
-    }
-    try:
-        func = version_map[version]
-    except KeyError: # msc, nx, zona, mystran
-        fmts = ', '.join(version_map)
-        msg = f'mode={version!r} is not supported; modes=[{fmts}]'
-        raise RuntimeError(msg)
-    func()
-
-def map_update(fem: BDF, version: str) -> None:
-    #if self.nastran_format == 'zona':
-        #self.zona.update_for_zona()
-    #elif self.nastran_format == 'mystran':
-        #self._update_for_mystran()
-    #else:
-        # msc / nx / optistruct
-        #self._update_for_nastran()
-
-    version_map = {
-        'msc': fem._update_for_nastran,
-        'nx': fem._update_for_nastran,
-        'optistruct': fem._update_for_optistruct,
-        'mystran': fem._update_for_mystran,
-        'zona': fem.zona.update_for_zona,
-    }
-    try:
-        func = version_map[version]
-    except KeyError:
-        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zona, mystran]'
-        raise RuntimeError(msg)
-    func()
-
-
-#if mode == 'msc':
-    #self.set_as_msc()
-#elif mode == 'nx':
-    #self.set_as_nx()
-#elif mode == 'mystran':
-    #self.set_as_mystran()
-#elif mode == 'zona':
-    #self.set_as_zona()
-#else:  # pragma: no cover
-    #msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, mystran]'
-    #raise NotImplementedError(msg)
 
 
 def main() -> None:  # pragma: no cover
