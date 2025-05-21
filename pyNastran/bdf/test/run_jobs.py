@@ -102,6 +102,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
         skip_files=skip_files,
         process_all=process_all,
         debug=debug, log=level)
+    assert isinstance(nfiles, int), nfiles
     return nfiles
 
 
@@ -284,6 +285,8 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         removes the *.asg, *.asm, *.log, *.f04, *.mon1, *.mon2 and *.plt files
     debug: bool; default=False
         print the call args
+    log: SimpleLogger
+        logging for the job runner
 
     Returns
     -------

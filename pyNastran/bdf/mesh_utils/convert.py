@@ -52,7 +52,7 @@ def convert(model: BDF, units_to: list[str],
     scale_model(model, xyz_scale, mass_scale, time_scale, force_scale, gravity_scale)
 
 
-def scale_by_terms(bdf_filename: BDF | str, terms: list[float], scales: list[float],
+def scale_by_terms(bdf_filename: BDF | str, terms: list[str], scales: list[float],
                    bdf_filename_out: Optional[str]=None,
                    encoding: Optional[str]=None, log=None, debug: bool=True) -> BDF:
     """
@@ -99,20 +99,21 @@ def scale_by_terms(bdf_filename: BDF | str, terms: list[float], scales: list[flo
         model.write_bdf(bdf_filename_out, size=16)
     return model
 
+
 def _setup_scale_by_terms(scales: list[float],
                           terms: list[str], quiet: bool=False) -> tuple[float, float, float]:
     """determines the mass, length, time scaling factors"""
     term_to_mlt_map = {
         #      M   L   T
-        'M' : [1., 0., 0.],
-        'L' : [0., 1., 0.],
-        'T' : [0., 0., 1.],
+        'M': [1., 0., 0.],
+        'L': [0., 1., 0.],
+        'T': [0., 0., 1.],
         'rho': [1., 0., -3.],
 
-        'F' : [1., 1., -2.],
-        'P' : [1., -1., -2.],
-        'V' : [0., 1., -1.],
-        'A' : [0., 1., -2.],
+        'F': [1., 1., -2.],
+        'P': [1., -1., -2.],
+        'V': [0., 1., -1.],
+        'A': [0., 1., -2.],
     }
     assert len(terms) == 3, terms
     A = np.zeros((3, 3), dtype='float64')
@@ -124,7 +125,7 @@ def _setup_scale_by_terms(scales: list[float],
     MLT = ['mass', 'length', 'time']
     for mlt, Ai in zip(MLT, A):
         if np.allclose(np.abs(Ai).max(), 0.):
-            raise RuntimeError('%s is not solvable from [%s]' %  (mlt, ', '.join(terms)))
+            raise RuntimeError('%s is not solvable from [%s]' % (mlt, ', '.join(terms)))
 
     detA = np.linalg.det(A)
     if detA == 0.0:
@@ -145,9 +146,10 @@ def _setup_scale_by_terms(scales: list[float],
         print(msg)
     return mass_scale, xyz_scale, time_scale
 
+
 def _scale_term(name: str,
                 coeffs: list[float],
-                terms: list[float],
+                terms: list[str],
                 scales: list[float]) -> tuple[float, str]:
     msg = '%s = ' % name
     value = 1.0
@@ -157,6 +159,7 @@ def _scale_term(name: str,
             value *= scale ** coeff
     msg = msg.strip('* ')
     return value, msg
+
 
 def scale_model(model: BDF,
                 xyz_scale: float,
@@ -237,7 +240,8 @@ def _set_wtmass(model: BDF, gravity_scale: float) -> None:
         model.add_card(card, 'PARAM')
     model.log.debug('wtmass = %s\n' % weight_mass)
 
-def _convert_nodes(model: BDF, xyz_scale: bool) -> None:
+
+def _convert_nodes(model: BDF, xyz_scale: float) -> None:
     """
     Converts the nodes
 
@@ -251,6 +255,7 @@ def _convert_nodes(model: BDF, xyz_scale: bool) -> None:
         else:
             # only scale R
             node.xyz[0] *= xyz_scale
+
 
 def _convert_coordinates(model: BDF, xyz_scale: float) -> None:
     """
@@ -290,6 +295,7 @@ def _convert_coordinates(model: BDF, xyz_scale: float) -> None:
             #coord.e3 *= xyz_scale
         #else:
             #raise NotImplementedError(coord)
+
 
 def _convert_elements(model: BDF,
                       xyz_scale: float,
@@ -365,13 +371,13 @@ def _convert_elements(model: BDF,
 
     scales = set([])
     scale_map = {
-        'nsm_bar' : 'nsm_bar_scale (M/L) = %g' % nsm_bar_scale,
-        'area_moi' : 'area_moi_scale (L^4) = %g' % area_moi_scale,
-        'area' : 'area_scale (L^2) = %g' % area_scale,
-        'stiffness' : 'stiffness_scale (F/L) = %g' % stiffness_scale,
-        'flexibility' : 'flexibility_scale (L/F) = %g' % flexibility_scale,
-        'damping' : 'damping_scale (F/L) = %g' % damping_scale,
-        'mass_moi' : 'mass_moi_scale (M*L^2) = %g' % mass_moi_scale,
+        'nsm_bar': 'nsm_bar_scale (M/L) = %g' % nsm_bar_scale,
+        'area_moi': 'area_moi_scale (L^4) = %g' % area_moi_scale,
+        'area': 'area_scale (L^2) = %g' % area_scale,
+        'stiffness': 'stiffness_scale (F/L) = %g' % stiffness_scale,
+        'flexibility': 'flexibility_scale (L/F) = %g' % flexibility_scale,
+        'damping': 'damping_scale (F/L) = %g' % damping_scale,
+        'mass_moi': 'mass_moi_scale (M*L^2) = %g' % mass_moi_scale,
     }
     for elem in model.elements.values():
         elem_type = elem.type
@@ -419,7 +425,7 @@ def _convert_elements(model: BDF,
 
         elif elem_type == 'CONROD':
             scales.update(['area', 'nsm_bar'])
-            elem.A *= area_scale # area
+            elem.A *= area_scale  # area
             elem.nsm *= nsm_bar_scale
         elif elem_type == 'CGAP':
             if elem.g0 is None and None in elem.x:
@@ -511,6 +517,7 @@ def _convert_elements(model: BDF,
             raise NotImplementedError(elem)
     _write_scales(model.log, scale_map, scales, {'length', 'mass'})
 
+
 def _convert_properties(model: BDF,
                         xyz_scale: float,
                         time_scale: float,
@@ -558,13 +565,13 @@ def _convert_properties(model: BDF,
     scale_map = {
         'nsm_bar': f'nsm_bar_scale (M/L) = {nsm_bar_scale:g}',
         'nsm_plate': f'nsm_plate_scale (M/L^2) = {nsm_plate_scale:g}',
-        'area_moi' : f'area_moi_scale (L^4) = {area_moi_scale:g}',
+        'area_moi': f'area_moi_scale (L^4) = {area_moi_scale:g}',
         'force': f'force_scale (F) = {force_scale:g}',
         'moment': f'force_scale (F*L) = {moment_scale:g}',
         'stiffness': f'stiffness_scale (F/L) = {stiffness_scale:g}',
         'damping': f'damping_scale (F/V) = {damping_scale:g}',
         'stress': f'stress_scale (F/L^2) = {stress_scale:g}',
-        'velocity' : f'velocity_scale (L/T) = {velocity_scale:g}',
+        'velocity': f'velocity_scale (L/T) = {velocity_scale:g}',
         'area_moi/length': f'area_moi/length (L^3) = {area_moi_length:g}',
         'rotational_stiffness': f'rotational_stiffness_scale (F*L/L) = {force_scale:g}',
     }
@@ -597,7 +604,7 @@ def _convert_properties(model: BDF,
             prop.k *= stiffness_scale
         elif prop_type in ['PDAMP', 'PDAMP5']:
             scales.add('damping')
-            prop.b *= damping_scale # force_scale / velocity_scale
+            prop.b *= damping_scale  # force_scale / velocity_scale
         elif prop_type == 'PVISC':
             prop.ce *= force_scale / velocity_scale
             prop.cr *= moment_scale / velocity_scale
@@ -764,6 +771,7 @@ def _convert_properties(model: BDF,
                         xyz_scale, velocity_scale, force_scale)
     _write_scales(model.log, scale_map, scales, {'length', 'area', 'mass', 'temperature'})
 
+
 def _convert_pbar(scales: set[str],
                   prop: PBAR,
                   xyz_scale: float,
@@ -786,6 +794,7 @@ def _convert_pbar(scales: set[str],
     prop.e2 *= xyz_scale
     prop.f1 *= xyz_scale
     prop.f2 *= xyz_scale
+
 
 def _convert_pbeam(scales: set[str],
                    prop: PBEAM,
@@ -818,6 +827,7 @@ def _convert_pbeam(scales: set[str],
     prop.n2a *= xyz_scale
     prop.n1b *= xyz_scale
     prop.n2b *= xyz_scale
+
 
 def _convert_pbeam3(scales: set[str],
                     prop: PBEAM3,
@@ -857,6 +867,7 @@ def _convert_pbeam3(scales: set[str],
     #nz
     # w
 
+
 def _convert_pbush(scales: set[str],
                    prop: PBUSH,
                    velocity_scale: float,
@@ -893,6 +904,7 @@ def _convert_pbush(scales: set[str],
     #mass : float; default=None
         #lumped mass of the CBUSH
         #This is an MSC only parameter.
+
 
 def _convert_pbush1d(model: BDF,
                      scales: set[str],
@@ -956,6 +968,7 @@ def _get_pbush1d_tables(prop: PBUSH1D, table_names: tuple[str], tables_set: set[
         else:
             raise TypeError('key=%r value=%r' % (key, value))
 
+
 def _set_pbush1d_tables(model: BDF, scales: set[str],
                         spring_tables: set[int], damper_tables: set[int],
                         xyz_scale: float, velocity_scale: float, force_scale: float) -> None:
@@ -981,6 +994,7 @@ def _set_pbush1d_tables(model: BDF, scales: set[str],
             table.x *= xyz_scale
             table.y *= force_scale
 
+
 def _convert_materials(model: BDF,
                        xyz_scale: float,
                        mass_scale: float,
@@ -998,7 +1012,7 @@ def _convert_materials(model: BDF,
 
     stress_scale = force_scale / xyz_scale ** 2
     density_scale = mass_scale / xyz_scale ** 3
-    a_scale = 1. / temperature_scale # thermal expansion
+    a_scale = 1. / temperature_scale  # thermal expansion
 
     model.log.debug('--Material Scales--')
     scales = set([])
@@ -1141,14 +1155,17 @@ def _convert_materials(model: BDF,
 
     scale_map = {
         'density': 'density_scale (M/L^3) = %g' % density_scale,
-        'stress' : 'stress_scale (F/L^3) = %g' % stress_scale,
-        'a' : 'alpha_scale (1/L) = %g' % a_scale,
-        'temperature' : 'temperature_scale (theta) = %g' % temperature_scale,
+        'stress': 'stress_scale (F/L^3) = %g' % stress_scale,
+        'a': 'alpha_scale (1/L) = %g' % a_scale,
+        'temperature': 'temperature_scale (theta) = %g' % temperature_scale,
     }
     _write_scales(model.log, scale_map, scales)
 
+
 def _write_scales(log: SimpleLogger, scale_map: dict[str, str], scales: set[str],
-                  keys_to_skip=set([])):
+                  keys_to_skip=None) -> None:
+    if keys_to_skip is None:
+        keys_to_skip = set([])
     for scale, msg in scale_map.items():
         if scale in scales:
             log.debug(msg)
@@ -1159,6 +1176,7 @@ def _write_scales(log: SimpleLogger, scale_map: dict[str, str], scales: set[str]
     #model.log.debug('density_scale (M/L^3) = %g' % density_scale)
     #model.log.debug('stress_scale (F/L^3) = %g' % stress_scale)
     #model.log.debug('a_scale (1/L) = %g\n' % a_scale)
+
 
 def _convert_constraints(model: BDF, xyz_scale: float) -> None:
     """
@@ -1179,12 +1197,13 @@ def _convert_constraints(model: BDF, xyz_scale: float) -> None:
             else:
                 raise NotImplementedError(spc)
 
+
 def _get_dload_scale(dload,
                      scales: set[str],
                      xyz_scale: float,
                      velocity_scale: float,
                      accel_scale: float,
-                     force_scale: float) -> None:
+                     force_scale: float) -> float:
     """
     LOAD assumes force
     """
@@ -1200,9 +1219,10 @@ def _get_dload_scale(dload,
     elif dload.Type == 'ACCE':
         scale = accel_scale
         scales.add('accel')
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(dload)
     return scale
+
 
 def _convert_loads(model: BDF,
                    xyz_scale: float,
@@ -1236,14 +1256,14 @@ def _convert_loads(model: BDF,
     model.log.debug('--Load Scales--')
     scales = set([])
     scale_map = {
-        'time' : 'time_scale (T) = %g' % time_scale,
-        'length' : 'length_scale (L) = %g' % xyz_scale,
-        'force' : 'force_scale (F) = %g' % force_scale,
-        'moment' : 'moment_scale (F*L) = %g' % moment_scale,
-        'pressure' : 'pressure_scale (F/L^2) = %g' % pressure_scale,
-        'velocity' : 'velocity_scale (L/T) = %g' % velocity_scale,
-        'randps' : 'velocity_psd_scale (L^2/T) = %g' % velocity_psd_scale,
-        'accel' : 'accel_scale (F/L) = %g ???' % accel_scale,
+        'time': 'time_scale (T) = %g' % time_scale,
+        'length': 'length_scale (L) = %g' % xyz_scale,
+        'force': 'force_scale (F) = %g' % force_scale,
+        'moment': 'moment_scale (F*L) = %g' % moment_scale,
+        'pressure': 'pressure_scale (F/L^2) = %g' % pressure_scale,
+        'velocity': 'velocity_scale (L/T) = %g' % velocity_scale,
+        'randps': 'velocity_psd_scale (L^2/T) = %g' % velocity_psd_scale,
+        'accel': 'accel_scale (F/L) = %g ???' % accel_scale,
         'temperature': 'temperature_scale (theta) = %g ???' % temperature_scale,
     }
     #model.log.debug('force_scale (F) = %g' % force_scale)
@@ -1335,7 +1355,7 @@ def _convert_loads(model: BDF,
             table.x *= frequency_scale
             table.y *= velocity_psd_scale
         elif table.type == 'TABRNDG':
-            table.LU *= time_scale # units of time
+            table.LU *= time_scale  # units of time
             table.WG *= velocity_scale
         else:
             raise NotImplementedError(table.get_stats())
@@ -1343,10 +1363,10 @@ def _convert_loads(model: BDF,
         tabled = model.TableD(tid)
         tabled.y *= scale
 
-    skip_cards = {'PLOADX1', 'QVOL', 'QHBDY', 'QBDY1', 'QBDY2', 'QBDY3', } # 'GMLOAD'
+    skip_cards = {'PLOADX1', 'QVOL', 'QHBDY', 'QBDY1', 'QBDY2', 'QBDY3', }  # 'GMLOAD'
     for loads in model.loads.values():
         assert isinstance(loads, list), loads
-        for load in loads: # list
+        for load in loads:  # list
             load_type = load.type
             if load_type == 'LOAD':
                 pass
@@ -1391,7 +1411,7 @@ def _convert_loads(model: BDF,
                 scales.add('length')
                 load.deformation *= xyz_scale
             elif load_type == 'RANDPS':
-                table = load.tid # defines G(f)
+                table = load.tid  # defines G(f)
                 if table.type == 'TABRND1':
                     scales.update(['frequency', 'force'])
                     table.x *= frequency_scale # freq
@@ -1413,7 +1433,7 @@ def _convert_loads(model: BDF,
             elif load_type == 'FORCEAX':
                 scales.add('force')
                 load.f_rtz *= force_scale
-            elif load_type in  skip_cards:
+            elif load_type in skip_cards:
                 model.log.warning('skipping %s' % load)
             elif load_type == 'TEMPAX':
                 scales.add('temperature')
@@ -1434,6 +1454,7 @@ def _convert_loads(model: BDF,
             else:
                 raise NotImplementedError(f'{load.get_stats()}\n{load}')
     _write_scales(model.log, scale_map, scales, {'length'})
+
 
 def _convert_aero(model: BDF,
                   xyz_scale: float,
@@ -1473,15 +1494,15 @@ def _convert_aero(model: BDF,
     #model.log.debug('density_scale (F/L^3) = %s\n' % density_scale)
     scales = set([])
     scale_map = {
-        'area' : 'area_scale (L^2) = %g' % area_scale,
-        'velocity' : 'velocity_scale (L/T) = %g' % velocity_scale,
-        'pressure' : 'pressure_scale (F/L^2) = %g' % pressure_scale,
-        'density' : 'density_scale (F/L^3) = %g' % density_scale,
-        'accel' : 'accel_scale (L/T^2) = %g' % acceleration_scale,
-        'moment' : 'moment (F*L) = %g' % moment_scale,
-        'angular_velocity' : 'angular_velocity (1/T) = %g' % angular_velocity_scale,
-        'angular_accel' : 'angular_accel (1/T^2) = %g' % angular_acceleration_scale,
-        #'force (F)' : 'force_scale (F) = %g' % force_scale,
+        'area': 'area_scale (L^2) = %g' % area_scale,
+        'velocity': 'velocity_scale (L/T) = %g' % velocity_scale,
+        'pressure': 'pressure_scale (F/L^2) = %g' % pressure_scale,
+        'density': 'density_scale (F/L^3) = %g' % density_scale,
+        'accel': 'accel_scale (L/T^2) = %g' % acceleration_scale,
+        'moment': 'moment (F*L) = %g' % moment_scale,
+        'angular_velocity': 'angular_velocity (1/T) = %g' % angular_velocity_scale,
+        'angular_accel': 'angular_accel (1/T^2) = %g' % angular_acceleration_scale,
+        #'force (F)': 'force_scale (F) = %g' % force_scale,
     }
 
     if model.aero:
@@ -1586,18 +1607,19 @@ def _convert_aero(model: BDF,
     for flutter in model.flutters.values():
         flfact = flutter.density_ref
         flfact_rho_ids.add(flfact.sid)
-        if 'velocity' in flutter.headers: # we skip kfreq
+        if 'velocity' in flutter.headers:  # we skip kfreq
             flfact = flutter.reduced_freq_velocity_ref
             flfact_velocity_ids.add(flfact.sid)
     for flfact_id in flfact_rho_ids: # density
         flfact = model.flfacts[flfact_id]
         flfact.factors *= density_scale
         scales.add('density')
-    for flfact_id in flfact_velocity_ids: # velocity
+    for flfact_id in flfact_velocity_ids:  # velocity
         flfact = model.flfacts[flfact_id]
         flfact.factors *= velocity_scale
         scales.add('velocity')
     _write_scales(model.log, scale_map, scales, {'length', 'area'})
+
 
 def _scale_caero(caero, xyz_scale: float, xyz_aefacts: set[int]) -> None:
     try:
@@ -1640,6 +1662,7 @@ def _scale_caero(caero, xyz_scale: float, xyz_aefacts: set[int]) -> None:
         print(caero.get_stats())
         raise
 
+
 def _convert_optimization(model: BDF,
                           xyz_scale: float,
                           mass_scale: float,
@@ -1668,7 +1691,6 @@ def _convert_optimization(model: BDF,
         #desvar.xub *= scale
         #desvar.delx *= scale
         #raise NotImplementedError(desvar)
-
 
     for unused_key, dconstrs in model.dconstrs.items():
         for dconstr in dconstrs:
@@ -1712,6 +1734,7 @@ def _convert_optimization(model: BDF,
         #print('------------')
         #print(dvprel)
 
+
 def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> None:
     """helper for ``_convert_optimization``"""
     otype = dconstr.type
@@ -1728,7 +1751,7 @@ def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> Non
                     scale = pressure_scale
                 elif response_type in {'STRAIN', 'CSTRAIN'}:
                     scale = 1.
-                else:
+                else:  # pragma: no cover
                     raise RuntimeError(atti)
                 #if atti
                 #if property_type == 'PSHELL':
@@ -1737,7 +1760,7 @@ def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> Non
             msg = 'skipping:\n%s%s' % (str(dconstr), str(dresp))
             model.log.warning(msg)
             return
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(dresp)
 
         # lower bound
@@ -1753,6 +1776,7 @@ def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> Non
         msg = f'otype={otype!r} is not supported\n{dconstr}'
         print(msg)
         raise NotImplementedError(msg)
+
 
 def _convert_dvcrel1(dvcrel: DVCREL1 | DVCREL2,
                      xyz_scale: float, mass_scale: float) -> float:
@@ -1773,6 +1797,7 @@ def _convert_dvcrel1(dvcrel: DVCREL1 | DVCREL2,
     else:
         raise NotImplementedError(dvcrel)
     return scale
+
 
 def _convert_dvmrel1(dvmrel, xyz_scale: float,
                      mass_scale: float,
@@ -1801,6 +1826,7 @@ def _convert_dvmrel1(dvmrel, xyz_scale: float,
         raise NotImplementedError('cannot convert %r\n%s' % (mat_type, dvmrel))
     return scale
 
+
 def _convert_dvprel1(dvprel, xyz_scale: float,
                      mass_scale: float,
                      force_scale: float,
@@ -1822,7 +1848,7 @@ def _convert_dvprel1(dvprel, xyz_scale: float,
     if prop_type == 'PSHELL':
         if var_to_change == 'T':
             scale = xyz_scale
-        elif var_to_change in [6, 8]: # 12I/t^3, ts/t
+        elif var_to_change in [6, 8]:  # 12I/t^3, ts/t
             scale = 1.
         else:  # pragma: no cover
             raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
@@ -1831,7 +1857,7 @@ def _convert_dvprel1(dvprel, xyz_scale: float,
             return scale
         if var_to_change.startswith('T') or var_to_change == 'Z0':
             scale = xyz_scale
-        elif var_to_change == 'SB': # Allowable shear stress of the bonding material
+        elif var_to_change == 'SB':  # Allowable shear stress of the bonding material
             scale = stress_scale
         else:  # pragma: no cover
             raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
@@ -1930,6 +1956,7 @@ def _convert_dvprel1(dvprel, xyz_scale: float,
         raise NotImplementedError('cannot convert %r\n%s' % (prop_type, dvprel))
     return scale
 
+
 def _convert_desvars(desvars, scale):
     """scales the DVPREL/DVCREL/DVMREL DESVAR values"""
     for desvar in desvars:
@@ -1945,6 +1972,7 @@ def _convert_desvars(desvars, scale):
             msg = f'DESVAR id={desvar.ddval} DDVAL is not None\n{str(desvar)}'
             raise RuntimeError(msg)
         assert desvar.ddval is None, desvar
+
 
 def get_scale_factors(units_from, units_to, log):
     """
@@ -2103,7 +2131,7 @@ def convert_mass(mass_from: str, mass_to: str,
     # convert to kg
     if mass_from == 'kg':
         pass
-    elif mass_from == 'Mg': # mega-gram / ton
+    elif mass_from == 'Mg':  # mega-gram / ton
         mass_scale *= 1000.
         gravity_scale_mass *= 1000.
     elif mass_from == 'g':
@@ -2112,11 +2140,11 @@ def convert_mass(mass_from: str, mass_to: str,
     elif mass_from == 'lbm':
         mass_scale *= lbm_to_kg
         weight_scale *= lbf_to_newton
-        gravity_scale_mass /= gravity_english_ft # ft/s^2 to m/s^2
+        gravity_scale_mass /= gravity_english_ft  # ft/s^2 to m/s^2
     elif mass_from == 'slug':
         mass_scale *= slug_to_kg
         # assume lbf
-        weight_scale *= lbf_to_newton #* gravity_english_ft)
+        weight_scale *= lbf_to_newton  #* gravity_english_ft)
         #log.warning("not scaling force/weight")
         #weight_scale *= lbf_to_newton
         #gravity_scale_mass /= gravity_english_in # in/s^2 to m/s^2
@@ -2134,10 +2162,10 @@ def convert_mass(mass_from: str, mass_to: str,
     # convert from kg
     if mass_to == 'kg':
         pass
-    elif mass_to == 'Mg': # mega-gram # what about weight_scale???
+    elif mass_to == 'Mg':  # mega-gram # what about weight_scale???
         mass_scale /= 1000.
         gravity_scale_mass /= 1000.
-    elif mass_to == 'g': # what about weight_scale???
+    elif mass_to == 'g':  # what about weight_scale???
         mass_scale *= 1000.
         gravity_scale_mass *= 1000.
         #weight_scale *= 1000.

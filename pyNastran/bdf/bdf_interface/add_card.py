@@ -18,7 +18,8 @@ from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
 from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
 from pyNastran.bdf.cards.elements.elements import (
-    CFAST, CWELD, CGAP, CRAC2D, CRAC3D, PLOTEL, PLOTEL3, PLOTEL4, GENEL)
+    CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL,
+    PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8, PLOTTET)
 from pyNastran.bdf.cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
 from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
@@ -6694,6 +6695,110 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_plotel_object(elem)
         return elem
 
+    def add_plotel6(self, eid: int, nodes: list[int], comment: str='') -> PLOTEL6:
+        """
+        Adds a PLOTEL6 card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int, int, int, int, int]
+            Unique GRID point IDs
+        comment : str; default=''
+            a comment for the card
+
+        """
+        elem = PLOTEL6(eid, nodes, comment=comment)
+        self._add_methods.add_plotel_object(elem)
+        return elem
+
+    def add_plotel8(self, eid: int, nodes: list[int], comment: str='') -> PLOTEL8:
+        """
+        Adds a PLOTEL8 card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int, int, int, int, int, int, int]
+            Unique GRID point IDs
+        comment : str; default=''
+            a comment for the card
+
+        """
+        elem = PLOTEL8(eid, nodes, comment=comment)
+        self._add_methods.add_plotel_object(elem)
+        return elem
+
+    def add_plottet(self, eid: int, nodes: list[int], comment: str='') -> None:
+        """
+        Adds a PLOTTET card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int, int, ...]
+            Unique GRID point IDs
+        comment : str; default=''
+            a comment for the card
+
+        """
+        elem = PLOTTET(eid, nodes, comment=comment)
+        self._add_methods.add_plotel_object(elem)
+
+    def add_plotpen(self, eid: int, nodes: list[int], comment: str='') -> None:
+        """
+        Adds a PLOTPEN card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int, int, ...]
+            Unique GRID point IDs
+        comment : str; default=''
+            a comment for the card
+
+        """
+        fields = ['PLOTPEN', eid] + nodes
+        self.reject_card_lines('PLOTPEN', print_card_8(fields).split('\n'), show_log=False)
+
+    def add_plotpyr(self, eid: int, nodes: list[int], comment: str='') -> None:
+        """
+        Adds a PLOTPYR card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int, int, ...]
+            Unique GRID point IDs
+        comment : str; default=''
+            a comment for the card
+
+        """
+        fields = ['PLOTPYR', eid] + nodes
+        self.reject_card_lines('PLOTPYR', print_card_8(fields).split('\n'), show_log=False)
+
+    def add_plothex(self, eid: int, nodes: list[int], comment: str='') -> None:
+        """
+        Adds a PLOTHEX card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int, int, ...]
+            Unique GRID point IDs
+        comment : str; default=''
+            a comment for the card
+
+        """
+        fields = ['PLOTHEX', eid] + nodes
+        self.reject_card_lines('PLOTHEX', print_card_8(fields).split('\n'), show_log=False)
+
     def add_nsm(self, sid: int, nsm_type: str, pid_eid: int, value: float,
                 comment: str='') -> NSM:
         """
@@ -8335,7 +8440,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_cset_object(cset)
         return cset
 
-    def add_cset1(self, ids: list[int], components: list[str], comment: str='') -> CSET | CSET1:
+    def add_cset1(self, ids: list[int], components: str, comment: str='') -> CSET | CSET1:
         """.. seealso:: ``add_cset``"""
         return self.add_cset(ids, components, comment=comment)
 
