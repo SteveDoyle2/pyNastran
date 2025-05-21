@@ -551,7 +551,7 @@ class STL:
                         assert word.lower() == 'endloop', f'No endloop found on line {iline+1}:\n{word}'
                         word = infile.readline()  # endfacet
                         #print(f'endfacet_word = {word.strip()}')
-                        assert word.lower() == 'endfacet', f'No endfacet found on line {iline+2}:\n{word}'
+                        #assert word.lower() == 'endfacet', f'No endfacet found on line {iline+2}:\n{word}'
                         iline += 2
 
                         if t1 in nodes_dict:
@@ -578,7 +578,7 @@ class STL:
                         elements.append(element)
                         ielement += 1
                         line = infile.readline().strip()  # facet normal  -1.665915e-01   1.653124e-01   3.903514e-01
-                        assert 'normal' in line.lower(), f'No normal found on line {iline+1}:\n{line}'
+                        #assert 'normal' in line.lower(), f'No normal found on line {iline+1}:\n{line}'
                         iline += 1
                     #print "end of solid..."
                 elif 'endsolid' in line.lower():

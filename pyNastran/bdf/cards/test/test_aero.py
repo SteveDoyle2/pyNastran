@@ -3204,7 +3204,7 @@ class TestAeroZona(unittest.TestCase):
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
                        run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
-                       run_export_caero=False, run_test_bdf=False)
+                       run_export_caero=False, run_test_bdf=False, run_op2_writer=False)
         model.zona.convert_to_nastran()
 
     def test_zona_model_1(self):

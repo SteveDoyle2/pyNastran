@@ -1862,6 +1862,110 @@ def cmd_line_filter(argv=None, quiet: bool=False) -> None:  # pragma: no cover
     model.write_bdf(bdf_filename_out)
 
 
+def cmd_line_super(argv=None, quiet: bool=False) -> None:
+    """command line interface to super"""
+    if argv is None:  # pragma: no cover
+        argv = sys.argv
+
+    import argparse
+    parent_parser = argparse.ArgumentParser(
+        #prog = 'pyNastranGUI',
+        #usage = usage,
+        #description='A foo that bars',
+        #epilog="And that's how you'd foo a bar",
+        #formatter_class=argparse.RawDescriptionHelpFormatter,
+        #description=textwrap.dedent(text),
+        #version=pyNastran.__version__,
+        #add_help=False,
+    )
+    # positional arguments
+    parent_parser.add_argument('super', type=str)
+    parent_parser.add_argument('INPUT_PLOTEL', help='path to plotel BDF/DAT/NAS file', type=str)
+    parent_parser.add_argument('INPUT_RETAIN', help='path to retained BDF/DAT/NAS file', type=str)
+    parent_parser.add_argument('nnode', help='starting node id', type=int)
+    parent_parser.add_argument('--output', help='path to output BDF/DAT/NAS file; default=super.bdf', type=str, default='super.bdf')
+
+    #parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
+    parent_parser.add_argument('--plotel', action='store_true', help='make a plotel model')
+    parent_parser.add_argument('--nmode', help='set the number of modes', type=int, default=0)
+    _add_parser_arguments(parent_parser, ['--punch', '--lax', '--allow_dup'])
+    args = parent_parser.parse_args(args=argv[1:])
+    if not quiet:  # pragma: no cover
+        print(args)
+
+    log = SimpleLogger(level='debug')
+    plotel_bdf_filename = args.INPUT_PLOTEL
+    retained_bdf_filename = args.INPUT_RETAIN
+    out_bdf_filename = args.output
+
+    assert plotel_bdf_filename != retained_bdf_filename
+    assert plotel_bdf_filename != out_bdf_filename
+
+    is_strict_card_parser = not args.lax
+    nnode = args.nnode
+    nmode = args.nmode
+    punch = args.punch
+    assert nmode > 0, nmode
+
+    is_strict_card_parser = not args.lax
+    plotel_model = read_lax_bdf(
+        plotel_bdf_filename, punch=punch, xref=False,
+        is_strict_card_parser=is_strict_card_parser,
+        log=log)
+    retained_model = read_lax_bdf(
+        retained_bdf_filename, punch=punch, xref=False,
+        is_strict_card_parser=is_strict_card_parser,
+        log=log)
+
+    max_nid = max(max(plotel_model.nodes), max(retained_model.nodes))
+    assert nnode > max_nid, f'nnode={nnode:d}, max_nid={max_nid} is too large'
+
+    #model.cross_reference()
+    print(plotel_model.get_bdf_stats())
+    #print(retained_model.get_bdf_stats())
+
+    #-------------------------------------------------
+    from pyNastran.bdf.bdf import BDF
+    super_model = BDF(log=log)
+
+    for eid, elem in plotel_model.elements.items():
+        etype = elem.type
+        if etype == 'CQUAD4':
+            nodes = elem.nodes
+            super_model.add_plotel4(eid, nodes)
+        elif etype == 'CTRIA3':
+            nodes = elem.nodes
+            super_model.add_plotel3(eid, nodes)
+        elif etype in {'CROD', 'CBAR', 'CBEAM', 'CBEND'}:
+            nodes = elem.nodes
+            assert len(nodes) == 2, elem
+        elif etype in {'CBUSH'}:
+            pass
+        else:
+            print(elem.type)
+            super_model.add_plotel(eid, nodes)
+    super_model.write_bdf('super_plotel.bdf')
+    #-------------------------------------------------
+    retain_setup_model = BDF(log=log)
+
+    spoint_ids = np.arange(1, nmode+1) + nnode
+    assert len(spoint_ids) == nmode and nmode > 0, f'spoint_ids={spoint_ids}; len={len(spoint_ids)}; nmode={nmode}'
+    retain_setup_model.add_spoint(spoint_ids, f' nmodes={nmode}')
+
+    qset = retain_setup_model.add_qset1(spoint_ids, '0', comment=' spoint modes')
+
+    fixed_nids = list(set(list(retain_setup_model.nodes)) | set(list(plotel_model.nodes)))
+    fixed_nids.sort()
+    fixed_components = '123456'
+    assert len(fixed_nids) > 0, fixed_nids
+    cset = retain_setup_model.add_cset1(fixed_nids, fixed_components, ' fixed nodes')  # fixed
+    print(cset)
+    print(qset)
+    print(spoint_ids)
+    #super_model.write_bdf(out_bdf_filename)
+    retain_setup_model.write_bdf('super_setup.bdf')
+
+
 def _union(xval: float,
            iunion: np.ndarray,
            ix: Optional[np.ndarray]) -> np.ndarray:
@@ -1894,6 +1998,7 @@ CMD_MAPS = {
     'split_cbars_by_pin_flags': cmd_line_split_cbars_by_pin_flag,
     'run_jobs': cmd_line_run_jobs,
     'host_jobs': cmd_line_host_jobs,
+    'super': cmd_line_super,
     'rbe3_to_rbe2': cmd_line_rbe3_to_rbe2,
     'rbe2_to_rbe3': cmd_line_rbe2_to_rbe3,
     'merge_rbe2': cmd_line_merge_rbe2,

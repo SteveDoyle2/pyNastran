@@ -8238,7 +8238,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_set_object(set_obj)
         return set_obj
 
-    def add_aset(self, ids, components, comment='') -> ASET | ASET1:
+    def add_aset(self, ids: list[int], components: list[str] | str,
+                 comment: str='') -> ASET | ASET1:
         """
         Creates an ASET/ASET1 card, which defines the degree of freedoms
         that will be retained during an ASET modal reduction.
@@ -8266,11 +8267,13 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_aset_object(aset)
         return aset
 
-    def add_aset1(self, ids, components, comment='') -> ASET | ASET1:
+    def add_aset1(self, ids: list[int], components: str,
+                  comment: str='') -> ASET | ASET1:
         """.. .. seealso:: ``add_aset``"""
         return self.add_aset(ids, components, comment=comment)
 
-    def add_bset(self, ids, components, comment='') -> BSET | BSET1:
+    def add_bset(self, ids: list[int], components: list[str] | str,
+                 comment: str='') -> BSET | BSET1:
         """
         Creates an BSET/BSET1 card, which defines the degree of freedoms
         that will be fixed during a generalized dynamic reduction or
@@ -8298,11 +8301,12 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_bset_object(bset)
         return bset
 
-    def add_bset1(self, ids, components, comment='') -> BSET | BSET1:
+    def add_bset1(self, ids: list[int], components: str, comment: str='') -> BSET | BSET1:
         """.. .. seealso:: ``add_bset``"""
         return self.add_bset(ids, components, comment=comment)
 
-    def add_cset(self, ids, components, comment='') -> CSET | CSET1:
+    def add_cset(self, ids: list[int],
+                 components: list[str] | str, comment: str='') -> CSET | CSET1:
         """
         Creates an CSET/CSET1 card, which defines the degree of freedoms
         that will be free during a generalized dynamic reduction or
@@ -8331,7 +8335,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_cset_object(cset)
         return cset
 
-    def add_cset1(self, ids, components, comment='') -> CSET | CSET1:
+    def add_cset1(self, ids: list[int], components: list[str], comment: str='') -> CSET | CSET1:
         """.. seealso:: ``add_cset``"""
         return self.add_cset(ids, components, comment=comment)
 
