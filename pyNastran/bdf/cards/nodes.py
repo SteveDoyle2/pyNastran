@@ -36,6 +36,7 @@ from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, write_card
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
+from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
     integer_or_double, components_or_blank, parse_components_or_blank)
@@ -692,11 +693,9 @@ class GRDSET(BaseCard):
             the output coordinate system
 
         """
-        if self.cd_ref is None:
-            return self.cd
-        return self.cd.cid
+        return coord_id(self.cd_ref, self.cd)
 
-    def Cp(self):
+    def Cp(self) -> int:
         """
         Gets the analysis coordinate system
 
@@ -706,9 +705,7 @@ class GRDSET(BaseCard):
             the analysis coordinate system
 
         """
-        if self.cp_ref is None:
-            return self.cp
-        return self.cp.cid
+        return coord_id(self.cp_ref, self.cp)
 
     def Ps(self):
         """
@@ -1153,9 +1150,7 @@ class GRID(BaseCard):
             the analysis coordinate system
 
         """
-        if self.cp_ref is None:
-            return self.cp
-        return self.cp_ref.cid
+        return coord_id(self.cp_ref, self.cp)
 
     def SEid(self) -> int:
         """
@@ -1743,9 +1738,7 @@ class POINT(BaseCard):
             the analysis coordinate system
 
         """
-        if self.cp_ref is None:
-            return self.cp
-        return self.cp_ref.cid
+        return coord_id(self.cp_ref, self.cp)
 
     def cross_reference(self, model: BDF) -> None:
         """

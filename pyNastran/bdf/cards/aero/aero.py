@@ -36,7 +36,10 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string_or_blank, integer_or_string, integer_string_or_blank,
     interpret_value, parse_components, components_or_blank, blank)
 from pyNastran.bdf.bdf_interface.internal_get import (
-    set_group)
+    coord_id,
+    caero_id, paero_id,
+    set_id,
+    set_group, aefact_id, aelist_id)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
@@ -1841,7 +1844,7 @@ class CAERO1(BaseCard):
         return coord_id(self.cp_ref, self.cp)
 
     def Pid(self) -> int:
-        return property_id(self.pid_ref, self.pid)
+        return paero_id(self.pid_ref, self.pid)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -2811,7 +2814,7 @@ class CAERO2(BaseCard):
         return coord_id(self.cp_ref, self.cp)
 
     def Pid(self) -> int:
-        return property_id(self.pid_ref, self.pid)
+        return paero_id(self.pid_ref, self.pid)
 
     @property
     def aefact_ids(self) -> list[int]:
@@ -3347,7 +3350,7 @@ class CAERO3(BaseCard):
         return coord_id(self.cp_ref, self.cp)
 
     def Pid(self) -> int:
-        return property_id(self.pid_ref, self.pid)
+        return paero_id(self.pid_ref, self.pid)
 
     def List_w(self) -> int:
         return aefact_id(self.list_w_ref, self.list_w)
@@ -3570,7 +3573,8 @@ class CAERO4(BaseCard):
         return coord_id(self.cp_ref, self.cp)
 
     def Pid(self) -> int:
-        return property_id(self.pid_ref, self.pid)
+        return (paero_id
+                (self.pid_ref, self.pid))
 
     def _init_ids(self, dtype='int32'):
         """
@@ -4026,7 +4030,7 @@ class CAERO5(BaseCard):
         return coord_id(self.cp_ref, self.cp)
 
     def Pid(self) -> int:
-        return property_id(self.pid_ref, self.pid)
+        return paero_id(self.pid_ref, self.pid)
 
     def LSpan(self) -> int:
         return aefact_id(self.lspan_ref, self.lspan)
@@ -4320,7 +4324,7 @@ class MONPNT2(BaseCard):
         #card = self.repr_fields()
         return self.comment + msg.rstrip() + '\n'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.write_card()
 
 
@@ -4486,8 +4490,8 @@ class MONPNT3(BaseCard):
         self.cp_ref = model.safe_coord(self.cp, self.name, xref_errors, msg=msg)
         self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
 
-        self.node_ref = xref_set_group(model, self.node_set_group, 'Node', msg)
-        self.elem_ref = xref_set_group(model, self.elem_set_group, 'Elem', msg)
+        self.node_ref = safe_xref_set_group(model, self.node_set_group, 'Node', msg)
+        self.elem_ref = safe_xref_set_group(model, self.elem_set_group, 'Elem', msg)
 
     def get_node_set_group(self) -> int:
         return set_group(self.node_ref, self.node_set_group)
@@ -4544,6 +4548,26 @@ class MONPNT3(BaseCard):
 
 def xref_set_group(model: BDF, set_group_id: int,
                    xref_type: str, msg: str) -> Optional[SET1 | GROUP]:
+    if set_group_id > 0:
+        if model.is_msc:
+            set_group_ref = model.Set(set_group_id, msg=msg)
+            # {'Node', 'Point'}
+            if xref_type == 'Node':
+                set_group_ref.cross_reference_set(
+                    model, xref_type, msg=msg, allow_empty_nodes=False)
+            elif xref_type == 'Elem':
+                warnings.warn('skipping SET1/Elem xref')
+            else:  # pragma: no cover
+                raise RuntimeError(f'xref_type={xref_type!r}')
+        else:
+            set_group_ref = model.Group(set_group_id, msg=msg)
+        return set_group_ref
+    return None
+
+
+def safe_xref_set_group(model: BDF,
+                        set_group_id: int,
+                        xref_type: str, msg: str) -> Optional[SET1 | GROUP]:
     if set_group_id > 0:
         if model.is_msc:
             set_group_ref = model.Set(set_group_id, msg=msg)
@@ -7129,39 +7153,3 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], Any]:
 CAEROs = CAERO1 | CAERO2 | CAERO3 | CAERO4 | CAERO5
 PAEROs = PAERO1 | PAERO2 | PAERO3 | PAERO4 | PAERO5
 SPLINEs = SPLINE1 | SPLINE2 | SPLINE3 | SPLINE4 | SPLINE5
-
-
-def coord_id(coord_ref: Coord, cid: int) -> int:
-    if coord_ref is not None:
-        return coord_ref.cid
-    return cid
-
-
-def property_id(prop_ref: PAEROs, pid: int) -> int:
-    if prop_ref is not None:
-        return prop_ref.pid
-    return pid
-
-
-def caero_id(caero_ref: CAEROs, caero: int) -> int:
-    if caero_ref is not None:
-        return caero_ref.eid
-    return caero
-
-
-def set_id(setg_ref: SET1 | SET2, setg: int) -> int:
-    if setg_ref is not None:
-        return setg_ref.sid
-    return setg
-
-
-def aelist_id(aelist_ref: AELIST, aelist: int) -> int:
-    if aelist_ref is not None:
-        return aelist_ref.sid
-    return aelist
-
-
-def aefact_id(aefact_ref: AEFACT, aefact: int) -> int:
-    if aefact_ref is not None:
-        return aefact_ref.sid
-    return aefact

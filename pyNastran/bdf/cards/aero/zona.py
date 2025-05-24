@@ -2514,6 +2514,7 @@ class SEGMESH(BaseCard):
                        itypes, xs, cambers, ys, zs, idys, idzs, comment=comment)
 
     def Cp(self) -> int:
+        # return coord_id(self.cp_ref, self.cp)
         if self.cp_ref is not None:
             return self.cp_ref.cid
         return self.cp

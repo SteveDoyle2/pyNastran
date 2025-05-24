@@ -1113,7 +1113,7 @@ class PBAR(LineProperty):
         17: 'f2',
         18: 'k1',
         19: 'k1',
-        20: 'i12', 'i12': 'i12',
+        20: 'i12', 'I12': 'i12',
     }
 
     @classmethod
