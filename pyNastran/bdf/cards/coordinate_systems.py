@@ -132,7 +132,7 @@ class CoordBase(BaseCard):
         self.origin = None
         self.rid_trace = []
 
-    def Cid(self):
+    def Cid(self) -> int:
         """Gets the coordinate ID"""
         return self.cid
 

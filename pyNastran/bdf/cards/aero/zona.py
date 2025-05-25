@@ -713,7 +713,7 @@ class AESURFZ(BaseCard):
         assert surface_type in ['SYM', 'ANTISYM', 'ASYM']
         return AESURFZ(label, surface_type, cid, panlst, setg, actuator_tf, comment=comment)
 
-    def Cid(self):
+    def Cid(self) -> int:
         if self.cid_ref is not None:
             return self.cid_ref.cid
         return self.cid

@@ -55,6 +55,7 @@ from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, _node_ids
+from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_string_or_blank, double_or_blank,
     integer_double_or_blank, string, string_or_blank, string_choice_or_blank,
@@ -602,9 +603,7 @@ class BCONP(BaseCard):
         self.master_ref = None
 
     def Cid(self) -> int:
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+        return coord_id(self.cid_ref, self.cid)
 
     def FrictionId(self) -> int:
         if self.friction_id_ref is not None:

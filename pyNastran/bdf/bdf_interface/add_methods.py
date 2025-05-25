@@ -14,7 +14,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.elements.elements import CFAST, CWELD, CGAP, CRAC2D, CRAC3D, PLOTELs, GENEL
     #from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
     #from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
-    #from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD
 
     #from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
     from pyNastran.bdf.cards.properties.springs import PELAS, PELAST

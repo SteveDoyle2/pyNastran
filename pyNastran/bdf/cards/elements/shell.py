@@ -32,6 +32,7 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_float_8
 from pyNastran.bdf.cards.base_card import Element, BaseCard
+from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank,
 )
@@ -5042,10 +5043,8 @@ class SNORM(BaseCard):
         self.cid = self.Cid()
         self.cid_ref = None
 
-    def Cid(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+    def Cid(self) -> int:
+        return coord_id(self.cid_ref, self.cid)
 
     def raw_fields(self):
         list_fields = ['SNORM', self.nid, self.Cid()] + list(self.normal)

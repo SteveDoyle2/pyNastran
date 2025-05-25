@@ -23,7 +23,6 @@ from pyNastran.bdf.cards.elements.elements import (
 from pyNastran.bdf.cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
 from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
-#from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD, GMLOAD
 
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
@@ -242,7 +241,7 @@ CARD_MAP = {
 
     'MATCID': MATCID,
 
-    # msgmesh
+    # msgmesh - removed
     #'GMCORD': GMCORD,
     #'CGEN': CGEN,
     #'GMLOAD': GMLOAD,

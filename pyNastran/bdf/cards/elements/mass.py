@@ -21,6 +21,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.cards.nodes import GRID
+from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank)
 from pyNastran.bdf.bdf_interface.assign_type_force import (
@@ -1074,9 +1075,7 @@ class CONM1(PointMassElement):
         return self.nid
 
     def Cid(self) -> int:
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+        return coord_id(self.cid_ref, self.cid)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -1637,15 +1636,13 @@ class CONM2(PointMassElement):
     def node_ids(self):
         return [self.Nid()]
 
-    def Nid(self):
+    def Nid(self) -> int:
         if self.nid_ref is not None:
             return self.nid_ref.nid
         return self.nid
 
-    def Cid(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+    def Cid(self) -> int:
+        return coord_id(self.cid_ref, self.cid)
 
     def raw_fields(self):
         list_fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +

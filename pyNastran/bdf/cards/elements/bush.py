@@ -17,6 +17,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
+from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
     string_or_blank)
@@ -30,7 +31,7 @@ class BushElement(Element):
         self.cid = None
         Element.__init__(self)
 
-    def Cid(self):
+    def Cid(self) -> Optional[int]:
         if self.cid is None:
             return None
         elif isinstance(self.cid, integer_types):
@@ -390,15 +391,11 @@ class CBUSH(BushElement):
             return self.g0_ref.nid
         return self.g0
 
-    def OCid(self):
-        if self.ocid_ref is not None:
-            return self.ocid_ref.cid
-        return self.ocid
+    def OCid(self) -> int:
+        return coord_id(self.ocid_ref, self.ocid)
 
-    def Cid(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+    def Cid(self) -> int:
+        return coord_id(self.cid_ref, self.cid)
 
     def cross_reference(self, model: BDF) -> None:
         """

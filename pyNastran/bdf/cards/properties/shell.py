@@ -24,6 +24,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material, write_card
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 from pyNastran.bdf.cards.materials import get_mat_props_S
+from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string_or_blank,
 )
@@ -1868,10 +1869,8 @@ class PLPLANE(Property):
             return self.mid_ref.mid
         return self.mid
 
-    def Cid(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+    def Cid(self) -> int:
+        return coord_id(self.cid_ref, self.cid)
 
     def raw_fields(self):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(),

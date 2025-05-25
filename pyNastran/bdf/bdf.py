@@ -62,7 +62,7 @@ from .cards.elements.elements import (
 from .cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
 from .cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
 from .cards.cyclic import CYAX, CYJOIN
-from .cards.msgmesh import CGEN
+#from .cards.msgmesh import CGEN
 
 from .cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from .cards.properties.springs import PELAS, PELAST
@@ -114,7 +114,6 @@ from .cards.coordinate_systems import (MATCID,
                                        CORD2R, CORD2C, CORD2S, #CORD3G,
                                        transform_coords_vectorized,
                                        Coord)
-#from .cards.coordinate_systems.msgmesh import CGEN, GMCORD, GMLOAD
 from .cards.deqatn import DEQATN
 from .cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5, FREQs,
@@ -2428,7 +2427,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'FEFACE': (FEFACE, add_methods.add_feface),
             'FEEDGE': (FEEDGE, add_methods.add_feedge),
 
-            # msgmesh
+            # msgmesh - removed
             #'GMCORD': (GMCORD, add_methods.add_coord_object), # coords
             #'CGEN': (CGEN, add_methods.add_element_object),   # elements
             #'GMLOAD': (GMLOAD, add_methods.add_load_object),  # basic loads

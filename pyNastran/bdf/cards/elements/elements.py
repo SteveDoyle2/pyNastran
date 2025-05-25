@@ -19,6 +19,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
     Element, BaseCard, break_word_by_trailing_integer, _node_ids)
+from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, integer_double_or_blank,
     double, double_or_blank, string)
@@ -819,10 +820,8 @@ class CGAP(Element):
     def node_ids(self):
         return [self.Ga(), self.Gb()]
 
-    def Cid(self):
-        if self.cid_ref is None:
-            return self.cid
-        return self.cid_ref.cid
+    def Cid(self) -> int:
+        return coord_id(self.cid_ref, self.cid)
 
     def Ga(self) -> int:
         if self.ga_ref is None:

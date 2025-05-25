@@ -30,6 +30,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by #  _node_ids,
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 
+from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
@@ -502,12 +503,10 @@ class GRAV(BaseCard):
         self.cid = self.Cid()
         self.cid_ref = None
 
-    def Cid(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+    def Cid(self) -> int:
+        return coord_id(self.cid_ref, self.cid)
 
-    def GravityVector(self):
+    def GravityVector(self) -> np.ndarray:
         """returns the gravity vector in absolute coordinates"""
         if self.Cid() == 0:
             return self.N
@@ -672,12 +671,10 @@ class ACCEL(BaseCard):
         msg = ', which is required by ACCEL sid=%s' % self.sid
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
-    def Cid(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+    def Cid(self) -> int:
+        return coord_id(self.cid_ref, self.cid)
 
-    def get_loads(self):
+    def get_loads(self) -> list:
         return [self]
 
     def raw_fields(self):
@@ -825,13 +822,11 @@ class ACCEL1(BaseCard):
         self.nodes_ref = None
         self.cid_ref = None
 
-    def Cid(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+    def Cid(self) -> int:
+        return coord_id(self.cid_ref, self.cid)
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         #msg = ', which is required by ACCEL1 sid=%s' % self.sid
         #_node_ids(self.nodes, allow_empty_nodes=True, msg=msg)
         return self._node_ids(nodes=self.nodes_ref)
@@ -1060,21 +1055,19 @@ class Load0(BaseCard):
         return [self]
 
     @property
-    def node_id(self):
+    def node_id(self) -> int:
         if self.node_ref is not None:
             return self.node_ref.nid
         return self.node
 
-    def Cid(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+    def Cid(self) -> int:
+        return coord_id(self.cid_ref, self.cid)
 
     @property
-    def scaled_vector(self):
+    def scaled_vector(self) -> np.ndarray:
         return self.xyz * self.mag
 
-    def to_global(self):
+    def to_global(self) -> np.ndarray:
         return self.cid_ref.transform_vector_to_global(self.scaled_vector)
 
     #def to_local(self):
@@ -2700,14 +2693,12 @@ class PLOAD4(Load):
             assert cid < 10000000, pload4
         return pload4
 
-    def get_loads(self):
+    def get_loads(self) -> list:
         return [self]
 
-    def Cid(self):
+    def Cid(self) -> int:
         """gets the coordinate system object"""
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+        return coord_id(self.cid_ref, self.cid)
 
     def cross_reference(self, model: BDF) -> None:
         """
