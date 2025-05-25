@@ -246,7 +246,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         return self.nsm
 
-    def Mid(self, iply):
+    def Mid(self, iply: int):
         """
         Gets the Material ID of the :math:`i^{th}` ply.
 

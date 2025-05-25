@@ -24,7 +24,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material, write_card
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 from pyNastran.bdf.cards.materials import get_mat_props_S
-from pyNastran.bdf.bdf_interface.internal_get import coord_id
+from pyNastran.bdf.bdf_interface.internal_get import coord_id, material_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string_or_blank,
 )
@@ -1863,11 +1863,9 @@ class PLPLANE(Property):
     #def MassPerArea(self):
         #return 0.
 
-    def Mid(self):
+    def Mid(self) -> int:
         """returns the material id"""
-        if self.mid_ref is not None:
-            return self.mid_ref.mid
-        return self.mid
+        return material_id(self.mid_ref, self.mid)
 
     def Cid(self) -> int:
         return coord_id(self.cid_ref, self.cid)
@@ -1992,17 +1990,15 @@ class PPLANE(Property):
             raise
         return mass_per_area
 
-    def Mid(self):
+    def Mid(self) -> int:
         """returns the material id"""
-        if self.mid_ref is not None:
-            return self.mid_ref.mid
-        return self.mid
+        return material_id(self.mid_ref, self.mid)
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         list_fields = ['PPLANE', self.pid, self.Mid(), self.t, self.nsm, self.formulation_option]
         return list_fields
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         list_fields = ['PPLANE', self.pid, self.Mid(), self.t, self.nsm, self.formulation_option]
         return list_fields
 
@@ -2158,11 +2154,9 @@ class PSHEAR(Property):
         """returns the material density"""
         return self.mid_ref.Rho()
 
-    def Mid(self):
+    def Mid(self) -> int:
         """returns the material id"""
-        if self.mid_ref is not None:
-            return self.mid_ref.mid
-        return self.mid
+        return material_id(self.mid_ref, self.mid)
 
     def MassPerArea(self, tflag=1, tscales=None):
         """

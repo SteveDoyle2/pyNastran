@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pyNastran.bdf.cards.base_card import BaseCard
-from pyNastran.bdf.bdf_interface.internal_get import table_id
+from pyNastran.bdf.bdf_interface.internal_get import material_id, table_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -34,10 +34,8 @@ class MaterialDependence(BaseCard):
     def __init__(self):
         self.mid = None
 
-    def Mid(self):
-        if self.mid_ref is None:
-            return self.mid
-        return self.mid_ref.mid  # TODO: is this something that should be supported?
+    def Mid(self) -> int:
+        return material_id(self.mid_ref, self.mid)
 
     def _get_table(self, key):
         """internal method for accessing tables"""

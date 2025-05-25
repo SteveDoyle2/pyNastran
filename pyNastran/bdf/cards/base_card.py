@@ -418,7 +418,7 @@ class Material(BaseCard):
                              xref_errors: dict[str, Any]) -> None:
         return self.cross_reference(model)
 
-    def Mid(self) -> Any:
+    def Mid(self) -> int:
         """
         returns the material ID of an element
 

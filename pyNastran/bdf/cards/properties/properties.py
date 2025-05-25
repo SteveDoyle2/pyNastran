@@ -14,6 +14,7 @@ from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
+from pyNastran.bdf.bdf_interface.internal_get import material_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -604,9 +605,7 @@ class CrackProperty(Property):
         Property.__init__(self)
 
     def Mid(self) -> int:
-        if self.mid_ref is not None:
-            return self.mid_ref.mid
-        return self.mid
+        return material_id(self.mid_ref, self.mid)
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()

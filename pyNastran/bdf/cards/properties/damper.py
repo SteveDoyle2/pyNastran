@@ -17,6 +17,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import Property
+from pyNastran.bdf.bdf_interface.internal_get import material_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank)
 if TYPE_CHECKING:  # pragma: no cover
@@ -226,12 +227,10 @@ class PDAMP5(DamperProperty):
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def Mid(self):
-        if self.mid_ref is not None:
-            return self.mid_ref.mid
-        return self.mid
+    def Mid(self) -> int:
+        return material_id(self.mid_ref, self.mid)
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         return self.raw_fields()
 
     def raw_fields(self):

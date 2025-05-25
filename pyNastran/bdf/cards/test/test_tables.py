@@ -6,7 +6,6 @@ from pyNastran.bdf.cards.bdf_tables import (
     TABLEM1, TABLEM2, TABLEM3, TABLEM4,
     TABDMP1, #TABLES1, TABLEST, TABRND1, TABRNDG,
 )
-from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestTables(unittest.TestCase):
@@ -18,10 +17,10 @@ class TestTables(unittest.TestCase):
         #2 : Dryden
         Type = 1
         LU = 2.17
-        WG = 3.14
-        table = model.add_tabrndg(tid, Type, LU, WG, comment='')
+        wg = 3.14
+        table = model.add_tabrndg(tid, Type, LU, wg, comment='')
         str(table)
-        table = model.add_tabrndg(tid+1, Type+1, LU, WG, comment='')
+        table = model.add_tabrndg(tid+1, Type+1, LU, wg, comment='')
         str(table)
         save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
 
@@ -32,7 +31,7 @@ class TestTables(unittest.TestCase):
         #2 : Dryden
         Type = 1
         LU = 2.17
-        WG = 3.14
+        wg = 3.14
         x = [1., 2., 3.]
         y = [10., 20., 30.]
         table = model.add_tables1(tid, x, y, Type=1, comment='tables1')
@@ -41,8 +40,10 @@ class TestTables(unittest.TestCase):
         y = [10, 20, 30]
         table = model.add_tablest(tid, x, y, comment='tablest')
         str(table)
-        save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False, run_save_load_hdf5=False)
-
+        save_load_deck(
+            model, run_convert=False, run_quality=False,
+            run_remove_unused=False,
+            run_save_load_hdf5=False)
 
     def test_tabdmp1_01(self):
         model = BDF(debug=False)

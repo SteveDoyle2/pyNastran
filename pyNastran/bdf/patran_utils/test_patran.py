@@ -13,7 +13,28 @@ MODEL_PATH = os.path.join(PKG_PATH, '..', 'models', 'patran_fmt')
 
 
 class TestPatranSyntax(unittest.TestCase):
-    def test_bdf_utils_01(self):
+    def test_patran_syntax_error(self):
+        node_sets1 = ['node', 1, 2, 3]
+        with self.assertRaises(TypeError):
+            parse_patran_syntax_dict(node_sets1)
+
+        node_sets2 = 'node 1,2:10:2:1'
+        with self.assertRaises(RuntimeError):
+            parse_patran_syntax_dict(node_sets2)
+
+        # node_sets3 = 'node 2:10:2'
+        # with self.assertRaises(SyntaxError):
+        #     parse_patran_syntax_dict(node_sets3)
+
+        node_sets4 = '2 node 2:10:2'
+        with self.assertRaises(AssertionError):
+            parse_patran_syntax_dict(node_sets4)
+        # print(out)
+
+        node_sets5 = 'node 2:10:2'
+        parse_patran_syntax_dict(node_sets5)
+
+    def test_patran_syntax_01(self):
         """tests parse_patran_syntax"""
         msg = '1:10  14:20:2  50:40:-1'
         output = parse_patran_syntax(msg, pound=None)
@@ -32,7 +53,7 @@ class TestPatranSyntax(unittest.TestCase):
 
         msg = '#:1'
         with self.assertRaises(ValueError):
-            output = parse_patran_syntax(msg, pound=None)
+            parse_patran_syntax(msg, pound=None)
         #assert array_equal(output, [1, 2, 3, 4, 5])
 
         msg = '1:#'
@@ -44,7 +65,7 @@ class TestPatranSyntax(unittest.TestCase):
         #with self.assertRaises(ValueError):
         output = parse_patran_syntax(msg, pound='5')
 
-    def test_bdf_utils_02(self):
+    def test_patran_syntax_02(self):
         """tests parse_patran_syntax_dict"""
         msg = 'n 1:10  14:20:2  50:40:-1 e 10 20'
         expected_nodes = np.array(
@@ -95,7 +116,7 @@ class TestPatranSyntax(unittest.TestCase):
         out = parse_patran_syntax_dict('')
         assert len(out) == 0, 'out=%s' % out
 
-    def test_bdf_utils_03(self):
+    def test_patran_syntax_03(self):
         """tests parse_patran_syntax_dict"""
         node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
         type_map = {

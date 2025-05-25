@@ -11,7 +11,7 @@ from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 from pyNastran.utils.numpy_utils import integer_types
 
 
-def parse_patran_syntax(node_sets: str, pound: Optional[int]=None) -> np.ndarray:
+def parse_patran_syntax(node_sets: str, pound: Optional[int | str]=None) -> np.ndarray:
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -167,10 +167,11 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: dict[str, Optional[int]
 
     >>> node_sets = "e 1:3 n 2:6:2 Node 10:13"
     >>> data = parse_patran_syntax_dict(node_sets)
-    >>> data = {
-          'e'    : [1, 2, 3],
-          'n'    : [2, 4, 6],
-          'Node' : [10, 11, 12, 13],
+    data
+    {
+        'e'    : [1, 2, 3],
+        'n'    : [2, 4, 6],
+        'Node' : [10, 11, 12, 13],
     }
 
 
@@ -182,11 +183,12 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: dict[str, Optional[int]
     # 'n' so define it twice if needed
     >>> pounds = {'Node' : 20}
     >>> data = parse_patran_syntax_dict(node_sets, pounds=pounds)
-    >>> data = {
-          'e'    : [1, 2, 3],
-          'n'    : [2, 4, 6],
-          'Node' : [10, 11, 12, 13],
-      }
+    >>> data
+    {
+        'e'    : [1, 2, 3],
+        'n'    : [2, 4, 6],
+        'Node' : [10, 11, 12, 13],
+    }
 
     Notes
     -----
@@ -196,6 +198,9 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: dict[str, Optional[int]
     .. warning:: case sensitive
 
     """
+    if not isinstance(node_sets, str):
+        raise TypeError(f'node_sets={node_sets!r} and should be string')
+
     data: dict[str, list[int]] = {}
     try:
         snodes = node_sets.split()
@@ -212,6 +217,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: dict[str, Optional[int]
     key = None
     for snode in snodes:
         if ':' in snode:
+            assert key is not None, snode
             ssnode = snode.split(':')
             if len(ssnode) == 2:
                 if ssnode[0].isdigit():
@@ -247,7 +253,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: dict[str, Optional[int]
                 else:
                     new_set = list(range(nmin, nmax + 1, -delta))
             else:
-                raise NotImplementedError(snode)
+                raise RuntimeError(f'snode={snode!r} expected of the form 2:10:2')
             if key is None:
                 msg = 'data must be of the form "Node 10:13", not "10:13"\n'
                 msg += 'new_set=%s' % np.array(new_set, dtype='int32')
@@ -255,6 +261,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: dict[str, Optional[int]
             data[key] += new_set
         else:
             if snode.isdigit():
+                assert key is not None, snode
                 data[key].append(int(snode))
             else:
                 key = snode
@@ -314,7 +321,8 @@ def parse_patran_syntax_dict_map(node_sets: str,
 
        **Example 2**
        >>> data = parse_patran_syntax_dict(node_sets, type_map)
-       >>> data = {
+       >>> data
+       {
            'Element' : [1, 2, 3],
            'Node' : [2, 4, 6, 10, 11, 12, 13, 15],
        }

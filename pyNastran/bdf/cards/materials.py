@@ -25,6 +25,7 @@ from numpy import zeros, array
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Material, BaseCard
+from pyNastran.bdf.bdf_interface.internal_get import material_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string, string_or_blank, integer_or_double, blank,)
@@ -224,12 +225,10 @@ class CREEP(Material):
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def Mid(self):  # links up to MAT1, MAT2, MAT9 or same mid
-        if self.mid_ref is not None:
-            return self.mid_ref.mid
-        return self.mid
+    def Mid(self) -> int:  # links up to MAT1, MAT2, MAT9 or same mid
+        return material_id(self.mid_ref, self.mid)
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         list_fields = ['CREEP', self.Mid(), self.T0, self.exp, self.form,
                        self.tidkp, self.tidcp, self.tidcs, self.thresh, self.Type,
                        self.a, self.b, self.c, self.d, self.e, self.f, self.g]

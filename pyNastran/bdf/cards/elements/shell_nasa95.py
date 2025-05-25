@@ -748,7 +748,7 @@ class PQUAD1(Property):
             return self.mid1_ref
         return self.mid2_ref
 
-    def Mid(self):
+    def Mid(self) -> int:
         """returns the material id used for mass"""
         mid1 = self.Mid1()
         if mid1 is not None:

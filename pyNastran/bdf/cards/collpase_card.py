@@ -143,7 +143,9 @@ def collapse_colon_packs(fields: list[int],
 
     """
     packs = condense(fields)
-    singles, doubles = build_thru_packs(packs, max_dv=None, thru_split=thru_split)
+    #  max_dv=None -> large values of dv are ok
+    singles, doubles = build_thru_packs(
+        packs, max_dv=None, thru_split=thru_split)
     doubles2 = []
     for double in doubles:
         if len(double) == 3:

@@ -6,6 +6,7 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element #, Mid
+from pyNastran.bdf.bdf_interface.internal_get import material_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -724,15 +725,10 @@ class CONROD(RodElement):
         """Get the center of mass of the element (save as the centroid for the CONROD)"""
         return self.Centroid()
 
-    def Mid(self):
-        if self.mid_ref is None:
-            return self.mid
-        #elif self.mid is None:
-            #print ("No material defined for element ", self.eid)
-            #return None
-        return self.mid_ref.mid
+    def Mid(self) -> int:
+        return material_id(self.mid_ref, self.mid)
 
-    def Pid(self):
+    def Pid(self) -> int:
         """Spoofs the property id for the CONROD"""
         return self.pid
 

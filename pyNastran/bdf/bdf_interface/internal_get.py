@@ -27,6 +27,11 @@ def coord_id(coord_ref: Coord, cid: int) -> int:
 #     return eid
 
 
+def material_id(mid_ref, mid: int) -> int:
+    if mid_ref is None:
+        return mid
+    return mid_ref.mid
+
 
 
 def table_id(table_ref: TABLEDs, tid: int) -> int:

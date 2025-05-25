@@ -35,6 +35,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     double, double_or_blank, string, string_or_blank,
     integer_double_or_blank, integer_double_string_or_blank,
     double_string_or_blank, interpret_value, check_string, loose_string)
+from pyNastran.bdf.bdf_interface.internal_get import material_id
 from pyNastran.bdf.bdf_interface.assign_type_force import (
     force_double, force_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -4292,13 +4293,11 @@ class DVMREL1(DVXREL1):
         """
         pass
 
-    def OptID(self):
+    def OptID(self) -> int:
         return self.oid
 
-    def Mid(self):
-        if self.mid_ref is not None:
-            return self.mid_ref.mid
-        return self.mid
+    def Mid(self) -> int:
+        return material_id(self.mid_ref, self.mid)
 
     def raw_fields(self):
         list_fields = ['DVMREL1', self.oid, self.mat_type, self.Mid(),
@@ -4520,10 +4519,10 @@ class DVMREL2(DVXREL2):
                 raise NotImplementedError(msg)
             setattr(mat, key, value)
 
-    def OptID(self):
+    def OptID(self) -> int:
         return self.oid
 
-    def Mid(self):
+    def Mid(self) -> int:
         if self.mid_ref is None:
             return self.mid
         #if self.mat_type in self.allowed_properties:

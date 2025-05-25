@@ -23,6 +23,7 @@ from pyNastran.bdf.field_writer_8 import (
     set_blank_if_default, set_default_if_blank,
     print_card_8, print_field_8)
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.bdf_interface.internal_get import material_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
@@ -841,10 +842,8 @@ class CTRIAX6(TriShell):
         #raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
         return 0.
 
-    def Mid(self):
-        if self.mid_ref is None:
-            return self.mid
-        return self.mid_ref.mid
+    def Mid(self) -> int:
+        return material_id(self.mid_ref, self.mid)
 
     def Normal(self):
         # () -> np.ndarray
