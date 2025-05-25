@@ -20,6 +20,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pyNastran.bdf.cards.base_card import BaseCard
+from pyNastran.bdf.bdf_interface.internal_get import table_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -42,9 +43,8 @@ class MaterialDependence(BaseCard):
         """internal method for accessing tables"""
         table = getattr(self, key)
         table_ref = getattr(self, key + '_ref')
-        if table_ref is not None:
-            return table_ref.tid
-        return table
+        return table_id(table_ref, table)
+
 
 class MaterialDependenceThermal(MaterialDependence):
     def __init__(self):
@@ -273,10 +273,8 @@ class MATS1(MaterialDependence):
         self.tid_ref = None
         self.mid_ref = None
 
-    def Tid(self):
-        if self.tid_ref is None:
-            return self.tid
-        return self.tid_ref.tid
+    def Tid(self) -> int:
+        return table_id(self.tid_ref, self.tid)
 
     def raw_fields(self):
         list_fields = ['MATS1', self.Mid(), self.Tid(), self.Type,
@@ -732,34 +730,34 @@ class MATT1(MaterialDependenceThermal):
         self.sc_table_ref = None
         self.ss_table_ref = None
 
-    def E_table(self):
+    def E_table(self) -> int:
         return self._get_table('e_table')
 
-    def G_table(self):
+    def G_table(self) -> int:
         return self._get_table('g_table')
 
-    def Nu_table(self):
+    def Nu_table(self) -> int:
         return self._get_table('nu_table')
 
-    def Rho_table(self):
+    def Rho_table(self) -> int:
         return self._get_table('rho_table')
 
-    def A_table(self):
+    def A_table(self) -> int:
         return self._get_table('a_table')
 
-    def Ge_table(self):
+    def Ge_table(self) -> int:
         return self._get_table('ge_table')
 
-    def St_table(self):
+    def St_table(self) -> int:
         return self._get_table('st_table')
 
-    def Sc_table(self):
+    def Sc_table(self) -> int:
         return self._get_table('sc_table')
 
-    def Ss_table(self):
+    def Ss_table(self) -> int:
         return self._get_table('ss_table')
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         list_fields = [
             'MATT1', self.Mid(), self.E_table(), self.G_table(),
             self.Nu_table(), self.Rho_table(), self.A_table(), self.Ge_table(),
@@ -997,49 +995,49 @@ class MATT2(MaterialDependenceThermal):
         self.ss_table = self.Ss_table()
         self.mid_ref = None
 
-    def G11_table(self):
+    def G11_table(self) -> int:
         return self._get_table('g11_table')
 
-    def G12_table(self):
+    def G12_table(self) -> int:
         return self._get_table('g12_table')
 
-    def G13_table(self):
+    def G13_table(self) -> int:
         return self._get_table('g13_table')
 
-    def G22_table(self):
+    def G22_table(self) -> int:
         return self._get_table('g22_table')
 
-    def G23_table(self):
+    def G23_table(self) -> int:
         return self._get_table('g23_table')
 
-    def G33_table(self):
+    def G33_table(self) -> int:
         return self._get_table('g33_table')
 
-    def Rho_table(self):
+    def Rho_table(self) -> int:
         return self._get_table('rho_table')
 
-    def A1_table(self):
+    def A1_table(self) -> int:
         return self._get_table('a1_table')
 
-    def A2_table(self):
+    def A2_table(self) -> int:
         return self._get_table('a2_table')
 
-    def A3_table(self):
+    def A3_table(self) -> int:
         return self._get_table('a3_table')
 
-    def Ge_table(self):
+    def Ge_table(self) -> int:
         return self._get_table('ge_table')
 
-    def St_table(self):
+    def St_table(self) -> int:
         return self._get_table('st_table')
 
-    def Sc_table(self):
+    def Sc_table(self) -> int:
         return self._get_table('sc_table')
 
-    def Ss_table(self):
+    def Ss_table(self) -> int:
         return self._get_table('ss_table')
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         list_fields = [
             'MATT2', self.Mid(), self.G11_table(), self.G12_table(),
             self.G13_table(), self.G22_table(), self.G23_table(),
@@ -1241,62 +1239,40 @@ class MATT3(MaterialDependenceThermal):
                      nuth_table, nuxz_table, rho_table, gzx_table,
                      ax_table, ath_table, az_table, ge_table, comment=comment)
 
-    def Ex_table(self):
-        if self.ex_table_ref is not None:
-            return self.ex_table_ref.tid
-        return self.ex_table
+    def Ex_table(self) -> int:
+        return table_id(self.ex_table_ref, self.ex_table)
 
-    def Eth_table(self):
-        if self.eth_table_ref is not None:
-            return self.eth_table_ref.tid
-        return self.eth_table
+    def Eth_table(self) -> int:
+        return table_id(self.eth_table_ref, self.eth_table)
 
-    def Ez_table(self):
-        if self.ez_table_ref is not None:
-            return self.ez_table_ref.tid
-        return self.eth_table
+    def Ez_table(self) -> int:
+        return table_id(self.ez_table_ref, self.ez_table)
 
-    def Nuth_table(self):
-        if self.nuth_table_ref is not None:
-            return self.nuth_table_ref.tid
-        return self.nuth_table
+    def Nuth_table(self) -> int:
+        return table_id(self.nuth_table_ref, self.nuth_table)
 
-    def Nuxz_table(self):
-        if self.nuxz_table_ref is not None:
-            return self.nuxz_table_ref.tid
-        return self.nuxz_table
+    def Nuxz_table(self) -> int:
+        return table_id(self.nuxz_table_ref, self.nuxz_table)
 
-    def Rho_table(self):
-        if self.rho_table_ref is not None:
-            return self.rho_table_ref.tid
-        return self.rho_table
+    def Rho_table(self) -> int:
+        return table_id(self.rho_table_ref, self.rho_table)
 
-    def Gzx_table(self):
-        if self.gzx_table_ref is not None:
-            return self.gzx_table_ref.tid
-        return self.gzx_table
+    def Gzx_table(self) -> int:
+        return table_id(self.gzx_table_ref, self.gzx_table)
 
-    def Ax_table(self):
-        if self.ax_table_ref is not None:
-            return self.ax_table_ref.tid
-        return self.ax_table
+    def Ax_table(self) -> int:
+        return table_id(self.ax_table_ref, self.ax_table)
 
-    def Ath_table(self):
-        if self.ath_table_ref is not None:
-            return self.ath_table_ref.tid
-        return self.ath_table
+    def Ath_table(self) -> int:
+        return table_id(self.ath_table_ref, self.ath_table)
 
-    def Az_table(self):
-        if self.az_table_ref is not None:
-            return self.az_table_ref.tid
-        return self.az_table
+    def Az_table(self) -> int:
+        return table_id(self.az_table_ref, self.az_table)
 
-    def Ge_table(self):
-        if self.ge_table_ref is not None:
-            return self.ge_table_ref.tid
-        return self.ge_table
+    def Ge_table(self) -> int:
+        return table_id(self.ge_table_ref, self.ge_table)
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         list_fields = [
             'MATT3', self.Mid(), self.Ex_table(), self.Eth_table(), self.Ez_table(),
             self.Nuth_table(), self.Nuxz_table(), self.Rho_table(), None, None,
@@ -1462,19 +1438,19 @@ class MATT4(MaterialDependenceThermal):
         self.mu_table_ref = None
         self.hgen_table_ref = None
 
-    def K_table(self):
+    def K_table(self) -> int:
         return self._get_table('k_table')
 
-    def Cp_table(self):
+    def Cp_table(self) -> int:
         return self._get_table('cp_table')
 
-    def H_table(self):
+    def H_table(self) -> int:
         return self._get_table('h_table')
 
-    def Mu_table(self):
+    def Mu_table(self) -> int:
         return self._get_table('mu_table')
 
-    def Hgen_table(self):
+    def Hgen_table(self) -> int:
         return self._get_table('hgen_table')
 
     def raw_fields(self):
@@ -1674,28 +1650,28 @@ class MATT5(MaterialDependenceThermal):
         self.cp_table_ref = None
         self.hgen_table_ref = None
 
-    def Kxx_table(self):
+    def Kxx_table(self) -> int:
         return self._get_table('kxx_table')
 
-    def Kxy_table(self):
+    def Kxy_table(self) -> int:
         return self._get_table('kxy_table')
 
-    def Kxz_table(self):
+    def Kxz_table(self) -> int:
         return self._get_table('kxz_table')
 
-    def Kyy_table(self):
+    def Kyy_table(self) -> int:
         return self._get_table('kyy_table')
 
-    def Kyz_table(self):
+    def Kyz_table(self) -> int:
         return self._get_table('kyz_table')
 
-    def Kzz_table(self):
+    def Kzz_table(self) -> int:
         return self._get_table('kzz_table')
 
-    def Cp_table(self):
+    def Cp_table(self) -> int:
         return self._get_table('cp_table')
 
-    def Hgen_table(self):
+    def Hgen_table(self) -> int:
         return self._get_table('hgen_table')
 
     def raw_fields(self):
@@ -1959,87 +1935,55 @@ class MATT8(MaterialDependenceThermal):
         self.ge_table_ref = None
         self.f12_table_ref = None
 
-    def E1_table(self):
-        if self.e1_table_ref is not None:
-            return self.e1_table_ref.tid
-        return self.e1_table
+    def E1_table(self) -> int:
+        return table_id(self.e1_table_ref, self.e1_table)
 
-    def E2_table(self):
-        if self.e2_table_ref is not None:
-            return self.e2_table_ref.tid
-        return self.e2_table
+    def E2_table(self) -> int:
+        return table_id(self.e2_table_ref, self.e2_table)
 
-    def Nu12_table(self):
-        if self.nu12_table_ref is not None:
-            return self.nu12_table_ref.tid
-        return self.nu12_table
+    def Nu12_table(self) -> int:
+        return table_id(self.nu12_table_ref, self.nu12_table)
 
-    def G12_table(self):
-        if self.g12_table_ref is not None:
-            return self.g12_table_ref.tid
-        return self.g12_table
+    def G12_table(self) -> int:
+        return table_id(self.g12_table_ref, self.g12_table)
 
-    def G1z_table(self):
-        if self.g1z_table_ref is not None:
-            return self.g1z_table_ref.tid
-        return self.g1z_table
+    def G1z_table(self) -> int:
+        return table_id(self.g1z_table_ref, self.g1z_table)
 
-    def G2z_table(self):
-        if self.g2z_table_ref is not None:
-            return self.g2z_table_ref.tid
-        return self.g2z_table
+    def G2z_table(self) -> int:
+        return table_id(self.g2z_table_ref, self.g2z_table)
 
-    def Rho_table(self):
-        if self.rho_table_ref is not None:
-            return self.rho_table_ref.tid
-        return self.rho_table
+    def Rho_table(self) -> int:
+        return table_id(self.rho_table_ref, self.rho_table)
 
-    def A1_table(self):
-        if self.a1_table_ref is not None:
-            return self.a1_table_ref.tid
-        return self.a1_table
+    def A1_table(self) -> int:
+        return table_id(self.a1_table_ref, self.a1_table)
 
-    def A2_table(self):
-        if self.a2_table_ref is not None:
-            return self.a2_table_ref.tid
-        return self.a2_table
+    def A2_table(self) -> int:
+        return table_id(self.a2_table_ref, self.a2_table)
 
-    def S_table(self):
-        if self.s_table_ref is not None:
-            return self.s_table_ref.tid
-        return self.s_table
+    def S_table(self) -> int:
+        return table_id(self.s_table_ref, self.s_table)
 
-    def Ge_table(self):
-        if self.ge_table_ref is not None:
-            return self.ge_table_ref.tid
-        return self.ge_table
+    def Ge_table(self) -> int:
+        return table_id(self.ge_table_ref, self.ge_table)
 
-    def F12_table(self):
-        if self.f12_table_ref is not None:
-            return self.f12_table_ref.tid
-        return self.f12_table
+    def F12_table(self) -> int:
+        return table_id(self.f12_table_ref, self.f12_table)
 
-    def Xt_table(self):
-        if self.xt_table_ref is not None:
-            return self.xt_table_ref.tid
-        return self.xt_table
+    def Xt_table(self) -> int:
+        return table_id(self.xt_table_ref, self.xt_table)
 
-    def Xc_table(self):
-        if self.xc_table_ref is not None:
-            return self.xc_table_ref.tid
-        return self.xc_table
+    def Xc_table(self) -> int:
+        return table_id(self.xc_table_ref, self.xc_table)
 
-    def Yt_table(self):
-        if self.yt_table_ref is not None:
-            return self.yt_table_ref.tid
-        return self.yt_table
+    def Yt_table(self) -> int:
+        return table_id(self.yt_table_ref, self.yt_table)
 
-    def Yc_table(self):
-        if self.yc_table_ref is not None:
-            return self.yc_table_ref.tid
-        return self.yc_table
+    def Yc_table(self) -> int:
+        return table_id(self.yc_table_ref, self.yc_table)
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         list_fields = ['MATT8', self.mid, self.E1_table(), self.E2_table(), self.Nu12_table(),
                        self.G12_table(), self.G1z_table(), self.G2z_table(), self.Rho_table(),
                        self.A1_table(), self.A2_table(), None,

@@ -6,6 +6,7 @@ if TYPE_CHECKING:  # pragma: no cover
         CAEROs, PAEROs, AELIST, AEFACT)
     from pyNastran.bdf.cards.bdf_sets import SET1, SET2
     from pyNastran.bdf.cards.coordinate_systems import Coord
+    from pyNastran.bdf.cards.bdf_tables import TABLEDs
 
 
 def coord_id(coord_ref: Coord, cid: int) -> int:
@@ -24,6 +25,14 @@ def coord_id(coord_ref: Coord, cid: int) -> int:
 #     if elem_ref is not None:
 #         return elem_ref.eid
 #     return eid
+
+
+
+
+def table_id(table_ref: TABLEDs, tid: int) -> int:
+    if table_ref is None:
+        return tid
+    return tid
 
 
 def paero_id(prop_ref: PAEROs, pid: int) -> int:

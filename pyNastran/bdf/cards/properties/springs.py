@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
+from pyNastran.bdf.bdf_interface.internal_get import table_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -286,36 +287,30 @@ class PELAST(SpringProperty):
         self.tgeid_ref = None
         self.tknid_ref = None
 
-    def Pid(self):
+    def Pid(self) -> int:
         if self.pid_ref is None:
             return self.pid
         return self.pid_ref.pid
 
-    def Tkid(self):
+    def Tkid(self) -> int:
         """
         Returns the table ID for force per unit displacement vs frequency
         (k=F/d vs freq)
         """
-        if self.tkid_ref is None:
-            return self.tkid
-        return self.tkid_ref.tid
+        return table_id(self.tkid_ref, self.tkid)
 
-    def Tknid(self):
+    def Tknid(self) -> int:
         """
         Returns the table ID for nondimensional force vs. displacement
         """
-        if self.tknid_ref is None:
-            return self.tknid
-        return self.tknid_ref.tid
+        return table_id(self.tknid_ref, self.tknid)
 
-    def Tgeid(self):
+    def Tgeid(self) -> int:
         """
         Returns the table ID for nondimensional structural damping
         coefficient vs. frequency (c/c0 vs freq)
         """
-        if self.tgeid_ref is None:
-            return self.tgeid
-        return self.tgeid_ref.tid
+        return table_id(self.tgeid_ref, self.tgeid)
 
     def raw_fields(self):
         return ['PELAST', self.pid, self.Tkid(), self.Tgeid(), self.Tknid()]
