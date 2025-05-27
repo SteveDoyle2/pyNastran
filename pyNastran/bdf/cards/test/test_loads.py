@@ -3,7 +3,7 @@ import os
 import unittest
 import numpy as np
 from numpy import array, allclose, array_equal, set_printoptions
-from cpylog import get_logger
+from cpylog import SimpleLogger
 set_printoptions(suppress=True, precision=3)
 
 import pyNastran
@@ -20,7 +20,7 @@ from pyNastran.op2.op2 import read_op2 # OP2,
 bdf = BDF(debug=False)
 TEST_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(TEST_PATH, '..', 'models')
-log = get_logger(level='warning')
+log = SimpleLogger(level='warning')
 
 
 class TestLoads(unittest.TestCase):
@@ -953,7 +953,8 @@ class TestLoads(unittest.TestCase):
         +-----+--+--+---S  -> x
         1     2  9  10  11
         """
-        model = BDF(debug=False)
+        log = SimpleLogger(level='debug')
+        model = BDF(debug=False, log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -1009,7 +1010,6 @@ class TestLoads(unittest.TestCase):
                          nsm=0.3, z1=None, z2=None,
                          mid4=None, comment='')
 
-
         eid = 4
         pid = 4
         nids = [1, 2, 3, 4]
@@ -1059,7 +1059,6 @@ class TestLoads(unittest.TestCase):
         unused_psolid = model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
                                          isop=None, fctn='SMECH', comment='psolid')
 
-
         conid = 42
         nodes = [
             2, 2, 2, 2, 2, 2,
@@ -1092,23 +1091,26 @@ class TestLoads(unittest.TestCase):
         node = 7
         mag = 1.0
         unused_force = model.add_force(sid, node, mag, xyz, cid=0, comment='force')
+        sid = 13
         unused_moment = model.add_moment(sid, node, mag, xyz, comment='moment')
 
+        sid = 14
         node = 6
         mag = 1.0
         g1 = 2
         g2 = 3
         unused_force1 = model.add_force1(sid, node, mag, g1, g2, comment='force1')
+        sid = 15
         unused_moment1 = model.add_moment1(sid, node, mag, g1, g2, comment='moment1')
 
+        sid = 16
         g1 = 1
         g2 = 3
         g3 = 2
         g4 = 4
         unused_force2 = model.add_force2(sid, node, mag, g1, g2, g3, g4, comment='force2')
+        sid = 17
         unused_moment2 = model.add_moment2(sid, node, mag, g1, g2, g3, g4, comment='moment2')
-        #g2, g3 = g3, g2
-        #force2 = model.add_force2(sid, node, mag, g1, g2, g3, g4, comment='force2')
 
         load_id = 120
         scale = 1.
@@ -1166,7 +1168,6 @@ class TestLoads(unittest.TestCase):
         assert allclose(ctria3.Mass(), 0.2)
         assert allclose(chexa.Mass(), 0.2)
 
-
         model.write_bdf('loads.temp')
         model._verify_bdf(xref=True)
         model.write_bdf('loads.temp')
@@ -1205,7 +1206,6 @@ class TestLoads(unittest.TestCase):
         #assert np.array_equal(forces1, forces2)
         #assert np.array_equal(moments1, moments2)
 
-
         write_skin_solid_faces(model2, 'skin.bdf', write_solids=False,
                                write_shells=True)
         os.remove('skin.bdf')
@@ -1237,7 +1237,7 @@ class TestLoads(unittest.TestCase):
 
     def test_sload(self):
         """tests SLOAD"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_spoint([11, 12])
         sid = 14

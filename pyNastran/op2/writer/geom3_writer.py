@@ -1,12 +1,16 @@
 from struct import pack, Struct
 from collections import defaultdict
+from cpylog import SimpleLogger
 
 from pyNastran.bdf import MAX_INT
 from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_header, write_header_nvalues
+from typing import BinaryIO
 
-def write_geom3(op2_file, op2_ascii, obj, endian=b'<', nastran_format='nx'):
+
+def write_geom3(op2_file: BinaryIO, op2_ascii,
+                obj, endian=b'<', nastran_format='nx'):
     if not hasattr(obj, 'loads') and not hasattr(obj, 'load_combinations'):
         return
     loads_by_type = defaultdict(list)
@@ -18,6 +22,9 @@ def write_geom3(op2_file, op2_ascii, obj, endian=b'<', nastran_format='nx'):
             loads_by_type[load.type].append(load)
     for unused_load_id, load in obj.tempds.items():
         loads_by_type[load.type].append(load)
+    log = obj.log
+    # log = SimpleLogger(level='debug')
+    # log.warning(f'loads_by_type = {list(loads_by_type)}')
     # pedge, pface
 
     # return if no supported cards are found
@@ -66,7 +73,7 @@ def write_geom3(op2_file, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         if load_type in ['SPCD']: # not a GEOM3 load
             continue
         if load_type in cards_to_skip:
-            obj.log.warning('skipping GEOM3-%s' % load_type)
+            log.warning(f'skipping GEOM3-{load_type}')
             continue
 
         #elif load_type not in supported_cards:
@@ -77,7 +84,7 @@ def write_geom3(op2_file, op2_ascii, obj, endian=b'<', nastran_format='nx'):
                                 nastran_format=nastran_format)
             cards_written[load_type] = len(loads)
         except Exception:  # pragma: no cover
-            obj.log.error('failed GEOM3-%s' % load_type)
+            log.error(f'failed GEOM3-{load_type}')
             raise
         op2_file.write(pack('i', nbytes))
 
@@ -93,10 +100,10 @@ def write_geom3(op2_file, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     #print('itable', itable)
     close_geom_table(op2_file, op2_ascii, itable)
     obj.log.debug(str(cards_written))
-
     #-------------------------------------
 
-def write_card(op2_file, op2_ascii, load_type, loads, endian, log,
+def write_card(op2_file: BinaryIO, op2_ascii, load_type: str, loads,
+               endian: bytes, log: SimpleLogger,
                nastran_format: str='nx'):
     nloads = len(loads)
     if load_type == 'FORCE':

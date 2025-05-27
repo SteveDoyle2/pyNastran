@@ -180,7 +180,7 @@ class MATS1(MaterialDependence):
         return MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MATS1 card from the OP2
 
@@ -208,11 +208,11 @@ class MATS1(MaterialDependence):
         d = {1: 'VonMises', 2: 'Tresca', 3: 'MohrCoulomb', 4: 'Drucker-Prager'}
         return d[self.yf]
 
-    def Hf(self):
+    def Hf(self) -> str:
         d = {1: 'Isotropic', 2: 'Kinematic', 3: 'Combined'}
         return d[self.hr]
 
-    def E(self, strain):
+    def E(self, strain: float) -> float:
         """
         Gets E (Young's Modulus) for a given strain.
 

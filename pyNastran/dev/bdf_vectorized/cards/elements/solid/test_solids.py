@@ -11,7 +11,7 @@ from pyNastran.dev.bdf_vectorized.cards.elements.solid.chexa20 import CHEXA20
 
 class TestSolids(unittest.TestCase):
 
-    def test_cpenta_01(self):
+    def test_vcpenta_01(self):
         model = BDF(debug=False)
         lines = ['CPENTA,85,22,201,202,203,205,206,207']
         card = model._process_card(lines)
@@ -26,7 +26,7 @@ class TestSolids(unittest.TestCase):
         #card.raw_fields()
         print(f.getvalue())
 
-    def test_cpenta_02(self):
+    def test_vcpenta_02(self):
         model = BDF(debug=False)
         lines = ['CPENTA,85,22,201,202,203,205,206,207,+PN2',
                  '+PN2,209,210,217,  ,  ,  ,213,214,218']
@@ -42,7 +42,7 @@ class TestSolids(unittest.TestCase):
         #card.raw_fields()
         print(f.getvalue())
 
-    def test_chexa_01(self):
+    def test_vchexa_01(self):
         model = BDF(debug=False)
         lines = [
             'CHEXA,85,22,201,202,203,205,206,207,+PN2',
@@ -59,7 +59,7 @@ class TestSolids(unittest.TestCase):
         #card.raw_fields()
         print(f.getvalue())
 
-    def test_chexa_02(self):
+    def test_vchexa_02(self):
         model = BDF(debug=False)
         lines = [
             'CHEXA,85,22,201,202,203,205,206,207,+PN2',
@@ -76,7 +76,7 @@ class TestSolids(unittest.TestCase):
         #card.raw_fields()
         print(f.getvalue())
 
-    def test_ctetra_01(self):
+    def test_vctetra_01(self):
         model = BDF(debug=False)
         lines = ['CTETRA,85,22,201,202,203,205']
         card = model._process_card(lines)
@@ -91,7 +91,7 @@ class TestSolids(unittest.TestCase):
         #card.raw_fields()
         print(f.getvalue())
 
-    def test_ctetra_02(self):
+    def test_vctetra_02(self):
         model = BDF(debug=False)
         lines = ['CTETRA,85,22,201,202,203,205,206,207,+PN2',
                  '+PN2,209,210,217']
@@ -107,11 +107,11 @@ class TestSolids(unittest.TestCase):
         #card.raw_fields()
         print(f.getvalue())
 
-    def test_solid_01(self):
+    def test_vsolid_01(self):
         """checks nonlinear static solid material"""
         pass
 
-    def test_solid_02(self):
+    def test_vsolid_02(self):
         """checks linear static solid material"""
         mid = 2
         pid = 4
@@ -197,7 +197,7 @@ class TestSolids(unittest.TestCase):
         self.assertEqual(element.get_mass_by_element_id(), mass)
         #self.assertEqual(element.get_mass_by_element_index(), mass)
 
-    def test_solid_03(self):
+    def test_vsolid_03(self):
         mid = 2
         pid = 4
         rho = 0.1
@@ -258,7 +258,7 @@ class TestSolids(unittest.TestCase):
         V = 2.0
         self.check_solid(model, eid, 'CHEXA8', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
 
-    def test_solid_04(self):
+    def test_vsolid_04(self):
         """checks linear static solid material"""
         mid = 2
         pid = 4
@@ -308,7 +308,7 @@ class TestSolids(unittest.TestCase):
             model.add_card(fields, fields[0], is_list=True)
         model.build()
 
-    def test_solid_05(self):
+    def test_vsolid_05(self):
         """checks linear static solid material"""
         mid = 2
         pid = 4

@@ -4,6 +4,7 @@ from struct import pack, Struct
 from .geom1_writer import write_geom_header, close_geom_table
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
+
 def write_ept(op2_file, op2_ascii, obj, endian=b'<',
               nastran_format: str='nx') -> None:
     if not hasattr(obj, 'properties'):
@@ -46,7 +47,6 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
         'PBCOMP',
         #'PGAP',
         #'PCOMPG',
-
     ]
     for name, pids in out.items():
         nproperties = len(pids)
@@ -259,7 +259,7 @@ def write_card(op2_file, op2_ascii, obj, name, pids, spack, endian):
                 stress = 0
             elif prop.stress == 'GAUSS':
                 stress = 1
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError('prop.stress=%s and must be [0, 1]' % prop.stress)
 
             if prop.integ == 'BUBBLE':
@@ -270,20 +270,20 @@ def write_card(op2_file, op2_ascii, obj, name, pids, spack, endian):
                 integ = 2
             elif prop.integ == 'THREE':
                 integ = 3
-            elif  prop.integ is None:  # TODO: not sure
+            elif prop.integ is None:  # TODO: not sure
                 integ = 0
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError('prop.integ=%s and must be [0, 1, 2, 3]' % prop.integ)
 
             if prop.isop == 'REDUCED':
                 isop = 0
             elif prop.isop == 'FULL':
                 isop = 1
-            elif  prop.isop is None:  # TODO: not sure
+            elif prop.isop is None:  # TODO: not sure
                 isop = 0
-            elif  prop.isop == 2: # 'TWO':
+            elif prop.isop == 2: # 'TWO':
                 isop = 2
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError('isop=%s and must be [0, 1, 2]' % prop.isop)
 
             if prop.fctn == 'SMECH':
@@ -292,7 +292,7 @@ def write_card(op2_file, op2_ascii, obj, name, pids, spack, endian):
                 fctn = b'PFLU'
             elif prop.fctn == 'FFLUID':
                 fctn = b'FFLU'
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError('PSOLID; fctn=%r' % prop.fctn)
 
             data = [pid, mid, cordm, integ, stress, isop, fctn]

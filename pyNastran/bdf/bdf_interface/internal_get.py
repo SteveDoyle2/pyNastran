@@ -37,7 +37,7 @@ def material_id(mid_ref, mid: int) -> int:
 def table_id(table_ref: TABLEDs, tid: int) -> int:
     if table_ref is None:
         return tid
-    return tid
+    return table_ref.tid
 
 
 def paero_id(prop_ref: PAEROs, pid: int) -> int:

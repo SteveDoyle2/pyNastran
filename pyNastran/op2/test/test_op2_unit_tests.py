@@ -2245,7 +2245,8 @@ class TestOP2Main(Tester):
 
     def test_bdf_op2_other_23(self):
         """checks ehbus69.bdf, which tests RealBush1DStressArray"""
-        log = get_logger(level='debug')
+        log = get_logger(level='warning')
+        #log = get_logger(level='debug')
         bdf_filename = MODEL_PATH / 'other' / 'ehbus69.bdf'
         op2_filename = MODEL_PATH / 'other' / 'ehbus69.op2'
 
@@ -2265,9 +2266,8 @@ class TestOP2Main(Tester):
             run_mass_properties=False, run_mirror=False,
             run_renumber=False)
 
-        # log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
+                write_f06=True, write_op2=True,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,

@@ -1,17 +1,13 @@
 """writes the MPT/MPTS table"""
 from __future__ import annotations
-#from copy import deepcopy
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Any, TYPE_CHECKING
-
-#import numpy as np
+from typing import Any, BinaryIO, TYPE_CHECKING
 
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_header, write_header_nvalues
 from .edt_writer import remove_unsupported_cards
 
-#from pyNastran.utils.numpy_utils import integer_types
 if TYPE_CHECKING:  # pragma: no cover
     #from cpylog import SimpleLogger
     #from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2, PAERO1, PAERO2, AESURF, AESURFS
@@ -19,7 +15,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.aero.dynamic_loads import GUST
     from pyNastran.op2.op2_geom import OP2Geom, BDF
 
-def write_dit(op2_file, op2_ascii, model: BDF | OP2Geom,
+def write_dit(op2_file: BinaryIO, op2_ascii,
+              model: BDF | OP2Geom,
               endian: bytes=b'<', nastran_format: str='nx') -> None:
     """writes the DIT/DITS table"""
     if not hasattr(model, 'loads'):  # OP2
@@ -35,8 +32,7 @@ def write_dit(op2_file, op2_ascii, model: BDF | OP2Geom,
         #'TABLEHT',
     ]
 
-    cards_to_skip = [
-    ]
+    cards_to_skip = []
     out = defaultdict(list)
     # geometry
     for table_id, table in sorted(model.tables.items()):
@@ -51,7 +47,6 @@ def write_dit(op2_file, op2_ascii, model: BDF | OP2Geom,
         out[table.type].append(table_id)
     for gust_id, gust in sorted(model.gusts.items()):
         out[gust.type].append(gust_id)
-
 
     remove_unsupported_cards(out, card_types, model.log)
     # other
@@ -92,20 +87,12 @@ def write_dit(op2_file, op2_ascii, model: BDF | OP2Geom,
     #-------------------------------------
     #print('itable', itable)
     close_geom_table(op2_file, op2_ascii, itable)
-    #-------------------------------------
 
-#def remove_unsupported_cards(card_dict: dict[str, Any],
-                             #card_types: list[str],
-                             #log: SimpleLogger):
-
-    #for card_type in list(card_dict):
-        #if card_type not in card_types:
-            #del card_dict[card_type]
-            #log.warning(f"removing {card_type} in OP2 writer because it's unsupported")
 
 def write_tabdmp1(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
-                  op2_file, op2_ascii, endian: bytes,
+                  op2_file: BinaryIO,
+                  op2_ascii, endian: bytes,
                   nastran_format: str='nx') -> int:
     """
     TABDMP1(15, 21, 162)
@@ -143,7 +130,8 @@ def write_tabdmp1(model: BDF | OP2Geom, name: str,
 
 def write_tabrndg(model: BDF | OP2Geom, name: str,
                   table_ids: list[int], ncards: int,
-                  op2_file, op2_ascii, endian: bytes,
+                  op2_file: BinaryIO, op2_ascii,
+                  endian: bytes,
                   nastran_format: str='nx') -> int:
     """
     TABRNDG(56, 26, 303)
@@ -622,11 +610,10 @@ def write_gust(model: BDF | OP2Geom, name: str,
     nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for gust_id in gust_ids:
-        gust = model.gusts[gust_id]
+        gust: GUST = model.gusts[gust_id]
         # (sid, dload, wg, x0, V) = out
         data = [gust.sid, gust.dload, gust.wg, gust.x0, gust.V]
-        #flutter = model.loads[flutter_id]  # type: FLUTTER
-        #print(flutter.get_stats())
+        #print(gust.get_stats())
         assert None not in data, data
         op2_ascii.write(f'  GUST data={data}\n')
         op2_file.write(structi.pack(*data))
