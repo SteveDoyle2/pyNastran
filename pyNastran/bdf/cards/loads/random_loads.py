@@ -181,10 +181,10 @@ class RANDPS(RandomLoad):
         self.tid = self.Tid()
         self.tid_ref = None
 
-    def get_loads(self):
+    def get_loads(self) -> list:
         return [self]
 
-    def Tid(self):
+    def Tid(self) -> int:
         if self.tid_ref is not None:
             return self.tid_ref.tid
         elif self.tid == 0:
@@ -220,7 +220,8 @@ class RANDT1(RandomLoad):
         tmax = 1.
         return RANDT1(sid, n, t0, tmax, comment='')
 
-    def __init__(self, sid: int, n: int, t0: int, tmax: float, comment: str=''):
+    def __init__(self, sid: int, n: int, t0: int, tmax: float,
+                 comment: str=''):
         """
         Creates a RANDT1 card
 
@@ -255,7 +256,7 @@ class RANDT1(RandomLoad):
         #assert self.k >= self.j, 'k=%s j=%s\n%s' % (self.k, self.j, self)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RANDT1 card from ``BDF.add_card(...)``
 
@@ -293,10 +294,10 @@ class RANDT1(RandomLoad):
         """Removes cross-reference links"""
         pass
 
-    def get_loads(self):
+    def get_loads(self) -> list:
         return [self]
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         list_fields = ['RANDT1', self.sid, self.n, self.t0, self.tmax]
         return list_fields
 

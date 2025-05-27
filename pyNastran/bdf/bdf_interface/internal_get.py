@@ -1,12 +1,19 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.cards.optimization_nx import GROUP
+    from pyNastran.bdf.cards.nodes import GRID
+    from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.bdf.cards.aero.aero import (
         CAEROs, PAEROs, AELIST, AEFACT)
     from pyNastran.bdf.cards.bdf_sets import SET1, SET2
-    from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.bdf.cards.bdf_tables import TABLEDs
+    from pyNastran.bdf.cards.optimization_nx import GROUP
+
+
+def node_id(node_ref, GRID, nid: int) -> int:
+    if node_ref is not None:
+        return node_ref.nid
+    return nid
 
 
 def coord_id(coord_ref: Coord, cid: int) -> int:
@@ -21,10 +28,10 @@ def coord_id(coord_ref: Coord, cid: int) -> int:
 #     return pid
 
 
-# def element_id(elem_ref, eid: int) -> int:
-#     if elem_ref is not None:
-#         return elem_ref.eid
-#     return eid
+def element_id(elem_ref, eid: int) -> int:
+    if elem_ref is not None:
+        return elem_ref.eid
+    return eid
 
 
 def material_id(mid_ref, mid: int) -> int:

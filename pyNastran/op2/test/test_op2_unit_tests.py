@@ -2267,7 +2267,7 @@ class TestOP2Main(Tester):
             run_renumber=False)
 
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=True,
+                write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,

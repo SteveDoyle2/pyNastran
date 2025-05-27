@@ -19,7 +19,6 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
-from numpy import array, cross, allclose, unique
 from numpy.linalg import norm  # type: ignore
 
 #from pyNastran.bdf.errors import CrossReferenceError
@@ -34,7 +33,7 @@ from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
-    integer_or_string, fields, integer_string_or_blank, integer_or_double)
+    integer_or_string, fields, integer_string_or_blank,)
 from pyNastran.bdf.bdf_interface.assign_type_force import (
     force_double, force_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, set_string8_blank_if_default
@@ -291,7 +290,7 @@ class CLOAD(LoadCombination):
     def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         self.cross_reference(model)
 
-    def get_load_ids(self):
+    def get_load_ids(self) -> list[int]:
         if self.load_ids_ref is None:
             return self.load_ids
         excite_ids = []
@@ -311,7 +310,7 @@ class CLOAD(LoadCombination):
         self.load_ids = self.get_load_ids()
         self.load_ids_ref = None
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         list_fields = ['CLOAD', self.sid, self.scale]
         load_ids = self.get_load_ids()
         for (scale_factor, load_id) in zip(self.scale_factors, load_ids):
@@ -401,8 +400,9 @@ class GRAV(BaseCard):
         self.mb = mb
         self.cid_ref = None
 
-        assert not allclose(max(abs(self.N)), 0.), ('GRAV N is a zero vector, '
-                                                    'N=%s' % str(self.N))
+        if np.allclose(max(abs(self.N)), 0.):
+            msg = 'GRAV N is a zero vector, N=%s' % str(self.N)
+            raise RuntimeError(msg)
 
     def validate(self):
         if not isinstance(self.scale, float):
@@ -410,7 +410,7 @@ class GRAV(BaseCard):
             raise TypeError(msg)
 
     @classmethod
-    def add_card(cls, card: BDF, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a GRAV card from ``BDF.add_card(...)``
 
@@ -425,15 +425,15 @@ class GRAV(BaseCard):
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', default=0)
         scale = double(card, 3, 'scale')
-        N = array([double_or_blank(card, 4, 'N1', default=0.0),
-                   double_or_blank(card, 5, 'N2', default=0.0),
-                   double_or_blank(card, 6, 'N3', default=0.0)])
+        N = np.array([double_or_blank(card, 4, 'N1', default=0.0),
+                      double_or_blank(card, 5, 'N2', default=0.0),
+                      double_or_blank(card, 6, 'N3', default=0.0)])
         mb = integer_or_blank(card, 7, 'mb', default=0)
         assert len(card) <= 8, f'len(GRAV card) = {len(card):d}\ncard={card}'
         return GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
 
     @classmethod
-    def add_card_lax(cls, card: BDF, comment: str=''):
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
         """
         Adds a GRAV card from ``BDF.add_card(...)``
 
@@ -448,15 +448,15 @@ class GRAV(BaseCard):
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', default=0)
         scale = force_double(card, 3, 'scale')
-        N = array([force_double_or_blank(card, 4, 'N1', default=0.0),
-                   force_double_or_blank(card, 5, 'N2', default=0.0),
-                   force_double_or_blank(card, 6, 'N3', default=0.0)])
+        N = np.array([force_double_or_blank(card, 4, 'N1', default=0.0),
+                      force_double_or_blank(card, 5, 'N2', default=0.0),
+                      force_double_or_blank(card, 6, 'N3', default=0.0)])
         mb = integer_or_blank(card, 7, 'mb', default=0)
         assert len(card) <= 8, f'len(GRAV card) = {len(card):d}\ncard={card}'
         return GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a GRAV card from the OP2
 
@@ -471,7 +471,7 @@ class GRAV(BaseCard):
         sid = data[0]
         cid = data[1]
         unused_a = data[2]
-        N = array(data[3:6])
+        N = np.array(data[3:6])
         mb = data[6]
         scale = 1.
         assert len(data) == 7
@@ -514,12 +514,12 @@ class GRAV(BaseCard):
         p = self.cid_ref.transform_vector_to_global(self.N)
         return self.scale * p
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         N = list(self.N)
         list_fields = ['GRAV', self.sid, self.Cid(), self.scale] + N + [self.mb]
         return list_fields
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         N = []
         for n in self.N:
             N.append(set_blank_if_default(n, 0.0))
@@ -567,7 +567,10 @@ class ACCEL(BaseCard):
         vals = [1., 2.]
         return ACCEL(sid, N, direction, locs, vals, cid=0, comment='')
 
-    def __init__(self, sid, N, direction, locs, vals, cid=0, comment=''):
+    def __init__(self, sid: int, N: np.ndarray,
+                 direction: str,
+                 locs: list[float], vals: list[float],
+                 cid: int=0, comment: str=''):
         """
         Creates an ACCEL card
 
@@ -604,8 +607,8 @@ class ACCEL(BaseCard):
 
         #: Component direction of acceleration variation. (Character; one of X,Y or Z)
         self.direction = direction
-        self.locs = array(locs, dtype='float64')
-        self.vals = array(vals, dtype='float64')
+        self.locs = np.array(locs, dtype='float64')
+        self.vals = np.array(vals, dtype='float64')
         self.cid_ref = None
 
     def validate(self):
@@ -721,7 +724,8 @@ class ACCEL1(BaseCard):
         nodes = [1, 3, 4]
         return ACCEL1(sid, scale, N, nodes, cid=0, comment='')
 
-    def __init__(self, sid, scale, N, nodes, cid=0, comment=''):
+    def __init__(self, sid: int, scale: float, N: np.ndarray,
+                 nodes: list[int], cid: int=0, comment: str=''):
         """
         Creates an ACCEL1 card
 
@@ -918,7 +922,7 @@ class Load0(BaseCard):
     """common class for FORCE, MOMENT"""
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, loads):
+    def export_to_hdf5(cls, h5_file, model: BDF, loads):
         """exports the loads in a vectorized way"""
         #encoding = model._encoding
         #comments = []
@@ -1000,9 +1004,9 @@ class Load0(BaseCard):
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', 0)
         mag = double(card, 4, 'mag')
-        xyz = array([double_or_blank(card, 5, 'X1', 0.0),
-                     double_or_blank(card, 6, 'X2', 0.0),
-                     double_or_blank(card, 7, 'X3', 0.0)])
+        xyz = np.array([double_or_blank(card, 5, 'X1', 0.0),
+                        double_or_blank(card, 6, 'X2', 0.0),
+                        double_or_blank(card, 7, 'X3', 0.0)])
         assert len(card) <= 8, 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
         return cls(sid, node, mag, xyz, cid=cid, comment=comment)
 
@@ -1023,7 +1027,7 @@ class Load0(BaseCard):
         node = data[1]
         cid = data[2]
         mag = data[3]
-        xyz = array(data[4:7])
+        xyz = np.array(data[4:7])
         return cls(sid, node, mag, xyz, cid=cid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -1492,9 +1496,7 @@ class Load2(BaseCard):
             msg += 'g2.get_position()=%s' % xyz2
             raise FloatingPointError(msg)
 
-
         v2 = xyz4 - xyz3
-
         try:
             v2 /= norm(v2)
         except FloatingPointError:
@@ -1503,7 +1505,6 @@ class Load2(BaseCard):
             msg += 'g4.get_position()=%s' % xyz4
             raise FloatingPointError(msg)
         xyz = np.cross(v21, v2)
-
         self.xyz = xyz
 
         msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43 (or v31)=%s\nxyz=%s' % (
@@ -2316,12 +2317,12 @@ class PLOAD2(Load):
         self.eids_ref = None
 
     @property
-    def element_ids(self):
+    def element_ids(self) -> list[int]:
         if self.eids_ref is not None:
             eids = [elem.eid for elem in self.eids_ref]
         else:
             eids = self.eids
-        return self.eids
+        return eids
 
     def get_loads(self):
         return [self]
@@ -2620,7 +2621,7 @@ class PLOAD4(Load):
             # alternate form
             eid2 = integer(card, 8, 'eid2')
             if eid2:
-                eids = list(unique(
+                eids = list(np.unique(
                     expand_thru([eid, 'THRU', eid2], set_fields=False, sort_fields=False)
                 ))
             g1 = None
@@ -2676,10 +2677,9 @@ class PLOAD4(Load):
             cid = None
             nvector = None
 
-        surf_or_line = data[7]
-
         eids = [eid]
-        if data[7] is None:
+        surf_or_line = data[7]
+        if surf_or_line is None:
             surf_or_line = 'SURF'
             assert data[8] is None, data
             line_load_dir = 'NORM'
