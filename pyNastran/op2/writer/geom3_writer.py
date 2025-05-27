@@ -648,7 +648,8 @@ def _write_rforce(load_type, loads, nloads, op2_file, op2_ascii, endian):
         #self.idrf = idrf
         #sid, nid, cid, a, r1, r2, r3, method, racc, mb = data
         #scale = 1.0
-        data = [load.sid, load.nid, load.cid, load.scale] + load.r123 + [
+        data = [load.sid, load.nid, load.cid, load.scale,
+                ] + load.r123.tolist() + [
             load.method, load.racc, load.mb]
         assert load.idrf == 0, load
         op2_ascii.write('  RFORCE data=%s\n' % str(data))

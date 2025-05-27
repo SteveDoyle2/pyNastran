@@ -51,6 +51,7 @@ def create_shear_moment_torque(model: BDF,
                                length_scale: float=1.0, length_unit: str='',
                                force_scale: float=1.0, force_unit: str='',
                                moment_scale: float=1.0, moment_unit: str='',
+                               make_plot: bool=False,
                                show: bool=True,
                                ) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -195,7 +196,7 @@ def create_shear_moment_torque(model: BDF,
             length_unit=length_unit,
             force_unit=force_unit,
             moment_unit=moment_unit)
-    if IS_MATPLOTLIB:
+    if IS_MATPLOTLIB and make_plot:
         plot_smt(
             xyz_stations,
             force_sum, moment_sum,

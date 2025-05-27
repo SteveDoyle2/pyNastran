@@ -10,7 +10,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.optimization_nx import GROUP
 
 
-def node_id(node_ref, GRID, nid: int) -> int:
+def node_id(node_ref: GRID, nid: int) -> int:
     if node_ref is not None:
         return node_ref.nid
     return nid

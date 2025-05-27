@@ -85,26 +85,28 @@ class TestGridPointForcesSMT(unittest.TestCase):
 
         gpforce = op2_model.grid_point_forces[1]
 
+        p1 = np.array([128., 6., 0.])  #  start; 127.95, 6.0, 19.559
+        p3 = np.array([138., 96., 0.]) #  end; 119.95, 96., 21.832
+
+        #method='Vector'
+        method = 'vector'
+        p2    = np.array([0., 1., 0.])  # xz-plane (normal direction)
+        zaxis = np.array([0., 0., 1.])  # z-axis
+
+        station_location = 'End-Origin'
+        make_plot = IS_MATPLOTLIB
+        forces_sum, moments_sum = create_shear_moment_torque(
+            bdf_model, gpforce, p1, p2, p3, zaxis,
+            method=method, station_location=station_location,
+            cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
+            nplanes=20, root_filename=None, csv_filename=None,
+            length_scale=1.0, length_unit='in',
+            force_scale=0.001, force_unit='kip',
+            moment_scale=0.001, moment_unit='in-kip',
+            make_plot=make_plot,
+            show=False)
+
         if 0:
-            p1 = np.array([128., 6., 0.])  #  start; 127.95, 6.0, 19.559
-            p3 = np.array([138., 96., 0.]) #  end; 119.95, 96., 21.832
-
-            #method='Vector'
-            method = 'vector'
-            p2    = np.array([0., 1., 0.])  # xz-plane (normal direction)
-            zaxis = np.array([0., 0., 1.])  # z-axis
-
-            station_location = 'End-Origin'
-            forces_sum, moments_sum = create_shear_moment_torque(
-                bdf_model, gpforce, p1, p2, p3, zaxis,
-                method=method, station_location=station_location,
-                cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
-                nplanes=20, root_filename=None, csv_filename=None,
-                length_scale=1.0, length_unit='in',
-                force_scale=0.001, force_unit='kip',
-                moment_scale=0.001, moment_unit='in-kip',
-                show=False)
-
             station_location = 'y'
             forces_sum, moments_sum = create_shear_moment_torque(
                 bdf_model, gpforce, p1, p2, p3, zaxis,

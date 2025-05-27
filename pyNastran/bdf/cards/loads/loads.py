@@ -19,7 +19,8 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, write_card
 
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.bdf_interface.internal_get import coord_id, node_id, element_id
+from pyNastran.bdf.bdf_interface.internal_get import (
+    coord_id, element_id, node_id as fnode_id)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, components_or_blank,
     string_or_blank)
@@ -1322,6 +1323,8 @@ class RFORCE(Load):
         """
         if comment:
             self.comment = comment
+        # if isinstance(r123, list):
+        r123 = np.asarray(r123)
         self.sid = sid
         self.nid = nid
         self.cid = cid
@@ -1337,7 +1340,9 @@ class RFORCE(Load):
 
     def validate(self):
         assert self.method in [1, 2], self.method
-        assert isinstance(self.r123, list), self.r123
+        if isinstance(self.r123, list):
+            self.r123 = np.array(self.r123, dtype='float64')
+        assert isinstance(self.r123, np.ndarray), self.r123
         assert isinstance(self.scale, float), self.scale
         assert isinstance(self.cid, int), self.cid
         assert isinstance(self.mb, int), self.mb
@@ -1421,7 +1426,7 @@ class RFORCE(Load):
 
     @property
     def node_id(self) -> int:
-        return node_id(self.nid_ref, self.nid)
+        return fnode_id(self.nid_ref, self.nid)
 
     def Nid(self) -> int:
         return self.node_id

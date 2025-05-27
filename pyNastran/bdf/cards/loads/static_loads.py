@@ -617,7 +617,7 @@ class ACCEL(BaseCard):
         assert self.direction in ['X', 'Y', 'Z'], 'dir=%r' % self.direction
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a ACCEL card from ``BDF.add_card(...)``
 
@@ -2594,7 +2594,7 @@ class PLOAD4(Load):
         assert self.g34 != 0, str(self)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PLOAD4 card from ``BDF.add_card(...)``
 
@@ -2638,7 +2638,7 @@ class PLOAD4(Load):
         n1 = double_or_blank(card, 10, 'N1', 0.)
         n2 = double_or_blank(card, 11, 'N2', 0.)
         n3 = double_or_blank(card, 12, 'N3', 0.)
-        nvector = array([n1, n2, n3])
+        nvector = np.array([n1, n2, n3])
 
         surf_or_line = string_or_blank(card, 13, 'sorl', 'SURF')
         line_load_dir = string_or_blank(card, 14, 'ldir', 'NORM')
