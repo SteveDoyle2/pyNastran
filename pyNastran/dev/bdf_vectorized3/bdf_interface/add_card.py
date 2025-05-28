@@ -4527,12 +4527,12 @@ class AddMaterial(BDFAttributes):
                              tab4, tabd, comment=comment)
         return mat
 
-    def add_mats1(self, mid: int, tid: int, Type: str,
+    def add_mats1(self, mid: int, Type: str,
                   h: float, hr: float, yf: float, limit1: float, limit2: float,
-                  comment: str='') -> int:
+                  tid: int=0, comment: str='') -> int:
         """Creates a MATS1 card"""
-        mat = self.mats1.add(mid, tid, Type, h, hr, yf, limit1, limit2,
-                             comment=comment)
+        mat = self.mats1.add(mid, Type, h, hr, yf, limit1, limit2,
+                             tid=tid, comment=comment)
         return mat
 
     def add_matt1(self, mid: int, e_table=None, g_table=None, nu_table=None, rho_table=None,

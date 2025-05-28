@@ -37,7 +37,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     double_string_or_blank, interpret_value, check_string, loose_string)
 from pyNastran.bdf.bdf_interface.internal_get import material_id
 from pyNastran.bdf.bdf_interface.assign_type_force import (
-    force_double, force_double_or_blank)
+    #force_double,
+    force_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -557,8 +558,11 @@ class DCONSTR(OptConstraint):
     +---------+------+-----+------------+------------+-------+--------+
     """
 
-    def __init__(self, oid, dresp_id, lid=-1.e20, uid=1.e20,
-                 lowfq=0., highfq=1.e20, comment=''):
+    def __init__(self, oid: int, dresp_id: int,
+                 lid: int | float=-1.e20,
+                 uid: int | float=1.e20,
+                 lowfq: float=0., highfq: float=1.e20,
+                 comment: str=''):
         """
         Creates a DCONSTR card
 
@@ -619,7 +623,7 @@ class DCONSTR(OptConstraint):
         hdf5_file.create_dataset('highfq', data=highfq)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DCONSTR card from ``BDF.add_card(...)``
 
@@ -641,7 +645,7 @@ class DCONSTR(OptConstraint):
         return DCONSTR(oid, dresp_id, lid, uid, lowfq, highfq, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a DCONSTR card from the OP2
 
@@ -948,6 +952,7 @@ class DESVAR(OptConstraint):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
 
 class TOPVAR(BaseCard):
     type = 'TOPVAR'
@@ -1874,7 +1879,7 @@ class DRESP1(OptConstraint):
 
     def __init__(self, dresp_id: int, label: str,
                  response_type: str,
-                 property_type: str,
+                 property_type: Optional[str],
                  region: int,
                  atta: Optional[int | float | str],
                  attb: Optional[int | float | str],
@@ -1987,7 +1992,7 @@ class DRESP1(OptConstraint):
         >>> #atta = ???
         >>> #region = ???
         >>> #attb = ???
-        >>> atti = [eid???]
+        >>> atti = [eid]  # ???
         >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
         """
         OptConstraint.__init__(self)
@@ -2017,8 +2022,9 @@ class DRESP1(OptConstraint):
         assert isinstance(atti, list), 'atti=%s type=%s' % (atti, type(atti))
 
         if validate:
-            atta, attb, atti = validate_dresp1(label, property_type, response_type,
-                                               atta, attb, atti)
+            atta, attb, atti = validate_dresp1(
+                label, property_type, response_type,
+                atta, attb, atti)
 
         self.atta = atta
         self.attb = attb
@@ -2127,8 +2133,8 @@ class DRESP1(OptConstraint):
             unused_atti = self.atti[0]
             out = case.data[itime, inid, comp - 1]
             #print(' DISP[itime=%s, nid=%s, comp=%i] = %s' % (itime, str(nidsi), comp, out))
-        elif property_type == 'ELEM' and 0:
-            pass
+        # elif property_type == 'ELEM' and 0:
+        #     pass
         else:
             msg = 'fields=%s\n' % (self.raw_fields())
             msg += 'response_type=%r property_type=%r region=%s\n' % (
@@ -2380,8 +2386,8 @@ class DRESP1(OptConstraint):
             ## atta - Arbitrary Beam Stress Item Code
             #ids = [idi for idi in self.atti if idi is not None]
             data = self._properties()
-        elif self.response_type in {'CMPLANCE'}:
-            asdf
+        # elif self.response_type in {'CMPLANCE'}:
+        #     asdf
         else:
             msg = 'response_type=%r property_type=%r atta=%r attb=%r atti=%r\n' % (
                 self.response_type, self.property_type, self.atta, self.attb, self.atti)
@@ -3616,7 +3622,7 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
         assert len(self.coeffs) == len(self.dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(self.coeffs), len(self.dvids))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DVCREL1 card from ``BDF.add_card(...)``
 
@@ -3645,7 +3651,7 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
         #if nfields % 2 == 1:
             #end_fields.append(None)
             #nfields += 1
-        i = 0
+
         for i in range(0, nfields, 2):
             desvar_id = end_fields[i]
             coeff = end_fields[i + 1]
@@ -4177,7 +4183,7 @@ class DVMREL1(DVXREL1):
         assert len(self.coeffs) == len(self.dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(self.coeffs), len(self.dvids))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DVMREL1 card from ``BDF.add_card(...)``
 
@@ -4209,7 +4215,6 @@ class DVMREL1(DVXREL1):
             #end_fields.append(None)
             #nfields += 1
 
-        i = 0
         for i in range(0, nfields, 2):
             desvar_id = end_fields[i]
             coeff = end_fields[i + 1]
@@ -4876,7 +4881,7 @@ class DVPREL1(DVXREL1):
         #if nfields % 2 == 1:
             #end_fields.append(None)
             #nfields += 1
-        i = 0
+
         for i in range(0, nfields, 2):
             desvar_id = end_fields[i]
             coeff = end_fields[i + 1]
@@ -5719,7 +5724,8 @@ def _get_dresp23_table_values(name, values_list, inline=False):
     return out
 
 
-def get_dvxrel1_coeffs(dvxrel, model, desvar_values, debug=False):
+def get_dvxrel1_coeffs(dvxrel, model: BDF,
+                       desvar_values, debug: bool=False):
     """
     Used by DVPREL1/2, DVMREL1/2, DVCREL1/2, and DVGRID to determine
     the value for the new property/material/etc. value
@@ -5934,23 +5940,23 @@ def get_dvprel_key(dvprel, prop=None):
                     var_to_change = pbeam_var_map[iterm] + str(istation + 1)
                 else:
                     msg = 'istation=%s iterm=%s' % (istation, iterm)
-                    msg += 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+                    msg += f'prop_type={prop_type!r} pname/fid={var_to_change} is not supported'
             else:
-                msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+                msg = f'prop_type={prop_type!r} pname/fid={var_to_change} is not supported'
         else:  # pragma: no cover
-            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+            msg = f'prop_type={prop_type!r} pname/fid={var_to_change!r} is not supported'
 
     elif prop_type == 'PBARL':
         if isinstance(var_to_change, integer_types):
-            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+            msg = f'prop_type={prop_type!r} pname/fid={var_to_change} is not supported'
         elif var_to_change.startswith('DIM'):
             pass
         else:  # pragma: no cover
-            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+            msg = f'prop_type={prop_type!r} pname/fid={var_to_change} is not supported'
         if prop is None:
-            var_to_change = '??? %s' % (var_to_change)
+            var_to_change = f'??? {var_to_change}'
         else:
-            var_to_change = '%s %s' % (prop.Type, var_to_change)
+            var_to_change = f'{prop.Type} {var_to_change}'
 
     elif prop_type == 'PBEAML':
         if isinstance(var_to_change, integer_types):
@@ -5962,7 +5968,7 @@ def get_dvprel_key(dvprel, prop=None):
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         if prop is None:
-            var_to_change = '??? %s' % (var_to_change)
+            var_to_change = f'??? {var_to_change}'
         else:
             var_to_change = '%s %s' % (prop.Type, var_to_change)
 
@@ -6091,11 +6097,10 @@ def get_dvprel_key(dvprel, prop=None):
         elif var_to_change.startswith('T(') and var_to_change.endswith(')'): #  T(2)
             pass
         else:  # pragma: no cover
-            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
-
+            msg = f'prop_type={prop_type!r} pname/fid={var_to_change!r} is not supported'
     else:  # pragma: no cover
-        msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
-    key = '%s %s' % (prop_type, var_to_change)
+        msg = f'prop_type={prop_type!r} pname/fid={var_to_change!r} is not supported'
+    key = f'{prop_type} {var_to_change}'
     return key, msg
 
 def _export_dresps_to_hdf5(h5_file, model, encoding):

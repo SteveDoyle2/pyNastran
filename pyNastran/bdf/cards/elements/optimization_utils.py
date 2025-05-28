@@ -6,7 +6,7 @@ if TYPE_CHECKING:  # pragma: no cover
 from pyNastran.bdf.cards.optimization import DRESP1
 
 def constrain_solid_stress_from_properties(model: BDF, pids: list[int],
-                                          constraint_id: int, dresp_id: int, uallow: float):
+                                           constraint_id: int, dresp_id: int, uallow: float):
     """adds VM stress constraints for solids"""
     skip_properties = [
         'PROD', 'PELAS', 'PDAMP',

@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.nodes import GRID
     from pyNastran.bdf.cards.coordinate_systems import Coord
@@ -15,6 +16,18 @@ def node_id(node_ref: GRID, nid: int) -> int:
         return node_ref.nid
     return nid
 
+
+def coord_id_blank(coord_ref: Coord, cid: Optional[int]) -> int:
+    assert cid is None or cid >= 0, cid
+    if coord_ref is not None:
+        return coord_ref.cid
+    return cid
+
+def coord_id_negative(coord_ref: Coord, cid: int) -> int:
+    assert cid >= -1, cid
+    if coord_ref is not None:
+        return coord_ref.cid
+    return cid
 
 def coord_id(coord_ref: Coord, cid: int) -> int:
     if coord_ref is not None:
@@ -42,6 +55,7 @@ def material_id(mid_ref, mid: int) -> int:
 
 
 def table_id(table_ref: TABLEDs, tid: int) -> int:
+    assert isinstance(tid, int), tid
     if table_ref is None:
         return tid
     return table_ref.tid

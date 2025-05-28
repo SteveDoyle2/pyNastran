@@ -217,20 +217,10 @@ class ACSRCE(BaseCard):
         self.dphase = self.DPhase()
         self.delay = self.Delay()
         #self.sloads = self.
-
-        #self.tb = self.Tb()
-        #self.tp = self.Tp()
-        #self.delay = self.delay_id
-        #if self.tb > 0:
-            #del self.tb_ref
-        #if self.tp > 0:
-            #del self.tp_ref
         self.power_ref = None
         self.sloads_ref = None
         self.delay_ref = None
         self.dphase_ref = None
-        #self.dphases_ref = None
-        #self.delays_ref = None
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         return self.cross_reference(model)
@@ -256,6 +246,7 @@ class ACSRCE(BaseCard):
             return self.dphase
 
     def Power(self) -> int:
+        assert isinstance(self.power, integer_types), self.power
         return ftable_id(self.power_ref, self.power)
 
     def get_load_at_freq(self, freq: float) -> float:

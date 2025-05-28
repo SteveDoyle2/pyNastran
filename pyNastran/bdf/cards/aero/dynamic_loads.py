@@ -1152,6 +1152,7 @@ def gust_function(gust_model: str='von_karman', V: float=1.0):
     out = num / denom
     return out
 
+
 class GUST(BaseCard):
     """
     Defines a stationary vertical gust for use in aeroelastic response

@@ -1217,22 +1217,22 @@ class CONM2(PointMassElement):
         nid = []
         cid = []
         mass = []
-        X = []
-        I = []
+        offset = []
+        inertia = []
         for eid in eids:
             element = model.masses[eid]
             #comments.append(element.comment)
             nid.append(element.nid)
             cid.append(element.cid)
             mass.append(element.mass)
-            X.append(element.X)
-            I.append(element.I)
+            offset.append(element.X)
+            inertia.append(element.I)
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('eid', data=eids)
         h5_file.create_dataset('nid', data=nid)
         h5_file.create_dataset('cid', data=cid)
-        h5_file.create_dataset('X', data=X)
-        h5_file.create_dataset('I', data=I)
+        h5_file.create_dataset('X', data=offset)
+        h5_file.create_dataset('I', data=inertia)
         h5_file.create_dataset('mass', data=mass)
 
         #self.eid = eid
@@ -1314,16 +1314,16 @@ class CONM2(PointMassElement):
         assert len(self.X) == 3, self.X
         assert len(self.I) == 6, self.I
 
-        I11, I12, I22, I13, I23, I33 = self.I
-        I = np.array([
-            [I11, I12, I13],
-            [I12, I22, I23],
-            [I13, I23, I33],
+        i11, i12, i22, i13, i23, i33 = self.I
+        inertia = np.array([
+            [i11, i12, i13],
+            [i12, i22, i23],
+            [i13, i23, i33],
         ], dtype='float32')
-        is_psd, eigi = is_positive_semi_definite(I)
+        is_psd, eigi = is_positive_semi_definite(inertia)
         if not is_psd:
             msg = (f'The eig(I) >= 0. for CONM2 eid={self.eid:d}\n'
-                   f'I=\n{I}\n'
+                   f'I=\n{inertia}\n'
                    f'eigenvalues={eigi}')
             warnings.warn(msg)
 
@@ -1345,13 +1345,13 @@ class CONM2(PointMassElement):
         cid = integer_or_blank(card, 3, 'cid', 0)
         mass = double_or_blank(card, 4, 'mass', 0.)
 
-        X = [
+        offset = [
             double_or_blank(card, 5, 'x1', 0.0),
             double_or_blank(card, 6, 'x2', 0.0),
             double_or_blank(card, 7, 'x3', 0.0),
         ]
 
-        I = [
+        inertia = [
             double_or_blank(card, 9, 'I11', 0.0),
             double_or_blank(card, 10, 'I21', 0.0),
             double_or_blank(card, 11, 'I22', 0.0),
@@ -1360,7 +1360,7 @@ class CONM2(PointMassElement):
             double_or_blank(card, 14, 'I33', 0.0),
         ]
         assert len(card) <= 15, f'len(CONM2 card) = {len(card):d}\ncard={card}'
-        return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
+        return CONM2(eid, nid, mass, cid=cid, X=offset, I=inertia, comment=comment)
 
     @classmethod
     def add_card_lax(cls, card: BDFCard, comment: str=''):
@@ -1442,11 +1442,12 @@ class CONM2(PointMassElement):
 
         """
         I = self.I
-        A = [[I[0], -I[1], -I[3]],
-             [-I[1], I[2], -I[4]],
-             [-I[3], -I[4], I[5]]]
+        inertia = [
+            [I[0], -I[1], -I[3]],
+            [-I[1], I[2], -I[4]],
+            [-I[3], -I[4], I[5]]]
         if self.Cid() in [0, -1]:
-            return A
+            return inertia
         else:
             # transform to global
             #dx = self.cid_ref.transform_node_to_global(self.X)
@@ -1649,23 +1650,23 @@ class CONM2(PointMassElement):
                        list(self.X) + [None] + list(self.I))
         return list_fields
 
-    def repr_fields(self):
-        I = []
+    def repr_fields(self) -> list:
+        inertia = []
         for i in self.I:
             if i == 0.:
-                I.append(None)
+                inertia.append(None)
             else:
-                I.append(i)
-        X = []
+                inertia.append(i)
+        offset = []
         for x in self.X:
             if x == 0.:
-                X.append(None)
+                offset.append(None)
             else:
-                X.append(x)
+                offset.append(x)
 
         cid = set_blank_if_default(self.Cid(), 0)
-        list_fields = (['CONM2', self.eid, self.Nid(), cid, self.mass] + X +
-                       [None] + I)
+        list_fields = (['CONM2', self.eid, self.Nid(), cid, self.mass] + offset +
+                       [None] + inertia)
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

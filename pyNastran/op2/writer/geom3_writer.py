@@ -656,7 +656,8 @@ def _write_rforce(load_type, loads, nloads, op2_file, op2_ascii, endian):
         op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_temp(load_type, loads, op2_file, op2_ascii, endian):
+def _write_temp(load_type, loads,
+                op2_file: BinaryIO, op2_ascii, endian):
     """writes the TEMPs"""
     key = (5701, 57, 27)
     nfields = 3

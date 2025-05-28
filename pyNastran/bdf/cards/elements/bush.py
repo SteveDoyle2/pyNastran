@@ -11,19 +11,21 @@ All bush elements are BushElement and Element objects.
 """
 from __future__ import annotations
 import warnings
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdf_interface.internal_get import coord_id
+from pyNastran.bdf.bdf_interface.internal_get import (
+    coord_id_negative, coord_id_blank)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
     string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.cards.nodes import GRID
 
 
 class BushElement(Element):
@@ -38,7 +40,7 @@ class BushElement(Element):
             return self.cid
         return self.cid_ref.cid
 
-    def Mass(self):
+    def Mass(self) -> float:
         return 0.
 
     def get_edge_ids(self):
@@ -127,7 +129,14 @@ class CBUSH(BushElement):
                 else:
                     raise KeyError('Field %r=%r is an invalid CBUSH entry.' % (n, value))
 
-    def __init__(self, eid, pid, nids, x, g0, cid=None, s=0.5, ocid=-1, si=None, comment=''):
+    def __init__(self, eid: int, pid: int,
+                 nids: list[int],
+                 x: Optional[list[float]],
+                 g0: Optional[int],
+                 cid: Optional[int]=None,
+                 s: float=0.5,
+                 ocid: int=-1,
+                 si: Optional[list[float]]=None, comment: str=''):
         """
         Creates a CBUSH card
 
@@ -302,11 +311,11 @@ class CBUSH(BushElement):
             x = [None, None, None]
 
         #: Location of spring damper (0 <= s <= 1.0)
-        s = double_or_blank(card, 9, 's', 0.5)
+        s = double_or_blank(card, 9, 's', default=0.5)
         #: Coordinate system identification of spring-damper offset. See
         #: Remark 9. (Integer > -1; Default = -1, which means the offset
         #: point lies on the line between GA and GB
-        ocid = integer_or_blank(card, 10, 'ocid', -1)
+        ocid = integer_or_blank(card, 10, 'ocid', default=-1)
         #: Components of spring-damper offset in the OCID coordinate system
         #: if OCID > 0.
         si = [double_or_blank(card, 11, 's1'),
@@ -316,7 +325,7 @@ class CBUSH(BushElement):
         return CBUSH(eid, pid, [ga, gb], x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, f, comment=''):
+    def add_op2_data(cls, data, f, comment: str=''):
         """
         Adds a CBUSH card from the OP2
 
@@ -360,7 +369,7 @@ class CBUSH(BushElement):
         if xref:
             if gb is None:
                 warnings.warn(f'No GB for CBUSH eid={self.eid}\n'
-                              f'nodes={self.nodes} dx={dx:g} '
+                              f'nodes={self.nodes} '
                               f'cid={cid}; ocid={ocid}; x={self.x} g0={self.g0}\n'
                               f'{str(self)}')
             else:
@@ -374,28 +383,28 @@ class CBUSH(BushElement):
                                   f'cid={cid}; ocid={ocid}; x={self.x} g0={self.g0}\n'
                                   f'{str(self)}')
 
-    def Ga(self):
+    def Ga(self) -> int:
         if self.nodes_ref is not None:
             return self.nodes_ref[0].nid
         return self.nodes[0]
 
-    def Gb(self):
+    def Gb(self) -> int:
         if self.nodes[1] in [0, None]:
             return 0
         if self.nodes_ref is not None:
             return self.nodes_ref[1].nid
         return self.nodes[1]
 
-    def G0(self):
+    def G0(self) -> int:
         if self.g0_ref is not None:
             return self.g0_ref.nid
         return self.g0
 
     def OCid(self) -> int:
-        return coord_id(self.ocid_ref, self.ocid)
+        return coord_id_negative(self.ocid_ref, self.ocid)
 
-    def Cid(self) -> int:
-        return coord_id(self.cid_ref, self.cid)
+    def Cid(self) -> Optional[int]:
+        return coord_id_blank(self.cid_ref, self.cid)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -462,7 +471,7 @@ class CBUSH(BushElement):
         self.pid_ref = None
         self.ocid_ref = None
 
-    def _get_x_g0(self):
+    def _get_x_g0(self) -> list:
         if self.g0 is not None:
             x = [self.G0(), None, None]
         else:
@@ -613,29 +622,29 @@ class CBUSH1D(BushElement):
         assert isinstance(pid, integer_types), 'CBUSH1D: pid=%r' % pid
         assert isinstance(cid, integer_types) or cid is None, 'CBUSH1D: cid=%r' % cid
 
-    def Ga(self):
+    def Ga(self) -> int:
         if self.ga_ref is not None:
             return self.ga_ref.nid
         return self.ga
 
-    def Gb(self):
+    def Gb(self) -> int:
         if self.gb_ref is not None:
             return self.gb_ref.nid
         return self.gb
 
     @property
-    def nodes(self):
+    def nodes(self) -> list[int]:
         return [self.ga, self.gb]
 
     @property
-    def nodes_ref(self):
+    def nodes_ref(self) -> list[GRID]:
         return [self.ga_ref, self.gb_ref]
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         return [self.Ga(), self.Gb()]
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         list_fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),
                        self.Cid()]
         return list_fields
@@ -652,7 +661,8 @@ class CBUSH2D(BushElement):
     """
     type = 'CBUSH2D'
     _field_map = {
-        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid', 6:'plane', 7:'sptid',
+        1: 'eid', 2: 'pid', 3: 'ga', 4: 'gb',
+        5: 'cid', 6: 'plane', 7: 'sptid',
     }
 
     def __init__(self, eid: int, pid: int, nids: list[int],

@@ -834,7 +834,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('dresp_id=%s not found%s.  Allowed DRESPx=%s'
                            % (dresp_id, msg, _unique_keys(self.dresps)))
 
-    def Desvar(self, desvar_id: int, msg: int='') -> DESVAR:
+    def Desvar(self, desvar_id: int, msg: str='') -> DESVAR:
         """gets a DESVAR"""
         try:
             return self.desvars[desvar_id]

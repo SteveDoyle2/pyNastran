@@ -3720,9 +3720,12 @@ class AddMaterial:
         self._add_methods.add_hyperelastic_material_object(mat)
         return mat
 
-    def add_mats1(self, mid, tid, Type, h, hr, yf, limit1, limit2, comment='') -> MATS1:
+    def add_mats1(self, mid: int, nl_type: str,
+                  h, hr, yf, limit1, limit2,
+                  tid: int=0, comment: str='') -> MATS1:
         """Creates a MATS1 card"""
-        mat = MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
+        mat = MATS1(mid, nl_type, h, hr, yf, limit1, limit2,
+                    tid=tid, comment=comment)
         self._add_methods.add_material_dependence_object(mat)
         return mat
 

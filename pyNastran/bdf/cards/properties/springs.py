@@ -312,5 +312,5 @@ class PELAST(SpringProperty):
         """
         return table_id(self.tgeid_ref, self.tgeid)
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         return ['PELAST', self.pid, self.Tkid(), self.Tgeid(), self.Tknid()]

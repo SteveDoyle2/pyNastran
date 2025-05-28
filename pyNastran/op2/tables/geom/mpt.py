@@ -1011,7 +1011,7 @@ class MPT:
                 #assert gxy == 4, out
                 #assert ge == 0, ge
                 assert sum([nuyz, nuzx, rho, gzx, ax, ay, ax, gea, geb, gec]) == 0, [mid, nuyz, nuzx, rho, gzx, ax, ay, ax, gea, geb, gec]
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(op2._nastran_format)
             if op2.is_debug_file:
                 op2.binary_debug.write('  MATT3=%s\n' % str(out))

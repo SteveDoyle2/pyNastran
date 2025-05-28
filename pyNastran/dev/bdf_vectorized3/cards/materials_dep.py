@@ -305,13 +305,15 @@ class MATS1(Material):
         self.limit2 = np.array([], dtype='float64')
         self.stress_strain_measure = np.array([], dtype='|U8')
 
-    def add(self, mid: int, tid: int, Type: str,
+    def add(self, mid: int, nonlinear_type: str,
             h: float, hr: int, yf: int, limit1: float, limit2: float,
             stress_strain_measure: str='',
+            tid: int=0,
             ifile: int=0, comment: str='') -> int:
         """Creates a MATS1 card"""
-        assert isinstance(Type, str), f'Type={Type!r}'
-        self.cards.append((mid, tid, Type, h, hr, yf, limit1, limit2, stress_strain_measure,
+        assert isinstance(nonlinear_type, str), f'nonlinear_type={nonlinear_type!r}'
+        self.cards.append((mid, tid, nonlinear_type, h, hr, yf,
+                           limit1, limit2, stress_strain_measure,
                            ifile, comment))
         self.n += 1
         return self.n - 1
@@ -332,7 +334,7 @@ class MATS1(Material):
             'NLELAS': 'NLELAST',
         }
         mid = integer(card, 1, 'mid')
-        tid = integer_or_blank(card, 2, 'tables1_id')
+        tid = integer_or_blank(card, 2, 'tables1_id', default=0)
         nonlinear_type = string(card, 3, 'Type')
 
         nonlinear_type = map_type_dict.get(nonlinear_type, nonlinear_type)
@@ -377,7 +379,7 @@ class MATS1(Material):
         ifile = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         table_id = np.zeros(ncards, dtype='int32')
-        Type = np.zeros(ncards, dtype='|U8')
+        nonlinear_type = np.zeros(ncards, dtype='|U8')
         hardening_slope = np.zeros(ncards, dtype='float64')
         hr = np.zeros(ncards, dtype='int32')
         yf = np.zeros(ncards, dtype='int32')
@@ -395,20 +397,22 @@ class MATS1(Material):
             ifile[icard] = ifilei
             material_id[icard] = mid
             table_id[icard] = tid
-            Type[icard] = nonlinear_typei
+            nonlinear_type[icard] = nonlinear_typei
             hardening_slope[icard] = hardening_slopei
             hr[icard] = hri
             yf[icard] = yfi
             limit1[icard] = limit1i
             limit2[icard] = limit2i
             stress_strain_measure[icard] = stress_strain_measurei
-        self._save(material_id, table_id, Type, hardening_slope, hr, yf,
+        self._save(material_id, table_id, nonlinear_type,
+                   hardening_slope, hr, yf,
                    limit1, limit2, stress_strain_measure,
                    ifile=ifile, comment=comment)
         self.sort()
         self.cards = []
 
-    def _save(self, material_id, table_id, Type, hardening_slope, hr, yf,
+    def _save(self, material_id, table_id, nonlinear_type,
+              hardening_slope, hr, yf,
               limit1, limit2, stress_strain_measure,
               ifile=None, comment=None) -> None:
         ncards = len(material_id)
@@ -421,7 +425,7 @@ class MATS1(Material):
         save_ifile_comment(self, ifile, comment)
         self.material_id = material_id
         self.table_id = table_id
-        self.Type = Type
+        self.Type = nonlinear_type
         self.hardening_slope = hardening_slope
         self.hr = hr
         self.yf = yf

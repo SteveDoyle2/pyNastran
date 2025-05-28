@@ -5,12 +5,11 @@ from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import (
         BDF, Element, Property, Material, ThermalMaterial,
-        CYAX, CYJOIN, AXIF,
+        CYAX, CYJOIN,
         TOPVAR, MPCAX, CORD3G,
         SESUPORT, SEUSET, SEUSET1,
-        CAEROs, PAEROs, SPLINEs, FREQs,
+        FREQs,
     )
-    from pyNastran.bdf.cards.bolt import BOLT, BOLTFOR, BOLTSEQ, BOLTLD
     from pyNastran.bdf.cards.elements.elements import CFAST, CWELD, CGAP, CRAC2D, CRAC3D, PLOTELs, GENEL
     #from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
     #from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
@@ -69,9 +68,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.loads.static_loads import (
         LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
         FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-        PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
-        GMLOAD)
+        PLOAD, PLOAD1, PLOAD2, PLOAD4)
     from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
+    from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1
 
     from pyNastran.bdf.cards.materials import (#MAT1, MAT2, MAT3, MAT4, MAT5,
                                                #MAT8, MAT9, MAT10, MAT11, MAT3D,
@@ -86,6 +85,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from pyNastran.bdf.cards.aero.aero import (
         AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
+        CAEROs, PAEROs, SPLINEs,
         #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
         #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
         MONPNT1, MONPNT2, MONPNT3,
@@ -93,7 +93,9 @@ if TYPE_CHECKING:  # pragma: no cover
     )
     from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
     from pyNastran.bdf.cards.aero.dynamic_loads import (
-        AERO, FLFACT, FLUTTER, GUST, GUST2, MKAERO1, MKAERO2)
+        AERO, FLFACT, FLUTTER,
+        GUST, GUST2,
+        MKAERO1, MKAERO2)
     #from pyNastran.bdf.cards.aero.zona import (
         #ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
         #SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
@@ -833,7 +835,7 @@ class AddMethods:
             self.model._type_to_id_map[material.type].append(key)
 
     def add_material_dependence_object(self, material: MaterialDependence,
-                                        allow_overwrites: bool=False) -> None:
+                                       allow_overwrites: bool=False) -> None:
         """
         adds the following objects:
             MATS1, MATS3, MATS8,
@@ -841,7 +843,7 @@ class AddMethods:
             MATT4, MATT5, MATT8, MATT9, MATT11,
             MATDMG
         """
-        Type = material.type
+        mat_type = material.type
         key = material.mid
         mapper = {
             'MATS1' : self.model.MATS1,
@@ -858,14 +860,14 @@ class AddMethods:
             'MATT11' : self.model.MATT11,
             'MATDMG': self.model.MATDMG,
         }
-        slot = mapper[Type]
+        slot = mapper[mat_type]
         if key in slot and not allow_overwrites:
             if not material == slot[key]:
-                assert key not in slot, 'dMATx.mid=%s Type=%r\nold=\n%snew=\n%s' % (key, Type, slot[key], material)
+                assert key not in slot, 'dMATx.mid=%s Type=%r\nold=\n%snew=\n%s' % (key, mat_type, slot[key], material)
         else:
             assert key > 0, 'mid=%s material=\n%s' % (key, material)
             slot[key] = material
-            self.model._type_to_id_map[material.type].append(key)
+            self.model._type_to_id_map[mat_type].append(key)
 
     def add_creep_material_object(self, material: CREEP, allow_overwrites: bool=False) -> None:
         """
@@ -917,12 +919,12 @@ class AddMethods:
         _add_value_to_dict(self.model.load_combinations, key, load, self.model._type_to_id_map)
 
     def add_load_object(self, load: (FORCE | FORCE1 | FORCE2 | MOMENT | MOMENT1 | MOMENT2 |
-                                      PLOAD | PLOAD1 | PLOAD2 | PLOAD4 | PLOADX1 |
-                                      GRAV | ACCEL | ACCEL1 | SPCD | SLOAD |
-                                      QBDY1 | QBDY2 | QBDY3 | QVOL |
-                                      # TEMPAX | PRESAX |  # removed
-                                      RFORCE | RFORCE1 | LOADCYN | LOADCYH | DEFORM |
-                                      GMLOAD)) -> None:
+                                     PLOAD | PLOAD1 | PLOAD2 | PLOAD4 | PLOADX1 |
+                                     GRAV | ACCEL | ACCEL1 | SPCD | SLOAD |
+                                     QBDY1 | QBDY2 | QBDY3 | QVOL |
+                                     # TEMPAX | PRESAX |  # removed
+                                     RFORCE | RFORCE1 | LOADCYN | LOADCYH | DEFORM
+                                     )) -> None:
         """adds a load object to a load case"""
         key = load.sid
         _add_value_to_dict(self.model.loads, key, load, self.model._type_to_id_map)
