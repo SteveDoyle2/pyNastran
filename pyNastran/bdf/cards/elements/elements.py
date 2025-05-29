@@ -1403,15 +1403,7 @@ class PLOTEL3(BaseCard):
     def node_ids(self) -> list[int]:
         if self.nodes_ref is None:
             return self.nodes
-        node_idsi = self.nodes_ref
-        n1, n2, n3 = node_idsi
-        nodes = [n1, n2, n3]
-        if not isinstance(n1, integer_types):
-            nodes[0] = n1.Nid()
-        if not isinstance(n2, integer_types):
-            nodes[1] = n2.Nid()
-        if not isinstance(n3, integer_types):
-            nodes[2] = n3.Nid()
+        nodes = [nid_ref.nid for nid_ref in self.nodes_ref]
         return nodes
 
     def get_edge_ids(self):
@@ -1563,17 +1555,7 @@ class PLOTEL4(BaseCard):
     def node_ids(self) -> list[int]:
         if self.nodes_ref is None:
             return self.nodes
-        node_idsi = self.nodes_ref
-        n1, n2, n3, n4 = node_idsi
-        nodes = [n1, n2, n3, n4]
-        if not isinstance(n1, integer_types):
-            nodes[0] = n1.Nid()
-        if not isinstance(n2, integer_types):
-            nodes[1] = n2.Nid()
-        if not isinstance(n3, integer_types):
-            nodes[2] = n3.Nid()
-        if not isinstance(n4, integer_types):
-            nodes[3] = n4.Nid()
+        nodes = [nid_ref.nid for nid_ref in self.nodes_ref]
         return nodes
 
     def get_edge_ids(self) -> list[tuple[int, int]]:
@@ -1732,22 +1714,8 @@ class PLOTEL6(BaseCard):
     def node_ids(self) -> list[int]:
         if self.nodes_ref is None:
             return self.nodes
-        node_idsi = self.nodes_ref
-        n1, n2, n3, n4, n5, n6 = node_idsi
-        nodes = [n1, n2, n3, n4, n5, n6]
-        if not isinstance(n1, integer_types):
-            nodes[0] = n1.Nid()
-        if not isinstance(n2, integer_types):
-            nodes[1] = n2.Nid()
-        if not isinstance(n3, integer_types):
-            nodes[2] = n3.Nid()
-
-        if not isinstance(n4, integer_types):
-            nodes[3] = n4.Nid()
-        if not isinstance(n5, integer_types):
-            nodes[4] = n5.Nid()
-        if not isinstance(n6, integer_types):
-            nodes[5] = n6.Nid()
+        nodes = [0 if nid_ref is None else nid_ref.nid
+                 for nid_ref in self.nodes_ref]
         return nodes
 
     def get_edge_ids(self):
@@ -1911,26 +1879,8 @@ class PLOTEL8(BaseCard):
     def node_ids(self) -> list[int]:
         if self.nodes_ref is None:
             return self.nodes
-        node_idsi = self.nodes_ref
-        n1, n2, n3, n4, n5, n6, n7, n8 = node_idsi
-        nodes = [n1, n2, n3, n4, n5, n6, n7, n8]
-        if not isinstance(n1, integer_types):
-            nodes[0] = n1.Nid()
-        if not isinstance(n2, integer_types):
-            nodes[1] = n2.Nid()
-        if not isinstance(n3, integer_types):
-            nodes[2] = n3.Nid()
-        if not isinstance(n4, integer_types):
-            nodes[3] = n4.Nid()
-
-        if not isinstance(n5, integer_types):
-            nodes[4] = n5.Nid()
-        if not isinstance(n6, integer_types):
-            nodes[5] = n6.Nid()
-        if not isinstance(n7, integer_types):
-            nodes[6] = n7.Nid()
-        if not isinstance(n8, integer_types):
-            nodes[7] = n8.Nid()
+        nodes = [0 if nid_ref is None else nid_ref.nid
+                 for nid_ref in self.nodes_ref]
         return nodes
 
     def get_edge_ids(self) -> list[tuple[int, int]]:
@@ -1998,6 +1948,9 @@ class PLOTTET(BaseCard):
         if comment:
             self.comment = comment
         self.eid = eid
+        nnodes = len(nodes)
+        if nnodes < 10:
+            nodes.extend([0] * (10-nnodes))
         self.nodes = nodes
         self.nodes_ref = None
 
@@ -2023,13 +1976,13 @@ class PLOTTET(BaseCard):
             integer(card, 4, 'g3'),
             integer(card, 5, 'g4'),
 
-            integer_or_blank(card, 6, 'g5'),
-            integer_or_blank(card, 7, 'g6'),
-            integer_or_blank(card, 8, 'g7'),
-            integer_or_blank(card, 9, 'g8'),
+            integer_or_blank(card, 6, 'g5', default=0),
+            integer_or_blank(card, 7, 'g6', default=0),
+            integer_or_blank(card, 8, 'g7', default=0),
+            integer_or_blank(card, 9, 'g8', default=0),
 
-            integer_or_blank(card, 10, 'g9'),
-            integer_or_blank(card, 11, 'g10'),
+            integer_or_blank(card, 10, 'g9', default=0),
+            integer_or_blank(card, 11, 'g10', default=0),
         ]
         assert len(card) <= 12, f'len(PLOTTET card) = {len(card):d}\ncard={card}'
         return PLOTTET(eid, nodes, comment=comment)
@@ -2065,19 +2018,18 @@ class PLOTTET(BaseCard):
 
         """
         msg = f', which is required by {self.type} eid={self.eid:d}'
+        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = self.nodes
         self.nodes_ref = [
-            model.Node(self.nodes[0], msg=msg),
-            model.Node(self.nodes[1], msg=msg),
-            model.Node(self.nodes[2], msg=msg),
-            model.Node(self.nodes[3], msg=msg),
-
-            model.Node(self.nodes[4], msg=msg),
-            model.Node(self.nodes[5], msg=msg),
-            model.Node(self.nodes[6], msg=msg),
-            model.Node(self.nodes[7], msg=msg),
-
-            model.Node(self.nodes[8], msg=msg),
-            model.Node(self.nodes[9], msg=msg),
+            model.Node(n1, msg=msg),
+            model.Node(n2, msg=msg),
+            model.Node(n3, msg=msg),
+            model.Node(n4, msg=msg),
+            None if n5 == 0 else model.Node(n5, msg=msg),
+            None if n6 == 0 else model.Node(n6, msg=msg),
+            None if n7 == 0 else model.Node(n6, msg=msg),
+            None if n8 == 0 else model.Node(n8, msg=msg),
+            None if n9 == 0 else model.Node(n9, msg=msg),
+            None if n10 == 0 else model.Node(n10, msg=msg),
         ]
 
     def safe_cross_reference(self, model: BDF, xref_errors):
@@ -2101,31 +2053,11 @@ class PLOTTET(BaseCard):
     def node_ids(self) -> list[int]:
         if self.nodes_ref is None:
             return self.nodes
-        node_idsi = self.nodes_ref
-        n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = node_idsi
-        nodes = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n10]
-        if not isinstance(n1, integer_types):
-            nodes[0] = n1.Nid()
-        if not isinstance(n2, integer_types):
-            nodes[1] = n2.Nid()
-        if not isinstance(n3, integer_types):
-            nodes[2] = n3.Nid()
-        if not isinstance(n4, integer_types):
-            nodes[3] = n4.Nid()
-
-        if not isinstance(n5, integer_types):
-            nodes[4] = n5.Nid()
-        if not isinstance(n6, integer_types):
-            nodes[5] = n6.Nid()
-        if not isinstance(n7, integer_types):
-            nodes[6] = n7.Nid()
-        if not isinstance(n8, integer_types):
-            nodes[7] = n8.Nid()
-
-        if not isinstance(n9, integer_types):
-            nodes[8] = n9.Nid()
-        if not isinstance(n10, integer_types):
-            nodes[9] = n10.Nid()
+        #node_idsi = self.nodes_ref
+        #n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = node_idsi
+        #nodes = [n1, n2, n3, n4, n5, n6, n7, n8, n9, n10]
+        nodes = [0 if nid_ref is None else nid_ref.nid
+                 for nid_ref in self.nodes_ref]
         return nodes
 
     def get_edge_ids(self) -> list[tuple[int, int]]:
@@ -2463,5 +2395,6 @@ def _read_genel_fields_until_char_blank(card_fields, istart):
         new_fields.append(field)
     return new_fields, istart+i
 
+PLOTPYR = PLOTPEN = PLOTHEX = None
 #PLOTTET | PLOTHEX | PLOTPEN | PLOTPYR
-PLOTELs = PLOTEL | PLOTEL3 | PLOTEL4
+PLOTELs = PLOTEL | PLOTEL3 | PLOTEL4 | PLOTEL6 | PLOTEL8 | PLOTTET

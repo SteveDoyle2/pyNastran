@@ -19,7 +19,8 @@ from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
 from pyNastran.bdf.cards.elements.elements import (
     CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL,
-    PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8, PLOTTET)
+    PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8,
+    PLOTTET, PLOTPYR, PLOTPEN, PLOTHEX)
 from pyNastran.bdf.cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
 from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
@@ -247,6 +248,16 @@ CARD_MAP = {
     #'GMLOAD': GMLOAD,
 
     'PLOTEL': PLOTEL,
+    'PLOTEL3': PLOTEL3,
+    'PLOTEL4': PLOTEL4,
+    'PLOTEL6': PLOTEL6,
+    'PLOTEL8': PLOTEL8,
+
+    'PLOTTET': PLOTTET,
+    'PLOTPYR': PLOTPYR,
+    'PLOTPEN': PLOTPEN,
+    'PLOTHEX': PLOTHEX,
+
     'TEMPD': TEMPD,
     'TEMPB3': TEMPB3,
     'TEMPRB': TEMPRB,
@@ -6733,7 +6744,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_plotel_object(elem)
         return elem
 
-    def add_plottet(self, eid: int, nodes: list[int], comment: str='') -> None:
+    def add_plottet(self, eid: int, nodes: list[int], comment: str='') -> PLOTTET:
         """
         Adds a PLOTTET card
 
@@ -6749,8 +6760,9 @@ class AddCards(AddCoords, AddContact, AddBolts,
         """
         elem = PLOTTET(eid, nodes, comment=comment)
         self._add_methods.add_plotel_object(elem)
+        return elem
 
-    def add_plotpen(self, eid: int, nodes: list[int], comment: str='') -> None:
+    def add_plotpen(self, eid: int, nodes: list[int], comment: str='') -> PLOTPEN:
         """
         Adds a PLOTPEN card
 
@@ -6767,7 +6779,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         fields = ['PLOTPEN', eid] + nodes
         self.reject_card_lines('PLOTPEN', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_plotpyr(self, eid: int, nodes: list[int], comment: str='') -> None:
+    def add_plotpyr(self, eid: int, nodes: list[int], comment: str='') -> PLOTPYR:
         """
         Adds a PLOTPYR card
 
@@ -6784,7 +6796,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         fields = ['PLOTPYR', eid] + nodes
         self.reject_card_lines('PLOTPYR', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_plothex(self, eid: int, nodes: list[int], comment: str='') -> None:
+    def add_plothex(self, eid: int, nodes: list[int], comment: str='') -> PLOTHEX:
         """
         Adds a PLOTHEX card
 

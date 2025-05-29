@@ -9,7 +9,7 @@ from pyNastran.bdf.cards.test.utils import save_load_deck, read_write_op2_geom
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
 
 
-class TestElements(unittest.TestCase):
+class TestPlotElements(unittest.TestCase):
 
     def test_plotel_01(self):
         """tests a PLOTEL"""
@@ -26,9 +26,94 @@ class TestElements(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
-        save_load_deck(model, xref='standard', punch=True,
-                       run_renumber=False)  # PLOTEL xref
+        save_load_deck(model, xref='standard', punch=True)
 
+    def test_plotel_02(self):
+        """tests a PLOTEL3/PLOTEL4"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        eid = 9
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [1., 1., 0.])
+        model.add_grid(13, [0., 1., 0.])
+        plotel3 = model.add_plotel3(eid, [10, 11, 12], comment='plotel')
+        plotel4 = model.add_plotel4(eid+1, [10, 11, 12, 13], comment='plotel')
+        plotel3.write_card(size=8, is_double=False)
+        plotel3.write_card(size=16, is_double=False)
+        plotel3.write_card(size=16, is_double=True)
+
+        plotel4.write_card(size=8, is_double=False)
+        plotel4.write_card(size=16, is_double=False)
+        plotel4.write_card(size=16, is_double=True)
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(
+            model, xref='standard', punch=True,
+            run_save_load_hdf5=False,
+            run_op2_writer=False)
+
+    def test_plottet(self):
+        """tests a PLOTETET"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.set_error_storage(
+            nxref_errors=0, stop_on_xref_error=True)
+        eid = 9
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [1., 1., 0.])
+        model.add_grid(13, [0.5, 0.5, 1.])
+        plottet = model.add_plottet(eid, [10, 11, 12, 13], comment='plotel')
+        plottet.write_card(size=8, is_double=False)
+        plottet.write_card(size=16, is_double=False)
+        plottet.write_card(size=16, is_double=True)
+
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(
+            model, xref='standard', punch=True,
+            run_save_load_hdf5=False,
+            run_op2_writer=False)
+
+    def test_plotel_03(self):
+        """tests a PLOTEL6/PLOTEL8"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        eid = 9
+        nodes = [10, 11]
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [1., 1., 0.])
+        model.add_grid(13, [0., 1., 0.])
+
+        model.add_grid(20, [0.5, 0., 0.])
+        model.add_grid(21, [1., 0.5, 0.])
+        model.add_grid(22, [0.5, 1., 0.])
+        model.add_grid(23, [0., 0.5, 0.])
+        plotel6 = model.add_plotel6(eid, [10, 11, 12, 20,21, 22], comment='plotel')
+        plotel8 = model.add_plotel8(eid+1, [10, 11, 12, 13,
+                                            20, 21, 22, 23], comment='plotel')
+        plotel6.write_card(size=8, is_double=False)
+        plotel6.write_card(size=16, is_double=False)
+        plotel6.write_card(size=16, is_double=True)
+
+        plotel8.write_card(size=8, is_double=False)
+        plotel8.write_card(size=16, is_double=False)
+        plotel8.write_card(size=16, is_double=True)
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(
+            model, xref='standard', punch=True,
+            #run_renumber=False,
+            run_save_load_hdf5=False,
+            run_op2_writer=False)
+
+
+class TestElements(unittest.TestCase):
     def test_cbush_01(self):
         """tests a CBUSH"""
         log = get_logger(level='warning')

@@ -17,7 +17,7 @@ from pyNastran.bdf.mesh_utils.mass_properties import (
 try:
     import matplotlib
     IS_MATPLOTLIB = True
-    from pyNastran.bdf.cards.elements.plot import plot_equivalent_lamina_vs_theta
+    from pyNastran.bdf.cards.elements.shell_laminate_plot import plot_equivalent_lamina_vs_theta
 except ModuleNotFoundError:
     IS_MATPLOTLIB = False
 

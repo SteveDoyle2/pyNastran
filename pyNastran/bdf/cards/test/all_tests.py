@@ -19,7 +19,7 @@ from pyNastran.bdf.cards.test.test_dmig import (
     TestDTI, TestDMIGReal, TestDMIGImag, TestDMIAX,
     TestMatrix, TestDMI,
 )
-from pyNastran.bdf.cards.test.test_elements import TestElements
+from pyNastran.bdf.cards.test.test_elements import TestElements, TestPlotElements
 from pyNastran.bdf.cards.test.test_mass_elements import TestMassElements
 from pyNastran.bdf.cards.test.test_methods import TestMethods
 from pyNastran.bdf.cards.test.test_nsm import TestNsm

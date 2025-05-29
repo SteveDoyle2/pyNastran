@@ -20,7 +20,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.shell_utils import tri_volume,
 #try:
     #import matplotlib
     #IS_MATPLOTLIB = True
-    #from pyNastran.bdf.cards.elements.plot import plot_equivalent_lamina_vs_theta
+    #from pyNastran.bdf.cards.elements.shell_laminate_plot import plot_equivalent_lamina_vs_theta
 #except ImportError:
 IS_MATPLOTLIB = False
 if TYPE_CHECKING:

@@ -269,10 +269,17 @@ def remove_unused(bdf_filename: PathLike,
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())
 
-        elif card_type in {'PLOTEL', 'PLOTEL3', 'PLOTEL4'}:
+        elif card_type in {'PLOTEL', 'PLOTEL3', 'PLOTEL4',
+                           'PLOTEL6', 'PLOTEL8'}:
             for eid in ids:
                 elem = model.plotels[eid]
                 nids_used.update(elem.node_ids)
+        elif card_type in {'PLOTET', 'PLOTPYR', 'PLOTPEN', 'PLOTHEX'}:
+            for eid in ids:
+                elem = model.plotels[eid]
+                nidsi = elem.node_ids
+                assert 0 not in nidsi, elem
+                nids_used.update(nidsi)
         elif card_type in {'PSOLID', 'PLSOLID'}:
             for pid in ids:
                 prop = model.properties[pid]

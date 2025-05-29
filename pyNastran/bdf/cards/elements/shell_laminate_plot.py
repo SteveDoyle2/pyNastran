@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from pyNastran.bdf.cards.properties.shell import PCOMP
 from pyNastran.bdf.cards.materials import MAT8
 
+
 def plot_equivalent_lamina_vs_theta(pcomp: PCOMP,
                                     mid_ref: MAT8,
                                     thetad: np.ndarray,
