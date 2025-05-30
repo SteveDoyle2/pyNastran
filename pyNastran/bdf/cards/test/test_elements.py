@@ -434,7 +434,6 @@ class TestElements(unittest.TestCase):
                                 gs=1, ga=None, gb=None,
                                 xs=None, ys=None, zs=None, comment='cfast')
 
-
         Type = 'fake'
         pid2 = None
         cfast2 = CFAST(eid, pid2, Type, ida, idb,

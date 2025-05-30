@@ -62,19 +62,7 @@ class PLOTEL(BaseCard):
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, encoding: str):
-        """exports the elements in a vectorized way"""
-        #comments = []
-        nodes = []
-        eids = list(model.plotels.keys())
-        for eid in eids:
-            element = model.plotels[eid]
-            if element.type != 'PLOTEL':
-                continue
-            #comments.append(element.comment)
-            nodes.append(element.nodes)
-        #h5_file.create_dataset('_comment', data=comments)
-        h5_file.create_dataset('eid', data=eids)
-        h5_file.create_dataset('nodes', data=nodes)
+        export_to_hdf5(h5_file, cls.type, model, encoding)
 
     def __init__(self, eid: int, nodes: list[int], comment: str=''):
         """
@@ -218,18 +206,7 @@ class PLOTEL3(BaseCard):
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, encoding: str):
         """exports the elements in a vectorized way"""
-        #comments = []
-        nodes = []
-        eids = list(model.plotels.keys())
-        for eid in eids:
-            element = model.plotels[eid]
-            if element.type != 'PLOTEL3':
-                continue
-            #comments.append(element.comment)
-            nodes.append(element.nodes)
-        #h5_file.create_dataset('_comment', data=comments)
-        h5_file.create_dataset('eid', data=eids)
-        h5_file.create_dataset('nodes', data=nodes)
+        export_to_hdf5(h5_file, cls.type, model, encoding)
 
     def __init__(self, eid: int, nodes: list[int], comment: str=''):
         """
@@ -366,18 +343,7 @@ class PLOTEL4(BaseCard):
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding):
         """exports the elements in a vectorized way"""
-        #comments = []
-        nodes = []
-        eids = list(model.plotels.keys())
-        for eid in eids:
-            element = model.plotels[eid]
-            if element.type != 'PLOTEL4':
-                continue
-            #comments.append(element.comment)
-            nodes.append(element.nodes)
-        #h5_file.create_dataset('_comment', data=comments)
-        h5_file.create_dataset('eid', data=eids)
-        h5_file.create_dataset('nodes', data=nodes)
+        export_to_hdf5(h5_file, cls.type, model, encoding)
 
     def __init__(self, eid: int, nodes: list[int], comment: str=''):
         """
@@ -518,18 +484,7 @@ class PLOTEL6(BaseCard):
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, encoding: str):
         """exports the elements in a vectorized way"""
-        #comments = []
-        nodes = []
-        eids = list(model.plotels.keys())
-        for eid in eids:
-            element = model.plotels[eid]
-            if element.type != 'PLOTEL6':
-                continue
-            #comments.append(element.comment)
-            nodes.append(element.nodes)
-        #h5_file.create_dataset('_comment', data=comments)
-        h5_file.create_dataset('eid', data=eids)
-        h5_file.create_dataset('nodes', data=nodes)
+        export_to_hdf5(h5_file, cls.type, model, encoding)
 
     def __init__(self, eid: int, nodes: list[int], comment: str=''):
         """
@@ -677,18 +632,7 @@ class PLOTEL8(BaseCard):
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, encoding):
         """exports the elements in a vectorized way"""
-        #comments = []
-        nodes = []
-        eids = list(model.plotels.keys())
-        for eid in eids:
-            element = model.plotels[eid]
-            if element.type != 'PLOTEL8':
-                continue
-            #comments.append(element.comment)
-            nodes.append(element.nodes)
-        #h5_file.create_dataset('_comment', data=comments)
-        h5_file.create_dataset('eid', data=eids)
-        h5_file.create_dataset('nodes', data=nodes)
+        export_to_hdf5(h5_file, cls.type, model, encoding)
 
     def __init__(self, eid: int, nodes: list[int], comment: str=''):
         """
@@ -840,18 +784,7 @@ class PLOTTET(BaseCard):
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, encoding):
         """exports the elements in a vectorized way"""
-        #comments = []
-        nodes = []
-        eids = list(model.plotels.keys())
-        for eid in eids:
-            element = model.plotels[eid]
-            if element.type != 'PLOTTET':
-                continue
-            #comments.append(element.comment)
-            nodes.append(element.nodes)
-        #h5_file.create_dataset('_comment', data=comments)
-        h5_file.create_dataset('eid', data=eids)
-        h5_file.create_dataset('nodes', data=nodes)
+        export_to_hdf5(h5_file, cls.type, model, encoding)
 
     def __init__(self, eid: int, nodes: list[int], comment: str=''):
         """
@@ -1014,18 +947,7 @@ class PLOTPYR(BaseCard):
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, encoding):
         """exports the elements in a vectorized way"""
-        #comments = []
-        nodes = []
-        eids = list(model.plotels.keys())
-        for eid in eids:
-            element = model.plotels[eid]
-            if element.type != 'PLOTTET':
-                continue
-            #comments.append(element.comment)
-            nodes.append(element.nodes)
-        #h5_file.create_dataset('_comment', data=comments)
-        h5_file.create_dataset('eid', data=eids)
-        h5_file.create_dataset('nodes', data=nodes)
+        export_to_hdf5(h5_file, cls.type, model, encoding)
 
     def __init__(self, eid: int, nodes: list[int], comment: str=''):
         """
@@ -1197,18 +1119,7 @@ class PLOTPEN(BaseCard):
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, encoding):
         """exports the elements in a vectorized way"""
-        #comments = []
-        nodes = []
-        eids = list(model.plotels.keys())
-        for eid in eids:
-            element = model.plotels[eid]
-            if element.type != 'PLOTPEN':
-                continue
-            #comments.append(element.comment)
-            nodes.append(element.nodes)
-        #h5_file.create_dataset('_comment', data=comments)
-        h5_file.create_dataset('eid', data=eids)
-        h5_file.create_dataset('nodes', data=nodes)
+        export_to_hdf5(h5_file, cls.type, model, encoding)
 
     def __init__(self, eid: int, nodes: list[int], comment: str=''):
         """
@@ -1386,18 +1297,7 @@ class PLOTHEX(BaseCard):
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, encoding):
         """exports the elements in a vectorized way"""
-        #comments = []
-        nodes = []
-        eids = list(model.plotels.keys())
-        for eid in eids:
-            element = model.plotels[eid]
-            if element.type != 'PLOTHEX':
-                continue
-            #comments.append(element.comment)
-            nodes.append(element.nodes)
-        #h5_file.create_dataset('_comment', data=comments)
-        h5_file.create_dataset('eid', data=eids)
-        h5_file.create_dataset('nodes', data=nodes)
+        export_to_hdf5(h5_file, cls.type, model, encoding)
 
     def __init__(self, eid: int, nodes: list[int], comment: str=''):
         """
@@ -1556,6 +1456,22 @@ class PLOTHEX(BaseCard):
         msg = print_card_8(fields)
         return self.comment + msg
 
+
+def export_to_hdf5(h5_file, plot_type: str,
+                   model: BDF, encoding: str):
+    """exports the elements in a vectorized way"""
+    #comments = []
+    nodes = []
+    eids = list(model.plotels.keys())
+    for eid in eids:
+        element = model.plotels[eid]
+        if element.type != plot_type:
+            continue
+        #comments.append(element.comment)
+        nodes.append(element.nodes)
+    #h5_file.create_dataset('_comment', data=comments)
+    h5_file.create_dataset('eid', data=eids)
+    h5_file.create_dataset('nodes', data=nodes)
 
 PLOTELs = (PLOTEL | PLOTEL3 | PLOTEL4 |
            PLOTEL6 | PLOTEL8 |
