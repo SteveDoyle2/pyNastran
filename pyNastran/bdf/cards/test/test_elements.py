@@ -15,11 +15,15 @@ class TestPlotElements(unittest.TestCase):
         """tests a PLOTEL"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        model.set_error_storage(
+            nparse_errors=0, stop_on_parsing_error=True,
+            nxref_errors=0, stop_on_xref_error=True)
         eid = 9
         nodes = [10, 11]
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(11, [1., 0., 0.])
         plotel = model.add_plotel(eid, nodes, comment='plotel')
+        plotel.raw_fields()
         plotel.write_card(size=8, is_double=False)
         plotel.write_card(size=16, is_double=False)
         plotel.write_card(size=16, is_double=True)
@@ -32,6 +36,9 @@ class TestPlotElements(unittest.TestCase):
         """tests a PLOTEL3/PLOTEL4"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        model.set_error_storage(
+            nparse_errors=0, stop_on_parsing_error=True,
+            nxref_errors=0, stop_on_xref_error=True)
         eid = 9
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(11, [1., 0., 0.])
@@ -39,10 +46,12 @@ class TestPlotElements(unittest.TestCase):
         model.add_grid(13, [0., 1., 0.])
         plotel3 = model.add_plotel3(eid, [10, 11, 12], comment='plotel')
         plotel4 = model.add_plotel4(eid+1, [10, 11, 12, 13], comment='plotel')
+        plotel3.raw_fields()
         plotel3.write_card(size=8, is_double=False)
         plotel3.write_card(size=16, is_double=False)
         plotel3.write_card(size=16, is_double=True)
 
+        plotel4.raw_fields()
         plotel4.write_card(size=8, is_double=False)
         plotel4.write_card(size=16, is_double=False)
         plotel4.write_card(size=16, is_double=True)
@@ -58,8 +67,10 @@ class TestPlotElements(unittest.TestCase):
         """tests a PLOTEL6/PLOTEL8"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        model.set_error_storage(
+            nparse_errors=0, stop_on_parsing_error=True,
+            nxref_errors=0, stop_on_xref_error=True)
         eid = 9
-        nodes = [10, 11]
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(11, [1., 0., 0.])
         model.add_grid(12, [1., 1., 0.])
@@ -72,10 +83,12 @@ class TestPlotElements(unittest.TestCase):
         plotel6 = model.add_plotel6(eid, [10, 11, 12, 20,21, 22], comment='plotel')
         plotel8 = model.add_plotel8(eid+1, [10, 11, 12, 13,
                                             20, 21, 22, 23], comment='plotel')
+        plotel6.raw_fields()
         plotel6.write_card(size=8, is_double=False)
         plotel6.write_card(size=16, is_double=False)
         plotel6.write_card(size=16, is_double=True)
 
+        plotel8.raw_fields()
         plotel8.write_card(size=8, is_double=False)
         plotel8.write_card(size=16, is_double=False)
         plotel8.write_card(size=16, is_double=True)
@@ -92,6 +105,7 @@ class TestPlotElements(unittest.TestCase):
         log = get_logger(level='warning')
         model = BDF(log=log)
         model.set_error_storage(
+            nparse_errors=0, stop_on_parsing_error=True,
             nxref_errors=0, stop_on_xref_error=True)
         eid = 9
         model.add_grid(10, [0., 0., 0.])
@@ -99,6 +113,7 @@ class TestPlotElements(unittest.TestCase):
         model.add_grid(12, [1., 1., 0.])
         model.add_grid(13, [0.5, 0.5, 1.])
         plottet = model.add_plottet(eid, [10, 11, 12, 13], comment='plotel')
+        plottet.raw_fields()
         plottet.write_card(size=8, is_double=False)
         plottet.write_card(size=16, is_double=False)
         plottet.write_card(size=16, is_double=True)
@@ -116,6 +131,7 @@ class TestPlotElements(unittest.TestCase):
         log = get_logger(level='warning')
         model = BDF(log=log)
         model.set_error_storage(
+            nparse_errors=0, stop_on_parsing_error=True,
             nxref_errors=0, stop_on_xref_error=True)
         eid = 9
         model.add_grid(10, [0., 0., 0.])
@@ -124,6 +140,7 @@ class TestPlotElements(unittest.TestCase):
         model.add_grid(13, [1., 0., 0.])
         model.add_grid(20, [0., 0., 1.])
         plotpyr = model.add_plotpyr(eid, [10, 11, 12, 13, 20], comment='plotel')
+        plotpyr.raw_fields()
         plotpyr.write_card(size=8, is_double=False)
         plotpyr.write_card(size=16, is_double=False)
         plotpyr.write_card(size=16, is_double=True)
@@ -141,6 +158,7 @@ class TestPlotElements(unittest.TestCase):
         log = get_logger(level='warning')
         model = BDF(log=log)
         model.set_error_storage(
+            nparse_errors=0, stop_on_parsing_error=True,
             nxref_errors=0, stop_on_xref_error=True)
         eid = 9
         model.add_grid(11, [0., 0., 0.])
@@ -151,6 +169,7 @@ class TestPlotElements(unittest.TestCase):
         model.add_grid(22, [1., 0., 1.])
         model.add_grid(23, [1., 1., 1.])
         plotpen = model.add_plotpen(eid, [11, 12, 13, 21, 22, 23], comment='plotel')
+        plotpen.raw_fields()
         plotpen.write_card(size=8, is_double=False)
         plotpen.write_card(size=16, is_double=False)
         plotpen.write_card(size=16, is_double=True)
@@ -168,6 +187,7 @@ class TestPlotElements(unittest.TestCase):
         log = get_logger(level='warning')
         model = BDF(log=log)
         model.set_error_storage(
+            nparse_errors=0, stop_on_parsing_error=True,
             nxref_errors=0, stop_on_xref_error=True)
         eid = 9
         model.add_grid(11, [0., 0., 0.])
@@ -179,10 +199,11 @@ class TestPlotElements(unittest.TestCase):
         model.add_grid(22, [1., 0., 1.])
         model.add_grid(23, [1., 1., 1.])
         model.add_grid(24, [0., 1., 1.])
-        plotpen = model.add_plotpen(eid, [11, 12, 13, 14, 21, 22, 23, 24], comment='plotel')
-        plotpen.write_card(size=8, is_double=False)
-        plotpen.write_card(size=16, is_double=False)
-        plotpen.write_card(size=16, is_double=True)
+        plothex = model.add_plothex(eid, [11, 12, 13, 14, 21, 22, 23, 24], comment='plotel')
+        plothex.raw_fields()
+        plothex.write_card(size=8, is_double=False)
+        plothex.write_card(size=16, is_double=False)
+        plothex.write_card(size=16, is_double=True)
 
         model.cross_reference()
         model.uncross_reference()

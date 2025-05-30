@@ -41,7 +41,7 @@ class NSMx(Property):
         'ELEMENT', 'PDUM8',
     ]
 
-    def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
+    def __init__(self, sid: int, nsm_type: str, pid_eid: int, value: float, comment: str=''):
         """
         Creates an NSM/NSM1 card
 
@@ -126,14 +126,14 @@ class NSMx(Property):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    @property
-    def Type(self):
-        """gets the nsm_type"""
-        return self.nsm_type
-    @Type.setter
-    def Type(self, nsm_type):
-        """sets the nsm_type"""
-        self.nsm_type = nsm_type
+    # @property
+    # def Type(self):
+    #     """gets the nsm_type"""
+    #     return self.nsm_type
+    # @Type.setter
+    # def Type(self, nsm_type):
+    #     """sets the nsm_type"""
+    #     self.nsm_type = nsm_type
 
     def raw_fields(self):
         #nodes = self.node_ids
@@ -257,7 +257,6 @@ class NSM1x(Property):
         pass
 
     def raw_fields(self):
-        #nodes = self.node_ids
         list_fields = [self.type, self.sid, self.nsm_type, self.value] + self.ids
         return list_fields
 

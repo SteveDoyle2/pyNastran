@@ -482,18 +482,21 @@ class CBEAM(LineElement):
         return CBEAM(eid, pid, [ga, gb], x, g0, offt, bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
-    def Nodes(self):
+    def Nodes(self) -> list[int]:
         return [self.ga, self.gb]
 
-    def Centroid(self):
+    def Centroid(self) -> np.ndarray:
         """"""
+        if self.pid_ref is None:
+            raise RuntimeError('Element eid=%i has not been '
+                               'cross referenced.\n%s' % (self.eid, str(self)))
         node1, node2 = self.nodes_ref
         xyz1 = node1.get_position()
         xyz2 = node2.get_position()
         centroid = (xyz1 + xyz2) / 2.
         return centroid
 
-    def center_of_mass(self):
+    def center_of_mass(self) -> np.ndarray:
         """the centroid formuala is way more complicated if you consider the nonstructural mass axis"""
         elem = self
         prop = self.pid_ref

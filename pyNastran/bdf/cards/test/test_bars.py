@@ -405,9 +405,36 @@ class TestBars(unittest.TestCase):
         pid = 102
         x = None
         g0 = 3
-        unused_cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
-                                     pa=0, pb=0, wa=None, wb=None,
-                                     comment='CBAR')
+        cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
+                              pa=0, pb=0, wa=None, wb=None,
+                              comment='CBAR')
+        with self.assertRaises(RuntimeError):
+            cbar.Mid()
+        with self.assertRaises(RuntimeError):
+            cbar.E()
+        with self.assertRaises(RuntimeError):
+            cbar.G()
+        with self.assertRaises(RuntimeError):
+            cbar.Nu()
+        with self.assertRaises(RuntimeError):
+            cbar.Rho()
+        with self.assertRaises(RuntimeError):
+            cbar.Area()
+        with self.assertRaises(RuntimeError):
+            cbar.I1()
+        with self.assertRaises(RuntimeError):
+            cbar.I2()
+        with self.assertRaises(RuntimeError):
+            cbar.J()
+        with self.assertRaises(RuntimeError):
+            cbar.Centroid()
+        with self.assertRaises(RuntimeError):
+            cbar.MassPerLength()
+        with self.assertRaises(RuntimeError):
+            cbar.Nsm()
+        with self.assertRaises(RuntimeError):
+            cbar.Mass()
+
         Type = 'BOX'
         dim = [1., 2., 0.1, 0.1]
         unused_pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0.,
@@ -439,6 +466,20 @@ class TestBars(unittest.TestCase):
 
         model.cross_reference()
         model.pop_xref_errors()
+        cbar.Mid()
+        cbar.E()
+        cbar.G()
+        cbar.Nu()
+        cbar.Rho()
+        cbar.Area()
+        cbar.I1()
+        cbar.I2()
+        cbar.J()
+        cbar.Centroid()
+        cbar.MassPerLength()
+        cbar.Nsm()
+        cbar.Mass()
+
 
         model._verify_bdf(xref=True)
         model.uncross_reference()

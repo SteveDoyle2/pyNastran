@@ -633,15 +633,20 @@ class CMASS3(PointMassElement):
         s2 = data[3]
         return CMASS3(eid, pid, [s1, s2], comment=comment)
 
-    def Mass(self):
+    def grid_component(self) -> tuple[tuple[int, int], tuple[int, int]]:
+        g1 = self.S1()
+        g2 = self.S2()
+        return ((g1, 0), (g2, 0))
+
+    def Mass(self) -> float:
         return self.pid_ref.mass
 
-    def S1(self):
+    def S1(self) -> int:
         if self.nodes_ref is not None:
             return self.nodes_ref[0].nid
         return self.nodes[0]
 
-    def S2(self):
+    def S2(self) -> int:
         if self.nodes_ref is not None:
             return self.nodes_ref[1].nid
         return self.nodes[1]
@@ -676,13 +681,13 @@ class CMASS3(PointMassElement):
     #def Mass(self):
         #return self.mass
 
-    def Centroid(self):
+    def Centroid(self) -> np.ndarray:
         return np.zeros(3)
 
-    def center_of_mass(self):
+    def center_of_mass(self) -> np.ndarray:
         return self.Centroid()
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         fields = ['CMASS3', self.eid, self.Pid(), self.S1(), self.S2()]
         return fields
 
@@ -750,7 +755,7 @@ class CMASS4(PointMassElement):
         self.nodes_ref = None
 
     @classmethod
-    def add_card(cls, card, icard=0, comment=''):
+    def add_card(cls, card: BDFCard, icard: int=0, comment: str=''):
         ioffset = icard * 4
         eid = integer(card, 1 + ioffset, 'eid')
         mass = double_or_blank(card, 2 + ioffset, 'mass', default=0.)
@@ -760,7 +765,7 @@ class CMASS4(PointMassElement):
         return CMASS4(eid, mass, [s1, s2], comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CMASS4 card from the OP2
 
@@ -778,25 +783,30 @@ class CMASS4(PointMassElement):
         s2 = data[3]
         return CMASS4(eid, mass, [s1, s2], comment=comment)
 
-    def Mass(self):
+    def grid_component(self) -> tuple[tuple[int, int], tuple[int, int]]:
+        g1 = self.S1()
+        g2 = self.S2()
+        return ((g1, 0), (g2, 0))
+
+    def Mass(self) -> float:
         return self.mass
 
-    def Centroid(self):
+    def Centroid(self) -> np.ndarray:
         return np.zeros(3)
 
-    def center_of_mass(self):
+    def center_of_mass(self) -> np.ndarray:
         return self.Centroid()
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         return [self.S1(), self.S2()]
 
-    def S1(self):
+    def S1(self) -> int:
         if self.nodes_ref is not None and self.nodes_ref[0] is not None:
             return self.nodes_ref[0].nid
         return self.nodes[0]
 
-    def S2(self):
+    def S2(self) -> int:
         if self.nodes_ref is not None and self.nodes_ref[1] is not None:
             return self.nodes_ref[1].nid
         return self.nodes[1]
@@ -822,7 +832,7 @@ class CMASS4(PointMassElement):
         self.nodes = [self.S1(), self.S2()]
         self.nodes_ref = None
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         fields = ['CMASS4', self.eid, self.mass] + self.node_ids
         return fields
 
@@ -927,7 +937,7 @@ class CONM1(PointMassElement):
         mass_matrix = np.zeros((6, 6))
         return CONM1(eid, nid, mass_matrix, cid=0, comment='')
 
-    def _finalize_hdf5(self, encoding):
+    def _finalize_hdf5(self, encoding: str) -> None:
         """hdf5 helper function"""
         self.mass_matrix = np.asarray(self.mass_matrix)
 
@@ -1287,6 +1297,7 @@ class CONM2(PointMassElement):
 
         if X is None:
             X = np.zeros(3)
+
         #: Offset distances from the grid point to the center of gravity of
         #: the mass in the coordinate system defined in field 4, unless
         #: CID = -1, in which case X1, X2, X3 are the coordinates, not
@@ -1457,7 +1468,7 @@ class CONM2(PointMassElement):
             #A2 = A * matrix
             #return A2  # correct for offset using dx???
 
-    def offset(self, xyz_nid):
+    def offset(self, xyz_nid: np.ndarray) -> np.ndarray:
         cid = self.Cid()
         if cid == 0:
             # no transform needed
@@ -1514,9 +1525,12 @@ class CONM2(PointMassElement):
             # if CID references a spherical or cylindrical coordinate system. This is similar
             # to the manner in which displacement coordinate systems are defined.
             # this statement is not supported...
-
+            cid_ref = self.cid_ref
+            if cid_ref is None:
+                raise RuntimeError(f'CONM2 error eid={self.eid} cid={self.cid}; '
+                                   f'cid_ref is None\n{str(self)}')
             # convert self.X into the global frame
-            x = self.cid_ref.transform_node_to_global(self.X)
+            x = cid_ref.transform_node_to_global(self.X)
 
             # self.X is an offset
             dx = x - self.cid_ref.origin

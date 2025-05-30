@@ -158,6 +158,24 @@ class TestRods(unittest.TestCase):
         conrod = model.add_conrod(eid, mid, nids, A=A, j=0.0, c=0.0, nsm=nsm,
                                comment='')
         assert conrod.get_edge_ids() == [(1, 2)]
+        conrod.Mid()
+        conrod.Area()
+        conrod.J()
+        conrod.C()
+        conrod.Nsm()
+        conrod.Area()
+        with self.assertRaises(RuntimeError):
+            conrod.Length()
+        with self.assertRaises(RuntimeError):
+            conrod.Centroid()
+        with self.assertRaises(RuntimeError):
+            conrod.MassPerLength()
+        with self.assertRaises(RuntimeError):
+            conrod.E()
+        with self.assertRaises(RuntimeError):
+            conrod.G()
+        with self.assertRaises(RuntimeError):
+            conrod.Mass()
 
         E = 1.0
         G = None
@@ -360,13 +378,63 @@ class TestRods(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_crod(eid_rod, pid_rod, [1, 2])
+        crod = model.add_crod(eid_rod, pid_rod, [1, 2])
+        with self.assertRaises(RuntimeError):
+            crod.Mid()
+        with self.assertRaises(RuntimeError):
+            crod.Area()
+        with self.assertRaises(RuntimeError):
+            crod.Length()
+        with self.assertRaises(RuntimeError):
+            crod.J()
+        with self.assertRaises(RuntimeError):
+            crod.Centroid()
+        with self.assertRaises(RuntimeError):
+            crod.MassPerLength()
+        with self.assertRaises(RuntimeError):
+            crod.C()
+        with self.assertRaises(RuntimeError):
+            crod.E()
+        with self.assertRaises(RuntimeError):
+            crod.G()
+        with self.assertRaises(RuntimeError):
+            crod.Nsm()
+        with self.assertRaises(RuntimeError):
+            crod.Area()
+        with self.assertRaises(RuntimeError):
+            crod.Mass()
+
         model.add_prod(pid_rod, mid, A)
         model.add_mat1(mid, E, G, nu)
 
         eid_tube = 2
         pid_tube = 2
-        model.add_ctube(eid_tube, pid_tube, [1, 2])
+        ctube = model.add_ctube(eid_tube, pid_tube, [1, 2])
+        with self.assertRaises(RuntimeError):
+            ctube.Mid()
+        with self.assertRaises(RuntimeError):
+            ctube.Area()
+        with self.assertRaises(RuntimeError):
+            ctube.Length()
+        with self.assertRaises(RuntimeError):
+            ctube.J()
+        with self.assertRaises(RuntimeError):
+            ctube.Centroid()
+        # with self.assertRaises(RuntimeError):
+        #     ctube.MassPerLength()
+        # with self.assertRaises(RuntimeError):
+        #     ctube.C()
+        with self.assertRaises(RuntimeError):
+            ctube.E()
+        with self.assertRaises(RuntimeError):
+            ctube.G()
+        with self.assertRaises(RuntimeError):
+            ctube.Nsm()
+        with self.assertRaises(RuntimeError):
+            ctube.Area()
+        with self.assertRaises(RuntimeError):
+            ctube.Mass()
+
         model.add_ptube(pid_tube, mid, 1.0)
         params = [
             ('A', 2.0),

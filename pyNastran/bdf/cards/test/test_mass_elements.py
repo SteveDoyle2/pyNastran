@@ -70,25 +70,55 @@ class TestMassElements(unittest.TestCase):
         nid = 10
         eid = 20
         massi = 42.
-        model.add_conm2(eid, nid, massi, cid=0, X=None, I=None, comment='conm2')
+        conm2 = model.add_conm2(eid, nid, massi, cid=0, X=None, I=None, comment='conm2')
+        with self.assertRaises(AttributeError):
+            conm2.center_of_mass()
+        conm2neg = model.add_conm2(eid+1, nid, massi, cid=-1, X=None, I=None, comment='conm2')
+        conm2neg.center_of_mass()
+        conm2pos = model.add_conm2(eid+2, nid, massi, cid=200, X=None, I=None, comment='conm2')
+        with self.assertRaises(RuntimeError):
+            conm2pos.center_of_mass()
+
         model.add_grid(nid, [0., 0., 0.])
+        origin = [1., 1., 1.]
+        zaxis = [0., 1., 0.]
+        xzplane = [1, 0., 0.]
+        model.add_cord2r(200, origin, zaxis, xzplane, rid=0)
+
         model.validate()
         model.cross_reference()
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+        conm2.center_of_mass()
+        conm2neg.center_of_mass()
+        conm2pos.center_of_mass()
+
+        conm2.Centroid_no_xref(model)
+        conm2neg.Centroid_no_xref(model)
+        conm2pos.Centroid_no_xref(model)
+        xyz_nid = conm2.nid_ref.get_position()
+        conm2.offset(xyz_nid)
+        conm2neg.offset(xyz_nid)
+        conm2pos.offset(xyz_nid)
+        assert np.allclose(conm2.Mass(), 42.0), conm2.Mass()
+        assert np.allclose(conm2neg.Mass(), 42.0), conm2neg.Mass()
+        assert np.allclose(conm2pos.Mass(), 42.0), conm2pos.Mass()
+
         model = save_load_deck(model, run_convert=False)
         pids_to_mass, mass_type_to_mass = model.get_mass_breakdown(property_ids=None)
         assert len(pids_to_mass) == 0, pids_to_mass
-        assert mass_type_to_mass['CONM2'] == 42., mass_type_to_mass
+        assert np.allclose(mass_type_to_mass['CONM2'], 3*42.), mass_type_to_mass
 
         pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = model.get_mass_breakdown_detailed(
             property_ids=None)
         assert len(pids_to_mass) == 0, pids_to_mass
-        assert mass_type_to_mass['CONM2'] == 42., mass_type_to_mass
+        assert mass_type_to_mass['CONM2'] == 126., mass_type_to_mass
         assert len(pids_to_mass_nonstructural) == 0, pids_to_mass_nonstructural
 
         mass, cg, I = mass_properties(
             model, element_ids=None, mass_ids=None, reference_point=None,
             sym_axis=None, scale=None)
-        assert np.allclose(mass, massi), 'massi=%s mass=%s' % (massi, mass)
+        assert np.allclose(mass, 3*massi), 'massi=%s mass=%s' % (massi, mass)
         assert np.array_equal(cg, np.zeros(3))
         assert np.array_equal(I, np.zeros(6))
 
@@ -117,6 +147,7 @@ class TestMassElements(unittest.TestCase):
         g2 = 2
         c2 = 4
         cmass1 = model.add_cmass1(eid, pid, [g1, g2], c1, c2, comment='cmass1')
+        cmass1.grid_component()
         cmass1.write_card(size=8)
         cmass1.write_card(size=16)
         cmass1.write_card(size=16, is_double=True)
@@ -131,6 +162,7 @@ class TestMassElements(unittest.TestCase):
 
         eid = 10
         cmass2 = model.add_cmass2(eid, mass, [g1, g2], c1, c2, comment='cmass2')
+        cmass2.grid_component()
         cmass2.write_card(size=8)
         cmass2.write_card(size=16)
         cmass2.write_card(size=16, is_double=True)
@@ -164,6 +196,7 @@ class TestMassElements(unittest.TestCase):
         s1 = 1
         s2 = 2
         cmass3 = model.add_cmass3(eid, pid, [s1, s2], comment='cmass3')
+        cmass3.grid_component()
         cmass3.write_card(size=8)
         cmass3.write_card(size=16)
         cmass3.write_card(size=16, is_double=True)
@@ -178,6 +211,7 @@ class TestMassElements(unittest.TestCase):
 
         eid = 10
         cmass4 = model.add_cmass4(eid, mass, [s1, s2], comment='cmass4')
+        cmass4.grid_component()
         cmass4.write_card(size=8)
         cmass4.write_card(size=16)
         cmass4.write_card(size=16, is_double=True)

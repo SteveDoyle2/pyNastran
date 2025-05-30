@@ -586,9 +586,39 @@ class TestBeams(unittest.TestCase):
         nids = [10, 20]
         x = None
         g0 = 30
-        model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None, pa=0,
-                        pb=0, wa=None, wb=None, sa=0,
-                        sb=0, comment='')
+        cbeam = model.add_cbeam(
+            eid, pid, nids, x, g0, offt='GGG', bit=None, pa=0,
+            pb=0, wa=None, wb=None, sa=0,
+            sb=0, comment='')
+        with self.assertRaises(RuntimeError):
+            cbeam.Mid()
+        with self.assertRaises(RuntimeError):
+            cbeam.E()
+        with self.assertRaises(RuntimeError):
+            cbeam.G()
+        with self.assertRaises(RuntimeError):
+            cbeam.Nu()
+        with self.assertRaises(RuntimeError):
+            cbeam.Rho()
+        with self.assertRaises(RuntimeError):
+            cbeam.Area()
+        # with self.assertRaises(RuntimeError):
+        #     cbeam.I1()
+        # with self.assertRaises(RuntimeError):
+        #     cbeam.I2()
+        # with self.assertRaises(RuntimeError):
+        #     cbeam.I12()
+        # with self.assertRaises(RuntimeError):
+        #     cbeam.J()
+        with self.assertRaises(RuntimeError):
+            cbeam.Centroid()
+        with self.assertRaises(RuntimeError):
+            cbeam.MassPerLength()
+        with self.assertRaises(RuntimeError):
+            cbeam.Nsm()
+        with self.assertRaises(RuntimeError):
+            cbeam.Mass()
+
 
         mid = 6
         E = 1.0e7

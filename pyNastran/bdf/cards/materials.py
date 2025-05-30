@@ -396,7 +396,8 @@ class MAT1(IsotropicMaterial):
     }
     _properties = ['_field_map', 'mp_name_map']
 
-    def __init__(self, mid: int, E: float, G: float, nu: float,
+    def __init__(self, mid: int,
+                 E: Optional[float], G: Optional[float], nu: Optional[float],
                  rho: float=0.0, a: float=0.0, tref: float=0.0, ge: float=0.0,
                  St: float=0.0, Sc: float=0.0, Ss: float=0.0,
                  mcsid: int=0, comment: str=''):
