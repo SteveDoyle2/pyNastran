@@ -54,30 +54,6 @@ class TestPlotElements(unittest.TestCase):
             run_save_load_hdf5=False,
             run_op2_writer=False)
 
-    def test_plottet(self):
-        """tests a PLOTETET"""
-        log = get_logger(level='warning')
-        model = BDF(log=log)
-        model.set_error_storage(
-            nxref_errors=0, stop_on_xref_error=True)
-        eid = 9
-        model.add_grid(10, [0., 0., 0.])
-        model.add_grid(11, [1., 0., 0.])
-        model.add_grid(12, [1., 1., 0.])
-        model.add_grid(13, [0.5, 0.5, 1.])
-        plottet = model.add_plottet(eid, [10, 11, 12, 13], comment='plotel')
-        plottet.write_card(size=8, is_double=False)
-        plottet.write_card(size=16, is_double=False)
-        plottet.write_card(size=16, is_double=True)
-
-        model.cross_reference()
-        model.uncross_reference()
-        model.safe_cross_reference()
-        save_load_deck(
-            model, xref='standard', punch=True,
-            run_save_load_hdf5=False,
-            run_op2_writer=False)
-
     def test_plotel_03(self):
         """tests a PLOTEL6/PLOTEL8"""
         log = get_logger(level='warning')
@@ -108,10 +84,113 @@ class TestPlotElements(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(
             model, xref='standard', punch=True,
-            #run_renumber=False,
             run_save_load_hdf5=False,
             run_op2_writer=False)
 
+    def test_plottet(self):
+        """tests a PLOTTET"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.set_error_storage(
+            nxref_errors=0, stop_on_xref_error=True)
+        eid = 9
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [1., 1., 0.])
+        model.add_grid(13, [0.5, 0.5, 1.])
+        plottet = model.add_plottet(eid, [10, 11, 12, 13], comment='plotel')
+        plottet.write_card(size=8, is_double=False)
+        plottet.write_card(size=16, is_double=False)
+        plottet.write_card(size=16, is_double=True)
+
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(
+            model, xref='standard', punch=True,
+            run_save_load_hdf5=False,
+            run_op2_writer=False)
+
+    def test_plotpyr(self):
+        """tests a PLOTPYR"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.set_error_storage(
+            nxref_errors=0, stop_on_xref_error=True)
+        eid = 9
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [1., 1., 0.])
+        model.add_grid(13, [1., 0., 0.])
+        model.add_grid(20, [0., 0., 1.])
+        plotpyr = model.add_plotpyr(eid, [10, 11, 12, 13, 20], comment='plotel')
+        plotpyr.write_card(size=8, is_double=False)
+        plotpyr.write_card(size=16, is_double=False)
+        plotpyr.write_card(size=16, is_double=True)
+
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(
+            model, xref='standard', punch=True,
+            run_save_load_hdf5=False,
+            run_op2_writer=False)
+
+    def test_plotpen(self):
+        """tests a PLOTPEN"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.set_error_storage(
+            nxref_errors=0, stop_on_xref_error=True)
+        eid = 9
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+
+        model.add_grid(21, [0., 0., 1.])
+        model.add_grid(22, [1., 0., 1.])
+        model.add_grid(23, [1., 1., 1.])
+        plotpen = model.add_plotpen(eid, [11, 12, 13, 21, 22, 23], comment='plotel')
+        plotpen.write_card(size=8, is_double=False)
+        plotpen.write_card(size=16, is_double=False)
+        plotpen.write_card(size=16, is_double=True)
+
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(
+            model, xref='standard', punch=True,
+            run_save_load_hdf5=False,
+            run_op2_writer=False)
+
+    def test_plothex(self):
+        """tests a PLOTHEX"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.set_error_storage(
+            nxref_errors=0, stop_on_xref_error=True)
+        eid = 9
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+        model.add_grid(14, [0., 1., 0.])
+
+        model.add_grid(21, [0., 0., 1.])
+        model.add_grid(22, [1., 0., 1.])
+        model.add_grid(23, [1., 1., 1.])
+        model.add_grid(24, [0., 1., 1.])
+        plotpen = model.add_plotpen(eid, [11, 12, 13, 14, 21, 22, 23, 24], comment='plotel')
+        plotpen.write_card(size=8, is_double=False)
+        plotpen.write_card(size=16, is_double=False)
+        plotpen.write_card(size=16, is_double=True)
+
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(
+            model, xref='standard', punch=True,
+            run_save_load_hdf5=False,
+            run_op2_writer=False)
 
 class TestElements(unittest.TestCase):
     def test_cbush_01(self):

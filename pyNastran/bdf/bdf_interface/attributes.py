@@ -29,7 +29,8 @@ if TYPE_CHECKING:  # pragma: no cover
         BAROR, BEAMOR,
         CBARAO, CBEAMAO,
         # plot
-        #PLOTEL, PLOTEL3, PLOTEL4,
+        # PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8,
+        # PLOTTET, PLOTPYR, PLOTPEN, PLOTHEX,
         PLOTELs,
         # dynamic
         TSTEP, TSTEP1, TSTEPNL,
@@ -866,7 +867,8 @@ class BDFAttributes:
             'nsms': ['NSM', 'NSM1', 'NSML', 'NSML1'],
             'nsmadds': ['NSMADD'],
             'rigid_elements': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON'],
-            'plotels': ['PLOTEL', 'PLOTEL3', 'PLOTEL4'],
+            'plotels': ['PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
+                        'PLOTTET', 'PLOTPYR', 'PLOTPEN', 'PLOTHEX'],
 
             'properties_mass': ['PMASS'],
             #'properties_acoustic' : ['PACABS'],

@@ -10,7 +10,9 @@ if TYPE_CHECKING:  # pragma: no cover
         SESUPORT, SEUSET, SEUSET1,
         FREQs,
     )
-    from pyNastran.bdf.cards.elements.elements import CFAST, CWELD, CGAP, CRAC2D, CRAC3D, PLOTELs, GENEL
+    from pyNastran.bdf.cards.elements.elements import (
+        CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL)
+    from pyNastran.bdf.cards.elements.plot import PLOTELs
     #from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
     #from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
 
@@ -413,7 +415,7 @@ class AddMethods:
         self.model._type_to_id_map[csupext.type].append(key)
 
     def add_plotel_object(self, elem: PLOTELs,
-                           allow_overwrites: bool=False) -> None:
+                          allow_overwrites: bool=False) -> None:
         """adds an PLOTEL object"""
         key = elem.eid
         assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)

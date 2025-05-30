@@ -274,11 +274,11 @@ def remove_unused(bdf_filename: PathLike,
             for eid in ids:
                 elem = model.plotels[eid]
                 nids_used.update(elem.node_ids)
-        elif card_type in {'PLOTET', 'PLOTPYR', 'PLOTPEN', 'PLOTHEX'}:
+        elif card_type in {'PLOTTET', 'PLOTPYR', 'PLOTPEN', 'PLOTHEX'}:
             for eid in ids:
                 elem = model.plotels[eid]
-                nidsi = elem.node_ids
-                assert 0 not in nidsi, elem
+                nidsi = set(elem.node_ids)
+                nidsi.discard(0)
                 nids_used.update(nidsi)
         elif card_type in {'PSOLID', 'PLSOLID'}:
             for pid in ids:

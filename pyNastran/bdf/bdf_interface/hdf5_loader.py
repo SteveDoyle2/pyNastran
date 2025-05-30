@@ -2193,7 +2193,7 @@ def hdf5_load_plotels(model, elements_group, unused_encoding):
             for eid, nids in zip(eids, nodes):
                 model.add_plotel(eid, nids, comment='')
         else:  # pragma: no cover
-            raise RuntimeError('card_type=%s in hdf5_load_plotels' % card_type)
+            raise RuntimeError(f'card_type={card_type} in hdf5_load_plotels')
         model.card_count[card_type] = len(eids)
 
 def write_card(elem):  # pragma: no cover

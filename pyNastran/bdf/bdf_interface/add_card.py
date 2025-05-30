@@ -18,7 +18,8 @@ from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
 from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
 from pyNastran.bdf.cards.elements.elements import (
-    CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL,
+    CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL)
+from pyNastran.bdf.cards.elements.plot import (
     PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8,
     PLOTTET, PLOTPYR, PLOTPEN, PLOTHEX)
 from pyNastran.bdf.cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
@@ -6776,8 +6777,9 @@ class AddCards(AddCoords, AddContact, AddBolts,
             a comment for the card
 
         """
-        fields = ['PLOTPEN', eid] + nodes
-        self.reject_card_lines('PLOTPEN', print_card_8(fields).split('\n'), show_log=False)
+        elem = PLOTPEN(eid, nodes, comment=comment)
+        self._add_methods.add_plotel_object(elem)
+        return elem
 
     def add_plotpyr(self, eid: int, nodes: list[int], comment: str='') -> PLOTPYR:
         """
@@ -6793,8 +6795,9 @@ class AddCards(AddCoords, AddContact, AddBolts,
             a comment for the card
 
         """
-        fields = ['PLOTPYR', eid] + nodes
-        self.reject_card_lines('PLOTPYR', print_card_8(fields).split('\n'), show_log=False)
+        elem = PLOTPYR(eid, nodes, comment=comment)
+        self._add_methods.add_plotel_object(elem)
+        return elem
 
     def add_plothex(self, eid: int, nodes: list[int], comment: str='') -> PLOTHEX:
         """
@@ -6810,8 +6813,9 @@ class AddCards(AddCoords, AddContact, AddBolts,
             a comment for the card
 
         """
-        fields = ['PLOTHEX', eid] + nodes
-        self.reject_card_lines('PLOTHEX', print_card_8(fields).split('\n'), show_log=False)
+        elem = PLOTHEX(eid, nodes, comment=comment)
+        self._add_methods.add_plotel_object(elem)
+        return elem
 
     def add_nsm(self, sid: int, nsm_type: str, pid_eid: int, value: float,
                 comment: str='') -> NSM:

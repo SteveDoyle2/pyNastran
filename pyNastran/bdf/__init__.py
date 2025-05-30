@@ -74,7 +74,8 @@ BULK_DATA_CARDS = {
     'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON',
 
     ## plotels
-    'PLOTEL', 'PLOTEL3', 'PLOTEL4',
+    'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
+    'PLOTTET', 'PLOTPYR', 'PLOTPEN', 'PLOTHEX',
 
     ## properties
     'PMASS',

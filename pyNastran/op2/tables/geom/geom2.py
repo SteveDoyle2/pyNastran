@@ -9,7 +9,9 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.errors import UnsupportedCard
-from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
+from pyNastran.bdf.cards.elements.elements import (
+    CGAP)
+from pyNastran.bdf.cards.elements.plot import PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4

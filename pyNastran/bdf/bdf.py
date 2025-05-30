@@ -57,8 +57,10 @@ from .bdf_interface.assign_type import (
 from pyNastran.bdf.cards.deqatn import split_deqatn_line0
 from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from .cards.elements.elements import (
-    CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL,
-    PLOTEL, PLOTEL3, PLOTEL4, PLOTELs)
+    CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL)
+from .cards.elements.plot import(
+    PLOTEL, PLOTEL3, PLOTEL4,
+    PLOTTET, PLOTPYR, PLOTPEN, PLOTHEX, PLOTELs)
 from .cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
 from .cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
 from .cards.cyclic import CYAX, CYJOIN
@@ -707,7 +709,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON',
 
             ## plotels
-            'PLOTEL', 'PLOTEL3', 'PLOTEL4',
+            'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
+            'PLOTTET', 'PLOTPYR', 'PLOTPEN', 'PLOTHEX',
 
             ## properties
             'PMASS',
