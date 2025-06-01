@@ -153,7 +153,7 @@ def write_tabrndg(model: BDF | OP2Geom, name: str,
     for table_id in table_ids:
         table = model.random_tables[table_id]
 
-        data = (table_id, table.Type,
+        data = (table_id, table.psd_type,
                 table.LU, table.WG,
                 0, 0, 0, 0, -1, -1)
         assert None not in data, data

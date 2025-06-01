@@ -2025,7 +2025,7 @@ class TABRNDG(Table):
         return self.raw_fields()
 
 
-def _map_axis(axis: int) => str:
+def _map_axis(axis: int) -> str:
     if axis == 0:
         axis_type = 'LINEAR'
     elif axis == 1:
