@@ -80,10 +80,20 @@ class TestAero(unittest.TestCase):
         p4 = [0., 5., 0.]
         x43 = 1.
         model.add_aeros(1.0, 1.0, 1.0)
+        caero_id = 1001
         caero = model.add_caero1(
-            1001, 1, igroup,
+            caero_id, 1, igroup,
             p1, x12, p4, x43, nspan=5, nchord=5)
         model.add_paero1(1)
+        box1 = 1001
+        box2 = box1 + 5 * 5
+        spline_id = 2001
+        setg = 3001
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [2., 0., 0.])
+        model.add_set1(setg, [1, 2, 3])
+        model.add_spline1(spline_id, caero_id, box1, box2, setg)
         assert np.allclose(caero.p1, p1), caero.p1
         npoints, nelements = caero.get_panel_npoints_nelements()
         assert np.allclose(npoints, 36), npoints
@@ -2551,6 +2561,14 @@ class TestAero(unittest.TestCase):
             velocity_units='m/s',
             density_units='kg/m^3',
             eas_units='m/s')
+
+    def test_add_mkaero1_from_geometric_spacing(self):
+        model = BDF()
+        machs = 0.8
+        model.add_mkaero1_from_geometric_spacing(
+            machs,
+            0.1, 1.0, num_k=2, nround=3,
+        )
 
     def test_mkaero1(self):
         """checks the MKAERO1 card"""

@@ -128,6 +128,8 @@ class ABCQSet(Set):
             ids = [ids]
         self.ids = ids
         self.components = components
+        assert isinstance(ids, list), ids
+        assert isinstance(components, list), components
         self.ids_ref = None
 
     def validate(self) -> None:

@@ -107,6 +107,10 @@ class TestAssignType(unittest.TestCase):
         self.assertEqual(val, 'default')
 
     def test_parse_components_or_blank(self):
+        with self.assertRaises(SyntaxError):
+            parse_components_or_blank(BDFCard([1.], has_none=False), 0, 'field')
+        parse_components_or_blank(BDFCard([1], has_none=False), 0, 'field')
+
         # out of range
         # with self.assertRaises(SyntaxError):
         parse_components_or_blank(BDFCard([1.]), 1, 'field')
@@ -116,13 +120,15 @@ class TestAssignType(unittest.TestCase):
         parse_components_or_blank(BDFCard([1]), 0, 'field')
         # with self.assertRaises(SyntaxError):
         parse_components_or_blank(BDFCard(['1']), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            # too large
+            parse_components_or_blank(BDFCard(['7']), 0, 'field')
 
+        # float
         with self.assertRaises(SyntaxError):
             self.assertEqual(1.e-9, parse_components_or_blank(BDFCard(['1-9']), 0, 'field'))
         with self.assertRaises(SyntaxError):
             self.assertEqual(1.e+9, parse_components_or_blank(BDFCard(['1+9']), 0, 'field'))
-
-        # float
 
         # string
         with self.assertRaises(SyntaxError):
@@ -199,6 +205,8 @@ class TestAssignType(unittest.TestCase):
             integer(BDFCard([1.]), 1, 'field')
 
         # float
+        with self.assertRaises(SyntaxError):
+            integer(BDFCard([1.], has_none=False), 0, 'field')
         with self.assertRaises(SyntaxError):
             integer(BDFCard(['1-2']), 0, 'field')
         with self.assertRaises(SyntaxError):
@@ -454,6 +462,9 @@ class TestAssignType(unittest.TestCase):
 
     def test_integer_or_double(self):
         """tests the integer_or_double function"""
+        integer_or_double(BDFCard([1.], has_none=False), 0, 'field')
+        integer_or_double(BDFCard([1], has_none=False), 0, 'field')
+
         # out of range
         with self.assertRaises(SyntaxError):
             integer_or_double(BDFCard([1.]), 1, 'field')
@@ -471,6 +482,10 @@ class TestAssignType(unittest.TestCase):
 
     def test_integer_or_string(self):
         """tests the integer_or_string function"""
+        with self.assertRaises(SyntaxError):
+            integer(BDFCard([1.], has_none=False), 0, 'field')
+        integer(BDFCard([1], has_none=False), 0, 'field')
+
         # out of range
         with self.assertRaises(SyntaxError):
             integer_or_string(BDFCard([1.]), 1, 'field')
@@ -491,6 +506,10 @@ class TestAssignType(unittest.TestCase):
         """
         value = double_or_blank(card, n, fieldname, default=None)
         """
+        with self.assertRaises(SyntaxError):
+            integer(BDFCard([1.], has_none=False), 0, 'field')
+        integer(BDFCard([1], has_none=False), 0, 'field')
+
         # integer
         self.check_integer(integer_double_or_blank)
 
@@ -522,6 +541,10 @@ class TestAssignType(unittest.TestCase):
 
     def test_integer_string_or_blank(self):
         """tests the integer_string_or_blank function"""
+        with self.assertRaises(SyntaxError):
+            integer(BDFCard([1.], has_none=False), 0, 'field')
+        integer(BDFCard([1], has_none=False), 0, 'field')
+
         # integer
         self.check_integer(integer_string_or_blank)
 
@@ -550,6 +573,10 @@ class TestAssignType(unittest.TestCase):
 
     def test_integer_double_or_string(self):
         """tests the integer_double_or_string function"""
+        with self.assertRaises(SyntaxError):
+            integer(BDFCard([1.], has_none=False), 0, 'field')
+        integer(BDFCard([1], has_none=False), 0, 'field')
+
         # out of range
         with self.assertRaises(SyntaxError):
             integer_double_or_string(BDFCard([1.]), 1, 'field')
@@ -570,6 +597,9 @@ class TestAssignType(unittest.TestCase):
 
     def test_integer_double_string_or_blank(self):
         """tests the integer_double_string_or_blank function"""
+        integer_double_string_or_blank(BDFCard([1.], has_none=False), 0, 'field')
+        integer_double_string_or_blank(BDFCard([1], has_none=False), 0, 'field')
+
         # out of range
         self.assertEqual(None, integer_double_string_or_blank(BDFCard([1.]), 1, 'field'))
         #with self.assertRaises(SyntaxError):
@@ -588,6 +618,10 @@ class TestAssignType(unittest.TestCase):
         self.assertEqual(1000, integer_double_string_or_blank(BDFCard([1000]), 0, 'field'))
         self.assertEqual('CAT', integer_double_string_or_blank(BDFCard([100]), 1, 'field', 'CAT'))
 
+        # int/float
+        self.assertEqual(1000, integer_double_string_or_blank(BDFCard([1000]), 0, 'field'))
+        self.assertEqual(1000.0, integer_double_string_or_blank(BDFCard([1000.0]), 0, 'field'))
+
         # blank
         #self.check_blank(integer_double_string_or_blank)
 
@@ -595,6 +629,8 @@ class TestAssignType(unittest.TestCase):
         """tests the parse_components function"""
         with self.assertRaises(SyntaxError):
             integer_string_or_blank(BDFCard(['1b']), 0, 'field')
+
+        parse_components(BDFCard([1], has_none=False), 0, 'field')
 
         # single ints
         val = parse_components(BDFCard([0]), 0, 'field')

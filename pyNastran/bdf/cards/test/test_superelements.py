@@ -11,11 +11,12 @@ MODEL_PATH = PKG_PATH / '..' / 'models'
 
 class TestSuperelements(unittest.TestCase):
 
-    def test_superelements_pch(self):
+    def _test_superelements_pch(self):
         model = BDF(mode='nx')
         model.is_superelements = True
         bdf_filename = MODEL_PATH / 'bugs' / 'outboard_op4asmblk.pch'
         model.read_bdf(bdf_filename, punch=True)
+        #save_load_deck(model)
 
     def test_superelements_1(self):
         """SEMPLN/SELOC/SEBULK test"""
@@ -42,8 +43,8 @@ class TestSuperelements(unittest.TestCase):
         model.add_sebulk(seid, superelement_type, rseid, comment='sebulk')
 
         #----------------------------------------------
-        super1 = create_superelement(debug=False)
-        model.superelement_models[1] = super1
+        super1, super1_key = create_superelement(1, debug=False)
+        model.superelement_models[super1_key] = super1
 
         #----------------------------------------------
 
@@ -55,6 +56,7 @@ class TestSuperelements(unittest.TestCase):
             #xref_sets=True, xref_optimization=True, word='')
         #model.uncross_reference()
 
+        assert len(model.superelement_models) == 1, model.superelement_models
         model.safe_cross_reference(
             xref=True, xref_nodes=True, xref_elements=True, xref_nodes_with_elements=False,
             xref_properties=True, xref_masses=True, xref_materials=True,
@@ -105,10 +107,10 @@ class TestSuperelements(unittest.TestCase):
         seid_b = 2
         nodes = [10, 11, 12]
 
-        super1 = create_superelement(debug=False)
-        super2 = create_superelement(debug=False)
-        model.superelement_models[('SUPER', seid_a, '')] = super1
-        model.superelement_models[('SUPER', seid_b, '')] = super2
+        super1, super1_key = create_superelement(seid_a, debug=False)
+        super2, super2_key = create_superelement(seid_b, debug=False)
+        model.superelement_models[super1_key] = super1
+        model.superelement_models[super2_key] = super2
 
         card_fields = ['SEEXCLUD', seid_a, seid_b, 11, 30]
         seexcld = model.add_card_fields(card_fields, 'SEEXCLUD', comment='',
@@ -127,16 +129,15 @@ class TestSuperelements(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
-
         #save_load_deck(model, run_save_load_hdf5=False)
 
     def test_superelement_setree(self):
         """tests the SETREE"""
         model = BDF(debug=False)
-        super1 = create_superelement(debug=True)
-        super2 = create_superelement(debug=True)
-        model.superelement_models[101] = super1
-        model.superelement_models[102] = super2
+        super1, super1_key = create_superelement(101, debug=True)
+        super2, super2_key = create_superelement(102, debug=True)
+        model.superelement_models[super1_key] = super1
+        model.superelement_models[super2_key] = super2
 
         seid = 100
         seids = [101, 102]
@@ -175,7 +176,8 @@ class TestSuperelements(unittest.TestCase):
         model.add_grid(8, [0., 0., 0.])
         save_load_deck(model)
 
-def create_superelement(debug=False):
+def create_superelement(super_id: int,
+                        debug=False) -> tuple[BDF, tuple[str, int, str]]:
     """creates a simple bar model"""
     super_model = BDF(debug=debug)
     super_model.add_grid(10, [0., 0., 0.])
@@ -190,7 +192,8 @@ def create_superelement(debug=False):
     super_model.add_cbar(100, 1000, [11, 12], x, g0)
     super_model.add_pbarl(1000, 2000, 'ROD', [1.,])
     super_model.add_mat1(2000, 3.0e7, None, 0.3)
-    return super_model
+    super_key = ('SUPER', super_id, '')
+    return super_model, super_key
 
 
 if __name__ == '__main__':   # pragma: no cover

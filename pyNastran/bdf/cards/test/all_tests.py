@@ -5,6 +5,7 @@ from pyNastran.bdf.cards.test.test_aero import TestAero, TestAeroZona
 from pyNastran.bdf.cards.test.test_acoustic import TestAcoustic
 from pyNastran.bdf.cards.test.test_constraints import TestConstraints
 from pyNastran.bdf.cards.test.test_sets import TestSets
+from pyNastran.bdf.cards.test.test_superelements import TestSuperelements
 from pyNastran.bdf.cards.test.test_deqatn import TestDEQATN
 from pyNastran.bdf.cards.test.test_dynamic import TestDynamic
 

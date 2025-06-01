@@ -8418,7 +8418,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         -----
         the length of components and ids must be the same
         """
-        if isinstance(components, str):
+        if isinstance(components, integer_string_types):
             bset = BSET1(ids, components, comment=comment)
         else:
             bset = BSET(ids, components, comment=comment)
@@ -8452,7 +8452,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         the length of components and ids must be the same
 
         """
-        if isinstance(components, str):
+        if isinstance(components, integer_string_types):
             cset = CSET1(ids, components, comment=comment)
         else:
             cset = CSET(ids, components, comment=comment)
@@ -8509,7 +8509,9 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_omit_object(omit1)
         return omit1
 
-    def add_qset(self, ids, components, comment='') -> QSET | QSET1:
+    def add_qset(self, ids: list[int],
+                 components: str | list[str],
+                 comment: str='') -> QSET | QSET1:
         """
         Creates a QSET/QSET1 card, which defines generalized degrees of
         freedom (q-set) to be used for dynamic reduction or component
@@ -8527,18 +8529,22 @@ class AddCards(AddCoords, AddContact, AddBolts,
             a comment for the card
 
         """
-        if isinstance(components, str):
+        if isinstance(components, integer_string_types):
             qset = QSET1(ids, components, comment=comment)
         else:
             qset = QSET(ids, components, comment=comment)
         self._add_methods.add_qset_object(qset)
         return qset
 
-    def add_qset1(self, ids, components, comment='') -> QSET | QSET1:
+    def add_qset1(self, ids: list[int],
+                  components: list[str],
+                  comment: str='') -> QSET | QSET1:
         """.. seealso:: ``add_qset``"""
         return self.add_qset(ids, components, comment=comment)
 
-    def add_uset(self, name, ids, components, comment='') -> USET | USET1:
+    def add_uset(self, name: str,
+                 ids: list[int],
+                 components: str | list[str], comment: str='') -> USET | USET1:
         """
         Creates a USET card, which defines a degrees-of-freedom set.
 
@@ -8564,7 +8570,10 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_uset_object(uset)
         return uset
 
-    def add_uset1(self, name, ids, components, comment='') -> USET | USET1:
+    def add_uset1(self, name: str,
+                  ids: list[int],
+                  components: str,
+                  comment: str='') -> USET | USET1:
         """.. seealso:: ``add_uset``"""
         return self.add_uset(name, ids, components, comment=comment)
 
@@ -8692,7 +8701,8 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_random_table_object(table)
         return table
 
-    def add_tabrndg(self, tid, Type, LU, WG, comment='') -> TABRNDG:
+    def add_tabrndg(self, tid: int, psd_type: int,
+                    LU: float, WG: float, comment: str='') -> TABRNDG:
         """
         Creates a TABRNDG card
 
@@ -8700,7 +8710,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         ----------
         tid : int
             table id
-        Type : int
+        psd_type : int
            PSD type
            1 : von Karman
            2 : Dryden
@@ -8711,11 +8721,13 @@ class AddCards(AddCoords, AddContact, AddBolts,
         comment : str; default=''
             a comment for the card
         """
-        table = TABRNDG(tid, Type, LU, WG, comment=comment)
+        table = TABRNDG(tid, psd_type, LU, WG, comment=comment)
         self._add_methods.add_random_table_object(table)
         return table
 
-    def add_tabdmp1(self, tid, x, y, Type='G', comment='') -> TABDMP1:
+    def add_tabdmp1(self, tid: int,
+                    x: np.ndarray, y: np.ndarray,
+                    Type: str='G', comment: str='') -> TABDMP1:
         """Creates a TABDMP1 card"""
         table = TABDMP1(tid, x, y, Type=Type, comment=comment)
         self._add_methods.add_table_sdamping_object(table)

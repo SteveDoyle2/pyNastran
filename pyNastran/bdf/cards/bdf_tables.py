@@ -851,6 +851,7 @@ class TABLED5(Table):
         #yi = self.a * ((x - x1) / x2) ** n
         #return yi.sum()
 
+
 class TABDMP1(Table):
     type = 'TABDMP1'
 
@@ -861,7 +862,9 @@ class TABDMP1(Table):
         y = [0., 1.]
         return TABDMP1(tid, x, y, Type='G', comment='')
 
-    def __init__(self, tid: int, x: Any, y: Any, Type: str='G', comment: str='') -> None:
+    def __init__(self, tid: int,
+                 x: np.ndarray, y: np.ndarray,
+                 Type: str='G', comment: str='') -> None:
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -1960,7 +1963,8 @@ class TABRNDG(Table):
         WG = 1.
         return TABRNDG(tid, Type, LU, WG, comment='')
 
-    def __init__(self, tid, Type, LU, WG, comment=''):
+    def __init__(self, tid: int, psd_type: int,
+                 LU: float, WG: float, comment: str=''):
         """
         Creates a TABRNDG card
 
@@ -1968,7 +1972,7 @@ class TABRNDG(Table):
         ----------
         tid : int
             table id
-        Type : int
+        psd_type : int
            PSD type
            1 : von Karman
            2 : Dryden
@@ -1986,7 +1990,7 @@ class TABRNDG(Table):
         #: Table identification number. (Integer >0)
         self.tid = tid
         #: PSD Type: 1. von Karman; 2. Dryden
-        self.Type = Type
+        self.psd_type = psd_type
         #: Scale of turbulence divided by velocity (units of time; Real)
         self.LU = LU
         #: Root-mean-square gust velocity. (Real)

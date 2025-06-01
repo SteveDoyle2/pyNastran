@@ -57,9 +57,9 @@ def parse_components(card: BDFCard, ifield: int, fieldname: str) -> str:
         a string of the dofs '0' or '123456' (not all are required)
 
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, str), type(fieldname)
+    # assert isinstance(card, BDFCard), type(card)
+    # assert isinstance(ifield, int), type(ifield)
+    # assert isinstance(fieldname, str), type(fieldname)
     svalue = card.field(ifield)
     if isinstance(svalue, integer_types):
         pass
@@ -114,14 +114,18 @@ def parse_components_or_blank(card: BDFCard,
         a string of the dofs '0' or '123456' (not all are required)
 
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, str), type(fieldname)
+    # assert isinstance(card, BDFCard), type(card)
+    # assert isinstance(ifield, int), type(ifield)
+    # assert isinstance(fieldname, str), type(fieldname)
     svalue = card.field(ifield)
     if isinstance(svalue, integer_types):
         pass
     elif svalue is None:
         return default
+    elif isinstance(svalue, float_types):
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
+                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
     elif '.' in svalue:
         dtype = _get_dtype(svalue)
         msg = ('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
@@ -177,8 +181,8 @@ def components_or_blank(card: BDFCard,
 
     """
     #assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, str), type(fieldname)
+    # assert isinstance(ifield, int), type(ifield)
+    # assert isinstance(fieldname, str), type(fieldname)
     #if default is not None:
         #assert isinstance(default, str), f'component default={default!r} and must be a string'
     svalue = card.field(ifield)
@@ -207,15 +211,15 @@ def blank(card: BDFCard, ifield: int, fieldname: str, default=None) -> None:
         the default value for the field (default=None)
 
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, str), type(fieldname)
+    # assert isinstance(card, BDFCard), type(card)
+    # assert isinstance(ifield, int), type(ifield)
+    # assert isinstance(fieldname, str), type(fieldname)
     svalue = card.field(ifield)
     if svalue is None:
         return default
 
     if isinstance(svalue, str):
-        svalue = svalue.strip().upper()
+        svalue = svalue.strip()
         if len(svalue) == 0:
             return default
     dtype = _get_dtype(svalue)
@@ -243,8 +247,8 @@ def blank(card: BDFCard, ifield: int, fieldname: str, default=None) -> None:
     #assert isinstance(fieldname, str), type(fieldname)
     #return integer_double_string_or_blank(card, ifield, fieldname, default=None)
 
-def integer_double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
-    # type (BDFCard, int, str, int | float | str) -> Optional[int | float | str]
+def integer_double_string_or_blank(card: BDFCard, ifield: int, fieldname: str,
+                                   default=None) -> Optional[int | float | str]:
     """
     Parameters
     ----------
@@ -300,12 +304,14 @@ def integer_double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, d
 
 #def assert_int_bounded_range(card, ifield, fieldname, lower=None, upper=None):
 
-def fields(func, card, fieldname, i, j=None) -> list[Any]:
+def fields(func, card: BDFCard,
+           fieldname: str,
+           i: int, j=None) -> list[Any]:
     """
     .. todo:: improve fieldname
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(fieldname, str), type(fieldname)
+    # assert isinstance(card, BDFCard), type(card)
+    # assert isinstance(fieldname, str), type(fieldname)
     function_values = []
     if j is None:
         j = len(card)
