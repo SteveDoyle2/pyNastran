@@ -15,12 +15,12 @@ class TestTables(unittest.TestCase):
         tid = 101
         #1 : von Karman
         #2 : Dryden
-        Type = 1
+        psd_type = 1
         LU = 2.17
         wg = 3.14
-        table = model.add_tabrndg(tid, Type, LU, wg, comment='')
+        table = model.add_tabrndg(tid, psd_type, LU, wg, comment='')
         str(table)
-        table = model.add_tabrndg(tid+1, Type+1, LU, wg, comment='')
+        table = model.add_tabrndg(tid+1, psd_type+1, LU, wg, comment='')
         str(table)
         save_load_deck(model, run_convert=False, run_quality=False, run_remove_unused=False)
 

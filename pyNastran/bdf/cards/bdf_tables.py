@@ -1995,8 +1995,8 @@ class TABRNDG(Table):
         self.LU = LU
         #: Root-mean-square gust velocity. (Real)
         self.WG = WG
-        assert self.Type in [1, 2], ('Type must be 1 or 2.  '
-                                     f'Type={self.Type}')
+        assert self.psd_type in [1, 2], ('psd_type must be 1 or 2.  '
+                                     f'psd_type={self.psd_type}')
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -2012,20 +2012,20 @@ class TABRNDG(Table):
 
         """
         table_id = integer(card, 1, 'tid')
-        Type = integer(card, 2, 'Type')
+        psd_type = integer(card, 2, 'Type')
         LU = double(card, 3, 'LU')
         WG = double(card, 4, 'WG')
-        return TABRNDG(table_id, Type, LU, WG, comment=comment)
+        return TABRNDG(table_id, psd_type, LU, WG, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['TABRNDG', self.tid, self.Type, self.LU, self.WG]
+        list_fields = ['TABRNDG', self.tid, self.psd_type, self.LU, self.WG]
         return list_fields
 
     def repr_fields(self):
         return self.raw_fields()
 
 
-def _map_axis(axis):
+def _map_axis(axis: int) => str:
     if axis == 0:
         axis_type = 'LINEAR'
     elif axis == 1:
