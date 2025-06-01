@@ -7,7 +7,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string, string_or_blank, double_or_string, double_string_or_blank,
     integer_or_string, integer_string_or_blank, integer_double_or_string,
     blank, parse_components, components_or_blank, integer_double_string_or_blank,
-    _get_dtype, interpret_value, modal_components)
+    _get_dtype, interpret_value, modal_components,
+    parse_components_or_blank,
+)
 
 
 class TestAssignType(unittest.TestCase):
@@ -103,6 +105,45 @@ class TestAssignType(unittest.TestCase):
         self.assertEqual(val, None)
         val = blank(BDFCard([None]), 0, 'field', 'default')
         self.assertEqual(val, 'default')
+
+    def test_parse_components_or_blank(self):
+        # out of range
+        # with self.assertRaises(SyntaxError):
+        parse_components_or_blank(BDFCard([1.]), 1, 'field')
+
+        # integer
+        # with self.assertRaises(SyntaxError):
+        parse_components_or_blank(BDFCard([1]), 0, 'field')
+        # with self.assertRaises(SyntaxError):
+        parse_components_or_blank(BDFCard(['1']), 0, 'field')
+
+        with self.assertRaises(SyntaxError):
+            self.assertEqual(1.e-9, parse_components_or_blank(BDFCard(['1-9']), 0, 'field'))
+        with self.assertRaises(SyntaxError):
+            self.assertEqual(1.e+9, parse_components_or_blank(BDFCard(['1+9']), 0, 'field'))
+
+        # float
+
+        # string
+        with self.assertRaises(SyntaxError):
+            parse_components_or_blank(BDFCard(['a']), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            parse_components_or_blank(BDFCard(['1b']), 0, 'field')
+
+        # blank
+        # with self.assertRaises(SyntaxError):
+        parse_components_or_blank(BDFCard(['']), 0, 'field')
+        # with self.assertRaises(SyntaxError):
+        parse_components_or_blank(BDFCard([None]), 0, 'field')
+
+
+        with self.assertRaises(SyntaxError):
+            parse_components_or_blank(BDFCard(['.']), 0, 'field')
+        parse_components_or_blank(BDFCard(['4']), 0, 'field')
+
+        # card = [1.0, '2.0', '3.', 'C', None, '']
+        # exact = [1.0, 2.0, 3.0, SyntaxError, SyntaxError, SyntaxError]
+        # self.run_function(double, card, exact)
 
     def test_double(self):
         """

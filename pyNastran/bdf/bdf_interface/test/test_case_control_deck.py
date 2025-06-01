@@ -23,6 +23,90 @@ class CaseControlTest(unittest.TestCase):
         model = BDF(debug=False)
         model.create_subcases(subcase_ids=[1, 2])
 
+    def test_subcase_op2(self):
+        model = BDF(debug=False)
+        subcases = model.create_subcases(1)
+        data_code_dict = {
+            'table_name': b'OUGV1',  # disp
+            'table_code': 1,   # disp
+            'sort_code': 1,    # sort2?
+            'device_code': 1,  # plot
+            'thermal': 0,      # not thermal
+
+            'title': 'mytitle',
+            'subtitle': 'subtitle',
+            'label': 'label',
+        }
+        msg = ''
+        log = model.log
+        subcase = subcases[1]
+        subcase.add_op2_data(data_code_dict, msg, log)
+
+        data_code_dict.update({'thermal': 1})
+        subcase.add_op2_data(data_code_dict, msg, log)
+
+        data_code_dict.update({'table_name': b'OAG1', 'table_code': 11,
+                               'thermal': 0})
+        subcase.add_op2_data(data_code_dict, msg, log)
+
+        data_code_dict.update({'table_name': b'OAGPSD1'})
+        subcase.add_op2_data(data_code_dict, msg, log)
+        # data_code_dict.update({'table_name': b'OAGATO1'})
+        # subcase.add_op2_data(data_code_dict, msg, log)
+        data_code_dict.update({'table_name': b'OAGCRM1'})
+        subcase.add_op2_data(data_code_dict, msg, log)
+        data_code_dict.update({'table_name': b'OAGRMS1'})
+        subcase.add_op2_data(data_code_dict, msg, log)
+        data_code_dict.update({'table_name': b'OAGNO1'})
+        subcase.add_op2_data(data_code_dict, msg, log)
+
+        data_code_dict.update({'table_name': b'OUPV1', 'table_code': 1})
+        subcase.add_op2_data(data_code_dict, msg, log)
+        data_code_dict.update({'table_name': b'OUPV1', 'table_code': 10})
+        subcase.add_op2_data(data_code_dict, msg, log)
+        data_code_dict.update({'table_name': b'OUPV1', 'table_code': 11})
+        subcase.add_op2_data(data_code_dict, msg, log)
+
+        data_code_dict.update({'table_name': b'OUXY1', 'table_code': 15})
+        subcase.add_op2_data(data_code_dict, msg, log)
+        data_code_dict.update({'table_name': b'OUXY1', 'table_code': 16})
+        subcase.add_op2_data(data_code_dict, msg, log)
+        data_code_dict.update({'table_name': b'OUXY1', 'table_code': 17})
+        subcase.add_op2_data(data_code_dict, msg, log)
+
+        data_code_dict.update({'table_name': b'OESC1', 'table_code': -1})
+        subcase.add_op2_data(data_code_dict, msg, log)
+        data_code_dict.update({'table_name': b'DOES1', 'table_code': -1})
+        subcase.add_op2_data(data_code_dict, msg, log)
+
+        data_code_dict.update({'table_name': b'OESXRM1C', 'table_code': 805})
+        subcase.add_op2_data(data_code_dict, msg, log)
+        data_code_dict.update({'table_name': b'OESXNO1C', 'table_code': 905})
+        subcase.add_op2_data(data_code_dict, msg, log)
+
+        data_code_dict.update({'table_name': b'TOUGV1', 'table_code': 11})
+        subcase.add_op2_data(data_code_dict, msg, log)
+
+
+    def test_get_op2_data(self):
+        model = BDF(debug=False)
+        subcases = model.create_subcases(1)
+        subcase = subcases[1]
+        subcase.add_result_type('TITLE', 'mytitle', [])
+        subcase.add_result_type('ECHO', 'UNSORT', [])
+        subcase.add_integer_type('LOAD', 4)
+        subcase.add_result_type('DISP', 'ALL', ['PLOT', 'SORT1', 'PHASE'])
+        subcase.add_result_type('ACCEL', 'ALL', ['PUNCH', 'SORT2', 'REAL'])
+        subcase.add_result_type('STRESS', 'ALL', ['PRINT', 'IMAG', 'VONMISES', 'FIBER'])
+        subcase.add_result_type('STRAIN', 'ALL', ['PRINT', 'RANDOM'])
+        subcase.add_result_type('FORCE', 'ALL', ['SORT2'])
+        subcase.add_result_type('GPFORCE', '5', ['PRINT', 'SORT1'])
+
+        solmap_to_value = model._solmap_to_value
+        subcase.get_op2_data(101, solmap_to_value)
+        subcase.suppress_output()
+        subcase.get_op2_data(101, solmap_to_value)
+
     def test_case_control_01(self):
         lines = ['SPC=2',
                  'MPC =3',

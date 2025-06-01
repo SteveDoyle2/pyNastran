@@ -210,7 +210,7 @@ class TestPlotElements(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(
             model, xref='standard', punch=True,
-            run_save_load_hdf5=False,
+            # run_save_load_hdf5=False,
             run_op2_writer=False)
 
 class TestElements(unittest.TestCase):

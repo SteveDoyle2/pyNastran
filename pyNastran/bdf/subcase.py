@@ -158,7 +158,7 @@ class Subcase:
             # table_name is a byte string
             table_name = table_name.decode('latin1')
         else:
-            raise NotImplementedError(f'table_name={table_name!r}')
+            raise NotImplementedError(f'table_name={table_name!r} must be bytes')
 
         table_code = data_code['table_code']
         unused_sort_code = data_code['sort_code']
@@ -864,7 +864,11 @@ class Subcase:
             'isubcase': None, 'tables': [], 'analysis_codes': [],
             'device_codes': [], 'sort_codes': [], 'table_codes': [],
             'label': label, 'subtitle': None, 'title': None,
-            'format_codes': [], 'stress_codes': [], 'thermal': None}
+            'format_codes': [], 'stress_codes': [], 'thermal': None,
+
+            # new
+            'approach_codes': [], 'tcodes': [],
+        }
 
         results = [
             'DISPLACEMENT', 'EKE', 'EDE', 'ELSDCON', 'ENTHALPY',
