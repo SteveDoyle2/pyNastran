@@ -1794,7 +1794,7 @@ class CAERO1(BaseCard):
                 msg = 'x12=%s x43=%s; dx=%s chord=%s nchord=%s; nchord must be greater than 0' % (
                     x12, x43, dx, chord, nchord)
                 raise ValueError(msg)
-        else:
+        else:  # pragma: no cover
             raise TypeError(chord)
 
         return CAERO1(eid, pid, igroup, p1, x12, p4, x43,
@@ -2528,22 +2528,44 @@ class CAERO1(BaseCard):
         self.p1 += dxyz
         self.p4 += dxyz
 
-    def plot(self, ax: AxesSubplot) -> None:
+    def plot(self, ax: AxesSubplot,
+             show_eid: bool=True, show_nid: bool=True,
+             name: str='', color: str='C0',
+             fontsize: int=10,
+             is_3d: bool=False) -> None:
         """plots the panels"""
         points, elements = self.panel_points_elements()
+        centroids = []
         for eid, elem in enumerate(elements[:, [0, 1, 2, 3, 0]]):
-            pointsi = points[elem][:, [0, 1]]
+            pointsi = points[elem][:, [0, 1, 2]]
             x = pointsi[:, 0]
             y = pointsi[:, 1]
-            ax.plot(x, y, color='b')
-            box_id = self.eid + eid
-            centroid = (x[:-1].sum() / 4, y[:-1].sum() / 4)
-            elem_name = f'e{box_id}'
-            ax.annotate(elem_name, centroid, ha='center')
+            z = pointsi[:, 2]
+            if is_3d:
+                ax.plot(x, y, z, color=color)
+            else:
+                ax.plot(x, y, color=color)
 
-            for pid, point in zip(elem, pointsi):
-                point_name = f'p{pid}'
-                ax.annotate(point_name, point, ha='center')
+            box_id = self.eid + eid
+            # if is_3d:
+            #     centroid = (x[:-1].sum() / 4, y[:-1].sum() / 4, z[:-1].sum() / 4)
+            # else:
+            centroid = (x[:-1].sum() / 4, y[:-1].sum() / 4)
+
+            if show_eid:
+                elem_name = f'e{box_id}'
+                ax.annotate(elem_name, centroid, ha='center', color=color)
+
+            if show_nid:
+                for pid, point in zip(elem, pointsi):
+                    point_name = f'p{pid}'
+                    ax.annotate(point_name, point, ha='center', color=color)
+            centroids.append(centroid)
+
+        mean_centroid = np.mean(centroids, axis=0)
+        if name:
+            ax.annotate(name, mean_centroid, ha='center', color='k',
+                        fontsize=fontsize, weight='bold')
 
     def raw_fields(self):
         """
