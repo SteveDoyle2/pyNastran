@@ -60,7 +60,7 @@ class TestContact(unittest.TestCase):
         model.validate()
 
         contact_region = 102
-        params = {'cat' : 111, 'dog' : 222, 'frog' : 0.}
+        params = {'tied' : 1}
         bctpara = model.add_bctpara(contact_region, params, comment='bctpara')
         bctpara.raw_fields()
         str(bctpara)
