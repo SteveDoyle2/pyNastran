@@ -419,7 +419,8 @@ def _check_dvcrel_options(cp_name: str, element_type: str, options):
             'valid: [%s]' % (cp_name, element_type, ', '.join(soptions)))
         raise ValueError(msg)
 
-def _check_dvmrel_options(mp_name, material_type, options):
+def _check_dvmrel_options(mp_name: str, material_type: str,
+                          options) -> None:
     if mp_name not in options:
         soptions = [str(val) for val in options]
         msg = (
@@ -428,7 +429,7 @@ def _check_dvmrel_options(mp_name, material_type, options):
         raise ValueError(msg)
 
 def _check_dvprel_options(pname_fid: str | int,
-                          prop_type: str, options):
+                          prop_type: str, options) -> None:
     if pname_fid not in options:
         soptions = [str(val) for val in options]
         msg = (
@@ -442,7 +443,9 @@ class OptConstraint(BaseCard):
         BaseCard.__init__(self)
 
 class DVXREL1(BaseCard):
-    def __init__(self, oid, dvids, coeffs, c0, comment):
+    def __init__(self, oid: int,
+                 dvids: list[int], coeffs: list[float],
+                 c0: float, comment: str):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -532,7 +535,7 @@ class DVXREL2(BaseCard):
         assert isinstance(self.labels, list), str(self)
 
     @property
-    def desvar_ids(self):
+    def desvar_ids(self) -> list[int]:
         if self.dvids_ref is None:
             return self.dvids
         return [desvar.desvar_id for desvar in self.dvids_ref]
