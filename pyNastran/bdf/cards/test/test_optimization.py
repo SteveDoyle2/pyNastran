@@ -10,7 +10,9 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
+from pyNastran.bdf.cards.optimization import (
+    break_word_by_trailing_integer,
+    validate_dvcrel, validate_dvmrel, validate_dvprel)
 
 MODEL_PATH = os.path.join(pyNastran.__path__[0], '..', 'models')
 
@@ -20,6 +22,177 @@ class TestOpt(unittest.TestCase):
     The cards tested are:
      * DEQATN
     """
+    def test_validate_dvprel(self):
+        prop_type = 'PSHELL'
+        pname_fid = 'T'
+        validate = False
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        validate = True
+        prop_type = 'PSHELL'
+        pname_fid = 'T'
+        validate_dvprel(prop_type, pname_fid, validate)
+        pname_fid = 'Z1'
+        validate_dvprel(prop_type, pname_fid, validate)
+        pname_fid = 'Z2'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PCOMP'
+        pname_fid = 'T1'
+        validate_dvprel(prop_type, pname_fid, validate)
+        pname_fid = 'THETA3'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PCOMPG'
+        pname_fid = 'Z0'
+        validate_dvprel(prop_type, pname_fid, validate)
+        # pname_fid = 'THETA3'
+        # validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PSHEAR'
+        pname_fid = 'T'
+        validate_dvprel(prop_type, pname_fid, validate)
+        pname_fid = 'NSM'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PROD'
+        pname_fid = 'A'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PTUBE'
+        pname_fid = 'T'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PBAR'
+        pname_fid = 'A'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PBARL'
+        pname_fid = 'DIM1'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PBEAM'
+        pname_fid = 'A'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PBEAML'
+        pname_fid = 'DIM1'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PMASS'
+        pname_fid = 3
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PVISC'
+        pname_fid = 'CE1'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PBUSH'
+        pname_fid = 'K1'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PBUSH1D'
+        pname_fid = 'K'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PBUSHT'
+        pname_fid = 'TBID1'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PGAP'
+        pname_fid = 'KA'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PDAMP'
+        pname_fid = 'B1'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PWELD'
+        pname_fid = 'D'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+        prop_type = 'PFAST'
+        pname_fid = 'KT1'
+        validate_dvprel(prop_type, pname_fid, validate)
+
+    def test_validate_dvmrel(self):
+        validate = False
+        element_type = 'MAT1'
+        cp_name = 'E'
+        validate_dvmrel(validate, element_type, cp_name)
+
+        validate = True
+        validate_dvmrel(validate, element_type, cp_name)
+
+        element_type = 'MAT2'
+        cp_name = 'G11'
+        validate_dvmrel(validate, element_type, cp_name)
+
+        element_type = 'MAT3'
+        cp_name = 'EX'
+        validate_dvmrel(validate, element_type, cp_name)
+
+        # element_type = 'MAT4'
+        # cp_name = 'E'
+        # validate_dvmrel(validate, element_type, cp_name)
+
+        # element_type = 'MAT5'
+        # cp_name = 'E'
+        # validate_dvmrel(validate, element_type, cp_name)
+
+        element_type = 'MAT8'
+        cp_name = 'E1'
+        validate_dvmrel(validate, element_type, cp_name)
+
+        element_type = 'MAT9'
+        cp_name = 'G11'
+        validate_dvmrel(validate, element_type, cp_name)
+
+        element_type = 'MAT10'
+        cp_name = 'BULK'
+        validate_dvmrel(validate, element_type, cp_name)
+
+        element_type = 'MAT11'
+        cp_name = 'E3'
+        validate_dvmrel(validate, element_type, cp_name)
+
+    def test_validate_dvcrel(self):
+        validate = False
+        element_type = 'CONM2'
+        cp_name = 'X1'
+        validate_dvcrel(validate, element_type, cp_name)
+
+        validate = True
+        validate_dvcrel(validate, element_type, cp_name)
+
+        element_type = 'CQUAD4'
+        cp_name = 'T1'
+        validate_dvcrel(validate, element_type, cp_name)
+
+        element_type = 'CTRIA3'
+        cp_name = 'T1'
+        validate_dvcrel(validate, element_type, cp_name)
+
+        element_type = 'CMASS4'
+        cp_name = 'M'
+        validate_dvcrel(validate, element_type, cp_name)
+
+        element_type = 'CELAS4'
+        cp_name = 'K'
+        validate_dvcrel(validate, element_type, cp_name)
+
+        element_type = 'CBEAM'
+        cp_name = 'X2'
+        validate_dvcrel(validate, element_type, cp_name)
+
+        element_type = 'CBUSH'
+        cp_name = 'X2'
+        validate_dvcrel(validate, element_type, cp_name)
+
+        # element_type = 'CBEAM'
+        # cp_name = 'X2'
+        # validate_dvcrel(validate, element_type, cp_name)
+
     def test_dmncon(self):
         model = BDF(debug=False)
         constraint_id = 1

@@ -137,20 +137,48 @@ class TestContact(unittest.TestCase):
         contact_id = 42
         bsid = 3
         bcbody = model.add_bcbody(
-            contact_id, bsid,
+            contact_id, bsid, {},
             dim='3D', behav='DEFORM',
             istype=0, fric=0,
-             idispl=0, comment='bcbody')
+            idispl=0, comment='bcbody')
         bcbody.cross_reference(model)
         bcbody.raw_fields()
         bcbody.write_card(size=8)
         bcbody.write_card(size=16)
+        contact_id += 1
+        grow = [0.1, 0.2, 0.3, 1, 2, 3]
+        bcbody_grow = model.add_bcbody(
+            contact_id, bsid, {'GROW': grow},
+            dim='3D', behav='DEFORM',
+            istype=0, fric=0,
+             idispl=0, comment='bcbody')
+        contact_id += 1
 
-        csid= 10
+        bcbody_rigid = model.add_bcbody(
+            contact_id, bsid, {},
+            dim='3D', behav='RIGID',
+            istype=0, fric=0,
+             idispl=0, comment='bcbody')
+
+        heat = [0.1] * 17
+        bcbody_heat = model.add_bcbody(
+            contact_id, bsid, {'HEAT': heat},
+            dim='3D', behav='SYMM',
+            istype=0, fric=0,
+            idispl=0, comment='bcbody')
+
+        csid = 10
         params = {
             'BIAS': 20.0,
-            # 'DDULMT', 'ERRBAS', 'ERROR', 'FKIND',
-            # 'FNTOL', 'FTYPE', 'IBSEP', 'ISPLIT', 'ICSEP'
+            'DDULMT': 1.0,
+            'ERRBAS': 1,
+            'ERROR': 3.0,
+            'FKIND': 1,
+            'FNTOL': 4.0,
+            'FTYPE': 1,
+            'IBSEP': 1,
+            'ISPLIT': 1,
+            'ICSEP': 1,
             'LINQUAD': 1,
             'LINCNT': -1,
             'METHOD': 'NODESURF',
@@ -162,10 +190,37 @@ class TestContact(unittest.TestCase):
             'SEGSYM': 0,
             'THKOFF': 1,
         }
-        bcpara = model.add_bcpara(csid, params)
+        bcpara = model.add_bcpara(csid, params, comment='bcpara')
         bcpara.raw_fields()
         bcpara.write_card(size=8)
         bcpara.write_card(size=16)
+
+        bct_params1 = {
+            'TYPE': 1,
+            'NSIDE': 2,
+            'TBIRTH': 3.0,
+            'TDEATH': 4.0,
+            'INIPENE': 2,
+            'PDEPTH': 6.0,
+        }
+        bct_params2 = {
+            'SEGNORM': -1,
+            'OFFTYPE': 1,
+            'OFFSET': 9.0,
+            'TZPENE': 10.0,
+            'CSTIFF': 1,
+        }
+        bct_params3 = {
+            'TIED': 1,
+            'TIEDTOL': 13.0,
+            'EXTFAC': 0.09,
+        }
+        bctpara1 = model.add_bctpara(csid, bct_params1, comment='bctpara')
+        bctpara2 = model.add_bctpara(csid+1, bct_params2, comment='bctpara')
+        bctpara3 = model.add_bctpara(csid+2, bct_params3, comment='bctpara')
+        bctpara1.raw_fields()
+        bctpara1.write_card(size=8)
+        bctpara1.write_card(size=16)
         save_load_deck(model)
 
 

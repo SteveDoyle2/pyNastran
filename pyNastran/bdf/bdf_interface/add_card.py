@@ -3956,7 +3956,8 @@ class AddContact:
         self._add_methods.add_bctadd_object(bctadd)
         return bctadd
 
-    def add_bctpara(self, csid, params, comment='') -> BCTPARA:
+    def add_bctpara(self, csid: int,
+                    params: dict[str, Any], comment: str='') -> BCTPARA:
         """Creates a BCTPARA card"""
         bctpara = BCTPARA(csid, params, comment=comment)
         self._add_methods.add_bctpara_object(bctpara)
@@ -3976,14 +3977,17 @@ class AddContact:
             return bcpara
 
     def add_bcbody(self, contact_id: int, bsid: int,
+                   word_dict: dict[str, Any],
                    dim: str='3D', behav: str='DEFORM',
                    istype: int=0, fric: int | float=0,
-                   idispl: int=0, comment: str='') -> BCBODY:
+                   idispl: int=0,
+                   comment: str='') -> BCBODY:
         """Creates a BCBODY card"""
-        bcbody = BCBODY(contact_id, bsid,
+        bcbody = BCBODY(contact_id, bsid, word_dict,
                  dim=dim, behav=behav,
                  istype=istype, fric=fric,
-                 idispl=idispl, comment=comment)
+                 idispl=idispl,
+                 comment=comment)
         self._add_methods.add_bcbody_object(bcbody)
         return bcbody
 

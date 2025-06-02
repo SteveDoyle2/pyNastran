@@ -59,7 +59,7 @@ valid_pcomp_codes = [3, #3-z0
                      53, 54, 57, 58,
                      63, 64, 67, 68]
 
-def validate_dvcrel(validate, element_type, cp_name):
+def validate_dvcrel(validate: bool, element_type: str, cp_name: str) -> None:
     """
     Valdiates the DVCREL1/2
 
@@ -106,11 +106,11 @@ def validate_dvcrel(validate, element_type, cp_name):
     elif element_type == 'CBUSH1D':
         options = []
         _check_dvcrel_options(cp_name, element_type, options)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(msg)
 
 
-def validate_dvmrel(validate, mat_type, mp_name):
+def validate_dvmrel(validate: bool, mat_type: str, mp_name: str) -> None:
     """
     Valdiates the DVMREL1/2
 
@@ -120,8 +120,8 @@ def validate_dvmrel(validate, mat_type, mp_name):
     """
     if not validate:
         return
-    msg = 'DVMRELx: mat_type=%r mp_name=%r is invalid' % (mat_type, mp_name)
-    if mat_type in ['MAT1']:
+    msg = f'DVMRELx: mat_type={mat_type!r} mp_name={mp_name!r} is invalid'
+    if mat_type == 'MAT1':
         assert mp_name in ['E', 'G', 'NU', 'GE', 'RHO', 'A', 'TREF'], msg
     elif mat_type == 'MAT2':
         assert mp_name in ['G11', 'G12', 'G22', 'G33', 'GE', 'RHO',
@@ -140,7 +140,8 @@ def validate_dvmrel(validate, mat_type, mp_name):
         raise NotImplementedError(msg)
 
 
-def validate_dvprel(prop_type, pname_fid, validate):
+def validate_dvprel(prop_type: str, pname_fid: str | int,
+                    validate: bool) -> str:
     """
     Valdiates the DVPREL1/2
 
