@@ -3968,21 +3968,45 @@ class AddContact:
         self._add_methods.add_blseg_object(blseg)
         return blseg
 
-    def add_bconp(self, contact_id, slave, master, sfac, fric_id, ptype, cid,
-                  comment='') -> BCONP:
+    def add_bcpara(self, csid: int,
+                   params: dict[str, Optional[int | float]],
+                   comment: str='') -> BCPARA:
+            bcpara = BCPARA(csid, params, comment=comment)
+            self._add_methods.add_bcpara_object(bcpara)
+            return bcpara
+
+    def add_bcbody(self, contact_id: int, bsid: int,
+                   dim: str='3D', behav: str='DEFORM',
+                   istype: int=0, fric: int | float=0,
+                   idispl: int=0, comment: str='') -> BCBODY:
+        """Creates a BCBODY card"""
+        bcbody = BCBODY(contact_id, bsid,
+                 dim=dim, behav=behav,
+                 istype=istype, fric=fric,
+                 idispl=idispl, comment=comment)
+        self._add_methods.add_bcbody_object(bcbody)
+        return bcbody
+
+    def add_bconp(self, contact_id: int,
+                  slave: int, master: int,
+                  sfac: int, fric_id: int,
+                  ptype: int, cid: int,
+                  comment: str='') -> BCONP:
         """Creates a BCONP card"""
         bconp = BCONP(contact_id, slave, master, sfac, fric_id, ptype,
                       cid, comment=comment)
         self._add_methods.add_bconp_object(bconp)
         return bconp
 
-    def add_bfric(self, friction_id, mu1, fstiff=None, comment=''):
+    def add_bfric(self, friction_id: int, mu1: float,
+                  fstiff=None, comment: str='') -> BFRIC:
         bfric = BFRIC(friction_id, mu1, fstiff=fstiff, comment=comment)
         self._add_methods.add_bfric_object(bfric)
         return bfric
 
-    def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX',
-                    grid_point=0, comment='') -> BCRPARA:
+    def add_bcrpara(self, crid: int, surf: str='TOP',
+                    offset=None, Type: str='FLEX',
+                    grid_point: int=0, comment: str='') -> BCRPARA:
         """
         Creates a BCRPARA card
 
@@ -6199,9 +6223,13 @@ class AddOptimization:
         return dvtrel
 
     def add_dmncon(self, constraint_id: int, constraint_type: str,
-                   xyz=None, normal=None, size=None,
-                   m=None, d=None, nsections=None,
-                   angle=None, mind=None, off_flag=None,
+                   xyz: Optional[np.ndarray]=None, # SYMP
+                   normal: Optional[np.ndarray]=None, # SYMP=None,
+                   size=None,
+                   m=None, d=None,
+                   nsections: Optional[int]=None,
+                   angle=None, mind=None,
+                   off_flag: Optional[int]=None,
                    comment: str='') -> DMNCON:
         dmncon = DMNCON(constraint_id, constraint_type, xyz=xyz, normal=normal,
                         size=size, m=m, d=d, nsections=nsections,

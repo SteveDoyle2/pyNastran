@@ -115,14 +115,24 @@ def remove_unused(bdf_filename: PathLike,
         'QVOL', 'PCONVM', # 'PCONV',
         #'PBCOMP', 'PDAMP5', 'CFAST',
         'CWELD',
-        'AECOMP', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
-        'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
-        'DCONADD',
         #'GMCORD',
         'MONPNT1', 'MONPNT2', 'MONPNT3',
-        'DSCREEN', 'DTI', 'NSMADD',
-        'AESURFS', 'CSSCHD',
-        'CGEN', 'NXSTRAT',
+        'DTI', 'NSMADD',
+        'NXSTRAT',
+
+        # removed
+        #'CGEN',
+
+        # optimization
+        'DMNCON','DSCREEN', 'DVTREL1', 'DCONADD',
+
+        # contact
+        'BGSET', 'BCBODY', 'BCPARA',
+
+        # aero
+        'AESURFS', 'CSSCHD', 'AECOMP',
+        'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+        'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
 
         # axisymmetric
         'FORCEAX', 'PRESAX',
@@ -135,8 +145,6 @@ def remove_unused(bdf_filename: PathLike,
 
         # parametric
         'FEEDGE', 'FEFACE',
-        # contact
-        'BGSET',
         # nx bolts
         'BOLT', 'BOLTFOR', 'BOLTLD', 'BOLTSEQ', 'BOLTFRC',
     }

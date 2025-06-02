@@ -17,7 +17,7 @@ msc contact:
  - BCAUTOP (todo)
  - BCBDPRP (todo)
  - BCBMRAD (todo)
- - BCBODY  (todo)
+ - BCBODY
  - BCBODY1 (todo)
  - BCBZIER (todo)
  - BCGRID  (todo)
@@ -26,12 +26,12 @@ msc contact:
  - BCMOVE  (todo)
  - BCNURB2 (todo)
  - BCONECT (todo)
- - BCONP   (todo)
+ - BCONP
  - BCONPRG (todo)
  - BCONPRP (todo)
 
  - BCONUDS (todo)
- - BCPARA (todo)
+ - BCPARA
  - BCPROP (todo)
  - BCRIGID (todo)
  - BCRGSRF (todo)
@@ -54,6 +54,7 @@ glue:
 from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, _node_ids
 from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -65,6 +66,10 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+
+
+def get_table3d(model: BDF, fric: int) -> TABLE3D:
+    return model.table3d[fric]
 
 
 class BFRIC(BaseCard):
@@ -204,6 +209,7 @@ class BLSEG(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
 class BCBODY(BaseCard):
     """
     +--------+---------+--------+--------+----------+---------+---------+---------+---------+
@@ -247,7 +253,8 @@ class BCBODY(BaseCard):
 
     def __init__(self, contact_id: int, bsid: int,
                  dim: str='3D', behav: str='DEFORM',
-                 istype: int=0, fric: int | float=0, idispl: int=0, comment=''):
+                 istype: int=0, fric: int | float=0, idispl: int=0,
+                 comment: str=''):
         if comment:
             self.comment = comment
         self.contact_id = contact_id
@@ -259,7 +266,7 @@ class BCBODY(BaseCard):
         self.idispl = idispl
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BCBODY card from ``BDF.add_card(...)``
 
@@ -273,22 +280,26 @@ class BCBODY(BaseCard):
         BID : int (4,1)
            Contact body identification number referenced by
            BCTABLE, BCHANGE, or BCMOVE. (Integer > 0; Required)
-        DIM : str; default='3D'
+        dim : str; default='3D'
            Dimension of body.
            DIM=2D planar body in x-y plane of the basic coordinate system,
                   composed of 2D elements or curves.
-           DIM=3D any 3D body composed of rigid surfaces, shell elements or solid
-                  elements.
-        BEHAV (4,8)
-           Behavior of curve or surface (Character; Default = DEFORM) DEFORM body is
-           deformable, RIGID body is rigid, SYMM body is a symmetry body, ACOUS
-           indicates an acoustic body, WORK indicates body is a workpiece, HEAT indicates
-           body is a heat-rigid body. See Remark 3. for Rigid Bodies..
+           DIM=3D any 3D body composed of rigid surfaces, shell elements
+                  or solid elements.
+        behav (4,8); default=DEFORM
+           Behavior of curve or surface (Character)
+            - DEFORM body is deformable
+            - RIGID body is rigid
+            - SYMM body is a symmetry body
+            - ACOUS indicates an acoustic body
+            - WORK indicates body is a workpiece
+            - HEAT indicates body is a heat-rigid body.
+           See Remark 3. for Rigid Bodies..
         BSID : int
-            Identification number of a BSURF, BCBOX, BCPROP or BCMATL entry if
-            BEHAV=DEFORM. (Integer > 0)
-        ISTYP : int (4,3)
-           Check of contact conditions. (Integer > 0; Default = 0)
+            Identification number of a BSURF, BCBOX, BCPROP
+            or BCMATL entry if BEHAV=DEFORM. (Integer > 0)
+        ISTYP : int (4,3); default=0
+           Check of contact conditions. (Integer > 0)
         ISTYP : int
            is not supported in segment-to-segment contact.
            For a deformable body:
@@ -301,13 +312,13 @@ class BCBODY(BaseCard):
               For a rigid body:
            =0 no symmetry condition on rigid body.
            =1 rigid body is a symmetry plane.
-        FRIC : int/float (6,7)
-            Friction coefficient. (Real > 0 or integer; Default = 0)
+        FRIC : int/float (6,7); default=0
+            Friction coefficient. (Real > 0 or integer)
             If the value is an integer it represents the ID of a TABL3Di.
-        IDSPL : int (4,5)
-            Set IDSPL=1 to activate the SPLINE (analytical contact) option for a deformable
-            body and for a rigid contact surface. Set it to zero or leave blank to not have
-            analytical contact. (Integer; Default = 0)
+        IDSPL : int (4,5); default=0
+            Set IDSPL=1 to activate the SPLINE (analytical contact)
+            option for a deformable body and for a rigid contact surface.
+            Set it to zero or leave blank to not have analytical contact. (Integer)
         NLOAD : int or None
             Enter a positive number if "load controlled" and rotations are allowed (Integer). The
             positive number is the grid number where the moments or rotations are applied. The
@@ -494,6 +505,10 @@ class BCBODY(BaseCard):
                       dim=dim, behav=behav, istype=istype,
                       fric=fric, idispl=idispl,
                       comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        if isinstance(self.fric, integer_types) and self.fric > 0:
+            fric_ref = get_table3d(model, fric)
 
     def raw_fields(self):
         list_fields = [
@@ -1023,7 +1038,8 @@ class BCPARA(BaseCard):
         keys, values = self.params
         self.params = {key : value for key, value in zip(keys, values)}
 
-    def __init__(self, csid, params, comment=''):
+    def __init__(self, csid: int, params: dict[str, Optional[int | float]],
+                 comment: str=''):
         """
         Creates a BCPARA card
 
@@ -1067,6 +1083,12 @@ class BCPARA(BaseCard):
         j = 1
         params = {}
         ivalue_line = 0
+        allowed_params = [
+            'BIAS', 'DDULMT', 'ERRBAS', 'ERROR', 'FKIND',
+            'FNTOL', 'FTYPE', 'IBSEP', 'ISPLIT', 'ICSEP',
+            'LINQUAD', 'LINCNT', 'MAXNOD', 'METHOD', 'MAXENT',
+            'NBODIES', 'NLGLUE', 'SLDLMT', 'SEGSYM', 'THKOFF',
+        ]
         while i < card.nfields:
             param = string_or_blank(card, i, f'param{j}')
             i += 1
@@ -1077,6 +1099,7 @@ class BCPARA(BaseCard):
                 j += 1
                 continue
             #print('param', param)
+            assert param in allowed_params, f'param={param!r} is not supported; allowed={allowed_params}'
             if param == 'BIAS':
                 # Contact tolerance bias factor. (0.0 ≤ Real ≤ 1.0.;
                 # Default = 0.9 for IGLUE=0, if field left blank or 0.0 (to obtain a near zero value,

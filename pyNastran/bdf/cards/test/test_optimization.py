@@ -20,6 +20,32 @@ class TestOpt(unittest.TestCase):
     The cards tested are:
      * DEQATN
     """
+    def test_dmncon(self):
+        model = BDF(debug=False)
+        constraint_id = 1
+        constraint_type = 'SYMP'
+        xyz = [1., 2., 3.]
+        normal = [0., 0., 1.]
+        dmncon = model.add_dmncon(
+            constraint_id, constraint_type,
+            xyz=xyz, normal=normal, comment='dmncon',
+        )
+        dmncon.raw_fields()
+        dmncon.write_card()
+        #dmncon.write_card_8()
+        #dmncon.write_card_16()
+
+        dvt_id = 3
+        group_id = 1
+        label = 'label'
+        dvtrel1 = model.add_dvtrel1(
+            dvt_id, label, group_id,
+            state='ACTIVE', dsv_flag=0, dvid1=0,
+            validate=True, comment='dvtrel1')
+        dvtrel1.raw_fields()
+        dvtrel1.write_card()
+        save_load_deck(model, run_save_load_hdf5=False)
+
     def test_opt_1(self):
         """tests SOL 200"""
         log = get_logger(level='warning')

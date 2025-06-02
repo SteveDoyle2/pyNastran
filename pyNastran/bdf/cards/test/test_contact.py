@@ -1,6 +1,7 @@
 import copy
 import unittest
 
+from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
@@ -18,13 +19,12 @@ class TestContact(unittest.TestCase):
             '              16      17      18      19      20      21      22      23',
         ]
         unused_card = model.add_card(copy.deepcopy(lines), 'BSURF', is_list=False)
-        out = model.bsurf[3].write_card(8, None)
+        out = model.bsurf[3].write_card(size=8, is_double=False)
         lines2 = out.split('\n')
         for line, line2 in zip(lines, lines2):
             self.assertEqual(line, line2)
 
     def test_contact_2(self):
-        sid = 42
         eids = [1, 2, 3]
         model = BDF(debug=False)
         sid = 42
@@ -77,7 +77,8 @@ class TestContact(unittest.TestCase):
          - BLSEG
          - BCONP -> BFRIC
         """
-        model = BDF(debug=False, log=None, mode='msc')
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, mode='msc')
         nodes = [2, 3]
         contact_id = 4
         master = 5
@@ -92,8 +93,9 @@ class TestContact(unittest.TestCase):
 
         line_id = slave
         blseg = model.add_blseg(line_id, nodes, comment='blseg_slave')
-        bconp = model.add_bconp(contact_id, slave, master, sfac, friction_id, ptype, cid,
-                                comment='bconp')
+        bconp = model.add_bconp(
+            contact_id, slave, master, sfac, friction_id, ptype, cid,
+            comment='bconp')
         mu1 = 0.2
         bfric = model.add_bfric(friction_id, mu1, fstiff=None, comment='bfric')
         model.add_grid(2, [0., 0., 0.])
@@ -112,7 +114,8 @@ class TestContact(unittest.TestCase):
         | BGSET | GSID | SID1 | TID1 | SDIST1  |    | EXT1 |      |    |
         |       |      | SID2 | TID2 | SDIST2  |    | EXT2 |      |    |
         """
-        model = BDF(debug=True, log=None, mode='msc')
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, mode='msc')
         gsid = 1
         sids = [1, 2, 3]
         tids = [10, 20, 30]
@@ -127,6 +130,44 @@ class TestContact(unittest.TestCase):
         card = model.add_card(card, 'BGSET', comment='comment', ifile=None, is_list=True, has_none=True)
         save_load_deck(model)
         #bgset = model.add_bgset
+
+    def test_contact_bcbody(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, mode='msc')
+        contact_id = 42
+        bsid = 3
+        bcbody = model.add_bcbody(
+            contact_id, bsid,
+            dim='3D', behav='DEFORM',
+            istype=0, fric=0,
+             idispl=0, comment='bcbody')
+        bcbody.cross_reference(model)
+        bcbody.raw_fields()
+        bcbody.write_card(size=8)
+        bcbody.write_card(size=16)
+
+        csid= 10
+        params = {
+            'BIAS': 20.0,
+            # 'DDULMT', 'ERRBAS', 'ERROR', 'FKIND',
+            # 'FNTOL', 'FTYPE', 'IBSEP', 'ISPLIT', 'ICSEP'
+            'LINQUAD': 1,
+            'LINCNT': -1,
+            'METHOD': 'NODESURF',
+            'MAXENT': 3,
+            'MAXNOD': 42,
+            'NLGLUE': 0,
+            'NBODIES': 2,
+            'SLDLMT': 1.0,
+            'SEGSYM': 0,
+            'THKOFF': 1,
+        }
+        bcpara = model.add_bcpara(csid, params)
+        bcpara.raw_fields()
+        bcpara.write_card(size=8)
+        bcpara.write_card(size=16)
+        save_load_deck(model)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

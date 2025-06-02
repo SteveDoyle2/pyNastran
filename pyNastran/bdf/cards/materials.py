@@ -20,7 +20,6 @@ All cards are Material objects.
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 import numpy as np
-from numpy import zeros, array
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -744,8 +743,8 @@ class MAT1(IsotropicMaterial):
         nu12 = self.Nu()
         G12 = self.G()
 
-        D = zeros((3, 3))
-        #D = zeros((6,6))
+        D = np.zeros((3, 3))
+        #D = np.zeros((6,6))
         mu = 1. - nu12 * nu12  # *E11/E22    # not necessary b/c they're equal
         D[0, 0] = E11 / mu
         D[1, 1] = E22 / mu
@@ -1154,7 +1153,7 @@ class MAT2(AnisotropicMaterial):
 
     def Dsolid(self):
         """Eq 9.4.7 in Finite Element Method using Matlab """
-        D = zeros((6, 6))
+        D = np.zeros((6, 6))
         E = self.E()
         nu12 = self.nu12
         nu = nu12
@@ -1182,7 +1181,7 @@ class MAT2(AnisotropicMaterial):
         nu = nu12
         #G12 = self.G()
 
-        D = zeros((3, 3))
+        D = np.zeros((3, 3))
         mu = 1. - nu12 * nu12  # *E11/E22    # not necessary b/c they're equal
         Emu = E / mu
         D[0, 0] = Emu
@@ -1564,6 +1563,7 @@ class MAT4(ThermalMaterial):
         self.tch = tch
         self.tdelta = tdelta
         self.qlat = qlat
+        self.matt4_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -1892,9 +1892,9 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
     def K(self):
         """thermal conductivity matrix"""
-        k = array([[self.kxx, self.kxy, self.kxz],
-                   [self.kxy, self.kyy, self.kyz],
-                   [self.kxz, self.kyz, self.kzz]])
+        k = np.array([[self.kxx, self.kxy, self.kxz],
+                      [self.kxy, self.kyy, self.kyz],
+                      [self.kxz, self.kyz, self.kzz]])
         return k
 
     def raw_fields(self):
@@ -2269,7 +2269,7 @@ class MAT8(OrthotropicMaterial):
         nu12 = self.Nu12()
         G12 = self.G12()
 
-        D = zeros((3, 3), dtype='float32')
+        D = np.zeros((3, 3), dtype='float32')
         mu = 1. - nu12 * nu12 * E11 / E22    # not necessary b/c they're equal
         D[0, 0] = E11 / mu
         D[1, 1] = E22 / mu
