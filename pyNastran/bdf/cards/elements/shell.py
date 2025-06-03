@@ -32,12 +32,13 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_float_8
 from pyNastran.bdf.cards.base_card import Element, BaseCard
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.internal_get import coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import (
-    force_integer, # force_double,
+    force_integer,
     force_integer_or_blank, force_double_or_blank)
 
 from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
@@ -54,6 +55,7 @@ __all__ = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'SNORM',
            'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',
            '_triangle_area_centroid_normal', '_normal',
            'transform_shell_material_coordinate_system']
+
 
 def _triangle_area_centroid_normal(nodes, card):
     """
@@ -97,7 +99,7 @@ def _triangle_area_centroid_normal(nodes, card):
         #   [207.42750549, 0.0, -0.22425441]
         #   [207.42750549, 0.0, 0.00631836]
         #   [207.42750549, 0.0, 0.69803673]
-        msg = error.message # strerror
+        msg = error.message  # strerror
         msg += '\nvector: %s; length: %s' % (vector, length)
         msg += '\n  %s\n  %s\n  %s' % (n1.tolist(), n2.tolist(), n3.tolist())
         raise RuntimeError(msg)
@@ -288,7 +290,6 @@ class TriShell(ShellElement):
         normal = np.cross(x, yprime)
         y = np.cross(normal, x)
         return x, y
-
 
     def Thickness(self) -> float:
         """Returns the thickness"""
@@ -488,9 +489,9 @@ class CTRIA3(TriShell):
         1: 'eid', 2: 'pid', 6: 'theta_mcid', 7: 'zoffset', 10: 'tflag',
         11: 'T1', 12: 'T2', 13: 'T3'}
     cp_name_map = {
-        'T1' : 'T1',
-        'T2' : 'T2',
-        'T3' : 'T3',
+        'T1': 'T1',
+        'T2': 'T2',
+        'T3': 'T3',
     }
     _properties = ['cp_name_map', '_field_map']
 
@@ -770,7 +771,7 @@ class CTRIA3(TriShell):
 
         if xref:
             assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], f'pid={pid:d} self.pid_ref.type={self.pid_ref.type}'
-            if not self.pid_ref.type in ['PLPLANE']:
+            if self.pid_ref.type not in ['PLPLANE']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
@@ -1077,6 +1078,7 @@ class CPLSTN3(CPLSTx3):
         #msg = ('CPLSTS3 %8d%8d%8d%8d%8d%8s\n' % tuple(data))
         #return self.comment + msg
 
+
 class CTRIA6(TriShell):
     """
     +--------+------------+---------+----+----+----+----+----+-----+
@@ -1089,8 +1091,13 @@ class CTRIA6(TriShell):
 
     """
     type = 'CTRIA6'
-    def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0., tflag=0,
-                 T1=None, T2=None, T3=None, comment=''):
+
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 theta_mcid: int | float=0., zoffset: float=0.,
+                 tflag: int=0,
+                 T1: Optional[float]=None,
+                 T2: Optional[float]=None,
+                 T3: Optional[float]=None, comment: str=''):
         """
         Creates a CTRIA6 card
 
@@ -1450,9 +1457,13 @@ class CTRIAR(TriShell):
 
     """
     type = 'CTRIAR'
+
     def __init__(self, eid: int, pid: int, nids: list[int],
-                 theta_mcid: float|int=0.0, zoffset: float=0.0,
-                 tflag: int=0, T1=None, T2=None, T3=None, comment: str=''):
+                 theta_mcid: int | float=0.0, zoffset: float=0.0,
+                 tflag: int=0,
+                 T1: Optional[float]=None,
+                 T2: Optional[float]=None,
+                 T3: Optional[float]=None, comment: str=''):
         """
         Creates a CTRIAR card
 
@@ -1680,7 +1691,6 @@ class CTRIAR(TriShell):
         T2 = set_blank_if_default(self.T2, 1.0)
         T3 = set_blank_if_default(self.T3, 1.0)
         return theta_mcid, zoffset, tflag, T1, T2, T3
-
 
     def _verify(self, xref):
         eid = self.eid
@@ -2014,7 +2024,9 @@ class CSHEAR(QuadShell):
 
     """
     type = 'CSHEAR'
-    def __init__(self, eid, pid, nids, comment=''):
+
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 comment: str=''):
         """
         Creates a CSHEAR card
 
@@ -2289,10 +2301,10 @@ class CQUAD4(QuadShell):
     """
     type = 'CQUAD4'
     cp_name_map = {
-        'T1' : 'T1',
-        'T2' : 'T2',
-        'T3' : 'T3',
-        'T4' : 'T4',
+        'T1': 'T1',
+        'T2': 'T2',
+        'T3': 'T3',
+        'T4': 'T4',
     }
     _field_map = {1: 'eid', 2: 'pid', 7: 'theta_mcid', 8: 'zoffset',
                   10: 'tflag', 11: 'T1', 12: 'T2', 13: 'T3'}
@@ -2939,7 +2951,7 @@ class CPLSTx4(QuadShell):
     +---------+-------+-------+----+----+----+----+-------+
 
     """
-    _field_map = {1: 'eid', 2:'pid', 7:'theta'}
+    _field_map = {1: 'eid', 2: 'pid', 7: 'theta'}
 
     def _update_field_helper(self, n, value):
         if n == 3:
@@ -2953,7 +2965,8 @@ class CPLSTx4(QuadShell):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, nids, theta=0.0, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 theta: float=0.0, comment: str=''):
         QuadShell.__init__(self)
         if comment:
             self.comment = comment
@@ -3120,7 +3133,7 @@ class CPLSTS4(CPLSTx4):
 
     def __init__(self, eid, pid, nids,
                  theta=0.0, tflag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment=''):
-        TriShell.__init__(self)
+        CPLSTx4.__init__(self)
         if comment:
             self.comment = comment
         self.eid = eid
@@ -3565,6 +3578,7 @@ class CPLSTx6(TriShell):
 class CPLSTS6(CPLSTx6):
     type = 'CPLSTS6'
 
+
 class CPLSTN6(CPLSTx6):
     type = 'CPLSTN6'
 
@@ -3802,6 +3816,7 @@ class CPLSTx8(QuadShell):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
 class CPLSTS8(CPLSTx8):
     type = 'CPLSTS8'
     def __init__(self, eid, pid, nids,
@@ -3847,8 +3862,13 @@ class CQUADR(QuadShell):
     """
     type = 'CQUADR'
 
-    def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
-                 T1=None, T2=None, T3=None, T4=None, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 theta_mcid: int | float=0.0, zoffset: float=0.,
+                 tflag: int=0,
+                 T1: Optional[float]=None,
+                 T2: Optional[float]=None,
+                 T3: Optional[float]=None,
+                 T4: Optional[float]=None, comment: str=''):
         """
         Creates a CQUADR card
 
@@ -4363,7 +4383,8 @@ class CQUAD(QuadShell):
     type = 'CQUAD'
     #tflag = 1
 
-    def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 theta_mcid: int | float=0., comment: str=''):
         """
         Creates a CQUAD card
 
@@ -4603,6 +4624,7 @@ class CQUAD8(QuadShell):
 
     """
     type = 'CQUAD8'
+
     def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
                  tflag=0, T1=None, T2=None, T3=None, T4=None,
                  comment=''):
@@ -4737,7 +4759,7 @@ class CQUAD8(QuadShell):
         #-1.0, -1.0, -1.0, -1.0,
         #0.0, 0)
         #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
-         #t1, t2, t3, t4, theta, zoffs, tflag) = out
+        #t1, t2, t3, t4, theta, zoffs, tflag) = out
         eid = data[0]
         pid = data[1]
         nids = data[2:10]
@@ -4807,7 +4829,7 @@ class CQUAD8(QuadShell):
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' % (i, nid)
 
         if xref:
             assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
@@ -4880,7 +4902,7 @@ class CQUAD8(QuadShell):
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
-        return(area, centroid)
+        return (area, centroid)
 
     def Area(self) -> float:
         r"""
@@ -4942,6 +4964,7 @@ def _get_nodes_array(model: BDF, shape, eids, dtype='int32'):
         zoffsets.append(element.zoffset)
         #t1234.append([element.T1, element.T2, element.T3, element.T4])
     return pids, nodes, mcids, thetas, zoffsets
+
 
 class SNORM(BaseCard):
     """
@@ -5056,11 +5079,12 @@ class SNORM(BaseCard):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = wipe_empty_fields(self.repr_fields())
-        if size == 8 or len(card) == 5: # to last node
+        if size == 8 or len(card) == 5:  # to last node
             msg = self.comment + print_card_8(card)
         else:
             msg = self.comment + print_card_16(card)
         return msg
+
 
 def transform_shell_material_coordinate_system(cids: list[int],
                                                iaxes, theta_mcid, normal, p1, p2,
@@ -5082,7 +5106,7 @@ def transform_shell_material_coordinate_system(cids: list[int],
     if len(imcid):
         icids = np.searchsorted(cids, mcid)
         iaxesi = iaxes[icids, :]
-        jmat = np.cross(normal[imcid, :], iaxesi) # k x i
+        jmat = np.cross(normal[imcid, :], iaxesi)  # k x i
         ji = np.linalg.norm(jmat, axis=1)[:, np.newaxis]
         ipos = np.where(ji > 0.)[0]
         #izero = np.where(ji == 0.)[0]
@@ -5102,7 +5126,7 @@ def transform_shell_material_coordinate_system(cids: list[int],
         assert len(imat.shape) == 2, imat.shape
         ni = np.linalg.norm(imat, axis=1)
         imat /= ni[:, np.newaxis]
-        jmat = np.cross(normal[itheta, :], imat) # k x i
+        jmat = np.cross(normal[itheta, :], imat)  # k x i
         nj = np.linalg.norm(jmat, axis=1)
         jmat /= nj[:, np.newaxis]
         telem[itheta, 0, :] = imat
@@ -5140,6 +5164,7 @@ def transform_shell_material_coordinate_system(cids: list[int],
     #K2[0, 2] = K2[0, 0]
     return telem
 
+
 def _material_coordinate_system(element,
                                 normal: np.ndarray,
                                 xyz1: np.ndarray,
@@ -5151,7 +5176,7 @@ def _material_coordinate_system(element,
     if isinstance(element.theta_mcid, integer_types):
         assert element.theta_mcid_ref is not None, f'mcid={element.theta_mcid} not found for\n{element}'
         i = element.theta_mcid_ref.i
-        jmat = np.cross(normal, i) # k x i
+        jmat = np.cross(normal, i)  # k x i
         try:
             jmat /= np.linalg.norm(jmat)
         except FloatingPointError:
@@ -5177,7 +5202,7 @@ def _element_coordinate_system(element,
     """helper function for material_coordinate_system"""
     imat = xyz2 - xyz1
     imat /= np.linalg.norm(imat)
-    jmat = np.cross(normal, imat) # k x i
+    jmat = np.cross(normal, imat)  # k x i
     try:
         jmat /= np.linalg.norm(jmat)
     except FloatingPointError:

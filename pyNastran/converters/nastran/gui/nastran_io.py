@@ -636,8 +636,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         if xyz_cid0 is not None:
             create_monpnt(self, model, xyz_cid0, nid_cp_cd)
         self._create_aero(model, box_id_to_caero_element_map, cs_box_ids,
-                          caero_points, ncaeros_points, ncaero_sub_points,
-                          has_control_surface)
+                          caero_points, has_control_surface)
 
         if nconm2 > 0 and xref_nodes:
             _set_conm_grid(gui, nconm2, model,
@@ -698,7 +697,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         else:
             gui._set_results([form], cases)
 
-    def update_caeros(self, obj: BDF):
+    def update_caeros(self, obj: BDF) -> None:
         """the update call for the ModifyMenu"""
         model: BDF = self.model
         xref_errors = {}
@@ -713,16 +712,13 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
          has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
         self.has_caero = has_caero
         self._create_aero(model, box_id_to_caero_element_map, cs_box_ids,
-                          caero_points, ncaeros_points, ncaero_sub_points,
-                          has_control_surface)
+                          caero_points, has_control_surface)
         self.Render()
 
     def _create_aero(self, model: BDF,
                      box_id_to_caero_element_map: dict[int, Any],
-                     cs_box_ids,
-                     caero_points,
-                     ncaeros_points: int,
-                     ncaero_sub_points: int,
+                     cs_box_ids: dict[str, np.ndarray],
+                     caero_points: np.ndarray,
                      has_control_surface: bool):
         # fill grids
         zfighting_offset0 = 0.001
@@ -751,7 +747,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
                 for unused_label, aesurf in sorted(labels_to_aesurfs.items()):
                     #reset_labels = False
-                    cs_name = '%s_control_surface' % aesurf.label
+                    cs_name = f'{aesurf.label}_control_surface'
                     self.set_caero_control_surface_grid(
                         cs_name, cs_box_ids[cs_name],
                         box_id_to_caero_element_map, caero_points, note=aesurf.label,
@@ -803,7 +799,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             else:
                 plot_pressures = True
 
-            if plot_pressures: # and self._plot_pressures:
+            if plot_pressures:  # and self._plot_pressures:
                 try:
                     icase = self._plot_pressures(
                         model, cases, formii, icase, subcase_idi)
@@ -839,7 +835,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
     def _create_splines(self, model: BDF,
                         box_id_to_caero_element_map: dict[int, int],
-                        caero_points):
+                        caero_points: np.ndarray) -> None:
         """
         Sets the following actors:
           - spline_%s_structure_points % spline_id
@@ -859,6 +855,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             return
 
         gui: MainWindow = self.gui
+        log = self.log
         # 0 - caero / caero_subpanel
         # 1 - control surface
         # 3/5/7/... - spline points
@@ -877,7 +874,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 #n, filename = log_properties(1)
                 #print(filename, n)
                 #stored_msg.append(msg)
-                self.log.error(msg)
+                log.error(msg)
                 #raise RuntimeError(msg)
                 continue
             else:
@@ -934,7 +931,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 stored_msg.append(stored_msgi)
 
         if stored_msg:
-            model.log.warning('\n' + '\n'.join(stored_msg))
+            log.warning('\n' + '\n'.join(stored_msg))
 
     def make_caeros(self, model: BDF) -> tuple[np.ndarray, int, int, int, int, bool,
                                                dict[int, int], list[int]]:

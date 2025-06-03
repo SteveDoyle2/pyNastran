@@ -1958,7 +1958,7 @@ class Add1dElements:
         pid : int
             property id
         nids : list[int]
-            node ids; connected grid points at ends A and B
+            2 node ids; connected grid points at ends A and B
         x : list[float, float, float]
             Components of orientation vector, from GA, in the displacement
             coordinate system at GA (default), or in the basic coordinate system
@@ -2699,8 +2699,12 @@ class Add2dElements:
         self._add_methods.add_element_object(elem)
         return elem
 
-    def add_ctriar(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
-                   tflag=0, T1=None, T2=None, T3=None, comment='') -> CTRIAR:
+    def add_ctriar(self, eid: int, pid: int, nids: list[int],
+                   theta_mcid: int | float=0.0, zoffset: float=0.0,
+                   tflag: int=0,
+                   T1: Optional[float]=None,
+                   T2: Optional[float]=None,
+                   T3: Optional[float]=None, comment: float='') -> CTRIAR:
         """
         Creates a CTRIAR card
 
@@ -2735,8 +2739,13 @@ class Add2dElements:
         self._add_methods.add_element_object(elem)
         return elem
 
-    def add_cquadr(self, eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
-                   T1=None, T2=None, T3=None, T4=None, comment='') -> CQUADR:
+    def add_cquadr(self, eid: int, pid: int, nids: list[int],
+                   theta_mcid: int | float=0.0, zoffset=0.,
+                   tflag: int=0,
+                   T1: Optional[float]=None,
+                   T2: Optional[float]=None,
+                   T3: Optional[float]=None,
+                   T4: Optional[float]=None, comment: str='') -> CQUADR:
         """
         Creates a CQUADR card
 
@@ -2746,8 +2755,8 @@ class Add2dElements:
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : list[int, int, int, int]
-            node ids
+        nids : list[int]
+            4 node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
             plane.  Requires MID1 and MID2.
@@ -4046,8 +4055,10 @@ class AddAero:
     def __init__(self, add_methods: AddMethods):
         self._add_methods = add_methods
 
-    def add_aeros(self, cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0,
-                  comment='') -> AEROS:
+    def add_aeros(self, cref: float, bref: float, sref: float,
+                  acsid: int=0, rcsid: int=0,
+                  sym_xz: int=0, sym_xy: int=0,
+                  comment: str='') -> AEROS:
         """
         Creates an AEROS card
 
@@ -4061,6 +4072,7 @@ class AddAero:
             the wing area
         acsid : int; default=0
             aerodyanmic coordinate system
+            defines the direction of the wind
         rcsid : int; default=0
             coordinate system for rigid body motions
         sym_xz : int; default=0
@@ -4076,7 +4088,7 @@ class AddAero:
         self._add_methods.add_aeros_object(aeros)
         return aeros
 
-    def add_aero(self, velocity: float, cref: float, rho_ref: float,
+    def add_aero(self, velocity: Optional[float], cref: float, rho_ref: float,
                  acsid: int=0, sym_xz: int=0, sym_xy: int=0,
                  comment: str='') -> AERO:
         """
@@ -4084,14 +4096,15 @@ class AddAero:
 
         Parameters
         ----------
-        velocity : float
-            the airspeed
+        velocity : float | None
+            the airspeed; used for gust
         cref : float
             the aerodynamic chord
         rho_ref : float
             FLFACT density scaling factor
         acsid : int; default=0
             aerodyanmic coordinate system
+            defines the direction of the wind
         sym_xz : int; default=0
             xz symmetry flag (+1=symmetry; -1=antisymmetric)
         sym_xy : int; default=0
