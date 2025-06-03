@@ -249,6 +249,41 @@ class TestOpt(unittest.TestCase):
         dmncon.write_card(size=8, is_double=False)
         dmncon.write_card(size=16, is_double=False)
 
+        constraint_id += 1
+        constraint_type = 'ADDM'
+        dmncon = model.add_dmncon(
+            constraint_id, constraint_type,
+            xyz=xyz, normal=normal,
+            angle=223., mind=42.0,
+            comment='dmncon',
+        )
+        dmncon.write_card(size=8, is_double=False)
+
+        # constraint_id += 1
+        # constraint_type = 'SYMC'
+        # dmncon = model.add_dmncon(
+        #     constraint_id, constraint_type,
+        #     xyz=xyz, normal=normal,
+        #     m=[1., 2., 3.], nsections=4, comment='dmncon',
+        # )
+        # dmncon.write_card(size=8, is_double=False)
+
+        constraint_id += 1
+        constraint_type = 'CDID'
+        dmncon = model.add_dmncon(
+            constraint_id, constraint_type,
+            xyz=xyz, normal=normal, d=[1], comment='dmncon',
+        )
+        dmncon.write_card(size=8, is_double=False)
+
+        constraint_id += 1
+        constraint_type = 'EXTC'
+        dmncon = model.add_dmncon(
+            constraint_id, constraint_type,
+            normal=normal, comment='dmncon',
+        )
+        dmncon.write_card(size=8, is_double=False)
+
         dvt_id = 3
         group_id = 1
         label = 'label'

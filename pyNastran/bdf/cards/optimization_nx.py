@@ -18,7 +18,7 @@ some missing optimization flags
 http://mscnastrannovice.blogspot.com/2014/06/msc-nastran-design-optimization-quick.html"""
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 #from itertools import cycle, count
 import numpy as np
 
@@ -67,8 +67,14 @@ class DMNCON(OptConstraint):
         #return DSCREEN(rtype, trs=-0.5, nstr=20, comment='')
 
     def __init__(self, constraint_id: int, constraint_type: str,
-                 xyz=None, normal=None, size=None,
-                 m=None, d=None, nsections=None, angle=None, mind=None, off_flag=None,
+                 xyz=None, normal=None,  # SYMP, ADDM
+                 size=None,
+                 m=None,  # SYMC
+                 d: Optional[list[float]]=None,  # CDID
+                 nsections=None,  # SYMC
+                 angle=None,  # ADDM
+                 mind=None,   # ADDM
+                 off_flag=None,
                  comment: str=''):
         """
         Creates a DMNCON object
@@ -102,21 +108,21 @@ class DMNCON(OptConstraint):
             assert xyz is not None, xyz
             assert normal is not None, normal
         elif constraint_type == 'SYMC':
-            assert xyz is not None, xyz
-            assert normal is not None, normal
-            assert m is not None, m
-            assert nsections is not None, nsections
+            assert xyz is not None, xyz  # SYMC
+            assert normal is not None, normal  # SYMC
+            assert m is not None, m  # SYMC
+            assert nsections is not None, nsections  # SYMC
         elif constraint_type == 'ADDM':  # Additive
-            assert xyz is not None, xyz
-            assert normal is not None, normal
-            assert mind is not None, mind
-            assert angle is not None, angle
+            assert xyz is not None, xyz  # 'ADDM'
+            assert normal is not None, normal  # 'ADDM'
+            assert mind is not None, mind  # 'ADDM'
+            assert angle is not None, angle  # 'ADDM'
         elif constraint_type == 'CHBC':
             assert off_flag is not None, off_flag
         elif constraint_type == 'CDID':
             assert xyz is not None, xyz
             assert normal is not None, normal
-            assert d is not None, d
+            assert d is not None and len(d) > 0, d
         elif constraint_type in {'MINS', 'MAXS'}:
             assert size is not None, size
         elif constraint_type == 'EXTC':
@@ -125,7 +131,7 @@ class DMNCON(OptConstraint):
             raise NotImplementedError(constraint_type)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDF, comment: str=''):
         """
         Adds a DMNCON card from ``BDF.add_card(...)``
 

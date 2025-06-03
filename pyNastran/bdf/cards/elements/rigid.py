@@ -22,6 +22,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element, write_card
+from pyNastran.bdf.bdf_interface.internal_get import node_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, parse_components, components_or_blank,
@@ -446,14 +447,10 @@ class RBAR(RigidElementBase):
     #     return card
 
     def Ga(self) -> int:
-        if self.ga_ref is not None:
-            return self.ga_ref.nid
-        return self.ga
+        return node_id(self.ga_ref, self.ga)
 
     def Gb(self) -> int:
-        if self.gb_ref is not None:
-            return self.gb_ref.nid
-        return self.gb
+        return node_id(self.gb_ref, self.gb)
 
     @property
     def nodes(self) -> list[int]:
@@ -598,14 +595,10 @@ class RBAR1(RigidElementBase):
         return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
     def Ga(self) -> int:
-        if self.ga_ref is not None:
-            return self.ga_ref.nid
-        return self.ga
+        return node_id(self.ga_ref, self.ga)
 
     def Gb(self) -> int:
-        if self.gb_ref is not None:
-            return self.gb_ref.nid
-        return self.gb
+        return node_id(self.gb_ref, self.gb)
 
     @property
     def independent_nodes(self) -> list[int]:
