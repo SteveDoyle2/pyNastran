@@ -1894,7 +1894,7 @@ class BGSET(BaseCard):
     def raw_fields(self):
         fields = ['BGSET', self.glue_id]
         for sid, tid, sdist, ext in zip(self.sids, self.tids, self.sdists,
-                                              self.exts):
+                                        self.exts):
             fields += [sid, tid, sdist, None, ext, None, None, None]
         return fields
 

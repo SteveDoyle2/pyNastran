@@ -923,6 +923,8 @@ def hdf5_load_desvars(model: BDF, group, encoding: str) -> None:
             ddval = _cast_array(sub_group['ddval'])
             for desvari, labeli, xiniti, xlbi, xubi, delxi, ddvali in zip(
                     desvar, label, xinit, xlb, xub, delx, ddval):
+                if np.isnan(ddvali):
+                    ddvali = None
                 labeli = labeli.decode(encoding)
                 assert isinstance(labeli, str), labeli
                 model.add_desvar(desvari, labeli, xiniti, xlb=xlbi, xub=xubi,

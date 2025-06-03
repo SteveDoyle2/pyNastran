@@ -22,7 +22,8 @@ from typing import Any, Optional, TYPE_CHECKING
 from itertools import cycle, count
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types, float_types
+from pyNastran.utils.numpy_utils import (
+    integer_types, float_types, integer_float_types)
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import (
     BaseCard, expand_thru_by, break_word_by_trailing_integer,
@@ -43,8 +44,10 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
+from pyNastran.bdf.bdf_interface.internal_get import property_id
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.cards.bdf_tables import TABLEDs
     from pyNastran.op2.op2 import OP2
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
@@ -58,6 +61,22 @@ valid_pcomp_codes = [3, #3-z0
                      43, 44, 47, 48,
                      53, 54, 57, 58,
                      63, 64, 67, 68]
+
+
+def ddval_id(ddval_ref: DDVAL, ddval: Optional[int]) -> Optional[int]:
+    assert ddval is None or isinstance(ddval, integer_types), ddval
+    if ddval_ref is not None:
+        return ddval_ref.oid
+    return ddval
+
+
+def table_int_float(table_ref: TABLEDs,
+                    tid_int_float: int | float) -> int | float:
+    assert isinstance(tid_int_float, integer_float_types), tid_int_float
+    if table_ref is None:
+        return tid_int_float  # int/float
+    return table_ref.tid
+
 
 def validate_dvcrel(validate: bool, element_type: str, cp_name: str) -> None:
     """
@@ -677,15 +696,11 @@ class DCONSTR(OptConstraint):
     def Rid(self):
         return self.DRespID()
 
-    def Lid(self):
-        if self.lid_ref is None:
-            return self.lid  # int/float
-        return self.lid_ref.tid
+    def Lid(self) -> int | float:
+        return table_int_float(self.lid_ref, self.lid)
 
-    def Uid(self):
-        if self.uid_ref is None:
-            return self.uid  # int/float
-        return self.uid_ref.tid
+    def Uid(self) -> int | float:
+        return table_int_float(self.uid_ref, self.uid)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -918,7 +933,7 @@ class DESVAR(OptConstraint):
         try:
             self.cross_reference(model)
         except KeyError:
-            self.log.warning(f'cant cross reference DESVAR {self.desvar_id} with DDVAL {self.ddval}')
+            model.log.warning(f'cant cross reference DESVAR {self.desvar_id} with DDVAL {self.ddval}')
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -926,11 +941,9 @@ class DESVAR(OptConstraint):
         self.ddval_ref = None
 
     def DDVal(self) -> int:
-        if self.ddval_ref is not None:
-            return self.ddval_ref.oid
-        return self.ddval
+        return ddval_id(self.ddval_ref, self.ddval)
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         """
         Gets the fields in their simplified form
 
@@ -977,6 +990,7 @@ class TOPVAR(BaseCard):
         self.delxv = delxv
         self.power = power
         self.options = options
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -1027,9 +1041,10 @@ class TOPVAR(BaseCard):
             else:
                 assert len(card) <= 9, f'len(TOPVAR card) = {len(card):d}\ncard={card}'
         return TOPVAR(opt_id, label, prop_type, xinit, pid, xlb=xlb,
-                      delxv=delxv, power=power, options=options, comment=comment)
+                      delxv=delxv, power=power, options=options,
+                      comment=comment)
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         """
         Gets the fields in their simplified form
 
@@ -1047,7 +1062,8 @@ class TOPVAR(BaseCard):
         if len(label) <= 6:
             label = ' %6s ' % label
         list_fields = [
-            'TOPVAR', self.opt_id, label, self.prop_type, self.xinit, xlb, delxv, power, self.pid]
+            'TOPVAR', self.opt_id, label, self.prop_type,
+            self.xinit, xlb, delxv, power, self.Pid()]
         for name, option in sorted(self.options.items()):
             if name == 'STRESS':
                 list_fields += [name, option['allowable'], None, None, None, None, None, None]
@@ -1066,14 +1082,26 @@ class TOPVAR(BaseCard):
                 raise NotImplementedError(name)
         return list_fields
 
+    def cross_reference(self, model: BDF) -> None:
+        pid = self.Pid()
+        msg = f', which is required by TOPVAR self.opt_id; pid={pid:d}'
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        return self.cross_reference(model)
+
+    def Pid(self) -> int:
+        return property_id(self.pid_ref, self.pid)
+
     def uncross_reference(self):
-        pass
+        self.pid = self.Pid()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
 
 class DDVAL(OptConstraint):
     """
@@ -1101,7 +1129,7 @@ class DDVAL(OptConstraint):
         ddvals = [1, 2]
         return DDVAL(oid, ddvals, comment='')
 
-    def __init__(self, oid, ddvals, comment=''):
+    def __init__(self, oid: int, ddvals: list[int], comment: str=''):
         OptConstraint.__init__(self)
         if comment:
             self.comment = comment
@@ -1369,8 +1397,10 @@ class DLINK(OptConstraint):
         return DLINK(oid, dependent_desvar, independent_desvars, coeffs,
                      c0=0., cmult=1., comment='')
 
-    def __init__(self, oid, dependent_desvar,
-                 independent_desvars, coeffs, c0=0., cmult=1., comment=''):
+    def __init__(self, oid: int,
+                 dependent_desvar: int,
+                 independent_desvars: list[int], coeffs: list[float],
+                 c0: float=0., cmult: float=1., comment: str=''):
         """
         Creates a DLINK card, which creates a variable that is a lienar
         ccombination of other design variables
@@ -1407,29 +1437,29 @@ class DLINK(OptConstraint):
         self.independent_desvars = independent_desvars
         self.coeffs = coeffs
 
-    @property
-    def ddvid(self):
-        return self.dependent_desvar
+    # @property
+    # def ddvid(self):
+    #     return self.dependent_desvar
 
-    @ddvid.setter
-    def ddvid(self, dependent_desvar):
-        self.dependent_desvar = dependent_desvar
+    # @ddvid.setter
+    # def ddvid(self, dependent_desvar):
+    #     self.dependent_desvar = dependent_desvar
 
-    @property
-    def IDv(self):
-        return self.independent_desvars
+    # @property
+    # def IDv(self):
+    #     return self.independent_desvars
 
-    @IDv.setter
-    def IDv(self, independent_desvars):
-        self.independent_desvars = independent_desvars
+    # @IDv.setter
+    # def IDv(self, independent_desvars):
+    #     self.independent_desvars = independent_desvars
 
-    @property
-    def Ci(self):
-        return self.coeffs
+    # @property
+    # def Ci(self):
+    #     return self.coeffs
 
-    @Ci.setter
-    def Ci(self, coeffs):
-        self.coeffs = coeffs
+    # @Ci.setter
+    # def Ci(self, coeffs):
+    #     self.coeffs = coeffs
 
     @classmethod
     def add_card(cls, card, comment=''):

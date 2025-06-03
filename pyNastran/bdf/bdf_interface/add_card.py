@@ -5699,10 +5699,13 @@ class AddOptimization:
         self._add_methods.add_desvar_object(desvar)
         return desvar
 
-    def add_topvar(self, opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2,
-                   power=3.0) -> TOPVAR:
+    def add_topvar(self, opt_id: int, label: str, prop_type: int, xinit: float,
+                   pid: int, xlb: float=0.001, delxv: float=0.2,
+                   power: float=3.0, options=None, comment: str='') -> TOPVAR:
         """adds a TOPVAR"""
-        topvar = TOPVAR(opt_id, label, ptype, xinit, pid, xlb=xlb, delxv=delxv, power=power)
+        topvar = TOPVAR(opt_id, label, prop_type, xinit, pid,
+                        xlb=xlb, delxv=delxv, power=power,
+                        options=options, comment=comment)
         self._add_methods.add_topvar_object(topvar)
         return topvar
 

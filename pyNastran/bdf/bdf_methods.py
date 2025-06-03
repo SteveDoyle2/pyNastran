@@ -240,7 +240,7 @@ class BDFMethods(BDFAttributes):
             value = dlink.c0
             desvar = dlink.dependent_desvar
             desvar_ref = self.desvars[desvar]
-            for coeff, desvar_idi in zip(dlink.coeffs, dlink.IDv):
+            for coeff, desvar_idi in zip(dlink.coeffs, dlink.independent_desvars):
                 valuei = desvar_values[desvar_idi]
                 value += coeff * valuei
             value2 = min(max(value, desvar_ref.xlb), desvar_ref.xub)

@@ -4,7 +4,7 @@ import os
 import unittest
 
 import numpy as np
-from cpylog import get_logger
+from cpylog import get_logger, SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
@@ -193,8 +193,50 @@ class TestOpt(unittest.TestCase):
         # cp_name = 'X2'
         # validate_dvcrel(validate, element_type, cp_name)
 
-    def test_dmncon(self):
-        model = BDF(debug=False)
+    def test_dmncon_dvtrel1_topvar(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+
+        options = {
+            'STRESS': {'allowable': 10.0},
+        }
+        options_stress = {
+            'SYM': {
+                'cid': 0,
+                'mirror_symmetry1': 'ZX',
+                'mirror_symmetry2': 'ZX',
+                'mirror_symmetry3': 'ZX',
+                'cyclic_symmetry': 'X',
+                'num_cyclic_symmetries': 5,
+            },
+        }
+        opt_id = 3
+        xinit = 0.1
+        pid = 42
+        prop_type = 'FAKE'
+        label = 'cat'
+        topvar1 = model.add_topvar(
+            opt_id, label, prop_type, xinit, pid,
+            xlb=0.001, delxv=0.2, power=3.0,
+            options=None, comment='topvar')
+        model.add_pelas(pid, 3.14)
+        topvar1.raw_fields()
+        topvar1.write_card(size=8, is_double=False)
+        topvar1.write_card(size=16, is_double=False)
+        opt_id = 4
+        topvar2 = model.add_topvar(
+            opt_id, label, prop_type, xinit, pid,
+            xlb=0.001, delxv=0.2, power=3.0,
+            options=options, comment='topvar')
+        topvar2.raw_fields()
+
+        opt_id = 5
+        topvar2 = model.add_topvar(
+            opt_id, label, prop_type, xinit, pid,
+            xlb=0.001, delxv=0.2, power=3.0,
+            options=options_stress, comment='topvar')
+        topvar2.raw_fields()
+
         constraint_id = 1
         constraint_type = 'SYMP'
         xyz = [1., 2., 3.]
@@ -204,9 +246,8 @@ class TestOpt(unittest.TestCase):
             xyz=xyz, normal=normal, comment='dmncon',
         )
         dmncon.raw_fields()
-        dmncon.write_card()
-        #dmncon.write_card_8()
-        #dmncon.write_card_16()
+        dmncon.write_card(size=8, is_double=False)
+        dmncon.write_card(size=16, is_double=False)
 
         dvt_id = 3
         group_id = 1
@@ -241,7 +282,8 @@ class TestOpt(unittest.TestCase):
 
     def test_opt_2(self):
         """tests updating model based on DESVARs"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
 
         modtrak_id = 100
         low_range = 3
@@ -365,7 +407,8 @@ class TestOpt(unittest.TestCase):
 
     def test_ddval(self):
         """tests a DDVAL"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         oid = 10
         ddvals = [0.1, 0.2, 0.3, 0.5]
         ddval = model.add_ddval(oid, ddvals, comment='ddval')
@@ -381,7 +424,8 @@ class TestOpt(unittest.TestCase):
         """tests a doptprm"""
         #DOPTPRM    CONV1  .00001  DELOBJ .000001  DESMAX     100      P1       1
         #              P2      13
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
 
         params = {
             'CONV1' : 0.0001,
@@ -406,7 +450,8 @@ class TestOpt(unittest.TestCase):
 
     def test_dlink(self):
         """tests a DLINK"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         oid = 10 # optimization id
         dvid = 11 # dlink id?
         IDv = [20, 21, 22]
@@ -825,7 +870,8 @@ class TestOpt(unittest.TestCase):
 
     def test_dvmrel1(self):
         """tests a DVMREL1"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
 
         model.add_desvar(11, 'X11', 1.0)
         oid = 10
@@ -923,7 +969,8 @@ class TestOpt(unittest.TestCase):
 
     def test_dvcrel1(self):
         """tests a DVCREL1, DVCREL2, DVGRID"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         oid = 10
         conm2_eid = 100
         cp_min = 0.01
@@ -1060,11 +1107,12 @@ class TestOpt(unittest.TestCase):
 
     def test_dvgrid(self):
         """tests DVGRID"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         desvar_id = 1
         nid = 2
         dxyz = [1., 2., 3.]
         cid = 1
-        model = BDF(debug=False)
         dvgrid = model.add_dvgrid(desvar_id, nid, dxyz, cid=cid, coeff=1.0, comment='')
         model.add_grid(nid, [0., 0., 0.])
 
