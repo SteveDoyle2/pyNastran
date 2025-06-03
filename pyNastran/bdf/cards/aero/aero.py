@@ -530,8 +530,9 @@ class AELINK(BaseCard):
         return self.label
 
     def validate(self):
-        if isinstance(self.aelink_id, integer_types):
-            assert self.aelink_id >= 0, f"aelink_id={self.aelink_id} and must be greater than or equal to 0 (or 'ALWAYS')"
+        if isinstance(self.aelink_id, integer_types) and self.aelink_id < 0:
+            raise RuntimeError(f"aelink_id={self.aelink_id} "
+                               "and must be greater than or equal to 0 (or 'ALWAYS')")
 
         if len(self.independent_labels) != len(self.linking_coefficients):
             msg = 'nlabels=%d nci=%d\nindependent_labels=%s linking_coefficients=%s\n%s' % (
@@ -921,9 +922,9 @@ class AESURF(BaseCard):
                  eff: float=1.0, ldw: str='LDW',
                  crefc: float=1.0, crefs: float=1.0,
                  pllim: float=-np.pi/2., pulim: float=np.pi/2.,
-                  # hinge moment lower/upper limits
+                 # hinge moment lower/upper limits
                  hmllim: Optional[float]=None, hmulim: Optional[float]=None,
-                  # TABLEDi deflection limits vs. dynamic pressure
+                 # TABLEDi deflection limits vs. dynamic pressure
                  tqllim: int=0, tqulim: int=0,
                  comment='') -> None:
         """
@@ -1436,7 +1437,7 @@ class CAERO1(BaseCard):
 
     _properties = ['_field_map', 'shape', 'xy', 'min_max_eid', 'npanels']
 
-    def _get_field_helper(self, n):
+    def _get_field_helper(self, n: int) -> int | float:
         """
         Gets complicated parameters on the CAERO1 card
 
@@ -1444,6 +1445,9 @@ class CAERO1(BaseCard):
         ----------
         n : int
             the field number to update
+
+        Returns
+        -------
         value : int/float
             the value for the appropriate field
 
@@ -1752,6 +1756,8 @@ class CAERO1(BaseCard):
         TODO: CP not handled correctly
 
         """
+        assert isinstance(p1, (list, np.ndarray)), p1
+        assert isinstance(p4, (list, np.ndarray)), p4
         x12 = p2[0] - p1[0]
         x43 = p3[0] - p4[0]
         nspan = 0
@@ -2165,8 +2171,8 @@ class CAERO1(BaseCard):
 
         # TE
         caero_c = CAERO1(eid_c, pid, igroup, p12, x12_2, pc, xc_23,
-                        cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord_b, lchord=lchord,
-                        comment=comment_c)
+                         cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord_b, lchord=lchord,
+                         comment=comment_c)
         caero_d = CAERO1(eid_d, pid, igroup, pc, xc_23, p43, x43_3,
                          cp=cp, nspan=nspan_b, lspan=lspan, nchord=nchord_b, lchord=lchord,
                          comment=comment_d)
@@ -2532,7 +2538,8 @@ class CAERO1(BaseCard):
              show_eid: bool=True, show_nid: bool=True,
              name: str='', color: str='C0',
              fontsize: int=10,
-             is_3d: bool=False) -> None:
+             is_3d: bool=False,
+             alpha: float=1.0) -> None:
         """plots the panels"""
         points, elements = self.panel_points_elements()
         centroids = []
@@ -2542,9 +2549,9 @@ class CAERO1(BaseCard):
             y = pointsi[:, 1]
             z = pointsi[:, 2]
             if is_3d:
-                ax.plot(x, y, z, color=color)
+                ax.plot(x, y, z, color=color, alpha=alpha)
             else:
-                ax.plot(x, y, color=color)
+                ax.plot(x, y, color=color, alpha=alpha)
 
             box_id = self.eid + eid
             # if is_3d:
@@ -2958,7 +2965,7 @@ class CAERO2(BaseCard):
             #print('xstation = ', xstation)
         else:
             nx = self.nsb
-            station = np.linspace(0., nx, num=nx+1) # *dx?
+            station = np.linspace(0., nx, num=nx+1)  # *dx?
         assert nx > 0, 'nx=%s' % nx
         assert nx == nx_new, (nx, nx_new)
 
@@ -3607,6 +3614,8 @@ class CAERO4(BaseCard):
         assert nspan >= 1, 'nspan=%s' % nspan
         self.box_ids = np.zeros((nchord, nspan), dtype=dtype)
 
+        ichord = -1
+        ispan = -1
         try:
             for ichord in range(nchord):
                 for ispan in range(nspan):
@@ -6952,6 +6961,28 @@ class SPLINE5(Spline):
 
 
 def get_caero_count(model: BDF) -> tuple[int, int, int, int]:
+    """
+    Get the count of panels for sizing purposes
+
+    Parameters
+    ----------
+    model : BDF
+        the FEM model
+
+    Returns
+    -------
+    ncaeros : int
+        number of CAEROx panels
+    ncaeros_sub : int
+        number of CAEROx sub-panels
+    ncaeros_points : int
+        number of CAERO points that define the panels
+        (4 per CAERO1/3/4/5 subpanel; 2 per CAERO2 panel)
+    ncaero_sub_points : int
+        number of CAEROx sub-points (1 per panel)
+        CAERO2, BODY7 not supported
+
+    """
     ncaeros = 0
     ncaeros_sub = 0
     #ncaeros_cs = 0
@@ -6961,10 +6992,10 @@ def get_caero_count(model: BDF) -> tuple[int, int, int, int]:
     # sorting doesn't matter here because we're just trying to size the array
     for caero in model.caeros.values():
         if hasattr(caero, 'panel_points_elements'):
-            npoints, ncelements = caero.get_panel_npoints_nelements()
+            npoints, nelements = caero.get_panel_npoints_nelements()
             ncaeros_sub += npoints
-            ncaero_sub_points += ncelements
-        elif isinstance(caero, CAERO2) or caero.type == 'BODY7':
+            ncaero_sub_points += nelements
+        elif caero.type in ['CAERO2', 'BODY7']:
             pass
         else:  # pragma: no cover
             msg = '%r doesnt support panel_points_elements\n%s' % (caero.type, caero.rstrip())
@@ -6974,7 +7005,7 @@ def get_caero_count(model: BDF) -> tuple[int, int, int, int]:
         if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5)) or caero.type == 'CAERO7':
             ncaeros_points += 4
             ncaeros += 1
-        elif isinstance(caero, CAERO2) or caero.type == 'BODY7':
+        elif caero.type in ['CAERO2', 'BODY7']:
             points, elems = caero.get_points_elements_3d()
             if points is None:
                 continue
@@ -7050,7 +7081,15 @@ def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
     return points_array, elements_array
 
 
-def build_caero_paneling(model: BDF) -> tuple[str, list[str], Any]:
+field_names = [
+    'has_caero', 'caero_points', 'ncaeros', 'ncaeros_sub', 'ncaeros_cs',
+    'ncaeros_points', 'ncaero_sub_points',
+    'has_control_surface', 'box_id_to_caero_element_map', 'cs_box_ids',
+]
+AeroPaneling = namedtuple('AeroPaneling', field_names)
+
+
+def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
     """
     Creates the CAERO panel inputs including:
      - caero
@@ -7065,35 +7104,38 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], Any]:
 
     Returns
     -------
-    caero_points : (N_aero_points, 3) float ndarray
-        the xyz points for the aero panels
-        N_aero_points can be 0
-    ncaeros : int
-        the number of aero sub-panels?
-    ncaeros_sub : int
-        ???
-    ncaeros_cs : int
-        ???
-    ncaeros_points : int
-        number of points for the caero coarse grid
-    ncaero_sub_points : int
-        number of points for the caero fine/subpanel grid
-    has_control_surface : bool
-        is there a control surface
-    box_id_to_caero_element_map : dict[box_id] = box_index
-        used to map the CAEROx box id to index in the ???
-        (aero panel elements) array, which will be used with
-        cs_box_ids
-    cs_box_ids : dict[control_surface_name] : list[panel ids]
-        list of panels used by each aero panel
+    all_control_surface_name : str
+        name for all control surfaces actor ('' if no control surfaces)
+    caero_control_surface_names: list[str]
+        names of the control surfaces
+    out : AeroPaneling
+        namedtuple for:
+        has_caero : bool
+            are there any CAEROx panels?
+        caero_points : (N_aero_points, 3) float ndarray
+            the xyz points for the aero panels
+            N_aero_points can be 0
+        ncaeros : int
+            the number of aero sub-panels?
+        ncaeros_sub : int
+            ???
+        ncaeros_cs : int
+            ???
+        ncaeros_points : int
+            number of points for the caero coarse grid
+        ncaero_sub_points : int
+            number of points for the caero fine/subpanel grid
+        has_control_surface : bool
+            is there a control surface
+        box_id_to_caero_element_map : dict[box_id] = box_index
+            used to map the CAEROx box id to index in the ???
+            (aero panel elements) array, which will be used with
+            cs_box_ids
+        cs_box_ids : dict[control_surface_name] : list[panel ids]
+            list of panels used by each aero panel
 
     """
-    has_caero = False
-    ncaeros = 0
-    ncaeros_sub = 0
     ncaeros_cs = 0
-    ncaeros_points = 0
-    ncaero_sub_points = 0
     has_control_surface = False
     box_id_to_caero_element_map = {}
     cs_box_ids = defaultdict(list)
@@ -7157,12 +7199,6 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], Any]:
                     cs_box_ids[cs_name].extend(aelist_ref.elements)
                     cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)
 
-    field_names = [
-        'has_caero', 'caero_points', 'ncaeros', 'ncaeros_sub', 'ncaeros_cs',
-        'ncaeros_points', 'ncaero_sub_points',
-        'has_control_surface', 'box_id_to_caero_element_map', 'cs_box_ids',
-    ]
-    AeroPaneling = namedtuple('AeroPaneling', field_names)
     out = AeroPaneling(
         has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
         ncaeros_points, ncaero_sub_points,

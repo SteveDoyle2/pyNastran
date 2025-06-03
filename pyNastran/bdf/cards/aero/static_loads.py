@@ -53,7 +53,10 @@ class AEROS(Aero):
         sref = 1.
         return AEROS(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
 
-    def __init__(self, cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment=''):
+    def __init__(self, cref: float, bref: float, sref: float,
+                  acsid: int=0, rcsid: int=0,
+                  sym_xz: int=0, sym_xy: int=0,
+                  comment: str=''):
         """
         Creates an AEROS card
 

@@ -13,7 +13,7 @@ All cards are BaseCard objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -59,37 +59,37 @@ class Aero(BaseCard):
         self.acsid = None
         self.acsid_ref = None
 
-    def Acsid(self):
+    def Acsid(self) -> int:
         try:
             return self.acsid_ref.cid
         except AttributeError:
             return self.acsid
 
     @property
-    def is_symmetric_xy(self):
+    def is_symmetric_xy(self) -> bool:
         if self.sym_xy == 1:
             return True
         return False
 
     @property
-    def is_symmetric_xz(self):
+    def is_symmetric_xz(self) -> bool:
         if self.sym_xz == 1:
             return True
         return False
 
     @property
-    def is_anti_symmetric_xy(self):
+    def is_anti_symmetric_xy(self) -> bool:
         if self.sym_xy == -1:
             return True
         return False
 
     @property
-    def is_anti_symmetric_xz(self):
+    def is_anti_symmetric_xz(self) -> bool:
         if self.sym_xz == -1:
             return True
         return False
 
-    def set_ground_effect(self, enable):  # TODO: verify
+    def set_ground_effect(self, enable: bool) -> bool:  # TODO: verify
         if enable:
             self.sym_xy = -1
         else:
@@ -112,8 +112,8 @@ class AERO(Aero):
     _properties = ['is_anti_symmetric_xy', 'is_anti_symmetric_xz',
                    'is_symmetric_xy', 'is_symmetric_xz']
     _field_map = {
-        1: 'acsid', 2:'velocity', 3:'cRef', 4:'rhoRef', 5:'symXZ',
-        6:'symXY',
+        1: 'acsid', 2: 'velocity', 3: 'cref', 4: 'rho_ref', 5: 'sym_xz',
+        6: 'sym_xy',
     }
 
     @classmethod
@@ -123,13 +123,15 @@ class AERO(Aero):
         rho_ref = 1.
         return AERO(velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0, comment='')
 
-    def __init__(self, velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0, comment=''):
+    def __init__(self, velocity: Optional[float], cref: float,
+                 rho_ref: float, acsid: int=0,
+                 sym_xz: int=0, sym_xy: int=0, comment=''):
         """
         Creates an AERO card
 
         Parameters
         ----------
-        velocity : float
+        velocity : float | None
             the airspeed
         cref : float
             the aerodynamic chord
@@ -505,8 +507,8 @@ class FLUTTER(BaseCard):
     """
     type = 'FLUTTER'
     _field_map = {
-        1: 'sid', 2:'method', 3:'density', 4:'mach', 5:'reduced_freq_velocity', 6:'imethod',
-        8:'epsilon',
+        1: 'sid', 2: 'method', 3: 'density', 4: 'mach', 5: 'reduced_freq_velocity', 6: 'imethod',
+        8: 'epsilon',
     }
     _properties = ['_field_map', 'headers', ]
 
@@ -816,7 +818,6 @@ class FLUTTER(BaseCard):
             density_units=density_units,
             eas_units=eas_units)
 
-
         flfact_rho = self.sid + 1
         flfact_mach = self.sid + 2
         flfact_velocity = self.sid + 3
@@ -892,7 +893,6 @@ class FLUTTER(BaseCard):
 
         #comment = ' Alt: min=%.3f max=%.3f %s' % (alt, al, alt_units)
         #model.add_flfact(flfact_alt, alts2, comment=comment)
-
 
     def make_flfacts_eas_sweep_constant_mach(self, model: BDF,
                                              mach: float, eass: np.ndarray,
@@ -1179,7 +1179,8 @@ class GUST(BaseCard):
         x0 = 0.
         return GUST(sid, dload, wg, x0, V=None, comment='')
 
-    def __init__(self, sid, dload, wg, x0, V=None, comment=''):
+    def __init__(self, sid: int, dload: int, wg: float, x0: float,
+                 V: Optional[float]=None, comment: str=''):
         """
         Creates a GUST card, which defines a stationary vertical gust
         for use in aeroelastic response analysis.
@@ -1505,7 +1506,6 @@ class MKAERO2(BaseCard):
             machs.append(double(card, i, 'mach'))
             reduced_freqs.append(double(card, i + 1, 'rFreq'))
         return MKAERO2(machs, reduced_freqs, comment=comment)
-
 
     def mklist(self):
         mklist = []
