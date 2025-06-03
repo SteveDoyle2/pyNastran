@@ -1462,12 +1462,14 @@ def export_to_hdf5(h5_file, plot_type: str,
     """exports the elements in a vectorized way"""
     #comments = []
     nodes = []
-    eids = list(model.plotels.keys())
-    for eid in eids:
+    eids = []
+    all_eids = list(model.plotels.keys())
+    for eid in all_eids:
         element = model.plotels[eid]
         if element.type != plot_type:
             continue
         #comments.append(element.comment)
+        eids.append(eid)
         nodes.append(element.nodes)
     #h5_file.create_dataset('_comment', data=comments)
     h5_file.create_dataset('eid', data=eids)

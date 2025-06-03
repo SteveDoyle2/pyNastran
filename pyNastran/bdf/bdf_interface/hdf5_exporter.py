@@ -864,13 +864,14 @@ def _hdf5_export_group(hdf5_file, model: BDF, group_name, encoding, debug=False)
 
         group = hdf5_file.create_group(group_name)
         for card_type in types_actual:
-            sub_group = group.create_group(card_type)
             ids = model._type_to_id_map[card_type]
             if debug:  # pragma: no cover
                 print(ids)
             assert len(ids) > 0, '%s : %s' % (card_type, ids)
             class_obj = CARD_MAP[card_type]
             #print(class_obj)
+
+            sub_group = group.create_group(card_type)
             if hasattr(class_obj, 'export_to_hdf5'):
                 class_obj.export_to_hdf5(sub_group, model, ids)
             else:

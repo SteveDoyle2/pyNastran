@@ -60,7 +60,6 @@ class TestPlotElements(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(
             model, xref='standard', punch=True,
-            run_save_load_hdf5=False,
             run_op2_writer=False)
 
     def test_plotel_03(self):
@@ -97,7 +96,6 @@ class TestPlotElements(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(
             model, xref='standard', punch=True,
-            run_save_load_hdf5=False,
             run_op2_writer=False)
 
     def test_plottet(self):
@@ -117,13 +115,14 @@ class TestPlotElements(unittest.TestCase):
         plottet.write_card(size=8, is_double=False)
         plottet.write_card(size=16, is_double=False)
         plottet.write_card(size=16, is_double=True)
+        elem = plottet
+        assert len(model._type_to_id_map[elem.type]) == 1, model._type_to_id_map
 
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
         save_load_deck(
             model, xref='standard', punch=True,
-            run_save_load_hdf5=False,
             run_op2_writer=False)
 
     def test_plotpyr(self):
@@ -150,7 +149,6 @@ class TestPlotElements(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(
             model, xref='standard', punch=True,
-            run_save_load_hdf5=False,
             run_op2_writer=False)
 
     def test_plotpen(self):
@@ -179,7 +177,6 @@ class TestPlotElements(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(
             model, xref='standard', punch=True,
-            run_save_load_hdf5=False,
             run_op2_writer=False)
 
     def test_plothex(self):
@@ -210,7 +207,6 @@ class TestPlotElements(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(
             model, xref='standard', punch=True,
-            # run_save_load_hdf5=False,
             run_op2_writer=False)
 
 class TestElements(unittest.TestCase):
