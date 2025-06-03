@@ -17,6 +17,7 @@ from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.elements.bars import (
     LineElement, init_x_g0, rotate_v_wa_wb, check_offt)
+from pyNastran.bdf.bdf_interface.internal_get import node_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_string_or_blank,
     integer_double_or_blank, integer_string_or_blank,
@@ -886,9 +887,7 @@ class CBEAM(LineElement):
 
     def G0(self) -> int:
         """gets G0"""
-        if self.g0_ref is None:
-            return self.g0
-        return self.g0_ref.nid
+        return node_id(self.g0_ref, self.g0)
 
     def get_x_g0_defaults(self):
         """

@@ -153,9 +153,6 @@ class OBC:
         """C O N T A C T  P R E S S U R E  A N D  T R A C T I O N S"""
         op2 = self.op2
         result_name = 'contact_tractions_and_pressure'
-        #if op2._results.is_not_saved(result_name):
-            #print('return A')
-            #return ndata
         if op2._results.is_not_saved(result_name):
             return ndata
         op2._results._found_result(result_name)

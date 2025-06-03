@@ -923,6 +923,8 @@ def hdf5_load_desvars(model: BDF, group, encoding: str) -> None:
             ddval = _cast_array(sub_group['ddval'])
             for desvari, labeli, xiniti, xlbi, xubi, delxi, ddvali in zip(
                     desvar, label, xinit, xlb, xub, delx, ddval):
+                if np.isnan(ddvali):
+                    ddvali = None
                 labeli = labeli.decode(encoding)
                 assert isinstance(labeli, str), labeli
                 model.add_desvar(desvari, labeli, xiniti, xlb=xlbi, xub=xubi,
@@ -2187,11 +2189,18 @@ def hdf5_load_plotels(model, elements_group, unused_encoding):
     """loads the plotels from an HDF5 file"""
     for card_type in elements_group.keys():
         elements = elements_group[card_type]
-        if card_type == 'PLOTEL':
+
+        plot_elements = {
+            'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
+            'PLOTTET', 'PLOTPYR', 'PLOTPEN', 'PLOTHEX',
+        }
+        if card_type in plot_elements:
+            card_type_lower = card_type.lower()
+            add_plotel = getattr(model, f'add_{card_type_lower}')
             eids = _cast_array(elements['eid'])
             nodes = _cast_array(elements['nodes']).tolist()
             for eid, nids in zip(eids, nodes):
-                model.add_plotel(eid, nids, comment='')
+                add_plotel(eid, nids, comment='')
         else:  # pragma: no cover
             raise RuntimeError(f'card_type={card_type} in hdf5_load_plotels')
         model.card_count[card_type] = len(eids)

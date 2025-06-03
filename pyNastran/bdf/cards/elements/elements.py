@@ -19,7 +19,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
     Element, BaseCard, break_word_by_trailing_integer, _node_ids)
-from pyNastran.bdf.bdf_interface.internal_get import coord_id
+from pyNastran.bdf.bdf_interface.internal_get import node_id, coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, integer_double_or_blank,
     double, double_or_blank, string)
@@ -476,14 +476,10 @@ class CWELD(Element):
         return [gs, self.Ga(), self.Gb()]
 
     def Ga(self) -> int:
-        if self.ga_ref is None:
-            return self.ga
-        return self.ga_ref.nid
+        return node_id(self.ga_ref, self.ga)
 
     def Gb(self) -> int:
-        if self.gb_ref is None:
-            return self.gb
-        return self.gb_ref.nid
+        return node_id(self.gb_ref, self.gb)
 
     def Gs(self) -> int:
         """Gets the GS node"""
@@ -824,19 +820,13 @@ class CGAP(Element):
         return coord_id(self.cid_ref, self.cid)
 
     def Ga(self) -> int:
-        if self.ga_ref is None:
-            return self.ga
-        return self.ga_ref.nid
+        return node_id(self.ga_ref, self.ga)
 
     def Gb(self) -> int:
-        if self.gb_ref is None:
-            return self.gb
-        return self.gb_ref.nid
+        return node_id(self.gb_ref, self.gb)
 
-    def G0(self):
-        if isinstance(self.g0, integer_types):
-            return self.g0
-        return self.g0_ref.nid
+    def G0(self) -> int:
+        return node_id(self.g0_ref, self.g0)
 
     def raw_fields(self):
         if self.g0 is not None:

@@ -35,10 +35,10 @@ def coord_id(coord_ref: Coord, cid: int) -> int:
     return cid
 
 
-# def property_id(prop_ref, pid: int) -> int:
-#     if prop_ref is not None:
-#         return prop_ref.pid
-#     return pid
+def property_id(prop_ref, pid: int) -> int:
+    if prop_ref is not None:
+        return prop_ref.pid
+    return pid
 
 
 def element_id(elem_ref, eid: int) -> int:

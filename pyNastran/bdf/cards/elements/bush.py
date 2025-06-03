@@ -18,7 +18,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.internal_get import (
-    coord_id_negative, coord_id_blank)
+    node_id, coord_id_negative, coord_id_blank)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
     string_or_blank)
@@ -396,9 +396,7 @@ class CBUSH(BushElement):
         return self.nodes[1]
 
     def G0(self) -> int:
-        if self.g0_ref is not None:
-            return self.g0_ref.nid
-        return self.g0
+        return node_id(self.g0_ref, self.g0)
 
     def OCid(self) -> int:
         return coord_id_negative(self.ocid_ref, self.ocid)
@@ -623,14 +621,10 @@ class CBUSH1D(BushElement):
         assert isinstance(cid, integer_types) or cid is None, 'CBUSH1D: cid=%r' % cid
 
     def Ga(self) -> int:
-        if self.ga_ref is not None:
-            return self.ga_ref.nid
-        return self.ga
+        return node_id(self.ga_ref, self.ga)
 
     def Gb(self) -> int:
-        if self.gb_ref is not None:
-            return self.gb_ref.nid
-        return self.gb
+        return node_id(self.gb_ref, self.gb)
 
     @property
     def nodes(self) -> list[int]:

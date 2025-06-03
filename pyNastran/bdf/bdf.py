@@ -59,7 +59,7 @@ from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from .cards.elements.elements import (
     CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL)
 from .cards.elements.plot import(
-    PLOTEL, PLOTEL3, PLOTEL4,
+    PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8,
     PLOTTET, PLOTPYR, PLOTPEN, PLOTHEX, PLOTELs)
 from .cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
 from .cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
@@ -2862,6 +2862,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'PLOTEL3': (PLOTEL3, add_methods.add_plotel_object),
             'PLOTEL4': (PLOTEL4, add_methods.add_plotel_object),
+            'PLOTEL6': (PLOTEL6, add_methods.add_plotel_object),
+            'PLOTEL8': (PLOTEL8, add_methods.add_plotel_object),
+
+            'PLOTTET': (PLOTTET, add_methods.add_plotel_object),
+            'PLOTPYR': (PLOTPYR, add_methods.add_plotel_object),
+            'PLOTPEN': (PLOTPEN, add_methods.add_plotel_object),
+            'PLOTHEX': (PLOTHEX, add_methods.add_plotel_object),
         }
 
         self._card_parser_prepare = {

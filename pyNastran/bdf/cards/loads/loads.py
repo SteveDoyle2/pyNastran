@@ -405,7 +405,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             #return self.tid_ref.tid
         #return self.tid
 
-    def Tid(self):
+    def Tid(self) -> int:
         if self.tid_ref is not None:
             return self.LoadID(self.tid_ref)
         return self.tid
