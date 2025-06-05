@@ -101,7 +101,7 @@ class MATS1(MaterialDependence):
 
     def __init__(self, mid: int, nl_type: Optional[str],
                  h: float, hr: float, yf: float,
-                 limit1: float, limit2: float,
+                 limit1: Optional[float], limit2: Optional[float],
                  tid: int=0, comment: str=''):
         MaterialDependence.__init__(self)
         if comment:
@@ -200,7 +200,7 @@ class MATS1(MaterialDependence):
             h = double_or_blank(card, 4, 'H')
             yf = integer_or_blank(card, 5, 'yf', default=1)
             hr = integer_or_blank(card, 6, 'hr', default=1)
-            limit1 = double(card, 7, 'limit1')
+            limit1 = double_or_blank(card, 7, 'limit1')
 
             if yf in [3, 4]:
                 limit2 = double(card, 8, 'limit2')
