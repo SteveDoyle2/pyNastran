@@ -22,7 +22,7 @@ from typing import Optional, TYPE_CHECKING
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.internal_get import material_id, table_id
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, string)
+    integer, integer_or_blank, double, double_or_blank, string, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
@@ -102,6 +102,7 @@ class MATS1(MaterialDependence):
     def __init__(self, mid: int, nl_type: Optional[str],
                  h: float, hr: float, yf: float,
                  limit1: Optional[float], limit2: Optional[float],
+                 strmeas: Optional[str],
                  tid: int=0, comment: str=''):
         MaterialDependence.__init__(self)
         if comment:
@@ -145,6 +146,11 @@ class MATS1(MaterialDependence):
         #: Internal friction angle, measured in degrees, for the
         #: Mohr-Coulomb and Drucker-Prager yield criteria
         self.limit2 = limit2
+
+        #: Stress/strain measure of the TABLES1 or TABLEST data referenced by the TID field.
+        #: Valid for SOLs 401 and 402 only.
+        self.strmeas = strmeas
+
         self.tid_ref = None
         self.mid_ref = None
         assert tid is not None
@@ -159,7 +165,8 @@ class MATS1(MaterialDependence):
         yf = None
         limit1 = None
         limit2 = None
-        return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, tid=tid, comment='')
+        strmeas = None
+        return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas, tid=tid, comment='')
 
     def validate(self) -> None:
         if self.nl_type not in ['NLELAST', 'PLASTIC', 'PLSTRN']:
@@ -207,8 +214,10 @@ class MATS1(MaterialDependence):
             else:
                 #limit2 = blank(card, 8, 'limit2')
                 limit2 = None
-        assert len(card) <= 9, f'len(MATS1 card) = {len(card):d}\ncard={card}'
-        return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, tid=tid, comment=comment)
+        strmeas = string_or_blank(card, 10, 'strmeas')
+
+        assert len(card) <= 10, f'len(MATS1 card) = {len(card):d}\ncard={card}'
+        return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas, tid=tid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment: str=''):
