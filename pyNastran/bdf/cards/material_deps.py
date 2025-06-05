@@ -232,7 +232,7 @@ class MATS1(MaterialDependence):
             a comment for the card
 
         """
-        (mid, tid, nl_type_int, h, yf, hr, limit1, limit2, strmeas) = data
+        (mid, tid, nl_type_int, h, yf, hr, limit1, limit2, strmeas_int) = data
         if nl_type_int == 1:
             nl_type = 'NLELAST'
         elif nl_type_int == 2:
@@ -242,6 +242,16 @@ class MATS1(MaterialDependence):
         else:  # pragma: no cover
             raise RuntimeError(f'Invalid Type:  mid={mid}; Type={nl_type_int}; must be 1=NLELAST, '
                                '2=PLASTIC, or 3=PLSTRN')
+
+        strmeas_map = {
+            None: 0,  # NULL
+            'UNDEF': 1,
+            'ENG': 2,
+            'TRUE': 3,
+            'CAUCHY': 4,
+        }
+        strmeas = strmeas_map[strmeas_int]
+
         return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas, tid=tid, comment=comment)
 
     def Yf(self) -> str:
