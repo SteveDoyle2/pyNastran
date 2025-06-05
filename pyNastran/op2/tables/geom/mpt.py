@@ -837,17 +837,17 @@ class MPT:
         MATS1(503,5,90) - record 12
         """
         op2: OP2Geom = self.op2
-        ntotal = 44 * self.factor  # 11*4
-        s = Struct(mapfmt(op2._endian + b'3ifiiff3i', self.size))
+        ntotal = 48 * self.factor  # 12*4
+        s = Struct(mapfmt(op2._endian + b'3ifiiff4i', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
-            (mid, tid, Type, h, yf, hr, limit1, limit2, a, bmat, c) = out
+            (mid, tid, Type, h, yf, hr, limit1, limit2, strmeas, a, bmat, c) = out
             assert a == 0, a
             assert bmat == 0, bmat
             assert c == 0, c
-            data_in = [mid, tid, Type, h, yf, hr, limit1, limit2]
+            data_in = [mid, tid, Type, h, yf, hr, limit1, limit2, strmeas]
             if op2.is_debug_file:
                 op2.binary_debug.write('  MATS1=%s\n' % str(out))
             mat = MATS1.add_op2_data(data_in)

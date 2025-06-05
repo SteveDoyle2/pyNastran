@@ -601,8 +601,9 @@ class TestMaterials(unittest.TestCase):
         yf = None
         limit1 = None
         limit2 = None
+        strmeas = None
         unused_mats1 = model.add_mats1(
-            mid, nl_type, h, hr, yf, limit1, limit2,
+            mid, nl_type, h, hr, yf, limit1, limit2, strmeas,
             tid=tid, comment='mats1')
         save_load_deck(model, xref='standard', punch=True, run_remove_unused=False)
 
