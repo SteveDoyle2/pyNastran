@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 from numpy import array
 
-from cpylog import get_logger
+from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF, CTRIA3, CQUAD4
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.materials import get_mat_props_S
@@ -21,15 +21,18 @@ try:
 except ModuleNotFoundError:
     IS_MATPLOTLIB = False
 
+
 class TestShells(unittest.TestCase):
     def test_pshell(self):
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         pid = 10
         pshell = model.add_pshell(pid, mid1=1, mid2=2, mid3=3, mid4=4, tst=3.14)
         assert ' 3.14' in pshell.rstrip(), pshell.rstrip()
 
-    def _make_cquad4(self, model, rho, nu, G, E, t, nsm):
+    def _make_cquad4(self, model: BDF,
+                     rho: float, nu: float, G: float, E: float,
+                     t: float, nsm: float):
         eid = 10
         pid = 20
         mid = 30
@@ -241,7 +244,7 @@ class TestShells(unittest.TestCase):
         self._make_ctria3(model, rho, nu, G, E, t, nsm)
 
     def test_cquad4_01(self):
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         eid = 10
         pid = 20
@@ -588,7 +591,7 @@ class TestShells(unittest.TestCase):
 
     def test_cshear(self):
         """tests a PSHEAR/CSHEAR"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -640,7 +643,7 @@ class TestShells(unittest.TestCase):
 
     def test_shells(self):
         """tests a CTRIA3/CQUAD4/PSHELL and CTRIA6/CQUAD8/CQUAD/PCOMP"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -741,7 +744,7 @@ class TestShells(unittest.TestCase):
 
     def test_trax(self):
         """tests a CTRAX3/CTRAX6/???"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -819,7 +822,7 @@ class TestShells(unittest.TestCase):
 
     def test_ctriar_cquadr(self):
         """tests a CTRIAR/PSHELL/MAT8"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -863,7 +866,8 @@ class TestShells(unittest.TestCase):
         save_load_deck(model)
 
     def test_cplsts3(self):
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         # cplsts3 = model.cplsts3
         # cplsts4 = model.cplsts4
         model.add_grid(1, [0., 0., 0.])
@@ -915,7 +919,7 @@ class TestShells(unittest.TestCase):
 
     def test_cplsts34(self):
         """tests a CPLSTS3, CPLSTS4/PSHELL/MAT8"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -963,7 +967,7 @@ class TestShells(unittest.TestCase):
 
     def test_cplstn34(self):
         """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -1011,7 +1015,7 @@ class TestShells(unittest.TestCase):
 
     def test_cplsts68(self):
         """tests a CPLSTS6, CPLSTS8/PSHELL/MAT8"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(5, [.5, 0., 0.])
@@ -1057,7 +1061,7 @@ class TestShells(unittest.TestCase):
 
     def test_cplstn68(self):
         """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(5, [.5, 0., 0.])
@@ -1103,7 +1107,7 @@ class TestShells(unittest.TestCase):
 
     def test_ctrishell68(self):
         """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(5, [.5, 0., 0.])
@@ -1152,7 +1156,7 @@ class TestShells(unittest.TestCase):
         pid_pshell = 11
 
         mid = 100
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -1219,7 +1223,7 @@ class TestShells(unittest.TestCase):
 
     def test_cquadx4(self):
         """tests a CQUADX4"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         eid = 1
         pid = 2
@@ -1251,7 +1255,7 @@ class TestShells(unittest.TestCase):
 
     def test_ctria6_cquad8_cquad9(self):
         """tests a CQUAD8 and CQUAD9"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         eid = 1
         pid = 10
@@ -1330,7 +1334,7 @@ class TestShells(unittest.TestCase):
 
     def test_cquadx8(self):
         """tests a CQUADX, CTRIAX, CTRIAX6"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         eid = 1
         pid = 10
@@ -1373,7 +1377,7 @@ class TestShells(unittest.TestCase):
 
     def test_shell_mcid(self):
         """tests that mcids=0 are correctly identified as not 0.0 and thus not dropped"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -1424,7 +1428,7 @@ class TestShells(unittest.TestCase):
 
     def test_abd_1(self):
         """tests some ABD matrix functionality for a PCOMP"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -1491,7 +1495,7 @@ class TestShells(unittest.TestCase):
 
     def test_abd_2(self):
         """tests some ABD matrix functionality for a PCOMP"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         model = BDF(log=log)
 
         #--------------------------

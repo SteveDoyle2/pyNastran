@@ -3131,23 +3131,26 @@ class CPLSTS4(CPLSTx4):
     """
     type = 'CPLSTS4'
 
-    def __init__(self, eid, pid, nids,
-                 theta=0.0, tflag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment=''):
-        CPLSTx4.__init__(self)
-        if comment:
-            self.comment = comment
-        self.eid = eid
-        self.pid = pid
-        assert len(nids) == 4, nids
-        self.nodes = self.prepare_node_ids(nids)
-        self.theta = theta
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 theta: float=0.0, tflag: int=0,
+                 T1: float=1.0, T2: float=1.0, T3: float=1.0, T4: float=1.0,
+                 comment: str=''):
+        # tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4,
+        super().__init__(eid, pid, nids, theta=theta, comment=comment)
+        # if comment:
+        #     self.comment = comment
+        # self.eid = eid
+        # self.pid = pid
+        # assert len(nids) == 4, nids
+        # self.nodes = self.prepare_node_ids(nids)
+        # self.theta = theta
         self.tflag = tflag
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
         self.T4 = T4
-        self.nodes = self.prepare_node_ids(nids)
-        assert len(self.nodes) == 4
+        # self.nodes = self.prepare_node_ids(nids)
+        # assert len(self.nodes) == 4
 
     def validate(self):
         assert len(set(self.nodes)) == 4, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
