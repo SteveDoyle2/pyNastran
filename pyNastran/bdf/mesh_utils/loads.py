@@ -21,13 +21,14 @@ if TYPE_CHECKING:  # pragma: no cover
         PLOAD1, PLOAD2, PLOAD4,
         FORCE, FORCE1, FORCE2,
         MOMENT, MOMENT1, MOMENT2, SLOAD)
-    FgLoad = (PLOAD | PLOAD2 | PLOAD4 | \
-              FORCE | FORCE1 | FORCE2 | \
+    FgLoad = (PLOAD | PLOAD2 | PLOAD4 |
+              FORCE | FORCE1 | FORCE2 |
               MOMENT | MOMENT1 | MOMENT2 | SLOAD)
 
 
 def isnan(value: Optional[float]) -> bool:
     return value is None or np.isnan(value)
+
 
 def sum_forces_moments(model: BDF,
                        p0: int | np.ndarray,
@@ -205,10 +206,11 @@ def sum_forces_moments(model: BDF,
     F2, M2 = transform_load(F, M, cid0, cid, model)
     return F2, M2
 
+
 def _pload1_total(model: BDF, loadcase_id: int, load: PLOAD1,
                   scale: float, xyz: np.ndarray,
                   F: np.ndarray, M: np.ndarray,
-                  p: float) -> tuple[np.ndarray, np.ndarray]:
+                  p: float) -> None:
     """helper method for ``sum_forces_moments``"""
     elem = load.eid_ref
     if elem.type in ['CBAR', 'CBEAM']:
@@ -218,6 +220,7 @@ def _pload1_total(model: BDF, loadcase_id: int, load: PLOAD1,
             loadcase_id, elem.type, load.type))
     else:
         raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
+
 
 def _pload1_elements(model: BDF, loadcase_id: int,
                      load: PLOAD1, scale: float, eids: list[int],
@@ -229,6 +232,7 @@ def _pload1_elements(model: BDF, loadcase_id: int,
     if elem.eid not in eids:
         return
     _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p)
+
 
 def _pload1_bar_beam(model: BDF, unused_loadcase_id: int,
                      load: PLOAD1, elem: CBAR, scale: float,
@@ -258,7 +262,7 @@ def _pload1_bar_beam(model: BDF, unused_loadcase_id: int,
         x1 = load.x1
         x2 = load.x2
         #compute_fx = False
-    elif load.scale == 'LE': # x1, x2 are actual lengths
+    elif load.scale == 'LE':  # x1, x2 are actual lengths
         x1 = load.x1 / L
         x2 = load.x2 / L
     elif load.scale == 'LEPR':
@@ -280,11 +284,11 @@ def _pload1_bar_beam(model: BDF, unused_loadcase_id: int,
     assert x1 <= x2, 'x1=%s x2=%s' % (x1, x2)
     if x1 != x2:
         # continue
-        if not load.type in ['FX', 'FY', 'FZ']:
-            model.log.warning('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s'% (
+        if load.type not in ['FX', 'FY', 'FZ']:
+            model.log.warning('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s' % (
                 x1, x2, load.scale, str(elem), str(load)))
             return
-        model.log.warning('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s'% (
+        model.log.warning('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s' % (
             x1, x2, load.scale, str(elem), str(load)))
 
         # y = (y2-y1)/(x2-x1)*(x-x1) + y1
@@ -343,6 +347,7 @@ def _pload1_bar_beam(model: BDF, unused_loadcase_id: int,
                        p1, p2,
                        F, M, p)
     return
+
 
 def sum_forces_moments_elements(model: BDF,
                                 p0: int | np.ndarray,
@@ -730,6 +735,7 @@ def _pload4_total(loadcase_id: int, load: PLOAD4, scale: float,
         M += mi
     return F, M
 
+
 def _pload4_elements(loadcase_id: int, load: PLOAD4,
                      scale: float, eids: list[int],
                      xyz: dict[int, np.ndarray],
@@ -745,6 +751,7 @@ def _pload4_elements(loadcase_id: int, load: PLOAD4,
         F += fi
         M += mi
     return F, M
+
 
 def _get_pload4_area_centroid_normal_nface(
         loadcase_id: int, load: PLOAD4, elem: CTRIA3 | CQUAD4,
@@ -859,6 +866,7 @@ def _get_pload4_area_centroid_normal_nface(
         raise NotImplementedError(msg)
     return nodes, area, face_centroid, normal, nface
 
+
 def _pload4_helper(loadcase_id: int, load: PLOAD4, scale: float,
                    elem: CTRIA3 | CQUAD4,
                    xyz: dict[int, np.ndarray],
@@ -889,6 +897,7 @@ def _pload4_helper(loadcase_id: int, load: PLOAD4, scale: float,
             load.surf_or_line, str(load))
         raise NotImplementedError(msg)
     return fi, mi
+
 
 def _get_area_normal(axb: np.ndarray,
                      nodes: list[int],
@@ -921,6 +930,7 @@ def _mean_pressure_on_pload4(pressures: list[float],
         pressure = load.pressures[0]
     return pressure
 
+
 def _get_load_summation_point(model: BDF, p0: np.ndarray,
                               cid: int=0) -> np.ndarray:
     """
@@ -943,7 +953,7 @@ def _get_load_summation_point(model: BDF, p0: np.ndarray,
         p = np.array(p0)
     return p
 
-def _pload4_helper_line(load: PLOAD4, load_dir: str,
+def _pload4_helper_line(load: PLOAD4, load_dir: np.ndarray,
                         elem: CQUAD4 | CTRIA3, scale: float,
                         pressures: list[float], nodes: list[int],
                         xyz: dict[int, np.ndarray],
@@ -1062,18 +1072,20 @@ def get_static_force_vector_from_subcase_id(model: BDF,
         F = _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof)
     return F
 
+
 def get_ndof(model: BDF, subcase: Subcase) -> tuple[int, int, int]:
     """gets the size of the DOFs"""
     ndof_per_grid = 6
     if 'HEAT' in subcase:
         ndof_per_grid = 1
     ngrid = model.card_count['GRID'] if 'GRID' in model.card_count else 0
-    nspoint = len(model.spoints) # if 'SPOINT' in model.card_count else 0
-    nepoint = len(model.epoints) # if 'EPOINT' in model.card_count else 0
+    nspoint = len(model.spoints)  # if 'SPOINT' in model.card_count else 0
+    nepoint = len(model.epoints)  # if 'EPOINT' in model.card_count else 0
     ndof = ngrid * ndof_per_grid + nspoint + nepoint
     #print(f'ngrid={ngrid} nspoint={nspoint}')
     assert ndof > 0, model.card_count
     return ngrid, ndof_per_grid, ndof
+
 
 def _get_loadid_ndof(model: BDF, subcase_id: int) -> tuple[int, int, int]:
     """helper method for ``get_static_force_vector_from_subcase_id``"""
@@ -1083,6 +1095,7 @@ def _get_loadid_ndof(model: BDF, subcase_id: int) -> tuple[int, int, int]:
         load_id, unused_options = subcase['LOAD']
     unused_ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
     return load_id, ndof_per_grid, ndof
+
 
 def _get_dof_map(model: BDF) -> dict[tuple[int, int], int]:
     """helper method for ``get_static_force_vector_from_subcase_id``"""
@@ -1161,6 +1174,7 @@ def _Fg_vector_from_loads(model: BDF, loads: list[FgLoad],
         skipped_load_types.sort()
         log.warning(f'skipping {skipped_load_types} in Fg')
     return Fg
+
 
 def _force_to_local(cd_ref: Coord, vector: np.ndarray) -> np.ndarray:
     #if cd_ref.type[-1] in ['C', 'S']:
@@ -1241,6 +1255,7 @@ def _add_force(Fg: np.ndarray,
         Fg[irow] += fglobal[dof]
     return show_warning
 
+
 def _add_pload2(Fg: np.ndarray, dof_map: dict[int, int],
                 model: BDF, load: PLOAD2) -> None:
     """adds the PLOAD2 loads to Fg"""
@@ -1262,6 +1277,7 @@ def _add_pload2(Fg: np.ndarray, dof_map: dict[int, int],
                 irow = dof_map[(nid, dof+1)]
                 Fg[irow] += fglobal[dof]
             #model.log.warning('PLOAD2 havent been verified')
+
 
 def _add_pload(Fg: np.ndarray,
                dof_map: dict[int, int],

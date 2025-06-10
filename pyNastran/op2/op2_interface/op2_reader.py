@@ -4431,9 +4431,9 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
          cref, bref, sref, *outi,
          title, subtitle, subcase) = out
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy} symxz={symxz}\n'
-                    f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
-        assert max(outi) == 0, outi
-        assert min(outi) == 0, outi
+                  f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
+        if max(outi) != 0 or min(outi) != 0:
+            log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
         device_code = acode % 10
         #imode10 = point_device
@@ -4564,8 +4564,8 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
                   f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
         assert zero == 0, zero
-        assert max(outi) == 0, outi
-        assert min(outi) == 0, outi
+        if max(outi) != 0 or min(outi) != 0:
+            log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
         device_code = acode % 10
         #imode10 = point_device
@@ -4693,8 +4693,8 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
                   f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
         assert zero == 0, zero
-        assert max(outi) == 0, outi
-        assert min(outi) == 0, outi
+        if max(outi) != 0 or min(outi) != 0:
+            log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
         device_code = acode % 10
         #imode10 = point_device
@@ -4831,8 +4831,8 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
          *outi,
          title, subtitle, subcase) = out
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
-        assert max(outi) == 0, outi
-        assert min(outi) == 0, outi
+        if max(outi) != 0 or min(outi) != 0:
+            log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
         device_code = acode % 10
         #imode10 = point_device
@@ -4952,8 +4952,8 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}')
         log.debug(f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
         #assert zero == 0, zero
-        assert max(outi) == 0, outi
-        assert min(outi) == 0, outi
+        if max(outi) != 0 or min(outi) != 0:
+            log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
         device_code = acode % 10
         #imode10 = point_device
@@ -5090,8 +5090,8 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
         log.debug(f'  name=[{name}]')
         assert one_a == 1, one_a
         assert one_b == 1, one_b
-        assert max(outi) == 0, outi
-        assert min(outi) == 0, outi
+        if max(outi) != 0 or min(outi) != 0:
+            log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
         device_code = acode % 10
         #imode10 = point_device

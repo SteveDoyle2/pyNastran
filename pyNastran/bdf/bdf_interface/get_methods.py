@@ -12,27 +12,27 @@ if TYPE_CHECKING:  # pragma: no cover
         BDF, Element, Property, Material, ThermalMaterial, RigidElement,
         CAEROs, PAEROs, SPLINEs)
     from pyNastran.bdf.cards.coordinate_systems import Coord
-    from pyNastran.bdf.cards.nodes import POINT, GRID, SPOINT, EPOINT # , SPOINTs, EPOINTs, SEQGP
+    from pyNastran.bdf.cards.nodes import POINT, GRID, SPOINT, EPOINT  # , SPOINTs, EPOINTs, SEQGP
     from pyNastran.bdf.cards.aero.aero import (
         #AECOMP, AECOMPL
         AEFACT, AELINK,
         AELIST,
-        AEPARM, AESURF, # AESURFS,
+        AEPARM, AESURF,  # AESURFS,
         CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
         PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
         #MONPNT1, MONPNT2, MONPNT3,
         SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     )
-    from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM # CSSCHD, TRIM2, DIVERG
+    from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM  # CSSCHD, TRIM2, DIVERG
     from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST
     # MKAERO1, MKAERO2
     # ----------------------------------------------------
 
     from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
     from pyNastran.bdf.cards.properties.mass import PMASS, NSM1, NSML, NSML1, NSM, NSMADD
-    from pyNastran.bdf.cards.constraints import (SPCADD, SPC1, # SPC,
+    from pyNastran.bdf.cards.constraints import (SPCADD, SPC1,  # SPC,
                                                  #MPC,
-                                                 MPCADD) # SUPORT1, SUPORT
+                                                 MPCADD)  # SUPORT1, SUPORT
     #from pyNastran.bdf.cards.deqatn import DEQATN
     from pyNastran.bdf.cards.dynamic import (
         #DELAY, DPHASE,
@@ -58,7 +58,7 @@ if TYPE_CHECKING:  # pragma: no cover
         ZONA)
 
     from pyNastran.bdf.cards.optimization import (
-        DCONADD, DCONSTR, DESVAR, DDVAL, # DOPTPRM, DLINK,
+        DCONADD, DCONSTR, DESVAR, DDVAL,  # DOPTPRM, DLINK,
         DRESP1, DRESP2, DRESP3,
         DVCREL1, DVCREL2,
         DVMREL1, DVMREL2,
@@ -71,6 +71,7 @@ if TYPE_CHECKING:  # pragma: no cover
                                                 TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                                 TABLES1, TABLEST, TABLEHT, TABLEH1,
                                                 TABRND1, TABRNDG)
+
 
 class GetMethods(BDFAttributes):
     """defines various methods to access low level BDF data"""

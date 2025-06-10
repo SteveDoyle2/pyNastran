@@ -238,6 +238,7 @@ class LOAD(LoadCombination):
         self.load_ids = self.get_load_ids()
         self.load_ids_ref = None
 
+
 class CLOAD(LoadCombination):
     """
     Static Load Combination for Superelement Loads (Superposition)
@@ -2906,7 +2907,8 @@ class PLOAD4(Load):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-def update_pload4_vector(pload4: PLOAD4, normal, cid: int):
+
+def update_pload4_vector(pload4: PLOAD4, normal: np.ndarray, cid: int) -> np.ndarray:
     """helper method"""
     if np.abs(pload4.nvector).max() == 0.:
         # element surface normal
