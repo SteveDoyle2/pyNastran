@@ -1416,7 +1416,7 @@ def check_case(sol: int,
 
     elif sol in {200, 'DESOPT'}:
         _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log,
-                            ierror=ierror, nerrors=nerrors)
+                            ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
     elif sol in [114, 116, 118]:
         # cyclic statics, buckling, frequency
         pass
@@ -1437,7 +1437,7 @@ def check_case(sol: int,
                  'PARAMS', 'PRINT68', 'TABTSTB', 'TSTGINO', 'UPWARD', 'USERDMAP',
                  'U24'}:
         pass
-    else:
+    else:  # pramga: no cover
         msg = f'SOL = {sol!r}\n'
         msg += str(subcase)
         raise NotImplementedError(msg)
@@ -1678,7 +1678,7 @@ def _check_case_sol_200(sol: int,
     elif analysis == 'MCEIG':  # modal complex eigenvalues
         solution = 110
         check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
-    else:
+    else:  # pragma: no cover
         msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
         raise NotImplementedError(msg)
 
