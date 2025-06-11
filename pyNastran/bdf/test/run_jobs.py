@@ -67,7 +67,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     recursive = args.recursive
     debug = args.debug
     #print(args)
-    skip_files = args.skip
+    skip_files = args.skip if args.skip else []
     nastran_args = args.args
     process_all = args.all
     if nastran_args is None or len(nastran_args) == 0:

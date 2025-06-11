@@ -18,12 +18,13 @@ MODEL_PATH = PKG_PATH / '..' / 'models'
 class TestBdfUtils(unittest.TestCase):
     def test_host_jobs(self):
         str_model_path = str(MODEL_PATH)
-        nfiles = cmd_line_host_jobs(['bdf', 'host_jobs', str_model_path, '--test', '--nmax', '2'], quiet=True)
+        nfiles = cmd_line_host_jobs([
+            'bdf', 'host_jobs', str_model_path, '--test', '--nmax', '2'], quiet=True)
 
     def test_run_jobs_path(self):
         str_model_path = str(MODEL_PATH)
         nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str_model_path, '--cleanup', '-r', '--test'], quiet=True)
-        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str_model_path, '--cleanup', '-r', '--test'])
+        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str_model_path, '--cleanup', '-r', '--test'], quiet=True)
         assert nfiles >= 1, nfiles  # 105
 
         extensions = ['.dat', '.bdf']
@@ -39,7 +40,9 @@ class TestBdfUtils(unittest.TestCase):
         extensions = ['.dat', '.bdf']
         str_model_path = str(MODEL_PATH)
 
-        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str_model_path, str_model_path, '--cleanup', '-r', '--test'])
+        nfiles = cmd_line_run_jobs([
+            'bdf', 'run_jobs', str_model_path, str_model_path,
+            '--cleanup','-r', '--test'], quiet=True)
 
         bdf_files = get_bdf_filenames_to_run(str_model_path, extensions, recursive=True)
         assert len(bdf_files) >= 10, len(bdf_files)  # 105
@@ -54,10 +57,12 @@ class TestBdfUtils(unittest.TestCase):
         # out_filename = str(MODEL_PATH / 'run_files.out')
         out_filename = 'run_files.out'
 
-        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str_model_path, str_model_path,
-                                    '-r', '--outfile', out_filename, '--test'])
-        nfiles = cmd_line_run_jobs(['bdf', 'run_jobs', str_model_path, str_model_path,
-                                    '-r', '--infile', out_filename, '--test'])
+        nfiles = cmd_line_run_jobs([
+            'bdf', 'run_jobs', str_model_path, str_model_path,
+            '-r', '--outfile', out_filename, '--test'], quiet=True)
+        nfiles = cmd_line_run_jobs([
+            'bdf', 'run_jobs', str_model_path, str_model_path,
+            '-r', '--infile', out_filename, '--test'], quiet=True)
 
     def test_get_femap_comments_dict(self):
         """tests:

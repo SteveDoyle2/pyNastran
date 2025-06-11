@@ -181,7 +181,8 @@ def host_jobs(host_dirnames: PathLike,  # | list[PathLike],
             if run:
                 rename_file(run_filename1, run_filename2)
             nfiles = run_jobs_by_filenames(
-                command_line_args_list, exe_paths_dict, log, #cleanup=cleanup,
+                command_line_args_list, exe_paths_dict, log,
+                #cleanup=cleanup,
                 run=run)
             #asdf
         time.sleep(2)
@@ -357,11 +358,11 @@ def run_jobs_by_filenames(command_line_args: list[list[str]],
     return nfiles
 
 
-def main():
+def main():  # pragma: no cover
     dirname = '.'
     args = ['bdf', 'host_jobs', dirname]
     cmd_line_host_jobs(argv=args)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
