@@ -28,6 +28,8 @@ class TestBdfUtils(unittest.TestCase):
         nfiles = cmd_line_run_jobs(args, quiet=True)
         assert nfiles >= 1, nfiles  # 105
 
+    def _test_run_jobs_path2(self):
+        str_model_path = str(MODEL_PATH)
         extensions = ['.dat', '.bdf']
         bdf_files = get_bdf_filenames_to_run(MODEL_PATH, extensions, recursive=True)
         assert len(bdf_files) >= 10, len(bdf_files)  # 105
