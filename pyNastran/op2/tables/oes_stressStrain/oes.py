@@ -2273,8 +2273,10 @@ class OES(OP2Common2):
         assert op2.num_wide * 4 * self.factor == ntotal, f'numwide*4={op2.num_wide*4} ntotal={ntotal} element_name={op2.element_name!r}\n{op2.code_information()}'
         return n, nelements, ntotal
 
-    def _oes_cbeam(self, data, ndata, dt, is_magnitude_phase,
-                   result_type, prefix, postfix):
+    def _oes_cbeam(self, data: bytes, ndata: int,
+                   dt: int | float, is_magnitude_phase: bool,
+                   result_type: int,
+                   prefix: str, postfix: str) -> tuple[int, int, int]:
         """
         reads stress/strain for element type:
          - 2 : CBEAM

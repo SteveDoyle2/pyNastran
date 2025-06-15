@@ -99,6 +99,14 @@ class OP2(OP2_Scalar, OP2Writer):
         if mode is not None:
             self.set_mode(mode)
         make_geom = False
+
+        # Interlacing only applies to 64-bit strings
+        #   Non-interlaced string:
+        #    - 'ABCDEFGH        '
+        #   Interlaced string:
+        #    - 'ABCD    EFGH    '
+        # MSC likes to be different, so they interlace, while
+        # NX does not. Non-interlaced strings are easier to parse.
         self.is_interlaced = True
         assert make_geom is False, make_geom
         OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
@@ -111,7 +119,8 @@ class OP2(OP2_Scalar, OP2Writer):
         if hasattr(self, 'h5_file') and self.h5_file is not None:
             self.h5_file.close()
 
-    def object_attributes(self, mode: str='public', keys_to_skip: Optional[list[str]]=None,
+    def object_attributes(self, mode: str='public',
+                          keys_to_skip: Optional[list[str]]=None,
                           filter_properties: bool=False) -> list[str]:
         """
         List the names of attributes of a class as strings. Returns public
@@ -200,7 +209,8 @@ class OP2(OP2_Scalar, OP2Writer):
             raise
         return is_equal
 
-    def assert_op2_equal(self, op2_model, skip_results: Optional[list[str]]=None,
+    def assert_op2_equal(self, op2_model,
+                         skip_results: Optional[list[str]]=None,
                          stop_on_failure: bool=True, debug: bool=False) -> bool:
         """
         Diffs the current op2 model vs. another op2 model.
