@@ -3939,7 +3939,31 @@ class AddContact:
     def __init__(self, add_methods: AddMethods):
         self._add_methods = add_methods
 
-    def add_bsurfs(self, bsurfs_id, eids, g1s, g2s, g3s, comment='') -> BSURFS:
+    # glue
+    def add_bgset(self, glue_id: int,
+                  sids: list[int],
+                  tids: list[int],
+                  sdists: list[float],
+                  exts: list[float],
+                  comment: str='', sol: int=101):
+        bgset = BGSET(glue_id, sids, tids, sdists, exts,
+                      comment=comment, sol=101)
+        self._add_methods.add_bgset_object(bgset)
+        return bgset
+
+    def add_bgadd(self, glue_id: int, glue_ids: list[int],
+                  comment: str='') -> BGADD:
+        """Creates a BCTADD card"""
+        bgadd = BGADD(glue_id, glue_ids, comment=comment)
+        self._add_methods.add_bgadd_object(bgadd)
+        return bgadd
+
+    #---------------------------
+    def add_bsurfs(self, bsurfs_id: int, eids: list[int],
+                   g1s: list[int],
+                   g2s: list[int],
+                   g3s: list[int],
+                   comment: str='') -> BSURFS:
         """Creates a BSURFS card"""
         bsurfs = BSURFS(bsurfs_id, eids, g1s, g2s, g3s, comment=comment)
         self._add_methods.add_bsurfs_object(bsurfs)
@@ -3959,7 +3983,8 @@ class AddContact:
         self._add_methods.add_bctset_object(bctset)
         return bctset
 
-    def add_bctadd(self, csid, contact_sets, comment='') -> BCTADD:
+    def add_bctadd(self, csid: int, contact_sets: list[int],
+                   comment: str='') -> BCTADD:
         """Creates a BCTADD card"""
         bctadd = BCTADD(csid, contact_sets, comment=comment)
         self._add_methods.add_bctadd_object(bctadd)

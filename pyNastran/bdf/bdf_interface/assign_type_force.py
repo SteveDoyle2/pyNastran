@@ -37,11 +37,13 @@ def _force_integer(svalue: str) -> int:
     sline = svalue.split('.')
     if len(sline) == 2:
         avalue = int(sline[0])
+        if sline[1] == '':
+            return avalue
+
         bvalue = int(sline[1])
         if bvalue != 0:
             raise ValueError()
-        else:
-            return avalue
+        return avalue
 
 
 def force_double(card: BDFCard, ifield: int, fieldname: str,
@@ -234,6 +236,10 @@ def parse_components(card: BDFCard, ifield: int, fieldname: str) -> str:
     #assert isinstance(ifield, int), type(ifield)
     #assert isinstance(fieldname, str), type(fieldname)
     svalue = card.field(ifield)
+
+    if isinstance(svalue, integer_types):
+        svalue = str(svalue)
+
     if svalue is None or '.' in svalue:
         dtype = _get_dtype(svalue)
         msg = ('%s = %r (field #%s) on card must be an integer (not %s).\n'

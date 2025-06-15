@@ -7,12 +7,28 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_interface.subcase.utils import write_set, collapse_thru_packs
+from pyNastran.bdf.bdf_interface.encoding import decode_lines
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
 
 
 class CaseControlTest(unittest.TestCase):
+    def test_decode_lines(self):
+        alines = ['aaa', 'bbb']
+        blines = [b'aaa', b'bbb']
+        lines = decode_lines(blines, 'utf8')
+        assert lines == alines
+        lines = decode_lines(blines, 'utf-8')
+        assert lines == alines
+
+        lines = decode_lines(alines, 'utf-8')
+        assert lines == alines
+
+        clines = [1, 'aaa']
+        with self.assertRaises(TypeError):
+            decode_lines(clines)
+
     def test_case_control_null_1(self):
         model = BDF(debug=False)
         model.create_subcases()

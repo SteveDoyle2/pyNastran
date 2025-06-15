@@ -7,6 +7,12 @@ from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 RUN_CONTACT = False
 
 class TestContact(unittest.TestCase):
+    # def test_bgset_bgadd(self):
+    #     model = BDF(debug=False)
+    #     add_id = 42
+    #     set_ids = [10]
+    #     model.add_bgadd(add_id, set_ids)
+
     def test_bcbody_01(self):
         model = BDF(debug=False)
         cgid = 2

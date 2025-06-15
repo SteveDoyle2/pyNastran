@@ -1073,11 +1073,15 @@ class ACMODL(Element):
         fset = None if self.fset == 0 else self.fset
         sset = None if self.sset == 0 else self.sset
         if is_msc(self.nastran_version):
+            #     | ACMODL | INTER |  INFOR  |   FSET   | SSET | NORMAL | METHOD | SKNEPSG | DSKNEPS  |
+            #     |        | INTOL | ALLSSET | SRCHUNIT |      |        |        |         |          |
             list_fields = ['ACMODL', self.inter, infor,
                            fset, sset, self.normal, self.method,
                            self.sk_neps, self.dsk_neps, self.intol,
                            self.all_set, self.search_unit, ]
+            assert isinstance(self.dsk_neps, float), self.dsk_neps
         else:
+            bbb
             list_fields = ['ACMODL', None, infor, fset, sset, self.normal, None, self.olvpang, self.search_unit,
                            self.intol, self.area_op, None, None, self.ctype]
             #list_fields = [

@@ -23,6 +23,19 @@ class TestAcoustic(unittest.TestCase):
      * AMLREG
 
     """
+    def test_acmodl(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log, mode='msc')
+        infor = 'CAT'
+        fset = 11
+        sset = 12
+        acmodl = model.add_acmodl(infor, fset, sset,
+                                  nastran_version='msc')
+        acmodl.raw_fields()
+        model.cross_reference()
+        save_load_deck(model)
+
+
     def test_acoustic1(self):
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'nx' / 'test_vba' / 'ac108vatv5tc.bdf'

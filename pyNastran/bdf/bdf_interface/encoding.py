@@ -1,4 +1,4 @@
-def decode_lines(lines_bytes, encoding: str):
+def decode_lines(lines_bytes, encoding: str) -> list[str]:
     if isinstance(lines_bytes[0], bytes):
         lines_str = [line.decode(encoding) for line in lines_bytes]
     elif isinstance(lines_bytes[0], str):
