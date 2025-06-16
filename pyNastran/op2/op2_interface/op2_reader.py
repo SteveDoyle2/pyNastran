@@ -4465,13 +4465,13 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         idata = 0
         encoding = b'<'
         structi2 = Struct(encoding + b'8s ii f')
-        type_type_map = {
+        trim_type_map = {
             0: 'Intercept',
             1: 'Rigid body',
             2: 'Control surface',
             3: 'General control',
         }
-        type_type_map = {
+        trim_status_map = {
             1: 'Free',
             2: 'Free',
             3: 'Fixed',
