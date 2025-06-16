@@ -4465,15 +4465,31 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         idata = 0
         encoding = b'<'
         structi2 = Struct(encoding + b'8s ii f')
+        type_type_map = {
+            0: 'Intercept',
+            1: 'Rigid body',
+            2: 'Control surface',
+            3: 'General control',
+        }
+        type_type_map = {
+            1: 'Free',
+            2: 'Free',
+            3: 'Fixed',
+            4: 'Scheduled',
+            5: 'Linked',
+            6: 'Scheduled',
+        }
         while idata*4 < len(data):
             datai = data[idata*4:(idata+5)*4]
             #print(op2.show_data(datai))
-            name, ai, bi, value = structi2.unpack(datai)
+            name, trim_type_int, trim_status_int, value = structi2.unpack(datai)
+            trim_type = trim_type_map[trim_type_int]
+            trim_status = trim_status_map[trim_status_int]
             name = name.rstrip()
             #print(f'name={name!r} ai={ai} bi={bi} value={value}')
             trim_vars[name] = {
-                'a': ai,
-                'b': bi,
+                'trim_type': trim_type,
+                'trim_status': trim_status,
                 'value': value}
             # (b'INTERCPT', 1, 3, 1.0)
             # (b'ANGLEA  ', 1, 1, 0.104)
@@ -4512,7 +4528,7 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
     data = op2_reader._read_record(debug=False)
 
     #n = 8
-    #'OAEROP  '
+    #'OAEROF  '
     #op2_reader._skip_record()
     op2_reader.read_3_markers([-2, 1, 0])
     data = op2_reader._read_record(debug=False)
@@ -4551,11 +4567,21 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
         #4  SUBCASE     I Subcase identification number
         #5  POINTID     I Device code + 10*Point identification number
         #6  MACH       RS
-        #8  KFREQ      RS Reduced frequency – METHOD = K
-        #9  FCODE       I Format Code = '1'
+        #8  Q          RS Dynamic pressure
+        #9  config     8d aerodynamic configuration name
         #10 NUMWDE      I Number of words per entry in DATA record, set to 4
-        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
-        # 12 UNDEF(39)    None
+        # 11 SYMXY I Aerodynamic configuration XY symmetry
+        #  -1 = SYMMETRIC
+        #   0 = ASYMMETRIC
+        #   1 = ANTISYMMETRIC
+        # 12 SYMXZ I Aerodynamic configuration XZ symmetry
+        #  -1 = ANTISYMMETRIC
+        #   0 = ASYMMETRIC
+        #   1 = SYMMETRIC
+        # 13 CHORD RS Reference chord length
+        # 14 SPAN RS Reference span length
+        # 15 AREA RS Reference area
+        # 16 UNDEF(39)     None
         #(60, 2002, 4, 1, 10, 1039199643, 1067257355, 0, 1, 4, 1)
         (acode, tcode, method_int, subcase_id,
          point_device, mach, q, aerosg2d, numwide, zero, coord,
@@ -4575,7 +4601,6 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
         title = title.strip()
         subtitle = subtitle.strip()
         subcase = subcase.strip()
-        trim_vars = {}
 
         #print(f'title = {title!r}')
         #print(f'subtitle = {subtitle!r}')
@@ -4613,14 +4638,14 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
     #     'label': np.array(labels),
     #     'force': np.array(forces, dtype='float64'),
     # }
-    nodes = np.array(grid_list, dtype='int32'),
-    label = np.array(label_list),
-    force = np.array(force_list, dtype='float64'),
+    nodes = np.array(grid_list, dtype='int32')
+    label = np.array(label_list)
+    force = np.array(force_list, dtype='float64')
 
     aforce = AeroForce(
         subcase, title, subtitle,
         mach, q, cref, bref, sref,
-        nodes, force)
+        nodes, force, label)
     op2.op2_results.trim_forces[subcase_id] = aforce
     return
 
@@ -4678,13 +4703,6 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         #2  TCODE(C)    I 2002
         #3  METHOD      I Method flag; 1=K, 2=KE, 3=PK, 4=PKNL
         #4  SUBCASE     I Subcase identification number
-        #5  POINTID     I Device code + 10*Point identification number
-        #6  MACH       RS
-        #8  KFREQ      RS Reduced frequency – METHOD = K
-        #9  FCODE       I Format Code = '1'
-        #10 NUMWDE      I Number of words per entry in DATA record, set to 4
-        #11 MODENUM     I Mode number – METHOD = KE, PK, or PKNL
-        # 12 UNDEF(39)    None
         #(60, 2002, 4, 1, 10, 1039199643, 1067257355, 0, 1, 4, 1)
         (acode, tcode, method_int, subcase_id,
          point_device, mach, q, aerosg2d, numwide, zero, coord,

@@ -11,7 +11,7 @@ from pyNastran.op2.op2 import read_op2
 
 from pyNastran.converters.format_converter import cmd_line_format_converter
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d, nastran_to_cart3d_filename
-from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
+from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl, nastran_to_stl_filename
 from pyNastran.converters.nastran.nastran_to_surf import nastran_to_surf, clear_out_solids
 from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot, nastran_to_tecplot_filename
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
@@ -593,13 +593,28 @@ class TestNastran(unittest.TestCase):
 
     def test_nastran_to_stl(self):
         """tests nastran_to_stl"""
-        bdf_filename = os.path.join(MODEL_PATH, 'plate', 'plate.bdf')
-        stl_filename = os.path.join(MODEL_PATH, 'plate', 'plate.stl')
+        bdf_filename = MODEL_PATH / 'plate' / 'plate.bdf'
+        stl_filename = MODEL_PATH / 'plate' / 'plate.stl'
         log = SimpleLogger(level='warning', encoding='utf-8')
-        nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=log)
+        nastran_to_stl_filename(bdf_filename, stl_filename, is_binary=False, log=log)
+
+        model = BDF(debug=None)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_mat1(1000, 3.0e7, None, 0.3)
+        model.add_pshell(100, 1000, 0.1)
+        model.add_conrod(10, 1000, [1, 2])
+        model.add_ctria3(1, 100, [1, 2, 3])
+        model.add_ctriar(2, 100, [1, 2, 3])
+        model.add_cquad4(3, 100, [1, 2, 3, 4])
+        model.add_cquadr(4, 100, [1, 2, 3, 4])
+        stl_filename2 = MODEL_PATH / 'plate' / 'spike.stl'
+        nastran_to_stl(model, stl_filename2)
 
     def test_nastran_to_tecplot_case(self):
-        bdf_filename = os.path.join(MODEL_PATH, 'plate', 'plate.bdf')
+        bdf_filename = MODEL_PATH / 'plate' / 'plate.bdf'
         log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_model = read_bdf(bdf_filename, log=log, debug=False)
 
