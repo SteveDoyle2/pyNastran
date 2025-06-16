@@ -817,7 +817,8 @@ class MATT2(MaterialDependenceThermal):
         mid = 1
         return MATT2(mid, g11_table=None)
 
-    def __init__(self, mid: int, g11_table: int=0, g12_table: int=0, g13_table: int=0,
+    def __init__(self, mid: int,
+                 g11_table: int=0, g12_table: int=0, g13_table: int=0,
                  g22_table: int=0, g23_table: int=0, g33_table: int=0, rho_table: int=0,
                  a1_table: int=0, a2_table: int=0, a3_table: int=0,
                  ge_table: int=0, st_table: int=0, sc_table: int=0, ss_table: int=0,
@@ -1098,7 +1099,8 @@ class MATT3(MaterialDependenceThermal):
         mid = 1
         return MATT3(mid, ex_table=None)
 
-    def __init__(self, mid: int, ex_table: int=0, eth_table: int=0, ez_table: int=0,
+    def __init__(self, mid: int,
+                 ex_table: int=0, eth_table: int=0, ez_table: int=0,
                  nuth_table: int=0, nuxz_table: int=0, rho_table: int=0,
                  gzx_table: int=0, ax_table: int=0, ath_table: int=0, az_table: int=0,
                  ge_table: int=0, comment: str=''):
@@ -1992,7 +1994,7 @@ class MATT9(MaterialDependenceThermal):
         mid = 1
         return MATT9(mid, g11_table=None)
 
-    def __init__(self, mid,
+    def __init__(self, mid: int,
                  g11_table: int=0, g12_table: int=0, g13_table: int=0, g14_table: int=0,
                  g15_table: int=0, g16_table: int=0,
                  g22_table: int=0, g23_table: int=0, g24_table: int=0,

@@ -23,7 +23,40 @@ class TestAcoustic(unittest.TestCase):
      * AMLREG
 
     """
-    def test_acmodl(self):
+    def test_panel(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        panel_id = 24
+        names = ['CAT', 'FROG']
+        set_ids = [37, 42]
+        model.add_panel(panel_id, names, set_ids, comment='panel')
+
+    def test_pacabs(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        pid = 10
+        cutfr = 20.0
+        m = 1.0
+        b = 2.0
+        k = 3.0
+        model.add_pacabs(pid, cutfr,
+                         b, k, m)
+        save_load_deck(model)
+
+    def test_acmodl_nx(self):
+        log = get_logger(level='warning')
+
+        model = BDF(log=log, mode='nx')
+        infor = 'CAT'
+        fset = 11
+        sset = 12
+        acmodl = model.add_acmodl(infor, fset, sset,
+                                  nastran_version='nx')
+        acmodl.raw_fields()
+        model.cross_reference()
+        save_load_deck(model)
+
+    def test_acmodl_msc(self):
         log = get_logger(level='warning')
         model = BDF(log=log, mode='msc')
         infor = 'CAT'
@@ -34,7 +67,6 @@ class TestAcoustic(unittest.TestCase):
         acmodl.raw_fields()
         model.cross_reference()
         save_load_deck(model)
-
 
     def test_acoustic1(self):
         log = get_logger(level='warning')

@@ -488,9 +488,12 @@ class PACABS(Element):
         m = 1.
         return PACABS(pid, cutfr, b, k, m)
 
-    def __init__(self, pid, cutfr, b, k, m,
-                 synth=True, tid_resistance=None, tid_reactance=None, tid_weight=None,
-                 comment=''):
+    def __init__(self, pid: int, cutfr: float,
+                 b: float, k: float, m: float,
+                 synth: bool=True,
+                 tid_resistance: int=0,
+                 tid_reactance: int=0,
+                 tid_weight: int=0, comment: str=''):
         """
         Creates a PACABS card
 
@@ -500,11 +503,11 @@ class PACABS(Element):
             Property identification number.
         synth : bool; default=True
             Request the calculation of B, K, and M from the tables TIDi below
-        tid_resistance : int; default=None
+        tid_resistance : int; default=0
             Identification of the TABLEDi entry that defines the resistance.
-        tid_reactance : int; default=None
+        tid_reactance : int; default=0
             Identification of the TABLEDi entry that defines the reactance.
-        tid_weight : int; default=None
+        tid_weight : int; default=0
             Identification of the TABLEDi entry that defines the weighting function.
         cutfr : float
             Cutoff frequency for tables referenced above. (Real > 0.0)
@@ -528,7 +531,7 @@ class PACABS(Element):
         self.m = m
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PACABS card from ``BDF.add_card(...)``
 
@@ -549,7 +552,7 @@ class PACABS(Element):
         b = double_or_blank(card, 8, 'b')
         k = double_or_blank(card, 9, 'k')
         m = double_or_blank(card, 10, 'm')
-        assert len(card) <= 8, f'len(PACABS card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 11, f'len(PACABS card) = {len(card):d}\ncard={card}'
 
         assert synth in ['YES', 'NO'], synth
         is_synth = synth == 'YES'
@@ -575,7 +578,7 @@ class PACABS(Element):
         fields = self.raw_fields()
         return print_card_8(fields)
 
-def is_msc(nastran_version: str):
+def is_msc(nastran_version: str) -> bool:
     return nastran_version == 'msc'
 
 
@@ -1081,7 +1084,6 @@ class ACMODL(Element):
                            self.all_set, self.search_unit, ]
             assert isinstance(self.dsk_neps, float), self.dsk_neps
         else:
-            bbb
             list_fields = ['ACMODL', None, infor, fset, sset, self.normal, None, self.olvpang, self.search_unit,
                            self.intol, self.area_op, None, None, self.ctype]
             #list_fields = [
