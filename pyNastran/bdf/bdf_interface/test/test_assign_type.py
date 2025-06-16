@@ -11,7 +11,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     parse_components_or_blank,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import (
-    force_integer, force_double, parse_components as force_components
+    force_integer, force_double, force_integer_or_blank,
+    force_double_or_string,
+    parse_components as force_components
 )
 
 class TestAssignType(unittest.TestCase):
@@ -308,6 +310,46 @@ class TestAssignType(unittest.TestCase):
         exact = [1, 2, 3, SyntaxError, SyntaxError, SyntaxError]
         self.run_function(force_integer, card, exact)
 
+    def test_force_integer_or_blank(self):
+        """
+        value = force_integer_or_blank(card, n, fieldname)
+        """
+        # integer
+        self.check_integer(force_integer_or_blank)
+
+        # float
+        self.assertEqual(force_integer_or_blank(BDFCard([1.]), 0, 'field'), 1)
+        self.assertEqual(force_integer_or_blank(BDFCard(['1.']), 0, 'field'), 1)
+        #with self.assertRaises(SyntaxError):
+            #integer(BDFCard(['cat']), 0, 'field')
+
+        # string
+        with self.assertRaises(SyntaxError):
+            force_integer_or_blank(BDFCard(['a']), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            force_integer_or_blank(BDFCard(['1b']), 0, 'field')
+
+        self.check_blank(force_integer_or_blank)
+
+        with self.assertRaises(SyntaxError):
+            force_integer_or_blank(BDFCard(['1+2']), 0, 'field')
+
+        card = [1, '2', '3.', 'C', None, '']
+        exact = [1, 2, 3, SyntaxError, None, None]
+        default = [None, None, None, None, None, None]
+        self.run_function_default(force_integer_or_blank, card, exact, default)
+
+    def test_force_double_or_string(self):
+        """tests the force_double_or_string function"""
+        # out of range
+        with self.assertRaises(SyntaxError):
+            force_double_or_string(BDFCard([1.]), 1, 'field')
+        self.assertEqual(1.e-9, force_double_or_string(BDFCard(['1-9']), 0, 'field'))
+        self.assertEqual(1.e+9, force_double_or_string(BDFCard(['1+9']), 0, 'field'))
+
+        self.check_double(force_double_or_string, is_strict=False)
+        self.check_string(force_double_or_string, check_dash=False)
+
     def test_double(self):
         """
         value = double(card, n, fieldname)
@@ -489,7 +531,6 @@ class TestAssignType(unittest.TestCase):
         default = [None, None, None, None, None, None]
         self.run_function_default(integer_or_blank, card, exact, default)
 
-
     def check_integer(self, method):
         """common integer checks"""
         self.assertEqual(1, method(BDFCard([1]), 0, 'field'))
@@ -502,7 +543,7 @@ class TestAssignType(unittest.TestCase):
         with self.assertRaises(SyntaxError):
             method(BDFCard(['-1 3']), 0, 'field')
 
-    def check_double(self, method):
+    def check_double(self, method, is_strict: bool=True):
         """common double checks"""
         method(BDFCard([3.0]), 0, 'field')
         method(BDFCard(['4.0']), 0, 'field')
@@ -534,8 +575,11 @@ class TestAssignType(unittest.TestCase):
         self.assertEqual(1.e+9, method(BDFCard(['1.D+9']), 0, 'field'))
 
         #if check_space:
-        with self.assertRaises(SyntaxError):
-            method(BDFCard(['-9. 31-4']), 0, 'field')
+        if is_strict:
+            with self.assertRaises(SyntaxError):
+                method(BDFCard(['-9. 31-4']), 0, 'field')
+        else:
+            self.assertEqual(method(BDFCard(['-9. 31-4']), 0, 'field'), -9.31e-4)
 
 
     def check_string(self, method, check_dash=True):
