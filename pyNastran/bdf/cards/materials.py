@@ -4066,7 +4066,7 @@ class MATHP(HyperelasticMaterial):
         self.tabd = tabd
 
     @classmethod
-    def add_card(cls, card; BDFCard, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a MATHP card from ``BDF.add_card(...)``
 
