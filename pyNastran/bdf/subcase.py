@@ -6,7 +6,7 @@ from typing import Any, TYPE_CHECKING
 from numpy import ndarray
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.utils import deprecated # object_attributes,
+#from pyNastran.utils import deprecated # object_attributes,
 
 from pyNastran.bdf.bdf_interface.subcase.utils import (
     write_stress_type, write_set, expand_thru_case_control)
@@ -132,20 +132,20 @@ class Subcase:
         _copy.params.update(self.params)
         return _copy
 
-    def deprecated(self, old_name: str, new_name: str, deprecated_version: str) -> None:
-        """
-        Throws a deprecation message and crashes if past a specific version.
-
-        Parameters
-        ----------
-        old_name : str
-            the old function name
-        new_name : str
-            the new function name
-        deprecated_version : float
-            the version the method was first deprecated in
-        """
-        return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
+    # def deprecated(self, old_name: str, new_name: str, deprecated_version: str) -> None:
+    #     """
+    #     Throws a deprecation message and crashes if past a specific version.
+    #
+    #     Parameters
+    #     ----------
+    #     old_name : str
+    #         the old function name
+    #     new_name : str
+    #         the new function name
+    #     deprecated_version : float
+    #         the version the method was first deprecated in
+    #     """
+    #     return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def add_op2_data(self, data_code: dict[str, Any], msg: str, log: SimpleLogger) -> None:
         """
@@ -1160,18 +1160,18 @@ class Subcase:
             key: str = entry[0]
             if 'SET' in key[0:3]:
                 if key == 'SET':  # handles "SET = ALL"
-                    key = 0
+                    set_id = 0
                 else:  # handles "SET 100 = 1,2,3"
                     sline = key.split(' ')
                     try:
-                        key = int(sline[1])
+                        set_id = int(sline[1])
                     except Exception:
                         msg = f'error caclulating key; sline={sline}'
                         raise RuntimeError(msg)
 
                 # store the integer ID and the SET-type list
-                set_dict[key] = entry
-                set_keys.append(key)
+                set_dict[set_id] = entry
+                set_keys.append(set_id)
             else:
                 # only store the entries before the SET cards
                 list_before.append(entry)
@@ -1273,7 +1273,7 @@ def update_param_name(param_name: str) -> str:
     elif param_name.startswith('ELFO'):
         param_name = 'FORCE'
     elif param_name.startswith('ELST'):
-        param_name = 'STRESS' # or ELSTRESS
+        param_name = 'STRESS'  # or ELSTRESS
     elif param_name.startswith('FORC'):
         param_name = 'FORCE'
     elif param_name.startswith('FREQ'):
@@ -1317,8 +1317,8 @@ def update_param_name(param_name: str) -> str:
     elif param_name.startswith('THER'):
         param_name = 'THERMAL'
     elif param_name.startswith('VECT'):
-        #param_name = 'PRESSURE' # or VECTOR
-        param_name = 'DISPLACEMENT' # or VECTOR
+        #param_name = 'PRESSURE'  # or VECTOR
+        param_name = 'DISPLACEMENT'  # or VECTOR
     elif param_name.startswith('VELO'):
         param_name = 'VELOCITY'
     elif param_name.startswith('TITL'):
@@ -1373,7 +1373,7 @@ def get_analysis_code(sol: int) -> int:
         105: 7,  # pre-buckling
         106: 10,  # nonlinear statics
         107: 9,  # complex eigenvalues
-        108 : 5,  # frequency
+        108: 5,  # frequency
         111: 5,
         112: 6,
         114: 1,
@@ -1391,6 +1391,7 @@ def get_analysis_code(sol: int) -> int:
     approach_code = codes[sol]
     #print('approach_code = %s' % approach_code)
     return approach_code
+
 
 def get_device_code(options: Any, unused_value: Any) -> int:
     """
@@ -1427,6 +1428,7 @@ def get_device_code(options: Any, unused_value: Any) -> int:
     #if device_code==0:
     #    device_code=1  # PRINT
     return device_code
+
 
 def get_table_code(sol: int, table_name: str, unused_options) -> int:
     """

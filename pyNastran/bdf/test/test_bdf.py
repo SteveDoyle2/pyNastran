@@ -1343,7 +1343,7 @@ def check_case(sol: int,
             subcase, msg, RuntimeError, log, ierror, nerrors)
         #ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
                                           #RuntimeError, log, ierror, nerrors)
-    elif sol in {8, 108}: # freq
+    elif sol in {8, 108}:  # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol in {109, 'DTRAN', 'SEDTRAN'}:  # time
         check_for_flag_in_subcases(fem2, subcase, ('TIME', 'TSTEP', 'TSTEPNL'))
@@ -2003,6 +2003,7 @@ def _check_case_parameters(subcase: Subcase,
         unused_nlparm = fem.NLParm(nlparm_id, f', which is required for {subcase}')
     return ierror
 
+
 def _check_case_parameters_aero(subcase: Subcase, fem: BDF, sol: int,
                                 ierror: int=0, nerrors: int=100,
                                 stop_on_failure: bool=True) -> int:
@@ -2053,6 +2054,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDF, sol: int,
         allowed_sols = [145, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'FMETHOD', log, ierror, nerrors)
     return ierror
+
 
 def test_get_cards_by_card_types(model: BDF) -> None:
     """Verifies the ``model.get_cards_by_card_types`` method works"""
@@ -2171,7 +2173,7 @@ def test_bdf_argparse(argv=None):
         help='disables BDF checks.  Checks run the methods on \n'
         '                 every element/property to test them.  May fails if a \n'
         '                 card is fully not supported (default=False)')
-    stop_check_group.add_argument('--stop', action='store_true', # dev
+    stop_check_group.add_argument('--stop', action='store_true',  # dev
                                   help='Stop after first read/write (default=False)\n')
 
     width_group = parent_parser.add_mutually_exclusive_group()
@@ -2226,7 +2228,7 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument('--crash', nargs=1, type=str,
                                help='Crash on specific cards (e.g. CGEN,EGRID)')
     parent_parser.add_argument('--ignore', nargs=1, type=str,
-                                  help='Ignores specific cards (e.g. DMI,RBE2)\n')
+                               help='Ignores specific cards (e.g. DMI,RBE2)\n')
 
     parent_parser.add_argument('--dumplines', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
@@ -2247,7 +2249,7 @@ def test_bdf_argparse(argv=None):
 
     #argv
     #print(argv)
-    from pyNastran.utils.arg_handling import argparse_to_dict, update_message # swap_key
+    from pyNastran.utils.arg_handling import argparse_to_dict, update_message  # swap_key
     update_message(parent_parser, usage, args, examples)
 
     #try:
@@ -2277,6 +2279,7 @@ def log_error(sol: int, error_solutions, msg: str, log: SimpleLogger) -> None:
         raise RuntimeError(msg)
     else:
         log.warning(msg)
+
 
 def _set_version(args: dict[str, Any]):
     """sets the version flag"""
@@ -2313,6 +2316,7 @@ def _set_version(args: dict[str, Any]):
 #stop         = False
 #version      = False
 #xref         = True
+
 
 def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
@@ -2504,7 +2508,7 @@ def main(argv=None):
             #filter_unused=data['filter'],
             xref=data['xref'],
             # xref_safe=data['xref_safe'],
-            check=not(data['check']),
+            check=not data['check'],
             punch=data['punch'],
             size=size,
             is_double=is_double,
