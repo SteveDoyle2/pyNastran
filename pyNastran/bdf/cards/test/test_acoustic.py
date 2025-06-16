@@ -26,10 +26,9 @@ class TestAcoustic(unittest.TestCase):
     def test_panel(self):
         log = get_logger(level='warning')
         model = BDF(log=log)
-        panel_id = 24
         names = ['CAT', 'FROG']
         set_ids = [37, 42]
-        model.add_panel(panel_id, names, set_ids, comment='panel')
+        model.add_panel(names, set_ids, comment='panel')
 
     def test_pacabs(self):
         log = get_logger(level='warning')
