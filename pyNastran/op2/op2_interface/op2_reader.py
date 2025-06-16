@@ -93,8 +93,10 @@ if TYPE_CHECKING:  # pragma: no cover
     #def __init__(self, op2_reader):
         #self.op2_reader = op2_reader
 
+
 class SubTableReadError(Exception):
     pass
+
 
 GEOM_TABLES = MSC_GEOM_TABLES + NX_GEOM_TABLES
 
@@ -398,7 +400,6 @@ class OP2Reader:
             self.log.debug(f'mode={mode!r} version={version_str!r}')
         self.op2.set_mode(mode)
         self.op2.set_table_type()
-
 
     def _read_mklist(self):
         """
@@ -749,7 +750,7 @@ class OP2Reader:
                 print('  name=%r' % name)
                 print('  comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
                 print('  coeff=%r' % coeff)
-                print('  word=%r (e, f, g)=(%s, %s, %s)' % (word, e, f, g)) # (1, 2, 0)
+                print('  word=%r (e, f, g)=(%s, %s, %s)' % (word, e, f, g))  # (1, 2, 0)
                 assert cp in [0, 2], cp
                 assert bi == 0, bi
                 assert c == 0, c
@@ -862,7 +863,6 @@ class OP2Reader:
                 op2._frequencies, op2.matrices,
                 #  :)       ?       :)      :)2     ?       ?
                 ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
-
 
     def _read_dict(self) -> None:
         """testing the KDICT"""
@@ -990,19 +990,19 @@ class OP2Reader:
         assert len(data) == 28 * factor, len(data)
 
         self.read_3_markers([-2, 1, 0])
-        data = self._read_record() # CSTM
+        data = self._read_record()  # CSTM
         #print(self.show_data(data, types='s'))
         assert len(data) == 8 * factor, len(data)
 
         self.read_3_markers([-3, 1, 0])
 
         coord_type_map = {
-            1 : 'CORD2R',
-            2 : '???',
-            3 : 'CORD2S',
-            5 : 'GMSURF',
-            7 : '???',
-            8 : '???',
+            1: 'CORD2R',
+            2: '???',
+            3: 'CORD2S',
+            5: 'GMSURF',
+            7: '???',
+            8: '???',
         }
         #1. Coordinate system type:
         #- 0 = unknown (seriously?)
@@ -1027,8 +1027,7 @@ class OP2Reader:
             itable -= 1
         markers = self.get_nmarkers(1, rewind=False)
 
-        if not op2.read_mode == 1: # or b'GEOM1' in op2.table_names:
-
+        if not op2.read_mode == 1:  # or b'GEOM1' in op2.table_names:
         #if not is_geometry: # or op2.read_mode == 1 or b'GEOM1' in op2.table_names:
             return
         nblocks = len(blocks)
@@ -1275,7 +1274,7 @@ class OP2Reader:
         # (301, 1, 8, 0, 0, 0, 0)
         # (???, ?, n, ?, ?, ?, ?)
         data, ndata = read_record_ndata()
-        assert ndata == 28, self.show_data(data) # 7*4
+        assert ndata == 28, self.show_data(data)  # 7*4
 
         self.read_3_markers([-2, 1, 0])
 
@@ -1384,7 +1383,6 @@ class OP2Reader:
         assert idata[6] == 0, f'idata[6]={idata[6]}; idata={idata}'
         #print(self.show_data(data))
 
-
         self.read_3_markers([-2, 1, 0])
         data = self._read_record()
 
@@ -1469,7 +1467,6 @@ class OP2Reader:
         data = self._read_record()
         #self.show_data(data, types='qd', endian=None, force=False)
 
-
         self.read_3_markers([-4, 1, 0])
         data = self._read_record()
         #self.show_data(data, types='ifqds', endian=None, force=False)
@@ -1483,7 +1480,6 @@ class OP2Reader:
             #print((aint, bint, cfloat, spaces, m1a, m1b))
             spaces = spaces.decode('latin1').strip()
             print((aint, bint, cfloat, spaces, m1a, m1b))
-
 
         ints = np.frombuffer(data, op2.idtype8)
         #print('ints', ints)
@@ -1560,7 +1556,7 @@ class OP2Reader:
         #print('--------------------')
 
         self.read_3_markers([-3, 1, 0])
-        unused_data = read_record() # nids 1-117
+        unused_data = read_record()  # nids 1-117
 
         self.read_3_markers([-4, 1, 0])
         data = read_record()
@@ -1625,7 +1621,7 @@ class OP2Reader:
 
     def read_table_name4(self, table_names: list[bytes]) -> str:
         assert isinstance(table_names, list), table_names
-        data, ndata = self._read_record_ndata4() # GPL
+        data, ndata = self._read_record_ndata4()  # GPL
         if ndata == 8:
             table_name_bytes, = self.op2.struct_8s.unpack(data)
         elif ndata == 12:
@@ -1641,7 +1637,7 @@ class OP2Reader:
 
     def read_table_name8(self, table_names: list[bytes]) -> str:
         assert isinstance(table_names, list), table_names
-        data, ndata = self._read_record_ndata8() # GPL
+        data, ndata = self._read_record_ndata8()  # GPL
         if ndata == 16:
             table_name_bytes, = self.op2.struct_16s.unpack(data)
         elif ndata == 24:
@@ -1653,7 +1649,7 @@ class OP2Reader:
             #self.show_data(data[16:], types='ifsq')
             raise SubTableReadError(f'cannot read table_name={table_names}')
 
-        is_interlaced_block = self.op2.is_interlaced # is_nx
+        is_interlaced_block = self.op2.is_interlaced  # is_nx
         table_name_bytes = reshape_bytes_block(table_name_bytes,
                                                is_interlaced_block=is_interlaced_block)
         table_name_str = table_name_bytes.decode('utf-8').strip()
@@ -1695,7 +1691,6 @@ class OP2Reader:
             self._read_deck_section(bulk_filename, save_lines,
                                     write_deck, mode='a',
                                     read_mode=2)
-
 
     def _read_deck_section(self, deck_filename: str, save_lines: bool,
                            write_deck: bool, mode='w', read_mode: int=1) -> list[str]:
@@ -1834,7 +1829,7 @@ class OP2Reader:
                 self.op2.case_control_deck.subcases[subcase.id] = subcase
                 #print(subcase)
             except Exception:
-                pass #raise
+                pass  # raise
             self.read_3_markers([itable, 1, 0])
             marker = self.get_marker1(rewind=True, macro_rewind=False)
 
@@ -1958,7 +1953,7 @@ class OP2Reader:
                 data = self._read_record()
                 ints = np.frombuffer(data, op2.idtype)
                 nints = len(ints)
-                floats = np.frombuffer(data, op2.fdtype) # .reshape(nints//7, 7)
+                floats = np.frombuffer(data, op2.fdtype)  # .reshape(nints//7, 7)
 
                 # 1 NVAL I Number of values
                 # 2 NCRV I Number of sections/solution (i.e., number of curves)
@@ -1983,7 +1978,7 @@ class OP2Reader:
                     nvalues = ints[i]
                     ncurves = ints[i+1]
                     keyword = ints[i+2]  # 10000+(SOLN*10)+DATTYP
-                    base = keyword - 10000 # (SOLN*10)+DATTYP
+                    base = keyword - 10000  # (SOLN*10)+DATTYP
                     solution = base // 10
                     datatype = base % 10
                     assert datatype in [1, 2, 3, 4, 5, 6, 7, 8], datatype
@@ -2040,8 +2035,8 @@ class OP2Reader:
         assert b9 == 123, out
         #print(a, b1, b2, b3, b4, b5, b6, b7, b8, b9)
         #'STWING  COMPLETE STRUCTURAL WING                                '
-        #(345, 0, 0, 0, 0, 1347635524, 1230459987, 538986318, 1, 0, 123)
-        #(4.834479701920619e-43, 0.0, 0.0, 0.0, 0.0, 14179176448.0, 881989.1875, 1.35761196e-19, 1.4012e-45, 0.0, 1.72359)
+        #(345, 0,   0,   0,   0,   1347635524,   1230459987,   538986318,      1, 0, 123)
+        #(345, 0.0, 0.0, 0.0, 0.0, 14179176448.0, 881989.1875, 1.35761196e-19, 1, 0.0, 1.72359)
         #self.show_data(data[96:], types='ifs', endian=None)
 
         self.read_3_markers([-4, 1, 0])
@@ -2060,7 +2055,7 @@ class OP2Reader:
         if len(data) == 28:
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
+                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n' % (
                     subtable_name, month, day, year, zero, one))
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
             self._print_month(month, day, year, zero, one)
@@ -2154,20 +2149,20 @@ class OP2Reader:
 
         self.read_3_markers([-4, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
-        if markers != [0]: # n4a=0
+        if markers != [0]:  # n4a=0
             #self.show_data(data_header, types='ifsd')
             # (1, 4, 0, '    ')
             #(421, 4, 128, '    ')
             #(814, 4, 256, '    ')
             data = self._read_record()
 
-            assert len(data) == n4words*4, 'n4words=%s len(data)=%s n4words*4=%s'  % (n4words, len(data), n4words*4)
+            assert len(data) == n4words*4, 'n4words=%s len(data)=%s n4words*4=%s' % (n4words, len(data), n4words*4)
 
             if table_name == b'PCOMPTS':
                 # (11, 3, 0)
                 pass
                 #self.show_data(data, types='ifs', endian=None)
-            elif 0: # pramga: no cover
+            elif 0:  # pramga: no cover
                 i = 0
                 j = 0
                 s1 = Struct(b'< 3i 4s')
@@ -2186,7 +2181,7 @@ class OP2Reader:
 
         self.read_3_markers([-5, 1, 0])
         data = self._read_record()
-        assert len(data) == n5words * 4, 'n5words=%s len(data)=%s n5words*4=%s'  % (n5words, len(data), n5words*4)
+        assert len(data) == n5words * 4, 'n5words=%s len(data)=%s n5words*4=%s' % (n5words, len(data), n5words*4)
 
         if table_name == b'PCOMPTS':
             # (101, 102, 103)
@@ -2302,7 +2297,7 @@ class OP2Reader:
         if ndata == 16:
             subtable_name, dummy_a, dummy_b = unpack(self._endian + b'8sii', data)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (
+                self.binary_debug.write('  recordi = [%r, %i, %i]\n' % (
                     subtable_name, dummy_a, dummy_b))
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
                 assert dummy_a == 170, dummy_a
@@ -2366,9 +2361,7 @@ class OP2Reader:
         self.read_markers([0])
         #data = self._read_record()
 
-
         #op2.show_ndata(440, types='ifs')
-
         #self.show_data(data)
 
     def read_long_block(self, expected_marker: int):
@@ -2881,6 +2874,7 @@ class OP2Reader:
         op2.n += 8 + ndata
         return data_out, ndata
     #------------------------------------------------------------------
+
     def unpack_table_name(self, data: bytes) -> bytes:
         if self.size == 4:
             return self.unpack_table_name4(data)
@@ -2964,7 +2958,7 @@ class OP2Reader:
                 table_name = self.unpack_table_name(data)
             except (NameError, MemoryError):
                 raise
-            except Exception: # struct_error:
+            except Exception:  # struct_error:
                 # we're done reading
                 op2.n = ni
                 op2.f.seek(op2.n)
@@ -2972,7 +2966,7 @@ class OP2Reader:
                 try:
                     # we have a trailing 0 marker
                     self.read_markers([0], macro_rewind=rewind)
-                except Exception: #struct_error:
+                except Exception:  # struct_error:
                     # if we hit this block, we have a FATAL error
                     is_special_nastran = op2._nastran_format.lower().startswith(('imat', 'autodesk'))
                     if not is_special_nastran and op2.post != -4:
@@ -3559,7 +3553,7 @@ class OP2Reader:
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
         data, ndata = self._read_record_ndata8()
 
-        is_interlaced_block = self.op2.is_interlaced # is_nx
+        is_interlaced_block = self.op2.is_interlaced  # is_nx
         subtable_name = self.get_subtable_name8(op2, data, ndata)
         subtable_name = reshape_bytes_block(
             subtable_name, is_interlaced_block=is_interlaced_block)
@@ -3572,14 +3566,14 @@ class OP2Reader:
 
     def get_subtable_name8(self, op2, data: bytes, ndata: int) -> bytes:
         is_interlaced_block = self.op2.is_nx
-        if ndata == 16: # 8*2
+        if ndata == 16:  # 8*2
             subtable_name, = op2.struct_16s.unpack(data)
             subtable_name = reshape_bytes_block(
                 subtable_name, is_interlaced_block)
             if self.is_debug_file:
                 self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
-        elif ndata == 32: # 16*2
+        elif ndata == 32:  # 16*2
             #(name1, name2, 170, 170)
             subtable_name, = op2.struct_16s.unpack(data[:16])
             assert len(subtable_name) == 16, len(subtable_name)
@@ -3588,12 +3582,12 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
-        elif ndata == 56: # 28*2
+        elif ndata == 56:  # 28*2
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'16s5q', data)
             subtable_name = reshape_bytes_block(
                 subtable_name, is_interlaced_block=is_interlaced_block)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
+                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n' % (
                     subtable_name, month, day, year, zero, one))
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
             self._print_month(month, day, year, zero, one)
@@ -3619,11 +3613,11 @@ class OP2Reader:
         elif ndata == 28:
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
+                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n' % (
                     subtable_name, month, day, year, zero, one))
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
             self._print_month(month, day, year, zero, one)
-        elif ndata == 612: # ???
+        elif ndata == 612:  # ???
             strings, ints, floats = self.show_data(data)
             msg = f'len(data) = {ndata:d}\n'
             #msg += 'strings  = %r\n' % strings
@@ -3666,7 +3660,7 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write(f'read_geom_table - {op2.table_name}\n')
         self.read_markers([-1])
-        data = self._read_record() # length=28=7*4
+        data = self._read_record()  # length=28=7*4
 
         self.read_3_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
@@ -3869,7 +3863,7 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write(f'record_length = {record_len:d}\n')
 
-        oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR'] # 'OESCP'?
+        oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR']  # 'OESCP'?
         factor = self.factor
         #print('record_len =', record_len)
         table_name = op2.table_name
@@ -4110,12 +4104,14 @@ def eqexin_to_nid_dof_doftype(eqexin1: np.ndarray,
     nid = nid[i]
     return nid, dof, doftype
 
+
 def update_op2_datacode(op2: OP2, data_code_old):
     op2.data_code = data_code_old
     for key, value in data_code_old.items():
         if key == 'size':
             continue
         setattr(op2, key, value)
+
 
 def read_dofs(op2: OP2, size: int=4) -> None:
     op2.log.debug('read_dofs')
@@ -4142,8 +4138,9 @@ def read_dofs(op2: OP2, size: int=4) -> None:
         #bbb
     #for dof in dofs:
         #print('dof', dof)
-    print()
+    #print()
     return dofs
+
 
 def get_read_skip_record(op2_reader: OP2Reader,
                          imode_skip: int) -> Callable:
@@ -4332,6 +4329,7 @@ def read_ovg(op2_reader: OP2Reader) -> None:
     op2.op2_results.vg_vf_response[subcase_id] = resp
     return
 
+
 def _skip_table(op2_reader: OP2Reader, itable: int) -> None:
     while 1:
         op2_reader.read_3_markers([itable, 1, 0])
@@ -4511,6 +4509,7 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         # is_xzsym = aero.is_symmetric_xz
     return
 
+
 def read_oaerof(op2_reader: OP2Reader) -> None:
     """aero box forces"""
     op2: OP2 = op2_reader.op2
@@ -4649,6 +4648,7 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
     op2.op2_results.trim_forces[subcase_id] = aforce
     return
 
+
 def read_oaerop(op2_reader: OP2Reader) -> None:
     """aero box pressures"""
     op2: OP2 = op2_reader.op2
@@ -4776,6 +4776,7 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         # is_xzsym = aero.is_symmetric_xz
     return
 
+
 def read_oaeroscd(op2_reader: OP2Reader) -> None:
     """stability & control derivatives"""
     op2: OP2 = op2_reader.op2
@@ -4805,10 +4806,12 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
         _skip_table(op2_reader, itable)
         return
 
-    #                              Ma q aero ? ? ? zero subcase title subtitle
-    structi = Struct(endian + b'5i f  f 8s   i i i 38i  128s    128s  128s')
+    # TODO: QRG incorrectly casts (chord, span, sref) to floats instead of integers
+    #       I think this is related to defaults for the AESURF (blank vs. specified)
+    #                              Ma q cofnig numwide symxy symxz chord,span,sref zero subcase title subtitle
+    #structf = Struct(endian + b'5i f  f 8s     i       i     i     3f              35i  128s    128s  128s')
+    structi = Struct(endian + b'5i f  f 8s     i       i     i     3i              35i  128s    128s  128s')
     while 1:
-
         #       trimid    coord
         # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
         # AEROS   1       1       131.0   2556.4  734000.01       0
@@ -4817,38 +4820,55 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
         if itablei == 0:
             break
 
+        # $       acsid   rcsid   chord   bref    sref    symxz   symxy
+        # AEROS          0       0 1.6137 7.74596       1.       0       0
+
+        # $             id    mach       q
+        # TRIM           1     0.5  50000.   URDD3    -50.    Slat      0.
+        #             Flap      0.AlrnLeft      0.AlrnRite      0.ElvnLeft      0.
+        #         ElvnRite      0.
+
+        #           (acode=12 tcode=106  0  subcase 0  mach q        config      numwide sym1 sym2
+        # ints    = (12,      106,       0, 1,      0, 0.5, 50000.0, 'AEROSG2D', 38,     -1, 1,     0, 1, 0)
+        # floats  = (12,      106,       0, 1,      0, 0.5, 50000.0, 'AEROSG2D', 38,     -1, 1,     0.0, 1.401298464324817e-45, 0.0)
         data = op2_reader._read_record(debug=False)  # table 3
-        #ni = -128*3
-        #print(op2.show_data(data[:12*4]))
-        #print(op2.show_data(data[15*4:ni]))
+        ni = -128*3
+        # op2.show_data(data[:15*4], types='ifs')
+        # op2.show_data(data[15*4:ni], types='if')
         out = structi.unpack(data)
 
-        #1  ACODE(C)    I Device code + 10*Approach Code
-        #2  TCODE(C)    I 2002
-        #3  METHOD      I Method flag; 1=K, 2=KE, 3=PK, 4=PKNL
-        #4  SUBCASE     I Subcase identification number
-        #5  POINTID     I Device code + 10*Point identification number
-        #6  MACH       RS
-        #8  KFREQ      RS Reduced frequency – METHOD = K
-        #9  FCODE       I Format Code = '1'
-        #10 NUMWDE      I Number of words per entry in DATA record, set to 4
+        # 1 ACODE(C) I Device code + 10* Approach Code = 12
+        # 2 TCODE(C) I Table code = 106
+        # 3 DATCOD   I Data code = 0
+        # 4 SUBCASE  I Subcase identification number
+        # 5 UNDEF None
+        # 6 MACHNUM      RS Mach number
+        # 7 Q            RS Dynamic pressure
+        # 8 CONFIG(2) CHAR4 Aerodynamic configuration name
+        # 10 NUMWDE       I Number of words per entry in DATA, set to 8   ## QRG is wrong...it's 38
+        # 11 SYMXY        I Aerodynamic configuration XY symmetry
+        #   -1 = SYMMETRIC
+        #    0 = ASYMMETRIC
+        #    1 = ANTISYMMETRIC
+        # 12 SYMXZ  I Aerodynamic configuration XZ symmetry
+        #   -1 = ANTISYMMETRIC
+        #    0 = ASYMMETRIC
+        #    1 = SYMMETRIC
+        # 13 CHORD RS Reference chord length  ## QRG is wrong...this is an int
+        # 14 SPAN  RS Reference span length   ## QRG is wrong...this is an int
+        # 15 AREA  RS Reference area          ## QRG is wrong...this is an int
+        # 16 UNDEF(35) None
         #
-        # 11 SYMXY I Aerodynamic configuration XY symmetry
-        #    -1 = SYMMETRIC
-        #     0 = ASYMMETRIC
-        #     1 = ANTISYMMETRIC
-        # 12 SYMXZ I Aerodynamic configuration XZ symmetry
-        #    -1 = ANTISYMMETRIC
-        #     0 = ASYMMETRIC
-        #     1 = SYMMETRIC
-        # 13 CHORD RS Reference chord length
-        # 14 SPAN RS Reference span length
-        # 15 AREA RS Reference area
         (acode, tcode, method_int, subcase_id,
          point_device, mach, q, aerosg2d, numwide, symxy, symxz,
-         *outi,
+         chord, span, sref, *outi,
          title, subtitle, subcase) = out
+
+        if not (chord, span, sref) == (0, 1, 0):
+            log.error(f'Expected {op2.table_name} (chord,span,sref) flags to be (0,1,0); got ({chord},{span},{sref})')
+
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
+        assert numwide == 38, numwide
         if max(outi) != 0 or min(outi) != 0:
             log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
@@ -4879,20 +4899,15 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
             datai = data[idata*4:(idata+numwide)*4]
             #print(datai)
             #print(op2.show_data(datai))
-            name, *data_list = structi2.unpack(datai)
-            name = name.rstrip()
+            name_bytes, *data_list = structi2.unpack(datai)
+            name = name_bytes.rstrip(b' ').decode(op2._encoding)
+            #print(name, data_list)
             data_values = np.array(data_list, dtype='float32')
             values = data_values.reshape(6, 6)
             trim_derivatives[name] = {
                 'name': name,
                 'value': values}
-            # (b'INTERCPT', 1, 3, 1.0)
-            # (b'ANGLEA  ', 1, 1, 0.104)
-            # (b'PITCH   ', 1, 3, 0.0)
-            # (b'URDD3   ', 1, 3, 2.5)
-            # (b'URDD5   ', 1, 3, 0.0)
-            # (b'PITCH   ', 1, 3, 0.0)
-            # (b'TFLAP   ', 2, 2, -0.45418)
+            # name = [REFCOEFF, ANGLEA, ELVNLEFT, ELVNRITE, URDD3, ALRNLEFT, SLAT, FLAP, ALRNRITE]
             idata += numwide
         itable -= 2
     op2_reader.read_markers([0])
@@ -4905,6 +4920,7 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
         # is_xysym = aero.is_symmetric_xy
         # is_xzsym = aero.is_symmetric_xz
     return
+
 
 def read_oaercshm(op2_reader: OP2Reader) -> None:
     """control surface position and hinge moment"""
@@ -5026,6 +5042,7 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
         # is_xysym = aero.is_symmetric_xy
         # is_xzsym = aero.is_symmetric_xz
     return
+
 
 def read_oaerohmd(op2_reader: OP2Reader) -> None:
     """hinge moment derivatives"""

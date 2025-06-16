@@ -22,7 +22,8 @@ PARAM,POST,-1
 PLOTEL,2,2356,1002
 PLOTEL3,10,2356,7996,20032
 PLOTEL4,20,2356,7996,20032,10342
-AEROS   1       1       131.1   2556.4  734000.01       0       
+$       acsid   rcsid   chord   bref    sref    symxz   symxy
+AEROS   1       1       131.1   2556.4  734000. 1       0       
 AESTAT  500     ANGLEA  
 AESTAT  501     PITCH   
 AESTAT  502     URDD3   
