@@ -4007,12 +4007,14 @@ class MATHP(HyperelasticMaterial):
                      a32=0., a23=0., a14=0., a05=0., d5=0.,
                      tab1=None, tab2=None, tab3=None, tab4=None, tabd=None, comment='')
 
-    def __init__(self, mid, a10=0., a01=0., d1=None, rho=0., av=0., tref=0., ge=0., na=1, nd=1,
+    def __init__(self, mid: int,
+                 a10=0., a01=0., d1=None, rho=0., av=0., tref=0., ge=0., na=1, nd=1,
                  a20=0., a11=0., a02=0., d2=0.,
                  a30=0., a21=0., a12=0., a03=0., d3=0.,
                  a40=0., a31=0., a22=0., a13=0., a04=0., d4=0.,
                  a50=0., a41=0., a32=0., a23=0., a14=0., a05=0., d5=0.,
-                 tab1=None, tab2=None, tab3=None, tab4=None, tabd=None, comment=''):
+                 tab1: int=0, tab2: int=0, tab3: int=0,
+                 tab4: int=0, tabd: int=0, comment: str=''):
         HyperelasticMaterial.__init__(self)
         if comment:
             self.comment = comment
@@ -4064,7 +4066,7 @@ class MATHP(HyperelasticMaterial):
         self.tabd = tabd
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a MATHP card from ``BDF.add_card(...)``
 
@@ -4114,11 +4116,11 @@ class MATHP(HyperelasticMaterial):
         a05 = double_or_blank(card, 46, 'a05', 0.)
         d5 = double_or_blank(card, 47, 'd5', 0.)
 
-        tab1 = integer_or_blank(card, 49, 'tab1')
-        tab2 = integer_or_blank(card, 50, 'tab2')
-        tab3 = integer_or_blank(card, 51, 'tab3')
-        tab4 = integer_or_blank(card, 52, 'tab4')
-        tabd = integer_or_blank(card, 56, 'tabd')
+        tab1 = integer_or_blank(card, 49, 'tab1', default=0)
+        tab2 = integer_or_blank(card, 50, 'tab2', default=0)
+        tab3 = integer_or_blank(card, 51, 'tab3', default=0)
+        tab4 = integer_or_blank(card, 52, 'tab4', default=0)
+        tabd = integer_or_blank(card, 56, 'tabd', default=0)
         assert len(card) <= 57, f'len(MATHP card) = {len(card):d}\ncard={card}'
         return MATHP(mid, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
                      a02, d2, a30, a21, a12, a03, d3, a40,
@@ -4127,7 +4129,7 @@ class MATHP(HyperelasticMaterial):
                      tab3, tab4, tabd, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a MATHP card from the OP2
 
@@ -4151,19 +4153,20 @@ class MATHP(HyperelasticMaterial):
         if continue_flag:
             (tab1, tab2, tab3, tab4, x1, x2, x3, tabd) = data[1]
         else:
-            tab1 = None
-            tab2 = None
-            tab3 = None
-            tab4 = None
-            tabd = None
+            tab1 = 0
+            tab2 = 0
+            tab3 = 0
+            tab4 = 0
+            tabd = 0
 
         return MATHP(mid, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
                      a02, d2, a30, a21, a12, a03, d3, a40,
                      a31, a22, a13, a04, d4, a50, a41,
-                     a32, a23, a14, a05, d5, tab1, tab2,
-                     tab3, tab4, tabd, comment=comment)
+                     a32, a23, a14, a05, d5,
+                     tab1, tab2, tab3, tab4, tabd,
+                     comment=comment)
 
-    def Rho(self):
+    def Rho(self) -> float:
         return self.rho
 
     def raw_fields(self):
@@ -4227,14 +4230,20 @@ class MATHP(HyperelasticMaterial):
 
         tref = set_blank_if_default(self.tref, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
+
+        tab1 = set_blank_if_default(self.tab1, 0)
+        tab2 = set_blank_if_default(self.tab2, 0)
+        tab3 = set_blank_if_default(self.tab3, 0)
+        tab4 = set_blank_if_default(self.tab4, 0)
+        tabd = set_blank_if_default(self.tabd, 0)
         list_fields = ['MATHP', self.mid, a10, a01, d1, self.rho, av, tref, ge,
                        None, na, nd, None, None, None, None, None,
                        a20, a11, a02, d2, None, None, None, None,
                        a30, a21, a12, a03, d3, None, None, None,
                        a40, a31, a22, a13, a04, d4, None, None,
                        a50, a41, a32, a23, a14, a05, d5, None,
-                       self.tab1, self.tab2, self.tab3, self.tab4,
-                       None, None, None, self.tabd]
+                       tab1, tab2, tab3, tab4,
+                       None, None, None, tabd]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -4242,6 +4251,7 @@ class MATHP(HyperelasticMaterial):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
 
 class MATEV(ViscoelasticMaterial):
     """

@@ -224,7 +224,7 @@ class TestF06Flutter(unittest.TestCase):
         """
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
         #log = get_logger2(log=None, debug=None, encoding='utf-8')
-        log = get_logger2(log=None, debug=True, encoding='utf-8')
+        log = get_logger2(log=None, debug=False, encoding='utf-8')
 
         plot_flutter_f06(
             f06_filename,
@@ -717,6 +717,8 @@ class TestF06Utils(unittest.TestCase):
         subpanel_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
         f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.f06'
         loads_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.blk'
+        nid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.nid'
+        eid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.eid'
         model = read_bdf(bdf_filename)
         export_caero_mesh(
             model,
@@ -728,12 +730,17 @@ class TestF06Utils(unittest.TestCase):
         trim_results = f06_to_pressure_loads(
             f06_filename, subpanel_caero_filename, loads_filename,
             log=None, nlines_max=1_000_000, debug=None)
+        trim_results = f06_to_pressure_loads(
+            f06_filename, subpanel_caero_filename, loads_filename,
+            nid_csv_filename=nid_csv_filename,
+            eid_csv_filename=eid_csv_filename,
+            log=None, nlines_max=1_000_000, debug=None)
 
     def test_f06_trim_freedlm(self):
         """tests read_f06_trim"""
         bdf_filename = AERO_PATH / 'freedlm' / 'freedlm.bdf'
         caero_filename = AERO_PATH / 'freedlm' / 'freedlm_caero.bdf'
-        model = read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, debug=None)
         export_caero_mesh(
             model,
             caero_bdf_filename=caero_filename,

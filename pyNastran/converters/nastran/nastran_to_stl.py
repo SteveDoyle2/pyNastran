@@ -7,15 +7,24 @@ defines:
 
 """
 import numpy as np
-from pyNastran.bdf.bdf import read_bdf
+from pyNastran.bdf.bdf import read_bdf, BDF
 from pyNastran.converters.stl.stl import STL
 from pyNastran.utils import PathLike
 
-def nastran_to_stl_filename(bdf_filename, stl_filename, is_binary=False, log=None):
+def nastran_to_stl_filename(bdf_filename: PathLike,
+                            stl_filename: PathLike,
+                            is_binary: bool=False,
+                            log=None) -> BDF:
     """Converts a Nastran model to an STL"""
-    return nastran_to_stl(bdf_filename, stl_filename, is_binary=is_binary)
+    model = nastran_to_stl(
+        bdf_filename, stl_filename, log=log,
+        is_binary=is_binary)
+    return model
 
-def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_on_failure=False):
+def nastran_to_stl(bdf_filename: PathLike,
+                   stl_filename: PathLike,
+                   is_binary: bool=False, log=None,
+                   stop_on_failure: bool=False) -> BDF:
     """
     Converts a Nastran model to an STL
 
@@ -59,16 +68,18 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_o
         nodeid_to_i_map[node_id] = i
         i += 1
     assert len(model.nodes) == i, 'model.nodes=%s i=%s' % (len(model.nodes), i)
+    etypes_to_skip = [
+        'CBAR', 'CBEAM', 'CONM2', 'RBE2', 'RBE3',
+        'CBUSH', 'CBUSH1D', 'CBUSH2D',
+        'CONROD', 'CROD',
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',]
     for unused_eid, element in sorted(model.elements.items()):
-        if element.type in ['CQUADR']:
+        # if element.type in ['CQUADR']:
+        #     continue
+        if element.type in etypes_to_skip:
             continue
-        elif element.type in ['CBAR', 'CBEAM', 'CONM2', 'RBE2', 'RBE3',
-                              'CBUSH', 'CBUSH1D', 'CBUSH2D',
-                              'CONROD', 'CROD',
-                              'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                              'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',]:
-            continue
-        elif element.type in ['CQUAD4']:
+        elif element.type in ['CQUAD4', 'CQUADR']:
             n1, n2, n3, n4 = element.node_ids
             i1, i2, i3, i4 = (nodeid_to_i_map[n1], nodeid_to_i_map[n2],
                               nodeid_to_i_map[n3], nodeid_to_i_map[n4])

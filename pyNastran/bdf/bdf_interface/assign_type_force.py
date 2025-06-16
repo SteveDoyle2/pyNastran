@@ -37,11 +37,13 @@ def _force_integer(svalue: str) -> int:
     sline = svalue.split('.')
     if len(sline) == 2:
         avalue = int(sline[0])
+        if sline[1] == '':
+            return avalue
+
         bvalue = int(sline[1])
         if bvalue != 0:
             raise ValueError()
-        else:
-            return avalue
+        return avalue
 
 
 def force_double(card: BDFCard, ifield: int, fieldname: str,
@@ -168,7 +170,8 @@ def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
             return out
     return default
 
-def force_double_or_string(card: BDFCard, ifield: int, fieldname: str):
+def force_double_or_string(card: BDFCard, ifield: int, fieldname: str,
+                           end: str=''):
     """see ``double_or_string``"""
     svalue = card.field(ifield)
 
@@ -181,11 +184,14 @@ def force_double_or_string(card: BDFCard, ifield: int, fieldname: str):
         return fvalue
 
     elif isinstance(svalue, str):
-        if len(svalue) == 0:
+        svalue_nospace = svalue.replace(' ', '')
+        if len(svalue_nospace) == 0:
             warnings.warn('%s = %r (field #%s) on card must be a float or string (not an blank).\n'
-                          'card=%s' % (fieldname, svalue, ifield, card))
+                          'card=%s' % (fieldname, svalue_nospace, ifield, card))
             raise RuntimeError('no blanks allowed')
 
+        assert len(card.card) > 0, card.card
+        card.card[ifield] = svalue_nospace
         try:
             # float
             fvalue = force_double(card, ifield, fieldname)
@@ -193,8 +199,15 @@ def force_double_or_string(card: BDFCard, ifield: int, fieldname: str):
         except SyntaxError:
             pass
 
-        #print(svalue)
-        raise NotImplementedError(svalue)
+        svalue_upper = svalue.upper()
+        if svalue_upper[0].isdigit() or '.' in svalue_upper or '+' in svalue_upper or '-' in svalue_upper or ' ' in svalue_upper:
+            card.card[ifield] = svalue
+            dtype = _get_dtype(svalue_upper)
+            raise SyntaxError('%s = %r (field #%s) on card must be an float or '
+                              'string (without a blank space; not %s).\n'
+                              'card=%s%s' % (fieldname, svalue_upper, ifield, dtype, card, end))
+        return str(svalue_upper)
+        # raise NotImplementedError(svalue)
         #try:
             #ivalue = int(svalue)
             #fvalue = float(ivalue)
@@ -234,6 +247,10 @@ def parse_components(card: BDFCard, ifield: int, fieldname: str) -> str:
     #assert isinstance(ifield, int), type(ifield)
     #assert isinstance(fieldname, str), type(fieldname)
     svalue = card.field(ifield)
+
+    if isinstance(svalue, integer_types):
+        svalue = str(svalue)
+
     if svalue is None or '.' in svalue:
         dtype = _get_dtype(svalue)
         msg = ('%s = %r (field #%s) on card must be an integer (not %s).\n'

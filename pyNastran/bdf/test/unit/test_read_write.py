@@ -538,6 +538,7 @@ class TestReadWrite(unittest.TestCase):
         include_dir = ''
         filename = 'model.bdf'
         filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True, debug=True)
         assert filename_out == PureWindowsPath('model.bdf'), 'filename_out=%r windows' % filename_out
 
         filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)

@@ -99,7 +99,8 @@ class AeroForce:
                  mach: float, q: float,
                  cref: float, bref: float, sref: float,
                  nodes: np.ndarray,
-                 force: np.ndarray):
+                 force: np.ndarray,
+                 label: np.ndarray):
         self.subcase = subcase
         self.title = title
         self.subtitle = subtitle
@@ -111,11 +112,13 @@ class AeroForce:
 
         self.nodes = nodes
         self.force = force
+        self.label = label
 
     @classmethod
     def from_f06(self, subcase: int,
                  nodes: np.ndarray,
-                 force: np.ndarray):
+                 force: np.ndarray,
+                 label: np.ndarray):
         title = ''
         subtitle = ''
         mach = np.nan
@@ -127,7 +130,7 @@ class AeroForce:
             subcase, title, subtitle,
             mach, q,
             cref, bref, sref,
-            nodes, force)
+            nodes, force, label)
         return aforce
 
     def __repr__(self) -> str:

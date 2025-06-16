@@ -3486,9 +3486,12 @@ class AddAcoustic:
         self._add_methods.add_acoustic_property_object(pacbar)
         return pacbar
 
-    def add_pacabs(self, pid, cutfr, b, k, m,
-                   synth=True, tid_resistance=None, tid_reactance=None,
-                   tid_weight=None, comment='') -> PACBAR:
+    def add_pacabs(self, pid: int, cutfr: float,
+                   b: float, k: float, m: float,
+                   synth: bool=True,
+                   tid_resistance: int=0,
+                   tid_reactance: int=0,
+                   tid_weight: int=0, comment: str='') -> PACABS:
         """
         Creates a PACABS card
 
@@ -3498,11 +3501,11 @@ class AddAcoustic:
             Property identification number.
         synth : bool; default=True
             Request the calculation of B, K, and M from the tables TIDi below
-        tid_resistance : int; default=None
+        tid_resistance : int; default=0
             Identification of the TABLEDi entry that defines the resistance.
-        tid_reactance : int; default=None
+        tid_reactance : int; default=0
             Identification of the TABLEDi entry that defines the reactance.
-        tid_weight : int; default=None
+        tid_weight : int; default=0
             Identification of the TABLEDi entry that defines the weighting function.
         cutfr : float
             Cutoff frequency for tables referenced above. (Real > 0.0)
@@ -3518,7 +3521,8 @@ class AddAcoustic:
         self._add_methods.add_acoustic_property_object(pacabs)
         return pacabs
 
-    def add_panel(self, names: list[str], set_ids: list[int]) -> None:
+    def add_panel(self, names: list[str], set_ids: list[int],
+                  comment: str='') -> None:
         fields = ['PANEL']
         for name, set_id in zip(names, set_ids):
             fields.extend([name, set_id])
@@ -3726,12 +3730,14 @@ class AddMaterial:
         self._add_methods.add_hyperelastic_material_object(mat)
         return mat
 
-    def add_mathp(self, mid, a10=0., a01=0., d1=None, rho=0., av=0., tref=0., ge=0., na=1, nd=1,
+    def add_mathp(self, mid: int,
+                  a10=0., a01=0., d1=None, rho=0., av=0., tref=0., ge=0., na=1, nd=1,
                   a20=0., a11=0., a02=0., d2=0.,
                   a30=0., a21=0., a12=0., a03=0., d3=0.,
                   a40=0., a31=0., a22=0., a13=0., a04=0., d4=0.,
                   a50=0., a41=0., a32=0., a23=0., a14=0., a05=0., d5=0.,
-                  tab1=None, tab2=None, tab3=None, tab4=None, tabd=None, comment='') -> MATHP:
+                  tab1: int=0, tab2: int=0, tab3: int=0,
+                  tab4: int=0, tabd: int=0, comment: str='') -> MATHP:
         """Creates a MATHP card"""
         mat = MATHP(mid, a10, a01, d1, rho, av, tref, ge, na, nd,
                     a20, a11, a02, d2,
@@ -3764,20 +3770,23 @@ class AddMaterial:
         self._add_methods.add_material_dependence_object(mat)
         return mat
 
-    def add_matt1(self, mid, e_table=None, g_table=None, nu_table=None, rho_table=None,
-                  a_table=None, ge_table=None, st_table=None, sc_table=None, ss_table=None,
-                  comment='') -> int:
+    def add_matt1(self, mid: int,
+                  e_table: int=0, g_table: int=0, nu_table: int=0,
+                  rho_table: int=0, a_table: int=0, ge_table: int=0,
+                  st_table: int=0, sc_table: int=0, ss_table: int=0,
+                  comment: str='') -> int:
         """Creates a MATT1 card"""
         mat = MATT1(mid, e_table, g_table, nu_table, rho_table, a_table,
                     ge_table, st_table, sc_table, ss_table,
                     comment=comment)
         return mat
 
-    def add_matt2(self, mid, g11_table=None, g12_table=None, g13_table=None, g22_table=None,
-                  g23_table=None, g33_table=None, rho_table=None,
-                  a1_table=None, a2_table=None, a3_table=None, ge_table=None,
-                  st_table=None, sc_table=None, ss_table=None,
-                  comment='') -> MATT2:
+    def add_matt2(self, mid: int,
+                  g11_table: int=0, g12_table: int=0, g13_table: int=0,
+                  g22_table: int=0, g23_table: int=0, g33_table: int=0, rho_table: int=0,
+                  a1_table: int=0, a2_table: int=0, a3_table: int=0,
+                  ge_table: int=0, st_table: int=0, sc_table: int=0, ss_table: int=0,
+                  comment: str='') -> MATT2:
         """Creates a MATT2 card"""
         mat = MATT2(mid, g11_table, g12_table, g13_table, g22_table,
                     g23_table, g33_table, rho_table,
@@ -3787,10 +3796,11 @@ class AddMaterial:
         self._add_methods.add_material_dependence_object(mat)
         return mat
 
-    def add_matt3(self, mid, ex_table=None, eth_table=None, ez_table=None,
-                  nuth_table=None, nuxz_table=None, rho_table=None,
-                  gzx_table=None, ax_table=None, ath_table=None, az_table=None,
-                  ge_table=None, comment='') -> MATT3:
+    def add_matt3(self, mid: int,
+                  ex_table: int=0, eth_table: int=0, ez_table: int=0,
+                  nuth_table: int=0, nuxz_table: int=0, rho_table: int=0,
+                  gzx_table: int=0, ax_table: int=0, ath_table: int=0, az_table: int=0,
+                  ge_table: int=0, comment: str='') -> MATT3:
         """Creates a MATT3 card"""
         mat = MATT3(mid, ex_table, eth_table, ez_table,
                     nuth_table, nuxz_table, rho_table, gzx_table,
@@ -3798,17 +3808,17 @@ class AddMaterial:
         self._add_methods.add_material_dependence_object(mat)
         return mat
 
-    def add_matt4(self, mid, k_table=None, cp_table=None, h_table=None,
-                  mu_table=None, hgen_table=None, comment='') -> MATT4:
+    def add_matt4(self, mid: int, k_table: int=0, cp_table: int=0, h_table=None,
+                  mu_table: int=0, hgen_table: int=0, comment: str='') -> MATT4:
         """Creates a MATT4 card"""
         mat = MATT4(mid, k_table, cp_table, h_table, mu_table, hgen_table,
                     comment=comment)
         self._add_methods.add_material_dependence_object(mat)
         return mat
 
-    def add_matt5(self, mid, kxx_table=None, kxy_table=None, kxz_table=None,
-                  kyy_table=None, kyz_table=None, kzz_table=None, cp_table=None,
-                  hgen_table=None, comment='') -> MATT5:
+    def add_matt5(self, mid: int, kxx_table: int=0, kxy_table: int=0, kxz_table=None,
+                  kyy_table: int=0, kyz_table: int=0, kzz_table: int=0,
+                  cp_table: int=0, hgen_table: int=0, comment: str='') -> MATT5:
         """Creates a MATT5 card"""
         mat = MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
                     kyz_table, kzz_table, cp_table,
@@ -3816,11 +3826,14 @@ class AddMaterial:
         self._add_methods.add_material_dependence_object(mat)
         return mat
 
-    def add_matt8(self, mid, e1_table=None, e2_table=None, nu12_table=None,
-                  g12_table=None, g1z_table=None, g2z_table=None, rho_table=None,
-                  a1_table=None, a2_table=None,
-                  xt_table=None, xc_table=None, yt_table=None, yc_table=None,
-                  s_table=None, ge_table=None, f12_table=None, comment='') -> MATT8:
+    def add_matt8(self, mid: int, e1_table: int=0, e2_table: int=0, nu12_table: int=0,
+                  g12_table: int=0, g1z_table: int=0, g2z_table: int=0,
+                  rho_table: int=0,
+                  a1_table: int=0, a2_table: int=0,
+                  xt_table: int=0, xc_table: int=0,
+                  yt_table: int=0, yc_table: int=0,
+                  s_table: int=0, ge_table: int=0,
+                  f12_table: int=0, comment: str='') -> MATT8:
         """Creates a MATT8 card"""
         mat = MATT8(mid, e1_table=e1_table, e2_table=e2_table, nu12_table=nu12_table,
                     g12_table=g12_table, g1z_table=g1z_table, g2z_table=g2z_table,
@@ -3830,16 +3843,20 @@ class AddMaterial:
         self._add_methods.add_material_dependence_object(mat)
         return mat
 
-    def add_matt9(self, mid,
-                  g11_table=None, g12_table=None, g13_table=None, g14_table=None,
-                  g15_table=None, g16_table=None, g22_table=None, g23_table=None,
-                  g24_table=None, g25_table=None, g26_table=None, g33_table=None,
-                  g34_table=None, g35_table=None, g36_table=None, g44_table=None,
-                  g45_table=None, g46_table=None, g55_table=None, g56_table=None,
-                  g66_table=None, rho_table=None,
-                  a1_table=None, a2_table=None, a3_table=None,
-                  a4_table=None, a5_table=None, a6_table=None,
-                  ge_table=None, comment='') -> MATT9:
+    def add_matt9(self, mid: int,
+                  g11_table: int=0, g12_table: int=0, g13_table: int=0, g14_table: int=0,
+                  g15_table: int=0, g16_table: int=0,
+                  g22_table: int=0, g23_table: int=0, g24_table: int=0,
+                  g25_table: int=0, g26_table: int=0,
+                  g33_table: int=0, g34_table: int=0, g35_table: int=0, g36_table: int=0,
+                  g44_table: int=0, g45_table: int=0, g46_table: int=0,
+                  g55_table: int=0, g56_table: int=0,
+                  g66_table: int=0,
+                  rho_table: int=0,
+                  a1_table: int=0, a2_table: int=0, a3_table: int=0,
+                  a4_table: int=0, a5_table: int=0, a6_table: int=0,
+                  ge_table: int=0,
+                  comment: str='') -> MATT9:
         mat = MATT9(mid,
                     g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
                     g22_table, g23_table, g24_table, g25_table, g26_table,
@@ -3853,12 +3870,13 @@ class AddMaterial:
         return mat
 
     def add_matt11(self, mid: int,
-                   e1_table=None, e2_table=None, e3_table=None,
-                   nu12_table=None, nu13_table=None, nu23_table=None,
-                   g12_table=None, g13_table=None, g23_table=None,
-                   rho_table=None,
-                   a1_table=None, a2_table=None, a3_table=None,
-                   ge_table=None, comment: str='') -> MATT11:
+                   e1_table: int=0, e2_table: int=0, e3_table: int=0,
+                   nu12_table: int=0, nu13_table: int=0, nu23_table: int=0,
+                   g12_table: int=0, g13_table: int=0, g23_table: int=0,
+                   rho_table: int=0,
+                   a1_table: int=0, a2_table: int=0, a3_table: int=0,
+                   ge_table: int=0,
+                   comment: str='') -> MATT11:
         mat = MATT11(mid, e1_table=e1_table, e2_table=e2_table, e3_table=e3_table,
                      nu12_table=nu12_table, nu13_table=nu13_table, nu23_table=nu23_table,
                      g12_table=g12_table, g13_table=g13_table, g23_table=g23_table,
@@ -3939,7 +3957,31 @@ class AddContact:
     def __init__(self, add_methods: AddMethods):
         self._add_methods = add_methods
 
-    def add_bsurfs(self, bsurfs_id, eids, g1s, g2s, g3s, comment='') -> BSURFS:
+    # glue
+    def add_bgset(self, glue_id: int,
+                  sids: list[int],
+                  tids: list[int],
+                  sdists: list[float],
+                  exts: list[float],
+                  comment: str='', sol: int=101):
+        bgset = BGSET(glue_id, sids, tids, sdists, exts,
+                      comment=comment, sol=101)
+        self._add_methods.add_bgset_object(bgset)
+        return bgset
+
+    def add_bgadd(self, glue_id: int, glue_ids: list[int],
+                  comment: str='') -> BGADD:
+        """Creates a BCTADD card"""
+        bgadd = BGADD(glue_id, glue_ids, comment=comment)
+        self._add_methods.add_bgadd_object(bgadd)
+        return bgadd
+
+    #---------------------------
+    def add_bsurfs(self, bsurfs_id: int, eids: list[int],
+                   g1s: list[int],
+                   g2s: list[int],
+                   g3s: list[int],
+                   comment: str='') -> BSURFS:
         """Creates a BSURFS card"""
         bsurfs = BSURFS(bsurfs_id, eids, g1s, g2s, g3s, comment=comment)
         self._add_methods.add_bsurfs_object(bsurfs)
@@ -3959,7 +4001,8 @@ class AddContact:
         self._add_methods.add_bctset_object(bctset)
         return bctset
 
-    def add_bctadd(self, csid, contact_sets, comment='') -> BCTADD:
+    def add_bctadd(self, csid: int, contact_sets: list[int],
+                   comment: str='') -> BCTADD:
         """Creates a BCTADD card"""
         bctadd = BCTADD(csid, contact_sets, comment=comment)
         self._add_methods.add_bctadd_object(bctadd)

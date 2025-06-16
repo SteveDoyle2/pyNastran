@@ -1079,11 +1079,13 @@ def string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
         if ' ' in svalue:
             raise SyntaxError('%s = %r (field #%s) on card must be a string without a space.\n'
                               'card=%s' % (fieldname, svalue, ifield, card))
+        # chars = ''
         if len(svalue) and (svalue[0].isdigit() or '.' in svalue or '+' in svalue or '-' in svalue[0]):
             chars = ''.join(list(set('%s.+-' % svalue[0] if svalue[0].isdigit() else '')))
-            raise SyntaxError('%s = %r (field #%s) on card must not have the '
-                              'following characters %s\n'
-                              'card=%s' % (fieldname, svalue, ifield, chars, card))
+            if len(chars):
+                raise SyntaxError('%s = %r (field #%s) on card must be a string without '
+                                  'the following characters %s\n'
+                                  'card=%s' % (fieldname, svalue, ifield, chars, card))
     else:
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a string (not %s).\n'

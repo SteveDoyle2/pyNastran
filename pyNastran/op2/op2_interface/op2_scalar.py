@@ -1007,7 +1007,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             # Glue normal and tangential tractions at grid point in basic coordinate system
             #b'OBG1': (reader_obc.read_sort1_3, reader_obc.read_4, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
-            b'OBG1' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
+            #b'OBG1' : [self._table_crasher, self._table_crasher, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
+            b'OBG2' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
             b'OBG2' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
 
             b'OCPSDF':   [self._table_passer, self._table_passer, 'Output table of cross-PSD functions'],

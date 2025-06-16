@@ -126,8 +126,10 @@ def remove_unused(bdf_filename: PathLike,
         # optimization
         'DMNCON', 'DSCREEN', 'DVTREL1', 'DCONADD', 'TOPVAR',
 
+        # glue
+        'BGADD', 'BGSET',
         # contact
-        'BGSET', 'BCBODY', 'BCPARA',
+        'BCBODY', 'BCPARA',
 
         # aero
         'AESURFS', 'CSSCHD', 'AECOMP',
