@@ -664,7 +664,7 @@ def _bar_eq_pload1(model: BDF,
         elif load.Type == 'FZ' and x1 == x2:
             force_dir = np.array([0., 0., 1.])
         F += p1 * force_dir
-        M += np.cross(r - p, F)
+        M += np.cross(r - xyz_ref, F)
     elif load.Type in ['MX', 'MY', 'MZ']:
         if load.Type == 'MX' and x1 == x2:
             moment_dir = np.array([1., 0., 0.])
