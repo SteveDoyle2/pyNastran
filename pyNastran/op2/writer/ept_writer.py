@@ -284,7 +284,7 @@ def write_card(op2_file, op2_ascii, obj, name, pids, spack, endian):
             elif prop.isop == 2: # 'TWO':
                 isop = 2
             else:  # pragma: no cover
-                raise NotImplementedError('isop=%s and must be [0, 1, 2]' % prop.isop)
+                raise NotImplementedError('isop=%r and must be [0, 1, 2]' % prop.isop)
 
             if prop.fctn == 'SMECH':
                 fctn = b'SMEC'

@@ -654,7 +654,9 @@ class PSOLID(Property):
                       isop=None, fctn='SMECH', comment='')
 
     def __init__(self, pid: int, mid: int, cordm: int=0,
-                 integ=None, stress=None, isop=None,
+                 integ: Optional[str]=None,
+                 stress: Optional[str]=None,
+                 isop: Optional[str]=None,
                  fctn: str='SMECH', comment: str=''):
         """
         Creates a PSOLID card
@@ -737,8 +739,14 @@ class PSOLID(Property):
             fctn = 'SMECH'
         elif fctn == 'PFLU':
             fctn = 'PFLUID'
+        elif fctn is None:
+            raise RuntimeError('fctn is None')
         self.fctn = fctn
         self.mid_ref = None
+        assert self.integ  is None or isinstance(self.integ,  str), f'integ={self.integ!r}'
+        assert self.isop   is None or isinstance(self.isop,   (int, str)), f'isop={self.isop!r}'
+        assert self.stress is None or isinstance(self.stress, str), f'stres={self.stress!r}'
+        assert self.fctn   is None or isinstance(self.fctn,   str), f'fctn={self.fctn!r}'
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model: BDF, pids: np.ndarray):
@@ -791,7 +799,7 @@ class PSOLID(Property):
             elif prop.isop == 1:
                 isop.append(b'FULL')
             elif prop.isop == 2:
-                isop.append('2')
+                isop.append(b'2')
             else:
                 isop.append(prop.isop.encode(encoding))
 
