@@ -3022,6 +3022,24 @@ class Add3dElements:
         self._add_methods.add_element_object(elem)
         return elem
 
+    def add_pcompls(self, pid: int,
+                 global_ply_ids: list[int],
+                 mids: list[int],
+                 thicknesses: list[float],
+                 thetas: list[float],
+                 direct: int=1, cordm: int=0,
+                 sb=None, analysis: str='ISH',
+                 c8=None, c20=None, comment: str='') -> PCOMPLS:
+        prop = PCOMPLS(pid,
+                       global_ply_ids, mids,
+                       thicknesses,
+                       thetas,
+                       direct=direct, cordm=cordm,
+                       sb=sb, analysis=analysis,
+                 c8=c8, c20=c20, comment=comment)
+        self._add_methods.add_property_object(prop)
+        return prop
+
     def add_psolid(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                    fctn='SMECH', comment='') -> PSOLID:
         """

@@ -529,7 +529,7 @@ def _convert_properties(model: BDF,
 
     Supports:  PELAS, PDAMP, PDAMP5, PVISC, PROD, PBAR, PBARL, PBEAM, PBEAML,
                PSHELL, PSHEAR, PCOMP, PCOMPG, PELAS, PTUBE, PBUSH,
-               PCONEAX, PGAP, PBUSH1D
+               PCONEAX, PGAP, PBUSH1D, PCOMPLS
     Skips : PSOLID, PLSOLID, PLPLANE
 
     Skips are unscaled (intentionally)
@@ -643,6 +643,12 @@ def _convert_properties(model: BDF,
             scales.update(['length', 'nsm_plate'])
             prop.t *= xyz_scale
             prop.nsm *= nsm_plate_scale
+
+        elif prop_type == 'PCOMPLS':
+            scales.update(['length'])
+            prop.thicknesses = [t * xyz_scale for t in prop.thicknesses]
+            if prop.sb is not None:
+                prop.sb *= stress_scale
 
         elif prop_type in ['PCOMP', 'PCOMPG']:
             scales.update(['length', 'nsm_plate', 'stress'])

@@ -398,9 +398,14 @@ class PCOMPLS(Property):
                       direct=1, cordm=0, sb=None, analysis='ISH',
                       c8=None, c20=None, comment='')
 
-    def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas,
-                 direct=1, cordm=0, sb=None, analysis='ISH',
-                 c8=None, c20=None, comment=''):
+    def __init__(self, pid: int,
+                 global_ply_ids: list[int],
+                 mids: list[int],
+                 thicknesses: list[float],
+                 thetas: list[float],
+                 direct: int=1, cordm: int=0,
+                 sb=None, analysis: str='ISH',
+                 c8=None, c20=None, comment: str=''):
         """
         | PCOMPLS | PID | DIRECT | CORDM |   SB   |  ANAL  |
         |         | C8  |  BEH8  | INT8  | BEH8H  | INT8H  |

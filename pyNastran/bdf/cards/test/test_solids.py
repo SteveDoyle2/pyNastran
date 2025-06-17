@@ -56,6 +56,31 @@ class TestSolids(unittest.TestCase):
         #"""checks nonlinear static solid material"""
         #pass
 
+    def test_solid_pcompls(self):
+        model = BDF(debug=False)
+        pid = 2
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        global_ply_ids = [10, 20, 30]
+        mids = [4, 5, 6]
+        thicknesses = [1., 2., 3.]
+        thetas = [0., 45., 90.]
+        model.add_pcompls(
+            pid, global_ply_ids, mids,
+            thicknesses, thetas, comment='pcompls')
+        for mid in mids:
+            model.add_mat1(mid, E, G, nu, rho=0.1)
+
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+        model.add_grid(15, [0., 0., 2.])
+        nids = [11, 12, 13, 15]
+        model.add_ctetra(100, pid, nids, comment='ctetra')
+        model.cross_reference()
+        save_load_deck(model, run_mass_properties=False)
+
     def test_solid_01(self):
         """checks linear static solid material"""
         mid = 2
