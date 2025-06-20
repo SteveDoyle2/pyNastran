@@ -599,11 +599,12 @@ def cmd_line_mirror(argv=None, quiet: bool=False) -> None:
                               crash_on_collapse=False,
                               debug=True, log=log)
     else:
+        log: SimpleLogger = model.log
         if eid_offset == 0:
-            model.log.info(f'writing mirrored model {bdf_filename_out} without equivalencing '
-                           'because there are no elements')
+            log.info(f'writing mirrored model {bdf_filename_out} without equivalencing '
+                     'because there are no elements')
         else:
-            model.log.info(f'writing mirrored model {bdf_filename_out} without equivalencing')
+            log.info(f'writing mirrored model {bdf_filename_out} without equivalencing')
         with open(bdf_filename_out, 'w') as bdf_file:
             bdf_file.write(bdf_filename_stringio.getvalue())
 
@@ -1163,6 +1164,10 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
         dirname = os.path.dirname(abs_name)
         basename = os.path.basename(abs_name)
         out_bdf_filename = os.path.join(dirname, f'clean_{basename}')
+        dict_filename = os.path.join(dirname, f'clean_summary+{basename}')
+    else:
+        dirname = os.path.dirname(out_bdf_filename)
+        dict_filename = os.path.join(dirname, f'clean_summary.out')
 
     is_strict_card_parser = not data['--lax']
     model = read_lax_bdf(
@@ -1170,12 +1175,22 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
         is_strict_card_parser=is_strict_card_parser,
         log=log)
     #model.cross_reference()
-    remove_unused(model,
-                  remove_nids=True, remove_cids=True,
-                  remove_pids=True, remove_mids=True,
-                  remove_spcs=True, remove_mpcs=True,
-                  remove_optimization=True,
-                  reset_type_to_id_map=False)
+    model, out_dict = remove_unused(
+        model,
+        remove_nids=True, remove_cids=True,
+        remove_pids=True, remove_mids=True,
+        remove_spcs=True, remove_mpcs=True,
+        remove_optimization=True,
+        reset_type_to_id_map=False)
+
+    if out_dict:
+        with open(dict_filename, 'w') as dict_file:
+            for key, myarray in out_dict.items():
+                assert isinstance(key, str), key
+                assert isinstance(myarray, np.ndarray), (key, myarray)
+                ids = myarray.tolist()
+                dict_file.write(f'key = {ids}\n')
+
     model.write_bdf(out_bdf_filename,
                     nodes_size=None,
                     is_double=False, interspersed=False)

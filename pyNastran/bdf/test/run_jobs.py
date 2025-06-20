@@ -51,7 +51,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
 
     file_group = parser.add_mutually_exclusive_group(required=False)
     file_group.add_argument('--infile', help='run only files listed in the file; overwrites bdf_dirname_filename')
-    file_group.add_argument('--outfile', help='skip run the jobs')
+    file_group.add_argument('--outfile', help='write the files listed to be run')
 
     parser.add_argument('--test', action='store_false', help='skip run the jobs')
     parser.add_argument('--debug', action='store_true', help='more debugging')

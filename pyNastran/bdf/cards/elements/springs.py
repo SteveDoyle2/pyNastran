@@ -27,7 +27,7 @@ class SpringElement(Element):
         Element.__init__(self)
         self.nodes = [None, None]
 
-    def Mass(self):
+    def Mass(self) -> float:
         return 0.0
 
     def repr_fields(self):

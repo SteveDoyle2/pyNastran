@@ -24,7 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover
         PARAM, MDLPRM,
         # grids/points
         POINT, SPOINT, EPOINT,
-        GRDSET, SEQGP, # GRIDB,
+        GRDSET, SEQGP,  # GRIDB,
         # bar
         BAROR, BEAMOR,
         CBARAO, CBEAMAO,
@@ -37,10 +37,10 @@ if TYPE_CHECKING:  # pragma: no cover
         NLPCI, NLPARM,
         TABRNDG,
         TABLES1,
-        TABLEDs, #TABLED1, TABLED2, TABLED3, TABLED4,
-        TABLEMs, #TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+        TABLEDs,  # TABLED1, TABLED2, TABLED3, TABLED4,
+        TABLEMs,  # TABLEM1, TABLEM2, TABLEM3, TABLEM4,
         TABDMP1,
-        TF, DELAY, #DPHASE,
+        TF, DELAY,  # DPHASE,
         # axisymmetric
         # RINGAX, AXIF, RINGFL, AXIC,  # removed
         CYJOIN, CYAX,
@@ -54,11 +54,11 @@ if TYPE_CHECKING:  # pragma: no cover
         # loads
         TEMPD,
         # thermal
-        #CHBYDP, CHBDYE, CHBDYP,
+        # CHBYDP, CHBDYE, CHBDYP,
         PHBDY,
-        CONV, PCONV, PCONVM, #CONVM,
+        CONV, PCONV, PCONVM,  # CONVM,
         RADCAV, RADMTX, VIEW, VIEW3D,
-        RADBC, RADSET, #TEMPBC,
+        RADBC, RADSET,  # TEMPBC,
         # aero
         MONPNT1, MONPNT2, MONPNT3,
         AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS, AESTAT,
@@ -98,7 +98,7 @@ if TYPE_CHECKING:  # pragma: no cover
         PMASS, CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
         NSMs, NSMADD,
 
-        PMIC, ACPLNW, AMLREG, ACMODL, MICPNT, # MATPOR,
+        PMIC, ACPLNW, AMLREG, ACMODL, MICPNT,  # MATPOR,
         SUPORT, SUPORT1,
         BOLT, BOLTFOR, BOLTSEQ, BOLTFRC, BOLTLD,
         PELAST, PDAMPT, PBUSHT, TIC,
@@ -425,6 +425,7 @@ class BDFAttributes:
 
         self._duplicate_nodes: list[str] = []
         self._duplicate_elements: list[str] = []
+        self._duplicate_rigid_elements: list[str] = []
         self._duplicate_properties: list[str] = []
         self._duplicate_materials: list[str] = []
         self._duplicate_masses: list[str] = []
@@ -543,7 +544,7 @@ class BDFAttributes:
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
-        self.coords: dict[int, Coord] = {0 : coord}
+        self.coords: dict[int, Coord] = {0: coord}
         self.matcid: dict[int, MATCID] = {}
 
         # --------------------------- constraints ----------------------------
@@ -635,7 +636,7 @@ class BDFAttributes:
         # ---------------------------- optimization --------------------------
         # optimization
         self.dconadds: dict[int, DCONADD] = {}
-        self.dconstrs: dict[int, DCONSTR] = {}
+        self.dconstrs: dict[int, list[DCONSTR]] = {}
         self.desvars: dict[int, DESVAR] = {}
         self.topvar: dict[int, TOPVAR] = {}
         self.ddvals: dict[int, DDVAL] = {}
@@ -654,7 +655,7 @@ class BDFAttributes:
         self.dscreen: dict[int, DSCREEN] = {}
 
         # nx optimization
-        self.group : dict[int, GROUP]= {}
+        self.group: dict[int, GROUP]= {}
         self.dmncon: dict[int, DMNCON] = {}
         self.dvtrels: dict[int, DVTREL1 | DVTREL2] = {}
 
@@ -928,30 +929,30 @@ class BDFAttributes:
             'spcadds': ['SPCADD'],
             'spcs': ['SPC', 'SPC1', 'GMSPC'],  # 'SPCAX' removed
             'spcoffs': ['SPCOFF', 'SPCOFF1'],
-            'mpcadds' : ['MPCADD'],
-            'mpcs' : ['MPC'],
-            'suport' : ['SUPORT'],
-            'suport1' : ['SUPORT1'],
-            'se_suport' : ['SESUP'],
+            'mpcadds': ['MPCADD'],
+            'mpcs': ['MPC'],
+            'suport': ['SUPORT'],
+            'suport1': ['SUPORT1'],
+            'se_suport': ['SESUP'],
 
-            'setree' : ['SETREE'],
-            'senqset' : ['SENQSET'],
-            'sebulk' : ['SEBULK'],
-            'sebndry' : ['SEBNDRY'],
-            'release' : ['RELEASE'],
-            'seloc' : ['SELOC'],
-            'sempln' : ['SEMPLN'],
-            'seconct' : ['SECONCT'],
-            'selabel' : ['SELABEL'],
-            'seexcld' : ['SEEXCLD'],
-            'seelt' : ['SEELT'],
-            'seload' : ['SELOAD'],
-            'csuper' : ['CSUPER'],
-            'csupext' : ['CSUPEXT'],
+            'setree': ['SETREE'],
+            'senqset': ['SENQSET'],
+            'sebulk': ['SEBULK'],
+            'sebndry': ['SEBNDRY'],
+            'release': ['RELEASE'],
+            'seloc': ['SELOC'],
+            'sempln': ['SEMPLN'],
+            'seconct': ['SECONCT'],
+            'selabel': ['SELABEL'],
+            'seexcld': ['SEEXCLD'],
+            'seelt': ['SEELT'],
+            'seload': ['SELOAD'],
+            'csuper': ['CSUPER'],
+            'csupext': ['CSUPEXT'],
 
             # loads
-            'load_combinations' : ['LOAD', 'LSEQ', 'CLOAD'],
-            'loads' : [
+            'load_combinations': ['LOAD', 'LSEQ', 'CLOAD'],
+            'loads': [
                 'FORCE', 'FORCE1', 'FORCE2',
                 'MOMENT', 'MOMENT1', 'MOMENT2',
                 'GRAV', 'ACCEL', 'ACCEL1',
@@ -969,36 +970,35 @@ class BDFAttributes:
                 # axisymmetric
                 'PLOADX1', 'FORCEAX', 'PRESAX', 'TEMPAX',
                 ],
-            'cyjoin' : ['CYJOIN'],
-            'cyax' : ['CYAX'],
-            'modtrak' : ['MODTRAK'],
-            'dloads' : ['DLOAD'],
+            'cyjoin': ['CYJOIN'],
+            'cyax': ['CYAX'],
+            'modtrak': ['MODTRAK'],
+            'dloads': ['DLOAD'],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
-            'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-                               'QVECT', 'RANDPS', 'RANDT1'],
+            'dload_entries': ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+                              'QVECT', 'RANDPS', 'RANDT1'],
 
             # aero cards
-            'aero' : ['AERO'],
-            'aeros' : ['AEROS'],
-            'gusts' : ['GUST', 'GUST2'],
-            'flutters' : ['FLUTTER'],
-            'flfacts' : ['FLFACT'],
-            'mkaeros' : ['MKAERO1', 'MKAERO2', 'MKAEROZ'],
-            'aecomps' : ['AECOMP', 'AECOMPL'],
-            'aefacts' : ['AEFACT'],
-            'aelinks' : ['AELINK'],
-            'aelists' : ['AELIST'],
-            'aeparams' : ['AEPARM'],
-            'aesurf' : ['AESURF'],
-            'aesurfs' : ['AESURFS'],
-            'aestats' : ['AESTAT'],
-            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', 'BODY7'],
-            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', 'SEGMESH'],
-            'monitor_points' : ['MONPNT1', 'MONPNT2', 'MONPNT3', 'MONDSP1'],
-            'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7'],
-            'panlsts' : ['PANLST1', 'PANLST2', 'PANLST3'],
-            'csschds' : ['CSSCHD',],
-            #'SPLINE3', 'SPLINE6', 'SPLINE7',
+            'aero': ['AERO'],
+            'aeros': ['AEROS'],
+            'gusts': ['GUST', 'GUST2'],
+            'flutters': ['FLUTTER'],
+            'flfacts': ['FLFACT'],
+            'mkaeros': ['MKAERO1', 'MKAERO2', 'MKAEROZ'],
+            'aecomps': ['AECOMP', 'AECOMPL'],
+            'aefacts': ['AEFACT'],
+            'aelinks': ['AELINK'],
+            'aelists': ['AELIST'],
+            'aeparams': ['AEPARM'],
+            'aesurf': ['AESURF'],
+            'aesurfs': ['AESURFS'],
+            'aestats': ['AESTAT'],
+            'caeros': ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', 'BODY7'],
+            'paeros': ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', 'SEGMESH'],
+            'monitor_points': ['MONPNT1', 'MONPNT2', 'MONPNT3', 'MONDSP1'],
+            'splines': ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7'],
+            'panlsts': ['PANLST1', 'PANLST2', 'PANLST3'],
+            'csschds': ['CSSCHD',],
             'trims': ['TRIM', 'TRIM2'],
             'divergs': ['DIVERG'],
 
@@ -1015,8 +1015,7 @@ class BDFAttributes:
             'convection_properties': ['PCONV', 'PCONVM'],
 
             # stores thermal boundary conditions
-            'bcs' : ['CONV', 'CONVM', 'RADBC', 'RADM', 'TEMPBC'],
-
+            'bcs': ['CONV', 'CONVM', 'RADBC', 'RADM', 'TEMPBC'],
 
             # dynamic cards
             'dareas': ['DAREA'],

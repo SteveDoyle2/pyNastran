@@ -10,14 +10,16 @@ if TYPE_CHECKING:  # pragma: no cover
         SESUPORT, SEUSET, SEUSET1,
         FREQs,
     )
+    from pyNastran.bdf.cards.base_card import BaseCard
     from pyNastran.bdf.cards.elements.elements import (
         CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL)
+    from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
     from pyNastran.bdf.cards.elements.plot import PLOTELs
     #from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
     #from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
 
     #from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
-    from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
+    from pyNastran.bdf.cards.properties.springs import PELAST  # PELAS
 
     #from pyNastran.bdf.cards.elements.solid import (
     #    #CTETRA, CPYRAM, CPENTA, CHEXA,
@@ -32,15 +34,15 @@ if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.bdf.cards.elements.axisymmetric_shells import (
         #CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
     from pyNastran.bdf.cards.elements.shell import (
-        CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
-        CTRIA3, CTRIA6, CTRIAR,
-        CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
-        CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
+        #CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
+        #CTRIA3, CTRIA6, CTRIAR,
+        #CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
+        #CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
         SNORM,
     )
     #from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
     #from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-    from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH2D
+    from pyNastran.bdf.cards.properties.bush import PBUSHT  # PBUSH, PBUSH1D, PBUSH2D
     #from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
     #                                                 CDAMP5)
     from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
@@ -61,7 +63,7 @@ if TYPE_CHECKING:  # pragma: no cover
                                                         MATCID, Coord)
     from pyNastran.bdf.cards.deqatn import DEQATN
     from pyNastran.bdf.cards.dynamic import (
-        DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
+        DELAY, DPHASE,  # FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
         TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
     from pyNastran.bdf.cards.loads.loads import (
         LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM,
@@ -151,6 +153,7 @@ if TYPE_CHECKING:  # pragma: no cover
     MaterialDependence = (
         MATT1 | MATT2 | MATT3 | MATT4 | MATT5 | MATT8 | MATT9 | MATT11 |
         MATS1 | MATDMG) # MATS3, MATS8
+
 
 class AddMethods:
     """defines methods to add card objects to the BDF"""
@@ -250,6 +253,9 @@ class AddMethods:
         model = self.model
 
         assert key > 0, 'nid=%s node=%s' % (key, node)
+        add_object_to_dict(model, key, 'node', node, model.nodes,
+                           model._duplicate_nodes, allow_overwrites)
+        return
         if key not in model.nodes:
             model.nodes[key] = node
             model._type_to_id_map[node.type].append(key)
@@ -310,7 +316,7 @@ class AddMethods:
             self.model.seqgp.append(seqgp)
 
     def add_point_object(self, point: POINT,
-                          allow_overwrites: bool=False) -> None:
+                         allow_overwrites: bool=False) -> None:
         """adds a POINT card"""
         key = point.nid
         model = self.model
@@ -363,21 +369,26 @@ class AddMethods:
         key = senqset.set_id
         self.model.senqset[key] = senqset
         self.model._type_to_id_map[senqset.type].append(key)
+
     def add_sebulk_object(self, sebulk: SEBULK) -> None:
         key = sebulk.seid
         self.model.sebulk[key] = sebulk
         self.model._type_to_id_map[sebulk.type].append(key)
+
     def add_release_object(self, release: RELEASE) -> None:
         key = release.seid
         self.model.release[key] = release
         self.model._type_to_id_map[release.type].append(key)
+
     def add_sebndry_object(self, sebndry: SEBNDRY) -> None:
         key = (sebndry.seid_a, sebndry.seid_b)
         self.model.sebndry[key] = sebndry
+
     def add_seloc_object(self, seloc: SELOC) -> None:
         key = seloc.seid
         self.model.seloc[key] = seloc
         self.model._type_to_id_map[seloc.type].append(key)
+
     def add_sempln_object(self, sempln: SEMPLN) -> None:
         key = sempln.seid
         self.model.sempln[key] = sempln
@@ -467,7 +478,7 @@ class AddMethods:
                 model._type_to_id_map[elem.type].append(key)
 
     def add_ao_object(self, elem_flag: CBARAO,
-                       allow_overwrites: bool=False) -> None:
+                      allow_overwrites: bool=False) -> None:
         """adds a CBARAO"""
         key = elem_flag.eid
         model = self.model
@@ -488,7 +499,7 @@ class AddMethods:
         self.model.doptprm = doptprm
 
     def add_nsm_object(self, nsm: NSM | NSM1 | NSML | NSML1,
-                        allow_overwrites: bool=False) -> None:
+                       allow_overwrites: bool=False) -> None:
         """adds an nsm object to a nsm set"""
         key = nsm.sid
         assert key > 0, 'sid=%s must be positive; nsm=\n%s' % (key, nsm)
@@ -509,7 +520,7 @@ class AddMethods:
             self.model._type_to_id_map[nsmadd.type].append(key)
 
     def add_mass_object(self, mass: CMASS1 | CMASS2 | CMASS3 | CMASS4 |
-                                     CONM1 | CONM2, allow_overwrites: bool=False) -> None:
+                        CONM1 | CONM2, allow_overwrites: bool=False) -> None:
         key = mass.eid
         model = self.model
         assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)
@@ -531,10 +542,9 @@ class AddMethods:
         key = elem.eid
         model = self.model
         assert key > 0, 'eid=%s elem=%s' % (key, elem)
-        if key in model.rigid_elements and not allow_overwrites:
-            assert elem.eid not in model.rigid_elements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, model.rigid_elements[elem.eid], elem)
-        model.rigid_elements[key] = elem
-        model._type_to_id_map[elem.type].append(key)
+        add_object_to_dict(model, key, 'element', elem, model.rigid_elements,
+                           model._duplicate_rigid_elements, allow_overwrites)  # TODO: fix me
+        return
 
     def add_thermal_element_object(self, elem: CHBDYE | CHBDYG | CHBDYP) -> None:
         """same as add_element at the moment..."""
@@ -593,14 +603,23 @@ class AddMethods:
         key = prop.pid
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         model = self.model
-        if key in model.properties and not allow_overwrites:
-            if not prop == model.properties[key]:
-                model._duplicate_properties.append(prop)
-                if model._stop_on_duplicate_error:
-                    model.pop_parse_errors()
-        else:
-            model.properties[key] = prop
-            model._type_to_id_map[prop.type].append(key)
+        # if key not in model.properties:
+        #     model.properties[key] = prop
+        #     model._type_to_id_map[prop.type].append(key)
+        # elif prop == model.properties[key]:
+        #     model.log.warning(f'replacing equivalent property:\n{prop}')
+        # elif allow_overwrites:
+        #     model.log.warning(f'replacing property:\n{model.properties[key]}with:\n{prop}')
+        #     model.properties[key] = prop
+        #     # already handled
+        #     #model._type_to_id_map[prop.type].append(key)
+        # else:
+        #     model._duplicate_properties.append(prop)
+        #     if model._stop_on_duplicate_error:
+        #         model.pop_parse_errors()
+        #     # raise RuntimeError('pid=%s\nold_prop=\n%snew_prop=\n%s' % (prop.pid, model.properties[key], prop))
+        add_object_to_dict(model, key, 'property', prop, model.properties,
+                           model._duplicate_properties, allow_overwrites)
 
     def add_property_mass_object(self, prop: PMASS, allow_overwrites: bool=False) -> None:
         """adds an PMASS object"""
@@ -799,7 +818,7 @@ class AddMethods:
             model._type_to_id_map[tf.type].append(key)
 
     def add_structural_material_object(self, material: Material,
-                                        allow_overwrites: bool=False) -> None:
+                                       allow_overwrites: bool=False) -> None:
         """adds an MAT1, MAT2, MAT8 object"""
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
@@ -848,18 +867,18 @@ class AddMethods:
         mat_type = material.type
         key = material.mid
         mapper = {
-            'MATS1' : self.model.MATS1,
-            'MATS3' : self.model.MATS3,
-            'MATS8' : self.model.MATS8,
+            'MATS1': self.model.MATS1,
+            'MATS3': self.model.MATS3,
+            'MATS8': self.model.MATS8,
 
-            'MATT1' : self.model.MATT1,
-            'MATT2' : self.model.MATT2,
-            'MATT3' : self.model.MATT3,
-            'MATT4' : self.model.MATT4,
-            'MATT5' : self.model.MATT5,
-            'MATT8' : self.model.MATT8,
-            'MATT9' : self.model.MATT9,
-            'MATT11' : self.model.MATT11,
+            'MATT1': self.model.MATT1,
+            'MATT2': self.model.MATT2,
+            'MATT3': self.model.MATT3,
+            'MATT4': self.model.MATT4,
+            'MATT5': self.model.MATT5,
+            'MATT8': self.model.MATT8,
+            'MATT9': self.model.MATT9,
+            'MATT11': self.model.MATT11,
             'MATDMG': self.model.MATDMG,
         }
         slot = mapper[mat_type]
@@ -1265,7 +1284,7 @@ class AddMethods:
         self.model._type_to_id_map[csschd.type].append(key)
 
     def add_caero_object(self, caero: CAEROs,
-                          allow_overwrites: bool=False) -> None:
+                         allow_overwrites: bool=False) -> None:
         """adds an CAERO1/CAERO2/CAERO3/CAERO4/CAERO5 object"""
         key = caero.eid
         assert key > 0
@@ -1300,7 +1319,7 @@ class AddMethods:
         self.model._type_to_id_map[monitor_point.type].append(len(self.model.monitor_points) - 1)
 
     def add_spline_object(self, spline: SPLINEs,
-                           allow_overwrites: bool=False) -> None:
+                          allow_overwrites: bool=False) -> None:
         """adds an SPLINE1/SPLINE2/SPLINE3/SPLINE4/SPLINE5 object"""
         key = spline.eid
         if not allow_overwrites:
@@ -1318,7 +1337,7 @@ class AddMethods:
         self.model._type_to_id_map[gust.type].append(key)
 
     def add_trim_object(self, trim: TRIM | TRIM2,
-                         allow_overwrites: bool=False) -> None:
+                        allow_overwrites: bool=False) -> None:
         """adds an TRIM object"""
         key = trim.sid
         if not allow_overwrites:
@@ -1470,7 +1489,7 @@ class AddMethods:
 
     #-----------------------------------------------------------
     # nx optimization
-    def add_dvtrel_object(self, dvtrel: DVTREL1) -> None: # DVTREL2
+    def add_dvtrel_object(self, dvtrel: DVTREL1) -> None:  # DVTREL2
         """adds a DVTREL1/DVTREL2 object"""
         key = dvtrel.dvtrel_id
         assert key not in self.model.dvtrels, 'DVTRELx=%s old\n%snew=\n%s' % (
@@ -1531,7 +1550,7 @@ class AddMethods:
         self.model._type_to_id_map[nxstrat.type].append(key)
 
     def add_tstep_object(self, tstep: TSTEP | TSTEP1,
-                          allow_overwrites: bool=False) -> None:
+                         allow_overwrites: bool=False) -> None:
         """adds a TSTEP object"""
         key = tstep.sid
         if key in self.model.tsteps and not allow_overwrites:
@@ -1703,7 +1722,7 @@ class AddMethods:
         self.model._type_to_id_map[table.type].append(key)
 
     def add_method_object(self, method: EIGR | EIGRL | EIGB,
-                           allow_overwrites: bool=False) -> None:
+                          allow_overwrites: bool=False) -> None:
         """adds a EIGR/EIGRL object"""
         key = method.sid
         if key in self.model.methods and not allow_overwrites:
@@ -1715,7 +1734,7 @@ class AddMethods:
             self.model._type_to_id_map[method.type].append(key)
 
     def add_cmethod_object(self, method: EIGC | EIGP,
-                            allow_overwrites: bool=False) -> None:
+                           allow_overwrites: bool=False) -> None:
         """adds a EIGB/EIGC object"""
         key = method.sid
         if key in self.model.cMethods and not allow_overwrites:
@@ -1798,6 +1817,7 @@ class AddMethods:
             self.model.boltfor[boltfor.sid] = boltfor
             self.model._type_to_id_map[boltfor.type].append(key)
 
+
 def _add_value_to_dict(result: dict[int, Any], key: int, card: Any,
                        mapper: dict[str, set[int]]) -> None:
     mapperi = mapper[card.type]
@@ -1808,3 +1828,57 @@ def _add_value_to_dict(result: dict[int, Any], key: int, card: Any,
         result[key].append(card)
         if key not in mapperi:
             mapperi.append(key)
+
+
+def add_object_to_dict(model: BDF, key: int, obj_name: str,
+                       obj: BaseCard, obj_dict: dict[int, BaseCard],
+                       duplicate_list: list[BaseCard],
+                       allow_overwrites: bool) -> None:
+    """
+
+    Parameters
+    ----------
+    key: int
+        property id
+    obj_name: str
+        'property'
+    obj: prop
+        PSHELL
+    obj_dict: dict[int, PSHELL | PBAR ...]
+        storage dictionary
+    duplicate_list: list[PSHELL | PBAR | ...]
+        model._duplicate_properties
+    allow_overwrites: bool
+        True/False
+
+    """
+    # if key not in obj_dict:
+    #     obj_dict[key] = obj
+    #     model._type_to_id_map[obj.type].append(key)
+    # elif obj == obj_dict[key]:
+    #     model.log.warning(f'replacing equivalent {obj_name}:\n{obj}')
+    # elif allow_overwrites:
+    #     model.log.warning(f'replacing {obj_name}:\n{model.nodes[key]}with:\n{obj}')
+    #     obj_dict[key] = node
+    #
+    #     # already handled
+    #     # model._type_to_id_map[obj.type].append(key)
+    # else:
+    #     raise RuntimeError('nid=%s\nold_{obj_name}=\n%snew_{obj_name}=\n%s' % (key, obj_dict[key], obj))
+
+    if key not in obj_dict:
+        obj_dict[key] = obj
+        model._type_to_id_map[obj.type].append(key)
+    elif obj == obj_dict[key]:
+        model.log.warning(f'replacing equivalent {obj_name}:\n{obj}')
+    elif allow_overwrites:
+        model.log.warning(f'replacing {obj_name}:\n{obj_dict[key]}with:\n{obj}')
+        obj_dict[key] = obj
+        # already handled
+        #model._type_to_id_map[prop.type].append(key)
+    else:
+        duplicate_list.append(obj)
+        if model._stop_on_duplicate_error:
+            model.pop_parse_errors()
+        #raise RuntimeError('pid=%s\nold_prop=\n%snew_prop=\n%s' % (prop.pid, model.properties[key], prop))
+

@@ -23,6 +23,7 @@ from collections import defaultdict
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
+
 def get_material_mass_breakdown_table(model: BDF) -> tuple[dict[int, float],
                                                            dict[int, dict[int, float]],
                                                            dict[int, dict[int, float]],
@@ -65,12 +66,12 @@ def get_material_mass_breakdown_table(model: BDF) -> tuple[dict[int, float],
             pid_to_mid_to_mass[pid][mid] += massi
             pid_to_mid_to_nsm_mass[pid][mid] += 0.
             pid_to_mid_to_rho_mass[pid][mid] += massi
-        elif elem_type in {'CONROD'}: # references a MAT directly
-            mid = prop.Mid()
+        elif elem_type in {'CONROD'}:  # references a MAT directly
+            mid = elem.Mid()
             length = elem.Length()
             massi = elem.Mass()
             nsm = elem.Nsm()
-            rho = elem.Area()
+            area = elem.Area()
             rho = elem.Rho()
             mid_to_mass[mid] += massi
             pid_to_mid_to_mass[0][mid] += massi
@@ -84,6 +85,8 @@ def get_material_mass_breakdown_table(model: BDF) -> tuple[dict[int, float],
             nsm = prop.Nsm()
             if prop_type in {'PSHELL'}:
                 mid = prop.Mid()
+                rho = elem.Rho()
+                t = elem.Thickness()
                 massi = elem.Mass()
                 mid_to_mass[mid] += massi
                 pid_to_mid_to_mass[pid][mid] += massi
@@ -104,6 +107,7 @@ def get_material_mass_breakdown_table(model: BDF) -> tuple[dict[int, float],
         else:
             raise NotImplementedError(elem)
     return dict(mid_to_mass), dict(pid_to_mid_to_mass), dict(pid_to_mid_to_rho_mass), dict(pid_to_mid_to_nsm_mass)
+
 
 def get_property_mass_breakdown_table(model: BDF):
     pids_to_thickness = get_thickness_breakdown(model, property_ids=None, stop_if_no_thickness=False)
@@ -128,6 +132,7 @@ def get_property_mass_breakdown_table(model: BDF):
         mass = pids_to_mass.get(pid, 0.)
         data.append((pid, length, area, thickness, volume, mass))
     return data
+
 
 def get_length_breakdown(model: BDF, property_ids=None,
                          stop_if_no_length: bool=True):
@@ -160,7 +165,7 @@ def get_length_breakdown(model: BDF, property_ids=None,
         'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
 
         # lines - should be included
-        'PBEND', # 'PBEAM3',
+        'PBEND',  # 'PBEAM3',
 
         # acoustic
         'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
@@ -187,7 +192,7 @@ def get_length_breakdown(model: BDF, property_ids=None,
                 elem = model.elements[eid]
                 try:
                     lengths.append(elem.Length())
-                except AttributeError:  # pragma: no cover
+                except (AttributeError, TypeError):  # pragma: no cover
                     print(prop)
                     print(elem)
                     raise
@@ -209,6 +214,7 @@ def get_length_breakdown(model: BDF, property_ids=None,
         if stop_if_no_length:
             raise RuntimeError(msg)
     return pids_to_length
+
 
 def get_area_breakdown(model: BDF,
                        property_ids=None,
@@ -247,7 +253,7 @@ def get_area_breakdown(model: BDF,
         'PCOMPS', 'PCOMPLS', 'PVISC', 'PBCOMP', 'PBEND',
 
         # lines - should be included
-        'PBEND', # 'PBEAM3',
+        'PBEND',  # 'PBEAM3',
 
         # acoustic
         'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
@@ -354,6 +360,7 @@ def get_thickness_breakdown(model: BDF,
             raise RuntimeError(msg)
     return pids_to_thickness
 
+
 def get_volume_breakdown(model: BDF, property_ids=None,
                          stop_if_no_volume: bool=True):
     """
@@ -397,7 +404,7 @@ def get_volume_breakdown(model: BDF, property_ids=None,
         'PWELD',
     }
     bar_properties = {
-        'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', # 'PBEAM3'
+        'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE',  # 'PBEAM3'
     }
 
     pids_to_volume = {}
@@ -474,6 +481,7 @@ def get_volume_breakdown(model: BDF, property_ids=None,
         if stop_if_no_volume:
             raise RuntimeError(msg)
     return pids_to_volume
+
 
 def get_mass_breakdown(model: BDF,
                        property_ids: list[int]=None,
@@ -569,7 +577,7 @@ def get_mass_breakdown(model: BDF,
                     masses.append(elem.Mass())
 
         elif prop.type in bar_properties:
-            nsm = prop.nsm # per unit length
+            nsm = prop.nsm  # per unit length
             try:
                 rho = prop.Rho()
             except AttributeError:
@@ -607,7 +615,7 @@ def get_mass_breakdown(model: BDF,
             pass
         elif prop.type == 'PSHEAR':
             thickness = prop.t
-            nsm = prop.nsm # per area
+            nsm = prop.nsm  # per area
             rho = prop.Rho()
             for eid in eids:
                 elem = model.elements[eid]

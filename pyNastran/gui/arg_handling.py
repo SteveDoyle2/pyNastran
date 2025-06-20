@@ -28,31 +28,31 @@ OUTPUT_FORMAT_TO_EXTENSION = {
 INPUT_FORMAT_TO_EXTENSION = {
     # an extension should not be added to this list if it is
     # shared with another type
-    'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch', '.blk', '.neu'], # '.dat'
-    'h5nastran' : ['.h5'],
-    #'nastran2' : ['.bdf', '.ecd', '.nas',],
+    'nastran': ['.bdf', '.ecd', '.nas', '.op2', '.pch', '.blk', '.neu'],  # '.dat'
+    'h5nastran': ['.h5'],
+    #'nastran2': ['.bdf', '.ecd', '.nas',],
 
-    'stl' : ['.stl'],
-    'cart3d' : ['.tri', '.triq'],
-    'tecplot' : ['.plt'],  # .dat
-    'ugrid' : ['.ugrid'],
-    'plot3d' : ['.p3d', '.p3da'],
-    'surf' : ['.surf'],
-    'lawgs' : ['.wgs'],
-    'shabp' : ['.mk5'],
-    'usm3d' : ['.front'],  # .cogsg
-    'bedge' : ['.bedge'],
-    'su2' : ['.su2'],
-    'tetgen' : ['.smesh', '.ele'],
-    'obj' : ['.obj'],
-    'fast' : ['.fgrid'],
-    'avl' : ['.avl'],
-    'vrml' : ['.wrl'],
-    'vtk' : ['.vtk', '.vtu'],
-    'fld' : ['.fld'],
-    'fluent' : ['.vrt', '.cel', '.daten'],
-    #'abaqus' : ['.inp'],
-    #'plot3d' : ['.p3d', '.p3da'],
+    'stl': ['.stl'],
+    'cart3d': ['.tri', '.triq'],
+    'tecplot': ['.plt'],  # .dat
+    'ugrid': ['.ugrid'],
+    'plot3d': ['.p3d', '.p3da'],
+    'surf': ['.surf'],
+    'lawgs': ['.wgs'],
+    'shabp': ['.mk5'],
+    'usm3d': ['.front'],  # .cogsg
+    'bedge': ['.bedge'],
+    'su2': ['.su2'],
+    'tetgen': ['.smesh', '.ele'],
+    'obj': ['.obj'],
+    'fast': ['.fgrid'],
+    'avl': ['.avl'],
+    'vrml': ['.wrl'],
+    'vtk': ['.vtk', '.vtu'],
+    'fld': ['.fld'],
+    'fluent': ['.vrt', '.cel', '.daten'],
+    #'abaqus': ['.inp'],
+    #'plot3d': ['.p3d', '.p3da'],
 
     #'fast': ['.cogsg'],
     'avus': ['.grd'],
@@ -62,6 +62,7 @@ INPUT_FORMAT_TO_EXTENSION = {
     #'panair' : ['.inp'],
     #'abaqus' : ['.inp'],
 }
+
 
 def determine_input_output_formats(log: SimpleLogger,
                                    filenames: list[str],
@@ -81,7 +82,7 @@ def determine_input_output_formats(log: SimpleLogger,
         return formats
 
     extension_to_format = {
-        ext : formati for formati, format_exts in INPUT_FORMAT_TO_EXTENSION.items()
+        ext: formati for formati, format_exts in INPUT_FORMAT_TO_EXTENSION.items()
         for ext in format_exts}
     for formati, format_exts in OUTPUT_FORMAT_TO_EXTENSION.items():
         for ext in format_exts:
@@ -97,6 +98,7 @@ def determine_input_output_formats(log: SimpleLogger,
             log.warning(f'unknown extension: {ext!r} for {filename}')
             continue
     return formats
+
 
 def determine_format(input_filename: str,
                      output_filenames: Optional[list[str]]=None,
@@ -131,14 +133,16 @@ def determine_format(input_filename: str,
     print(f'allowed_formats = {allowed_formats}')
 
     in_ext = os.path.splitext(input_filename)[1].lower()
-    in_extension_to_format = {val : key for key, value in INPUT_FORMAT_TO_EXTENSION.items()
+    in_extension_to_format = {val: key for key, value in INPUT_FORMAT_TO_EXTENSION.items()
                               for val in value}
-    out_extension_to_format = {val : key for key, value in OUTPUT_FORMAT_TO_EXTENSION.items()
+    out_extension_to_format = {val: key for key, value in OUTPUT_FORMAT_TO_EXTENSION.items()
                                for val in value}
     if in_ext in in_extension_to_format:
         formati = in_extension_to_format[in_ext]
     elif out_ext in out_extension_to_format:
         formati = out_extension_to_format[out_ext]
+    elif in_ext == '.dat':
+        formati = 'nastran'
     else:
         #print('allowed_formats =', allowed_formats)
         msg = 'format=%r was not found\nSpecify the format as [%s]' % (
@@ -157,7 +161,6 @@ def get_inputs(print_inputs: bool=False,
         # drop the pyNastranGUI; same as argparse
         argv = argv[1:]
 
-
     if len(argv) >= 1:
         argdict = run_argparse(argv)
         if print_inputs:
@@ -166,19 +169,20 @@ def get_inputs(print_inputs: bool=False,
         return argdict
 
     inputs = {
-        'format' : None, # input_format
-        'input' : None, # input_filename
-        'output' : None, # output_filename
-        'debug' : True, # debug
-        'geomscript' : None, # geom_script
-        'postscript' : None, # post_script
-        'user_points' : None, # user_points
-        'user_geom' : None, # user_geom
-        'is_groups' : not GROUPS_DEFAULT,
-        'log' : None,
-        'test' : False,
+        'format': None,  # input_format
+        'input': None,  # input_filename
+        'output': None,  # output_filename
+        'debug': True,  # debug
+        'geomscript': None,  # geom_script
+        'postscript': None,  # post_script
+        'user_points': None,  # user_points
+        'user_geom': None,  # user_geom
+        'is_groups': not GROUPS_DEFAULT,
+        'log': None,
+        'test': False,
     }
     return inputs
+
 
 def run_argparse(argv: list[str]) -> dict[str, str]:
     """Gets the inputs for pyNastranGUI using argparse."""
@@ -393,6 +397,7 @@ def run_argparse(argv: list[str]) -> dict[str, str]:
     _update_argparse_argdict(argdict)
     return argdict
 
+
 def _add_inputs_outputs(positional_inputs, optional_inputs,
                         word: str='input') -> list[str]:
     input_filenames = []
@@ -412,6 +417,7 @@ def _add_inputs_outputs(positional_inputs, optional_inputs,
     if isinstance(positional_inputs, str):
         input_filenames += [positional_inputs]
     return input_filenames
+
 
 def _update_argparse_argdict(argdict: dict[str, Any]) -> dict[str, Any]:
     """converts to the pyNastranGUI argument format"""
@@ -489,11 +495,13 @@ def _update_argparse_argdict(argdict: dict[str, Any]) -> dict[str, Any]:
             raise RuntimeError(msg)
     return argdict
 
+
 def _set_groups_key(argdict: dict[str, str]) -> None:
     if not GROUPS_DEFAULT:
         swap_key(argdict, 'nogroups', 'is_groups')
     else:
         argdict['is_groups'] = argdict['groups']
+
 
 def _update_format(argdict: dict[str, Any],
                    input_filenames: list[str],
@@ -520,6 +528,7 @@ def _update_format(argdict: dict[str, Any],
                 input_formats.extend(formati)
         argdict['format'] = input_formats
     return input_formats
+
 
 def _validate_format(input_formats: list[str]) -> None:
     # None is for custom geometry
