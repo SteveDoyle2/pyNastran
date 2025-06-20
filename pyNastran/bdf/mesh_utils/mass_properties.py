@@ -2175,7 +2175,7 @@ def mass_properties_breakdown(model: BDF,
                               sym_axis: Optional[str]=None,
                               scale: Optional[float]=None,
                               inertia_reference: str='cg',
-                              debug=False):
+                              debug: bool=False):
     """Gets an incomplete breakdown the mass properties on a per element basis"""
     reference_point, is_cg = _update_reference_point(
         model, reference_point, inertia_reference)
@@ -2486,7 +2486,6 @@ def mass_properties_breakdown(model: BDF,
             #assert len(e2i) > 0, e2_dict
             #e2 = e2i[ipids, :, :]
             #assert e2.shape[0] == nelementsi
-
 
             #telem = transform_shell_material_coordinate_system(
                 #cids, iaxes, theta_mcid, normal, p1, p2)
@@ -2854,10 +2853,11 @@ def _solid_density(pids_list: list[int],
     pids_list_ = []
     rho_list_ = []
     for card_type in card_types:
-        if card_type not in mass_per_volume_dict:
-            continue
-        pids_list_.append(pids_per_volume_dict[card_type]) # pid
-        rho_list_.append(mass_per_volume_dict[card_type]) # rho
+        if card_type == 'PSOLID':
+            pids_list_.append(pids_per_volume_dict[card_type]) # pid
+            rho_list_.append(mass_per_volume_dict[card_type]) # rho
+        else:
+            raise RuntimeError(card_type)
 
     pids_array = np.hstack(pids_list_)
     rhos_array = np.hstack(rho_list_)
@@ -3259,6 +3259,15 @@ def _breakdown_property_dicts(model: BDF) -> tuple[dict[str, list[int]],
             rho = mid_ref.rho
             assert  rho >= 0., rho
             mass_per_volume_dict[ptype].append(rho)
+        elif ptype == 'PCOMPLS':
+            # TODO: not sure how this works...
+            mpai = [mid_ref.Rho() * t for mid_ref, t in
+                    zip(prop.mids_ref, prop.thicknesses)]
+            assert min(mpai) >= 0.
+            thickness = sum(prop.thicknesses)
+            pids_per_volume_dict[ptype].append(pid)
+            #mid_ref = prop.mids_ref
+            mass_per_volume_dict[ptype].append(mpai)
         else:
             model.log.warning('skipping mass_properties_breakdown for %s' % ptype)
 

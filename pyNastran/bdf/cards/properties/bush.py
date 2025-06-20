@@ -134,8 +134,12 @@ class PBUSH(BushingProperty):
     #}
 
     def __init__(self, pid: int,
-                  k=None, b=None, ge=None,
-                  rcv=None, mass=None, t=None, comment: str=''):
+                 k: Optional[list[float]]=None,
+                 b: Optional[list[float]]=None,
+                 ge: Optional[list[float]]=None,
+                 rcv: Optional[list[float]]=None,
+                 mass: Optional[float]=None,
+                 t=None, comment: str=''):
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -1118,10 +1122,10 @@ class PBUSH_OPTISTRUCT(BushingProperty):
         1: 'pid',
     }
     pname_map = {
-        -2 : 'K1', -3 : 'K2', -4 : 'K3', -5 : 'K4', -6 : 'K5', -7 : 'K6',
-        -8 : 'B1', -9 : 'B2', -10 : 'B3', -11 : 'B4', -12 : 'B5', -13 : 'B6',
-        -14 : 'GE1', -15 : 'GE2', -16 : 'GE3', -17 : 'GE4', -18 : 'GE5', -19 : 'GE6',
-        -20 : 'SA', -21 : 'ST', -22 : 'EA', -23 : 'ET',
+        -2: 'K1', -3: 'K2', -4 : 'K3', -5 : 'K4', -6 : 'K5', -7 : 'K6',
+        -8: 'B1', -9: 'B2', -10 : 'B3', -11 : 'B4', -12 : 'B5', -13 : 'B6',
+        -14: 'GE1', -15: 'GE2', -16 : 'GE3', -17 : 'GE4', -18 : 'GE5', -19 : 'GE6',
+        -20: 'SA', -21: 'ST', -22 : 'EA', -23 : 'ET',
     }
     #def update_by_pname_fid(self, name, value):
         #if name == 'B1':
@@ -1178,7 +1182,12 @@ class PBUSH_OPTISTRUCT(BushingProperty):
         #5 : 'j', 'J' : 'j',
     #}
 
-    def __init__(self, pid, k, b, ge, mass, comment=''):
+    def __init__(self, pid: int,
+                 k: list[float],
+                 b: list[float],
+                 ge: list[float],
+                 mass: list[float],
+                 comment: str=''):
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -1205,6 +1214,15 @@ class PBUSH_OPTISTRUCT(BushingProperty):
         BushingProperty.__init__(self)
         if comment:
             self.comment = comment
+
+        if k is None:
+            k = []
+        if b is None:
+            b = []
+        if ge is None:
+            ge = []
+        if mass is None:
+            mass = []
 
         #: Property ID
         self.pid = pid
@@ -1257,7 +1275,7 @@ class PBUSH_OPTISTRUCT(BushingProperty):
         assert isinstance(self.mass, list), 'PBUSH: pid=%i type(mass)=%s mass=%s' % (self.pid, type(self.mass), self.mass)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBUSH card from ``BDF.add_card(...)``
 
@@ -1320,7 +1338,8 @@ class PBUSH_OPTISTRUCT(BushingProperty):
                                 comment=comment)
 
     @classmethod
-    def _read_var(cls, card, var_prefix, istart, iend):
+    def _read_var(cls, card: BDFCard, var_prefix: str,
+                  istart: int, iend: int) -> list[float]:
         print(card[istart:iend+1])
         Ki = fields(double_string_or_blank, card, var_prefix, istart, iend)
         return Ki

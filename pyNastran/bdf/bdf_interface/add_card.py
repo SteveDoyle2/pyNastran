@@ -57,7 +57,8 @@ from pyNastran.bdf.cards.elements.acoustic import (
     ACMODL, ACPLNW, AMLREG, PMIC, MICPNT, MATPOR)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH2D
+from pyNastran.bdf.cards.properties.bush import (
+    PBUSH, PBUSH1D, PBUSHT, PBUSH2D, PBUSH_OPTISTRUCT)
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                                  CDAMP5)
 from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
@@ -2373,8 +2374,11 @@ class Add1dElements:
         return elem
 
     def add_pbush(self, pid: int,
-                  k=None, b=None, ge=None,
-                  rcv=None, mass=None, comment: str='') -> PBUSH:
+                  k: Optional[list[float]]=None,
+                  b: Optional[list[float]]=None,
+                  ge: Optional[list[float]]=None,
+                  rcv: Optional[list[float]]=None,
+                  mass: Optional[float]=None, comment: str='') -> PBUSH:
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -2405,6 +2409,20 @@ class Add1dElements:
         t = None
         prop = PBUSH(pid, k, b, ge, rcv=rcv, mass=mass, t=t,
                      comment=comment)
+        self._add_methods.add_property_object(prop)
+        return prop
+
+    def add_pbush_optistruct(self, pid: int,
+                             k: Optional[list[float]]=None,
+                             b: Optional[list[float]]=None,
+                             ge: Optional[list[float]]=None,
+                             mass: Optional[float]=None, comment: str='') -> PBUSH:
+        """
+        Creates a PBUSH card, which defines a property for a CBUSH
+        """
+        prop = PBUSH_OPTISTRUCT(
+            pid, k, b, ge, mass=mass,
+            comment=comment)
         self._add_methods.add_property_object(prop)
         return prop
 
@@ -3022,8 +3040,29 @@ class Add3dElements:
         self._add_methods.add_element_object(elem)
         return elem
 
-    def add_psolid(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
-                   fctn='SMECH', comment='') -> PSOLID:
+    def add_pcompls(self, pid: int,
+                 global_ply_ids: list[int],
+                 mids: list[int],
+                 thicknesses: list[float],
+                 thetas: list[float],
+                 direct: int=1, cordm: int=0,
+                 sb=None, analysis: str='ISH',
+                 c8=None, c20=None, comment: str='') -> PCOMPLS:
+        prop = PCOMPLS(pid,
+                       global_ply_ids, mids,
+                       thicknesses,
+                       thetas,
+                       direct=direct, cordm=cordm,
+                       sb=sb, analysis=analysis,
+                 c8=c8, c20=c20, comment=comment)
+        self._add_methods.add_property_object(prop)
+        return prop
+
+    def add_psolid(self, pid: int, mid: int, cordm: int=0,
+                   integ: Optional[str]=None,
+                   stress: Optional[str]=None,
+                   isop: Optional[str]=None,
+                   fctn: str='SMECH', comment: str='') -> PSOLID:
         """
         Creates a PSOLID card
 

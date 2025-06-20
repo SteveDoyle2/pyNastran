@@ -80,7 +80,7 @@ def sum_forces_moments(model: BDF,
     if not isinstance(loadcase_id, integer_types):
         raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
 
-    p = _get_load_summation_point(model, p0, cid=0)
+    xyz_ref = _get_load_summation_point(model, p0, cid=0)
     loads, scale_factors, unused_is_grav = model.get_reduced_loads(
         loadcase_id, skip_scale_factor0=True)
 
@@ -102,21 +102,21 @@ def sum_forces_moments(model: BDF,
                 f = load.mag * load.xyz * scale
 
             node = model.Node(load.node_id)
-            r = xyz[node.nid] - p
+            r = xyz[node.nid] - xyz_ref
             m = np.cross(r, f)
             F += f
             M += m
         elif load.type == 'FORCE1':
             f = load.mag * load.xyz * scale
             node = model.Node(load.node_id)
-            r = xyz[node.nid] - p
+            r = xyz[node.nid] - xyz_ref
             m = np.cross(r, f)
             F += f
             M += m
         elif load.type == 'FORCE2':
             f = load.mag * load.xyz * scale
             node = model.Node(load.node_id)
-            r = xyz[node.nid] - p
+            r = xyz[node.nid] - xyz_ref
             m = np.cross(r, f)
             F += f
             M += m
@@ -152,7 +152,7 @@ def sum_forces_moments(model: BDF,
                 raise RuntimeError(msg)
 
             area, normal = _get_area_normal(axb, nodes, xyz)
-            r = centroid - p
+            r = centroid - xyz_ref
             f = load.pressure * area * normal * scale
             m = np.cross(r, f)
 
@@ -160,7 +160,7 @@ def sum_forces_moments(model: BDF,
             M += m
 
         elif load.type == 'PLOAD1':
-            _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p)
+            _pload1_total(model, loadcase_id, load, scale, xyz, F, M, xyz_ref)
 
         elif load.type == 'PLOAD2':
             pressure = load.pressure * scale
@@ -170,7 +170,7 @@ def sum_forces_moments(model: BDF,
                     n = elem.Normal()
                     area = elem.Area()
                     f = pressure * n * area
-                    r = elem.Centroid() - p
+                    r = elem.Centroid() - xyz_ref
                     m = np.cross(r, f)
                     F += f
                     M += m
@@ -178,7 +178,7 @@ def sum_forces_moments(model: BDF,
                     model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
                         loadcase_id, elem.type, load.type))
         elif load.type == 'PLOAD4':
-            _pload4_total(loadcase_id, load, scale, xyz, F, M, p)
+            _pload4_total(loadcase_id, load, scale, xyz, F, M, xyz_ref)
 
         elif load.type == 'GRAV':
             if include_grav:  # this will be super slow
@@ -186,7 +186,7 @@ def sum_forces_moments(model: BDF,
                 for eid, elem in model.elements.items():
                     centroid = elem.Centroid()
                     mass = elem.Mass()
-                    r = centroid - p
+                    r = centroid - xyz_ref
                     f = mass * gravity
                     m = np.cross(r, f)
                     F += f
@@ -599,7 +599,7 @@ def sum_forces_moments_elements(model: BDF,
                     raise NotImplementedError('case=%s etype=%r loadtype=%r not supported' % (
                         loadcase_id, elem.type, loadtype))
         elif loadtype == 'PLOAD4':
-            _pload4_elements(loadcase_id, load, scale, eids, xyz, F, M, p)
+            _pload4_elements(loadcase_id, load, scale, eids, xyz, F, M, xyz_ref)
 
         elif loadtype == 'GRAV':
             if include_grav:  # this will be super slow
@@ -664,7 +664,7 @@ def _bar_eq_pload1(model: BDF,
         elif load.Type == 'FZ' and x1 == x2:
             force_dir = np.array([0., 0., 1.])
         F += p1 * force_dir
-        M += np.cross(r - p, F)
+        M += np.cross(r - xyz_ref, F)
     elif load.Type in ['MX', 'MY', 'MZ']:
         if load.Type == 'MX' and x1 == x2:
             moment_dir = np.array([1., 0., 0.])
