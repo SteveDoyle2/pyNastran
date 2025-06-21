@@ -59,9 +59,9 @@ class PBUSH(BushingProperty):
     +-------+-----+-------+------+-------+-----+-----+-----+----+
     |       | RCV |  SA   |  ST  |   EA  |  ET |     |     |    |
     +-------+-----+-------+------+-------+-----+-----+-----+----+
-    |       |  M  |  MASS |      |       |     |     |     |    |
+    |       |  M* | MASS  |      |       |     |     |     |    |
     +-------+-----+-------+------+-------+-----+-----+-----+----+
-    |       |  T  | ALPHA | TREF | COINL |     |     |     |    |
+    |       |  T* | ALPHA | TREF | COINL |     |     |     |    |
     +-------+-----+-------+------+-------+-----+-----+-----+----+
 
     RCV was added <= MSC 2016
@@ -73,12 +73,12 @@ class PBUSH(BushingProperty):
         1: 'pid',
     }
     pname_map = {
-        -2 : 'K1', -3 : 'K2', -4 : 'K3', -5 : 'K4', -6 : 'K5', -7 : 'K6',
-        -8 : 'B1', -9 : 'B2', -10 : 'B3', -11 : 'B4', -12 : 'B5', -13 : 'B6',
-        -14 : 'GE1', -15 : 'GE2', -16 : 'GE3', -17 : 'GE4', -18 : 'GE5', -19 : 'GE6',
-        -20 : 'SA', -21 : 'ST', -22 : 'EA', -23 : 'ET',
+        -2: 'K1', -3: 'K2', -4: 'K3', -5: 'K4', -6: 'K5', -7: 'K6',
+        -8: 'B1', -9: 'B2', -10: 'B3', -11: 'B4', -12: 'B5', -13: 'B6',
+        -14: 'GE1', -15: 'GE2', -16: 'GE3', -17: 'GE4', -18: 'GE5', -19: 'GE6',
+        -20: 'SA', -21: 'ST', -22: 'EA', -23: 'ET',
     }
-    def update_by_pname_fid(self, name, value):
+    def update_by_pname_fid(self, name: str, value: float):
         if name == 'B1':
             self.Bi[0] = value
         elif name == 'B2':
@@ -117,8 +117,18 @@ class PBUSH(BushingProperty):
             self.GEi[4] = value
         elif name == 'GE6':
             self.GEi[5] = value
-        #elif name == 'M':
-            #self.mass
+
+        # sa, st, ea, et
+        elif name == 'SA':
+            self.sa = value
+        elif name == 'ST':
+            self.st = value
+        elif name == 'EA':
+            self.ea = value
+        elif name == 'ET':
+            self.et = value
+        elif name == 'M':
+            self.mass = value
         elif isinstance(name, int) and name in self.pname_map:
             name2 = self.pname_map[name]
             self.update_by_pname_fid(name2, value)

@@ -1,7 +1,7 @@
 import unittest
 from io import StringIO
 
-from cpylog import get_logger
+from cpylog import SimpleLogger, get_logger
 from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, CDAMP1, read_bdf#, get_logger2
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.test.test_shells import (
@@ -254,7 +254,8 @@ class TestDampers(unittest.TestCase):
 
     def test_pbusht(self):
         """tests CBUSH, PBUSH, PBUSHT"""
-        model = BDF(debug=False, log=None, mode='msc')
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, mode='msc')
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(11, [0., 0., 0.])
 
@@ -268,8 +269,17 @@ class TestDampers(unittest.TestCase):
         g0 = None
         unused_cbush = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
                                        ocid=-1, si=None, comment='cbush')
-        unused_pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
-                                       comment='pbush')
+        pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
+                                comment='pbush')
+        names = [
+            'K1', 'K2', 'K3', 'K4', 'K5', 'K6',
+            'B1', 'B2', 'B3', 'B4', 'B5', 'B6',
+            'GE1', 'GE2', 'GE3', 'GE4', 'GE5', 'GE6',
+            'SA', 'ST', 'EA', 'ET',
+            #'MASS'  # M or MASS
+        ]
+        for name in names:
+            pbush.update_by_pname_fid(name, 3.14)
 
         k_tables = [2]
         b_tables = [2]

@@ -8,6 +8,17 @@ from cpylog import SimpleLogger
 
 
 class TestThermal(unittest.TestCase):
+    def test_view3d(self):
+        model = BDF(debug=None)
+        icavity = 1
+        view3d = model.add_view3d(
+            icavity, gitb=4, gips=4, cier=4,
+            error_tol=0.1, zero_tol=1e-10, warp_tol=0.01,
+            rad_check=3, comment='view3d')
+        view3d.raw_fields()
+        model.cross_reference()
+        save_load_deck(model)
+
     def test_temp(self):
         """
         TEMP cards can only have 3 values per line. Because that's annoying, it

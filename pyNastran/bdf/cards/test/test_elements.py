@@ -453,7 +453,10 @@ class TestElements(unittest.TestCase):
         kt3 = 0.1
         pfast = model.add_pfast(pid, d, kt1, kt2, kt3, mcid=-1, mflag=0, kr1=0.,
                                 kr2=0., kr3=0., mass=0., ge=0.,
-                                comment='')
+                                comment='pfast')
+        pfastb = model.add_pfast(
+            pid+1, d, kt1, kt2, kt3, mcid=0, mflag=0, kr1=0.,
+            kr2=0., kr3=0., mass=0., ge=0.)
         model.validate()
 
         cfast.raw_fields()

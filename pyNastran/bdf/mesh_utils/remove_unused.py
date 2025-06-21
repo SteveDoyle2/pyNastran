@@ -118,6 +118,8 @@ def remove_unused(bdf_filename: PathLike,
         # not checked------------------------------------------
         'PHBDY', 'CHBDYG', 'CHBDYP', 'CHBDYE', 'RADBC', 'CONVM',  # 'CONV',
         'QVOL', 'PCONVM',  # 'PCONV',
+        'VIEW3D',
+
         #'PBCOMP', 'PDAMP5', 'CFAST',
         'CWELD',
         #'GMCORD',
@@ -148,7 +150,9 @@ def remove_unused(bdf_filename: PathLike,
         'PACABS', 'PMIC', 'MATPOR', 'AMLREG', 'CAABSF', 'MICPNT',
 
         # superelements
-        'SELOC', 'SEEXCLD', 'SENQSET',
+        'SELOC', 'SEEXCLD', 'SELABEL', 'SESUP', 'SECONCT',
+        'SENQSET', 'RELEASE',
+        'CSUPER', 'CSUPEXT',
 
         # parametric
         'FEEDGE', 'FEFACE',
@@ -626,8 +630,6 @@ def remove_unused(bdf_filename: PathLike,
             # freq_id exists, but we shouldn't be getting rid of it
             pass
         #    for freq_id,
-        elif card_type in not_implemented_types:
-            model.log.warning(f'skipping {card_type}')
         elif card_type == 'SNORM':
             for nid in ids:
                 card = model.normals[nid]
@@ -641,6 +643,8 @@ def remove_unused(bdf_filename: PathLike,
             for pid in ids:
                 card = model.properties[pid]
                 mids_used.add(card.mid)
+        elif card_type in not_implemented_types:
+            model.log.warning(f'skipping {card_type}')
         else:  # pragma: no cover
             raise NotImplementedError(card_type)
 
@@ -836,7 +840,6 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
     else:
         raise NotImplementedError(card_type)
 
-
 def _store_nsm(model: BDF, ids: np.ndarray, pids_used: set[int]) -> None:
     """helper for ``remove_unused``"""
     for nsm_id in ids:
@@ -859,7 +862,6 @@ def _store_nsm(model: BDF, ids: np.ndarray, pids_used: set[int]) -> None:
             else:
                 msg = 'found nsm_type=%r...\n%s' % (nsm.nsm_type, str(nsm))
                 raise NotImplementedError(msg)
-
 
 def _store_loads(model: BDF, unused_card_type, unused_ids,
                  nids_used: set[int],

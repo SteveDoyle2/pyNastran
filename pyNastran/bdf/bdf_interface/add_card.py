@@ -6474,7 +6474,8 @@ class AddSuperelements:
         self._add_methods.add_sesuport_object(se_suport)
         return se_suport
 
-    def add_release(self, seid, comp, nids, comment='') -> RELEASE:
+    def add_release(self, seid: int, comp: str, nids: list[int],
+                    comment: str='') -> RELEASE:
         release = RELEASE(seid, comp, nids, comment=comment)
         self._add_methods.add_release_object(release)
         return release
@@ -6492,10 +6493,12 @@ class AddSuperelements:
         self._add_methods.add_sebulk_object(sebulk)
         return sebulk
 
-    def add_seconct(self, seid_a: int, seid_b: int, tol: float, loc: str,
-                    nodes_a: list[int], nodes_b: list[int], comment: str='') -> SECONCT:
-        seconct = SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b,
-                          comment=comment)
+    def add_seconct(self, seid_a: int, seid_b: int,
+                    nodes_a: list[int], nodes_b: list[int],
+                    tol: float=1e-5, loc: str='YES',
+                    comment: str='') -> SECONCT:
+        seconct = SECONCT(seid_a, seid_b, nodes_a, nodes_b,
+                          tol=tol, loc=loc, comment=comment)
         self._add_methods.add_seconct_object(seconct)
         return seconct
 
@@ -6550,7 +6553,8 @@ class AddSuperelements:
         self._add_methods.add_setree_object(setree)
         return setree
 
-    def add_csuper(self, seid, psid, nodes, comment='') -> CSUPER:
+    def add_csuper(self, seid: int, psid: int, nodes: list[int],
+                   comment: str='') -> CSUPER:
         csuper = CSUPER(seid, psid, nodes, comment=comment)
         self._add_methods.add_csuper_object(csuper)
         return csuper

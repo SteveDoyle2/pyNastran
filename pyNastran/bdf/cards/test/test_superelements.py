@@ -11,6 +11,63 @@ MODEL_PATH = PKG_PATH / '..' / 'models'
 
 class TestSuperelements(unittest.TestCase):
 
+    def test_seconct(self):
+        model = BDF(debug=None)
+        model.sol = 103
+
+        super_a = BDF(debug=None)
+        super_a.add_grid(11, [1., 0., 0.])
+        super_a.add_grid(12, [2., 0., 0.])
+        super_a.add_grid(13, [3., 0., 0.])
+
+        super_a.add_grid(101, [1., 0., 0.])
+        super_a.add_grid(102, [2., 0., 0.])
+        super_a.add_grid(103, [3., 0., 0.])
+        seid_a = 10
+        seid_b = 10
+        model.superelement_models[('SUPER', 10, '')] = super_a
+
+        tol = 0.1
+        loc = 'NO'
+        nodes_a = [11, 12, 13]
+        nodes_b = [101, 102, 103]
+
+        seconct = model.add_seconct(
+            seid_a, seid_b,
+            nodes_a, nodes_b,
+            tol=tol, loc=loc, comment='seconct')
+        seconct.raw_fields()
+        model.cross_reference()
+        save_load_deck(model)
+
+    def test_release(self):
+        model = BDF(debug=None)
+
+        seid = 10
+        comp = '3'
+        psid = 42
+        nodes = [11, 12, 13]
+        release = model.add_release(seid, comp, nodes, comment='release')
+        csuper = model.add_csuper(
+            seid, psid, nodes,
+            comment='csuper')
+        label = 'CAT'
+        comps = ['A', 'B', 'C']
+        csupext = model.add_csupext(seid, nodes, comment='csupext')
+        selabel = model.add_selabel(seid, label, comment='selabel')
+        sesup = model.add_sesup(nodes, comps, comment='sesup')
+
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [2., 0., 0.])
+        model.add_grid(13, [3., 0., 0.])
+        release.raw_fields()
+        csuper.raw_fields()
+        csupext.raw_fields()
+        selabel.raw_fields()
+        sesup.raw_fields()
+        model.cross_reference()
+        save_load_deck(model)
+
     def _test_superelements_pch(self):
         model = BDF(mode='nx')
         model.is_superelements = True
