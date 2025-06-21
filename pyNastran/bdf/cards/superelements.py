@@ -798,12 +798,13 @@ class SETREE(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by SETREE seid=%s' % self.seid
+        super_ids = list(model.superelement_models.keys())
+        msg = f', which is required by SETREE seid={self.seid}; allowed={super_ids}'
         missing_superelements = []
         superelements_ref = []
         for super_id in self.superelements:
             super_key = ('SUPER', super_id, '')
-            if super_id in model.superelement_models:
+            if super_key in super_ids:
                 superelement = model.superelement_models[super_key]
             else:
                 missing_superelements.append(super_id)

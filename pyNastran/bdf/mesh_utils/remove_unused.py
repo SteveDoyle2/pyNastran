@@ -151,7 +151,7 @@ def remove_unused(bdf_filename: PathLike,
 
         # superelements
         'SELOC', 'SEEXCLD', 'SELABEL', 'SESUP', 'SECONCT',
-        'SENQSET', 'RELEASE',
+        'SETREE', 'SENQSET', 'RELEASE',
         'CSUPER', 'CSUPEXT',
 
         # parametric
