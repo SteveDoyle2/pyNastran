@@ -241,16 +241,21 @@ class TestNsm(unittest.TestCase):
 
     def test_nsml1_mass_by_element(self):
         eid_conrod = 1
-        # eid_crod = 2
-        # eid_ctube = 3
+        eid_crod = 2
+        eid_ctube = 3
+        eid_cbush = 4
 
         eid_cbar = 10
-        # eid_cbeam = 11
+        eid_cbeam = 11
 
         eid_quad = 20
         eid_tri = 21
 
-        pid_pbarl = 2
+        pid_prod = 1
+        pid_ptube = 2
+        pid_pbarl = 3
+        pid_pbeaml = 4
+        pid_pbush = 5
         pid_pshell = 10
         pid_pcomp = 11
 
@@ -267,31 +272,59 @@ class TestNsm(unittest.TestCase):
         model.add_grid(4, [0., 1., 0.])
 
         model.add_conrod(eid_conrod, mid, [1, 4])
+        model.add_crod(eid_crod, pid_prod, [1, 2])
+        model.add_ctube(eid_ctube, pid_ptube, [1, 2])
         model.add_cbar(eid_cbar, pid_pbarl, [1, 2], [0., 1., 0.], None, validate=True)
+        model.add_cbush(eid_cbush, pid_pbush, [1, 2], [0., 1., 0.], None)
 
         model.add_cquad4(eid_quad, pid_pshell, nids) # area=1.0
         model.add_ctria3(eid_tri, pid_pshell, [1, 2, 3]) # area=1.0
 
         model.add_mat1(mid, E, G, nu, rho=0.0)
+
+        model.add_prod(pid_prod, mid, 1.0)
+        model.add_ptube(pid_ptube, mid, 1.0)
         model.add_pbarl(pid_pbarl, mid, 'BAR', [1., 2.])
+        model.add_pbush(pid_pbush, [1.0])
+
         model.add_pshell(pid_pshell, mid1=mid, t=0.1) #, nsm=None)
         model.add_pcomp(pid_pcomp, mid, [0.1])
 
-        nsml1_conrod_ele = model.add_nsml1(1000, 'ELEMENT', 1.0, eid_conrod) # ???
-        nsml1_cbar_ele   = model.add_nsml1(1000, 'ELEMENT', 1.0, eid_cbar) # ???
+        nsml1_conrod_ele = model.add_nsml1(1000, 'ELEMENT', 1.0, eid_conrod)  # ???
+        nsml1_crod_ele   = model.add_nsml1(1000, 'ELEMENT', 1.0, eid_crod)   # ???
+        nsml1_ctube_ele  = model.add_nsml1(1000, 'ELEMENT', 1.0, eid_ctube)  # ???
+        nsml1_cbar_ele   = model.add_nsml1(1000, 'ELEMENT', 1.0, eid_cbar)  # ???
+        # nsml1_cbeam_ele  = model.add_nsml1(1000, 'ELEMENT', 1.0, eid_cbeam)  # ???
+        nsml1_cbush_ele  = model.add_nsml1(1000, 'ELEMENT', 1.0, eid_cbush) # ???
 
-        nsml1_pbar   = model.add_nsml1(2000, 'PBAR', 1.0, pid_pbarl) # correct; 1.0
-        nsml1_pshell = model.add_nsml1(2001, 'PSHELL', 1.0, pid_pshell) # correct; 1.0
-        nsml1_pcomp  = model.add_nsml1(2002, 'PCOMP', 1.0, pid_pcomp) # ???
+        nsml1_prod   = model.add_nsml1(2000, 'PROD', 1.0, pid_prod)       # correct; 1.0
+        nsml1_ptube  = model.add_nsml1(2000, 'PTUBE', 1.0, pid_ptube)     # correct; 1.0
+        nsml1_pbar   = model.add_nsml1(2000, 'PBAR', 1.0, pid_pbarl)     # correct; 1.0
+        # nsml1_pbeam = model.add_nsml1(2001, 'PBEAM', 1.0, pid_pbeaml) # correct; 1.0
+        nsml1_pbush  = model.add_nsml1(2002, 'PBUSH', 1.0, pid_pbush)    # correct; 1.0
+        nsml1_pshell = model.add_nsml1(2003, 'PSHELL', 1.0, pid_pshell)  # correct; 1.0
+        nsml1_pcomp  = model.add_nsml1(2004, 'PCOMP', 1.0, pid_pcomp)    # ???
+
+        nsml1_prod_all = model.add_nsml1(2000, 'PROD', 1.0, 'ALL')       # correct; 1.0
 
         model.validate()
         model.cross_reference()
         nsml1_conrod_ele.get_eid_mass_cg_by_element(model)
+        nsml1_crod_ele.get_eid_mass_cg_by_element(model)
+        nsml1_ctube_ele.get_eid_mass_cg_by_element(model)
         nsml1_cbar_ele.get_eid_mass_cg_by_element(model)
+        # nsml1_cbeam_ele.get_eid_mass_cg_by_element(model)
+        nsml1_cbush_ele.get_eid_mass_cg_by_element(model)
 
+        nsml1_pbush.get_eid_mass_cg_by_element(model)
+        nsml1_prod.get_eid_mass_cg_by_element(model)
+        nsml1_ptube.get_eid_mass_cg_by_element(model)
         nsml1_pbar.get_eid_mass_cg_by_element(model)
+        #nsml1_pbeam.get_eid_mass_cg_by_element(model)
         nsml1_pshell.get_eid_mass_cg_by_element(model)
         nsml1_pcomp.get_eid_mass_cg_by_element(model)
+
+        nsml1_prod_all.get_eid_mass_cg_by_element(model)
 
     def test_nsmadd(self):
         """tests the NSMADD and all NSM cards"""

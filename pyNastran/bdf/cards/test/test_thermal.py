@@ -10,12 +10,32 @@ from cpylog import SimpleLogger
 class TestThermal(unittest.TestCase):
     def test_view3d(self):
         model = BDF(debug=None)
-        icavity = 1
+        icavity = 10
+        iview = 9
+
+        view = model.add_view(iview, icavity, comment='view')
         view3d = model.add_view3d(
             icavity, gitb=4, gips=4, cier=4,
             error_tol=0.1, zero_tol=1e-10, warp_tol=0.01,
             rad_check=3, comment='view3d')
+        radlst = model.add_radlst(icavity, [10, 11, 12], matrix_type=1, comment='radlst')
+        radcav = model.add_radcav(icavity, [20, 21], comment='radcav')
+
+        iview2 = 20
+        icavity2 = 21
+        model.add_view(iview2, icavity2)
+        model.add_view3d(icavity2)
+        model.add_radlst(icavity2, [10, 11, 12])
+        model.add_radcav(icavity2, [20, 21])
+        index = 1
+        exchange_factors = [1., 2.]
+        radmtx = model.add_radmtx(
+            icavity, index, exchange_factors, comment='radmtx')
+        view.raw_fields()
         view3d.raw_fields()
+        radcav.raw_fields()
+        radlst.raw_fields()
+        radmtx.raw_fields()
         model.cross_reference()
         save_load_deck(model)
 

@@ -118,7 +118,8 @@ def remove_unused(bdf_filename: PathLike,
         # not checked------------------------------------------
         'PHBDY', 'CHBDYG', 'CHBDYP', 'CHBDYE', 'RADBC', 'CONVM',  # 'CONV',
         'QVOL', 'PCONVM',  # 'PCONV',
-        'VIEW3D',
+        'VIEW', 'VIEW3D',
+        'RADCAV', 'RADMTX',
 
         #'PBCOMP', 'PDAMP5', 'CFAST',
         'CWELD',

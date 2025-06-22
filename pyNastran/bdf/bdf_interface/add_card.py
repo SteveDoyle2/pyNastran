@@ -89,10 +89,11 @@ from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, AC
                                                     PLOAD, PLOAD1, PLOAD2, PLOAD4)
 from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
 
-from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
-                                           MAT8, MAT9, MAT10, MAT11, MAT3D,
-                                           MATG, MATHE, MATHP, CREEP, MATEV,
-                                           EQUIV, NXSTRAT)
+from pyNastran.bdf.cards.materials import (
+    MAT1, MAT2, MAT3, MAT4, MAT5,
+    MAT8, MAT9, MAT10, MAT11, MAT3D,
+    MATG, MATHE, MATHP, CREEP, MATEV,
+    EQUIV, NXSTRAT)
 from pyNastran.bdf.cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11, MATS1, MATDMG)
 
@@ -105,7 +106,8 @@ from pyNastran.bdf.cards.aero.aero import (
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3, MONDSP1,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
-from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
+from pyNastran.bdf.cards.aero.static_loads import (
+    AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG)
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.zona import (
     CAERO7, PAFOIL7, BODY7, AESURFZ, ACOORD, MKAEROZ,
@@ -1435,7 +1437,7 @@ class Add0dElements:
         self._add_methods.add_element_object(elem)
         return elem
 
-    def add_pvisc(self, pid, ce, cr, comment='') -> PVISC:
+    def add_pvisc(self, pid: int, ce: float, cr: float, comment: str='') -> PVISC:
         """
         Creates a PVISC card
 
@@ -1444,9 +1446,11 @@ class Add0dElements:
         pid : int
             property id for a CVISC
         ce : float
-            Viscous damping values for extension in units of force per unit velocity
+            Viscous damping values for extension in units
+            of force per unit velocity
         cr : float
-            Viscous damping values for rotation in units of moment per unit velocity.
+            Viscous damping values for rotation in units of
+            moment per unit velocity.
         comment : str; default=''
             a comment for the card
 
@@ -1713,7 +1717,9 @@ class Add1dElements:
         self._add_methods.add_element_object(elem)
         return elem
 
-    def add_ptube(self, pid, mid, OD1, t=None, nsm=0., OD2=None, comment='') -> PTUBE:
+    def add_ptube(self, pid: int, mid: int, OD1: float,
+                  t: Optional[float]=None, nsm: float=0.,
+                  OD2: Optional[float]=None, comment: str='') -> PTUBE:
         """
         Adds a PTUBE card
 
@@ -2329,8 +2335,10 @@ class Add1dElements:
         self._add_methods.add_element_object(elem)
         return elem
 
-    def add_cbush(self, eid: int, pid: int, nids, x: Optional[list[float]], g0: Optional[int], cid=None,
-                  s: float=0.5, ocid: int=-1, si: Optional[list[float]]=None, comment='') -> CBUSH:
+    def add_cbush(self, eid: int, pid: int, nids: list[int],
+                  x: Optional[list[float]], g0: Optional[int],
+                  cid=None, s: float=0.5, ocid: int=-1,
+                  si: Optional[list[float]]=None, comment: str='') -> CBUSH:
         """
         Creates a CBUSH card
 
@@ -2352,15 +2360,15 @@ class Add1dElements:
                   or damping from the PBUSH card
             None : use x
         cid : int; default=None
-            Element coordinate system identification. A 0 means the basic
-            coordinate system. If CID is blank, then the element coordinate
-            system is determined from GO or Xi.
+            Element coordinate system identification:
+             - blank, element coordinate system is determined
+               from GO or Xi.
+             - 0 means the basic coordinate system.
         s: float; default=0.5
             Location of spring damper (0 <= s <= 1.0)
         ocid : int; default=-1
-            Coordinate system identification of spring-damper offset.
-            (Integer > -1; Default = -1, which means the offset
-            point lies on the line between GA and GB)
+            >-1: Coordinate system of spring-damper offset
+            -1:  Offset point lies on the line between GA and GB
         si : list[float, float, float]; default=None
             Components of spring-damper offset in the OCID coordinate system
             if OCID > 0.
@@ -2369,7 +2377,8 @@ class Add1dElements:
             a comment for the card
 
         """
-        elem = CBUSH(eid, pid, nids, x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
+        elem = CBUSH(eid, pid, nids, x, g0,
+                     cid=cid, s=s, ocid=ocid, si=si, comment=comment)
         self._add_methods.add_element_object(elem)
         return elem
 
@@ -3249,7 +3258,7 @@ class AddRigidElements:
         comps : list[str]
             independent components
             len(comps) = len(weights)
-        GiJs : varies
+        Gijs : varies
             independent nodes
             list[list[int]]:
                 allows for different nodes for the different weights
@@ -3435,6 +3444,7 @@ class AddAcoustic:
                         nlayers=nlayers, radsurf=radsurf,
                         comment=comment)
         self._add_methods.add_amlreg_object(amlreg)
+        return amlreg
 
     def add_micpnt(self, eid: int, node_id: int, name: str, comment: str='') -> None:
         #acoustic
@@ -3487,18 +3497,21 @@ class AddAcoustic:
         return chacab
 
 
-    def add_caabsf(self, eid, pid, nodes, comment='') -> CHACAB:
+    def add_caabsf(self, eid: int, pid: int, nodes: list[int],
+                   comment: str='') -> CAABSF:
         caabsf = CAABSF(eid, pid, nodes, comment=comment)
         self._add_methods.add_element_object(caabsf)
         return caabsf
 
-    def add_chacbr(self, eid, pid, nodes, comment='') -> CHACBR:
+    def add_chacbr(self, eid: int, pid: int, nodes: list[int],
+                   comment: str='') -> CHACBR:
         chacbr = CHACBR(eid, pid, nodes, comment=comment)
         self._add_methods.add_element_object(chacbr)
         return chacbr
 
-    def add_paabsf(self, pid, tzreid=None, tzimid=None,
-                   s=1.0, a=1.0, b=0.0, k=0.0, rhoc=1.0, comment=''):
+    def add_paabsf(self, pid: int, tzreid=None, tzimid=None,
+                   s: float=1.0, a: float=1.0, b: float=0.0,
+                   k: float=0.0, rhoc: float=1.0, comment: str='') -> PAABSF:
         paabsf = PAABSF(pid, tzreid=tzreid, tzimid=tzimid,
                         s=s, a=a, b=b, k=k, rhoc=rhoc, comment=comment)
         self._add_methods.add_acoustic_property_object(paabsf)
@@ -5222,7 +5235,9 @@ class AddAero:
         fields = ['SBLND1', eid, eid1, eid2, option_bytes, w1, aero_grid, d1, d2] + x + [cid]
         self.reject_card_lines('SBLND1', print_card_(fields).split('\n'), show_log=False)
 
-    def add_massset(self, mass_set_id, scale, scales, mass_set_ids) -> None:
+    def add_massset(self, mass_set_id: int, scale: float,
+                    scales: list[float], mass_set_ids: list[int],
+                    comment: str='') -> None:
         """adds an MASSSET card"""
         fields = ['MASSSET', mass_set_id, scale]
         for scalei, massi in zip(scales, mass_set_ids):
@@ -5235,7 +5250,8 @@ class AddThermal:
     def __init__(self, add_methods: AddMethods):
         self._add_methods = add_methods
 
-    def add_temp(self, sid, temperatures, comment='') -> TEMP:
+    def add_temp(self, sid: int, temperatures: dict[int, float],
+                 comment: str='') -> TEMP:
         """
         Creates a TEMP card
 
@@ -5261,7 +5277,7 @@ class AddThermal:
         #self._add_thermal_load_object(temp)
         #return temp
 
-    def add_tempd(self, sid, temperature, comment='') -> TEMPD:
+    def add_tempd(self, sid: int, temperature: float, comment: str='') -> TEMPD:
         """
         Creates a TEMPD card
 
@@ -5640,6 +5656,36 @@ class AddThermal:
         self._add_methods.add_view3d_object(view3d)
         return view3d
 
+    def add_radcav(self, icavity: int, sets: list[int],
+                   ele_amb: Optional[int]=None,
+                   shadow: str='YES',
+                   scale: float=0.0,
+                   prtpch: Optional[int]=None,  # ???
+                   nefci: Optional[int]=None,  # ???
+                   rmax: float=0.1, ncomp: int=32,
+                   comment: str='') -> RADCAV:
+        radcav = RADCAV(
+            icavity, sets,
+            scale=scale, prtpch=prtpch, nefci=nefci,
+            rmax=rmax, ncomp=ncomp, comment=comment)
+        self._add_methods.add_radcav_object(radcav)
+        return radcav
+
+    def add_radlst(self, icavity: int, eids: list[int],
+                   matrix_type: int=1, comment: str='') -> RADLST:
+        """TODO"""
+        radlst = RADLST(icavity, eids, matrix_type=matrix_type, comment=comment)
+        # self._add_methods.add_radlst_object(radlst)
+        return radlst
+
+    def add_radmtx(self, icavity: int, index: int,
+                   exchange_factors: list[float], comment: str='') -> RADMTX:
+        """TODO"""
+        radmtx = RADMTX(icavity, index,
+                        exchange_factors, comment=comment)
+        self._add_methods.add_radmtx_object(radmtx)
+        return radmtx
+
     def add_pconv(self, pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
                   chlen=None, gidin=None, ce=0,
                   e1=None, e2=None, e3=None,
@@ -5967,8 +6013,10 @@ class AddOptimization:
         self._add_methods.add_dresp_object(dresp)
         return dresp
 
-    def add_dvcrel1(self, oid, Type, eid, cp_name, dvids, coeffs,
-                    cp_min=None, cp_max=1e20, c0=0., validate=True, comment='') -> DVCREL1:
+    def add_dvcrel1(self, oid: int, prop_type: str, eid: int, cp_name: str,
+                    dvids: list[int], coeffs: list[float],
+                    cp_min: Optional[float]=None, cp_max: float=1e20,
+                    c0: float=0., validate: bool=True, comment: str='') -> DVCREL1:
         """
         Creates a DVCREL1 card
 
@@ -5998,7 +6046,7 @@ class AddOptimization:
             a comment for the card
 
         """
-        dvcrel = DVCREL1(oid, Type, eid, cp_name, dvids, coeffs,
+        dvcrel = DVCREL1(oid, prop_type, eid, cp_name, dvids, coeffs,
                          cp_min=cp_min, cp_max=cp_max, c0=c0,
                          validate=validate, comment=comment)
         self._add_methods.add_dvcrel_object(dvcrel)

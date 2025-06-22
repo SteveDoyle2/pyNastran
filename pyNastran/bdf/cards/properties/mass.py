@@ -155,6 +155,7 @@ class NSM1x(Property):
     valid_properties = [
         'PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PRAC2D', # 'PCONEAX',
+        'PBUSH',
         'ELEMENT',
     ]
 
@@ -479,9 +480,8 @@ class NSML1(NSM1x):
         line_properties = {
             'PROD', 'PTUBE',
             'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
+            'PBUSH',
         }
-
-        id0: int = self.ids[0]
 
         if self.nsm_type in {'ELEMENT', 'CONROD'}:
             all_ids, id0 = get_id_id0(self.ids, model.elements)
@@ -531,8 +531,17 @@ class NSML1(NSM1x):
                 allowed_etype = 'CROD'
             elif self.nsm_type == 'PTUBE':
                 allowed_etype = 'CTUBE'
+            elif self.nsm_type == 'PBUSH':
+                allowed_etype = 'CBUSH'
             else:
-                raise NotImplementedError(self.nsm_type)
+                raise NotImplementedError((self.nsm_type, 'line'))
+
+            if self.ids == ['ALL']:
+                all_ids = [pid for pid, prop in model.properties.items()
+                           if prop.type in pline_properties]
+                id0 = all_ids[0]
+            else:
+                all_ids, id0 = get_id_id0(self.ids, model.properties)
 
             use_length = True
             prop = model.properties[id0]
@@ -560,12 +569,11 @@ class NSML1(NSM1x):
             elif self.nsm_type in {'PCOMP', 'PCOMPG'}:
                 shell_properties = {'PCOMP', 'PCOMPG'}
             else:
-                raise NotImplementedError(self.nsm_type)
+                raise NotImplementedError((self.nsm_type, 'shell'))
 
             if self.ids == ['ALL']:
-                all_dict = {pid: prop for pid, prop in model.properties.items()
-                            if prop.type in shell_properties}
-                all_ids = list(all_dict)
+                all_ids = [pid for pid, prop in model.properties.items()
+                           if prop.type in shell_properties]
             else:
                 all_ids = self.ids
             id0 = all_ids[0]

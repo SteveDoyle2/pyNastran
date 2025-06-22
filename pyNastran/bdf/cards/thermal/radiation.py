@@ -8,7 +8,7 @@ All set cards are defined in this file.  This includes:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import warnings
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -517,9 +517,13 @@ class RADCAV(ThermalBC):
         return RADCAV(icavity, sets, ele_amb=None, shadow='YES', scale=0.0,
                       prtpch=None, nefci=None, rmax=0.1, ncomp=32, comment='')
 
-    def __init__(self, icavity, sets, ele_amb=None,
-                 shadow='YES', scale=0.0, prtpch=None,
-                 nefci=None, rmax=0.1, ncomp=32, comment=''):
+    def __init__(self, icavity: int, sets: list[int],
+                 ele_amb: Optional[int]=None,
+                 shadow: str='YES',
+                 scale: float=0.0,
+                 prtpch: Optional[int]=None,  # ???
+                 nefci: Optional[int]=None,  # ???
+                 rmax: float=0.1, ncomp: int=32, comment: str=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment
@@ -538,7 +542,7 @@ class RADCAV(ThermalBC):
         self.sets = sets
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RADCAV card from ``BDF.add_card(...)``
 
@@ -552,12 +556,12 @@ class RADCAV(ThermalBC):
         """
         icavity = integer(card, 1, 'icavity')
         ele_amb = integer_or_blank(card, 2, 'ele_amb')
-        shadow = string_or_blank(card, 3, 'shadow', 'YES')
-        scale = double_or_blank(card, 4, 'scale', 0.0)
+        shadow = string_or_blank(card, 3, 'shadow', default='YES')
+        scale = double_or_blank(card, 4, 'scale', default=0.0)
         prtpch = integer_or_blank(card, 5, 'prtpch')
         nefci = string_or_blank(card, 6, 'nefci')
-        rmax = double_or_blank(card, 7, 'rmax', 1.0)
-        ncomp = integer_or_blank(card, 8, 'ncomp', 32)
+        rmax = double_or_blank(card, 7, 'rmax', default=1.0)
+        ncomp = integer_or_blank(card, 8, 'ncomp', default=32)
 
         sets = fields(integer, card, 'set', i=9, j=card.nfields)
         return RADCAV(icavity, sets, ele_amb=ele_amb,
@@ -622,7 +626,7 @@ class RADLST(ThermalBC):
     +--------+---------+--------+------+-------+--------+-------+------+--------+
 
     """
-    type = 'RADCAV'
+    type = 'RADLST'
 
     @classmethod
     def _init_from_empty(cls):
@@ -630,7 +634,8 @@ class RADLST(ThermalBC):
         eids = [1, 2, 3]
         return RADLST(icavity, eids, matrix_type=1, comment='')
 
-    def __init__(self, icavity, eids, matrix_type=1, comment=''):
+    def __init__(self, icavity: int, eids: list[int],
+                 matrix_type: int=1, comment: str=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment
@@ -710,7 +715,8 @@ class RADMTX(ThermalBC):
         exchange_factors = [1., 2.]
         return RADMTX(icavity, index, exchange_factors, comment='')
 
-    def __init__(self, icavity, index, exchange_factors, comment=''):
+    def __init__(self, icavity: int, index: int,
+                 exchange_factors: list[float], comment: str=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment
