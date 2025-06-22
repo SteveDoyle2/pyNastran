@@ -2581,9 +2581,12 @@ class Add2dElements:
         self._add_methods.add_element_object(elem)
         return elem
 
-    def add_cquad4(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-                   tflag=0, T1=None, T2=None, T3=None, T4=None,
-                   comment='') -> CQUAD4:
+    def add_cquad4(self, eid: int, pid: int, nids: list[int],
+                   theta_mcid: int | float=0.0, zoffset: float=0.0,
+                   tflag: int=0,
+                   T1: Optional[float]=None, T2: Optional[float]=None,
+                   T3: Optional[float]=None, T4: Optional[float]=None,
+                   comment: str='') -> CQUAD4:
         """
         Creates a CQUAD4 card
 
@@ -2593,8 +2596,8 @@ class Add2dElements:
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : list[int, int, int, int]
-            node ids
+        nids : list[int]
+            4 node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
             plane.  Requires MID1 and MID2.

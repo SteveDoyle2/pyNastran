@@ -836,9 +836,21 @@ class PCOMP(CompositeShellProperty):
         if comment:
             self.comment = comment
 
-        nplies = len(mids)
+        if isinstance(mids, integer_types):
+            nplies = len(thicknesses)
+            mids = [mids] * nplies
+        else:
+            nplies = len(mids)
+        assert nplies >= 1, nplies
+
+        if isinstance(thicknesses, float_types):
+            thicknesses = [thicknesses] * nplies
+
         if thetas is None:
             thetas = [0.] * nplies
+        elif isinstance(thetas, float_types):
+            thetas = [thetas] * nplies
+
         if souts is None:
             souts = ['NO'] * nplies
         #: Property ID

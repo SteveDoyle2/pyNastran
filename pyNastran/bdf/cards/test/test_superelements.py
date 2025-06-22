@@ -78,12 +78,10 @@ class TestSuperelements(unittest.TestCase):
         setree = model.add_setree(seid_c, seids, comment='')
         setree.raw_fields()
         model.cross_reference()
-        # save_load_deck(model)
+        save_load_deck(model)
 
     def test_release(self):
         model = BDF(debug=None)
-
-        # seid = 10
         comp = '3'
         psid = 42
         nodes = [11, 12, 13]
@@ -118,11 +116,13 @@ class TestSuperelements(unittest.TestCase):
         model.is_superelements = True
         bdf_filename = MODEL_PATH / 'bugs' / 'outboard_op4asmblk.pch'
         model.read_bdf(bdf_filename, punch=True)
-        #save_load_deck(model)
+        model.sol = 103
+        save_load_deck(model)
 
     def test_superelements_1(self):
         """SEMPLN/SELOC/SEBULK test"""
         model = BDF(debug=False)
+        model.sol = 103
         model.add_grid(2, [0., 0., 0.])
         model.add_grid(3, [0., 0., 1.])
         model.add_grid(4, [1., 0., 0.])
@@ -165,8 +165,10 @@ class TestSuperelements(unittest.TestCase):
             xref_loads=True, xref_constraints=True, xref_aero=True,
             xref_sets=True, xref_optimization=True,
             create_superelement_geometry=True, debug=True, word='')
+        model.uncross_reference()
+        model.cross_reference()
         os.remove('super_2.bdf')
-        #save_load_deck(model, punch=True)
+        save_load_deck(model)
 
     def test_superelement_2(self):
         """
@@ -175,7 +177,7 @@ class TestSuperelements(unittest.TestCase):
          - SELOAD
          - SEEXCLD
         """
-        model = BDF(debug=False)
+        model = BDF(debug=None)
         seid_a = 101
         seid_b = 102
         ids = [10, 20]
@@ -200,11 +202,11 @@ class TestSuperelements(unittest.TestCase):
         senqset.raw_fields()
 
         model.validate()
-
         save_load_deck(model, run_save_load_hdf5=False)
 
     def test_seexclude(self):
-        model = BDF(debug=False)
+        model = BDF(debug=None)
+        model.sol = 103
         seid_a = 1
         seid_b = 2
         nodes = [10, 11, 12]
@@ -231,7 +233,7 @@ class TestSuperelements(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
-        #save_load_deck(model, run_save_load_hdf5=False)
+        save_load_deck(model, run_save_load_hdf5=False)
 
     def test_superelement_setree(self):
         """tests the SETREE"""

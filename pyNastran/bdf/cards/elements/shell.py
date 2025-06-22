@@ -2357,8 +2357,12 @@ class CQUAD4(QuadShell):
         h5_file.create_dataset('zoffset', data=zoffsets)
         #self.tflag = tflag
 
-    def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-                 tflag=0, T1=None, T2=None, T3=None, T4=None, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 theta_mcid: int | float=0.0, zoffset: float=0.0,
+                 tflag: int=0,
+                 T1: Optional[float]=None, T2: Optional[float]=None,
+                 T3: Optional[float]=None, T4: Optional[float]=None,
+                 comment: str=''):
         """
         Creates a CQUAD4 card
 

@@ -30,7 +30,7 @@ class TestNsm(unittest.TestCase):
         G = None
         nu = 0.3
         nids = [1, 2, 3, 4]
-        model = BDF(debug=False)
+        model = BDF(debug=None)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -185,6 +185,15 @@ class TestNsm(unittest.TestCase):
             #print('mass[%s] = %s' % (nsm_id, mass))
             #print('----------------------------------------------')
 
+        for nsm_id, nsms in model.nsms.items():
+            expected = expected_dict[nsm_id]
+            for nsm in nsms:
+                if nsm.type == 'NSML1':
+                    if expected == -1.0:
+                        pass  # crash
+                    else:
+                        nsm.get_eid_mass_cg_by_element(model)
+
         model2 = save_load_deck(model, run_test_bdf=False)
         model2.reset_rslot_map()
         #print(model2._type_to_slot_map)
@@ -212,7 +221,7 @@ class TestNsm(unittest.TestCase):
 
     def test_nsm_prepare(self):
         """tests the NSMADD and all NSM cards using the prepare methods"""
-        model = BDF()
+        model = BDF(debug=None)
         nsm_id = 100
         fields = ['NSM', nsm_id, 'ELEMENT',
                   1, 1.0,
@@ -230,6 +239,59 @@ class TestNsm(unittest.TestCase):
         model.add_card(fields, 'NSML1', comment='', is_list=True,
                        has_none=True)
 
+    def test_nsml1_mass_by_element(self):
+        eid_conrod = 1
+        # eid_crod = 2
+        # eid_ctube = 3
+
+        eid_cbar = 10
+        # eid_cbeam = 11
+
+        eid_quad = 20
+        eid_tri = 21
+
+        pid_pbarl = 2
+        pid_pshell = 10
+        pid_pcomp = 11
+
+        mid = 100
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        nids = [1, 2, 3, 4]
+
+        model = BDF(debug=None)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        model.add_conrod(eid_conrod, mid, [1, 4])
+        model.add_cbar(eid_cbar, pid_pbarl, [1, 2], [0., 1., 0.], None, validate=True)
+
+        model.add_cquad4(eid_quad, pid_pshell, nids) # area=1.0
+        model.add_ctria3(eid_tri, pid_pshell, [1, 2, 3]) # area=1.0
+
+        model.add_mat1(mid, E, G, nu, rho=0.0)
+        model.add_pbarl(pid_pbarl, mid, 'BAR', [1., 2.])
+        model.add_pshell(pid_pshell, mid1=mid, t=0.1) #, nsm=None)
+        model.add_pcomp(pid_pcomp, mid, [0.1])
+
+        nsml1_conrod_ele = model.add_nsml1(1000, 'ELEMENT', 1.0, eid_conrod) # ???
+        nsml1_cbar_ele   = model.add_nsml1(1000, 'ELEMENT', 1.0, eid_cbar) # ???
+
+        nsml1_pbar   = model.add_nsml1(2000, 'PBAR', 1.0, pid_pbarl) # correct; 1.0
+        nsml1_pshell = model.add_nsml1(2001, 'PSHELL', 1.0, pid_pshell) # correct; 1.0
+        nsml1_pcomp  = model.add_nsml1(2002, 'PCOMP', 1.0, pid_pcomp) # ???
+
+        model.validate()
+        model.cross_reference()
+        nsml1_conrod_ele.get_eid_mass_cg_by_element(model)
+        nsml1_cbar_ele.get_eid_mass_cg_by_element(model)
+
+        nsml1_pbar.get_eid_mass_cg_by_element(model)
+        nsml1_pshell.get_eid_mass_cg_by_element(model)
+        nsml1_pcomp.get_eid_mass_cg_by_element(model)
 
     def test_nsmadd(self):
         """tests the NSMADD and all NSM cards"""
@@ -250,7 +312,7 @@ class TestNsm(unittest.TestCase):
         nu = 0.3
         nids = [1, 2, 3, 4]
 
-        model = BDF(debug=False)
+        model = BDF(debug=None)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])

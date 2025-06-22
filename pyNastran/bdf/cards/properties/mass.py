@@ -370,6 +370,20 @@ class NSML(NSMx):
         NSMx.__init__(self, sid, nsm_type, pid_eid, value, comment=comment)
 
 
+def get_id_id0(ids: list[int] | list[str],
+               mydict: dict[int, BaseCard]) -> tuple[list[int], int]:
+    if ids == ['ALL']:
+        all_ids = list(mydict)
+        id0 = all_ids[0]
+    else:
+        id0 = ids[0]
+        all_ids = ids
+        assert isinstance(all_ids, list), all_ids
+        assert isinstance(all_ids[0], integer_types), all_ids
+    assert isinstance(id0, integer_types), (self.ids, all_ids)
+    return all_ids, id0
+
+
 class NSML1(NSM1x):
     """
     Defines lumped non structural mass entries by VALUE,ID list.
@@ -456,22 +470,37 @@ class NSML1(NSM1x):
         use_length = False
         use_area = False
 
-        lines = {'CBAR', 'CBEAM', 'CROD', 'CTUBE'}
-        shell_elements = {'CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4', 'CQUADR', 'CQUAD8', 'CQUAD'}
+        line_elements = {
+            'CBAR', 'CBEAM', 'CROD', 'CTUBE', 'CBUSH', 'CONROD'}
+        shell_elements = {
+            'CTRIA3', 'CTRIA6', 'CTRIAR',
+            'CQUAD4', 'CQUADR', 'CQUAD8', 'CQUAD'}
+
+        line_properties = {
+            'PROD', 'PTUBE',
+            'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
+        }
 
         id0: int = self.ids[0]
-        if self.nsm_type == 'ELEMENT':
-            ncards = len(self.ids)
+
+        if self.nsm_type in {'ELEMENT', 'CONROD'}:
+            all_ids, id0 = get_id_id0(self.ids, model.elements)
+
+            if self.nsm_type == 'CONROD':
+                all_ids = [eid for eid in all_ids
+                           if model.elements[eid].type == 'CONROD']
+                id0 = all_ids[0]
+
+            ncards = len(all_ids)
             eids = np.zeros(ncards, dtype='int32')
             cg = np.zeros((ncards, 3), dtype='float64')
 
             elem0 = model.elements[id0]
             etype = elem0.type
-            if etype in lines:
-                line_elements = {'CBAR', 'CBEAM', 'CROD', 'CTUBE', 'CBUSH'}
+            if etype in line_elements:
                 use_length = True
                 length = np.zeros(ncards, dtype='float64')
-                for i, eid in enumerate(self.ids):
+                for i, eid in enumerate(all_ids):
                     eids[i] = eid
                     elem = model.elements[eid]
                     assert elem.type in line_elements, elem.type
@@ -480,7 +509,7 @@ class NSML1(NSM1x):
             elif etype in shell_elements:
                 use_area = True
                 area = np.zeros(ncards, dtype='float64')
-                for i, eid in enumerate(self.ids):
+                for i, eid in enumerate(all_ids):
                     eids[i] = eid
                     elem = model.elements[eid]
                     assert elem.type in shell_elements, elem.type
@@ -490,31 +519,59 @@ class NSML1(NSM1x):
             else:
                 raise NotImplementedError((self.nsm_type, 'shell', etype))
 
-        elif self.nsm_type == 'PSHELL':
-            use_area = True
+        elif self.nsm_type in line_properties:
+            pline_properties = {self.nsm_type}
+            if self.nsm_type in {'PBAR', 'PBARL'}:
+                pline_properties = {'PBAR', 'PBARL'}
+                allowed_etype = 'CBAR'
+            elif self.nsm_type in {'PBEAM', 'PBEAML'}:
+                pline_properties = {'PBEAM', 'PBEAML'}
+                allowed_etype = 'CBEAM'
+            elif self.nsm_type == 'PROD':
+                allowed_etype = 'CROD'
+            elif self.nsm_type == 'PTUBE':
+                allowed_etype = 'CTUBE'
+            else:
+                raise NotImplementedError(self.nsm_type)
+
+            use_length = True
             prop = model.properties[id0]
             ptype = prop.type
-            shell_properties = {'PSHELL'}
-            assert ptype in shell_properties, prop
+            assert ptype in pline_properties, f'allowed={pline_properties}\n{prop}'
             elems = [(eid, elem) for eid, elem in sorted(model.elements.items())
-                     if elem.type in shell_elements and elem.pid in self.ids]
+                     if elem.type == allowed_etype and elem.pid in self.ids]
 
             ncards = len(elems)
             eids = np.zeros(ncards, dtype='int32')
-            area = np.zeros(ncards, dtype='float64')
+            length = np.zeros(ncards, dtype='float64')
             cg = np.zeros((ncards, 3), dtype='float64')
             for i, (eid, elem) in enumerate(elems):
                 eids[i] = eid
                 elem = model.elements[eid]
-                assert prop.type in shell_properties, (elem, prop)
-                area[i] = elem.Area()
+                assert prop.type in pline_properties, (elem, prop)
+                length[i] = elem.Length()
                 cg[i, :] = elem.Centroid()
 
-        elif self.nsm_type in {'PCOMP', 'PCOMPG'}:
+        elif self.nsm_type in {'PSHELL', 'PCOMP', 'PCOMPG'}:
             use_area = True
+
+            if self.nsm_type == 'PSHELL':
+                shell_properties = {'PSHELL'}
+            elif self.nsm_type in {'PCOMP', 'PCOMPG'}:
+                shell_properties = {'PCOMP', 'PCOMPG'}
+            else:
+                raise NotImplementedError(self.nsm_type)
+
+            if self.ids == ['ALL']:
+                all_dict = {pid: prop for pid, prop in model.properties.items()
+                            if prop.type in shell_properties}
+                all_ids = list(all_dict)
+            else:
+                all_ids = self.ids
+            id0 = all_ids[0]
+
             prop = model.properties[id0]
             ptype = prop.type
-            shell_properties = {'PCOMP', 'PCOMPG'}
             assert ptype in shell_properties, prop
             elems = [(eid, elem) for eid, elem in sorted(model.elements.items())
                      if elem.type in shell_elements and elem.pid in self.ids]

@@ -150,9 +150,9 @@ def remove_unused(bdf_filename: PathLike,
         'PACABS', 'PMIC', 'MATPOR', 'AMLREG', 'CAABSF', 'MICPNT',
 
         # superelements
-        'SELOC', 'SEEXCLD', 'SELABEL', 'SESUP', 'SECONCT',
-        'SETREE', 'SENQSET', 'RELEASE',
-        'CSUPER', 'CSUPEXT',
+        'SEBULK', 'SELOC', 'SEEXCLD', 'SELABEL', 'SESUP',
+        'SECONCT', 'SELOAD', 'SETREE', 'SEMPLN', 'SENQSET',
+        'RELEASE', 'CSUPER', 'CSUPEXT',
 
         # parametric
         'FEEDGE', 'FEFACE',
