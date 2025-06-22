@@ -49,7 +49,10 @@ def write_geom3(op2_file: BinaryIO, op2_ascii,
         'RANDT1',
     ]
     cards_to_skip = [
-        'TEMPRB',
+        'TEMPRB', 'ACCEL',
+
+        # haven't checked correct table
+        'ACSRCE', 'LOADCYN', 'RFORCE1',
     ]
     supported_cards = ['PLOAD4', 'QHBDY'] + list(LOAD_MAP)
     for key in wrong_tables:
@@ -567,15 +570,6 @@ def _write_qhbdy(load_type, loads, nloads: int,
         #print(load.get_stats())
 
         nids = [0] * 8
-        #if flag == 1:
-            #flag = 'POINT'
-        #elif flag == 2:
-            #flag = 'LINE'
-        #elif flag == 5:
-            #flag = 'AREA4'
-        #elif flag == 9:
-            #flag = 'AREA8'
-
         if load.flag == 'POINT':
             # C:\NASA\m4\formats\git\examples\move_tpl\ex8a.op2 - flag=1
             flag = 1 # 0?
@@ -766,7 +760,7 @@ LOAD_MAP = {
 
     'LOAD': _write_load,
     'LSEQ': _write_lseq,
-    'ACCEL': _write_accel,
+    # 'ACCEL': _write_accel,
     'ACCEL1': _write_accel1,
     'SLOAD': _write_sload,
     'RFORCE': _write_rforce,
