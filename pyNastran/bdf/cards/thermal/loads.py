@@ -1374,11 +1374,11 @@ class TEMPP1(BaseCard):
         eid = 1
         tbar = 2.0
         tprime = 1.0
-        t_stress = 10.
+        t_stress = [10.]
         return TEMPP1(sid, eid, tbar, tprime, t_stress, comment='')
 
     def __init__(self, sid: int, eid: int,
-                 tbar: float, tprime: float, t_stress: float,
+                 tbar: float, tprime: float, t_stress: list[float],
                  comment: str=''):
         BaseCard.__init__(self)
         self.comment = comment
@@ -1387,6 +1387,7 @@ class TEMPP1(BaseCard):
         self.tbar = tbar
         self.tprime = tprime
         self.t_stress = t_stress
+        assert isinstance(t_stress, list), str(self)
 
     @classmethod
     def add_op2_data(cls, data, comment: str=''):
@@ -1399,6 +1400,7 @@ class TEMPP1(BaseCard):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid, eid, t, tprime, ts1, ts2 = data
         return TEMPP1(sid, eid, t, tprime, [ts1, ts2], comment=comment)

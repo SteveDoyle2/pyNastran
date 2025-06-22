@@ -145,7 +145,7 @@ from pyNastran.bdf.cards.dmig import (
     DMIG_UACCEL, DTI, DTI_UNITS,
     dtype_to_tin_tout_str, REVERSE_DMI_MAP)
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
-                                               TEMPRB, QVOL, QVECT)
+                                               TEMPRB, QVOL, QVECT, TEMPP1)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, CONVM, TEMPBC)
 from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
@@ -5404,6 +5404,13 @@ class AddThermal:
                      comment=comment)
         self._add_methods.add_dload_entry(load)
         return load
+
+    def add_tempp1(self, sid: int, eid: int,
+                   tbar: float, tprime: float, t_stress: float,
+                   comment: str='') -> TEMPP1:
+        tempp1 = TEMPP1(sid, eid, tbar, tprime, t_stress, comment=comment)
+        self._add_methods.add_load_object(tempp1)
+        return tempp1
 
     def add_chbdyg(self, eid, surface_type, nodes,
                    iview_front=0, iview_back=0,

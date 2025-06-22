@@ -8,6 +8,27 @@ from cpylog import SimpleLogger
 
 
 class TestThermal(unittest.TestCase):
+    def test_qvect(self):
+        model = BDF(debug=None)
+        sid = 42
+        q0 = 18.
+        t_source = 19.
+        eid = 2
+        eids = [eid]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_mat1(100, 3.0e7, None, 0.3)
+        model.add_conrod(2, 100, [1, 2], 1.0)
+        qvect = model.add_qvect(sid, q0, eids, t_source, ce=0,
+                                vector_tableds=None, control_id=0,
+                                comment='')
+        tbar = 5.0
+        tprime = 4.0
+        t_stress = [3.14, 2.71]
+        temmp1 = model.add_tempp1(
+            sid, eid, tbar, tprime, t_stress, comment='tempp1')
+        save_load_deck(model, run_remove_unused=False)
+
     def test_view3d(self):
         model = BDF(debug=None)
         icavity = 10

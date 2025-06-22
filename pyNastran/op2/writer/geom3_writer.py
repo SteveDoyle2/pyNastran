@@ -16,6 +16,7 @@ def write_geom3(op2_file: BinaryIO, op2_ascii,
     if not hasattr(obj, 'loads') and not hasattr(obj, 'load_combinations'):
         log.warning('missing loads/load_combinations')
         return
+
     loads_by_type = defaultdict(list)
     for unused_load_id, loads in obj.loads.items():
         for load in loads:
@@ -23,16 +24,29 @@ def write_geom3(op2_file: BinaryIO, op2_ascii,
     for unused_load_id, loads in obj.load_combinations.items():
         for load in loads:
             loads_by_type[load.type].append(load)
+    # for unused_load_id, load in obj.lseqs.items():
+    #     assert not isinstace(load, list), load
+        # for load in loads:
+        # loads_by_type[load.type].append(load)
+    for unused_load_id, loads in obj.dload_entries.items():
+        for load in loads:
+            loads_by_type[load.type].append(load)
     for unused_load_id, load in obj.tempds.items():
         loads_by_type[load.type].append(load)
+
     # log = SimpleLogger(level='debug')
     # log.warning(f'loads_by_type = {list(loads_by_type)}')
     # pedge, pface
 
     # return if no supported cards are found
     wrong_tables = [
-        # see EDT
-        'DEFORM', 'CLOAD', # these are be in the
+        # EDT
+        'DEFORM', 'CLOAD',
+        # GEOM4
+        'SPCD',
+        # DYNAMICS
+        'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'RANDPS',
+        'RANDT1',
     ]
     cards_to_skip = [
         'TEMPRB',
@@ -63,8 +77,8 @@ def write_geom3(op2_file: BinaryIO, op2_ascii,
 
     itable = -3
     for load_type, loads in sorted(loads_by_type.items()):
-        if load_type in ['SPCD']: # not a GEOM3 load
-            continue
+        # if load_type in ['SPCD']: # not a GEOM3 load
+        #     continue
         if load_type in cards_to_skip:
             log.warning(f'skipping GEOM3-{load_type}')
             continue
@@ -605,36 +619,33 @@ def _write_qvect(load_type, loads, nloads: int,
     nfields = 12
     spack = Struct(endian + b'i 2f i if if if 2i')
 
-    nloads = _get_nloads_from_elements(loads)
+    nloads = _get_nloads_from_eids(loads)
     nbytes = write_header(load_type, nfields, nloads, key, op2_file, op2_ascii)
     for load in loads:
         #(sid, qvol, cntrlnd, eid) = out
-        for eid in load.elements:
-            print(load.get_stats())
-            # vector_tableds = [e1, e2, e3]
-            # flags = [flag1, flag2, flag3]
-            # es = [e1, e2, e3]
-            # elements = [eid]
-            # assert flag1 in [0, 2], (sid, flags, es)
-            # assert flag2 in [0, 2], (sid, flags, es)
-            # assert flag3 in [0, 2], (sid, flags, es)
-            # flags = load.flags
-            e_flags = []
-            assert len(load.eids) == 1, load.eids
-            for value in load.vector_tableds:
-                assert value is not None, value
-                if isinstance(value, integer_types):
-                    e_flags.append(0)  # is this right?
-                else:
-                    e_flags.append(2)  # is this right?
-                e_flags.append(value)
+        # flags = [flag1, flag2, flag3]
+        # assert flag1 in [0, 2], (sid, flags, es)
+        # assert flag2 in [0, 2], (sid, flags, es)
+        # assert flag3 in [0, 2], (sid, flags, es)
+        # flags = load.flags
+        e_flags = []
+        assert len(load.eids) == 1, load.eids
+        for value in load.vector_tableds:
+            assert value is not None, value
+            if isinstance(value, integer_types):
+                e_flags.append(0)  # is this right?
+            else:
+                e_flags.append(2)  # is this right?
+            e_flags.append(value)
 
-            for eid in load.elements:
-                data = [load.sid, load.q0, load.t_source, load.ce,
-                        ] + e_flags + [load.control_id] + [eid]
-                assert None not in data, data
-                op2_ascii.write('  QVECT data=%s\n' % str(data))
-                op2_file.write(spack.pack(*data))
+        data0 = [load.sid, load.q0, load.t_source, load.ce,
+                 ] + e_flags + [load.control_id]
+        assert None not in data0, data0
+        for eid in load.eids:
+            data = data0 + [eid]
+            assert None not in data, data
+            op2_ascii.write('  QVECT data=%s\n' % str(data))
+            op2_file.write(spack.pack(*data))
     return nbytes
 
 def _write_qvol(load_type, loads, nloads: int,
