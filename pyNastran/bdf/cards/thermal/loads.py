@@ -193,8 +193,11 @@ class QVECT(ThermalLoad):
         return QVECT(sid, q0, eids, t_source=None, ce=0,
                      vector_tableds=None, control_id=0, comment='')
 
-    def __init__(self, sid, q0, eids, t_source=None,
-                 ce=0, vector_tableds=None, control_id=0, comment=''):
+    def __init__(self, sid: int, q0: float, eids: list[int],
+                 t_source: Optional[float]=None,
+                 ce: int=0,
+                 vector_tableds: Optional[list[int | float]]=None,
+                 control_id: int=0, comment: str=''):
         """
         Creates a QVECT card
 
@@ -282,7 +285,7 @@ class QVECT(ThermalLoad):
                      comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a QVECT card from the OP2
 

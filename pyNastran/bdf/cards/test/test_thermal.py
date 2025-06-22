@@ -75,6 +75,7 @@ class TestThermal(unittest.TestCase):
             'SUBCASE 1',
             '  DISP(PLOT) = ALL',
             '  ANALYSIS = HEAT',
+            '  LOAD = 43',
             'BEGIN BULK',
         ]
         model.case_control_deck = CaseControlDeck(lines, log=None)
@@ -84,6 +85,7 @@ class TestThermal(unittest.TestCase):
         model.add_grid(13, [1., 1., 0.])
         model.add_grid(14, [0., 1., 0.])
         model.add_grid(15, [0., 2., 0.])
+        model.add_grid(16, [0., 3., 0.])
 
         eid = 1
         pid = 1
@@ -266,7 +268,8 @@ class TestThermal(unittest.TestCase):
         bdf_filename2.seek(0)
         model2 = read_bdf(bdf_filename2, xref=False, log=log, debug=False)
         model2.safe_cross_reference()
-        save_load_deck(model, punch=False, run_renumber=False, run_test_bdf=False)
+        # punch = False,
+        save_load_deck(model, run_renumber=False)
 
     def test_thermal_2(self):
         """tests TABLEHT, TABLEH1"""
