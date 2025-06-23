@@ -62,8 +62,9 @@ def write_edom(op2_file, op2_ascii, model: BDF | OP2Geom,
         out[dvcrel.type].append(dvcrel_id)
     for dlink_id, dlink in sorted(model.dlinks.items()):
         out[dlink.type].append(dlink_id)
-    for dvgrid_id, dvgrid in sorted(model.dvgrids.items()):
-        out[dvgrid.type].append(dvgrid_id)
+    for dvgrid_id, dvgrids in sorted(model.dvgrids.items()):
+        for dvgrid in dvgrids:
+            out[dvgrid.type].append(dvgrid_id)
     if model.doptprm:
         out[model.doptprm.type].append(model.doptprm)
     if model.dtable:

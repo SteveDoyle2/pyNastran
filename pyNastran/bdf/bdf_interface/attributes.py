@@ -651,7 +651,7 @@ class BDFAttributes:
         self.dvprels: dict[int, DVPREL1 | DVPREL2] = {}
         self.dvmrels: dict[int, DVMREL1 | DVMREL2] = {}
         self.dvcrels: dict[int, DVCREL1 | DVCREL2] = {}
-        self.dvgrids: dict[int, DVGRID] = {}
+        self.dvgrids: dict[int, list[DVGRID]] = {}
         self.doptprm: Optional[DOPTPRM] = None
         self.dscreen: dict[int, DSCREEN] = {}
 
