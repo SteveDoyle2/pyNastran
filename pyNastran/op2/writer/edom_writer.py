@@ -63,7 +63,7 @@ def write_edom(op2_file, op2_ascii, model: BDF | OP2Geom,
     for dlink_id, dlink in sorted(model.dlinks.items()):
         out[dlink.type].append(dlink_id)
     for dvgrid_id, dvgrid in sorted(model.dvgrids.items()):
-        out['DVGRID'].append(dvgrid_id)
+        out[dvgrid.type].append(dvgrid_id)
     if model.doptprm:
         out[model.doptprm.type].append(model.doptprm)
     if model.dtable:
@@ -81,12 +81,12 @@ def write_edom(op2_file, op2_ascii, model: BDF | OP2Geom,
     itable = -3
 
     for name, ids in sorted(out.items()):
-        model.log.debug('EDOM %s %s' % (name, ids))
+        model.log.debug(f'EDOM {name} {ids}')
         #print('EDOM %s %s' % (name, ids))
         ncards = len(ids)
         assert ncards > 0, ncards
         if name in cards_to_skip:
-            model.log.warning('skipping EDOM-%s' % name)
+            model.log.warning(f'skipping EDOM-{name}')
             continue
 
         #if nmaterials == 0:
