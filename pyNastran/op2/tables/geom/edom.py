@@ -1190,7 +1190,72 @@ class EDOM(GeomCommon):
         return n
 
     def read_dvcrel2(self, data: bytes, n: int) -> int:
-        read_dvcrel2
+        """
+        Word Name Type Description
+        1    ID        I     Unique identification number
+        2    TYPE(2)   CHAR4 Name of an element connectivity entry
+        4    EID       I     Element identification number
+        5    FID       I     Entry is 0
+        6    CPMIN     RS    Minimum value allowed for this property
+        7    CPMAX     RS    Maximum value allowed for this property
+        8    EQID      I     DEQATN entry identification number
+        9    CPNAME(2) CHAR4 Name of connectivity property
+        11   FLAG      I     DESVAR/DTABLE
+        FLAG = 1000 DESVAR
+           12   DVIDi     I     A DESVAR entry identification number
+           Word 12 repeats until -1000
+        FLAG = 2000 DTABLE
+           12   LABLi(2)  CHAR4 Label for a constant on the DTABLE entry
+           Words 12 and 13 repeat until -2000
+        End flag when -1 occurs
+        """
+        op2: OP2Geom = self.op2
+        #return  self._read_dvxrel2(data, n, DVPREL2)
+
+        n0 = n
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
+        istart, iend = get_minus1_start_end(ints)
+        size = self.size
+        # cp_type = ''
+        # cp_name = ''
+        for (i0, i1) in zip(istart, iend):
+            #self.show_data(data[n+i0*size:n+i1*size], types='ifs')
+            assert ints[i1] == -1, ints[i1]
+            dvcrel_id = ints[i0]
+            cp_type_bytes = data[n0+(i0+1)*size:n0+(i0+3)*size]
+            eid, fid_zero = ints[i0+3:i0+5]
+            cp_min, cp_max = floats[i0+5:i0+7]
+            deqation = ints[i0+7]
+
+            #data[n0+iflag*size:n0+(iflag+1)*size])
+            cp_name_bytes = data[n0+(i0+8)*size:n0+(i0+10)*size]
+
+            if size == 4:
+                cp_type = cp_type_bytes.decode('latin1').rstrip()
+                cp_name = cp_name_bytes.decode('latin1').rstrip()
+            else:  # pragma: no cover
+                raise RuntimeError(size)
+
+            assert fid_zero == 0, f'fid={fid_zero} cp_name_bytes={cp_name_bytes}'
+
+            #print(dvcrel_id, cp_type, eid, cp_name, deqation)
+            iend, dvids, labels = _read_dvxrel2_flag(data, n0, i0, i1, size, ints)
+
+            #print(dvids, labels)
+            dvcrel = op2.add_dvcrel2(dvcrel_id, cp_type, eid,
+                                     cp_name, deqation,
+                                     dvids=dvids,
+                                     labels=labels,
+                                     cp_min=cp_min, cp_max=cp_max,
+                                     validate=True)
+            dvcrel.validate()
+            #print(dvprel)
+            #print('--------------------')
+
+            dvcrel.write_card_16()
+            n += (i1 - i0 + 1) * size
+        return n
 
     def read_dvmrel1(self, data: bytes, n: int) -> int:
         """

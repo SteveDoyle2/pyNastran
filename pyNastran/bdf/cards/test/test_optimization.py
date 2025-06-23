@@ -23,7 +23,7 @@ class TestOpt(unittest.TestCase):
      * DEQATN
     """
     def test_dvcrel2(self):
-        model = BDF(debug=True)
+        model = BDF(debug=None)
         oid = 20
 
         equation_id = 100
