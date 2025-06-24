@@ -848,7 +848,8 @@ def _store_nsm(model: BDF, ids: np.ndarray, pids_used: set[int]) -> None:
         for nsm in nsms:
             idsi = nsm.ids
 
-            if nsm.nsm_type in ['PROD', 'PBARL', 'PBEAML',
+            if nsm.nsm_type in ['PROD', 'PTUBE', 'PBUSH',
+                                'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
                                 'PSHELL', 'PCOMP', 'PCOMPG']:
                 if len(idsi) == 1 and idsi[0] == 'ALL':
                     idsi = list(model.properties.keys())

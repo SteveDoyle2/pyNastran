@@ -189,9 +189,12 @@ class NSM1x(Property):
 
         if isinstance(ids, integer_types):
             ids = [ids]
-        if isinstance(ids, str):
+        elif isinstance(ids, str):
             assert ids == 'ALL', 'ids=%r is not ALL' % ids
             ids = [ids]
+
+        if ids == ['ALL']:
+            pass
         else:
             # With the 'THRU' and 'THRU', 'BY' forms, blanks fields are
             # allowed for readability. Any combination of a list of IDs

@@ -774,6 +774,12 @@ class EPT:
                     #print('ivalues =', ivalues)
                     pid_eids = ints[ivalues].tolist()
                     #print('pid_eids =', pid_eids)
+                elif spec_opt == 2:
+                    all_word = data[n0+(istarti + 1) * size:
+                                    n0+(istarti + 3) * size].decode('latin1').rstrip()
+                    assert all_word == 'ALL', all_word
+                    pid_eids = ['ALL']
+
                 elif spec_opt == 3:
                     # datai = (3, 249311, 'THRU    ', 250189)
                     #print(f'i0={i0}')

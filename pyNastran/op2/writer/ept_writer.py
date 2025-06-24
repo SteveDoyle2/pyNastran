@@ -1,5 +1,7 @@
 from collections import defaultdict
+from typing import BinaryIO
 from struct import pack, Struct
+import numpy as np
 
 from .geom1_writer import write_geom_header, close_geom_table
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
@@ -22,7 +24,8 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
 
     #if not hasattr(obj, 'nodes'):
         #return
-    nproperties = len(obj.properties) + len(obj.properties_mass) + len(out)
+    nproperties = (len(obj.properties) + len(obj.properties_mass) +
+                   len(obj.nsms)) + len(out)
     if nproperties == 0:
         return
     write_geom_header(b'EPT', op2_file, op2_ascii, endian=endian)
@@ -41,6 +44,11 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
         out[prop.type].append(pid)
     for pid, prop in obj.properties_mass.items():
         out[prop.type].append(pid)
+    for pid, nsms in obj.nsms.items():
+        for nsm in nsms:
+            out[nsm.type].append(nsm)
+    # for pid, prop in obj.nsmadds.items():
+    #     out[prop.type].append(pid)
 
     skip_properties = [
         'PBEND', #'PBUSH1D',
@@ -53,27 +61,17 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
         if nproperties == 0:  # pragma: no cover
             continue
         if name in skip_properties:  # pragma: no cover
-            obj.log.warning('skipping EPT-%s' % name)
+            obj.log.warning(f'skipping EPT-{name}')
             continue
         #obj.log.debug('writing EPT-%s' % name)
 
         #print('EPT', itable, name)
-        if name == 'PBARL':
-            itable = write_pbarl(name, pids, itable, op2_file, op2_ascii, obj, endian=endian)
-            continue
-        elif name == 'PCOMP':
-            itable = write_pcomp(name, pids, itable, op2_file, op2_ascii, obj, endian=endian)
-            continue
-        elif name == 'PCOMPG':
-            itable = write_pcompg(name, pids, itable, op2_file, op2_ascii, obj, endian=endian)
-            continue
-        elif name == 'PBUSH':
-            itable = write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
-                                 nastran_format=nastran_format)
-            continue
-        elif name == 'PFAST':
-            itable = write_pfast(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
-                                 nastran_format=nastran_format)
+        if name in EPT_MAP:
+            func = EPT_MAP[name]
+            itable = func(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
+                          nastran_format=nastran_format)
+            # itable = write_pfast(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
+            #                      nastran_format=nastran_format)
             continue
 
         elif name == 'PELAS':
@@ -411,8 +409,9 @@ def write_card(op2_file, op2_ascii, obj, name, pids, spack, endian):
         raise NotImplementedError(name)
 
 
-def write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
-                nastran_format='nx'):
+def write_pbush(name: str, pids: np.ndarray, itable: int,
+                op2_file: BinaryIO, op2_ascii, obj, endian: bytes=b'<',
+                nastran_format: str='nx') -> int:
     """writes the PBUSH"""
     size = 4
     key = (1402, 14, 37)
@@ -520,8 +519,9 @@ def write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
     op2_ascii.write(str(data) + '\n')
     return itable
 
-def write_pfast(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
-                nastran_format='nx'):
+def write_pfast(name: str, pids: np.ndarray, itable: int,
+                op2_file: BinaryIO, op2_ascii, obj, endian: bytes=b'<',
+                nastran_format: str='nx') -> int:
     """writes the PFAST"""
     # TODO: there are 2 different types of PFAST cards...
 
@@ -603,7 +603,210 @@ def write_pfast(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
     op2_ascii.write(str(data) + '\n')
     return itable
 
-def write_pbarl(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
+def write_nsml(name: str, nsms: list, itable: int,
+               op2_file: BinaryIO, op2_ascii, obj, endian: bytes=b'<',
+               nastran_format: str='nx') -> int:
+    """
+    NX 2019.2
+    RECORD – NSML(3501, 35, 994)
+
+    Defines a set of lumped nonstructural mass by ID.
+    Word Name Type Description
+    1 SID         I Set identification number
+    2 PROP(2) CHAR4 Set of properties or elements
+    4 ID          I Property of element identification number
+    5 VALUE      RS Lumped nonstructural mass value
+    Words 4 and 5 repeat until -1 occurs
+
+      ints    = (3, ELEMENT, 0,    200, 0.7, -1,
+                 4, PSHELL,  0,   6401, 4.2, -1)
+      floats  = (3, ELEMENT, 0.0,  200, 0.7, -1,
+                 4, PSHELL,  0.0, 6401, 4.2, -1)
+
+    id     : 10
+    ids    : [10]
+    nsm_type : 'PSHELL'
+    sid    : 3000
+    value  : 1.0
+    """
+    key = (3501, 35, 994)
+
+    nfieldsi = 0
+    for nsm in nsms:
+        nfieldsi += 5 + 2 * len(nsm.ids)
+        assert len(nsm.ids) == 1, nsm.get_stats()
+
+    nvalues = nfieldsi + 3 # +3 comes from the keys
+    nbytes = nvalues * 4
+    op2_file.write(pack('3i', *[4, nvalues, 4]))
+    op2_file.write(pack('i', nbytes)) #values, nbtyes))
+
+    op2_file.write(pack('3i', *key))
+    op2_ascii.write('%s %s\n' % (name, str(key)))
+
+    # nfields = 0
+    for nsm in nsms:
+        # print(nsm.get_stats())
+        # sid    : 1000
+        # nsm_type : 'ELEMENT'
+        # value  : 1.0
+        # ids    : [1]
+        # if nsm.nsm_type == 'ELEMENT':
+        #     nsm_type_bytes = b'ELEM'
+        # else:
+        nsm_type8 = f'{nsm.nsm_type:<8}'
+        nsm_type_bytes = nsm_type8.encode('latin1')
+
+        # ints = (3, ELEMENT, 0, 200, 0.7, -1,
+        #         4, PSHELL, 0, 6401, 4.2, -1)
+        fmt = b'i8si'
+        data = [nsm.sid, nsm_type_bytes, 0, ]
+        value = nsm.value
+        for idi in nsm.ids:
+            data.extend([idi, value])
+            fmt += b'if'
+        fmt += b'i'
+        data.append(-1)
+
+        struct1 = Struct(fmt)
+        op2_file.write(struct1.pack(*data))
+        op2_ascii.write(str(data) + '\n')
+
+    op2_file.write(pack('i', nbytes))
+    itable -= 1
+    data = [
+        4, itable, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2_file.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
+    return itable
+
+def write_nsml1_nsm1(name: str, nsms: list, itable: int,
+                     op2_file: BinaryIO, op2_ascii, obj, endian: bytes=b'<',
+                     nastran_format: str='nx') -> int:
+    """
+    Writes the NX cards:
+      NSM1(3301, 33, 992)
+      NSML1(3701, 37, 995) - lumped nonstructural mass entries by VALUE, ID list.
+
+    Word Name Type Description
+    1 SID      I Set identification number
+    2 PROP CHAR4 Set of properties
+    3 TYPE CHAR4 Set of elements
+    4 VALUE   RS Lumped nonstructural mass value
+    5 SPECOPT  I Specification option
+    SPECOPT=1 By IDs
+      6 ID I Property of element identification number
+      Word 6 repeats until -1 occurs
+    SPECOPT=2 All
+      6 ALL(2) CHAR4 Keyword ALL
+      Words 6 and 7 repeat until -1 occurs
+    SPECOPT=3 Thru range
+      6 ID1         I Starting identification number
+      7 THRU(2) CHAR4 Keyword THRU
+      9 ID2         I Ending identification number
+      Words 6 through 9 repeat until -1 occurs
+    SPECOPT=4 Thru range with by
+      6 ID1         I Starting identification number
+      7 THRU(2) CHAR4 Keyword THRU
+      9 ID2         I Ending identification number
+      10 BY(2)  CHAR4 Keyword BY
+      12 N I Increment
+      Words 6 through 12 repeat until -1 occurs
+
+    data = (1, ELEMENT, 466.2,
+            3, 249311, THRU, 250189, -1,
+            3, 250656, THRU, 251905, -1,
+            3, 270705, THRU, 275998, -1,
+            3, 332687, THRU, 334734, -1,
+            -2,)
+    [1000, b'ELEMENT ', 1.0,
+        1, 42, -1,
+     1001, b'ELEMENT ', 1.0, 1, 42, -1, -1]
+    """
+    nsm0 = nsms[0]
+    if nsm0.type == 'NSML1':
+        key = (3701, 37, 995)
+    elif nsm0.type == 'NSM1':
+        key = (3301, 33, 992)
+    else:  # pragma: no cover
+        raise RuntimeError(nsm0.get_stats())
+    # fmt0 = endian + b'2i8s 8sf'
+
+    nfieldsi = 0
+    for nsm in nsms:
+        if nsm.ids == ['ALL']:  # SPECOPT=2
+            #  1     2      3      4         5       6      7      8   9
+            #[sid, 'ELEM, 'ENT ', value, SPECOPT, 'ALL ', '    ', -1, -2]
+            #fmt += b'i8sf i8s'  # 7 fields here; fmt0
+
+            #
+            #data.extend([2, b'ALL     '], -1)
+            nfieldsi += 9
+        else:
+            nidsi = len(nsm.ids) + 4  # 1 flag; -1, -2
+            nfieldsi += 3 + nidsi
+
+    nvalues = nfieldsi + 3 # +3 comes from the keys
+    nbytes = nvalues * 4
+    op2_file.write(pack('3i', *[4, nvalues, 4]))
+    op2_file.write(pack('i', nbytes)) #values, nbtyes))
+
+    op2_file.write(pack('3i', *key))
+    op2_ascii.write('%s %s\n' % (name, str(key)))
+
+    # nfields = 0
+    # all_data = []
+    # minus2_bytes = pack('i', -2)
+    for nsm in nsms:
+        # sid    : 1000
+        # nsm_type : 'ELEMENT'
+        # value  : 1.0
+        # ids    : [1]
+        # if nsm.nsm_type == 'ELEMENT':
+        #     nsm_type_bytes = b'ELEM'
+        # else:
+        nsm_type8 = f'{nsm.nsm_type:<8}'
+        nsm_type_bytes = nsm_type8.encode('latin1')
+
+        data = [nsm.sid, nsm_type_bytes, nsm.value]
+        if nsm.ids == ['ALL']:  # SPECOPT=2
+            fmt = b'i8sf i8s i'
+            data.extend([2, b'ALL     ', -1])
+        else:
+            # SPECOPT=1 By IDs
+            #   6 ID I Property of element identification number
+            #   Word 6 repeats until -1 occurs
+            nidsi = len(nsm.ids) + 2  # 3=1 for specopt, 2 for -1/-1
+            fmt = f'i8sf {nidsi}i'.encode('latin1')
+            assert isinstance(nsm.ids, list), nsm.ids
+            data.append(1)
+            data.extend(nsm.ids)
+            data.extend([-1])
+
+        fmt += b'i'
+        data.append(-2)  # end of table
+        # all_data.extend(data)
+        struct1 = Struct(fmt)
+        op2_file.write(struct1.pack(*data))
+        op2_ascii.write(str(data) + '\n')
+
+    # print(all_data)
+    # assert len(all_data) == nfieldsi, (nfieldsi, len(all_data), all_data)
+    op2_file.write(pack('i', nbytes))
+    itable -= 1
+    data = [
+        4, itable, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2_file.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
+    return itable
+
+def write_pbarl(name: str, pids: np.ndarray, itable: int,
+                op2_file: BinaryIO, op2_ascii, obj, endian: bytes=b'<',
+                nastran_format: str='nx') -> int:
     """writes the PBARL"""
     key = (9102, 91, 52)
     fmt0 = endian + b'2i8s8sf'
@@ -651,7 +854,9 @@ def write_pbarl(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
     op2_ascii.write(str(data) + '\n')
     return itable
 
-def write_pcomp(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
+def write_pcomp(name: str, pids: np.ndarray, itable: int,
+                op2_file: BinaryIO, op2_ascii, obj, endian: bytes=b'<',
+                nastran_format: str='nx') -> int:
     """writes the PCOMP"""
     key = (2706, 27, 287)
 
@@ -745,7 +950,9 @@ def write_pcomp(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
 
     return itable
 
-def write_pcompg(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
+def write_pcompg(name: str, pids: np.ndarray, itable: int,
+                 op2_file: BinaryIO, op2_ascii, obj, endian: bytes=b'<',
+                 nastran_format: str='nx') -> int:
     """writes the PCOMPG"""
     key = (15006, 150, 604)
 
@@ -1057,3 +1264,16 @@ def _write_pbush1d(name, model, pids, spack, op2_file, op2_ascii, endian):
         #if min([typea, types, typed, typeg, typef]) < 0:
             #raise RuntimeError(f'typea={typea} types={types} typed={typed} typeg={typeg} typef={typef}')
     return
+
+
+EPT_MAP = {
+    # 'NSM1': write_nsml1_nsm1,  # has some issues
+
+    'NSML': write_nsml,
+    'NSML1': write_nsml1_nsm1,
+    'PBARL': write_pbarl,
+    'PCOMP': write_pcomp,
+    'PCOMPG': write_pcompg,
+    'PBUSH': write_pbush,
+    'PFAST': write_pfast,
+}

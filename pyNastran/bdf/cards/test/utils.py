@@ -101,7 +101,8 @@ def save_load_deck(model: BDF, xref='standard', punch: bool=True,
         log_error = SimpleLogger(level='error', encoding='utf-8')
         test_bdf(folder, 'model2.bdf', stop_on_failure=True,
                  punch=punch,
-                 quiet=True, log=log_error, is_lax_parser=True)
+                 quiet=True, log=log_error, is_lax_parser=True,
+                 run_mass=run_mass_properties)
         os.remove('model2.test_bdf.bdf')
 
     nelements = len(model2.elements) + len(model2.masses)

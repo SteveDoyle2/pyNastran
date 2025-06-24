@@ -218,6 +218,7 @@ class TestNsm(unittest.TestCase):
             self.assertEqual(mass, 0.0)
             #print('mass[%s] = %s' % (nsm_id, mass))
         #print('done with null')
+        save_load_deck(model, run_mass_properties=False)
 
     def test_nsm_prepare(self):
         """tests the NSMADD and all NSM cards using the prepare methods"""
@@ -238,6 +239,33 @@ class TestNsm(unittest.TestCase):
                        has_none=True)
         model.add_card(fields, 'NSML1', comment='', is_list=True,
                        has_none=True)
+        save_load_deck(model, run_mass_properties=False)
+
+    def test_nsml1_single(self):
+        eid_conrod = 42
+        mid = 100
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        nids = [1, 2, 3, 4]
+
+        model = BDF(debug=None)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        model.add_conrod(eid_conrod, mid, [1, 4])
+        model.add_mat1(mid, E, G, nu, rho=0.0)
+        # if 0:
+        model.add_nsml1(1000, 'ELEMENT', 1.0, eid_conrod)  # ???
+        model.add_nsml1(1000, 'PSHELL', 1.0, 'ALL')  # ???
+        model.add_nsml1(1001, 'ELEMENT', 1.0, eid_conrod)  # ???
+        # else:
+        model.add_nsm1(1000, 'ELEMENT', 1.0, eid_conrod)  # ???
+        model.add_nsm1(1000, 'PSHELL', 1.0, 'ALL')  # ???
+        model.add_nsm1(1001, 'ELEMENT', 1.0, eid_conrod)  # ???
+        save_load_deck(model, run_mass_properties=False)
 
     def test_nsml1_mass_by_element(self):
         eid_conrod = 1
@@ -325,6 +353,7 @@ class TestNsm(unittest.TestCase):
         nsml1_pcomp.get_eid_mass_cg_by_element(model)
 
         nsml1_prod_all.get_eid_mass_cg_by_element(model)
+        save_load_deck(model, run_mass_properties=False)
 
     def test_nsmadd(self):
         """tests the NSMADD and all NSM cards"""
@@ -376,6 +405,7 @@ class TestNsm(unittest.TestCase):
         self.assertAlmostEqual(mass, 8.0)
         model2 = save_load_deck(model)
         mass, unused_cg, unused_I = mass_properties_nsm(model2, nsm_id=5000)
+        save_load_deck(model, run_mass_properties=False)
 
     #def test_nsm(self):
         #"""tests a complete nsm example"""
