@@ -404,9 +404,42 @@ class TestNsm(unittest.TestCase):
 
         mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=5000)
         self.assertAlmostEqual(mass, 8.0)
+
         model2 = save_load_deck(model)
         mass, unused_cg, unused_I = mass_properties_nsm(model2, nsm_id=5000)
         save_load_deck(model, run_mass_properties=False)
+
+    def test_nsmadd_short(self):
+        """tests the NSMADD and all NSM cards"""
+        eid_quad = 1
+        pid_pshell = 10
+        mid = 100
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        nids = [1, 2, 3, 4]
+
+        model = BDF(debug=True)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(eid_quad, pid_pshell, nids) # area=1.0
+        model.add_mat1(mid, E, G, nu, rho=0.0)
+        model.add_pshell(pid_pshell, mid1=mid, t=0.1) #, nsm=None)
+
+        model.add_nsm1(1000, 'PSHELL', 1.0, pid_pshell, comment='nsm1') # correct; 1.0
+        model.add_nsml1(2000, 'PSHELL', 1.0, pid_pshell, comment='nsml1') # correct; 1.0
+        model.add_nsml(3000, 'PSHELL', pid_pshell, 1.0, comment='nsml') # correct; 1.0
+        model.add_nsml(4000, 'PSHELL', pid_pshell, 1.0, comment='nsml') # correct; 1.0
+        model.add_nsmadd(5000, [1000, 2000, 3000, 4000], comment='nsmadd')
+        model.add_nsmadd(5000, [1000, 2000, 3000, 4000], comment='nsmadd')
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        save_load_deck(model, run_mass_properties=False,
+                       run_remove_unused=False, run_convert=False,
+                       run_save_load_hdf5=False)
 
     #def test_nsm(self):
         #"""tests a complete nsm example"""

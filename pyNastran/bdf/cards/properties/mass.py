@@ -615,6 +615,7 @@ class NSML1(NSM1x):
             raise RuntimeError((use_area, use_length))
         return eids, mass, cg
 
+
 class NSMADD(BaseCard):
     """
     Defines non structural mass as the sum of the sets listed.
@@ -626,7 +627,7 @@ class NSMADD(BaseCard):
     +--------+----+----+-----+
     """
     type = 'NSMADD'
-    _properties = ['nsm_ids']
+    _properties = ['ids', 'nsm_ids', 'conid']
 
     @classmethod
     def _init_from_empty(cls):
@@ -658,11 +659,11 @@ class NSMADD(BaseCard):
     def validate(self):
         usets = np.unique(self.sets)
         if not len(self.sets) == len(usets):
-            warnings.warn(f'NSMADD sid={sid} has duplicate set ids\n{str(self.sets)}')
+            warnings.warn(f'NSMADD sid={self.sid} has duplicate set ids\n{str(self.sets)}')
         self.sets_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an NSMADD card from ``BDF.add_card(...)``
 
@@ -708,6 +709,14 @@ class NSMADD(BaseCard):
             else:
                 raise TypeError('type=%s; nsm=\n%s' % (type(nsm), nsm))
         return nsm_ids
+
+    @property
+    def ids(self):
+        return self.nsm_ids
+
+    @property
+    def conid(self) -> int:
+        return self.sid
 
     def cross_reference(self, model: BDF) -> None:
         """

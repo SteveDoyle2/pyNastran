@@ -4,6 +4,7 @@ from struct import pack, Struct
 import numpy as np
 
 from .geom1_writer import write_geom_header, close_geom_table
+from .geom4_writer import _write_spcadd
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
 
@@ -23,6 +24,9 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
         out[pdampt.type].append(pid)
     for pid, pbusht in obj.pbusht.items():
         out[pbusht.type].append(pid)
+    for nsm_id, nsmadds in obj.nsmadds.items():
+        for card in nsmadds:
+            out[card.type].append(card)
 
     #if not hasattr(obj, 'nodes'):
         #return
@@ -68,8 +72,10 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
         #obj.log.debug('writing EPT-%s' % name)
 
         #print('EPT', itable, name)
+        log = obj.log
         if name in EPT_MAP:
             func = EPT_MAP[name]
+            log.warning(f'EPT: {name}')
             itable = func(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
                           nastran_format=nastran_format)
             # itable = write_pfast(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
@@ -599,6 +605,15 @@ def write_pfast(name: str, pids: np.ndarray, itable: int,
         op2_file.write(struct1.pack(*data_in))
         op2_ascii.write(str(data_in) + '\n')
 
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
+
+def write_nsmadd(card_type: str, cards: list, itable: int,
+                 op2_file: BinaryIO, op2_ascii, obj, endian: bytes=b'<',
+                 nastran_format: str='nx', size: int=4) -> int:
+    ncards = len(cards)
+    nbytes = _write_spcadd(card_type, cards, ncards, op2_file, op2_ascii,
+                           endian)
     itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
     return itable
 
@@ -1215,11 +1230,13 @@ def write_pconv(name: str, props: list, itable: int,
             e3 = 0.0 if prop.e3 is None else prop.e3
             chlen = 0.0 if prop.chlen is None else prop.chlen
             gidin = 0 if prop.gidin is None else prop.gidin
+            ftype = 0 if prop.ftype is None else prop.ftype
+            ce = 0 if prop.ce is None else prop.ce
             data = [prop.pconid, mid, prop.form, prop.expf,
-                    prop.ftype, tid, 0, 0,
-                    chlen, gidin, prop.ce,
+                    ftype, tid, 0, 0,
+                    chlen, gidin, ce,
                     e1, e2, e3]
-            assert None not in data, data
+            assert None not in data, (data, data.index(None))
             op2_file.write(struct1.pack(*data))
             op2_ascii.write(str(data) + '\n')
 
@@ -1474,6 +1491,7 @@ def _write_table_footer(op2_file: BinaryIO, op2_ascii,
 
 
 EPT_MAP = {
+    'NSMADD': write_nsmadd,
     'NSM': write_nsm,
     'NSM1': write_nsm1,
 
