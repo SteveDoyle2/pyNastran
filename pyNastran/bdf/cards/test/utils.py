@@ -31,7 +31,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     IS_H5PY = False
 
-def save_load_deck(model: BDF, xref='standard', punch: bool=True,
+def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
                    run_remove_unused: bool=True,
                    run_convert: bool=True,
                    run_renumber: bool=True,

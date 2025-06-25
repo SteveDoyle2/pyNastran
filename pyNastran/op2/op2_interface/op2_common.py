@@ -704,7 +704,7 @@ class OP2Common(Op2Codes, F06Writer):
         n = func(data, n)  # gets all the grid/mat cards
         assert n is not None, name
         if n != ndata:  # pragma: no cover
-            assert isinstance(n, int), f'mishandled geometry table for {name}; n must be an int; n={n}'
+            assert isinstance(n, int), f'mishandled geometry table for {name}; n must be an int; n={n}; type={type(n)}'
             msg = f'mishandled geometry table for {name}; n={n} len(data)={ndata}; should be equal'
             self.log.error(msg)
             #raise RuntimeError(msg)

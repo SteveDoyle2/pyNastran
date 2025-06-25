@@ -906,7 +906,7 @@ class EPT:
             zero_two = ints[i0+3]
             value = float(floats[i0+4])
             spec_opt = ints[i0+5]
-            assert zero_two in [0, 2], zero_two
+            assert zero_two in [0, 2], f'sid={sid} nsm_type={nsm_type!r} value={value}; 0/2={zero_two}'
             #nii = 6
             #print(ints[i0+nii:i1])
             #print(floats[i0+nii:i1])
@@ -923,8 +923,8 @@ class EPT:
                 # 7 ID I
                 ids = ints[i0+6:i1]
             elif spec_opt == 2:
-                word = data[n0+(i0+6)*size:n0+i1*size]
-                ids = word
+                word = data[n0+(i0+6)*size:n0+i1*size].decode('latin1').rstrip()
+                ids = [word]
             elif spec_opt == 3:  # thru
                 # datai = (249311, 'THRU    ', 250189)
                 #datai = data[n0+(i0+6)*size:n0+i1*size]
@@ -945,7 +945,7 @@ class EPT:
             n += (i1 - i0 + 1) * size
             ncards += 1
         op2.card_count['NSM1'] = ncards
-        return n
+        return int(n)
 
     def read_nsm(self, data: bytes, n: int) -> int:
         """NSM"""
@@ -2848,12 +2848,12 @@ class EPT:
         """
         op2: OP2Geom = self.op2
         ntotal = 56  # 14*4
-        s = Struct(op2._endian + b'3if 4i fii 3f')
+        struct1 = Struct(op2._endian + b'3if 4i fii 3f')
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         props = []
         for unused_i in range(nentries):
-            out = s.unpack(data[n:n+ntotal])
+            out = struct1.unpack(data[n:n+ntotal])
             (pconid, mid, form, expf, ftype, tid, unused_undef1, unused_undef2, chlen,
              gidin, ce, e1, e2, e3) = out
             data_in = (pconid, mid, form, expf, ftype, tid, chlen,

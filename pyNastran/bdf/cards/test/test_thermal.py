@@ -289,8 +289,9 @@ class TestThermal(unittest.TestCase):
         bdf_filename2.seek(0)
         model2 = read_bdf(bdf_filename2, xref=False, log=log, debug=False)
         model2.safe_cross_reference()
-        # punch = False,
-        save_load_deck(model, run_renumber=False)
+
+        save_load_deck(model, nastran_format='nx', run_renumber=False)
+        save_load_deck(model, nastran_format='msc', run_renumber=False)
 
     def test_thermal_2(self):
         """tests TABLEHT, TABLEH1"""

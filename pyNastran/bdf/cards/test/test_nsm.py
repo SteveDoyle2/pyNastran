@@ -247,7 +247,7 @@ class TestNsm(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        nids = [1, 2, 3, 4]
+        # nids = [1, 2, 3, 4]
 
         model = BDF(debug=None)
         model.add_grid(1, [0., 0., 0.])
@@ -261,10 +261,11 @@ class TestNsm(unittest.TestCase):
         model.add_nsml1(1000, 'ELEMENT', 1.0, eid_conrod)  # ???
         model.add_nsml1(1000, 'PSHELL', 1.0, 'ALL')  # ???
         model.add_nsml1(1001, 'ELEMENT', 1.0, eid_conrod)  # ???
-        # else:
         model.add_nsm1(1000, 'ELEMENT', 1.0, eid_conrod)  # ???
         model.add_nsm1(1000, 'PSHELL', 1.0, 'ALL')  # ???
         model.add_nsm1(1001, 'ELEMENT', 1.0, eid_conrod)  # ???
+        model.add_nsm(1000, 'ELEMENT', [eid_conrod], 1.0)  # ???
+        model.add_nsm(1001, 'CONROD', [eid_conrod], 1.0)  # ???
         save_load_deck(model, run_mass_properties=False)
 
     def test_nsml1_mass_by_element(self):

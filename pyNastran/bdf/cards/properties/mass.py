@@ -190,8 +190,14 @@ class NSM1x(Property):
         if isinstance(ids, integer_types):
             ids = [ids]
         elif isinstance(ids, str):
-            assert ids == 'ALL', 'ids=%r is not ALL' % ids
+            assert ids == 'ALL', f'ids={ids!r} is not ALL'
             ids = [ids]
+        elif isinstance(ids, list):
+            pass
+        elif isinstance(ids, np.ndarray):
+            ids = ids.tolist()
+        else:  # pragma: no cover
+            raise TypeError((ids, type(ids)))
 
         if ids == ['ALL']:
             pass

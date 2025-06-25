@@ -984,7 +984,7 @@ class PCONV(ThermalProperty):
         self.gidin_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PCONV card from ``BDF.add_card(...)``
 
@@ -1015,7 +1015,7 @@ class PCONV(ThermalProperty):
                      ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a PCONV card from the OP2
 
@@ -1028,6 +1028,7 @@ class PCONV(ThermalProperty):
 
         """
         (pconid, mid, form, expf, ftype, tid, chlen, gidin, ce, e1, e2, e3) = data
+        mid = mid if mid > 0 else None
         return PCONV(pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
                      e1, e2, e3, comment=comment)
 
