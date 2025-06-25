@@ -1447,6 +1447,11 @@ def _convert_loads(model: BDF,
             elif load_type == 'PRESAX':
                 scales.add('pressure')
                 load.pressure *= pressure_scale
+            elif load_type == 'TEMPP1':
+                # t_stress: [3.14]
+                load.tbar *= temperature_scale
+                load.tprime *= temperature_scale
+                scales.add('temperature')
             elif load_type == 'TEMPRB':
                 scales.add('temperature')
                 load.ta *= temperature_scale

@@ -31,6 +31,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class SEBNDRY(BaseCard):
@@ -797,12 +798,13 @@ class SETREE(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by SETREE seid=%s' % self.seid
+        super_ids = list(model.superelement_models.keys())
+        msg = f', which is required by SETREE seid={self.seid}; allowed={super_ids}'
         missing_superelements = []
         superelements_ref = []
         for super_id in self.superelements:
             super_key = ('SUPER', super_id, '')
-            if super_id in model.superelement_models:
+            if super_key in super_ids:
                 superelement = model.superelement_models[super_key]
             else:
                 missing_superelements.append(super_id)
@@ -1180,9 +1182,12 @@ class SECONCT(BaseCard):
         loc = 'YES'
         nodes_a = [10, 20, 30]
         nodes_b = [11, 21, 31]
-        return SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment='')
+        return SECONCT(seid_a, seid_b, nodes_a, nodes_b, tol=tol, loc=loc, comment='')
 
-    def __init__(self, seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=''):
+    def __init__(self, seid_a: int, seid_b: int,
+                 nodes_a: list[int], nodes_b: list[int],
+                 tol: float=1e-5, loc: str='YES',
+                 comment: str=''):
         """
         Parameters
         ----------
@@ -1215,13 +1220,14 @@ class SECONCT(BaseCard):
         self.nodes_b = nodes_b
         self.nodes_a_ref = None
         self.nodes_b_ref = None
+        assert loc in ['YES', 'NO'], f'loc={loc!r}'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
         seid_a = integer(card, 1, 'seid_a')
         seid_b = integer(card, 2, 'seid_b')
-        tol = double_or_blank(card, 3, 'tol', 1e-5)
-        loc = string_or_blank(card, 4, 'loc', 'YES')
+        tol = double_or_blank(card, 3, 'tol', default=1e-5)
+        loc = string_or_blank(card, 4, 'loc', default='YES')
         fields = card[9:]
         if len(fields) < 2:
             assert len(card) >= 9, f'len(SECONCT card) = {len(card):d}\ncard={card}'
@@ -1255,7 +1261,7 @@ class SECONCT(BaseCard):
                 nodes_a.append(node_a)
                 nodes_b.append(node_b)
                 inode += 1
-        return SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=comment)
+        return SECONCT(seid_a, seid_b, nodes_a, nodes_b, tol=tol, loc=loc, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """

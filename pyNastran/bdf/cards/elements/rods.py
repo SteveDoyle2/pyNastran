@@ -319,7 +319,7 @@ class CTUBE(RodElement):
         h5_file.create_dataset('pid', data=pids)
         h5_file.create_dataset('nodes', data=nodes)
 
-    def __init__(self, eid, pid, nids, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int], comment: str=''):
         """
         Creates a CTUBE card
 
@@ -329,8 +329,8 @@ class CTUBE(RodElement):
             element id
         pid : int
             property id
-        nids : list[int, int]
-            node ids
+        nids : list[int]
+            2 node ids
         comment : str; default=''
             a comment for the card
         """
@@ -565,7 +565,9 @@ class CONROD(RodElement):
         h5_file.create_dataset('c', data=c)
         h5_file.create_dataset('nsm', data=nsm)
 
-    def __init__(self, eid, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment=''):
+    def __init__(self, eid: int, mid: int, nids: list[int],
+                 A: float=0.0, j: float=0.0, c: float=0.0,
+                 nsm: float=0.0, comment: str=''):
         """
         Creates a CONROD card
 
@@ -575,8 +577,8 @@ class CONROD(RodElement):
             element id
         mid : int
             material id
-        nids : list[int, int]
-            node ids
+        nids : list[int]
+            2 node ids
         A : float
             area
         j : float; default=0.

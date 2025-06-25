@@ -159,15 +159,15 @@ class CBUSH(BushElement):
                   or damping from the PBUSH card
             None : use x
         cid : int; default=None
-            Element coordinate system identification. A 0 means the basic
-            coordinate system. If CID is blank, then the element coordinate
-            system is determined from GO or Xi.
+            Element coordinate system identification:
+             - blank, element coordinate system is determined
+               from GO or Xi.
+             - 0 means the basic coordinate system.
         s: float; default=0.5
             Location of spring damper (0 <= s <= 1.0)
         ocid : int; default=-1
-            Coordinate system identification of spring-damper offset.
-            (Integer > -1; Default = -1, which means the offset
-            point lies on the line between GA and GB)
+            >-1: Coordinate system of spring-damper offset
+            -1:  Offset point lies on the line between GA and GB
         si : list[float, float, float]; default=None
             Components of spring-damper offset in the OCID coordinate system
             if OCID > 0.

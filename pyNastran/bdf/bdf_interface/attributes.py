@@ -336,8 +336,9 @@ class BDFAttributes:
         self.case_control_lines: list[str] = []
 
         # dictionary of BDFs
-        self.superelement_models = {}
-        self.initial_superelement_models = []  # the keys before superelement mirroring
+        self.superelement_models: dict[tuple[str, int, str], BDF] = {}
+        # the keys before superelement mirroring
+        self.initial_superelement_models = []
 
         self._auto_reject = False
         self._solmap_to_value = {
@@ -650,7 +651,7 @@ class BDFAttributes:
         self.dvprels: dict[int, DVPREL1 | DVPREL2] = {}
         self.dvmrels: dict[int, DVMREL1 | DVMREL2] = {}
         self.dvcrels: dict[int, DVCREL1 | DVCREL2] = {}
-        self.dvgrids: dict[int, DVGRID] = {}
+        self.dvgrids: dict[int, list[DVGRID]] = {}
         self.doptprm: Optional[DOPTPRM] = None
         self.dscreen: dict[int, DSCREEN] = {}
 

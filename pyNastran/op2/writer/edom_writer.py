@@ -62,8 +62,9 @@ def write_edom(op2_file, op2_ascii, model: BDF | OP2Geom,
         out[dvcrel.type].append(dvcrel_id)
     for dlink_id, dlink in sorted(model.dlinks.items()):
         out[dlink.type].append(dlink_id)
-    for dvgrid_id, dvgrid in sorted(model.dvgrids.items()):
-        out['DVGRID'].append(dvgrid_id)
+    for dvgrid_id, dvgrids in sorted(model.dvgrids.items()):
+        for dvgrid in dvgrids:
+            out[dvgrid.type].append(dvgrid_id)
     if model.doptprm:
         out[model.doptprm.type].append(model.doptprm)
     if model.dtable:
@@ -81,12 +82,12 @@ def write_edom(op2_file, op2_ascii, model: BDF | OP2Geom,
     itable = -3
 
     for name, ids in sorted(out.items()):
-        model.log.debug('EDOM %s %s' % (name, ids))
+        model.log.debug(f'EDOM {name} {ids}')
         #print('EDOM %s %s' % (name, ids))
         ncards = len(ids)
         assert ncards > 0, ncards
         if name in cards_to_skip:
-            model.log.warning('skipping EDOM-%s' % name)
+            model.log.warning(f'skipping EDOM-{name}')
             continue
 
         #if nmaterials == 0:
@@ -1045,7 +1046,7 @@ def write_dvcrel2(model: BDF | OP2Geom, name: str,
     data_all = []
     for dvcrel_id in dvcrel_ids:
         dvcrel = model.dvcrels[dvcrel_id]
-        print(dvcrel.get_stats())
+        # print(dvcrel.get_stats())
         # TODO: doesn't handle fid = float
         #fid = 0
         #if isinstance(dvprel.pname_fid, str):
@@ -1056,19 +1057,12 @@ def write_dvcrel2(model: BDF | OP2Geom, name: str,
             #fid = dvcrel.pname_fid
             #pname = ''
 
-        cp_min = dvcrel.cp_min
-        if cp_min is None:
-            # TODO: not supported
-            #
-            # Minimum value allowed for this property. If MPNAME references a
-            # material property that can only be positive, then the default value for
-            # MPMIN is 1.0E-15. Otherwise, it is -1.0E35. (Real)
-            cp_min = 1e-20
+        cp_min, cp_max = _get_dvcrel_coeffs(dvcrel)
 
         mat_type_bytes = ('%-8s' % dvcrel.element_type).encode('ascii')
         cp_name_bytes = ('%-8s' % dvcrel.cp_name).encode('ascii')
         data = [dvcrel_id, mat_type_bytes, dvcrel.eid, fid,
-                cp_min, dvcrel.cp_max, dvcrel.dequation, cp_name_bytes]
+                cp_min, cp_max, dvcrel.dequation, cp_name_bytes]
         fmt += _write_dvxrel2_flag(dvcrel, data)
 
         assert None not in data, data
@@ -1190,7 +1184,8 @@ EDOM_MAP = {
     'DVPREL1': write_dvprel1,
     'DVMREL1': write_dvmrel1,
     'DVCREL1': write_dvcrel1,
-    'DVPREL2': write_dvprel2, 'DVMREL2': write_dvmrel2, # 'DVCREL2': write_dvcrel2,
+    'DVPREL2': write_dvprel2, 'DVMREL2': write_dvmrel2,
+    'DVCREL2': write_dvcrel2,
 
     'DESVAR': write_desvar,
     #'DOPTPRM': _write_doptprm,

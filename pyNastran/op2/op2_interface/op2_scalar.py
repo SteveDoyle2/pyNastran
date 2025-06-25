@@ -558,7 +558,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if debug_file is None:
             self.debug_file = None
         else:
-            assert isinstance(debug_file, str), debug_file
+            assert isinstance(debug_file, PathLike), debug_file
             self.debug_file = debug_file
 
         self.op2_reader = OP2Reader(self)

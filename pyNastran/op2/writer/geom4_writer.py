@@ -836,6 +836,8 @@ def _write_spcadd(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii
         key = (5491, 59, 13)
     elif card_type == 'MPCADD':
         key = (4891, 60, 83)
+    elif card_type == 'NSMADD':
+        key = (3401, 34, 993)
     else:  # pragma: no cover
         raise NotImplementedError(card_type)
     #SPCADD(5491,59,13)

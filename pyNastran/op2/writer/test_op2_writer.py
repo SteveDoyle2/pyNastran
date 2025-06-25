@@ -20,11 +20,11 @@ class TestOP2Writer(unittest.TestCase):
     def test_write_1(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'solid_bending')
-        op2_filename = os.path.join(folder, 'solid_bending.op2')
-        op2_filename_debug = os.path.join(folder, 'solid_bending.debug.out')
-        op2_filename_out = os.path.join(folder, 'solid_bending_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'solid_bending_out.debug.out')
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
+        op2_filename_debug = folder / 'solid_bending.debug.out'
+        op2_filename_out = folder / 'solid_bending_out.op2'
+        op2_filename_debug_out = folder / 'solid_bending_out.debug.out'
         #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
@@ -39,11 +39,11 @@ class TestOP2Writer(unittest.TestCase):
     def test_write_2(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'solid_bending')
-        op2_filename = os.path.join(folder, 'solid_bending.op2')
-        op2_filename_debug = os.path.join(folder, 'solid_bending.debug.out')
-        op2_filename_out = os.path.join(folder, 'solid_bending_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'solid_bending_out.debug.out')
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
+        op2_filename_debug = folder / 'solid_bending.debug.out'
+        op2_filename_out = folder / 'solid_bending_out.op2'
+        op2_filename_debug_out = folder / 'solid_bending_out.debug.out'
         #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
@@ -56,14 +56,14 @@ class TestOP2Writer(unittest.TestCase):
         assert op2 == op2b
         os.remove(op2_filename_debug_out)
 
-    def _test_write_3(self):
+    def test_write_3(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
-        op2_filename_debug = os.path.join(folder, 'static_solid_shell_bar.debug.out')
-        op2_filename_out = os.path.join(folder, 'static_solid_shell_bar_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'static_solid_shell_bar_out.debug.out')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'static_solid_shell_bar.op2'
+        op2_filename_debug = folder / 'static_solid_shell_bar.debug.out'
+        op2_filename_out = folder / 'static_solid_shell_bar_out.op2'
+        op2_filename_debug_out = folder / 'static_solid_shell_bar_out.debug.out'
         #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
@@ -77,11 +77,11 @@ class TestOP2Writer(unittest.TestCase):
     def test_write_4(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='warning', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
-        op2_filename_debug = os.path.join(folder, 'static_solid_shell_bar.debug.out')
-        op2_filename_out = os.path.join(folder, 'static_solid_shell_bar_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'static_solid_shell_bar_out.debug.out')
+        folder = MODEL_PATH / 'sol_101_elements'
+        op2_filename = folder / 'static_solid_shell_bar.op2'
+        op2_filename_debug = folder / 'static_solid_shell_bar.debug.out'
+        op2_filename_out = folder / 'static_solid_shell_bar_out.op2'
+        op2_filename_debug_out = folder / 'static_solid_shell_bar_out.debug.out'
         #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'

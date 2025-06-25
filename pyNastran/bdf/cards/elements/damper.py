@@ -58,7 +58,8 @@ class CDAMP1(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, nids, c1=0, c2=0, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 c1: int=0, c2: int=0, comment: str=''):
         """
         Creates a CDAMP1 card
 
@@ -68,7 +69,7 @@ class CDAMP1(LineDamper):
             element id
         pid : int
             property id (PDAMP)
-        nids : list[int, int]
+        nids : list[int]
             node ids
         c1 / c2 : int; default=0
             DOF for nid1 / nid2
@@ -252,7 +253,8 @@ class CDAMP2(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, b, nids, c1=0, c2=0, comment=''):
+    def __init__(self, eid: int, b: float, nids: list[int],
+                 c1: int=0, c2: int=0, comment: str=''):
         """
         Creates a CDAMP2 card
 
@@ -262,9 +264,8 @@ class CDAMP2(LineDamper):
             element id
         b : float
             damping
-        nids : list[int, int]
-            SPOINT ids
-            node ids
+        nids : list[int]
+            2 SPOINT ids or 2 node ids
         c1 / c2 : int; default=0
             DOF for nid1 / nid2
         comment : str; default=''
@@ -435,7 +436,7 @@ class CDAMP3(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, nids, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int], comment: str=''):
         """
         Creates a CDAMP3 card
 
@@ -445,8 +446,8 @@ class CDAMP3(LineDamper):
             element id
         pid : int
             property id (PDAMP)
-        nids : list[int, int]
-            SPOINT ids
+        nids : list[int]
+            2 SPOINT ids
         comment : str; default=''
             a comment for the card
         """
@@ -591,7 +592,7 @@ class CDAMP4(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, b, nids, comment=''):
+    def __init__(self, eid: int, b: float, nids: list[int], comment: str=''):
         """
         Creates a CDAMP4 card
 
@@ -601,7 +602,7 @@ class CDAMP4(LineDamper):
             element id
         b : float
             damping
-        nids : list[int, int]
+        nids : list[int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -739,7 +740,7 @@ class CDAMP5(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, nids, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int], comment: str=''):
         """
         Creates a CDAMP5 card
 
@@ -749,8 +750,8 @@ class CDAMP5(LineDamper):
             element id
         pid : int
             property id (PDAMP5)
-        nids : list[int, int]
-            GRID/SPOINT ids
+        nids : list[int]
+            2 GRID/SPOINT ids
         comment : str; default=''
             a comment for the card
         """
@@ -906,7 +907,7 @@ class CVISC(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, pid, nids, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int], comment: str=''):
         """
         Creates a CVISC card
 
@@ -916,8 +917,8 @@ class CVISC(LineDamper):
             element id
         pid : int
             property id (PVISC)
-        nids : list[int, int]
-            GRID ids
+        nids : list[int]
+            2 GRID ids
         comment : str; default=''
             a comment for the card
         """

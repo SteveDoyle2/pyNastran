@@ -133,14 +133,6 @@ class GEOM3:
             (12509, 125, 999): ['HYDROS', self.read_hydros],
             #(9709, 97, 635): ['???', self.read_fake],
             #(9709, 97, 635): ['???', self.read_fake],
-            #(9709, 97, 635): ['???', self.read_fake],
-            #(9709, 97, 635): ['???', self.read_fake],
-            #(9709, 97, 635): ['???', self.read_fake],
-            #(9709, 97, 635): ['???', self.read_fake],
-            #(9709, 97, 635): ['???', self.read_fake],
-            #(9709, 97, 635): ['???', self.read_fake],
-            #(9709, 97, 635): ['???', self.read_fake],
-            #(9709, 97, 635): ['???', self.read_fake],
         }
 
     def read_hydros(self, data: bytes, n: int) -> int:
@@ -186,7 +178,8 @@ class GEOM3:
 
             assert cidg >= 0, cidg
 
-            #self.add_cbeam3(eid, pid, nids, x, g0, wa, wb, wc, tw, s)
+            # self.add_hydros(sid, pnom, rho, g, sete, setg,
+            #                 pld4, ovrd, cidg, hghtb, harbov, cntl)
             n += ntotal
         #self.show_data(data[n:])
         op2.log.warning('geom skipping HYDROS')
@@ -998,20 +991,20 @@ class GEOM3:
         assert ndatai % ntotal == 0, ndatai
         struct_if = Struct(op2._endian + b'i 2f i if if if 2i')
 
-
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_if.unpack(edata)
             if op2.is_debug_file:
-                op2.binary_debug.write('  QHBDY=%s\n' % str(out))
-            (sid, q0, t_source, ce, flag1, e1, flag2, e2, flag3, e3, cntrlnd, eid) = out
+                op2.binary_debug.write('  QVECT=%s\n' % str(out))
+            # (sid, q0, t_source, ce, flag1, e1, flag2,
+            #  e2, flag3, e3, control_id, eid) = out
 
             load = QVECT.add_op2_data(out)
             str(load)
             #self.add_thermal_load(load)
             op2._add_methods.add_load_object(load)
             n += ntotal
-        op2.card_count['QHBDY'] = nentries
+        op2.card_count['QVECT'] = nentries
         return n
 
     def read_qvol(self, data: bytes, n: int) -> int:
