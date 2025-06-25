@@ -1878,7 +1878,7 @@ def cmd_line_filter(argv=None, quiet: bool=False) -> None:  # pragma: no cover
 
 
 def cmd_line_super(argv=None, quiet: bool=False) -> None:
-    """command line interface to super"""
+    """command line interface to ``bdf super``"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
@@ -2074,6 +2074,67 @@ def cmd_line_super(argv=None, quiet: bool=False) -> None:
     main_model.write_bdf('super_run.bdf')
 
 
+def cmd_line_delete(argv=None, quiet: bool=False) -> None:
+    """command line interface to ``bdf delete``"""
+    if argv is None:  # pragma: no cover
+        argv = sys.argv
+
+    import argparse
+    parent_parser = argparse.ArgumentParser(
+        #prog = 'pyNastranGUI',
+        #usage = usage,
+        #description='A foo that bars',
+        #epilog="And that's how you'd foo a bar",
+        #formatter_class=argparse.RawDescriptionHelpFormatter,
+        #description=textwrap.dedent(text),
+        #version=pyNastran.__version__,
+        #add_help=False,
+    )
+    # positional arguments
+    parent_parser.add_argument('delete', type=str)
+    parent_parser.add_argument('INPUT', help='path to output BDF/DAT/NAS file', type=str)
+    parent_parser.add_argument('OUTPUT', nargs='?', help='path to output file', type=str)
+    _add_parser_arguments(parent_parser, ['--punch', '--lax', '--allow_dup'])
+    args = parent_parser.parse_args(args=argv[1:])
+    if not quiet:  # pragma: no cover
+        print(args)
+
+    bdf_filename = args.INPUT
+    bdf_filename_out = args.OUTPUT
+    is_strict_card_parser = not args.lax
+    punch = args.punch
+    duplicate_cards = args.allow_dup.split(',') if args.allow_dup else []
+
+    bdf_filename_out = ''
+    if bdf_filename_out is None:
+        bdf_filename_base, ext = os.path.splitext(bdf_filename)
+        bdf_filename_out = f'{bdf_filename_base}.delete{ext}'
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8')
+
+    model = BDF(log=log)
+    bdf_filename = 'fem.bdf'
+    #encoding = None
+    read_includes = False
+    cards_list = model.read_cards(
+        bdf_filename=bdf_filename,
+        punch=punch, read_includes=read_includes,
+        save_file_structure=False,
+        #encoding=encoding,
+    )
+
+    is_list = False
+    has_none = True
+    for card in cards_list:
+        card_name, comment, card_lines, (ifile, unused_iline) = card
+        card_name = card_name.upper()
+        card_obj, unused_card = model.create_card_object(
+            card_lines, card_name,
+            is_list=is_list, has_none=has_none)
+        # regex to remove elements, properties, ...
+
+
 def _union(xval: float,
            iunion: np.ndarray,
            ix: Optional[np.ndarray]) -> np.ndarray:
@@ -2111,6 +2172,9 @@ CMD_MAPS = {
     'rbe2_to_rbe3': cmd_line_rbe2_to_rbe3,
     'merge_rbe2': cmd_line_merge_rbe2,
 
+    'delete': cmd_line_delete,
+    #'summary': cmd_line_summary,
+
     'export_caero_mesh': cmd_line_export_caero_mesh,
     'transform': cmd_line_transform,
     'filter': cmd_line_filter,
@@ -2140,6 +2204,8 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
+    usage_bin_msg = '  bdf bin                         IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n' if dev else ''
+    help_bin_msg = '  bdf bin                         -h | --help\n' if dev else ''
     msg = (
         'Usage:\n'
         '  bdf diff                        IN_BDF_FILENAME1 IN_BDF_FILENAME2 [--punch]\n'
@@ -2166,17 +2232,14 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf rbe3_to_rbe2                IN_BDF_FILENAME [--infile INFILE] [--punch] [--lax]\n'
         '  bdf merge_rbe2                  IN_BDF_FILENAME [--infile INFILE] [--punch] [--lax]\n'
         '  bdf run_jobs                    BDF_FILENAME_DIRNAME [FILE...] [--exe NASTRAN_PATH] [--infile INFILE] [--outfile OUTFILE] [--skip SKIP] [--all] [--test] [--debug] [--cleanup]\n'
+       f'{usage_bin_msg}'
     )
-
-    if dev:
-        msg += '  bdf bin                         IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n'
 
     msg += (
         # '\n'
-        '  bdf diff               -h | --help\n'
+        'Mesh Tools:\n'
         '  bdf merge              -h | --help\n'
         '  bdf equivalence        -h | --help\n'
-        '  bdf inclzip            -h | --help\n'
         '  bdf renumber           -h | --help\n'
         '  bdf remove_unused      -h | --help\n'
         '  bdf delete_bad_shells  -h | --help\n'
@@ -2185,25 +2248,26 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf mirror             -h | --help\n'
         '  bdf convert            -h | --help\n'
         '  bdf scale              -h | --help\n'
-        '  bdf export_mcids       -h | --help\n'
         '  bdf free_faces         -h | --help\n'
         '  bdf flip_shell_normals -h | --help\n'
         '  bdf transform          -h | --help\n'
         '  bdf filter             -h | --help\n'
-        '  bdf flutter            -h | --help\n'
         '  bdf rbe3_to_rbe2       -h | --help\n'
         '  bdf merge_rbe2         -h | --help\n'
-
+        'Export Tools:\n'
+        '  bdf inclzip            -h | --help\n'
+        '  bdf export_mcids       -h | --help\n'
         '  bdf export_caero_mesh  -h | --help\n'
         '  bdf split_cbars_by_pin_flags    -h | --help\n'
         '  bdf solid_dof                   -h | --help\n'
-        '  bdf stats                       -h | --help\n'
-        '  bdf run_jobs                    -h | --help\n'
+        'Comparision Tools:\n'
+        '  bdf diff               -h | --help\n'
+        '  bdf stats              -h | --help\n'
+        f'{usage_bin_msg}'
+        'Analysis Tools:\n'
+        '  bdf flutter            -h | --help\n'
+        '  bdf run_jobs           -h | --help\n'
     )
-    if dev:
-        msg += (
-            '  bdf bin                         -h | --help\n'
-        )
     msg += '  bdf -v | --version\n'
     msg += '\n'
 

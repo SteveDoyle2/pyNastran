@@ -62,6 +62,7 @@ class BushElement(Element):
     #def center_of_mass(self):
         #return self.Centroid()
 
+
 class CBUSH(BushElement):
     """
     Generalized Spring-and-Damper Connection
@@ -79,7 +80,7 @@ class CBUSH(BushElement):
     """
     type = 'CBUSH'
     _field_map = {
-        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'cid', 9:'s', 10:'ocid'
+        1: 'eid', 2: 'pid', 3: 'ga', 4: 'gb', 8: 'cid', 9: 's', 10: 'ocid',
     }
     _properties = ['_field_map', ]
 
@@ -333,6 +334,8 @@ class CBUSH(BushElement):
         ----------
         data : list[varies]
             a list of fields defined in OP2 format
+        f : int
+            flag
         comment : str; default=''
             a comment for the card
         """
@@ -499,7 +502,7 @@ class CBUSH(BushElement):
 class CBUSH1D(BushElement):
     type = 'CBUSH1D'
     _field_map = {
-        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid',
+        1: 'eid', 2: 'pid', 3: 'ga', 4: 'gb', 5: 'cid',
     }
 
     def __init__(self, eid, pid, nids, cid=None, comment=''):
@@ -767,6 +770,7 @@ class CBUSH2D(BushElement):
     @property
     def ga(self) -> int:
         return self.nodes[0]
+
     @property
     def gb(self) -> int:
         return self.nodes[1]

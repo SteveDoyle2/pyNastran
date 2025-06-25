@@ -24,7 +24,7 @@ VELOCITY_UNITS = ['m/s', 'cm/s', 'mm/s', 'in/s', 'ft/s', 'knots']
 
 
 def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
-    """command line interface to flip_shell_normals"""
+    """command line interface to bdf flutter"""
     if argv is None:  # pragma: no cover
         argv = sys.argv
 

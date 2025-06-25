@@ -1240,7 +1240,7 @@ class AESURFS(BaseCard):
         return AESURFS(aesid, label, list1, list2, comment='')
 
     def __init__(self, aesid: int, label: str,
-                 list1: int, list2: int,
+                 list1: int, list2: int=0,
                  comment: str='') -> None:
         """
         Creates an AESURFS card
@@ -1269,7 +1269,7 @@ class AESURFS(BaseCard):
         self.list2_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AESURFS card from ``BDF.add_card(...)``
 
@@ -1284,12 +1284,12 @@ class AESURFS(BaseCard):
         aesid = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
         list1 = integer(card, 4, 'list1')
-        list2 = integer(card, 6, 'list2')
+        list2 = integer_or_blank(card, 6, 'list2', default=0)
         assert len(card) <= 7, f'len(AESURFS card) = {len(card):d}\ncard={card}'
         return AESURFS(aesid, label, list1, list2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         aesid = data[0]
         label = data[1]
         list1 = data[2]
@@ -1311,8 +1311,9 @@ class AESURFS(BaseCard):
         self.list1_ref = model.Set(self.list1, msg)
         self.list1_ref.cross_reference_set(model, 'Node', msg)
 
-        self.list2_ref = model.Set(self.list1, msg=msg)
-        self.list2_ref.cross_reference_set(model, 'Node', msg)
+        if self.list2 != 0:
+            self.list2_ref = model.Set(self.list2, msg=msg)
+            self.list2_ref.cross_reference_set(model, 'Node', msg)
 
     def safe_cross_reference(self, model):
         msg = ', which is required by AESURFS aesid=%s' % self.aesid
@@ -1322,11 +1323,12 @@ class AESURFS(BaseCard):
         except KeyError:
             pass
 
-        try:
-            self.list2_ref = model.Set(self.list1, msg=msg)
-            self.list2_ref.cross_reference_set(model, 'Node', msg)
-        except KeyError:
-            pass
+        if self.list2 != 0:
+            try:
+                self.list2_ref = model.Set(self.list2, msg=msg)
+                self.list2_ref.cross_reference_set(model, 'Node', msg)
+            except KeyError:
+                pass
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -1341,7 +1343,7 @@ class AESURFS(BaseCard):
     def List2(self) -> int:
         return set_id(self.list2_ref, self.list2)
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         """
         Gets the fields in their unmodified form
 

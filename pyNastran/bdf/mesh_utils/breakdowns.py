@@ -125,11 +125,11 @@ def get_property_mass_breakdown_table(model: BDF):
     pids.sort()
     data = []
     for pid in pids:
-        length = pids_to_length.get(pid, 0.)
-        area = pids_to_area.get(pid, 0.)
-        thickness = pids_to_thickness.get(pid, 0.)
-        volume = pids_to_volume.get(pid, 0.)
-        mass = pids_to_mass.get(pid, 0.)
+        length: float = pids_to_length.get(pid, 0.)
+        area: float = pids_to_area.get(pid, 0.)
+        thickness: float = pids_to_thickness.get(pid, 0.)
+        volume: float = pids_to_volume.get(pid, 0.)
+        mass: float = pids_to_mass.get(pid, 0.)
         data.append((pid, length, area, thickness, volume, mass))
     return data
 
@@ -433,6 +433,7 @@ def get_volume_breakdown(model: BDF, property_ids=None,
             volumes.extend(volumesi)
         elif prop.type in bar_properties:
             # TODO: Do I need to consider the offset on length effects for a CBEAM?
+            #       No? Because the end points should already be offset...they are not
             lengths = []
             for eid in eids:
                 elem = model.elements[eid]
@@ -449,7 +450,7 @@ def get_volume_breakdown(model: BDF, property_ids=None,
         elif prop.type in ['PSOLID', 'PCOMPS', 'PCOMPLS', 'PLSOLID']:
             for eid in eids:
                 elem = model.elements[eid]
-                if elem.type in ['CTETRA', 'CPENTA', 'CHEXA']:
+                if elem.type in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
                     volumes.append(elem.Volume())
                 else:
                     key = (elem.type, prop.type)
@@ -604,7 +605,7 @@ def get_mass_breakdown(model: BDF,
             rho = prop.Rho()
             for eid in eids:
                 elem = model.elements[eid]
-                if elem.type in {'CTETRA', 'CPENTA', 'CHEXA'}:
+                if elem.type in {'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM'}:
                     masses.append(rho * elem.Volume())
                 else:
                     key = (elem.type, prop.type)

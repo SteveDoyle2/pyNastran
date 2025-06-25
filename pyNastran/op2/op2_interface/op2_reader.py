@@ -4864,8 +4864,12 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
          chord, span, sref, *outi,
          title, subtitle, subcase) = out
 
-        if not (chord, span, sref) == (0, 1, 0):
-            log.error(f'Expected {op2.table_name} (chord,span,sref) flags to be (0,1,0); got ({chord},{span},{sref})')
+        allowed_cbs = [
+            (0, 0, 0),
+            (0, 1, 0),
+        ]
+        if (chord, span, sref) not in allowed_cbs:
+            log.error(f'Expected {op2.table_name} (chord,span,sref) flags can be {allowed_cbs}; got ({chord},{span},{sref})')
 
         log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
         assert numwide == 38, numwide

@@ -81,17 +81,17 @@ class EPT:
             (1802, 18, 31): ['PVISC', self.read_pvisc],    # record 59
             (10201, 102, 400): ['PVAL', self.read_pval],   # record 58 - not done
             (2606, 26, 289): ['VIEW', self.read_view],     # record 62 - not done
-            (3201, 32, 991) : ['NSM', self.read_nsm_2],  # record
-            (3301, 33, 992) : ['NSM1', self.read_nsm1],  # record
-            (3701, 37, 995) : ['NSML1', self.read_nsml1_nx],    # record
+            (3201, 32, 991): ['NSM', self.read_nsm_2],  # record
+            (3301, 33, 992): ['NSM1', self.read_nsm1],  # record
+            (3701, 37, 995): ['NSML1', self.read_nsml1_nx],    # record
             (3601, 36, 62): ['NSML1', self.read_nsml1_msc],  # record 7
             (15006, 150, 604): ['PCOMPG', self.read_pcompg],  # record
 
             (702, 7, 38): ['PBUSHT', self.read_pbusht],  # record 1
             (3301, 33, 56): ['NSM1', self.read_fake],  # record 3
-            (3401, 34, 57) : ['NSMADD', self.read_fake],    # record 5
+            (3401, 34, 57): ['NSMADD', self.read_fake],    # record 5
             (3501, 35, 58): ['NSML', self.read_fake],  # record 6
-            (3501, 35, 994) : ['NSML', self.read_nsml],
+            (3501, 35, 994): ['NSML', self.read_nsml],
             (1502, 15, 36): ['PAABSF', self.read_paabaf],  # record 8
             (8300, 83, 382): ['PACABS', self.read_fake],  # record 9
             (8500, 85, 384): ['PACBAR', self.read_fake],  # record 10
@@ -110,14 +110,14 @@ class EPT:
             (10301, 103, 399): ['PSET', self.read_pset],  # record 57
             (3002, 30, 415): ['VIEW3D', self.read_view3d],  # record 63
 
-            (13501, 135, 510) : ['PFAST', self.read_pfast_msc],  # MSC-specific
-            (3601, 36, 55) : ['PFAST', self.read_pfast_nx],  # NX-specific
-            (3801, 38, 979) : ['PPLANE', self.read_pplane],
-            (11801, 118, 560) : ['PWELD', self.read_fake],
-            (3401, 34, 993) : ['NSMADD', self.read_nsmadd],
-            (9300, 93, 684) : ['ELAR', self.read_fake],
-            (9400, 94, 685) : ['ELAR2', self.read_fake],
-            (16006, 160, 903) : ['PCOMPS', self.read_pcomps],
+            (13501, 135, 510): ['PFAST', self.read_pfast_msc],  # MSC-specific
+            (3601, 36, 55): ['PFAST', self.read_pfast_nx],  # NX-specific
+            (3801, 38, 979): ['PPLANE', self.read_pplane],
+            (11801, 118, 560): ['PWELD', self.read_fake],
+            (3401, 34, 993): ['NSMADD', self.read_nsmadd],
+            (9300, 93, 684): ['ELAR', self.read_fake],
+            (9400, 94, 685): ['ELAR2', self.read_fake],
+            (16006, 160, 903): ['PCOMPS', self.read_pcomps],
 
             # MSC-specific
             (14602, 146, 692): ['PSLDN1', self.read_fake],
@@ -3524,7 +3524,7 @@ class EPT:
                     nproperties -= 1
                     continue
                 #assert propi.type in ['PCOMP', 'PCOMPG'], propi.get_stats()
-                op2.log.error(f'PSHELL {pid:d} is also {propi.type} (skipping PSHELL):\n{propi}{prop}')
+                op2.log.debug(f'PSHELL {pid:d} is also {propi.type} (skipping PSHELL):\n{propi}{prop}')
                 nproperties -= 1
                 continue
             #continue

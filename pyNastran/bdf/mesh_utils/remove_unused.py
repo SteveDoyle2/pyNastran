@@ -1094,7 +1094,7 @@ def _remove(model: BDF,
         cids_to_remove.sort()
         if cids_to_remove:
             model.log.debug(f'removing coords {cids_to_remove}; n={len(cids_to_remove)}')
-            out_dict['coords'] = cids_to_remove
+            out_dict['coords'] = np.array(cids_to_remove, dtype='int64')
 
     if remove_pids and pids_to_remove:
         for pid in pids_mass_to_remove:
@@ -1102,14 +1102,14 @@ def _remove(model: BDF,
         pids_mass_to_remove.sort()
         if pids_mass_to_remove:
             model.log.debug('removing properties_mass %s' % pids_mass_to_remove)
-            out_dict['properties_mass'] = pids_mass_to_remove
+            out_dict['properties_mass'] = np.array(pids_mass_to_remove, dtype='int64')
 
         for pid in pids_to_remove:
             del model.properties[pid]
         pids_to_remove.sort()
         if pids_to_remove:
             model.log.debug('removing properties %s' % pids_to_remove)
-            out_dict['properties'] = pids_to_remove
+            out_dict['properties'] = np.array(pids_to_remove, dtype='int64')
 
     if remove_mids and mids_to_remove:
         for mid in mids_to_remove:

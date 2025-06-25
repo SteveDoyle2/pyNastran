@@ -19,6 +19,7 @@ from pyNastran.utils.numpy_utils import integer_types
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
+
 def get_mpc_node_ids(model: BDF, mpc_id: int,
                      consider_mpcadd: bool=True,
                      stop_on_failure: bool=True) -> list[list[int]]:
@@ -70,6 +71,7 @@ def get_mpc_node_ids(model: BDF, mpc_id: int,
                 raise RuntimeError(msg)
             model.log.warning(msg)
     return lines
+
 
 def get_mpc_node_ids_c1(model: BDF, mpc_id: int,
                         consider_mpcadd: bool=True,
@@ -138,6 +140,7 @@ def get_mpc_node_ids_c1(model: BDF, mpc_id: int,
             model.log.warning(msg)
     return dict(independent_node_ids_c1), dict(dependent_node_ids_c1)
 
+
 def get_rigid_elements_with_node_ids(model: BDF, node_ids):
     """
     Gets the series of rigid elements that use specific nodes
@@ -172,6 +175,7 @@ def get_rigid_elements_with_node_ids(model: BDF, node_ids):
         else:
             raise RuntimeError(rigid_element.type)
     return rbes
+
 
 def get_dependent_nid_to_components(model: BDF, mpc_id=None, stop_on_failure=True):
     """
@@ -281,6 +285,7 @@ def get_dependent_nid_to_components(model: BDF, mpc_id=None, stop_on_failure=Tru
             raise RuntimeError(rigid_element.type)
     return dependent_nid_to_components
 
+
 def get_lines_rigid(model: BDF) -> Any:
     """
     GUI helper function
@@ -308,11 +313,11 @@ def get_lines_rigid(model: BDF) -> Any:
         elif elem.type == 'RBE2':
             #list_fields = ['RBE2', elem.eid, elem.Gn(), elem.cm
                            #] + elem.Gmi_node_ids + [elem.alpha]
-            n2 = elem.Gn() # independent
-            nids1 = elem.Gmi_node_ids # dependent
+            n2 = elem.Gn()  # independent
+            nids1 = elem.Gmi_node_ids  # dependent
             for n1 in nids1:
                 lines_rigid.append([n1, n2])
-        elif elem.type in ['RBAR', 'RBAR1', 'RROD']: ## TODO: these aren't quite right
+        elif elem.type in ['RBAR', 'RBAR1', 'RROD']:  ## TODO: these aren't quite right
             dependent = elem.Ga()
             independent = elem.Gb()
             lines_rigid.append([dependent, independent])
@@ -334,8 +339,8 @@ def get_lines_rigid(model: BDF) -> Any:
             #assert len(independent) == 1, independent
             if len(independent) != 1 or len(dependent) != 1:
                 msg = 'skipping card because len(independent) != 1 or len(dependent) != 1\n'
-                msg += '  independent = %s\n'  % independent
-                msg += '  dependent = %s\n'  % dependent
+                msg += '  independent = %s\n' % independent
+                msg += '  dependent = %s\n' % dependent
                 msg += str(elem)
                 model.log.error(msg)
                 continue
@@ -350,6 +355,7 @@ def get_lines_rigid(model: BDF) -> Any:
             print(str(elem))
             raise NotImplementedError(elem.type)
     return lines_rigid
+
 
 def get_mpcs(model, mpc_id: int, consider_mpcadd: bool=True,
              stop_on_failure: bool=True) -> tuple[list[int], list[str]]:

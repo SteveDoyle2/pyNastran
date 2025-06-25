@@ -54,9 +54,9 @@ class AEROS(Aero):
         return AEROS(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
 
     def __init__(self, cref: float, bref: float, sref: float,
-                  acsid: int=0, rcsid: int=0,
-                  sym_xz: int=0, sym_xy: int=0,
-                  comment: str=''):
+                 acsid: int=0, rcsid: int=0,
+                 sym_xz: int=0, sym_xy: int=0,
+                 comment: str=''):
         """
         Creates an AEROS card
 
@@ -430,10 +430,10 @@ class CSSCHD(Aero):
         self.lschd_ref = None
 
     def validate(self) -> None:
-        if not(self.lalpha is None or isinstance(self.lalpha, integer_types)):
+        if not (self.lalpha is None or isinstance(self.lalpha, integer_types)):
             raise TypeError('lalpha=%r must be an int or None' % self.lalpha)
 
-        if not(self.lmach is None or isinstance(self.lmach, integer_types)):
+        if not (self.lmach is None or isinstance(self.lmach, integer_types)):
             raise TypeError('lmach=%r must be an int or None' % self.lmach)
 
         if self.lalpha is None and self.lmach is None:
@@ -891,7 +891,8 @@ class TRIM(BaseCard):
                     dof = (nid, componenti)
                     suport_dof_msg += '    (%s, %s)\n' % (nid, componenti)
                     if dof in suport_dofs:
-                        msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
+                        msg = ('Duplicate SUPORT DOF\n'
+                               'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs)))
                         raise RuntimeError(msg)
                     suport_dofs.add(dof)
                     nsuport1_dofs += 1

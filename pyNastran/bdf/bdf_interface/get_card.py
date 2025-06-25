@@ -47,6 +47,7 @@ if TYPE_CHECKING:  # pragma: no cover
     #from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF
 
+
 class GetCard(GetMethods):
     """defines various methods to access high level BDF data"""
     def __init__(self) -> None:
@@ -56,7 +57,7 @@ class GetCard(GetMethods):
     def get_card_ids_by_card_types(self, card_types: list[str]=None,
                                    reset_type_to_slot_map: bool=False,
                                    stop_on_missing_card: bool=False,
-                                   combine: bool=False) -> dict[str, list[int]]:
+                                   combine: bool=False) -> dict[str, list[int]] | list:
         """
         Parameters
         ----------
@@ -237,7 +238,7 @@ class GetCard(GetMethods):
                             raise NotImplementedError('list; names=%s' % card_names)
                 else:
                     raise NotImplementedError('%s; names=%s' % (type(adict), card_names))
-        return rslot_map
+        return dict(rslot_map)
 
     def get_rslot_map(self, reset_type_to_slot_map=False) -> dict[str, str]:
         """gets the rslot_map"""
@@ -1047,11 +1048,11 @@ class GetCard(GetMethods):
 
         if solids is None:
             solids = {
-                'CTETRA' : (4, 10),
-                #'CTETRA' : (10, ),
-                'CHEXA' : (8, 20),
-                'CPENTA' : (6, 15),
-                'CPYRAM' : (5, 13),
+                'CTETRA': (4, 10),
+                #'CTETRA': (10, ),
+                'CHEXA': (8, 20),
+                'CPENTA': (6, 15),
+                'CPYRAM': (5, 13),
             }
 
         etypes_found = []
@@ -1121,7 +1122,7 @@ class GetCard(GetMethods):
                     except TypeError:
                         #print(elem)
                         #print('nidsi =', nidsi)
-                        nidsi2 = [nid  if nid is not None else 0
+                        nidsi2 = [nid if nid is not None else 0
                                   for nid in nidsi]
                         try:
                             nids[i, :] = nidsi2
@@ -1252,6 +1253,8 @@ class GetCard(GetMethods):
         stop_if_no_eids : bool; default=True
             prevents crashing if there are no elements
             setting this to False really doesn't make sense for non-DMIG models
+        msg : str; default=''
+            custom message
 
         Returns
         -------
@@ -1450,7 +1453,7 @@ class GetCard(GetMethods):
                 continue
             if hasattr(element, 'pid'):
                 pid = element.Pid()
-                if pid < 0: # CTRIAX6
+                if pid < 0:  # CTRIAX6
                     continue
                 try:
                     pid_to_eids_map[pid].append(eid)
@@ -1775,6 +1778,7 @@ class GetCard(GetMethods):
             #unique_pairs = np.lib.arraysetops.unique(new_array, axis=0).tolist()
         return mkarray
 
+
 def _get_pid_to_node_ids_and_elements_array(model: BDF,
                                             pids: list[int],
                                             etypes: list[str],
@@ -1826,7 +1830,7 @@ def _get_pid_to_node_ids_and_elements_array(model: BDF,
         'CTRIAX', 'CQUADX', 'CTRIAX6',
         'CTRIA6', 'CQUAD8', 'CQUAD',
         'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
-        'CRAC2D', 'CRAC3D', 'CHBDYP', #'CHBDYG',
+        'CRAC2D', 'CRAC3D', 'CHBDYP',  # 'CHBDYG',
         'CHACAB', 'CAABSF',
         'CBEAM3',
     ]

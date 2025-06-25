@@ -58,7 +58,7 @@ from pyNastran.bdf.cards.deqatn import split_deqatn_line0
 from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from .cards.elements.elements import (
     CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL)
-from .cards.elements.plot import(
+from .cards.elements.plot import (
     PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8,
     PLOTTET, PLOTPYR, PLOTPEN, PLOTHEX, PLOTELs)
 from .cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
@@ -380,7 +380,7 @@ MISSING_CARDS = {
 
     ## uds
     'PORUDS', 'YLDUDS', 'SHRUDS', 'FAILUDS', 'COMPUDS',
-    'FLOWUDS','BCONUDS', 'ELEMUDS', 'UDSESV', 'MATUDS',
+    'FLOWUDS', 'BCONUDS', 'ELEMUDS', 'UDSESV', 'MATUDS',
     'TICEUDS', 'EOSUDS', 'TABLUDS', 'GENUDS', 'ENTUDS',
 
     # explosives
@@ -692,15 +692,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # nastran95
             #'CTRSHL', 'CQUAD1',
 
-            'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', # plate strain
-            'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8', # plate stress
+            'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',  # plate strain
+            'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',  # plate stress
 
             # acoustic
             'CHACAB', 'CAABSF', 'CHACBR',
             'PACABS', 'PAABSF', 'PACBAR', 'ACMODL',
 
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-            #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2', # nastran95-removed
+            #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',  # nastran95-removed
             'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
             'CGAP',
             'GENEL',
@@ -718,7 +718,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PBUSH', 'PBUSH1D', 'PBUSH2D',
             'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', 'PBEND',
-            'PBEAML', 'PBMSECT', # not fully supported
+            'PBEAML', 'PBMSECT',  # not fully supported
             'PBEAM3',  # v1.3
 
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
@@ -751,10 +751,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             ## Material dependence - MATT1/MATT2/etc.
             'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9', 'MATT11',
-            'MATS1',  #'MATS3', 'MATS8',
+            'MATS1',  # 'MATS3', 'MATS8',
             'MATDMG',
             # 'MATHE'
-            #'EQUIV', # testing only, should never be activated...
+            # 'EQUIV', # testing only, should never be activated...
 
             ## nxstrats
             'NXSTRAT',
@@ -763,7 +763,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MAT4', 'MAT5',
 
             ## spcs
-            'SPC', 'SPCADD', 'SPC1', 'SPCOFF', 'SPCOFF1', # 'SPCAX',
+            'SPC', 'SPCADD', 'SPC1', 'SPCOFF', 'SPCOFF1',  # 'SPCAX',
 
             ## mpcs
             'MPC', 'MPCADD',
@@ -777,7 +777,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## dload_entries
             'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             'QVECT',
-            'RANDPS', 'RANDT1', # random
+            'RANDPS', 'RANDT1',  # random
 
             ## loads
             'LOAD', 'CLOAD', 'LSEQ', 'LOADCYN', 'LOADCYH',
@@ -1379,6 +1379,94 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.active_filename = obj.active_filename
         self.include_dir = obj.include_dir
 
+    def _load_lines(self, bdf_filename: Optional[PathLike]=None,
+                    punch: bool=False,
+                    read_includes: bool=True,
+                    save_file_structure: bool=False,
+                    encoding: Optional[str]=None) -> tuple[list[str], np.ndarray,
+                                                           list[str]]:
+        """
+
+        Parameters
+        ----------
+        bdf_filename
+        punch
+        read_includes
+        save_file_structure
+        encoding
+
+        Returns
+        -------
+        bulk_data_lines
+        bulk_data_ilines
+        additional_deck_lines
+        """
+        if bdf_filename and not isinstance(bdf_filename, (StringIO, list)):
+            check_path(bdf_filename, 'bdf_filename')
+        self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
+        self.log.debug(f'---starting BDF.read_bdf of {self.bdf_filename}---')
+        self._parse_primary_file_header(bdf_filename)
+
+        obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
+                         replace_includes=self.replace_includes,
+                         nastran_format=self.nastran_format,
+                         consider_superelements=self.is_superelements,
+                         log=self.log, debug=self.debug)
+        obj.use_new_parser = self.use_new_deck_parser
+
+        out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
+        (system_lines,
+         executive_control_lines,
+         case_control_lines,
+         bulk_data_lines, bulk_data_ilines,
+         additional_deck_lines, additional_deck_ilines) = out
+        self._set_pybdf_attributes(obj, save_file_structure)
+
+        #assert system_lines == [], system_lines
+        #assert executive_control_lines == [], executive_control_lines
+        #assert case_control_lines == [], case_control_lines
+        self.system_command_lines = system_lines
+        self.executive_control_lines = executive_control_lines
+        self.case_control_lines = case_control_lines
+
+        sol, method, sol_iline, app = parse_executive_control_deck(executive_control_lines)
+        self.app = app
+        self.update_solution(sol, method, sol_iline)
+
+        self.case_control_deck = CaseControlDeck(case_control_lines, self.log)
+        self.case_control_deck.solmap_to_value = self._solmap_to_value
+        self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
+        return bulk_data_lines, bulk_data_ilines, additional_deck_lines
+
+    def read_cards(self, bdf_filename: Optional[PathLike]=None,
+                   #validate: bool=True,
+                   punch: bool=False,
+                   read_includes: bool=True,
+                   save_file_structure: bool=False,
+                   encoding: Optional[str]=None) -> None:
+        self.save_file_structure = save_file_structure
+        bulk_data_lines, bulk_data_ilines, additional_deck_lines = self._load_lines(
+            bdf_filename, punch=punch,
+            read_includes=read_includes,
+            save_file_structure=save_file_structure,
+            encoding=encoding)
+        cards_list, cards_dict, card_count = self.get_bdf_cards(
+            bulk_data_lines, bulk_data_ilines, use_dict=False)
+        assert len(cards_dict) == 0, cards_dict
+        #for card in cards_list:
+            #card_name = card[0]
+            #if card_name == 'CBAR':
+                #print(card)
+        # self._parse_cards(cards_list, cards_dict, card_count)
+
+        # is_list : bool; default=True
+        #     True : this is a list of fields
+        #     False : this is a list of lines
+        # has_none : bool; default=True
+        #     can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
+        return cards_list
+
+
     def read_bdf(self, bdf_filename: Optional[PathLike]=None,
                  validate: bool=True,
                  xref: bool=True,
@@ -1424,41 +1512,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         """
         self.save_file_structure = save_file_structure
-        if bdf_filename and not isinstance(bdf_filename, (StringIO, list)):
-            check_path(bdf_filename, 'bdf_filename')
-        self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
-        self.log.debug(f'---starting BDF.read_bdf of {self.bdf_filename}---')
-        self._parse_primary_file_header(bdf_filename)
-
-        obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
-                         replace_includes=self.replace_includes,
-                         nastran_format=self.nastran_format,
-                         consider_superelements=self.is_superelements,
-                         log=self.log, debug=self.debug)
-        obj.use_new_parser = self.use_new_deck_parser
-
-        out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
-        (system_lines,
-         executive_control_lines,
-         case_control_lines,
-         bulk_data_lines, bulk_data_ilines,
-         additional_deck_lines, additional_deck_ilines) = out
-        self._set_pybdf_attributes(obj, save_file_structure)
-
-        #assert system_lines == [], system_lines
-        #assert executive_control_lines == [], executive_control_lines
-        #assert case_control_lines == [], case_control_lines
-        self.system_command_lines = system_lines
-        self.executive_control_lines = executive_control_lines
-        self.case_control_lines = case_control_lines
-
-        sol, method, sol_iline, app = parse_executive_control_deck(executive_control_lines)
-        self.app = app
-        self.update_solution(sol, method, sol_iline)
-
-        self.case_control_deck = CaseControlDeck(case_control_lines, self.log)
-        self.case_control_deck.solmap_to_value = self._solmap_to_value
-        self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
+        bulk_data_lines, bulk_data_ilines, additional_deck_lines = self._load_lines(
+            bdf_filename, punch=punch,
+            read_includes=read_includes,
+            save_file_structure=save_file_structure,
+            encoding=encoding)
 
         try:
             self._parse_all_cards(bulk_data_lines, bulk_data_ilines)
@@ -1620,7 +1678,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     slot[idi] = (comment, card_lines)
         return
 
-    def _parse_all_cards(self, bulk_data_lines: list[str], bulk_data_ilines: Any) -> None:
+    def _parse_all_cards(self, bulk_data_lines: list[str],
+                         bulk_data_ilines: Any) -> None:
         """creates and loads all the cards the bulk data section"""
         if not self._parse:
             return self._get_unparsed_cards(bulk_data_lines, bulk_data_ilines)
@@ -1810,7 +1869,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.xref_obj.pop_xref_errors()
 
     def get_bdf_cards(self, bulk_data_lines: list[str],
-                      bulk_data_ilines: Optional[Any]=None) -> tuple[Any, Any, Any]:
+                      bulk_data_ilines: Optional[Any]=None,
+                      use_dict: bool=True) -> tuple[Any, Any, Any]:
         """Parses the BDF lines into a list of card_lines"""
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
@@ -1865,7 +1925,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     # new list version
                     #if full_comment:
                         #print('full_comment = ', full_comment)
-                    if old_card_name in dict_cards:
+                    if old_card_name in dict_cards and use_dict:
                         cards_dict[old_card_name].append([_prep_comment(full_comment),
                                                           card_lines, ifile_iline])
                     else:
@@ -1912,7 +1972,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 backup_comment += comment + '\n'
             #elif comment:
                 #backup_comment += '$' + comment + '\n'
-
 
         if card_lines:
             if self.echo and not self.force_echo_off:
@@ -4510,7 +4569,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 card_name, comment, card_lines, (ifile, unused_iline) = card
                 card_name = cast(str, card_name)
                 comment = cast(str, comment)
-                card_lines = cast(list[str],card_lines)
+                card_lines = cast(list[str], card_lines)
                 if card_name is None:
                     msg = f'card_name = {card_name!r}\n'
                     msg += f'card_lines = {card_lines}'
