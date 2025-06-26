@@ -146,7 +146,8 @@ class RADBC(ThermalBC):
         eids = [1, 2]
         return RADBC(nodamb, famb, cntrlnd, eids, comment='')
 
-    def __init__(self, nodamb, famb, cntrlnd, eids, comment=''):
+    def __init__(self, nodamb: int, famb: float, cntrlnd: int,
+                 eids: list[int], comment: str=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment

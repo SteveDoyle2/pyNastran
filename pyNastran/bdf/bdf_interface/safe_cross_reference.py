@@ -47,7 +47,7 @@ class SafeXrefMesh(XrefMesh):
                              xref_sets: bool=True,
                              xref_optimization: bool=True,
                              create_superelement_geometry: bool=False,
-                             debug=True,
+                             debug: bool=True,
                              word: str='') -> None:
         """
         Performs cross referencing in a way that skips data gracefully.

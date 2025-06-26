@@ -300,7 +300,7 @@ class TestOP2Writer(unittest.TestCase):
     def test_write_elements_5(self):
         """tests basic op2 writing"""
         log = SimpleLogger(level='info', encoding='utf-8')
-        folder = os.path.join(MODEL_PATH, 'elements')
+        folder = MODEL_PATH / 'elements'
         op2_filename = os.path.join(folder, 'time_elements.op2')
         op2_filename_debug = os.path.join(folder, 'time_elements.debug.out')
         op2_filename_out = os.path.join(folder, 'time_elements_out.op2')

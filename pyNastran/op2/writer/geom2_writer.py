@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import struct
+#import struct
 from collections import defaultdict
 from struct import pack, Struct
-from typing import TYPE_CHECKING
+from typing import BinaryIO, TYPE_CHECKING
 
 from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
@@ -12,7 +12,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 
-def write_geom2(op2_file, op2_ascii, obj, endian=b'<',
+def write_geom2(op2_file: BinaryIO, op2_ascii,
+                obj, endian=b'<',
                 nastran_format: str='nx'):
     if not hasattr(obj, 'elements'):
         return
@@ -22,29 +23,31 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<',
     nspoints = len(obj.spoints)
     nplotels = len(obj.plotels)
     nelements = len(obj.elements)
-    if nelements == 0 and nplotels == 0 and nspoints == 0:
+    nmic = len(obj.micpnt)
+    nbc = len(obj.bcs)
+    nall = nelements + nplotels + nspoints + nmic + nbc
+    if nall == 0:
         return
     cards_written = {}
     write_geom_header(b'GEOM2', op2_file, op2_ascii)
     itable = -3
 
     log = obj.log
-    #etypes = [
-        #'CROD', 'CONROD',
-        #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-        #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
-        #'CTRIA3', 'CQUAD4',
-        #'CTETRA', 'CHEXA', 'CPENTA',
-    #]
-    etypes_to_skip = [
-        'CHBDYE', 'CBEND',
-        #'CHBDYP',
-    ]
+    # etypes_to_skip = [
+    #     'CHBDYE', 'CBEND',
+    #     #'CHBDYP',
+    # ]
     out = defaultdict(list)
     for eid, element in obj.elements.items():
         out[element.type].append(eid)
     for eid, element in obj.masses.items():  # CONM2
         out[element.type].append(eid)
+    for eid, element in obj.micpnt.items():
+        out[element.type].append(eid)
+    for bc_id, bcs in obj.bcs.items():
+        log.error(str(bcs))
+        for bc in bcs:
+            out[bc.type].append(bc)
 
     if nspoints:
         out['SPOINT'] = list(obj.spoints.keys())
@@ -52,7 +55,7 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<',
         out['PLOTEL'] = list(obj.plotels.keys())
 
     # elements with fixed lengths
-    geom2_mapper = {
+    geom2_key_mapper = {
         # key, spack, nfields
         'CHBDYP' : ((10908, 109, 407), b'12i 3f', 15),
         'CHBDYG' : ((10808, 108, 406), b'16i', 16),
@@ -107,15 +110,16 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<',
 
         'RADBC': ((12801, 128, 417), b'ifii', 4),
     }
+    allowed_etypes = list(geom2_key_mapper) + list(GEOM2_MAP)
     for name, eids in sorted(out.items()):
         nelements = len(eids)
-        if name in etypes_to_skip:
-            log.warning('skipping GEOM2-%s' % name)
-            continue
+        # if name in etypes_to_skip:
 
-        max_eid_id = max(eids)
-        if max_eid_id > 99999999:
-            raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name}: max eid={max_eid_id}')
+        eid0 = eids[0]
+        if isinstance(eid0, integer_types):
+            max_eid_id = max(eids)
+            if max_eid_id > 99999999:
+                raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name}: max eid={max_eid_id}')
         #if max_nid > 99999999:
             #raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
 
@@ -126,23 +130,19 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<',
             #continue
 
         cards_written[name] = nelements
-        if name in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM']:
-            itable = write_solid(obj, name, eids, nelements, itable, op2_file, op2_ascii, endian)
+        if name in GEOM2_MAP:
+            func = GEOM2_MAP[name]
+            itable = func(obj, name, eids, nelements, itable,
+                          op2_file, op2_ascii, endian)
             continue
         #elif name == 'CFAST':
             #_write_cfast(obj, name, eids, nelements, itable, op2_file, op2_ascii, endian,
                          #nastran_format=nastran_format)
 
-        if name in geom2_mapper:
-            key, spacki, nfields = geom2_mapper[name]
+        if name in geom2_key_mapper:
+            key, spacki, nfields = geom2_key_mapper[name]
             spack = Struct(endian + spacki)
             #print(name, spacki)
-        elif name == 'CBAR':
-            itable = write_cbar(obj, name, eids, nelements, itable, op2_file, op2_ascii, endian)
-            continue
-        elif name == 'CBEAM':
-            itable = write_cbeam(obj, name, eids, nelements, itable, op2_file, op2_ascii, endian)
-            continue
         elif name == 'CBUSH':
             key = (2608, 26, 60)
             spack = None
@@ -168,7 +168,7 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<',
 
         # -------------------
         else:
-            obj.log.warning(f'skipping GEOM2-{name}')
+            log.warning(f'skipping GEOM2-{name}')
             del cards_written[name]
             continue
         #else:  # pragma: no cover
@@ -177,7 +177,8 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<',
         #if self.is_debug_file:
             #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
+        nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                           op2_file, op2_ascii)
 
         try:
             write_card(name, eids, spack, obj, op2_file, op2_ascii, endian)
@@ -193,7 +194,9 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<',
 
     #-------------------------------------
 
-def _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii):
+def _write_intermediate_block(name: str, key: tuple[int, int, int],
+                              nfields: int, nelements: int,
+                              op2_file: BinaryIO, op2_ascii):
     """writes the start of the geometry block; goes in the middle of the writer"""
     nvalues = nfields * nelements + 3 # +3 comes from the keys
     nbytes = nvalues * 4
@@ -331,7 +334,8 @@ def write_cbar(obj, name, eids, nelements, itable, op2_file, op2_ascii, endian):
     itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
     return itable
 
-def write_solid(model, name, eids, nelements, itable, op2_file, op2_ascii, endian) -> int:
+def write_solid(model, name: str, eids: np.ndarray, nelements: int, itable: int,
+                op2_file: BinaryIO, op2_ascii, endian: bytes) -> int:
     """writes the solid elements"""
     if name == 'CTETRA':
         key = (5508, 55, 217)
@@ -592,9 +596,11 @@ def write_card(name, eids, spack, obj, op2_file, op2_ascii, endian):
     """writes the GEOM2 elements"""
     op2_ascii.write('GEOM2-%s\n' % name)
 
-    eid_max = max(eids)
-    if eid_max > 99999999:
-        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name} max(eid)={eid_max}')
+    eid0 = eids[0]
+    if isinstance(eid0, integer_types):
+        eid_max = max(eids)
+        if eid_max > 99999999:
+            raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name} max(eid)={eid_max}')
 
     if name == 'CHBDYP':
         write_chbdyp(eids, spack, obj, op2_file, op2_ascii)
@@ -636,9 +642,6 @@ def write_card(name, eids, spack, obj, op2_file, op2_ascii, endian):
         write_cplstn6(eids, spack, obj, op2_file, op2_ascii, name)
     elif name == 'CPLSTN8':
         write_cplstn8(eids, spack, obj, op2_file, op2_ascii, name)
-
-    elif name == 'RADBC':
-        write_radbc(eids, spack, obj, op2_file, op2_ascii, name)
 
     elif name == 'CTRIAX':
         for eid in sorted(eids):
@@ -1093,25 +1096,6 @@ def write_cplstn8(eids, spack, obj, op2_file, op2_ascii, name: str):
         # 6i ff ii 4f
         op2_file.write(spack.pack(*data))
 
-def write_radbc(eids, spack, obj, op2_file, op2_ascii, name: str):
-    for eid in sorted(eids):
-        elem = obj.radbc[eid]
-        nids = elem.node_ids
-        pid = elem.pid
-        theta = elem.theta
-        # t1 = elem.T1 if elem.T1 is not None else -1.
-        # t2 = elem.T2 if elem.T2 is not None else -1.
-        # t3 = elem.T3 if elem.T3 is not None else -1.
-        # t4 = elem.T4 if elem.T4 is not None else -1.
-        # assert t4 == -1.0, elem.T4
-        #eid, famb, cntrlnd, nodamb = out
-        data = [eid, pid] + nids + [theta, 0, 0, 0, 0, 0]
-
-        # print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
-        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
-        assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
-        # 6i ff ii 4f
-        op2_file.write(spack.pack(*data))
 
 def get_theta_from_theta_mcid(theta_mcid: int | float) -> float:
     """the theta/mcid field is stored in a strange way"""
@@ -1120,3 +1104,94 @@ def get_theta_from_theta_mcid(theta_mcid: int | float) -> float:
     else:
         theta = theta_mcid
     return theta
+
+def write_radbc(model, name: str, elems, nelements: int, itable: int,
+                op2_file: BinaryIO, op2_ascii, endian: bytes) -> int:
+    """
+    RADBC(12801,128,417)
+
+    Word Name Type Description
+    1 EID      I Element identification number
+    2 FAMB    RS Radiation view factor between the face and the ambient point
+    3 CNTRLND  I Control point for radiation boundary condition
+    4 NODAMB   I
+    """
+    structi = Struct(endian + b'ifii')
+
+    nelements = 0
+    for elem in elems:
+        nelements += len(elem.eids)
+
+    nfields = 4
+    key = (12801, 128, 417)
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for elem in elems:
+        famb = elem.famb
+        cntrlnd = elem.cntrlnd
+        nodamb = elem.nodamb
+        for eid in elem.eids:
+            data = [eid, famb, cntrlnd, nodamb]
+            # print(data) # 'ifii'
+
+            # print('  RADBC eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+            # op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+            assert None not in data, data
+            op2_file.write(structi.pack(*data))
+    itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
+    return itable
+
+
+def write_micpnt(model, name: str, eids: np.ndarray, nelements: int, itable: int,
+                 op2_file: BinaryIO, op2_ascii, endian: bytes) -> int:
+    """
+    RECORD – MICPNT(2801,28,630)
+    Word Name Type Description
+    1 EID I Element identification number
+    2 GID I Fluid grid identification number
+    3 DESC(12) CHAR4 Description - 48 characters maximum
+    """
+    key = (2801, 28, 630)
+    nfields = 14
+    struc = Struct(endian + b'2i 48s')
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.micpnt[eid]
+        # eid, node_id, name_bytes = out
+        name = elem.name
+        name_bytes = (f'{name:<48}').encode('latin1')
+        data = [eid, elem.nid, name_bytes]
+        op2_ascii.write(f'  eid={eid} nid={elem.nid} nids={name}\n')
+        datai = struc.pack(*data)
+        assert len(datai) == nfields*4, len(datai)
+        op2_file.write(struc.pack(*data))
+    itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
+    return itable
+
+    op2: OP2Geom = self.op2
+    #size = self.size
+    struc = Struct(op2._endian + b'2i 48s')
+    ntotal = 8 + 48
+    nelements = (len(data) - n) // ntotal
+    assert (len(data) - n) % ntotal == 0
+    assert nelements > 0
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]  # 4*4
+        out = struc.unpack(edata)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  MICPNT=%s\n' % str(out))
+        #(eid,n1,n2) = out
+        eid, node_id, name_bytes = out
+        name = name_bytes.decode('latin1').rstrip()
+
+GEOM2_MAP = {
+    'CBAR': write_cbar,
+    'CBEAM': write_cbeam,
+    'CTETRA': write_solid,
+    'CHEXA': write_solid,
+    'CPENTA': write_solid,
+    'CPYRAM': write_solid,
+    'MICPNT': write_micpnt,
+    'RADBC': write_radbc,
+}

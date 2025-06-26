@@ -75,7 +75,7 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
         log = obj.log
         if name in EPT_MAP:
             func = EPT_MAP[name]
-            log.warning(f'EPT: {name}')
+            log.warning(f'reading EPT-{name}')
             itable = func(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
                           nastran_format=nastran_format)
             # itable = write_pfast(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,

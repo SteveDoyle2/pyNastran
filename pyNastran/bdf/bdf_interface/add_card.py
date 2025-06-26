@@ -3446,10 +3446,11 @@ class AddAcoustic:
         self._add_methods.add_amlreg_object(amlreg)
         return amlreg
 
-    def add_micpnt(self, eid: int, node_id: int, name: str, comment: str='') -> None:
+    def add_micpnt(self, eid: int, node_id: int, name: str, comment: str='') -> MICPNT:
         #acoustic
         micpnt = MICPNT(eid, node_id, name, comment=comment)
         self._add_methods.add_micpnt_object(micpnt)
+        return micpnt
 
     def add_pmic(self, pid: int, comment: str='') -> PMIC:
         pmic = PMIC(pid, comment=comment)
@@ -5615,7 +5616,8 @@ class AddThermal:
         self._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.radmid)
         return boundary_condition
 
-    def add_radbc(self, nodamb, famb, cntrlnd, eids, comment='') -> RADBC:
+    def add_radbc(self, nodamb: int, famb: float, cntrlnd: int, eids: list[int],
+                  comment: str='') -> RADBC:
         """Creates a RADBC card"""
         boundary_condition = RADBC(nodamb, famb, cntrlnd, eids, comment=comment)
         self._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
