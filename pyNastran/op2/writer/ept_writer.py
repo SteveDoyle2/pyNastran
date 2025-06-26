@@ -75,21 +75,13 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
         log = obj.log
         if name in EPT_MAP:
             func = EPT_MAP[name]
-            log.warning(f'reading EPT-{name}')
+            # log.warning(f'reading EPT-{name}')
             itable = func(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
                           nastran_format=nastran_format)
             # itable = write_pfast(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
             #                      nastran_format=nastran_format)
             continue
 
-        elif name == 'PELAS':
-            key = (302, 3, 46)
-            nfields = 4
-            spack = Struct(endian + b'i3f')
-        elif name == 'PDAMP':
-            key = (202, 2, 45)
-            nfields = 2
-            spack = Struct(endian + b'if')
         elif name == 'PVISC':
             key = (1802, 18, 31)
             nfields = 3
@@ -161,14 +153,6 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
 
         nbytes = _write_table_header(
             op2_file, op2_ascii, name, key, nvalues, size)
-        if 0:
-            nvalues = nfields * nproperties + 3  # +3 comes from the keys
-            nbytes = nvalues * 4
-            op2_file.write(struct_3i.pack(*[4, nvalues, 4]))
-            op2_file.write(pack('i', nbytes)) #values, nbtyes))
-
-            op2_file.write(struct_3i.pack(*key))
-            op2_ascii.write('%s %s\n' % (name, str(key)))
 
         try:
             write_card(op2_file, op2_ascii, obj, name, pids, spack, endian)
@@ -192,19 +176,7 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<',
 
 def write_card(op2_file, op2_ascii, obj, name, pids, spack, endian):
     op2_ascii.write('EPT-%s\n' % name)
-    if name == 'PELAS':
-        for pid in sorted(pids):
-            prop = obj.properties[pid]
-            #(pid, k, ge, s) = out
-            data = [pid, prop.k, prop.ge, prop.s]
-            op2_file.write(spack.pack(*data))
-    elif name == 'PDAMP':
-        for pid in sorted(pids):
-            prop = obj.properties[pid]
-            #(pid, b) = out
-            data = [pid, prop.b]
-            op2_file.write(spack.pack(*data))
-    elif name == 'PVISC':
+    if name == 'PVISC':
         for pid in sorted(pids):
             prop = obj.properties[pid]
             #(pid, ce, cr) = out
@@ -1463,6 +1435,49 @@ def _write_pbush1d(name, model, pids, spack, op2_file, op2_ascii, endian):
             #raise RuntimeError(f'typea={typea} types={types} typed={typed} typeg={typeg} typef={typef}')
     return
 
+def write_pelas(name: str, props: list, itable: int,
+                op2_file: BinaryIO, op2_ascii, obj, endian: bytes=b'<',
+                nastran_format: str='nx', size: int=4) -> int:
+    key = (302, 3, 46)
+
+    nfieldsi = len(props) * 4
+    nbytes = _write_table_header(
+        op2_file, op2_ascii, name, key, nfieldsi, size)
+
+    spack = Struct(endian + b'i3f')
+    for pid in sorted(props):
+        prop = obj.properties[pid]
+        # (pid, k, ge, s) = out
+        data = [pid, prop.k, prop.ge, prop.s]
+        # assert None not in data, (data, data.index(None))
+        op2_file.write(spack.pack(*data))
+        op2_ascii.write(str(data) + '\n')
+
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
+
+
+def write_pdamp(name: str, props: list, itable: int,
+                op2_file: BinaryIO, op2_ascii, obj, endian: bytes=b'<',
+                nastran_format: str='nx', size: int=4) -> int:
+    key = (202, 2, 45)
+    spack = Struct(endian + b'if')
+
+    nfieldsi = len(props) * 2
+    nbytes = _write_table_header(
+        op2_file, op2_ascii, name, key, nfieldsi, size)
+
+    for pid in sorted(props):
+        prop = obj.properties[pid]
+        # (pid, b) = out
+        data = [pid, prop.b]
+        # assert None not in data, (data, data.index(None))
+        op2_file.write(spack.pack(*data))
+        op2_ascii.write(str(data) + '\n')
+
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
+
 
 def _write_table_header(op2_file: BinaryIO, op2_ascii,
                         name: str, key: tuple[int, int, int],
@@ -1489,7 +1504,6 @@ def _write_table_footer(op2_file: BinaryIO, op2_ascii,
     op2_ascii.write(str(data) + '\n')
     return itable
 
-
 EPT_MAP = {
     'NSMADD': write_nsmadd,
     'NSM': write_nsm,
@@ -1504,4 +1518,6 @@ EPT_MAP = {
     'PBUSH': write_pbush,
     'PFAST': write_pfast,
     'PCONV': write_pconv,
+    'PELAS': write_pelas,
+    'PDAMP': write_pdamp,
 }
