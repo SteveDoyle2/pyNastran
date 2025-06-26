@@ -936,6 +936,31 @@ class TestLoads(unittest.TestCase):
         os.remove('ploadx1.temp')
         save_load_deck(model2, run_convert=False, run_mass_properties=False)
 
+    def test_cpyram_load(self):
+        pid = 41
+        mid = 42
+        model = BDF(debug=False, log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(5, [0., 0., 1.])
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.2, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
+                       comment='')
+        eid = 6
+        nids = [1, 2, 3, 4, 5]
+        model.add_cpyram(eid, pid, nids, comment='cpyram')
+        model.add_cpyram(eid+1, pid, nids)
+        model.add_psolid(pid, mid)
+
+        model.cross_reference()
+        save_load_deck(model)
+
     def test_loads_combo(self):
         r"""
         tests CONROD, CTRIA3-PSHELL, CQUAD4-PCOMP,

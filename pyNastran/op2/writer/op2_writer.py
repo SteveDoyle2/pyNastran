@@ -173,9 +173,9 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
         #write_casecc(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     obj.log.debug(f'nastran_format={nastran_format}')
     if 'GEOM1' not in skips:  # nodes
-        write_geom1(op2_file, fop2_ascii, obj, endian=endian)
+        write_geom1(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'GEOM2' not in skips:  # elements
-        write_geom2(op2_file, fop2_ascii, obj, endian=endian)
+        write_geom2(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'GEOM3' not in skips:  # constraints
         write_geom3(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'GEOM4' not in skips:  # loads

@@ -24,24 +24,8 @@ def write_edt(op2_file: BinaryIO, op2_ascii, model: BDF | OP2Geom,
     """writes the EDT/EDTS table"""
     if not hasattr(model, 'loads'):  # OP2
         return
-    card_types = [
-        'MKAERO1', # 'MKAERO2',
-        'AERO', 'AEROS',
-        'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
-        'PAERO1', 'PAERO2', 'PAERO5',
-        'SPLINE1', 'SPLINE2', 'SPLINE4', #'SPLINE3',
-        'AELIST',
-        'AEFACT',
-        'AESURF', 'AESURFS',
-        'AESTAT',
-        'TRIM', 'DIVERG', 'FLUTTER',
-        'DEFORM',
-        'FLFACT',
-        'SET1', 'SET2', 'SET3',
-        'AELINK',
-        'MONPNT1', 'MONPNT2', 'MONPNT3',
-    ]
 
+    card_types = list(EDT_MAP.keys())
     cards_to_skip = [
         #'GUST',  # part of DIT
     ]

@@ -492,7 +492,7 @@ class TestAero(unittest.TestCase):
         aeparm = AEPARM.add_card(BDFCard(['AEPARM', aeparm_id, 'THRUST', 'lb']),
                                  comment='aeparm_comment')
 
-        model = BDF(debug=False)
+        model = BDF(debug=None)
         aeparm = model.add_aeparm(aeparm_id, 'THRUST', 'lb', comment='aeparm_comment')
         assert aeparm.aeparm_id == aeparm_id
         aeparm.validate()
@@ -2618,7 +2618,7 @@ class TestAero(unittest.TestCase):
             '             .01     .02     .03',
         ]
         # ----------------------------------------------------------------------
-        model = BDF(debug=False)
+        model = BDF(debug=None)
 
         machs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         reduced_freqs = [0.01, 0.02, 0.03]
@@ -2808,7 +2808,7 @@ class TestAero(unittest.TestCase):
 
     def test_trim_02(self):
         """checks the TRIM card with a 2.5g pullup"""
-        model = BDF()
+        model = BDF(debug=None)
         sid = 75
         mach = 0.75
         q = 100.
@@ -3147,7 +3147,7 @@ class TestAero(unittest.TestCase):
         """tests the bah_plane"""
         bdf_filename = AERO_PATH / 'bah_plane' / 'bah_plane.bdf'
         folder = ''
-        run_bdf(folder, bdf_filename, debug=False, xref=True, check=True,
+        run_bdf(folder, bdf_filename, debug=None, xref=True, check=True,
                 punch=False, mesh_form='combined',
                 is_folder=False, print_stats=False,
                 encoding=None, sum_load=True, size=8,

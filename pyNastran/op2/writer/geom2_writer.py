@@ -12,12 +12,13 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 
-def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
-    nastran_format = 'msc'
+def write_geom2(op2_file, op2_ascii, obj, endian=b'<',
+                nastran_format: str='nx'):
     if not hasattr(obj, 'elements'):
         return
     #if not hasattr(obj, 'nodes'):
         #return
+
     nspoints = len(obj.spoints)
     nplotels = len(obj.plotels)
     nelements = len(obj.elements)
@@ -27,6 +28,7 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
     write_geom_header(b'GEOM2', op2_file, op2_ascii)
     itable = -3
 
+    log = obj.log
     #etypes = [
         #'CROD', 'CONROD',
         #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -50,7 +52,7 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
         out['PLOTEL'] = list(obj.plotels.keys())
 
     # elements with fixed lengths
-    mapper = {
+    geom2_mapper = {
         # key, spack, nfields
         'CHBDYP' : ((10908, 109, 407), b'12i 3f', 15),
         'CHBDYG' : ((10808, 108, 406), b'16i', 16),
@@ -108,7 +110,7 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
     for name, eids in sorted(out.items()):
         nelements = len(eids)
         if name in etypes_to_skip:
-            obj.log.warning('skipping GEOM2-%s' % name)
+            log.warning('skipping GEOM2-%s' % name)
             continue
 
         max_eid_id = max(eids)
@@ -131,8 +133,8 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
             #_write_cfast(obj, name, eids, nelements, itable, op2_file, op2_ascii, endian,
                          #nastran_format=nastran_format)
 
-        if name in mapper:
-            key, spacki, nfields = mapper[name]
+        if name in geom2_mapper:
+            key, spacki, nfields = geom2_mapper[name]
             spack = Struct(endian + spacki)
             #print(name, spacki)
         elif name == 'CBAR':
@@ -166,7 +168,7 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
 
         # -------------------
         else:
-            obj.log.warning('skipping %s' % name)
+            obj.log.warning(f'skipping GEOM2-{name}')
             del cards_written[name]
             continue
         #else:  # pragma: no cover

@@ -587,7 +587,7 @@ class GEOM2:
             edata = data[n:n + ntotal]
             out = struct_15i.unpack(edata)
             if op2.is_debug_file:
-                op2.binary_debug.write('  CPENTA=%s\n' % str(out))
+                op2.binary_debug.write('  CPYRAM=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13) = out
 
