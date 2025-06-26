@@ -610,6 +610,13 @@ class GetMethods(BDFAttributes):
             raise KeyError('TRIM=%s not found%s.  Allowed TRIM=%s'
                            % (trim_id, msg, _unique_keys(self.trims)))
 
+    def safe_aesurf(self, aesurf_name: str, msg: str='') -> Optional[AESURF]:
+        try:
+            aesurf = self.AESurf(aesurf_name, msg=msg)
+        except KeyError:
+            return None
+        return aesurf
+
     def AESurf(self, aesurf_name: str, msg: str='') -> AESURF:
         """gets an AESURF"""
         #if isinstance(aesurf_name, integer_types):

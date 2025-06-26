@@ -5168,7 +5168,8 @@ class AddAero:
         self._add_methods.add_aesurf_object(aesurf)
         return aesurf
 
-    def add_aesurfs(self, aesid, label, list1, list2, comment='') -> AESURFS:
+    def add_aesurfs(self, aesid: int, label: str,
+                    list1: int, list2: int=0, comment: str='') -> AESURFS:
         """
         Creates an AESURFS card
 
@@ -5178,8 +5179,11 @@ class AddAero:
             the unique id
         label : str
             the AESURF name
-        list1 / list2 : int / None
-            the list (SET1) of node ids for the primary/secondary
+        list1 : int
+            the list (SET1) of node ids for the primary
+            control surface(s) on the AESURF card
+        list2 : int; default=0
+            the list (SET1) of node ids for the secondary
             control surface(s) on the AESURF card
         comment : str; default=''
             a comment for the card

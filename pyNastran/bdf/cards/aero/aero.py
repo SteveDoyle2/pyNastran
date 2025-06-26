@@ -38,7 +38,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.bdf_interface.internal_get import (
     coord_id,
     caero_id, paero_id,
-    set_id,
+    set_id, aesurf_label,
     set_group, aefact_id, aelist_id)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
@@ -1251,8 +1251,11 @@ class AESURFS(BaseCard):
             the unique id
         label : str
             the AESURF name
-        list1 / list2 : int / None
-            the list (SET1) of node ids for the primary/secondary
+        list1 : int
+            the list (SET1) of node ids for the primary
+            control surface(s) on the AESURF card
+        list2 : int; default=0
+            the list (SET1) of node ids for the secondary
             control surface(s) on the AESURF card
         comment : str; default=''
             a comment for the card
@@ -1265,6 +1268,7 @@ class AESURFS(BaseCard):
         self.label = label
         self.list1 = list1
         self.list2 = list2
+        self.label_ref = None
         self.list1_ref = None
         self.list2_ref = None
 
@@ -1307,7 +1311,8 @@ class AESURFS(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by AESURFS aesid=%s' % self.aesid
+        msg = f', which is required by AESURFS aesid={self.aesid}'
+        self.label_ref = model.AESurf(self.label, msg)
         self.list1_ref = model.Set(self.list1, msg)
         self.list1_ref.cross_reference_set(model, 'Node', msg)
 
@@ -1315,8 +1320,9 @@ class AESURFS(BaseCard):
             self.list2_ref = model.Set(self.list2, msg=msg)
             self.list2_ref.cross_reference_set(model, 'Node', msg)
 
-    def safe_cross_reference(self, model):
-        msg = ', which is required by AESURFS aesid=%s' % self.aesid
+    def safe_cross_reference(self, model: BDF):
+        msg = f', which is required by AESURFS aesid={self.aesid}'
+        self.label_ref = model.safe_aesurf(self.label, msg)
         try:
             self.list1_ref = model.Set(self.list1, msg=msg)
             self.list1_ref.cross_reference_set(model, 'Node', msg)
@@ -1332,10 +1338,15 @@ class AESURFS(BaseCard):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
+        self.label = self.Label()
         self.list1 = self.List1()
         self.list2 = self.List2()
+        self.label_ref = None
         self.list1_ref = None
         self.list2_ref = None
+
+    def Label(self) -> str:
+        return aesurf_label(self.label_ref, self.label)
 
     def List1(self) -> int:
         return set_id(self.list1_ref, self.list1)
@@ -1353,7 +1364,7 @@ class AESURFS(BaseCard):
             the fields that define the card
 
         """
-        list_fields = ['AESURFS', self.aesid, self.label, None, self.List1(), None,
+        list_fields = ['AESURFS', self.aesid, self.Label(), None, self.List1(), None,
                        self.List2()]
         return list_fields
 

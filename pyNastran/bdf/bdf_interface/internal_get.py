@@ -5,7 +5,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.nodes import GRID
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.bdf.cards.aero.aero import (
-        CAEROs, PAEROs, AELIST, AEFACT)
+        CAEROs, PAEROs, AELIST, AEFACT, AESURF)
     from pyNastran.bdf.cards.bdf_sets import SET1, SET2
     from pyNastran.bdf.cards.bdf_tables import TABLEDs
     from pyNastran.bdf.cards.optimization_nx import GROUP
@@ -78,6 +78,10 @@ def set_id(setg_ref: SET1 | SET2, setg: int) -> int:
         return setg_ref.sid
     return setg
 
+def aesurf_label(aesurf_ref: AESURF, aesurf: str) -> str:
+    if aesurf_ref is not None:
+        return aesurf_ref.label
+    return aesurf
 
 def aelist_id(aelist_ref: AELIST, aelist: int) -> int:
     if aelist_ref is not None:

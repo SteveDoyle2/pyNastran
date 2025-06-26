@@ -527,16 +527,28 @@ class TestAero(unittest.TestCase):
 
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.add_card(bdf_card, 'AESURFS', comment='aesurfs',
-                       is_list=True, has_none=True)
-        aesurfs = AESURFS(aesid, label, list1, list2, comment='aesurfs')
+        AESURFS.add_card(bdf_card, comment='')
+        AESURFS.add_card(bdf_card, comment='aesurfs')
+
+        # model.add_card(bdf_card, 'AESURFS', comment='aesurfs',
+        #                is_list=True, has_none=True)
+
+        cid = 0
+        aelist_id1 = 7000
+        aesurf = model.add_aesurf(aesid, label, cid, aelist_id1)
+        caero_box_elements = [1001, 1002, 1003, 1004]
+        aelist = model.add_aelist(aelist_id1, caero_box_elements)
+
+        aesid += 1
+        aesurfs = model.add_aesurfs(aesid, label, list1, list2, comment='aesurfs')
         str(aesurfs)
         aesurfs.write_card()
 
-        model.add_set1(6002, [1, 2, 3])
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [0., 0., 0.])
-        model.add_grid(3, [0., 0., 0.])
+        model.add_set1(6002, [11, 12, 13])
+        model.add_set1(6003, [12, 13])
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [0., 0., 0.])
+        model.add_grid(13, [0., 0., 0.])
 
         model.validate()
         save_load_deck(model)

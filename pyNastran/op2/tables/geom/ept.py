@@ -399,6 +399,22 @@ class EPT:
         ntotal1 = 8 * size
         s2 = Struct(mapfmt(op2._endian + b'2i 2f 4i', size))
 
+        fti_to_ft_map = {
+            0: None,
+            1: 'HILL',
+            2: 'HOFF',
+            3: 'TSAI',
+            4: 'STRN',
+            5: 'STRS',
+            6: 'TS',
+            9: 'PFA',
+        }
+        lam_fti_to_lam_ft_map = {
+            0: None,
+            7: 'SB',
+            8: 'NB',
+        }
+
         eight_minus1 = Struct(mapfmt(op2._endian + b'8i', size))
         ndata = len(data)
         ntotal2 = 8 * self.size
@@ -437,23 +453,9 @@ class EPT:
                 #
                 #9-PFA for progressive ply failure. See Remark 6.
                 #0-(Character; Default = No failure theory). Not supported
-                if fti == 0:
-                    ft = None
-                elif fti == 1:
-                    ft = 'HILL'
-                elif fti == 2:
-                    ft = 'HOFF'
-                elif fti == 3:
-                    ft = 'TSAI'
-                elif fti == 4:
-                    ft = 'STRN'
-                elif fti == 5:
-                    ft = 'STRS'
-                elif fti == 6:
-                    ft = 'TS'
-                elif fti == 9:
-                    ft = 'PFA'
-                else:  # pragma: no cover
+                try:
+                    ft = fti_to_ft_map[fti]
+                except KeyError:  # pragma: no cover
                     self.log.error(f'PCOMPS pid={pid} global_ply_id={global_ply_id} mid={mid} t={t:g} '
                                    f'theta={theta} fti={fti} lam_ft={lam_fti} sout={souti} tflag={tflagi}')
                     raise NotImplementedError(fti)
@@ -461,13 +463,9 @@ class EPT:
                 #SB for transverse shear stress failure index.
                 #NB for normal stress failure index.
                 #(Character; Default = No failure index)
-                if lam_fti == 0:
-                    lam_ft = None
-                elif lam_fti == 7:
-                    lam_ft = 'SB'
-                elif lam_fti == 8:
-                    lam_ft = 'NB'
-                else:  # pragma: no cover
+                try:
+                    lam_ft = lam_fti_to_lam_ft_map[lam_fti]
+                except KeyError:  # pragma: no cover
                     raise NotImplementedError(lam_fti)
 
                 if souti == 0:
@@ -575,7 +573,7 @@ class EPT:
         data = (1, 14, 'FACE CONTACT(1)                                         ')
         """
         op2: OP2Geom = self.op2
-        assert self.size == 4, 'DESC size={self.size} is not supported'
+        assert self.size == 4, f'DESC size={self.size} is not supported'
         #op2.show_data(data[n:], types='ifs')
         struct_2i = Struct(op2._endian + b'2i')
         while n < len(data):
