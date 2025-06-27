@@ -28,6 +28,7 @@ AESTAT  500     ANGLEA
 AESTAT  501     PITCH   
 AESTAT  502     URDD3   
 AESTAT  503     URDD5   
+$       id      mach    q
 TRIM    1       0.789   1.5     PITCH   0.0     URDD3   2.5     
         URDD5   0.0
 INCLUDE 'bwb_geom.blk'

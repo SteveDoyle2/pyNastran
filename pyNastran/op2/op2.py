@@ -341,13 +341,13 @@ class OP2(OP2_Scalar, OP2Writer):
             self.log.warning(f'type(a)={aname} type(b)={bname}')
             return False
 
-        if aname == 'PARAM': # TODO: update this
+        if aname == 'PARAM':  # TODO: update this
             return True
 
         # does this ever hit?
         skip_names = [
             'Array', 'Eigenvalues', 'GridPointWeight', 'TRMBU', 'TRMBD',
-            'FlutterResponse']
+            'FlutterResponse', 'TrimDerivatives']
         if not any(word in aname for word in skip_names):
             msg = f'{aname} is not an Array ... assume equal'
             self.log.warning(msg)

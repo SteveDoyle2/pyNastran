@@ -27,6 +27,7 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R, Coord
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray33float
     from cpylog import SimpleLogger
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.bdf.bdf import BDF, GRID, CBEAM
 
 
@@ -105,18 +106,18 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.mid_ref.rho
 
-    def Nsm(self):
+    def Nsm(self) -> float:
         """Placeholder method for the non-structural mass, :math:`nsm`"""
         raise NotImplementedError('implement self.Area() for %s' % self.type)
 
-    def MassPerLength(self):
+    def MassPerLength(self) -> float:
         """Get the mass per unit length, :math:`\frac{m}{L}`"""
         if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.MassPerLength()
 
-    def Mass(self):
+    def Mass(self) -> float:
         r"""
         Get the mass of the element.
 
@@ -147,7 +148,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         self.nodes_ref = None
         self.pid_ref = None
 
-    def Length(self):
+    def Length(self) -> float:
         r"""
         Gets the length, :math:`L`, of the element.
 
@@ -157,7 +158,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
         return L
 
-    def get_edge_ids(self):
+    def get_edge_ids(self) -> list[tuple[int, ...]]:
         """
         Return the edge IDs
         """
@@ -186,7 +187,8 @@ class BAROR(BaseCard):
         x = None
         return BAROR(pid, is_g0, g0, x, offt='GGG', comment='')
 
-    def __init__(self, pid, is_g0, g0, x, offt='GGG', comment=''):
+    def __init__(self, pid: int, is_g0: bool, g0: int, x: Optional[list[float]],
+                 offt: str='GGG', comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -202,7 +204,7 @@ class BAROR(BaseCard):
             #raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         pid = integer_or_blank(card, 2, 'pid')
 
         # x / g0
@@ -236,6 +238,7 @@ class BAROR(BaseCard):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
 
 class CBARAO(BaseCard):
     """
@@ -384,10 +387,11 @@ class CBAR(LineElement):
     """
     type = 'CBAR'
     _field_map = {
-        1: 'eid', 2:'pid', 3:'ga', 4:'gb',
-        8:'offt', 9:'pa', 10:'pb',
+        1: 'eid', 2: 'pid', 3: 'ga', 4: 'gb',
+        8: 'offt', 9: 'pa', 10: 'pb',
         #, 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'
     }
+
     def update_by_cp_name(self, cp_name, value):
         if cp_name == 'W1A':
             self.wa[0] = value
@@ -502,10 +506,10 @@ class CBAR(LineElement):
 
         Parameters
         ----------
+        eid : int
+            element id
         pid : int
             property id
-        mid : int
-            material id
         nids : list[int, int]
             node ids; connected grid points at ends A and B
         x : list[float, float, float]
@@ -866,9 +870,6 @@ class CBAR(LineElement):
 
         check_offt(self)
         is_failed = True
-        ihat = None
-        yhat = None
-        zhat = None
 
         eid = self.eid
         (nid1, nid2) = self.node_ids
@@ -913,7 +914,7 @@ class CBAR(LineElement):
         # wa/wb are not considered in i_offset
         # they are considered in ihat
         i = xyz2 - xyz1
-        Li: float = norm(i)
+        Li: float = np.linalg.norm(i)
         if Li == 0.:
             msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
             raise ValueError(msg)
@@ -966,7 +967,7 @@ class CBAR(LineElement):
         # they are considered in ihat
         i = xyz2 - xyz1
         ihat_norm = norm(i)
-        if ihat_norm== 0.:
+        if ihat_norm == 0.0:
             msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
             raise ValueError(msg)
         i_offset = i / ihat_norm
@@ -978,14 +979,14 @@ class CBAR(LineElement):
         return v
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         return [self.Ga(), self.Gb()]
 
-    def get_edge_ids(self):
+    def get_edge_ids(self) -> list[int, ...]:
         return [tuple(sorted(self.node_ids))]
 
     @property
-    def nodes(self):
+    def nodes(self) -> list[int]:
         return [self.ga, self.gb]
 
     @nodes.setter
@@ -994,16 +995,16 @@ class CBAR(LineElement):
         self.gb = values[1]
 
     @property
-    def nodes_ref(self):
+    def nodes_ref(self) -> list[GRID]:
         return [self.ga_ref, self.gb_ref]
 
     @nodes_ref.setter
-    def nodes_ref(self, values):
+    def nodes_ref(self, values) -> None:
         assert values is not None, values
         self.ga_ref = values[0]
         self.gb_ref = values[1]
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         """Gets the fields of the card in their full form"""
         (x1, x2, x3) = self.get_x_g0_defaults()
 
@@ -1014,7 +1015,7 @@ class CBAR(LineElement):
                        x3, offt, self.pa, self.pb] + list(self.wa) + list(self.wb)
         return list_fields
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         """Gets the fields of the card in their reduced form"""
         pa = set_blank_if_default(self.pa, 0)
         pb = set_blank_if_default(self.pb, 0)
@@ -1041,7 +1042,7 @@ class CBAR(LineElement):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-    def write_card_16(self, is_double=False):
+    def write_card_16(self, is_double=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_16(card)
 
@@ -1064,8 +1065,14 @@ class CBEAM3(LineElement):  # was CBAR
                       tw=None, s=None, comment='')
 
     type = 'CBEAM3'
-    def __init__(self, eid, pid, nids, x, g0,
-                 wa=None, wb=None, wc=None, tw=None, s=None, comment=''):
+
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 x: Optional[list[float]], g0: Optional[int],
+                 wa: Optional[np.ndarray]=None,
+                 wb: Optional[np.ndarray]=None,
+                 wc: Optional[np.ndarray]=None,
+                 tw: Optional[np.ndarray]=None,
+                 s: Optional[np.ndarray]=None, comment: str=''):
         LineElement.__init__(self)
 
         if wa is None:
@@ -1187,14 +1194,16 @@ class CBEAM3(LineElement):  # was CBAR
         self.gc_ref = None
         self.pid_ref = None
 
-    def center_of_mass(self):
+    def center_of_mass(self) -> np.ndarray:
         return np.zeros(3)
-    def Centroid(self):
+
+    def Centroid(self) -> np.ndarray:
         return np.zeros(3)
-    def MassPerLength(self):
+
+    def MassPerLength(self) -> float:
         return 0.
 
-    def Length(self):
+    def Length(self) -> float:
         r"""
         We'll fit a 2nd order polynomial to the x, y, and z coefficients.
         We know GA (t=0), GB(t=1), and GC (t=0.5 assumed).
@@ -1290,7 +1299,7 @@ class CBEAM3(LineElement):  # was CBAR
             #print('dx=', dx, length)
         else:
             t = 1.
-            at2btc = a * t **2 + b * t + c
+            at2btc = a * t ** 2 + b * t + c
             length = (
                 (b + 2 * a * t) / (4 * a) * np.sqrt(at2btc) +
                 (4 * a * c - b ** 2) / (8 * a ** 1.5) * np.log(
@@ -1306,7 +1315,7 @@ class CBEAM3(LineElement):  # was CBAR
 
         xyza = self.ga_ref.get_position() + self.wa
         xyzb = self.gb_ref.get_position() + self.wb
-        Aa, Ab, Ac = A # self.pid_ref.area
+        Aa, Ab, Ac = A  # self.pid_ref.area
         L = self.Length()
         if self.gc is not None:
             xa, ya, za = xyza
@@ -1330,7 +1339,7 @@ class CBEAM3(LineElement):  # was CBAR
 
         xyza = self.ga_ref.get_position() + self.wa
         xyzb = self.gb_ref.get_position() + self.wb
-        Aa, Ab, Ac = A # self.pid_ref.area
+        Aa, Ab, Ac = A  # self.pid_ref.area
         if self.gc is not None:
             xa, ya, za = xyza
             xb, yb, zb = xyzb
@@ -1402,11 +1411,10 @@ class CBEAM3(LineElement):  # was CBAR
         return [self.ga, self.gb, self.gc]
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         return [self.Ga(), self.Gb(), self.Gc()]
 
-
-    def get_edge_ids(self):
+    def get_edge_ids(self) -> list[int, ...]:
         nids = [self.Ga(), self.Gb()]
         return [tuple(sorted(nids))]
 
@@ -1434,7 +1442,7 @@ class CBEAM3(LineElement):  # was CBAR
         x1, x2, x3 = self.get_x_g0_defaults()
         ga, gb, gc = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3] + \
-                  list(self.wa) + list(self.wb) + list(self.wc) + list(self.tw) + list(self.s)
+            list(self.wa) + list(self.wb) + list(self.wc) + list(self.tw) + list(self.s)
         return list_fields
 
     def repr_fields(self):
@@ -1468,6 +1476,7 @@ class CBEAM3(LineElement):  # was CBAR
     def _verify(self, xref):
         unused_edges = self.get_edge_ids()
 
+
 def init_x_g0_cbeam3(card, eid, x1_default, x2_default, x3_default):
     """reads the x/g0 field for the CBEAM3"""
     field6 = integer_double_or_blank(card, 6, 'g0_x1', x1_default)
@@ -1495,7 +1504,7 @@ def init_x_g0_cbeam3(card, eid, x1_default, x2_default, x3_default):
 class CBEND(LineElement):
     type = 'CBEND'
     _field_map = {
-        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'geom',
+        1: 'eid', 2: 'pid', 3: 'ga', 4: 'gb', 8: 'geom',
     }
     _properties = ['node_ids']
 
@@ -1830,7 +1839,7 @@ class CBEND(LineElement):
                                 radius, 0., 2*np.pi-0.0001, ntheta=41)
         assert xyz.shape == (41, 3), xyz.shape
         ax.plot(xyz[:, 0], xyz[:, 1], label='circle')
-        dxyz = xyz[1:,:] - xyz[:-1,:]
+        dxyz = xyz[1:, :] - xyz[:-1, :]
         assert len(xyz) == len(dxyz) + 1
         length = np.linalg.norm(dxyz, axis=1)
         assert len(dxyz) == len(length), (len(dxyz), len(length))
@@ -1839,8 +1848,8 @@ class CBEND(LineElement):
 
         xyz = self.make_circle2(origin, xform,
                                 radius, theta1, theta2, ntheta=51)
-        dxyz = xyz[1:,:] - xyz[:-1,:]
-        xyzi_cg = (xyz[1:,:] + xyz[:-1,:]) / 2
+        dxyz = xyz[1:, :] - xyz[:-1, :]
+        xyzi_cg = (xyz[1:, :] + xyz[:-1, :]) / 2
         length = np.linalg.norm(dxyz, axis=1)
         rho = 1.
         area = 1.
@@ -2023,6 +2032,7 @@ class CBEND(LineElement):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
 def init_x_g0(card, eid, x1_default, x2_default, x3_default):
     """common method to read the x/g0 field for the CBAR, CBEAM, CBEAM3"""
     field5 = integer_double_or_blank(card, 5, 'g0_x1', x1_default)
@@ -2045,6 +2055,7 @@ def init_x_g0(card, eid, x1_default, x2_default, x3_default):
                'type=%s' % (card.field(0), eid, field5, type(field5)))
         raise RuntimeError(msg)
     return x, g0
+
 
 def get_bar_vector(model: BDF, elem: CBAR | CBEAM,
                    node1: GRID, node2: GRID,
@@ -2084,8 +2095,8 @@ def get_bar_vector(model: BDF, elem: CBAR | CBEAM,
             v = cd1_ref.transform_node_to_global(elem.x)
             cd1_ref = model.Coord(cd1)
             cd2_ref = model.Coord(cd2)
-
     return v, cd1, cd1_ref, cd2, cd2_ref
+
 
 def rotate_v_wa_wb(model: BDF, elem,
                    xyz1: np.ndarray, xyz2: np.ndarray,
@@ -2180,9 +2191,9 @@ def rotate_v_wa_wb(model: BDF, elem,
     yhat_offset, zhat_offset = get_bar_yz_transform(
         v, ihat_offset, eid, xyz1, xyz2, node1.nid, node2.nid,
         i_offset, Li_offset)
-    xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
+    xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset])  # 3x3 unit matrix
 
-    #--------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # rotate wa
     # wa defines the offset at end A
     wa = elem.wa
@@ -2239,11 +2250,12 @@ def rotate_v_wa_wb(model: BDF, elem,
     #print(f'yhat = {yhat}')
     #print(f'zhat = {zhat}')
 
-    xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
+    xform = np.vstack([ihat, yhat, zhat])  # 3x3 unit matrix
     #print('xform:')
     #print(xform)
     #print("")
     return v, wa, wb, xform
+
 
 def get_bar_yz_transform(v: np.ndarray, ihat: np.ndarray,
                          eid: int,
@@ -2278,9 +2290,9 @@ def get_bar_yz_transform(v: np.ndarray, ihat: np.ndarray,
        the CBAR/CBEAM's z-axis
 
     """
-    vhat = v / norm(v) # j
+    vhat = v / norm(v)  # j
     try:
-        z = np.cross(ihat, vhat) # k
+        z = np.cross(ihat, vhat)  # k
     except ValueError:
         msg = (
             'Invalid vector length\n'
@@ -2309,7 +2321,7 @@ def get_bar_yz_transform(v: np.ndarray, ihat: np.ndarray,
                f'eid={eid} v={v} i={i} -> z={z}; norm(z)={norm_z}\nn{nid1}={xyz1} n{nid2}={xyz2}')
         raise FloatingPointError(msg)
 
-    yhat = np.cross(zhat, ihat) # j
+    yhat = np.cross(zhat, ihat)  # j
 
     norm_i = norm(ihat)
     if norm_i == 0.0 or norm(yhat) == 0.0 or norm_z == 0.0:
@@ -2320,6 +2332,7 @@ def get_bar_yz_transform(v: np.ndarray, ihat: np.ndarray,
               ' v=%s i=%s n%s=%s n%s=%s' % (
                   eid, Li, norm(yhat), norm(zhat), v, i, nid1, xyz1, nid2, xyz2))
     return yhat, zhat
+
 
 def check_offt(element):
     """

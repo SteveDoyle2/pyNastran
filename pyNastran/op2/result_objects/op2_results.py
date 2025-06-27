@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.op2_interface.random_results import (
@@ -14,6 +14,7 @@ from pyNastran.op2.op2_interface.random_results import (
 from pyNastran.op2.result_objects.design_response import Responses
 if TYPE_CHECKING:
     from pyNastran.f06.flutter_response import FlutterResponse
+    from pyNastran.f06.f06_tables.trim import TrimDerivatives
 
 
 class Results:
@@ -26,6 +27,7 @@ class Results:
         self.monitor1 = None
         self.monitor3 = None
         self.responses = Responses()
+        self.trim = Trim()
 
         self.scalars = {}  # fake data
         self.separation_initial = {}
@@ -65,27 +67,27 @@ class Results:
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
         self.ROQGM1 = ROQGM1()   # relative mpc forces???
 
-        self.RADEFFM = RADEFFM() # eigenvectors
+        self.RADEFFM = RADEFFM()  # eigenvectors
 
-        self.RADCONS = RADCONS() # eigenvectors
-        self.RAFCONS = RAFCONS() # force
-        self.RASCONS = RASCONS() # stress
-        self.RAECONS = RAECONS() # strain
-        self.RAGCONS = RAGCONS() # grid point forces
-        self.RAPCONS = RAPCONS() # composite stress
-        self.RANCONS = RANCONS() # strain energy
-        self.RARCONS = RARCONS() # spc force
-        self.RAQCONS = RAQCONS() # mpc force
+        self.RADCONS = RADCONS()  # eigenvectors
+        self.RAFCONS = RAFCONS()  # force
+        self.RASCONS = RASCONS()  # stress
+        self.RAECONS = RAECONS()  # strain
+        self.RAGCONS = RAGCONS()  # grid point forces
+        self.RAPCONS = RAPCONS()  # composite stress
+        self.RANCONS = RANCONS()  # strain energy
+        self.RARCONS = RARCONS()  # spc force
+        self.RAQCONS = RAQCONS()  # mpc force
 
-        self.RADEATC = RADEATC() # eigenvectors
-        self.RAFEATC = RAFEATC() # force
-        self.RASEATC = RASEATC() # stress
-        self.RAEEATC = RAEEATC() # strain
-        self.RAGEATC = RAGEATC() # grid point forces
-        self.RAPEATC = RAPEATC() # composite stress
-        self.RANEATC = RANEATC() # strain energy
-        self.RAREATC = RAREATC() # spc force
-        self.RAQEATC = RAQEATC() # mpcforce
+        self.RADEATC = RADEATC()  # eigenvectors
+        self.RAFEATC = RAFEATC()  # force
+        self.RASEATC = RASEATC()  # stress
+        self.RAEEATC = RAEEATC()  # strain
+        self.RAGEATC = RAGEATC()  # grid point forces
+        self.RAPEATC = RAPEATC()  # composite stress
+        self.RANEATC = RANEATC()  # strain energy
+        self.RAREATC = RAREATC()  # spc force
+        self.RAQEATC = RAQEATC()  # mpcforce
         self.srss = SRSS()
         self.abs = ABS()
         self.nrl = NRL()
@@ -111,6 +113,7 @@ class Results:
             'plastic_strain': self.plastic_strain,
             'thermal_strain': self.thermal_strain,
             'creep_strain': self.creep_strain,
+            'trim': self.trim,
             #self.ato,
             #self.psd,
             #self.rms,
@@ -149,7 +152,7 @@ class Results:
             #self.cstm, self.trmbd, self.trmbu,
             #self.vg_vf_response,
             #self.superelement_tables,
-
+            self.trim,
         ]
         return sum_objs
 
@@ -225,8 +228,28 @@ class Load:
         length = sum((len(getattr(self, name)) for name in names))
         return length
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True):
         raise NotImplementedError('get_table_types')
+
+
+class Trim:
+    def __init__(self):
+        super().__init__()
+        self.derivatives: dict[int, TrimDerivatives] = {}
+        # self.hinge_moments = {}
+        self.hinge_moment_derivatives = {}
+        self.control_surface_position_hinge_moment = {}
+        #self.variables = {}
+        self.aero_pressure = {}
+        self.aero_force = {}
+
+    def get_table_types(self, include_class: bool=True) -> list[str]:
+        tables = [
+            'derivatives',  # 'hinge_moments', 'variables', 'aero_pressure', 'aero_force',
+        ]
+        if include_class:
+            return ['trim.' + table for table in tables]
+        return tables
 
 
 class SolutionSet(Load):
@@ -245,6 +268,7 @@ class SolutionSet(Load):
             return ['solution_set.' + table for table in tables]
         return tables
 
+
 class Acoustic(Load):
     def __init__(self):
         super().__init__()
@@ -257,6 +281,7 @@ class Acoustic(Load):
         if include_class:
             return ['acoustic.' + table for table in tables]
         return tables
+
 
 class ModalContribution:
     def __init__(self):
@@ -332,7 +357,7 @@ class ModalContribution:
 
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
-            'displacements', # 'velocities', 'accelerations',
+            'displacements',  # 'velocities', 'accelerations',
             #'load_vectors', 'spc_forces', 'mpc_forces',
 
             #'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
@@ -355,7 +380,7 @@ class ModalContribution:
             'cquadr_strain', 'cquad4_strain', 'cquad8_strain',
             'ctetra_strain', 'cpenta_strain', 'chexa_strain', 'cpyram_strain',
 
-            'cbend_stress', # 'cbend_strain', 'cbend_force',
+            'cbend_stress',  # 'cbend_strain', 'cbend_force',
             'cbush_stress', 'cbush_strain',
             'cshear_stress', 'cshear_strain', 'cshear_force',
 
@@ -372,6 +397,7 @@ class ModalContribution:
         if include_class:
             return ['modal_contribution.' + table for table in tables]
         return tables
+
 
 class StrengthRatio:
     def __init__(self):
@@ -401,6 +427,7 @@ class StrengthRatio:
             return ['strength_ratio.' + table for table in tables]
         return tables
 
+
 class FailureIndices:
     def __init__(self):
         self.cquad4_composite_force = {}
@@ -422,6 +449,7 @@ class FailureIndices:
         if include_class:
             return ['failure_indices.' + table for table in tables]
         return tables
+
 
 class Force(Load):
     def __init__(self):
@@ -592,6 +620,7 @@ class ThermalLoad(Load):
             return ['thermal_load.' + table for table in tables]
         return tables
 
+
 class Stress:
     def __init__(self, word: str):
         """word : str
@@ -613,7 +642,6 @@ class Stress:
         self.cbar_stress_10nodes = {}
         self.cbeam_stress = {}
         self.cbend_stress = {}
-
 
         # other 1d/2d
         self.cshear_stress = {}
@@ -683,7 +711,7 @@ class Stress:
             'cbeam_stress',
 
             # CBEND - isotropic CBEAM stress/strain
-            'cbend_stress', # 'cbend_force',
+            'cbend_stress',  # 'cbend_force',
 
             # OES - isotropic CTRIA3/CQUAD4 stress/strain
             'ctria3_stress', 'ctriar_stress', 'ctria6_stress',
@@ -710,6 +738,7 @@ class Stress:
         if include_class:
             return [f'{self.word}.' + table for table in tables]
         return tables
+
 
 class Strain:
     def __init__(self, word: str):
@@ -776,7 +805,6 @@ class Strain:
         self.ctriax6_strain = {}
 
         self.hyperelastic_cquad4_strain = {}
-
 
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
@@ -917,6 +945,7 @@ class KineticEnergy:
             return ['kinetic_energy.' + table for table in tables]
         return tables
 
+
 class StrainEnergy:
     def __init__(self):
         """
@@ -1015,23 +1044,24 @@ class StrainEnergy:
 
 class CSTM:
     def __init__(self):
-        self.headers = {"cid": 0,
-                        "cid_type": 1,
-                        "unused_int_index": 2,
-                        "unused_double_index": 3,
-                        "ox": 4,
-                        "oy": 5,
-                        "oz": 6,
-                        "T11": 7,
-                        "T12": 8,
-                        "T13": 9,
-                        "T21": 10,
-                        "T22": 11,
-                        "T23": 12,
-                        "T31": 13,
-                        "T32": 14,
-                        "T33": 15
-                    }
+        self.headers = {
+            "cid": 0,
+            "cid_type": 1,
+            "unused_int_index": 2,
+            "unused_double_index": 3,
+            "ox": 4,
+            "oy": 5,
+            "oz": 6,
+            "T11": 7,
+            "T12": 8,
+            "T13": 9,
+            "T21": 10,
+            "T22": 11,
+            "T23": 12,
+            "T31": 13,
+            "T32": 14,
+            "T33": 15,
+        }
         self.data = None  # type: Optional[np.ndarray]  # Coordinate Transformation Matrices from Native to Global
 
     def get_stats(self, short=False):
@@ -1047,6 +1077,7 @@ class CSTM:
             msg += '  data = None'
         return msg
 
+
 class TRMBD:
     def __init__(self, **data: dict[str, Any]):
         self.isubcase = data['isubcase']
@@ -1059,7 +1090,7 @@ class TRMBD:
         self.subtitle = data['subtitle']
         self.label = data['label']
 
-        self.times = np.array([], dtype='float64') # default type
+        self.times = np.array([], dtype='float64')  # default type
         self.nodes: dict[str, np.ndarray] = {}
         self.eulersx: dict[str, np.ndarray] = {}
         self.eulersy: dict[str, np.ndarray] = {}
@@ -1090,6 +1121,7 @@ class TRMBD:
         msg += f'  nodes, eulersx, eulersy, eulersz'
         return msg
 
+
 class TRMBU:
     def __init__(self, ntimes: int, **data: dict[str, Any]):
         self.isubcase = data['isubcase']
@@ -1103,7 +1135,7 @@ class TRMBU:
         self.label = data['label']
 
         self.ntimes = ntimes
-        self.times = np.array([], dtype='float64') # default dtype
+        self.times = np.array([], dtype='float64')  # default dtype
         self.eulers: dict[str, np.ndarray] = {}
 
     def etypes(self) -> list[int]:

@@ -1534,8 +1534,9 @@ class OP2_F06_Common:
 
         table_types = base + [
             'grid_point_weight',
+
             # OUG - displacement, temperatures, eigenvectors, velocity, acceleration
-            'displacements', # 'displacements_scaled',
+            'displacements',  # 'displacements_scaled',
             'temperatures',
             'eigenvectors', 'eigenvectors_structure', 'eigenvectors_fluid',
             'velocities',
@@ -1574,8 +1575,8 @@ class OP2_F06_Common:
             'params',
 
             # LAMA
-            'eigenvalues', # LAMA, CLAMA, BLAMA, LAMAS
-            'eigenvalues_fluid', # LAMAF
+            'eigenvalues',  # LAMA, CLAMA, BLAMA, LAMAS
+            'eigenvalues_fluid',  # LAMAF
 
             # OUG1S
             #'eigenvectors_structure',

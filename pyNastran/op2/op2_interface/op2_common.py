@@ -432,7 +432,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.nonlinear_factor = np.nan #np.float32(None)
         self.data_code['nonlinear_factor'] = np.nan
 
-    def _read_title_helper(self, data: bytes) -> None:
+    def _read_title_helper(self, data: bytes) -> dict[str, Any]:
         if self.size == 4:
             assert len(data) == 584, len(data)
             # title_subtitle_label
@@ -502,6 +502,7 @@ class OP2Common(Op2Codes, F06Writer):
                     'label', self.label,
                     'pval_step', self.pval_step,
                     'superelement_adaptivity_index', self.superelement_adaptivity_index))
+        return self.data_code
 
     def _read_title(self, data: bytes) -> None:
         self._read_title_helper(data)

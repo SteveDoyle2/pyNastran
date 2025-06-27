@@ -339,6 +339,9 @@ class AnimationWindow(PyDialog):
         #self.min_value_edit.setValue(1)
         self.max_value_button = QPushButton('Default')
 
+        self.animate_in_gui_checkbox = QCheckBox('Animate in GUI?')
+        self.animate_in_gui_checkbox.setChecked(True)
+
         # TODO: enable this (uncomment) ------------------------------------------
         #self.min_value_enable.hide()
         #self.min_value.hide()
@@ -1045,6 +1048,8 @@ class AnimationWindow(PyDialog):
         #grid2.addWidget(self.animate_freq_sweeep_radio, 8, 3)
 
         grid2.addWidget(self.save_animation_checkbox, irow, 0)
+        irow += 1
+        grid2.addWidget(self.animate_in_gui_checkbox, irow, 0)
         irow += 1
 
         grid2.addWidget(self.resolution_label, irow, 0)
