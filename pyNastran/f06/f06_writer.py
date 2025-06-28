@@ -671,6 +671,7 @@ class F06Writer(OP2_F06_Common):
                         continue
 
                     result = res_type[res_key]
+                    # print(f'res_key = {res_key}')
                     if repr_check:
                         str(result)
                     subtitle = result.subtitle
@@ -700,9 +701,9 @@ class F06Writer(OP2_F06_Common):
                         else:
                             print(res_format % (class_name, isubcase, element_name))
 
+                        #log.error(f'result = {result}')
                         result.is_complex
                         result.is_real
-
                         #check_element_node(result)
                         try:
                             self.page_num = result.write_f06(

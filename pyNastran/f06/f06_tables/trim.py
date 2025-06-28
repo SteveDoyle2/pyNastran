@@ -1,5 +1,6 @@
 from collections import defaultdict
 import numpy as np
+from pyNastran.utils.numpy_utils import integer_types
 TrimVariable = tuple[int, str, str, float, str]
 ControllerState = dict[str, float]
 TrimVariables = dict[str, TrimVariable]
@@ -176,3 +177,83 @@ class TrimResults:
         else:
             msg += '\n  len(aero_pressure) = 0'
         return msg
+
+
+class TrimDerivatives:
+    def __init__(self, mach: float, q: float,
+                 chord: float, span: float, sref: float,
+                 names: np.ndarray, derivatives: np.ndarray,
+                 subcase: int=1, title: str='', subtitle: str='', label: str=''):
+        self.nonlinear_factor = None
+        self.is_complex = False
+        self.is_real = False
+
+        self.mach = mach
+        self.q = q
+        self.chord = chord
+        self.span = span
+        self.sref = sref
+        self.subcase = subcase
+        assert isinstance(self.subcase, integer_types), self.subcase
+
+        self.title = title
+        self.subtitle = subtitle
+        self.label = label
+        assert isinstance(title, str), title
+        assert isinstance(subtitle, str), subtitle
+        assert isinstance(label, str), label
+
+        self.names = names
+        self.data = derivatives
+
+    def __eq__(self, other) -> bool:
+        return True
+    def get_stats(self, short: bool=False) -> str:
+        msg = ''
+        msg += f'  derivatives[{self.subcase}]:\n'
+        coeffs = ['Cx', 'Cy', 'Cz', 'Cmx', 'Cmy', 'Cmz']
+        headers = ['rigid_unsplined', 'rigid_splined', 'elastic_unsplined', 'elastic_splined',
+                   'inertial_restrained', 'inertial_unrestrained']
+
+        if short:
+            nnames = len(self.names)
+            msg += f'    names   = {self.names.tolist()}; n={nnames}\n'
+            msg += f'    headers = {headers}\n'
+            msg += f'    coeffs  = {coeffs}\n'
+            msg += f'    data.shape = ({nnames}, 6, 6)\n'
+        else:
+            for name, derivs in zip(self.names, self.data):
+                msg += f'    {name}:\n'
+                for coeff, line in zip(coeffs, derivs):
+                    msg += f'     {coeff}: {line}\n'
+        return msg
+
+    def write_f06(self, f06_file, header: list[str], page_stamp: str, page_num: int=1,
+                  is_mag_phase: bool=False, is_sort1: bool=True):
+        f06_file.write(''.join(header))
+        msg = (
+            '    TRIM VARIABLE   COEFFICIENT              RIGID                         ELASTIC                          INERTIAL                  ELASTIC/RIGID\n'
+            '                                   UNSPLINED        SPLINED       RESTRAINED      UNRESTRAINED     RESTRAINED      UNRESTRAINED    UNSPLINED  SPLINED\n'
+            '\n')
+
+        coeffs = ['Cx', 'Cy', 'Cz', 'Cmx', 'Cmy', 'Cmz']
+        for name, derivs in zip(self.names, self.data):
+            # msg += f'    {name}:\n'
+            name_str = name
+            for coeff, line in zip(coeffs, derivs):
+                # msg += f'     {coeff}: {line}\n'
+                rigid_unsplined, rigid_splined, elastic_unsplined, elastic_splined, inertial_restrained, inertial_unrestrained = line
+                msg += (
+                    f'    {name_str:<14}   {coeff:9s}   '
+                    f'{rigid_unsplined:>13.6E}  {rigid_splined:>13.6E}  '
+                    f'{elastic_unsplined:>13.6E}  {elastic_splined:>13.6E}  '
+                    f'{inertial_restrained:>13.6E}  {inertial_unrestrained:>13.6e}  '
+                    f'{elastic_unsplined/rigid_unsplined:>13.6E}  {elastic_splined/rigid_splined:>13.6e}  \n')
+                name_str = ''
+            msg += '\n'
+        f06_file.write(msg)
+        f06_file.write(page_stamp % page_num)
+        return page_num + 1
+
+    def __repr__(self):
+        return f'TrimDerivatives(subcase={self.subcase}, title, subtitle)'

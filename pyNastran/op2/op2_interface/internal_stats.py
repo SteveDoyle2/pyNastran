@@ -13,12 +13,13 @@ def get_op2_stats(model: OP2, short: bool=False) -> str:
     """see OP2.get_op2_stats(...)"""
     msg = []
     #msg += model.op2_results.responses.get_stats(short=short)
+    op2_results = model.op2_results
 
     msg.extend(write_params_stats(model.params))
     for key, weight in model.grid_point_weight.items():
         msg += weight.get_stats(key, short=short)
 
-    msg += model.op2_results.psds.get_stats(short=short)
+    msg += op2_results.psds.get_stats(short=short)
 
     table_types = model._get_table_types_testing()
 
