@@ -26,6 +26,7 @@ import warnings
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
+import scipy
 
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.utils import object_attributes
@@ -47,6 +48,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    from pyNastran.bdf.cards.bdf_sets import SET1
+    from pyNastran.bdf.cards.optimization_nx import GROUP
     import matplotlib
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
 
@@ -587,7 +590,7 @@ class AELINK(BaseCard):
         aestat_names = {aestat.label for aestat in model.aestats.values()}
         is_aesurf = self.dependent_label in aesurf_names
         is_aeparam = self.dependent_label in aparam_names
-        if not(is_aesurf or is_aeparam):
+        if not (is_aesurf or is_aeparam):
             raise RuntimeError(f'dependent_label={self.dependent_label} is an AESURF and AEPARM\n{self}\n'
                                f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
         elif is_aesurf:
@@ -603,7 +606,7 @@ class AELINK(BaseCard):
             is_aesurf = independent_label in aesurf_names
             is_aeparam = independent_label in aparam_names
             is_aestat = independent_label in aestat_names
-            if not(is_aesurf or is_aeparam or is_aestat):
+            if not (is_aesurf or is_aeparam or is_aestat):
                 raise RuntimeError(f'independent_label={independent_label} is an AESURF and AEPARM\n{self}\n'
                                    f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
             elif is_aesurf:
@@ -1838,7 +1841,7 @@ class CAERO1(BaseCard):
         npanels = nchord * nspan
         try:
             self.box_ids = np.arange(self.eid, self.eid + npanels,
-                                     dtype=dtype).reshape(nspan, nchord)# .T
+                                     dtype=dtype).reshape(nspan, nchord)
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
@@ -1878,7 +1881,7 @@ class CAERO1(BaseCard):
         msg = f', which is required by CAERO1 eid={self.eid}'
         self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
-        model.log
+        #model.log
         if model.sol in [144, 145, 146, 200]:
             self.ascid_ref = model.Acsid(msg=msg)
         else:
@@ -2061,8 +2064,8 @@ class CAERO1(BaseCard):
         comment_a = (self.comment + ' A').strip()
         comment_b = (self.comment + ' B').strip()
         caero_a = CAERO1(eid_a, pid, igroup, p1, self.x12, p14, x14_23,
-                        cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord, lchord=lchord,
-                        comment=comment_a)
+                         cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord, lchord=lchord,
+                         comment=comment_a)
         caero_b = CAERO1(eid_b, pid, igroup, p14, x14_23, p4, self.x43,
                          cp=cp, nspan=nspan_b, lspan=lspan, nchord=nchord, lchord=lchord,
                          comment=comment_b)
@@ -2956,7 +2959,7 @@ class CAERO2(BaseCard):
             # print('xstation = ', xstation)
         else:
             nx = self.nsb
-            station = np.linspace(0., nx, num=nx+1) # *dx?
+            station = np.linspace(0., nx, num=nx+1)  # *dx?
         assert nx > 0, 'nx=%s' % nx
         return station
 
@@ -4127,7 +4130,7 @@ class MONPNT1(BaseCard):
         xyz = [0., 1., 2.]
         return MONPNT1(name, label, axes, aecomp_name, xyz, cp=0, cd=None, comment='')
 
-    def __init__(self, name: str, label: str, axes: int, aecomp_name: str,
+    def __init__(self, name: str, label: str, axes: str, aecomp_name: str,
                  xyz: list[float], cp: int=0, cd: Optional[int]=None, comment: str=''):
         """
         Creates a MONPNT1 card
@@ -5411,7 +5414,7 @@ class PAERO4(BaseCard):
     """
     type = 'PAERO4'
     _field_map = {
-        1: 'pid', #2:'orient', 3:'width', 4:'AR',
+        1: 'pid',  # 2:'orient', 3:'width', 4:'AR',
     }
 
     #def _get_field_helper(self, n):
@@ -5869,7 +5872,7 @@ class SPLINE1(Spline):
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'usage = %s' % self.usage
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPLINE1 card from ``BDF.add_card(...)``
 
@@ -5896,7 +5899,7 @@ class SPLINE1(Spline):
                        nelements, melements, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         eid = data[0]
         caero = data[1]
         box1 = data[2]
@@ -5912,7 +5915,7 @@ class SPLINE1(Spline):
                        nelements, melements, comment=comment)
 
     @property
-    def aero_element_ids(self):
+    def aero_element_ids(self) -> np.ndarray:
         return np.arange(self.box1, self.box2 + 1)
 
     def CAero(self) -> int:
@@ -5977,7 +5980,94 @@ class SPLINE1(Spline):
         self.caero_ref = None
         self.setg_ref = None
 
-    def raw_fields(self):
+    def _verify(self, xref: bool) -> None:
+        self.aero_element_ids
+        if xref:
+            caero: CAERO1 = self.caero_ref
+            p1, p2, p3, p4 = caero.get_points()
+            # p1---p4
+            # |    |
+            # p2---p3
+            a = p3 - p1
+            b = p2 - p4
+            # print(f'p1 = {p1}')
+            # print(f'p2 = {p2}')
+            # print(f'p3 = {p3}')
+            # print(f'p4 = {p4}')
+
+            # print(f'a = {a}')
+            # print(f'b = {b}')
+            axb = np.cross(a, b)
+            # print(f'axb = {axb}')
+            normi = np.linalg.norm(axb)
+            area = 0.5 * normi
+            normal = axb / normi
+            # print(f'area = {area}')
+            # print(f'normal = {normal}')
+
+            # just toss the "z" value of the spline
+            # this is nice, so we can find the point in local xy space (so there's no xform for a wing spline)
+            centroid = (p1 + p2 + p3 + p4) / 4.
+            # centroid = np.zeros(3)
+            # print(f'centroid = {centroid}')
+
+            setg: SET1 = self.setg_ref
+
+            p12 = (p1 + p2) / 2.
+            p34 = (p3 + p4) / 2.
+            j = p34 - p12
+            j /= np.linalg.norm(j)
+            i = np.cross(j, normal)
+            # print(f'i = {i}')
+            xform = np.vstack([i, j, normal]).round(2)
+
+            nodes_ref: list[GRID] = setg.ids_ref
+            # print(f'xform:\n{xform}')
+            local_spline_points = []
+            for ipoint, node in enumerate(nodes_ref):
+                xyz = node.get_position()
+
+                # Vector from the panel point to the point
+                vector_to_point = xyz - centroid
+
+                # Distance from the point to the panel along the normal
+                distance_to_panel = np.dot(vector_to_point, normal)
+
+                # Project the point onto the panel
+                projected_point = xyz - distance_to_panel * normal
+                # projected_point2 = xform @ (xyz - centroid)
+                # projected_point3 = xform.T @ (xyz - centroid)
+                # print(f'xyz[{ipoint}] = {xyz}')
+                # print(f'projected_point1[{ipoint}] = proj          = {projected_point}')
+                # print(f'projected_point2[{ipoint}] = xform   @ xyz = {projected_point2}\n')
+                # print(f'projected_point3[{ipoint}] = xform.T @ xyz = {projected_point3}\n')
+                local_spline_points.append(projected_point)
+
+            del xform
+            local_spline_points_array = np.array(local_spline_points)
+            try:
+                hull = scipy.spatial.ConvexHull(local_spline_points_array[:, :2])
+                area_hull = hull.area
+            except scipy.spatial._qhull.QhullError:
+                area_hull = np.nan
+
+            # The points are now projected (with no z value)
+            # Let's find the convex hull of points
+            # Finally, compute the area of the convex hull
+            #area_hull = 0.95 * area
+            area_ratio = area_hull / area
+            msg = (
+                f'Spline Points for SPLINE1 eid={self.eid} caero={self.caero} dont span the surface\n'
+                f' area_hull/area = {area_hull:g}/{area:g} = {area_ratio:.3g}\n'
+                f' local_spline_points:\n{local_spline_points_array}'
+            )
+            if np.isnan(area_ratio) or area_ratio <= 0.25:
+                # model.log.error(msg)
+                # raise RuntimeError(msg)
+                #warnings.warn(msg)
+                pass
+
+    def raw_fields(self) -> list:
         """
         Gets the fields in their unmodified form
 
@@ -5992,7 +6082,7 @@ class SPLINE1(Spline):
                        self.melements]
         return list_fields
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         dz = set_blank_if_default(self.dz, 0.)
         method = set_blank_if_default(self.method, 'IPS')
         usage = set_blank_if_default(self.usage, 'BOTH')

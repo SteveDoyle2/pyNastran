@@ -210,7 +210,7 @@ class TrimDerivatives:
         return True
     def get_stats(self, short: bool=False) -> str:
         msg = ''
-        msg += f'  trim_derivatives[{self.subcase}]:\n'
+        msg += f'  derivatives[{self.subcase}]:\n'
         coeffs = ['Cx', 'Cy', 'Cz', 'Cmx', 'Cmy', 'Cmz']
         headers = ['rigid_unsplined', 'rigid_splined', 'elastic_unsplined', 'elastic_splined',
                    'inertial_restrained', 'inertial_unrestrained']
@@ -228,15 +228,16 @@ class TrimDerivatives:
                     msg += f'     {coeff}: {line}\n'
         return msg
 
-    def write_f06(self, f06_file, header, page_stamp: str, page_num: int=1,
+    def write_f06(self, f06_file, header: list[str], page_stamp: str, page_num: int=1,
                   is_mag_phase: bool=False, is_sort1: bool=True):
+        f06_file.write(''.join(header))
         msg = (
             '    TRIM VARIABLE   COEFFICIENT              RIGID                         ELASTIC                          INERTIAL                  ELASTIC/RIGID\n'
             '                                   UNSPLINED        SPLINED       RESTRAINED      UNRESTRAINED     RESTRAINED      UNRESTRAINED    UNSPLINED  SPLINED\n'
             '\n')
 
         coeffs = ['Cx', 'Cy', 'Cz', 'Cmx', 'Cmy', 'Cmz']
-        for name, derivs in zip(self.names, self.derivatives):
+        for name, derivs in zip(self.names, self.data):
             # msg += f'    {name}:\n'
             name_str = name
             for coeff, line in zip(coeffs, derivs):

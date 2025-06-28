@@ -675,7 +675,7 @@ class CBAR(LineElement):
         return CBAR(eid, pid, [ga, gb], x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool):
         eid = self.eid
         unused_pid = self.Pid()
         unused_edges = self.get_edge_ids()
