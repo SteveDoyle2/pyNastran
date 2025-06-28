@@ -389,7 +389,8 @@ class F06Writer(OP2_F06_Common):
             f06_file.write(page_stamp % self.page_num)
             self.page_num += 1
 
-    def write_f06(self, f06_filename: str, matrix_filename: Optional[str]=None,
+    def write_f06(self, f06_filename: str,
+                  matrix_filename: Optional[str]=None,
                   is_mag_phase: bool=False, is_sort1: bool=True,
                   delete_objects: bool=False, end_flag: bool=False,
                   quiet: bool=True, repr_check: bool=False,
@@ -533,7 +534,8 @@ class F06Writer(OP2_F06_Common):
                 )
                 np.savetxt(mat_file, data, header=header, delimiter=',')
 
-    def _write_f06_subcase_based(self, f06, page_stamp: str,
+    def _write_f06_subcase_based(self, f06: TextIO,
+                                 page_stamp: str,
                                  delete_objects=True,
                                  is_mag_phase: bool=False,
                                  is_sort1: bool=True,

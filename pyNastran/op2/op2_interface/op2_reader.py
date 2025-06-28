@@ -54,7 +54,8 @@ from pyNastran.f06.errors import FatalError
 from pyNastran.f06.flutter_response import FlutterResponse
 from pyNastran.f06.f06_tables.trim import (
     MonitorLoads, TrimResults, ControllerState,
-    AeroPressure, AeroForce, TrimDerivatives)
+    AeroPressure, AeroForce,
+    TrimVariables, TrimDerivatives, ControlSurfacePostiionHingeMoment)
 
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError, EmptyRecordError
 from pyNastran.op2.result_objects.eqexin import EQEXIN
@@ -4387,8 +4388,25 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
     #7: f
     #                              Ma q aero ? ? ? c.b.Sref ?            subcase title subtitle
     structi = Struct(endian + b'5i f  f 8s   i i i fff      35i 128s    128s  128s')
-    while 1:
 
+    structi2 = Struct(endian + b'8s ii f')
+    trim_type_map = {
+        0: 'Intercept',
+        1: 'Rigid body',
+        2: 'Control surface',
+        3: 'General control',
+    }
+    trim_status_map = {
+        1: 'Free',
+        2: 'Free',
+        3: 'Fixed',
+        4: 'Scheduled',
+        5: 'Linked',
+        6: 'Scheduled',
+    }
+    trim = op2.op2_results.trim
+
+    while 1:
         #       trimid    coord
         # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
         # AEROS   1       1       131.0   2556.4  734000.01       0
@@ -4438,10 +4456,11 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         #assert device_code == 0, (acode, device_code)
         #point_id = point_device // 10
 
-        title = title.strip()
-        subtitle = subtitle.strip()
-        subcase = subcase.strip()
-        trim_vars = {}
+        op2.isubcase = subcase_id
+        data_code = op2._read_title_helper(data)
+        title = data_code['title']
+        subtitle = data_code['subtitle']
+        label = data_code['label']
 
         #print(f'title = {title!r}')
         #print(f'subtitle = {subtitle!r}')
@@ -4450,6 +4469,11 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         assert acode == 12, acode
         assert tcode == 103, tcode
         assert numwide == 5, numwide
+
+        op2.tCode = tcode   # trim
+        op2.sort_code = 0  # SORT1, real, not-random
+        subcase_key = op2._get_code()
+        # op2.subcase_key[subcase_id].append(subcase_key)
 
         op2_reader.read_3_markers([itable-1, 1, 0])
         next_marker = op2_reader.get_marker1(rewind=True)
@@ -4461,22 +4485,8 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
 
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
-        encoding = b'<'
-        structi2 = Struct(encoding + b'8s ii f')
-        trim_type_map = {
-            0: 'Intercept',
-            1: 'Rigid body',
-            2: 'Control surface',
-            3: 'General control',
-        }
-        trim_status_map = {
-            1: 'Free',
-            2: 'Free',
-            3: 'Fixed',
-            4: 'Scheduled',
-            5: 'Linked',
-            6: 'Scheduled',
-        }
+        trim_values_list = []
+        name_trimtype_trimstatus_list = []
         while idata*4 < len(data):
             datai = data[idata*4:(idata+5)*4]
             #print(op2.show_data(datai))
@@ -4484,11 +4494,10 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
             trim_type = trim_type_map[trim_type_int]
             trim_status = trim_status_map[trim_status_int]
             name = name.rstrip()
+
+            name_trimtype_trimstatus_list.append((name, trim_type, trim_status))
+            trim_values_list.append(value)
             #print(f'name={name!r} ai={ai} bi={bi} value={value}')
-            trim_vars[name] = {
-                'trim_type': trim_type,
-                'trim_status': trim_status,
-                'value': value}
             # (b'INTERCPT', 1, 3, 1.0)
             # (b'ANGLEA  ', 1, 1, 0.104)
             # (b'PITCH   ', 1, 3, 0.0)
@@ -4497,11 +4506,19 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
             # (b'PITCH   ', 1, 3, 0.0)
             # (b'TFLAP   ', 2, 2, -0.45418)
             idata += 5
+
+        name_type_status = np.array(name_trimtype_trimstatus_list)
+        trim_values_array = np.array(trim_values_list)
+        trim_vars = TrimVariables(
+            mach, q, cref, bref, sref,
+            name_type_status, trim_values_array,
+            subcase=subcase_id, title=title,
+            subtitle=subtitle, label=label)
+        assert subcase_id not in trim.variables, subcase_id
+        assert isinstance(subcase_id, int), subcase_id
+        trim.variables[subcase_key] = trim_vars
         itable -= 2
     op2_reader.read_markers([0])
-    if not hasattr(op2.op2_results, 'trim_variables'):
-        op2.op2_results.trim_variables = {}
-    op2.op2_results.trim_variables[subcase_id] = trim_vars
 
     #if hasattr(op2, 'aeros'):
         #op2.add_trim(trim_id, mach, q, cref=cref, bref=bref, sref=sref)
@@ -4980,6 +4997,8 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
 
     #                              Ma q aero ? ? ? cbs_ref zero subcase title subtitle
     structi = Struct(endian + b'5i f  f 8s   i i i 3f      35i  128s    128s  128s')
+
+    structi2 = Struct(endian + b'8s 6f')
     while 1:
         #       trimid    coord
         # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
@@ -5021,14 +5040,12 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
         #assert device_code == 0, (acode, device_code)
         #point_id = point_device // 10
 
-        title = title.strip()
-        subtitle = subtitle.strip()
-        subcase = subcase.strip()
-        trim_control_surface_position_hinge_moment = {}
+        op2.isubcase = subcase_id
+        data_code = op2._read_title_helper(data)
+        title = data_code['title']
+        subtitle = data_code['subtitle']
+        label = data_code['label']
 
-        #print(f'title = {title!r}')
-        #print(f'subtitle = {subtitle!r}')
-        #print(f'subcase = {subcase!r}')
         assert acode == 12, acode
         assert tcode == 104, tcode
         assert numwide == 8, numwide
@@ -5043,26 +5060,35 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
         #op2_reader.show(80, types='ifs')
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
-        encoding = b'<'
-        structi2 = Struct(encoding + b'8s 6f')
+
+        names_list = []
+        trim_values_list = []
+        data_list = []
         while idata*4 < len(data):
             # TFLAP [-4.5418206e-01 -1.5707964e+00  1.5707964e+00  1.6729131e+06
             #        -1.0000000e+10  1.0000000e+10]
             datai = data[idata*4:(idata+numwide)*4]
-            name, trim_value, *data_list = structi2.unpack(datai)
+            name, trim_value, *data_listi = structi2.unpack(datai)
             name = name.rstrip().decode(op2.encoding)
-            values = np.array(data_list, dtype='float32')
-            trim_control_surface_position_hinge_moment[name] = {
-                #'name': name,
-                'trim_value': trim_value,
-                'values': values,
-            }
-            log.debug(f'{name}={trim_value:g} values={values.round(4)}')
+            names_list.append(name)
+            trim_values_list.append(trim_value)
+            data_list.append(data_listi)
+            # log.debug(f'{name}={trim_value:g} values={values.round(4)}')
             idata += numwide
+
+        names = np.array(names_list)
+        trim_values = np.array(trim_values_list)
+        data_array = np.array(data_list)
+        trim_control_surface_position_hinge_moment = ControlSurfacePostiionHingeMoment(
+            mach, q, cref, bref, sref,
+            names, trim_values, data_array,
+            subcase=subcase_id, title=title,
+            subtitle=subtitle, label=label)
         itable -= 2
     op2_reader.read_markers([0])
-    assert subcase_id not in op2.op2_results.trim.control_surface_position_hinge_moment, subcase_id
-    op2.op2_results.trim.control_surface_position_hinge_moment[subcase_id] = trim_control_surface_position_hinge_moment
+    trim = op2.op2_results.trim
+    assert subcase_id not in trim.control_surface_position_hinge_moment, subcase_id
+    trim.control_surface_position_hinge_moment[subcase_id] = trim_control_surface_position_hinge_moment
 
     #if hasattr(op2, 'aeros'):
         #op2.add_trim(trim_id, mach, q, cref=cref, bref=bref, sref=sref)
@@ -5102,8 +5128,9 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
 
     #                              Ma q aero ? ? ? name one one zero subcase title subtitle
     structi = Struct(endian + b'5i f  f 8s   i i i 8s   i   i   34i  128s    128s  128s')
-    while 1:
+    structi2 = Struct(endian + b'8s 5f')
 
+    while 1:
         #       trimid    coord
         # AEROS ACSID RCSID       REFC      REFB      REFS SYMXZ SYMXY
         # AEROS   1       1       131.0   2556.4  734000.01       0
@@ -5169,9 +5196,12 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
         #assert device_code == 0, (acode, device_code)
         #point_id = point_device // 10
 
-        title = title.strip()
-        subtitle = subtitle.strip()
-        subcase = subcase.strip()
+        op2.isubcase = subcase_id
+        data_code = op2._read_title_helper(data)
+        title = data_code['title']
+        subtitle = data_code['subtitle']
+        label = data_code['label']
+
         trim_control_surface_position_hinge_moment = {}
 
         #print(f'title = {title!r}')
@@ -5185,15 +5215,13 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
         op2_reader.read_3_markers([itable-1, 1, 0])
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
-        encoding = b'<'
 
         # 1 LABEL(2) CHAR4 Trim variable name
         # 3 RIGID       RS Rigid hinge moment derivative
-        # 4 ELSTRES     RS Elastic restrained hinge moment derivative
-        # 5 ELSTURSTN   RS Elastic unrestrained hinge moment derivative
-        # 6 INRLRES     RS Inertial restrained hinge moment derivative
+        # 4 ELSTRES     RS Elastic    restrained hinge moment derivative
+        # 5 ELSTURSTN   RS Elastic  unrestrained hinge moment derivative
+        # 6 INRLRES     RS Inertial   restrained hinge moment derivative
         # 7 INRLURSTN   RS Inertial unrestrained hinge moment derivative
-        structi2 = Struct(encoding + b'8s 5f')
         trim_hinge_moment_derivatives = {}
         while idata*4 < len(data):
             # TFLAP [-4.5418206e-01 -1.5707964e+00  1.5707964e+00  1.6729131e+06

@@ -161,12 +161,14 @@ def _get_op2_stats_full(model: OP2, table_types: list[str],
                 msg.append(f'{table_type_print}[{key}]\n')
             continue
 
+        #if not len(table):
+            #continue
         try:
-            for isubcase, subcase in sorted(table.items(), key=_compare):
-                class_name = subcase.__class__.__name__
-                if hasattr(subcase, 'get_stats'):
+            for isubcase, case in sorted(table.items(), key=_compare):
+                class_name = case.__class__.__name__
+                if hasattr(case, 'get_stats'):
                     try:
-                        stats = subcase.get_stats() # short=short
+                        stats = case.get_stats() # short=short
                     except Exception:
                         msgi = 'errored reading %s %s[%s]\n\n' % (
                             class_name, table_type_print, isubcase)
@@ -181,6 +183,7 @@ def _get_op2_stats_full(model: OP2, table_types: list[str],
                     msg.append(msgi)
                     raise RuntimeError(msgi)
         except Exception:
+            # if you're getting a crash here, make sure self.subcase_key is set correctly
             log.warning(f'table_type={table_type}; type(table)={type(table)}')
             log.warning(str(table))
             raise
