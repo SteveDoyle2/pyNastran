@@ -695,7 +695,6 @@ class TestZonaFlutter(unittest.TestCase):
             assert len(responses) == 2, list(responses.keys())
 
 
-
 class TestF06Utils(unittest.TestCase):
     def test_opt_aerobeam(self):
         """tests optimization"""
@@ -720,19 +719,16 @@ class TestF06Utils(unittest.TestCase):
         nid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.nid'
         eid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.eid'
         model = read_bdf(bdf_filename, debug=None)
-        model.log.error('A---------------------------')
         export_caero_mesh(
             model,
             caero_bdf_filename=subpanel_caero_filename,
             is_subpanel_model=True,
             pid_method='caero',
             write_panel_xyz=True)
-        model.log.error('B---------------------------')
 
         trim_results = f06_to_pressure_loads(
             f06_filename, subpanel_caero_filename, loads_filename,
             log=None, nlines_max=1_000_000, debug=None)
-        model.log.error('C---------------------------')
         trim_results = f06_to_pressure_loads(
             f06_filename, subpanel_caero_filename, loads_filename,
             nid_csv_filename=nid_csv_filename,

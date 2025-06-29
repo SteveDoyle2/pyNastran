@@ -57,10 +57,14 @@ def read_f06_trim(f06_filename: str,
     stacked_aero_force = _stack_data_dict(trim_results.aero_force, 3)
 
     for subcase, aero_pressure in stacked_aero_pressure.items():
+        metadata = trim_results.metadata[subcase]
         trim_results.aero_pressure[subcase] = AeroPressure.from_f06(
-            subcase, *aero_pressure)
+            subcase, *aero_pressure, metadata)
+
     for subcase, aero_force in stacked_aero_force.items():
-        trim_results.aero_force[subcase] = AeroForce.from_f06(subcase, *aero_force)
+        metadata = trim_results.metadata[subcase]
+        trim_results.aero_force[subcase] = AeroForce.from_f06(
+            subcase, *aero_force, metadata)
 
     out = {
         'trim_results': trim_results,
@@ -168,7 +172,7 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
         elif 'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S' in line:
             log.debug('reading aero static data recovery tables')
             iblank_count = 0
-            line, i, ipressure, iforce = _read_aerostatic_data_recovery_output_table(
+            line, i, ipressure, iforce, metadata = _read_aerostatic_data_recovery_output_table(
                 f06_file, line, i, nlines_max,
                 trim_results,
                 title, subtitle, subcase,
@@ -615,7 +619,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                                                 trim_results: TrimResults,
                                                 title: str, subtitle: str, subcase: str,
                                                 ipressure: int, iforce: int,
-                                                log: SimpleLogger) -> tuple[str, int, int, int]:
+                                                log: SimpleLogger) -> tuple[str, int, int, int, dict[str, Any]]:
     """
     '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'      <----- you are here
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
@@ -673,14 +677,14 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     if 'TRIM ALGORITHM USED: LINEAR TRIM SOLUTION WITHOUT REDUNDANT CONTROL SURFACES.' in line2:
         line, i = _read_aeroelastic_trim_variables(
             f06_file, line, i, nlines_max, trim_results, isubcase, metadata)
-        return line, i, ipressure, iforce
+        return line, i, ipressure, iforce, metadata
 
     line3 = f06_file.readline()
     i += 1
     if 'TRANSFORMATION FROM REFERENCE TO WIND AXES:' in line3:
         line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
         #line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
-        return line, i, ipressure, iforce
+        return line, i, ipressure, iforce, metadata
 
     if 'AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS' in line3:
         line, i, grid_id, Cp_pressure = _read_aerostatic_data_recover_output_table_pressure(
@@ -708,7 +712,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
         iforce += 1
     else:
         raise NotImplementedError(line3.strip())
-    return line, i, ipressure, iforce
+    return line, i, ipressure, iforce, metadata
 
 
 def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,

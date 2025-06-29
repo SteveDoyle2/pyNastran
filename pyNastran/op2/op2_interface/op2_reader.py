@@ -4659,14 +4659,19 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
     #     'force': np.array(forces, dtype='float64'),
     # }
     nodes = np.array(grid_list, dtype='int32')
-    label = np.array(label_list)
     force = np.array(force_list, dtype='float64')
+    force_labels = np.array(label_list)
 
     aforce = AeroForce(
-        subcase, title, subtitle,
+        subcase,
         mach, q, cref, bref, sref,
-        nodes, force, label)
+        nodes, force, force_labels,
+        title=title, subtitle=subtitle, label=label)
     op2.op2_results.trim.aero_force[subcase_id] = aforce
+
+
+
+
     return
 
 
@@ -4753,8 +4758,7 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         op2_reader.read_3_markers([itable-1, 1, 0])
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
-        encoding = b'<'
-        structi2 = Struct(encoding + b'i 4s ff')
+        structi2 = Struct(op2._endian + b'i 4s ff')
 
         grid_list = []
         label_list = []
@@ -4763,9 +4767,9 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         while idata*4 < len(data):
             datai = data[idata*4:(idata+numwide)*4]
             #print(op2.show_data(datai))
-            nid, label, aero_pressure_coeff, aero_pressure = structi2.unpack(datai)
+            nid, labeli, aero_pressure_coeff, aero_pressure = structi2.unpack(datai)
             grid_list.append(nid)
-            label_list.append(label.rstrip().decode('latin1'))
+            label_list.append(labeli.rstrip().decode('latin1'))
             cp_list.append(aero_pressure_coeff)
             pressure_list.append(aero_pressure)
             idata += numwide
@@ -4781,10 +4785,12 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
     nodes = np.array(grid_list, dtype='int32')
     cp = np.array(cp_list, dtype='float64')
     pressure = np.array(pressure_list, dtype='float64')
+    labels = np.array(label_list)
     apress = AeroPressure(
-        subcase, title, subtitle,
+        subcase,
         mach, q, cref, bref, sref,
-        nodes, cp, pressure)
+        nodes, cp, pressure, # labels,
+        title=title, subtitle=subtitle, label=label)
     op2.op2_results.trim.aero_pressure[subcase_id] = apress
 
     #if hasattr(op2, 'aeros'):

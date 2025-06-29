@@ -45,12 +45,12 @@ class MonitorLoads:
 
 
 class AeroPressure(Statics):
-    def __init__(self, subcase: int, title: str, subtitle: str,
+    def __init__(self, subcase: int,
                  mach: float, q: float,
                  cref: float, bref: float, sref: float,
                  nodes: np.ndarray,
-                 cp: np.ndarray, pressure: np.ndarray):
-        label = ''
+                 cp: np.ndarray, pressure: np.ndarray, # labels: np.ndarray,
+                 subtitle: str='', title: str='', label: str=''):
         super().__init__(title, subtitle, label)
         self.subcase = subcase
         self.mach = mach
@@ -62,24 +62,30 @@ class AeroPressure(Statics):
         self.nodes = nodes
         self.pressure = pressure
         self.cp = cp
+        # self.labels = labels
 
     @classmethod
     def from_f06(self, subcase: int,
                  nodes: np.ndarray,
-                 cp_pressure: np.ndarray):
-        title = ''
-        subtitle = ''
-        mach = np.nan
-        q = np.nan
-        cref = np.nan
-        bref = np.nan
-        sref = np.nan
+                 cp_pressure: np.ndarray,
+                 # labels: np.ndarray,
+                 metadata: dict[str, Any]):
+        title = metadata['title']
+        subtitle = metadata['subtitle']
+        label = metadata['label']
+        mach = metadata['mach']
+        q = metadata['q']
+        cref = metadata['cref']
+        bref = metadata['bref']
+        sref = metadata['sref']
         apress = AeroPressure(
-            subcase, title, subtitle,
+            subcase,
             mach, q,
             cref, bref, sref,
             nodes,
-            cp_pressure[:, 0], cp_pressure[:, 1])
+            cp_pressure[:, 0], cp_pressure[:, 1], # labels,
+            title=title, subtitle=subtitle, label=label,
+        )
         return apress
 
     def get_stats(self, short: bool=False) -> str:
@@ -138,13 +144,13 @@ class AeroPressure(Statics):
         return msg
 
 class AeroForce(Statics):
-    def __init__(self, subcase: int, title: str, subtitle: str,
+    def __init__(self, subcase: int,
                  mach: float, q: float,
                  cref: float, bref: float, sref: float,
                  nodes: np.ndarray,
                  force: np.ndarray,
-                 force_label: np.ndarray):
-        label = ''
+                 force_label: np.ndarray,
+                 title: str='', subtitle: str='', label=''):
         super().__init__(title, subtitle, label)
         self.subcase = subcase
         self.mach = mach
@@ -161,19 +167,22 @@ class AeroForce(Statics):
     def from_f06(self, subcase: int,
                  nodes: np.ndarray,
                  force: np.ndarray,
-                 force_label: np.ndarray):
-        title = ''
-        subtitle = ''
-        mach = np.nan
-        q = np.nan
-        cref = np.nan
-        bref = np.nan
-        sref = np.nan
+                 force_label: np.ndarray,
+                 metadata: dict[str, Any]):
+        title = metadata['title']
+        subtitle = metadata['subtitle']
+        label = metadata['label']
+        mach = metadata['mach']
+        q = metadata['q']
+        cref = metadata['cref']
+        bref = metadata['bref']
+        sref = metadata['sref']
         aforce = AeroForce(
-            subcase, title, subtitle,
+            subcase,
             mach, q,
             cref, bref, sref,
-            nodes, force, force_label)
+            nodes, force, force_label,
+            title=title, subtitle=subtitle, label=label)
         return aforce
 
     def get_stats(self, short: bool=False) -> str:
@@ -331,6 +340,7 @@ class TrimVariables(Statics):
         label = metadata.get('label', '')
         out = TrimVariables(mach, q, chord, span, sref, name_type_status_units, values,
                             subcase=isubcase, title=title, subtitle=subtitle, label=label)
+        return out
 
     def __eq__(self, other) -> bool:
         return True
