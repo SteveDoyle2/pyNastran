@@ -1,8 +1,9 @@
 from collections import defaultdict
+from typing import Any
 import io
 import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
-#TrimVariable = tuple[int, str, str, float, str]
+TrimVariable = tuple[int, str, str, float, str]
 ControllerState = dict[str, float]
 #TrimVariables = dict[str, TrimVariable]
 
@@ -303,6 +304,33 @@ class TrimVariables(Statics):
 
         self.name_type_status_units = name_type_status_units
         self.data = data
+
+    @classmethod
+    def from_f06(self, trim_variables: dict[str, TrimVariable],
+                 metadata: dict[str, Any], isubcase: int):
+        nvars = len(trim_variables)
+        ids = np.zeros(nvars, dtype='int32')
+        values = np.zeros(nvars, dtype='float64')
+        name_type_status_units = np.zeros((nvars, 4), dtype='U16')
+        i = 0
+        for name, (idi, trim_type, trim_status, ux, ux_unit) in trim_variables.items():
+            ids[i] = idi
+            name_type_status_units[i, :] = [name, trim_type, trim_status, ux_unit]
+            values[i] = ux
+            i =+ 1
+
+        # 'mach': mach, 'q': q,
+        # 'cref': cref, 'bref': bref, 'sref': sref,
+        mach = metadata['mach']
+        q = metadata['q']
+        chord = metadata['cref']
+        span = metadata['bref']
+        sref = metadata['sref']
+        title = metadata.get('title', '')
+        subtitle = metadata.get('subtitle', '')
+        label = metadata.get('label', '')
+        out = TrimVariables(mach, q, chord, span, sref, name_type_status_units, values,
+                            subcase=isubcase, title=title, subtitle=subtitle, label=label)
 
     def __eq__(self, other) -> bool:
         return True

@@ -17,7 +17,7 @@ def f06_to_pressure_loads(f06_filename: str,
                           nlines_max: int=1_000_000,
                           debug: bool=False) -> None:
     caero_model = read_bdf(subpanel_caero_filename, log=log,
-                           xref=False, validate=False)
+                           xref=False, validate=False, debug=debug)
     log = caero_model.log
 
     nid_to_eid_map = defaultdict(list)
@@ -41,13 +41,21 @@ def f06_to_pressure_loads(f06_filename: str,
     if loads_filename is not None:
         with open(loads_filename, 'w') as loads_file:
             for subcase, element_pressure in element_pressures.items():
-                metadatai = metadata[subcase]
-                subtitle = metadatai.get('subtitle', '')
-                mach = metadatai['mach']
-                q = metadatai['q']
-                cref = metadatai['cref']
-                bref = metadatai['bref']
-                sref = metadatai['sref']
+                if 0:  # pragma: no cover
+                    metadatai = metadata[subcase]
+                    subtitle = metadatai.get('subtitle', '')
+                    mach = metadatai['mach']
+                    q = metadatai['q']
+                    cref = metadatai['cref']
+                    bref = metadatai['bref']
+                    sref = metadatai['sref']
+                else:
+                    subtitle = element_pressure.subtitle
+                    mach = element_pressure.mach
+                    q = element_pressure.q
+                    cref = element_pressure.chord
+                    bref = element_pressure.span
+                    sref = element_pressure.sref
 
                 comment = f'$ subtitle={subtitle!r}\n'
                 comment += f'$ mach={mach:g} q={q:g}\n'

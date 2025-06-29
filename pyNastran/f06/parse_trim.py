@@ -1,4 +1,4 @@
-from typing import Optional, TextIO
+from typing import Optional, TextIO, Any
 import os
 import numpy as np
 #import scipy.sparse
@@ -6,7 +6,7 @@ from cpylog import SimpleLogger, get_logger2
 from pyNastran.utils import print_bad_path
 from pyNastran.f06.f06_tables.trim import (
     MonitorLoads, TrimResults, ControllerState,
-    AeroPressure, AeroForce, TrimVariable)
+    AeroPressure, AeroForce, TrimVariables, TrimVariable)
 
 
 #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
@@ -505,7 +505,8 @@ def _get_controller_state(header_lines: list[str]) -> ControllerState:
 
 def _read_aeroelastic_trim_variables(f06_file: TextIO,
                                      line: str, i: int, nlines_max: int,
-                                     trim_results: TrimResults, isubcase: int) -> tuple[str, int]:
+                                     trim_results: TrimResults, isubcase: int,
+                                     metadata: dict[str, Any]) -> tuple[str, int]:
     """
     '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = SYMMETRIC      XZ-SYMMETRY = SYMMETRIC'
@@ -553,7 +554,8 @@ def _read_aeroelastic_trim_variables(f06_file: TextIO,
             continue
         idi, name, trim_type, trim_status, ux, ux_unit = _split_trim_variable(line2)
         trim_variables[name] = (idi, trim_type, trim_status, ux, ux_unit)
-    trim_results.trim_variables[isubcase] = trim_variables
+    trim_results.trim_variables[isubcase] = TrimVariables.from_f06(
+        trim_variables, metadata, isubcase)
     f06_file.seek(seek1)
     return line_end, iend
 
@@ -657,16 +659,20 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     cref = float(sline[2])
     bref = float(sline[5])
     sref = float(sline[8])
-    trim_results.metadata[isubcase] = {
+    label = ''
+    metadata = {
         'mach': mach, 'q': q,
-        'cref': cref, 'bref': bref, 'sref': sref}
+        'cref': cref, 'bref': bref, 'sref': sref,
+        'title': title, 'subtitle': subtitle, 'label': label,
+    }
+    trim_results.metadata[isubcase] = metadata
 
     unused_line1 = f06_file.readline()
     line2 = f06_file.readline()
     i += 2
     if 'TRIM ALGORITHM USED: LINEAR TRIM SOLUTION WITHOUT REDUNDANT CONTROL SURFACES.' in line2:
-        line, i = _read_aeroelastic_trim_variables(f06_file, line, i, nlines_max,
-                                                   trim_results, isubcase)
+        line, i = _read_aeroelastic_trim_variables(
+            f06_file, line, i, nlines_max, trim_results, isubcase, metadata)
         return line, i, ipressure, iforce
 
     line3 = f06_file.readline()

@@ -719,17 +719,20 @@ class TestF06Utils(unittest.TestCase):
         loads_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.blk'
         nid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.nid'
         eid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.eid'
-        model = read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, debug=None)
+        model.log.error('A---------------------------')
         export_caero_mesh(
             model,
             caero_bdf_filename=subpanel_caero_filename,
             is_subpanel_model=True,
             pid_method='caero',
             write_panel_xyz=True)
+        model.log.error('B---------------------------')
 
         trim_results = f06_to_pressure_loads(
             f06_filename, subpanel_caero_filename, loads_filename,
             log=None, nlines_max=1_000_000, debug=None)
+        model.log.error('C---------------------------')
         trim_results = f06_to_pressure_loads(
             f06_filename, subpanel_caero_filename, loads_filename,
             nid_csv_filename=nid_csv_filename,
@@ -747,13 +750,14 @@ class TestF06Utils(unittest.TestCase):
             is_subpanel_model=True,
             pid_method='caero',
             write_panel_xyz=True)
-        model2 = read_bdf(bdf_filename)
+        model2 = read_bdf(bdf_filename, debug=None)
         #print(f'nnodes = {len(model2.nodes)}')
         #print(f'nelements = {len(model2.elements)}')
 
         f06_filename = AERO_PATH / 'freedlm' / 'freedlm.f06'
-        trim_results = read_f06_trim(f06_filename,
-                                     log=None, nlines_max=1_000_000, debug=None)['trim_results']
+        trim_results = read_f06_trim(
+            f06_filename,
+            log=None, nlines_max=1_000_000, debug=None)['trim_results']
         assert len(trim_results.aero_force.keys()) == 2
         assert len(trim_results.aero_pressure.keys()) == 2
         assert len(trim_results.controller_state.keys()) == 2
@@ -774,7 +778,6 @@ class TestF06Utils(unittest.TestCase):
         #print(press)
         #print(f'npressure = {len(press)}')
         #print(f'nforce = {len(force)}')
-
 
     def test_f06_trim_aerobeam(self):
         """tests read_f06_trim"""
