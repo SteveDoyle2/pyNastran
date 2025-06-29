@@ -179,7 +179,7 @@ def _get_op2_stats_full(model: OP2, table_types: list[str],
                         msg.extend(stats)
                         msg.append('\n')
                 else:
-                    msgi = 'skipping %s %s[%s]\n\n' % (class_name, table_type_print, isubcase)
+                    msgi = 'No get_stats for %s %s[%s]\n\n' % (class_name, table_type_print, isubcase)
                     msg.append(msgi)
                     raise RuntimeError(msgi)
         except Exception:

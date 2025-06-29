@@ -1,9 +1,23 @@
 from collections import defaultdict
+import io
 import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 #TrimVariable = tuple[int, str, str, float, str]
 ControllerState = dict[str, float]
 #TrimVariables = dict[str, TrimVariable]
+
+class Statics:
+    def __init__(self, title: str, subtitle: str, label: str):
+        self.nonlinear_factor = None
+        self.is_complex = False
+        self.is_real = False
+
+        assert isinstance(title, str), title
+        assert isinstance(subtitle, str), subtitle
+        assert isinstance(label, str), label
+        self.title = title
+        self.subtitle = subtitle
+        self.label = label
 
 
 class MonitorLoads:
@@ -29,15 +43,15 @@ class MonitorLoads:
         return msg
 
 
-class AeroPressure:
+class AeroPressure(Statics):
     def __init__(self, subcase: int, title: str, subtitle: str,
                  mach: float, q: float,
                  cref: float, bref: float, sref: float,
                  nodes: np.ndarray,
                  cp: np.ndarray, pressure: np.ndarray):
+        label = ''
+        super().__init__(title, subtitle, label)
         self.subcase = subcase
-        self.title = title
-        self.subtitle = subtitle
         self.mach = mach
         self.q = q
         self.cref = cref
@@ -67,6 +81,19 @@ class AeroPressure:
             cp_pressure[:, 0], cp_pressure[:, 1])
         return apress
 
+    def get_stats(self, short: bool=False) -> str:
+        msg = ''
+        msg += f'  aero_pressure[{self.subcase}]:\n'
+
+        # if short:
+        msg += f'    nodes:     n={len(self.nodes)}\n'
+        msg += f'    pressure:  {str(self.pressure.shape)}\n'
+        msg += f'    cp:        {str(self.cp.shape)}\n'
+        # else:
+        #     for (name, typei, status, units), data in zip(self.name_type_status_units, self.data):
+        #         msg += f'   {name:<8} {typei:<8} {status:<8}: {data} {units}\n'
+        return msg
+
     def get_element_pressure(self, nid_to_eid_map: dict[int, list[int]]):
         """
                            AERODYNAMIC PRES.       AERODYNAMIC
@@ -85,6 +112,20 @@ class AeroPressure:
                 element_pressures[eid].append(cp)
         return dict(element_pressures)
 
+    def write_f06(self, f06_file, header: list[str], page_stamp: str, page_num: int=1,
+                  is_mag_phase: bool=False, is_sort1: bool=True):
+        f06_file.write(''.join(header))
+        # msg = (
+        #     '    TRIM VARIABLE   COEFFICIENT              RIGID                         ELASTIC                          INERTIAL                  ELASTIC/RIGID\n'
+        #     '                                   UNSPLINED        SPLINED       RESTRAINED      UNRESTRAINED     RESTRAINED      UNRESTRAINED    UNSPLINED  SPLINED\n'
+        #     '\n')
+        msg = '     Node    PRESSURE     CP\n'
+        for (nid, press, cp) in zip(self.nodes, self.pressure, self.cp):
+            msg += f' {nid:>10d}  {press:13.6e}  {cp:13.6e}\n'
+        f06_file.write(msg)
+        f06_file.write(page_stamp % page_num)
+        return page_num + 1
+
     def __repr__(self) -> str:
         nnids = len(self.nodes)
         msg = (
@@ -95,16 +136,16 @@ class AeroPressure:
         )
         return msg
 
-class AeroForce:
+class AeroForce(Statics):
     def __init__(self, subcase: int, title: str, subtitle: str,
                  mach: float, q: float,
                  cref: float, bref: float, sref: float,
                  nodes: np.ndarray,
                  force: np.ndarray,
-                 label: np.ndarray):
+                 force_label: np.ndarray):
+        label = ''
+        super().__init__(title, subtitle, label)
         self.subcase = subcase
-        self.title = title
-        self.subtitle = subtitle
         self.mach = mach
         self.q = q
         self.cref = cref
@@ -113,13 +154,13 @@ class AeroForce:
 
         self.nodes = nodes
         self.force = force
-        self.label = label
+        self.force_label = force_label
 
     @classmethod
     def from_f06(self, subcase: int,
                  nodes: np.ndarray,
                  force: np.ndarray,
-                 label: np.ndarray):
+                 force_label: np.ndarray):
         title = ''
         subtitle = ''
         mach = np.nan
@@ -131,8 +172,38 @@ class AeroForce:
             subcase, title, subtitle,
             mach, q,
             cref, bref, sref,
-            nodes, force, label)
+            nodes, force, force_label)
         return aforce
+
+    def get_stats(self, short: bool=False) -> str:
+        msg = ''
+        msg += f'  aero_force[{self.subcase}]:\n'
+
+        # if short:
+        msg += f'    nodes:        n={len(self.nodes)}\n'
+        msg += f'    force:        {str(self.force.shape)}\n'
+        msg += f'    force_label:  {str(self.force_label.shape)}\n'
+        # else:
+        #     for (name, typei, status, units), data in zip(self.name_type_status_units, self.data):
+        #         msg += f'   {name:<8} {typei:<8} {status:<8}: {data} {units}\n'
+        return msg
+
+    def write_f06(self, f06_file, header: list[str], page_stamp: str, page_num: int=1,
+                  is_mag_phase: bool=False, is_sort1: bool=True):
+        f06_file.write(''.join(header))
+        # msg = (
+        #     '    TRIM VARIABLE   COEFFICIENT              RIGID                         ELASTIC                          INERTIAL                  ELASTIC/RIGID\n'
+        #     '                                   UNSPLINED        SPLINED       RESTRAINED      UNRESTRAINED     RESTRAINED      UNRESTRAINED    UNSPLINED  SPLINED\n'
+        #     '\n')
+        msg = '     Node          FX          FY          FZ          MX          MY          MZ     CP\n'
+        for (nid, force, label) in zip(self.nodes, self.force, self.force_label):
+            # print(nid, force, label)
+            fx, fy, fz, mx, my, mz = force
+            msg += f' {nid:>10d}  {fx:13.6e}  {fy:13.6e}  {fz:13.6e}  '\
+                   f'{mx:13.6e}  {my:13.6e}  {mz:13.6e}  {label:10s}\n'
+        f06_file.write(msg)
+        f06_file.write(page_stamp % page_num)
+        return page_num + 1
 
     def __repr__(self) -> str:
         nnids = len(self.nodes)
@@ -184,15 +255,44 @@ class TrimResults:
 #     name_type_status, trim_values_array, derivatives_array,
 #     subcase=subcase_id, title=title,
 #     subtitle=subtitle, label=label)
-class TrimVariables:
+class TrimVariables(Statics):
+    """
+
+                                   A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+                             CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC
+                                               MACH = 7.890000E-01                Q = 1.500000E+00
+                             CHORD = 1.3110E+02           SPAN = 2.5564E+03            AREA = 7.3400E+05
+
+              TRIM ALGORITHM USED: LINEAR TRIM SOLUTION WITHOUT REDUNDANT CONTROL SURFACES.
+
+
+                                                          AEROELASTIC TRIM VARIABLES
+
+                                      ID     LABEL                 TYPE        TRIM STATUS      VALUE OF UX
+
+                                             INTERCEPT          RIGID BODY           FIXED      1.000000E+00
+                                     500     ANGLEA             RIGID BODY            FREE      1.047265E-01  RADIANS
+                                     501     PITCH              RIGID BODY           FIXED      0.000000E+00  NONDIMEN. RATE
+                                     502     URDD3              RIGID BODY           FIXED      2.500000E+00  LOAD FACTOR
+                                     503     URDD5              RIGID BODY           FIXED      0.000000E+00  LOAD FACTOR
+                                  110000     TFLAP         CONTROL SURFACE            FREE     -4.541439E-01  RADIANS
+
+
+                                               CONTROL SURFACE POSITION AND HINGE MOMENT RESULTS
+
+                                ACTIVE LIMITS ARE FLAGGED WITH AN (A),  VIOLATED LIMITS ARE FLAGGED WITH A (V).
+
+                                                    POSITION                                         HINGE MOMENT
+              CONTROL SURFACE      LOWER LIMIT       VALUE         UPPER LIMIT        LOWER LIMIT       VALUE         UPPER LIMIT
+                  TFLAP          -1.570796E+00   -4.541439E-01    1.570796E+00            N/A        1.672770E+06         N/A
+    1    N2A STATIC AEROELASTIC AND FLUTTER MODEL                                 MARCH  10, 2025  SIMCENTER NASTRAN  8/25/23   PAGE    24
+
+    """
     def __init__(self, mach: float, q: float,
                  chord: float, span: float, sref: float,
-                 name_type_status: np.ndarray, data: np.ndarray,
+                 name_type_status_units: np.ndarray, data: np.ndarray,
                  subcase: int=1, title: str='', subtitle: str='', label: str=''):
-        self.nonlinear_factor = None
-        self.is_complex = False
-        self.is_real = False
-
+        super().__init__(title, subtitle, label)
         self.mach = mach
         self.q = q
         self.chord = chord
@@ -201,14 +301,7 @@ class TrimVariables:
         self.subcase = subcase
         assert isinstance(self.subcase, integer_types), self.subcase
 
-        self.title = title
-        self.subtitle = subtitle
-        self.label = label
-        assert isinstance(title, str), title
-        assert isinstance(subtitle, str), subtitle
-        assert isinstance(label, str), label
-
-        self.name_type_status = name_type_status
+        self.name_type_status_units = name_type_status_units
         self.data = data
 
     def __eq__(self, other) -> bool:
@@ -221,13 +314,20 @@ class TrimVariables:
         # self.data = data
 
         if short:
-            nnames = len(self.name_type_status)
-            msg += f'    name_type_status: {self.name_type_status.tolist()}; n={nnames}\n'
+            nnames = len(self.name_type_status_units)
+            msg += f'    name_type_status_units: {self.name_type_status_units.tolist()}; n={nnames}\n'
             msg += f'    data.shape = {str(self.data.shape)}\n'
         else:
-            for (name, typei, status), data in zip(self.name_type_status, self.data):
-                msg += f'   {name:<8} {typei:<8} {status:<8}: {data}\n'
+            for (name, typei, status, units), data in zip(self.name_type_status_units, self.data):
+                msg += f'   {name:<8} {typei:<8} {status:<8}: {data} {units}\n'
         return msg
+
+    def print_f06(self) -> str:
+        f06_file = io.StringIO()
+        header = []
+        page_stamp = '%d'
+        out = self.write_f06(f06_file, header, page_stamp)
+        return f06_file.getvalue()[:-1]
 
     def write_f06(self, f06_file, header: list[str], page_stamp: str, page_num: int=1,
                   is_mag_phase: bool=False, is_sort1: bool=True):
@@ -237,21 +337,63 @@ class TrimVariables:
             '                                   UNSPLINED        SPLINED       RESTRAINED      UNRESTRAINED     RESTRAINED      UNRESTRAINED    UNSPLINED  SPLINED\n'
             '\n')
 
-        for (name, typei, status), data in zip(self.name_type_status, self.data):
-            msg += f'   {name:<8} {typei:<8} {status:<8}: {data}\n'
+        msg = (
+            ''
+            '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S\n'
+            '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC\n'
+            f'                                           MACH = {self.mach:13.6E}                Q = {self.q:13.6E}\n'
+            f'                         CHORD = {self.chord:7.4E}           SPAN = {self.span:7.4E}            AREA = {self.sref:7.4E}\n'
+            '\n'
+            '          TRIM ALGORITHM USED: LINEAR TRIM SOLUTION WITHOUT REDUNDANT CONTROL SURFACES.                                           \n'
+            '\n'
+            '\n'
+            '                                                      AEROELASTIC TRIM VARIABLES'
+            '\n'
+            '                                  ID     LABEL                 TYPE        TRIM STATUS      VALUE OF UX\n'
+            '\n'
+            # '                                         INTERCEPT          RIGID BODY           FIXED      1.000000E+00\n'
+            # '                                 500     ANGLEA             RIGID BODY            FREE      1.047265E-01  RADIANS         \n'
+            # '                                 501     PITCH              RIGID BODY           FIXED      0.000000E+00  NONDIMEN. RATE  \n'
+            # '                                 502     URDD3              RIGID BODY           FIXED      2.500000E+00  LOAD FACTOR     \n'
+            # '                                 503     URDD5              RIGID BODY           FIXED      0.000000E+00  LOAD FACTOR     \n'
+            # '                              110000     TFLAP         CONTROL SURFACE            FREE     -4.541439E-01  RADIANS         \n'
+            # '\n'
+            # '\n'
+            # '                                           CONTROL SURFACE POSITION AND HINGE MOMENT RESULTS\n'
+            # '\n'
+            # '                            ACTIVE LIMITS ARE FLAGGED WITH AN (A),  VIOLATED LIMITS ARE FLAGGED WITH A (V).\n'
+            # '\n'
+            # '                                                POSITION                                         HINGE MOMENT\n'
+            # '          CONTROL SURFACE      LOWER LIMIT       VALUE         UPPER LIMIT        LOWER LIMIT       VALUE         UPPER LIMIT\n'
+            # '              TFLAP          -1.570796E+00   -4.541439E-01    1.570796E+00            N/A        1.672770E+06         N/A     \n'
+        )
+        # for (name, typei, status) in self.name_type_status:
+        for (name, typei, status, units), data in zip(self.name_type_status_units.tolist(), self.data):
+            # assert name == 'INTERCEPT', f'name={name!r}'
+            # assert typei.upper() == 'RIGID BODY', f'typei={typei!r}'
+            # assert status.upper() == 'FIXED', f'status={status!r}'
+            # print(f'name={name}; data={data}')
+            # assert len(data) == 1, data
+            value = data
+            extra = ''
+            if units in 'RADIANS':
+                extra = f'  {np.degrees(value):13.6E}  DEGREES'
+            elif units == 'NONDIMEN. RATE':
+                extra = f'  {np.degrees(value):13.6E}  DEGREES/SEC'
+
+            msg += f'                                        {name.upper():<10}    {typei.upper():>16}      {status.upper():>10}     {value:13.6E}  {units.upper():<14s}{extra}\n'
+
         f06_file.write(msg)
         f06_file.write(page_stamp % page_num)
         return page_num + 1
 
 
-class TrimDerivatives:
+class TrimDerivatives(Statics):
     def __init__(self, mach: float, q: float,
                  chord: float, span: float, sref: float,
                  names: np.ndarray, derivatives: np.ndarray,
                  subcase: int=1, title: str='', subtitle: str='', label: str=''):
-        self.nonlinear_factor = None
-        self.is_complex = False
-        self.is_real = False
+        super().__init__(title, subtitle, label)
 
         self.mach = mach
         self.q = q
@@ -260,13 +402,6 @@ class TrimDerivatives:
         self.sref = sref
         self.subcase = subcase
         assert isinstance(self.subcase, integer_types), self.subcase
-
-        self.title = title
-        self.subtitle = subtitle
-        self.label = label
-        assert isinstance(title, str), title
-        assert isinstance(subtitle, str), subtitle
-        assert isinstance(label, str), label
 
         self.names = names
         self.data = derivatives
@@ -332,16 +467,14 @@ class TrimDerivatives:
         return f'TrimDerivatives(subcase={self.subcase}, title, subtitle)'
 
 
-class ControlSurfacePostiionHingeMoment:
+class ControlSurfacePostiionHingeMoment(Statics):
     def __init__(self, mach: float, q: float,
                  chord: float, span: float, sref: float,
                  names: np.ndarray,
                  trim_values: np.ndarray,
                  hinge_moments: np.ndarray,
                  subcase: int=1, title: str='', subtitle: str='', label: str=''):
-        self.nonlinear_factor = None
-        self.is_complex = False
-        self.is_real = False
+        super().__init__(title, subtitle, label)
 
         self.mach = mach
         self.q = q
@@ -350,13 +483,6 @@ class ControlSurfacePostiionHingeMoment:
         self.sref = sref
         self.subcase = subcase
         assert isinstance(self.subcase, integer_types), self.subcase
-
-        self.title = title
-        self.subtitle = subtitle
-        self.label = label
-        assert isinstance(title, str), title
-        assert isinstance(subtitle, str), subtitle
-        assert isinstance(label, str), label
 
         self.names = names
         self.trim_values = trim_values

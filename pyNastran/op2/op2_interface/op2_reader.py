@@ -4391,10 +4391,10 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
 
     structi2 = Struct(endian + b'8s ii f')
     trim_type_map = {
-        0: 'Intercept',
-        1: 'Rigid body',
-        2: 'Control surface',
-        3: 'General control',
+        0: ('Intercept', ''),
+        1: ('Rigid body', 'load/rate'),
+        2: ('Control surface', 'RADIANS'),
+        3: ('General control', 'RADIANS'),
     }
     trim_status_map = {
         1: 'Free',
@@ -4471,9 +4471,8 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         assert numwide == 5, numwide
 
         op2.tCode = tcode   # trim
-        op2.sort_code = 0  # SORT1, real, not-random
+        op2.sort_code = 0   # SORT1, real, not-random
         subcase_key = op2._get_code()
-        # op2.subcase_key[subcase_id].append(subcase_key)
 
         op2_reader.read_3_markers([itable-1, 1, 0])
         next_marker = op2_reader.get_marker1(rewind=True)
@@ -4486,16 +4485,25 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
         trim_values_list = []
-        name_trimtype_trimstatus_list = []
+        name_trimtype_trimstatus_units_list = []
         while idata*4 < len(data):
             datai = data[idata*4:(idata+5)*4]
             #print(op2.show_data(datai))
             name, trim_type_int, trim_status_int, value = structi2.unpack(datai)
-            trim_type = trim_type_map[trim_type_int]
+            trim_type, units = trim_type_map[trim_type_int]
             trim_status = trim_status_map[trim_status_int]
-            name = name.rstrip()
+            name = name.rstrip().decode('latin1')
+            if name == 'INTERCPT':
+                name = 'INTERCEPT'
+            if units == 'load/rate':
+                if name in ['ROLL', 'PITCH', 'YAW']:
+                    units = 'NONDIMEN. RATE'
+                elif name in ['ANGLEA', 'SIDES']:
+                    units = 'RADIANS'
+                else:
+                    units = 'LOAD FACTOR'
 
-            name_trimtype_trimstatus_list.append((name, trim_type, trim_status))
+            name_trimtype_trimstatus_units_list.append((name, trim_type, trim_status, units))
             trim_values_list.append(value)
             #print(f'name={name!r} ai={ai} bi={bi} value={value}')
             # (b'INTERCPT', 1, 3, 1.0)
@@ -4507,15 +4515,15 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
             # (b'TFLAP   ', 2, 2, -0.45418)
             idata += 5
 
-        name_type_status = np.array(name_trimtype_trimstatus_list)
+        name_type_status_units = np.array(name_trimtype_trimstatus_units_list, dtype='U16')
         trim_values_array = np.array(trim_values_list)
         trim_vars = TrimVariables(
             mach, q, cref, bref, sref,
-            name_type_status, trim_values_array,
+            name_type_status_units, trim_values_array,
             subcase=subcase_id, title=title,
             subtitle=subtitle, label=label)
-        assert subcase_id not in trim.variables, subcase_id
-        assert isinstance(subcase_id, int), subcase_id
+        trim_vars.print_f06()
+        assert subcase_key not in trim.variables, subcase_key
         trim.variables[subcase_key] = trim_vars
         itable -= 2
     op2_reader.read_markers([0])
@@ -4614,13 +4622,11 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
         #assert device_code == 0, (acode, device_code)
         #point_id = point_device // 10
 
-        title = title.strip()
-        subtitle = subtitle.strip()
-        subcase = subcase.strip()
-
-        #print(f'title = {title!r}')
-        #print(f'subtitle = {subtitle!r}')
-        #print(f'subcase = {subcase!r}')
+        op2.isubcase = subcase_id
+        data_code = op2._read_title_helper(data)
+        title = data_code['title']
+        subtitle = data_code['subtitle']
+        label = data_code['label']
 
         assert acode == 12, acode
         assert tcode == 102, tcode
@@ -4647,8 +4653,6 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
         itable -= 2
 
     op2_reader.read_markers([0])
-    if not hasattr(op2.op2_results, 'trim_forces'):
-        op2.op2_results.trim_forces = {}
     # trim_forces = {
     #     'nid': np.array(grid_ids, dtype='int32'),
     #     'label': np.array(labels),
@@ -4662,7 +4666,7 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
         subcase, title, subtitle,
         mach, q, cref, bref, sref,
         nodes, force, label)
-    op2.op2_results.trim_forces[subcase_id] = aforce
+    op2.op2_results.trim.aero_force[subcase_id] = aforce
     return
 
 
@@ -4736,13 +4740,11 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         #assert device_code == 0, (acode, device_code)
         #point_id = point_device // 10
 
-        title = title.strip()
-        subtitle = subtitle.strip()
-        subcase = subcase.strip()
-
-        #print(f'title = {title!r}')
-        #print(f'subtitle = {subtitle!r}')
-        #print(f'subcase = {subcase!r}')
+        op2.isubcase = subcase_id
+        data_code = op2._read_title_helper(data)
+        title = data_code['title']
+        subtitle = data_code['subtitle']
+        label = data_code['label']
 
         assert acode == 12, acode
         assert tcode == 101, tcode
@@ -4770,8 +4772,6 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         itable -= 2
 
     op2_reader.read_markers([0])
-    if not hasattr(op2.op2_results, 'trim_pressures'):
-        op2.op2_results.trim_pressures = {}
     # trim_pressures = {
     #     'nid': np.array(grid_list, dtype='int32'),
     #     'label': np.array(label_list),
@@ -4785,7 +4785,7 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         subcase, title, subtitle,
         mach, q, cref, bref, sref,
         nodes, cp, pressure)
-    op2.op2_results.trim_pressures[subcase_id] = apress
+    op2.op2_results.trim.aero_pressure[subcase_id] = apress
 
     #if hasattr(op2, 'aeros'):
         #op2.add_trim(trim_id, mach, q, cref=cref, bref=bref, sref=sref)
@@ -4920,6 +4920,10 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
         assert tcode == 106, tcode
         assert numwide == 38, numwide
 
+        op2.tCode = tcode  # trim
+        op2.sort_code = 0  # SORT1, real, not-random
+        subcase_key = op2._get_code()
+
         op2_reader.read_3_markers([itable-1, 1, 0])
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
@@ -4928,11 +4932,9 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
         all_values = []
         while idata*4 < len(data):
             datai = data[idata*4:(idata+numwide)*4]
-            #print(datai)
             #print(op2.show_data(datai))
             name_bytes, *data_list = structi2.unpack(datai)
             name = name_bytes.rstrip(b' ').decode(op2._encoding)
-            #print(name, data_list)
             data_values = np.array(data_list, dtype='float32')
             values = data_values.reshape(6, 6)
 
@@ -4954,8 +4956,9 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
             mach, q, chord, span, sref,
             names_array, derivatives_array,
             subcase=subcase_id, title=title, subtitle=subtitle, label=label)
-        assert subcase_id not in op2.op2_results.trim.derivatives, subcase_id
-        op2.op2_results.trim.derivatives[subcase_id] = trim_derivatives
+        trim = op2.op2_results.trim
+        assert subcase_key not in trim.derivatives, subcase_key
+        trim.derivatives[subcase_key] = trim_derivatives
 
     op2_reader.read_markers([0])
 
@@ -5050,6 +5053,10 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
         assert tcode == 104, tcode
         assert numwide == 8, numwide
 
+        op2.tCode = tcode  # trim
+        op2.sort_code = 0  # SORT1, real, not-random
+        subcase_key = op2._get_code()
+
         op2_reader.read_3_markers([itable-1, 1, 0])
         next_marker = op2_reader.get_marker1(rewind=True)
         if next_marker == itable-2:  # -5
@@ -5060,6 +5067,7 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
         #op2_reader.show(80, types='ifs')
         data = op2_reader._read_record(debug=False)  # table 4
         idata = 0
+        name_map = {'INTERCPT': 'INTERCEPT'}
 
         names_list = []
         trim_values_list = []
@@ -5070,13 +5078,16 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
             datai = data[idata*4:(idata+numwide)*4]
             name, trim_value, *data_listi = structi2.unpack(datai)
             name = name.rstrip().decode(op2.encoding)
+            if name == 'INTERCPT':
+                name = 'INTERCEPT'
+            # name = name_map.get(name, name)
             names_list.append(name)
             trim_values_list.append(trim_value)
             data_list.append(data_listi)
             # log.debug(f'{name}={trim_value:g} values={values.round(4)}')
             idata += numwide
 
-        names = np.array(names_list)
+        names = np.array(names_list, dtype='U10')
         trim_values = np.array(trim_values_list)
         data_array = np.array(data_list)
         trim_control_surface_position_hinge_moment = ControlSurfacePostiionHingeMoment(
@@ -5087,8 +5098,8 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
         itable -= 2
     op2_reader.read_markers([0])
     trim = op2.op2_results.trim
-    assert subcase_id not in trim.control_surface_position_hinge_moment, subcase_id
-    trim.control_surface_position_hinge_moment[subcase_id] = trim_control_surface_position_hinge_moment
+    assert subcase_key not in trim.control_surface_position_hinge_moment, subcase_key
+    trim.control_surface_position_hinge_moment[subcase_key] = trim_control_surface_position_hinge_moment
 
     #if hasattr(op2, 'aeros'):
         #op2.add_trim(trim_id, mach, q, cref=cref, bref=bref, sref=sref)
@@ -5180,7 +5191,7 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
          title, subtitle, subcase) = out
         #op2.show_data(data[14*4:15*4])
         log.debug(f'mach={mach:g} q={q:.3f} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
-        log.debug(f'  name=[{name}]')
+        #log.debug(f'  name=[{name}]')
 
         allowed = [
             (1, 1),
@@ -5202,15 +5213,13 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
         subtitle = data_code['subtitle']
         label = data_code['label']
 
-        trim_control_surface_position_hinge_moment = {}
-
-        #print(f'title = {title!r}')
-        #print(f'subtitle = {subtitle!r}')
-        #print(f'subcase = {subcase!r}')
-
         assert acode == 12, acode
         assert tcode == 105, tcode
         assert numwide == 7, numwide
+
+        op2.tCode = tcode  # trim
+        op2.sort_code = 0  # SORT1, real, not-random
+        subcase_key = op2._get_code()
 
         op2_reader.read_3_markers([itable-1, 1, 0])
         data = op2_reader._read_record(debug=False)  # table 4
@@ -5223,23 +5232,30 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
         # 6 INRLRES     RS Inertial   restrained hinge moment derivative
         # 7 INRLURSTN   RS Inertial unrestrained hinge moment derivative
         trim_hinge_moment_derivatives = {}
+        names_list = []
+        values_list = []
         while idata*4 < len(data):
             # TFLAP [-4.5418206e-01 -1.5707964e+00  1.5707964e+00  1.6729131e+06
             #        -1.0000000e+10  1.0000000e+10]
             datai = data[idata*4:(idata+numwide)*4]
-            #print(op2.show_data(datai))
-            name, *data_list = structi2.unpack(datai)
+            name, *data_listi = structi2.unpack(datai)
             name = name.rstrip().decode(op2.encoding)
-            values = np.array(data_list, dtype='float32')
+            values = np.array(data_listi, dtype='float32')
+            names_list.append(name)
+            values_list.append(data_listi)
             trim_hinge_moment_derivatives[name] = {
                 #'name': name,
                 'values': values}
             log.debug(f'HMD {name}: values={values.round(6)}')
             idata += numwide
+
+        names = np.array(names_list, dtype='U8')
+        values = np.array(values_list)
         itable -= 2
     op2_reader.read_markers([0])
-    assert subcase_id not in op2.op2_results.trim.hinge_moment_derivatives, subcase_id
-    op2.op2_results.trim.hinge_moment_derivatives[subcase_id] = trim_hinge_moment_derivatives
+    trim = op2.op2_results.trim
+    assert subcase_key not in trim.hinge_moment_derivatives, subcase_key
+    trim.hinge_moment_derivatives[subcase_key] = trim_hinge_moment_derivatives
 
     #if hasattr(op2, 'aeros'):
         #op2.add_trim(trim_id, mach, q, cref=cref, bref=bref, sref=sref)

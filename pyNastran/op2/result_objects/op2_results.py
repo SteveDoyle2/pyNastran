@@ -16,7 +16,8 @@ if TYPE_CHECKING:
     from pyNastran.f06.flutter_response import FlutterResponse
     from pyNastran.f06.f06_tables.trim import (
         TrimVaribles, TrimDerivatives,
-        ControlSurfacePostiionHingeMoment)
+        ControlSurfacePostiionHingeMoment,
+        AeroPressure, AeroForce)
 
 
 class Results:
@@ -242,14 +243,15 @@ class Trim(Load):
         self.hinge_moment_derivatives = {}
         self.control_surface_position_hinge_moment: dict[int, ControlSurfacePostiionHingeMoment] = {}
         self.variables: dict[int, TrimVaribles] = {}
-        self.aero_pressure = {}
-        self.aero_force = {}
+        self.aero_pressure: dict[int, AeroPressure] = {}
+        self.aero_force: dict[int, AeroForce] = {}
 
     def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             'variables', 'derivatives',
             'control_surface_position_hinge_moment',
-            #'hinge_moments', #'aero_pressure', 'aero_force',
+            #'hinge_moments',
+            'aero_pressure', 'aero_force',
         ]
         if include_class:
             return ['trim.' + table for table in tables]
