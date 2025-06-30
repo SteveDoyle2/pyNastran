@@ -2121,8 +2121,9 @@ def read_sol_200(f06_filename: str,
     return optimization_results
 
 
-def plot_sol_200(f06_filename: str, png_filename: str='', show: bool=True):
-    all_results = read_sol_200(f06_filename)
+def plot_sol_200(f06_filename: str, png_filename: str='', show: bool=True,
+                 log: SimpleLogger=None):
+    all_results = read_sol_200(f06_filename, log=log)
     plot_sol_200_from_results(all_results, png_filename=png_filename, show=show)
 
 

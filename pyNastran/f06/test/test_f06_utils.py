@@ -698,10 +698,11 @@ class TestZonaFlutter(unittest.TestCase):
 class TestF06Utils(unittest.TestCase):
     def test_opt_aerobeam(self):
         """tests optimization"""
+        log = SimpleLogger('warning')
         f06_filename = AERO_PATH / 'aerobeam.f06'
         png_filename = AERO_PATH / 'aerobeam.png'
         plot_sol_200(f06_filename, png_filename=png_filename,
-                     show=True)
+                     show=True, log=log)
         #read_sol_200(f06_filename)
 
     def test_opt_mdb200(self):

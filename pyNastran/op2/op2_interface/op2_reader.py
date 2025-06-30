@@ -55,7 +55,9 @@ from pyNastran.f06.flutter_response import FlutterResponse
 from pyNastran.f06.f06_tables.trim import (
     MonitorLoads, TrimResults, ControllerState,
     AeroPressure, AeroForce,
-    TrimVariables, TrimDerivatives, ControlSurfacePostiionHingeMoment)
+    TrimVariables, TrimDerivatives,
+    HingeMomentDerivatives,
+    ControlSurfacePostiionHingeMoment,)
 
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError, EmptyRecordError
 from pyNastran.op2.result_objects.eqexin import EQEXIN
@@ -4517,9 +4519,22 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
 
         name_type_status_units = np.array(name_trimtype_trimstatus_units_list, dtype='U16')
         trim_values_array = np.array(trim_values_list)
+
+        names = name_type_status_units[:, 0]
+        nnames = len(names)
+        ids = np.full(nnames, -1, dtype='int32')
+        if hasattr(op2, 'aestats'):
+            for aestat_id, aestat in op2.aestats.items():
+                index = names.index(aestat.name)
+                ids[index] = aestat_id
+            for aesurf_id, aesurf in op2.aesurf.items():
+                index = names.index(aesurf.name)
+                ids[index] = aesurf_id
+
         trim_vars = TrimVariables(
             mach, q, cref, bref, sref,
             name_type_status_units, trim_values_array,
+            ids=ids,
             subcase=subcase_id, title=title,
             subtitle=subtitle, label=label)
         trim_vars.print_f06()
@@ -5162,29 +5177,29 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
         #op2.show_data(data[15*4:ni])
         out = structi.unpack(data)
 
-        #1  ACODE(C)    I Device code + 10*Approach Code
-        #2  TCODE(C)    I 105
-        # 3 DATCOD I Data code = 0
-        # 4 SUBCASE I Subcase identification number
+        #1  ACODE(C)      I Device code + 10*Approach Code
+        #2  TCODE(C)      I 105
+        # 3 DATCOD        I Data code = 0
+        # 4 SUBCASE       I Subcase identification number
         # 5 UNDEF None
-        # 6 MACHNUM RS Mach number
-        # 7 Q RS Dynamic pressure
+        # 6 MACHNUM      RS Mach number
+        # 7 Q            RS Dynamic pressure
         # 8 CONFIG(2) CHAR4 Aerodynamic configuration name
         # 10 NUMWDE I Number of words per entry in DATA, set to 8
-        # 11 SYMXY I Aerodynamic configuration XY symmetry
+        # 11 SYMXY  I Aerodynamic configuration XY symmetry
         # -1 = SYMMETRIC
-        # 0 = ASYMMETRIC
-        # 1 = ANTISYMMETRIC
-        # 12 SYMXZ I Aerodynamic configuration XZ symmetry
+        #  0 = ASYMMETRIC
+        #  1 = ANTISYMMETRIC
+        # 12 SYMXZ  I Aerodynamic configuration XZ symmetry
         # -1 = ANTISYMMETRIC
-        # 0 = ASYMMETRIC
-        # 1 = SYMMETRIC
-        # 13 CHORD RS Reference chord length
-        # 14 SPAN RS Reference span length
-        # 15 AREA RS Reference area
+        #  0 = ASYMMETRIC
+        #  1 = SYMMETRIC
+        # 13 CHORD          RS Reference chord length
+        # 14 SPAN           RS Reference span length
+        # 15 AREA           RS Reference area
         # 16 CNTLSURF(2) CHAR4 Control surface
-        # 18 REFCORDL RS Reference chord length
-        # 19 REFAREA RS Reference area
+        # 18 REFCORDL       RS Reference chord length
+        # 19 REFAREA        RS Reference area
         # 20 UNDEF(31) None
 
         nzero = 34
@@ -5192,11 +5207,15 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
 
         # op2.show_data(data[4*10:-nzero*4-128*3])
         (acode, tcode, method_int, subcase_id,
-         point_device, mach, q, aerosg2d, numwide, symxy, symxz,
-         name, one_a, one_b, *outi,
+         point_device, mach, q, aerosg2d_bytes, numwide, symxy, symxz,
+         cs_name_bytes, one_a, one_b, *outi,
          title, subtitle, subcase) = out
+        # print(f'cs_name = {cs_name_bytes}')
+        # asdf
         #op2.show_data(data[14*4:15*4])
-        log.debug(f'mach={mach:g} q={q:.3f} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
+        cs_name = cs_name_bytes.decode('latin1')
+        aerosg2d = aerosg2d_bytes.decode('latin1')
+        log.debug(f'mach={mach:g} q={q:.3f} cs_name={cs_name!r} aerosg2d={aerosg2d!r} symxy={symxy}; symxz={symxz}')
         #log.debug(f'  name=[{name}]')
 
         allowed = [
@@ -5237,7 +5256,7 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
         # 5 ELSTURSTN   RS Elastic  unrestrained hinge moment derivative
         # 6 INRLRES     RS Inertial   restrained hinge moment derivative
         # 7 INRLURSTN   RS Inertial unrestrained hinge moment derivative
-        trim_hinge_moment_derivatives = {}
+        # trim_hinge_moment_derivatives = {}
         names_list = []
         values_list = []
         while idata*4 < len(data):
@@ -5246,23 +5265,30 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
             datai = data[idata*4:(idata+numwide)*4]
             name, *data_listi = structi2.unpack(datai)
             name = name.rstrip().decode(op2.encoding)
-            values = np.array(data_listi, dtype='float32')
+            if name == 'INTERCPT':
+                name = 'INTERCEPT'
             names_list.append(name)
             values_list.append(data_listi)
-            trim_hinge_moment_derivatives[name] = {
-                #'name': name,
-                'values': values}
-            log.debug(f'HMD {name}: values={values.round(6)}')
+            # log.debug(f'HMD {name}: values={values.round(6)}')
             idata += numwide
 
+        nnames = len(names_list)
         names = np.array(names_list, dtype='U8')
         values = np.array(values_list)
+        assert values.shape == (nnames, 5), (nnames, values.shape)
+        chord = 0.
+        span = 0.
+        sref = 0.
+        derivs = HingeMomentDerivatives(
+            mach, q, chord, span, sref,
+            cs_name, names, values, subcase=subcase_id,
+            title=title, subtitle=subtitle, label=label)
         itable -= 2
     op2_reader.read_markers([0])
     trim = op2.op2_results.trim
     assert subcase_key not in trim.hinge_moment_derivatives, subcase_key
-    trim.hinge_moment_derivatives[subcase_key] = trim_hinge_moment_derivatives
-
+    # trim.hinge_moment_derivatives[subcase_key] = trim_hinge_moment_derivatives
+    trim.hinge_moment_derivatives[subcase_key] = derivs
     #if hasattr(op2, 'aeros'):
         #op2.add_trim(trim_id, mach, q, cref=cref, bref=bref, sref=sref)
         # is_xysym = aero.is_symmetric_xy

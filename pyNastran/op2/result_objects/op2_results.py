@@ -250,6 +250,7 @@ class Trim(Load):
         tables = [
             'variables', 'derivatives',
             'control_surface_position_hinge_moment',
+            'hinge_moment_derivatives',
             #'hinge_moments',
             'aero_pressure', 'aero_force',
         ]
