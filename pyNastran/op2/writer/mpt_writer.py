@@ -457,9 +457,17 @@ def _write_mat11(model: BDF, name: str, mids: list[int], nmaterials: int,
 
 def _write_mats1(model: BDF, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MATS1"""
+    strmeas_map = {
+        None : 0,  # NULL
+        'UNDEF' : 1,
+        'ENG' : 2,
+        'TRUE': 3,
+        'CAUCHY': 4,
+    }
+
     key = (503, 5, 90)
-    nfields = 11
-    spack = Struct(endian + b'3ifiiff3i')
+    nfields = 12
+    spack = Struct(endian + b'3ifiiff4i')
     nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.MATS1[mid]
@@ -486,6 +494,8 @@ def _write_mats1(model: BDF, name, mids, nmaterials, op2_file, op2_ascii, endian
                 0 if mat.hr is None else mat.hr,
                 0.0 if mat.limit1 is None else mat.limit1,
                 0.0 if mat.limit2 is None else mat.limit2,
+                strmeas_map[mat.strmeas],
+
                 a, bmat, c]
         assert None not in data, f'MATS1 {data}'
         assert len(data) == nfields
