@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from pyNastran.f06.flutter_response import FlutterResponse
     from pyNastran.f06.f06_tables.trim import (
         TrimVaribles, TrimDerivatives,
+        HingeMomentDerivatives,
         ControlSurfacePostiionHingeMoment,
         AeroPressure, AeroForce)
 
@@ -240,7 +241,7 @@ class Trim(Load):
         super().__init__()
         self.derivatives: dict[int, TrimDerivatives] = {}
         # self.hinge_moments = {}
-        self.hinge_moment_derivatives = {}
+        self.hinge_moment_derivatives: dict[int, HingeMomentDerivatives] = {}
         self.control_surface_position_hinge_moment: dict[int, ControlSurfacePostiionHingeMoment] = {}
         self.variables: dict[int, TrimVaribles] = {}
         self.aero_pressure: dict[int, AeroPressure] = {}

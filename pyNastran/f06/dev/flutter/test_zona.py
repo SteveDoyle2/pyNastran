@@ -3,8 +3,16 @@ import unittest
 import pyNastran
 from pyNastran.f06.dev.flutter.read_zona_out import read_zona_out
 from pyNastran.f06.dev.flutter.read_zona_aic import read_zona_aic
+
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_DIR = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples' / 'flutter'
+
+try:
+    import matplotlib
+    IS_MATPLOTLIB = True
+    matplotlib.use('Agg')
+except ModuleNotFoundError:  # pragma: no cover
+    IS_MATPLOTLIB = False
 
 
 class TestZona(unittest.TestCase):

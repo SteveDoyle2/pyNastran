@@ -724,7 +724,7 @@ class TestNX(Tester):
         BWB_PATH = MODEL_PATH / 'bwb'
         op2_filename = BWB_PATH / 'bwb_saero_trim.op2'
         f06_filename = BWB_PATH / 'bwb_saero_trim.test_op2.f06'
-        model = read_op2(op2_filename, log=log)
+        model = read_op2_geom(op2_filename, log=log)
         trim = model.op2_results.trim
         trim_var = trim.variables[1]
 

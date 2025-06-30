@@ -1018,8 +1018,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         state = self.__dict__.copy()
         # Remove the unpicklable entries.
         del state['_card_parser'], state['log']
-        if hasattr(self, '_card_parser_b'):
-            del state['_card_parser_b']
         if hasattr(self, '_card_parser_prepare'):
             del state['_card_parser_prepare']
         return state
@@ -1145,7 +1143,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
 
             'point_ids', 'subcases',
-            '_card_parser', '_card_parser_b', '_card_parser_prepare',
+            '_card_parser', '_card_parser_prepare',
             'wtmass',
         ]
         attrs = object_attributes(self, mode='all', keys_to_skip=keys_to_skip)

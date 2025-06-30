@@ -119,7 +119,7 @@ dependencies = [
     'numpy<3',
     'scipy<2',
     'matplotlib<4',
-    'cpylog>=1.5.0',
+    'cpylog>=1.6.0',
     'docopt-ng>=0.9.0',
     'colorama',
     'qtpy',

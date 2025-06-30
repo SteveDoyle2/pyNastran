@@ -448,8 +448,6 @@ class OP2(OP2_Scalar, OP2Writer):
         del state['log']
         if hasattr(self, 'results') and hasattr(self._results, 'log'):
             del state['_results'].log
-        #if hasattr(self, '_card_parser_b'):
-            #del state['_card_parser_b']
         #if hasattr(self, '_card_parser_prepare'):
             #del state['_card_parser_prepare']
 

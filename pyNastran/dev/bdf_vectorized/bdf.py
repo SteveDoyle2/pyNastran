@@ -428,7 +428,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         state = self.__dict__.copy()
         # Remove the unpicklable entries.
         #del state['spcObject'], state['mpcObject'],
-        del state['_card_parser'], state['_card_parser_b'], state['log']
+        del state['_card_parser'], state['log']
         return state
 
     def save(self, obj_filename='model.obj', unxref=True):
@@ -477,7 +477,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
-            '_card_parser', '_card_parser_b',
+            '_card_parser',
         ]
         for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
             if key.startswith('__') and key.endswith('__'):

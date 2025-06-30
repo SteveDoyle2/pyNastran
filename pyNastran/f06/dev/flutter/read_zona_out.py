@@ -1,27 +1,14 @@
 import os
 from typing import Optional
 import numpy as np
-from cpylog import SimpleLogger
+from cpylog import SimpleLogger, get_logger
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.f06.flutter_response import FlutterResponse
-
-def debug_to_level(debug: Optional[str | bool]) -> str:
-    if debug is None:
-        return 'warning'
-    if isinstance(debug, str):
-        return debug
-    return 'debug' if debug else 'info'
-
-def debug_to_log(debug: Optional[str|bool],
-                 log: Optional[SimpleLogger]) -> SimpleLogger:
-    level = debug_to_level(debug)
-    log = SimpleLogger(level=level) if log is None else log
-    return log
 
 def read_zona_out(zona_out_filename: PathLike,
                   log: Optional[SimpleLogger]=None,
                   debug: Optional[str|bool]=True) -> tuple[dict, dict]:
-    log = debug_to_log(debug, log)
+    log = get_logger(log, debug)
     assert os.path.exists(zona_out_filename), print_bad_path(zona_out_filename)
     with open(zona_out_filename, 'r') as zona_out_file:
         lines = zona_out_file.readlines()
@@ -212,7 +199,7 @@ def zona_lines_to_out(log: SimpleLogger, lines: list[str]) -> tuple[dict, dict]:
         iline += 1
 
     ref_line = lines[iline]
-    ref_dict = split_ref_line(ref_line)
+    ref_dict = split_ref_line(ref_line, log)
     log.debug(f'ref_dict = {ref_dict}')
 
     #' THE FOLLOWING V-G-F TABLE LISTS   49 NUMBER OF STRUCTURAL MODES (  1 - 49 ) AND    0 NUMBER OF AERODYNAMIC LAG ROOTS (  0 -  0 )'
@@ -369,7 +356,7 @@ def get_mode_sline(line: str) -> list[int]:
     return modes
 
 
-def _split_num_unit(value_str: str) -> tuple[float, str]:
+def _split_num_unit(value_str: str, log: SimpleLogger) -> tuple[float, str]:
     """
     Parameters
     ----------
@@ -382,7 +369,7 @@ def _split_num_unit(value_str: str) -> tuple[float, str]:
     -> (1.0726E-07, 'SLIN/IN**3')
 
     """
-    print(value_str)
+    log.debug(value_str)
     assert '(' in value_str, value_str
 
     value_str2, unit = value_str.split(' ', 1)
@@ -391,7 +378,7 @@ def _split_num_unit(value_str: str) -> tuple[float, str]:
     unit = unit.strip(' ()').lower()
     return value, unit
 
-def split_ref_line(line: str) -> dict[str, tuple[float, str]]:
+def split_ref_line(line: str, log: SimpleLogger) -> dict[str, tuple[float, str]]:
     sline = line.strip().split(',')
     out = {}
     for name_value in sline:
@@ -402,14 +389,14 @@ def split_ref_line(line: str) -> dict[str, tuple[float, str]]:
             value = float(value_str)
             unit = ''
         elif name == 'VREF':
-            value, unit = _split_num_unit(value_str)
+            value, unit = _split_num_unit(value_str, log)
             if unit == 'in/sec':
                 unit = 'in/s'
             elif unit == 'ft/sec':
                 unit = 'ft/s'
             assert unit in {'in/s', 'ft/s', 'm/s'}, unit
         elif name == 'DENSITY':
-            value, unit = _split_num_unit(value_str)
+            value, unit = _split_num_unit(value_str, log)
 
             if unit == 'slin/in**3':
                 unit = 'slinch/in^3'
@@ -417,7 +404,7 @@ def split_ref_line(line: str) -> dict[str, tuple[float, str]]:
             #     unit = 'ft/s'
             assert unit in {'slinch/in^3'}, f'unit={unit!r}'
         elif name == 'ALTITUDE':
-            value, unit = _split_num_unit(value_str)
+            value, unit = _split_num_unit(value_str, log)
             assert unit in {'ft'}, f'unit={unit!r}'
 
         elif name == 'REFERENCE LENGTH (L)':
