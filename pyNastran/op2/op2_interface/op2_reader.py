@@ -4497,7 +4497,10 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
             name = name.rstrip().decode('latin1')
             if name == 'INTERCPT':
                 name = 'INTERCEPT'
-            if units == 'load/rate':
+                units = ''   # trim_type_int is wrong...
+                # assert units is None, (name, trim_type, units, trim_status)
+
+            elif units == 'load/rate':
                 if name in ['ROLL', 'PITCH', 'YAW']:
                     units = 'NONDIMEN. RATE'
                 elif name in ['ANGLEA', 'SIDES']:
