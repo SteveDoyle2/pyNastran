@@ -11,7 +11,7 @@ from pyNastran.utils import print_bad_path
 from pyNastran.converters.tecplot.zone import Zone, TecplotDict
 from pyNastran.utils import object_attributes, object_methods, object_stats
 
-from cpylog import get_logger2
+from cpylog import get_logger
 PathLike = PurePath | str
 
 ZoneTuple = namedtuple('Zone', ['zone_name',
@@ -105,7 +105,7 @@ class TecplotBinary(Base):
         self._n = 0
 
         self.tecplot_filename: PathLike = ''
-        self.log = get_logger2(log, debug=debug)
+        self.log = get_logger(log, level=debug)
         self.debug = debug
 
         # mesh = None : model hasn't been read

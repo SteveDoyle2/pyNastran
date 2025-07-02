@@ -14,7 +14,7 @@ from struct import Struct
 from numpy import array, unique
 from typing import Optional, TYPE_CHECKING
 
-from cpylog import SimpleLogger, get_logger2
+from cpylog import SimpleLogger, get_logger
 from pyNastran.utils import check_path
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
@@ -55,7 +55,7 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename: str,
     """
     #base, ext = os.path.splitext(ugrid_filename_out)
     #bdf_filename = base + '.bdf'
-    log = get_logger2(log, debug=True)
+    log = get_logger(log, level=True)
     log.debug(f'merge_ugrid3d_and_bdf_to_ugrid3d_filename - bdf_filename = {bdf_filename}')
     log.debug(f'merge_ugrid3d_and_bdf_to_ugrid3d_filename - ugrid_filename = {ugrid_filename}')
 
@@ -231,7 +231,7 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename: str, bdf_filename: str,
     out_bdf_filename : str
         the output BDF filename
     """
-    log = get_logger2(log, debug=True)
+    log = get_logger(log, level=True)
     log.info(f'equivalence_ugrid3d_and_bdf_to_bdf - bdf_filename={bdf_filename}')
     log.info(f'equivalence_ugrid3d_and_bdf_to_bdf - ugrid_filename={ugrid_filename}')
     check_path(ugrid_filename, 'ugrid_filename')

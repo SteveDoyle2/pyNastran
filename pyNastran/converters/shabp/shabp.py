@@ -6,7 +6,7 @@ dfeines:
 """
 from numpy import array, zeros, arange, ones, cross
 from numpy.linalg import norm  # type: ignore
-from cpylog import get_logger2
+from cpylog import get_logger
 
 from pyNastran.converters.shabp.shabp_results import ShabpOut
 #from pyNastran.converters.shabp.parse_trailer import parse_trailer
@@ -46,7 +46,7 @@ class SHABP(ShabpOut):
         self.component_to_params = {}
         self.component_num_to_name = {}
         self.component_name_to_num = {}
-        self.log = get_logger2(log, debug=debug)
+        self.log = get_logger(log, level=debug)
 
         self.title = ''
         self.header = ''

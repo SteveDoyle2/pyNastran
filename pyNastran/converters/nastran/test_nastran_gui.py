@@ -1129,7 +1129,6 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.op2')
         test = NastranGUI()
-        #test.log = get_logger2()
 
         model = read_bdf(bdf_filename, debug=None)
         #CTRIA3      8043  901512    7571    7569    7572

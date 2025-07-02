@@ -4,7 +4,7 @@ from io import StringIO
 from typing import Optional, Any
 
 import numpy as np
-from cpylog import SimpleLogger, get_logger2
+from cpylog import SimpleLogger, get_logger
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Part, Elements, Step, cast_nodes,
     ShellSection, SolidSection, Surface, BeamSection,
@@ -40,7 +40,7 @@ class Abaqus:
 
         self.shell_sections: list[ShellSection] = []
         self.solid_sections: list[SolidSection] = []
-        self.log = get_logger2(log, debug)
+        self.log = get_logger(log, debug)
 
     def read_abaqus_inp(self, abaqus_inp_filename: str, encoding: Optional[str]=None):
         """reads an abaqus model"""

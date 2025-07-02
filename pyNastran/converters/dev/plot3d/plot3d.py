@@ -1,5 +1,5 @@
 from numpy import zeros
-from cpylog import get_logger2
+from cpylog import get_logger
 
 
 class Plot3d:  # pragma: no cover
@@ -9,7 +9,7 @@ class Plot3d:  # pragma: no cover
         self.z = {}
         self.block_shapes = {}
 
-        self.log = get_logger2(log=log, debug=debug)
+        self.log = get_logger(log=log, level=debug)
 
     def read_plot3d(self, p3d_name):  # pragma: no cover
         self.read_plot3d_ascii(p3d_name)

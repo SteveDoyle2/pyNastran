@@ -11,7 +11,7 @@ import numpy as np
 from scipy.spatial import KDTree
 from scipy.interpolate import interp1d, splrep, splev
 
-from cpylog import SimpleLogger, get_logger2
+from cpylog import SimpleLogger, get_logger
 try:
     import matplotlib  # pylint: disable=unused-import
     IS_MATPLOTLIB = True
@@ -177,7 +177,7 @@ class TestF06Flutter(unittest.TestCase):
 
     def test_f06_pt145(self):
         """tests read_f06_trim"""
-        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        log = get_logger(log=None, level=None, encoding='utf-8')
         f06_filename = AERO_PATH / 'pt145.f06'
         #trim_results = read_f06_trim(f06_filename,
         #                             log=None, nlines_max=1_000_000, debug=None)
@@ -194,7 +194,7 @@ class TestF06Flutter(unittest.TestCase):
     def test_plot_flutter_bah(self):
         """tests plot_flutter_f06"""
         f06_filename = AERO_PATH / 'bah_plane' / 'bah_plane.f06'
-        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        log = get_logger(log=None, level=None, encoding='utf-8')
         #log = get_logger2(log=None, debug=True, encoding='utf-8')
         flutters, data = plot_flutter_f06(
             f06_filename, show=False, close=True,
@@ -223,8 +223,8 @@ class TestF06Flutter(unittest.TestCase):
         has issues with writing the subcase...
         """
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
-        #log = get_logger2(log=None, debug=None, encoding='utf-8')
-        log = get_logger2(log=None, debug=False, encoding='utf-8')
+        #log = get_logger(log=None, level=None, encoding='utf-8')
+        log = get_logger(log=None, level=False, encoding='utf-8')
 
         plot_flutter_f06(
             f06_filename,
@@ -376,7 +376,7 @@ class TestF06Flutter(unittest.TestCase):
                                show=False, clear=True, close=True)
 
     def test_cmd_line_plot_flutter_0012(self):
-        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        log = get_logger(log=None, level=None, encoding='utf-8')
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
         ivel = '0'
         mode = '1:2'
@@ -392,7 +392,7 @@ class TestF06Flutter(unittest.TestCase):
 
     def test_cmd_line_plot_flutter_no_input_0012(self):
         """no input???"""
-        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        log = get_logger(log=None, level=None, encoding='utf-8')
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
         argv = ['f06', 'plot_145', str(f06_filename), '--eas',
                 '--out_units', 'english_in']

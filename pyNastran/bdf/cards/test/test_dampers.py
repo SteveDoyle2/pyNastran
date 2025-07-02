@@ -2,7 +2,7 @@ import unittest
 from io import StringIO
 
 from cpylog import SimpleLogger, get_logger
-from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, CDAMP1, read_bdf#, get_logger2
+from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, CDAMP1, read_bdf
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.test.test_shells import (
     make_dvprel_optimization, make_dvcrel_optimization,

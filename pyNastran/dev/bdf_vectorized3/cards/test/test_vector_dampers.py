@@ -3,7 +3,7 @@ from io import StringIO
 import numpy as np
 
 from cpylog import get_logger
-from pyNastran.dev.bdf_vectorized3.bdf import BDF, BDFCard, read_bdf#, get_logger2
+from pyNastran.dev.bdf_vectorized3.bdf import BDF, BDFCard, read_bdf
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import (
     make_dvprel_optimization,

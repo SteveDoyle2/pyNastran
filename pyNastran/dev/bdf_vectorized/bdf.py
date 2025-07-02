@@ -13,7 +13,8 @@ from collections import defaultdict
 from typing import Optional
 
 import numpy as np
-from cpylog import SimpleLogger, get_logger2, __version__ as CPYLOG_VERSION
+from cpylog import SimpleLogger, get_logger, __version__ as CPYLOG_VERSION
+assert CPYLOG_VERSION >= '1.6.0', CPYLOG_VERSION
 
 from pyNastran.utils import object_attributes, check_path, PathLike
 from pyNastran.bdf.bdf_interface.utils import (
@@ -258,8 +259,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         # (multiple BDF passes among other things)
         self._fast_add = True
 
-        log_args = {} if CPYLOG_VERSION <= '1.5.0' else {'nlevels': 2}
-        self.log = get_logger2(log=log, debug=debug, **log_args)
+        self.log = get_logger(log=log, level=debug, **log_args)
 
         #: list of all read in cards - useful in determining if entire BDF
         #: was read & really useful in debugging

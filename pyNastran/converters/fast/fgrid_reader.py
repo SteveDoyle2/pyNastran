@@ -1,5 +1,5 @@
 import numpy as np
-from cpylog import get_logger2
+from cpylog import get_logger
 from pyNastran.utils import check_path
 
 
@@ -27,7 +27,7 @@ class FGridReader:
             if log is set, debug is ignored and uses the
             settings the logging object has
         """
-        self.log = get_logger2(log, debug=debug)
+        self.log = get_logger(log, level=debug)
         self.debug = debug
         self.nodes = None
         self.bcs = None

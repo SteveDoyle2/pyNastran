@@ -3,7 +3,7 @@ Defines the following classes:
     - UGRID2D_Reader
 """
 from numpy import array
-from cpylog import get_logger2
+from cpylog import get_logger
 
 
 class UGRID2D_Reader:
@@ -11,7 +11,7 @@ class UGRID2D_Reader:
     Interface to the AFLR UGrid2D format.
     """
     def __init__(self, log=None, debug=None):
-        self.log = get_logger2(log=log, debug=debug)
+        self.log = get_logger(log=log, level=debug)
         self.nodes = None
         self.tris = None
         self.quads = None

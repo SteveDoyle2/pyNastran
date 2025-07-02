@@ -10,7 +10,7 @@ defines:
 
 """
 from numpy import array, zeros
-from cpylog import get_logger2
+from cpylog import get_logger
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -39,7 +39,7 @@ class Tetgen:
             if log is set, debug is ignored and uses the
             settings the logging object has
         """
-        self.log = get_logger2(log, debug=debug)
+        self.log = get_logger(log, level=debug)
         self.nodes = None
         self.tris = None
         self.tets = None

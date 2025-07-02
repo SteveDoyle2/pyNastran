@@ -22,7 +22,7 @@ from collections import defaultdict
 from typing import Optional, Any
 
 import numpy as np
-from cpylog import SimpleLogger, get_logger2
+from cpylog import SimpleLogger, get_logger
 
 from pyNastran.utils import PathLike, is_binary_file
 from pyNastran.converters.cart3d.cart3d_reader_writer import (

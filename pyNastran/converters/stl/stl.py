@@ -8,7 +8,7 @@ import numpy as np
 import scipy
 from scipy.spatial import KDTree
 
-from cpylog import get_logger2, SimpleLogger
+from cpylog import get_logger, SimpleLogger
 from pyNastran.utils import is_binary_file
 
 
@@ -57,7 +57,7 @@ class STL:
             if log is set, debug is ignored and uses the
             settings the logging object has
         """
-        self.log = get_logger2(log, debug=debug)
+        self.log = get_logger(log, level=debug)
 
         self.nodes = None
         self.elements = None

@@ -14,7 +14,7 @@ from numpy.linalg import solve  # type: ignore
 
 import scipy
 from scipy.sparse import dok_matrix  # type: ignore
-from cpylog import get_logger2
+from cpylog import get_logger
 
 # pyNastran
 import pyNastran.bdf.bdf_interface.dev.matrices
@@ -186,7 +186,7 @@ class Solver(OP2):
         #F06Writer.__init_data__(self)
         OP2.__init__(self, debug=False, log=None, debug_file=None) # make_geom=False,
         debug = fargs['--debug']
-        self.log = get_logger2(log, debug)
+        self.log = get_logger(log, debug)
 
         self.page_num = 1
         self.fargs = fargs

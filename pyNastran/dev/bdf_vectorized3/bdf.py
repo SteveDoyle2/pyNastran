@@ -28,7 +28,7 @@ from typing import (
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
-from cpylog import get_logger2
+from cpylog import get_logger
 
 from pyNastran.utils import object_attributes, check_path, PathLike
 from pyNastran.utils.numpy_utils import (
@@ -535,7 +535,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             valid_modes = {'msc', 'nx', 'mystran', 'zona'}
 
         """
-        self.log = get_logger2(log=log, debug=debug)
+        self.log = get_logger(log=log, debug=debug)
         super().__init__()
         #AddCards.__init__(self)
         #WriteMesh.__init__(self)

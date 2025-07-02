@@ -2,7 +2,7 @@ import os
 from typing import Optional
 
 import numpy as np
-from cpylog import SimpleLogger, get_logger2
+from cpylog import SimpleLogger, get_logger
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.converters.fluent.utils import (
     read_vrt, read_cell, read_daten,
@@ -25,7 +25,7 @@ class Fluent:
             logging debug
         """
         self.auto_read_write_h5 = auto_read_write_h5
-        self.log = get_logger2(log=log, debug=debug)
+        self.log = get_logger(log=log, level=debug)
 
         # vrt
         self.node_id = np.array([], dtype='int32')

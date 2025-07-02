@@ -49,14 +49,7 @@ from typing import Optional, Callable, Any
 from numpy import array
 import numpy as np
 import cpylog
-if cpylog.__version__ >= '1.5.0':  # pragma: no cover
-    #import warnings
-    #warnings.warn('run "pip install cpylog>=1.5.0"')
-    from cpylog import get_logger2, log_exc
-else:  # pramga: no cover
-    from cpylog import get_logger2
-    def log_exc(*args, **kwargs):
-        pass
+from cpylog import get_logger2, log_exc
 
 
 from pyNastran import is_release, __version__
@@ -633,6 +626,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         # contact
         reader_obc = self._op2_readers.reader_obc
+        reader_obg = self._op2_readers.reader_obg
         reader_oslide = self._op2_readers.reader_oslide
         reader_ougstrs = self._op2_readers.reader_ougstrs
         reader_ofcon3d = self._op2_readers.reader_ofcon3d
@@ -1006,9 +1000,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OBC2' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'], # Contact pressures and tractions at grid points.
 
             # Glue normal and tangential tractions at grid point in basic coordinate system
-            #b'OBG1': (reader_obc.read_sort1_3, reader_obc.read_4, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
+            b'OBG1': (reader_obg.read_sort1_3, reader_obg.read_4, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
             #b'OBG1' : [self._table_crasher, self._table_crasher, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
-            b'OBG2' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
+            # b'OBG2' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
             b'OBG2' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
 
             b'OCPSDF':   [self._table_passer, self._table_passer, 'Output table of cross-PSD functions'],
@@ -1839,6 +1833,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         #assert desc != '???', self.table_name
         self.to_nx(f' because table_name={self.table_name} ({desc}) was found')
         self._table_passer(data, ndata)
+        return 0
 
     def _table_passer(self, data, ndata: int) -> int:
         """auto-table skipper"""
@@ -2375,7 +2370,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if hasattr(self, 'subtable_name'):
             del self.subtable_name
 
-    def _read_psdf_3(self, data: bytes, ndata: int) -> None:
+    def _read_psdf_3(self, data: bytes, ndata: int) -> int:
         """reads the PSDF table"""
         #(50, 2011, 4001, 0, 302130, 3
         # strip off the title

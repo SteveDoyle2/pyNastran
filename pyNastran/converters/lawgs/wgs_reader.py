@@ -10,7 +10,7 @@ from math import sin, cos
 
 import numpy as np
 from numpy import array, radians, dot, zeros
-from cpylog import get_logger2
+from cpylog import get_logger
 
 class Panel:
     """
@@ -200,7 +200,7 @@ class LaWGS:
             settings the logging object has
 
         """
-        self.log = get_logger2(log=log, debug=debug)
+        self.log = get_logger(log=log, level=debug)
         self.panels = {}
 
     def read_lawgs(self, wgs_filename):

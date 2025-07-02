@@ -710,11 +710,12 @@ class TestSATKOP2(Tester):
           #sort1
           #freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
 
-        assert len(op2.op2_results.rms.displacements[(1, 5, 1, 0, 0, '', '')].freqs) == 1
-        assert len(op2.op2_results.rms.velocities[(1, 5, 1, 0, 0, '', '')].freqs) == 1
-        assert len(op2.op2_results.rms.accelerations[(1, 5, 1, 0, 0, '', '')].freqs) == 1
-        assert len(op2.op2_results.rms.cbar_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
-        assert len(op2.op2_results.rms.cbush_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        rms = op2.op2_results.rms
+        assert len(rms.displacements[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(rms.velocities[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(rms.accelerations[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(rms.cbar_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(rms.cbush_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
 
 
 class TestNX(Tester):
@@ -745,8 +746,11 @@ class TestNX(Tester):
 
     def test_nx_glue_slide_distance(self):
         """test NX 2020 version"""
-        log = get_logger(level='warning')
+        # log = SimpleLogger(level='warning')
+        log = SimpleLogger(level='info')
+        # log = SimpleLogger(level='debug')
         op2_filename = MODEL_PATH / 'nx' / 'glue' / 'n401gsh01.op2'
+        # read_op2(op2_filename)
         #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
@@ -2640,7 +2644,7 @@ class TestOP2Main(Tester):
         model.read_op2(op2_filename)
 
     def test_op2_solid_bending_01(self):
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = MODEL_PATH / 'solid_bending'
         op2_filename = folder / 'solid_bending.op2'
         f06_filename = folder / 'solid_bending.test_op2.f06'
@@ -2652,23 +2656,24 @@ class TestOP2Main(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
 
-        read_op2(op2_filename, debug=False, log=log)
-        run_op2(op2_filename, write_bdf=False,
-                write_f06=True,
+        read_op2(op2_filename, debug=False, log=log, combine=False)
+        run_op2(op2_filename, write_bdf=False, write_f06=True,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
+                build_pandas=True,
                 load_as_h5=False, log=log)
-        run_op2(op2_filename, write_bdf=False,
-                write_f06=True,
-                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
+        run_op2(op2_filename, write_bdf=False, write_f06=False, make_geom=False,
+                debug=False, stop_on_failure=True, binary_debug=True, quiet=True,
                 slice_nodes=[1,2,3],
                 slice_elements=[4,5,6],
                 load_as_h5=False, log=log)
-        assert os.path.exists(debug_file), os.listdir(folder)
-
-        op2 = run_op2(op2_filename, make_geom=False, write_bdf=False,
-                      write_f06=True,
-                      debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
-                      build_pandas=True, log=log)[0]
+        run_op2(op2_filename, write_bdf=False, write_f06=False, make_geom=False,
+                debug=False, stop_on_failure=True, binary_debug=True, quiet=True,
+                slice_nodes=[1,2,3],
+                load_as_h5=False, log=log)
+        run_op2(op2_filename, make_geom=False, write_bdf=False, write_f06=False,
+                debug=False, stop_on_failure=True, binary_debug=True, quiet=True,
+                slice_elements=[4,5,6],
+                load_as_h5=False, log=log)
         assert os.path.exists(debug_file), os.listdir(folder)
 
         subcase = op2.case_control_deck.subcases[1]
@@ -2703,9 +2708,9 @@ class TestOP2Main(Tester):
     def test_op2_solid_bending_02_geom(self):
         log = get_logger(level='warning')
         #log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'solid_bending')
-        op2_filename = os.path.join(folder, 'solid_bending.op2')
-        hdf5_filename = os.path.join(folder, 'solid_bending.test_op2_solid_bending_02_geom.h5')
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
+        hdf5_filename = folder / 'solid_bending.test_op2_solid_bending_02_geom.h5'
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False, write_hdf5=False,
@@ -2764,7 +2769,7 @@ class TestOP2Main(Tester):
 
     def test_op2_buckling_solid_shell_bar_01_geom(self):
         """single subcase buckling"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'buckling_solid_shell_bar.op2')
         subcases = 1
@@ -2789,7 +2794,7 @@ class TestOP2Main(Tester):
 
     def test_op2_buckling_solid_shell_bar_02_geom(self):
         """multi subcase buckling"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'buckling2_solid_shell_bar.op2')
         unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
@@ -2839,7 +2844,7 @@ class TestOP2Main(Tester):
 
     def test_op2_transient_solid_shell_bar_01_geom(self):
         """transient test"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
         f06_filename = os.path.join(folder, 'transient_solid_shell_bar.test_op2.f06')
@@ -2856,7 +2861,7 @@ class TestOP2Main(Tester):
 
     def test_op2_frequency_solid_shell_bar_01_geom(self):
         """frequency test"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = MODEL_PATH / 'sol_101_elements'
         op2_filename = folder / 'freq_solid_shell_bar.op2'
         f06_filename = folder / 'freq_solid_shell_bar.test_op2.f06'
@@ -2874,7 +2879,7 @@ class TestOP2Main(Tester):
 
     def test_op2_transfer_function_01(self):
         """tests the transfer function cards work"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'transfer_function')
         #bdf_filename = os.path.join(folder, 'actuator_tf_modeling.bdf')
         op2_filename = os.path.join(folder, 'actuator_tf_modeling.op2')
@@ -2912,7 +2917,7 @@ class TestOP2Main(Tester):
 
     def test_monpnt3(self):
         """creates the MONPNT3 table"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'aero', 'monpnt3')
         op2_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.op2')
         f06_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06')
@@ -2927,7 +2932,7 @@ class TestOP2Main(Tester):
 
     def test_op2_solid_shell_bar_01(self):
         """tests sol_101_elements/static_solid_shell_bar.op2"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         op2_filename = os.path.join('static_solid_shell_bar.op2')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, op2_filename)
@@ -3033,7 +3038,7 @@ class TestOP2Main(Tester):
 
     def test_op2_solid_shell_bar_01_straincurvature(self):
         """tests sol_101_elements/static_solid_shell_bar_straincurve.op2"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         unused_bdf_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve.op2')

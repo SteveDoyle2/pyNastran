@@ -17,7 +17,7 @@ import numpy as np
 from numpy import (zeros, array, vstack, hstack, where,
                    arctan2, arccos, sign, isnan, radians, unique)
 from numpy.linalg import norm  # type: ignore
-from cpylog import get_logger2
+from cpylog import get_logger
 
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -46,7 +46,7 @@ class AFLR2:
             settings the logging object has
 
         """
-        self.log = get_logger2(log=log, debug=debug)
+        self.log = get_logger(log=log, debug=debug)
         self.debug = debug
 
         self.nodes = None

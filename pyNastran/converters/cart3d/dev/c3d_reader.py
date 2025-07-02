@@ -1,14 +1,14 @@
 from struct import unpack, Struct
 
 from numpy import zeros
-from cpylog import get_logger2
+from cpylog import get_logger
 
 #from pyNastran.utils import is_binary_file
 
 
 class C3D_Reader:
     def __init__(self, log=None, debug=False):
-        self.log = get_logger2(log, debug=debug)
+        self.log = get_logger(log, level=debug)
 
     def read_c3d(self, c3d_filename):
         self.f = open(c3d_filename, 'r')

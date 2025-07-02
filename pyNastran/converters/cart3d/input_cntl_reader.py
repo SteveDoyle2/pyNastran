@@ -1,9 +1,9 @@
-from cpylog import get_logger2
+from cpylog import get_logger
 
 
 class InputCntlReader:
     def __init__(self, log=None, debug=False):
-        self.log = get_logger2(log, debug=debug)
+        self.log = get_logger(log, level=debug)
 
     def read_input_cntl(self, input_cntl_filename):
         self.log.info('reading input_cntl=%r' % input_cntl_filename)

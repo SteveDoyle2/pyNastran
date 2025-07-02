@@ -15,7 +15,7 @@ from typing import BinaryIO
 
 import numpy as np
 from pyNastran.utils import check_path
-from cpylog import get_logger2
+from cpylog import get_logger
 
 
 class Usm3d:
@@ -74,7 +74,7 @@ class Usm3d:
         self.loads = None
         self.mapbc = None
         self.precision = 'double'
-        self.log = get_logger2(log, debug=debug)
+        self.log = get_logger(log, level=debug)
 
 
     def read_mapbc(self, mapbc_filename):

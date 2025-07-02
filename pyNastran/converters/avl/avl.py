@@ -2,7 +2,7 @@ import os
 import sys
 
 import numpy as np
-from cpylog import get_logger2
+from cpylog import get_logger
 from pyNastran.converters.avl.control import Control
 from pyNastran.converters.avl.surface import Surface
 from pyNastran.converters.avl.body import Body
@@ -49,7 +49,7 @@ class AVL:
     """Interface to the AVL (Athena Vortex Lattice) code"""
     def __init__(self, log=None, debug=False):
         self.name = 'model_name'
-        self.log = get_logger2(log=log, debug=debug, encoding='utf-8')
+        self.log = get_logger(log=log, level=debug, encoding='utf-8')
         self.avl_filename = ''
         self.mach = 0.
 
