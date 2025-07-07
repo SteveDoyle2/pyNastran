@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import annotations
 import os
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -437,7 +437,7 @@ class AnimationWindow(PyDialog):
             )
 
         self.animation_type = QLabel('Animation Type:')
-        animation_type = {}
+        #animation_type = {}
         #scale_msg = 'Scale\n'
         #phase_msg = 'Phase\n'
         #time_msg = 'Time\n'
@@ -615,6 +615,7 @@ class AnimationWindow(PyDialog):
             self.delete_images_checkbox.setVisible(enable)
             self.make_gif_checkbox.setVisible(enable)
             self.repeat_checkbox.setVisible(enable)
+            self.animate_in_gui_checkbox.setVisible(enable)
             self.resolution_button.setVisible(enable)
             self.resolution_label.setVisible(enable)
             self.resolution_edit.setVisible(enable)
@@ -629,6 +630,7 @@ class AnimationWindow(PyDialog):
         self.make_images_checkbox.setEnabled(enable)
         self.delete_images_checkbox.setEnabled(enable)
         self.repeat_checkbox.setEnabled(enable)
+        self.animate_in_gui_checkbox.setEnabled(enable)
         self.resolution_button.setEnabled(enable)
         self.resolution_edit.setEnabled(enable)
         if IS_IMAGEIO:
@@ -686,7 +688,8 @@ class AnimationWindow(PyDialog):
             self.set_grid_time(False, 'phase')
         self._animate_type = 'phase'
 
-    def set_grid_scale(self, enabled: bool=True, word: str='') -> None:
+    def set_grid_scale(self, enabled: bool=True,
+                       word: str='') -> None:
         """enables/disables the secondary input"""
         #print('%s-set_grid_scale; enabled = %r' % (word, enabled))
         if HIDE_WHEN_INACTIVE:
@@ -708,7 +711,6 @@ class AnimationWindow(PyDialog):
         self.max_value_enable.setEnabled(enabled)
         self.on_min_value_enable()
         self.on_max_value_enable()
-
 
     def set_grid_time(self, enabled: bool=True, word: str='') -> None:
         """enables/disables the secondary input"""
@@ -1049,8 +1051,6 @@ class AnimationWindow(PyDialog):
 
         grid2.addWidget(self.save_animation_checkbox, irow, 0)
         irow += 1
-        grid2.addWidget(self.animate_in_gui_checkbox, irow, 0)
-        irow += 1
 
         grid2.addWidget(self.resolution_label, irow, 0)
         grid2.addWidget(self.resolution_edit, irow, 1)
@@ -1073,6 +1073,7 @@ class AnimationWindow(PyDialog):
         grid2.addWidget(self.make_gif_checkbox, irow, 2)
         irow += 1
         grid2.addWidget(self.repeat_checkbox, irow, 0)
+        grid2.addWidget(self.animate_in_gui_checkbox, irow, 1)
         irow += 1
         grid2.addWidget(spacer, irow, 0)
 
@@ -1150,10 +1151,12 @@ class AnimationWindow(PyDialog):
         #self.gui.log.warning(f'passed = {passed}')
         if passed:
             try:
-                self._make_gif(validate_out, istep=self.istep)
+                self._make_gif(validate_out, istep=self.istep,
+                               stop_animation=False)
                 self.istep += 1
             except IndexError:
-                self._make_gif(validate_out, istep=0)
+                self._make_gif(validate_out, istep=0,
+                               stop_animation=False)
                 self.istep += 1
             self.wipe_button.setEnabled(True)
 
@@ -1177,7 +1180,6 @@ class AnimationWindow(PyDialog):
         self.wipe_button.setEnabled(True)
         self.stop_button.setEnabled(False)
 
-
     def on_run(self) -> bool:
         """click the Run button"""
         self.istep = 0
@@ -1186,7 +1188,7 @@ class AnimationWindow(PyDialog):
 
         passed, validate_out = self.on_validate()
         if passed:
-            self._make_gif(validate_out, istep=None)
+            self._make_gif(validate_out, istep=None, stop_animation=False)
         return passed
 
     def _make_gif(self, validate_out, istep=None,
@@ -1301,9 +1303,11 @@ class AnimationWindow(PyDialog):
         return min_value, max_value
 
     def on_validate(self, wipe: bool=False) -> tuple[bool,
-            tuple[int, int, int,
+            tuple[int, int, Optional[int],
                   float, float, int, bool,
-                  int, str, str, float, float]]:
+                  int, str, str,
+                  Optional[float], Optional[float],
+                 ]]:
         """checks to see if the input is valid"""
         # requires no special validation
         icase_fringe, flag0 = check_int(self.icase_fringe_edit)
@@ -1327,12 +1331,13 @@ class AnimationWindow(PyDialog):
         if self.max_value_edit.isEnabled():
             max_value, flag5 = check_float(self.max_value_edit)
 
+        animate_in_gui = False
         if wipe:
-            animate_in_gui = False
             scale = 0.
             flag1 = True
         else:
-            animate_in_gui = self.animate_in_gui_checkbox.isChecked()
+            if self.animate_in_gui_checkbox.isEnabled():
+                animate_in_gui = self.animate_in_gui_checkbox.isChecked()
             if scale == 0.0:
                 self.scale_edit.setStyleSheet(QLINEEDIT_ERROR)
                 flag1 = False

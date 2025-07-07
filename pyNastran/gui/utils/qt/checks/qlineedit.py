@@ -5,7 +5,7 @@ import numpy as np
 from pyNastran.gui.utils.qt.checks.utils import (check_locale_float, is_ranged_value,
                                                  check_format_str)
 if TYPE_CHECKING:  # pragma: no cover
-    from qtpy.QtWidgets import QLineEdit, QSpinBox
+    from qtpy.QtWidgets import QLineEdit, QSpinBox, QDoubleSpinBox
 
 QLINEEDIT_ERROR = "QLineEdit{background: red;}"
 QLINEEDIT_GOOD = "QLineEdit{background: white;}"
@@ -35,7 +35,7 @@ def check_save_path(cell: QLineEdit) -> tuple[str, bool]:
     return text, passed
 
 #-------------------------------------------------------------------------------
-def check_int(cell: QLineEdit) -> tuple[int, bool]:
+def check_int(cell: QLineEdit | QSpinBox) -> tuple[int, bool]:
     """
     Colors the cell red if the integer is invalid
 
@@ -89,7 +89,7 @@ def check_positive_int_or_blank(cell: QLineEdit) -> tuple[int, bool]:
         #cell.setStyleSheet(QLINEEDIT_ERROR)
         #return None, False
 
-def check_float(cell: QLineEdit | QSpinBox) -> tuple[float, bool]:
+def check_float(cell: QLineEdit | QSpinBox | QDoubleSpinBox) -> tuple[float, bool]:
     """
     Colors the cell red if the float is invalid
 

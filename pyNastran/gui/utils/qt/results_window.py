@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Optional, Any
 from qtpy import QtGui
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView
 #from qtpy.QtCore import QAbstractView
@@ -13,7 +13,7 @@ class ResultsWindow(QWidget):
                  data: list[Any],
                  choices,
                  is_single_select: bool,
-                 left_click_callback: ClickCallback,
+                 left_click_callback: Optional[ClickCallback],
                  right_click_actions: list[tuple[str, ClickCallback, bool]]=None,
                  include_clear: bool=True,
                  include_export_case: bool=True,
