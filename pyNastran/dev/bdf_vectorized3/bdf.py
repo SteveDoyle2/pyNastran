@@ -535,7 +535,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             valid_modes = {'msc', 'nx', 'mystran', 'zona'}
 
         """
-        self.log = get_logger(log=log, debug=debug)
+        self.log = get_logger(log=log, level=debug)
         super().__init__()
         #AddCards.__init__(self)
         #WriteMesh.__init__(self)
