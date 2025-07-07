@@ -46,7 +46,7 @@ class AFLR2:
             settings the logging object has
 
         """
-        self.log = get_logger(log=log, debug=debug)
+        self.log = get_logger(log=log, level=debug)
         self.debug = debug
 
         self.nodes = None

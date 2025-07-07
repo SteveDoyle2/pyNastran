@@ -2656,7 +2656,7 @@ class TestOP2Main(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
 
-        read_op2(op2_filename, debug=False, log=log, combine=False)
+        op2 = read_op2(op2_filename, debug=False, log=log, combine=False)
         run_op2(op2_filename, write_bdf=False, write_f06=True,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
                 build_pandas=True,
