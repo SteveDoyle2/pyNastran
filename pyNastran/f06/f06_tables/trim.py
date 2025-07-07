@@ -5,7 +5,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 TrimVariable = tuple[int, str, str, float, str]
 ControllerState = dict[str, float]
-#TrimVariables = dict[str, TrimVariable]
+
 
 class Statics:
     def __init__(self, title: str, subtitle: str, label: str):
@@ -19,6 +19,13 @@ class Statics:
         self.title = title
         self.subtitle = subtitle
         self.label = label
+
+    def print_f06(self) -> str:
+        f06_file = io.StringIO()
+        header = []
+        page_stamp = '%d'
+        out = self.write_f06(f06_file, header, page_stamp)
+        return f06_file.getvalue()[:-1]
 
 
 class MonitorLoads:
@@ -49,7 +56,7 @@ class AeroPressure(Statics):
                  mach: float, q: float,
                  cref: float, bref: float, sref: float,
                  nodes: np.ndarray,
-                 cp: np.ndarray, pressure: np.ndarray, # labels: np.ndarray,
+                 cp: np.ndarray, pressure: np.ndarray,  # labels: np.ndarray,
                  subtitle: str='', title: str='', label: str=''):
         super().__init__(title, subtitle, label)
         self.subcase = subcase
@@ -65,7 +72,7 @@ class AeroPressure(Statics):
         # self.labels = labels
 
     @classmethod
-    def from_f06(self, subcase: int,
+    def from_f06(cls, subcase: int,
                  nodes: np.ndarray,
                  cp_pressure: np.ndarray,
                  # labels: np.ndarray,
@@ -83,7 +90,7 @@ class AeroPressure(Statics):
             mach, q,
             cref, bref, sref,
             nodes,
-            cp_pressure[:, 0], cp_pressure[:, 1], # labels,
+            cp_pressure[:, 0], cp_pressure[:, 1],  # labels,
             title=title, subtitle=subtitle, label=label,
         )
         return apress
@@ -152,6 +159,7 @@ class AeroPressure(Statics):
         )
         return msg
 
+
 class AeroForce(Statics):
     def __init__(self, subcase: int,
                  mach: float, q: float,
@@ -173,7 +181,7 @@ class AeroForce(Statics):
         self.force_label = force_label
 
     @classmethod
-    def from_f06(self, subcase: int,
+    def from_f06(cls, subcase: int,
                  nodes: np.ndarray,
                  force: np.ndarray,
                  force_label: np.ndarray,
@@ -224,7 +232,7 @@ class AeroForce(Statics):
             '                                             AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS\n'
             '\n'
             '    GROUP  GRID ID  LABEL        T1                T2                T3                R1                R2                R3\n'
-           #'        1   900015   LS     0.000000E+00      0.000000E+00      1.032646E+03      0.000000E+00      1.000156E+04      0.000000E+00\n'
+            #'        1   900015   LS     0.000000E+00      0.000000E+00      1.032646E+03      0.000000E+00      1.000156E+04      0.000000E+00\n'
         )
         for (nid, force, label) in zip(self.nodes, self.force, self.force_label):
             # print(nid, force, label)
@@ -335,10 +343,10 @@ class TrimVariables(Statics):
         self.data = data
 
     @classmethod
-    def from_f06(self, trim_variables: dict[str, TrimVariable],
+    def from_f06(cls, trim_variables: dict[str, TrimVariable],
                  metadata: dict[str, Any], isubcase: int):
         nvars = len(trim_variables)
-        ids = np.full(nnames, -1, dtype='int32')
+        ids = np.full(nvars, -1, dtype='int32')
         values = np.zeros(nvars, dtype='float64')
         name_type_status_units = np.zeros((nvars, 4), dtype='U16')
         i = 0
@@ -346,7 +354,7 @@ class TrimVariables(Statics):
             ids[i] = idi
             name_type_status_units[i, :] = [name, trim_type, trim_status, ux_unit]
             values[i] = ux
-            i =+ 1
+            i += 1
 
         # 'mach': mach, 'q': q,
         # 'cref': cref, 'bref': bref, 'sref': sref,
@@ -381,13 +389,6 @@ class TrimVariables(Statics):
             for (name, typei, status, units), data in zip(self.name_type_status_units, self.data):
                 msg += f'   {name:<8} {typei:<8} {status:<8}: {data} {units}\n'
         return msg
-
-    def print_f06(self) -> str:
-        f06_file = io.StringIO()
-        header = []
-        page_stamp = '%d'
-        out = self.write_f06(f06_file, header, page_stamp)
-        return f06_file.getvalue()[:-1]
 
     def write_f06(self, f06_file, header: list[str], page_stamp: str, page_num: int=1,
                   is_mag_phase: bool=False, is_sort1: bool=True):
@@ -463,11 +464,12 @@ class TrimDerivatives(Statics):
 
     def __eq__(self, other) -> bool:
         return True
+
     def get_stats(self, short: bool=False) -> str:
         msg = ''
         msg += f'  derivatives[{self.subcase}]:\n'
         coeffs = ['Cx', 'Cy', 'Cz', 'Cmx', 'Cmy', 'Cmz']
-        headers = ['rigid_unsplined', 'rigid_splined', 'elastic_unsplined', 'elastic_splined',
+        headers = ['rigid_unsplined', 'rigid_splined', 'elastic_restrained', 'elastic_unrestrained',
                    'inertial_restrained', 'inertial_unrestrained']
 
         if short:
@@ -497,19 +499,19 @@ class TrimDerivatives(Statics):
             name_str = name
             for coeff, line in zip(coeffs, derivs):
                 # msg += f'     {coeff}: {line}\n'
-                rigid_unsplined, rigid_splined, elastic_unsplined, elastic_splined, inertial_restrained, inertial_unrestrained = line
+                rigid_unsplined, rigid_splined, elastic_restrained, elastic_unrestrained, inertial_restrained, inertial_unrestrained = line
                 try:
-                    e2r_unsplined = elastic_unsplined / rigid_unsplined
+                    e2r_unsplined = elastic_restrained / rigid_unsplined
                 except FloatingPointError:
                     e2r_unsplined = np.nan
                 try:
-                    e2r_splined = elastic_splined / rigid_splined
+                    e2r_splined = elastic_restrained / rigid_splined
                 except FloatingPointError:
                     e2r_splined = np.nan
                 msg += (
                     f'    {name_str:<14}   {coeff:9s}   '
                     f'{rigid_unsplined:>13.6E}  {rigid_splined:>13.6E}  '
-                    f'{elastic_unsplined:>13.6E}  {elastic_splined:>13.6E}  '
+                    f'{elastic_restrained:>13.6E}  {elastic_unrestrained:>13.6E}  '
                     f'{inertial_restrained:>13.6E}  {inertial_unrestrained:>13.6e}  '
                     f'{e2r_unsplined:>13.6E}  {e2r_splined:>13.6E}  \n')
                 name_str = ''
@@ -550,6 +552,7 @@ class HingeMomentDerivatives(Statics):
 
     def __eq__(self, other) -> bool:
         return True
+
     def get_stats(self, short: bool=False) -> str:
         msg = ''
         msg += f'  derivatives[{self.subcase}]:\n'
@@ -654,6 +657,7 @@ class ControlSurfacePostiionHingeMoment(Statics):
 
     def __eq__(self, other) -> bool:
         return True
+
     def get_stats(self, short: bool=False) -> str:
         msg = ''
         msg += f'  control_surface_position_hinge_moment[{self.subcase:d}]:\n'
