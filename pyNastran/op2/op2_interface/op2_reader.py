@@ -4676,20 +4676,26 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
     #     'label': np.array(labels),
     #     'force': np.array(forces, dtype='float64'),
     # }
-    nodes = np.array(grid_list, dtype='int32')
-    force = np.array(force_list, dtype='float64')
-    force_labels = np.array(label_list)
 
-    aforce = AeroForce(
-        subcase,
-        mach, q, cref, bref, sref,
-        nodes, force, force_labels,
-        title=title, subtitle=subtitle, label=label)
-    op2.op2_results.trim.aero_force[subcase_id] = aforce
+    result_name = 'trim.aero_force'
+    save_result = op2._results.is_saved(result_name)
+    if save_result:
+        op2._results._found_result(result_name)
 
+        nodes = np.array(grid_list, dtype='int32')
+        force = np.array(force_list, dtype='float64')
+        force_labels = np.array(label_list)
+        aforce = AeroForce(
+            subcase,
+            mach, q, cref, bref, sref,
+            nodes, force, force_labels,
+            title=title, subtitle=subtitle, label=label)
 
-
-
+        op2.tCode = tcode  # trim
+        op2.sort_code = 0  # SORT1, real, not-random
+        subcase_key = op2._get_code()
+        assert subcase_key not in op2.op2_results.trim.aero_force
+        op2.op2_results.trim.aero_force[subcase_key] = aforce
     return
 
 
@@ -4794,22 +4800,27 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
         itable -= 2
 
     op2_reader.read_markers([0])
-    # trim_pressures = {
-    #     'nid': np.array(grid_list, dtype='int32'),
-    #     'label': np.array(label_list),
-    #     'Cp': np.array(cp_list, dtype='float64'),
-    #     'pressure': np.array(pressure_list, dtype='float64'),
-    # }
-    nodes = np.array(grid_list, dtype='int32')
-    cp = np.array(cp_list, dtype='float64')
-    pressure = np.array(pressure_list, dtype='float64')
-    labels = np.array(label_list)
-    apress = AeroPressure(
-        subcase,
-        mach, q, cref, bref, sref,
-        nodes, cp, pressure, # labels,
-        title=title, subtitle=subtitle, label=label)
-    op2.op2_results.trim.aero_pressure[subcase_id] = apress
+
+    result_name = 'trim.aero_pressure'
+    save_result = op2._results.is_saved(result_name)
+    if save_result:
+        op2._results._found_result(result_name)
+
+        nodes = np.array(grid_list, dtype='int32')
+        cp = np.array(cp_list, dtype='float64')
+        pressure = np.array(pressure_list, dtype='float64')
+        labels = np.array(label_list)
+        apress = AeroPressure(
+            subcase,
+            mach, q, cref, bref, sref,
+            nodes, cp, pressure,  # labels,
+            title=title, subtitle=subtitle, label=label)
+
+        op2.tCode = tcode  # trim
+        op2.sort_code = 0  # SORT1, real, not-random
+        subcase_key = op2._get_code()
+        assert subcase_key not in op2.op2_results.trim.aero_force
+        op2.op2_results.trim.aero_pressure[subcase_key] = apress
 
     #if hasattr(op2, 'aeros'):
         #op2.add_trim(trim_id, mach, q, cref=cref, bref=bref, sref=sref)
@@ -4975,14 +4986,19 @@ def read_oaeroscd(op2_reader: OP2Reader) -> None:
         # print(derivatives_array[0, :, :])
         assert derivatives_array.shape == (nnames, 6, 6), (nnames, derivatives_array.shape)
 
-        names_array = np.array(names)
-        trim_derivatives = TrimDerivatives(
-            mach, q, chord, span, sref,
-            names_array, derivatives_array,
-            subcase=subcase_id, title=title, subtitle=subtitle, label=label)
-        trim = op2.op2_results.trim
-        assert subcase_key not in trim.derivatives, subcase_key
-        trim.derivatives[subcase_key] = trim_derivatives
+
+        result_name = 'trim.derivatives'
+        save_result = op2._results.is_saved(result_name)
+        if save_result:
+            op2._results._found_result(result_name)
+            names_array = np.array(names)
+            trim_derivatives = TrimDerivatives(
+                mach, q, chord, span, sref,
+                names_array, derivatives_array,
+                subcase=subcase_id, title=title, subtitle=subtitle, label=label)
+            trim = op2.op2_results.trim
+            assert subcase_key not in trim.derivatives, subcase_key
+            trim.derivatives[subcase_key] = trim_derivatives
 
     op2_reader.read_markers([0])
 

@@ -8,6 +8,24 @@ defines:
    - merge_bedge(self, bedge, bedge_filename)
  - export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, log=None)
 
+m3.bedge
+    4
+    4           2           4           4
+   60          16          60          16         134           6
+   76          22         252           2          66           2
+  144           2
+    0           0           0           0           1           1
+    1           1           1           1           1           1
+    1           1
+   -6.633581169548380      -4.083969916911601
+   ...
+
+ncurves = 4
+nsubcurves_per_curve = [4, 2, 4, 4]; n=4
+nsubcurves = 14
+nnodes_pack = [60, 16, 60, 16, 134, 6, 76, 22, 252, 2, 66, 2, 144, 2]; n=14
+grid_bc = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]; n=14
+
 """
 import os
 import sys

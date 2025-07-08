@@ -28,7 +28,7 @@ from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 import scipy
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.utils import object_attributes
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
@@ -48,6 +48,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    from pyNastran.bdf.cards.nodes import GRID
     from pyNastran.bdf.cards.bdf_sets import SET1
     from pyNastran.bdf.cards.optimization_nx import GROUP
     import matplotlib
@@ -1714,8 +1715,20 @@ class CAERO1(BaseCard):
         area = np.linalg.norm(np.cross(a, b))
         assert area > 0, f'eid={self.eid} p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
 
+    def _verify(self, xref: bool) -> None:
+        cp = self.Cp()
+        pid = self.Pid()
+        assert isinstance(cp, integer_types), f'cp={cp!r}'
+        assert isinstance(pid, integer_types), f'pid={pid!r}'
+        self.flip_normal()
+        self.flip_normal()
+        if xref:
+            ids = self.aefact_ids
+            area = self.area()
+            assert isinstance(area, float_types), f'area={area!r}'
+
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CAERO1 card from ``BDF.add_card(...)``
 
@@ -1984,7 +1997,7 @@ class CAERO1(BaseCard):
             p4 = self.cp_ref.transform_node_to_global(self.p4)
         return p1, p4
 
-    def get_points(self):
+    def get_points(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Get the 4 corner points for the CAERO card
 
@@ -2002,7 +2015,7 @@ class CAERO1(BaseCard):
         else:
             p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
             p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
-        return [p1, p2, p3, p4]
+        return (p1, p2, p3, p4)
 
     def area(self) -> float:
         p1, p2, p3, p4 = self.get_points()
@@ -2941,7 +2954,7 @@ class CAERO2(BaseCard):
 
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
-        return [p1, p2]
+        return (p1, p2)
 
     def get_leading_edge_points(self) -> [np.ndarray]:
         return [self.get_points()[0]]
@@ -6199,11 +6212,11 @@ class SPLINE2(Spline):
         self.caero_ref = None
         self.setg_ref = None
 
-    def validate(self):
+    def validate(self) -> None:
         assert self.box2 >= self.box1, 'box2=%s box1=%s' % (self.box2, self.box1)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPLINE2 card from ``BDF.add_card(...)``
 
@@ -6230,6 +6243,39 @@ class SPLINE2(Spline):
         assert len(card) <= 13, f'len(SPLINE2 card = {len(card):d}\ncard={card}'
         return SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid,
                        dthx, dthy, usage, comment=comment)
+
+    def _verify(self, xref: bool) -> None:
+        self.aero_element_ids
+        if xref:
+            caero: CAERO1 | CAERO2 = self.caero_ref
+            if isinstance(caero, CAERO1):
+                p1, p2, p3, p4 = caero.get_points()
+                centroid = (p1 + p2 + p3 + p4) / 4.
+                area = caero.area()
+                assert isinstance(area, float_types), f'area={area}'
+            elif isinstance(caero, CAERO2):
+                p1, p2 = caero.get_points()
+                # p1---p4
+                # |    |
+                # p2---p3
+                ihat = p2 - p1
+                length = np.linalg.norm(ihat)
+                assert isinstance(length, float_types), f'length={length}'
+                # print(f'p1 = {p1}')
+                # print(f'p2 = {p2}')
+
+                centroid = (p1 + p2) / 2.
+                # print(f'centroid = {centroid}')
+            else:
+                raise TypeError(str(caero))
+
+            setg: SET1 = self.setg_ref
+            nodes_ref: list[GRID] = setg.ids_ref
+            local_spline_points = []
+            for ipoint, node in enumerate(nodes_ref):
+                xyz = node.get_position()
+                local_spline_points.append(xyz)
+            local_spline_points_array = np.array(local_spline_points)
 
     def cross_reference(self, model: BDF) -> None:
         """

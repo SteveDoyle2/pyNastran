@@ -290,6 +290,7 @@ def run_bdf(folder: str, bdf_filename: str,
             limit_mesh_opt: bool=False,
             sum_load: bool=True,
             run_mass: bool=True,
+            run_eid_checks: bool=True,
             run_mcid: bool=True,
             run_extract_bodies: bool=False,
             run_skin_solids: bool=True,
@@ -402,7 +403,7 @@ def run_bdf(folder: str, bdf_filename: str,
         run_skin_solids=run_skin_solids,
         run_export_caero=run_export_caero,
         run_mass=run_mass,
-        run_mcid=run_mcid,
+        run_eid_checks=run_eid_checks, run_mcid=run_mcid,
         save_file_structure=save_file_structure,
         run_pickle=run_pickle,
         validate_case_control=validate_case_control,
@@ -448,6 +449,7 @@ def run_and_compare_fems(
         run_skin_solids: bool=True,
         run_export_caero: bool=True,
         run_mass: bool=True,
+        run_eid_checks: bool=True,
         run_mcid: bool=True,
         run_pickle: bool=False,
         validate_case_control: bool=True,
@@ -494,7 +496,7 @@ def run_and_compare_fems(
             run_extract_bodies=run_extract_bodies,
             run_skin_solids=run_skin_solids,
             run_export_caero=run_export_caero,
-            run_mcid=run_mcid,
+            run_eid_checks=run_eid_checks, run_mcid=run_mcid,
             save_file_structure=save_file_structure,
             hdf5=hdf5,
             encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
@@ -671,7 +673,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              size: int, is_double: bool,
              run_extract_bodies: bool=False, run_skin_solids: bool=True,
              run_export_caero: bool=True,
-             run_mcid: bool=True,
+             run_eid_checks: bool=True, run_mcid: bool=True,
              save_file_structure: bool=False, hdf5: bool=False,
              encoding: Optional[str]=None,
              crash_cards: Optional[list[str]]=None,
@@ -706,6 +708,8 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
         ???
     run_extract_bodies : bool; default=False
         isolate the fem bodies; typically 1 body; code is still buggy
+    run_eid_checks: bool; default=True
+        runs lots of element checks
     run_mcid: bool; default=True
         export the material coordinate systems
     encoding : str; default=None
@@ -774,7 +778,8 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
                     log.debug('fem1.cross_reference()')
                     fem1.cross_reference()
 
-                _fem_xref_methods_check(fem1, run_mcid=run_mcid)
+                _fem_xref_methods_check(
+                    fem1, run_eid_checks=run_eid_checks, run_mcid=run_mcid)
 
                 fem1._xref = True
                 #what was this for???
@@ -877,7 +882,8 @@ def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
     #sys.exit('hdf5')
 
 
-def _fem_xref_methods_check(fem1: BDF, run_mcid: bool) -> None:
+def _fem_xref_methods_check(fem1: BDF,
+                            run_eid_checks: bool, run_mcid: bool) -> None:
     """
     testing that these methods work with xref
     """
@@ -899,18 +905,21 @@ def _fem_xref_methods_check(fem1: BDF, run_mcid: bool) -> None:
                    consider_1d=True, consider_2d=True, consider_3d=True)
     get_dependent_nid_to_components(fem1)
 
-    fem1.get_pid_to_node_ids_and_elements_array(
-        pids=None, etypes=None, idtype='int32',
-        msg=' which is required by test_bdf')
-    fem1.get_property_id_to_element_ids_map(msg=' which is required by test_bdf')
-    fem1.get_material_id_to_property_ids_map(msg=' which is required by test_bdf')
-    fem1.get_element_ids_list_with_pids(pids=None)
-    fem1.get_element_ids_dict_with_pids(pids=None, stop_if_no_eids=False,
-                                        msg=' which is required by test_bdf')
-    fem1.get_node_id_to_element_ids_map()
-    fem1.get_node_id_to_elements_map()
+    if run_eid_checks:
+        fem1.log.debug('run_eid_checks=True check')
+        fem1.get_pid_to_node_ids_and_elements_array(
+            pids=None, etypes=None, idtype='int32',
+            msg=' which is required by test_bdf')
+        fem1.get_property_id_to_element_ids_map(msg=' which is required by test_bdf')
+        fem1.get_material_id_to_property_ids_map(msg=' which is required by test_bdf')
+        fem1.get_element_ids_list_with_pids(pids=None)
+        fem1.get_element_ids_dict_with_pids(pids=None, stop_if_no_eids=False,
+                                            msg=' which is required by test_bdf')
+        fem1.get_node_id_to_element_ids_map()
+        fem1.get_node_id_to_elements_map()
 
     if run_mcid:
+        fem1.log.debug('run_mcid=True check')
         export_mcids(fem1, csv_filename=None, eids=None,
                      export_xaxis=True, export_yaxis=False, iply=0, log=None, debug=False)
         export_mcids_all(fem1)
@@ -2049,7 +2058,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDF, sol: int,
 
     if 'FMETHOD' in subcase:
         # FLUTTER
-        fmethod_id = subcase.get_int_parameter('FMETHOD')
+        fmethod_id: int = subcase.get_int_parameter('FMETHOD')
         unused_fmethod = fem.flutters[fmethod_id]
         allowed_sols = [145, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'FMETHOD', log, ierror, nerrors)
@@ -2216,6 +2225,10 @@ def test_bdf_argparse(argv=None):
                                help='skip the processing of the caero mesh (default=False)')
     parent_parser.add_argument('--skip_skin', action='store_true',
                                help='skip the solid skinning (default=False)')
+    parent_parser.add_argument('--skip_eid_checks', action='store_true',
+                               help='skip the element checks (default=False)')
+    parent_parser.add_argument('--skip_mcid', action='store_true',
+                               help='skip the material coordinate system exporting (default=False)')
 
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
@@ -2362,7 +2375,7 @@ def get_test_bdf_usage_args_examples(encoding):
         #'  --filter       Filters unused cards\n'
 
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
-        f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n'  +
+        f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n' +
         '  -q, --quiet        prints debug messages (default=False)\n'
 
         '\n'
@@ -2385,6 +2398,8 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_mass    skip the mass properties calculations (default=False)\n'
         '  --skip_aero    skip the processing of the caero mesh (default=False)\n'
         '  --skip_skin    skip the solid skinning (default=False)\n'
+        '  --skip_eid_checks  skips some element checks (default=False)\n'
+        '  --skip_mcid        skip the material coordinate system exporting (default=False)\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2417,6 +2432,8 @@ def main(argv=None):
     data['run_mass'] = not data['skip_mass']
     data['run_export_caero'] = not data['skip_aero']
     data['run_skin_solids'] = not data['skip_skin']
+    data['run_eid_checks'] = not data['skip_eid_checks']
+    data['run_mcid'] = not data['skip_mcid']
 
     is_double = False
     if data['double']:
@@ -2452,7 +2469,7 @@ def main(argv=None):
             debug=debug,
             xref=data['xref'],
             #filter_unused=data['filter'],
-            check=not(data['check']),
+            check=not data['check'],
             punch=data['punch'],
             size=size,
             is_double=is_double,
@@ -2462,6 +2479,8 @@ def main(argv=None):
             run_mass=data['run_mass'],
             run_export_caero=data['run_export_caero'],
             run_skin_solids=data['run_skin_solids'],
+            run_eid_checks=data['run_eid_checks'],
+            run_mcid=data['run_mcid'],
             run_extract_bodies=False,
 
             is_lax_parser=data['lax'],
@@ -2516,6 +2535,8 @@ def main(argv=None):
             run_mass=data['run_mass'],
             run_export_caero=data['run_export_caero'],
             run_skin_solids=data['run_skin_solids'],
+            run_eid_checks=data['run_eid_checks'],
+            run_mcid=data['run_mcid'],
             run_extract_bodies=False,
 
             is_lax_parser=data['lax'],

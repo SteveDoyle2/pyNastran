@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Optional, Any
 import io
 import numpy as np
+from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types
 TrimVariable = tuple[int, str, str, float, str]
 ControllerState = dict[str, float]
@@ -432,10 +433,14 @@ class TrimVariables(Statics):
                 self.ids, self.name_type_status_units.tolist(), self.data):
             value = data
             extra = ''
-            if units in 'RADIANS':
-                extra = f'  {np.degrees(value):13.6E}  DEGREES'
+
+            if 'RADIANS' in units:
+                #extra = f'  {np.degrees(value):13.6E}  DEGREES'
+                extra = f'  {np.degrees(value):13.6f}  DEGREES'
             elif units == 'NONDIMEN. RATE':
-                extra = f'  {np.degrees(value):13.6E}  DEGREES/SEC'
+                #extra = f'  {np.degrees(value):13.6E}  DEGREES/SEC'
+                extra = f'  {np.degrees(value):13.6f}  DEGREES/SEC'
+
             id_str = '' if idi == -1 else str(idi)
             msg += f'                            {id_str:>8}     {name.upper():<10}    {typei.upper():>16}      {status.upper():>10}     {value:13.6E}  {units.upper():<14s}{extra}\n'
 
@@ -464,6 +469,22 @@ class TrimDerivatives(Statics):
 
     def __eq__(self, other) -> bool:
         return True
+
+    def rigid_unsplined(self) -> np.ndarray:
+        """return the rigid derivative matrix to determine controllability"""
+        nnames = len(self.names)
+        # should this be transposed?
+        rigid_unsplined = self.data[:, 0].reshape(nnames, 6)
+        return rigid_unsplined
+
+    def to_excel(self, csv_filename: PathLike) -> None:
+        rigid_unsplined = self.rigid_unsplined().tolist()
+        with open(csv_filename, 'w') as csv_file:
+            assert len(self.names) == len(ru)
+            for name, ru in zip(self.names, rigid_unsplined):
+                list_ru = [str(rui) for rui in ru]
+                line = ','.join(list_ru)
+                csv_file.write(line + '\n')
 
     def get_stats(self, short: bool=False) -> str:
         msg = ''
