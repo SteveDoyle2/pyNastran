@@ -8105,7 +8105,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_load_object(load)
         return load
 
-    def add_pload2(self, sid, pressure, eids, comment='') -> PLOAD2:
+    def add_pload2(self, sid: int, pressure: float, eids: list[int], comment: str='') -> PLOAD2:
         """
         Creates a PLOAD2 card, which defines an applied load normal
         to the quad/tri face

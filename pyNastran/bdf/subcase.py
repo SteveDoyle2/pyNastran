@@ -753,6 +753,18 @@ class Subcase:
         assert isinstance(value, integer_types), f'value={value!r} and is not an integer'
         self.add(key, value, [], 'STRESS-type')
 
+    def add_string_type(self, key: str, value: str) -> None:
+        """
+        Simple way to add something of the form:
+            ANALYSIS = HEAT
+
+        subcase.add_string_type('ANALYSIS', 'HEAT')
+        vs.
+        subcase.add('ANALYSIS', 'HEAT', [], 'STRESS-type')
+        """
+        assert isinstance(value, str), f'value={value!r} and is not a string'
+        self.add(key, value, [], 'STRESS-type')
+
     def add_result_type(self, key: str, value: int | str,
                         options: list[str]) -> None:
         """

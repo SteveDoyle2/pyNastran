@@ -480,7 +480,7 @@ class TrimDerivatives(Statics):
     def to_excel(self, csv_filename: PathLike) -> None:
         rigid_unsplined = self.rigid_unsplined().tolist()
         with open(csv_filename, 'w') as csv_file:
-            assert len(self.names) == len(ru)
+            assert len(self.names) == len(rigid_unsplined)
             for name, ru in zip(self.names, rigid_unsplined):
                 list_ru = [str(rui) for rui in ru]
                 line = ','.join(list_ru)
@@ -655,7 +655,7 @@ class HingeMomentDerivatives(Statics):
         return f'HingeMomentDerivatives(subcase={self.subcase}, title, subtitle)'
 
 
-class ControlSurfacePostiionHingeMoment(Statics):
+class ControlSurfacePositionHingeMoment(Statics):
     def __init__(self, mach: float, q: float,
                  chord: float, span: float, sref: float,
                  names: np.ndarray,
@@ -718,6 +718,6 @@ class ControlSurfacePostiionHingeMoment(Statics):
         return page_num + 1
 
     def __repr__(self) -> str:
-        out = f'ControlSurfacePostiionHingeMoment(subcase={self.subcase!r}, '\
+        out = f'ControlSurfacePositionHingeMoment(subcase={self.subcase!r}, '\
               f'title={self.title!r}, subtitle={self.subtitle!r})'
         return out

@@ -13,6 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, CAERO2
 from pyNastran.bdf.field_writer_8 import print_card_8
 
+
 def export_caero_mesh(model: BDF,
                       caero_bdf_filename: PathLike='caero.bdf',
                       is_subpanel_model: bool=True,
@@ -40,12 +41,13 @@ def export_caero_mesh(model: BDF,
         $$        1        2    0.0988    0.2500    0.0000    0.0988    0.5000    0.1234
 
     """
-    if not pid_method in {'aesurf', 'caero', 'paero'}:
+    log = model.log
+    if pid_method not in {'aesurf', 'caero', 'paero'}:
         raise RuntimeError(f'pid_method={pid_method!r} is not [aesurf, caero, paero]')
 
     inid = 1
     mid = 1
-    model.log.debug(f'---starting export_caero_model of {caero_bdf_filename}---')
+    log.info(f'export_caero_mesh -> {caero_bdf_filename}')
 
     #all_points = []
     aero_eid_map = {}
@@ -54,13 +56,13 @@ def export_caero_mesh(model: BDF,
     model.xref_obj.safe_cross_reference_aero()
     for caero_eid, caero in sorted(model.caeros.items()):
         if caero.type == 'CAERO2':
-            model.log.warning('CAERO2 will probably cause issues...put it at the max id')
+            log.warning('CAERO2 will probably cause issues...put it at the max id')
             continue
         points, elements = caero.panel_points_elements()
         for isubpanel_eid in range(len(elements)):
             aero_eid_map[isubpanel_ieid] = caero_eid + isubpanel_eid
             isubpanel_ieid += 1
-    model.log.debug(f'nsubpanels = {len(aero_eid_map)}')
+    log.debug(f'  nsubpanels = {len(aero_eid_map)}')
     subcases, loads = _write_subcases_loads(model, aero_eid_map, is_subpanel_model)
 
     with open(caero_bdf_filename, 'w') as bdf_file:
@@ -69,6 +71,10 @@ def export_caero_mesh(model: BDF,
         bdf_file.write('CEND\n')
         bdf_file.write(subcases)
         bdf_file.write('BEGIN BULK\n')
+
+        if model.aeros:
+            rcsid_ref = model.aeros.rcsid_ref
+            bdf_file.write(str(rcsid_ref))
 
         bdf_file.write(loads)
         _write_properties(model, bdf_file, pid_method=pid_method)
@@ -142,6 +148,7 @@ def export_caero_mesh(model: BDF,
         rho = 2700.  # 2700 kg/m^3
         bdf_file.write(f'MAT1,{mid},{E},,{nu},{rho}\n')
         bdf_file.write('ENDDATA\n')
+    log.debug(f'  ---finished export_caero_mesh of {caero_bdf_filename}---')
     return
 
 
@@ -152,8 +159,8 @@ def _write_caero2_subpanel(bdf_file: TextIO, caero: CAERO2):
         aefact_lsb = str(caero.lsb_ref).rstrip().split('\n')
         bdf_file.write('$ ' + '\n$ '.join(aefact_lsb) + '\n')
     if caero.lint_ref:
-         aefact_lint = str(caero.lint_ref).rstrip().split('\n')
-         bdf_file.write('$ ' + '\n$ '.join(aefact_lint) + '\n')
+        aefact_lint = str(caero.lint_ref).rstrip().split('\n')
+        bdf_file.write('$ ' + '\n$ '.join(aefact_lint) + '\n')
     #points, elements = caero.panel_points_elements()
     #raise NotImplementedError('caero2')
     return
@@ -175,7 +182,7 @@ def _write_subcases_loads(model: BDF,
 
     for name, dmij in model.dmij.items():
         data, rows, cols = dmij.get_matrix(is_sparse=False, apply_symmetry=True)
-        log.info(f'{name}: shape={data.shape}')
+        log.info(f'  {name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
 
@@ -206,14 +213,14 @@ def _write_subcases_loads(model: BDF,
 
     for name, dmiji in model.dmiji.items():
         data, rows, cols = dmiji.get_matrix(is_sparse=False, apply_symmetry=True)
-        log.info(f'{name}: shape={data.shape}')
+        log.info(f'  {name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
         raise NotImplementedError(msg)
 
     for name, dmik in model.dmik.items():
         data, rows, cols = dmik.get_matrix(is_sparse=False, apply_symmetry=True)
-        log.info(f'{name}: shape={data.shape}')
+        log.info(f'  {name}: shape={data.shape}')
         msg = f'{name}:\n'
         msg += str(data)
         if name == 'WKK':
@@ -303,7 +310,7 @@ def _write_dmi(model: BDF,
     for name, dmi in model.dmi.items():
         form_str = dmi.matrix_form_str
         data, rows, cols = dmi.get_matrix(is_sparse=False, apply_symmetry=True)
-        log.info(f'{name}: shape={data.shape}; form_str={form_str}')
+        log.debug(f'  {name}: shape={data.shape}; form_str={form_str}')
 
         if name == 'WTFACT':
             # square matrix of (neids,neids) that has values on only? the diagonal
@@ -386,7 +393,7 @@ def _write_dmi(model: BDF,
                 ]
             elif matrix_form_str == 'square':
                 assert data.shape[0] == data.shape[1]
-                force = data[::2,::2]
+                force = data[::2, ::2]
                 moment = data[1::2, 1::2]
                 force_correction_row = force.sum(axis=0)
                 force_correction_col = force.sum(axis=1)
@@ -423,6 +430,7 @@ def _write_dmi(model: BDF,
         isubcase += 1
     return isubcase, loads, subcases
 
+
 def _write_subpanel_strips(bdf_file: TextIO, model: BDF,
                            caero_eid: int,
                            points: np.ndarray, elements: np.ndarray) -> None:
@@ -438,16 +446,17 @@ def _write_subpanel_strips(bdf_file: TextIO, model: BDF,
         p4 = points[elements[i, 1], :]
         p2 = points[elements[i, 2], :]
         p3 = points[elements[i, 3], :]
-        le = (p1 + p4)*0.5
-        te = (p2 + p3)*0.5
+        le: list[float] = (p1 + p4)*0.5
+        te: list[float] = (p2 + p3)*0.5
         dy = (p4 - p1)[1]
         dz = (p4 - p1)[2]
         span = math.sqrt(dy**2 + dz**2)
-        chord = te[0] - le[0]
-        xqc = le[0] + chord / 4.
-        xmid = le[0] + chord / 2.
+        chord: float = te[0] - le[0]
+        xqc: float = le[0] + chord / 4.
+        xmid: float = le[0] + chord / 2.
         bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
             caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span, xqc, xmid))
+
 
 def _get_subpanel_property(model: BDF, caero_id: int, eid: int,
                            pid_method: str='aesurf') -> int:
@@ -471,6 +480,7 @@ def _get_subpanel_property(model: BDF, caero_id: int, eid: int,
     if pid is None:
         pid = 1
     return pid
+
 
 def _write_properties(model: BDF, bdf_file: TextIO,
                       pid_method: str='aesurf') -> None:

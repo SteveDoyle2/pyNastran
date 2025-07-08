@@ -251,6 +251,7 @@ class OP2(OP2_Scalar, OP2Writer):
                 self.read_mode, op2_model.read_mode))
             return True
 
+        warned_classes: list[str] = []
         table_types = self.get_table_types()
         for table_type in table_types:
             if table_type in skip_results_set or table_type.startswith('responses.'):
@@ -276,15 +277,18 @@ class OP2(OP2_Scalar, OP2Writer):
 
                 # get the displacement for model B
                 bvalue = bdict[key]
-                is_equal = self._is_op2_case_equal(table_type, key, avalue, bvalue,
-                                                   stop_on_failure=stop_on_failure, debug=debug)
+                is_equal = self._is_op2_case_equal(
+                    table_type, key, avalue, bvalue,
+                    warned_classes, stop_on_failure=stop_on_failure, debug=debug)
                 if not is_equal and stop_on_failure:
                     return is_equal
         return True
 
     def _is_op2_case_equal(self, table_type: str,
                            key, a_obj, b_obj,
-                           stop_on_failure: bool=True, debug: bool=False) -> bool:
+                           warned_classes: list[str],
+                           stop_on_failure: bool=True,
+                           debug: bool=False) -> bool:
         """
         Helper method for ``assert_op2_equal``
 
@@ -347,7 +351,19 @@ class OP2(OP2_Scalar, OP2Writer):
         # does this ever hit?
         skip_names = [
             'Array', 'Eigenvalues', 'GridPointWeight', 'TRMBU', 'TRMBD',
-            'FlutterResponse', 'TrimDerivatives']
+            'FlutterResponse',
+            # trim
+            'TrimVariables',
+            'TrimDerivatives', 'HingeMomentDerivatives',
+            'ControlSurfacePositionHingeMoment',
+            'AeroPressure', 'AeroForce',
+        ]
+        if aname in skip_names:
+            if aname not in warned_classes:
+                msg = f'{aname} is not an Array ... assume equal'
+                self.log.warning(msg)
+                warned_classes.append(aname)
+            return True
         if not any(word in aname for word in skip_names):
             msg = f'{aname} is not an Array ... assume equal'
             self.log.warning(msg)
