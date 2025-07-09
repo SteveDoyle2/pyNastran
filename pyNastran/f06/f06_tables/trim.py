@@ -61,13 +61,14 @@ class AeroPressure(Statics):
                  subtitle: str='', title: str='', label: str=''):
         super().__init__(title, subtitle, label)
         self.subcase = subcase
+        assert isinstance(self.subcase, integer_types), self.subcase
         self.mach = mach
         self.q = q
         self.cref = cref
         self.bref = bref
         self.sref = sref
 
-        self.nodes = nodes
+        self.nodes = nodes  # centroidal nodes
         self.pressure = pressure
         self.cp = cp
         # self.labels = labels
@@ -171,13 +172,14 @@ class AeroForce(Statics):
                  title: str='', subtitle: str='', label=''):
         super().__init__(title, subtitle, label)
         self.subcase = subcase
+        assert isinstance(self.subcase, integer_types), self.subcase
         self.mach = mach
         self.q = q
         self.cref = cref
         self.bref = bref
         self.sref = sref
 
-        self.nodes = nodes
+        self.nodes = nodes  # centroidal nodes
         self.force = force
         self.force_label = force_label
 
