@@ -2445,7 +2445,7 @@ class OP2Reader:
                 force = force_bytes.decode(encoding)
                 length = length_bytes.decode(encoding)
                 time = time_bytes.decode(encoding)
-                print(mass, force, length, time)
+                #print(mass, force, length, time)
                 fields = {
                     'mass': mass,
                     'force': force,
@@ -4534,14 +4534,15 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
             trim_values_array = np.array(trim_values_list)
 
             names = name_type_status_units[:, 0]
+            names_list = names.tolist()
             nnames = len(names)
             ids = np.full(nnames, -1, dtype='int32')
             if hasattr(op2, 'aestats'):
                 for aestat_id, aestat in op2.aestats.items():
-                    index = names.index(aestat.name)
+                    index = names_list.index(aestat.label)
                     ids[index] = aestat_id
                 for aesurf_id, aesurf in op2.aesurf.items():
-                    index = names.index(aesurf.name)
+                    index = names_list.index(aesurf.label)
                     ids[index] = aesurf_id
 
             trim_vars = TrimVariables(

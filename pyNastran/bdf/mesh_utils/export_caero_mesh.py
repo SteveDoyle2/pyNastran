@@ -72,9 +72,10 @@ def export_caero_mesh(model: BDF,
         bdf_file.write(subcases)
         bdf_file.write('BEGIN BULK\n')
 
+        coords_to_write_dict = {}
         if model.aeros:
             rcsid_ref = model.aeros.rcsid_ref
-            bdf_file.write(str(rcsid_ref))
+            coords_to_write_dict[rcsid_ref.cid] = rcsid_ref
 
         bdf_file.write(loads)
         _write_properties(model, bdf_file, pid_method=pid_method)
@@ -141,6 +142,34 @@ def export_caero_mesh(model: BDF,
                 bdf_file.write(print_card_8(['CQUAD4', caero_eid, pid, p1, p2, p3, p4]))
             inid += npoints
 
+        for aesurf_id, aesurf in model.aesurf.items():
+            #print(aesurf)
+            if aesurf.cid1_ref is not None:
+                #print(aesurf.cid1_ref)
+                coords_to_write_dict[aesurf.cid1_ref.cid] = aesurf.cid1_ref
+            if aesurf.cid2_ref is not None:
+                coords_to_write_dict[aesurf.cid2_ref.cid] = aesurf.cid2_ref
+
+        nrids = 1
+        while nrids > 0:
+            cids = set(list(coords_to_write_dict))
+            coords_to_add = set([])
+            for cid in cids:
+                coord = model.coords[cid]
+                coords_to_add.add(coord.rid)
+                coords_to_add.update(coord.rid_trace)  # seems to be busted
+            coords_to_add_filtered = coords_to_add - cids
+            coords_to_add_next = set([])
+            for cid in coords_to_add_filtered:
+                if cid == 0:
+                    continue
+                coords_to_add_next.add(cid)
+                coords_to_write_dict[cid] = model.coords[cid]
+            nrids = len(coords_to_add_next)
+
+        for cid, coord in sorted(coords_to_write_dict.items()):
+            bdf_file.write(str(coord))
+
         # aluminum
         E = 350e9  # 350 GPa
         #G = None
@@ -178,7 +207,6 @@ def _write_subcases_loads(model: BDF,
 
     log = model.log
     isubcase, loads, subcases = _write_dmi(model, aero_eid_map)
-    del aero_eid_map
 
     for name, dmij in model.dmij.items():
         data, rows, cols = dmij.get_matrix(is_sparse=False, apply_symmetry=True)

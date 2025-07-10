@@ -1404,7 +1404,8 @@ class RBE3(RigidElementBase):
         mixed_nodes = np.intersect1d(self.dependent_nodes, self.independent_nodes)
         if len(mixed_nodes):
             warnings.warn(f'RBE3 eid={self.eid}; mixed dependent/independent nodes = {mixed_nodes}')
-
+        weight_sum = sum(self.weights)
+        assert weight_sum > 0, f'RBE3 eid={self.eid}; weights={self.weights}, must be positive'
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):

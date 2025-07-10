@@ -930,7 +930,7 @@ class AESURF(BaseCard):
                  hmllim: Optional[float]=None, hmulim: Optional[float]=None,
                  # TABLEDi deflection limits vs. dynamic pressure
                  tqllim: int=0, tqulim: int=0,
-                 comment='') -> None:
+                 comment: str='') -> None:
         """
         Creates an AESURF card, which defines a control surface
 
@@ -2274,8 +2274,8 @@ class CAERO1(BaseCard):
             mask2 = (m1 & m2).any(-1)
             m3 = (slope < 0) != (contour2[:, 1] < polygoni[:, 1])
             m4 = m1 & m3
-            count = np.count_nonzero(m4, axis=-1)
-            mask3 = ~(count % 2 == 0)
+            counti = np.count_nonzero(m4, axis=-1)
+            mask3 = ~(counti % 2 == 0)
             mask = mask1 | mask2 | mask3
             return mask
 
@@ -2954,7 +2954,7 @@ class CAERO2(BaseCard):
 
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
-        return (p1, p2)
+        return p1, p2
 
     def get_leading_edge_points(self) -> [np.ndarray]:
         return [self.get_points()[0]]
@@ -7223,7 +7223,7 @@ def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
 
     if len(elements) == 1:
         points_array = np.vstack(points)
-        elements_array = elements[0] # .reshape(1, 4)
+        elements_array = elements[0]  # .reshape(1, 4)
     else:
         points_array = np.vstack(points)
         elements_array = np.vstack(elements)

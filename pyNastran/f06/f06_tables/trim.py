@@ -53,6 +53,14 @@ class MonitorLoads:
 
 
 class AeroPressure(Statics):
+    """
+    AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS
+
+    These are located at the k-set degrees of freedom, so centroid of the aero panel.
+    Pressures act in the direction of the aero panel, which may be flipped, so:
+     - signed_pressure = pressure * normal
+     - force = signed_pressure * area
+    """
     def __init__(self, subcase: int,
                  mach: float, q: float,
                  cref: float, bref: float, sref: float,
@@ -217,6 +225,12 @@ class AeroForce(Statics):
         #     for (name, typei, status, units), data in zip(self.name_type_status_units, self.data):
         #         msg += f'   {name:<8} {typei:<8} {status:<8}: {data} {units}\n'
         return msg
+
+    @property
+    def total_force(self) -> np.ndarray:
+        force = self.force[:, :3]
+        total_force = force.sum(axis=0)
+        return total_force
 
     def write_f06(self, f06_file, header: list[str], page_stamp: str, page_num: int=1,
                   is_mag_phase: bool=False, is_sort1: bool=True):

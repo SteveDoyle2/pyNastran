@@ -298,15 +298,16 @@ class SafeXrefMesh(XrefMesh):
         return _safe_attr(self, mid, ref_id, xref_errors,
                           func=self.HyperelasticMaterial, word='mid', msg=msg)
 
-    def safe_coord(self, cid: int, ref_id: int,
+    def safe_coord(self, cid: int, ref_id: int | str,
                    xref_errors: dict[str, tuple[int, int]], msg: str='') -> Coord:
         """
         Gets a Coord card
 
         Parameters
         ----------
-        ref_id : int
-            the referencing value (e.g., a node and element references a coord)
+        ref_id : varies
+            int: the referencing value (e.g., a node and element references a coord)
+            str: MONPNT3 uses this
 
         """
         return _safe_attr(self, cid, ref_id, xref_errors,
