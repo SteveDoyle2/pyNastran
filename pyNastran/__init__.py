@@ -94,7 +94,7 @@ else:
 __issue__ = 'https://github.com/SteveDoyle2/pyNastran/issues'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'
 
-is_release = False  ## True=turns on skipping of tables that aren't supported
+is_release = True  ## True=turns on skipping of tables that aren't supported
 
 # separarate table_passer crasher; previously controlled by is_release
 # TODO: currently no warn option
