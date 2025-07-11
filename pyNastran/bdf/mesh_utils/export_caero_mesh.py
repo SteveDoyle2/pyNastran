@@ -10,7 +10,7 @@ import numpy as np
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.utils import PathLike
-    from pyNastran.bdf.bdf import BDF, CAERO2
+    from pyNastran.bdf.bdf import BDF, CAERO2, Coord, AELIST
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -18,7 +18,8 @@ def export_caero_mesh(model: BDF,
                       caero_bdf_filename: PathLike='caero.bdf',
                       is_subpanel_model: bool=True,
                       pid_method: str='aesurf',
-                      write_panel_xyz: bool=True) -> None:
+                      write_panel_xyz: bool=True,
+                      rotate_panel: bool=False) -> None:
     """
     Write the CAERO cards as CQUAD4s that can be visualized
 
@@ -34,12 +35,13 @@ def export_caero_mesh(model: BDF,
                    main structure will be pid=1
         'caero' : write the CAERO1 as the property id
         'paero' : write the PAERO1 as the property id
+    rotate_panel_angle : float; default=0.0
+        panel angle to rotate (e.g., rotate all surfaces by 30 degrees)
     write_panel_xyz : bool; default=True
         write the following table...
         $$  CAEROID      EID       XLE       YLE       ZLE     CHORD      SPAN   XLE+C/4
         $$        1        1    0.0000    0.2500    0.0000    0.0988    0.5000    0.0247
         $$        1        2    0.0988    0.2500    0.0000    0.0988    0.5000    0.1234
-
     """
     log = model.log
     if pid_method not in {'aesurf', 'caero', 'paero'}:
@@ -64,6 +66,19 @@ def export_caero_mesh(model: BDF,
             isubpanel_ieid += 1
     log.debug(f'  nsubpanels = {len(aero_eid_map)}')
     subcases, loads = _write_subcases_loads(model, aero_eid_map, is_subpanel_model)
+    coords_to_write_dict = _get_coords_to_write_dict(model)
+
+    eids_to_rotate_dict = {}
+    for aesurf_id, aesurf in model.aesurf.items():
+        cid1_ref: Coord = aesurf.cid1_ref
+        aelist1_ref: AELIST = aesurf.aelist_id1_ref
+        panel1_eids = aelist1_ref.elements
+        eids_to_rotate_dict[(aesurf.label, 1)] = (cid1_ref, panel1_eids)
+        if aesurf.aelist2_ref is not None:
+            cid2_ref: Coord = aesurf.cid2_ref
+            aelist2_ref: AELIST = aesurf.aelist_id2_ref
+            panel2_eids = aelist2_ref.elements
+            eids_to_rotate_dict[(aesurf.label, 2)] = (cid2_ref, panel2_eids)
 
     with open(caero_bdf_filename, 'w') as bdf_file:
         #bdf_file.write('$ pyNastran: punch=True\n')
@@ -71,11 +86,6 @@ def export_caero_mesh(model: BDF,
         bdf_file.write('CEND\n')
         bdf_file.write(subcases)
         bdf_file.write('BEGIN BULK\n')
-
-        coords_to_write_dict = {}
-        if model.aeros:
-            rcsid_ref = model.aeros.rcsid_ref
-            coords_to_write_dict[rcsid_ref.cid] = rcsid_ref
 
         bdf_file.write(loads)
         _write_properties(model, bdf_file, pid_method=pid_method)
@@ -105,11 +115,14 @@ def export_caero_mesh(model: BDF,
                 if write_panel_xyz:
                     _write_subpanel_strips(bdf_file, model, caero_eid, points, elements)
 
-                npoints = points.shape[0]
-                #nelements = elements.shape[0]
-                for ipoint, point in enumerate(points):
-                    x, y, z = point
-                    bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
+                if rotate_panel_angle != 0.0:
+                    raise NotImplementedError(f'rotate_panel_angle={rotate_panel_angle}')
+                else:
+                    npoints = points.shape[0]
+                    #nelements = elements.shape[0]
+                    for ipoint, point in enumerate(points):
+                        x, y, z = point
+                        bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
 
                 #pid = caero_eid
                 #mid = caero_eid
@@ -142,31 +155,6 @@ def export_caero_mesh(model: BDF,
                 bdf_file.write(print_card_8(['CQUAD4', caero_eid, pid, p1, p2, p3, p4]))
             inid += npoints
 
-        for aesurf_id, aesurf in model.aesurf.items():
-            #print(aesurf)
-            if aesurf.cid1_ref is not None:
-                #print(aesurf.cid1_ref)
-                coords_to_write_dict[aesurf.cid1_ref.cid] = aesurf.cid1_ref
-            if aesurf.cid2_ref is not None:
-                coords_to_write_dict[aesurf.cid2_ref.cid] = aesurf.cid2_ref
-
-        nrids = 1
-        while nrids > 0:
-            cids = set(list(coords_to_write_dict))
-            coords_to_add = set([])
-            for cid in cids:
-                coord = model.coords[cid]
-                coords_to_add.add(coord.rid)
-                coords_to_add.update(coord.rid_trace)  # seems to be busted
-            coords_to_add_filtered = coords_to_add - cids
-            coords_to_add_next = set([])
-            for cid in coords_to_add_filtered:
-                if cid == 0:
-                    continue
-                coords_to_add_next.add(cid)
-                coords_to_write_dict[cid] = model.coords[cid]
-            nrids = len(coords_to_add_next)
-
         for cid, coord in sorted(coords_to_write_dict.items()):
             bdf_file.write(str(coord))
 
@@ -179,6 +167,42 @@ def export_caero_mesh(model: BDF,
         bdf_file.write('ENDDATA\n')
     log.debug(f'  ---finished export_caero_mesh of {caero_bdf_filename}---')
     return
+
+
+def _get_coords_to_write_dict(model: BDF) -> dict[int, Coord]:
+    coords_to_write_dict = {}
+    if model.aeros:
+        rcsid_ref = model.aeros.rcsid_ref
+        coords_to_write_dict[rcsid_ref.cid] = rcsid_ref
+    for aesurf_id, aesurf in model.aesurf.items():
+        #print(aesurf)
+        if aesurf.cid1_ref is not None:
+            #print(aesurf.cid1_ref)
+            coords_to_write_dict[aesurf.cid1_ref.cid] = aesurf.cid1_ref
+        if aesurf.cid2_ref is not None:
+            coords_to_write_dict[aesurf.cid2_ref.cid] = aesurf.cid2_ref
+    _add_traced_coords(model, coords_to_write_dict)
+    return coords_to_write_dict
+
+
+def _add_traced_coords(model: BDF,
+                       coords_to_write_dict: dict[int, Coord]) -> None:
+    nrids = 1
+    while nrids > 0:
+        cids = set(list(coords_to_write_dict))
+        coords_to_add = set([])
+        for cid in cids:
+            coord = model.coords[cid]
+            coords_to_add.add(coord.rid)
+            coords_to_add.update(coord.rid_trace)  # seems to be busted
+        coords_to_add_filtered = coords_to_add - cids
+        coords_to_add_next = set([])
+        for cid in coords_to_add_filtered:
+            if cid == 0:
+                continue
+            coords_to_add_next.add(cid)
+            coords_to_write_dict[cid] = model.coords[cid]
+        nrids = len(coords_to_add_next)
 
 
 def _write_caero2_subpanel(bdf_file: TextIO, caero: CAERO2):

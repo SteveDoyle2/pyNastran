@@ -47,7 +47,7 @@ from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
 from pyNastran.f06.csv_writer import write_csv
 
 PKG_PATH = Path(pyNastran.__path__[0])
-MODEL_PATH = (PKG_PATH / '..'/ 'models').resolve()
+MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
 OP2_TEST_PATH = (PKG_PATH / 'op2' / 'test' / 'examples').resolve()
 OP2_TEST = PKG_PATH / 'op2' / 'test'
 
@@ -71,22 +71,21 @@ class TestOP2Unit(Tester):
             superelement_adaptivity_index='')
         str(weight)
 
-
     def test_cd_displacement(self):
         log = get_logger(level='debug')
         data_code = {
-            'device_code' : 1,
-            'analysis_code' : 1,
-            'table_code' : 1,
-            'nonlinear_factor' : None,
-            'sort_bits' : [0, 0, 0],
-            'sort_method' : 1,
-            'is_msc' : True,
-            'format_code' : 1,
-            'data_names' : [],
-            'tCode' : 1,
-            'table_name' : 'OUGV1',
-            '_encoding' : 'utf-8',
+            'device_code': 1,
+            'analysis_code': 1,
+            'table_code': 1,
+            'nonlinear_factor': None,
+            'sort_bits': [0, 0, 0],
+            'sort_method': 1,
+            'is_msc': True,
+            'format_code': 1,
+            'data_names': [],
+            'tCode': 1,
+            'table_name': 'OUGV1',
+            '_encoding': 'utf-8',
         }
 
         bdf_model = BDF(log=log)
@@ -119,17 +118,17 @@ class TestOP2Unit(Tester):
         bdf_model.add_cord2c(3, origin, zaxis, xzplane, rid=0, comment='')
 
         dxyz = np.array([[
-            [1., 0., 0., 0., 0., 0.], # 1
-            [1., 0., 0., 0., 0., 0.], # 2
-            [1., 0., 0., 0., 0., 0.], # 3
+            [1., 0., 0., 0., 0., 0.],  # 1
+            [1., 0., 0., 0., 0., 0.],  # 2
+            [1., 0., 0., 0., 0., 0.],  # 3
 
-            [1., 0., 0., 0., 0., 0.], # 11
-            [1., 0., 0., 0., 0., 0.], # 12
-            [1., 0., 0., 0., 0., 0.], # 13
+            [1., 0., 0., 0., 0., 0.],  # 11
+            [1., 0., 0., 0., 0., 0.],  # 12
+            [1., 0., 0., 0., 0., 0.],  # 13
 
-            [1., 0., 0., 0., 0., 0.], # 23 - [0., 1., 0.]
-            [1., 0., 0., 0., 0., 0.], # 24 - answer=same as 23
-            [1., 0., 0., 0., 0., 0.], # 25 - [-1, 0., 0.]
+            [1., 0., 0., 0., 0., 0.],  # 23 - [0., 1., 0.]
+            [1., 0., 0., 0., 0., 0.],  # 24 - answer=same as 23
+            [1., 0., 0., 0., 0., 0.],  # 25 - [-1, 0., 0.]
 
             #[1., 0., 0., 0., 0., 0.], # 31 - [0,1,0]
             #[1., 0., 0., 0., 0., 0.], # 32 - [0,-1,0]
@@ -154,7 +153,6 @@ class TestOP2Unit(Tester):
         op2_model.transform_displacements_to_global(
             icd_transform, bdf_model.coords, xyz_cid0=xyz_cid0, debug=True)
 
-
         # we're working in a 2D plane
         icd2 = icd_transform[2]
         unused_dispi_cd2 = op2_model.displacements[1].data[0, icd2, :2]
@@ -162,20 +160,20 @@ class TestOP2Unit(Tester):
 
         dispi = op2_model.displacements[1].data[0, :, :2]
         expected_disp = np.array([
-            [1., 0.,], # 1
-            [1., 0.,], # 2
-            [1., 0.,], # 3
+            [1., 0.,],  # 1
+            [1., 0.,],  # 2
+            [1., 0.,],  # 3
 
-            [1., 0.,], # 11
-            [1., 0.,], # 12
-            [1., 0.,], # 13
+            [1., 0.,],  # 11
+            [1., 0.,],  # 12
+            [1., 0.,],  # 13
 
-            [0., 1.,], # 23
-            [0., 1.,], # 24
-            [-1., 0.,], # 25
+            [0., 1.,],  # 23
+            [0., 1.,],  # 24
+            [-1., 0.,],  # 25
 
-            #[0., 1.,], # 31
-            #[0., -1.,], # 32
+            #[0., 1.,],  # 31
+            #[0., -1.,],  # 32
         ])
         assert is_array_close(dispi, expected_disp)
         #print(is_array_close(dispi, expected_disp))
@@ -192,7 +190,6 @@ class TestOP2Unit(Tester):
 
         datai = np.array([3, 1, -1], dtype='int32')
         _read_spcadd_mpcadd(model, 'SPCADD', datai)
-
 
         datai = np.array([4, 1, 10, -1], dtype='int32')
         _read_spcadd_mpcadd(model, 'MPCADD', datai)
@@ -359,6 +356,7 @@ class TestAutodeskOP2(Tester):
         assert len(stress.chexa_stress) == 0, len(stress.chexa_stress)
         assert len(op2.grid_point_forces) == 4, len(op2.grid_point_forces)
 
+
 class TestOptistructOP2(Tester):
     """various OP2 tests"""
     def test_op2_optistruct_1(self):
@@ -391,7 +389,6 @@ class TestOptistructOP2(Tester):
         # rod_force = force.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
         # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
-
 
         # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
         # isubcase = isubcases[1]
@@ -562,7 +559,8 @@ class TestSATKOP2(Tester):
 
         assert len(op2.op2_results.force.cbar_force[1].modes) == 8
             #type=RealCBarForceArray ntimes=8 nelements=5; table_name='OEF1'
-            #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+            #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1,
+            #                                   bending_moment_b2, shear1, shear2, axial, torque]
             #data.shape = (8, 5, 8)
             #element.shape = (5,)
             #element name: CBAR-34
@@ -694,7 +692,8 @@ class TestSATKOP2(Tester):
 
         assert len(op2.op2_results.psd.cbar_force[(1, 5, 2, 0, 0, '', '')].freqs) == 298
           #type=RealCBarForceArray ntimes=298 nelements=5; table_name='OEFPSD1'
-          #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+          #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2,
+          #                                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
           #data.shape = (298, 10, 8)
           #element.shape = (5,)
           #element name: CBAR-34
@@ -727,7 +726,24 @@ class TestNX(Tester):
         f06_filename = BWB_PATH / 'bwb_saero_trim.test_op2.f06'
         model = read_op2_geom(op2_filename, log=log)
         trim = model.op2_results.trim
-        trim_var = trim.variables[1]
+
+        assert len(trim.variables) == 1, trim.variables
+        assert len(trim.derivatives) == 1, trim.derivatives
+        assert len(trim.hinge_moment_derivatives) == 1, trim.hinge_moment_derivatives
+        assert len(trim.control_surface_position_hinge_moment) == 1, trim.control_surface_position_hinge_moment
+        assert len(trim.aero_pressure) == 1, trim.aero_pressure
+        assert len(trim.aero_force) == 1, trim.aero_force
+
+        #key = 1
+        key = (1, 0, 1, 0, 0, '', '')
+        str(trim.variables[key])
+        str(trim.derivatives[key])
+        str(trim.control_surface_position_hinge_moment[key])
+        str(trim.aero_pressure[key])
+        str(trim.aero_force[key])
+
+        key = (1, 0, 1, 0, 0, '', 'TFLAP')
+        str(trim.hinge_moment_derivatives[key])
 
         model.get_op2_stats(short=True)
         model.get_op2_stats(short=False)
@@ -751,7 +767,7 @@ class TestNX(Tester):
         # log = SimpleLogger(level='debug')
         op2_filename = MODEL_PATH / 'nx' / 'glue' / 'n401gsh01.op2'
         # read_op2(op2_filename)
-        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
+        #bdf_filename = folder / 'rms_tr0i_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -870,7 +886,6 @@ class TestNX(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-
     def test_nx_composite_solids_corner(self):
         """
         checks nx/composite_solids/test_nx_corner.bdf, which tests
@@ -921,9 +936,9 @@ class TestNX(Tester):
         save_load_deck(model, run_save_load=False, run_renumber=False)
 
         log = get_logger(level='warning')
-        exclude_results = None  #['*cplstn3*']
+        exclude_results = None  # ['*cplstn3*']
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
-                write_f06=True, write_op2=False, write_hdf5=False, # IS_H5PY
+                write_f06=True, write_op2=False, write_hdf5=False,  # IS_H5PY
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=exclude_results,
@@ -964,7 +979,7 @@ class TestMSC(Tester):
     def test_cantilever_plate_nonlinear_msc_2021(self):
         log = get_logger(level='debug')
         folder = MODEL_PATH / 'bugs' / 'cantilevered_plate'
-        op2_filename1 =  folder / '3Delements' / 'non_linear' / 'cantilevered_plate_3d.op2'
+        op2_filename1 = folder / '3Delements' / 'non_linear' / 'cantilevered_plate_3d.op2'
         unused_op2, unused_is_passed = run_op2(
             op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
@@ -1216,7 +1231,7 @@ class TestOP2Main(Tester):
 
         model2 = OP2Geom(log=log)
         tables = {
-            b'GEOM1S' : read_some_table,
+            b'GEOM1S': read_some_table,
         }
         model2.set_additional_generalized_tables_to_read(tables)
         with self.assertRaises(NotImplementedError):
@@ -1269,8 +1284,8 @@ class TestOP2Main(Tester):
         op2_2.read_op2(op2_filename_m2)
         op2_1.write_f06(f06_filename)
 
-        op2_1.write_op2(op2_filename_m1_out, skips=['grid_point_weight']) #, is_mag_phase=False)
-        op2_2.write_op2(op2_filename_m2_out, skips=['grid_point_weight']) #, is_mag_phase=False)
+        op2_1.write_op2(op2_filename_m1_out, skips=['grid_point_weight'])  #, is_mag_phase=False)
+        op2_2.write_op2(op2_filename_m2_out, skips=['grid_point_weight'])  #, is_mag_phase=False)
         os.remove(f06_filename)
         os.remove('temp.debug')
         os.remove(op2_filename_m1_out)

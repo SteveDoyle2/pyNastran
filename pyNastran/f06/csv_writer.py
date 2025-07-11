@@ -17,12 +17,13 @@ import numpy as np
 #from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 #from pyNastran.op2.op2_interface.result_set import ResultSet
 from pyNastran.utils import PathLike, PurePath
-from pyNastran.op2.result_objects.matrix import Matrix #, MatrixDict
+from pyNastran.op2.result_objects.matrix import Matrix  # MatrixDict
 from pyNastran.op2.op2_interface.internal_utils import get_result_length
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
     from pyNastran.op2.tables.onmd import NormalizedMassDensity
+
 
 def make_csv_header() -> str:
     #spaces = ''
@@ -178,6 +179,7 @@ Flag, SubcaseID, iTime,       Eid, BLANK, BLANK,  StrainEnergy,     Percent, Str
     out = '#' + '\n#'.join(lines)
     return out
 
+
 class CSVWriter:
     def __init__(self, op2: OP2):
         self.is_csv = True
@@ -272,7 +274,7 @@ class CSVWriter:
             #log.debug('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
 
         with open(matrix_filename, 'wb') as mat_file:
-            for name, matrix in model.matrices.items():  #type: Matrix
+            for name, matrix in model.matrices.items():  # type: Matrix
                 matrix = cast(Matrix, matrix)
                 if name == 'MP3F':
                     results.monitor3.write(csv)
@@ -503,14 +505,9 @@ def _get_file_obj(csv_filename: PathLike,
             matrix_filename = os.path.splitext(csv_filename)[0] + '.mat'
         #print("matrix_filename =", matrix_filename)
         #mat = open(matrix_filename, 'wb')
-
         csv = open(csv_filename, 'w')
 
     elif hasattr(csv_filename, 'read') and hasattr(csv_filename, 'write'):
-        #f06 = f06_outname
-    #else:
-        #print('type(f06_outname) =', type(f06_outname))
-        #assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname
         csv = csv_filename
         csv_filename = csv.name
         if matrix_filename is None:
@@ -519,7 +516,8 @@ def _get_file_obj(csv_filename: PathLike,
             print('csv_filename =', csv_filename)
     return csv, csv_filename, matrix_filename
 
-def write_csv(model: OP2, csv_filename: str, is_exponent_format: bool=True):
+
+def write_csv(model: OP2, csv_filename: PathLike, is_exponent_format: bool=True):
     csv = CSVWriter(model)
     csv.write(csv_filename, matrix_filename=None,
               is_exponent_format=is_exponent_format,
@@ -527,7 +525,8 @@ def write_csv(model: OP2, csv_filename: str, is_exponent_format: bool=True):
               is_mag_phase=False,
               is_sort1=True, quiet=True, repr_check=False, close=True)
 
-if __name__ == '__main__':  # pragma: no cover
+
+def main():  # pragma: no cover
     from pyNastran.op2.op2 import read_op2
     dirname = os.path.dirname(__file__)
     op2_filename = os.path.join(dirname, 'nx.op2')
@@ -545,3 +544,7 @@ if __name__ == '__main__':  # pragma: no cover
     csv_filename = os.path.join(dirname, 'solid_bending.frd')
     op2 = read_op2(op2_filename)
     write_csv(op2, csv_filename, is_exponent_format=True)
+
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

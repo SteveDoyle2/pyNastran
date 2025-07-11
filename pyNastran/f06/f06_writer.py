@@ -23,7 +23,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointFo
 from pyNastran.op2.op2_interface.internal_utils import get_result_length
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet, add_results_of_exact_type
-from pyNastran.op2.result_objects.matrix import Matrix  #, MatrixDict
+from pyNastran.op2.result_objects.matrix import Matrix  # MatrixDict
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
     from pyNastran.op2.tables.onmd import NormalizedMassDensity
@@ -146,7 +146,7 @@ def make_end(end_flag: bool=False,
         SEMG = 'T'
         SEMR = 'F'
         if 'SEMR' in options:
-            SEMR = 'T' # modal
+            SEMR = 'T'  # modal
         SEKR = 'T'
         SELR = 'T'
         MODES = 'F'
@@ -389,7 +389,7 @@ class F06Writer(OP2_F06_Common):
             f06_file.write(page_stamp % self.page_num)
             self.page_num += 1
 
-    def write_f06(self, f06_filename: str,
+    def write_f06(self, f06_filename: PathLike,
                   matrix_filename: Optional[str]=None,
                   is_mag_phase: bool=False, is_sort1: bool=True,
                   delete_objects: bool=False, end_flag: bool=False,
@@ -504,7 +504,7 @@ class F06Writer(OP2_F06_Common):
             log.debug('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
 
         with open(matrix_filename, 'w') as mat_file:
-            for name, matrix in self.matrices.items():  #type: Matrix
+            for name, matrix in self.matrices.items():  # type: Matrix
                 matrix = cast(Matrix, matrix)
                 if name == 'MP3F':
                     page_num = results.monitor3.write(
@@ -779,6 +779,7 @@ def check_element_node(obj):
         print(''.join(obj.get_stats()))
         raise RuntimeError(f'{obj.element_name}-{obj.element_type}: {eids}')
 
+
 def get_all_results_string(all_results: list[str]) -> str:
     dict_results = defaultdict(list)
     for res in all_results:
@@ -790,7 +791,7 @@ def get_all_results_string(all_results: list[str]) -> str:
             dict_results[key].append(value)
         else:
             #print(res)
-            dict_results[res] = [res] # .append(res)
+            dict_results[res] = [res]  # .append(res)
 
     msg = ':\n'
     for key, value in sorted(dict_results.items()):
@@ -820,8 +821,6 @@ def _get_file_obj(self: F06Writer,
         f06 = open(f06_filename, 'w')
         self._write_summary(f06)
     elif hasattr(f06_filename, 'read') and hasattr(f06_filename, 'write'):
-        #f06 = f06_filename
-    #else:
         #print('type(f06_filename) =', type(f06_filename))
         #assert isinstance(f06_outname, file), 'type(f06_filename)= %s' % f06_filename
         f06 = f06_filename
@@ -834,8 +833,9 @@ def _get_file_obj(self: F06Writer,
         raise TypeError(type(f06_filename))
     return f06, f06_filename, matrix_filename
 
+
 def _write_responses1(op2: OP2, f06: TextIO,
-                      page_stamp: str, page_num: int):
+                      page_stamp: str, page_num: int) -> int:
     op2_results = op2.op2_results
     for subcase, res in op2_results.vg_vf_response.items():
         page_num = res.export_to_f06_file(
@@ -845,8 +845,9 @@ def _write_responses1(op2: OP2, f06: TextIO,
             page_num=page_num)
     return page_num
 
+
 def _write_responses2(op2: OP2, f06: TextIO,
-                      page_stamp: str, page_num: int):
+                      page_stamp: str, page_num: int) -> int:
     op2_results = op2.op2_results
 
     desvars = op2_results.responses.desvars
