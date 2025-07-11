@@ -51,8 +51,7 @@ import numpy as np
 import cpylog
 from cpylog import get_logger2, log_exc
 
-
-from pyNastran import is_release, __version__
+from pyNastran import is_release, stop_on_op2_table_passer, __version__
 from pyNastran.utils import PathLike, is_binary_file
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import EmptyRecordError
@@ -1843,7 +1842,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             desc = self.op2_reader.desc_map[self.table_name]
             self.log.warning(f'    skipping {self.table_name_str:<8} ({desc})')
             #raise NotImplementedError((self.table_name, desc))
-        if not is_release and self.isubtable > -4:
+        if not stop_on_op2_table_passer and self.isubtable > -4:
             if self.table_name in GEOM_TABLES and not self.make_geom:
                 pass
             else:
