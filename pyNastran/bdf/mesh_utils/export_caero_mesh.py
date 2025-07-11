@@ -18,8 +18,8 @@ def export_caero_mesh(model: BDF,
                       caero_bdf_filename: PathLike='caero.bdf',
                       is_subpanel_model: bool=True,
                       pid_method: str='aesurf',
-                      write_panel_xyz: bool=True,
-                      rotate_panel: bool=False) -> None:
+                      rotate_panel_angle_deg: float=0.0,
+                      write_panel_xyz: bool=True) -> None:
     """
     Write the CAERO cards as CQUAD4s that can be visualized
 
@@ -35,7 +35,7 @@ def export_caero_mesh(model: BDF,
                    main structure will be pid=1
         'caero' : write the CAERO1 as the property id
         'paero' : write the PAERO1 as the property id
-    rotate_panel_angle : float; default=0.0
+    rotate_panel_angle_deg : float; default=0.0
         panel angle to rotate (e.g., rotate all surfaces by 30 degrees)
     write_panel_xyz : bool; default=True
         write the following table...
@@ -43,6 +43,7 @@ def export_caero_mesh(model: BDF,
         $$        1        1    0.0000    0.2500    0.0000    0.0988    0.5000    0.0247
         $$        1        2    0.0988    0.2500    0.0000    0.0988    0.5000    0.1234
     """
+    rotate_panel_angle = np.radians(rotate_panel_angle_deg)
     log = model.log
     if pid_method not in {'aesurf', 'caero', 'paero'}:
         raise RuntimeError(f'pid_method={pid_method!r} is not [aesurf, caero, paero]')
@@ -69,16 +70,20 @@ def export_caero_mesh(model: BDF,
     coords_to_write_dict = _get_coords_to_write_dict(model)
 
     eids_to_rotate_dict = {}
+    aesurf_subpanel_eid_list = []
     for aesurf_id, aesurf in model.aesurf.items():
         cid1_ref: Coord = aesurf.cid1_ref
         aelist1_ref: AELIST = aesurf.aelist_id1_ref
         panel1_eids = aelist1_ref.elements
         eids_to_rotate_dict[(aesurf.label, 1)] = (cid1_ref, panel1_eids)
-        if aesurf.aelist2_ref is not None:
+        aesurf_subpanel_eid_list.extend(panel1_eids)
+        if aesurf.aelist_id2_ref is not None:
             cid2_ref: Coord = aesurf.cid2_ref
             aelist2_ref: AELIST = aesurf.aelist_id2_ref
             panel2_eids = aelist2_ref.elements
             eids_to_rotate_dict[(aesurf.label, 2)] = (cid2_ref, panel2_eids)
+            aesurf_subpanel_eid_list.extend(panel2_eids)
+    aesurf_subpanel_eids = np.array(aesurf_subpanel_eid_list, dtype='int32')
 
     with open(caero_bdf_filename, 'w') as bdf_file:
         #bdf_file.write('$ pyNastran: punch=True\n')
@@ -115,8 +120,62 @@ def export_caero_mesh(model: BDF,
                 if write_panel_xyz:
                     _write_subpanel_strips(bdf_file, model, caero_eid, points, elements)
 
-                if rotate_panel_angle != 0.0:
-                    raise NotImplementedError(f'rotate_panel_angle={rotate_panel_angle}')
+                box_ids = caero.box_ids.flatten()
+                eids_aesurf = np.union1d(box_ids, aesurf_subpanel_eids)
+
+                # verify eids_aesurf is sorted
+                assert np.allclose(eids_aesurf, np.unique(eids_aesurf))
+                if len(eids_aesurf) and rotate_panel_angle != 0.0:
+                    nid_all = np.unique(elements.ravel())
+                    # get the aesurf and fixed ids
+                    # eids_aesurf = np.intersect1d(box_ids, aesurf_subpanel_eids)
+                    eids_fixed = np.setdiff1d(box_ids, aesurf_subpanel_eids)
+
+                    # get the index for each element
+                    assert isinstance(box_ids, np.ndarray), box_ids
+                    assert box_ids.ndim == 1, box_ids.shape
+                    assert eids_fixed.ndim == 1, eids_fixed.shape
+                    ieid_fixed = np.searchsorted(box_ids, eids_fixed)
+                    # ieid_aesurf = np.searchsorted(box_ids, eids_aesurf)
+
+                    # get the node ids associated with each element
+                    nid_fixed = np.unique(elements[ieid_fixed, :])
+                    # nid_aesurf = np.unique(elements[ieid_aesurf, :])
+
+                    # get their index (so we can write the nodes in a rotated frame)
+                    inid_fixed = np.searchsorted(nid_all, nid_fixed)
+
+                    # get the base points and the points we're going to rotate
+                    # note that they might overlap or be used by multiple flaps
+                    #
+                    # we'll write points_fixed later
+                    points_fixed = points[inid_fixed, :]
+                    elements_fixed = elements[ieid_fixed, :]
+
+                    # now get do the same thing for each flap
+                    for (label, idi), (cid_ref, eid_surface) in eids_to_rotate_dict.items():
+                        eids_aesurf = np.intersect1d(box_ids, eid_surface)
+                        if len(eids_aesurf) == 0:
+                            continue
+
+                        # print(f'box_ids     = {box_ids}; n={len(box_ids)}')
+                        # print(f'eids_aesurf = {eids_aesurf}; n={len(eids_aesurf)}')
+                        ieid_aesurf = np.searchsorted(box_ids, eids_aesurf)
+                        # print(f'ieid_aesurf = {ieid_aesurf}')
+                        # print('elements:\n', elements)
+                        nid_aesurf = np.unique(elements[ieid_aesurf, :])
+
+                        inid_aesurf = np.searchsorted(nid_all, nid_aesurf)
+                        points_to_rotate = points[inid_aesurf, :]
+                        elements_to_rotate = elements[ieid_aesurf, :]
+                        xyz_rotated = rodriguez_rotate(
+                            points_to_rotate, rotate_panel_angle,
+                            cid_ref, iaxis=1)  # y-axis
+
+                        # TODO: still need to renumber the points
+                        #       and figure out what the offset is
+                    raise NotImplementedError(f'rotate_panel_angle_deg={rotate_panel_angle_deg:g}; '
+                                              f'rotate_panel_angle={rotate_panel_angle:g}')
                 else:
                     npoints = points.shape[0]
                     #nelements = elements.shape[0]
@@ -168,6 +227,55 @@ def export_caero_mesh(model: BDF,
     log.debug(f'  ---finished export_caero_mesh of {caero_bdf_filename}---')
     return
 
+
+def rodriguez_rotate(xyz: np.ndarray,
+                     theta: float,
+                     coord: Coord,
+                     iaxis: int=0) -> np.ndarray:
+    """
+    v_rotated = v * cos(θ) + (k x v) * sin(θ) + k * (k · v) * (1 - cos(θ))
+    Where:
+      v is the vector to be rotated.
+      k is the unit vector representing the axis of rotation.
+      θ is the angle of rotation.
+      x denotes the cross product.
+      · denotes the dot product.
+
+    :return:
+    """
+    if iaxis == 0:
+        k = coord.i
+    elif iaxis == 1:
+        k = coord.j
+    elif iaxis == 2:
+        k = coord.k
+    else:
+        raise RuntimeError(f'iaxis={iaxis!r} and must be [0, 1, 2] for [x, y, z]')
+    assert xyz.ndim == 2, f'xyz.shape={str(xyz.shape)} and must be 2d'
+
+    nxyz = len(xyz)
+    # thetas = np.full(nxyz, theta, dtype='float64')
+    kmat = np.vstack([k] * nxyz, dtype='float64')
+    # print(f'k; shape={str(k.shape)} = {k}')
+    # kxv = np.cross(k[np.newaxis, :], xyz, axis=0)
+    # kov = np.dot(k[np.newaxis, :], xyz, axis=0)
+    try:
+        kxv = np.cross(kmat, xyz, axis=1)
+    except ValueError:  # pragma: no cover
+        print(f'xyz; shape={str(xyz.shape)}:\n{xyz}')
+        print(f'kmat; shape={str(kmat.shape)}:\n{kmat}')
+        raise
+    assert kxv.shape == (nxyz, 3), (kxv.shape, nxyz)
+    # kov = np.dot(kmat, xyz, axis=0)
+    kov = np.einsum('ij,ij->i', kmat, xyz)
+    kov2 = kov.reshape(nxyz, 1)
+    assert len(kov) == nxyz, (len(kov), nxyz)
+    xyz_rotated = (
+        xyz * np.cos(theta) +
+        kxv * np.sin(theta) +
+        kmat * kov2 * (1 - np.cos(theta))
+    )
+    return xyz_rotated
 
 def _get_coords_to_write_dict(model: BDF) -> dict[int, Coord]:
     coords_to_write_dict = {}

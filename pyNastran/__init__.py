@@ -94,4 +94,10 @@ else:
 __issue__ = 'https://github.com/SteveDoyle2/pyNastran/issues'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'
 
-is_release = True  ## True=turns on skipping of tables that aren't supported
+is_release = False  ## True=turns on skipping of tables that aren't supported
+
+# stop takes priority
+stop_on_missed_op2_table = False
+
+## True=turns on skipping of tables that aren't supported
+warn_on_missed_op2_table = True

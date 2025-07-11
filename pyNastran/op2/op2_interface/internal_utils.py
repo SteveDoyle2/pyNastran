@@ -1,4 +1,4 @@
-from pyNastran import is_release
+from pyNastran import warn_on_missed_op2_table
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.f06_formatting import get_key0
 
@@ -51,7 +51,7 @@ def get_result_length(res_types: list[dict], res_key: str) -> int:
             class_name = result.__class__.__name__
             res_length = max(len(class_name), res_length)
 
-            if not is_release:
+            if not warn_on_missed_op2_table:
                 print(' %s - results not found...key=%s' % (class_name, res_key))
         else:  # empty result
             #print('else')

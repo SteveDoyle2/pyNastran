@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from cpylog import SimpleLogger
-from pyNastran import is_release
+from pyNastran import stop_on_missed_op2_table
 from pyNastran.utils import object_attributes, object_methods, object_stats, simplify_object_keys
 from pyNastran.utils.numpy_utils import integer_types
 
@@ -255,7 +255,7 @@ class BaseScalarObject(Op2Codes):
 
     def get_stats(self, short: bool=False):
         msg = 'get_stats is not implemented in %s\n' % self.__class__.__name__
-        if not is_release:
+        if stop_on_missed_op2_table:
             raise NotImplementedError(msg)
         return msg
 
@@ -504,17 +504,17 @@ class ScalarObject(BaseScalarObject):
         """
         has_list = self._start_data_member(var_name, value_name)
         if has_list:
-            listA = self._get_var(var_name)
-            if listA is not None:
+            list_a = self._get_var(var_name)
+            if list_a is not None:
                 #print("has %s" % var_name)
                 value = self._get_var(value_name)
                 try:
-                    n = len(listA)
+                    n = len(list_a)
                 except Exception:
-                    print("listA = ", listA)
+                    print("listA = ", list_a)
                     raise
-                listA.append(value)
-                assert len(listA) == n + 1
+                list_a.append(value)
+                assert len(list_a) == n + 1
 
     def _set_data_members(self):
         if 'data_names' not in self.data_code:

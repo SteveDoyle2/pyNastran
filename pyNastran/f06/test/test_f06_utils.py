@@ -720,6 +720,13 @@ class TestF06Utils(unittest.TestCase):
         nid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.nid'
         eid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.eid'
         model = read_bdf(bdf_filename, debug=None)
+        # export_caero_mesh(
+        #     model,
+        #     caero_bdf_filename=subpanel_caero_filename,
+        #     is_subpanel_model=True,
+        #     pid_method='caero',
+        #     rotate_panel_angle_deg=45.,
+        #     write_panel_xyz=False)
         export_caero_mesh(
             model,
             caero_bdf_filename=subpanel_caero_filename,

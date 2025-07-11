@@ -2,8 +2,9 @@
 Defines the following classes:
     - UGRID2D_Reader
 """
-from numpy import array
+import numpy as np
 from cpylog import get_logger
+from pyNastran.utils import PathLike
 
 
 class UGRID2D_Reader:
@@ -12,11 +13,11 @@ class UGRID2D_Reader:
     """
     def __init__(self, log=None, debug=None):
         self.log = get_logger(log=log, level=debug)
-        self.nodes = None
-        self.tris = None
-        self.quads = None
+        self.nodes = np.zeros((0, 3), dtype='float64')
+        self.tris = np.zeros((0, 3), dtype='int32')
+        self.quads = np.zeros((0, 4), dtype='int32')
 
-    def read_ugrid(self, ugrid_filename):
+    def read_ugrid(self, ugrid_filename: PathLike):
         """
         Reads a ugrid2d file of the form::
 
@@ -47,11 +48,10 @@ class UGRID2D_Reader:
             raise
         i = 7
 
-        self.log.debug('nnodes=%s ntrias=%s nquads=%s ntets4=%s '
-                       'npyram5=%s npenta6=%s nhexas8s=%s' % (
+        self.log.debug('nnodes=%d ntrias=%d nquads=%d ntets4=%d '
+                       'npyram5=%d npenta6=%d nhexas8s=%d' % (
                            nnodes, ntrias, nquads, ntets,
                            npyram5, npenta6, nhexas8s))
-
 
         #nodes = zeros(nnodes * 3, dtype=ndarray_float)
         #tris  = zeros(ntris * 3, dtype='int32')
@@ -65,7 +65,7 @@ class UGRID2D_Reader:
 
         # nodes
         iend = i + nnodes * 3
-        nodes = array(data[i:iend], dtype='float64')
+        nodes = np.array(data[i:iend], dtype='float64')
         if len(nodes) != (iend - i):
             raise RuntimeError('len(xyz)=%s for nnodes=%s (expected=%s)' % (
                 len(nodes), (iend - i)//3, iend - i))
@@ -79,7 +79,7 @@ class UGRID2D_Reader:
 
         # tris
         iend = i + ntrias * 3
-        tris = array(data[i:iend], dtype='int32')
+        tris = np.array(data[i:iend], dtype='int32')
         if len(tris) != (iend - i):
             raise RuntimeError('len(tri_nodes)=%s for ntris=%s (expected=%s)' % (
                 len(tris), (iend - i)//3, iend - i))
@@ -92,7 +92,7 @@ class UGRID2D_Reader:
         i = iend
 
         iend = i + nquads * 4
-        quads = array(data[i:iend], dtype='int32')
+        quads = np.array(data[i:iend], dtype='int32')
         if len(quads) != (iend - i):
             raise RuntimeError('len(quad_nodes)=%s for nquads=%s (expected=%s)' % (
                 len(quads), (iend - i)//3, iend - i))
@@ -102,7 +102,7 @@ class UGRID2D_Reader:
         #print(nodes[-1, :])
         #assert nodes[:, 2].max() == 0.0
         #assert nodes[:, 2].min() == 0.0
-        i = iend
+        #i = iend
 
         self.nodes = nodes
         self.tris = tris - 1

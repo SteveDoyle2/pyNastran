@@ -2453,7 +2453,7 @@ class CAERO1(BaseCard):
         return npoints, nelements
 
     @property
-    def xy(self):
+    def xy(self) -> tuple[np.ndarray, np.ndarray]:
         """
         Returns
         -------
@@ -2507,7 +2507,7 @@ class CAERO1(BaseCard):
         # correct paneling, wrong orientation
         #return points_elements_from_quad_points(p1, p2, p3, p4, y, x, dtype='int32')
 
-    def set_points(self, points):
+    def set_points(self, points: list[float] | list[np.ndarray]) -> None:
         self.p1 = points[0]
         p2 = points[1]
         p3 = points[2]
@@ -2558,7 +2558,7 @@ class CAERO1(BaseCard):
         int_pt[:, 0] += chord * 0.75
         return int_pt
 
-    def shift(self, dxyz) -> None:
+    def shift(self, dxyz: np.ndarray) -> None:
         """shifts the aero panel"""
         self.p1 += dxyz
         self.p4 += dxyz
@@ -2626,7 +2626,7 @@ class CAERO1(BaseCard):
     def get_LSpan(self) -> int:
         return aefact_id(self.lspan_ref, self.lspan)
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         """
         Gets the fields in their simplified form
 

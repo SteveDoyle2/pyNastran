@@ -7,7 +7,10 @@ from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
-from pyNastran import is_release
+from pyNastran import (
+    is_release,
+    warn_on_missed_op2_table,
+    stop_on_missed_op2_table)
 from pyNastran.op2.errors import OverwriteTableError
 from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2_interface.function_codes import func7
@@ -1649,7 +1652,12 @@ class OP2Common(Op2Codes, F06Writer):
                                      #69, # CBEND
                                      #]:
                 #return ndata
-        if is_release:
+        if stop_on_missed_op2_table:
+            msg = 'table_name=%s table_code=%s %s\n%s' % (
+                self.table_name, self.table_code, msg, self.code_information())
+            raise NotImplementedError(msg)
+
+        if warn_on_missed_op2_table:
             if msg != self._last_comment:
                 #print(self.code_information())
                 if self.read_mode == 2:
@@ -1669,13 +1677,8 @@ class OP2Common(Op2Codes, F06Writer):
                 #    pass
                 #else:
                 #    self.log.warning(self.code_information())
-
                 self._last_comment = msg
             return ndata
-        else:  # pragma: no cover
-            msg = 'table_name=%s table_code=%s %s\n%s' % (
-                self.table_name, self.table_code, msg, self.code_information())
-            raise NotImplementedError(msg)
 
     @property
     def size(self) -> int:
