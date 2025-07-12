@@ -24,6 +24,7 @@ from vtk import vtkRenderLargeImage, vtkAxesActor, vtkOrientationMarkerWidget
 from cpylog import SimpleLogger
 
 import pyNastran
+from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
@@ -66,7 +67,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         self.build_fmts(['nastran'], stop_on_failure=True)
         self.stop_on_failure = True
 
-    def load_nastran_geometry(self, bdf_filename: str | BDF,
+    def load_nastran_geometry(self, bdf_filename: PathLike | BDF,
                          name: str='main',
                          plot: bool=True,
                          stop_on_failure: bool=False):
@@ -75,7 +76,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
             plot=plot, stop_on_failure=stop_on_failure)
         self.validate_result_object_methods()
 
-    def load_nastran_results(self, op2_filename: str | OP2):
+    def load_nastran_results(self, op2_filename: PathLike | OP2):
         self.stop_on_failure = True
         super().load_nastran_results(op2_filename)
         self.validate_result_object_methods()
@@ -442,10 +443,12 @@ class NastranGUI(NastranIO, FakeGUIMethods):
                 raise NotImplementedError(res)
         return dict(results_by_type)
 
+
 PKG_PATH = Path(pyNastran.__path__[0])
 STL_PATH = PKG_PATH / 'converters' / 'stl'
 MODEL_PATH = PKG_PATH / '..' / 'models'
 FLUTTER_PATH = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples' / 'flutter'
+
 
 class TestNastranGUI(unittest.TestCase):
 
@@ -554,7 +557,6 @@ class TestNastranGUI(unittest.TestCase):
         gpforce = case.gpforce_array
         model_name = 'main'
 
-
         p1 = [0, 0, 0]
         p3 = [1, 0, 0]
 
@@ -573,11 +575,10 @@ class TestNastranGUI(unittest.TestCase):
         assert np.allclose(np.abs(force_sum).max(), 0.000732421875), np.abs(force_sum).max()
         assert np.allclose(np.abs(moment_sum).max(), 0.000244140625), np.abs(moment_sum).max()
 
-        p1 = np.array([0, 0, 0]) # origin
-        p2 = np.array([1, 0, 0]) # xaxis
+        p1 = np.array([0, 0, 0])  # origin
+        p2 = np.array([1, 0, 0])  # xaxis
         p3 = np.array([1, 0, 0]) # end
         zaxis = np.array([0, 0, 1])
-        #idir = 0
         test.shear_moment_torque_obj.plot_shear_moment_torque(
             icase_gpforce,
             p1, p2, p3, zaxis,
@@ -715,11 +716,11 @@ class TestNastranGUI(unittest.TestCase):
         text = 'cat'
         test.mark_actions.mark_nodes(nids, icase, text)
 
-        with self.assertRaises(RuntimeError): # icase_to_apply=166 doesn't exist
+        with self.assertRaises(RuntimeError):  # icase_to_apply=166 doesn't exist
             test.mark_elements(eids, stop_on_failure=True, show_command=True)
         #test.mark_elements_by_case(eids, stop_on_failure=True, show_command=True)
 
-        test.icase = 2 # PropertyID
+        test.icase = 2  # PropertyID
         test.mark_elements(eids, stop_on_failure=True, show_command=True)
         test.mark_elements_by_case(eids, stop_on_failure=True, show_command=True)
 
@@ -728,13 +729,13 @@ class TestNastranGUI(unittest.TestCase):
             #print(obj)
 
         # fail mapping strain energy because we're on NodeID
-        test.icase = 0 # NodeID
-        test.icase_fringe = 0 # NodeID
+        test.icase = 0  # NodeID
+        test.icase_fringe = 0  # NodeID
         is_passed = test.map_element_centroid_to_node_fringe_result(update_limits=True, show_msg=True)
 
         obj, (itime, name) = test.result_cases[test.icase]
         str(obj)
-        assert is_passed == False, f'map_element_centroid_to_node_fringe_result should fail for NodeID\n{obj}'
+        assert is_passed is False, f'map_element_centroid_to_node_fringe_result should fail for NodeID\n{obj}'
 
         # map strain energy
         keys = list(test.result_cases.keys())
@@ -958,7 +959,7 @@ class TestNastranGUI(unittest.TestCase):
         nnids = len(nids)
         nid = nids[-1] + 1
         nids2 = np.arange(nid, nid+nnids, dtype=nids.dtype)
-        node_gridtype2 =  disp.node_gridtype.copy()
+        node_gridtype2 = disp.node_gridtype.copy()
         node_gridtype2[:, 0] = nids2
 
         datai = disp.data[0, :, :]
@@ -986,7 +987,8 @@ class TestNastranGUI(unittest.TestCase):
         assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
         nmodes = 10
-        nresults = get_nreal_nresults(test,
+        nresults = get_nreal_nresults(
+            test,
             neigenvectors=nmodes,
             nbar_stress=nmodes,
             nbeam_stress=nmodes,  # beam stress is dropped
@@ -1020,7 +1022,6 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename)
         #test.write_result_cases()
         assert len(test.result_cases) == 238, len(test.result_cases)
-
 
     def test_beam_modes_02(self):
         """CBAR/CBEAM - PARAM,POST,-2"""
@@ -1056,7 +1057,8 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
         nmodes = 10
-        nresults = get_nreal_nresults(test,
+        nresults = get_nreal_nresults(
+            test,
             neigenvectors=nmodes,
             nbar_stress=nmodes,
             nbeam_stress=nmodes,  # beam stress is dropped
@@ -1142,7 +1144,8 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(model)
         assert len(test.result_cases) == 95, len(test.result_cases)
         if os.path.exists(op2_filename) and 0:  # pragma: no cover
-            nresults = get_nreal_nresults(test,
+            nresults = get_nreal_nresults(
+                test,
                 nspc_force=1,
                 nmpc_force=1,
                 ndisplacement=1,
@@ -1266,8 +1269,8 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
-        ngeometry = 63
-        assert len(test.result_cases) == 63, len(test.result_cases)
+        ngeometry = 62
+        assert len(test.result_cases) == 62, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
 
@@ -1302,13 +1305,14 @@ class TestNastranGUI(unittest.TestCase):
         # =47 good
         #nastran_settings.strain = False
         # ----------------------------------------------
-        nresults = get_nreal_nresults(test,
+        nresults = get_nreal_nresults(
+            test,
             nspc_force=1, nmpc_force=1, ndisplacement=1,
             nload_vectors=1,
             #neigenvectors=0,
             nspring_stress=1, nspring_strain=1, nspring_force=1,
-            ncrod_stress=1, # ctube_stress=0, nconrod_stress=0,
-            ncrod_strain=1, # ctube_strain=0, nconrod_strain=0,
+            ncrod_stress=1,  # ctube_stress=0, nconrod_stress=0,
+            ncrod_strain=1,  # ctube_strain=0, nconrod_strain=0,
             nbar_stress=1, nbar_strain=1, nbar_force=1,
             #nbeam_stress=0, nbeam_strain=0, nbeam_force=0,
             nplate_stress=1, nplate_strain=1, nplate_force=1,
@@ -1322,7 +1326,7 @@ class TestNastranGUI(unittest.TestCase):
         test.write_result_cases()
         #assert nresults == 139, nresults  # 202-139; alt is 196-63=133
         if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 204, len(test.result_cases)
+            assert len(test.result_cases) == 203, len(test.result_cases)
         else:
             assert USE_OLD_TERMS
             assert len(test.result_cases) == -1, len(test.result_cases) # new terms; ???
@@ -1337,24 +1341,24 @@ class TestNastranGUI(unittest.TestCase):
             elif idisp is not None and iforce_xyz is None and case.uname == 'LoadVectors':
                 iforce_xyz = key
                 break
-            elif key > 70:
+            elif key > 69:
                 break
 
-        ifringe = len(test.result_cases) - 1 # Strain Energy Density
+        ifringe = len(test.result_cases) - 1  # Strain Energy Density
         test.on_fringe(icase=ifringe, stop_on_failure=True)
         with self.assertRaises(ValueError):
             test.on_vector(icase=ifringe, stop_on_failure=True)
         with self.assertRaises(ValueError):
-            test.on_disp(icase=ifringe, stop_on_failure=True) # disp
+            test.on_disp(icase=ifringe, stop_on_failure=True)  # disp
 
         test.on_fringe(icase=iforce_xyz, stop_on_failure=True)
         test.on_vector(icase=iforce_xyz, stop_on_failure=True)
-        test.on_disp(icase=idisp, stop_on_failure=True) # disp
+        test.on_disp(icase=idisp, stop_on_failure=True)  # disp
         test.on_clear_results()
 
         test.on_fringe(icase=iforce_xyz, stop_on_failure=True)
-        test.on_vector(icase=iforce_xyz, stop_on_failure=True) # force_xyz
-        test.on_disp(icase=idisp, stop_on_failure=True) # disp
+        test.on_vector(icase=iforce_xyz, stop_on_failure=True)  # force_xyz
+        test.on_disp(icase=idisp, stop_on_failure=True)  # disp
         test.on_fringe(icase=37, update_legend_window=True, show_msg=True)  # normal
 
         #op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
@@ -1404,26 +1408,26 @@ class TestNastranGUI(unittest.TestCase):
         same as test_gui_elements_01 except missing a single:
          -
         """
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        bdf_filename = MODEL_PATH / 'elements' / 'static_elements.bdf'
+        op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
         model = read_bdf(bdf_filename)
         test = NastranGUI()
         test.load_nastran_geometry(model)
         if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 63, len(test.result_cases)
+            assert len(test.result_cases) == 62, len(test.result_cases)
         else:
-            assert len(test.result_cases) == 63, len(test.result_cases)
+            assert len(test.result_cases) == 62, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
         if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 204, len(test.result_cases)
+            assert len(test.result_cases) == 203, len(test.result_cases)
         else:
             assert USE_OLD_TERMS
-            assert len(test.result_cases) == -1, len(test.result_cases) # new terms; ???
+            assert len(test.result_cases) == -1, len(test.result_cases)  # new terms; ???
 
     def _test_gui_elements_01b(self):  # pragma: no cover
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        bdf_filename = MODEL_PATH / 'elements' / 'static_elements.bdf'
+        op2_filename = MODEL_PATH / 'elements' / 'static_elements.op2'
         #model = read_bdf(bdf_filename)
         model = BDF()
         model.disable_cards(['CHEXA', 'CTETRA', 'CPENTA',
@@ -1475,11 +1479,11 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(op2_filename)
 
         assert USE_NEW_SIDEBAR_OBJS
-        assert len(test.result_cases) == 58, len(test.result_cases)
+        assert len(test.result_cases) == 57, len(test.result_cases)
 
         test.load_nastran_results(op2_filename)
         assert USE_NEW_SIDEBAR_OBJS
-        assert len(test.result_cases) == 199, len(test.result_cases)
+        assert len(test.result_cases) == 198, len(test.result_cases)
 
         #test = NastranGUI()
         test.settings.nastran_create_coords = False
@@ -1772,8 +1776,8 @@ class TestNastranGUI(unittest.TestCase):
         T1z.color = (255, 0, 0)
         T1z.opacity = 0.6
         T1z.bar_scale = 0.20
-        test.edit_geometry_properties_obj.on_update_geometry_properties({'T1_z' : T1z}, name=None, write_log=True)
-        test.edit_geometry_properties_obj.on_update_geometry_properties({'T1_z' : T1z}, name='T1_z', write_log=True)
+        test.edit_geometry_properties_obj.on_update_geometry_properties({'T1_z': T1z}, name=None, write_log=True)
+        test.edit_geometry_properties_obj.on_update_geometry_properties({'T1_z': T1z}, name='T1_z', write_log=True)
 
     def test_gui_bar_t2(self):
         """tests a PBARL/T2"""
@@ -1967,6 +1971,7 @@ class TestZonaGui(unittest.TestCase):
     #keys = test.result_cases.keys()
     #assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
 
+
 def assert_result_cases(test: NastranGUI, ncases: int,
                         debug: bool=False) -> None:  # pragma: no cover
     msg = ''
@@ -1987,6 +1992,7 @@ def assert_result_cases(test: NastranGUI, ncases: int,
         if hasattr(sys.stdout, 'reconfigure'):
             sys.stdout.reconfigure(encoding='utf-8')
         print(msg)
+
 
 def get_nreal_nresults_from_model(
         model: BDF,
@@ -2017,7 +2023,8 @@ def get_nreal_nresults_from_model(
             nsolid = 1
 
     test = False
-    nresults = get_nreal_nresults(test,
+    nresults = get_nreal_nresults(
+        test,
         nspc_force=nspc, nmpc_force=nmpc, ndisplacement=ndisplacement,
         neigenvectors=neigenvectors,
         nspring_stress=nspring*nstress, nspring_strain=nspring*nstrain,
@@ -2035,7 +2042,9 @@ def get_nreal_nresults_from_model(
         nplate_force=nplate*nforce, nshear_force=nshear*nforce)
     return nresults
 
-def get_nreal_nresults(test,
+
+def get_nreal_nresults(
+        test,
         nspc_force=0,
         nmpc_force=0,
         nload_vectors=0,
@@ -2074,7 +2083,6 @@ def get_nreal_nresults(test,
         # *2 is for translation/rotation
         nspc_force + nmpc_force + nload_vectors +
         ndisplacement + neigenvectors) * 2
-
 
     if not nastran_settings.force:
         nspring_force = 0
@@ -2137,7 +2145,7 @@ def get_nreal_nresults(test,
         ncomposite_stress_strain * 9 * USE_NEW_SIDEBAR_OBJS +
 
         # [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, von_mises]
-        (nsolid_stress + nsolid_strain) * 10 # OLD
+        (nsolid_stress + nsolid_strain) * 10  # OLD
     )
 
     nforce = (

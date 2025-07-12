@@ -11,13 +11,14 @@ from vtkmodules.vtkIOLegacy import vtkUnstructuredGridWriter
 from cpylog import SimpleLogger
 
 import pyNastran
+from pyNastran.utils import PathLike
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 
-from pyNastran.gui.gui_objects.gui_result import GuiResult, GridPointForceResult, check_title # NormalResult,
-from pyNastran.gui.gui_objects.displacements import ForceTableResults, DisplacementResults # , ElementalTableResults
+from pyNastran.gui.gui_objects.gui_result import GuiResult, GridPointForceResult, check_title  # NormalResult,
+from pyNastran.gui.gui_objects.displacements import ForceTableResults, DisplacementResults  # ElementalTableResults
 from pyNastran.converters.nastran.gui.result_objects.simple_table_results import SimpleTableResults
 from pyNastran.converters.nastran.gui.result_objects.layered_table_results import LayeredTableResults
 from pyNastran.gui.gui_objects.displacement_results import DisplacementResults2
@@ -105,6 +106,7 @@ def save_nastran_results(gui: NastranGUI,
             vtk_array = case.save_vtk_result(icase, used_titles)
         add_vtk_array(location, point_data, cell_data, vtk_array)
 
+
 def _save_force_table_results(icase: int,
                               case: ForceTableResults,
                               key: int,
@@ -119,7 +121,7 @@ def _save_force_table_results(icase: int,
 
     if dxyz.ndim == 2:
         vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-        titlei =  f'icase={icase}; {title}_subcase={case.subcase_id}'
+        titlei = f'icase={icase}; {title}_subcase={case.subcase_id}'
         titlei = check_title(title, used_titles)
         vtk_array.SetName(titlei)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
@@ -128,12 +130,13 @@ def _save_force_table_results(icase: int,
             header = case.headers[itime].replace(' = ', '=')
             dxyz = case.dxyz[itime, :, :]
             vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-            titlei =  f'icase={icase}; {header}_subcase={case.subcase_id}'
+            titlei = f'icase={icase}; {header}_subcase={case.subcase_id}'
             titlei = check_title(titlei, used_titles)
             vtk_array.SetName(titlei)
             add_vtk_array(case.location, point_data, cell_data, vtk_array)
     else:
         log.warning(f'cannot add {str(case)!r}')
+
 
 def _save_displacement_results(icase: int,
                                case: DisplacementResults,
@@ -153,10 +156,11 @@ def _save_displacement_results(icase: int,
         dxyz = case.dxyz[itime, :, :]
         assert dxyz.ndim == 2, dxyz.shape
         vtk_array = numpy_to_vtk(dxyz, deep=0, array_type=None)
-        titlei =  f'icase={icase}; {header}_subcase={case.subcase_id}'
+        titlei = f'icase={icase}; {header}_subcase={case.subcase_id}'
         titlei = check_title(titlei, used_titles)
         vtk_array.SetName(titlei)
         add_vtk_array(case.location, point_data, cell_data, vtk_array)
+
 
 def _save_simple_table_results(icase: int,
                                case: SimpleTableResults,
@@ -186,7 +190,7 @@ def _save_simple_table_results(icase: int,
     (itime, imethod, header) = name
     header2 = header.replace(' = ', '=')
     method = case.methods[imethod]
-    titlei =  f'icase={icase}; {case.uname}: {method}_{header2}_subcase={case.subcase_id}'
+    titlei = f'icase={icase}; {case.uname}: {method}_{header2}_subcase={case.subcase_id}'
     fringe, vector = case.get_fringe_vector_result(key, name)
     res = vector if vector is not None else fringe
 
@@ -198,6 +202,7 @@ def _save_simple_table_results(icase: int,
     del name, itime, imethod, header, header2
     add_vtk_array(case.location, point_data, cell_data, vtk_array)
     #log.warning(f'skipping SimpleTableResults {case}')
+
 
 def _save_layered_table_results(icase: int,
                                 case: LayeredTableResults,
@@ -224,7 +229,7 @@ def _save_layered_table_results(icase: int,
         raise TypeError(msg)
 
     #for method in case.methods:
-    titlei =  f'icase={icase}; {form_name}_subcase={case.subcase_id}'
+    titlei = f'icase={icase}; {form_name}_subcase={case.subcase_id}'
     method = case.get_methods(key, name)[0]
     fringe, vector = case.get_fringe_vector_result(key, name)
     res = vector if vector is not None else fringe
@@ -235,8 +240,9 @@ def _save_layered_table_results(icase: int,
     del name, itime, ilayer, imethod
     return vtk_array
 
-def nastran_to_vtk(bdf_filename: str | BDF,
-                   op2_filename: Optional[str | OP2],
+
+def nastran_to_vtk(bdf_filename: PathLike | BDF,
+                   op2_filename: Optional[PathLike | OP2],
                    vtu_filename: str,
                    log_level: str='error',
                    compression_level: int=5) -> vtkUnstructuredGrid:
@@ -359,6 +365,7 @@ def add_vtk_array(location: str,
         cell_data.AddArray(vtk_array)
     return
 
+
 def main() -> None:  # pragma: no cover
     PKG_PATH = pyNastran.__path__[0]
     MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
@@ -371,6 +378,7 @@ def main() -> None:  # pragma: no cover
     op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
     vtk_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.vtu')
     nastran_to_vtk(op2_filename, op2_filename, vtk_filename)
+
 
 if __name__ == '__main__':  # pragma: no cover
     main()

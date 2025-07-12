@@ -1842,10 +1842,11 @@ class OP2_Scalar(OP2Common, FortranFormat):
             desc = self.op2_reader.desc_map[self.table_name]
             self.log.warning(f'    skipping {self.table_name_str:<8} ({desc})')
             #raise NotImplementedError((self.table_name, desc))
-        if not stop_on_op2_table_passer and self.isubtable > -4:
+
+        if self.isubtable > -4:
             if self.table_name in GEOM_TABLES and not self.make_geom:
                 pass
-            else:
+            elif stop_on_op2_table_passer:
                 print(f'dont skip table {self.table_name_str!r}')
                 raise RuntimeError(f'dont skip table {self.table_name_str!r}')
         return ndata
