@@ -3194,6 +3194,7 @@ class CAERO3(BaseCard):
         self.list_w_ref = None
         self.list_c1_ref = None
         self.list_c2_ref = None
+        self.box_ids = None
 
     def validate(self):
         assert len(self.p1) == 3, 'p1=%s' % self.p1
@@ -3203,7 +3204,7 @@ class CAERO3(BaseCard):
         assert isinstance(self.cp, int), 'cp=%r' % self.cp
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CAERO3 card from ``BDF.add_card(...)``
 
@@ -3255,6 +3256,7 @@ class CAERO3(BaseCard):
         if self.list_c2 is not None:
             self.list_c2_ref = model.AEFact(self.list_c2, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
+        self._init_ids()
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = f', which is required by CAERO3 eid={self.eid}'
@@ -3273,6 +3275,7 @@ class CAERO3(BaseCard):
             self.ascid_ref = model.Acsid(msg=msg)
         except KeyError:
             model.log.warning('cannot find an aero coordinate system for %s' % msg)
+        self._init_ids()
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -3349,6 +3352,29 @@ class CAERO3(BaseCard):
         nelements = nchord * nspan
         npoints = (nchord + 1) * (nspan + 1)
         return npoints, nelements
+
+    def _init_ids(self, dtype: str='int32') -> np.ndarray:
+        """
+        Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
+
+        """
+        nchord, nspan = self.shape
+        assert nchord >= 1, 'nchord=%s' % nchord
+        assert nspan >= 1, 'nspan=%s' % nspan
+        self.box_ids = np.zeros((nchord, nspan), dtype=dtype)
+
+        npanels = nchord * nspan
+        try:
+            self.box_ids = np.arange(self.eid, self.eid + npanels,
+                                     dtype=dtype).reshape(nspan, nchord)
+        except OverflowError:
+            if dtype == 'int64':
+                # we already tried int64
+                msg = 'eid=%s lchord=%s lspan=%s nchord=%s' % (
+                    self.eid, self.lchord, self.lspan, nchord)
+                raise OverflowError(msg)
+            self._init_ids(dtype='int64')
+        return self.box_ids
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -3634,7 +3660,7 @@ class CAERO4(BaseCard):
         return (paero_id
                 (self.pid_ref, self.pid))
 
-    def _init_ids(self, dtype='int32'):
+    def _init_ids(self, dtype: str='int32') -> np.ndarray:
         """
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
         """

@@ -5,9 +5,7 @@ This file defines:
         log=None, debug=True)
 
 """
-from cpylog import get_logger2
-from pyNastran.utils import deprecated
-from pyNastran.utils import PathLike
+from pyNastran.utils import PathLike  # deprecated
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 from pyNastran.bdf.mesh_utils.mirror_mesh import _plane_to_iy
 

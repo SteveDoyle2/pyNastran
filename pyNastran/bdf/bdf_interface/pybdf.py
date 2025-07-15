@@ -29,7 +29,7 @@ from collections import defaultdict
 from typing import Optional, Any, cast
 
 import numpy as np
-from cpylog import get_logger2, SimpleLogger
+# from cpylog import get_logger, SimpleLogger
 from pyNastran.nptyping_interface import NDArrayN2int
 from pyNastran.utils import print_bad_path, PathLike
 
@@ -37,6 +37,11 @@ from pyNastran.bdf import BULK_DATA_CARDS, CASE_BULK_CARDS
 from pyNastran.bdf.errors import AuxModelError, MissingDeckSections, SuperelementFlagError
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename, parse_include_lines
+from cpylog import SimpleLogger, __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.7.0':
+    from cpylog import get_logger
+else:
+    from cpylog import get_logger2 as get_logger
 
 
 # these allow spaces

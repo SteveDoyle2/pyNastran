@@ -289,7 +289,7 @@ class TecplotBinary(Base):
 
             nvars = len(variables)
 
-            #self.show(1000, types='ifdq')
+            self.show(1000, types='ifdq')
             for izone, zone_tuple in enumerate(zone_tuples):
                 zone_name = zone_tuple.zone_name
                 log.debug(f'-----izone={izone} {zone_name!r}-----')

@@ -22,12 +22,17 @@ except ModuleNotFoundError:  # pragma: no cover
     #plt.switch_backend('Agg')
 
 
-from cpylog import get_logger2, SimpleLogger
+from cpylog import SimpleLogger, __version__ as CPYLOG_VERSION
 from pyNastran.f06.flutter_response import FlutterResponse, get_flutter_units
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import float_types, integer_types
 from pyNastran.f06.f06_matrix_parser import read_real_eigenvalues
 Crossing = tuple[float, float, float]
+
+if CPYLOG_VERSION > '1.7.0':
+    from cpylog import get_logger
+else:
+    from cpylog import get_logger2 as get_logger
 
 
 def make_flutter_response(f06_filename: PathLike,

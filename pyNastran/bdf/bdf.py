@@ -29,7 +29,9 @@ from typing import (
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
-from cpylog import get_logger2
+# from cpylog import get_logger2 as get_logger, CPYLOG_VERSION
+# if CPYLOG_VERSION > (1, 7, 0):
+#     from cpylog import get_logger
 
 from pyNastran.utils import PathLike, object_attributes, check_path, deprecated as _deprecated
 from .utils import parse_patran_syntax
@@ -207,6 +209,12 @@ from .bdf_interface.pybdf import (
 )
 
 #from .bdf_interface.add_card import CARD_MAP
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.7.0':
+    from cpylog import get_logger
+else:
+    from cpylog import get_logger2 as get_logger
+
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
@@ -602,7 +610,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.include_dir = ''
         self.dumplines = False
 
-        self.log = get_logger2(log=log, debug=debug)
+        self.log = get_logger(log=log, debug=debug)
 
         # list of all read in cards - useful in determining if entire BDF
         # was read & really useful in debugging

@@ -29,7 +29,7 @@ from h5py._hl.dataset import Dataset
 import numpy as np
 from cpylog import get_logger2
 
-from pyNastran.utils import object_attributes, check_path
+from pyNastran.utils import object_attributes, check_path, PathLike
 from pyNastran.utils.numpy_utils import integer_types, float_types
 
 #integer_types = (int, np.int32, np.int64)
@@ -37,7 +37,8 @@ from pyNastran.utils.numpy_utils import integer_types, float_types
 
 #---------------------------------------------------------------------------------------------
 
-def export_obj_to_hdf5(hdf5_filename, obj, user_custom_types=None, log=None, debug=False):
+def export_obj_to_hdf5(hdf5_filename: PathLike, obj,
+                       user_custom_types=None, log=None, debug: bool=False):
     """exports an object to an HDF5 file"""
     log = get_logger2(log=log, debug=debug, encoding='utf-8')
     with h5py.File(hdf5_filename, 'w') as hdf5_file:
