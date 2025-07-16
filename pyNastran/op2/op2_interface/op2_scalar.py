@@ -48,8 +48,13 @@ from typing import Optional, Callable, Any
 
 from numpy import array
 import numpy as np
-import cpylog
-from cpylog import get_logger2, log_exc
+
+from cpylog import log_exc, __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
+
 
 from pyNastran import is_release, stop_on_op2_table_passer, __version__
 from pyNastran.utils import PathLike, is_binary_file
@@ -519,7 +524,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         """
         assert debug is None or isinstance(debug, bool), 'debug=%r' % debug
 
-        self.log = get_logger2(log, debug=debug, encoding='utf-8')
+        self.log = get_logger(log, debug=debug, encoding='utf-8')
         self._count = 0
         self.op2_filename = None
         self.bdf_filename = None

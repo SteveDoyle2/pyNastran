@@ -27,7 +27,7 @@ np.seterr(all='raise')
 #import matplotlib
 #matplotlib.use('Qt5Agg')
 
-from pyNastran.utils import check_path, print_bad_path
+from pyNastran.utils import check_path, print_bad_path, PathLike
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
@@ -274,7 +274,10 @@ def run_lots_of_files(filenames: list[str], folder: str='',
     return failed_files
 
 
-def run_bdf(folder: str, bdf_filename: str,
+def test_bdf(bdf_filename: PathLike, **kwargs):
+    run_bdf('.', bdf_filename, **kwargs)
+
+def run_bdf(folder: str, bdf_filename: PathLike,
             debug: bool=False, xref: bool=True, check: bool=True,
             punch: bool=False,
             mesh_form: str='separate', is_folder: bool=False,
@@ -296,7 +299,7 @@ def run_bdf(folder: str, bdf_filename: str,
             run_skin_solids: bool=True,
             run_export_caero: bool=True,
             save_file_structure: bool=False,
-            nerrors=0, dev: bool=False,
+            nerrors: int=0, dev: bool=False,
             crash_cards=None, cards_to_ignore=None,
             safe_xref: bool=False, run_pickle: bool=False,
             version: Optional[str]=None,
@@ -378,12 +381,12 @@ def run_bdf(folder: str, bdf_filename: str,
 
     bdf_model = bdf_filename
     if not quiet:
-        print("bdf_model = %s" % bdf_model)
+        print(f'bdf_model = {bdf_model}')
     if is_folder:
         bdf_model = os.path.join(TEST_PATH, folder, bdf_filename)
 
     model, ext = os.path.splitext(bdf_model)
-    out_model = '%s.test_bdf%s' % (model, ext)
+    out_model = f'{model}.test_bdf{ext}'
 
     fem1, fem2, diff_cards = run_and_compare_fems(
         bdf_model, out_model, debug=debug, xref=xref, check=check,

@@ -4,7 +4,7 @@ import datetime
 from collections import defaultdict
 from struct import pack, Struct
 from typing import Optional, Any, TYPE_CHECKING
-from cpylog import get_logger2
+from cpylog import get_logger
 
 #import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
@@ -40,7 +40,7 @@ class TrashWriter:
 
 class OP2Writer(OP2_F06_Common):
     def __init__(self, log=None, debug: bool=False):
-        self.log = get_logger2(log, debug)
+        self.log = get_logger(log, debug)
         OP2_F06_Common.__init__(self)
         self.card_count = {}
 

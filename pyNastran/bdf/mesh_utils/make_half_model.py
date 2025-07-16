@@ -12,7 +12,7 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import _plane_to_iy
 
 # def make_symmetric_model(bdf_filename, plane: str='xz',
 #                          zero_tol: float=1e-12, log=None, debug: bool=True):
-#     log = get_logger2(log=log, debug=debug, encoding='utf-8')
+#     log = get_logger(log=log, debug=debug, encoding='utf-8')
 #     deprecated('make_symmetric_model', 'make_half_model', '1.3', levels=[0, 1, 2])
 #     return make_half_model(bdf_filename, plane=plane, zero_tol=zero_tol, log=log, debug=debug)
 

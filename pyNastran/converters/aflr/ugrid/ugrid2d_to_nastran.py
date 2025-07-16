@@ -3,6 +3,7 @@ from copy import deepcopy
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
 from pyNastran.bdf.field_writer_8 import print_card_8, print_int_card
 
+
 def ugrid2d_to_nastran_filename(ugrid2d_filename, bdf_filename,
                                 axis_order=None,
                                 nid_start=1, eid_start=1,
@@ -24,7 +25,7 @@ def convert_ugrid2d_to_nastran(bdf_filename, nodes, tris, quads,
     if axis_order is not None:
         nodes = deepcopy(nodes[:, axis_order])
 
-    with open(bdf_filename, 'wb') as bdf_file:
+    with open(bdf_filename, 'w') as bdf_file:
         if not punch:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -40,7 +41,6 @@ def convert_ugrid2d_to_nastran(bdf_filename, nodes, tris, quads,
             card = ['GRID', nid, cp, xi, yi, zi]
             bdf_file.write(print_card_8(card))
             nid += 1
-
 
         t = 0.1
         card = ['PSHELL', pid, mid, t]

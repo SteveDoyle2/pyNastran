@@ -5,10 +5,10 @@ There is some manual work that has to happen afterwards.
 from __future__ import print_function, unicode_literals
 import os
 from io import open
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger
 
-log_debug = get_logger2(log=None, debug=True, encoding='utf-8')
-log_warning = get_logger2(log=None, debug=None, encoding='utf-8')
+log_debug = get_logger(log=None, debug=True, encoding='utf-8')
+log_warning = get_logger(log=None, debug=None, encoding='utf-8')
 
 
 IGNORE_DIRS = ['src', 'dmap', 'solver', '__pycache__',
@@ -281,7 +281,7 @@ def get_sub_dirs(dirname, log):
 
 def run():
     """regenerates the *.rst files"""
-    log = get_logger2(log=None, debug=True, encoding='utf-8')
+    log = get_logger(log=None, debug=True, encoding='utf-8')
     unused_folders, files = get_folders_files('../../pyNastran')
     #c = get_classes(files)
     get_doc(files, log)

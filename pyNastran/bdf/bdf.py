@@ -30,7 +30,7 @@ from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
 # from cpylog import get_logger2 as get_logger, CPYLOG_VERSION
-# if CPYLOG_VERSION > (1, 7, 0):
+# if CPYLOG_VERSION > (1, 6, 0):
 #     from cpylog import get_logger
 
 from pyNastran.utils import PathLike, object_attributes, check_path, deprecated as _deprecated
@@ -210,9 +210,9 @@ from .bdf_interface.pybdf import (
 
 #from .bdf_interface.add_card import CARD_MAP
 from cpylog import __version__ as CPYLOG_VERSION
-if CPYLOG_VERSION > '1.7.0':
+if CPYLOG_VERSION > '1.6.0':
     from cpylog import get_logger
-else:
+else:  # pragma: no cover
     from cpylog import get_logger2 as get_logger
 
 if TYPE_CHECKING:  # pragma: no cover

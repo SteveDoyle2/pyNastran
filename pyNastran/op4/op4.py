@@ -8,11 +8,15 @@ from typing import TextIO, BinaryIO, Optional, cast
 import numpy as np
 from numpy import float32, float64, complex64, complex128
 from scipy.sparse import coo_matrix  # type: ignore
-from cpylog import get_logger2, SimpleLogger
+from cpylog import SimpleLogger, __version__ as CPYLOG_VERSION
 
 from pyNastran.utils import is_binary_file as file_is_binary, PathLike, PurePath
 from pyNastran.utils.mathematics import print_matrix #, print_annotated_matrix
 from pyNastran.op2.result_objects.matrix import Matrix
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 class OP4:
@@ -27,7 +31,7 @@ class OP4:
         self._endian = ''
         self.debug = debug
         #assert debug == True, debug
-        self.log = get_logger2(log, debug)
+        self.log = get_logger(log, debug)
         self._new = False
         self.large = False
 

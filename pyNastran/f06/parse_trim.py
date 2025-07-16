@@ -2,16 +2,23 @@ from typing import Optional, TextIO, Any
 import os
 import numpy as np
 #import scipy.sparse
-from cpylog import SimpleLogger, get_logger2
+from cpylog import SimpleLogger  # get_logger
 from pyNastran.utils import print_bad_path
 from pyNastran.f06.f06_tables.trim import (
     MonitorLoads, TrimResults, ControllerState,
     AeroPressure, AeroForce, TrimVariables, TrimVariable)
 
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
+
 
 #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
 
-MONTHS = {'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'}
+MONTHS = {'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+          'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'}
 SKIP_FLAGS = [
     'This software and related documentation are',
     'LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED',
@@ -39,12 +46,13 @@ SKIP_FLAGS = [
     #'* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',  # causes a crash
 ]
 
+
 def read_f06_trim(f06_filename: str,
                   log: Optional[SimpleLogger]=None,
                   nlines_max: int=1_000_000,
                   debug: bool=False) -> dict[str, TrimResults]:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
-    log = get_logger2(log=log, debug=debug, encoding='utf-8')
+    log = get_logger(log=log, debug=debug, encoding='utf-8')
     dirname = os.path.dirname(os.path.abspath(f06_filename))
     assert os.path.exists(f06_filename), print_bad_path(f06_filename)
     log.info(f'reading {f06_filename!r}')
@@ -103,6 +111,7 @@ def _stack_data_dict(results: dict[np.ndarray, np.ndarray],
             data2 = np.vstack(all_data)
             results_out[subcase] = (nids2, data2)
     return results_out
+
 
 def _skip_to_page_stamp_and_rewind(f06_file: TextIO, line: str, i: int,
                                    nlines_max: int) -> tuple[str, int, int]:
@@ -563,6 +572,7 @@ def _read_aeroelastic_trim_variables(f06_file: TextIO,
     f06_file.seek(seek1)
     return line_end, iend
 
+
 def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     """101     ANGLEA             RIGID BODY           FIXED      1.000000E-01  RADIANS'"""
     line2 = line.rstrip()  # s.split()
@@ -613,6 +623,7 @@ def _read_metadata_header(f06_file: TextIO,
     assert xz_symmetry in {'ANTISYMMETRIC', 'ASYMMETRIC', 'SYMMETRIC'}, xz_symmetry
     assert xy_symmetry in {'ANTISYMMETRIC', 'ASYMMETRIC', 'SYMMETRIC'}, xy_symmetry
     return i, aero_config, xz_symmetry, xy_symmetry
+
 
 def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                                                 line: str, i: int, nlines_max: int,

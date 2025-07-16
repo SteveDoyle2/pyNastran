@@ -1,5 +1,6 @@
 import os
 import warnings
+from pathlib import Path
 import unittest
 
 import numpy as np
@@ -9,8 +10,8 @@ import pyNastran
 from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge, export_to_bedge
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
 
-PKG_PATH = pyNastran.__path__[0]
-TEST_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'aflr2')
+PKG_PATH = Path(pyNastran.__path__[0])
+TEST_PATH = PKG_PATH / 'converters' / 'aflr' / 'aflr2'
 warnings.simplefilter('always')
 np.seterr(all='raise')
 
@@ -21,11 +22,14 @@ class TestBEdge(unittest.TestCase):
     def test_bedge_1(self):
         """tests the m3 model"""
         log = get_logger(level='warning')
-        bedge_filename = os.path.join(TEST_PATH, 'm3.bedge')
-        bdf_filename = os.path.join(TEST_PATH, 'm3.bdf')
-        fixed_points_filename = os.path.join(TEST_PATH, 'm3.xyz')
+        #log = get_logger(level='debug')
+        bedge_filename = TEST_PATH / 'm3.bedge'
+        bdf_filename = TEST_PATH / 'm3.bdf'
+        esp_filename = TEST_PATH / 'm3.csm'
+        fixed_points_filename = TEST_PATH / 'm3.xyz'
 
         model = read_bedge(bedge_filename, beta_reverse=179.7, log=log, debug=False)
+        model.write_esp(esp_filename)
         model2 = read_bedge(bedge_filename, beta_reverse=179.7, log=log, debug=False)
         assert len(model.nodes) == 858, 'nodes=%s' % len(model.nodes)
         assert len(model.bars) == 858, 'nbars=%s' % len(model.bars)

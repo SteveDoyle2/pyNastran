@@ -115,7 +115,6 @@ class SurfReader:
         #fail_surf_filename = basename +
         #print(fail_surf_filename)
 
-
         is_failed_surf = True if '.FAIL.surf' in surf_filename else False
         # if '.FAIL.' in surf_filename:
             # is_failed_surf = True
@@ -134,7 +133,6 @@ class SurfReader:
 
             tri_props = np.zeros((ntris, 3), dtype='int32')
             quad_props = np.zeros((nquads, 3), dtype='int32')
-
 
             # read nodes
             if is_failed_surf:

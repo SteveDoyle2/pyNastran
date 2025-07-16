@@ -332,6 +332,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
                 res.get_vector_result(itime, res_name)
                 deflects = res.deflects(itime, res_name)
                 if is_complex and deflects:
+                    scale = 1.0
                     res.get_vector_result_by_scale_phase(itime, res_name, scale, phase=45.)
                 res.get_default_arrow_scale(itime, res_name)
                 res.get_default_min_max(itime, res_name)
@@ -577,7 +578,7 @@ class TestNastranGUI(unittest.TestCase):
 
         p1 = np.array([0, 0, 0])  # origin
         p2 = np.array([1, 0, 0])  # xaxis
-        p3 = np.array([1, 0, 0]) # end
+        p3 = np.array([1, 0, 0])  # end
         zaxis = np.array([0, 0, 1])
         test.shear_moment_torque_obj.plot_shear_moment_torque(
             icase_gpforce,
@@ -873,7 +874,6 @@ class TestNastranGUI(unittest.TestCase):
             # assert nresults == 24, nresults # 49-10; ???
             # assert len(test.result_cases) == 39, len(test.result_cases)
 
-
         nresult_cases = len(test.result_cases)
         icase = max(test.result_cases)
 
@@ -1033,7 +1033,8 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename)
 
         nmodes = 10
-        nresults = get_nreal_nresults(test,
+        nresults = get_nreal_nresults(
+            test,
             neigenvectors=nmodes,
             nbar_stress=nmodes,
             nbeam_stress=nmodes,  # beam stress is dropped
@@ -1077,7 +1078,8 @@ class TestNastranGUI(unittest.TestCase):
         assert len(test.result_cases) == 7, len(test.result_cases)
         test.load_nastran_results(op2_filename)
         nmodes = 10
-        nresults = get_nreal_nresults(test,
+        nresults = get_nreal_nresults(
+            test,
             neigenvectors=nmodes,
             nbar_stress=nmodes,
             nbeam_stress=nmodes,  # beam stress is dropped
@@ -1199,9 +1201,9 @@ class TestNastranGUI(unittest.TestCase):
         #print(test.result_cases[160])
         #assert_result_cases(test, ncases=236)
         if USE_OLD_TERMS:
-            assert len(test.result_cases) == 220, len(test.result_cases) # old terms
+            assert len(test.result_cases) == 220, len(test.result_cases)  # old terms
         else:
-            assert len(test.result_cases) == 224, len(test.result_cases) # new terms
+            assert len(test.result_cases) == 224, len(test.result_cases)  # new terms
         #print(test.result_cases)
 
     def test_vba1(self):
@@ -1231,11 +1233,11 @@ class TestNastranGUI(unittest.TestCase):
         test.on_update_geometry_properties_override_dialog(out_datai)
 
         out_data = {
-            'clicked_ok' : True,
-            'Global XYZ' : out_datai['Global XYZ'],
-            'conm2' : out_datai['conm2'],
-            'bar_z' : out_datai['bar_z'],
-            'caero' : out_datai['caero'],
+            'clicked_ok': True,
+            'Global XYZ': out_datai['Global XYZ'],
+            'conm2': out_datai['conm2'],
+            'bar_z': out_datai['bar_z'],
+            'caero': out_datai['caero'],
         }
 
         #print(test.geometry_properties)
@@ -1433,7 +1435,7 @@ class TestNastranGUI(unittest.TestCase):
         model.disable_cards(['CHEXA', 'CTETRA', 'CPENTA',
                              'CROD', 'PLOTEL', 'CBAR', 'CBEAM', 'CTRIA3', 'CQUAD4', 'CQUADR', 'CTRIAR',
                              'CQUAD8', 'CTRIA6', 'CSHEAR', 'CTUBE',
-                             'CONM2', 'CVISC', #'CONROD',
+                             'CONM2', 'CVISC',  # 'CONROD',
                              'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
 
                              'PLOAD1', 'PLOAD2', 'PLOAD4',
@@ -1467,9 +1469,7 @@ class TestNastranGUI(unittest.TestCase):
         if USE_OLD_TERMS:
             assert len(test2.result_cases) == 105, len(test2.result_cases)
         else:
-            assert len(test2.result_cases) == 125, len(test2.result_cases)  #  wrong
-
-
+            assert len(test2.result_cases) == 125, len(test2.result_cases)  # wrong
 
     def test_gui_elements_02(self):
         """tests a large number of elements and results in SOL 101"""
@@ -1504,9 +1504,9 @@ class TestNastranGUI(unittest.TestCase):
 
         test.load_nastran_results(op2_filename)
         if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 116, len(test.result_cases) # old terms
+            assert len(test.result_cases) == 116, len(test.result_cases)  # old terms
         else:
-            assert len(test.result_cases) == 120, len(test.result_cases) # new terms
+            assert len(test.result_cases) == 120, len(test.result_cases)  # new terms
 
     def test_gui_elements_03(self):
         """tests a large number of elements and results in SOL 103-modes"""
@@ -1527,7 +1527,7 @@ class TestNastranGUI(unittest.TestCase):
                 #fobj.write(f'{key}: {value}\n')
 
         if USE_NEW_SIDEBAR_OBJS and USE_OLD_TERMS:
-            assert len(test.result_cases) == 503, len(test.result_cases) # old terms
+            assert len(test.result_cases) == 503, len(test.result_cases)  # old terms
         else:
             assert USE_OLD_TERMS
 

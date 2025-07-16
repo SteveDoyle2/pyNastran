@@ -62,7 +62,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 from pyNastran.gui.menus.edit_geometry_properties.manage_actors import AltGeometry
 from pyNastran.bdf.cards.base_card import deprecated
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import print_bad_path, PathLike
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 if TYPE_CHECKING:  # pragma: no cover
@@ -110,6 +110,7 @@ class GeometryObject(BaseGui):
         #pass
     #def modify(self):
         #pass
+
 
 class GuiAttributes:
     """All methods in this class must not require VTK"""
@@ -241,7 +242,7 @@ class GuiAttributes:
         # actor_slots
         self.corner_text_actors: dict[int, vtkTextActor] = {}
         self.geometry_actors = {}
-        self.alt_grids = {} #additional grids
+        self.alt_grids = {}  # additional grids
 
         # coords
         self.transform = {}
@@ -294,6 +295,7 @@ class GuiAttributes:
     @property
     def geometry_properties(self):
         return self.model_data.geometry_properties
+
     @geometry_properties.setter
     def geometry_properties(self, geometry_properties):
         self.model_data.geometry_properties = geometry_properties
@@ -301,6 +303,7 @@ class GuiAttributes:
     @property
     def groups(self) -> dict[str, Any]:
         return self.model_data.groups
+
     @groups.setter
     def groups(self, groups: dict[str, Any]):
         self.model_data.groups = groups
@@ -308,6 +311,7 @@ class GuiAttributes:
     @property
     def group_active(self) -> str:
         return self.model_data.group_active
+
     @group_active.setter
     def group_active(self, group_active: str) -> None:
         self.model_data.group_active = group_active
@@ -315,6 +319,7 @@ class GuiAttributes:
     @property
     def follower_nodes(self) -> dict[str, list[int]]:
         return self.model_data.follower_nodes
+
     @follower_nodes.setter
     def follower_nodes(self, follower_nodes: dict[str, list[int]]) -> None:
         self.model_data.follower_nodes = follower_nodes
@@ -322,6 +327,7 @@ class GuiAttributes:
     @property
     def follower_functions(self) -> dict[str, FollowerFunction]:
         return self.model_data.follower_functions
+
     @follower_functions.setter
     def follower_functions(self, follower_functions: dict[str, FollowerFunction]):
         self.model_data.follower_functions = follower_functions
@@ -329,6 +335,7 @@ class GuiAttributes:
     @property
     def label_actors(self) -> list[vtkTextActor]:
         return self.model_data.label_actors
+
     @label_actors.setter
     def label_actors(self, label_actors: list[vtkTextActor]) -> None:
         self.model_data.label_actors = label_actors
@@ -336,6 +343,7 @@ class GuiAttributes:
     @property
     def label_ids(self) -> list[int]:
         return self.model_data.label_ids
+
     @label_ids.setter
     def label_ids(self, label_ids: list[int]) -> None:
         self.model_data.label_ids = label_ids
@@ -343,13 +351,15 @@ class GuiAttributes:
     @property
     def label_scale(self) -> float:
         return self.model_data.label_scale
-    @property
+
+    @label_scale.setter
     def label_scale(self, label_scale: float) -> None:
         self.model_data.label_scale = label_scale
 
     @property
     def result_cases(self) -> dict[int, Any]:
         return self.model_data.result_cases
+
     @result_cases.setter
     def result_cases(self, result_cases: dict[int, Any]) -> None:
         self.model_data.result_cases = result_cases
@@ -492,7 +502,7 @@ class GuiAttributes:
         return self.nid_maps[self.name]
 
     @nid_map.setter
-    def nid_map(self, nid_map: dict[int, int]) -> int:
+    def nid_map(self, nid_map: dict[int, int]) -> None:
         """sets the node_id map"""
         self.nid_maps[self.name] = nid_map
 
@@ -534,7 +544,7 @@ class GuiAttributes:
         create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
         if add:
-            self._add_alt_actors({name : self.alt_grids[name]})
+            self._add_alt_actors({name: self.alt_grids[name]})
 
             #if name in self.geometry_actors:
             self.geometry_actors[name].Modified()
@@ -742,7 +752,7 @@ class GuiAttributes:
         reset_minus1 = True
         # new geometry
         if reset_minus1:
-            self.model_data.label_actors = {-1 : []}
+            self.model_data.label_actors = {-1: []}
         else:
             for idi in self.label_actors:
                 if idi == -1:
@@ -1028,6 +1038,7 @@ class GuiAttributes:
     @property
     def model(self):
         return self.models[self.name]
+
     @model.setter
     def model(self, model) -> None:
         self.models[self.name] = model
@@ -1078,7 +1089,7 @@ class GuiAttributes:
     def on_load_geometry(self, infile_name=None, geometry_format=None,
                          name: str='main',
                          plot: bool=True,
-                         stop_on_failure: bool=False) -> None:
+                         stop_on_failure: bool=False) -> bool:
         """
         Loads a baseline geometry
 
@@ -1100,9 +1111,10 @@ class GuiAttributes:
         if name is False:
             # fixing weird pyqt5, python 3.12 issue
             name = 'main'
-        self.load_actions.on_load_geometry(
+        is_failed = self.load_actions.on_load_geometry(
             infile_name=infile_name, geometry_format=geometry_format,
             name=name, plot=plot, stop_on_failure=stop_on_failure)
+        return is_failed
 
     @start_stop_performance_mode
     def on_load_results(self, out_filename=None) -> None:
@@ -1196,7 +1208,7 @@ class GuiAttributes:
 
         if is_failed:
             return
-        if results_filename:  #  and not is_geom_results
+        if results_filename:  # and not is_geom_results
             self.on_load_results(results_filename)
 
         post_script = inputs['postscript']
@@ -1504,7 +1516,9 @@ class GuiAttributes:
         return is_failed
 
     @start_stop_performance_mode
-    def on_load_csv_points(self, csv_filename=None, name=None, color=None) -> bool:
+    def on_load_csv_points(self, csv_filename: Optional[PathLike]=None,
+                           name: Optional[str]=None,
+                           color: Optional[list[float]]=None) -> bool:
         """
         Loads a User Points CSV File of the form:
 
@@ -1784,6 +1798,7 @@ class ModelData:
         msg = ('ModelData:\n'
                f'result_cases.keys() = {self.result_cases.keys()}')
         return msg
+
 
 def _add_fmt(supported_fmts: list[str],
              fmts: list[Format], fmt: str,

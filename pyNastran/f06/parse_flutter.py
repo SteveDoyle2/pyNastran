@@ -29,9 +29,9 @@ from pyNastran.utils.numpy_utils import float_types, integer_types
 from pyNastran.f06.f06_matrix_parser import read_real_eigenvalues
 Crossing = tuple[float, float, float]
 
-if CPYLOG_VERSION > '1.7.0':
+if CPYLOG_VERSION > '1.6.0':
     from cpylog import get_logger
-else:
+else:  # pragma: no cover
     from cpylog import get_logger2 as get_logger
 
 
@@ -71,7 +71,7 @@ def make_flutter_response(f06_filename: PathLike,
     out_units = get_flutter_units(out_units)
 
     if log is None:
-        log = get_logger2(log=None, debug=True, encoding='utf-8')
+        log = get_logger(log=None, debug=True, encoding='utf-8')
     #log.level = 'debug'
     flutters = {}
     iline = 0
@@ -798,7 +798,7 @@ def make_flutter_plots(modes: list[int],
         subcases_set = set(subcases)
     missing_cases_set = subcases_set - subcases_flutter_set
 
-    log = get_logger2(log=log, debug=True, encoding='utf-8')
+    log = get_logger(log=log, debug=True, encoding='utf-8')
     if missing_cases_set:
         missing_cases_list = list(missing_cases_set)
         missing_cases_list.sort()

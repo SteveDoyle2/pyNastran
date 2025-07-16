@@ -195,7 +195,6 @@ class TestF06Flutter(unittest.TestCase):
         """tests plot_flutter_f06"""
         f06_filename = AERO_PATH / 'bah_plane' / 'bah_plane.f06'
         log = get_logger(log=None, level=None, encoding='utf-8')
-        #log = get_logger2(log=None, debug=True, encoding='utf-8')
         flutters, data = plot_flutter_f06(
             f06_filename, show=False, close=True,
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True, plot_kfreq_damping=True,
