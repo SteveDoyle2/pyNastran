@@ -469,7 +469,7 @@ class FlutterGui(LoggableGui):
             self, caption=title, basedir=basedir, filters=qt_wildcard,)
         if fname == '':
             return
-        self.f06_filename_edit.setText(fname)
+        self.f06_filename_edit[self.ifile].setText(fname)
         self.ok_button.setEnabled(False)
         self._set_f06_default_names(fname)
     def _set_f06_default_names(self, f06_filename: str) -> None:
