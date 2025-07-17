@@ -45,6 +45,8 @@ from pyNastran.bdf.bdf_interface.subcase.cards_int import INT_CARD_DICT, INT_CAR
 from pyNastran.bdf.bdf_interface.subcase.cards_check import CHECK_CARD_DICT, CHECK_CARD_NAMES
 
 from pyNastran.utils import object_attributes
+
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 

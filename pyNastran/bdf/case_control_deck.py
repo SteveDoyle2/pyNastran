@@ -25,6 +25,9 @@ import copy
 from typing import Any, Optional, TYPE_CHECKING
 
 from cpylog import get_logger, SimpleLogger
+# from cpylog import __version__ as CPYLOG_VERSION, SimpleLogger
+# from cpylog import get_logger
+
 
 #from pyNastran.bdf import subcase
 from pyNastran.utils import object_attributes, object_methods, object_stats
@@ -45,6 +48,7 @@ from pyNastran.bdf.bdf_interface.subcase.cards import (
     split_by_mixed_commas_parentheses,
 )
 from pyNastran.utils import object_attributes
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
