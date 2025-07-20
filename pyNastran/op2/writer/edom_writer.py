@@ -1078,18 +1078,21 @@ def _write_dvxrel2_flag(dvxrel2: DVPREL2 | DVMREL2,
                         data: list[Any]) -> bytes:
     """writes the DVxREL2 flag table"""
     fmt = b''
+    data_local = []
     ndesvars = len(dvxrel2.dvids)
     if ndesvars:
         fmt += b' %ii' % (2 + ndesvars)
-        data += [1000] + dvxrel2.dvids + [-1000]
+        data_local += [1000] + dvxrel2.dvids + [-1000]
 
     nlabels = len(dvxrel2.labels)
     if nlabels:
-        fmt += b' i%isi' % (nlabels*8)
+        fmt += b' i' + (b'8s' * nlabels) + b'i'
         labels_bytes = [('%-8s' % label).encode('ascii') for label in dvxrel2.labels]
-        data += [2000] + labels_bytes + [-2000]
+        data_local += [2000] + labels_bytes + [-2000]
+
     fmt += b' i'
-    data.append(-1)
+    data_local.append(-1)
+    data += data_local
     return fmt
 
 def write_dtable(model: BDF | OP2Geom, name: str,
