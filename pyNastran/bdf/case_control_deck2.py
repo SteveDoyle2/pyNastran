@@ -43,7 +43,6 @@ from pyNastran.bdf.bdf_interface.subcase.cards import (
 from pyNastran.bdf.bdf_interface.subcase.cards_str import STR_CARD_DICT, STR_CARD_NAMES
 from pyNastran.bdf.bdf_interface.subcase.cards_int import INT_CARD_DICT, INT_CARD_NAMES
 from pyNastran.bdf.bdf_interface.subcase.cards_check import CHECK_CARD_DICT, CHECK_CARD_NAMES
-
 from pyNastran.utils import object_attributes
 
 
@@ -64,7 +63,8 @@ class CaseControlDeck:
         del state['log']
         return state
 
-    def __init__(self, lines: list[str], log: Optional[Any]=None) -> None:
+    def __init__(self, lines: list[str],
+                 log: Optional[Any]=None) -> None:
         """
         Parameters
         ----------
@@ -78,7 +78,7 @@ class CaseControlDeck:
         self.use_card_dict = True
 
         # pulls the logger from the BDF object
-        self.log = get_logger(log=log, level="debug")
+        self.log = get_logger(log, "debug")
         self.debug = False
 
         self.sol_200_map = {

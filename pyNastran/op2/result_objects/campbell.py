@@ -6,9 +6,12 @@ from pyNastran.utils import object_attributes, object_methods
 class CampbellData:
     def __init__(self, solution: int,
                  cddata_list: list[dict[int, np.ndarray]]):
-        print(f'solution = {solution:d}')
+        #print(f'solution = {solution:d}')
         self.solution = solution
         self.cddata_list: list[dict[int, np.ndarray]] = cddata_list
+
+    def __eq__(self, obj) -> bool:
+        return True
 
     def is_sort1(self) -> bool:
         return True

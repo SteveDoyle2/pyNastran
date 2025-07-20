@@ -52,7 +52,7 @@ def read_f06_trim(f06_filename: str,
                   nlines_max: int=1_000_000,
                   debug: bool=False) -> dict[str, TrimResults]:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
-    log = get_logger(log=log, debug=debug, encoding='utf-8')
+    log = get_logger(log, debug, encoding='utf-8')
     dirname = os.path.dirname(os.path.abspath(f06_filename))
     assert os.path.exists(f06_filename), print_bad_path(f06_filename)
     log.info(f'reading {f06_filename!r}')

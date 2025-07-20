@@ -90,7 +90,7 @@ class CaseControlDeck:
 
         """
         # pulls the logger from the BDF object
-        self.log = get_logger(log=log, level="debug")
+        self.log = get_logger(log, "debug")
         self.debug = False
 
         self.sol_200_map = {
@@ -444,7 +444,8 @@ class CaseControlDeck:
         sol : str
             the solution type to change the solution to
 
-        >>> bdf.case_control
+        >>> bdf = BDF()
+        >>> bdf.case_control_deck
         SUBCASE 1
             DISP = ALL
 
@@ -473,10 +474,11 @@ class CaseControlDeck:
 
         Examples
         --------
+        >>> bdf_filename = 'fem.bdf'
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
-        >>> bdf.case_control.add_parameter_to_global_subcase('DISP=ALL')
-        >>> bdf.case_control
+        >>> bdf.case_control_deck.add_parameter_to_global_subcase('DISP=ALL')
+        >>> bdf.case_control_deck
         TITLE = DUMMY LINE
         DISP = ALL
 
@@ -487,7 +489,8 @@ class CaseControlDeck:
             self._add_parameter_to_subcase(key, value, options, param_type,
                                            isubcase)
 
-    def add_parameter_to_local_subcase(self, isubcase: int, param: list[str]) -> None:
+    def add_parameter_to_local_subcase(self, isubcase: int,
+                                       param: list[str]) -> None:
         """
         Takes in a single-lined string and adds it to a single Subcase.
 
@@ -495,7 +498,7 @@ class CaseControlDeck:
         ----------
         isubcase : int
             the subcase ID to add
-        param_name : list[str]
+        param : list[str]
             the parameter name to add
 
         Notes
@@ -504,10 +507,11 @@ class CaseControlDeck:
 
         Examples
         --------
+        >>> bdf_filename = 'fem.bdf'
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
-        >>> bdf.case_control.add_parameter_to_local_subcase(1, 'DISP=ALL')
-        >>> print(bdf.case_control)
+        >>> bdf.case_control_deck.add_parameter_to_local_subcase(1, 'DISP=ALL')
+        >>> print(bdf.case_control_deck)
         TITLE = DUMMY LINE
         SUBCASE 1
             DISP = ALL

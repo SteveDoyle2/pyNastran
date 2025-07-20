@@ -718,6 +718,36 @@ class TestSATKOP2(Tester):
 
 
 class TestNX(Tester):
+    def test_nx_normalized_mass_density_1(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'nx' / 'normalized_mass_density'
+        op2_filename = folder / 's200tpgdsobj2e.op2'
+        bdf_filename = folder / 's200tpgdsobj2e.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_nx_normalized_mass_density_2(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'nx' / 'normalized_mass_density'
+        op2_filename = folder / 's200tpgext1.op2'
+        bdf_filename = folder / 's200tpgext1.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
     def test_op2_bwb_trim(self):
         log = SimpleLogger(level='warning')
         # log = SimpleLogger(level='debug')
@@ -983,6 +1013,36 @@ class TestMSC(Tester):
         unused_op2, unused_is_passed = run_op2(
             op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_msc_force_vector(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'msc' / 'force_vector'
+        op2_filename = folder / 'nas102_ws21.op2'
+        bdf_filename = folder / 'nas102_ws21.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_msc_contact_stress(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'msc' / 'contact'
+        op2_filename = folder / 'nsc01a_n.op2'
+        bdf_filename = folder / 'nsc01a_n.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
             exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,

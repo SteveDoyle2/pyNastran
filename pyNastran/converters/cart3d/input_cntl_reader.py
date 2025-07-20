@@ -1,9 +1,13 @@
-from cpylog import get_logger
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 class InputCntlReader:
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, level=debug)
+        self.log = get_logger(log, debug)
 
     def read_input_cntl(self, input_cntl_filename):
         self.log.info('reading input_cntl=%r' % input_cntl_filename)

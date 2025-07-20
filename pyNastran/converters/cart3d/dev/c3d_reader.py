@@ -1,14 +1,17 @@
 from struct import unpack, Struct
 
-from numpy import zeros
-from cpylog import get_logger
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 #from pyNastran.utils import is_binary_file
 
 
 class C3D_Reader:
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, level=debug)
+        self.log = get_logger(log, debug)
 
     def read_c3d(self, c3d_filename):
         self.f = open(c3d_filename, 'r')
@@ -26,7 +29,7 @@ class C3D_Reader:
         fmt = 'Iccc'
         s = Struct(fmt)
         n = 10
-        vol_hexs = zeros((n, 3), dtype='int32')
+        vol_hexs = np.zeros((n, 3), dtype='int32')
         for j in range(nvol_hexes):
             data = self.f.read(7)
             self.n += 7

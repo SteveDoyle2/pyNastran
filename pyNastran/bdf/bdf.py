@@ -612,7 +612,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.include_dir = ''
         self.dumplines = False
 
-        self.log = get_logger(log=log, debug=debug)
+        self.log = get_logger(log, debug)
 
         # list of all read in cards - useful in determining if entire BDF
         # was read & really useful in debugging

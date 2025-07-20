@@ -190,7 +190,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
     failed_files = []
     npass = 1
     nfailed = 1
-    log = get_logger(log=None, level=debug, encoding='utf-8')
+    log = get_logger(None, debug, encoding='utf-8')
     with WarningRedirector(log) as unused_warn:
         for ifile, filename in enumerate(filenames2):
             abs_filename = os.path.abspath(os.path.join(folder, filename))
