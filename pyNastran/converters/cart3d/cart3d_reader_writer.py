@@ -21,13 +21,17 @@ from struct import pack, unpack
 from typing import TextIO, BinaryIO, Optional
 
 import numpy as np
-from cpylog import get_logger, SimpleLogger
+from cpylog import __version__ as CPYLOG_VERSION, SimpleLogger
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 class Cart3dReaderWriter:
     """Cart3d IO class"""
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, level=debug)
+        self.log = get_logger(log, debug)
         self._endian = b''
         self._encoding = 'latin1'
         self.n = 0

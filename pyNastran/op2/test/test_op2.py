@@ -60,7 +60,7 @@ def run_lots_of_files(files: list[str],
                       exclude_results: Optional[str]=None,
                       stop_on_failure: bool=False, nstart: int=0, nstop: int=1000000000,
                       short_stats: bool=False,
-                      binary_debug: bool | list[bool]=False,
+                      binary_debug: list[bool]=False,
                       compare: bool=True, quiet: bool=False, dev: bool=True, xref_safe: bool=False):
     """used by op2_test.py to run thousands of files"""
     if skip_files is None:
@@ -73,8 +73,9 @@ def run_lots_of_files(files: list[str],
     assert write_op2 in [True, False]
     assert write_hdf5 in [True, False]
     assert build_pandas in [True, False]
-    if binary_debug in [True, False]:
-        binary_debug = [binary_debug]
+    # if binary_debug in [True, False]:
+    #     binary_debug = [binary_debug]
+    # assert binary_debug == [False], binary_debug
 
     subcases = []
     failed_cases = []

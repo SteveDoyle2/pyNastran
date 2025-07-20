@@ -27,11 +27,11 @@ from typing import Optional, Any
 import h5py
 from h5py._hl.dataset import Dataset
 import numpy as np
-from cpylog import __version__ as CPYLOG_VERSION
 
 from pyNastran.utils import object_attributes, check_path, PathLike
 from pyNastran.utils.numpy_utils import integer_types, float_types
 
+from cpylog import __version__ as CPYLOG_VERSION
 if CPYLOG_VERSION > '1.6.0':
     from cpylog import get_logger
 else:  # pragma: no cover
@@ -45,7 +45,7 @@ else:  # pragma: no cover
 def export_obj_to_hdf5(hdf5_filename: PathLike, obj,
                        user_custom_types=None, log=None, debug: bool=False):
     """exports an object to an HDF5 file"""
-    log = get_logger(log=log, debug=debug, encoding='utf-8')
+    log = get_logger(log, debug, encoding='utf-8')
     with h5py.File(hdf5_filename, 'w') as hdf5_file:
         log.info('starting export_op2_to_hdf5_file of %r' % hdf5_filename)
         export_obj_to_hdf5_file(
@@ -60,7 +60,7 @@ def export_obj_to_hdf5_file(hdf5_file, obj, user_custom_types=None, log=None, de
 
 class HDF5Exporter:
     def __init__(self, hdf5_file, user_custom_types=None, log=None, debug=False):
-        log = get_logger(log=log, debug=debug, encoding='utf-8')
+        log = get_logger(log, debug, encoding='utf-8')
         if user_custom_types is None:
             user_custom_types = []
         self.user_custom_types = user_custom_types
@@ -236,7 +236,7 @@ def load_obj_from_hdf5(hdf5_filename: str, custom_types_dict=None, log=None, deb
         the custom mapper
     """
     check_path(hdf5_filename, 'hdf5_filename')
-    log = get_logger(log=log, debug=debug, encoding='utf-8')
+    log = get_logger(log, debug, encoding='utf-8')
     log.info('hdf5_filename = %r' % hdf5_filename)
 
     model = {}
@@ -253,7 +253,7 @@ def load_obj_from_hdf5_file(model, h5_file, log=None, custom_types_dict=None, de
 
 class HDF5Importer:
     def __init__(self, h5_file, custom_types_dict=None, log=None, debug=False, encoding='utf8'):
-        self.log = get_logger(log=log, debug=debug, encoding='utf-8')
+        self.log = get_logger(log, debug, encoding='utf-8')
         if custom_types_dict is None:
             custom_types_dict = {}
         self.custom_types_dict = custom_types_dict

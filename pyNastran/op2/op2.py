@@ -351,7 +351,7 @@ class OP2(OP2_Scalar, OP2Writer):
         # does this ever hit?
         skip_names = [
             'Array', 'Eigenvalues', 'GridPointWeight', 'TRMBU', 'TRMBD',
-            'FlutterResponse',
+            'FlutterResponse', 'CampbellData',
             # trim
             'TrimVariables',
             'TrimDerivatives', 'HingeMomentDerivatives',

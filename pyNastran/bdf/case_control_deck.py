@@ -90,7 +90,7 @@ class CaseControlDeck:
 
         """
         # pulls the logger from the BDF object
-        self.log = get_logger(log=log, level="debug")
+        self.log = get_logger(log, "debug")
         self.debug = False
 
         self.sol_200_map = {

@@ -8,8 +8,12 @@ import numpy as np
 import scipy
 from scipy.spatial import KDTree
 
-from cpylog import get_logger, SimpleLogger
 from pyNastran.utils import is_binary_file
+from cpylog import __version__ as CPYLOG_VERSION, SimpleLogger
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 def read_fld(fld_filename: str,
@@ -53,7 +57,7 @@ class FLD:
             if log is set, debug is ignored and uses the
             settings the logging object has
         """
-        self.log = get_logger(log, level=debug)
+        self.log = get_logger(log, debug)
 
         #self.nodes = None
         #self.elements = None

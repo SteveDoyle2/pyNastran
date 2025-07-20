@@ -988,6 +988,36 @@ class TestMSC(Tester):
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
+    def test_msc_force_vector(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'msc' / 'force_vector'
+        op2_filename = folder / 'nas102_ws21.op2'
+        bdf_filename = folder / 'nas102_ws21.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_msc_contact_stress(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'msc' / 'contact'
+        op2_filename = folder / 'nsc01a_n.op2'
+        bdf_filename = folder / 'nsc01a_n.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
     def test_msc_2014(self):
         """test MSC 2014 version"""
         log = get_logger(level='warning')

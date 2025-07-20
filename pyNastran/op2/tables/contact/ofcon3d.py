@@ -13,10 +13,8 @@ This file defines the OUG Table, which contains:
    - DISPLACEMENT = ALL
 """
 from __future__ import annotations
-from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
-from pyNastran import DEV
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 

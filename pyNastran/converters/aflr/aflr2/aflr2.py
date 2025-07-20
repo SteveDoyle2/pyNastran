@@ -33,8 +33,6 @@ from copy import deepcopy
 from typing import Optional
 
 import numpy as np
-# from numpy import (zeros, array, vstack, hstack, where,
-#                    arctan2, arccos, sign, isnan, radians, unique)
 from numpy.linalg import norm  # type: ignore
 from cpylog import SimpleLogger, __version__ as CPYLOG_VERSION
 if CPYLOG_VERSION > '1.6.0':

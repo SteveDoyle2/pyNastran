@@ -1,6 +1,10 @@
 import numpy as np
-from cpylog import get_logger
 from pyNastran.utils import check_path
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 def read_fgrid(fgrid_filename, unused_dimension_flag, log=None, debug=False):
@@ -27,7 +31,7 @@ class FGridReader:
             if log is set, debug is ignored and uses the
             settings the logging object has
         """
-        self.log = get_logger(log, level=debug)
+        self.log = get_logger(log, debug)
         self.debug = debug
         self.nodes = None
         self.bcs = None

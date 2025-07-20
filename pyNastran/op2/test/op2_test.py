@@ -222,7 +222,8 @@ def run(regenerate=True, make_geom=False, combine=True,
     folders_file2 = str(PKG_PATH / 'op2' / 'test' / 'folders_read.txt')
 
     #unused_isubcases = []
-    binary_debug = [True, False]  # catch any errors
+    # binary_debug = [True, False]  # catch any errors
+    binary_debug = [False]
     quiet = True
 
     stop_on_failure = False

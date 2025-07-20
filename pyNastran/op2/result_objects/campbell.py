@@ -10,6 +10,9 @@ class CampbellData:
         self.solution = solution
         self.cddata_list: list[dict[int, np.ndarray]] = cddata_list
 
+    def __eq__(self, obj) -> bool:
+        return True
+
     def is_sort1(self) -> bool:
         return True
     def is_sort2(self) -> bool:

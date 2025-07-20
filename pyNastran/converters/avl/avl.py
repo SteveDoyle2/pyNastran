@@ -2,10 +2,14 @@ import os
 import sys
 
 import numpy as np
-from cpylog import get_logger
 from pyNastran.converters.avl.control import Control
 from pyNastran.converters.avl.surface import Surface
 from pyNastran.converters.avl.body import Body
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 AVL_KEYWORDS_LONG = [
     'SURFACE', 'COMPONENT', 'YDUPLICATE', 'BODY', 'ANGLE', 'BFILE',
@@ -45,11 +49,12 @@ class Section:
         )
         return msg
 
+
 class AVL:
     """Interface to the AVL (Athena Vortex Lattice) code"""
     def __init__(self, log=None, debug=False):
         self.name = 'model_name'
-        self.log = get_logger(log=log, level=debug, encoding='utf-8')
+        self.log = get_logger(log, debug, encoding='utf-8')
         self.avl_filename = ''
         self.mach = 0.
 

@@ -3,8 +3,12 @@ Defines the following classes:
     - UGRID2D_Reader
 """
 import numpy as np
-from cpylog import get_logger
 from pyNastran.utils import PathLike
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 class UGRID2D_Reader:
@@ -12,7 +16,7 @@ class UGRID2D_Reader:
     Interface to the AFLR UGrid2D format.
     """
     def __init__(self, log=None, debug=None):
-        self.log = get_logger(log=log, level=debug)
+        self.log = get_logger(log, debug)
         self.nodes = np.zeros((0, 3), dtype='float64')
         self.tris = np.zeros((0, 3), dtype='int32')
         self.quads = np.zeros((0, 4), dtype='int32')

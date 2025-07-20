@@ -1,12 +1,16 @@
 from collections import defaultdict
 from numpy import array, linspace, vstack
 from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
-from cpylog import get_logger
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 class InputC3dReader:
     def __init__(self, log=None, debug=False):
-        self.log = get_logger(log, level=debug)
+        self.log = get_logger(log, debug)
 
     def read_input_c3d(self, input_c3d_filename, stack=True):
         """reads the input.c3d file"""
