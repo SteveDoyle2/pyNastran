@@ -598,8 +598,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.echo = False
         self.read_includes = True
         #self.skip_includes = []
-        # path to include as written in deck
-        self.replace_includes = {}  # TODO: unused
+
+        # path to include as written in deck...TODO: what does that mean?
+        # dynamically update INCLUDE files in traced bdf with other files
+        self.replace_includes = {}
 
         self._remove_disabled_cards = False
         self.use_new_deck_parser = True
@@ -632,13 +634,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # flag that allows for OpenMDAO-style optimization syntax to be used
         self._is_dynamic_syntax = False
 
-        # True:  relax strictness on card parser
-        # False: use strict parser (default)
+        # True:  use strict parser (default)
+        # False: relax strictness on card parser
         self.is_strict_card_parser = True
 
         # True:  allow duplicate ids on CQUAD4, RBE2, CONM2, ... (default)
         #        duplicate CQUAD4/CTRIA3, RBE2/RBE3s, ... are still not allowed
-        # False: no duplicate elements of any kind are allowed
+        # False: no duplicate elements of any kind are allowed;
+        #        prevents FEMAP renumbering the model
         self.allow_duplicate_element_rbe_mass = True
 
         # set of card types that overwrites work on

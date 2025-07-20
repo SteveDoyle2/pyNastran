@@ -39,37 +39,37 @@ def write_include(filename: str, is_windows: bool=None) -> str:
     """
     is_windows = is_windows if is_windows is not None else sys.platform in ['win32']
 
-    msg = "INCLUDE '"  # len=8
-    #nmax = 72 - 8 # 64
-
+    assert isinstance(filename, str), f'filename={filename} is not a string'
     if is_windows:
         marker = '\\'
     else:
         marker = '/'
 
     sline = _split_path(filename, is_windows)
-    #print('sline =', sline)
-    nsline = len(sline)
-    if len(filename) > 52: # 62
-        pth = ''
+    if len(filename) > 62:  # 62; 72-10=62; we need space for the INCLUDE (9) and the quote at the end
+        pth = "INCLUDE '"
+        all_paths = []
         for isline, pathi in enumerate(sline):
             if pathi == '/':  # /home/etc -> [/, home, etc]
-                pth += '%s' % marker
+                next_term = marker
             else:
-                pth += '%s%s' % (pathi, marker)
-            if len(pth) > 52:
-                if isline == nsline - 1: # if this is the last one...
-                    break
-                    #pth = pth.rstrip(marker)
-                    #msg += pth
-                    #pth = '\n'
-                else:
-                    pth += '\n        '
-                    msg += pth
-                    pth = ''
+                next_term = '%s%s' % (pathi, marker)
+
+            if len(pth + next_term) < 71:  # we need space for the quote
+                pth += next_term
+            else:
+                pth += '\n'
+                all_paths.append(pth)
+                pth = '        ' + next_term
+                assert len(pth) < 71, pth
+
+        if len(pth):
+            all_paths.append(pth)
+        pth = ''.join(all_paths).rstrip('\n \\')
+        out = pth.rstrip('\n ' + marker) + "'\n"
     else:
         pth = marker.join(sline)
-    out = msg + pth.rstrip('\n ' + marker) + "'\n"
+        out = "INCLUDE '" + pth.rstrip('\n ' + marker) + "'\n"
     return out
 
 
