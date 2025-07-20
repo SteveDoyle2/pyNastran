@@ -36,7 +36,11 @@ import numpy as np
 # from numpy import (zeros, array, vstack, hstack, where,
 #                    arctan2, arccos, sign, isnan, radians, unique)
 from numpy.linalg import norm  # type: ignore
-from cpylog import get_logger, SimpleLogger
+from cpylog import SimpleLogger, __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 from pyNastran.utils import print_bad_path, PathLike
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -70,7 +74,7 @@ class AFLR2:
             settings the logging object has
 
         """
-        self.log = get_logger(log=log, level=debug)
+        self.log = get_logger(log, debug)
         self.debug = debug
 
         self.nodes = np.zeros((0, 3), dtype='float64')
@@ -372,6 +376,47 @@ class AFLR2:
         self.turn_angle = turn_angle
         sys.stdout.flush()
 
+    def write_tri(self, tri_filename: PathLike,
+                  holes: list[tuple[float, float]] | None=None,
+                  circles: list[tuple[float, float, float, int]] | None=None,
+                  regions: list[tuple[float, float]] | None=None,
+                  curves_to_skip: list[int] | None=None,
+                  bc_tags: list[int] | None=None,
+                  temp_tags_map: list[int] | None=None,
+                  min_angle: float | str=20.0,
+                  max_area: float | str=0.05,
+                  tri_order: int=1,
+                  plot_clear_regions: bool=True,
+                  show: bool=False) -> None:  # pragma: no cover
+        if bc_tags is None:
+            bc_tags = []
+        if temp_tags_map is None:
+            temp_tags_map = {}
+
+        triangle_input, options = get_triangle_input(
+            self, curves_to_skip=curves_to_skip,
+            holes=holes, circles=circles, regions=regions,
+            min_angle=min_angle, max_area=max_area,
+            tri_order=tri_order,
+        )
+        # -----------------------------------------
+        self.log.info(f'options = {options}')
+        import triangle as tr
+        triangle_output = tr.triangulate(triangle_input, options)
+
+        triangle_output_to_temp_deck(
+            tri_filename, triangle_output,
+            bc_tags=bc_tags, temp_tags_map=temp_tags_map)
+
+        if plot_clear_regions and 'triangle_attributes' in triangle_output:
+            # makes less messy plots
+            del triangle_output['triangle_attributes']
+
+        if show and tri_order == 1:
+            import matplotlib.pyplot as plt
+            tr.compare(plt, triangle_input, triangle_output)
+            plt.show()
+
     def write_esp(self, esp_filename: PathLike,
                   curves_to_skip: Optional[list[int]]=None) -> None:
         """
@@ -398,7 +443,8 @@ class AFLR2:
         """
         if curves_to_skip is None:
             curves_to_skip = []
-        ucurves, nodes_pack, nsubcurves_list = get_nnodes_pack(self.curves, self.subcurves, self.log)
+        ucurves, nodes_pack, nsubcurves_list = get_nnodes_pack(
+            self.curves, self.subcurves, self.log)
         # ncurves = len(ucurves)
         # self.log.debug(f'ucurves = {ucurves}')
         # self.log.debug(f'nodes_pack = {nodes_pack}')
@@ -429,8 +475,7 @@ class AFLR2:
             if icurve in curves_to_skip:
                 for isubcurvei in range(nsubcurves):
                     nnodes = nodes_pack[isubcurve]
-                    for inodei in range(nnodes):
-                        inode += 1
+                    inode += nnodes
                     isubcurve += 1
                 continue
 
@@ -524,7 +569,297 @@ class AFLR2:
         self.log.debug('ugrid_bcs = %s' % np.unique(grid_bc))
 
         export_to_bedge(bedge_filename,
-                        nodes, grid_bc, curves, subcurves, axis=2, log=self.log)
+                        nodes, grid_bc, curves, subcurves,
+                        axis=2, log=self.log)
+
+
+def _func_circle(R: float, x: float, y: float,
+                 N: int) -> tuple[np.ndarray, np.ndarray]:
+    i = np.arange(N)
+    theta = i * 2 * np.pi / N
+    pts = np.stack([np.cos(theta), np.sin(theta)], axis=1) * R
+    seg = np.stack([i, i + 1], axis=1)
+    seg[-1, 1] = 0
+    xy = np.array([x, y])
+    pts2 = pts + xy[np.newaxis, :]
+    return pts2, seg
+
+
+def get_triangle_input(model: AFLR2,
+                       holes: list[tuple[float, float]] | None=None,
+                       circles: list[tuple[float, float, float, int]] | None=None,
+                       regions: list[tuple[float, float]] | None=None,
+                       curves_to_skip: Optional[list[int]]=None,
+                       min_angle: float | str=20.0,
+                       max_area: float | str=0.05,
+                       tri_order: int=1,
+                       ) -> tuple[dict[str, np.ndarray], str]:
+    """
+    'qpa0.05'
+
+    Triangle needs to be a closed curve and 2d (unlike bedge)
+     - triangle has an MIT license
+
+    https://github.com/inducer/meshpy
+    https://rufat.be/triangle/examples.html
+
+    Parameters
+    ----------
+    extra : str
+        https://www.cs.cmu.edu/~quake/triangle.switch.html
+        -A Assigns a regional attribute to each triangle that identifies what segment-bounded region it belongs to.
+        -j Jettisons vertices that are not part of the final triangulation from the output .node file (including duplicate input vertices and vertices ``eaten'' by holes).
+        -o2 Generates second-order subparametric elements with six nodes each.
+
+    options : str; default='qpa0.05'
+        *p - Triangulates a Planar Straight Line Graph.
+        r - Refines a previously generated mesh.
+        *q - Quality mesh generation with no angles smaller
+            than 20 degrees. An alternate minimum angle may
+            be specified after the q.
+        *a - Imposes a maximum triangle area constraint.
+            A fixed area constraint (that applies to every
+            triangle) may be specified after the a, or varying
+            areas may be read from the input dictionary.
+        c - Encloses the convex hull with segments.
+        D - Conforming Delaunay: use this switch if you want all
+            triangles in the mesh to be Delaunay, and not just
+            constrained Delaunay; or if you want to ensure that
+            all Voronoi vertices lie within the triangulation.
+        X - Suppresses exact arithmetic.
+        S - Specifies the maximum number of added Steiner points.
+        i - Uses the incremental algorithm for Delaunay
+            triangulation, rather than the divide-and-conquer
+            algorithm.
+        F - Uses Steven Fortune’s sweepline algorithm for
+            Delaunay triangulation, rather than the
+            divide-and-conquer algorithm.
+        l - Uses only vertical cuts in the divide-and-conquer
+            algorithm. By default, Triangle uses alternating
+            vertical and horizontal cuts, which usually improve
+            the speed except with vertex sets that are small or
+            short and wide. This switch is primarily of
+            theoretical interest.
+        s - Specifies that segments should be forced into the
+            triangulation by recursively splitting them at their
+            midpoints, rather than by generating a constrained
+            Delaunay triangulation. Segment splitting is true to
+            Ruppert’s original algorithm, but can create needlessly
+            small triangles. This switch is primarily of
+            theoretical interest.
+        C - Check the consistency of the final mesh. Uses exact
+            arithmetic for checking, even if the -X switch is
+            used. Useful if you suspect Triangle is buggy.
+        n - Return neighbor list in dict key ‘neighbors’
+        e - Return edge list in dict key ‘edges’
+
+    """
+    assert tri_order in {1, 2}, tri_order
+    if circles is None:
+        circles = []
+    if curves_to_skip is None:
+        curves_to_skip = []
+    if regions is None:
+        regions = []
+    if holes is None:
+        holes = []
+
+    if not isinstance(min_angle, str):
+        min_angle = f'{min_angle:g}'
+    if not isinstance(max_area, str):
+        max_area = f'{max_area:g}'
+    #-----------------------------------------
+
+    ucurves, nodes_pack, nsubcurves_list = get_nnodes_pack(
+        model.curves, model.subcurves, model.log)
+    isubcurve = 0
+    inode = 0
+    segments = []
+    for icurve, nsubcurves in zip(ucurves, nsubcurves_list):
+        if icurve in curves_to_skip:
+            for isubcurvei in range(nsubcurves):
+                nnodes = nodes_pack[isubcurve]
+                inode += nnodes
+                isubcurve += 1
+            continue
+
+        inode0 = inode
+        for isubcurvei in range(nsubcurves):
+            nnodes = nodes_pack[isubcurve]
+            segmenti = np.zeros((nnodes, 2), dtype='int32')
+            i = inode + np.arange(0, nnodes)
+            segmenti[:, 0] = i
+            segmenti[:, 1] = i + 1
+            inode += nnodes
+            isubcurve += 1
+            segments.append(segmenti)
+        segmenti[-1, 1] = inode0
+        inode0 = inode
+
+    all_nodes_list = [model.nodes[:, :2]]
+    for circle in circles:
+        (R, x, y, N) = circle
+        pts0, seg0 = _func_circle(R, x, y, N)
+        all_nodes_list.append(pts0)
+        segments.append(seg0 + inode)
+        inode += len(pts0)
+
+    segment = np.vstack(segments)
+
+    all_nodes = np.vstack(all_nodes_list)
+    if len(curves_to_skip):
+        # filter unused points
+        ipoints = np.unique(segment.ravel())
+        all_nodes = all_nodes[ipoints, :]
+        segment = np.searchsorted(ipoints, segment)
+
+    #all_nodes = self.nodes[ipoints, :2]
+    assert all_nodes.shape[1] == 2, all_nodes.shape
+
+    triangle_input = {
+        'vertices': all_nodes,
+        'segments': segment,
+    }
+    if len(holes):
+        triangle_input['holes'] = holes
+
+    option_flags = [
+        'p',  # generate planar line graph (respect the hard edges)
+        'j',  # jettison/remove unused points
+    ]
+    if len(regions):
+        triangle_input['regions'] = regions
+        option_flags.append('A')
+
+    if min_angle != '':
+        option_flags.append(f'q{min_angle}')
+    if max_area != '':
+        option_flags.append(f'a{max_area}')
+
+    if tri_order == 2:
+        option_flags.append('-o2')
+    options = ''.join(option_flags)
+    # options = 'qpAa0.05'
+    # options = 'qpa0.05'
+    return triangle_input, options
+
+
+def triangle_output_to_temp_deck(tri_filename: PathLike,
+                                 triangle_output: dict[str, np.ndarray],
+                                 bc_tags: list[int] | None=None,
+                                 temp_tags_map: list[int] | None=None) -> None:
+    #print(triangle_output.keys())
+
+    # Input
+    # -----
+    # vertices
+    # segments
+    # holes
+    # regions
+
+    # Output
+    # ------
+    # vertex_markers: useful for BCs?
+    # triangles
+    # triangle_attributes: generated by A and regiosn
+    # segment_markers: useful for BCs; remeshed by triangle
+    #print('triangle_output', triangle_output)
+    vertices = triangle_output['vertices']
+    vertex_markers = triangle_output['vertex_markers'].flatten().tolist()
+    segment_markers = triangle_output['segment_markers'].flatten()
+    tris = triangle_output['triangles'] + 1
+    nvert = len(vertices)
+    ntri = len(tris)
+
+    nids = np.arange(1, nvert+1, dtype='int32')
+    eids = np.arange(1, ntri+1, dtype='int32')
+    if 'triangle_attributes' in triangle_output:
+        pids = triangle_output['triangle_attributes'].ravel().astype('int32')
+    else:
+        pids = np.ones(ntri, dtype='int32')
+
+    # print(f'vertex_markers = {vertex_markers}')
+    # print(f'segment_markers = {segment_markers}')
+    upids = np.unique(pids)
+
+    segments = triangle_output['segments']
+    segment_markers = triangle_output['segment_markers']
+    useg_markers = np.unique(segment_markers)
+    bc_nodes_list = []
+    temp_nodes_list = []
+    temp_value_list = []
+    for iseg_marker in useg_markers:
+        if iseg_marker not in bc_tags and iseg_marker not in temp_tags_map:
+            continue
+
+        if iseg_marker in bc_tags:
+            assert iseg_marker not in temp_tags_map, f'iseg_marker={iseg_marker} and is in bc_tags and temp_tags_map'
+            iseg = np.where(segment_markers == iseg_marker)[0]
+            nodes = np.unique(segments[iseg, :].ravel())
+            bc_nodes_list.append(nodes + 1)
+        elif iseg_marker in temp_tags_map:
+            temp = temp_tags_map[iseg_marker]
+            iseg = np.where(segment_markers == iseg_marker)[0]
+            nodes = np.unique(segments[iseg, :].ravel())
+            nnodesi = len(nodes)
+            temps = np.full(nnodesi, temp, dtype='float64')
+            temp_nodes_list.append(nodes + 1)
+            temp_value_list.append(temps)
+
+    spc_id = 101
+    load_id = 102
+    if len(bc_nodes_list):
+        bc_nodes = np.hstack(bc_nodes_list).tolist()
+    else:
+        bc_nodes = np.array([], dtype='int32').tolist()
+
+    if len(temp_nodes_list):
+        temp_nodes = np.hstack(temp_nodes_list).tolist()
+        temp_values = np.hstack(temp_value_list).tolist()
+    else:
+        temp_nodes = np.array([], dtype='int32').tolist()
+        temp_values = np.array([], dtype='int32').tolist()
+
+    tri_dim = tris.shape[1]
+    with open(tri_filename, 'w') as tri_file:
+        tri_file.write('SOL 101\n')
+        tri_file.write('CEND\n')
+        tri_file.write(f'DISP(PLOT) = ALL\n')
+        tri_file.write(f'STRESS(PLOT) = ALL\n')
+        tri_file.write(f'STRAIN(PLOT) = ALL\n')
+        if len(bc_nodes):
+            tri_file.write(f'SUBCASE 1\n')
+            tri_file.write(f'  SPC = {spc_id}\n')
+        if len(temp_nodes):
+            tri_file.write(f'  LOAD = {load_id}\n')
+        tri_file.write('BEGIN BULK\n')
+        for nid, (x, y) in zip(nids, vertices):
+            card = ['GRID', nid, '', x, y, 0.]
+            tri_file.write(print_card_8(card))
+        if len(bc_nodes):
+            card = ['SPC1', spc_id, '123456', ] + bc_nodes
+            tri_file.write(print_card_8(card))
+
+        for temp_node, temp_value in zip(temp_nodes, temp_values):
+            card = ['TEMP', load_id, temp_node, temp_value]
+            tri_file.write(print_card_8(card))
+
+        if tri_dim == 3:
+            for eid, pid, (n1, n2, n3) in zip(eids, pids, tris):
+                card = ['CTRIA3', eid, pid, n1, n2, n3]
+                tri_file.write(print_card_8(card))
+        else:
+            assert tri_dim == 6, tri_dim
+            for eid, pid, (n1, n2, n3, n4, n5, n6) in zip(eids, pids, tris):
+                # the output of triangle is weird
+                card = ['CTRIA6', eid, pid, n1, n2, n3, n6, n4, n5]
+                tri_file.write(print_card_8(card))
+
+        for pid in upids:
+            mid = pid
+            tri_file.write(print_card_8(['PSHELL', pid, mid, 0.1]))
+            tri_file.write(print_card_8(['MAT1', mid, 3.0e7, None, 0.3]))
+        tri_file.write('ENDDATA\n')
 
 
 def _flip_value(lst: list[int]) -> list[int]:
@@ -583,7 +918,7 @@ def export_to_bedge(bedge_filename: PathLike,
 
     Parameters
     ----------
-    bedge_filename : str
+    bedge_filename : str | Path
         the *.bedge file
     nodes : ???
         ???

@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from traceback import print_exc
-from typing import Optional, Any
+from typing import TextIO, TypedDict, Optional, Any
 
 import numpy as np
 
@@ -49,7 +49,9 @@ def parse_table_names_from_f06(f06_filename: str) -> list[str]:
     return names
 
 
-def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
+def run_lots_of_files(files: list[str],
+                      failed_file: TextIO,
+                      make_geom: bool=True, combine: bool=True,
                       write_bdf: bool=False, write_f06: bool=True,
                       delete_f06: bool=True, delete_op2: bool=True, delete_hdf5: bool=True,
                       delete_debug_out: bool=True, build_pandas: bool=True, write_op2: bool=False,
@@ -57,7 +59,8 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
                       include_results: Optional[str]=None,
                       exclude_results: Optional[str]=None,
                       stop_on_failure: bool=False, nstart: int=0, nstop: int=1000000000,
-                      short_stats: bool=False, binary_debug: bool=False,
+                      short_stats: bool=False,
+                      binary_debug: bool | list[bool]=False,
                       compare: bool=True, quiet: bool=False, dev: bool=True, xref_safe: bool=False):
     """used by op2_test.py to run thousands of files"""
     if skip_files is None:
@@ -119,6 +122,8 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
 
             if not is_passed:
                 sys.stderr.write(f'**file={op2file}\n')
+                failed_file.write(op2file + '\n')
+                failed_file.flush()
                 failed_cases.append(op2file)
                 nfailed += 1
             else:
@@ -163,6 +168,10 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
         should the op2 tables be combined
     write_bdf : bool; default=False
         should a BDF be written based on the geometry tables
+    read_bdf : bool; default=None
+        should the written BDF (from write_bdf) be read
+    xref_safe : bool; default=False
+        should the reloaded BDF (from read_bdf) be safe_xref'd
     write_f06 : bool; default=True
         should an F06 be written based on the results
     write_op2 : bool; default=False
@@ -225,6 +234,10 @@ def run_op2(op2_filename: PathLike, make_geom: bool=False, combine: bool=True,
     is_testing: bool; default=False
         True: release mode
         False : be picky with table parsing
+    slice_nodes : list[int]; default=None
+        useful for writing the op2 with a subset of nodal results
+    slice_elements : list[int]; default=None
+        useful for writing the op2 with a subset of elemental results
 
     Returns
     -------
@@ -531,7 +544,35 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename: str,
                 raise
     #os.remove(bdf_filename)
 
-def get_test_op2_data(argv=None) -> dict[str, str]:
+class TestOp2Args(TypedDict):
+   is_nx: bool
+   is_msc: bool
+   is_optistruct: bool
+   geometry: bool
+   nocombine: bool
+   load_hdf5: bool
+   write_bdf: bool
+   write_f06: bool
+   write_op2: bool
+   is_mag_phase: bool
+   pandas: bool
+   subcase: bool
+   include: str
+   exclude: str
+   debug: bool
+   binarydebug: bool
+   is_sort2: bool
+   disablecompare: bool
+   quiet: bool
+   safe: bool
+   post: bool
+   test: bool
+   # is_nx = data['nx'],
+   # is_optistruct = data['optistruct'],
+   # is_autodesk = data['autodesk'],
+
+
+def get_test_op2_data(argv=None) -> TestOp2Args:
     if argv is None:
         argv = sys.argv[1:]  # same as argparse
         #print('get_inputs; argv was None -> %s' % argv)
@@ -648,7 +689,7 @@ def get_test_op2_data(argv=None) -> dict[str, str]:
         "  -h, --help     Show this help message and exit\n"
         "  -v, --version  Show program's version number and exit\n"
     )
-    examples = ''
+    #examples = ''
     #if len(argv) == 1:
         #msg = usage + args + examples
         #print(argv)
@@ -671,7 +712,6 @@ def get_test_op2_data(argv=None) -> dict[str, str]:
     #_set_version(args2)
 
     data = _update_data(args2, is_dev)
-    x = 1
     return data
 
 def get_test_op2_data(argv) -> dict[str, str]:
@@ -859,7 +899,9 @@ def main(argv=None, show_args: bool=True) -> None:
             combine=not data['nocombine'],
             load_as_h5=data['load_hdf5'],
             write_bdf=data['write_bdf'],
+            read_bdf=None,
             write_f06=data['write_f06'],
+            delete_f06=False,
             write_op2=data['write_op2'],
             write_hdf5=data['write_hdf5'],
             is_mag_phase=data['is_mag_phase'],
@@ -875,7 +917,7 @@ def main(argv=None, show_args: bool=True) -> None:
             is_nx=data['nx'],
             is_optistruct=data['optistruct'],
             is_autodesk=data['autodesk'],
-            safe=data['safe'],
+            xref_safe=data['safe'],
             post=data['post'],
             is_testing=data['test'],
             slice_nodes=slice_nodes,
@@ -895,6 +937,7 @@ def main(argv=None, show_args: bool=True) -> None:
             combine=not data['nocombine'],
             load_as_h5=data['load_hdf5'],
             write_bdf=data['write_bdf'],
+            read_bdf=None,
             write_f06=data['write_f06'],
             write_op2=data['write_op2'],
             write_hdf5=data['write_hdf5'],

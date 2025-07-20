@@ -524,7 +524,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         """
         assert debug is None or isinstance(debug, bool), 'debug=%r' % debug
 
-        self.log = get_logger(log, debug=debug, encoding='utf-8')
+        self.log = get_logger(log, debug, encoding='utf-8')
         self._count = 0
         self.op2_filename = None
         self.bdf_filename = None
