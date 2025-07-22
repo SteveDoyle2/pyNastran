@@ -170,10 +170,10 @@ class PLSOLID(Property):
 
 class PCOMPS(Property):
     type = 'PCOMPS'
-    _field_map = {
+    _field_map: dict[int, str] = {
         #1: 'pid', 2:'mid', 3:'cordm', 4:'integ', 5:'stress',
         #6:'isop', 7:'fctn',
-    }  # type: dict[int,str]
+    }
 
     @classmethod
     def _init_from_empty(cls):
@@ -382,10 +382,10 @@ class PCOMPLS(Property):
     +---------+------+--------+--------+--------+--------+
     """
     type = 'PCOMPLS'
-    _field_map = {
+    _field_map: dict[int, str] = {
         #1: 'pid', 2:'mid', 3:'cordm', 4:'integ', 5:'stress',
         #6:'isop', 7:'fctn',
-    }  # type: dict[int,str]
+    }
 
     @classmethod
     def _init_from_empty(cls):

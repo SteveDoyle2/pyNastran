@@ -45,7 +45,7 @@ def build_kbb_cquad4(model: BDF,
 
     nids = np.zeros((nelements, 4), dtype='int32')
     for i, eid in enumerate(eids):
-        elem = model.elements[eid]  # type: CQUAD4
+        elem: CQUAD4 = model.elements[eid]
         theta_mcidi = elem.theta_mcid
         nids[i, :] = elem.nodes
         # nids.append(elem.nodes)
@@ -302,7 +302,7 @@ def build_kbb_cquad8(model: BDF,
 
     nids = np.zeros((nelements, 8), dtype='int32')
     for i, eid in enumerate(eids):
-        elem = model.elements[eid]  # type: CQUAD4
+        elem: CQUAD4 = model.elements[eid]
         theta_mcidi = elem.theta_mcid
         nids[i, :] = elem.nodes
         # nids.append(elem.nodes)

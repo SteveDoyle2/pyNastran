@@ -132,7 +132,7 @@ class ZONA:
         """
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []  # type: list[str]
+        my_keys_to_skip: list[str] = []
 
         my_keys_to_skip = ['log',]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)

@@ -255,7 +255,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
 
     # dloads
     for (lid, loads) in sorted(model.dloads.items()):
-        groups_dict = {}  # type: dict[str, Any]
+        groups_dict: dict[str, Any] = {}
         for loadi in loads:
             groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
         added_messge = _get_added_message_from_dict(groups_dict)
@@ -297,7 +297,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
             msgi = 'cant find card_group_name=%r' % card_group_name
             raise AttributeError(msgi)
 
-        groups = set() # type: set[str]
+        groups: set[str] = set()
 
         if not isinstance(card_group, dict):
             msgi = '%s is a %s; not dictionary, which is required by get_bdf_stats()' % (

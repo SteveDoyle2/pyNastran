@@ -15,7 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def load_hdf5_file(subcase: Subcase, hdf5_file, encoding: str):
-    log = subcase.log  # type: SimpleLogger
+    log: SimpleLogger = subcase.log
 
     keys = list(hdf5_file.keys())
     for key in keys:

@@ -1907,8 +1907,7 @@ class PPLANE(Property):
         mid = 1
         return PPLANE(pid, mid, t=0., nsm=0., formulation_option=0, comment='')
 
-    def __init__(self, pid, mid, t=0., nsm=0., formulation_option=0, comment=''):
-        # type: (int, int, float, float, int, str) -> None
+    def __init__(self, pid: int, mid: int, t: float=0., nsm: float=0., formulation_option: int=0, comment: str=''):
         """NX specific card"""
         Property.__init__(self)
         if comment:

@@ -298,7 +298,7 @@ class TestThermal(unittest.TestCase):
         model = BDF(debug=False, log=None, mode='msc')
         model.sol = 159
         model.case_control_deck = CaseControlDeck([], log=model.log)
-        subcase = model.case_control_deck.create_new_subcase(100)  # type: Subcase
+        subcase: Subcase = model.case_control_deck.create_new_subcase(100)
         subcase.add('DISP', 'ALL', ['PLOT'], 'STRESS-type')
         subcase.add('TSTEP', 10, [], 'STRESS-type')
         sid = 10

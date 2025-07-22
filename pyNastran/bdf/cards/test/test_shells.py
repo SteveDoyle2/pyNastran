@@ -1707,7 +1707,7 @@ class TestShells(unittest.TestCase):
         self._make_cquad4(model, rho, nu, G, E, t, nsm)
 
         eid = 10
-        elem = model.elements[eid]  # type: CQUAD4
+        elem: CQUAD4 = model.elements[eid]
 
         #['grid', n1, 0, 0., 0., 0.],
         #['grid', n2, 0, 2., 0., 0.],

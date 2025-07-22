@@ -399,7 +399,7 @@ class WriteMesh(BDFAttributes):
         if self.properties:
             bdf_file.write('$ELEMENTS_WITH_PROPERTIES\n')
 
-        eids_written = []  # type: list[int]
+        eids_written: list[int] = []
         pids = sorted(self.properties.keys())
         pid_eids = self.get_element_ids_dict_with_pids(pids, stop_if_no_eids=False)
 

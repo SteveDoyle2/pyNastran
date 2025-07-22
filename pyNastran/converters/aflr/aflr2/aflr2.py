@@ -605,8 +605,11 @@ def get_triangle_input(model: AFLR2,
     ----------
     extra : str
         https://www.cs.cmu.edu/~quake/triangle.switch.html
-        -A Assigns a regional attribute to each triangle that identifies what segment-bounded region it belongs to.
-        -j Jettisons vertices that are not part of the final triangulation from the output .node file (including duplicate input vertices and vertices ``eaten'' by holes).
+        -A Assigns a regional attribute to each triangle that
+           identifies what segment-bounded region it belongs to.
+        -j Jettisons vertices that are not part of the final
+           triangulation from the output .node file (including
+           duplicate input vertices and vertices ``eaten'' by holes).
         -o2 Generates second-order subparametric elements with six nodes each.
 
     options : str; default='qpa0.05'

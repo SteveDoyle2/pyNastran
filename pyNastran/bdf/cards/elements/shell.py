@@ -268,8 +268,8 @@ class ShellElement(Element):
 class TriShell(ShellElement):
     def __init__(self):
         ShellElement.__init__(self)
-        self.nodes_ref = None  # type: Optional[list[Any]]
-        self.pid_ref = None  # type: Optional[Any]
+        self.nodes_ref: Optional[list[Any]] = None
+        self.pid_ref: Optional[Any] = None
 
     def get_edge_ids(self):
         """Return the edge IDs"""
@@ -591,7 +591,7 @@ class CTRIA3(TriShell):
         self.T2 = T2
         self.T3 = T3
         assert len(self.nodes) == 3
-        self.theta_mcid_ref = None  # type: Optional[Any]
+        self.theta_mcid_ref: Optional[Any] = None
 
     def validate(self):
         assert len(set(self.nodes)) == 3, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
@@ -1140,7 +1140,7 @@ class CTRIA6(TriShell):
         self.T3 = T3
         self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
-        self.theta_mcid_ref = None  # type: Optional[Any]
+        self.theta_mcid_ref: Optional[Any] = None
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, eids):
@@ -2408,7 +2408,7 @@ class CQUAD4(QuadShell):
         self.T2 = T2
         self.T3 = T3
         self.T4 = T4
-        self.theta_mcid_ref = None  # type: Optional[Any]
+        self.theta_mcid_ref: Optional[Any] = None
 
     def validate(self):
         assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
@@ -3921,7 +3921,7 @@ class CQUADR(QuadShell):
         self.T4 = T4
         self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 4, 'CQUADR'
-        self.theta_mcid_ref = None  # type: Optional[Any]
+        self.theta_mcid_ref: Optional[Any] = None
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, eids):

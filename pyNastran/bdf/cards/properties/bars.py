@@ -88,8 +88,7 @@ def get_inertia_rectangular(sections):
     return A, Ixx, Iyy, Ixy
 
 
-def _IAreaL(prop, dim):
-    # type: (Any, list[float]) -> tuple[float, float, float, float]
+def _IAreaL(prop: Any, dim: list[float]) -> tuple[float, float, float, float]:
     beam_type = prop.beam_type
     if beam_type == 'ROD':
         A, I1, I2, I12 = rod_section(prop.type, prop.beam_type, dim, prop)

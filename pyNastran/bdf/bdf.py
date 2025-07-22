@@ -1475,7 +1475,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #     can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
         return cards_list
 
-
     def read_bdf(self, bdf_filename: Optional[PathLike]=None,
                  validate: bool=True,
                  xref: bool=True,
@@ -1505,18 +1504,22 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         .. code-block:: python
 
-           >>> bdf = BDF()
-           >>> bdf.read_bdf(bdf_filename, xref=True)
-           >>> g1 = bdf.Node(1)
-           >>> print(g1.get_position())
+           >>> bdf_filename1 = 'fem.bdf'
+           >>> bdf_filename2 = 'fem_out.bdf'
+           >>> model = BDF()
+           >>> model.read_bdf(bdf_filename1, xref=True)
+           >>> node1 = model.Node(1)
+           >>> print(node1.get_position())
            [10.0, 12.0, 42.0]
-           >>> bdf.write_card(bdf_filename2)
-           >>> print(bdf.card_stats())
+           >>> print(node1)
+           'GRID    1       0       10.0     12.0     42.0'
+           >>> model.write_bdf(bdf_filename2)
+           >>> print(model.get_bdf_stats())
 
            ---BDF Statistics---
            SOL 101
-           bdf.nodes = 20
-           bdf.elements = 10
+           model.nodes = 20
+           model.elements = 10
            etc.
 
         """
@@ -1610,7 +1613,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         rslot_to_type_map = self.get_rslot_map()
 
         for card_name, cards_list in cards_dict.items():
-            if (card_name not in self.cards_to_read or card_name in zona_cards_to_skip):
+            if card_name not in self.cards_to_read or card_name in zona_cards_to_skip:
                 for (comment, card_lines, ifile_iline) in cards_list:
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
                 continue
@@ -2150,6 +2153,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             the corresponding object
             (e.g. the GRID object)
 
+        >>> bdf_filename = 'fem.bdf'
+        >>> model = read_bdf(bdf_filename)
+
         # On GRID 100, set Cp (2) to 42
         >>> model.update_card('GRID', 100, 2, 42)
 
@@ -2169,13 +2175,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         # get the storage object
         try:
-            field_str = self._type_to_slot_map[card_name] # 'nodes'
+            field_str = self._type_to_slot_map[card_name]  # 'nodes'
         except KeyError:
             msg = 'Updating card card_name=%r is not supported\nkeys=%s' % (
                 card_name, list(self._type_to_slot_map.keys()))
             raise KeyError(msg)
 
-        objs = getattr(self, field_str) # self.nodes
+        objs = getattr(self, field_str)  # self.nodes
         # get the specific card
         try:
             obj = objs[icard]
@@ -2201,9 +2207,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
            GRID, 1, %xVar, %yVar, %zVar
 
-           >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
+           >>> bdf_filename = 'fem.bdf'
+           >>> my_dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
            >>> bdf = BDF()
-           >>> bdf.set_dynamic_syntax(dict_of_vars)
+           >>> bdf.set_dynamic_syntax(my_dict_of_vars)
            >>> bdf.read_bdf(bdf_filename, xref=True)
 
         Notes
@@ -2267,14 +2274,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         -------
         fields : list[str]
             the parsed card's fields
-        card_name : str
-            the card's name
 
         .. code-block:: python
 
             >>> card_lines = ['GRID,1,,1.0,2.0,3.0,,']
             >>> model = BDF()
-            >>> fields, card_name = model._process_card(card_lines)
+            >>> fields = model._process_card(card_lines)
             >>> fields
             ['GRID', '1', '', '1.0', '2.0', '3.0']
             >>> card_name
@@ -2874,7 +2879,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BSURF': (BSURF, add_methods.add_bsurf_object),
             'BSURFS': (BSURFS, add_methods.add_bsurfs_object),
 
-            'RADCAV': (RADCAV, add_methods.add_radcav_object), #
+            'RADCAV': (RADCAV, add_methods.add_radcav_object),
             #'RADLST': (RADLST, add_methods.add_radcav_object), # TestOP2.test_bdf_op2_thermal_02
             #'RADMTX': (RADMTX, add_methods.add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
             #'RADMT': (Crash, None),
@@ -3290,7 +3295,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """adds a DMIJI"""
         return self._prepare_dmix(DMIJI, self._add_methods.add_dmiji_object, card_obj, comment=comment)
 
-    def _prepare_cmass4(self, unused_card: list[str], card_obj: BDFCard, comment='') -> CMASS4:
+    def _prepare_cmass4(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[CMASS4]:
         """adds a CMASS4"""
         elements = [CMASS4.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(5):
@@ -3299,7 +3304,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods.add_mass_object(elem)
         return elements
 
-    def _prepare_pelas(self, unused_card: list[str], card_obj: BDFCard, comment='') -> PELAS:
+    def _prepare_pelas(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[PELAS]:
         """adds a PELAS"""
         properties = [PELAS.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(5):
@@ -3308,7 +3313,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods.add_property_object(prop)
         return properties
 
-    def _prepare_nsm(self, unused_card: list[str], card_obj: BDFCard, comment='') -> NSM:
+    def _prepare_nsm(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[NSM]:
         """adds an NSM"""
         nfields = len(card_obj)
         ncards = (nfields - 3) // 2
@@ -3491,7 +3496,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                   created.
 
         """
-        card_name = card_name.upper()
+        card_name: str = card_name.upper()
         card_obj, unused_card = self.create_card_object(
             card_lines, card_name,
             is_list=is_list, has_none=has_none)
@@ -3502,7 +3507,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def add_card_lax(self, card_lines: list[str], card_name: str,
                      comment: str='', ifile=None, is_list: bool=True, has_none: bool=True) -> Any:
         """see ``add_card``"""
-        card_name = card_name.upper()
+        card_name: str = card_name.upper()
         #if card_name not in self.card_count:
         card_obj, unused_card = self.create_card_object(
             card_lines, card_name,
@@ -3896,6 +3901,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # assume GRID 1 has a CD=10, CP=0
         # assume GRID 2 has a CD=10, CP=0
         # assume GRID 5 has a CD=50, CP=0
+        >>> bdf_filename = 'fem.bdf'
+        >>> model = read_bdf(bdf_filename)
         >>> model.point_ids
         [1, 2, 5]
         >>> out = model.get_displacement_index_xyz_cp_cd()
@@ -4007,6 +4014,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         Examples
         --------
+        >>> bdf_filename = 'fem.bdf'
+        >>> model = read_bdf(bdf_filename)
         >>> out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
         >>> nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform = out
         """
@@ -4053,6 +4062,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # assume GRID 1 has a CD=10, CP=0
         # assume GRID 2 has a CD=10, CP=0
         # assume GRID 5 has a CD=50, CP=1
+        >>> bdf_filename = 'fem.bdf'
+        >>> model = read_bdf(bdf_filename)
         >>> model.point_ids
         [1, 2, 5]
         >>> out = model.get_displacement_index_xyz_cp_cd()
@@ -4190,7 +4201,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             msg = ('xyz_cid0:\n%s\n'
                    'xyz_cid0_correct:\n%s\n'
                    'nid_cp_cd:\n%s\n'
-                   'xyz_cp:\n%s'% (xyz_cid0, xyz_cid0_correct, nid_cp_cd, xyz_cp))
+                   'xyz_cp:\n%s' % (xyz_cid0, xyz_cid0_correct, nid_cp_cd, xyz_cp))
             raise ValueError(msg)
 
         if cid == 0:
@@ -4212,7 +4223,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             if not np.allclose(xyz_cid, xyz_cid_correct, atol=atol):
                 #np.array_equal(xyz_cid, xyz_cid_correct):
                 msg = ('xyz_cid:\n%s\n'
-                       'xyz_cid_correct:\n%s'% (xyz_cid, xyz_cid_correct))
+                       'xyz_cid_correct:\n%s' % (xyz_cid, xyz_cid_correct))
                 raise ValueError(msg)
         return xyz_cid
 
@@ -4294,6 +4305,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # assume GRID 1 has a CD=10
         # assume GRID 2 has a CD=10
         # assume GRID 5 has a CD=50
+        >>> bdf_filename = 'fem.bdf'
+        >>> model = read_bdf(bdf_filename)
         >>> model.point_ids
         [1, 2, 5]
         >>> icd_transform = model.get_displacement_index()
@@ -4332,8 +4345,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         count_num : int, optional
             the amount to increment by (default=1)
 
-        >>> bdf.read_bdf(bdf_filename)
-        >>> bdf.card_count['GRID']
+        >>> bdf_filename = 'fem.bdf'
+        >>> model = read_bdf(bdf_filename)
+        >>> model.card_count['GRID']
         50
 
         """
@@ -4725,7 +4739,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _update_for_optistruct(self) -> None:
         """updates for mystran"""
-        self._update_for_nastran() # copies this...
+        self._update_for_nastran()  # copies this...
         card_parser = self._card_parser
         CARD_MAP['PBUSH_OPTISTRUCT'] = PBUSH_OPTISTRUCT
         card_parser['PBUSH'] = (PBUSH_OPTISTRUCT, self._add_methods.add_property_object)
@@ -4819,13 +4833,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         .. code-block:: python
 
-           >>> bdf = BDF()
-           >>> bdf.read_bdf(bdf_filename, xref=True)
-           >>> g1 = bdf.Node(1)
-           >>> print(g1.get_position())
+           >>> bdf_filename = 'fem.bdf'
+           >>> bdf_filename2 = 'fem_out.bdf'
+           >>> model = read_bdf(bdf_filename, xref=True)
+           >>> node1 = model.Node(1)
+           >>> print(node1.get_position())
            [10.0, 12.0, 42.0]
-           >>> bdf.write_card(bdf_filename2)
-           >>> print(bdf.card_stats())
+           >>> model.write_bdf(bdf_filename2)
+           >>> print(model.get_bdf_stats())
 
            ---BDF Statistics---
            SOL 101
@@ -5044,6 +5059,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.reject_cards.append(card_obj)
             class_instance = None
         return class_instance
+
 
 class BDF(BDF_):
     """NASTRAN BDF Reader/Writer/Editor class."""

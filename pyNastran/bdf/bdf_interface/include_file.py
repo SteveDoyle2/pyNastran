@@ -49,6 +49,7 @@ def get_include_filename(log,
     for line in include_lines:
         if len(line) > 72:
             msg = '\n - '.join(include_lines)
+            msg += f'\nsource_filename: {source_filename!r}'
             log.warning(f'INCLUDE line={line!r} is too long (n={len(line)} for:\n - {msg}')
     #print(f'card_lines={card_lines};\nsource_filename={source_filename!r}')
     if not isinstance(include_dirs, list):
@@ -83,7 +84,7 @@ def get_include_filename(log,
             break
     else:
     #if 1:
-        msg = f'Could not find INCLUDE line:\n{include_lines}\n'
+        msg = f'Could not find INCLUDE file:\n{include_lines}\n'
         msg += f'  filename: {os.path.abspath(filename_raw)}\n'
         if source_filename:
             msg += f'  source file: {os.path.abspath(source_filename)}\n'

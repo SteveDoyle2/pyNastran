@@ -668,7 +668,7 @@ class CaseControlDeck:
                 isubcase, str(sorted(self.subcases.keys())))
             raise RuntimeError(msg)
 
-        subcase = self.subcases[isubcase]  # type: Subcase
+        subcase: Subcase = self.subcases[isubcase]
         subcase._add_data(key, value, options, param_type)
 
         #print("\n%s\n" % (self.subcases[isubcase]))
@@ -881,7 +881,7 @@ def _clean_lines(lines: list[str]) -> list[str]:
         the lines to clean.
 
     """
-    lines2 = []  # type: list[str]
+    lines2: list[str] = []
     for line in lines:
         # ' \n\r\t'
         line = line.strip().split('$')[0].rstrip()

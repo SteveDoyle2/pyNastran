@@ -459,6 +459,7 @@ SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
     'pltmode': ['PLTMODE'],
 }
 
+
 class BDFAttributes:
     """defines attributes of the BDF"""
 
@@ -475,6 +476,7 @@ class BDFAttributes:
         self.is_zona = False
         self.save_file_structure = False
         self.is_superelements = False
+        self._nastran_format = ''
         self.set_as_msc()
         self.units: list[str] = []
 
@@ -649,13 +651,13 @@ class BDFAttributes:
         inheritance
 
         References:
-          1.  http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
+          1.  https://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
         """
         self.xref_obj = CrossReference(self)
         self.bdf_filename = None
         self.punch = None
         self._encoding = None
-        self._is_long_ids = False # ids > 8 characters
+        self._is_long_ids = False  # ids > 8 characters
 
         #: ignore any ECHOON flags
         self.force_echo_off = True
@@ -705,7 +707,7 @@ class BDFAttributes:
 
             # guessing
             #'CTRAN' : 115,
-            'CFREQ' : 118,
+            'CFREQ': 118,
 
             # solution 200 names
             'STATICS': 101,
@@ -989,7 +991,7 @@ class BDFAttributes:
         self.dscreen: dict[int, DSCREEN] = {}
 
         # nx optimization
-        self.group: dict[int, GROUP]= {}
+        self.group: dict[int, GROUP] = {}
         self.dmncon: dict[int, DMNCON] = {}
         self.dvtrels: dict[int, DVTREL1 | DVTREL2] = {}
 
@@ -1162,7 +1164,7 @@ class BDFAttributes:
             nchars = max(nchars, len(card_group))
 
         nline = 58
-        fmt =     '| %%-%ss | %%-%ss |\n' % (nchars, nline)
+        fmt = '| %%-%ss | %%-%ss |\n' % (nchars, nline)
         fmt_plus = '+%%-%ss+%%-%ss+\n' % (nchars + 2, nline + 2)
 
         dash1 = '-' * (nchars + 2)

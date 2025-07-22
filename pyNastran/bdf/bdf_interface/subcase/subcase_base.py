@@ -89,7 +89,7 @@ class IntStrCard(IntCard):
 
     """
     type = 'IntStrCard'
-    allowed_strings = set([]) # type: set[str]
+    allowed_strings: set[str] = set([])
     def __init__(self, value):
         """
         Creates an IntStrCard
@@ -135,7 +135,7 @@ class IntStrCard(IntCard):
 
 class StringCard(CaseControlCard):
     type = 'StringCard'
-    allowed_values = [] # type: list[str]
+    allowed_values: list[str] = []
     def __init__(self, value, validate=True):
         super(StringCard, self).__init__()
         self.value = value.strip()

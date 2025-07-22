@@ -1738,7 +1738,7 @@ def _show_bad_file(self: Any, bdf_filename: str | StringIO,
         the number of lines to show
 
     """
-    lines = []  # type: list[str]
+    lines: list[str] = []
     print('ENCODING - show_bad_file=%r' % encoding)
 
     with open(bdf_filename, 'r', encoding=encoding) as bdf_file:
