@@ -183,11 +183,15 @@ class CaseControlDeck:
         from pyNastran.utils.dict_to_h5py import _cast
 
         keys = list(hdf5_file.keys())
+        scalars = [
+            '_begin_count', 'debug', 'write_begin_bulk', 'use_card_dict', 'allow_tabs',
+        ]
+        list_of_strings = ['reject_lines', 'begin_bulk', 'lines', 'output_lines']
         for key in keys:
-            if key in ['_begin_count', 'debug', 'write_begin_bulk', 'use_card_dict']:  # scalars
+            if key in scalars:
                 value = _cast(hdf5_file[key])
                 setattr(self, key, value)
-            elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']:  # lists of strings
+            elif key in list_of_strings:
                 unused_lines_str = decode_lines(
                     _cast(hdf5_file[key]),
                     encoding)
@@ -231,7 +235,7 @@ class CaseControlDeck:
         h5attrs = object_attributes(self, mode='both', keys_to_skip=keys_to_skip)
         for h5attr in h5attrs:
             value = getattr(self, h5attr)
-            if h5attr in ['_begin_count', 'debug', 'write_begin_bulk']:  # scalars
+            if h5attr in ['_begin_count', 'debug', 'write_begin_bulk', 'allow_tabs']:  # scalars
                 # simple export
                 hdf5_file.create_dataset(h5attr, data=value)
             elif h5attr in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']:
@@ -548,7 +552,7 @@ class CaseControlDeck:
         #self.read([param])
         lines = _clean_lines([param])
         (j, fail_flag, key, value, options, param_type) = parse_entry(
-            lines, self.log, debug=self.debug)
+            lines, self.log, allow_tabs=self.allow_tabs, debug=self.debug)
         return j, key, value, options, param_type
 
     def _read(self, lines: list[str]) -> None:

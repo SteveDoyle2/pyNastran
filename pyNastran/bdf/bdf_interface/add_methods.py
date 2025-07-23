@@ -184,35 +184,45 @@ class AddMethods:
     def add_dmig_object(self, dmig: DMIG, allow_overwrites: bool=False) -> None:
         """adds a DMIG object"""
         name = dmig.name
-        assert name not in self.model.dmig, f'duplicate DMIG header for {name!r}\nold:\n{self.model.dmig[name]}new:\n{dmig}'
+        if name in self.model.dmig:
+            self.model.log.warning(f'duplicate DMIG header for {name!r}\nold:\n{self.model.dmig[name]}new:\n{dmig}')
+        # assert name not in self.model.dmig, f'duplicate DMIG header for {name!r}\nold:\n{self.model.dmig[name]}new:\n{dmig}'
         self.model.dmig[name] = dmig
         self.model._type_to_id_map[dmig.type].append(name)
 
     def add_dmiax_object(self, dmiax: DMIAX, allow_overwrites: bool=False) -> None:
         """adds a DMI object"""
         name = dmiax.name
-        assert name not in self.model.dmiax, f'duplicate DMIAX header for {name!r}\nold:\n{self.model.dmiax[name]}new:\n{dmiax}'
+        if name in self.model.dmiax:
+            self.model.log.warning(f'duplicate DMIAX header for {name!r}\nold:\n{self.model.dmiax[name]}new:\n{dmiax}')
+        # assert name not in self.model.dmiax, f'duplicate DMIAX header for {name!r}\nold:\n{self.model.dmiax[name]}new:\n{dmiax}'
         self.model.dmiax[name] = dmiax
         self.model._type_to_id_map[dmiax.type].append(name)
 
     def add_dmij_object(self, dmij: DMIJ, allow_overwrites: bool=False) -> None:
         """adds a DMIJ object"""
         name = dmij.name
-        assert name not in self.model.dmij, f'duplicate DMIJ header for {name!r}\nold:\n{self.model.dmij[name]}new:\n{dmij}'
+        if name in self.model.dmij:
+            self.model.log.warning(f'duplicate DMIJ header for {name!r}\nold:\n{self.model.dmij[name]}new:\n{dmij}')
+        # assert name not in self.model.dmij, f'duplicate DMIJ header for {name!r}\nold:\n{self.model.dmij[name]}new:\n{dmij}'
         self.model.dmij[name] = dmij
         self.model._type_to_id_map[dmij.type].append(name)
 
     def add_dmiji_object(self, dmiji: DMIJI, allow_overwrites: bool=False) -> None:
         """adds a DMIJI object"""
         name = dmiji.name
-        assert name not in self.model.dmiji, f'duplicate DMIJI header for {name!r}\nold:\n{self.model.dmiji[name]}new:\n{dmiji}'
+        if name in self.model.dmiji:
+            self.model.log.warning(f'duplicate DMIJI header for {name!r}\nold:\n{self.model.dmiji[name]}new:\n{dmiji}')
+        # assert name not in self.model.dmiji, f'duplicate DMIJI header for {name!r}\nold:\n{self.model.dmiji[name]}new:\n{dmiji}'
         self.model.dmiji[name] = dmiji
         self.model._type_to_id_map[dmiji.type].append(name)
 
     def add_dmik_object(self, dmik: DMIK, allow_overwrites: bool=False) -> None:
         """adds a DMIK object"""
         name = dmik.name
-        assert name not in self.model.dmik, f'duplicate DMIK header for {name!r}'
+        if name in self.model.dmik:
+            self.model.log.warning(f'duplicate DMIK header for {name!r}\nold:\n{self.model.dmik[name]}new:\n{dmik}')
+        # assert name not in self.model.dmik, f'duplicate DMIK header for {name!r}'
         self.model.dmik[name] = dmik
         self.model._type_to_id_map[dmik.type].append(name)
 
@@ -264,22 +274,8 @@ class AddMethods:
         model = self.model
 
         assert key > 0, 'nid=%s node=%s' % (key, node)
-        add_object_to_dict(model, key, 'node', node, model.nodes,
-                           model._duplicate_nodes, allow_overwrites)
-        return
-        if key not in model.nodes:
-            model.nodes[key] = node
-            model._type_to_id_map[node.type].append(key)
-        elif node == model.nodes[key]:
-            model.log.warning(f'replacing equivalent node:\n{node}')
-        elif allow_overwrites:
-            model.log.warning(f'replacing node:\n{model.nodes[key]}with:\n{node}')
-            model.nodes[key] = node
-
-            # already handled
-            #model._type_to_id_map[node.type].append(key)
-        else:
-            raise RuntimeError('nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, model.nodes[key], node))
+        add_object_to_dict_no_dupes(model, key, 'node', node, model.nodes,
+                                    model._duplicate_nodes, allow_overwrites)
 
     # def add_gridb_object(self, node: GRIDB, allow_overwrites: bool=False) -> None:
     #     """adds a GRIDB card"""
@@ -481,19 +477,6 @@ class AddMethods:
                 model.pop_parse_errors()
             #raise RuntimeError('eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, model.elements[key], elem))
 
-        if 0:  # pragma: no cover
-            key = elem.eid
-            model = self.model
-            assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
-            if key in model.elements and not allow_overwrites:
-                if not elem == model.elements[key]:
-                    model._duplicate_elements.append(elem)
-                    if model._stop_on_duplicate_error:
-                        model.pop_parse_errors()
-            else:
-                model.elements[key] = elem
-                model._type_to_id_map[elem.type].append(key)
-
     def add_ao_object(self, elem_flag: CBARAO,
                       allow_overwrites: bool=False) -> None:
         """adds a CBARAO"""
@@ -556,9 +539,8 @@ class AddMethods:
         key = elem.eid
         model = self.model
         assert key > 0, 'eid=%s elem=%s' % (key, elem)
-        add_object_to_dict(model, key, 'element', elem, model.rigid_elements,
-                           model._duplicate_rigid_elements, allow_overwrites)  # TODO: fix me
-        return
+        add_object_to_dict_no_dupes(model, key, 'element', elem, model.rigid_elements,
+                                    model._duplicate_rigid_elements, allow_overwrites)
 
     def add_thermal_element_object(self, elem: CHBDYE | CHBDYG | CHBDYP) -> None:
         """same as add_element at the moment..."""
@@ -617,36 +599,16 @@ class AddMethods:
         key = prop.pid
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         model = self.model
-        # if key not in model.properties:
-        #     model.properties[key] = prop
-        #     model._type_to_id_map[prop.type].append(key)
-        # elif prop == model.properties[key]:
-        #     model.log.warning(f'replacing equivalent property:\n{prop}')
-        # elif allow_overwrites:
-        #     model.log.warning(f'replacing property:\n{model.properties[key]}with:\n{prop}')
-        #     model.properties[key] = prop
-        #     # already handled
-        #     #model._type_to_id_map[prop.type].append(key)
-        # else:
-        #     model._duplicate_properties.append(prop)
-        #     if model._stop_on_duplicate_error:
-        #         model.pop_parse_errors()
-        #     # raise RuntimeError('pid=%s\nold_prop=\n%snew_prop=\n%s' % (prop.pid, model.properties[key], prop))
-        add_object_to_dict(model, key, 'property', prop, model.properties,
-                           model._duplicate_properties, allow_overwrites)
+        add_object_to_dict_no_dupes(model, key, 'property', prop, model.properties,
+                                    model._duplicate_properties, allow_overwrites)
 
     def add_property_mass_object(self, prop: PMASS, allow_overwrites: bool=False) -> None:
         """adds an PMASS object"""
         key = prop.pid
         model = self.model
-        if key in model.properties_mass and not allow_overwrites:
-            if not prop == self.model.properties_mass[key]:
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key, model.properties_mass[key],prop))
-                assert key not in model.properties_mass, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, model.properties_mass[key], prop)
-        else:
-            assert key > 0, 'pid=%s prop=%s' % (key, prop)
-            model.properties_mass[key] = prop
-            model._type_to_id_map[prop.type].append(key)
+        add_object_to_dict(
+            model, key, 'property', prop, model.properties_mass,
+            allow_overwrites)
 
     def add_dtable_object(self, dtable: DTABLE, allow_overwrites: bool=False) -> None:
         """adds an DTABLE object"""
@@ -1844,10 +1806,59 @@ def _add_value_to_dict(result: dict[int, Any], key: int, card: Any,
             mapperi.append(key)
 
 
-def add_object_to_dict(model: BDF, key: int, obj_name: str,
-                       obj: BaseCard, obj_dict: dict[int, BaseCard],
-                       duplicate_list: list[BaseCard],
+def add_object_to_dict(model: BDF, key: int,
+                       obj_name : str,
+                       obj: BaseCard,
+                       obj_dict: dict[int, BaseCard],
                        allow_overwrites: bool) -> None:
+    """
+
+    Parameters
+    ----------
+    key: int
+        property id
+    obj_name: str
+        'property'
+    obj: prop
+        PSHELL
+    obj_dict: dict[int, PSHELL | PBAR ...]
+        storage dictionary
+    allow_overwrites: bool
+        True/False
+
+    """
+    # if key in model.properties_mass and not allow_overwrites:
+    #     if not prop == self.model.properties_mass[key]:
+    #         # print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key, model.properties_mass[key],prop))
+    #         assert key not in model.properties_mass, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
+    #         key, model.properties_mass[key], prop)
+    # else:
+    #     assert key > 0, 'pid=%s prop=%s' % (key, prop)
+    #     model.properties_mass[key] = prop
+    #     model._type_to_id_map[prop.type].append(key)
+
+    if key not in obj_dict:
+        obj_dict[key] = obj
+        model._type_to_id_map[obj.type].append(key)
+    elif obj == obj_dict[key]:
+        model.log.warning(f'replacing equivalent {obj_name}:\n{obj}')
+    elif allow_overwrites:
+        model.log.warning(f'replacing {obj_name}:\n{obj_dict[key]}with:\n{obj}')
+        obj_dict[key] = obj
+        # already handled
+        #model._type_to_id_map[prop.type].append(key)
+    else:
+        # duplicate_list.append(obj)
+        # if model._stop_on_duplicate_error:
+        #     model.pop_parse_errors()
+        raise RuntimeError(f'id={key!r}\n'
+                           f'old_{obj_name}=\n{str(obj_dict[key])}'
+                           f'new_{obj_name}=\n{str(obj)}')
+
+def add_object_to_dict_no_dupes(model: BDF, key: int, obj_name: str,
+                                obj: BaseCard, obj_dict: dict[int, BaseCard],
+                                duplicate_list: list[BaseCard],
+                                allow_overwrites: bool) -> None:
     """
 
     Parameters
