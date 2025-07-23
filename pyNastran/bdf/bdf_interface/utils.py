@@ -308,7 +308,8 @@ def to_fields_line0(card_line: str, card_name: str) -> list[str]:
     return new_fields
 
 
-def to_fields(card_lines: list[str], card_name: str) -> list[str]:
+def to_fields(card_lines: list[str], card_name: str,
+              allow_tabs: bool=True) -> list[str]:
     """
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
@@ -337,6 +338,10 @@ def to_fields(card_lines: list[str], card_name: str) -> list[str]:
        ['GRID', '1', '', '1.0', '2.0', '3.0']
 
     """
+    if not allow_tabs:
+        joined_lines = '\n'.join(card_lines)
+        if not allow_tabs and '\t' in joined_lines:
+            raise RuntimeError(f'There are tabs in:\n{joined_lines}')
     fields: list[str] = []
 
     if card_name in ['MONPNT1', 'MONDSP1']:

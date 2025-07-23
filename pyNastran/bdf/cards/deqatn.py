@@ -21,35 +21,43 @@ from pyNastran.bdf.cards.base_card import BaseCard
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, DTABLE
 
+
 def pi(num):
     """weird way to multiply π by a number"""
     return np.pi * num
+
 
 def rss(*args):  # good
     """2-norm; generalized magnitude of vector for N components"""
     return norm(args)
 
+
 def avg(*args):
     """average"""
     return np.mean(args)
+
 
 def ssq(*args):
     """sum of squares"""
     return np.square(args).sum()
 
+
 def logx(x, y):
     """log base_x(y)"""
     return log(y**x) / log(x)
 
+
 def dim(x, y):
     """positive difference"""
     return x - min(x, y)
+
 
 def db(p, pref):
     """sound pressure in decibels"""
     return 20. * log(p / pref)
 
 #def _Log(z):
+
 
 def atan2h(x, y):
     """
@@ -78,9 +86,11 @@ def atan2h(x, y):
     #return np.arctanh(x, y)
     raise NotImplementedError()
 
+
 def invdb(dbi: float, pref: float) -> float:
     """inverse Db"""
     return 10. ** (dbi / 20. + log(pref))
+
 
 def dba(p: float, pref: float, f: float) -> float:
     """
@@ -103,6 +113,7 @@ def dba(p: float, pref: float, f: float) -> float:
     """
     ta1, ta2 = _get_ta(f)
     return 20. * log(p / pref) + 10 * log(ta1) + 10. * log(ta2)
+
 
 def invdba(dbai: float, pref: float, f: float) -> float:
     """
@@ -127,7 +138,8 @@ def invdba(dbai: float, pref: float, f: float) -> float:
     #dbai = dba(p, pref, f)
     return 10. ** ((dbai - 10. * log(ta1) - 10. * log(ta2))/20)
 
-def _get_ta(f: float) -> float:
+
+def _get_ta(f: float) -> tuple[float, float]:
     """gets the factors for dba, invdba"""
     k1 = 2.242882e16
     k3 = 1.562339
@@ -138,6 +150,7 @@ def _get_ta(f: float) -> float:
     ta1 = k3 * f**4 / ((f**2 + p2**2) * (f**2 + p3**2))
     ta2 = k1 * f**4 / ((f**2 + p1**2)**2 * (f**2 + p4**2)**2)
     return ta1, ta2
+
 
 # we'll add _ to the beginning of these variables
 BUILTINS = ['del', 'eval', 'yield', 'async', 'await', 'property',
@@ -166,6 +179,7 @@ def split_deqatn_line0(card: list[str]) -> tuple[int, str, str, list[str]]:
     line0_eq = line0[16:]
     eqs_temp = [line0_eq] + card[1:]
     return equation_id, name_eqid, line0_eq, eqs_temp
+
 
 class DEQATN(BaseCard):  # needs work...
     """
@@ -368,6 +382,7 @@ class DEQATN(BaseCard):  # needs work...
                            size=size, is_double=is_double)
         return msg
 
+
 def write_deqatn(equation_id: int, eqs: list[str],
                  size: int=8, is_double: bool=False) -> str:
     """directly write a DEQATN"""
@@ -383,12 +398,14 @@ def write_deqatn(equation_id: int, eqs: list[str],
     #print(msg)
     return msg
 
+
 def lines_to_eqs(eqs_in: list[str]) -> list[str]:
     """splits the equations"""
     eqs_wrapped = _split_equations_by_semicolon(eqs_in)
     eqs = _join_wrapped_equation_lines(eqs_in, eqs_wrapped)
     assert len(eqs) > 0, eqs
     return eqs
+
 
 def _split_equations_by_semicolon(eqs_in: list[str]) -> list[str]:
     """helper for ``lines_to_eqs``"""
@@ -430,6 +447,7 @@ def _split_equations_by_semicolon(eqs_in: list[str]) -> list[str]:
             #'line     =%r\n'
             #'full_line=%r' % (check_line, full_line))
         #raise SyntaxError(msg)
+
 
 def _join_wrapped_equation_lines(unused_eqs_temp_in, eqs_temp: list[str]) -> list[str]:
     """helper for ``lines_to_eqs``"""
@@ -476,6 +494,7 @@ def _join_wrapped_equation_lines(unused_eqs_temp_in, eqs_temp: list[str]) -> lis
         eqs.append(eqi)
     return eqs
 
+
 def split_equations(lines: list[str]) -> list[str]:
     """takes an overbounded DEQATN card and shortens it"""
     # first line must be < 56
@@ -492,6 +511,7 @@ def split_equations(lines: list[str]) -> list[str]:
     # remove the trailing semicolon
     lines2[-1] = lines2[-1][:-1]
     return lines2
+
 
 def _split_equation(lines_out: list[str], line: str, n: int,
                     isplit: int=0) -> list[str]:
@@ -551,9 +571,10 @@ def _split_equation(lines_out: list[str], line: str, n: int,
     lines_out.append(line_out.replace('^', '**').strip())
     isplit += 1
     if isplit > 360:
-        raise RuntimeError('Recursion issue splitting line; isplit=%i' %  isplit)
+        raise RuntimeError('Recursion issue splitting line; isplit=%i' % isplit)
     lines_out = _split_equation(lines_out, line[i:], n, isplit+1)
     return lines_out
+
 
 def fortran_to_python_short(line: str, unused_default_values: Any) -> Any:
     """the function used by the DRESP2"""
@@ -562,6 +583,7 @@ def fortran_to_python_short(line: str, unused_default_values: Any) -> Any:
     local_dict = {}
     exec(func_str, globals(), local_dict)
     return local_dict['func']
+
 
 def split_to_equations(lines: list[str]) -> list[str]:
     """
@@ -584,6 +606,7 @@ def split_to_equations(lines: list[str]) -> list[str]:
             equation_lines.append(line)
     return equation_lines
 
+
 def _setup_deqatn(equation_id: int,
                   eqs: list[str],
                   dtable_ref: Optional[DTABLE],
@@ -595,6 +618,7 @@ def _setup_deqatn(equation_id: int,
     func_name, nargs, func_str = fortran_to_python(
         equation_id, eqs, default_values, comment)
     return func_name, nargs, func_str
+
 
 def fortran_to_python(deqatn_id: int,
                       lines: list[str],
@@ -712,7 +736,7 @@ def write_function_header(func_header: str, eq: str,
 
     Parameters
     ----------
-    f : str
+    func_header : str
         the function header
         f(a, b, c)
     eq : str
@@ -799,6 +823,7 @@ def write_function_header(func_header: str, eq: str,
     msg += '    %s = %s\n' % (func_name, eq)
     return func_name, msg, variables
 
+
 def _write_function_line(func_name: str, variables: list[str],
                          default_values: dict[str, float]) -> str:
     """writes the ``def f(x, y, z=1.):`` part of the function"""
@@ -822,12 +847,14 @@ def _write_function_line(func_name: str, variables: list[str],
     msg = 'def %s(%s):\n' % (func_name, vals2)
     return msg
 
+
 def _write_comment(comment: str) -> str:
     """writes the deqatn to the comment block"""
     lines = comment.split('\n')
     msgi = '\n    '.join(lines)
     msg = '    """\n    %s"""\n' % msgi
     return msg
+
 
 def _write_variables(variables: list[str]) -> str:
     """type checks the inputs"""

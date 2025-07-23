@@ -46,7 +46,22 @@ def write_include(filename: str, is_windows: bool=None) -> str:
         marker = '/'
 
     sline = _split_path(filename, is_windows)
-    if len(filename) > 62:  # 62; 72-10=62; we need space for the INCLUDE (9) and the quote at the end
+
+    if len(filename) <= 62:
+        # short path
+        #
+        # 62; 72-10=62
+        # we need space for:
+        #  - INCLUDE (9)
+        #  - single quote at the end
+        pth = marker.join(sline)
+        pth2 = pth.rstrip('\n ' + marker)
+        if not is_windows and pth2.startswith(marker):
+            ## '//opt/work/fem.bdf' -> '/opt/work/fem.bdf'
+            pth2 = marker + pth2.lstrip(marker)
+        out = "INCLUDE '" + pth2 + "'\n"
+    else:
+        # multiline path
         pth = "INCLUDE '"
         all_paths = []
         for isline, pathi in enumerate(sline):
@@ -67,9 +82,6 @@ def write_include(filename: str, is_windows: bool=None) -> str:
             all_paths.append(pth)
         pth = ''.join(all_paths).rstrip('\n \\')
         out = pth.rstrip('\n ' + marker) + "'\n"
-    else:
-        pth = marker.join(sline)
-        out = "INCLUDE '" + pth.rstrip('\n ' + marker) + "'\n"
     return out
 
 

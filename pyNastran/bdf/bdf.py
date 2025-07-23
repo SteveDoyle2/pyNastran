@@ -653,7 +653,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # cards that were created, but not processed
         self.reject_cards: list[str] = []
 
-        self.include_filenames: list[str] = defaultdict(list)
+        self.include_filenames: dict[int, list[str]] = defaultdict(list)
         # self.__init_attributes()
 
         cards_to_read = [
@@ -1172,7 +1172,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 raise AttributeError(f'key={key!r} val={val}\nupdate ~line 1050 of bdf.py and '
                                      f'add the new key ({key})')
 
-        self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
+        self.case_control_deck = CaseControlDeck(
+            self.case_control_lines, allow_tabs=self.allow_tabs, log=self.log)
         #self.log.debug('done loading!')
         for model in self.superelement_models.values():
             model.log = self.log
@@ -1319,7 +1320,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             xref = self._xref
         verify_bdf(self, xref)
 
-    def include_zip(self, bdf_filename: Optional[str]=None,
+    def include_zip(self, bdf_filename: PathLike | None=None,
                     encoding: Optional[str]=None,
                     make_ilines: bool=True) -> tuple[list[str], Any]:
         """
@@ -1442,7 +1443,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.app = app
         self.update_solution(sol, method, sol_iline)
 
-        self.case_control_deck = CaseControlDeck(case_control_lines, self.log)
+        self.case_control_deck = CaseControlDeck(
+            case_control_lines, allow_tabs=self.allow_tabs, log=self.log)
         self.case_control_deck.solmap_to_value = self._solmap_to_value
         self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
         return bulk_data_lines, bulk_data_ilines, additional_deck_lines
@@ -1880,6 +1882,31 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """raises an error if there are cross-reference errors"""
         self.xref_obj.pop_xref_errors()
 
+    def _store_group(self, strip_comment: str) -> bool:
+        """
+        'group: name="ULFuseCanardAtch MainFuseStruct Fixed Gridpoints"; nodes=1'
+
+        Returns
+        -------
+        continue_flag : bool
+            should a continue be called
+        """
+        strip_comment2 = strip_comment.split(':', 1)[1].strip()
+        if ';' in strip_comment2:
+            group = ModelGroup.create_from_line(strip_comment2)
+            name = group.name
+            if name in self.model_groups:
+                og_group = self.model_groups[name]
+                # print(og_group)
+                og_group.union(group)
+                # print('->', og_group)
+                del og_group
+                return True
+            self.model_groups[name] = group
+        else:
+            self.log.warning(f'unknown group={strip_comment}')
+        return True
+
     def get_bdf_cards(self, bulk_data_lines: list[str],
                       bulk_data_ilines: Optional[Any]=None,
                       use_dict: bool=True) -> tuple[Any, Any, Any]:
@@ -1899,6 +1926,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         backup_comment = ''
         nlines = len(bulk_data_lines)
 
+        # self.echo = True
+        # self.force_echo_off = False
+
         for iline_bulk, line in enumerate(bulk_data_lines):
             ifile_iline = bulk_data_ilines[iline_bulk, :]
             #print(iline_bulk, ifile_iline, line)
@@ -1908,25 +1938,21 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 line, comment = line.split('$', 1)
                 strip_comment = comment.strip()
                 if strip_comment.lower().startswith('group:'):
-                    #'group: name="ULFuseCanardAtch MainFuseStruct Fixed Gridpoints"; nodes=1'
-                    strip_comment2 = strip_comment.split(':', 1)[1].strip()
-                    if ';' in strip_comment2:
-                        group = ModelGroup.create_from_line(strip_comment2)
-                        name = group.name
-                        if name in self.model_groups:
-                            og_group = self.model_groups[name]
-                            #print(og_group)
-                            og_group.union(group)
-                            #print('->', og_group)
-                            del og_group
-                            continue
-                        self.model_groups[name] = group
-                    else:
-                        self.log.warning(f'unknown group={strip_comment}')
+                    continue_flag = self._store_group(strip_comment)
+                    if continue_flag:
+                        continue
+            #if not self.allow_tabs and '\t' in line:
+                #raise RuntimeError(f'There are tabs in:\n{line}')
+                #self.log.warning(f'There are tabs in:\n{line}')
 
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
+                    # multiline card is finished
+
+                    if not self.allow_tabs and '\t' in (joined_lines_n := '\n'.join(card_lines)):
+                        raise RuntimeError(f'There are tabs in:\n{joined_lines_n}')
+
                     if self.echo and not self.force_echo_off:
                         self.log.info('Reading %s:\n' %
                                       old_card_name + full_comment + ''.join(card_lines))
@@ -1986,6 +2012,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #backup_comment += '$' + comment + '\n'
 
         if card_lines:
+            if not self.allow_tabs and '\t' in (joined_lines_n := '\n'.join(card_lines)):
+                raise RuntimeError(f'There are tabs in:\n{joined_lines_n}')
+
             if self.echo and not self.force_echo_off:
                 self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
             #print('end_add %s' % card_lines)
@@ -2024,9 +2053,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             comment = ''
             if '$' in line:
                 line, comment = line.split('$', 1)
+
+            # if not self.allow_tabs and '\t' in line:
+            #     raise RuntimeError(f'There are tabs in:\n{line}')
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
+                    if not self.allow_tabs and '\t' in (joined_lines_n := '\n'.join(card_lines)):
+                        raise RuntimeError(f'There are tabs in:\n{joined_lines_n}')
+
                     if self.echo and not self.force_echo_off:
                         self.log.info('Reading %s:\n' %
                                       old_card_name + full_comment + ''.join(card_lines))
@@ -2075,6 +2110,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #backup_comment += comment + '\n'
 
         if card_lines:
+            if not self.allow_tabs and '\t' in (joined_lines_n := '\n'.join(card_lines)):
+                raise RuntimeError(f'There are tabs in:\n{joined_lines_n}')
+
             if self.echo and not self.force_echo_off:
                 self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
             #print('end_add %s' % card_lines)
@@ -3219,7 +3257,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods.add_tempd_object(tempd)
         return tempds
 
-    def _prepare_dequatn(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DEQATN:
+    def _prepare_dequatn(self, unused_card: list[str], card_obj: list[str], comment='') -> DEQATN:
         """adds a DEQATN"""
         deqatn = DEQATN.add_card(card_obj, comment=comment)
         self._add_methods.add_deqatn_object(deqatn)
@@ -4881,7 +4919,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         cards_out = self._parse_cards_hdf5(cards, card_count)
         assert isinstance(cards_out, dict), cards_out
 
-        self.case_control_deck = CaseControlDeck(case_control_lines, log=self.log)
+        self.case_control_deck = CaseControlDeck(
+            case_control_lines, allow_tabs=self.allow_tabs, log=self.log)
         self.case_control_deck.solmap_to_value = self._solmap_to_value
         self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
         return cards_out
@@ -4895,7 +4934,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         self.punch = False
         if self.case_control_deck is None:
-            self.case_control_deck = CaseControlDeck([], log=self.log)
+            self.case_control_deck = CaseControlDeck(
+                [], allow_tabs=self.allow_tabs, log=self.log)
 
         subcases = {}
         for subcase_id in subcase_ids:

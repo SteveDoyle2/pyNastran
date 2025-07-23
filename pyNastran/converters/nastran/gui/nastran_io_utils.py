@@ -51,7 +51,7 @@ from pyNastran.op2.op2_geom import OP2Geom
 
 #
 from .utils import (
-    build_offset_normals_dims, # build_map_centroidal_result,
+    build_offset_normals_dims,  # build_map_centroidal_result,
     #get_nastran_gui_layer_word, # check_for_missing_control_surface_boxes,
     get_elements_nelements_unvectorized, get_shell_material_coord,
     #make_nid_map, store_warning,
@@ -63,7 +63,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 from pyNastran.gui.qt_files.colors import (
     RED_FLOAT, BLUE_FLOAT)
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
-from pyNastran.gui.gui_objects.displacements import ElementalTableResults # ForceTableResults,
+from pyNastran.gui.gui_objects.displacements import ElementalTableResults  # ForceTableResults,
 
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
@@ -73,12 +73,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 SIDE_MAP = {}
 SIDE_MAP['CHEXA'] = {
-    1 : [4, 3, 2, 1],
-    2 : [1, 2, 6, 5],
-    3 : [2, 3, 7, 6],
-    4 : [3, 4, 8, 7],
-    5 : [4, 1, 5, 8],
-    6 : [5, 6, 7, 8],
+    1: [4, 3, 2, 1],
+    2: [1, 2, 6, 5],
+    3: [2, 3, 7, 6],
+    4: [3, 4, 8, 7],
+    5: [4, 1, 5, 8],
+    6: [5, 6, 7, 8],
 }
 
 NO_THETA = [
@@ -90,6 +90,7 @@ NO_THETA = [
     'CHBDYP', 'GENEL',
 ]
 
+
 def map_elements1_quality_helper(self,
                                  model: BDF,
                                  xyz_cid0: np.ndarray,
@@ -100,7 +101,6 @@ def map_elements1_quality_helper(self,
     #eid_to_nid_map.clear()
     eid_to_nid_map = {}
     self.eid_to_nid_map = eid_to_nid_map
-
 
     eid_map = self.gui.eid_map
     # --------------------------
@@ -647,7 +647,6 @@ def map_elements1_quality_helper(self,
                 eid_to_nid_map[eid] = node_ids[:5]
             #print('*node_ids =', node_ids[:5])
 
-
             point_ids.SetId(0, nid_map[node_ids[0]])
             point_ids.SetId(1, nid_map[node_ids[1]])
             point_ids.SetId(2, nid_map[node_ids[2]])
@@ -674,7 +673,7 @@ def map_elements1_quality_helper(self,
             node_ids = element.node_ids
             _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
 
-            if node_ids[0] is None and node_ids[1] is None: # CELAS2
+            if node_ids[0] is None and node_ids[1] is None:  # CELAS2
                 log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
                 del self.eid_map[eid]
                 continue
@@ -774,7 +773,7 @@ def map_elements1_quality_helper(self,
             #min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
                                     #element.nodes_ref[1].get_position())
 
-            g0 = element.g0 #_vector
+            g0 = element.g0  #_vector
             if not isinstance(g0, integer_types):
                 log.warning('removing\n%s' % (element))
                 log.warning('removing CBEND/g0 eid=%s; %s' % (eid, element.type))
@@ -860,7 +859,7 @@ def map_elements1_quality_helper(self,
             #|    1   |    2    |    3    |   4  |    5   |    6   |  7 |  8 |  9 |
             #| CHBDYP |   EID   |   PID   | TYPE | IVIEWF | IVIEWB | G1 | G2 | G0 |
             #|        | RADMIDF | RADMIDB | GMID |   CE   |   E1   | E2 | E3 |    |
-            pid = 0 # element.pid
+            pid = 0  # element.pid
             node_ids = element.node_ids
             if element.Type == 'LINE':
                 n1, n2 = [nid_map[nid] for nid in node_ids[:2]]
@@ -1039,6 +1038,7 @@ def map_elements1_quality_helper(self,
     )
     return out
 
+
 def map_elements1_no_quality_helper(self,
                                     xyz_cid0: np.ndarray,
                                     nid_cp_cd: np.ndarray,
@@ -1152,7 +1152,7 @@ def map_elements1_no_quality_helper(self,
         #(0, 4, 7, 3), # (1, 5, 8, 4),
         #(0, 6, 5, 4), # (1, 7, 6, 5),
     #)
-    line_type = 3 # vtkLine().GetCellType()
+    line_type = 3  # vtkLine().GetCellType()
 
     nid_to_pid_map = defaultdict(list)
     pid = 0
@@ -1553,7 +1553,6 @@ def map_elements1_no_quality_helper(self,
                 point_ids.SetId(4, nid_map[node_ids[4]])
             #print('*node_ids =', node_ids[:5])
 
-
             #if min(node_ids) > 0:
             grid.InsertNextCell(elem.GetCellType(), point_ids)
 
@@ -1574,7 +1573,7 @@ def map_elements1_no_quality_helper(self,
             node_ids = element.node_ids
             _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
 
-            if node_ids[0] is None and node_ids[1] is None: # CELAS2
+            if node_ids[0] is None and node_ids[1] is None:  # CELAS2
                 log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
                 del self.eid_map[eid]
                 continue
@@ -3031,7 +3030,7 @@ def get_model_unvectorized(log: SimpleLogger,
     else:  # read the bdf/punch
         model = BDF(log=log, debug=True)
 
-        skip_cards = ['DMI']
+        skip_cards = ['DMI', 'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMIAX']
         model.disable_cards(skip_cards)
 
         model.is_strict_card_parser = False

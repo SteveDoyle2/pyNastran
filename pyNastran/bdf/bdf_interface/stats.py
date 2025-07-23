@@ -11,6 +11,8 @@ def get_bdf_stats(model: BDF, return_type: str='string',
 
     Parameters
     ----------
+    model : BDF
+        the model object
     return_type : str (default='string')
         the output type ('list', 'string')
             'list' : list of strings
@@ -191,6 +193,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         #new
         'bolt', 'boltld', 'boltfor', 'boltseq', 'boltfrc',
         'use_new_deck_parser', 'allow_overwrites_set', '_parse',
+        'allow_tabs',
     ] + list_attrs + card_dict_groups + scalar_attrs
     missed_attrs = []
     for attr in model.object_attributes(filter_properties=True,
@@ -359,16 +362,19 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         return '\n'.join(msg)
     return msg
 
+
 def _get_added_message_from_dict(groups_dict: dict[str, int]) -> str:
     ncards_total = sum(groups_dict.values())
     msg = _get_added_message(groups_dict, ncards_total)
     return msg
+
 
 def _get_added_message(group_msg: list[str], ncards_total) -> str:
     #added_msg = ''
     #if len(group_msg) > 1:
     added_msg = f': {ncards_total}'
     return added_msg
+
 
 def _constraint_stats(model: BDF, msg: list[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
@@ -414,6 +420,7 @@ def _constraint_stats(model: BDF, msg: list[str]) -> None:
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
 
+
 def _cyclic_stats(model: BDF, msg: list[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
     if model.cyax:
@@ -422,6 +429,7 @@ def _cyclic_stats(model: BDF, msg: list[str]) -> None:
     if model.cyjoin:
         msg.append('bdf:cyjoin')
         msg.append('  %-8s %s' % ('CYJOIN:', len(model.cyjoin)))
+
 
 def _aero_stats(model: BDF, msg: list[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
@@ -438,6 +446,7 @@ def _aero_stats(model: BDF, msg: list[str]) -> None:
     if model.mkaeros:
         msg.append('bdf:mkaeros')
         msg.append('  %-8s %s' % ('MKAERO:', len(model.mkaeros)))
+
 
 def _nsm_stats(model: BDF, msg: list[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
@@ -459,6 +468,7 @@ def _nsm_stats(model: BDF, msg: list[str]) -> None:
         for name, count_name in sorted(groups_dict.items()):
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
+
 
 def _get_bdf_stats_loads(model: BDF) -> list[str]:
     """helper for ``get_bdf_stats(...)``"""

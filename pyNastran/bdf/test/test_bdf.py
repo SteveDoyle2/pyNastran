@@ -284,6 +284,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             print_stats: bool=False,
             encoding=None,
             size: int=8, is_double: bool=False,
+            allow_tabs: bool=True,
             hdf5: bool=False,
             is_lax_parser: bool=False,
             allow_duplicates: bool=False,
@@ -293,6 +294,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             limit_mesh_opt: bool=False,
             sum_load: bool=True,
             run_mass: bool=True,
+            run_dependent_checks: bool=True,
             run_eid_checks: bool=True,
             run_mcid: bool=True,
             run_extract_bodies: bool=False,
@@ -393,7 +395,9 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         punch=punch, mesh_form=mesh_form,
         print_stats=print_stats, encoding=encoding,
         sum_load=sum_load, size=size, is_double=is_double,
-        is_lax_parser=is_lax_parser, allow_duplicates=allow_duplicates,
+        is_lax_parser=is_lax_parser,
+        allow_tabs=allow_tabs,
+        allow_duplicates=allow_duplicates,
         stop=stop, nastran=nastran, post=post, hdf5=hdf5,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
@@ -406,6 +410,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         run_skin_solids=run_skin_solids,
         run_export_caero=run_export_caero,
         run_mass=run_mass,
+        run_dependent_checks=run_dependent_checks,
         run_eid_checks=run_eid_checks, run_mcid=run_mcid,
         save_file_structure=save_file_structure,
         run_pickle=run_pickle,
@@ -432,6 +437,7 @@ def run_and_compare_fems(
         is_double: bool=False,
         save_file_structure: bool=False,
         is_lax_parser: bool=False,
+        allow_tabs: bool=True,
         allow_duplicates: bool=False,
         stop: bool=False,
         nastran: str='',
@@ -452,6 +458,7 @@ def run_and_compare_fems(
         run_skin_solids: bool=True,
         run_export_caero: bool=True,
         run_mass: bool=True,
+        run_dependent_checks: bool=True,
         run_eid_checks: bool=True,
         run_mcid: bool=True,
         run_pickle: bool=False,
@@ -462,6 +469,7 @@ def run_and_compare_fems(
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDF(debug=debug, log=log)
+    fem1.allow_tabs = allow_tabs
     #fem1.force_echo_off = False
     if is_lax_parser:
         fem1.log.warning('using lax card parser')
@@ -499,6 +507,7 @@ def run_and_compare_fems(
             run_extract_bodies=run_extract_bodies,
             run_skin_solids=run_skin_solids,
             run_export_caero=run_export_caero,
+            run_dependent_checks=run_dependent_checks,
             run_eid_checks=run_eid_checks, run_mcid=run_mcid,
             save_file_structure=save_file_structure,
             hdf5=hdf5,
@@ -676,6 +685,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              size: int, is_double: bool,
              run_extract_bodies: bool=False, run_skin_solids: bool=True,
              run_export_caero: bool=True,
+             run_dependent_checks: bool=True,
              run_eid_checks: bool=True, run_mcid: bool=True,
              save_file_structure: bool=False, hdf5: bool=False,
              encoding: Optional[str]=None,
@@ -782,7 +792,8 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
                     fem1.cross_reference()
 
                 _fem_xref_methods_check(
-                    fem1, run_eid_checks=run_eid_checks, run_mcid=run_mcid)
+                    fem1, run_dependent_checks=run_dependent_checks,
+                    run_eid_checks=run_eid_checks, run_mcid=run_mcid)
 
                 fem1._xref = True
                 #what was this for???
@@ -886,30 +897,33 @@ def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
 
 
 def _fem_xref_methods_check(fem1: BDF,
-                            run_eid_checks: bool, run_mcid: bool) -> None:
+                            run_dependent_checks: bool,
+                            run_eid_checks: bool,
+                            run_mcid: bool) -> None:
     """
     testing that these methods work with xref
     """
     log = fem1.log
     log.debug('_fem_xref_methods_check(fem1)')
 
-    fem1._get_rigid()
-    common_node_ids = list(fem1.nodes.keys())
-    fem1.get_rigid_elements_with_node_ids(common_node_ids)
+    if run_dependent_checks:
+        fem1._get_rigid()
+        common_node_ids = list(fem1.nodes.keys())
+        fem1.get_rigid_elements_with_node_ids(common_node_ids)
 
-    for spc_id in set(list(fem1.spcadds.keys()) + list(fem1.spcs.keys())):
-        fem1.get_reduced_spcs(spc_id, consider_spcadd=True)
-    for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
-        fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
+        for spc_id in set(list(fem1.spcadds.keys()) + list(fem1.spcs.keys())):
+            fem1.get_reduced_spcs(spc_id, consider_spcadd=True)
+        for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
+            fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
 
-    get_dependent_nid_to_components(fem1)
-    fem1._get_maps(eids=None, map_names=None,
-                   consider_0d=True, consider_0d_rigid=True,
-                   consider_1d=True, consider_2d=True, consider_3d=True)
-    get_dependent_nid_to_components(fem1)
+        get_dependent_nid_to_components(fem1)
+        get_dependent_nid_to_components(fem1)
 
     if run_eid_checks:
         fem1.log.debug('run_eid_checks=True check')
+        fem1._get_maps(eids=None, map_names=None,
+                       consider_0d=True, consider_0d_rigid=True,
+                       consider_1d=True, consider_2d=True, consider_3d=True)
         fem1.get_pid_to_node_ids_and_elements_array(
             pids=None, etypes=None, idtype='int32',
             msg=' which is required by test_bdf')
@@ -944,6 +958,7 @@ def remake_model(bdf_model: str, fem1: BDF, run_pickle: bool) -> BDF:
     fem1.get_bdf_stats()
 
     fem1 = BDF(debug=fem1.debug, log=fem1.log)
+    # fem1.allow_tabs = allow_tabs
     fem1.load(obj_model)
     #fem1.write_bdf(out_model_8)
     #fem1.log = log
@@ -2482,6 +2497,7 @@ def main(argv=None):
             run_mass=data['run_mass'],
             run_export_caero=data['run_export_caero'],
             run_skin_solids=data['run_skin_solids'],
+            run_dependent_checks=True,
             run_eid_checks=data['run_eid_checks'],
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
@@ -2538,6 +2554,7 @@ def main(argv=None):
             run_mass=data['run_mass'],
             run_export_caero=data['run_export_caero'],
             run_skin_solids=data['run_skin_solids'],
+            run_dependent_checks=True,
             run_eid_checks=data['run_eid_checks'],
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,

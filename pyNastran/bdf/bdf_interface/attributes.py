@@ -671,6 +671,9 @@ class BDFAttributes:
         #: list of case control deck lines
         self.case_control_lines: list[str] = []
 
+        # allow tabs in main bdf lines
+        self.allow_tabs = True
+
         # dictionary of BDFs
         self.superelement_models: dict[tuple[str, int, str], BDF] = {}
         # the keys before superelement mirroring
@@ -1005,7 +1008,7 @@ class BDFAttributes:
         #: stores TSTEPNL
         self.tstepnls: dict[int, TSTEPNL] = {}
         #: stores TF
-        self.transfer_functions: dict[int, TF] = {}
+        self.transfer_functions: dict[int, list[TF]] = {}
         #: stores DELAY
         self.delays: dict[int, DELAY] = {}
 
@@ -1131,13 +1134,13 @@ class BDFAttributes:
         self.setree: dict[int, SETREE] = {}
         self.senqset: dict[int, SENQSET | SENQSET1] = {}
         self.sebulk: dict[int, SEBULK] = {}
-        self.sebndry: dict[int, SEBNDRY] = {}
+        self.sebndry: dict[tuple[int, int], SEBNDRY] = {}
         self.release: dict[int, RELEASE] = {}
         self.seloc: dict[int, SELOC] = {}
         self.sempln: dict[int, SEMPLN] = {}
         self.seconct: dict[int, SECONCT] = {}
         self.selabel: dict[int, SELABEL] = {}
-        self.seexcld: dict[int, SEEXCLD] = {}
+        self.seexcld: dict[tuple[int, int], SEEXCLD] = {}
         self.seelt: dict[int, SEELT] = {}
         self.seload: dict[int, SELOAD] = {}
         self.csuper: dict[int, CSUPER] = {}
