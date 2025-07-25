@@ -46,7 +46,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
     parser.add_argument('-r', '--recursive', action='store_true', help='recursively search for directories')
     parser.add_argument('--skip', nargs='+', help='dont process specific files')
-    parser.add_argument('-a', '--all', help='dont skip files that have an op2')
+    parser.add_argument('-a', '--all', action='store_true', help='dont skip files that have an op2')
     parser.add_argument('--args', help='additional arguments')
 
     file_group = parser.add_mutually_exclusive_group(required=False)

@@ -306,7 +306,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             safe_xref: bool=False, run_pickle: bool=False,
             version: Optional[str]=None,
             validate_case_control: bool=True,
-            stop_on_failure: bool=True, log=None, name: str=''):
+            stop_on_failure: bool=True, log: Optional[SimpleLogger]=None, name: str=''):
     """
     Runs a single BDF
 
