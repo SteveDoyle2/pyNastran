@@ -2,9 +2,7 @@ import os
 
 #from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
-    QApplication, QLabel, QPushButton, QLineEdit,
-    QGridLayout, QHBoxLayout, QVBoxLayout,
-    QComboBox, )
+    QApplication, QPushButton, QHBoxLayout, QComboBox, )
 #from qtpy.compat import getexistingdirectory
 from qtpy.QtWidgets import QLabel, QGridLayout, QVBoxLayout, QLineEdit
 
@@ -15,7 +13,7 @@ from pyNastran.gui.menus.results_sidebar import ResultsWindow
     #get_cases_from_tree, #build_pruned_tree)
 
 field_map = {
-    'CAERO1' : [
+    'CAERO1': [
         'eid',
         'pid',
         ('lspan', 'nspan'),
@@ -26,9 +24,11 @@ field_map = {
 }
 print(field_map)
 
+
 class ModifyWindow(PyDialog):
     def __init__(self, data, win_parent=None):
         card = data['card']
+
 
 class ElementWindow(PyDialog):
     """
@@ -95,7 +95,7 @@ class ElementWindow(PyDialog):
         self.n9_edit = QNodeEdit(self, str(''), pick_style='single', tab_to_next=True)
         self.n10_edit = QNodeEdit(self, str(''), pick_style='single', tab_to_next=True)
 
-        for inode in range(3, 10+1): # 3-10
+        for inode in range(3, 10+1):  # 3-10
             inode_label = 'n%i_label' % inode
             inode_edit = 'n%i_edit' % inode
             getattr(self, inode_label).setVisible(False)
@@ -112,7 +112,6 @@ class ElementWindow(PyDialog):
         for element_type in ELEMENT_TYPES:
             self.element_type_pulldown.addItem(element_type)
         self.element_type = ELEMENT_TYPES[0]
-
 
         self.method_type_label = QLabel('Method Type')
         self.method_type_pulldown = QComboBox()
@@ -131,12 +130,11 @@ class ElementWindow(PyDialog):
         #self.results_widget_label = QLabel('Results:')
         #self.results_widget = ResultsWindow(
             #parent, name, data, choices,
-            is_single_select=True,
+            #is_single_select=True,
             #left_click_callback=None,
             #right_click_actions=None,
             #include_clear=False, include_delete=True,
             #include_results=False)
-
 
         self.add_button = QPushButton('Create')
         self.delete_button = QPushButton('Delete')
@@ -186,7 +184,7 @@ class ElementWindow(PyDialog):
         self.mid_label.setVisible(is_mid)
         self.mid_edit.setVisible(is_mid)
 
-        for inode in range(3, 10+1): # 3-10
+        for inode in range(3, 10+1):  # 3-10
             is_ni = 'n%i' % inode in params
             inode_label = 'n%i_label' % inode
             inode_edit = 'n%i_edit' % inode
@@ -224,7 +222,7 @@ class ElementWindow(PyDialog):
         self.n1_edit.setEnabled(enable)
         self.n2_edit.setEnabled(enable)
 
-        for inode in range(3, 10+1): # 3-10
+        for inode in range(3, 10+1):  # 3-10
             inode_label = 'n%i_label' % inode
             inode_edit = 'n%i_edit' % inode
             getattr(self, inode_label).setEnabled(enable)
@@ -276,7 +274,6 @@ class ElementWindow(PyDialog):
         grid.addWidget(self.comment_edit, irow, 2)
         irow += 1
 
-
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.add_button)
@@ -304,7 +301,6 @@ class ElementWindow(PyDialog):
         self.mcsid_label.setVisible(False)
         self.mcsid_pulldown.setVisible(False)
 
-
     #def on_add(self):
         #self.validate()
     #def validate(self):
@@ -314,13 +310,13 @@ class ElementWindow(PyDialog):
         ##self.controls
         #return True
 
-def main(): # pragma: no cover
+
+def main():  # pragma: no cover
     """test example for AnimationWindow"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-
 
     import sys
     # Someone is launching this directly
@@ -330,10 +326,10 @@ def main(): # pragma: no cover
 
     #from pyNastran.gui.menus.legend.animation import AnimationWindow
     data2 = {
-        'font_size' : 8,
-        'icase_fringe' : 1,
-        'icase_disp' : 2,
-        'icase_vector' : 3,
+        'font_size': 8,
+        'icase_fringe': 1,
+        'icase_disp': 2,
+        'icase_vector': 3,
 
         'name': 'cat',
         'time': 2,
@@ -348,7 +344,7 @@ def main(): # pragma: no cover
         'arrow_scale': 3.0,
         'default_arrow_scale': 30,
 
-        #'phase' : 0.,
+        #'phase': 0.,
         'phase': None,
         'default_phase': 120.,
         #'default_phase': None,
@@ -364,9 +360,9 @@ def main(): # pragma: no cover
     data2['phase'] = 0.  # uncomment for phase
 
     form = [
-        [u'Controls', None, [
-            (u'Elevator', 0, []),
-            (u'Flap', 1, []),
+        ['Controls', None, [
+            ('Elevator', 0, []),
+            ('Flap', 1, []),
         ]],
     ]
     #[0, 1, 2, 3, 4, 5, 6, 7, 8]
@@ -375,5 +371,6 @@ def main(): # pragma: no cover
     # Enter the main loop
     app.exec_()
 
-if __name__ == "__main__": # pragma: no cover
+
+if __name__ == "__main__":  # pragma: no cover
     main()

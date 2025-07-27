@@ -92,51 +92,51 @@ class LegendObject(BaseGui):
         #default_arrow_scale = None
 
         data = {
-            'font_size' : self.settings.font_size,
+            'font_size': self.settings.font_size,
             #'icase' : self.icase,
-            'icase_fringe' : gui.icase_fringe,  # int for normals
-            'icase_disp' : gui.icase_disp,
-            'icase_vector' : gui.icase_vector,
-            'title' : legend_title,
-            'min_value' : min_value,
-            'max_value' : max_value,
+            'icase_fringe': gui.icase_fringe,  # int for normals
+            'icase_disp': gui.icase_disp,
+            'icase_vector': gui.icase_vector,
+            'title': legend_title,
+            'min_value': min_value,
+            'max_value': max_value,
             'filter_value': filter_value,
 
-            'scale' : scale,
-            'arrow_scale' : arrow_scale,
-            'phase' : phase,
-            'format' : data_format,
+            'scale': scale,
+            'arrow_scale': arrow_scale,
+            'phase': phase,
+            'format': data_format,
 
             'default_min': default_min,
             'default_max': default_max,
             'default_filter_value': default_filter_value,
-            'default_title' : default_title,
-            'default_scale' : default_scale,
-            'default_arrow_scale' : default_arrow_scale,
-            'default_phase' : default_phase,
-            'default_format' : default_format,
+            'default_title': default_title,
+            'default_scale': default_scale,
+            'default_arrow_scale': default_arrow_scale,
+            'default_phase': default_phase,
+            'default_format': default_format,
 
-            'default_nlabels' : default_nlabels,
-            'default_labelsize' : default_labelsize,
-            'default_ncolors' : default_ncolors,
-            'default_colormap' : default_colormap,
+            'default_nlabels': default_nlabels,
+            'default_labelsize': default_labelsize,
+            'default_ncolors': default_ncolors,
+            'default_colormap': default_colormap,
 
-            'nlabels' : nlabels,
-            'labelsize' : labelsize,
-            'ncolors' : ncolors,
-            'colormap' : colormap,
+            'nlabels': nlabels,
+            'labelsize': labelsize,
+            'ncolors': ncolors,
+            'colormap': colormap,
 
-            'is_low_to_high' : True,
+            'is_low_to_high': True,
             'is_discrete': True,
             'is_horizontal': gui.scalar_bar.is_horizontal,
-            'is_shown' : gui.scalar_bar.is_shown,
-            'is_fringe' : gui._is_fringe,
-            'clicked_ok' : False,
-            'close' : False,
+            'is_shown': gui.scalar_bar.is_shown,
+            'is_fringe': gui._is_fringe,
+            'clicked_ok': False,
+            'close': False,
         }
         gui: MainWindow = self.gui
-        if not isinstance(gui, QMainWindow): # pragma: no cover
-            return # testing
+        if not isinstance(gui, QMainWindow):  # pragma: no cover
+            return  # testing
         if not self._legend_window_shown:
             self._legend_window = LegendPropertiesWindow(data, win_parent=gui)
             self._legend_window.show()
@@ -192,15 +192,15 @@ class LegendObject(BaseGui):
             'scale': scale,
             'default_scale': default_scale,
 
-            'arrow_scale' : arrow_scale,
-            'default_arrow_scale' : default_arrow_scale,
+            'arrow_scale': arrow_scale,
+            'default_arrow_scale': default_arrow_scale,
 
-            'is_scale' : default_phase is None,
-            'phase' : phase,
-            'default_phase' : default_phase,
-            'dirname' : os.path.abspath(os.getcwd()),
-            'clicked_ok' : False,
-            'close' : False,
+            'is_scale': default_phase is None,
+            'phase': phase,
+            'default_phase': default_phase,
+            'dirname': os.path.abspath(os.getcwd()),
+            'clicked_ok': False,
+            'close': False,
         }
         self.set_animation_window(data)
 

@@ -24,7 +24,8 @@ from typing import TYPE_CHECKING
 import numpy
 #np_funcs2 = []
 #np_linalg_funcs2 = []
-import scipy, scipy.interpolate
+import scipy
+import scipy.interpolate
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -35,13 +36,15 @@ from qtpy.QtWidgets import (
 from qtpy.compat import getexistingdirectory
 
 from pyNastran.gui.menus.python_console import PythonConsoleWidget, PythonConsoleLayout
-from pyNastran.gui.utils.qt.pydialog import PyDialog, set_combo_box_text
+from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text, get_combo_box_text
 from pyNastran.gui.utils.qt.checks.qlineedit import (
-    check_int, check_float, check_name_str, check_path)
-from pyNastran.gui.utils.qt.dialogs import open_file_dialog
+    check_int, check_float, check_name_str, check_path,
+    QLINEEDIT_ERROR)
+#from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.menus.results_sidebar import ResultsWindow
 from pyNastran.gui.menus.results_sidebar_utils import (
-    get_cases_from_tree, #build_pruned_tree
+    get_cases_from_tree,  # build_pruned_tree
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -342,9 +345,11 @@ class CalculatorWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
+
 def enable_disable_objects(qt_objects, enable=True):
     for obj in qt_objects:
         obj.setEnabled(enable)
+
 
 def load_module_functions(module, func_list, exclusion_set):
     for func in dir(module):
@@ -357,6 +362,7 @@ def load_module_functions(module, func_list, exclusion_set):
         if skip:
             continue
         func_list.append(func)
+
 
 def main(): # pragma: no cover
     """test example for CalculatorWindow"""
@@ -490,7 +496,7 @@ def main(): # pragma: no cover
         #           'atleast_3d', 'average', 'bartlett', 'base_repr', 'binary_repr', 'bincount', 'bitwise_and', 'bitwise_not', 'bitwise_or', 'bitwise_xor', 'blackman', 'block', 'bmat', 'bool8', 'broadcast', 'broadcast_arrays', 'broadcast_shapes', 'broadcast_to', 'busday_count', 'busday_offset', 'busdaycalendar', 'byte', 'byte_bounds', 'ceil', 'choose', 'clip', 'column_stack', 'common_type', 'compare_chararrays', 'compat', 'complex128', 'complex64', 'complexfloating', 'compress', 'concatenate', 'conj', 'conjugate', 'convolve', 'copy', 'copysign', 'copyto', 'core', 'corrcoef', 'correlate', 'cos', 'cosh', 'count_nonzero', 'cov', 'cross', 'csingle', 'ctypeslib', 'cumprod', 'cumproduct', 'cumsum', 'datetime64', 'datetime_as_string', 'datetime_data', 'deg2rad', 'degrees', 'delete', 'deprecate', 'deprecate_with_doc', 'diag', 'diag_indices', 'diag_indices_from', 'diagflat', 'diagonal', 'diff', 'digitize', 'disp', 'divide', 'divmod', 'dot', 'double', 'dsplit', 'dstack', 'dtype', 'e', 'ediff1d', 'einsum', 'einsum_path', 'emath', 'empty', 'empty_like', 'equal', 'errstate', 'euler_gamma',
         #           'exp', 'exp2', 'expand_dims', 'expm1', 'extract', 'eye', 'fabs', 'fastCopyAndTranspose', 'fft', 'fill_diagonal',
         # 'find_common_type', 'finfo', 'fix', 'flatiter', 'flatnonzero', 'flexible', 'flip', 'fliplr', 'flipud', 'float16', 'float32', 'float64', 'float_power', 'floating', 'floor', 'floor_divide', 'fmax', 'fmin', 'fmod', 'format_float_positional', 'format_float_scientific', 'format_parser', 'frexp', 'frombuffer', 'fromfile', 'fromfunction', 'fromiter', 'frompyfunc', 'fromregex', 'fromstring', 'full', 'full_like', 'gcd', 'generic', 'genfromtxt', 'geomspace', 'get_array_wrap', 'get_include', 'get_printoptions', 'getbufsize', 'geterr', 'geterrcall', 'geterrobj', 'gradient', 'greater', 'greater_equal', 'half', 'hamming', 'hanning', 'heaviside', 'histogram', 'histogram2d', 'histogram_bin_edges', 'histogramdd', 'hsplit', 'hstack', 'hypot', 'i0', 'identity', 'iinfo', 'imag', 'in1d', 'index_exp', 'indices', 'inexact', 'inf', 'info', 'infty', 'inner', 'insert', 'int0', 'int16', 'int32', 'int64', 'int8', 'intc', 'integer', 'interp', 'intersect1d', 'intp', 'invert', 'is_busday', 'isclose', 'iscomplex', 'iscomplexobj', 'isfinite', 'isfortran', 'isin', 'isinf', 'isnan', 'isnat', 'isneginf', 'isposinf', 'isreal', 'isrealobj', 'isscalar', 'issctype', 'issubdtype', 'issubsctype', 'iterable', 'kaiser', 'kron', 'lcm', 'ldexp', 'left_shift', 'less', 'less_equal', 'lexsort', 'lib', 'linalg', 'linspace', 'little_endian', 'load', 'loads', 'loadtxt', 'log', 'log10', 'log1p', 'log2', 'logaddexp', 'logaddexp2', 'logical_and', 'logical_not', 'logical_or', 'logical_xor', 'logspace', 'longcomplex', 'longdouble', 'longfloat', 'longlong', 'lookfor', 'ma', 'mafromtxt', 'mask_indices', 'mat', 'math', 'matmul', 'matrix', 'matrixlib', 'max', 'maximum', 'maximum_sctype', 'may_share_memory', 'mean', 'median', 'memmap', 'meshgrid', 'mgrid', 'min', 'min_scalar_type', 'minimum', 'mintypecode', 'mod', 'modf', 'moveaxis', 'msort', 'multiply', 'nan', 'nan_to_num', 'nanargmax', 'nanargmin', 'nancumprod', 'nancumsum', 'nanmax', 'nanmean', 'nanmedian', 'nanmin', 'nanpercentile', 'nanprod', 'nanquantile', 'nanstd', 'nansum', 'nanvar', 'nbytes', 'ndarray', 'ndenumerate', 'ndfromtxt', 'ndim', 'ndindex', 'nditer', 'negative', 'nested_iters', 'newaxis', 'nextafter', 'nonzero', 'not_equal', 'numarray', 'number', 'obj2sctype', 'object0', 'ogrid', 'oldnumeric', 'ones', 'ones_like', 'outer', 'packbits', 'pad', 'partition', 'percentile', 'pi', 'piecewise', 'place', 'poly', 'poly1d', 'polyadd', 'polyder', 'polydiv', 'polyfit', 'polyint', 'polymul', 'polynomial', 'polysub', 'polyval', 'positive', 'power', 'printoptions', 'prod', 'product', 'promote_types', 'ptp', 'put', 'put_along_axis', 'putmask', 'quantile', 'rad2deg', 'radians', 'random', 'ravel', 'ravel_multi_index', 'real', 'real_if_close', 'rec', 'recarray', 'recfromcsv', 'recfromtxt', 'reciprocal', 'record', 'remainder', 'repeat', 'require', 'reshape', 'resize', 'result_type', 'right_shift', 'rint', 'roll', 'rollaxis', 'roots', 'rot90', 'round', 'row_stack', 'savetxt', 'searchsorted', 'setdiff1d', 'setxor1d', 'shape', 'sign', 'sin', 'sinc', 'sinh', 'sometrue', 'sort', 'sqrt', 'square', 'squeeze', 'stack', 'std', 'sum', 'swapaxes', 'tan', 'tanh', 'tensordot', 'tile', 'transpose', 'trapezoid', 'union1d', 'unique', 'vdot', 'vectorize', 'vsplit', 'vstack', 'where', 'zeros'),
-        'numpy' : ('abs', 'arccos', 'arcsin', 'arctan', 'cos', 'degrees', 'radians', 'exp', 'log', 'log10', 'power', 'sqrt', 'tan'),
+        'numpy': ('abs', 'arccos', 'arcsin', 'arctan', 'cos', 'degrees', 'radians', 'exp', 'log', 'log10', 'power', 'sqrt', 'tan'),
         'scipy.special': ('exp10', ),
     }
     i = 0
@@ -541,7 +547,6 @@ def main(): # pragma: no cover
             #]]
     #]
 
-
     #[0, 1, 2, 3, 4, 5, 6, 7, 8]
     main_window = CalculatorWindow(data2,
                                    modules_form=(module_map, modules_form),
@@ -551,5 +556,5 @@ def main(): # pragma: no cover
     app.exec_()
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     main()
