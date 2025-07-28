@@ -208,7 +208,6 @@ def main():  # pragma: no cover
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-
     import sys
     # Someone is launching this directly
     # Create the QApplication
@@ -231,12 +230,13 @@ def main():  # pragma: no cover
     ]
 
     data = {
-        'cameras' : {'a':amat, 'b':bmat, 'c':cmat},
+        'cameras': {'a': amat, 'b': bmat, 'c': cmat},
     }
     main_window = CameraWindow(data, win_parent=None)
     main_window.show()
     # Enter the main loop
     app.exec_()
+
 
 if __name__ == "__main__":  # pragma: no cover
     main()

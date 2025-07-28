@@ -1174,7 +1174,6 @@ class AnimationWindow(PyDialog):
 
     def on_stop(self) -> None:
         """click the Stop button"""
-        print('on_stop')
         #passed, validate_out = self.on_validate()
         #if passed:
             #self._make_gif(validate_out, stop_animation=True)
@@ -1375,7 +1374,6 @@ class AnimationWindow(PyDialog):
 
     def on_close(self) -> None:
         """click the Cancel button"""
-        print('on_close')
         self._set_settings()
         self.on_stop()
         self.out_data['close'] = True
@@ -1388,19 +1386,18 @@ def enable_disable_objects(qt_objects: list[QSpinBox],
         obj.setEnabled(enable)
 
 
-def get_gif_filename(gifbase: Optional[str],
+def get_gif_filename(gif_base: Optional[str],
                      output_dir: str,
                      stop_animation: bool,
                      animate_in_gui: bool) -> Optional[str]:
     gif_filename = None
-    #if gifbase is not None:  # and not animate_in_gui and not stop_animation
-    if gifbase is not None and not stop_animation:
-        if gifbase.lower().endswith('.gif'):
-            gifbase = gifbase[:-4]
-        if gifbase == '':
+    #if gif_base is not None:  # and not animate_in_gui and not stop_animation
+    if gif_base is not None and not stop_animation:
+        if gif_base.lower().endswith('.gif'):
+            gif_base = gif_base[:-4]
+        if gif_base == '':
             return gif_filename
-        gif_filename = os.path.join(output_dir, gifbase + '.gif')
-    print(f'get_gif_filename = {get_gif_filename}')
+        gif_filename = os.path.join(output_dir, gif_base + '.gif')
     return gif_filename
 
 

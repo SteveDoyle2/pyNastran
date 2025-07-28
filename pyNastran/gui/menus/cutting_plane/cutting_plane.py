@@ -11,7 +11,7 @@ The preferences menu handles:
 """
 from __future__ import annotations
 import os
-from typing import TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING
 
 from qtpy.QtCore import Qt
 from qtpy import QtGui
@@ -21,13 +21,13 @@ from qtpy.QtWidgets import (
 
 from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
-from pyNastran.gui.utils.qt.qcombobox import get_combo_box_text # set_combo_box_text,
+from pyNastran.gui.utils.qt.qcombobox import get_combo_box_text  # set_combo_box_text,
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import (
-    check_save_path, #check_path,
+    check_save_path,  # check_path,
     #check_int, check_positive_int_or_blank,
-    check_float,# check_float_ranged,
+    check_float,  # check_float_ranged,
     #check_name_str, check_name_length, check_format, check_format_str,
 )
 from pyNastran.gui.utils.wildcards import wildcard_csv
@@ -481,7 +481,6 @@ class CuttingPlaneWindow(PyDialog):
             '}')
         return True, color_int, color_float
 
-
     #---------------------------------------------------------------------------
 
     def on_validate(self):
@@ -505,7 +504,7 @@ class CuttingPlaneWindow(PyDialog):
         p2 = [p2_x, p2_y, p2_z]
 
         flag6, flag7, flag8, zaxis_cid, zaxis = get_zaxis(
-            self.win_parent, # for camera
+            self.win_parent,  # for camera
             self.zaxis_method_pulldown,
             self.zaxis_x_edit, self.zaxis_y_edit, self.zaxis_z_edit)
         #print('zaxis =', zaxis)
@@ -521,7 +520,6 @@ class CuttingPlaneWindow(PyDialog):
         csv_flag = True
         if self.export_checkbox.isChecked():
             csv_filename, csv_flag = check_save_path(self.csv_edit)
-
 
         flags = [flag0, flag1, flag2, flag3, flag4, flag5,
                  flag6, flag7, flag8,
@@ -586,6 +584,7 @@ def get_zaxis(win_parent: MainWindow,
         raise NotImplementedError(zaxis_method)
     return flag1, flag2, flag3, zaxis_cid, zaxis
 
+
 def get_pulldown_text(method_int: int,
                       methods: list[str],
                       pulldown: QComboBox):
@@ -596,12 +595,12 @@ def get_pulldown_text(method_int: int,
         method = methods[method_int]
     return method
 
+
 def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-
 
     import sys
     # Someone is launching this directly
@@ -609,19 +608,20 @@ def main():  # pragma: no cover
     app = QApplication(sys.argv)
     #The Main window
     data = {
-        'font_size' : 8,
-        #'cids' : [0, 1, 2, 3],
-        'cids' : [0],
-        'plane_color' : (1., 0., 1.), # purple
-        'name' : 'main',
-
+        'font_size': 8,
+        #'cids': [0, 1, 2, 3],
+        'cids': [0],
+        'plane_color': (1., 0., 1.),  # purple
+        'name': 'main',
     }
+
     def func(*args):
         pass
     main_window = CuttingPlaneWindow(data, func, show_tol=True)
     main_window.show()
     # Enter the main loop
     app.exec_()
+
 
 if __name__ == '__main__':   # pragma: no cover
     main()

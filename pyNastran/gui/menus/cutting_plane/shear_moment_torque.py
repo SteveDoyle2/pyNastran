@@ -23,17 +23,17 @@ from qtpy.QtWidgets import (
     QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox,
     QFrame)
 
-from qtpy.QtGui import QColor# , QHeaderView
+from qtpy.QtGui import QColor  # QHeaderView
 
 
 from pyNastran.utils.locale import func_str
 from pyNastran.gui.menus.cutting_plane.results_dialog import ResultsDialog
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color, check_patran_syntax
 from pyNastran.gui.utils.qt.qelement_edit import (
-    QElementLineEdit, QElementTextEdit, # QNodeLineEdit
+    QElementLineEdit, QElementTextEdit,  # QNodeLineEdit
 )
 from pyNastran.gui.utils.qt.resize_qtextedit import AutoResizingTextEdit
-from pyNastran.gui.utils.qt.qcombobox import make_combo_box # get_combo_box_text # set_combo_box_text,
+from pyNastran.gui.utils.qt.qcombobox import make_combo_box  # get_combo_box_text # set_combo_box_text,
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float, QLINEEDIT_GOOD
@@ -289,7 +289,6 @@ class ShearMomentTorqueWindow(PyDialog):
 
         # Plane Color
 
-
         # ------------------------------------------------
         opacity_edit, point_size_edit, line_width_edit, color_edit = create_shear_moment_torque_edits(
             self,
@@ -327,7 +326,7 @@ class ShearMomentTorqueWindow(PyDialog):
             self.time_label = QLabel('Time:')
             if self.gpforce is None:  # pragma: no cover
                 # for debugging; not real
-                times = ['0.', '0.5', '1.' , '1.5', '2.']
+                times = ['0.', '0.5', '1.', '1.5', '2.']
                 time = '0.'
             else:
                 times = [func_str(time) for time in self.gpforce._times]
@@ -335,7 +334,6 @@ class ShearMomentTorqueWindow(PyDialog):
             self.times_pulldown = make_combo_box(times, time)
             self.time_label.setEnabled(False)
             self.times_pulldown.setEnabled(False)
-
 
         #name = 'main'
         #win_parent = self
@@ -562,7 +560,6 @@ class ShearMomentTorqueWindow(PyDialog):
         vbox.addLayout(grid2)
         #vbox.addStretch()
 
-
         grid_node_element = QGridLayout()
         #grid_node_element.addWidget(self.node_label, 0, 0)
         #grid_node_element.addWidget(self.node_edit, 0, 1)
@@ -732,7 +729,6 @@ class ShearMomentTorqueWindow(PyDialog):
         self.point_size_edit.valueChanged.connect(self.on_plane_point_size)
         self.line_width_edit.valueChanged.connect(self.on_plane_line_width)
         self.element_node_checkbox.clicked.connect(self.on_element_node_checkbox)
-
 
         self.export_checkbox.clicked.connect(self.on_export_checkbox)
         self.csv_button.clicked.connect(self.on_browse_csv)
@@ -929,7 +925,6 @@ class ShearMomentTorqueWindow(PyDialog):
             #'}')
         return True, color_int, color_float
 
-
     #---------------------------------------------------------------------------
 
     def on_validate(self) -> bool:
@@ -976,7 +971,7 @@ class ShearMomentTorqueWindow(PyDialog):
             p2_flag = all([flag4, flag5, flag6])
 
             flag10, flag11, flag12, zaxis_cid, zaxis = get_zaxis(
-                self.win_parent, # for camera
+                self.win_parent,  # for camera
                 self.zaxis_method_pulldown,
                 self.zaxis_x_edit, self.zaxis_y_edit, self.zaxis_z_edit)
             zaxis_flag = all([flag10, flag11, flag12])
@@ -999,7 +994,6 @@ class ShearMomentTorqueWindow(PyDialog):
                 self.element_edit, self.elements_pound)
         else:
             self.element_node_checkbox.setStyleSheet(QLINEEDIT_GOOD)
-
 
         flags = [
             p1_flag, p2_flag, p3_flag,
@@ -1059,6 +1053,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
+
 def add_row(irow: int,
             grid: QGridLayout,
             p1_label, p1_cid_pulldown,
@@ -1081,12 +1076,12 @@ def get_pulldown_text(method_int: int,
         method = methods[method_int]
     return method
 
+
 def main() -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-
 
     import sys
     # Someone is launching this directly
@@ -1096,19 +1091,19 @@ def main() -> None:  # pragma: no cover
 
     #gpforce = None
     data = {
-        'font_size' : 8,
+        'font_size': 8,
         'icase': 42,
         #'cids' : [0, 1, 2, 3],
-        'cids' : [0],
+        'cids': [0],
         'elements_pound': 5000,
-        'plane_color' : (1., 0., 1.), # purple
-        'plane_opacity' : 0.9,
-        'vector_line_width' : 0.9,
-        'vector_point_size' : 0.9,
-        #'gpforce' : gpforce,
-        #'itime' : 0,
-        'word' : 'Static',
-        'model_name' : 'main',
+        'plane_color': (1., 0., 1.),  # purple
+        'plane_opacity': 0.9,
+        'vector_line_width': 0.9,
+        'vector_point_size': 0.9,
+        #'gpforce': gpforce,
+        #'itime': 0,
+        'word': 'Static',
+        'model_name': 'main',
     }
     main_window = ShearMomentTorqueWindow(data)
     main_window.show()

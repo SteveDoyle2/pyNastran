@@ -606,8 +606,8 @@ def _write_subpanel_strips(bdf_file: TextIO, model: BDF,
         p4 = points[elements[i, 1], :]
         p2 = points[elements[i, 2], :]
         p3 = points[elements[i, 3], :]
-        le: list[float] = (p1 + p4)*0.5
-        te: list[float] = (p2 + p3)*0.5
+        le: list[float] = (p1 + p4) * 0.5
+        te: list[float] = (p2 + p3) * 0.5
         dy = (p4 - p1)[1]
         dz = (p4 - p1)[2]
         span = math.sqrt(dy**2 + dz**2)
@@ -616,6 +616,61 @@ def _write_subpanel_strips(bdf_file: TextIO, model: BDF,
         xmid: float = le[0] + chord / 2.
         bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
             caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span, xqc, xmid))
+
+def get_skj(model: BDF, percent_location: int=25) -> np.ndarray:
+    area_arm_dict = get_area_arm_dict_panel(
+        model, percent_location=percent_location)
+
+def get_area_arm_dict_panel(model: BDF,
+                            percent_location: int=25) -> dict[int, int]:
+    """get the subpanel (area, area*moment_arm dict)"""
+    area_arm_dict = {}
+    for caero_eid, caero in sorted(model.caeros.items()):
+            scaero = str(caero).rstrip().split('\n')
+            if caero.type == 'CAERO2':
+                raise RuntimeError(caero)
+                # _write_caero2_subpanel(bdf_file, caero)
+                # continue
+
+            points, elements = caero.panel_points_elements()
+            _area_arm_dict_panel(
+                area_arm_dict,
+                model, points, elements,
+                percent_location=percent_location,
+            )
+    nsubpanels = len(area_arm_dict)
+    nj = nsubpanels
+    nk = nsubpanels * 2
+    skj = np.zeros((nk, nj), dtype='float64')
+    for i, (area, arm) in area_arm_dict.items():
+        skj[]
+
+def _area_arm_dict_panel(area_arm_dict: dict[int, tuple[float, float]],
+                         model: BDF,
+                         points: np.ndarray, elements: np.ndarray,
+                         percent_location: int=25) -> None:
+    """writes the strips for the subpanels at some % chord"""
+    percent = percent_location / 100.
+    for i in range(elements.shape[0]):
+        # The point numbers here are consistent with the CAERO1
+        p1 = points[elements[i, 0], :]
+        p4 = points[elements[i, 1], :]
+        p2 = points[elements[i, 2], :]
+        p3 = points[elements[i, 3], :]
+        centroid = (p1 + p2 + p3 + p4) / 4.
+        axb = np.cross(p3 - p1, p4 - p2)
+        area = 0.5 * np.linalg.norm(axb)
+        le: list[float] = (p1 + p4) * 0.5
+        te: list[float] = (p2 + p3) * 0.5
+        dy = (p4 - p1)[1]
+        dz = (p4 - p1)[2]
+        # span = math.sqrt(dy**2 + dz**2)
+        chord: float = te[0] - le[0]
+        #xqc: float = le[0] + chord * percent
+        r_arm = chord * percent
+        area_arm_dict[caero_eid+i] = (area, area * r_arm)
+        # bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
+        #     caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span, xqc, xmid))
 
 
 def _get_subpanel_property(model: BDF, caero_id: int, eid: int,

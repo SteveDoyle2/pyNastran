@@ -32,11 +32,13 @@ def make_font(font_size: int, is_bold=False) -> QFont:
         font.setBold(is_bold)
     return font
 
+
 class QIntEdit(QLineEdit):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         qfloat_validator = QIntValidator()
         self.setValidator(qfloat_validator)
+
 
 class QFloatEdit(QLineEdit):
     def __init__(self, *args, **kwargs):
@@ -56,7 +58,7 @@ class PyDialog(QDialog):
         self.win_parent = win_parent
 
         # we set this to 0 to indicate we haven't called on_font yet
-        self.font_size = 0 # data['font_size']
+        self.font_size = 0  # data['font_size']
 
     def set_font_size(self, font_size: int) -> None:
         """
@@ -81,6 +83,8 @@ class PyDialog(QDialog):
         if event.key() == Qt.Key_Escape:
             if hasattr(self, 'on_cancel'):
                 self.on_cancel()
+            elif hasattr(self, 'on_close'):
+                self.on_close()
             else:
                 self.closeEvent(event)
 
@@ -92,6 +96,7 @@ def check_patran_syntax(cell: QTextEdit | QLineEdit,
     else:
         values, is_passed = check_patran_syntax_qtextedit(cell, pound=pound)
     return values, is_passed
+
 
 def check_patran_syntax_qtextedit(cell: QTextEdit,
                                   pound=None) -> tuple[Optional[np.ndarray], bool]:
@@ -108,6 +113,7 @@ def check_patran_syntax_qtextedit(cell: QTextEdit,
         values = None
         is_passed = False
     return values, is_passed
+
 
 def check_patran_syntax_qlineedit(cell: QLineEdit,
                                   pound=None) -> tuple[Optional[np.ndarray], bool]:
@@ -139,6 +145,7 @@ def check_patran_syntax_qlineedit(cell: QLineEdit,
     #qlineedit.setStyleSheet(QLINEEDIT_GOOD)
     #return is_failed, element_ids
 
+
 def check_patran_syntax_dict(cell: QLineEdit,
                              pound=None) -> tuple[Optional[dict[str, np.ndarray]], bool]:
     text = str(cell.text())
@@ -151,6 +158,7 @@ def check_patran_syntax_dict(cell: QLineEdit,
         cell.setStyleSheet(QLINEEDIT_ERROR)
         cell.setToolTip(str(error))
         return None, False
+
 
 def check_color(color_float: ColorFloat) -> tuple[ColorFloat, Any]:
     assert len(color_float) == 3, color_float

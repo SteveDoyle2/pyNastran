@@ -61,14 +61,14 @@ class AltGeometry:
 
         """
         representation_map = {
-            'main' : None,
-            'wire' : 'Wireframe',
-            'point' : 'point',
-            'surface' : 'Surface',
-            'wire+surf' : 'Surface',
-            'wire+point' : 'Wireframe',
-            'bar' : None,
-            'toggle' : None,
+            'main': None,
+            'wire': 'Wireframe',
+            'point': 'point',
+            'surface': 'Surface',
+            'wire+surf': 'Surface',
+            'wire+point': 'Wireframe',
+            'bar': None,
+            'toggle': None,
         }
         if display is None:
             try:
@@ -183,6 +183,7 @@ class AltGeometry:
     @property
     def color_float(self) -> ColorFloat:
         return tuple([i/255. for i in self._color])
+
     @property
     def color_int(self) -> ColorInt:
         return self._color
@@ -222,8 +223,8 @@ class AltGeometry:
 
     def __repr__(self):
         msg = ('AltGeometry(%r, color=%s, line_width=%s, opacity=%s,\n'
-              ' point_size=%s, bar_scale=%s, representation=%r, display=%r, is_visible=%s,\n'
-              'is_pickable=%s, label_actors=%s)' % (
+               ' point_size=%s, bar_scale=%s, representation=%r, display=%r, is_visible=%s,\n'
+               'is_pickable=%s, label_actors=%s)' % (
                   self.name, str(self.color), self.line_width, self.opacity, self.point_size,
                   self.bar_scale, self.representation, self.display, self.is_visible,
                   self.is_pickable, self.label_actors))

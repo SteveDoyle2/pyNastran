@@ -6,7 +6,7 @@ defines:
 # -*- coding: utf-8 -*-
 import numpy as np
 
-from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
+from pyNastran.bdf.utils import parse_patran_syntax  # parse_patran_syntax_dict
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 
 
@@ -131,6 +131,7 @@ class NodeGroup:
         msg += '  node_str: [%s]\n' % self.node_str
         msg += '  nodes_pound: %s\n' % self.nodes_pound
         return msg
+
 
 def _get_collapsed_text(values: list[int]) -> str:
     """writes the collapsed text for ``Group`` and ``NodeGroup``"""

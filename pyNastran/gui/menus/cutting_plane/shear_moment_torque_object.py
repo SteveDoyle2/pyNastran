@@ -36,6 +36,7 @@ LINE_NAME = 'smt_vector'
 POINT_NAME = 'smt_points'
 ARROW_NAME = 'smt_arrow'
 
+
 class ShearMomentTorqueObject(BaseGui):
     """wrapper around ShearMomentTorqueWindow"""
     def __init__(self, gui: MainWindow):
@@ -85,7 +86,6 @@ class ShearMomentTorqueObject(BaseGui):
         gui = self.gui
         settings: Settings = gui.settings
 
-
         model_name = gui.name
         model = self.setup_model_data(model_name)
         if hasattr(model, 'coords'):
@@ -102,19 +102,19 @@ class ShearMomentTorqueObject(BaseGui):
         group: Group = self.gui.groups[gui.group_active]
         elements_pound = group.elements_pound
         data = {
-            'font_size' : settings.font_size,
+            'font_size': settings.font_size,
             'icase': icase,
-            'cids' : cids,
+            'cids': cids,
             'elements_pound': elements_pound,
-            'plane_color' : settings.shear_moment_torque_color,
-            'plane_opacity' : settings.shear_moment_torque_opacity,
-            'vector_line_width' : settings.shear_moment_torque_line_width,
-            'vector_point_size' : settings.shear_moment_torque_point_size,
+            'plane_color': settings.shear_moment_torque_color,
+            'plane_opacity': settings.shear_moment_torque_opacity,
+            'vector_line_width': settings.shear_moment_torque_line_width,
+            'vector_point_size': settings.shear_moment_torque_point_size,
 
-            'gpforce' : gpforce,
-            'model_name' : model_name,
-            'clicked_ok' : False,
-            'close' : False,
+            'gpforce': gpforce,
+            'model_name': model_name,
+            'clicked_ok': False,
+            'close': False,
         }
         if not self._smt_window_shown:
             self._smt_window = ShearMomentTorqueWindow(data, win_parent=gui)
@@ -137,7 +137,7 @@ class ShearMomentTorqueObject(BaseGui):
         model = self.gui.models[model_name]
         return model
 
-    def setup_model_data(self, model_name: str) -> BDF:
+    def setup_model_data(self, model_name: str) -> None:
         model = self.get_model(model_name)
 
         if model_name != self.model_name:
@@ -211,9 +211,9 @@ class ShearMomentTorqueObject(BaseGui):
         nplanes = data['nplanes']
         #model = self.models[model_name]
 
-        cid_p1, p1 = data['p1'] # start
-        cid_p2, p2 = data['p2'] # xzplane
-        cid_p3, p3 = data['p3'] # end
+        cid_p1, p1 = data['p1']  # start
+        cid_p2, p2 = data['p2']  # xzplane
+        cid_p3, p3 = data['p3']  # end
         cid_zaxis, zaxis = data['zaxis']
         method = data['method']
 
@@ -243,9 +243,9 @@ class ShearMomentTorqueObject(BaseGui):
         icase: int = data['icase']
         nplanes = data['nplanes']
 
-        cid_p1, p1 = data['p1'] # start
-        cid_p2, p2 = data['p2'] # xzplane
-        cid_p3, p3 = data['p3'] # end
+        cid_p1, p1 = data['p1']  # start
+        cid_p2, p2 = data['p2']  # xzplane
+        cid_p3, p3 = data['p3']  # end
         cid_zaxis, zaxis = data['zaxis']
         method = data['method']
         station_location = data['station_location']
@@ -701,7 +701,7 @@ class ShearMomentTorqueObject(BaseGui):
             xyz1, j, k, dim_max,
             representation='surface',
             color=color,  # floats
-            opacity=opacity, # 0=transparent, 1=solid
+            opacity=opacity,  # 0=transparent, 1=solid
             actor_name=actor_name,
             visible_in_geometry_properties=False,
         )
@@ -710,6 +710,7 @@ class ShearMomentTorqueObject(BaseGui):
                                 #opacity=opacity, color=color)
         #plane_actor.VisibilityOn()
         return plane_actor
+
 
 def set_plane_opacity_color(alt_geom: AltGeometry,
                             actor: vtkActor,
@@ -725,7 +726,7 @@ def set_plane_opacity_color(alt_geom: AltGeometry,
     prop.SetDiffuseColor(*color)
     if opacity is not None:
         alt_geom.opacity = opacity
-        prop.SetOpacity(opacity) # 0=transparent, 1=solid
+        prop.SetOpacity(opacity)  # 0=transparent, 1=solid
     if line_width is not None:
         alt_geom.line_width = line_width
         prop.SetLineWidth(line_width)
@@ -733,6 +734,7 @@ def set_plane_opacity_color(alt_geom: AltGeometry,
         alt_geom.point_size = point_size
         prop.SetPointSize(point_size)
     prop.Modified()
+
 
 def clear_actors(gui: MainWindow, names: list[str]) -> None:
     """clears the gui actors"""

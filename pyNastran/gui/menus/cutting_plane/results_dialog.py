@@ -4,6 +4,7 @@ import numpy as np
 from qtpy.QtWidgets import (
     QVBoxLayout, QTableWidget, QTableWidgetItem, QDialog, QHeaderView)
 
+
 class ResultsDialog(QDialog):
     def __init__(self, win_parent,
                  data: np.ndarray,

@@ -23,7 +23,7 @@ class ForceResults2(DispForceVectorResults):
                  title: str,
                  t123_offset: int,
                  methods_txyz_rxyz: list[str],
-                 index_to_base_title_annotation:dict[int, tuple[str, str]],
+                 index_to_base_title_annotation: dict[int, tuple[str, str]],
                  dim_max: float=1.0,
                  data_format: str='%g',
                  is_variable_data_format: bool=False,
@@ -32,7 +32,7 @@ class ForceResults2(DispForceVectorResults):
                  set_max_min: bool=False,
                  uname: str='ForceResults2'):
         """
-        Defines a SPC Force/MPC Force/Applied Load result
+        Defines an SPC Force/MPC Force/Applied Load result
 
         Parameters
         ----------
@@ -83,7 +83,7 @@ class ForceResults2(DispForceVectorResults):
         #location = 'node'
 
         # setup the node mapping
-        disp_nodes = case.node_gridtype[:, 0]  #  local node id
+        disp_nodes = case.node_gridtype[:, 0]  # local node id
         self.common_nodes = np.intersect1d(node_id, disp_nodes)
         self.inode_common = np.searchsorted(node_id, self.common_nodes)
         self.inode_result = np.searchsorted(disp_nodes, self.common_nodes)
@@ -122,7 +122,7 @@ class ForceResults2(DispForceVectorResults):
         dxyz, *unused_junk = self.get_vector_data_dense(itime, res_name)
         #scale = 1.
         assert dxyz.ndim == 2, dxyz.shape
-        return self.xyz, dxyz # * scale
+        return self.xyz, dxyz  # * scale
 
     def get_vector_result(self, itime: int, res_name: str,
                           ) -> tuple[np.ndarray, np.ndarray]:

@@ -80,7 +80,7 @@ class DisplacementResults2(DispForceVectorResults):
 
         # setup the node mapping
         #node_id # the nodes in the bdf
-        disp_nodes = dxyz.node_gridtype[:, 0]  #  local node id
+        disp_nodes = dxyz.node_gridtype[:, 0]  # local node id
         self.common_nodes = np.intersect1d(node_id, disp_nodes)
         self.inode_common = np.searchsorted(node_id, self.common_nodes)
         self.inode_result = np.searchsorted(disp_nodes, self.common_nodes)

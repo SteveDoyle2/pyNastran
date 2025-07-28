@@ -16,7 +16,7 @@ from pyNastran.gui.qt_files.base_gui import BaseGui
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui import MainWindow
 
-# EDIT ACTOR PROPERTIES
+
 class EditGeometryPropertiesObject(BaseGui):
     """defines EditGeometryPropertiesObject"""
     def __init__(self, gui: MainWindow):
@@ -109,7 +109,7 @@ class EditGeometryPropertiesObject(BaseGui):
                 raise NotImplementedError(geom_prop)
 
     def on_update_geometry_properties_override_dialog(
-        self, geometry_properties: dict[str, AltGeometry]) -> None:
+            self, geometry_properties: dict[str, AltGeometry]) -> None:
         """
         Update the goemetry properties and overwrite the options in the
         edit geometry properties dialog if it is open.
@@ -134,7 +134,7 @@ class EditGeometryPropertiesObject(BaseGui):
         self.on_update_geometry_properties(geometry_properties)
 
     def on_update_geometry_properties_window(
-        self, geometry_properties: dict[str, AltGeometry]) -> None:
+            self, geometry_properties: dict[str, AltGeometry]) -> None:
         """updates the EditGeometryProperties window"""
         if self.window_shown:
             self.window.on_update_geometry_properties_window(geometry_properties)
@@ -180,10 +180,10 @@ class EditGeometryPropertiesObject(BaseGui):
             gui.log_command(msg)
 
     def _update_ith_geometry_properties(
-        self, namei: str,
-        group: AltGeometry | CoordProperties,
-        lines: list[str],
-        render: bool=True) -> None:
+            self, namei: str,
+            group: AltGeometry | CoordProperties,
+            lines: list[str],
+            render: bool=True) -> None:
         """updates a geometry"""
         gui = self.gui
         if namei not in gui.geometry_actors:
@@ -381,6 +381,7 @@ class EditGeometryPropertiesObject(BaseGui):
         grid.Modified()
         #print('update2...')
 
+
 def map_group1_results_to_group2(group1: CoordProperties | AltGeometry,
                                  group2: CoordProperties | AltGeometry | None) -> bool:
     """helper to also update main data instead of just the actors"""
@@ -393,7 +394,7 @@ def map_group1_results_to_group2(group1: CoordProperties | AltGeometry,
     else:
         assert isinstance(group1, AltGeometry), group1
         keys = ('point_size', 'opacity',
-                '_color', # 'color_float',
+                '_color',  # 'color_float',
                 'is_visible', 'line_width', 'representation', 'bar_scale')
 
     for key in keys:
