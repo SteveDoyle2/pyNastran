@@ -621,6 +621,17 @@ def get_skj(model: BDF, percent_location: int=25) -> np.ndarray:
     area_arm_dict = get_area_arm_dict_panel(
         model, percent_location=percent_location)
 
+    nsubpanels = len(area_arm_dict)
+    nj = nsubpanels
+    nk = nsubpanels * 2
+    skj = np.zeros((nk, nj), dtype='float64')
+    for j, (area, arm) in area_arm_dict.items():
+        k1 = 2 * j
+        k2 = k1 + 1
+        skj[k1, j] = area
+        skj[k2, j] = area * arm
+    return skj
+
 def get_area_arm_dict_panel(model: BDF,
                             percent_location: int=25) -> dict[int, int]:
     """get the subpanel (area, area*moment_arm dict)"""
@@ -638,12 +649,7 @@ def get_area_arm_dict_panel(model: BDF,
                 model, points, elements,
                 percent_location=percent_location,
             )
-    nsubpanels = len(area_arm_dict)
-    nj = nsubpanels
-    nk = nsubpanels * 2
-    skj = np.zeros((nk, nj), dtype='float64')
-    for i, (area, arm) in area_arm_dict.items():
-        skj[]
+    return area_arm_dict
 
 def _area_arm_dict_panel(area_arm_dict: dict[int, tuple[float, float]],
                          model: BDF,
