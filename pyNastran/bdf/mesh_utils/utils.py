@@ -40,8 +40,7 @@ from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.free_faces import write_skin_solid_faces
 from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
 
-from pyNastran.bdf.test.run_jobs import cmd_line_run_jobs
-#from pyNastran.bdf.test.host_jobs import cmd_line_host_jobs
+from pyNastran.bdf.mesh_utils.run_jobs import cmd_line_run_jobs
 from pyNastran.bdf.mesh_utils.host_jobs import cmd_line_host_jobs
 from .cmd_line.bdf_diff import cmd_line_diff
 from .cmd_line.bdf_merge import cmd_line_merge

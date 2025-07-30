@@ -918,7 +918,7 @@ def _make_flfacts_alt_sweep_constant_eas(eas: float, alts: np.ndarray,
                                          velocity_units: str='m/s',
                                          density_units: str='kg/m^3',
                                          eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray,
-                                                                        np.ndarray]:  # pragma: no cover
+                                                                        np.ndarray]:
     """
     Veas = Vtas * sqrt(rho/rho0)
     Vtas = Veas * sqrt(rho0/rho)
@@ -943,7 +943,7 @@ def make_flfacts_alt_sweep_constant_tas(tas: float, alts: np.ndarray,
                                         density_units: str='kg/m^3',
                                         eas_limit: float=1000.,
                                         eas_units: str='m/s') -> tuple[np.ndarray, np.ndarray,
-                                                                       np.ndarray]:    # pragma: no cover
+                                                                       np.ndarray]:
     """
     Veas = Vtas * sqrt(rho/rho0)
     Vtas = Veas * sqrt(rho0/rho)
@@ -1235,7 +1235,12 @@ def create_atmosphere_table(quantities: list[str],
                             alt_min: float, alt_max: float,
                             nalt: int=0,
                             dalt: float=0.0,
-                            ) -> np.array:
+                            alt_units: str='ft',
+                            density_units: str='slug/ft^3',
+                            pressure_units: str='psf',
+                            temperature_units: str='R',
+                            velocity_units: str='ft/s',
+                            dynamic_viscosity_units: str='(lbf*s)/ft^2') -> np.array:
     """
     Parameters
     ----------
@@ -1264,12 +1269,6 @@ def create_atmosphere_table(quantities: list[str],
 
     nalti = len(alts)
     out_list = [alts]
-    alt_units = 'ft'
-    density_units = 'slug/ft^3'
-    pressure_units = 'psf'
-    temperature_units = 'R'
-    velocity_units = 'ft/s'
-    dynamic_viscosity_units = '(lbf*s)/ft^2'
     R = 1716.0  # english
     for quantity in quantities:
         out = np.full(nalti, np.nan, dtype='float64')
@@ -1287,28 +1286,10 @@ def create_atmosphere_table(quantities: list[str],
                 out[ialt] = atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
         elif quantity == 'dynamic_viscosity':
             for ialt, alt in enumerate(alts):
-                val = atm_dynamic_viscosity_mu(alt, alt_units=alt_units, visc_units=dynamic_viscosity_units)
-        else:
+                out[ialt] = atm_dynamic_viscosity_mu(alt, alt_units=alt_units, visc_units=dynamic_viscosity_units)
+        else:  # pragma: no cover
             raise NotImplementedError(quantity)
         out_list.append(out)
 
     out_array = np.column_stack(out_list)
     return out_array
-
-
-def main():  # pragma: no cover
-    import os
-    dirname = os.path.dirname(__file__)
-    quantities = ['density', 'pressure', 'speed_of_sound']
-    x = create_atmosphere_table(
-        quantities,
-        0., 50000.,
-        dalt=1000.)
-    csv_filename = os.path.join(dirname, 'atmosphere.csv')
-    quantity_list = ['alt'] + quantities
-    header = ','.join(quantity_list)
-    np.savetxt(csv_filename, x, delimiter=',', header=header)
-
-
-if __name__ == '__main__':  # pragma: no cover
-    main()

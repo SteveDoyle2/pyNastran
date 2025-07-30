@@ -718,6 +718,28 @@ class TestSATKOP2(Tester):
 
 
 class TestNX(Tester):
+    def test_nx_rotor_1(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'nx' / 'rotor'
+        op2_filename = folder / 'rotor049.op2'
+        bdf_filename = folder / 'rotor049.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        op2_model, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+        cddata = op2_model.op2_results.cddata # campbell_data
+        campbell_data = cddata[2]
+        assert campbell_data.is_sort1() is True
+        assert campbell_data.is_sort2() is False
+        assert campbell_data.is_real() is False
+        assert campbell_data.is_complex() is True
+        campbell_data.plot()
+
     def test_nx_normalized_mass_density_1(self):
         log = get_logger(level='warning')
         folder = MODEL_PATH / 'nx' / 'normalized_mass_density'

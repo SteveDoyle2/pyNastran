@@ -1,4 +1,5 @@
 """various atmosphere tests"""
+import os
 import unittest
 import numpy as np
 
@@ -17,6 +18,7 @@ from pyNastran.utils.atmosphere import (
     make_flfacts_eas_sweep_constant_mach,
     sutherland_viscoscity,
     _reynolds_factor,
+    create_atmosphere_table,
 )
 
 from pyNastran.utils.convert import (
@@ -719,6 +721,19 @@ class TestAtm(unittest.TestCase):
             velocity_units='m/s', density_units='kg/m^3',
             eas_units='m/s')
         del rho, mach, vel, alt
+
+    def test_table(self):
+        dirname = os.path.dirname(__file__)
+        quantities = ['density', 'pressure', 'speed_of_sound']
+        x = create_atmosphere_table(
+            quantities,
+            0., 50000.,
+            dalt=1000.)
+        csv_filename = os.path.join(dirname, 'atmosphere.csv')
+        quantity_list = ['alt'] + quantities
+        header = ','.join(quantity_list)
+        np.savetxt(csv_filename, x, delimiter=',', header=header)
+
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

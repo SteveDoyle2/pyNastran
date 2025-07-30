@@ -2,18 +2,16 @@ import os
 import sys
 import time
 import shlex
-import shutil
 import datetime
 import getpass
 import subprocess
 import argparse
 from pathlib import Path
-from typing import Optional
 
 from cpylog import SimpleLogger, FileLogger
 import pyNastran
-from pyNastran.utils import print_bad_path, PathLike
-#from pyNastran.bdf.test.run_jobs import run_jobs_by_filenames
+from pyNastran.utils import PathLike
+from pyNastran.bdf.mesh_utils.run_jobs import run_jobs_by_filenames
 
 def cmd_line_host_jobs(argv=None, quiet: bool=False) -> int:
     """
