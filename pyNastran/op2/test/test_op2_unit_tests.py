@@ -1040,6 +1040,19 @@ class TestMSC(Tester):
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
+    def test_msc_pcompts(self):
+        """per https://github.com/SteveDoyle2/pyNastran/issues/840"""
+        log = get_logger(level='warning')
+        op2_filename = MODEL_PATH / 'msc' / 'sol103_test_pcompg_2021.op2'
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+
     def test_msc_force_vector(self):
         log = get_logger(level='warning')
         folder = MODEL_PATH / 'msc' / 'force_vector'
