@@ -21,7 +21,8 @@ class TestRunHostJobs(unittest.TestCase):
         nfiles = cmd_line_run_jobs(args, quiet=True)
         assert nfiles >= 1, nfiles  # 105
 
-    def test_run_jobs_path2(self):
+    def _test_run_jobs_path2(self):
+        """doesn't work remotely"""
         str_model_path = str(MODEL_PATH)
         extensions = ['.dat', '.bdf']
         bdf_files = get_bdf_filenames_to_run(MODEL_PATH, extensions, recursive=True)
@@ -37,7 +38,7 @@ class TestRunHostJobs(unittest.TestCase):
 
         nfiles = cmd_line_run_jobs([
             'bdf', 'run_jobs', str_model_path,
-            '--cleanup','-r', '--test'], quiet=True)
+            '--cleanup', '-r', '--test'], quiet=True)
 
         bdf_files = get_bdf_filenames_to_run(str_model_path, extensions, recursive=True)
         assert len(bdf_files) >= 10, len(bdf_files)  # 105

@@ -2164,7 +2164,7 @@ class OP2Reader:
             #(814, 4, 256, '    ')
             data = self._read_record()
 
-            assert len(data) == n4words*4, 'n4words=%s len(data)=%s n4words*4=%s' % (n4words, len(data), n4words*4)
+            #assert len(data) == n4words*4, 'n4words=%s len(data)=%s n4words*4=%s' % (n4words, len(data), n4words*4)
 
             if table_name == b'PCOMPTS':
                 # (11, 3, 0)
@@ -2189,7 +2189,7 @@ class OP2Reader:
 
         self.read_3_markers([-5, 1, 0])
         data = self._read_record()
-        assert len(data) == n5words * 4, 'n5words=%s len(data)=%s n5words*4=%s' % (n5words, len(data), n5words*4)
+        #assert len(data) == n5words * 4, 'n5words=%s len(data)=%s n5words*4=%s' % (n5words, len(data), n5words*4)
 
         if table_name == b'PCOMPTS':
             # (101, 102, 103)

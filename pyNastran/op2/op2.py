@@ -568,7 +568,7 @@ class OP2(OP2_Scalar, OP2Writer):
     def is_geometry(self) -> bool:
         return False
 
-    def read_op2(self, op2_filename: Optional[str]=None,
+    def read_op2(self, op2_filename: Optional[PathLike]=None,
                  combine: bool=True,
                  build_dataframe: Optional[bool]=False,
                  skip_undefined_matrices: bool=False,
@@ -658,7 +658,7 @@ class OP2(OP2_Scalar, OP2Writer):
         result_types = self.get_table_types()
         skip_results = (
             'params', 'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3',
-             'cstm', 'trmbu', 'trmbd',
+            'cstm', 'trmbu', 'trmbd',
         )
         for result_type in result_types:
             if result_type in skip_results or result_type.startswith('responses.'):
@@ -1187,7 +1187,6 @@ class OP2(OP2_Scalar, OP2Writer):
         #subcase_ids.sort()
         #print('subcase_ids =', subcase_ids)
 
-
         # isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step
         #(1, 2, 1, 0, 0, 'SUPERELEMENT 0')  : result1
 
@@ -1254,7 +1253,7 @@ class OP2(OP2_Scalar, OP2Writer):
                             for sort_method in sort_method_list:
                                 for ogs in ogs_list:
                                     key = (isubcase, analysis_code, sort_method, count, ogs,  # ints
-                                           superelement_adaptivity_index, pval_step) # str
+                                           superelement_adaptivity_index, pval_step)  # str
                                     if key not in keys3:
                                         #print('adding ', key)
                                         #assert key in used_keys, key
@@ -1426,6 +1425,7 @@ def _inlist(case_key: int, keys: list[Any]) -> bool:
         if key == case_key:
             return True
     return found_case_key
+
 
 def _inlist_int_tuple(case_key: int | tuple,
                       keys: list[Any]) -> bool:
@@ -1644,6 +1644,7 @@ def _create_hdf5_info(h5_file: H5File, op2_model: OP2) -> None:
     from pyNastran.op2.op2_interface.hdf5_interface import create_info_group
     create_info_group(h5_file, op2_model)
 
+
 def _get_keys_to_skip(model: OP2) -> list[str]:
     stress = model.op2_results.stress
     strain = model.op2_results.strain
@@ -1657,6 +1658,7 @@ def _get_keys_to_skip(model: OP2) -> list[str]:
         strain_energy.get_table_types(include_class=False)
     assert isinstance(my_keys_to_skip, list), my_keys_to_skip
     return my_keys_to_skip
+
 
 def get_disp_like_dicts(model: OP2) -> list[dict]:
     ato = model.op2_results.ato

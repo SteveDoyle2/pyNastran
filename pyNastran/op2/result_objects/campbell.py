@@ -3,6 +3,7 @@ import numpy as np
 from cpylog import SimpleLogger
 from pyNastran.utils import object_attributes, object_methods
 
+
 class CampbellData:
     def __init__(self, solution: int,
                  cddata_list: list[dict[int, np.ndarray]]):
@@ -15,10 +16,13 @@ class CampbellData:
 
     def is_sort1(self) -> bool:
         return True
+
     def is_sort2(self) -> bool:
         return False
+
     def is_real(self) -> bool:
         return False
+
     def is_complex(self) -> bool:
         return True
 
@@ -109,7 +113,6 @@ class CampbellData:
             rpm = data['RPM']
             eigenfreq = data['eigenfreq']
             Lehr = data['Lehr']
-            imag_eig = data['imag_eig']
             converted_freq = data['converted_freq']
             plt.figure(ifig)
             plt.plot(rpm, eigenfreq)  # RPM vs. eigenfreq
@@ -124,9 +127,10 @@ class CampbellData:
             plt.plot(rpm, real_eig)  # RPM vs. real_eig
             plt.grid(True)
 
-            plt.figure(ifig+3)
-            plt.plot(rpm, imag_eig)  # RPM vs. imag_eig
-            plt.grid(True)
+            # imag_eig = data['imag_eig']
+            # plt.figure(ifig+3)
+            # plt.plot(rpm, imag_eig)  # RPM vs. imag_eig
+            # plt.grid(True)
 
             plt.figure(ifig+4)
             plt.plot(rpm, converted_freq)  # RPM vs. converted_freq
