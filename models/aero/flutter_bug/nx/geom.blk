@@ -1004,7 +1004,7 @@ $ Femap Coordinate System 340 : Rectangular Coordinate System
 CORD2R       340       0.4256518 .225425   .0104 .299661 .225425-.981631+
 +       1.417683 .225425-.115591
 $ Femap Coordinate System 341 : Rectangular Coordinate System
-lkCORD2R       341       0 .294132  -.3175  .01905-.125822  -.3175-.888496+
+CORD2R       341       0 .294132  -.3175  .01905-.125822  -.3175-.888496+
 +       1.201678  -.3175-.400904
 $ Femap Coordinate System 342 : Rectangular Coordinate System
 CORD2R       342       0 .294132  -.3175  .01905.7096462  -.3175-.890537+
