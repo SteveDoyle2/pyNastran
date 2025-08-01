@@ -3,20 +3,23 @@ Defines utilities for parsing include files:
  - get_include_filename(card_lines, include_dir='', is_windows=None)
 
 """
+from __future__ import annotations
 import os
 import ntpath
 import posixpath
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from pyNastran.utils import print_bad_path, PathLike
 from pyNastran.bdf.errors import EnvironmentVariableError
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 IS_WINDOWS = 'nt' in os.name
 #is_linux = 'posix' in os.name
 #is_mac = 'darwin' in os.name
 
 
-def get_include_filename(log,
+def get_include_filename(log: SimpleLogger,
                          include_lines: list[str],
                          include_dirs: list[str],
                          replace_includes: dict[str, str],
@@ -83,7 +86,6 @@ def get_include_filename(log,
         if ninclude_dirs == 1:
             break
     else:
-    #if 1:
         msg = f'Could not find INCLUDE file:\n{include_lines}\n'
         msg += f'  filename: {os.path.abspath(filename_raw)}\n'
         if source_filename:
@@ -107,6 +109,7 @@ def get_include_filename(log,
                 #msg += f'  environment_keys: {list(key for key in os.environ)}'
         raise IOError(msg)
     return filename
+
 
 def parse_include_lines(card_lines: list[str]) -> str:
     """handles splitting out the INCLUDE lines"""
@@ -147,6 +150,7 @@ def parse_include_lines(card_lines: list[str]) -> str:
     #
     # -> C:\PROJECT\Data Files\SUBDIR\THISFILE
     return filename
+
 
 def split_filename_into_tokens(include_dir: str, filename: str,
                                is_windows: bool,
@@ -200,6 +204,7 @@ def split_filename_into_tokens(include_dir: str, filename: str,
         pth3 = posixpath.join(*pth2)
     pth_out = inc / pth3
     return pth_out
+
 
 def split_tokens(tokens: tuple[str], is_windows: bool,
                  debug: bool=False) -> list[str]:

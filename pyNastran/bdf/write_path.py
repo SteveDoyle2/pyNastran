@@ -45,6 +45,7 @@ def write_include(filename: str, is_windows: bool=None) -> str:
     else:
         marker = '/'
 
+    # TODO: seems to have an issue when filename uses \ (from os.path.join), but is_windows=True
     sline = _split_path(filename, is_windows)
 
     if len(filename) <= 62:

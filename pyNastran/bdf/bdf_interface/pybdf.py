@@ -26,7 +26,8 @@ import warnings
 from io import StringIO
 from itertools import count
 from collections import defaultdict
-from typing import Optional, Any, cast
+from functools import cache
+from typing import Sequence, Optional, Any, cast
 
 import numpy as np
 # from cpylog import get_logger, SimpleLogger
@@ -205,7 +206,6 @@ class BDFInputPy:
                   make_ilines: bool=True) -> tuple[list[str], list[str], list[str],
                                                    list[str], Optional[np.ndarray],
                                                    dict[tuple[str, str], list[str]],
-                                                    #list[str], Optional[np.ndarray],
                                                    ]:
         """
         Opens the bdf and extracts the lines by group
@@ -786,7 +786,11 @@ class BDFInputPy:
         # bdf_filename
         self._validate_open_file(bdf_filename_inc, check)
 
-        self.log.debug('opening %r' % bdf_filename_inc)
+        if is_file_case_sensitive(bdf_filename_inc):
+            self.log.debug('opening %r' % bdf_filename_inc)
+        else:
+            self.log.warning('opening %r (not case sensitive)' % bdf_filename_inc)
+
         self.active_filenames.append(bdf_filename_inc)
         self.loaded_filenames.append(bdf_filename_inc)
 
@@ -839,6 +843,18 @@ class BDFInputPy:
                     bdf_filename_inc, current_fname))
             elif not os.path.isfile(bdf_filename):
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
+
+
+@cache
+def listdir(directory: str) -> Sequence[str]:
+    return os.listdir(directory)
+
+
+def is_file_case_sensitive(path: str) -> bool:
+    if not os.path.isfile(path):
+        return False  # exit early
+    directory, filename = os.path.split(path)
+    return any(f == filename for f in listdir(directory))
 
 
 def _is_bulk_data_line(text: str) -> bool:
