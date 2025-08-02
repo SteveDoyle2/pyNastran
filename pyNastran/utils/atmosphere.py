@@ -151,6 +151,7 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float, mach: float,
     alt_final = convert_altitude(alt_final, 'ft', alt_units)
     return alt_final
 
+
 def get_alt_for_q_with_constant_mach(q: float, mach: float,
                                      pressure_units: str='psf', alt_units: str='ft',
                                      nmax: int=20, tol: float=5.) -> float:
@@ -594,17 +595,65 @@ def atm_calibrated_airspeed(alt: float,
     CAS = EAS * sqrt(p/p0)
     https://aerotoolbox.com/airspeed-conversions/
     """
-    eas = atm_equivalent_airspeed(alt, mach, alt_units=alt_units,
-                                  eas_units=cas_units)
+    z = convert_altitude(alt, alt_units, 'ft')
+    p0 = atm_pressure(0.)  # psf
+    p = atm_pressure(z)  # psf
+    a0 = atm_speed_of_sound(0., velocity_units=cas_units)
+    qc = p * ((1 + 0.2*mach**2)**3.5 - 1)
+    mach_comp = np.sqrt(5 * (qc/p0+1)**(1/3.5) - 1)
+    cas = a0 * mach_comp
 
+    #tas = a * mach
+    #eas = a0 * mach * np.sqrt(p / p0)
+    return cas
+
+
+def cas_to_mach(alt: float,
+                cas: float, alt_units: str='ft',
+                cas_units: str='ft/s'):
+    """
+    Parameters
+    ----------
+    alt : float
+        Altitude in alt_units
+    cas : float
+        Calibrated airspeed in cas_units
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
+    cas_units : str; default='ft/s'
+        the calibrated airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
+
+    Returns
+    -------
+    alt : float
+        Altitude in alt_units
+
+    cas = a0 * mach_comp
+    mach_comp = cas/a0
+
+    mach_comp = np.sqrt(5 * (qc/p0+1)**(1/3.5) - 1)
+    mach_comp**2 = 5 * (qc/p0+1)**(1/3.5) - 1
+    (mach_comp**2 + 1) / 5 = (qc/p0+1)**(1/3.5)
+    [(mach_comp**2 + 1) / 5]**3.5 = qc/p0+1
+    qc = p0 * ([(mach_comp**2 + 1) / 5]**3.5 - 1)
+
+    qc = p * ((1 + 0.2*mach**2)**3.5 - 1)
+    qc/p + 1 = (1 + 0.2*mach**2)**3.5
+    (qc/p + 1)**(1/3.5) = 1 + 0.2*mach**2
+    ((qc/p + 1)**(1/3.5) - 1)/0.2 = mach**2
+    inner = ((qc/p + 1)**(1/3.5) - 1)/0.2
+    mach = sqrt(inner)
+    """
     z = convert_altitude(alt, alt_units, 'ft')
     p0 = atm_pressure(0.)  # psf
     p = atm_pressure(z)  # psf
     a0 = atm_speed_of_sound(z, velocity_units=cas_units)
-    qc = p * ((1 + 0.2*mach**2)**3.5 - 1)
-    mach_comp = np.sqrt(5 * (qc/p0+1)**(1/3.5) - 1)
-    cas = a0 * mach_comp
-    return cas
+
+    mach_comp = cas / a0
+    qc = p0 * (((mach_comp ** 2 + 1) / 5) ** 3.5 - 1)
+    inner = ((qc / p + 1) ** (1 / 3.5) - 1) / 0.2
+    mach = inner ** 0.5
+    return mach
 
 
 def atm_mach(alt: float,
@@ -728,7 +777,7 @@ def atm_dynamic_viscosity_mu(alt: float,
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
     visc_units : str; default='(lbf*s)/ft^2'
-        the viscosity units; (lbf*s)/ft^2, (N*s)/m^2, Pa*s
+        the viscosity units; (lbf*s)/ft^2, (N*s)/m^2, Pa*s, psf*s
 
     Returns
     -------
@@ -743,9 +792,9 @@ def atm_dynamic_viscosity_mu(alt: float,
     mu = sutherland_viscoscity(T)  # (lbf*s)/ft^2
 
     # same units as pressure, except multiplied by seconds
-    if visc_units == '(lbf*s)/ft^2':
+    if visc_units in {'(lbf*s)/ft^2', 'psf*s'}:
         factor = 1.
-    elif visc_units in ['(N*s)/m^2', 'Pa*s']:
+    elif visc_units in {'(N*s)/m^2', 'Pa*s'}:
         factor = 47.88026
     else:  # pragma: no cover
         raise NotImplementedError(f'visc_units={visc_units!r}; use [(N*s)/m^2, Pa*s, (lbf*s)/ft^2]')
@@ -867,7 +916,7 @@ def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
     assert tass[0] <= tass[-1], tass
 
     rhoi = atm_density(alt, R=1716., alt_units=alt_units,
-                      density_units=density_units)
+                       density_units=density_units)
     nvel = len(tass)
     rho = np.ones(nvel, dtype=tass.dtype) * rhoi
 
@@ -875,7 +924,7 @@ def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
                               velocity_units=velocity_units)
     machs = tass / sosi
 
-    velocity = tass # sosi * machs
+    velocity = tass  # sosi * machs
     rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
                                       alt_units=alt_units,
                                       density_units=density_units,
@@ -1216,9 +1265,9 @@ def _limit_eas(rho: NDArrayNfloat, machs: NDArrayNfloat, velocity: NDArrayNfloat
 
 
 def _rho_sos_for_alts(alts: np.ndarray,
-                          alt_units: str='m',
-                          density_units: str='kg/m^3',
-                          velocity_units: str='m/s') -> tuple[np.ndarray, np.ndarray]:
+                      alt_units: str='m',
+                      density_units: str='kg/m^3',
+                      velocity_units: str='m/s') -> tuple[np.ndarray, np.ndarray]:
     """gets the density and speed of sound arrays for a set of altitudes"""
     assert alts[0] >= alts[-1], alts
     alts = np.asarray(alts)
@@ -1242,12 +1291,26 @@ def create_atmosphere_table(quantities: list[str],
                             velocity_units: str='ft/s',
                             dynamic_viscosity_units: str='(lbf*s)/ft^2') -> np.array:
     """
+
     Parameters
     ----------
-    alt_min: float
-    alt_max: float
-    nalt: int
-    dalt: float
+    quantities list[str]
+    alt_min : float
+    alt_max : float
+    nalt : int
+    dalt : float
+    alt_units : str; default='m'
+        the altitude units; ft, kft, m
+    velocity_units : str; default='m/s'
+        the velocity units; ft/s, m/s, in/s, knots
+    density_units : str; default='kg/m^3'
+        the density units; slug/ft^3, slinch/in^3, kg/m^3, g/cm^3, Mg/mm^3
+    pressure_units : str; default='psf'
+        the pressure units; psf, psi, Pa, kPa, MPa
+    temperature_units : str; default='R'
+        the altitude units; R, K
+    dynamic_viscosity_units : str; default='(lbf*s)/ft^2'
+        the dynamic viscosity, mu; (lbf*s)/ft^2, (N*s)/m^2, Pa*s, psf*s
 
     out = create_atmosphere_table(quantities, alt_min=0, alt_max=10000, dalt=1000.)
     out[:, 0]  # alt
@@ -1274,19 +1337,24 @@ def create_atmosphere_table(quantities: list[str],
         out = np.full(nalti, np.nan, dtype='float64')
         if quantity == 'density':
             for ialt, alt in enumerate(alts):
-                out[ialt] = atm_density(alt, R, alt_units=alt_units, density_units=density_units)
+                out[ialt] = atm_density(
+                    alt, R, alt_units=alt_units, density_units=density_units)
         elif quantity == 'pressure':
             for ialt, alt in enumerate(alts):
-                out[ialt] = atm_pressure(alt, alt_units=alt_units, pressure_units=pressure_units)
+                out[ialt] = atm_pressure(
+                    alt, alt_units=alt_units, pressure_units=pressure_units)
         elif quantity == 'temperature':
             for ialt, alt in enumerate(alts):
-                out[ialt] = atm_temperature(alt, alt_units=alt_units, temperature_units=temperature_units)
+                out[ialt] = atm_temperature(
+                    alt, alt_units=alt_units, temperature_units=temperature_units)
         elif quantity == 'speed_of_sound':
             for ialt, alt in enumerate(alts):
-                out[ialt] = atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
+                out[ialt] = atm_speed_of_sound(
+                    alt, alt_units=alt_units, velocity_units=velocity_units)
         elif quantity == 'dynamic_viscosity':
             for ialt, alt in enumerate(alts):
-                out[ialt] = atm_dynamic_viscosity_mu(alt, alt_units=alt_units, visc_units=dynamic_viscosity_units)
+                out[ialt] = atm_dynamic_viscosity_mu(
+                    alt, alt_units=alt_units, visc_units=dynamic_viscosity_units)
         else:  # pragma: no cover
             raise NotImplementedError(quantity)
         out_list.append(out)
