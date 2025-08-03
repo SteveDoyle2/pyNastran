@@ -26,7 +26,6 @@ from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
 #from pyNastran.utils import print_bad_path
 #from pyNastran.converters.cart3d.cart3d import read_cart3d
 #from pyNastran.converters.tecplot.tecplot import read_tecplot
-#from pyNastran.dev.tools.pressure_map_aero_setup import get_aero_model
 
 #import sys
 #from typing import Any
@@ -517,7 +516,6 @@ def cmd_line_gui():
     from pyNastran.utils import print_bad_path
     from pyNastran.converters.cart3d.cart3d import read_cart3d
     from pyNastran.converters.tecplot.tecplot import read_tecplot
-    from pyNastran.dev.tools.pressure_map_aero_setup import get_aero_model
 
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error

@@ -28,7 +28,6 @@ from pyNastran.gui.qt_version import qt_version
 #else:  # pragma: no cover
     #raise NotImplementedError(qt_version)
 
-from pyNastran.gui import IS_DEV
 import pyNastran.gui.formats
 import pyNastran.gui.gui_common
 #if not IS_DEV:
@@ -36,9 +35,6 @@ import pyNastran.gui.gui_common
 from pyNastran.all_tests_no_gui import *
 from pyNastran.converters.test_gui_formats import *
 from pyNastran.gui.test.all_tests_gui import *
-
-#if IS_H5PY:
-    #from pyNastran.dev.h5.test.test_h5 import *
 
 
 if __name__ == "__main__":  # pragma: no cover

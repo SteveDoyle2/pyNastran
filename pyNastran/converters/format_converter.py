@@ -315,8 +315,6 @@ def run_format_converter(fmt1: str, fname1: str,
         process_ugrid(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt1 == 'abaqus':
         process_abaqus(fname1, fmt2, fname2, log, data=data, quiet=quiet)
-    elif fmt1 == 'vrml' and DEV:
-        process_vrml(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     else:
         format1s = ['nastran', 'cart3d', 'stl', 'tecplot', 'ugrid', 'abaqus']
         if DEV:
@@ -455,26 +453,6 @@ def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet
         format2, output_filename,
         data, log=log, quiet=quiet)
 
-
-def process_vrml(vrml_filename: str, fmt2: str, fname2: str,
-                 log: SimpleLogger,
-                 data: dict[str, Any],
-                 quiet: bool=False) -> None:
-    """
-    Converts VRML to Nastran
-    """
-    assert fmt2 in ['nastran', 'stl'], 'format2=%s' % fmt2
-    #if data['--scale'] != 1.0:
-        #model.points *= data['--scale']
-        #data['--scale'] = 1.0
-
-    from pyNastran.converters.dev.vrml.vrml import vrml_to_nastran, vrml_to_stl
-    if fmt2 == 'nastran':
-        vrml_to_nastran(vrml_filename, fname2, log=log)
-    elif fmt2 == 'stl':
-        vrml_to_stl(vrml_filename, fname2, log=log)
-    else:
-        raise NotImplementedError(f'fmt2={fmt2!r}  is not supported by process_vrml')
 
 if __name__ == '__main__':  # pragma: no cover
     cmd_line_format_converter()

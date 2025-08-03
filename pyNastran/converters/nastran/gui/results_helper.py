@@ -1284,8 +1284,6 @@ def fill_responses(cases: Cases, model: OP2, icase: int) -> tuple[int, list[Form
             icase += 1
     #f06_filename = model.f06_filename
     #print('f06_filename =', f06_filename)
-    #from pyNastran.f06.dev.read_sol_200 import read_sol_200
-    #read_sol_200(f06_filename)
 
     #desvars = model.op2_results.responses.desvars  # type: Desvars
     #if desvars is not None:

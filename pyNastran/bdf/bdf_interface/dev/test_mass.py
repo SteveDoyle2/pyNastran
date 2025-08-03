@@ -2,8 +2,6 @@ import unittest
 
 import numpy as np
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdf_interface.dev.mass import (
-    make_gpwg, make_mass_matrix, make_reduced_mass_matrix)
 
 
 class TestMassGeneration(unittest.TestCase):

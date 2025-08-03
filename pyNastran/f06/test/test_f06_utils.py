@@ -41,7 +41,6 @@ from pyNastran.f06.parse_flutter import (
 from pyNastran.f06.flutter_response import _reshape_eigenvectors
 from pyNastran.f06.parse_trim import read_f06_trim
 from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
-from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
 
@@ -677,21 +676,6 @@ def _fix_modes(eigr: np.ndarray,
         data0 = all_data[:, ivel, :]
         tree0 = KDTree(data0)
     return out
-
-
-class TestZonaFlutter(unittest.TestCase):
-    def test_zona_gafa(self):
-        from pyNastran.f06.dev.flutter.read_zona_out import read_zona_out
-        #bdf_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.bdf'
-        f06_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.out'
-        png_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.png'
-        responses, mass = read_zona_out(f06_filename)
-        # plot_sol_200(f06_filename, png_filename=png_filename,
-        #              show=True)
-        if len(responses) == 1:
-            warnings.warn('nresponses=1 and should be 2')
-        else:
-            assert len(responses) == 2, list(responses.keys())
 
 
 class TestF06Utils(unittest.TestCase):
