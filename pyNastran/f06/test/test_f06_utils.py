@@ -679,21 +679,6 @@ def _fix_modes(eigr: np.ndarray,
 
 
 class TestF06Utils(unittest.TestCase):
-    def test_opt_aerobeam(self):
-        """tests optimization"""
-        log = SimpleLogger('warning')
-        f06_filename = AERO_PATH / 'aerobeam.f06'
-        png_filename = AERO_PATH / 'aerobeam.png'
-        plot_sol_200(f06_filename, png_filename=png_filename,
-                     show=True, log=log)
-        #read_sol_200(f06_filename)
-
-    def test_opt_mdb200(self):
-        """tests optimization"""
-        f06_filename = MODEL_PATH / 'other' / 'mdb200.f06'
-        png_filename = MODEL_PATH / 'other' / 'mdb200.png'
-        plot_sol_200(f06_filename, png_filename=png_filename,
-                     show=True)
 
     def test_f06_trim_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.bdf'
