@@ -1,12 +1,5 @@
 """import various codes with backup for failed imports"""
 CLASS_MAP = {}
-from pyNastran import DEV
-
-try:
-    from pyNastran.converters.dev.avus.avus_io import AvusIO
-    CLASS_MAP['avus'] = AvusIO
-except ModuleNotFoundError:  # pragma: no cover
-    pass
 
 try:
     from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
@@ -88,8 +81,6 @@ from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 #CLASS_MAP['nastran'] = NastranIO
 
 
-#from pyNastran.converters.dev.plot3d.plot3d_io import Plot3d_io
-
 try:
     from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
     CLASS_MAP['bedge'] = BEdge_IO
@@ -116,62 +107,8 @@ except ModuleNotFoundError:  # pragma: no cover
     pass
 
 #---------------------------------------------------------------------
-# pynastrangui-1.4.0-dev includes obj, but not others below line
-#try:
-#    from pyNastran2.nastran_io2 import Nastran2
-#    CLASS_MAP['nastran2'] = Nastran2
-#except ModuleNotFoundError:  # pragma: no cover
-#    pass
-
-try:
-    import tables
-
-
-    IS_TABLES = True
-except ModuleNotFoundError:
-    IS_TABLES = False
-
-if IS_TABLES:
-    try:
-        from pyNastran.dev.bdf_vectorized3.nastran_io3 import Nastran3
-        CLASS_MAP['nastran3'] = Nastran3
-    except ModuleNotFoundError:  # pragma: no cover
-        raise
-
 try:
     from pyNastran.converters.fluent.fluent_io import FluentIO
     CLASS_MAP['fluent'] = FluentIO
 except ModuleNotFoundError:  # pragma: no cover
     pass
-
-if DEV:
-    try:
-        from pyNastran.dev.h5.h5_nastran_io import H5NastranIO
-        CLASS_MAP['h5nastran'] = H5NastranIO
-    except ModuleNotFoundError:  # pragma: no cover
-        pass
-
-    try:
-        from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
-        CLASS_MAP['adb'] = ADB_IO
-    except ModuleNotFoundError:  # pragma: no cover
-        pass
-
-    try:
-        from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
-        CLASS_MAP['degen_geom'] = DegenGeomIO
-    except ModuleNotFoundError:  # pragma: no cover
-        pass
-
-    try:
-        from pyNastran.converters.dev.obj.obj_io import ObjIO
-        CLASS_MAP['obj'] = ObjIO
-    except ModuleNotFoundError:  # pragma: no cover
-        pass
-
-    try:
-        from pyNastran.converters.dev.vrml.vrml_io import Vrml_io
-        CLASS_MAP['vrml'] = Vrml_io
-    except ModuleNotFoundError:  # pragma: no cover
-        #raise
-        pass

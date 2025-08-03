@@ -2,15 +2,6 @@
 is_pynastrangui_exe = False
 is_installed = False
 if is_pynastrangui_exe or is_installed:
-    # pyInstaller
-
-    #from importlib.metadata import version, PackageNotFoundError
-    #__version__ = version('pyNastran')
-    #try:
-        #__version__ = version('pyNastran')
-    #except PackageNotFoundError:
-        ## package is not installed
-        #pass
     from pyNastran.version import __version__, __releaseDate__, __releaseDate2__
 else:
     import os
@@ -22,48 +13,14 @@ else:
         raise ImportError('Upgrade your Python to >= 3.10.0; version=(%s.%s.%s)' % (
             IMAJOR, MINOR1, MINOR2))
 
-    def get_git_revision_short_hash_date() -> tuple[str, tuple[str, str, str]]:
-        """determines the git revision; only works if the packages was checked
-        out using git"""
-        try:
-            #ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
-
-            # independent of pyNastran location as long as there is a git folder
-            #   what about if you use setup_user.py install?
-            #   what about if you don't have git?
-            # can raise a subprocess.CalledProcessError, which means the return code != 0
-            ghash_bytes = subprocess.check_output(['git', 'describe', '--always'],
-                                                  cwd=os.path.dirname(__file__))
-            ghash = ghash_bytes.decode('utf-8').rstrip()
-
-            #git show -s --format=%cd --date=short
-            #Mon Mar 11 23:00:39 2024 -0700
-            #
-            #git show --no-patch --format=%ai
-            #2024-03-11 16:37:20 -0700
-            date_bytes = subprocess.check_output(
-                ['git', 'show', '-s', '--format=%cd', '--date=short'],
-                cwd=os.path.dirname(__file__))
-            date = date_bytes.decode('utf-8').rstrip()
-            year, month, day = date.split('-')
-            month = month.lstrip('0')
-            day = day.lstrip('0')
-            date_out = (year, month, day)
-        except Exception:
-            # git isn't installed
-            ghash = 'no.git.checksum'
-            date_out = ('2025', '5', 'xx')
-        # 1.5.0+dev.0eccfa918
-        return 'dev.%s' % ghash, date_out
-
-    revision, (year, month, day) = get_git_revision_short_hash_date()
     __version_release__ = '1.5.0'
 
     # only for release; 1.4.0
     #__version__ = __version_release__
     # 1.4.0+dev.0eccfa918
-    __version__ = f'{__version_release__}+{revision}'
+    __version__ = f'{__version_release__}'
 
+    year, month, day = ('2025', '8', 'xx')
     months = {
         '1': 'JANUARY', '2': 'FEBRUARY', '3': 'MARCH',
         '4': 'APRIL', '5': 'MAY', '6': 'JUNE',
