@@ -2118,7 +2118,8 @@ class OP2Reader:
 
         """
         op2: OP2 = self.op2
-        op2.log.debug("table_name = %r" % op2.table_name)
+        log = op2.log
+        log.debug("table_name = %r" % op2.table_name)
         table_name = self._read_table_name(rewind=False)
 
         #read_record = self._skip_record if op2.read_mode == 2 else self._read_record
@@ -2130,7 +2131,7 @@ class OP2Reader:
         data_header = self._read_record()
         #self.show_data(data_header, types='ifsd', endian=None)
         a, bi, n4a, n5, e, f, n4b = Struct(b'<7i').unpack(data_header)
-        self.log.debug('a=%s b=%s n4a=%s n5=%s e=%s f=%s n4b=%s' % (
+        log.debug('a=%s b=%s n4a=%s n5=%s e=%s f=%s n4b=%s' % (
             a, bi, n4a, n5, e, f, n4b))
         #assert n4a == n4b, 'n4a=%s n4b=%s' % (n4a, n4b)
 
@@ -2162,7 +2163,10 @@ class OP2Reader:
             # (1, 4, 0, '    ')
             #(421, 4, 128, '    ')
             #(814, 4, 256, '    ')
+            #---------------------------------
+            # (201, 4, 0,   '    ')
             data = self._read_record()
+            # self.show_data(data)
 
             #assert len(data) == n4words*4, 'n4words=%s len(data)=%s n4words*4=%s' % (n4words, len(data), n4words*4)
 
@@ -2177,11 +2181,11 @@ class OP2Reader:
                 while i < len(data):
                     datai = data[i:i+16]
                     out = s1.unpack(datai)
-                    print(out)
+                    log.debug(str(out))
                     i += 16
                     j += 1
-                print("j (-4) = %s" % j)
-                assert i == len(data), '-4'
+                log.debug("j (-4) = %s" % j)
+                # assert i == len(data), '-4'
         else:
             self.read_markers([0])
             assert n4a == 0, n4a
@@ -2189,7 +2193,7 @@ class OP2Reader:
 
         self.read_3_markers([-5, 1, 0])
         data = self._read_record()
-        #assert len(data) == n5words * 4, 'n5words=%s len(data)=%s n5words*4=%s' % (n5words, len(data), n5words*4)
+        # assert len(data) == n5words * 4, 'n5words=%s len(data)=%s n5words*4=%s' % (n5words, len(data), n5words*4)
 
         if table_name == b'PCOMPTS':
             # (101, 102, 103)

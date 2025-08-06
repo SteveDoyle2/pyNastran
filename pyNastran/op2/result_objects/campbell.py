@@ -99,7 +99,7 @@ class CampbellData:
         """
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip)
 
-    def plot(self, ifig: int=1) -> None:
+    def plot(self, ifig: int=1, show: bool=True) -> None:
         import matplotlib.pyplot as plt
         for data in self.cddata_list:
             # 1: 'RPM',
@@ -113,6 +113,9 @@ class CampbellData:
             rpm = data['RPM']
             eigenfreq = data['eigenfreq']
             Lehr = data['Lehr']
+            # ['RPM', 'eigenfreq', 'Lehr',
+            #  'real_eig', 'whirl_dir', 'converted_freq',
+            #  'whirl_code']
             converted_freq = data['converted_freq']
             plt.figure(ifig)
             plt.plot(rpm, eigenfreq)  # RPM vs. eigenfreq
@@ -135,3 +138,5 @@ class CampbellData:
             plt.figure(ifig+4)
             plt.plot(rpm, converted_freq)  # RPM vs. converted_freq
             plt.grid(True)
+        if show:  # pragma: no cover
+            plt.show()
