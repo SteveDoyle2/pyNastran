@@ -87,8 +87,10 @@ def get_alt_for_density(density: float, density_units: str='slug/ft^3',
     return alt_out
 
 
-def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float, mach: float,
-                                       velocity_units: str='ft/s', alt_units: str='ft',
+def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float,
+                                       mach: float,
+                                       velocity_units: str='ft/s',
+                                       alt_units: str='ft',
                                        nmax: int=20, tol: float=5.) -> float:
     """
     Gets the altitude associated with a equivalent airspeed.
@@ -592,31 +594,46 @@ def atm_calibrated_airspeed(alt: float,
     cas : float
         Calibrated airspeed in cas_units
 
-    CAS = EAS * sqrt(p/p0)
     https://aerotoolbox.com/airspeed-conversions/
     """
     z = convert_altitude(alt, alt_units, 'ft')
     p0 = atm_pressure(0.)  # psf
     p = atm_pressure(z)  # psf
+    # rho = atm_density(alt)
+    # rho0 = atm_density(0.)
+    a0 = atm_speed_of_sound(0., alt_units='ft', velocity_units=cas_units)
+    # a = atm_speed_of_sound(z, alt_units='ft', velocity_units=cas_units)
+    # q1 = 1.4/2 * p * mach**2  # psf
+    # q2 = atm_dynamic_pressure(alt, mach, alt_units=alt_units, pressure_units='psf')
+    # assert np.allclose(q1, q2)
+
+    # veas = np.sqrt(2*q1/rho0)
+    # veas_units1 = a0 * mach * np.sqrt(p/p0)
+    # veas_units2 = convert_velocity(veas, 'ft/s', cas_units)
+
     a0 = atm_speed_of_sound(0., velocity_units=cas_units)
-    qc = p * ((1 + 0.2*mach**2)**3.5 - 1)
-    mach_comp = np.sqrt(5 * (qc/p0+1)**(1/3.5) - 1)
-    cas = a0 * mach_comp
+    qc = p * ((1 + 0.2*mach**2)**3.5 - 1)         # good?
+    # mach2 = np.sqrt(5 * ((qc/p+1)**(1/3.5) - 1))  # good?
+
+    mach_comp = np.sqrt(5 * ((qc/p0+1)**(1/3.5) - 1))
+    vcas = a0 * mach_comp  # czs_units b/c a0
 
     #tas = a * mach
     #eas = a0 * mach * np.sqrt(p / p0)
-    return cas
+    return vcas
 
 
 def cas_to_mach(alt: float,
-                cas: float, alt_units: str='ft',
+                vcas: float, alt_units: str='ft',
                 cas_units: str='ft/s'):
     """
+    Get Mach Number from calibrated airspeed
+
     Parameters
     ----------
     alt : float
         Altitude in alt_units
-    cas : float
+    vcas : float
         Calibrated airspeed in cas_units
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
@@ -629,30 +646,22 @@ def cas_to_mach(alt: float,
         Altitude in alt_units
 
     cas = a0 * mach_comp
-    mach_comp = cas/a0
+    mach_comp = vcas/a0
 
-    mach_comp = np.sqrt(5 * (qc/p0+1)**(1/3.5) - 1)
-    mach_comp**2 = 5 * (qc/p0+1)**(1/3.5) - 1
-    (mach_comp**2 + 1) / 5 = (qc/p0+1)**(1/3.5)
-    [(mach_comp**2 + 1) / 5]**3.5 = qc/p0+1
-    qc = p0 * ([(mach_comp**2 + 1) / 5]**3.5 - 1)
+    mach_comp = np.sqrt(5 * ((qc/p0+1)**(1/3.5) - 1))
+    qc = p0 * ((1 + 0.2*mach_comp**2)**3.5 - 1)
 
     qc = p * ((1 + 0.2*mach**2)**3.5 - 1)
-    qc/p + 1 = (1 + 0.2*mach**2)**3.5
-    (qc/p + 1)**(1/3.5) = 1 + 0.2*mach**2
-    ((qc/p + 1)**(1/3.5) - 1)/0.2 = mach**2
-    inner = ((qc/p + 1)**(1/3.5) - 1)/0.2
-    mach = sqrt(inner)
+    mach = sqrt(5 * ((qc/p+1)**(1/3.5) - 1))
     """
     z = convert_altitude(alt, alt_units, 'ft')
     p0 = atm_pressure(0.)  # psf
     p = atm_pressure(z)  # psf
-    a0 = atm_speed_of_sound(z, velocity_units=cas_units)
+    a0 = atm_speed_of_sound(0., velocity_units=cas_units)
 
-    mach_comp = cas / a0
-    qc = p0 * (((mach_comp ** 2 + 1) / 5) ** 3.5 - 1)
-    inner = ((qc / p + 1) ** (1 / 3.5) - 1) / 0.2
-    mach = inner ** 0.5
+    mach_comp = vcas / a0
+    qc = p0 * ((1 + 0.2*mach_comp**2)**3.5 - 1)
+    mach = np.sqrt(5 * ((qc/p+1)**(1/3.5) - 1))
     return mach
 
 
