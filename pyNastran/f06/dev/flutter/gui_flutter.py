@@ -5,7 +5,7 @@ import warnings
 import traceback
 from pathlib import Path
 from functools import wraps
-from typing import Optional, Any  #TYPE_CHECKING
+from typing import Optional, Any
 
 ICON_PATH = Path('')
 try:
@@ -18,14 +18,14 @@ from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from qtpy import QtCore
-from qtpy.compat import getopenfilename #, getsavefilename
+from qtpy.compat import getopenfilename  # getsavefilename
 from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (
     QLabel, QWidget,
     QApplication, QMenu, QVBoxLayout, QLineEdit, QComboBox,
     QHBoxLayout, QPushButton, QGridLayout,
     QAction,
-    QCheckBox, #QRadioButton,
+    QCheckBox,
     QListWidgetItem, QAbstractItemView,
     QListWidget, QSpinBox, QTabWidget, QToolButton,
 )
@@ -134,6 +134,7 @@ class FlutterGui(LoggableGui):
         self.freq_tol_remove = -1.0
         self.mag_tol = -1.0
         self.damping = -1.0
+        self.damping_required = -1.0
         self.vf = -1.0
         self.vl = -1.0
         self.export_to_png = True
@@ -189,9 +190,9 @@ class FlutterGui(LoggableGui):
             #'file_save_as': Action(name='file_save_as', text='Save As...', func=self.on_file_save_as),
             'file_exit':       Action(name='exit', text='Exit...', icon='exit2.jpg', func=self.on_file_exit),
             'export_settings': Action(name='Export Settings', text='Export Settings...', icon='preferences.jpg',
-                                      shortcut='Ctrl+P',func=self.on_export_settings),
+                                      shortcut='Ctrl+P', func=self.on_export_settings),
         }
-        actions_input = Actions(ICON_PATH, actions_dict) # , load_icon=False
+        actions_input = Actions(ICON_PATH, actions_dict)  # load_icon=False
         recent_files = actions_input.build_recent_file_qactions(
             self, self.recent_files, self.set_f06)
         self.qactions = actions_input.build_qactions(self)
@@ -396,6 +397,7 @@ class FlutterGui(LoggableGui):
             ('vl', -1, self.VL_edit),
             ('vf', -1, self.VF_edit),
             ('damping', -1, self.damping_edit),
+            ('damping_required', -1, self.damping_required_edit),
             ('output_directory', -1, self.output_directory_edit),
         ]
         for key, index, line_edit in line_edits:
@@ -472,6 +474,7 @@ class FlutterGui(LoggableGui):
         self.f06_filename_edit[self.ifile].setText(fname)
         self.ok_button.setEnabled(False)
         self._set_f06_default_names(fname)
+
     def _set_f06_default_names(self, f06_filename: str) -> None:
         base = os.path.splitext(f06_filename)[0]
         self._bdf_filename_default = base + '.bdf'
@@ -689,7 +692,7 @@ class FlutterGui(LoggableGui):
         self.bdf_filename_browse.setEnabled(False)
         self.bdf_filename_edit.setToolTip('Loads the Nastran Geometry')
 
-        self.op2_filename_checkbox = QCheckBox( 'OP2 Filename:', self)
+        self.op2_filename_checkbox = QCheckBox('OP2 Filename:', self)
         self.op2_filename_edit = QLineEdit(self)
         self.op2_filename_browse = QPushButton('Browse...', self)
         self.op2_filename_checkbox.setChecked(False)
@@ -837,6 +840,10 @@ class FlutterGui(LoggableGui):
         self.VF_label = QLabel('VF, Flutter:', self)
         self.VF_edit = QFloatEdit('', self)
         self.VF_edit.setToolTip('Makes a vertical line for VF')
+
+        self.damping_required_label = QLabel('Damping Required, g:', self)
+        self.damping_required_edit = QFloatEdit('', self)
+        self.damping_required_edit.setToolTip('Enables the flutter crossing (e.g., 0.0 for 0%)')
 
         self.damping_label = QLabel('Damping, g:', self)
         self.damping_edit = QFloatEdit('', self)
@@ -1000,6 +1007,10 @@ class FlutterGui(LoggableGui):
         self.damp_lim_label.setVisible(show_damp)
         self.damp_lim_edit_min.setVisible(show_damp)
         self.damp_lim_edit_max.setVisible(show_damp)
+
+        self.damping_required_label.setVisible(show_crossing)
+        self.damping_required_edit.setVisible(show_crossing)
+
         self.damping_label.setVisible(show_crossing)
         self.damping_edit.setVisible(show_crossing)
 
@@ -1217,6 +1228,10 @@ class FlutterGui(LoggableGui):
 
         grid.addWidget(self.VF_label, irow, 0)
         grid.addWidget(self.VF_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.damping_required_label, irow, 0)
+        grid.addWidget(self.damping_required_edit, irow, 1)
         irow += 1
 
         grid.addWidget(self.damping_label, irow, 0)
@@ -1612,6 +1627,8 @@ class FlutterGui(LoggableGui):
         xlim_kfreq = self.kfreq_lim
         ylim_damping = self.ydamp_lim
         ylim_freq = self.freq_lim
+
+        damping_required = self.damping_required
         damping_limit = self.damping  # % damping
         eas_range = self.eas_damping_lim
 
@@ -1686,7 +1703,7 @@ class FlutterGui(LoggableGui):
                 response.plot_modal_participation(
                     ivel, mode,
                     fig=fig, axes=axes,
-                    modes=modes, #eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
+                    modes=modes,  # eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
                     freq_tol=freq_tol,
                     mag_tol=mag_tol,
                     show=True, clear=False, close=False,
@@ -1715,10 +1732,17 @@ class FlutterGui(LoggableGui):
                 #log.info(f'modes={modes!r}')
                 #log.info(f'freq_tol={freq_tol!r}')
                 #log.info(f'v_lines={v_lines!r}')
-                damping_required = [
-                    (0.00, 0.01),
-                    (0.03, 0.03),
-                ]
+                damping_crossings = []
+                if damping_required is not None and damping_required > -0.99:
+                    damping_crossings.append((damping_required, damping_required+0.01))
+                if damping_limit is not None and damping_limit > -0.99:
+                    damping_crossings.append((damping_limit, damping_limit))
+                if len(damping_crossings) == 0:
+                    damping_crossings = [
+                        (0.00, 0.01),
+                        (0.03, 0.03),
+                    ]
+
                 response.plot_vg_vf(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     plot_type=x_plot_type,
@@ -1730,6 +1754,8 @@ class FlutterGui(LoggableGui):
                     legend=True,
                     v_lines=v_lines,
                     damping_limit=damping_limit,
+                    damping_required=damping_required,
+                    damping_crossings=damping_crossings,
                     png_filename=png_filename,
                     point_removal=self.point_removal,
                     mode_switch_method=self.mode_switch_method,
@@ -1765,7 +1791,7 @@ class FlutterGui(LoggableGui):
 
     def get_xlim(self) -> tuple[Limit, Limit, Limit, Limit,
                                 Limit, Limit, Limit, Limit, Limit,
-                                Optional[float], Optional[float],
+                                Optional[float], Optional[float], Optional[float],
                                 Optional[float], Optional[float], bool]:
         index_lim_min, is_passed0a = get_float_or_none(self.index_lim_edit_min)
         index_lim_max, is_passed0b = get_float_or_none(self.index_lim_edit_max)
@@ -1830,6 +1856,7 @@ class FlutterGui(LoggableGui):
 
         vl, is_passed_vl = get_float_or_none(self.VL_edit)
         vf, is_passed_vf = get_float_or_none(self.VF_edit)
+        damping_required, is_passed_damping_required = get_float_or_none(self.damping_required_edit)
         damping, is_passed_damping = get_float_or_none(self.damping_edit)
         eas_damping_lim_min, is_passed_eas_damping_lim1 = get_float_or_none(self.eas_damping_lim_edit_min)
         eas_damping_lim_max, is_passed_eas_damping_lim2 = get_float_or_none(self.eas_damping_lim_edit_max)
@@ -1838,12 +1865,12 @@ class FlutterGui(LoggableGui):
         point_removal_str = self.point_removal_edit.text().strip()
         point_removal = point_removal_str_to_point_removal(point_removal_str, self.log)
 
-        if is_passed_vl and vl is None:
-            vl = -1.0
-        if is_passed_vf and vf is None:
-            vf = -1.0
-        if is_passed_damping and damping is None:
-            damping = -1.0
+        vl = _float_passed_to_default(vl, is_passed_vl)
+        vf = _float_passed_to_default(vf, is_passed_vf)
+        log = self.log
+        damping_required = _float_passed_to_default(damping_required, is_passed_damping_required)
+        damping = _float_passed_to_default(damping, is_passed_damping)
+
         #if is_passed_eas_damping_lim1 and eas_damping_lim_min is None:
         #    eas_damping_lim_min = None
         #if is_passed_eas_damping_lim2 and eas_damping_lim_max is None:
@@ -1864,7 +1891,8 @@ class FlutterGui(LoggableGui):
             is_passed_ikfreq1, is_passed_ikfreq2,
             is_passed_eig,
             is_passed_tol1, is_passed_tol2, is_passed_tol3,
-            is_passed_vl, is_passed_vf, is_passed_damping,
+            is_passed_vl, is_passed_vf,
+            is_passed_damping_required, is_passed_damping,
         ]
         is_passed = all(is_passed_flags)
         # if not is_passed:
@@ -1875,7 +1903,7 @@ class FlutterGui(LoggableGui):
             damp_lim, freq_lim, kfreq_lim, ikfreq_lim,
             eigr_lim, eigi_lim,
             freq_tol, freq_tol_remove, mag_tol,
-            vl, vf, damping, eas_damping_lim, point_removal, is_passed,
+            vl, vf, damping_required, damping, eas_damping_lim, point_removal, is_passed,
         )
         return out
 
@@ -1894,7 +1922,7 @@ class FlutterGui(LoggableGui):
          ydamp_lim, freq_lim, kfreq_lim, ikfreq_lim,
          eigr_lim, eigi_lim,
          freq_tol, freq_tol_remove, mag_tol,
-         vl, vf, damping, eas_damping_lim, point_removal,
+         vl, vf, damping_required, damping, eas_damping_lim, point_removal,
          is_valid_xlim) = self.get_xlim()
 
         selected_modes = []
@@ -1923,6 +1951,7 @@ class FlutterGui(LoggableGui):
         self.mag_tol = mag_tol
         self.vl = vl
         self.vf = vf
+        self.damping_required = damping_required
         self.damping = damping
         self.eas_damping_lim = eas_damping_lim
         self.point_removal = point_removal
@@ -2005,6 +2034,7 @@ class FlutterGui(LoggableGui):
             'vl': vl,
             'vf': vf,
             'damping': damping,
+            'damping_required': damping_required,
             'eas_damping_lim': eas_damping_lim,
             'point_removal': point_removal,
             'mode_switch_method': self.mode_switch_method,
@@ -2051,12 +2081,16 @@ class FlutterGui(LoggableGui):
 
     def log_debug(self, msg: str) -> None:
         print(f'DEBUG: {msg}')
+
     def log_info(self, msg: str) -> None:
         print(f'INFO:  {msg}')
+
     def log_command(self, msg: str) -> None:
         print(f'COMMAND: {msg}')
+
     def log_warning(self, msg: str) -> None:
         print(f'WARNING: {msg}')
+
     def log_error(self, msg: str) -> None:
         print(f'ERROR:   {msg}')
 
@@ -2113,6 +2147,7 @@ def point_removal_str_to_point_removal(point_removal_str: str,
         print(traceback.print_exception(e))
     return point_removal
 
+
 def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
     items = list_widget.selectedItems()
     texts = []
@@ -2146,6 +2181,7 @@ def validate_json(data: dict[str, Any],
             default_value = allowed_values[0]
             data[key] = default_value
     return is_valid
+
 
 def get_float_or_none(line_edit: QLineEdit) -> tuple[Optional[float | str], bool]:
     # is_passed = False
@@ -2181,6 +2217,13 @@ def _to_str(value: Optional[int | float]) -> str:
     else:
         str_value = str(value)
     return str_value
+
+
+def _float_passed_to_default(value: float, is_passed: bool,
+                             default: float=-1.0) -> float:
+    if is_passed and value is None:
+        value = default
+    return value
 
 def main(f06_filename: str='') -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
