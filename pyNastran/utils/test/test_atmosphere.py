@@ -734,9 +734,11 @@ class TestAtm(unittest.TestCase):
 
     def test_table(self):
         dirname = os.path.dirname(__file__)
-        quantities = ['density', 'pressure', 'speed_of_sound']
+        quantities = ['density', 'pressure', 'speed_of_sound', 'temperature',
+                      'velocity', 'dynamic_viscosity',
+                      'calibrated_airspeed', 'equivalent_airspeed']
         x = create_atmosphere_table(
-            quantities,
+            quantities, 0.8,
             0., 50000.,
             dalt=1000.)
         csv_filename = os.path.join(dirname, 'atmosphere.csv')

@@ -1290,6 +1290,7 @@ def _rho_sos_for_alts(alts: np.ndarray,
 
 
 def create_atmosphere_table(quantities: list[str],
+                            mach: float,
                             alt_min: float, alt_max: float,
                             nalt: int=0,
                             dalt: float=0.0,
@@ -1321,7 +1322,9 @@ def create_atmosphere_table(quantities: list[str],
     dynamic_viscosity_units : str; default='(lbf*s)/ft^2'
         the dynamic viscosity, mu; (lbf*s)/ft^2, (N*s)/m^2, Pa*s, psf*s
 
-    out = create_atmosphere_table(quantities, alt_min=0, alt_max=10000, dalt=1000.)
+    out = create_atmosphere_table(
+         quantities, mach,
+         alt_min=0, alt_max=10000, dalt=1000.)
     out[:, 0]  # alt
     [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
 
@@ -1329,6 +1332,7 @@ def create_atmosphere_table(quantities: list[str],
     allowed_quantities = [
         'density', 'pressure', 'temperature', 'velocity',
         'speed_of_sound', 'dynamic_viscosity',
+        'calibrated_airspeed', 'equivalent_airspeed',
     ]
     for quantity in quantities:
         assert quantity in allowed_quantities, f'{quantity} is not a valid quantity; use {allowed_quantities}'
@@ -1364,6 +1368,15 @@ def create_atmosphere_table(quantities: list[str],
             for ialt, alt in enumerate(alts):
                 out[ialt] = atm_dynamic_viscosity_mu(
                     alt, alt_units=alt_units, visc_units=dynamic_viscosity_units)
+        elif quantity == 'velocity':
+            out[ialt] = atm_velocity(
+                alt, mach, alt_units=alt_units, velocity_units=velocity_units)
+        elif quantity == 'calibrated_airspeed':
+            out[ialt] = atm_calibrated_airspeed(
+                alt, mach, alt_units=alt_units, cas_units=velocity_units)
+        elif quantity in 'equivalent_airspeed':
+            out[ialt] = atm_equivalent_airspeed(
+                alt, mach, alt_units=alt_units, eas_units=velocity_units)
         else:  # pragma: no cover
             raise NotImplementedError(quantity)
         out_list.append(out)
