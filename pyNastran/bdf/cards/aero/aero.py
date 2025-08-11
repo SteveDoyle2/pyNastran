@@ -1101,14 +1101,14 @@ class AESURF(BaseCard):
         msg = ', which is required by AESURF eid=%s' % self.label
         self.cid1_ref = model.Coord(self.cid1, msg=msg)
         if self.cid2 is not None:
-            self.cid2_ref = model.Coord(self.cid2)
-        self.aelist_id1_ref = model.AELIST(self.aelist_id1)
+            self.cid2_ref = model.Coord(self.cid2, msg=msg)
+        self.aelist_id1_ref = model.AELIST(self.aelist_id1, msg=msg)
         if self.aelist_id2:
-            self.aelist_id2_ref = model.AELIST(self.aelist_id2)
+            self.aelist_id2_ref = model.AELIST(self.aelist_id2, msg=msg)
         if self.tqllim:  # integer
-            self.tqllim_ref = model.TableD(self.tqllim)
+            self.tqllim_ref = model.TableD(self.tqllim, msg=msg)
         if self.tqulim:  # integer
-            self.tqulim_ref = model.TableD(self.tqulim)
+            self.tqulim_ref = model.TableD(self.tqulim, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by AESURF aesid=%s' % self.aesurf_id
@@ -5516,7 +5516,7 @@ class PAERO4(BaseCard):
         """
         Parameters
         ----------
-        PID : int
+        pid : int
             Property identification number. (Integer > 0)
         cla : int; default=0
             Select Prandtl-Glauert correction. (Integer = -1, 0, 1)
@@ -5539,12 +5539,12 @@ class PAERO4(BaseCard):
             for each Mach number. See Remark 3, 4, and 5 below; variable b’s
             and β’s for each mi on the MKAEROi entry.
             (Integer = 0 if CIRC = 0, > 0 if CIRC ≠ 0)
-        DOCi : list[float]
+        docs : list[float]
             d/c = distance of the control surface hinge aft of the quarter-chord
             divided by the strip chord (Real ≥ 0.0)
-        CAOCi : list[float]
+        caocs : list[float]
             ca/c = control surface chord divided by the strip chord. (Real ≥ 0.0)
-        GAPOCi : list[float]
+        gapocs : list[float]
             g/c = control surface gap divided by the strip chord. (Real ≥ 0.0)
 
         """

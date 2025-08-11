@@ -386,7 +386,7 @@ def _write_slurm(slurm_script: PathLike,
             slurm_filename = f'submit{ifile}.sh'
             print(f'call_args = {call_args}')
             args = {}
-            nastran_filename = call_args[1]
+            nastran_filename = os.path.basename(call_args[1])
             for arg in call_args[2:]:
                 key, value = arg.split('=', 1)
                 args[key] = value
@@ -395,9 +395,12 @@ def _write_slurm(slurm_script: PathLike,
             # Now you can use the imported module and its contents
             out = dynamic_module.run(ifile, slurm_filename, nastran_filename, args)
 
-        with open('submit.sh', 'w') as sh_file:
+        with open('submit.sh', 'w', newline='\n') as sh_file:
+            sh_file.write('#!/bin/sh\n')
             sh_file.write(f'# fix the permissions\n')
             sh_file.write('chmod +x *.sh\n')
+            sh_file.write('# fix slash-r line endings\n')
+            sh_file.write('dox2unix *\n')
             sh_file.write(f'#\n')
             sh_file.write(f'# files must be in local directory\n')
             sh_file.write(f'#\n')

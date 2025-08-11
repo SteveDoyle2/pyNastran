@@ -2,7 +2,6 @@
 from __future__ import annotations
 from copy import deepcopy
 from math import sin, cos, radians, atan2, sqrt, degrees
-from itertools import count
 import warnings
 from typing import Callable, Optional, Any, TYPE_CHECKING
 
@@ -806,14 +805,17 @@ class NastranMatrix(BaseCard):
         #assert isinstance(self.GCi[0], (list, np.ndarray)), 'type(GCi[0])=%s' % type(self.GCi[0])
         #assert isinstance(self.GCj[0], (list, np.ndarray)), 'type(GCj[0])=%s' % type(self.GCj[0])
 
-        msg = '\n$' + '-' * 80
-        msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
+        msg_list = [
+            '\n$' + '-' * 80,
+            '\n$ %s Matrix %s\n' % (self.type, self.name),
+        ]
+
         list_fields = [self.type, self.name, 0, self.matrix_form, self.tin,
                        self.tout, self.polar, None, self.ncols]
         if size == 8:
-            msg += print_card_8(list_fields)
+            msg_list.append(print_card_8(list_fields))
         else:
-            msg += print_card_16(list_fields)
+            msg_list.append(print_card_16(list_fields))
 
         if size == 8 and len(self.GCi):
             Gi = np.array(self.GCi)[:, 0]
@@ -833,31 +835,31 @@ class NastranMatrix(BaseCard):
                     list_fields = [self.type, self.name, GCj[0], GCj[1],
                                    None, GCi[0], GCi[1], magi, phasei]
                     if size == 8:
-                        msg += print_card_8(list_fields)
+                        msg_list.append(print_card_8(list_fields))
                     elif is_double:
-                        msg += print_card_double(list_fields)
+                        msg_list.append(print_card_double(list_fields))
                     else:
-                        msg += print_card_16(list_fields)
+                        msg_list.append(print_card_16(list_fields))
             else:
                 for (GCi, GCj, reali, complexi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     list_fields = [self.type, self.name, GCj[0], GCj[1],
                                    None, GCi[0], GCi[1], reali, complexi]
                     if size == 8:
-                        msg += print_card_8(list_fields)
+                        msg_list.append(print_card_8(list_fields))
                     elif is_double:
-                        msg += print_card_double(list_fields)
+                        msg_list.append(print_card_double(list_fields))
                     else:
-                        msg += print_card_16(list_fields)
+                        msg_list.append(print_card_16(list_fields))
         else:
             for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
                 list_fields = [self.type, self.name, GCj[0], GCj[1],
                                None, GCi[0], GCi[1], reali, None]
                 if size == 8:
-                    msg += print_card_8(list_fields)
+                    msg_list.append(print_card_8(list_fields))
                 elif is_double:
-                    msg += print_card_double(list_fields)
+                    msg_list.append(print_card_double(list_fields))
                 else:
-                    msg += print_card_16(list_fields)
+                    msg_list.append(print_card_16(list_fields))
 
         #msg += '\n\nGCi[0]=%s\n' % self.GCi[0]
         #msg += 'GCj[0]=%s\n' % self.GCj[0]
@@ -865,6 +867,7 @@ class NastranMatrix(BaseCard):
         #assert isinstance(self.GCi[0], (list, np.ndarray)), msg
         #assert isinstance(self.GCj[0], (list, np.ndarray)), msg
         #assert isinstance(self.Real[0], (list, np.ndarray)), msg
+        msg = ''.join(msg_list)
         return msg
 
 
@@ -976,7 +979,6 @@ class DMIG_UACCEL(BaseCard):
             list_fields += [lseq, None, None]
             for ncxi in ncx:
                 list_fields += ncxi
-           #for (nid, comp, xi) in ncx:
         #print('list_fields= %s' % list_fields)
         self.write_card()
         return list_fields
@@ -1898,7 +1900,8 @@ class DMI(NastranMatrix):
 
         if matrix_form not in {1, 2, 3, 4, 5, 6, 8}:
             msg = (
-                '%s name=%r matrix_form=%r must be [1, 2, 3, 4, 5, 6, 8]\n'
+                f'{self.type} name={name!r} '
+                f'matrix_form={matrix_form!r} must be [1, 2, 3, 4, 5, 6, 8]\n'
                 '  1: Square\n'
                 '  2: Rectangular\n'
                 '  3: Diagonal matrix (M=number of rows, N=1)\n'
@@ -1907,7 +1910,7 @@ class DMI(NastranMatrix):
                 '  6: Symmetric\n'
                 '  8: Identity (m=nRows, n=m)\n'
                 #'  9: Rectangular\n'
-                % (self.type, name, matrix_form))
+            )
             raise ValueError(msg)
 
         self.name = name
@@ -1923,6 +1926,59 @@ class DMI(NastranMatrix):
             self.Complex = Complex
         if finalize:
             self.finalize()
+
+    @classmethod
+    def from_array(cls, name: str,
+                   myarray: np.ndarray,
+                   form: int | str,
+                   tin=None, tout=None,
+                   comment: str=''):
+        if tin is None:
+            tin = dtype_to_tin_tout_str(myarray)
+
+        if tout is None:
+            tout = dtype_to_tin_tout_str(myarray)
+
+        nrows, ncols = myarray.shape
+
+        # GCj = columns
+        # GCi = rows
+        str_form = form
+        if isinstance(form, integer_types):
+            str_form = REVERSE_DMI_MAP[form]
+
+        if str_form == 'square':
+            # np.repeat(list(range(1, 3)), 4, axis=0).reshape(2, 4)
+            # -> [1, 2] -> [1, 1, 1, 1, 2, 2, 2, 2]
+            # array([[1, 1, 1, 1],
+            #        [2, 2, 2, 2]])
+            assert nrows == ncols
+            assert nrows >= 1, nrows
+        elif str_form == 'rectangular':
+            assert nrows >= 1
+            assert ncols >= 1
+        elif str_form == 'diagonal':
+            assert nrows >= 1, (nrows, ncols)
+            assert ncols == 1, (nrows, ncols)
+        else:  # pragma: no cover
+            raise NotImplementedError(str_form)
+
+        # ncols = 2
+        GCi = np.repeat(list(range(1, nrows + 1)), ncols, axis=0).reshape(nrows, ncols).flatten()
+        GCj = np.repeat(list(range(1, ncols + 1)), nrows, axis=0).reshape(nrows, ncols).flatten()
+        # self.log.warning(f'str_form = {str_form}')
+        # self.log.warning(f'GCi = {GCi}')
+        # self.log.warning(f'GCj = {GCj}')
+
+        Real = myarray.real.flatten()
+        Complex = None
+        if tin in {'complex64', 'complex128', 3, 4}:
+            Complex = myarray.imag.flatten()
+
+        dmi = DMI(name, form, tin, tout, nrows, ncols,
+                  GCj, GCi, Real,
+                  Complex=Complex, comment=comment)
+        return dmi
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -2626,7 +2682,7 @@ def _get_diagonal_symmetric(matrix: DMIG) -> tuple[np.ndarray, np.ndarray]:
     assert matrix.GCi.ndim == 2, matrix.GCi.ndim
     assert matrix.GCj.ndim == 2, matrix.GCj.ndim
     dij = matrix.GCi - matrix.GCj
-    dij[:, 0] == dij[:, 1]
+    #dij[:, 0] == dij[:, 1]
     is_diagonal = (dij[:, 0] == 0) & (dij[:, 1] == 0)
     not_diagonal = ~is_diagonal
     return is_diagonal, not_diagonal

@@ -61,7 +61,48 @@ class TestMatrix(unittest.TestCase):
 
 class TestDMI(unittest.TestCase):
 
-    def test_dmi_ailternate(self):
+    def test_dmi_square_mult(self):
+        model = BDF(debug=True)
+        name = 'WKK'
+        form = 'square'
+        tin = 'float32'
+        tout = tin
+        nrows = 4
+        ncols = 4
+        GCi = [1, 2, 2, 3, 3, 4, 4]
+        GCj = [1, 1, 2, 2, 3, 3, 4]
+        # Real = np.random.random(len(GCi))
+        Real = np.ones(len(GCi))
+        dmi1 = model.add_dmi(
+            name, form, tin, tout, nrows, ncols,
+            GCi, GCj, Real)
+        data1, rows1, cols1 = dmi1.get_matrix(
+            is_sparse=False, apply_symmetry=False)
+        # print(dmi1)
+        GCid = [1, 2, 3, 4]
+        GCjd = [1, 2, 3, 4]
+        Reald = [3., 2., 7., 5.]
+        dmi2 = model.add_dmi(
+            'MYDIAG', 'square', tin, tout, nrows, ncols,
+            GCid, GCjd, Reald,
+        )
+        diag_data2, rows2, cols2 = dmi2.get_matrix(
+            is_sparse=False, apply_symmetry=False)
+        #print()
+        #print(data1)
+        #print(diag_data2)
+        out = diag_data2 @ data1
+        #print(out)
+
+        updated_dmi1 = model.add_dense_dmi(
+            'TEMP', out,
+            'square', tin, tout,
+        )
+        updated_dmi1.name = dmi1.name
+
+
+
+    def test_dmi_alternate(self):
         model = BDF(debug=True)
         lines1 = ['DMI,ALTERNTE,0,3,1,1,,12,1']
         model.add_card(lines1, 'DMI', is_list=False)
@@ -75,7 +116,7 @@ class TestDMI(unittest.TestCase):
         #print(model.dmi)
         dmi = model.dmi['ALTERNTE']
         alternate = dmi.get_matrix()[0]
-        assert alternate.shape == (12, 1), rrr.shape
+        assert alternate.shape == (12, 1), alternate.shape
         alternate = alternate.flatten()
         alternate_expected = np.array([
             0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0])

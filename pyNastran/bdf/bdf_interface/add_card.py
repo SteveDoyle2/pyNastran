@@ -9480,55 +9480,15 @@ class AddCards(AddCoords, AddContact, AddBolts,
     def add_dense_dmi(self, name: str, myarray: np.ndarray,
                       form: int | str,
                       tin=None, tout=None,
-                      validate: bool=True):
+                      validate: bool=True, comment: str='') -> DMI:
         """default for tin/tout = myarray.dtype
 
         ..warning :: only supports square matrices for the moment
         """
-        if tin is None:
-            tin = dtype_to_tin_tout_str(myarray)
-
-        if tout is None:
-            tout = dtype_to_tin_tout_str(myarray)
-
-        nrows, ncols = myarray.shape
-
-        #GCj = columns
-        #GCi = rows
-        str_form = form
-        if isinstance(form, integer_types):
-            str_form = REVERSE_DMI_MAP[form]
-
-        if str_form == 'square':
-            # np.repeat(list(range(1, 3)), 4, axis=0).reshape(2, 4)
-            # -> [1, 2] -> [1, 1, 1, 1, 2, 2, 2, 2]
-            # array([[1, 1, 1, 1],
-            #        [2, 2, 2, 2]])
-            assert nrows == ncols
-            assert nrows >= 1, nrows
-        elif str_form == 'rectangular':
-            assert nrows >= 1
-            assert ncols >= 1
-        elif str_form == 'diagonal':
-            assert nrows >= 1, (nrows, ncols)
-            assert ncols == 1, (nrows, ncols)
-        else:  # pragma: no cover
-            raise NotImplementedError(str_form)
-
-        # ncols = 2
-        GCi = np.repeat(list(range(1, nrows+1)), ncols, axis=0).reshape(nrows, ncols).flatten()
-        GCj = np.repeat(list(range(1, ncols+1)), nrows, axis=0).reshape(nrows, ncols).flatten()
-        #self.log.warning(f'str_form = {str_form}')
-        #self.log.warning(f'GCi = {GCi}')
-        #self.log.warning(f'GCj = {GCj}')
-
-        Real = myarray.real.flatten()
-        Complex = None
-        if tin in {'complex64', 'complex128', 3, 4}:
-            Complex = myarray.imag.flatten()
-        dmi = self.add_dmi(
-            name, form, tin, tout, nrows, ncols, GCj, GCi, Real,
-            Complex=Complex, comment='')
+        dmi = DMI.from_array(
+            name, myarray,
+            form, tin=tin, tout=tout,
+            comment=comment)
         if validate:
             dmi.validate()
         return dmi
