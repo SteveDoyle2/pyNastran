@@ -14,6 +14,31 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
+try:
+    import pyNastran.f06.dev.flutter.nastran_utils
+except ImportError:
+    pass
+
+try:
+    import pyNastran.f06.dev.flutter.gui_flutter
+except ImportError:
+    pass
+
+try:
+    import pyNastran.f06.dev.flutter.utils
+except ImportError:
+    pass
+
+try:
+    import pyNastran.f06.dev.flutter.actions_builder
+except ImportError:
+    pass
+
+try:
+    import pyNastran.f06.dev.flutter.scalar_bar
+except ImportError:
+    pass
+
 
 class TestZona(unittest.TestCase):
     def test_zona_case1_out(self):

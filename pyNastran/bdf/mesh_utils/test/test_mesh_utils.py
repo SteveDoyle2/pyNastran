@@ -43,6 +43,12 @@ from pyNastran.bdf.mesh_utils.dvxrel import get_dvprel_ndarrays
 from pyNastran.bdf.mesh_utils.rbe_tools import (
     merge_rbe2, rbe3_to_rbe2, rbe2_to_rbe3)
 
+import pyNastran.bdf.mesh_utils.add_remove_mesh
+import pyNastran.bdf.mesh_utils.bdf_remove_comments
+import pyNastran.bdf.mesh_utils.cleanup_model
+import pyNastran.bdf.mesh_utils.normals
+import pyNastran.bdf.mesh_utils.add_remove_mesh
+
 
 TEST_DIR = (Path(__file__) / '..').resolve()
 PKG_PATH = Path(pyNastran.__path__[0])
