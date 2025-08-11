@@ -6,6 +6,7 @@ defines:
 from __future__ import annotations
 from typing import Any, Optional, TYPE_CHECKING
 from qtpy.QtWidgets import QMainWindow
+from pyNastran.utils import PathLike
 from pyNastran.f06.dev.flutter.vtk_window import VtkWindow
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -19,15 +20,22 @@ DT_MS_MAX = 5000
 
 class VtkWindowObject:
     """defines VtkWindowObject, which is an interface to the PreferencesWindow"""
-    def __init__(self, gui: FlutterGui, icon_path: str):
+    def __init__(self, gui: FlutterGui, icon_path: PathLike):
         self.gui = gui
         self.ncase = 0
         self.icon_path = icon_path
         self.window_shown = None
         self.window = None
+
+        self.dt_ms = DT_MS_DEFAULT
+        self.nphase = NPHASE_DEFAULT
+        self.icase = 0
+        self.animate = True
+
         self.apply_settings({})
         # self.dt_ms = DT_MS_DEFAULT
         # self.nphase = NPHASE_DEFAULT
+
     def apply_settings(self, data: dict[str, Any]) -> None:
         vtk_data = data.get('vtk', {})
         self.dt_ms = DT_MS_DEFAULT if 'dt_ms' not in vtk_data else int(vtk_data['dt_ms'])

@@ -19,15 +19,15 @@ import matplotlib.gridspec as gridspec
 
 from qtpy import QtCore
 from qtpy.compat import getopenfilename  # getsavefilename
-from qtpy.QtGui import QIcon, QPixmap
+#from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (
     QLabel, QWidget,
-    QApplication, QMenu, QVBoxLayout, QLineEdit, QComboBox,
+    QApplication, QVBoxLayout, QComboBox,  # QMenu, QLineEdit,
     QHBoxLayout, QPushButton, QGridLayout,
     QAction,
     QCheckBox,
     QListWidgetItem, QAbstractItemView,
-    QListWidget, QSpinBox, QTabWidget, QToolButton,
+    QListWidget, QSpinBox, QTabWidget,  # QToolButton,
 )
 # from qtpy.QtWidgets import (
 #     QMessageBox,

@@ -40,7 +40,7 @@ def make_flutter_response(f06_filename: PathLike,
                           use_rhoref: bool=False,
                           read_flutter: bool=True,
                           log: Optional[SimpleLogger]=None) -> tuple[dict[int, FlutterResponse],
-                                                               dict[str, Any]]:
+                                                                     dict[str, Any]]:
     """
     Creates the FlutterResponse object
 
@@ -144,7 +144,8 @@ def make_flutter_response(f06_filename: PathLike,
                     if is_heavy_debug:  # pragma: no cover
                         log.debug(f'found break iline={iline}; line={line}')
                     while 'PAGE' not in line:
-                        line = f06_file.readline(); iline += 1
+                        line = f06_file.readline()
+                        iline += 1
                         if len(line) == 0:
                             nblank += 1
                             if nblank == 100:
@@ -158,7 +159,7 @@ def make_flutter_response(f06_filename: PathLike,
 
             if 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line:
                 print(f'line = {line}')
-                asdf
+                raise RuntimeError('need to parse OPGWG')
             elif 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
                 real_eigenvaluesi = read_real_eigenvalues(
                     f06_file, log, line, iline)
@@ -324,7 +325,7 @@ def make_flutter_response(f06_filename: PathLike,
                 #assert methodi == method, f'methodi={methodi!r}; method={method!r}'
 
             if len(eigenvectors):
-                eigr_eigi_velocity = np.array(eigr_eigi_velocity_list, dtype='float64') # eigr, eigi, velo
+                eigr_eigi_velocity = np.array(eigr_eigi_velocity_list, dtype='float64')  # eigr, eigi, velo
                 assert eigr_eigi_velocity.ndim == 2, eigr_eigi_velocity
                 eigenvectors_array = np.column_stack(eigenvectors)
                 #print(f'eigr_eigi_velocity.shape = {eigr_eigi_velocity.shape}')
@@ -614,6 +615,7 @@ def _read_opgwg(f06_file: TextIO, iline: int,
     #print(opgwg)
     return iline, line, opgwg
 
+
 def plot_flutter_f06(f06_filename: PathLike,
                      f06_units: Optional[dict[str, str]]=None,
                      out_units: Optional[dict[str, str]]=None,
@@ -750,6 +752,7 @@ def plot_flutter_f06(f06_filename: PathLike,
                            subcases=subcases,
                            show=show, clear=clear, close=close)
     return flutters, mass_lama
+
 
 def make_flutter_plots(modes: list[int],
                        flutters: dict[int, FlutterResponse],
@@ -1032,8 +1035,8 @@ def _find_modes_to_keep(response: FlutterResponse,
     freq_atol = -0.1
     ifilter = np.where(
         ((abs_dreal < tol) & (abs_dimag < tol)) |  # remove root-locus dots
-        ((abs_ddamp < damp_ztol) & (abs_damp > damp_atol)) | # remove flat damping lines far from the damping axis
-        ((abs_dfreq < freq_ztol) & (abs_freq > freq_atol))   # remove flat freq lines far from the damping axis
+        ((abs_ddamp < damp_ztol) & (abs_damp > damp_atol)) |  # remove flat damping lines far from the damping axis
+        ((abs_dfreq < freq_ztol) & (abs_freq > freq_atol))    # remove flat freq lines far from the damping axis
     )
     nmodes = results.shape[0]
     iall = np.arange(nmodes)
@@ -1042,7 +1045,6 @@ def _find_modes_to_keep(response: FlutterResponse,
     #isave = np.where(
         #((abs_dreal > tol) | (abs_dimag > tol)) |
     #)
-
 
     #return isave
     #iimag = np.where(dimag != 0.)[0]
