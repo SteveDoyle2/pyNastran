@@ -7,6 +7,7 @@ from pyNastran.utils.atmosphere import (
     atm_density, atm_dynamic_pressure, atm_temperature,
     atm_pressure, atm_velocity, atm_mach, atm_equivalent_airspeed,
     atm_dynamic_viscosity_mu, atm_kinematic_viscosity_nu,
+    atm_calibrated_airspeed, cas_to_mach,
     get_alt_for_density, get_alt_for_pressure,
     get_alt_for_mach_eas,
     get_alt_for_q_with_constant_mach,
@@ -250,6 +251,15 @@ class TestAtmConvert(unittest.TestCase):
 
 class TestAtm(unittest.TestCase):
     """various atmosphere tests"""
+    def test_calibrated_airpseed(self):
+        alt = 30000
+        mach = 0.8
+        cas = atm_calibrated_airspeed(alt, mach, alt_units='ft', cas_units='knots')
+        self.assertAlmostEqual(cas, 303.990024, delta=0.001), cas
+
+        mach2 = cas_to_mach(alt, cas, alt_units='ft', cas_units='knots')
+        self.assertAlmostEqual(mach2, mach, delta=0.01)
+
     def test_temperature(self):
         """tests temperature at various altitudes"""
         with self.assertRaises(RuntimeError):
@@ -724,9 +734,11 @@ class TestAtm(unittest.TestCase):
 
     def test_table(self):
         dirname = os.path.dirname(__file__)
-        quantities = ['density', 'pressure', 'speed_of_sound']
+        quantities = ['density', 'pressure', 'speed_of_sound', 'temperature',
+                      'velocity', 'dynamic_viscosity',
+                      'calibrated_airspeed', 'equivalent_airspeed']
         x = create_atmosphere_table(
-            quantities,
+            quantities, 0.8,
             0., 50000.,
             dalt=1000.)
         csv_filename = os.path.join(dirname, 'atmosphere.csv')
