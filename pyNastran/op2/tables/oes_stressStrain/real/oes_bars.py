@@ -336,69 +336,6 @@ class RealBarArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_csv(self, csv_file: TextIO,
-                  is_exponent_format: bool=False,
-                  is_mag_phase: bool=False, is_sort1: bool=True,
-                  write_header: bool=True):
-        """
-        Stress Table - PBAR/PBARL
-        -------------------------
-
-        """
-        name = str(self.__class__.__name__)
-        if write_header:
-            csv_file.write('# %s\n' % name)
-            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'End', 'Saxial', 'S1', 'S2', 'S3', 'S4', 'Blank']
-            csv_file.write('# ' + ','.join(headers) + '\n')
-
-        # stress vs. strain
-        flag = 10 if 'Stress' in name else 11
-
-        isubcase = self.isubcase
-        ntimes = self.data.shape[0]
-
-        zero = ' 0.000000E+00'
-
-        eids = self.element
-        eid_len = '%d' % len(str(eids.max()))
-
-        for itime in range(ntimes):
-            #dt = self._times[itime]
-            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            #f06_file.write(''.join(header + msg))
-
-            s1a = self.data[itime, :, 0]
-            s2a = self.data[itime, :, 1]
-            s3a = self.data[itime, :, 2]
-            s4a = self.data[itime, :, 3]
-
-            axial = self.data[itime, :, 4]
-            #smaxa = self.data[itime, :, 5]
-            #smina = self.data[itime, :, 6]
-            #MSt = self.data[itime, :, 7]
-
-            s1b = self.data[itime, :, 8]
-            s2b = self.data[itime, :, 9]
-            s3b = self.data[itime, :, 10]
-            s4b = self.data[itime, :, 11]
-
-            #smaxb = self.data[itime, :, 12]
-            #sminb = self.data[itime, :, 13]
-            #MSc = self.data[itime, :, 14]
-
-            for (eid, s1ai, s2ai, s3ai, s4ai, axiali, s1bi, s2bi, s3bi, s4bi) in zip(
-                eids, s1a, s2a, s3a, s4a, axial, s1b, s2b, s3b, s4b):
-
-                vals = [s1ai, s2ai, s3ai, s4ai, axiali,
-                        s1bi, s2bi, s3bi, s4bi]
-                if is_exponent_format:
-                    vals2 = write_floats_13e_long(vals)
-                    [s1ai, s2ai, s3ai, s4ai, axiali,
-                     s1bi, s2bi, s3bi, s4bi] = vals2
-                csv_file.write(f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, 0, {axiali}, {s1ai}, {s2ai}, {s3ai}, {s4ai}, {zero}\n'
-                               f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, 1, {axiali}, {s1bi}, {s2bi}, {s3bi}, {s4bi}, {zero}\n')
-        return
-
     def write_f06(self, f06_file: TextIO, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:

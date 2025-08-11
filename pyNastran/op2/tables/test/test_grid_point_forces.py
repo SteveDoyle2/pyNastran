@@ -944,8 +944,6 @@ class TestGridPointForces(unittest.TestCase):
         #print(msg)
 
         csv_file = StringIO()
-        op2_1.spc_forces[1].write_csv(csv_file)
-        op2_1.grid_point_forces[1].write_csv(csv_file)
         #print(csv_file.getvalue())
 
         assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04)

@@ -686,31 +686,6 @@ class GlueForceArray(ScalarObject):  # displacement style table
             new_result = False
         return itable
 
-    def write_csv(self, csv_file, is_mag_phase=False):
-        name = str(self.__class__.__name__)
-        csv_file.write('%s\n' % name)
-        headers = ['Node', 'GridType'] + self.headers
-        csv_file.write('%s,' * len(headers) % tuple(headers) + '\n')
-        node = self.node_gridtype[:, 0]
-        gridtype = self.node_gridtype[:, 1]
-        itime = 0
-        unused_times = self._times
-
-        # sort1 as sort1
-        for itime in range(self.ntimes):
-            #dt = self._times[itime]
-            t1 = self.data[itime, :, 0]
-            t2 = self.data[itime, :, 1]
-            t3 = self.data[itime, :, 2]
-            r1 = self.data[itime, :, 3]
-            r2 = self.data[itime, :, 4]
-            r3 = self.data[itime, :, 5]
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
-                unused_sgridtype = self.recast_gridtype_as_string(gridtypei)
-                csv_file.write('%s,' * 9 % (itime, node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i))
-                csv_file.write('\n')
-        return
-
     def _write_f06_block(self, words, header, page_stamp, page_num, f06_file, write_words,
                          is_mag_phase=False, is_sort1=True):
         if write_words:

@@ -1177,69 +1177,6 @@ class RealTableArray(TableArray):
             new_result = False
         return itable
 
-    def write_csv(self, csv_file: TextIO,
-                  is_exponent_format: bool=False,
-                  is_mag_phase: bool=False, is_sort1: bool=True,
-                  write_header: bool=True):
-        """
-        Displacement Table
-        ------------------
-        Flag, SubcaseID,  iTime, NID,       dx,      dy,       dz,      rx,       ry,      rz,  cd,  PointType
-        1,            1,  0,     101, 0.014159, 0.03448, 0.019135, 0.00637, 0.008042, 0.00762,   0,  1
-        uses cd=-1 for unknown cd
-
-        """
-        name = str(self.__class__.__name__)
-        if write_header:
-            csv_file.write('%s\n' % name)
-            headers = ['Flag', 'Subcase', 'iTime', 'Node', ] + self.headers + ['cd', 'PointType']
-            csv_file.write('# ' + ','.join(headers) + '\n')
-        node = self.node_gridtype[:, 0]
-        gridtype = self.node_gridtype[:, 1]
-
-        #unused_times = self._times
-        isubcase = self.isubcase
-
-        flag_map = {
-            'RealDisplacementArray': 1,
-            'RealVelocityArray': 2,
-            'RealAccelerationArray': 3,
-            'RealEigenvectorArray': 4,
-
-            'RealLoadVectorArray': 5,
-            #'RealAppliedLoadsArray': 5,
-            'RealSPCForcesArray': 6,
-            'RealMPCForcesArray': 7,
-            #'Temperature' : 8,
-
-            #'HeatFlux' : 9,
-            'RealTemperatureGradientAndFluxArray': 9,
-        }
-        flag = flag_map[name]
-
-        # sort1 as sort1
-        assert is_sort1 is True, is_sort1
-        nid_len = '%d' % len(str(node.max()))
-        cd = -1
-        for itime in range(self.ntimes):
-            #dt = self._times[itime]
-            t1 = self.data[itime, :, 0]
-            t2 = self.data[itime, :, 1]
-            t3 = self.data[itime, :, 2]
-            r1 = self.data[itime, :, 3]
-            r2 = self.data[itime, :, 4]
-            r3 = self.data[itime, :, 5]
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
-                #unused_sgridtype = self.recast_gridtype_as_string(gridtypei)
-                assert is_exponent_format
-                if is_exponent_format:
-                    vals2 = write_floats_13e_long([t1i, t2i, t3i, r1i, r2i, r3i])
-                    (t1i, t2i, t3i, r1i, r2i, r3i) = vals2
-
-                csv_file.write(f'{flag}, {isubcase}, {itime}, {node_id:{nid_len}d}, '
-                               f'{t1i}, {t2i}, {t3i}, {r1i}, {r2i}, {r3i}, {cd}, {gridtypei}\n')
-        return
-
     def write_frd(self, frd_file: TextIO,
                   is_exponent_format: bool=False,
                   is_mag_phase: bool=False, is_sort1: bool=True,

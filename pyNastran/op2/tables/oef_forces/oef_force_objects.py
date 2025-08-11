@@ -807,46 +807,6 @@ class RealSpringDamperForceArray(RealForceObject):
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
         raise NotImplementedError(f'this should be overwritten by {self.__class__.__name__}')
 
-    def write_csv(self, csv_file: TextIO,
-                  is_exponent_format: bool=False,
-                  is_mag_phase: bool=False, is_sort1: bool=True,
-                  write_header: bool=True):
-        """
-        Stress Table - CROD/CONROD/CTUBE
-        --------------------------------
-        Flag, SubcaseID, iTime, EID,  BLANK,  BLANK,  Sxx,       Syy,  Szz,      Sxy,  Syz,  Szx
-        10,           1,     0, 312,      0,      0,  1642.503,    0,    0,  167.541,    0,    0
-        10,           1,     0, 313,      0,      0,  3937.541,    0,    0,   66.171,    0,    0
-        """
-        name = str(self.__class__.__name__)
-        if write_header:
-            csv_file.write('# %s\n' % name)
-            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'Fx', 'BLANK', 'BLANK', 'BLANK', 'BLANK', 'BLANK']
-            csv_file.write('# ' + ','.join(headers) + '\n')
-
-        # stress vs. strain
-        flag = 12
-        isubcase = self.isubcase
-        #times = self._times
-
-        # write the f06
-        ntimes = self.data.shape[0]
-
-        zero = ' 0.000000E+00'
-        eids = self.element
-        eid_len = '%d' % len(str(eids.max()))
-
-        for itime in range(ntimes):
-            #dt = self._times[itime]
-            force = self.data[itime, :, 0]
-
-            for eid, forcei in zip(eids, force):
-                if is_exponent_format:
-                    forcei = write_float_13e_long(forcei)
-                csv_file.write(f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, 0, 0, '
-                               f'{forcei}, {zero}, {zero}, {zero}, {zero}, {zero}\n')
-        return
-
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
@@ -1242,49 +1202,6 @@ class RealRodForceArray(RealForceObject):
         elif 'CTUBE' in self.element_name:
             msg = ctube_msg
         return self.element_name, msg
-
-    def write_csv(self, csv_file: TextIO,
-                  is_exponent_format: bool=False,
-                  is_mag_phase: bool=False, is_sort1: bool=True,
-                  write_header: bool=True):
-        """
-        Force Table - CROD/CONROD/CTUBE
-        -------------------------------
-        Flag, SubcaseID, iTime, EID,  BLANK, BLANK,  Faxial,  BLANK, BLANK,  Torsion,  BLANK,  BLANK
-        10,           1,     0, 312,      0,     0,  1642.503,    0,     0,  167.541,    0,    0
-        10,           1,     0, 313,      0,     0,  3937.541,    0,     0,   66.171,    0,    0
-        """
-        name = str(self.__class__.__name__)
-        if write_header:
-            csv_file.write('# %s\n' % name)
-            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'Faxial', 'BLANK', 'BLANK', 'Torsion', 'BLANK', 'BLANK']
-            csv_file.write('# ' + ','.join(headers) + '\n')
-
-        # stress vs. strain
-        flag = 12
-
-        isubcase = self.isubcase
-        #times = self._times
-
-        # write the f06
-        ntimes = self.data.shape[0]
-        eids = self.element
-        eid_len = '%d' % len(str(eids.max()))
-
-        zero = ' 0.000000E+00'
-        for itime in range(ntimes):
-            dt = self._times[itime]
-            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
-
-            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
-            axial = self.data[itime, :, 0]
-            torsion = self.data[itime, :, 1]
-            for eid, axiali, torsioni in zip(eids, axial, torsion):
-                if is_exponent_format:
-                    [axiali, torsioni] = write_floats_13e_long([axiali, torsioni])
-                csv_file.write(f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, 0, 0, '
-                               f'{axiali}, {zero}, {zero}, {torsioni}, {zero}, {zero}\n')
-        return
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
@@ -2266,79 +2183,6 @@ class RealCShearForceArray(RealForceObject):
         msg += self.get_data_code()
         return msg
 
-    def write_csv(self, csv_file: TextIO,
-                  is_exponent_format: bool=False,
-                  is_mag_phase: bool=False, is_sort1: bool=True,
-                  write_header: bool=True):
-        """
-        Force Table - CSHEAR
-        -------------------------------
-        Flag, SubcaseID, iTime, EID, BLANK, BLANK
-        """
-        name = str(self.__class__.__name__)
-        if write_header:
-            csv_file.write('# %s\n' % name)
-            #headers = ['Flag', 'SubcaseID', 'iTime', 'EID', 'BLANK', 'BLANK',
-                       #'Nxx', 'Nyy', 'Nxy', 'Mxx', 'Myy', 'Mxy', 'Qx', 'Qy']
-            headers = ['Flag', 'SubcaseID', 'iTime', 'EID', 'BLANK', 'BLANK',
-                       'f14', 'f12', 'f21', 'f23', 'f32', 'f34', 'f43', 'f41',
-                       'kick1', 'tau12', 'kick2', 'tau23', 'kick3', 'tau34', 'kick4', 'tau41']
-            csv_file.write('# ' + ','.join(headers) + '\n')
-
-        flag = 12
-        isubcase = self.isubcase
-        #times = self._times
-
-        ntimes = self.data.shape[0]
-        eids = self.element
-        eid_len = '%d' % len(str(eids.max()))
-
-        #zero = ' 0.000000E+00'
-        for itime in range(ntimes):
-            f14 = self.data[itime, :, 0]
-            f12 = self.data[itime, :, 1]
-            f21 = self.data[itime, :, 2]
-            f23 = self.data[itime, :, 3]
-            f32 = self.data[itime, :, 4]
-            f34 = self.data[itime, :, 5]
-            f43 = self.data[itime, :, 6]
-            f41 = self.data[itime, :, 7]
-
-            kick1 = self.data[itime, :, 8]
-            tau12 = self.data[itime, :, 9]
-            kick2 = self.data[itime, :, 10]
-            tau23 = self.data[itime, :, 11]
-            kick3 = self.data[itime, :, 12]
-            tau34 = self.data[itime, :, 13]
-            kick4 = self.data[itime, :, 14]
-            tau41 = self.data[itime, :, 15]
-
-            #zip_in = [
-                #f14, f12, f21, f23, f32, f34, f43, f41,
-                #kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
-            #]
-            for (eid, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
-                 kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i) in zip(
-                    eids, f14, f12, f21, f23, f32, f34, f43, f41,
-                    kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41):
-                if is_exponent_format:
-                    vals2 = write_floats_12e([
-                        f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
-                        kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i])
-                    [
-                        f14i, f12i,
-                        f21i, f23i,
-                        f32i, f34i,
-                        f43i, f41i,
-                        kick1i, tau12i, kick2i, tau23i,
-                        kick3i, tau34i, kick4i, tau41i
-                    ] = vals2
-                csv_file.write(
-                    f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, 0, 0, '
-                    f'{f14i}, {f12i}, {f21i}, {f23i}, {f32i}, {f34i}, {f43i}, {f41i}, '
-                    f'{kick1i}, {tau12i}, {kick2i}, {tau23i}, {kick3i}, {tau34i}, {kick4i}, {tau41i}\n')
-        return
-
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
@@ -2688,49 +2532,6 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             ]
         return msg
 
-    def write_csv(self, csv_file: TextIO,
-                  is_exponent_format: bool=False,
-                  is_mag_phase: bool=False, is_sort1: bool=True,
-                  write_header: bool=True):
-        """
-        Force Table - CROD/CONROD/CTUBE
-        -------------------------------
-        Flag, SubcaseID, iTime, EID,  BLANK,  BLANK,  Faxial,  BLANK, BLANK,  Torsion,  BLANK,  BLANK
-        10,           1,     0, 312,      0,      0,  1642.503,    0,     0,  167.541,    0,    0
-        10,           1,     0, 313,      0,      0,  3937.541,    0,     0,   66.171,    0,    0
-        """
-        name = str(self.__class__.__name__)
-        if write_header:
-            csv_file.write('# %s\n' % name)
-            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'Faxial', 'BLANK', 'BLANK', 'Torsion', 'BLANK', 'BLANK']
-            csv_file.write('# ' + ','.join(headers) + '\n')
-
-        # stress vs. strain
-        flag = 12
-
-        isubcase = self.isubcase
-        #times = self._times
-
-        # write the f06
-        ntimes = self.data.shape[0]
-        eids = self.element
-        eid_len = '%d' % len(str(eids.max()))
-
-        zero = ' 0.000000E+00'
-        for itime in range(ntimes):
-            dt = self._times[itime]
-            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
-
-            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
-            axial = self.data[itime, :, 0]
-            torsion = self.data[itime, :, 1]
-            for eid, axiali, torsioni in zip(eids, axial, torsion):
-                if is_exponent_format:
-                    [axiali, torsioni] = write_floats_13e_long([axiali, torsioni])
-                csv_file.write(f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, 0, 0, '
-                               f'{axiali}, {zero}, {zero}, {torsioni}, {zero}, {zero}\n')
-        return
-
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
@@ -3048,59 +2849,6 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             msg = f'element_name={self.element_name} self.element_type={self.element_type}'
             raise NotImplementedError(msg)
         return self.element_name, nnodes, msg
-
-    def write_csv(self, csv_file: TextIO,
-                  is_exponent_format: bool=False,
-                  is_mag_phase: bool=False, is_sort1: bool=True,
-                  write_header: bool=True):
-        name = str(self.__class__.__name__)
-        if write_header:
-            csv_file.write('# %s\n' % name)
-            headers = ['Flag', 'SubcaseID', 'iTime', 'EID', 'BLANK', 'BLANK',
-                       'Nxx', 'Nyy', 'Nxy', 'Mxx', 'Myy', 'Mxy', 'Qx', 'Qy']
-            csv_file.write('# ' + ','.join(headers) + '\n')
-
-        # stress vs. strain
-        flag = 12
-        isubcase = self.isubcase
-        #times = self._times
-
-        ntimes = self.data.shape[0]
-        eids = self.element
-        eid_len = '%d' % len(str(eids.max()))
-
-        #zero = ' 0.000000E+00'
-        for itime in range(ntimes):
-            #dt = self._times[itime]
-            #header = _eigenvalue_header(self, header, itime, ntimes, dt)
-
-            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
-
-            #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-            mx = self.data[itime, :, 0]
-            my = self.data[itime, :, 1]
-            mxy = self.data[itime, :, 2]
-            bmx = self.data[itime, :, 3]
-            bmy = self.data[itime, :, 4]
-            bmxy = self.data[itime, :, 5]
-            tx = self.data[itime, :, 6]
-            ty = self.data[itime, :, 7]
-
-            for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-                if is_exponent_format:
-                    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e_long(
-                        [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
-                # cquad4/ctria3
-                #          8      -7.954568E+01  2.560061E+03 -4.476376E+01    1.925648E+00  1.914048E+00  3.593237E-01    8.491534E+00  5.596094E-01  #
-                #f06_file.write('   %8i %18s %13s %13s   %13s %13s %13s   %13s %s\n' % (
-                    #eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
-                #'Flag', 'SubcaseID', 'iTime', 'EID', 'BLANK', 'BLANK', 'Nxx', 'Nyy', 'Nxy', 'Mxx', 'Myy', 'Mxy', 'Qx', 'Qy'
-                #'      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY\n'
-
-                csv_file.write(f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, 0, 0, '
-                               f'{mxi}, {myi}, {mxyi}, {bmxi}, {bmyi}, {bmxyi}, '
-                               f'{txi}, {tyi}\n')
-        return
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
@@ -3547,54 +3295,6 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         else:
             raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
         return element_name, nnodes, msg
-
-    def write_csv(self, csv_file: TextIO,
-                  is_exponent_format: bool=False,
-                  is_mag_phase: bool=False, is_sort1: bool=True,
-                  write_header: bool=True):
-        name = str(self.__class__.__name__)
-        if write_header:
-            csv_file.write('# %s\n' % name)
-            headers = ['Flag', 'SubcaseID', 'iTime', 'EID', 'NID', 'BLANK',
-                       'Nxx', 'Nyy', 'Nxy', 'Mxx', 'Myy', 'Mxy',
-                       'Qx', 'Qy']
-            csv_file.write('# ' + ','.join(headers) + '\n')
-
-        # stress vs. strain
-        flag = 12
-
-        isubcase = self.isubcase
-        #times = self._times
-
-        # write the f06
-        ntimes = self.data.shape[0]
-
-        eids = self.element_node[:, 0]
-        nids = self.element_node[:, 1]
-        eid_len = '%d' % len(str(eids.max()))
-        nid_len = '%d' % len(str(nids.max()))
-
-        for itime in range(ntimes):
-            #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-            mx = self.data[itime, :, 0]
-            my = self.data[itime, :, 1]
-            mxy = self.data[itime, :, 2]
-
-            bmx = self.data[itime, :, 3]
-            bmy = self.data[itime, :, 4]
-            bmxy = self.data[itime, :, 5]
-
-            tx = self.data[itime, :, 6]
-            ty = self.data[itime, :, 7]
-
-            for eid, nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, nids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-                if is_exponent_format:
-                    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e_long(
-                        [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
-                csv_file.write(f'{flag}, {isubcase}, {itime}, {eid:{eid_len}d}, {nid:{nid_len}d}, 0, '
-                               f'{mxi}, {myi}, {mxyi}, {bmxi}, {bmyi}, {bmxyi}, '
-                               f'{txi}, {tyi}\n')
-        return
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
