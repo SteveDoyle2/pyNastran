@@ -96,9 +96,9 @@ def _triangle_area_centroid_normal(nodes, card):
     except FloatingPointError as error:
         #CTRIA3     20152     701   20174   20175   20176    8020
         #vector: [ 0.  0.  0.]; length: 0.0
-        #   [207.42750549, 0.0, -0.22425441]
-        #   [207.42750549, 0.0, 0.00631836]
-        #   [207.42750549, 0.0, 0.69803673]
+        #  [207.42750549, 0.0, -0.22425441]
+        #  [207.42750549, 0.0, 0.00631836]
+        #  [207.42750549, 0.0, 0.69803673]
         msg = error.message  # strerror
         msg += '\nvector: %s; length: %s' % (vector, length)
         msg += '\n  %s\n  %s\n  %s' % (n1.tolist(), n2.tolist(), n3.tolist())

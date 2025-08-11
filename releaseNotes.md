@@ -9,18 +9,56 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
-v1.4.2 (2024/5/xx)
+v1.5.0 (2025/x/xx)
 ------------------
 
+
+v1.5.0 (2025/8/xx)
+------------------
+
+Removed:
+ - axisymmetric elements
+    - RINGAX, CCONEAX, PCONEAX, FORCEAX, PRESAX, TEMPAX
+    - SPCAX, POINTAX, RINGAX, DMIAX, AXIF, AXIC, RINGFL ,)
+      kept: CTRIAX, CTRIAX6, CQUADX, PLOADX1, ... remain
+ - msgmesh
+    - GRIDB
+ - nastran95 elements
+
+GUI:
+ - added:
+   - ability to drag/drop files
+   - saving of preferences in gui (no longer waits until you quit)
+   - fld format
+   - fluent format (vrt, ele, daten)
 BDF:
  - added:
-   - added PBUSH2D-MSC, add_pbush2d_cross (only CROSS is saupported)
-   - added NX extrap flag (default=0) is not used on TABLED1-D3, TABLEM1-M3, and TABLEST
-   - MATT11
+   - bdf control:
+     - ** model.replace_includes** dictionary
+     - ** model.is_strict_card_parser=False** option
+     - ** model.allow_tabs = False** option
+   - case control:
+     - Subcase.add_string_type(key, value)  # for ANALYSIS=HEAT
+   - new card fields:
+     - added PBUSH2D-MSC, add_pbush2d_cross (only CROSS is saupported)
+     - added NX extrap flag (default=0) is not used on TABLED1-D3, TABLEM1-M3, and TABLEST
+   - new cards:
+     - MATT11, CWELD, PWELD
+     - PLOTEL3', PLOTEL4, PLOTEL6, PLOTEL8, PLOTTET, PLOTPYR, PLOTPEN, PLOTHEX
+     - no midside nodes
+
+ - changed renames:
+   - dmis -> dmi
+   - dmigs -> dmig
+   - dmiks -> dmik
+   - dmijis -> dmiji
  - changed:
+   - aero card defaults 0 instead of None for aefact/aelist
+   - table defaults now 0 instead of None
    - MONPNT2 now uses lists for tables, element_types, nddl_items, eids to support NX Nastran
    - DRESP1, DRESP2, DRESP3 region=None is now stored as 0
  - fixed:
+   - GROUP and MONPNT3 for NX nastran
    - DVPREL2, DVMREL2, DVCREL2 can use only labels (and no DESVARs)
    - SPLINE5 add_card out of range bug
    - fixed MATT8 bug where table ids are not set to None when they're 0 and are thus xref'd
@@ -40,15 +78,33 @@ BDF:
 
 OP2:
  - added:
-   - adding flutter design response (type=84)
-   - vg_vf_response (from OVG table)
+   - flutter design response (type=84)
+   - op2_results
+     - cddata  (campbell data)
+     - vg_vf_response (from OVG table)
+     - trim
+       - variables
+       - aero_force
+       - aero_pressure
+       - derivatives
+       - control_surface_position_hinge_moment
+       - hinge_moment_derivatives
+     - strain
+     - elastic_strain
+     - plastic_strain
+     - thermal_strain
+     - creep_strain
+     - kinetic_energy
+
  - changed:
-   - Glue forces f06 writing now listed under "glue forces" and not "contact forces"
+   - stress/strain/force no longer found in model.cquad4_stress, etc.
+     - this simplifies discovery of variables/cleans up the API
+ - fixed:
    - split cards to avoid op2/f06 errors
      - contact_slide_distance:      RealSlideDistanceArray (vs. DisplacementArray)
      - glue_contact_slide_distance: RealSlideDistanceArray (vs. DisplacementArray)
      - bolt_results:                RealBoltResultsArray (vs. DisplacementArray)
- - fixed:
+   - Glue forces f06 writing now listed under "glue forces" and not "contact forces"
    - CSTM no longer print out when it's empty
    - rms cpyram_stress/strain no longer cause crashes
 
@@ -72,6 +128,7 @@ OP2Geom:
 
 F06:
  - added:
+    - ability to read geometry from an f06 (see pyNastran.f06.parse_geometry)
     - DSCMCOL f06 writing
     - CDDATA (cambell diagrams) f06 writing
     - contact_slide_distance/glue_contact_slide_distance f06 writing
@@ -79,6 +136,7 @@ F06:
     - Convergence f06 writing
  - changed:
     - removed frequency filter for flutter_response
+    - added use_rhoref flag
  - fixed:
     - fixed bug in complex eigenvector f06 writing (left off mode id from table header)
 

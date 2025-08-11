@@ -126,14 +126,7 @@ class NSMx(Property):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    # @property
-    # def Type(self):
-    #     """gets the nsm_type"""
-    #     return self.nsm_type
-    # @Type.setter
-    # def Type(self, nsm_type):
-    #     """sets the nsm_type"""
-    #     self.nsm_type = nsm_type
+
 
     def raw_fields(self):
         #nodes = self.node_ids
