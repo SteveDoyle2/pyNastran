@@ -3389,17 +3389,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods.add_property_object(prop)
         return properties
 
-    # def _prepare_ringfl(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[RINGFL]:
-    #     """adds a RINGFL"""
-    #     rings = [RINGFL.add_card(card_obj, icard=0, comment=comment)]
-    #     if card_obj.field(3):
-    #         rings.append(RINGFL.add_card(card_obj, icard=1, comment=comment))
-    #     if card_obj.field(5):
-    #         rings.append(RINGFL.add_card(card_obj, icard=2, comment=comment))
-    #     for ring in rings:
-    #         self._add_methods.add_ringfl_object(ring)
-    #     return rings
-
     def _prepare_pdamp(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[PDAMP]:
         """adds a PDAMP"""
         properties = [PDAMP.add_card(card_obj, icard=0, comment=comment)]
