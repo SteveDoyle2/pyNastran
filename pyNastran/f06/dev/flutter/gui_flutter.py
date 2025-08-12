@@ -45,7 +45,6 @@ from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
 from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
 from pyNastran.f06.dev.flutter.preferences_object import PreferencesObject
-from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import get_flutter_units
@@ -88,7 +87,6 @@ class FlutterGui(LoggableGui):
         super().__init__(html_logging=False)
 
         self._export_settings_obj = PreferencesObject(self)
-        self._vtk_window_obj = VtkWindowObject(self, ICON_PATH)
         self.font_size = 10
         self.plot_font_size = 10
         self.show_lines = True
@@ -108,10 +106,6 @@ class FlutterGui(LoggableGui):
 
         self.data = {}
         self.f06_filename = ''
-        self.bdf_filename = ''
-        self.op2_filename = ''
-        self._bdf_filename_default = ''
-        self._op2_filename_default = ''
         self.subcase = 0
         self.x_plot_type = 'eas'
         self.plot_type = 'x-damp-freq'
@@ -158,7 +152,6 @@ class FlutterGui(LoggableGui):
         self.on_plot_type()
         self._set_f06_default_names(self.f06_filename_edit[0].text())
         self.setAcceptDrops(True)
-        #self.on_open_new_window()
         self.show()
 
     def dragEnterEvent(self, event):
@@ -172,14 +165,10 @@ class FlutterGui(LoggableGui):
         filenames = [url.toLocalFile() for url in event.mimeData().urls()]
         for filename in filenames:
             flower = filename.lower()
-            if flower.endswith(('.bdf', '.dat', '.blk', '.pch', '.inp')):
-                self.bdf_filename_edit.setText(filename)
-            elif flower.endswith(('.f06', '.out')):
+            if flower.endswith(('.f06', '.out')):
                 self.f06_filename_edit[ifile].setText(filename)
-            elif flower.endswith(('.op2', '.h5')):
-                self.op2_filename_edit.setText(filename)
             else:
-                self.log.error(f'unknown extension (bdf/f06/op2) format for {filename}')
+                self.log.error(f'unknown extension (f06/out) format for {filename}')
 
     def setup_toolbar(self):
         #frame = QFrame(self)
@@ -294,7 +283,6 @@ class FlutterGui(LoggableGui):
         #print(f'json_filename={json_filename!r} wildcard={wildcard!r}')
         #print(f'self.data = {self.data}')
         out_data = copy.deepcopy(self.data)
-        out_data['vtk'] = self._vtk_window_obj.data
         with open(json_filename, 'w') as json_file:
             json.dump(out_data, json_file, indent=4)
         #print(f'fname="{fname}"')
@@ -303,7 +291,6 @@ class FlutterGui(LoggableGui):
         self._set_window_title()
 
     def _apply_settings(self, data: dict[str, Any]) -> None:
-        self._vtk_window_obj.apply_settings(data)
         font_size0 = self.font_size
         # radios = [
         #     ('show_points', self.show_points_radio),
@@ -442,24 +429,6 @@ class FlutterGui(LoggableGui):
         if self.font_size != font_size0:
             self.on_set_font_size(self.font_size)
 
-    def on_enable_bdf(self) -> None:
-        state = self.bdf_filename_checkbox.isChecked()
-        self.bdf_filename_edit.setEnabled(state)
-        self.bdf_filename_browse.setEnabled(state)
-        if state:
-            self.bdf_filename_edit.setText(self.bdf_filename)
-        else:
-            self.bdf_filename_edit.setText(self._bdf_filename_default)
-
-    def on_enable_op2(self) -> None:
-        state = self.op2_filename_checkbox.isChecked()
-        self.op2_filename_edit.setEnabled(state)
-        self.op2_filename_browse.setEnabled(state)
-        if state:
-            self.op2_filename_edit.setText(self.op2_filename)
-        else:
-            self.op2_filename_edit.setText(self._op2_filename_default)
-
     def on_browse_f06(self) -> None:
         """pops a dialog to select the f06 file"""
         title = 'Load a Flutter (Nastran F06, Zona Out) File'
@@ -474,40 +443,6 @@ class FlutterGui(LoggableGui):
         self._set_f06_default_names(fname)
     def _set_f06_default_names(self, f06_filename: str) -> None:
         base = os.path.splitext(f06_filename)[0]
-        self._bdf_filename_default = base + '.bdf'
-        self._op2_filename_default = base + '.op2'
-        if self.bdf_filename == '':
-            self.bdf_filename = self._bdf_filename_default
-        if self.op2_filename == '':
-            self.op2_filename = self._op2_filename_default
-        self.bdf_filename_edit.setText(self._bdf_filename_default)
-        self.op2_filename_edit.setText(self._op2_filename_default)
-
-    def on_browse_bdf(self) -> None:
-        """pops a dialog to select the bdf file"""
-        title = 'Load Nastran Flutter BDF/DAT File'
-        qt_wildcard = 'F06 File (*.bdf, *.dat)'
-        basedir = os.path.dirname(self.bdf_filename)
-        fname, wildcard_level = getopenfilename(
-            self, caption=title, basedir=basedir, filters=qt_wildcard,)
-        if fname == '':
-            return
-        self.bdf_filename_edit.setText(fname)
-        self.bdf_filename = fname
-        #self.ok_button.setEnabled(False)
-
-    def on_browse_op2(self) -> None:
-        """pops a dialog to select the op2 file"""
-        title = 'Load Nastran Flutter OP2 File'
-        qt_wildcard = 'OP2 File (*.o2p)'
-        basedir = os.path.dirname(self.op2_filename)
-        fname, wildcard_level = getopenfilename(
-            self, caption=title, basedir=basedir, filters=qt_wildcard,)
-        if fname == '':
-            return
-        self.op2_filename_edit.setText(fname)
-        self.pop_vtk_gui_button.setEnabled(True)
-        self.op2_filename = fname
 
     # @dontcrash
     def on_load_settings(self) -> None:
@@ -541,14 +476,6 @@ class FlutterGui(LoggableGui):
         self.f06_filename_label = []
         self.f06_filename_edit = []
         self.f06_filename_browse = []
-
-        self.bdf_filename_checkbox = []
-        self.bdf_filename_edit = []
-        self.bdf_filename_browse = []
-
-        self.op2_filename_checkbox = []
-        self.op2_filename_edit = []
-        self.op2_filename_browse = []
 
         # self.use_rhoref_checkbox = []
         #
@@ -667,7 +594,6 @@ class FlutterGui(LoggableGui):
         # self.f06_load_button = []
         # self.ok_button = []
         #
-        # self.pop_vtk_gui_button = []
         # self.solution_type_label = []
         # self.solution_type_pulldown = []
         # self.mode2_label = []
@@ -680,22 +606,6 @@ class FlutterGui(LoggableGui):
         self.f06_filename_label.append(QLabel('F06 Filename:', self))
         self.f06_filename_edit.append(QLineEdit(self))
         self.f06_filename_browse.append(QPushButton('Browse...', self))
-
-        self.bdf_filename_checkbox = QCheckBox('BDF Filename:', self)
-        self.bdf_filename_edit = QLineEdit(self)
-        self.bdf_filename_browse = QPushButton('Browse...', self)
-        self.bdf_filename_checkbox.setChecked(False)
-        self.bdf_filename_edit.setEnabled(False)
-        self.bdf_filename_browse.setEnabled(False)
-        self.bdf_filename_edit.setToolTip('Loads the Nastran Geometry')
-
-        self.op2_filename_checkbox = QCheckBox( 'OP2 Filename:', self)
-        self.op2_filename_edit = QLineEdit(self)
-        self.op2_filename_browse = QPushButton('Browse...', self)
-        self.op2_filename_checkbox.setChecked(False)
-        self.op2_filename_edit.setEnabled(False)
-        self.op2_filename_browse.setEnabled(False)
-        self.op2_filename_edit.setToolTip('Loads the Nastran Results (and geometry if BDF Filename is empty)')
 
         self.use_rhoref_checkbox = QCheckBox('Sea Level Rho Ref', self)
         self.use_rhoref_checkbox.setChecked(False)
@@ -865,20 +775,12 @@ class FlutterGui(LoggableGui):
         self.f06_load_button = QPushButton('Load F06', self)
         self.ok_button = QPushButton('Run', self)
 
-        self.pop_vtk_gui_button = QPushButton('Open GUI', self)
-        self.solution_type_label = QLabel('Solution Type:', self)
-        self.solution_type_pulldown = QComboBox(self)
-        self.mode2_label = QLabel('Mode:', self)
-        self.mode2_pulldown = QComboBox(self)
-
         self.mode_switch_method_label = QLabel('Mode Switch Method:', self)
         self.mode_switch_method_pulldown = QComboBox(self)
         self.mode_switch_method_pulldown.addItems(MODE_SWITCH_METHODS)
 
         self.setup_modes()
         self.on_plot_type()
-        self.on_enable_bdf()
-        self.on_enable_op2()
 
     def on_plot_type(self) -> None:
         x_plot_type = self.x_plot_type_pulldown.currentText()
@@ -1083,14 +985,6 @@ class FlutterGui(LoggableGui):
             hbox.addWidget(self.f06_filename_edit[ifile], file_row, 1)
             hbox.addWidget(self.f06_filename_browse[ifile], file_row, 2)
             file_row += 1
-            hbox.addWidget(self.bdf_filename_checkbox, file_row, 0)
-            hbox.addWidget(self.bdf_filename_edit, file_row, 1)
-            hbox.addWidget(self.bdf_filename_browse, file_row, 2)
-            file_row += 1
-            hbox.addWidget(self.op2_filename_checkbox, file_row, 0)
-            hbox.addWidget(self.op2_filename_edit, file_row, 1)
-            hbox.addWidget(self.op2_filename_browse, file_row, 2)
-            file_row += 1
 
         grid = QGridLayout()
         irow = 0
@@ -1260,16 +1154,12 @@ class FlutterGui(LoggableGui):
         hbox_check.addLayout(grid_check)
         hbox_check.addStretch(1)
 
-        grid_modes = self._grid_modes()
-
         vbox = QVBoxLayout()
         vbox.addLayout(hbox)
         vbox.addLayout(grid)
         vbox.addLayout(hbox_check)
         vbox.addStretch(1)
         vbox.addLayout(ok_cancel_hbox)
-        vbox.addWidget(self.pop_vtk_gui_button)
-        vbox.addLayout(grid_modes)
         #log_widget = ApplicationLogWidget(self)
 
         log_widget = self.setup_logging()
@@ -1316,41 +1206,19 @@ class FlutterGui(LoggableGui):
         self.iwindows.append(iwindow)
         self.tabs.setTabText(iwindow_file2, f'File {ifile}')
 
-    def _grid_modes(self) -> QGridLayout:
-        irow = 0
-        grid_modes = QGridLayout()
-        grid_modes.addWidget(self.solution_type_label, irow, 0)
-        grid_modes.addWidget(self.solution_type_pulldown, irow, 1)
-        self.solution_type_pulldown.addItems(['Real Modes', 'Complex Modes'])
-        irow += 1
-
-        grid_modes.addWidget(self.mode2_label, irow, 0)
-        grid_modes.addWidget(self.mode2_pulldown, irow, 1)
-        # self.solution_type_pulldown.addItems(['Real Modes', 'Complex Modes'])
-        irow += 1
-        return grid_modes
-
     def setup_connections(self) -> None:
         self.f06_load_button.clicked.connect(self.on_load_f06)
-        #self.bdf_load_button.clicked.connect(self.on_load_bdf)
-        #self.op2_load_button.clicked.connect(self.on_load_op2)
 
         self.x_plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
         self.plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
         self.subcase_edit.currentIndexChanged.connect(self.on_subcase)
-        self.bdf_filename_checkbox.stateChanged.connect(self.on_enable_bdf)
-        self.op2_filename_checkbox.stateChanged.connect(self.on_enable_op2)
         for f06_filename_browse in self.f06_filename_browse:
             f06_filename_browse.clicked.connect(self.on_browse_f06)
-        self.bdf_filename_browse.clicked.connect(self.on_browse_bdf)
-        self.op2_filename_browse.clicked.connect(self.on_browse_op2)
         #self.modes_widget.itemSelectionChanged.connect(self.on_modes)
         # self.modes_widget.itemClicked.connect(self.on_modes)
         # self.modes_widget.currentRowChanged.connect(self.on_modes)
         self.ok_button.clicked.connect(self.on_ok)
         self.units_out_pulldown.currentIndexChanged.connect(self.on_units_out)
-
-        self.pop_vtk_gui_button.clicked.connect(self.on_open_new_window)
 
     def on_units_out(self):
         units_out = self.units_out_pulldown.currentText()
@@ -1375,6 +1243,7 @@ class FlutterGui(LoggableGui):
         self.on_set_font_size(self.font_size)
 
     def on_set_font_size(self, font_size: int) -> None:
+        font_size = 10
         self.font_size = font_size
         font = make_font(font_size, is_bold=False)
         self.setFont(font)
@@ -1959,8 +1828,6 @@ class FlutterGui(LoggableGui):
         #     (response.eigr_eigi_velocity is not None)
         # ) or (self.plot_type != 'modal-participation'))
         data = {
-            'bdf_filename': self.bdf_filename,
-            'op2_filename': self.op2_filename,
             'log_scale_x': self.log_xscale_checkbox.isChecked(),
             'log_scale_y1': self.log_yscale1_checkbox.isChecked(),
             'log_scale_y2': self.log_yscale2_checkbox.isChecked(),
@@ -2030,24 +1897,6 @@ class FlutterGui(LoggableGui):
             )
             #self.log.error(f'failed data:\n{str(data)}')
         return is_passed
-
-    def on_open_new_window(self):
-        #bdf_filename = self.bdf_filename if not (self.bdf_filename and os.path.exists(self.bdf_filename)) else BDF_FILENAME
-        #op2_filename = self.op2_filename if not (self.op2_filename and os.path.exists(self.op2_filename)) else OP2_FILENAME
-        bdf_filename = self.bdf_filename if os.path.exists(self.bdf_filename) else ''
-        op2_filename = self.op2_filename if os.path.exists(self.op2_filename) else ''
-        self._vtk_window_obj.show(bdf_filename, op2_filename)
-        return
-        try:
-            from pyNastran.f06.dev.flutter.gui_flutter_vtk import VtkWindow
-        except ImportError as e:
-            self.log.error(str(e))
-            # print(traceback.print_tb(e))
-            print(traceback.print_exception(e))
-            self.log.error('cant open window')
-            return
-        self.new_window = VtkWindow(gui, BDF_FILENAME, OP2_FILENAME)
-        self.new_window.show()
 
     def log_debug(self, msg: str) -> None:
         print(f'DEBUG: {msg}')
