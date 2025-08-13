@@ -335,6 +335,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
 
     assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
     assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
+    freq_tol_remove = 0.0
 
     flutter_responses = plot_flutter_f06(
         f06_filename, modes=modes,

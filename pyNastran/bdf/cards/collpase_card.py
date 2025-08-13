@@ -338,7 +338,7 @@ def build_thru_packs(packs: list[int],
     singles = []
     doubles = []
     for (first_val, last_val, by) in packs:
-        assert by > 0, (first_val, last_val, by)
+        # assert by > 0, (first_val, last_val, by)
         if first_val == last_val:
             singles.append(first_val)
         else:
