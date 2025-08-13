@@ -781,15 +781,13 @@ class FlutterGui(LoggableGui):
         self.freq_tol_edit = QFloatEdit('-1.0', self)
         self.freq_tol_edit.setToolTip("Applies a dotted line for modes that don't change by more than some amount")
 
+        self.freq_tol_remove_label = QLabel('dFreq Tol (Hz) Remove:', self)
+        self.freq_tol_remove_edit = QFloatEdit('-1.0', self)
+        self.freq_tol_remove_edit.setToolTip('Removes a mode if it meets dFreq Tol (Hz) Dash and Remove')
+
         self.mag_tol_label = QLabel('Magnitude Tol:', self)
         self.mag_tol_edit = QFloatEdit('-1.0', self)
-        self.mag_tol_edit.setToolTip("Filters modal participation factors based on magnitude")
-
-        self.freq_tol_remove_label = QLabel('dFreq Tol (Hz) Hide:', self)
-        self.freq_tol_remove_edit = QFloatEdit('-1.0', self)
-        self.freq_tol_remove_edit.setToolTip("Completely remove modes that don't change by more than some amount")
-        self.freq_tol_remove_label.setVisible(False)
-        self.freq_tol_remove_edit.setVisible(False)
+        self.mag_tol_edit.setToolTip('Filters modal participation factors based on magnitude')
 
         self.subcase_label = QLabel('Subcase:', self)
         self.subcase_edit = QComboBox(self)
@@ -975,6 +973,7 @@ class FlutterGui(LoggableGui):
         self.x_plot_type_pulldown.setVisible(show_xaxis)
         self.freq_tol_label.setVisible(show_freq_tol)
         self.freq_tol_edit.setVisible(show_freq_tol)
+        self.freq_tol_remove_edit.setVisible(show_freq_tol)
 
         self.index_lim_label.setVisible(show_index_lim)
         self.index_lim_edit_min.setVisible(show_index_lim)
@@ -1690,7 +1689,7 @@ class FlutterGui(LoggableGui):
                 response.plot_root_locus(
                     fig=fig, axes=axes,
                     modes=modes, eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
-                    freq_tol=freq_tol,
+                    freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                     show=True, clear=False, close=False,
                     legend=True,
                     png_filename=png_filename,
@@ -1704,7 +1703,7 @@ class FlutterGui(LoggableGui):
                     ivel, mode,
                     fig=fig, axes=axes,
                     modes=modes,  # eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
-                    freq_tol=freq_tol,
+                    freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                     mag_tol=mag_tol,
                     show=True, clear=False, close=False,
                     legend=True,
@@ -1719,7 +1718,7 @@ class FlutterGui(LoggableGui):
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     modes=modes, plot_type=x_plot_type,
                     xlim=xlim, ylim_damping=ylim_damping, ylim_kfreq=xlim_kfreq,
-                    freq_tol=freq_tol,
+                    freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                     show=True, clear=False, close=False,
                     legend=True,
                     png_filename=png_filename,
@@ -1749,7 +1748,7 @@ class FlutterGui(LoggableGui):
                     modes=modes,
                     xlim=xlim, ylim_damping=ylim_damping, ylim_freq=ylim_freq,
                     eas_range=eas_range,
-                    freq_tol=freq_tol,
+                    freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                     show=True, clear=False, close=False,
                     legend=True,
                     v_lines=v_lines,

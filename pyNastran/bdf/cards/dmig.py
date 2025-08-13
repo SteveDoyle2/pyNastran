@@ -442,6 +442,7 @@ class NastranMatrix(BaseCard):
                 '  9: Rectangular\n')
             raise ValueError(msg)
         self.name = name
+        self.write_header = True
 
         #: 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
         self.matrix_form = matrix_form
@@ -1858,6 +1859,7 @@ class DMI(NastranMatrix):
         """
         #NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
                                #GCj, GCi, Real, Complex, comment='')
+        self.write_header = True
         if comment:
             self.comment = comment
 
@@ -1971,6 +1973,9 @@ class DMI(NastranMatrix):
         # self.log.warning(f'GCj = {GCj}')
 
         Real = myarray.real.flatten()
+        assert len(Real) == len(GCi)
+        assert len(Real) == len(GCj)
+
         Complex = None
         if tin in {'complex64', 'complex128', 3, 4}:
             Complex = myarray.imag.flatten()
@@ -2236,20 +2241,20 @@ class DMI(NastranMatrix):
         """writes the card in single precision"""
         return self._write_card(print_card_8)
 
-    def _get_real_fields(self, func):
+    def _get_real_fields(self, func) -> list[str]:
         try:
-            msg = _dmi_get_real_matrix_columns(
+            msg_list = _dmi_get_real_matrix_columns(
                 self.name, self.GCi, self.GCj, self.Real, func)
         except ValueError:  # pragma: no cover
             stats = self.get_stats()
             raise RuntimeError(stats)
-        return msg
+        return msg_list
 
-    def _get_complex_fields(self, func):
-        msg = _dmi_get_complex_matrix_columns(
+    def _get_complex_fields(self, func) -> list[str]:
+        msg_list = _dmi_get_complex_matrix_columns(
             self.name, self.GCi, self.GCj,
             self.Real, self.Complex, func)
-        return msg
+        return msg_list
 
     def get_matrix(self,
                    is_sparse: bool=False,
@@ -2294,14 +2299,16 @@ class DMI(NastranMatrix):
         """writes the card in single/double precision"""
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
-        list_fields = ['DMI', self.name, 0, self.matrix_form, self.tin,
+        dollar = '' if self.write_header else '$'
+        list_fields = [f'{dollar}DMI', self.name, 0, self.matrix_form, self.tin,
                        self.tout, None, self.nrows, self.ncols]
-        msg += print_card_8(list_fields)
+        msg_list = [print_card_8(list_fields)]
 
         if self.is_complex:
-            msg += self._get_complex_fields(func)
+            msg_list.extend(self._get_complex_fields(func))
         else:
-            msg += self._get_real_fields(func)
+            msg_list.extend(self._get_real_fields(func))
+        msg = ''.join(msg_list)
         return msg
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -2324,8 +2331,8 @@ class DMI(NastranMatrix):
 
 
 def _dmi_get_real_matrix_columns(name: str, GCi, GCj, Real,
-                                func: Callable[float, str]) -> str:
-    msg = ''
+                                 func: Callable[float, str]) -> list[str]:
+    msg_list = []
     uGCj = np.unique(GCj)
     #print(f'uGCj={uGCj}')
     for gcj in uGCj:
@@ -2333,7 +2340,7 @@ def _dmi_get_real_matrix_columns(name: str, GCi, GCj, Real,
         i = np.where((gcj == GCj) & (Real != 0.))[0]
         if len(i) == 0:
             list_fields = ['DMI', name, gcj, 1, 0.0]
-            msg += func(list_fields)
+            msg_list.append(func(list_fields))
             continue
         assert len(i) > 0, i
         singles, doubles = collapse_thru_ipacks(i, GCi[i].tolist())
@@ -2369,13 +2376,13 @@ def _dmi_get_real_matrix_columns(name: str, GCi, GCj, Real,
             for gci, real in zip(gcis1, reals1):
                 list_fields.extend([gci, real])
         assert len(list_fields) > 3, list_fields
-        msg += func(list_fields)
-    return msg
+        msg_list.append(func(list_fields))
+    return msg_list
 
 
 def _dmi_get_complex_matrix_columns(name: str, GCi, GCj, Real, Complex,
-                                    func: Callable[float, str]) -> str:
-    msg = ''
+                                    func: Callable[float, str]) -> list[str]:
+    msg_list = []
     uGCj = np.unique(GCj)
     #print(f'uGCj={uGCj}')
     for gcj in uGCj:
@@ -2383,7 +2390,7 @@ def _dmi_get_complex_matrix_columns(name: str, GCi, GCj, Real, Complex,
         i = np.where((gcj == GCj) & ((Real != 0.0) | (Complex != 0.0)))[0]
         if len(i) == 0:
             list_fields = ['DMI', name, gcj, 1, 0.0, 0.0]
-            msg += func(list_fields)
+            msg_list.append(func(list_fields))
             continue
         assert len(i) > 0, i
         singles, doubles = collapse_thru_ipacks(i, GCi[i].tolist())
@@ -2422,8 +2429,8 @@ def _dmi_get_complex_matrix_columns(name: str, GCi, GCj, Real, Complex,
             for gci, real, complex in zip(gcis1, reals1, complex1):
                 list_fields.extend([gci, real, complex])
         assert len(list_fields) > 3, list_fields
-        msg += func(list_fields)
-    return msg
+        msg_list.append(func(list_fields))
+    return msg_list
 
 
 def get_row_col_map(matrix: DMIG,

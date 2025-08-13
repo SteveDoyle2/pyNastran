@@ -23,6 +23,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
+from cpylog import SimpleLogger
 from pyNastran.utils.atmosphere import (
     get_alt_for_density, atm_density,
     convert_altitude, convert_velocity, convert_density, convert_pressure,
@@ -162,7 +163,7 @@ class FlutterResponse:
         method : str
             expected PKNL
         subcase_id : int
-            self explanatory
+            self-explanatory
         cref : chord; default=1.0
             Reference length for reduced frequency
             used to compute b (reference semi-chord); found per the AERO card
@@ -690,6 +691,7 @@ class FlutterResponse:
                 ncol: int=0,
                 clear: bool=False, legend: bool=True,
                 freq_tol: float=-1.0,
+                freq_tol_remove: float=-1.0,
                 png_filename=None, show: bool=True,
                 **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
@@ -706,7 +708,7 @@ class FlutterResponse:
             modes=modes, fig=fig, xlim=xlim, ylim=ylim_damping,
             ncol=ncol,
             show=show, clear=clear, legend=legend,
-            freq_tol=freq_tol,
+            freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             v_lines=v_lines, plot_type=plot_type, xunit=xunit,
             png_filename=png_filename,
             **legend_kwargs)
@@ -817,6 +819,7 @@ class FlutterResponse:
                         close: bool=False, legend: bool=True,
                         #noline: bool=False, nopoints: bool=False,
                         freq_tol: float=-1.0,
+                        freq_tol_remove: float=-1.0,
                         png_filename=None,
                         **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
@@ -856,6 +859,7 @@ class FlutterResponse:
 
         """
         assert isinstance(freq_tol, float_types), freq_tol
+        assert isinstance(freq_tol_remove, float_types), freq_tol_remove
         xlabel = r'Eigenvalue (Real); $\omega \zeta$'
         ylabel = r'Eigenvalue (Imaginary); $\omega$'
         ix = self.ieigr
@@ -868,7 +872,7 @@ class FlutterResponse:
             xlim=eigr_lim, ylim=eigi_lim,
             ncol=ncol,
             show=show, clear=clear, close=close, legend=legend,
-            freq_tol=freq_tol,
+            freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             png_filename=png_filename,
             **legend_kwargs)
         return fig, axes
@@ -883,6 +887,7 @@ class FlutterResponse:
                                  close: bool=False, legend: bool=True,
                                  #noline: bool=False, nopoints: bool=False,
                                  freq_tol: float=-1.0,
+                                 freq_tol_remove: float=-1.0,
                                  png_filename=None,
                                  **legend_kwargs):
         """
@@ -1078,6 +1083,7 @@ class FlutterResponse:
                   show: bool=True, clear: bool=False,
                   close: bool=False, legend: bool=True,
                   freq_tol: float=-1.0,
+                  freq_tol_remove: float=-1.0,
                   png_filename=None,
                   **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
@@ -1117,10 +1123,12 @@ class FlutterResponse:
                 raise RuntimeError(f'ix={ix} is out of bounds')
             ys = self.results[imode, :, iy].ravel()
             #print('freq, xs, ys')
-            jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
+            jcolor, color2, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, damping, freq_tol=freq_tol,
+                freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 show_mode_number=self.show_mode_number)
+            if is_removedi:
+                continue
             #print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
 
             #print(f'freq={freq}')
@@ -1192,6 +1200,7 @@ class FlutterResponse:
                    show: bool=True, clear: bool=False,
                    close: bool=False, legend: bool=True,
                    freq_tol: float=-1.0,
+                   freq_tol_remove: float=-1.0,
                    png_filename=None,
                    **legend_kwargs) -> tuple[plt.Figure,
                                              tuple[plt.Axes, plt.Axes]]:
@@ -1208,8 +1217,8 @@ class FlutterResponse:
 
         """
         self.fix()
-        legend_kwargs = get_legend_kwargs(self.font_size,
-                                          legend_kwargs)
+        legend_kwargs = get_legend_kwargs(
+            self.font_size, legend_kwargs)
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
         nmodes = len(modes)
@@ -1250,10 +1259,12 @@ class FlutterResponse:
             xs = self.results[imode, :, ix].ravel()
             y1s = self.results[imode, :, iy1].ravel()
             y2s = self.results[imode, :, iy2].ravel()
-            jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
+            jcolor, color2, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, damping, freq_tol=freq_tol,
+                freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 show_mode_number=self.show_mode_number)
+            if is_removedi:
+                continue
 
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
@@ -1334,6 +1345,7 @@ class FlutterResponse:
                            show: bool=True, clear: bool=False,
                            close: bool=False, legend: bool=True,
                            freq_tol: float=-1.0,
+                           freq_tol_remove: float=-1.0,
                            png_filename=None,
                            damping_limit=None,
                            v_lines: list[LineData]=None,
@@ -1360,7 +1372,7 @@ class FlutterResponse:
             xlim=xlim, ylim1=ylim_damping, ylim2=ylim_kfreq,
             show=show, clear=clear, close=close,
             legend=legend,
-            freq_tol=freq_tol,
+            freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             png_filename=png_filename,
             **kwargs)
         return fig, axes2
@@ -1371,6 +1383,7 @@ class FlutterResponse:
                             show: bool=True, clear: bool=False,
                             close: bool=False, legend: bool=True,
                             freq_tol: float=-1.0,
+                            freq_tol_remove: float=-1.0,
                             png_filename=None,
                             **kwargs) -> tuple[plt.Figure,
                                                tuple[plt.Axes, plt.Axes]]:
@@ -1394,7 +1407,7 @@ class FlutterResponse:
             xlim=xlim, ylim1=ylim_damping, ylim2=ylim_freq,
             show=show, clear=clear, close=close,
             legend=legend,
-            freq_tol=freq_tol,
+            freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             png_filename=png_filename,
             **kwargs)
         return fig, axes2
@@ -1611,6 +1624,7 @@ class FlutterResponse:
                    damping_limit: Optional[float]=None,
                    ncol: int=0,
                    freq_tol: float=-1.0,
+                   freq_tol_remove: float=-1.0,
                    filter_freq: bool=False,
                    damping_crossings: list[tuple[float, float]]=None,
                    filter_damping: bool=False,
@@ -1695,6 +1709,7 @@ class FlutterResponse:
             yfreq_min, yfreq_max = ylim_freq
 
         legend_elements = []
+        nmodes = 0
         for i, imode, mode in zip(count(), imodes, modes):
             color = colors[jcolor]
             symbol = symbols[jcolor]
@@ -1711,10 +1726,13 @@ class FlutterResponse:
             vel, damping, freq = remove_excluded_points(
                 vel, damping, freq, point_removal)
 
-            jcolor, color, linestyle2, symbol2, texti = _increment_jcolor(
+            jcolor, color, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, damping, freq_tol=freq_tol,
+                freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 show_mode_number=self.show_mode_number)
+            if is_removedi:
+                continue
+
             if color != 'gray':
                 imodes_crossing.append(imode)
 
@@ -1744,6 +1762,7 @@ class FlutterResponse:
             #if texti == '':
                 #msgi = str([texti, symbol2, linestyle2]) + 'was unexpected...'
                 #warnings.warn(msgi)
+            nmodes += 1
             legend_elementsi = _plot_two_axes(
                 damp_axes, freq_axes,
                 vel, damping, freq,
@@ -1801,7 +1820,7 @@ class FlutterResponse:
         damp_axes.set_title(title)  #, fontsize=self.font_size)
         #plt.suptitle(title)
 
-        nmodes = len(modes)
+        nmodes = min(1, nmodes)
         ncol = _update_ncol(nmodes, ncol)
         if legend:
             damp_axes.legend(
@@ -1846,7 +1865,7 @@ class FlutterResponse:
         modes, imodes = _get_modes_imodes(self.modes, modes)
         #------------------------------------------------------
         # setup a linear extrapolation of the first 2 points
-        # so we can bump the degree
+        # to bump the polynomial degree
         deg = 1  # linear
         i0 = 0
         i1 = deg + 1
@@ -1936,9 +1955,12 @@ class FlutterResponse:
             symbol2 = symbols[jcolor]
             #(freq0, eas0), (freq3, eas3) = xcrossing_dict[mode]
             # freq = self.results[imode, :, self.ifreq].ravel()
-            # jcolor, color, linestyle2, symbol2 = _increment_jcolor(
+            # jcolor, color, linestyle2, symbol2, is_removedi = _increment_jcolor(
             #     jcolor, color, linestyle, symbol,
-            #     freq, damping, freq_tol)
+            #     freq, damping, freq_tol, freq_tol_remove)
+            # if is_removedi:
+            #     continue
+
             for case in xcrossing_dict[mode]:
                 damping0, freq0, eas0 = case
                 if np.isnan(eas0):
@@ -2306,6 +2328,48 @@ class FlutterResponse:
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip)
 
 
+    @staticmethod
+    def xcrossing_dict_to_VL_VF(xcrossing_dict: dict[int, list[Crossing]],
+                                log: SimpleLogger,
+                                VL_target: float,
+                                VF_target: float,
+                                V_baseline: float=1000.,
+                                ) -> tuple[list[float], float, list[float], float]:
+        """
+        Parameters
+        ----------
+        xcrossing_dict: dict[int, list[Crossing]]
+        log : float
+        VL_target : float
+            desired VL; throws warning if not satisfied
+        VF_target : float
+            desired VF; throws warning if not satisfied
+        V_baseline : float; default=1000.
+            the value for VL/VF if no crossing occurs
+
+        Returns
+        -------
+
+        """
+        # print('mode\tdamping\tfreq\tvel')
+        VLs = [V_baseline]
+        VFs = [V_baseline]
+        for mode, crossings in xcrossing_dict.items():
+            for (damping, freq, vel) in crossings:
+                # print(mode, damping, freq, vel)
+                if damping == 0.0:
+                    if vel < VL_target:
+                        log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
+                    VLs.append(vel)
+                elif damping == 0.03:
+                    if vel < VF_target:
+                        log.error(f'VF: mode={mode} damping={damping} freq={freq} VF={vel}')
+                    VFs.append(vel)
+        VL = min(VLs)
+        VF = min(VFs)
+        return VLs, VL, VFs, VF
+
+
 def _imodes(results_shape: tuple[int, int],
             modes: Optional[np.ndarray, slice[int] |
                             tuple[int] | list[int]]) -> np.ndarray:
@@ -2589,9 +2653,10 @@ def _increment_jcolor(mode: int,
                       linestyle: str, symbol: str,
                       freq: np.ndarray, damping: np.ndarray,
                       freq_tol: float=-1.0,
+                      freq_tol_remove: float=-1.0,
                       show_mode_number: bool=False,
-                      # jcolor, color, linestyle2, symbol2, text
-                      ) -> tuple[int, Color, str, str, str]:
+                      # jcolor, color, linestyle2, symbol2, text, is_removedi
+                      ) -> tuple[int, Color, str, str, str, bool]:
     """
     Filters a line if it doesn't change by more than freq_tol.
     Changes the line color and removes the symbol.
@@ -2603,6 +2668,12 @@ def _increment_jcolor(mode: int,
     freq: np.ndarray
         the frequency data
     freq_tol: float; default=-1.0
+        set lines to dashed if they fall under the tolerance
+        -1.0: no filtering (default)
+        >0.0: filter is active
+    freq_tol_remove: float; default=-1.0
+        hide lines to if they fall under the tolerance
+        a line must be dashed for it to be hidden (i.e., freq_tol_remove <= freq_tol)
         -1.0: no filtering (default)
         >0.0: filter is active
 
@@ -2616,8 +2687,10 @@ def _increment_jcolor(mode: int,
     #print(f'freq_tol = {freq_tol!r}')
     assert isinstance(freq, np.ndarray), freq
     assert isinstance(freq_tol, float_types), freq_tol
+    assert isinstance(freq_tol_remove, float_types), freq_tol_remove
     is_filtered = False
-    if freq.max() - freq.min() <= freq_tol and damping.max() < 0.:
+    dfreq = freq.max() - freq.min()
+    if dfreq <= freq_tol and damping.max() < 0.:
         color = 'gray'
         is_filtered = True
         jcolor -= 1
@@ -2628,8 +2701,15 @@ def _increment_jcolor(mode: int,
     if show_mode_number and symbol2:
         symbol2 = ''
         text = str(mode)
+
+    is_removed = False
+    if is_filtered and dfreq <= freq_tol_remove:
+        linestyle2 = ''
+        text = ''
+        is_removed = True
+
     jcolor += 1
-    return jcolor, color, linestyle2, symbol2, text
+    return jcolor, color, linestyle2, symbol2, text, is_removed
 
 
 def set_xlim(axes: plt.Axes, xlim: Limit) -> None:
