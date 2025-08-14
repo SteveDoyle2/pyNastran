@@ -47,7 +47,6 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     parser.add_argument('-r', '--recursive', action='store_true', help='recursively search for directories')
     parser.add_argument('--skip', nargs='+', help='dont process specific files')
     parser.add_argument('-a', '--all', action='store_true', help='dont skip files that have an op2')
-    parser.add_argument('--slurm', help='grab the slurm .py script')
     #parser.add_argument('--nthreads', default=1, help='set the number of threads; mem/parallel are per job (default=1)')
     parser.add_argument('--args', help='additional arguments')
 
@@ -71,7 +70,6 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     #print(args)
     skip_files = args.skip if args.skip else []
     nastran_args = args.args
-    slurm_script = args.slurm
     process_all = args.all
     if nastran_args is None or len(nastran_args) == 0:
         keywords = []
@@ -103,7 +101,6 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
         recursive=recursive, run=run,
         out_filename=out_filename,
         skip_files=skip_files,
-        slurm_script=slurm_script,
         process_all=process_all,
         debug=debug, log=level)
     assert isinstance(nfiles, int), nfiles
@@ -251,7 +248,6 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
              recursive: bool=False,
              keywords: Optional[str | list[str] | dict[str, str] | list[list[str]]]=None,
              run: bool=True,
-             slurm_script: PathLike='',
              out_filename: PathLike='',
              skip_files: PathLike | list[PathLike]='',
              process_all: bool=False,
@@ -355,61 +351,9 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
         run=run, debug=debug)
     assert isinstance(nfiles, int), nfiles
 
-    if slurm_script:
-        _write_slurm(slurm_script, all_call_args)
     if out_filename:
         _write_outfile(out_filename, all_call_args)
     return nfiles
-
-
-def _write_slurm(slurm_script: PathLike,
-                 all_call_args: list[list[str]]) -> None:
-    # with open(out_filename, 'w') as out_file:
-    #     for bdf_filename in bdf_filenames:
-    #         out_file.write(f'{str(bdf_filename)}\n')
-    import importlib
-    base, script_ext = os.path.splitext(slurm_script)
-    script_ext = script_ext.lower()
-
-    module_name = os.path.basename(base)
-    print(f'module_name = {module_name!r}')
-    print(f'slurm_script = {slurm_script!r}')
-    spec = importlib.util.spec_from_file_location(module_name, slurm_script)
-
-    if spec:
-        dynamic_module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = dynamic_module
-        spec.loader.exec_module(dynamic_module)
-
-        #njobs = len(all_call_args)
-        for ifile, call_args in enumerate(all_call_args):
-            slurm_filename = f'submit{ifile}.sh'
-            print(f'call_args = {call_args}')
-            args = {}
-            nastran_filename = os.path.basename(call_args[1])
-            for arg in call_args[2:]:
-                key, value = arg.split('=', 1)
-                args[key] = value
-            print(f'args = {args}')
-
-            # Now you can use the imported module and its contents
-            out = dynamic_module.run(ifile, slurm_filename, nastran_filename, args)
-
-        with open('submit.sh', 'w', newline='\n') as sh_file:
-            sh_file.write('#!/bin/sh\n')
-            sh_file.write(f'# fix the permissions\n')
-            sh_file.write('chmod +x *.sh\n')
-            sh_file.write('# fix slash-r line endings\n')
-            sh_file.write('dox2unix *\n')
-            sh_file.write(f'#\n')
-            sh_file.write(f'# files must be in local directory\n')
-            sh_file.write(f'#\n')
-            for ifile, call_args in enumerate(all_call_args):
-                nastran_filename = call_args[1]
-                sh_file.write(f'sbatch submit{ifile}.sh  # {os.path.basename(nastran_filename)}\n')
-    else:
-        raise RuntimeError(msg)
-        #log.debug(f'  out = {out}')
 
 
 def _write_outfile(out_filename: PathLike,
