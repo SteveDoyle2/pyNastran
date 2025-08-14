@@ -23,12 +23,13 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
+from cpylog import SimpleLogger
 from pyNastran.utils.atmosphere import (
     get_alt_for_density, atm_density,
     convert_altitude, convert_velocity, convert_density, convert_pressure,
 )
 from pyNastran.utils import object_attributes, object_methods, PathLike
-from pyNastran.utils.numpy_utils import float_types
+from pyNastran.utils.numpy_utils import float_types, integer_float_types
 
 if TYPE_CHECKING and IS_MATPLOTLIB:  # pragma: no cover
     from matplotlib.axes import Axes
@@ -48,7 +49,7 @@ class FlutterResponse:
         return True
 
     def export_to_hdf5(self, h5_file, encoding: str):
-        return  #h5_file.create_dataset('data', data=np.ones(10))
+        return  # h5_file.create_dataset('data', data=np.ones(10))
 
     def __repr__(self) -> str:
         #from pyNastran.utils import object_stats
@@ -117,7 +118,7 @@ class FlutterResponse:
 
         mach0 = 0.0
         density_ratio = 1.0
-        configuration = 'AEROSG2D'  #  TODO: what is this?
+        configuration = 'AEROSG2D'  # TODO: what is this?
         xysym = '???'
         xzsym = '???'
         method = 'PKNL'
@@ -162,7 +163,7 @@ class FlutterResponse:
         method : str
             expected PKNL
         subcase_id : int
-            self explanatory
+            self-explanatory
         cref : chord; default=1.0
             Reference length for reduced frequency
             used to compute b (reference semi-chord); found per the AERO card
@@ -175,7 +176,7 @@ class FlutterResponse:
         if in_units is None:
             in_units = get_flutter_units('english_in')
         b = cref / 2.0
-        configuration = 'AEROSG2D'  #  TODO: what is this?
+        configuration = 'AEROSG2D'  # TODO: what is this?
         xysym = '???'
         xzsym = '???'
         #[mach, rho, velocity, damping, freq]
@@ -324,6 +325,7 @@ class FlutterResponse:
 
         assert eigr_eigi_velocity.ndim == 2, eigr_eigi_velocity
         assert eigr_eigi_velocity.shape[1] == 3, eigr_eigi_velocity
+        self.markevery = 0
         self.eigenvector = eigenvector
         self.eigr_eigi_velocity = eigr_eigi_velocity
 
@@ -613,7 +615,11 @@ class FlutterResponse:
 
         Parameters
         ----------
-        imethod: int; default=0
+        colors : list[str]; default=None
+            colors for the plot; default -> C0-C9
+        symbols : list[str]; default=None
+            symbols for the plot; default ->  various symbols
+        imethod : int; default=0
             imethod=0: loop over symbols and then colors
             imethod=1: loop over colors and then symbols
 
@@ -685,6 +691,7 @@ class FlutterResponse:
                 ncol: int=0,
                 clear: bool=False, legend: bool=True,
                 freq_tol: float=-1.0,
+                freq_tol_remove: float=-1.0,
                 png_filename=None, show: bool=True,
                 **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
@@ -701,7 +708,7 @@ class FlutterResponse:
             modes=modes, fig=fig, xlim=xlim, ylim=ylim_damping,
             ncol=ncol,
             show=show, clear=clear, legend=legend,
-            freq_tol=freq_tol,
+            freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             v_lines=v_lines, plot_type=plot_type, xunit=xunit,
             png_filename=png_filename,
             **legend_kwargs)
@@ -722,7 +729,7 @@ class FlutterResponse:
     #     is_velocity_range = velocity_range[0] is not None or velocity_range[1] is not None
 
     def get_flutter_crossings(self,
-                              damping_required: Optional[list[tuple[float, float]]]=None,
+                              damping_crossings: Optional[list[tuple[float, float]]]=None,
                               modes=None,
                               eas_range: Optional[tuple[float, float]]=None,
                               point_removal: Optional[list[tuple[float, float]]]=None,
@@ -734,7 +741,7 @@ class FlutterResponse:
 
         Parameters
         ----------
-        damping_required: list[(damping_target, damping_required)]
+        damping_crossings : list[(damping_target, damping_required)]
             A point will be created at the damping point if it meets the criterion
             for damping_required. This is useful when you have slight spikes over the target damping
             target_damping: float
@@ -743,11 +750,14 @@ class FlutterResponse:
                 the required damping for flutter
         modes : (nmode,) int ndarray; default=None -> all modes
             the modes to analyze
-        eas_range: [eas_min, eas_max]
+        eas_range : [eas_min, eas_max]
             the equivalent airspeed range of the plot to consider
-        freq_round: int; default=2
+        point_removal : list[range1, ...]; default=None -> []
+            list of ranges for start/stop.
+            Points in this range will be removed.
+        freq_round : int; default=2
             number of digits for the frequency
-        eas_round
+        eas_round : int; default=3
             number of digits for the equivalent airspeed
 
         Returns
@@ -755,8 +765,8 @@ class FlutterResponse:
         xcrossing_dict: dict[mode, [(percent_damping, freq, velocity), ...]
             the flutter crossings
         """
-        if damping_required is None:
-            damping_required = [
+        if damping_crossings is None:
+            damping_crossings = [
                 (0.00, 0.01),
                 (0.03, 0.03),
             ]
@@ -765,7 +775,7 @@ class FlutterResponse:
 
         eas_min0, eas_max0 = eas_range
         modes, imodes = _get_modes_imodes(self.modes, modes)
-        min_damping = _get_min_damping(damping_required)
+        min_damping = _get_min_damping(damping_crossings)
 
         # if dfreq > 0. and is_damping_range:
         #     raise NotImplementedError('dfreq > 0. and ddamp > 0.')
@@ -783,7 +793,7 @@ class FlutterResponse:
                 easi, dampi, freqi, point_removal)
 
             crossings = []
-            for damping_targeti, damping_requiredi in damping_required:
+            for damping_targeti, damping_requiredi in damping_crossings:
                 if dampi.max() < damping_requiredi:
                     continue
                 eas0, freq0 = get_zero_crossings(easi, freqi, dampi - damping_targeti)
@@ -809,6 +819,7 @@ class FlutterResponse:
                         close: bool=False, legend: bool=True,
                         #noline: bool=False, nopoints: bool=False,
                         freq_tol: float=-1.0,
+                        freq_tol_remove: float=-1.0,
                         png_filename=None,
                         **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
@@ -848,6 +859,7 @@ class FlutterResponse:
 
         """
         assert isinstance(freq_tol, float_types), freq_tol
+        assert isinstance(freq_tol_remove, float_types), freq_tol_remove
         xlabel = r'Eigenvalue (Real); $\omega \zeta$'
         ylabel = r'Eigenvalue (Imaginary); $\omega$'
         ix = self.ieigr
@@ -860,7 +872,7 @@ class FlutterResponse:
             xlim=eigr_lim, ylim=eigi_lim,
             ncol=ncol,
             show=show, clear=clear, close=close, legend=legend,
-            freq_tol=freq_tol,
+            freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             png_filename=png_filename,
             **legend_kwargs)
         return fig, axes
@@ -875,6 +887,7 @@ class FlutterResponse:
                                  close: bool=False, legend: bool=True,
                                  #noline: bool=False, nopoints: bool=False,
                                  freq_tol: float=-1.0,
+                                 freq_tol_remove: float=-1.0,
                                  png_filename=None,
                                  **legend_kwargs):
         """
@@ -1005,7 +1018,7 @@ class FlutterResponse:
 
         # normalize the magnitude, so it's a percentage
         # TODO: is this the right axis?
-        mag /= mag_max # [:, np.newaxis]
+        mag /= mag_max  # [:, np.newaxis]
         #print(f'mag2 = {mag}')
         #print(f'mag_tol = {mag_tol!r}')
 
@@ -1070,6 +1083,7 @@ class FlutterResponse:
                   show: bool=True, clear: bool=False,
                   close: bool=False, legend: bool=True,
                   freq_tol: float=-1.0,
+                  freq_tol_remove: float=-1.0,
                   png_filename=None,
                   **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
@@ -1106,13 +1120,15 @@ class FlutterResponse:
             if ix >= 0:
                 xs = self.results[imode, :, ix].ravel()
             else:
-                asdf
+                raise RuntimeError(f'ix={ix} is out of bounds')
             ys = self.results[imode, :, iy].ravel()
             #print('freq, xs, ys')
-            jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
+            jcolor, color2, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, damping, freq_tol=freq_tol,
+                freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 show_mode_number=self.show_mode_number)
+            if is_removedi:
+                continue
             #print(f'plot_xy: jcolor={jcolor}; color={color2}; linstyle={linestyle2}; symbol={symbol2}')
 
             #print(f'freq={freq}')
@@ -1184,6 +1200,7 @@ class FlutterResponse:
                    show: bool=True, clear: bool=False,
                    close: bool=False, legend: bool=True,
                    freq_tol: float=-1.0,
+                   freq_tol_remove: float=-1.0,
                    png_filename=None,
                    **legend_kwargs) -> tuple[plt.Figure,
                                              tuple[plt.Axes, plt.Axes]]:
@@ -1200,8 +1217,8 @@ class FlutterResponse:
 
         """
         self.fix()
-        legend_kwargs = get_legend_kwargs(self.font_size,
-                                          legend_kwargs)
+        legend_kwargs = get_legend_kwargs(
+            self.font_size, legend_kwargs)
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
         nmodes = len(modes)
@@ -1242,10 +1259,12 @@ class FlutterResponse:
             xs = self.results[imode, :, ix].ravel()
             y1s = self.results[imode, :, iy1].ravel()
             y2s = self.results[imode, :, iy2].ravel()
-            jcolor, color2, linestyle2, symbol2, texti = _increment_jcolor(
+            jcolor, color2, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, damping, freq_tol=freq_tol,
+                freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 show_mode_number=self.show_mode_number)
+            if is_removedi:
+                continue
 
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
@@ -1326,11 +1345,12 @@ class FlutterResponse:
                            show: bool=True, clear: bool=False,
                            close: bool=False, legend: bool=True,
                            freq_tol: float=-1.0,
+                           freq_tol_remove: float=-1.0,
                            png_filename=None,
                            damping_limit=None,
                            v_lines: list[LineData]=None,
                            **kwargs) -> tuple[plt.Figure,
-                                             tuple[plt.Axes, plt.Axes]]:
+                                              tuple[plt.Axes, plt.Axes]]:
         """
         Plots a kfreq vs. damping curve
 
@@ -1352,7 +1372,7 @@ class FlutterResponse:
             xlim=xlim, ylim1=ylim_damping, ylim2=ylim_kfreq,
             show=show, clear=clear, close=close,
             legend=legend,
-            freq_tol=freq_tol,
+            freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             png_filename=png_filename,
             **kwargs)
         return fig, axes2
@@ -1363,6 +1383,7 @@ class FlutterResponse:
                             show: bool=True, clear: bool=False,
                             close: bool=False, legend: bool=True,
                             freq_tol: float=-1.0,
+                            freq_tol_remove: float=-1.0,
                             png_filename=None,
                             **kwargs) -> tuple[plt.Figure,
                                                tuple[plt.Axes, plt.Axes]]:
@@ -1386,7 +1407,7 @@ class FlutterResponse:
             xlim=xlim, ylim1=ylim_damping, ylim2=ylim_freq,
             show=show, clear=clear, close=close,
             legend=legend,
-            freq_tol=freq_tol,
+            freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             png_filename=png_filename,
             **kwargs)
         return fig, axes2
@@ -1599,11 +1620,13 @@ class FlutterResponse:
                    ylim_freq: Optional[Limit]=None,
                    ivelocity: Optional[int]=None,
                    v_lines: list[LineData]=None,
-                   damping_limit=None,
+                   damping_required: Optional[float]=None,
+                   damping_limit: Optional[float]=None,
                    ncol: int=0,
                    freq_tol: float=-1.0,
+                   freq_tol_remove: float=-1.0,
                    filter_freq: bool=False,
-                   damping_required: list[tuple[float, float]]=None,
+                   damping_crossings: list[tuple[float, float]]=None,
                    filter_damping: bool=False,
                    eas_range: Optional[tuple[float, float]]=None,
                    png_filename=None, show: bool=False,
@@ -1633,21 +1656,21 @@ class FlutterResponse:
         filter_freq : bool; default=False
             filter modes entirely outside the plot range
             useful for cleaning up the legend; False for interactive mode
-        damping_required: list[(damping_target, damping_required)]
+        damping_crossings : list[(damping_target, damping_required)]
             A point will be created at the damping point if it meets the criterion
             for damping_required. This is useful when you have slight spikes over the target damping
             target_damping: float
                 the target damping for flutter
             damping_required: float
                 the required damping for flutter
-        filter_damping: bool; default=False
+        filter_damping : bool; default=False
             filter crossings entirely outside the plot range
             useful for cleaning up the legend
         point_removal : list[range]
             range : tuple[float, float]
             points in the range will be removed; useful for deleting a single point based on EAS
             point_removal = [(400.0, 410.0),]
-        mode_switch_method: str
+        mode_switch_method : str
             None, Frequency
 
         """
@@ -1676,7 +1699,7 @@ class FlutterResponse:
         xcrossing_dict = {}
         if hasattr(self, 'ieas') and plot_type == 'eas':
             xcrossing_dict = self.get_flutter_crossings(
-                damping_required=damping_required, modes=modes,
+                damping_crossings=damping_crossings, modes=modes,
                 eas_range=eas_range)
 
         if ylim_freq is None or not isinstance(ylim_freq[0], float_types) or not isinstance(ylim_freq[0], float_types):
@@ -1686,6 +1709,7 @@ class FlutterResponse:
             yfreq_min, yfreq_max = ylim_freq
 
         legend_elements = []
+        nmodes = 0
         for i, imode, mode in zip(count(), imodes, modes):
             color = colors[jcolor]
             symbol = symbols[jcolor]
@@ -1702,10 +1726,13 @@ class FlutterResponse:
             vel, damping, freq = remove_excluded_points(
                 vel, damping, freq, point_removal)
 
-            jcolor, color, linestyle2, symbol2, texti = _increment_jcolor(
+            jcolor, color, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
-                freq, damping, freq_tol=freq_tol,
+                freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                 show_mode_number=self.show_mode_number)
+            if is_removedi:
+                continue
+
             if color != 'gray':
                 imodes_crossing.append(imode)
 
@@ -1735,6 +1762,7 @@ class FlutterResponse:
             #if texti == '':
                 #msgi = str([texti, symbol2, linestyle2]) + 'was unexpected...'
                 #warnings.warn(msgi)
+            nmodes += 1
             legend_elementsi = _plot_two_axes(
                 damp_axes, freq_axes,
                 vel, damping, freq,
@@ -1753,7 +1781,7 @@ class FlutterResponse:
 
         # add horizontal line
         legend_elementsi = _add_damping_limit(
-            plot_type, damp_axes, damping_limit)
+            plot_type, damp_axes, damping_required, damping_limit)
         legend_elements.extend(legend_elementsi)
 
         legend_elementsi = _add_vertical_lines(
@@ -1763,7 +1791,7 @@ class FlutterResponse:
         # crossings go on top (aka at the end)
         eas_max = None if (xlim is None or xlim[1] is None) else xlim[1]
         legend_elementsi = self._plot_crossings(
-            damp_axes,  # damping_required,
+            damp_axes,
             imodes, modes,
             imodes_crossing, xcrossing_dict,
             colors_show, symbols_show,
@@ -1792,7 +1820,7 @@ class FlutterResponse:
         damp_axes.set_title(title)  #, fontsize=self.font_size)
         #plt.suptitle(title)
 
-        nmodes = len(modes)
+        nmodes = min(1, nmodes)
         ncol = _update_ncol(nmodes, ncol)
         if legend:
             damp_axes.legend(
@@ -1837,7 +1865,7 @@ class FlutterResponse:
         modes, imodes = _get_modes_imodes(self.modes, modes)
         #------------------------------------------------------
         # setup a linear extrapolation of the first 2 points
-        # so we can bump the degree
+        # to bump the polynomial degree
         deg = 1  # linear
         i0 = 0
         i1 = deg + 1
@@ -1927,9 +1955,12 @@ class FlutterResponse:
             symbol2 = symbols[jcolor]
             #(freq0, eas0), (freq3, eas3) = xcrossing_dict[mode]
             # freq = self.results[imode, :, self.ifreq].ravel()
-            # jcolor, color, linestyle2, symbol2 = _increment_jcolor(
+            # jcolor, color, linestyle2, symbol2, is_removedi = _increment_jcolor(
             #     jcolor, color, linestyle, symbol,
-            #     freq, damping, freq_tol)
+            #     freq, damping, freq_tol, freq_tol_remove)
+            # if is_removedi:
+            #     continue
+
             for case in xcrossing_dict[mode]:
                 damping0, freq0, eas0 = case
                 if np.isnan(eas0):
@@ -1953,7 +1984,7 @@ class FlutterResponse:
 
         Parameters
         ----------
-        veas_filename : str
+        csv_filename : str
             the filename to write
         modes : list[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
@@ -2047,7 +2078,7 @@ class FlutterResponse:
                   page_stamp: Optional[str]=None,
                   page_num: int=1, **kwargs) -> int:
         page_num = self.export_to_f06_file(
-            f06_file, #modes=modes,
+            f06_file,  # modes=modes,
             page_stamp=page_stamp, page_num=page_num)
         # return self.export_to_f06(f06_filename,
         #                           page_stamp=page_stamp, page_num=page_num)
@@ -2064,7 +2095,7 @@ class FlutterResponse:
                 page_stamp=page_stamp, page_num=page_num)
         return page_num
 
-    def export_to_f06_file(self, f06_file: str,
+    def export_to_f06_file(self, f06_file: TextIO,
                            modes: Optional[list[int]]=None,
                            page_stamp: Optional[str]=None,
                            page_num: int=1) -> int:
@@ -2076,7 +2107,7 @@ class FlutterResponse:
             f06_file.write(f'0                                                                                                            SUBCASE {self.subcase:d}\n')
             f06_file.write('0                                                       FLUTTER  SUMMARY\n')
             f06_file.write('                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC\n')
-            f06_file.write('       POINT = %4i     METHOD = %s\n' % (imode + 1, self.method))
+            f06_file.write(f'       POINT = {imode+1:4d}     METHOD = {self.method}\n')
             f06_file.write('\n')
             f06_file.write('\n')
 
@@ -2297,9 +2328,51 @@ class FlutterResponse:
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip)
 
 
+    @staticmethod
+    def xcrossing_dict_to_VL_VF(xcrossing_dict: dict[int, list[Crossing]],
+                                log: SimpleLogger,
+                                VL_target: float,
+                                VF_target: float,
+                                V_baseline: float=1000.,
+                                ) -> tuple[list[float], float, list[float], float]:
+        """
+        Parameters
+        ----------
+        xcrossing_dict: dict[int, list[Crossing]]
+        log : float
+        VL_target : float
+            desired VL; throws warning if not satisfied
+        VF_target : float
+            desired VF; throws warning if not satisfied
+        V_baseline : float; default=1000.
+            the value for VL/VF if no crossing occurs
+
+        Returns
+        -------
+
+        """
+        # print('mode\tdamping\tfreq\tvel')
+        VLs = [V_baseline]
+        VFs = [V_baseline]
+        for mode, crossings in xcrossing_dict.items():
+            for (damping, freq, vel) in crossings:
+                # print(mode, damping, freq, vel)
+                if damping == 0.0:
+                    if vel < VL_target:
+                        log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
+                    VLs.append(vel)
+                elif damping == 0.03:
+                    if vel < VF_target:
+                        log.error(f'VF: mode={mode} damping={damping} freq={freq} VF={vel}')
+                    VFs.append(vel)
+        VL = min(VLs)
+        VF = min(VFs)
+        return VLs, VL, VFs, VF
+
+
 def _imodes(results_shape: tuple[int, int],
             modes: Optional[np.ndarray, slice[int] |
-                                        tuple[int] | list[int]]) -> np.ndarray:
+                            tuple[int] | list[int]]) -> np.ndarray:
     """gets the imodes from the modes"""
     if modes is None:
         nmodes = results_shape[0]
@@ -2442,20 +2515,22 @@ def _asarray(results, allow_fix_kfreq: bool=True):
 
 def _add_damping_limit(plot_type: str,
                        damp_axes: Axes,
+                       required_damping: Optional[float],
                        damping_limit: Optional[float],
                        linewidth: int=2) -> list[Line2D]:
-    if damping_limit is None:
-        return []
     #damp_label = f'Damping={damping_limit*100:.1f}'
     #plt.axhline(y=1.0, color="black", linestyle="--")
-    line1 = damp_axes.axhline(
-        y=0., color='k', linestyle='--', linewidth=linewidth,
-        label=f'Structural Damping=0%')
-    line2 = damp_axes.axhline(
-        y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
-        label=f'Limit Structural Damping={damping_limit*100:.0f}%')
-
-    legend_elements = [line1, line2]
+    legend_elements = []
+    if required_damping is not None and isinstance(required_damping, integer_float_types) and required_damping > -0.99:
+        line1 = damp_axes.axhline(
+            y=required_damping, color='k', linestyle='--', linewidth=linewidth,
+            label=f'Required {required_damping*100:.0f}% Damping')
+        legend_elements.append(line1)
+    if damping_limit is not None and isinstance(damping_limit, integer_float_types) and damping_limit > -0.99:
+        line2 = damp_axes.axhline(
+            y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
+            label=f'{damping_limit*100:.0f}% Damping')
+        legend_elements.append(line2)
     return legend_elements
 
 
@@ -2512,12 +2587,14 @@ def get_flutter_units(units: Optional[str | dict[str, str]]) -> dict[str, str]:
         units_dict = units
     return units_dict
 
+
 def _apply_subcase_to_filename(filename: str, subcase: int) -> str:
     """helper for filename management"""
     filename_out = filename
     if '%' in filename:
         filename_out = filename % subcase
     return filename_out
+
 
 def _update_ncol(nmodes: int, ncol: int=0) -> int:
     """Updates ncol to be a valid number"""
@@ -2576,9 +2653,10 @@ def _increment_jcolor(mode: int,
                       linestyle: str, symbol: str,
                       freq: np.ndarray, damping: np.ndarray,
                       freq_tol: float=-1.0,
+                      freq_tol_remove: float=-1.0,
                       show_mode_number: bool=False,
-                      # jcolor, color, linestyle2, symbol2, text
-                      ) -> tuple[int, Color, str, str, str]:
+                      # jcolor, color, linestyle2, symbol2, text, is_removedi
+                      ) -> tuple[int, Color, str, str, str, bool]:
     """
     Filters a line if it doesn't change by more than freq_tol.
     Changes the line color and removes the symbol.
@@ -2590,6 +2668,12 @@ def _increment_jcolor(mode: int,
     freq: np.ndarray
         the frequency data
     freq_tol: float; default=-1.0
+        set lines to dashed if they fall under the tolerance
+        -1.0: no filtering (default)
+        >0.0: filter is active
+    freq_tol_remove: float; default=-1.0
+        hide lines to if they fall under the tolerance
+        a line must be dashed for it to be hidden (i.e., freq_tol_remove <= freq_tol)
         -1.0: no filtering (default)
         >0.0: filter is active
 
@@ -2603,8 +2687,10 @@ def _increment_jcolor(mode: int,
     #print(f'freq_tol = {freq_tol!r}')
     assert isinstance(freq, np.ndarray), freq
     assert isinstance(freq_tol, float_types), freq_tol
+    assert isinstance(freq_tol_remove, float_types), freq_tol_remove
     is_filtered = False
-    if freq.max() - freq.min() <= freq_tol and damping.max() < 0.:
+    dfreq = freq.max() - freq.min()
+    if dfreq <= freq_tol and damping.max() < 0.:
         color = 'gray'
         is_filtered = True
         jcolor -= 1
@@ -2615,14 +2701,23 @@ def _increment_jcolor(mode: int,
     if show_mode_number and symbol2:
         symbol2 = ''
         text = str(mode)
+
+    is_removed = False
+    if is_filtered and dfreq <= freq_tol_remove:
+        linestyle2 = ''
+        text = ''
+        is_removed = True
+
     jcolor += 1
-    return jcolor, color, linestyle2, symbol2, text
+    return jcolor, color, linestyle2, symbol2, text, is_removed
+
 
 def set_xlim(axes: plt.Axes, xlim: Limit) -> None:
     if xlim == [None, None] or xlim == (None, None):
         xlim = None
     if xlim is not None:
         axes.set_xlim(xlim)
+
 
 def set_ylim(axes: plt.Axes, ylim: Limit) -> None:
     if ylim == [None, None] or ylim == (None, None):
@@ -2657,6 +2752,7 @@ def _get_unit_factor(in_units: dict[str, str],
     else:
         units = 'units'
     return factor, units
+
 
 def get_legend_kwargs(font_size: int,
                       legend_kwargs: Optional[dict[str, Any]],
@@ -2709,21 +2805,21 @@ def check_range(eas_min0: float, eas_max0: float,
     return eas, freq
 
 
-def _get_min_damping(damping_required: list[tuple[float, float]]) -> float:
+def _get_min_damping(damping_crossings: list[tuple[float, float]]) -> float:
     """
     Get min required damping for 0% and 3%, such that flutter exists.
     The goal of this is to filter all points that are below 4% to
     limit identifying an excessive number of flutter crossings.
 
-    damping_required = [
+    damping_crossings = [
         (0.00, 0.01),
         (0.03, 0.04),
     ]
-    damping = _get_min_damping(damping_required)
+    damping = _get_min_damping(damping_crossings)
     >>> 0.04
     """
-    min_damping = damping_required[0][1]
-    for dampingi, requiredi in damping_required[1:]:
+    min_damping = damping_crossings[0][1]
+    for dampingi, requiredi in damping_crossings[1:]:
         min_damping = min(min_damping, requiredi)
     return min_damping
 
@@ -2739,7 +2835,7 @@ def _plot_two_axes(damp_axes: plt.Axes, freq_axes: plt.Axes,
     legend_elements = [legend_element]
 
     # setup for plotting every Nth point
-    markevery2 = None if markevery is None else markevery + 1
+    markevery2 = None if markevery in {0, None} else markevery + 1
     vel2 = vel[::markevery2]
     damping2 = damping[::markevery2]
     freq2 = freq[::markevery2]
@@ -2786,7 +2882,7 @@ def _show_save_clear_close(fig: plt.Figure,
 
 def _reshape_eigenvectors(eigenvectors: np.array,
                           eigr_eigi_vel: np.array,
-                          incorrect_shape: bool=False) -> np.ndarray:
+                          incorrect_shape: bool=False) -> tuple[np.ndarray, np.ndarray]:
     """
     Parameters
     ----------
@@ -2874,6 +2970,7 @@ def _set_ticks(self, axes: plt.Axes, iaxis: int) -> None:
         axes.xaxis.set_major_locator(MultipleLocator(self._xtick_major_locator_multiple[iaxis]))
     if _is_tick(self._ytick_major_locator_multiple, iaxis):
         axes.yaxis.set_major_locator(MultipleLocator(self._ytick_major_locator_multiple[iaxis]))
+
 
 def _is_tick(values: Optional[tuple[float, ...]], index: int):
     out = values is not None and values[index] is not None

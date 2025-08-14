@@ -100,7 +100,11 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    is_gui = False
+    is_gui = '--gui' in argv
+    if is_gui:
+        argv.remove('--gui')
+        from pyNastran.f06.dev.flutter.gui_flutter import main as gui_flutter
+
     if len(argv) == 2 and is_gui:
         gui_flutter()
         return

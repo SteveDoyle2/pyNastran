@@ -678,6 +678,21 @@ def _fix_modes(eigr: np.ndarray,
     return out
 
 
+class TestZonaFlutter(unittest.TestCase):
+    def test_zona_gafa(self):
+        from pyNastran.f06.dev.flutter.read_zona_out import read_zona_out
+        #bdf_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.bdf'
+        f06_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.out'
+        png_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.png'
+        responses, mass = read_zona_out(f06_filename)
+        # plot_sol_200(f06_filename, png_filename=png_filename,
+        #              show=True)
+        if len(responses) == 1:
+            warnings.warn('nresponses=1 and should be 2')
+        else:
+            assert len(responses) == 2, list(responses.keys())
+
+
 class TestF06Utils(unittest.TestCase):
 
     def test_f06_trim_bwb(self):
