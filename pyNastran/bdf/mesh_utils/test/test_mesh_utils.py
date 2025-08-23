@@ -207,9 +207,9 @@ class TestMeshUtilsAero(unittest.TestCase):
         """tests multiple ``bdf`` tools"""
         path = MODEL_PATH / 'aero'
         bdf_filename = str(path / 'ha145z.bdf')
-        #bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--aeroboxs] [--pid PID]\n'
+        #bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--aerobox] [--pid PID]\n'
         #is_aerobox_model : bool; default=True
-        #    True : write the aeroboxs as CQUAD4s
+        #    True : write the aerobox as CQUAD4s
         #    False : write the macro elements as CQUAD4s
         #pid_method : str; default='aesurf'
         #    'aesurf' : write the referenced AESURF as the property ID
@@ -223,8 +223,8 @@ class TestMeshUtilsAero(unittest.TestCase):
         Real = [np.radians(5.)]
         model.add_dmi_w2gj(tin, tout, nrows, GCj, Real)
         #print(model.caeros)
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_aeroboxs.bdf',
-                '--pid', 'aesurf', '--aeroboxs']
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf_aeroboxes.bdf',
+                '--pid', 'aesurf', '--aerobox']
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'ha145z.aesurf.bdf',
@@ -242,7 +242,7 @@ class TestMeshUtilsAero(unittest.TestCase):
         path = MODEL_PATH / 'aero'
         bdf_filename = str(path / 'cpmopt.bdf')
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf',
-                '--pid', 'caero', '--aeroboxs']
+                '--pid', 'caero', '--aerobox']
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', path / 'cpmopt.paero.bdf',
@@ -260,19 +260,19 @@ class TestMeshUtilsAero(unittest.TestCase):
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_aesurf.bdf',
-                '--aeroboxs', '--pid', 'aesurf']
+                '--aerobox', '--pid', 'aesurf']
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_caero.bdf',
-                '--aeroboxs', '--pid', 'caero']
+                '--aerobox', '--pid', 'caero']
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_paero.bdf',
-                '--aeroboxs', '--pid', 'paero']
+                '--aerobox', '--pid', 'paero']
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero.bdf',
-                '--aeroboxs']
+                '--aerobox']
         cmd_line(argv=argv, quiet=True)
 
         #bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]

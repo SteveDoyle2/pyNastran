@@ -73,9 +73,9 @@ class ChangeBCs(QDialog):
         #self.checkbox_discrete.setChecked(self._default_is_discrete)
 
         # put these in a group
-        #checkboxs2 = QButtonGroup(self)
-        #checkboxs2.addButton(self.checkbox_continuous)
-        #checkboxs2.addButton(self.checkbox_discrete)
+        #checkboxes2 = QButtonGroup(self)
+        #checkboxes2.addButton(self.checkbox_continuous)
+        #checkboxes2.addButton(self.checkbox_discrete)
 
         # closing
         self.apply_button = QPushButton("Apply")

@@ -4819,7 +4819,7 @@ class SPLINE1(VectorizedBaseCard):
 
         caero_ids = array_str(self.caero_id, size=size)
         spline_ids = array_str(self.spline_id, size=size)
-        boxs = array_str(self.box_id, size=size)
+        boxes = array_str(self.box_id, size=size)
         set_ids = array_str(self.set_id, size=size)
 
         nelements = array_default_int(self.nelement, default=0, size=size)
@@ -4827,7 +4827,7 @@ class SPLINE1(VectorizedBaseCard):
         dzs = array_default_float(self.dz, default=0., size=size, is_double=False)
         for eid, caero, (box1, box2), setg, dz, \
             method, usage, nelement, melement in zip(
-                spline_ids, caero_ids, boxs, set_ids, dzs,
+                spline_ids, caero_ids, boxes, set_ids, dzs,
                 self.method, self.usage, nelements, melements):
             #dz = set_blank_if_default(self.dz, 0.)
             #method = set_blank_if_default(self.method, 'IPS')
@@ -5117,7 +5117,7 @@ class SPLINE2(VectorizedBaseCard):
 
         caero_ids = array_str(self.caero_id, size=size)
         spline_ids = array_str(self.spline_id, size=size)
-        boxs = array_str(self.box_id, size=size)
+        boxes = array_str(self.box_id, size=size)
         set_ids = array_str(self.set_id, size=size)
 
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
@@ -5127,7 +5127,7 @@ class SPLINE2(VectorizedBaseCard):
         dthys = array_default_float(self.dthy, default=0.0, size=size, is_double=False)
         for eid, caero, (box1, box2), setg, dz, dtor, \
             cid, usage, dthx, dthy in zip(
-                spline_ids, caero_ids, boxs, set_ids, dzs, dtors,
+                spline_ids, caero_ids, boxes, set_ids, dzs, dtors,
                 coord_ids, self.usage, dthxs, dthys):
 
             list_fields = ['SPLINE2', eid, caero, box1, box2,
@@ -5471,7 +5471,7 @@ class SPLINE3(VectorizedBaseCard):
 
         caero_ids = array_str(self.caero_id, size=size)
         spline_ids = array_str(self.spline_id, size=size)
-        boxs = array_str(self.box_id, size=size)
+        boxes = array_str(self.box_id, size=size)
         components = array_str(self.components, size=size)
         nodes = array_str(self.nodes, size=size)
         disp = array_str(self.displacement_components, size=size)
@@ -5479,7 +5479,7 @@ class SPLINE3(VectorizedBaseCard):
         #spline_id, caero_id, box_id, components,
         #nnodes, nodes, displacement_components, coeffs
         for eid, caero, box_id, component, (inode0, inode1), usage in zip(
-                spline_ids, caero_ids, boxs, components,
+                spline_ids, caero_ids, boxes, components,
                 self.inode, self.usage):
             usages = set_blank_if_default(usage, 'BOTH')
             nodesi = nodes[inode0:inode1]

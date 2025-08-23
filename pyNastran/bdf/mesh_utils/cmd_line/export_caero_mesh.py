@@ -13,7 +13,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     import pyNastran
     msg = (
         'Usage:\n'
-        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--aeroboxs] [--pid PID]\n'
+        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--aerobox] [--pid PID]\n'
         '  bdf export_caero_mesh -h | --help\n'
         '  bdf export_caero_mesh -v | --version\n'
         '\n'
@@ -25,7 +25,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
         'Options:\n'
         '  -o OUT, --output  OUT_CAERO_BDF_FILENAME  path to output BDF file\n'
         '  --punch                                   flag to identify a *.pch/*.inc file\n'
-        '  --aeroboxs                                write the aeroboxs (default=False)\n'
+        '  --aerobox                                 write the aeroboxes (default=False)\n'
         '  --pid PID                                 sets the pid; {aesurf, caero, paero} [default: aesurf]\n'
         '\n'
 
@@ -53,7 +53,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     base = os.path.splitext(bdf_filename)
     if caero_bdf_filename is None:
         caero_bdf_filename = base + '.caero.bdf'
-    is_aerobox_model = data['--aeroboxs']
+    is_aerobox_model = data['--aerobox']
 
     pid_method = 'aesurf'
     if data['--pid']:

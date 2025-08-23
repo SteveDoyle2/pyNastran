@@ -28,7 +28,7 @@ def export_caero_mesh(model: BDF,
     caero_bdf_filename : str
         the file to write
     is_aerobox_model : bool; default=True
-        True : write the aeroboxs as CQUAD4s
+        True : write the aeroboxes as CQUAD4s
         False : write the macro elements as CQUAD4s
     pid_method : str; default='aesurf'
         'aesurf' : write the referenced AESURF as the property ID
@@ -65,7 +65,7 @@ def export_caero_mesh(model: BDF,
         for iaerobox_eid in range(len(elements)):
             aero_eid_map[iaerobox_ieid] = caero_eid + iaerobox_eid
             iaerobox_ieid += 1
-    log.debug(f'  naeroboxs = {len(aero_eid_map)}')
+    log.debug(f'  naeroboxes = {len(aero_eid_map)}')
     subcases, loads = _write_subcases_loads(model, aero_eid_map, is_aerobox_model)
     coords_to_write_dict = _get_coords_to_write_dict(model)
 
@@ -332,7 +332,7 @@ def _write_subcases_loads(model: BDF,
                           aero_eid_map: dict[int, int],
                           is_aerobox_model: bool) -> tuple[str, str]:
     """writes the DMI, DMIJ, DMIK cards to a series of load cases"""
-    naeroboxs = len(aero_eid_map)
+    naeroboxes = len(aero_eid_map)
     if len(model.dmi) == 0 and len(model.dmij) == 0 and len(model.dmik) == 0 and len(model.dmiji) == 0:
         loads = ''
         subcases = ''
@@ -388,7 +388,7 @@ def _write_subcases_loads(model: BDF,
             # column matrix of (neids*2,1)
             #assert data.shape[1] == 1, f'name={name}; shape={data.shape}'  # (112,1)
             if data.shape[1] != 1 and 0:
-                # naeroboxs = 40
+                # naeroboxes = 40
                 # WKK = (80,80)
                 log.warning(f'WKK is the wrong shape; shape={data.shape}')
                 continue
@@ -463,7 +463,7 @@ def _write_subcases_loads(model: BDF,
 def _write_dmi(model: BDF,
                aero_eid_map: dict[int, int]) -> tuple[int, str, str]:
     """writes the DMI cards to a series of load cases"""
-    naeroboxs = len(aero_eid_map)
+    naeroboxes = len(aero_eid_map)
     isubcase = 1
     loads = ''
     subcases = ''
@@ -535,7 +535,7 @@ def _write_dmi(model: BDF,
                 pass
             elif matrix_form_str in {'square', 'rectangular'}:
                 assert data.shape[0] == data.shape[1], f'name={name}; shape={data.shape} matrix_form={dmi.matrix_form}={matrix_form_str}'  # (100,100)
-                assert data.shape == (2*naeroboxs, 2*naeroboxs), f'name={name}; shape={data.shape} expected=({2*naeroboxs},{2*naeroboxs}); matrix_form={dmi.matrix_form}={matrix_form_str}'
+                assert data.shape == (2*naeroboxes, 2*naeroboxes), f'name={name}; shape={data.shape} expected=({2*naeroboxes},{2*naeroboxes}); matrix_form={dmi.matrix_form}={matrix_form_str}'
                 matrix_form_str = 'square'
             else:
                 matrix_form_str = 'column'
@@ -543,7 +543,7 @@ def _write_dmi(model: BDF,
 
             if matrix_form_str in {'diagonal', 'column'}:
                 assert data.shape[1] == 1, f'name={name}; shape={data.shape}'  # (112,1)
-                assert data.shape == (2*naeroboxs, 1), f'name={name}; shape={data.shape}  expected=({2*naeroboxs},{2*naeroboxs}); matrix_form={dmi.matrix_form}={matrix_form_str}'
+                assert data.shape == (2*naeroboxes, 1), f'name={name}; shape={data.shape}  expected=({2*naeroboxes},{2*naeroboxes}); matrix_form={dmi.matrix_form}={matrix_form_str}'
                 nrows = data.shape[0] // 2
                 data = data.reshape(nrows, 2)
                 force_correction = data[:, 0]
@@ -595,7 +595,7 @@ def _write_dmi(model: BDF,
 def _write_aerobox_strips(bdf_file: TextIO, model: BDF,
                           caero_eid: int,
                           points: np.ndarray, elements: np.ndarray) -> None:
-    """writes the strips for the aeroboxs"""
+    """writes the strips for the aeroboxes"""
     #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
     bdf_file.write('$$\n$$ XYZ_LE is taken at the center of the leading edge; (p1+p4)/2\n$$\n')
     bdf_file.write('$$ %8s %8s %9s %9s %9s %9s %9s %9s %9s\n' % (
@@ -623,9 +623,9 @@ def get_skj(model: BDF, percent_location: int=25) -> np.ndarray:
     area_arm_dict = get_area_arm_dict_panel(
         model, percent_location=percent_location)
 
-    naeroboxs = len(area_arm_dict)
-    nj = naeroboxs
-    nk = naeroboxs * 2
+    naeroboxes = len(area_arm_dict)
+    nj = naeroboxes
+    nk = naeroboxes * 2
     skj = np.zeros((nk, nj), dtype='float64')
     for j, (area, arm) in area_arm_dict.items():
         k1 = 2 * j
@@ -659,7 +659,7 @@ def _area_arm_dict_panel(area_arm_dict: dict[int, tuple[float, float]],
                          model: BDF,
                          points: np.ndarray, elements: np.ndarray,
                          percent_location: int=25) -> None:
-    """writes the strips for the aeroboxs at some % chord"""
+    """writes the strips for the aeroboxes at some % chord"""
     percent = percent_location / 100.
     for i in range(elements.shape[0]):
         # The point numbers here are consistent with the CAERO1

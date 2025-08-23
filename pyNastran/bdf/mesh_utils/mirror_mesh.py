@@ -927,7 +927,7 @@ def _mirror_aero(model: BDF,
         else:
             log.error(f'not mirroring plane {plane!r}; only xz, yz')
 
-    ncaero_boxs = 0
+    ncaero_boxes = 0
     for unused_caero_id, caero in model.caeros.items():
         if caero.type == 'CAERO1':
             npoints, nelements = caero.get_panel_npoints_nelements()
@@ -937,12 +937,12 @@ def _mirror_aero(model: BDF,
             log.error('skipping (only supports CAERO1):\n%s' % caero.rstrip())
             continue
         del npoints
-        ncaero_boxs += nelements
+        ncaero_boxes += nelements
     w2gj = []
-    w2gj0 = np.zeros(ncaero_boxs, dtype='float32')
+    w2gj0 = np.zeros(ncaero_boxes, dtype='float32')
     if 'W2GJ' in model.dmi:
         w2gj0 = model.dmi['W2GJ'].Real
-    if ncaero_boxs:
+    if ncaero_boxes:
         w2gj = [w2gj0]
 
     iaerobox_offset = 0

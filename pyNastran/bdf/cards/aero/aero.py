@@ -7268,7 +7268,7 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
     """
     Creates the CAERO panel inputs including:
      - caero
-     - caero_boxs
+     - caero_boxes
      - caero_control_surfaces
      - N control surfaces
 

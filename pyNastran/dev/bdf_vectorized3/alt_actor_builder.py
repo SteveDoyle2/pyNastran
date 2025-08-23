@@ -812,7 +812,7 @@ def create_caero(gui: MainWindow,
         ipoint_aerobox += npoints
 
     if len(xyz_total) == 0:
-        log.warning(f'CAERO1: no panels/aeroboxs')
+        log.warning(f'CAERO1: no panels/aeroboxes')
         return
 
     name = 'caero'
@@ -822,7 +822,7 @@ def create_caero(gui: MainWindow,
                  is_visible=True, representation='wire')
 
     if len(points) == 0:
-        log.warning(f'CAERO1: no aeroboxs?')
+        log.warning(f'CAERO1: no aeroboxes?')
         return
     aero_element_ids = np.hstack(element_id)
     aero_xyz = np.vstack(points)
@@ -834,7 +834,7 @@ def create_caero(gui: MainWindow,
     #counts = np.bincount(aero_element_ids)
     assert len(aero_element_ids) == len(np.unique(aero_element_ids)), 'overwrote caero elements...'
 
-    name = 'caero_boxs'
+    name = 'caero_boxes'
     _build_quads(gui, name,
                  aero_xyz, aero_elements,
                  line_width=5, color=YELLOW_FLOAT,

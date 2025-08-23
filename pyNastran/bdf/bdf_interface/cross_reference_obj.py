@@ -1027,25 +1027,25 @@ def _check_caero_box_overlap(model: BDF) -> int:
         return 0
     # we don't need to check the ncaeros=1 case
     i = 0
-    naeroboxs = 0
-    #print('eid, naeroboxsi')
+    naeroboxes = 0
+    #print('eid, naeroboxesi')
     min_maxs = np.zeros((ncaeros, 2), dtype='int32')
     for eid, caero in sorted(model.caeros.items()):
         min_maxs[i, :] = caero.min_max_eid
-        npointsi, naeroboxsi = caero.get_panel_npoints_nelements()
-        naeroboxs += naeroboxsi
+        npointsi, naeroboxesi = caero.get_panel_npoints_nelements()
+        naeroboxes += naeroboxesi
         #print(caero)
-        #print(eid, naeroboxsi)
+        #print(eid, naeroboxesi)
         i += 1
-    naeroboxs_per_caeros = naeroboxs
+    naeroboxes_per_caeros = naeroboxes
     mins = min_maxs[:, 0]
     maxs = min_maxs[:, 1]
     delta = maxs - mins
     #print('delta:')
     #print(f'delta = {delta}')
     assert delta.min() > 0, delta
-    naeroboxs = delta.sum()
-    assert naeroboxs == naeroboxs_per_caeros, f'naeroboxs={naeroboxs} != naeroboxs_per_caeros={naeroboxs_per_caeros}'
+    naeroboxes = delta.sum()
+    assert naeroboxes == naeroboxes_per_caeros, f'naeroboxes={naeroboxes} != naeroboxes_per_caeros={naeroboxes_per_caeros}'
 
     isort = np.argsort(min_maxs.ravel())
     expected = np.arange(ncaeros * 2, dtype='int32')
@@ -1053,4 +1053,4 @@ def _check_caero_box_overlap(model: BDF) -> int:
         msg = 'CAERO element ids are inconsistent\n'
         msg += 'isort = %s' % str(isort)
         raise RuntimeError(msg)
-    return naeroboxs
+    return naeroboxes
