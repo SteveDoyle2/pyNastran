@@ -756,7 +756,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
             if not stop and run_export_caero and len(fem1.caeros):
                 caero_bdf_filename = base + '.caero.bdf'
                 export_caero_mesh(fem1, caero_bdf_filename,
-                                  is_subpanel_model=True,
+                                  is_aerobox_model=True,
                                   pid_method='caero', write_panel_xyz=True)
 
             if not stop and not xref and run_skin_solids:

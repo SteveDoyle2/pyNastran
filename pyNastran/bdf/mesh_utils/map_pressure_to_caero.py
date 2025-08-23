@@ -42,7 +42,7 @@ def map_caero(bdf_filename: PathLike):
         int_pts_list.extend(int_pt)
     int_pts = np.vstack(int_pts_list)
 
-    export_caero_mesh(model, caero_bdf_filename, is_subpanel_model=True,
+    export_caero_mesh(model, caero_bdf_filename, is_aerobox_model=True,
                       write_panel_xyz=False)
 
     #-----------------------------------------------

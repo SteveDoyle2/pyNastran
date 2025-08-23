@@ -70,7 +70,7 @@ from pyNastran.bdf.bdf import (BDF,
                                # nastran95
                                #CQUAD1,
                                )
-from pyNastran.bdf.cards.aero.aero import get_caero_subpanel_grid, build_caero_paneling
+from pyNastran.bdf.cards.aero.aero import get_caero_box_grid, build_caero_paneling
 from pyNastran.bdf.cards.aero.zona import CAERO7, BODY7
 #from pyNastran.bdf.cards.elements.shell import (
     #CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
@@ -266,17 +266,17 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         gui: MainWindow = self.gui
         settings = gui.settings.nastran_settings
-        names = ['caero', 'caero_subpanels']
+        names = ['caero', 'caero_boxs']
         geometry_properties = _get_geometry_properties_by_name(gui, names)
 
         settings.show_caero_sub_panels = not settings.show_caero_sub_panels
         if settings.show_caero_actor:
             if settings.show_caero_sub_panels:
                 geometry_properties['caero'].is_visible = False
-                geometry_properties['caero_subpanels'].is_visible = True
+                geometry_properties['caero_boxs'].is_visible = True
             else:
                 geometry_properties['caero'].is_visible = True
-                geometry_properties['caero_subpanels'].is_visible = False
+                geometry_properties['caero_boxs'].is_visible = False
         gui.on_update_geometry_properties_override_dialog(geometry_properties)
 
     def toggle_conms(self) -> None:
@@ -480,7 +480,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             # opacity = 1
             # alt_grids = [
                 # ['caero', yellow, line_width, opacity],
-                # ['caero_subpanels', yellow, line_width, opacity],
+                # ['caero_boxs', yellow, line_width, opacity],
             # ]
             # skip_reading = self._remove_old_geometry2(bdf_filename, alt_grids=alt_grids)
         if skip_reading:
@@ -728,7 +728,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         gui: MainWindow = self.gui
         if 'caero' in gui.alt_grids:
             self.set_caero_grid(model)
-            self.set_caero_subpanel_grid(model)
+            self.set_caero_box_grid(model)
             if has_control_surface:
                 cs_name = 'caero_control_surfaces'
                 self.set_caero_control_surface_grid(
@@ -832,7 +832,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         if 'caero' not in geometry_actors:
             return
         geometry_actors['caero'].Modified()
-        geometry_actors['caero_subpanels'].Modified()
+        geometry_actors['caero_boxs'].Modified()
 
     def _create_splines(self, model: BDF,
                         box_id_to_caero_element_map: dict[int, int],
@@ -857,7 +857,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         gui: MainWindow = self.gui
         log = self.log
-        # 0 - caero / caero_subpanel
+        # 0 - caero / caero_boxs
         # 1 - control surface
         # 3/5/7/... - spline points
         # 2/4/6/... - spline panels
@@ -939,7 +939,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         """
         Creates the CAERO panel inputs including:
          - caero
-         - caero_subpanels
+         - caero_boxs
          - caero_control_surfaces
          - N control surfaces
 
@@ -962,7 +962,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         ncaeros_points : int
             number of points for the caero coarse grid
         ncaero_sub_points : int
-            number of points for the caero fine/subpanel grid
+            number of points for the caero fine/aerobox grid
         has_control_surface : bool
             is there a control surface
         box_id_to_caero_element_map : dict[box_id] = box_index
@@ -1108,7 +1108,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #gui.alt_grids['caero']
         #edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
-    def set_caero_subpanel_grid(self, model: BDF) -> None:
+    def set_caero_box_grid(self, model: BDF) -> None:
         """
         Sets the CAERO sub-panel geometry.
 
@@ -1118,11 +1118,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             the bdf model
 
         """
-        nodes, elements = get_caero_subpanel_grid(model)
+        nodes, elements = get_caero_box_grid(model)
         if elements.shape[0] == 0:  # pragma: no cover
             return
         gui: MainWindow = self.gui
-        grid = gui.alt_grids['caero_subpanels']
+        grid = gui.alt_grids['caero_boxs']
         quad_etype = 9
         create_vtk_cells_of_constant_element_type(grid, elements, quad_etype)
 
@@ -3022,11 +3022,11 @@ class NastranIO(NastranIO_):
         #gui.actions['about'].Disable()
         menu_items = {
             'nastran_toolbar': (gui.nastran_toolbar,
-                                ('caero', 'caero_subpanels', 'conm2'))
+                                ('caero', 'caero_boxs', 'conm2'))
         }
         #menu_items = [
             #(self.menu_help2, ('about_nastran',)),
-            #(self.gui.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
+            #(self.gui.nastran_toolbar, ('caero', 'caero_boxs', 'conm2'))
             #(self.menu_window, tuple(menu_window)),
             #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
             #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
@@ -3072,7 +3072,7 @@ class NastranIO(NastranIO_):
         settings = gui.settings.nastran_settings
         settings.show_caero_actor = not settings.show_caero_actor
 
-        names = ['caero', 'caero_subpanels', 'caero_control_surfaces']
+        names = ['caero', 'caero_boxs', 'caero_control_surfaces']
         geometry_properties = _get_geometry_properties_by_name(gui, names)
 
         if settings.show_caero_actor:
@@ -3081,7 +3081,7 @@ class NastranIO(NastranIO_):
             except KeyError:
                 pass
             if settings.show_caero_sub_panels:
-                geometry_properties['caero_subpanels'].is_visible = True
+                geometry_properties['caero_boxs'].is_visible = True
             else:
                 geometry_properties['caero'].is_visible = True
         else:
@@ -3090,7 +3090,7 @@ class NastranIO(NastranIO_):
             except KeyError:
                 pass
             geometry_properties['caero'].is_visible = False
-            geometry_properties['caero_subpanels'].is_visible = False
+            geometry_properties['caero_boxs'].is_visible = False
         gui.on_update_geometry_properties_override_dialog(geometry_properties)
 
 
@@ -3793,7 +3793,7 @@ def _create_caero_actors(gui: MainWindow, ncaeros: int,
     This just creates the following actors.  It does not fill them.
     These include:
      - caero
-     - caero_subpanels
+     - caero_boxs
      - caero_control_surfaces
     """
     if not has_caero:
@@ -3803,11 +3803,11 @@ def _create_caero_actors(gui: MainWindow, ncaeros: int,
         'caero', color=settings.caero_color, line_width=3, opacity=1.0,
         representation='toggle', is_visible=True, is_pickable=False)
     gui.create_alternate_vtk_grid(
-        'caero_subpanels', color=settings.caero_color, line_width=3, opacity=1.0,
+        'caero_boxs', color=settings.caero_color, line_width=3, opacity=1.0,
         representation='toggle', is_visible=False, is_pickable=False)
 
     gui.alt_grids['caero'].Allocate(ncaeros, 1000)
-    gui.alt_grids['caero_subpanels'].Allocate(ncaeros_sub, 1000)
+    gui.alt_grids['caero_boxs'].Allocate(ncaeros_sub, 1000)
     if has_control_surface:
         gui.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
 

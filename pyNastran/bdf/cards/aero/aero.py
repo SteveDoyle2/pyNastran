@@ -550,7 +550,7 @@ class AELINK(BaseCard):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AELINK card from ``BDF.add_card(...)``
 
@@ -7152,7 +7152,7 @@ def get_caero_count(model: BDF) -> tuple[int, int, int, int]:
         number of CAEROx sub-panels
     ncaeros_points : int
         number of CAERO points that define the panels
-        (4 per CAERO1/3/4/5 subpanel; 2 per CAERO2 panel)
+        (4 per CAERO1/3/4/5 aeroboxes; 2 per CAERO2 panel)
     ncaero_sub_points : int
         number of CAEROx sub-points (1 per panel)
         CAERO2, BODY7 not supported
@@ -7228,8 +7228,8 @@ def get_caero_points(model: BDF,
     return caero_points, has_caero
 
 
-def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
-    """builds the CAERO subpanel grid in 3d space"""
+def get_caero_box_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
+    """builds the CAERO aerobox grid in 3d space"""
     j = 0
     points = []
     elements = []
@@ -7268,7 +7268,7 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
     """
     Creates the CAERO panel inputs including:
      - caero
-     - caero_subpanels
+     - caero_boxs
      - caero_control_surfaces
      - N control surfaces
 
@@ -7299,7 +7299,7 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
         ncaeros_points : int
             number of points for the caero coarse grid
         ncaero_sub_points : int
-            number of points for the caero fine/subpanel grid
+            number of points for the caero fine/aerobox grid
         has_control_surface : bool
             is there a control surface
         box_id_to_caero_element_map : dict[box_id] = box_index

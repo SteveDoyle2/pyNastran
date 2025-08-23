@@ -143,7 +143,7 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
         base = os.path.splitext(model.bdf_filename)[0]
         caero_bdf_filename = base + '.caero.bdf'
         export_caero_mesh(model, caero_bdf_filename,
-                          is_subpanel_model=True,
+                          is_aerobox_model=True,
                           pid_method='caero', write_panel_xyz=True)
         os.remove(caero_bdf_filename)
 

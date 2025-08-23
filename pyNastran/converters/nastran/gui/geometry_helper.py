@@ -80,9 +80,9 @@ class NastranGuiAttributes:
         self.save_data = True # was False
         #--------------------------------------
 
-        ##: flips the nastran CAERO subpaneling
+        ##: flips the nastran CAERO aeroboxs
         ##:   False -> borders of CAEROs can be seen
-        ##:   True  -> individual subpanels can be seen
+        ##:   True  -> individual aeroboxs can be seen
         #self.show_caero_sub_panels = False
 
         #self.show_caero_actor = True  # show the caero mesh

@@ -764,6 +764,9 @@ class FlutterResponse:
         -------
         xcrossing_dict: dict[mode, [(percent_damping, freq, velocity), ...]
             the flutter crossings
+
+        TODO: handle case where mode doesn't exceed allowable (0.01) before going below limit (0.0) again
+              and then comes back up (e.g., garbage mode)
         """
         if damping_crossings is None:
             damping_crossings = [

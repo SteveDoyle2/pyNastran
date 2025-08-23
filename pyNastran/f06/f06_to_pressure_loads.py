@@ -9,14 +9,14 @@ from pyNastran.f06.parse_trim import read_f06_trim
 
 
 def f06_to_pressure_loads(f06_filename: str,
-                          subpanel_caero_filename: str,
+                          aerobox_caero_filename: str,
                           loads_filename: str,
                           nid_csv_filename: str='',
                           eid_csv_filename: str='',
                           log: Optional[SimpleLogger]=None,
                           nlines_max: int=1_000_000,
                           debug: bool=False) -> None:
-    caero_model = read_bdf(subpanel_caero_filename, log=log,
+    caero_model = read_bdf(aerobox_caero_filename, log=log,
                            xref=False, validate=False, debug=debug)
     log = caero_model.log
 

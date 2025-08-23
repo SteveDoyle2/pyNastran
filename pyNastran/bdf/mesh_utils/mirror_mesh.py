@@ -927,7 +927,7 @@ def _mirror_aero(model: BDF,
         else:
             log.error(f'not mirroring plane {plane!r}; only xz, yz')
 
-    ncaero_subpanels = 0
+    ncaero_boxs = 0
     for unused_caero_id, caero in model.caeros.items():
         if caero.type == 'CAERO1':
             npoints, nelements = caero.get_panel_npoints_nelements()
@@ -937,15 +937,15 @@ def _mirror_aero(model: BDF,
             log.error('skipping (only supports CAERO1):\n%s' % caero.rstrip())
             continue
         del npoints
-        ncaero_subpanels += nelements
+        ncaero_boxs += nelements
     w2gj = []
-    w2gj0 = np.zeros(ncaero_subpanels, dtype='float32')
+    w2gj0 = np.zeros(ncaero_boxs, dtype='float32')
     if 'W2GJ' in model.dmi:
         w2gj0 = model.dmi['W2GJ'].Real
-    if ncaero_subpanels:
+    if ncaero_boxs:
         w2gj = [w2gj0]
 
-    isubpanel_offset = 0
+    iaerobox_offset = 0
     caero_id_offset = 0
     if len(model.caeros):
         is_aero = True
@@ -967,9 +967,9 @@ def _mirror_aero(model: BDF,
                 x12 = caero.x12
                 x43 = caero.x43
                 npoints, nelements = caero.get_panel_npoints_nelements()
-                w2gji = w2gj0[isubpanel_offset:isubpanel_offset+nelements]
+                w2gji = w2gj0[iaerobox_offset:iaerobox_offset+nelements]
                 #print(f'w2gji = {w2gji}')
-                isubpanel_offset += nelements
+                iaerobox_offset += nelements
                 if plane == 'xz': # flip the y
                     if np.allclose(p1[1], p4[1]):
                         log.error(f'skipping {plane} symmetric panel; p1={p1}; p4={p4}')
@@ -1001,10 +1001,10 @@ def _mirror_aero(model: BDF,
                 p1 = caero.get_leading_edge_points()[0]
                 p1 = p1.copy()
 
-                w2gji = w2gj0[isubpanel_offset:isubpanel_offset+nelements]
+                w2gji = w2gj0[iaerobox_offset:iaerobox_offset+nelements]
                 #print(f'w2gji = {w2gji}')
-                isubpanel_offset += nelements
-                if plane == 'xz': # flip the y
+                iaeroboxoffset += nelements
+                if plane == 'xz':  # flip the y
                     if np.allclose(p1[1], 0.):
                         log.error(f'skipping {plane} symmetric panel; p1={p1}')
                         continue

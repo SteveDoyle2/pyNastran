@@ -2107,13 +2107,15 @@ class DMI(NastranMatrix):
         else:
             self._read_real(card)
 
-    def _read_real(self, card):
+    def _read_real(self, card: BDFCard):
         """reads a real DMI column"""
         # column number
         j = integer(card, 2, 'icol')
 
         # counter
         i = 0
+
+        # TODO: speed this up
         fields = [interpret_value(field, card) for field in card[3:]]
 
         # Real, starts at A(i1,j), goes to A(i2,j) in a column
@@ -2147,7 +2149,7 @@ class DMI(NastranMatrix):
         #print(self.GCi)
         #print(self.GCj)
 
-    def _read_complex(self, card):
+    def _read_complex(self, card: BDFCard):
         """reads a complex DMI column"""
         #msg = 'complex matrices not supported in the DMI reader...'
         #raise NotImplementedError(msg)
@@ -2155,6 +2157,8 @@ class DMI(NastranMatrix):
         j = integer(card, 2, 'icol')
         # counter
         i = 0
+
+        # TODO: speed this up
         fields = [interpret_value(field, card) for field in card[3:]]
         # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
 

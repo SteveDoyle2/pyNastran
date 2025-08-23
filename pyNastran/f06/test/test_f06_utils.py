@@ -713,7 +713,7 @@ class TestF06Utils(unittest.TestCase):
 
     def test_f06_trim_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.bdf'
-        subpanel_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
+        aerobox_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
         f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.f06'
         loads_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.blk'
         nid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.nid'
@@ -721,23 +721,23 @@ class TestF06Utils(unittest.TestCase):
         model = read_bdf(bdf_filename, debug=None)
         # export_caero_mesh(
         #     model,
-        #     caero_bdf_filename=subpanel_caero_filename,
-        #     is_subpanel_model=True,
+        #     caero_bdf_filename=aerobox_caero_filename,
+        #     is_aerobox_model=True,
         #     pid_method='caero',
         #     rotate_panel_angle_deg=45.,
         #     write_panel_xyz=False)
         export_caero_mesh(
             model,
-            caero_bdf_filename=subpanel_caero_filename,
-            is_subpanel_model=True,
+            caero_bdf_filename=aerobox_caero_filename,
+            is_aerobox_model=True,
             pid_method='caero',
             write_panel_xyz=True)
 
         trim_results = f06_to_pressure_loads(
-            f06_filename, subpanel_caero_filename, loads_filename,
+            f06_filename, aerobox_caero_filename, loads_filename,
             log=None, nlines_max=1_000_000, debug=None)
         trim_results = f06_to_pressure_loads(
-            f06_filename, subpanel_caero_filename, loads_filename,
+            f06_filename, aerobox_caero_filename, loads_filename,
             nid_csv_filename=nid_csv_filename,
             eid_csv_filename=eid_csv_filename,
             log=None, nlines_max=1_000_000, debug=None)
@@ -750,7 +750,7 @@ class TestF06Utils(unittest.TestCase):
         export_caero_mesh(
             model,
             caero_bdf_filename=caero_filename,
-            is_subpanel_model=True,
+            is_aerobox_model=True,
             pid_method='caero',
             write_panel_xyz=True)
         model2 = read_bdf(bdf_filename, debug=None)

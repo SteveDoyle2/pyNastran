@@ -260,17 +260,17 @@ class CrossReference:
             check_caero_element_ids = True
 
         if check_caero_element_ids:
-            nsubpanels = _check_caero_subpanel_overlap(model)
+            naeroboxes = _check_caero_box_overlap(model)
 
             if 'W2GJ' in model.dmi:
                 w2gj = model.dmi['W2GJ']
-                assert w2gj.shape == (nsubpanels, 1), f'nsubpanels={nsubpanels}; w2gj.shape={str(w2gj.shape)}'
+                assert w2gj.shape == (naeroboxes, 1), f'naeroboxes={naeroboxes}; w2gj.shape={str(w2gj.shape)}'
             if 'FA2J' in model.dmi:
                 fa2j = model.dmi['FA2J']
-                assert fa2j.shape == (nsubpanels, 1), f'nsubpanels={nsubpanels}; fa2j.shape={str(fa2j.shape)}'
+                assert fa2j.shape == (naeroboxes, 1), f'naeroboxes={naeroboxes}; fa2j.shape={str(fa2j.shape)}'
             if 'WKK' in model.dmi:
                 wkk = model.dmi['WKK']
-                assert wkk.shape in [(nsubpanels*2, 1), (nsubpanels*2, nsubpanels*2)], f'nsubpanels*2={nsubpanels*2}; wkk.shape={str(wkk.shape)}'
+                assert wkk.shape in [(naeroboxes*2, 1), (naeroboxes*2, naeroboxes*2)], f'naeroboxes*2={naeroboxes*2}; wkk.shape={str(wkk.shape)}'
 
             #'AERO',     ## aero
             #'AEROS',    ## aeros
@@ -1016,35 +1016,36 @@ class CrossReference:
         for node in model.nodes.values():
             node.elements_ref = nodes[node.nid]
 
-def _check_caero_subpanel_overlap(model: BDF) -> int:
+
+def _check_caero_box_overlap(model: BDF) -> int:
     """
     only support CAERO1
-    check that subpanel ids don't overlap
+    check that aerobox ids don't overlap
     """
     ncaeros = len(model.caeros)
     if ncaeros == 0:
         return 0
     # we don't need to check the ncaeros=1 case
     i = 0
-    nsubpanels = 0
-    #print('eid, nsubpanelsi')
+    naeroboxs = 0
+    #print('eid, naeroboxsi')
     min_maxs = np.zeros((ncaeros, 2), dtype='int32')
     for eid, caero in sorted(model.caeros.items()):
         min_maxs[i, :] = caero.min_max_eid
-        npointsi, nsubpanelsi = caero.get_panel_npoints_nelements()
-        nsubpanels += nsubpanelsi
+        npointsi, naeroboxsi = caero.get_panel_npoints_nelements()
+        naeroboxs += naeroboxsi
         #print(caero)
-        #print(eid, nsubpanelsi)
+        #print(eid, naeroboxsi)
         i += 1
-    nsubpanels_per_caeros = nsubpanels
+    naeroboxs_per_caeros = naeroboxs
     mins = min_maxs[:, 0]
     maxs = min_maxs[:, 1]
     delta = maxs - mins
     #print('delta:')
     #print(f'delta = {delta}')
     assert delta.min() > 0, delta
-    nsubpanels = delta.sum()
-    assert nsubpanels == nsubpanels_per_caeros, f'nsubpanels={nsubpanels} != nsubpanels_per_caeros={nsubpanels_per_caeros}'
+    naeroboxs = delta.sum()
+    assert naeroboxs == naeroboxs_per_caeros, f'naeroboxs={naeroboxs} != naeroboxs_per_caeros={naeroboxs_per_caeros}'
 
     isort = np.argsort(min_maxs.ravel())
     expected = np.arange(ncaeros * 2, dtype='int32')
@@ -1052,4 +1053,4 @@ def _check_caero_subpanel_overlap(model: BDF) -> int:
         msg = 'CAERO element ids are inconsistent\n'
         msg += 'isort = %s' % str(isort)
         raise RuntimeError(msg)
-    return nsubpanels
+    return naeroboxs

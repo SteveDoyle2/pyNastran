@@ -68,8 +68,8 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         '\n'
 
         'Positional Arguments:\n'
-        '  F06_FILENAME             path to input F06 file\n'
-        '  SUBPANEL_CAERO_FILENAME  path to input CAERO file\n'
+        '  F06_FILENAME            path to input F06 file\n'
+        '  AEROBOX_CAERO_FILENAME  path to input CAERO file\n'
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -86,7 +86,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
     assert docopt_version >= '0.9.0', docopt_version
     data = docopt(msg, version=ver, argv=argv[1:])
     f06_filename = data['F06_FILENAME']
-    subpanel_caero_filename = data['SUBPANEL_CAERO_FILENAME']
+    aerobox_caero_filename = data['AEROBOX_CAERO_FILENAME']
 
     dirname = os.path.dirname(f06_filename)
     loads_filename = os.path.join(dirname, 'loads.inc')
@@ -97,7 +97,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
     nid_csv_filename = os.path.join(dirname, 'nid_pyNastran.csv')
     eid_csv_filename = os.path.join(dirname, 'eid_pyNastran.csv')
     loads = f06_to_pressure_loads(f06_filename,
-                                  subpanel_caero_filename,
+                                  aerobox_caero_filename,
                                   loads_filename,
                                   nid_csv_filename=nid_csv_filename,
                                   eid_csv_filename=eid_csv_filename,

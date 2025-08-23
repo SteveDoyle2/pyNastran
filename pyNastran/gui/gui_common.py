@@ -461,8 +461,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if 'nastran' in self.fmt_order:
             tools += [
-                ('caero',           'Show/Hide CAERO Panels', '', 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels, is_visible),
-                ('caero_subpanels', 'Toggle CAERO Subpanels', '', 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels, is_visible),
+                ('caero',      'Show/Hide CAERO Panels', '', 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels, is_visible),
+                ('caero_boxs', 'Toggle CAERO Boxes', '', 'Show/Hide CAERO Box Outlines', self.toggle_caero_boxs, is_visible),
                 ('conm2', 'Toggle CONM2s', '', 'Show/Hide CONM2s', self.toggle_conms, is_visible),
                 ('min',   'Min',           '', 'Show/Hide Min Label', self.view_actions.on_show_hide_min_actor, is_visible),
                 ('max',   'Max',           '', 'Show/Hide Max Label', self.view_actions.on_show_hide_max_actor, is_visible),
