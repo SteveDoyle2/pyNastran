@@ -283,7 +283,7 @@ def _plane_to_iy(plane: str) -> tuple[int, str]:
     plane_sorted = ''.join(sorted(set(plane)))
     if plane_sorted == 'yz':
         iy = 0
-    if plane_sorted == 'xz':
+    elif plane_sorted == 'xz':
         iy = 1
     elif plane_sorted == 'xy':
         iy = 2
