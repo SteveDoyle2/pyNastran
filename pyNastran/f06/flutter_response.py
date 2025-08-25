@@ -740,7 +740,6 @@ class FlutterResponse:
                               point_removal: Optional[list[tuple[float, float]]]=None,
                               freq_round: int=2,
                               eas_round: int=3,
-                              include_divergence: bool=False,
                               ) -> tuple[dict[float, dict[int, list[Crossing]]],
                                          dict[float, dict[int, list[Crossing]]]]:
         """
@@ -773,8 +772,6 @@ class FlutterResponse:
             number of digits for the frequency
         eas_round : int; default=3
             number of digits for the equivalent airspeed
-        include_divergence : bool; default=False
-            should the divergence speeds be calculated; still in development
 
         Returns
         -------
@@ -849,6 +846,8 @@ class FlutterResponse:
                 # ifreq = ifreqs[-1] + 1
 
                 ifreqs = np.where(dfreq < 0.1)[0]
+                if len(ifreqs) == 0:
+                    continue
                 ifreq = ifreqs[0]
 
                 #if imode == 17:
@@ -872,7 +871,7 @@ class FlutterResponse:
                 if np.isnan(eas0):
                     continue
                 crossing = (freq_targeti, float(freq0), float(eas0))
-                print(f'found a crossing...mode={mode}; {crossing}')
+                # print(f'found a crossing...mode={mode}; {crossing}')
                 vd_crossing_dict_freq = vd_crossing_dict[freq_targeti]
                 vd_crossing_dict_freq[mode] = crossing
         #print(f'vd_crossing_dict = {vd_crossing_dict}')
@@ -2063,12 +2062,13 @@ class FlutterResponse:
                         imodes: np.ndarray,
                         modes: np.ndarray,
                         imodes_crossing: np.ndarray,
-                        vl_vf_crossing_dict: dict[int, list[Crossing]],
-                        vd_crossing_dict: dict[int, list[Crossing]],
+                        vl_vf_crossing_dict: dict[float, dict[int, list[Crossing]]],
+                        vd_crossing_dict: dict[float, dict[int, list[Crossing]]],
                         colors: list[str],
                         symbols: list[str],
                         eas_max: Optional[float]=None,
-                        filter_damping: bool=False) -> tuple[list[Line2D], list[Line2D]]:
+                        filter_damping: bool=False,
+                        ndiverg_max: int=7) -> tuple[list[Line2D], list[Line2D]]:
         """
         Parameters
         ----------
@@ -2078,20 +2078,44 @@ class FlutterResponse:
         eas_max : float; default=None
             requires filter_damping
             if velocity is greater than the allowable range, don't plot it
+        ndiverg_max: int; default=7
+            the loweset N modes will be plotted; N=0 -> no filtering
 
         """
-        #print('*******plot_crossings*******')
-
+        filter_vds = (ndiverg_max > 0)
         # sort by modes - back to the old format
         vl_vf_crossing_dict_modes_sort = {}
         for damping, modes_crossings_dict in vl_vf_crossing_dict.items():
-            for mode, crossings in modes_crossings_dict.items():
-                assert len(crossings) == 1, crossings
-                if mode not in vl_vf_crossing_dict_modes_sort:
-                    vl_vf_crossing_dict_modes_sort[mode] = []
-                for crossing in crossings:
-                    # damping0, freq0, eas0 = crossing
-                    vl_vf_crossing_dict_modes_sort[mode].append(crossing)
+
+            if filter_vds:
+                modes_vd = []
+                vds = []
+                for mode, crossings in modes_crossings_dict.items():
+                    assert len(crossings) == 1, crossings
+                    for crossing in crossings:
+                        damping0, freq0, eas0 = crossing
+                        modes_vd.append(mode)
+                        vds.append(eas0)
+                modes_vd_array = np.array(modes_vd)
+                vds_array = np.array(vds)
+                isort = np.argsort(vds_array)[ndiverg_max:]
+                lowest_modes = modes_vd_array[isort]
+                # lowest_vds = vds_array[isort]
+                for mode in lowest_modes:
+                    crossings = modes_crossings_dict[mode]
+                    if mode not in vl_vf_crossing_dict_modes_sort:
+                        vl_vf_crossing_dict_modes_sort[mode] = []
+                    for crossing in crossings:
+                        # damping0, freq0, eas0 = crossing
+                        vl_vf_crossing_dict_modes_sort[mode].append(crossing)
+            else:
+                for mode, crossings in modes_crossings_dict.items():
+                    assert len(crossings) == 1, crossings
+                    if mode not in vl_vf_crossing_dict_modes_sort:
+                        vl_vf_crossing_dict_modes_sort[mode] = []
+                    for crossing in crossings:
+                        # damping0, freq0, eas0 = crossing
+                        vl_vf_crossing_dict_modes_sort[mode].append(crossing)
         vl_vf_crossing_dict = vl_vf_crossing_dict_modes_sort
         #-------------------------------------------------------------
         #print(f'vd_crossing_dict2 = {vd_crossing_dict}')
@@ -2571,25 +2595,31 @@ class FlutterResponse:
         VLs = [V_baseline]
         VFs = [V_baseline]
         VDs = [V_baseline]
-        for mode, crossings in vl_vf_crossing_dict.items():
-            for (damping, freq, vel) in crossings:
-                if freq < freq_target:
-                    log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
+        # log.info(f'V_baseline={V_baseline} KEAS')
+        for freq, mode_vd_crossings in vd_crossing_dict.items():
+            for mode, vd_crossing in mode_vd_crossings.items():
+                (damping, freq, vel) = vd_crossing
+                if freq < freq_target and vel <= V_baseline:
+                    log.error(f'VD: mode={mode} damping={damping} freq={freq} VD={vel}')
                 VDs.append(vel)
 
-        for mode, crossings in vl_vf_crossing_dict.items():
-            for (damping, freq, vel) in crossings:
-                # print(mode, damping, freq, vel)
-                if damping == 0.0:
-                    if vel < VL_target:
-                        log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
-                    VLs.append(vel)
-                elif damping == 0.03:
-                    if vel < VF_target:
-                        log.error(f'VF: mode={mode} damping={damping} freq={freq} VF={vel}')
-                    VFs.append(vel)
-                else:
-                    log.error(f'Cant determine VL/VF: mode={mode} damping={damping} freq={freq} vel={vel}')
+        # assert len(vl_vf_crossing_dict) == 2, vl_vf_crossing_dict
+        # ifreq = 0
+        for damping_target, vl_vf_crossings in vl_vf_crossing_dict.items():
+            if damping_target == 0.0:  # VL
+                for mode, crossings in vl_vf_crossings.items():
+                    for (damping, freq, vel) in crossings:
+                        if vel < VL_target and vel <= V_baseline:
+                            log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
+                        VLs.append(vel)
+            else:
+                assert damping_target == 0.03, damping_target  # VF
+                for mode, crossings in vl_vf_crossings.items():
+                    for (damping, freq, vel) in crossings:
+                        if vel < VF_target and vel <= V_baseline:
+                            log.error(f'VF: mode={mode} damping={damping} freq={freq} VF={vel}')
+                        VFs.append(vel)
+
         VL = min(VLs)  # limit
         VF = min(VFs)  # flutter
         VD = min(VDs)  # divergence
