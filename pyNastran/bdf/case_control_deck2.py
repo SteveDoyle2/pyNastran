@@ -514,7 +514,7 @@ class CaseControlDeck:
         #self.read([param])
         lines = _clean_lines([param])
         (j, fail_flag, key, value, options, param_type) = parse_entry(
-            lines, self.log, debug=self.debug)
+            lines, self.log, self.allow_tabs, debug=self.debug)
         return j, key, value, options, param_type
 
     def _read(self, lines: list[str]) -> None:
