@@ -790,29 +790,29 @@ class FlutterResponse:
             for target, required in damping_crossings:
                 damping_crossings_dict[target] = required
         elif damping_crossings is None:
-            damping_crossings = {
+            damping_crossings_dict = {
                 0.00: 0.01,
                 0.03: 0.03,
             }
         else:  # pragma: no cover
             raise TypeError(damping_crossings)
 
-        if isinstance(damping_crossings, dict):
-            damping_crossings_dict = damping_crossings
-        elif damping_crossings is None:
+        if isinstance(freq_crossings, dict):
+            freq_crossings_dict = freq_crossings
+        elif freq_crossings is None:
             assert freq_crossings is None, freq_crossings
             freq_crossings_dict = {
                 0.0: 1.0,
             }
         else:  # pragma: no cover
-            raise TypeError(damping_crossings)
+            raise TypeError(freq_crossings)
 
         if eas_range is None:
             eas_range = [None, None]
 
         eas_min0, eas_max0 = eas_range
         modes, imodes = _get_modes_imodes(self.modes, modes)
-        min_damping = _get_min_damping(damping_crossings)
+        min_damping = _get_min_damping(freq_crossings_dict)
 
         # if dfreq > 0. and is_damping_range:
         #     raise NotImplementedError('dfreq > 0. and ddamp > 0.')
@@ -2913,7 +2913,7 @@ def check_range(eas_min0: float, eas_max0: float,
     return eas, freq
 
 
-def _get_min_damping(damping_crossings: list[tuple[float, float]]) -> float:
+def _get_min_damping(damping_crossings: dict[float, float]) -> float:
     """
     Get min required damping for 0% and 3%, such that flutter exists.
     The goal of this is to filter all points that are below 4% to
@@ -2926,8 +2926,8 @@ def _get_min_damping(damping_crossings: list[tuple[float, float]]) -> float:
     damping = _get_min_damping(damping_crossings)
     >>> 0.04
     """
-    min_damping = damping_crossings[0][1]
-    for dampingi, requiredi in damping_crossings[1:]:
+    min_damping = min(damping_crossings.values())
+    for dampingi, requiredi in damping_crossings.items():
         min_damping = min(min_damping, requiredi)
     return min_damping
 
