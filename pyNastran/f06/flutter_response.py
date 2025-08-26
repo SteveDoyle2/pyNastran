@@ -2564,21 +2564,23 @@ class FlutterResponse:
                     for (damping, freq, vel) in crossings:
                         if vel < VL_target and vel <= V_baseline:
                             log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
-                        VLs.append((freq, vel))
+                        VLs.append((vel, freq))
             else:
                 assert damping_target == 0.03, damping_target  # VF
                 for mode, crossings in vl_vf_crossings.items():
                     for (damping, freq, vel) in crossings:
                         if vel < VF_target and vel <= V_baseline:
                             log.error(f'VF: mode={mode} damping={damping} freq={freq} VF={vel}')
-                        VFs.append((freq, vel))
+                        VFs.append((vel, freq))
 
         vl_array = np.array(VLs)
         vf_array = np.array(VFs)
         vd_array = np.array(VDs)
-        ivl = np.where(vl_array[:, 0] == vl_array[:, 0].min())[0]
-        ivf = np.where(vf_array[:, 0] == vf_array[:, 0].min())[0]
-        ivd = np.where(vd_array[:, 0] == vd_array[:, 0].min())[0]
+
+        # find minimum velocity in [velocity, frequency] table
+        ivl = np.where(vl_array[:, 0] == vl_array[:, 0].min())[0][0]
+        ivf = np.where(vf_array[:, 0] == vf_array[:, 0].min())[0][0]
+        ivd = np.where(vd_array[:, 0] == vd_array[:, 0].min())[0][0]
 
         vl, freql = vl_array[ivl, :]  # limit
         vf, freqf = vf_array[ivf, :]  # flutter
