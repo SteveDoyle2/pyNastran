@@ -162,8 +162,14 @@ class FlutterResponse:
         ----------
         method : str
             expected PKNL
+        fdata : (nvel, nfreq, 5) np.ndarray
+            fdata = [rho, mach, velocity, damping, freq]
         subcase_id : int
-            self-explanatory
+            subcase id
+        subtitle : str; default=''
+            subcase subtitle
+        label : str; default=''
+            subcase label
         cref : chord; default=1.0
             Reference length for reduced frequency
             used to compute b (reference semi-chord); found per the AERO card
@@ -311,8 +317,7 @@ class FlutterResponse:
             ASYMMETRIC, SYMMETRIC
             unused
         XZ-SYMMETRY : str
-            ASYMMETRIC, SYMMETRIC
-            unused
+            unused: ASYMMETRIC, SYMMETRIC
 
         """
         self.f06_filename = f06_filename
@@ -422,7 +427,6 @@ class FlutterResponse:
                 #= self.eigenvector.reshape(nmodes, nmodes, nvelocity)
             assert eigr_eigi_velocity.ndim == 3, eigr_eigi_velocity
             assert eigr_eigi_velocity.shape[2] == 3, eigr_eigi_velocity
-
             nvelocity = results.shape
 
         self.results_in = results
@@ -730,24 +734,33 @@ class FlutterResponse:
 
     def get_flutter_crossings(self,
                               damping_crossings: Optional[list[tuple[float, float]]]=None,
+                              freq_crossings: Optional[list[tuple[float, float]]]=None,
                               modes=None,
                               eas_range: Optional[tuple[float, float]]=None,
                               point_removal: Optional[list[tuple[float, float]]]=None,
                               freq_round: int=2,
                               eas_round: int=3,
-                              ) -> dict[int, list[Crossing]]:
+                              ) -> tuple[dict[float, dict[int, list[Crossing]]],
+                                         dict[float, dict[int, list[Crossing]]]]:
         """
         Gets the flutter crossings
 
         Parameters
         ----------
-        damping_crossings : list[(damping_target, damping_required)]
+        damping_crossings : dict[damping_target] : damping_required
             A point will be created at the damping point if it meets the criterion
             for damping_required. This is useful when you have slight spikes over the target damping
-            target_damping: float
-                the target damping for flutter
+            damping_target: float
+                the target damping for flutter (e.g., 0.0)
             damping_required: float
-                the required damping for flutter
+                the required damping for flutter (e.g., target_damping + 0.01)
+        freq_crossings : dict[freq_target] = freq_required
+            A point will be created at the frequency point if it meets the criterion
+            for freq_required. This is useful when you have slight spikes over the target frequency
+            freq_target: float
+                the target frequency for divergence (e.g., 5.0 Hz)
+            freq_required: float
+                the required frequency for divergence (e.g., target_freq - 1.0)
         modes : (nmode,) int ndarray; default=None -> all modes
             the modes to analyze
         eas_range : [eas_min, eas_max]
@@ -762,25 +775,113 @@ class FlutterResponse:
 
         Returns
         -------
-        xcrossing_dict: dict[mode, [(percent_damping, freq, velocity), ...]
+        vl_vf_crossing_dict: dict[percent_damping, dict[mode, [(freq, velocity), ...]]
             the flutter crossings
+        vd_crossing_dict: dict[zero_frequency, dict[mode, [(freq, velocity), ...]]
+            the divergence crossings
+
+        TODO: handle case where mode doesn't exceed allowable (0.01) before going below limit (0.0) again
+              and then comes back up (e.g., garbage mode)
         """
-        if damping_crossings is None:
-            damping_crossings = [
-                (0.00, 0.01),
-                (0.03, 0.03),
-            ]
+        if isinstance(damping_crossings, dict):
+            damping_crossings_dict = damping_crossings
+        elif isinstance(damping_crossings, list):
+            damping_crossings_dict = {}
+            for target, required in damping_crossings:
+                damping_crossings_dict[target] = required
+        elif damping_crossings is None:
+            damping_crossings_dict = {
+                0.00: 0.01,
+                0.03: 0.03,
+            }
+        else:  # pragma: no cover
+            raise TypeError(damping_crossings)
+
+        #----------------------------------------------
+        if isinstance(freq_crossings, dict):
+            freq_crossings_dict = freq_crossings
+        elif freq_crossings is None:
+            assert freq_crossings is None, freq_crossings
+            freq_crossings_dict = {
+                0.0: 1.0,
+            }
+        else:  # pragma: no cover
+            raise TypeError(freq_crossings)
+
         if eas_range is None:
             eas_range = [None, None]
-
         eas_min0, eas_max0 = eas_range
-        modes, imodes = _get_modes_imodes(self.modes, modes)
-        min_damping = _get_min_damping(damping_crossings)
 
-        # if dfreq > 0. and is_damping_range:
-        #     raise NotImplementedError('dfreq > 0. and ddamp > 0.')
-        # elif is_damping_range:
-        xcrossing_dict = {}
+        modes, imodes = _get_modes_imodes(self.modes, modes)
+        min_damping = _get_min_damping(damping_crossings_dict)
+
+        #----------------------------------------------
+        # preallocate
+        vd_crossing_dict = {}
+        for freq_targeti in freq_crossings_dict:
+            vd_crossing_dict[freq_targeti] = {}
+
+        for imode in imodes:
+            mode = imode + 1
+            dampi = self.results[imode, :, self.idamping].flatten()
+            easi = self.results[imode, :, self.ieas].flatten()
+            freqi = self.results[imode, :, self.ifreq].flatten()
+            easi, dampi, freqi = remove_excluded_points(
+                easi, dampi, freqi, point_removal)
+
+            for freq_targeti, freq_requiredi in freq_crossings_dict.items():
+                if freqi.min() > freq_requiredi:
+                    continue
+
+                # dfreq sign is flipped because get_zero_crossings
+                # requires a positive crossing
+                dfreq = freqi - freq_targeti
+
+                # v1
+                # ifreqs = np.where(dfreq > 0)[0]
+                # ifreq = ifreqs[-1] + 1
+
+                # v2
+                # ifreqs = np.where(dfreq.min() == dfreq)[0]
+                # ifreq = ifreqs[-1] + 1
+
+                # TODO: do a check on divergence to not call it a divergence point if it's "flat" for 2 points before
+                ifreqs = np.where(dfreq < 0.1)[0]
+                if len(ifreqs) == 0:
+                    continue
+                ifreq = ifreqs[0]
+
+                #if imode == 17:
+                    #print(f'dfreq = {ifreqs.tolist()}; n={len(ifreqs)}')
+                    #print(f'dfreq = {dfreq.tolist()}; n={len(dfreq)}')
+                    #print(f'ifreq = {ifreq}')
+
+                if ifreq >= len(freqi):
+                    continue
+                freq0 = freqi[ifreq]
+                eas0 = easi[ifreq]
+                #if imode == 17:
+                    #print(f'eas0  = {eas0}')
+                    #print(f'freq0 = {freq0}')
+
+                # eas0, freq0 = get_zero_crossings(easi, freqi, -dfreq)
+
+                freq0 = round(freq0, freq_round)
+                eas0 = round(eas0, eas_round)
+                eas0, freq0 = check_range(eas_min0, eas_max0, freq0, eas0)
+                if np.isnan(eas0):
+                    continue
+                crossing = (freq_targeti, float(freq0), float(eas0))
+                # print(f'found a crossing...mode={mode}; {crossing}')
+                vd_crossing_dict_freq = vd_crossing_dict[freq_targeti]
+                vd_crossing_dict_freq[mode] = crossing
+        #print(f'vd_crossing_dict = {vd_crossing_dict}')
+        #----------------------------------------------
+        # preallocate
+        vl_vf_crossing_dict = {}
+        for damping_targeti in damping_crossings_dict:
+            vl_vf_crossing_dict[damping_targeti] = {}
+
         for imode in imodes:
             mode = imode + 1
             dampi = self.results[imode, :, self.idamping].flatten()
@@ -788,27 +889,31 @@ class FlutterResponse:
                 continue
             easi = self.results[imode, :, self.ieas].flatten()
             freqi = self.results[imode, :, self.ifreq].flatten()
-
             easi, dampi, freqi = remove_excluded_points(
                 easi, dampi, freqi, point_removal)
 
-            crossings = []
-            for damping_targeti, damping_requiredi in damping_crossings:
+            for damping_targeti, damping_requiredi in damping_crossings_dict.items():
                 if dampi.max() < damping_requiredi:
                     continue
-                eas0, freq0 = get_zero_crossings(easi, freqi, dampi - damping_targeti)
+
+                # target different percent dampings
+                ddamping = dampi - damping_targeti
+                eas0, freq0 = get_zero_crossings(easi, freqi, ddamping)
+
                 freq0 = round(freq0, freq_round)
                 eas0 = round(eas0, eas_round)
-
                 eas0, freq0 = check_range(eas_min0, eas_max0, freq0, eas0)
                 if np.isnan(eas0):
                     continue
-                crossings.append((damping_targeti, float(freq0), float(eas0)))
+                vl_vf_crossing_dict[damping_targeti][mode] = [(damping_targeti, float(freq0), float(eas0))]
 
-            if len(crossings) == 0:
-                continue
-            xcrossing_dict[mode] = crossings
-        return xcrossing_dict
+        # cleanup
+        for damping_targeti in list(damping_crossings_dict):
+            if len(vl_vf_crossing_dict[damping_targeti]) == 0:
+                del vl_vf_crossing_dict[damping_targeti]
+
+        # if include_divergence:
+        return vl_vf_crossing_dict, vd_crossing_dict
 
     def plot_root_locus(self, modes=None,
                         fig=None, axes=None,
@@ -1666,13 +1771,33 @@ class FlutterResponse:
         filter_damping : bool; default=False
             filter crossings entirely outside the plot range
             useful for cleaning up the legend
+        v_lines : list[(name, velocity, vcolor, linestyle)]
+            name : str
+                name of the line
+            velocity : float
+                equivalent airspeed
+            color : str
+                color of the line
+            linestyle : str
+                '-', '--', 'dotted'
         point_removal : list[range]
             range : tuple[float, float]
             points in the range will be removed; useful for deleting a single point based on EAS
             point_removal = [(400.0, 410.0),]
         mode_switch_method : str
             None, Frequency
-
+        xlim : Limit
+            limits for x-axis
+        ylim_damping : Limit
+            limits for damping-axis
+        ylim_freq : Limit
+            limits for freq-axis
+        ncol : int; default=0 -> auto
+            number of columns for the legend
+        ivelocity : int
+            indices to plot
+        close : bool; default=False
+            should the plot be closed after being saved
         """
         self._apply_mode_switch_method(mode_switch_method)
 
@@ -1696,9 +1821,10 @@ class FlutterResponse:
 
         jcolor = 0
         imodes_crossing = []
-        xcrossing_dict = {}
+        vl_vf_crossing_dict = {}
+        vd_crossing_dict = {}
         if hasattr(self, 'ieas') and plot_type == 'eas':
-            xcrossing_dict = self.get_flutter_crossings(
+            vl_vf_crossing_dict, vd_crossing_dict = self.get_flutter_crossings(
                 damping_crossings=damping_crossings, modes=modes,
                 eas_range=eas_range)
 
@@ -1708,7 +1834,10 @@ class FlutterResponse:
         if filter_freq:
             yfreq_min, yfreq_max = ylim_freq
 
-        legend_elements = []
+        legend_elements_damp = []
+        legend_elements_freq = []
+        #print(f'imodes={imodes}')
+        #print(f'modes={modes}')
         nmodes = 0
         for i, imode, mode in zip(count(), imodes, modes):
             color = colors[jcolor]
@@ -1770,7 +1899,7 @@ class FlutterResponse:
                 label, texti,
                 self.markevery,
                 markersize=None)
-            legend_elements.extend(legend_elementsi)
+            legend_elements_damp.extend(legend_elementsi)
             if ivelocity and symbol2 and ivelocity < len(vel):
                 markersize = 10
                 plot_kwargs = {
@@ -1782,22 +1911,23 @@ class FlutterResponse:
         # add horizontal line
         legend_elementsi = _add_damping_limit(
             plot_type, damp_axes, damping_required, damping_limit)
-        legend_elements.extend(legend_elementsi)
+        legend_elements_damp.extend(legend_elementsi)
 
         legend_elementsi = _add_vertical_lines(
             [damp_axes, freq_axes], v_lines, plot_type, xunit)
-        legend_elements.extend(legend_elementsi)
+        legend_elements_damp.extend(legend_elementsi)
 
         # crossings go on top (aka at the end)
         eas_max = None if (xlim is None or xlim[1] is None) else xlim[1]
-        legend_elementsi = self._plot_crossings(
-            damp_axes,
+        legend_elements_dampi, legend_elements_freqi = self._plot_crossings(
+            damp_axes, freq_axes,
             imodes, modes,
-            imodes_crossing, xcrossing_dict,
+            imodes_crossing, vl_vf_crossing_dict, vd_crossing_dict,
             colors_show, symbols_show,
             eas_max=eas_max,
             filter_damping=filter_damping)
-        legend_elements.extend(legend_elementsi)
+        legend_elements_damp.extend(legend_elements_dampi)
+        legend_elements_freq.extend(legend_elements_freqi)
 
         damp_axes.set_xlabel(xlabel)  #, size=self.font_size)
         freq_axes.set_xlabel(xlabel)  #, size=self.font_size)
@@ -1822,12 +1952,21 @@ class FlutterResponse:
 
         nmodes = min(1, nmodes)
         ncol = _update_ncol(nmodes, ncol)
+        # print(f'legend_elements_freq = {legend_elements_freq}')
+        # print(f'legend_elements_damp = {legend_elements_damp}')
         if legend:
-            damp_axes.legend(
-                handles=legend_elements,
-                bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol,
-                #fontsize=10,
-            )
+            if legend_elements_freq:
+                # print('making freq axes legend')
+                freq_axes.legend(
+                    handles=legend_elements_freq,
+                )
+            if legend_elements_damp:
+                # print('making damp axes legend')
+                damp_axes.legend(
+                    handles=legend_elements_damp,
+                    bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol,
+                    #fontsize=10,
+                )
             #damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol)
             #fig.subplots_adjust(hspace=0.25)
             #fig.subplots_adjust(hspace=.5)
@@ -1861,7 +2000,7 @@ class FlutterResponse:
                 self.results[:, ivel, ires] = self.results[ifreq_sort, ivel, ires]
         modes = self.get_delta_modes(dfreq=1.0)
 
-    def polyfit_modes(self):
+    def polyfit_modes(self, modes) -> None:
         modes, imodes = _get_modes_imodes(self.modes, modes)
         #------------------------------------------------------
         # setup a linear extrapolation of the first 2 points
@@ -1904,7 +2043,7 @@ class FlutterResponse:
         #------------------------------------------------------
         # I think we're done
 
-    def get_delta_modes(self, modes=None, dfreq: float=-1.0):
+    def get_delta_modes(self, modes=None, dfreq: float=-1.0) -> np.ndarray:
         modes, imodes = _get_modes_imodes(self.modes, modes)
         freqs = self.results[imodes, :, self.ifreq]
         dfs = freqs.max(axis=1) - freqs.min(axis=1)
@@ -1919,14 +2058,17 @@ class FlutterResponse:
 
     def _plot_crossings(self,
                         damp_axes: plt.Axes,
+                        freq_axes: plt.Axes,
                         imodes: np.ndarray,
                         modes: np.ndarray,
                         imodes_crossing: np.ndarray,
-                        xcrossing_dict: dict[int, list[Crossing]],
+                        vl_vf_crossing_dict: dict[float, dict[int, list[Crossing]]],
+                        vd_crossing_dict: dict[float, dict[int, list[Crossing]]],
                         colors: list[str],
                         symbols: list[str],
                         eas_max: Optional[float]=None,
-                        filter_damping: bool=False) -> list[Line2D]:
+                        filter_damping: bool=False,
+                        ndiverg_max: int=7) -> tuple[list[Line2D], list[Line2D]]:
         """
         Parameters
         ----------
@@ -1936,24 +2078,39 @@ class FlutterResponse:
         eas_max : float; default=None
             requires filter_damping
             if velocity is greater than the allowable range, don't plot it
+        ndiverg_max: int; default=7
+            the loweset N modes will be plotted; N=0 -> no filtering
 
         """
+        # def _reshape_vl_vf_crossing_dict(self):
+        vl_vf_crossing_dict_modes_sort = _sort_vl_vf_crossings_by_mode(vl_vf_crossing_dict)
+        vd_crossing_dict_modes_sort = _sort_vd_crossings_by_mode(vd_crossing_dict)
+        del vl_vf_crossing_dict, vd_crossing_dict
+        #print(f'vd_crossing_dict_modes_sort = {vd_crossing_dict_modes_sort}')
+
+        #-------------------------------------------------------------
         plot_type = 'eas'
-        legend_elements = []
-        assert isinstance(xcrossing_dict, dict), xcrossing_dict
-        if len(xcrossing_dict) == 0:
-            return legend_elements
+        legend_elements_damp = []
+        legend_elements_freq = []
+        assert isinstance(vd_crossing_dict_modes_sort, dict), vd_crossing_dict_modes_sort
+        assert isinstance(vl_vf_crossing_dict_modes_sort, dict), vl_vf_crossing_dict_modes_sort
+        if len(vl_vf_crossing_dict_modes_sort) == 0 and len(vd_crossing_dict_modes_sort) == 0:
+            return legend_elements_damp, legend_elements_freq
         jcolor = 0
         xunit = self.out_units[plot_type]
-        # TODO: fix the colors...
+        # TODO: fix the colors...what's wrong?
+        #print(f"imodes_crossing = {imodes_crossing}")
         for i, imode, mode in zip(count(), imodes, modes):
             if imode not in imodes_crossing:
                 continue
-            if mode not in xcrossing_dict:
-                continue
+            #if mode not in vl_vf_crossing_dict:  # TODO: what does this do?
+                #continue
+
+            is_vd = (mode in vd_crossing_dict_modes_sort)
+            is_vl_vf = (mode in vl_vf_crossing_dict_modes_sort)
             color = colors[jcolor]
             symbol2 = symbols[jcolor]
-            #(freq0, eas0), (freq3, eas3) = xcrossing_dict[mode]
+            #(freq0, eas0), (freq3, eas3) = vl_vf_crossing_dict[mode]
             # freq = self.results[imode, :, self.ifreq].ravel()
             # jcolor, color, linestyle2, symbol2, is_removedi = _increment_jcolor(
             #     jcolor, color, linestyle, symbol,
@@ -1961,21 +2118,46 @@ class FlutterResponse:
             # if is_removedi:
             #     continue
 
-            for case in xcrossing_dict[mode]:
-                damping0, freq0, eas0 = case
-                if np.isnan(eas0):
-                    continue
-                if filter_damping and eas0 > eas_max:
-                    continue
-                damping_str = f'{damping0*100:.0f}%'
-                label = f'Mode {mode}: g={damping_str}; {eas0:.0f} {xunit}; {freq0:.1f} Hz'
-                legend_element = Line2D([0], [0],
-                                        marker=symbol2, color=color, label=label, linestyle='')
-                damp_axes.plot(eas0, damping0, color=color,
-                               marker=symbol2, linestyle='', label=label)
-                legend_elements.append(legend_element)
-            jcolor += 1
-        return legend_elements
+            if is_vd:
+                #print(f'**crossings2 = {vd_crossing_dict[mode]}')
+                for case in vd_crossing_dict_modes_sort[mode]:
+                    # print(f'case = {case}')
+                    damping0, freq0, eas0 = case
+                    #print(f'mode={mode} damping={damping0} freq={freq0} eas={eas0}')
+                    if np.isnan(eas0):
+                        continue
+                    if filter_damping and eas0 > eas_max:
+                        continue
+                    damping_str = f'{damping0*100:.0f}%'
+                    label = f'Divergence Mode {mode}: {damping_str}; {eas0:.0f} {xunit}; {freq0:.1f} Hz'
+                    #print(label)
+                    legend_element = Line2D([0], [0],
+                                            marker=symbol2, color=color, label=label, linestyle='')
+                    freq_axes.plot(eas0, damping0, color=color,
+                                   marker=symbol2, linestyle='', label=label)
+                    legend_elements_freq.append(legend_element)
+
+            if is_vl_vf:
+                for case in vl_vf_crossing_dict_modes_sort[mode]:
+                    # print(case)
+                    damping0, freq0, eas0 = case
+                    if np.isnan(eas0):
+                        continue
+                    if filter_damping and eas0 > eas_max:
+                        continue
+                    damping_str = f'{damping0*100:.0f}%'
+                    label = f'Mode {mode}: g={damping_str}; {eas0:.0f} {xunit}; {freq0:.1f} Hz'
+                    legend_element = Line2D([0], [0],
+                                            marker=symbol2, color=color, label=label, linestyle='')
+                    damp_axes.plot(eas0, damping0, color=color,
+                                   marker=symbol2, linestyle='', label=label)
+                    legend_elements_damp.append(legend_element)
+            if is_vd or is_vl_vf:
+                jcolor += 1
+
+        #print(f'legend_elements_damp = {legend_elements_damp}')
+        #print(f'legend_elements_freqi = {legend_elements_freq}')
+        return legend_elements_damp, legend_elements_freq
 
     def export_to_csv(self, csv_filename: PathLike,
                       modes: Optional[list[int]]=None) -> None:
@@ -2327,19 +2509,32 @@ class FlutterResponse:
         """
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip)
 
-
     @staticmethod
-    def xcrossing_dict_to_VL_VF(xcrossing_dict: dict[int, list[Crossing]],
-                                log: SimpleLogger,
-                                VL_target: float,
-                                VF_target: float,
-                                V_baseline: float=1000.,
-                                ) -> tuple[list[float], float, list[float], float]:
+    def xcrossing_dict_to_VL_VF_VD(vl_vf_crossing_dict: dict[int, list[Crossing]],
+                                   vd_crossing_dict: dict[int, list[Crossing]],
+                                   log: SimpleLogger,
+                                   freq_target: float,
+                                   VL_target: float,
+                                   VF_target: float,
+                                   V_baseline: float=1000.,
+                                   ) -> tuple[float, float, float, float, float, float]:
         """
         Parameters
         ----------
-        xcrossing_dict: dict[int, list[Crossing]]
+        vl_vf_crossing_dict: dict[int, list[Crossing]]
+            mode_num: int
+                mode number
+            Crossing: (damping, freq, vel)
+                3 floats
+        vd_crossing_dict: dict[int, list[Crossing]]
+            mode_num: int
+                mode number
+            Crossing: (damping, freq, vel)
+                3 floats
         log : float
+            the logger
+        freq_target : float
+            desired freq; throws warning if not satisfied
         VL_target : float
             desired VL; throws warning if not satisfied
         VF_target : float
@@ -2352,22 +2547,45 @@ class FlutterResponse:
 
         """
         # print('mode\tdamping\tfreq\tvel')
-        VLs = [V_baseline]
-        VFs = [V_baseline]
-        for mode, crossings in xcrossing_dict.items():
-            for (damping, freq, vel) in crossings:
-                # print(mode, damping, freq, vel)
-                if damping == 0.0:
-                    if vel < VL_target:
-                        log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
-                    VLs.append(vel)
-                elif damping == 0.03:
-                    if vel < VF_target:
-                        log.error(f'VF: mode={mode} damping={damping} freq={freq} VF={vel}')
-                    VFs.append(vel)
-        VL = min(VLs)
-        VF = min(VFs)
-        return VLs, VL, VFs, VF
+        VLs = [(V_baseline, np.nan)]
+        VFs = [(V_baseline, np.nan)]
+        VDs = [(V_baseline, np.nan)]
+        # log.info(f'V_baseline={V_baseline} KEAS')
+        for freq, mode_vd_crossings in vd_crossing_dict.items():
+            for mode, vd_crossing in mode_vd_crossings.items():
+                (damping, freq, vel) = vd_crossing
+                if freq < freq_target and vel <= V_baseline:
+                    log.error(f'VD: mode={mode} damping={damping} freq={freq} VD={vel}')
+                VDs.append((vel, freq))
+
+        for damping_target, vl_vf_crossings in vl_vf_crossing_dict.items():
+            if damping_target == 0.0:  # VL
+                for mode, crossings in vl_vf_crossings.items():
+                    for (damping, freq, vel) in crossings:
+                        if vel < VL_target and vel <= V_baseline:
+                            log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
+                        VLs.append((vel, freq))
+            else:
+                assert damping_target == 0.03, damping_target  # VF
+                for mode, crossings in vl_vf_crossings.items():
+                    for (damping, freq, vel) in crossings:
+                        if vel < VF_target and vel <= V_baseline:
+                            log.error(f'VF: mode={mode} damping={damping} freq={freq} VF={vel}')
+                        VFs.append((vel, freq))
+
+        vl_array = np.array(VLs)
+        vf_array = np.array(VFs)
+        vd_array = np.array(VDs)
+
+        # find minimum velocity in [velocity, frequency] table
+        ivl = np.where(vl_array[:, 0] == vl_array[:, 0].min())[0][0]
+        ivf = np.where(vf_array[:, 0] == vf_array[:, 0].min())[0][0]
+        ivd = np.where(vd_array[:, 0] == vd_array[:, 0].min())[0][0]
+
+        vl, freql = vl_array[ivl, :]  # limit
+        vf, freqf = vf_array[ivf, :]  # flutter
+        vd, freqd = vd_array[ivd, :]  # divergence
+        return vl, freql, vf, freqf, vd, freqd
 
 
 def _imodes(results_shape: tuple[int, int],
@@ -2433,8 +2651,18 @@ def _get_modes_imodes(all_modes: np.ndaray,
 def get_zero_crossings(x: np.ndarray,
                        freq: np.ndarray,
                        y: np.ndarray) -> np.ndarray:
-    """https://stackoverflow.com/questions/3843017/efficiently-detect-sign-changes-in-python
+    """Finds the zero crossings where zero crossings must be increasing
 
+    Parameters
+    ----------
+    x : (n,) float np.ndarray
+        equivalent airspeed
+    freq : (n,) float np.ndarray
+        frequency
+    y : (n,) float np.ndarray
+        damping
+
+    https://stackoverflow.com/questions/3843017/efficiently-detect-sign-changes-in-python
     Haven't tested this yet...
     """
     # zero_crossings = np.where(np.diff(np.sign(y)))[0]
@@ -2805,7 +3033,7 @@ def check_range(eas_min0: float, eas_max0: float,
     return eas, freq
 
 
-def _get_min_damping(damping_crossings: list[tuple[float, float]]) -> float:
+def _get_min_damping(damping_crossings: dict[float, float]) -> float:
     """
     Get min required damping for 0% and 3%, such that flutter exists.
     The goal of this is to filter all points that are below 4% to
@@ -2818,8 +3046,8 @@ def _get_min_damping(damping_crossings: list[tuple[float, float]]) -> float:
     damping = _get_min_damping(damping_crossings)
     >>> 0.04
     """
-    min_damping = damping_crossings[0][1]
-    for dampingi, requiredi in damping_crossings[1:]:
+    min_damping = min(damping_crossings.values())
+    for dampingi, requiredi in damping_crossings.items():
         min_damping = min(min_damping, requiredi)
     return min_damping
 
@@ -2937,7 +3165,20 @@ def _add_vertical_lines(axes_list: list[Axes],
                         v_lines: Optional[list[LineData]],
                         plot_type: str, xunit: str,
                         linewidth: int=2) -> list[Line2D]:
-    """the first plot gets the label"""
+    """the first plot gets the label
+
+    Parameters
+    ----------
+    v_lines : list[(name, velocity, vcolor, linestyle)]
+        name : str
+            name of the line
+        velocity : float
+            equivalent airspeed
+        color : str
+            color of the line
+        linestyle : str
+            '-', '--', 'dotted'
+    """
     legend_elements = []
     if v_lines is None or plot_type not in {'tas', 'eas'}:
         return legend_elements
@@ -3016,3 +3257,72 @@ def remove_excluded_points(vel: np.ndarray, damping: np.ndarray, freq: np.ndarra
     damping = damping[islice]
     freq = freq[islice]
     return vel, damping, freq
+
+
+def _sort_vl_vf_crossings_by_mode(vl_vf_crossing_dict: dict[float, dict[int, list[Crossing]]],
+                                  ) -> dict[int, list[Crossing]]:
+        #print(f'vd_crossing_dict2 = {vd_crossing_dict}')
+        vl_vf_crossing_dict_modes_sort = {}
+        for damping, modes_crossings_dict in vl_vf_crossing_dict.items():
+            for mode, crossings in modes_crossings_dict.items():
+                # assert isinstance(crossings, tuple)
+                # crossings = [crossings]
+                assert len(crossings) == 1, crossings
+                if mode not in vl_vf_crossing_dict_modes_sort:
+                    vl_vf_crossing_dict_modes_sort[mode] = []
+                for crossing in crossings:
+                    # damping0, freq0, eas0 = crossing
+                    vl_vf_crossing_dict_modes_sort[mode].append(crossing)
+        return vl_vf_crossing_dict_modes_sort
+
+
+def _sort_vd_crossings_by_mode(vd_crossing_dict: dict[float, dict[int, list[Crossing]]],
+                               ndiverg_max: int=7) -> dict[int, list[Crossing]]:
+    filter_vds = (ndiverg_max > 0)
+    # sort by modes - back to the old format
+    vd_crossing_dict_modes_sort = {}
+    #print(f'plot_crossings = {vl_vf_crossing_dict}')
+    if filter_vds:
+        for damping, modes_crossings_dict in vd_crossing_dict.items():
+            modes_vd = []
+            vds = []
+            for mode, crossings in modes_crossings_dict.items():
+                assert len(crossings) == 3, crossings
+                crossings = [crossings]
+                assert len(crossings) == 1, crossings
+                for crossing in crossings:
+                    damping0, freq0, eas0 = crossing
+                    modes_vd.append(mode)
+                    vds.append(eas0)
+            modes_vd_array = np.array(modes_vd)
+            vds_array = np.array(vds)
+            isort = np.argsort(vds_array)[:ndiverg_max]
+            lowest_modes = modes_vd_array[isort]
+            # print(f'modes_vd_array = {modes_vd_array}')
+            # print(f'lowest_modes = {lowest_modes}')
+            del modes_vd_array, isort, vds_array
+            # lowest_vds = vds_array[isort]
+            for mode in lowest_modes:
+                crossings = modes_crossings_dict[mode]
+                assert len(crossings) == 3, crossings
+                crossings = [crossings]
+                assert len(crossings) == 1, crossings
+                if mode not in vd_crossing_dict_modes_sort:
+                    vd_crossing_dict_modes_sort[mode] = []
+                for crossing in crossings:
+                    # damping0, freq0, eas0 = crossing
+                    vd_crossing_dict_modes_sort[mode].append(crossing)
+        # print(f'plot_crossings A = {vd_crossing_dict_modes_sort}')
+    else:
+        for damping, modes_crossings_dict in vd_crossing_dict.items():
+            for mode, crossings in modes_crossings_dict.items():
+                assert len(crossings) == 3, crossings
+                crossings = [crossings]
+                assert len(crossings) == 1, crossings
+                if mode not in vd_crossing_dict_modes_sort:
+                    vd_crossing_dict_modes_sort[mode] = []
+                for crossing in crossings:
+                    # damping0, freq0, eas0 = crossing
+                    vd_crossing_dict_modes_sort[mode].append(crossing)
+        # print(f'plot_crossings B = {vd_crossing_dict_modes_sort}')
+    return vd_crossing_dict_modes_sort

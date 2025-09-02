@@ -10,7 +10,7 @@ from types import MethodType, FunctionType
 import os
 import io
 import sys
-import getpass
+#import getpass
 import inspect
 import warnings
 from pathlib import PurePath
@@ -128,6 +128,7 @@ def print_bad_path(path: PathLike) -> str:
     #raw_path = path
     if isinstance(path, PurePath):
         path = str(path)
+    path0 = path
     #if len(path) > 255:
         #path = os.path.abspath(_filename(path))
         #npath = os.path.dirname(path)
@@ -145,6 +146,8 @@ def print_bad_path(path: PathLike) -> str:
         path, npath = npath, os.path.dirname(npath)
         res.append(path)
     msg = {True: 'passed', False: 'failed'}
+    if not os.path.exists(path0):
+        return 'Missing File:\n' + '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i) for i in res])
     return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i) for i in res])
 
 #def _filename(filename: str) -> str:

@@ -113,6 +113,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
     rhoref_flag = data['--rhoref']
     npoints = _int(data, 'N')
     clean = data['--clean']
+    clean = True
     assert clean in [True, False], clean
 
     const_type = data['CONST_TYPE'].lower()
@@ -172,6 +173,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
                    comment=cmd)
     if not quiet:
         print(cmd)
+
 
 def create_flutter(log: SimpleLogger,
                    sweep_method: str, value1: float, value2: float, sweep_unit: str, npoints: int,
@@ -377,6 +379,7 @@ def create_flutter(log: SimpleLogger,
 
     model.punch = True
     flutter.comment = comment
+    clean = True
     if bdf_filename_out:
         if clean:
             # makes a "clean" deck by writing the data in small field
@@ -385,19 +388,21 @@ def create_flutter(log: SimpleLogger,
             # the downsides are we have to write twice and we lose extra precision
             model.write_bdf(bdf_filename_out, encoding=None, size=8,
                             nodes_size=None, elements_size=None, loads_size=None,
-                            is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
+                            is_double=False, interspersed=False, enddata=None, write_header=True, close=True,
+                            flfact_size=8)
 
             model2 = BDF(log=log)
             model2.read_bdf(bdf_filename_out, validate=True, xref=False, punch=True, read_includes=True,
-                           save_file_structure=False, encoding=None)
+                            save_file_structure=False, encoding=None)
             model2.write_bdf(bdf_filename_out, encoding=None, size=16,
-                            nodes_size=None, elements_size=None, loads_size=None,
-                            is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
+                             nodes_size=None, elements_size=None, loads_size=None,
+                             is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
         else:
             model.write_bdf(bdf_filename_out, encoding=None, size=size,
                             nodes_size=None, elements_size=None, loads_size=None,
                             is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
     return model, density_units, velocity_units
+
 
 def _float(data: dict[str, Any], name: str):
     svalue = data[name]
@@ -406,6 +411,7 @@ def _float(data: dict[str, Any], name: str):
     except:
         raise SyntaxError(f'name={name} value={svalue!r} is not a float')
     return value
+
 
 def _int(data: dict[str, Any], name: str):
     svalue = data[name]

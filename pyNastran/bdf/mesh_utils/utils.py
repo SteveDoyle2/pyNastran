@@ -2224,7 +2224,7 @@ def cmd_line(argv=None, quiet: bool=False) -> None:
         '  bdf flutter                     UNITS eas EAS1 EAS2 SWEEP_UNIT N CONST_TYPE CONST_VAL [-o OUT_BDF_FILENAME] [--size SIZE | --clean]'
         '  bdf flip_shell_normals          IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--zero_zoffset]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--shift XYZ]\n'
-        '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--subpanels] [--pid PID]\n'
+        '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--aerobox] [--pid PID]\n'
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [-p PIN_FLAGS_CSV_FILENAME]\n'
         '  bdf solid_dof                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--lax] [--allow_dup]\n'
         '  bdf stats                       IN_BDF_FILENAME [--punch]\n'

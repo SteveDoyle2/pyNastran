@@ -47,6 +47,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     parser.add_argument('-r', '--recursive', action='store_true', help='recursively search for directories')
     parser.add_argument('--skip', nargs='+', help='dont process specific files')
     parser.add_argument('-a', '--all', action='store_true', help='dont skip files that have an op2')
+    #parser.add_argument('--nthreads', default=1, help='set the number of threads; mem/parallel are per job (default=1)')
     parser.add_argument('--args', help='additional arguments')
 
     file_group = parser.add_mutually_exclusive_group(required=False)
@@ -450,7 +451,7 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
         eta = new.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
         eta_next = nexti.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
         all_call_args.append(call_args)
-    log.info('done')
+    log.info(f'done at {now.strftime("%Y-%m-%d %I:%M %p")}')
     return nfiles, all_call_args
 
 

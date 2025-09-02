@@ -109,7 +109,7 @@ class WriteMesh(BDFAttributes):
             try:
                 mat.rho *= wtmass
             except:
-                print(prop.get_stats())
+                print(mat.get_stats())
                 is_error = True
 
         for eid, elem in self.masses.items():
@@ -131,7 +131,6 @@ class WriteMesh(BDFAttributes):
             if prop_type == 'PBUSH':
                 if prop.mass is not None:
                     prop.mass *= wtmass
-
             else:
                 try:
                     prop.nsm *= wtmass
@@ -140,7 +139,6 @@ class WriteMesh(BDFAttributes):
                     is_error = True
         if is_error:
             raise RuntimeError('stopping...')
-
 
     def write_bdf(self, out_filename: Optional[str | StringIO]=None,
                   encoding: Optional[str]=None,
@@ -205,7 +203,6 @@ class WriteMesh(BDFAttributes):
             bdf_file = open(out_filename, 'w', encoding=encoding)
         self._write_header(bdf_file, encoding, write_header=write_header)
         #self.apply_wtmass()
-
 
         if self.superelement_models:
             bdf_file.write('$' + '*'*80+'\n')
@@ -512,7 +509,6 @@ class WriteMesh(BDFAttributes):
             for (unused_id, diverg) in sorted(self.divergs.items()):
                 bdf_file.write(diverg.write_card(size, is_double))
 
-
     def _write_flutter(self, bdf_file: TextFile, size: int=8,
                        flfact_size: int=8,
                        is_double: bool=False,
@@ -584,7 +580,6 @@ class WriteMesh(BDFAttributes):
         self._write_rejects(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_matcids(bdf_file, size, is_double, is_long_ids=is_long_ids)
-
 
     def _write_constraints(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                            is_long_ids: Optional[bool]=None) -> None:
@@ -678,7 +673,7 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(coord.write_card_16(is_double))
 
     def _write_matcids(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
-                      is_long_ids: Optional[bool]=None) -> None:
+                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the MATCID cards in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
 
@@ -763,7 +758,7 @@ class WriteMesh(BDFAttributes):
             for key, micpnt in self.micpnt.items():
                 bdf_file.write(micpnt.write_card(size, is_double))
 
-    def _write_mesh_long_ids_size(self, size: bool, is_long_ids: bool) -> tuple[int, bool]:
+    def _write_mesh_long_ids_size(self, size: int, is_long_ids: bool) -> tuple[int, bool]:
         """helper method"""
         if is_long_ids and size == 16 or is_long_ids is False:
             return size, is_long_ids
@@ -800,12 +795,12 @@ class WriteMesh(BDFAttributes):
             else:
                 for (key, loadcase) in sorted(self.loads.items()):
                     for load in loadcase:
-#                        if load.type == 'PLOAD2':
-#                            try:
-#                                load.raw_fields()
-#                            except Exception:
-#                                bdf_file.write(load.write_card_separate(self, size, is_double))
-#                                continue
+                       # if load.type == 'PLOAD2':
+                       #     try:
+                       #         load.raw_fields()
+                       #     except Exception:
+                       #         bdf_file.write(load.write_card_separate(self, size, is_double))
+                       #         continue
                         try:
                             bdf_file.write(load.write_card(size, is_double))
                         except Exception:
@@ -839,7 +834,6 @@ class WriteMesh(BDFAttributes):
                     except Exception:
                         print(f'failed printing load...type={load.type} key={key!r}')
                         raise
-
 
     def _write_masses(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
@@ -1297,7 +1291,6 @@ class WriteMesh(BDFAttributes):
         for unused_seid, release in sorted(self.release.items()):
             bdf_file.write(release.write_card(size, is_double))
 
-
     def _write_tables(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the TABLEx cards sorted by ID"""
@@ -1348,7 +1341,6 @@ class WriteMesh(BDFAttributes):
             for unused_icavity, radcav in self.radcavs.items():
                 bdf_file.write(radcav.write_card(size, is_double))
 
-
     def _write_thermal_materials(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                                  is_long_ids: Optional[bool]=None) -> None:
         """Writes the thermal materials in a sorted order"""
@@ -1356,6 +1348,7 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$THERMAL MATERIALS\n')
             for (unused_mid, material) in sorted(self.thermal_materials.items()):
                 bdf_file.write(material.write_card(size, is_double))
+
 
 def _fix_sizes(size: int,
                nodes_size: Optional[int],
@@ -1371,6 +1364,7 @@ def _fix_sizes(size: int,
     if flfact_size is None:
         flfact_size = size
     return size, nodes_size, elements_size, loads_size, flfact_size
+
 
 def _output_helper(out_filename: Optional[str], interspersed: bool,
                    size: int, is_double: bool, log: SimpleLogger) -> tuple[str, int]:
@@ -1406,11 +1400,12 @@ def _output_helper(out_filename: Optional[str], interspersed: bool,
     #self.log.debug("***writing %s" % fname)
     return out_filename, size
 
+
 def get_optimization_include(model: BDF) -> tuple[list[int], list[int]]:
     """gets the properties and materials refereced by DVPRELx/DVMRELx"""
     property_types = {'PELAS', 'PDAMP', 'PGAP', 'PBUSH', 'PBUSH1D', 'PVISC', 'PWELD',
-                  'PROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBMSECT',
-                  'PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG', }
+                      'PROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBMSECT',
+                      'PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG', }
     material_types = {'MAT1', 'MAT8', 'MAT9'}
 
     pids_to_remove = set([])
@@ -1427,12 +1422,13 @@ def get_optimization_include(model: BDF) -> tuple[list[int], list[int]]:
     return list(pids_to_remove), list(mids_to_remove)
 
 
-def delete_optimization_data(model: BDF) -> tuple[list[int], list[int]]:
+def delete_optimization_data(model: BDF) -> tuple[list[Any], list[Any], list[DESVAR]]:
     """removes optimization referenced data (that will be in the PCH file)"""
     pids_to_remove, mids_to_remove = get_optimization_include(model)
     properties_to_write, materials_to_write, desvars = _delete_optimization_data(
         model, pids_to_remove, mids_to_remove)
     return properties_to_write, materials_to_write, desvars
+
 
 def _delete_optimization_data(model: BDF,
                               pids_to_remove: list[int],

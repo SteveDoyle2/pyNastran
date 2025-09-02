@@ -66,11 +66,12 @@ def collapse_thru(fields, nthru: Optional[int]=None) -> list[tuple[int, int, int
     """
     _check_sort_fields(fields)
     packs = condense(fields)
-    fields2 = build_thru(packs, max_dv=1) # , nthru=nthru
+    fields2 = build_thru(packs, max_dv=1)  # , nthru=nthru
     if nthru is not None and Counter(fields2)['THRU'] > 2:
         return fields
     #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
     return fields2
+
 
 def _check_sort_fields(fields):
     if isinstance(fields, np.ndarray):
@@ -85,6 +86,7 @@ def _check_sort_fields(fields):
         raise NotImplementedError(f'fields={fields}; type={type(fields)}')
     fields.sort()
 
+
 def collapse_thru_packs(fields: list[int]) -> tuple[list[int], list[list[int]]]:
     #assert isinstance(fields, list), fields
     assert 'THRU' not in fields, fields
@@ -93,6 +95,7 @@ def collapse_thru_packs(fields: list[int]) -> tuple[list[int], list[list[int]]]:
 
     #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
     return singles, doubles
+
 
 def collapse_thru_ipacks(ifields: list[int], fields: list[int]):
     #assert isinstance(fields, list), fields
@@ -217,6 +220,7 @@ def condense(value_list) -> list[list[int]]:
         packs.append([first_val, val, dv_old])
     return packs
 
+
 def condensei(value_ilist: list[int],
               value_list: list[int]) -> list[list[int]]:
     """
@@ -283,6 +287,7 @@ def condensei(value_ilist: list[int],
         packs.append([first_vali, vali, dv_old])
     return packs
 
+
 def build_thru_packs(packs: list[int],
                      max_dv: int=1, thru_split: int=3.
                      ) -> tuple[list[int], list[list[int]]]:
@@ -332,7 +337,7 @@ def build_thru_packs(packs: list[int],
             singles.append(first_val)
         else:
             if by == 1:
-                if last_val - first_val < thru_split: # dont make extra THRU cards
+                if last_val - first_val < thru_split:  # dont make extra THRU cards
                     singlei = list(range(first_val, last_val + 1, 1))
                     singles += singlei
                 else:
@@ -341,7 +346,12 @@ def build_thru_packs(packs: list[int],
             else:
                 diff = last_val - first_val
                 if max_dv == 1 or diff == by:
-                    singlei = list(range(first_val, last_val + by, by))
+                    try:
+                        rangei = range(first_val, last_val + by, by)
+                    except ValueError:
+                        raise ValueError(f'bad range loop...first_val={first_val}, last_val={last_val} '
+                                         f'by={by}; max_dv={max_dv}, thru_split={thru_split}')
+                    singlei = list(rangei)
                     singles += singlei
                 else:
                     double = [first_val, 'THRU', last_val, 'BY', by]

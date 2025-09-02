@@ -17,6 +17,7 @@ def get_normals_at_elements(model: BDF) -> dict[int, np.ndarray]:
         normals[eid] = normal
     return normals
 
+
 def get_normals_at_nodes(model: BDF) -> dict[int, np.ndarray]:
     normals_at_nodes = {}
     #node_count = defaultdict(int)

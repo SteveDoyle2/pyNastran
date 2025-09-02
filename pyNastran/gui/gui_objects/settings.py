@@ -151,7 +151,7 @@ NASTRAN_BOOL_KEYS = [
     'nastran_grid_point_force', 'nastran_strain_energy',
 
     # --------------------------------------------------------------
-    'nastran_show_caero_sub_panels',
+    'nastran_show_caero_boxes',
     'nastran_show_caero_actor',
     #'nastran_show_control_surfaces',
     #'nastran_show_conm',
@@ -302,10 +302,10 @@ class NastranSettings:
 
         # ------------------------------------------------------
 
-        #: flips the nastran CAERO subpaneling
+        #: flips the nastran CAERO aeroboxes
         #:   False -> borders of CAEROs can be seen
-        #:   True  -> individual subpanels can be seen
-        self.show_caero_sub_panels = False
+        #:   True  -> individual aeroboxes can be seen
+        self.show_caero_boxes = False
 
         self.show_caero_actor = True  # show the caero mesh
         #self.show_control_surfaces = True

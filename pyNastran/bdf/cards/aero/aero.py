@@ -550,7 +550,7 @@ class AELINK(BaseCard):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AELINK card from ``BDF.add_card(...)``
 
@@ -1101,14 +1101,14 @@ class AESURF(BaseCard):
         msg = ', which is required by AESURF eid=%s' % self.label
         self.cid1_ref = model.Coord(self.cid1, msg=msg)
         if self.cid2 is not None:
-            self.cid2_ref = model.Coord(self.cid2)
-        self.aelist_id1_ref = model.AELIST(self.aelist_id1)
+            self.cid2_ref = model.Coord(self.cid2, msg=msg)
+        self.aelist_id1_ref = model.AELIST(self.aelist_id1, msg=msg)
         if self.aelist_id2:
-            self.aelist_id2_ref = model.AELIST(self.aelist_id2)
+            self.aelist_id2_ref = model.AELIST(self.aelist_id2, msg=msg)
         if self.tqllim:  # integer
-            self.tqllim_ref = model.TableD(self.tqllim)
+            self.tqllim_ref = model.TableD(self.tqllim, msg=msg)
         if self.tqulim:  # integer
-            self.tqulim_ref = model.TableD(self.tqulim)
+            self.tqulim_ref = model.TableD(self.tqulim, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by AESURF aesid=%s' % self.aesurf_id
@@ -5516,7 +5516,7 @@ class PAERO4(BaseCard):
         """
         Parameters
         ----------
-        PID : int
+        pid : int
             Property identification number. (Integer > 0)
         cla : int; default=0
             Select Prandtl-Glauert correction. (Integer = -1, 0, 1)
@@ -5539,12 +5539,12 @@ class PAERO4(BaseCard):
             for each Mach number. See Remark 3, 4, and 5 below; variable b’s
             and β’s for each mi on the MKAEROi entry.
             (Integer = 0 if CIRC = 0, > 0 if CIRC ≠ 0)
-        DOCi : list[float]
+        docs : list[float]
             d/c = distance of the control surface hinge aft of the quarter-chord
             divided by the strip chord (Real ≥ 0.0)
-        CAOCi : list[float]
+        caocs : list[float]
             ca/c = control surface chord divided by the strip chord. (Real ≥ 0.0)
-        GAPOCi : list[float]
+        gapocs : list[float]
             g/c = control surface gap divided by the strip chord. (Real ≥ 0.0)
 
         """
@@ -7152,7 +7152,7 @@ def get_caero_count(model: BDF) -> tuple[int, int, int, int]:
         number of CAEROx sub-panels
     ncaeros_points : int
         number of CAERO points that define the panels
-        (4 per CAERO1/3/4/5 subpanel; 2 per CAERO2 panel)
+        (4 per CAERO1/3/4/5 aero box; 2 per CAERO2 panel)
     ncaero_sub_points : int
         number of CAEROx sub-points (1 per panel)
         CAERO2, BODY7 not supported
@@ -7228,8 +7228,8 @@ def get_caero_points(model: BDF,
     return caero_points, has_caero
 
 
-def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
-    """builds the CAERO subpanel grid in 3d space"""
+def get_caero_box_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
+    """builds the CAERO aerobox grid in 3d space"""
     j = 0
     points = []
     elements = []
@@ -7268,7 +7268,7 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
     """
     Creates the CAERO panel inputs including:
      - caero
-     - caero_subpanels
+     - caero_boxes
      - caero_control_surfaces
      - N control surfaces
 
@@ -7299,7 +7299,7 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
         ncaeros_points : int
             number of points for the caero coarse grid
         ncaero_sub_points : int
-            number of points for the caero fine/subpanel grid
+            number of points for the caero fine/aerobox grid
         has_control_surface : bool
             is there a control surface
         box_id_to_caero_element_map : dict[box_id] = box_index

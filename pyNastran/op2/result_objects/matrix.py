@@ -391,8 +391,10 @@ class Matrix:
         """
         #if self.shape_str == 'symmetric':
             #raise ValueError('call symmetric_to_rectangular before writing a DMI')
-        msg = '\n$' + '-' * 80
-        msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
+        msg_list = [
+            '\n$' + '-' * 80,
+            '\n$ %s Matrix %s\n' % ('DMI', self.name),
+        ]
         nrows, ncols = self.shape
 
         tin = self.tin
@@ -400,7 +402,7 @@ class Matrix:
 
         list_fields = ['DMI', self.name, 0, self.form, tin,
                        tout, None, nrows, ncols]
-        msg += print_card_8(list_fields)
+        msg_list.append(print_card_8(list_fields))
 
         func_small: Callable[list[Any]] = print_card_8 if size == 8 else print_card_16
         func: Callable[list[Any]] = func_small if tin in {1, 3} else print_card_double
@@ -414,14 +416,15 @@ class Matrix:
                       nrows=nrows, ncols=ncols,
                       GCj=GCj, GCi=GCi,
                       Real=data_array.real, Complex=data_array.imag)
-            msg += dmi._get_complex_fields(func)
+            msg_list.extend(dmi._get_complex_fields(func))
         else:
             dmi = DMI(self.name, matrix_form=self.form,
                       tin=self.tin, tout=tout,
                       nrows=nrows, ncols=ncols,
                       GCj=GCj, GCi=GCi,
                       Real=data_array, Complex=None)
-            msg += dmi._get_real_fields(func)
+            msg_list.extend(dmi._get_real_fields(func))
+        msg = ''.join(msg_list)
         return msg
 
 

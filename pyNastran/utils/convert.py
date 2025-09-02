@@ -4,6 +4,7 @@ def convert_altitude(alt: float, alt_units_in: str, alt_units_out: str) -> float
         return alt
     return alt * _altitude_factor(alt_units_in, alt_units_out)
 
+
 def _altitude_factor(alt_units_in: str, alt_units_out: str) -> float:
     """helper method for convert_altitude"""
     factor = 1.0
@@ -28,6 +29,7 @@ def _altitude_factor(alt_units_in: str, alt_units_out: str) -> float:
         raise RuntimeError(f'alt_units_out={alt_units_out!r} is not valid; use [1/m, 1/in, 1/ft]')
     return factor
 
+
 def convert_density(density: float, density_units_in: str,
                     density_units_out: str) -> float:
     """
@@ -37,6 +39,7 @@ def convert_density(density: float, density_units_in: str,
     if density_units_in == density_units_out:
         return density
     return density * _density_factor(density_units_in, density_units_out)
+
 
 def _density_factor(density_units_in: str, density_units_out: str) -> float:
     """helper method for convert_density"""
@@ -73,12 +76,14 @@ def _density_factor(density_units_in: str, density_units_out: str) -> float:
         raise RuntimeError(msg)
     return factor
 
+
 def convert_temperature(temperature: float, temperature_units_in: str,
                         temperature_units_out: str) -> float:
     """nominal unit is C"""
     if temperature_units_in == temperature_units_out:
         return temperature
     return _temperature_factor(temperature, temperature_units_in, temperature_units_out)
+
 
 def _temperature_factor(temperature: float, temperature_units_in: str,
                         temperature_units_out: str) -> float:
@@ -112,12 +117,14 @@ def _temperature_factor(temperature: float, temperature_units_in: str,
 
     return temperature2
 
+
 def convert_pressure(pressure: float, pressure_units_in: str,
                      pressure_units_out: str) -> float:
     """nominal unit is psf"""
     if pressure_units_in == pressure_units_out:
         return pressure
     return pressure * _pressure_factor(pressure_units_in, pressure_units_out)
+
 
 def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
     """helper method for convert_pressure"""
@@ -154,12 +161,14 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
         raise RuntimeError(f'pressure_units_out={pressure_units_out} is not valid; use [Pa, kPa, MPa, bar, psf, psi]')
     return factor
 
+
 def convert_velocity(velocity: float, velocity_units_in: str,
                      velocity_units_out: str) -> float:
     """nominal unit is ft/s"""
     if velocity_units_in == velocity_units_out:
         return velocity
     return velocity * _velocity_factor(velocity_units_in, velocity_units_out)
+
 
 def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     """helper method for convert_velocity"""
@@ -197,11 +206,13 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
         raise RuntimeError(msg)
     return factor
 
+
 def convert_area(area: float, area_units_in: str, area_units_out: str) -> float:
     """nominal unit is ft^2"""
     if area_units_in == area_units_out:
         return area
     return area * _area_factor(area_units_in, area_units_out)
+
 
 def _area_factor(area_units_in: str, area_units_out: str) -> float:
     """helper method for convert_area"""
@@ -215,12 +226,14 @@ def _area_factor(area_units_in: str, area_units_out: str) -> float:
     area_factor = length_factor ** 2
     return area_factor
 
+
 def convert_length(length: float, length_units_in: str,
                    length_units_out: str) -> float:
     """nominal unit is ft"""
     if length_units_in == length_units_out:
         return length
     return length * _length_factor(length_units_in, length_units_out)
+
 
 def _length_factor(length_units_in: str, length_units_out: str) -> float:
     """helper method for convert_length"""
@@ -254,11 +267,13 @@ def _length_factor(length_units_in: str, length_units_out: str) -> float:
         raise RuntimeError(msg)
     return factor
 
+
 def convert_mass(mass: float, mass_units_in: str, mass_units_out: str) -> float:
     """nominal unit is slug"""
     if mass_units_in == mass_units_out:
         return mass
     return mass * _mass_factor(mass_units_in, mass_units_out)
+
 
 def _mass_factor(mass_units_in: str, mass_units_out: str) -> float:
     """helper method for convert_mass"""
@@ -284,11 +299,13 @@ def _mass_factor(mass_units_in: str, mass_units_out: str) -> float:
         raise RuntimeError(msg)
     return factor
 
+
 def convert_force(force: float, force_units_in: str, force_units_out: str) -> float:
     """nominal unit is lbf"""
     if force_units_in == force_units_out:
         return force
     return force * _force_factor(force_units_in, force_units_out)
+
 
 def _force_factor(force_units_in: str, force_units_out: str) -> float:
     """helper method for convert_force"""

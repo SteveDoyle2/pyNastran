@@ -116,30 +116,6 @@ class OP2_F06_Common:
         """allows for simple OP2 vectorization"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
-    # ------------------------------------------------------------------
-    # stress
-
-    # ------------------------------------------------------------------
-    # Strain Energy - Getter
-
-    # ------------------------------------------------------
-    # Strain Energy - Getter 2
-    # ------------------------------------------------------------------
-    # Strain Energy - Setter
-
-
-
-    # ------------------------------------------------------------------
-    # Stress - Getter
-
-    #-------------------------------------------------------------------
-    # Strain - Getter
-
-    # ------------------------------------------------------------------
-    # Force - Getter
-
-    # ------------------------------------------------------------------
-    # Force - Setter
 
         #(model.cquad4_strain_energy, 'CQUAD4', True),
         #(model.cquad8_strain_energy, 'CQUAD8', True),
@@ -177,10 +153,6 @@ class OP2_F06_Common:
         #(model.genel_strain_energy, 'GENEL', False),
         #(model.cshear_strain_energy, 'CSHEAR', True),
         #(model.conm2_strain_energy, 'CONM2', False),
-
-
-    # --------------------------------------------------
-    # Force - Setter
 
     # ------------------------------------------------------------------
     def __objects_vector_init__(self):
