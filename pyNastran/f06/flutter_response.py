@@ -845,6 +845,7 @@ class FlutterResponse:
                 # ifreqs = np.where(dfreq.min() == dfreq)[0]
                 # ifreq = ifreqs[-1] + 1
 
+                # TODO: do a check on divergence to not call it a divergence point if it's "flat" for 2 points before
                 ifreqs = np.where(dfreq < 0.1)[0]
                 if len(ifreqs) == 0:
                     continue
@@ -913,7 +914,6 @@ class FlutterResponse:
 
         # if include_divergence:
         return vl_vf_crossing_dict, vd_crossing_dict
-        # return vl_vf_crossing_dict
 
     def plot_root_locus(self, modes=None,
                         fig=None, axes=None,

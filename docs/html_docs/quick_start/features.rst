@@ -1287,7 +1287,7 @@ Nastran Specific Features
   - dimensional vectors
 - aero models
 
-  - CAERO panels & aeroboxes
+  - CAERO panels & boxes
   - sideslip coordinate systems support
 - mass elements
 - plotting elements (e.g., PLOTEL)

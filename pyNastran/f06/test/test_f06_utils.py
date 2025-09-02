@@ -146,12 +146,11 @@ class TestF06Flutter(unittest.TestCase):
         assert np.allclose(eigenvectors2, eigenvectors_expected)
         assert np.allclose(eigr_eigi_vel2, eigr_eigi_vel_expected)
 
-
     def test_make_grid_point_singularity_table(self):
         model = OP2()
         failed = [
-            (1,1), (1,2), (1,7),
-            (2,1), (2,2), (2,7),
+            (1, 1), (1, 2), (1, 7),
+            (2, 1), (2, 2), (2, 7),
         ]
         table = model.make_grid_point_singularity_table(failed)
         msg = '\n'.join(table.split('\n')[:-2]) + '\n'
@@ -379,13 +378,14 @@ class TestF06Flutter(unittest.TestCase):
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
         ivel = '0'
         mode = '1:2'
-        argv = ['f06', 'plot_145', str(f06_filename), '--eas',
-                '--in_units', 'si', '--out_units', 'english_in',
-                '--modal', ivel, mode,
-                '--mag_tol', '0.1',
-                '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv',
-                '--ncol', '2',
-            ]
+        argv = [
+            'f06', 'plot_145', str(f06_filename), '--eas',
+            '--in_units', 'si', '--out_units', 'english_in',
+            '--modal', ivel, mode,
+            '--mag_tol', '0.1',
+            '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv',
+            '--ncol', '2',
+        ]
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 
@@ -420,7 +420,7 @@ class TestF06Flutter(unittest.TestCase):
         flutter.plot_vg_vf(plot_type='eas')
         flutter.plot_vg(plot_type='eas')
         #---------------------------------
-        flutter.set_plot_settings(figsize=(4,4),)
+        flutter.set_plot_settings(figsize=(4, 4),)
         flutter.set_symbol_settings(
             nopoints=False,
             show_mode_number=True,
@@ -452,12 +452,12 @@ class TestF06Flutter(unittest.TestCase):
         """constant to check dxyz"""
         # nmodes, nvel
         eigr = np.array([
-            [0.,1., 2.],
-            [0.,1., 2.],
+            [0., 1., 2.],
+            [0., 1., 2.],
         ])
         eigi = np.array([
-            [1.,1.,1.],
-            [10.,10,10],
+            [1., 1., 1.],
+            [10., 10., 10.],
         ])
         nmodes, nvel = eigr.shape
         out = _fix_modes(eigr, eigi, nmodes, nvel, kmodes=0)
@@ -483,7 +483,7 @@ class TestF06Flutter(unittest.TestCase):
             """
             coeffs = [0, -40, -2, 0.5]
             x = np.linspace(-10, 13., num=100)
-            y1 = coeffs[0] + coeffs[1] * x + coeffs[2] * x**2 + coeffs[3]  * x**3
+            y1 = coeffs[0] + coeffs[1] * x + coeffs[2] * x**2 + coeffs[3] * x**3
 
             coeffs2 = [-20, 5, 1, 0.1]
             y2 = coeffs[0] + coeffs[1] * x + coeffs[2] * x ** 2 + coeffs[3] * x ** 3
@@ -495,6 +495,7 @@ class TestF06Flutter(unittest.TestCase):
             plt.grid(True)
             #plt.show()
             #flutter.sort_modes_by_freq(freq)
+
 
 def fix_modes_2024(flutter: FlutterResponse,
                    kmodes: int=0,
@@ -518,6 +519,7 @@ def fix_modes_2024(flutter: FlutterResponse,
         mode_switching
     return
 
+
 def _fix_modes(eigr: np.ndarray,
                eigi: np.ndarray,
                nmodes: int, nvel: int,
@@ -531,7 +533,7 @@ def _fix_modes(eigr: np.ndarray,
 
     # all_data = [nmode, nvel, 2]
     all_data = np.dstack([eigr, eigi])
-    data0 = np.column_stack([eigr[:,0],eigi[:, 0]])
+    data0 = np.column_stack([eigr[:, 0], eigi[:, 0]])
     assert np.array_equal(data0, all_data[:, 0, :])
     assert all_data.shape == (nmodes, nvel, 2), all_data.shape
     imode_expected = np.arange(nmodes, dtype='int32')
@@ -553,7 +555,7 @@ def _fix_modes(eigr: np.ndarray,
             print(f'dxyz[{ivel}]:\n{dxyz}')
             print(f'ixyz[{ivel}]:\n{ixyz}')
 
-        imode_next = ixyz[:,0]
+        imode_next = ixyz[:, 0]
         iunique, idx, inv, counts = np.unique(
             imode_next,
             return_index=True,
@@ -672,7 +674,7 @@ def _fix_modes(eigr: np.ndarray,
         elif debug:
             print(f'ivel={ivel}: no switching')
 
-        out[:,ivel] = isort
+        out[:, ivel] = isort
         imode_next
         data0 = all_data[:, ivel, :]
         tree0 = KDTree(data0)
@@ -716,8 +718,8 @@ class TestF06Utils(unittest.TestCase):
         aerobox_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
         f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.f06'
         loads_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.blk'
-        nid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.nid'
-        eid_csv_filename= MODEL_PATH / 'bwb' / 'bwb_saero_trim.eid'
+        nid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.nid'
+        eid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.eid'
         model = read_bdf(bdf_filename, debug=None)
         # export_caero_mesh(
         #     model,

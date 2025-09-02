@@ -4,15 +4,16 @@ import numpy as np
 
 from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import read_bdf, print_card_8
+from pyNastran.utils import PathLike
 #from pyNastran.f06.f06_tables.trim import AeroPressure
 from pyNastran.f06.parse_trim import read_f06_trim
 
 
-def f06_to_pressure_loads(f06_filename: str,
-                          aerobox_caero_filename: str,
-                          loads_filename: str,
-                          nid_csv_filename: str='',
-                          eid_csv_filename: str='',
+def f06_to_pressure_loads(f06_filename: PathLike,
+                          aerobox_caero_filename: PathLike,
+                          loads_filename: PathLike,
+                          nid_csv_filename: PathLike='',
+                          eid_csv_filename: PathLike='',
                           log: Optional[SimpleLogger]=None,
                           nlines_max: int=1_000_000,
                           debug: bool=False) -> None:
@@ -37,7 +38,6 @@ def f06_to_pressure_loads(f06_filename: str,
         element_pressure = apress.get_element_pressure(nid_to_eid_map)
         element_pressure_dict[subcase] = element_pressure
 
-    import sys
     if loads_filename is not None:
         with open(loads_filename, 'w') as loads_file:
             for subcase, element_pressure in element_pressure_dict.items():

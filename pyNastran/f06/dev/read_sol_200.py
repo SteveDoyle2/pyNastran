@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Optional, Any
 import numpy as np
 from cpylog import get_logger, SimpleLogger
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import print_bad_path, PathLike
 
 
 class OptimizationResult:
@@ -17,13 +17,13 @@ class OptimizationResult:
         #all_desvars = []
         #objective_functions = {}
         self.design_vars = {
-            'internal_id' : [],
-            'desvar_id' : [],
-            'label' : [],
-            'xl' : [],
-            'xi' : [],
-            'x' : [],
-            'xu' : [],
+            'internal_id': [],
+            'desvar_id': [],
+            'label': [],
+            'xl': [],
+            'xi': [],
+            'x': [],
+            'xu': [],
         }
 
     def len(self) -> int:
@@ -50,7 +50,7 @@ def _read_line_block(i: int, lines: list[str],
                      imax=None) -> tuple[int, list[str]]:
     i0 = i
     if i > 480:
-        x=1
+        x = 1
     lines2 = []
     line = lines[i].rstrip()
     #print('cat', rstrip, strip, line)
@@ -179,6 +179,7 @@ def _read_int_gradient(i: int, line: str, lines: list[str],
     #print('end read_int_gradient', i, ids)
     return i, ids
 
+
 def _read_gradient(i: int, line: str, lines: list[str], nlines, log: SimpleLogger,
                    debug: bool=False) -> tuple[int, np.ndarray]:
     i += 1
@@ -196,6 +197,7 @@ def _read_gradient(i: int, line: str, lines: list[str], nlines, log: SimpleLogge
     grad = _parse_gradient(lines2, debug=debug)
     #print('end gradient', i, grad)
     return i, grad
+
 
 def _read_gradient_block(i: int, line: str, lines: list[str],
                          nlines: int, log: SimpleLogger,
@@ -354,7 +356,7 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
             i, grad = _read_gradient(i, line, lines, nlines, log, debug=False)
             gradients[line].append(grad)
             print_line = False
-        elif line in  blank_gradients:
+        elif line in blank_gradients:
             # there is a blank line
             i += 1
             log.info(line)
@@ -722,6 +724,7 @@ def _read_design_optimization(i: int, line: str, lines: list[str], nlines: int,
     #optimization_result.design_objective = obj
     return i, end_of_job, idesign
 
+
 def _read_design_optimization_tools(i: int, line: str, lines: list[str],
                                     nlines: int,
                                     design_vars, log: SimpleLogger) -> int:
@@ -824,7 +827,7 @@ def _read_design_optimization_tools(i: int, line: str, lines: list[str],
         elif '-- INITIAL FUNCTION VALUES' in line:
             i += 2
             line = lines[i].strip()
-            obj = _get_last_float(line) #  OBJ
+            obj = _get_last_float(line)  # OBJ
 
             i += 2
             line = lines[i].strip()
@@ -908,15 +911,19 @@ def _read_summary_of_design_cycle_history(i: int, line: str, lines: list[str],
         line = lines[i].strip()
     return i, end_of_job
 
+
 def _get_last_int(line: str) -> int:
     return int(line.split()[-1])
+
 
 def _get_last_float(line: str) -> float:
     return float(line.split()[-1])
 
+
 def show_design_vars(design_vars, log: SimpleLogger):
     for key, values in sorted(design_vars.items()):
         log.info(f'{key}: {values}')
+
 
 def _complete_optimization(i, lines, nlines, log):
     i += 1
@@ -933,7 +940,7 @@ def _complete_optimization(i, lines, nlines, log):
             pass
         elif 'TERMINATION CRITERIA' in line:
             pass
-        elif 'RELATIVE CONVERGENCE CRITERION WAS MET FOR' in line and  'CONSECUTIVE ITERATIONS' in line:
+        elif 'RELATIVE CONVERGENCE CRITERION WAS MET FOR' in line and 'CONSECUTIVE ITERATIONS' in line:
             #RELATIVE CONVERGENCE CRITERION WAS MET FOR  2 CONSECUTIVE ITERATIONS
             pass
         elif 'THERE ARE' in line and 'ACTIVE CONSTRAINTS AND' in line and 'VIOLATED CONSTRAINTS' in line:
@@ -1109,6 +1116,7 @@ def _read_property_comparison_table(i: int, lines: list[str], log: SimpleLogger)
     #print('*', i, line)
     return i, line, lines2
 
+
 def _read_property_table(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     # ---------------------------------------------------------------------------------------------------------------
     #     ELEMENT    ELEMENT   CONNECTIVITY  ANALYSIS         DESIGN          LOWER           UPPER       DIFFERENCE
@@ -1123,6 +1131,7 @@ def _read_property_table(i: int, lines: list[str]) -> tuple[int, str, list[str]]
     i, lines2 = _read_line_block(i, lines, strip=True)
     line = lines[i].strip()
     return i, line, lines2
+
 
 def _read_design_constraints_of_responses(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     """DESIGN CONSTRAINTS ON RESPONSES"""
@@ -1143,6 +1152,7 @@ def _read_design_constraints_of_responses(i: int, lines: list[str]) -> tuple[int
     line = lines[i].strip()
     return i, line, lines2
 
+
 def _read_constraints_on_designed_properties(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     """CONSTRAINTS ON DESIGNED PROPERTIES"""
     #                                         -----   CONSTRAINTS ON DESIGNED PROPERTIES   -----
@@ -1157,6 +1167,7 @@ def _read_constraints_on_designed_properties(i: int, lines: list[str]) -> tuple[
     i, lines2 = _read_line_block(i, lines, strip=True)
     line = lines[i].strip()
     return i, line, lines2
+
 
 def _read_constraints_on_dependent_design_variables(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     """CONSTRAINTS ON DEPENDENT DESIGN VARIABLES"""
@@ -1173,6 +1184,7 @@ def _read_constraints_on_dependent_design_variables(i: int, lines: list[str]) ->
     i, lines2 = _read_line_block(i, lines, strip=True)
     line = lines[i].strip()
     return i, line, lines2
+
 
 def _read_weight_as_a_function_of_material_id(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     #                                        -----   WEIGHT AS A FUNCTION OF MATERIAL ID ----
@@ -1397,6 +1409,7 @@ def _read_stress_responses(i: int, lines: list[str],
     print(f'stress_response[subcase={subcase_id}] = {stress_response2}')
     return i, line, lines2, stress_response2
 
+
 def _read_composite_stress_responses(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     """COMPOSITE LAMINATE STRESS RESPONSES"""
     #                                        -----    COMPOSITE LAMINATE STRESS RESPONSES    -----
@@ -1412,6 +1425,7 @@ def _read_composite_stress_responses(i: int, lines: list[str]) -> tuple[int, str
     i, lines2 = _read_line_block(i, lines, strip=True)
     line = lines[i].strip()
     return i, line, lines2
+
 
 def _read_flutter_responses(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     """FLUTTER RESPONSES"""
@@ -1429,6 +1443,7 @@ def _read_flutter_responses(i: int, lines: list[str]) -> tuple[int, str, list[st
     line = lines[i].strip()
     return i, line, lines2
 
+
 def _read_weight_responses(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     """WEIGHT RESPONSE"""
     #                                                  -----    WEIGHT RESPONSE    -----
@@ -1444,6 +1459,7 @@ def _read_weight_responses(i: int, lines: list[str]) -> tuple[int, str, list[str
     i, lines2 = _read_line_block(i, lines, strip=True)
     line = lines[i].strip()
     return i, line, lines2
+
 
 def _read_retained_dresp2_responses(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     """RETAINED DRESP2 RESPONSES"""
@@ -1476,6 +1492,7 @@ def _read_retained_dresp2_responses(i: int, lines: list[str]) -> tuple[int, str,
     i = i + j - nj
     line = lines[i].strip()
     return i, line, lines2
+
 
 def _read_design_variable_history(i: int, lines: list[str]) -> tuple[int, str, list[str]]:
     """DESIGN VARIABLE HISTORY"""
@@ -1522,11 +1539,11 @@ def _read_objective_and_maximum_constraint_history(i: int, lines: list[str],
     line = lines[i].strip()
 
     obj = {
-    'cycle' : [],
-    'obj_approximate' : [],
-    'obj_exact' : [],
-    'error' : [],
-    'max_constraint' : [],
+        'cycle': [],
+        'obj_approximate': [],
+        'obj_exact': [],
+        'error': [],
+        'max_constraint': [],
     }
     for line in lines2:
         cycles, objas, objes, errors, max_constraints = line.split()
@@ -1541,6 +1558,7 @@ def _read_objective_and_maximum_constraint_history(i: int, lines: list[str],
         obj['error'].append(error)
         obj['max_constraint'].append(max_constraint)
     return i, line, obj
+
 
 def _read_design_objective(i: int, lines: list[str],
                            optimization_result: OptimizationResult,
@@ -1601,6 +1619,7 @@ def _read_design_objective(i: int, lines: list[str],
     objective['out'].append(output_value)
     log.warning(f'objective = {objective}; in={input_value} -> out={output_value}')
     return i, line
+
 
 def _read_design_variables(i: int, lines: list[str],
                            design_cycle: int, idesign: int,
@@ -1719,6 +1738,7 @@ def _read_design_variables(i: int, lines: list[str],
     #print('desvars', i)
     return i, line
 
+
 def _read_iteration_number(i: int, line: str, lines: list[str],
                            design_vars, constraint_ids_failing, gvector,
                            nlines: int, log: SimpleLogger, debug: bool=True) -> int:
@@ -1832,7 +1852,7 @@ def _read_iteration_number(i: int, line: str, lines: list[str],
                 i += 1
                 line = lines[i].strip()
 
-                x=1
+                x = 1
                 # '  CONSTRAINT VALUES (G-VECTOR)'
                 i, constraint_values = _read_gradient(i, line, lines, nlines, log, debug=False)
                 break
@@ -1978,6 +1998,7 @@ def _read_1d_search(i: int, line: str, lines: list[str], nlines: int,
     print('-'*80)
     return i
 
+
 def _parse_ints(lines: list[str]) -> np.ndarray:
     """
       CONSTRAINT NUMBERS
@@ -1988,6 +2009,7 @@ def _parse_ints(lines: list[str]) -> np.ndarray:
         data.extend(line.split())
     ids = np.array(data, dtype='int32')
     return ids
+
 
 def _parse_gradient(lines: list[str], debug: bool=True) -> np.ndarray:
     """
@@ -2032,8 +2054,10 @@ def _get_decision_variables(lines: list[str]) -> tuple[list[str], np.ndarray, np
     data = np.array(data, dtype='float32')
     return header, ids, data
 
+
 def _is_end_of_job(line: str) -> bool:
     return '* * * END OF JOB * * *' in line or '* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *' in line
+
 
 def read_sol_200(f06_filename: str,
                  log: Optional[SimpleLogger]=None) -> list[OptimizationResult]:
@@ -2063,7 +2087,7 @@ def read_sol_200(f06_filename: str,
                 break
         #elif line == '*       I N I T I A L   A N A L Y S I S       *':
             #i = read_optimization_cycle(i, line, lines, nlines,log)
-        elif  line == 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R':
+        elif line == 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R':
             i += 31
             line = lines[i].strip()  # page xx
         elif _is_page_skip(line):
@@ -2121,14 +2145,14 @@ def read_sol_200(f06_filename: str,
     return optimization_results
 
 
-def plot_sol_200(f06_filename: str, png_filename: str='', show: bool=True,
+def plot_sol_200(f06_filename: PathLike, png_filename: PathLike='', show: bool=True,
                  log: SimpleLogger=None):
     all_results = read_sol_200(f06_filename, log=log)
     plot_sol_200_from_results(all_results, png_filename=png_filename, show=show)
 
 
 def plot_sol_200_from_results(all_results: list[OptimizationResult],
-                              png_filename: str='',
+                              png_filename: PathLike='',
                               show: bool=True):
 
     #--------------------------------------------------------------

@@ -9,7 +9,7 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
-v1.5.0 (2025/x/xx)
+v1.6.0 (2025/x/xx)
 ------------------
 
 

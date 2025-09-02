@@ -7152,7 +7152,7 @@ def get_caero_count(model: BDF) -> tuple[int, int, int, int]:
         number of CAEROx sub-panels
     ncaeros_points : int
         number of CAERO points that define the panels
-        (4 per CAERO1/3/4/5 aeroboxes; 2 per CAERO2 panel)
+        (4 per CAERO1/3/4/5 aero box; 2 per CAERO2 panel)
     ncaero_sub_points : int
         number of CAEROx sub-points (1 per panel)
         CAERO2, BODY7 not supported

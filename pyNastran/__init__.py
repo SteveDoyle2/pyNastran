@@ -62,8 +62,9 @@ else:
     # only for release; 1.4.0
     #__version__ = __version_release__
     # 1.4.0+dev.0eccfa918
+    # __version__ = f'{__version_release__}'  # release version
+    # year, month, day = ('2025', '9', 'xx')  # release version
     __version__ = f'{__version_release__}+{revision}'
-
     months = {
         '1': 'JANUARY', '2': 'FEBRUARY', '3': 'MARCH',
         '4': 'APRIL', '5': 'MAY', '6': 'JUNE',
