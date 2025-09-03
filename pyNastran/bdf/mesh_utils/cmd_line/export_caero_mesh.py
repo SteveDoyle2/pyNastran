@@ -50,7 +50,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     bdf_filename = data['IN_BDF_FILENAME']
     punch = data['--punch']
     caero_bdf_filename = data['--output']
-    base = os.path.splitext(bdf_filename)
+    base = os.path.splitext(bdf_filename)[0]
     if caero_bdf_filename is None:
         caero_bdf_filename = base + '.caero.bdf'
     is_aerobox_model = data['--aerobox']
