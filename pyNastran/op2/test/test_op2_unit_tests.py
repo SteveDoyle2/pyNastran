@@ -787,14 +787,17 @@ class TestNX(Tester):
         assert len(trim.aero_force) == 1, trim.aero_force
 
         #key = 1
-        key = (1, 0, 1, 0, 0, '', '')
-        str(trim.variables[key])
+        # print('trim.variables =', list(trim.variables))
+        # print('trim.derivatives =', list(trim.derivatives))
+        key = (1, 1, 1, 0, 0, '', '')
         str(trim.derivatives[key])
         str(trim.control_surface_position_hinge_moment[key])
         str(trim.aero_pressure[key])
         str(trim.aero_force[key])
+        str(trim.variables[key])
 
-        key = (1, 0, 1, 0, 0, '', 'TFLAP')
+        key = (1, 1, 1, 0, 0, '', 'TFLAP')
+        # print('trim.hinge_moment_derivatives = ', list(trim.hinge_moment_derivatives.keys()))
         str(trim.hinge_moment_derivatives[key])
 
         model.get_op2_stats(short=True)

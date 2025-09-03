@@ -3007,7 +3007,7 @@ class OP2Reader:
             #print(table_name)
         return table_name
 
-    def _read_block(self):
+    def _read_block(self) -> bytes:
         if self.size == 4:
             return self.read_block4()
         return self.read_block8()
@@ -3411,7 +3411,7 @@ class OP2Reader:
     def _get_record_length(self) -> int:
         """
         The record length helps us figure out data block size, which is used
-        to quickly size the arrays.  We just need a bit of meta data and can
+        to quickly size the arrays.  We just need a bit of metadata and can
         jump around quickly.
 
         Returns
@@ -3701,8 +3701,9 @@ class OP2Reader:
 
     def _read_subtables(self) -> None:
         """reads a series of subtables"""
-        # this parameters is used for numpy streaming
         op2: OP2 = self.op2
+
+        # _table4_count is used for numpy streaming
         op2._table4_count = 0
         op2.is_table_1 = True
         op2._data_factor = 1
@@ -3717,7 +3718,7 @@ class OP2Reader:
         # get the parsing functions (table3_parser, table4_parser)
         # or find out we're going to be skipping the tables
         #
-        # table3 - the table with the meta data (e.g. subcase_id, time, is_stress/strain)
+        # table3 - the table with the metadata (e.g. subcase_id, time, is_stress/strain)
         # table4 - the actual results data
         #
         # we indicate table3/4 by isubtable, which starts from -3 (so table3) and counts
@@ -4239,6 +4240,7 @@ def read_ovg(op2_reader: OP2Reader) -> None:
         #(60, 2002, 4, 1, 10, 1039199643, 1067257355, 0, 1, 4, 1)
         (acode, tcode, method_int, subcase_id, point_device, mach, rho, kfreq, fcode, numwide, imode,
          b, title, subtitle, subcase) = out
+
         device_code = acode % 10
         imode10 = point_device
         assert device_code == 0, (acode, device_code)
@@ -4459,12 +4461,16 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
              point_device, mach, q, aerosg2d, numwide, symxy, symxz,
              cref, bref, sref, *outi,
              title, subtitle, subcase) = out
+
+            op2.subtable_name = ''
+            op2.parse_approach_code(data)
+
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy} symxz={symxz}\n'
                       f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
             if max(outi) != 0 or min(outi) != 0:
                 log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
-            device_code = acode % 10
+            # device_code = acode % 10
             #imode10 = point_device
             #assert device_code == 0, (acode, device_code)
             #point_id = point_device // 10
@@ -4789,11 +4795,13 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
              point_device, mach, q, aerosg2d, numwide, zero, coord,
              cref, bref, sref, *outi,
              title_bytes, subtitle_bytes, subcase_bytes) = out
-            op2.analysis_code = acode
-            op2.data_code = {
-                'analysis_code': acode,
-                'analysis_fmt': 'i',
-            }
+            # op2.analysis_code = acode
+            op2.subtable_name = ''
+            op2.parse_approach_code(data)
+            # op2.data_code = {
+            #     'analysis_code': acode,
+            #     'analysis_fmt': 'i',
+            # }
 
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
                       f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
@@ -5128,6 +5136,10 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
              point_device, mach, q, aerosg2d, numwide, zero, coord,
              cref, bref, sref, *outi,
              title, subtitle, subcase) = out
+
+            op2.subtable_name = ''
+            op2.parse_approach_code(data)
+
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}')
             log.debug(f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
             #assert zero == 0, zero
@@ -5298,6 +5310,9 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
          title, subtitle, subcase) = out
         # print(f'cs_name = {cs_name_bytes}')
 
+        op2.subtable_name = ''
+        op2.parse_approach_code(data)
+
         #op2.show_data(data[14*4:15*4])
         cs_name = cs_name_bytes.decode('latin1').rstrip()
         aerosg2d = aerosg2d_bytes.decode('latin1').rstrip()
@@ -5313,7 +5328,7 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
         if max(outi) != 0 or min(outi) != 0:
             log.error(f'Expected all 0s in {op2.table_name}; outi={outi}')
 
-        device_code = acode % 10
+        # device_code = acode % 10
         #imode10 = point_device
         #assert device_code == 0, (acode, device_code)
         #point_id = point_device // 10
@@ -5360,7 +5375,6 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
                 values_list.append(data_listi)
                 # log.debug(f'HMD {name}: values={values.round(6)}')
                 idata += numwide
-
 
             nnames = len(names_list)
             names = np.array(names_list, dtype='U8')
