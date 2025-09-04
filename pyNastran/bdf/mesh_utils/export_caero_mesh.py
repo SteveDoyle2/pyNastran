@@ -603,7 +603,6 @@ def _write_aerobox_strips(bdf_file: TextIO, model: BDF,
     bdf_file.write('$$ %8s %8s %9s %9s %9s %9s %9s %9s %9s %9s\n' % (
         'CAEROID', 'EID', 'XLE', 'YLE', 'ZLE', 'CHORD', 'SPAN', 'XLE+C/4', 'XLE+C/2', 'AREA'))
 
-    #print(f'x12 = {caero.x12}')
     for i in range(elements.shape[0]):
         # The point numbers here are consistent with the CAERO1
         p1 = points[elements[i, 0], :]
