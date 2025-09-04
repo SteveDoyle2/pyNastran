@@ -35,6 +35,9 @@ SORT1_TABLES_BYTES = [
 
     # SATK
     b'OUGPK1', b'OEFPK1',
+    
+    # doesn't really matter
+    b'OAEROP', b'OAEROTV', b'OAERCSHM', b'OAEROSCD', b'OAEROHMD',
 ]
 SORT2_TABLES_BYTES = [
     b'OUGPSD2', b'OUGATO2', b'OESCP',

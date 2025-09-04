@@ -1712,7 +1712,7 @@ class CAERO1(BaseCard):
 
         a = p3 - p1
         b = p4 - p2
-        area = np.linalg.norm(np.cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         assert area > 0, f'eid={self.eid} p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
 
     def _verify(self, xref: bool) -> None:
@@ -2021,7 +2021,7 @@ class CAERO1(BaseCard):
         p1, p2, p3, p4 = self.get_points()
         a = p3 - p1
         b = p4 - p2
-        area = np.linalg.norm(np.cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         assert area > 0, f'eid={self.eid} p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
         return area
 
@@ -3315,7 +3315,7 @@ class CAERO3(BaseCard):
         p1, p2, p3, p4 = self.get_points()
         a = p3 - p1
         b = p4 - p2
-        area = np.linalg.norm(np.cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         assert area > 0, f'eid={self.eid} p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
         return area
 

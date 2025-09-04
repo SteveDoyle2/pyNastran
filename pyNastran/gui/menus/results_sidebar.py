@@ -318,7 +318,7 @@ class ResultsSidebar(QWidget):
     def set_derivation_visible(self, is_visible: bool,
                                min_max_averages_dict: dict[str, Any]) -> None:
         """
-        Derivation sets how multi-valued results get squashed down into a
+        Derivation sets how multivalued results get squashed down into a
         single result.  For example, a PSHELL stress result has 2 values per
         node/centroid.  For nodal averaging, the results need to be squashed
         down into nnode nodal values for each element (vs. 2*nnode).
@@ -533,8 +533,10 @@ class ResultsSidebar(QWidget):
 
         iname = 0
         if self._use_new_sidebar:
-            vbox_top_widget = QWidget(self); vbox_top_widget.setLayout(vbox_top)
-            vbox_btm_widget = QWidget(self); vbox_btm_widget.setLayout(vbox_btm)
+            vbox_top_widget = QWidget(self)
+            vbox_btm_widget = QWidget(self)
+            vbox_top_widget.setLayout(vbox_top)
+            vbox_btm_widget.setLayout(vbox_btm)
 
             vbox_btm.addWidget(self.result_method_window)
 

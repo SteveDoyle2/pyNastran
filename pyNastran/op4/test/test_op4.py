@@ -15,7 +15,7 @@ def run_lots_of_files(files, write_op4=True,
     """runs lots of op4 files"""
     if skip_files is None:
         skip_files = []
-    n = ''
+    # n = ''
     failed_cases = []
     nfailed = 0
     ntotal = 0
@@ -26,9 +26,9 @@ def run_lots_of_files(files, write_op4=True,
         #if baseName not in skipFiles and not base_name.startswith('acms') and i not in nSkip:
         if base_name not in skip_files and '#' not in op4file:
             print("%"*80)
-            print('file=%s\n' % op4file)
-            n = '%s ' % i
-            sys.stderr.write('%sfile=%s\n' %(n, op4file))
+            print(f'file={op4file}\n')
+            n = f'{i} '
+            sys.stderr.write(f'{n}file={op4file}\n')
             ntotal += 1
             is_passed = run_op4(op4file,
                                 debug=debug,
@@ -48,7 +48,7 @@ def run_lots_of_files(files, write_op4=True,
 
     seconds = time.time()-t0
     minutes = seconds/60.
-    print("dt = %s seconds = %s minutes" % (seconds, minutes))
+    print(f'dt = {seconds} seconds = {minutes} minutes')
 
     msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(
         npassed, ntotal, 100.*npassed/float(ntotal), ntotal-npassed)
@@ -85,7 +85,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
                 #delta = matrix - matrix2
                 #assert np.array_equal(matrix, matrix2), 'delta=\n%s' % delta
 
-        for key, (form, matrix) in sorted(matrices.items()):
+        for key, matrix in sorted(matrices.items()):
             print(key, matrix.shape)
             #if isinstance(matrix, np.ndarray):
                 #print(key, matrix.shape, matrix)
@@ -109,7 +109,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
-        sys.stderr.write('**file=%s\n' % op4_filename)
+        sys.stderr.write(f'**file={op4_filename}\n')
         sys.exit('keyboard stop...')
     #except RuntimeError: # the op2 is bad, not my fault
     #    is_passed = True

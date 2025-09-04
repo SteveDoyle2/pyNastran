@@ -113,7 +113,6 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False) -> None:
     rhoref_flag = data['--rhoref']
     npoints = _int(data, 'N')
     clean = data['--clean']
-    clean = True
     assert clean in [True, False], clean
 
     const_type = data['CONST_TYPE'].lower()

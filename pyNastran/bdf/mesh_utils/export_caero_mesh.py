@@ -10,7 +10,9 @@ import numpy as np
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.utils import PathLike
-    from pyNastran.bdf.bdf import BDF, CAERO2, Coord, AELIST
+    from pyNastran.bdf.bdf import BDF, Coord, AELIST
+
+from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -118,7 +120,7 @@ def export_caero_mesh(model: BDF,
                 #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
                 points, elements = caero.panel_points_elements()
                 if write_panel_xyz:
-                    _write_aerobox_strips(bdf_file, model, caero_eid, points, elements)
+                    _write_aerobox_strips(bdf_file, model, caero, caero_eid, points, elements)
 
                 box_ids = caero.box_ids.flatten()
                 eids_aesurf = np.union1d(box_ids, aesurf_aerobox_eids)
@@ -593,20 +595,20 @@ def _write_dmi(model: BDF,
 
 
 def _write_aerobox_strips(bdf_file: TextIO, model: BDF,
-                          caero_eid: int,
+                          caero: CAERO1, caero_eid: int,
                           points: np.ndarray, elements: np.ndarray) -> None:
     """writes the strips for the aeroboxes"""
     #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
     bdf_file.write('$$\n$$ XYZ_LE is taken at the center of the leading edge; (p1+p4)/2\n$$\n')
-    bdf_file.write('$$ %8s %8s %9s %9s %9s %9s %9s %9s %9s\n' % (
-        'CAEROID', 'EID', 'XLE', 'YLE', 'ZLE', 'CHORD', 'SPAN', 'XLE+C/4', 'XLE+C/2'))
+    bdf_file.write('$$ %8s %8s %9s %9s %9s %9s %9s %9s %9s %9s\n' % (
+        'CAEROID', 'EID', 'XLE', 'YLE', 'ZLE', 'CHORD', 'SPAN', 'XLE+C/4', 'XLE+C/2', 'AREA'))
 
     for i in range(elements.shape[0]):
         # The point numbers here are consistent with the CAERO1
         p1 = points[elements[i, 0], :]
         p4 = points[elements[i, 1], :]
-        p2 = points[elements[i, 2], :]
-        p3 = points[elements[i, 3], :]
+        p3 = points[elements[i, 2], :]
+        p2 = points[elements[i, 3], :]
         le: list[float] = (p1 + p4) * 0.5
         te: list[float] = (p2 + p3) * 0.5
         dy = (p4 - p1)[1]
@@ -615,8 +617,11 @@ def _write_aerobox_strips(bdf_file: TextIO, model: BDF,
         chord: float = te[0] - le[0]
         xqc: float = le[0] + chord / 4.
         xmid: float = le[0] + chord / 2.
-        bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
-            caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span, xqc, xmid))
+
+        axb = np.cross(p3 - p1, p4 - p2)
+        areai = 0.5 * np.linalg.norm(axb)
+        bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
+            caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span, xqc, xmid, areai))
 
 
 def get_skj(model: BDF, percent_location: int=25) -> np.ndarray:
@@ -627,11 +632,16 @@ def get_skj(model: BDF, percent_location: int=25) -> np.ndarray:
     nj = naeroboxes
     nk = naeroboxes * 2
     skj = np.zeros((nk, nj), dtype='float64')
-    for j, (area, arm) in area_arm_dict.items():
+    #print(f'skj.shape = ({nk}, {nj})')
+    j = 0
+    for jeid, (area, arm) in area_arm_dict.items():
+        # jeid is the box id, j is the box index
         k1 = 2 * j
         k2 = k1 + 1
+        #print(f'{j}, {area:.1f}, {area*arm:.1f}, {arm:.1f}')
         skj[k1, j] = area
         skj[k2, j] = area * arm
+        j += 1
     return skj
 
 
@@ -649,7 +659,7 @@ def get_area_arm_dict_panel(model: BDF,
             points, elements = caero.panel_points_elements()
             _area_arm_dict_panel(
                 area_arm_dict,
-                model, points, elements,
+                model, caero, points, elements,
                 percent_location=percent_location,
             )
     return area_arm_dict
@@ -657,31 +667,40 @@ def get_area_arm_dict_panel(model: BDF,
 
 def _area_arm_dict_panel(area_arm_dict: dict[int, tuple[float, float]],
                          model: BDF,
+                         caero: CAERO1,
                          points: np.ndarray, elements: np.ndarray,
                          percent_location: int=25) -> None:
     """writes the strips for the aeroboxes at some % chord"""
+    caero_eid = caero.eid
     percent = percent_location / 100.
+    area = caero.area()
+    total_area = 0.
     for i in range(elements.shape[0]):
         # The point numbers here are consistent with the CAERO1
+        elem = elements[i, :]
         p1 = points[elements[i, 0], :]
         p4 = points[elements[i, 1], :]
         p2 = points[elements[i, 2], :]
         p3 = points[elements[i, 3], :]
         centroid = (p1 + p2 + p3 + p4) / 4.
         axb = np.cross(p3 - p1, p4 - p2)
-        area = 0.5 * np.linalg.norm(axb)
+        areai = 0.5 * np.linalg.norm(axb)
+        total_area += areai
+
+        if areai == 0.0:
+            raise RuntimeError(f'area={areai}; caero:\n{str(caero)}\nelem={elem}\n'
+                               f'p1 = {p1}\n'
+                               f'p2 = {p2}\n'
+                               f'p3 = {p3}\n'
+                               f'p4 = {p4}')
         le: list[float] = (p1 + p4) * 0.5
         te: list[float] = (p2 + p3) * 0.5
         dy = (p4 - p1)[1]
         dz = (p4 - p1)[2]
-        # span = math.sqrt(dy**2 + dz**2)
         chord: float = te[0] - le[0]
-        #xqc: float = le[0] + chord * percent
         r_arm = chord * percent
-        area_arm_dict[caero_eid+i] = (area, area * r_arm)
-        # bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
-        #     caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span, xqc, xmid))
-
+        area_arm_dict[caero_eid+i] = (areai, r_arm)
+    #print(f'area={area:.1f} total_area={total_area:.1f}')
 
 def _get_aerobox_property(model: BDF, caero_id: int, eid: int,
                           pid_method: str='aesurf') -> int:
