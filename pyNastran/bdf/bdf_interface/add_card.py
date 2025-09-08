@@ -107,7 +107,7 @@ from pyNastran.bdf.cards.aero.aero import (
     MONPNT1, MONPNT2, MONPNT3, MONDSP1,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
 from pyNastran.bdf.cards.aero.static_loads import (
-    AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG)
+    AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG, UXVEC)
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.zona import (
     CAERO7, PAFOIL7, BODY7, AESURFZ, ACOORD, MKAEROZ,
@@ -589,6 +589,7 @@ CARD_MAP = {
     'TRIM': TRIM,
     'TRIM2': TRIM2,
     'DIVERG': DIVERG,
+    'UXVEC': UXVEC,
 
     # SOL 145
     'AERO': AERO,
@@ -5226,8 +5227,13 @@ class AddAero:
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
 
     def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int,
-                    mesh: str, force: int, dmik: str, perq: str) -> None:
-        """adds an AEPRESS card"""
+                    mesh: str, force: int, dmik: str, perq: str='') -> None:
+        """adds an AEFORCE card
+
+        Parameters
+        ----------
+        perq : not used by NX
+        """
         assert isinstance(mesh, str), mesh
         assert isinstance(sym_xz, str), sym_xz
         assert isinstance(sym_xy, str), sym_xy
@@ -9607,11 +9613,10 @@ class AddCards(AddCoords, AddContact, AddBolts,
         fields = ['RCROSS', sid, rtype1, id1, comp1, rtype2, id2, comp2, curid]
         self.reject_card_lines('RCROSS', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float]):
-        fields = ['UXVEC', idi, None, None, None, None, None, None, None]
-        for label, ux in zip(labels, uxs):
-            fields.extend([label, ux])
-        self.reject_card_lines('UXVEC', print_card_8(fields).split('\n'), show_log=False)
+    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float], comment: str='') -> UXVEC:
+        uxvec = UXVEC(idi, labels, uxs, comment=comment)
+        self._add_methods.add_uxvec_object(uxvec)
+        return uxvec
     #----------------------------------------------------------------------------------
     # parametric
     def add_pset(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment='') -> PSET:

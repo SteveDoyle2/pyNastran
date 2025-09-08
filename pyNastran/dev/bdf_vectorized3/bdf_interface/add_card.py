@@ -8449,11 +8449,11 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         fields = ['RCROSS', sid, rtype1, id1, comp1, rtype2, id2, comp2, curid]
         self.reject_card_lines('RCROSS', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float]):
-        fields = ['UXVEC', idi, None, None, None, None, None, None, None]
-        for label, ux in zip(labels, uxs):
-            fields.extend([label, ux])
-        self.reject_card_lines('UXVEC', print_card_8(fields).split('\n'), show_log=False)
+    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float], comment: str='') -> UXVEC:
+        uxvec = UXVEC(idi, labels, uxs, comment=comment)
+        self._add_methods.add_uxvec_object(uxvec)
+        return uxvec
+
     #----------------------------------------------------------------------------------
     # parametric
     #def add_pset(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment: str='') -> PSET:

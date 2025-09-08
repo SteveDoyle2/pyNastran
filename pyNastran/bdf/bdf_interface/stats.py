@@ -83,7 +83,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         # aero
         'caeros', 'paeros', 'aecomps', 'aefacts', 'aelinks',
         'aelists', 'aeparams', 'aesurf', 'aesurfs', 'aestats', 'gusts', 'flfacts',
-        'flutters', 'splines', 'trims', 'divergs', 'csschds',
+        'flutters', 'splines', 'trims', 'divergs', 'csschds', 'uxvec',
 
         # thermal
         'bcs', 'thermal_materials', 'phbdys', 'views', 'view3ds',

@@ -96,7 +96,7 @@ if TYPE_CHECKING:  # pragma: no cover
         MONPNT1, MONPNT2, MONPNT3,
         #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     )
-    from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
+    from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG, UXVEC
     from pyNastran.bdf.cards.aero.dynamic_loads import (
         AERO, FLFACT, FLUTTER,
         GUST, GUST2,
@@ -1330,6 +1330,17 @@ class AddMethods:
         assert key > 0, 'key=%r diverg=\n%s' % (key, diverg)
         self.model.divergs[key] = diverg
         self.model._type_to_id_map[diverg.type].append(key)
+
+
+    def add_uxvec_object(self, uxvec: UXVEC,
+                         allow_overwrites: bool=False) -> None:
+        """adds an UXVEC object"""
+        key = uxvec.sid
+        if not allow_overwrites:
+            assert key not in self.model.trims, 'UXVEC=%s  old=\n%snew=\n%s' % (key, self.model.uxvec[key], uxvec)
+        assert key > 0, 'key=%r uxvec=\n%s' % (key, uxvec)
+        self.model.uxvec[key] = uxvec
+        self.model._type_to_id_map[uxvec.type].append(key)
 
     def add_flutter_object(self, flutter: FLUTTER, allow_overwrites: bool=False) -> None:
         """adds an FLUTTER object"""

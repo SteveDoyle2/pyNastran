@@ -499,7 +499,7 @@ class WriteMesh(BDFAttributes):
     def _write_static_aero(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                            is_long_ids: Optional[bool]=None) -> None:
         """Writes the static aero cards"""
-        if self.aeros or self.trims or self.divergs:
+        if self.aeros or self.trims or self.divergs or self.uxvec:
             bdf_file.write('$STATIC AERO\n')
             # static aero
             if self.aeros:
@@ -508,6 +508,8 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(trim.write_card(size, is_double))
             for (unused_id, diverg) in sorted(self.divergs.items()):
                 bdf_file.write(diverg.write_card(size, is_double))
+            for (unused_id, uxvec) in sorted(self.uxvec.items()):
+                bdf_file.write(uxvec.write_card(size, is_double))
 
     def _write_flutter(self, bdf_file: TextFile, size: int=8,
                        flfact_size: int=8,

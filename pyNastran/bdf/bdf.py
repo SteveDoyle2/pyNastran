@@ -146,7 +146,7 @@ from .cards.aero.aero import (
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5, PAEROs,
     MONPNT1, MONPNT2, MONPNT3, MONDSP1,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5, SPLINEs)
-from .cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
+from .cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG, UXVEC
 from .cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from .cards.optimization import (
     DCONADD, DCONSTR, DESVAR, TOPVAR, DDVAL, DOPTPRM, DLINK,
@@ -835,6 +835,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
             'SPLINE6', 'SPLINE7',
             'TRIM', 'TRIM2',  ## trims
+            'UXVEC',  ## uxvec,
             'CSSCHD',  ## csschds
             'DIVERG',  ## divergs
 
@@ -1494,7 +1495,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         validate : bool; default=True
             runs various checks on the BDF
         xref :  bool; default=True
-            should the bdf be cross referenced
+            should the bdf be cross-referenced
         punch : bool; default=False
             indicates whether the file is a punch file
         read_includes : bool; default=True
@@ -2135,7 +2136,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         Parameters
         ----------
         sol : int
-            the solution type (101, 103, etc)
+            the solution type (101, 103, etc.)
         method : str
             the solution method (only for SOL=600)
         sol_iline : int
@@ -2834,6 +2835,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'AEROS': (AEROS, add_methods.add_aeros_object),
             'TRIM': (TRIM, add_methods.add_trim_object),
             'TRIM2': (TRIM2, add_methods.add_trim_object),
+            'UXVEC': (UXVEC, add_methods.add_uxvec_object),
             'DIVERG': (DIVERG, add_methods.add_diverg_object),
 
             # SOL 145
@@ -3303,7 +3305,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             dmix = class_obj.add_card(card_obj, comment=comment)
             add_method(dmix)
         else:
-            if class_obj.type not in {'DMIAX', 'DTI', 'DMIG', 'DMIK', 'DMIJI'}:
+            if class_obj.type not in {'DMIAX', 'DTI', 'DMIG', 'DMIK', 'DMIJ', 'DMIJI'}:
                 field4 = double(
                     card_obj, 4, f'{class_obj.type} column',
                     end=('did you mean to set field 2 to 0 to '
@@ -5234,6 +5236,7 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
        >>> g1 = bdf.Node(1)
        >>> print(g1.get_position())
        [10.0, 12.0, 42.0]
+       >>> bdf_filename2 = 'fem_out.bdf'
        >>> bdf.write_card(bdf_filename2)
        >>> print(bdf.card_stats())
 

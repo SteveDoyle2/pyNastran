@@ -69,7 +69,7 @@ if TYPE_CHECKING:  # pragma: no cover
         #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
         #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
         FLUTTER, MKAERO1, MKAERO2, FLFACT,
-        TRIM, TRIM2, GUST, GUST2, DIVERG, CSSCHD,
+        TRIM, TRIM2, GUST, GUST2, DIVERG, CSSCHD, UXVEC,
         # roter
         ROTORD, ROTORG,
         # modal
@@ -1075,6 +1075,9 @@ class BDFAttributes:
 
         #: stores DIVERG
         self.divergs: dict[int, DIVERG] = {}
+
+        #: stores UXVEC
+        self.uxvec: dict[int, UXVEC] = {}
 
         # ------ SOL 145 ------
         #: stores AERO
