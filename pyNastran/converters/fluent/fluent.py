@@ -158,6 +158,9 @@ class Fluent:
         daten_filename = base + '.daten'
         cell_filename = base + '.cel'
         h5_filename = base + '.h5'
+        assert os.path.exists(vrt_filename), print_bad_path(vrt_filename)
+        assert os.path.exists(daten_filename), print_bad_path(daten_filename)
+        assert os.path.exists(cell_filename), print_bad_path(cell_filename)
         self.fluent_filename = fluent_filename
         if self.auto_read_write_h5 and os.path.exists(h5_filename):
             # fails if pytables isn't installed
@@ -169,8 +172,8 @@ class Fluent:
         assert os.path.exists(daten_filename), print_bad_path(daten_filename)
         assert os.path.exists(cell_filename), print_bad_path(cell_filename)
 
-        (quads, tris), element_ids = read_cell(cell_filename)
-        node, xyz = read_vrt(vrt_filename)
+        (quads, tris), element_ids = read_cell(cell_filename, self.log)
+        node, xyz = read_vrt(vrt_filename, self.log)
         result_element_id, titles, results = read_daten(daten_filename, scale=1.0)
 
         self.node_id = node

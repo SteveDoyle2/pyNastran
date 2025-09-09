@@ -99,7 +99,7 @@ def write_vrt(vrt_filename: PathLike, node_id: str, xyz: np.ndarray) -> None:
             vrt_file.write(fmt % (nid, x, y, z))
     return
 
-def read_vrt(vrt_filename: PathLike) -> tuple[np.ndarray, np.ndarray]:
+def read_vrt(vrt_filename: PathLike, log) -> tuple[np.ndarray, np.ndarray]:
     """
      PROSTAR_VERTEX
      4000         0         0         0         0         0         0         0
@@ -151,7 +151,7 @@ def write_cell(vrt_filename: PathLike, quads: np.ndarray, tris: np.ndarray) -> N
             cel_file.write(quad_fmt % (eid, n1, n2, n3, n4))
     return
 
-def read_cell(cell_filename: PathLike) -> tuple[tuple[np.ndarray, np.ndarray],
+def read_cell(cell_filename: PathLike, log) -> tuple[tuple[np.ndarray, np.ndarray],
                                                 np.ndarray]:
     """
     PROSTAR_CELL
@@ -163,7 +163,9 @@ def read_cell(cell_filename: PathLike) -> tuple[tuple[np.ndarray, np.ndarray],
    4175456    2118943    2118954    2118941
 
     """
+    #log.debug(f'reading cell={cell_filename}')
     with open(cell_filename, 'r') as cell_file:
+        # may fail for a file on a disconnected mapped drive (e.g., OneDrive/Sharepoint)
         lines = cell_file.readlines()
 
     element_ids_list = []
