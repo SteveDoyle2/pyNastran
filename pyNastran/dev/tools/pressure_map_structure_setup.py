@@ -121,7 +121,8 @@ def get_element_ids_by_sid(structure_model: BDF,
     return structure_eids
 
 
-def get_structure_xyz(structure_model: BDF) -> tuple[np.ndarray, np.ndarray]:
+def get_structure_xyz(structure_model: BDF,
+                      xyz_units: str='in') -> tuple[np.ndarray, np.ndarray]:
     assert len(structure_model.nodes), structure_model.get_bdf_stats()
     (nid_cp_cd, xyz_cid0,
      xyz_cp, unused_icd_transform, unused_icp_transform,
@@ -129,6 +130,17 @@ def get_structure_xyz(structure_model: BDF) -> tuple[np.ndarray, np.ndarray]:
     #del xyz_cp, icd_transform, icp_transform
     structure_nodes = nid_cp_cd[:, 0]
     structure_xyz = xyz_cid0
+
+    log = structure_model.log
+    xyz_min = xyz_cid0.min(axis=0)
+    xyz_max = xyz_cid0.max(axis=0)
+    dxyz = xyz_max - xyz_min
+
+    log.info(f'structure xyz range:')
+    log.info(f'    xyz_min ({xyz_units}) = {xyz_min}')
+    log.info(f'    xyz_max ({xyz_units}) = {xyz_max}')
+    log.info(f'    dxyz    ({xyz_units}) = {dxyz}')
+
     return structure_nodes, structure_xyz
 
 

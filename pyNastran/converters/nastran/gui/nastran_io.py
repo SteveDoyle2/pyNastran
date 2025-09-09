@@ -768,6 +768,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         form0 = form[2]
         assert icase is not None
         nsubcases = len(model.subcases)
+        log = gui.log
+        #log.info(f'self.plot_applied_loads = {self.plot_applied_loads}')
+        #log.info(f'nsubcases = {nsubcases}')
         for subcase_idi, subcase in sorted(model.subcases.items()):
             if not xref_nodes:
                 continue
@@ -790,7 +793,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             formii = formi[2]
 
             assert icase is not None
+            log.info(f'normals = {self.normals}')
             if self.normals is not None and self.plot_applied_loads:
+                log.info('_plot_applied_loads')
                 icase = self._plot_applied_loads(
                     model, cases, formii, icase, subcase_idi, xref_loads=xref_loads,
                     colormap=colormap,
@@ -799,6 +804,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 plot_pressures = False
             else:
                 plot_pressures = True
+            log.info(f'plot_pressures = {plot_pressures}')
 
             if plot_pressures:  # and self._plot_pressures:
                 try:
@@ -2501,8 +2507,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             #model.log.debug('self.plot_applied_loads=False')
             #return icase
 
+        log = model.log
         if not xref_loads:
-            model.log.debug('returning from plot_applied_loads_early')
+            log.debug('returning from plot_applied_loads_early')
             return icase
 
         try:
@@ -2513,10 +2520,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 normals=self.normals, nid_map=self.nid_map,)
             is_loads, is_temperatures, temperature_data, load_data = out
 
-            #self.log.info('subcase_id=%s is_loads=%s is_temperatures=%s' % (
+            #log.info('subcase_id=%s is_loads=%s is_temperatures=%s' % (
                 #subcase_id, is_loads, is_temperatures))
             if is_loads:
                 centroidal_pressures, forces, moments, spcd = load_data
+                #log.info(f'centroidal_pressures = {centroidal_pressures}')
+                #log.info(f'forces = {forces}')
+                #log.info(f'moments = {moments}')
+                #log.info(f'spcd = {spcd}')
                 if np.abs(centroidal_pressures).max():
                     pressure_res = GuiResult(subcase_id, header='Pressure', title='Pressure',
                                              location='centroid', scalar=centroidal_pressures)

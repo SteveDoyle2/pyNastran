@@ -10,12 +10,15 @@ from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot
 
 
 def get_aero_model(aero_filename: PathLike, aero_format: str,
+                   aero_xyz_scale: float=1.0,
+                   xyz_units: float='in',
                    stop_on_failure: bool=True) -> tuple[Any, list[str]]:
     assert os.path.exists(aero_filename), print_bad_path(aero_filename)
 
     aero_format = aero_format.lower()
     if aero_format == 'cart3d':
         model: Cart3D = read_cart3d(aero_filename)
+        log = model.log
         variables = list(model.loads)
     # elif aero_format == 'Fund3D':
     #     return None, []
@@ -23,17 +26,30 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
     #     pass
     elif aero_format == 'tecplot':
         model: Tecplot = read_tecplot(aero_filename)
+        log = model.log
         #print(model.object_stats())
         variables = model.result_variables
+        model.xyz *= aero_xyz_scale
     elif aero_format == 'fluent':
-        model: Fluent = read_fluent(aero_filename)
+        model: Fluent = read_fluent(aero_filename, debug='debug')
+        log = model.log
         # print(model.object_stats())
         variables = model.titles[1:]
+        model.xyz *= aero_xyz_scale
     else:  # pragma: no cover
         if stop_on_failure:
             raise NotImplementedError(aero_format)
         else:
             return None, []
+
+    xyz_min = model.xyz.min(axis=0)
+    xyz_max = model.xyz.max(axis=0)
+    dxyz = xyz_max - xyz_min
+    log.info(f'aero xyz range (aero_xyz_scale={aero_xyz_scale}):')
+    log.info(f'    xyz_min  ({xyz_units}) = {xyz_min}')
+    log.info(f'    xyz_max  ({xyz_units}) = {xyz_max}')
+    log.info(f'    dxyz     ({xyz_units}) = {dxyz}')
+
     return model, variables
 
 
