@@ -14,6 +14,10 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
                    xyz_units: str='in',
                    stop_on_failure: bool=True) -> tuple[Any, list[str]]:
     assert os.path.exists(aero_filename), print_bad_path(aero_filename)
+    # if regions_to_include is None:
+    #     regions_to_include = []
+    # if regions_to_remove is None:
+    #     regions_to_remove = []
 
     aero_format = aero_format.lower()
     if aero_format == 'cart3d':
@@ -94,35 +98,45 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
         #raise RuntimeError(aero_model)
     elif aero_format == 'fluent':
         aero_model = cast(Fluent, aero_model)
-        (
-            tri_area, quad_area,
-            tri_centroid, quad_centroid,
-            tri_normal, quad_normal,
-        ) = aero_model.get_area_centroid_normal(aero_model.tris, aero_model.quads)
-
-        # tri_nodes = tris[:, 2:]
-        # quad_nodes = quads[:, 2:]
         aero_xyz_nodal = aero_model.xyz
+
         if len(regions_to_include) > 0 or len(regions_to_remove) > 0:
-            element_id, tri_nodes, quad_nodes, quad_results, tri_results = filter_by_region(
+            element_id, tris, quads, quad_results, tri_results = filter_by_region(
                 aero_model, regions_to_remove, regions_to_include)
+            tri_eids = tris[:, 0]
+            quad_eids = quads[:, 0]
+
+            tri_nodes = tris[:, 2:]
+            quad_nodes = quads[:, 2:]
         else:
             log.info(f'regions_to_include={regions_to_include}')
             log.info(f'regions_to_remove={regions_to_remove}')
             tri_eids = aero_model.tris[:, 0]
+            quad_eids = aero_model.quads[:, 0]
+
             tri_nodes = aero_model.tris[:, 2:]
             quad_nodes = aero_model.quads[:, 2:]
 
-            quad_eids = aero_model.tris[:, 0]
             element_id = np.unique(np.hstack([quad_eids, tri_eids]))
             tri_results = aero_model.results[:len(tri_nodes)]
             quad_results = aero_model.results[:len(quad_nodes)]
             assert len(aero_model.result_element_id) > 0, aero_model.result_element_id
 
+        assert len(tri_results) == len(tri_nodes), (len(tri_results), len(tri_nodes))
+        (
+            tri_area, quad_area,
+            tri_centroid, quad_centroid,
+            tri_normal, quad_normal,
+        ) = aero_model.get_area_centroid_normal_from_nodes(tri_nodes, quad_nodes)
+
         node_id = aero_model.node_id
         itri = np.searchsorted(node_id, tri_nodes)
         iquad = np.searchsorted(node_id, quad_nodes)
 
+        assert len(tri_results) == len(tri_area), (len(tri_results), len(tri_area))
+
+        # print(f'aero_xyz_nodal.shape = {aero_xyz_nodal.shape}')
+        # print(f'itri.shape = {itri.shape}; itri.max()={itri.max()}')
         xyz1 = aero_xyz_nodal[itri[:, 0], :]
         xyz2 = aero_xyz_nodal[itri[:, 1], :]
         xyz3 = aero_xyz_nodal[itri[:, 2], :]
@@ -139,27 +153,49 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
         aero_normal = np.vstack([tri_normal, quad_normal])
         aero_centroid = np.vstack([tri_centroid, quad_centroid])
 
+
         titles = list(aero_model.titles[1:])
         iresult = titles.index('Pressure Coefficient')
         aero_area = np.hstack([quad_area, tri_area])
-        aero_Cp_centroidal = np.hstack([
-            quad_results[:, iresult],
-            tri_results[:, iresult],
+        # print(f'tri_results.shape = {tri_results.shape}')
+        # print(f'quad_results.shape = {quad_results.shape}')
+        quad_Cp_centroid = quad_results[:, iresult]
+        tri_Cp_centroid = tri_results[:, iresult]
+        aero_Cp_centroid = np.hstack([
+            quad_Cp_centroid,
+            tri_Cp_centroid,
         ])
         #aero_model = read_fluent(aero_filename)
     else:  # pragma: no cover
         raise RuntimeError(aero_format)
 
     assert aero_xyz_nodal.shape[1] == 3, aero_xyz_nodal
+    log.info(f'aero: nnodes={len(node_id)} nxyz={len(aero_xyz_nodal)} '
+             f'ntris={len(tri_nodes)} nquads={len(quad_nodes)} ncentroid={len(aero_centroid)} narea={len(aero_area)}')
+
+    assert len(tri_Cp_centroid) == len(tri_area), (len(tri_Cp_centroid), len(tri_area))
+    assert len(tri_normal) == len(tri_area), (len(tri_normal), len(tri_area))
+    assert len(tri_centroid) == len(tri_area), (len(tri_centroid), len(tri_area))
+    assert len(tri_nodes) == len(tri_area), (len(tri_nodes), len(tri_area))
     aero_dict = {
         'node_id': node_id,
         'xyz_nodal': aero_xyz_nodal,
-        'Cp_centroidal': aero_Cp_centroidal,
-        'centroid': aero_centroid,
-        'area': aero_area,
-        'normal': aero_normal,
+        # 'Cp_centroid': aero_Cp_centroidal,
+        # 'centroid': aero_centroid,
+        # 'area': aero_area,
+        # 'normal': aero_normal,
+
         'tri_nodes': tri_nodes,
+        'tri_centroid': tri_centroid,
+        'tri_area': tri_area,
+        'tri_Cp_centroid': tri_Cp_centroid,
+        'tri_normal': tri_normal,
+
         'quad_nodes': quad_nodes,
+        'quad_centroid': quad_centroid,
+        'quad_area': tri_area,
+        'quad_Cp_centroid': quad_Cp_centroid,
+        'quad_normal': quad_normal,
     }
     # aero_Cp_centroidal = out_dict['aero_Cp_centroidal']
     # aero_area = out_dict['aero_area']
