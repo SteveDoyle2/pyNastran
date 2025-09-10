@@ -11,7 +11,7 @@ from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot
 
 def get_aero_model(aero_filename: PathLike, aero_format: str,
                    aero_xyz_scale: float=1.0,
-                   xyz_units: float='in',
+                   xyz_units: str='in',
                    stop_on_failure: bool=True) -> tuple[Any, list[str]]:
     assert os.path.exists(aero_filename), print_bad_path(aero_filename)
 
@@ -104,24 +104,24 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
         # quad_nodes = quads[:, 2:]
         aero_xyz_nodal = aero_model.xyz
         if len(regions_to_include) > 0 or len(regions_to_remove) > 0:
-            element_id, tris, quads, quad_results, tri_results = filter_by_region(
+            element_id, tri_nodes, quad_nodes, quad_results, tri_results = filter_by_region(
                 aero_model, regions_to_remove, regions_to_include)
         else:
             log.info(f'regions_to_include={regions_to_include}')
             log.info(f'regions_to_remove={regions_to_remove}')
             tri_eids = aero_model.tris[:, 0]
-            tris = aero_model.tris[:, 2:]
-            quads = aero_model.quads[:, 2:]
+            tri_nodes = aero_model.tris[:, 2:]
+            quad_nodes = aero_model.quads[:, 2:]
 
             quad_eids = aero_model.tris[:, 0]
             element_id = np.unique(np.hstack([quad_eids, tri_eids]))
-            tri_results = aero_model.results[:len(tris)]
-            quad_results = aero_model.results[:len(quads)]
+            tri_results = aero_model.results[:len(tri_nodes)]
+            quad_results = aero_model.results[:len(quad_nodes)]
             assert len(aero_model.result_element_id) > 0, aero_model.result_element_id
 
         node_id = aero_model.node_id
-        itri = np.searchsorted(node_id, tris)
-        iquad = np.searchsorted(node_id, quads)
+        itri = np.searchsorted(node_id, tri_nodes)
+        iquad = np.searchsorted(node_id, quad_nodes)
 
         xyz1 = aero_xyz_nodal[itri[:, 0], :]
         xyz2 = aero_xyz_nodal[itri[:, 1], :]
@@ -152,11 +152,14 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
 
     assert aero_xyz_nodal.shape[1] == 3, aero_xyz_nodal
     aero_dict = {
+        'node_id': node_id,
         'xyz_nodal': aero_xyz_nodal,
         'Cp_centroidal': aero_Cp_centroidal,
         'centroid': aero_centroid,
         'area': aero_area,
         'normal': aero_normal,
+        'tri_nodes': tri_nodes,
+        'quad_nodes': quad_nodes,
     }
     # aero_Cp_centroidal = out_dict['aero_Cp_centroidal']
     # aero_area = out_dict['aero_area']
