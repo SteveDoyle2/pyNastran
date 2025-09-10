@@ -135,21 +135,6 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
 
         assert len(tri_results) == len(tri_area), (len(tri_results), len(tri_area))
 
-        # print(f'aero_xyz_nodal.shape = {aero_xyz_nodal.shape}')
-        # print(f'itri.shape = {itri.shape}; itri.max()={itri.max()}')
-        xyz1 = aero_xyz_nodal[itri[:, 0], :]
-        xyz2 = aero_xyz_nodal[itri[:, 1], :]
-        xyz3 = aero_xyz_nodal[itri[:, 2], :]
-        tri_centroid = (xyz1 + xyz2 + xyz3) / 3.
-        tri_normal = np.cross(xyz2 - xyz1, xyz3 - xyz1)
-
-        xyz1 = aero_xyz_nodal[iquad[:, 0], :]
-        xyz2 = aero_xyz_nodal[iquad[:, 1], :]
-        xyz3 = aero_xyz_nodal[iquad[:, 2], :]
-        xyz4 = aero_xyz_nodal[iquad[:, 3], :]
-        quad_centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
-        quad_normal = np.cross(xyz3 - xyz1, xyz4 - xyz2)
-
         aero_normal = np.vstack([tri_normal, quad_normal])
         aero_centroid = np.vstack([tri_centroid, quad_centroid])
 
@@ -177,6 +162,10 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
     assert len(tri_normal) == len(tri_area), (len(tri_normal), len(tri_area))
     assert len(tri_centroid) == len(tri_area), (len(tri_centroid), len(tri_area))
     assert len(tri_nodes) == len(tri_area), (len(tri_nodes), len(tri_area))
+
+    assert np.abs(tri_normal).max() <= 1.001, (tri_normal.min(), tri_normal.max())
+    assert np.abs(quad_normal).max() <= 1.001, (quad_normal.min(), quad_normal.max())
+
     aero_dict = {
         'node_id': node_id,
         'xyz_nodal': aero_xyz_nodal,

@@ -4,6 +4,10 @@ from collections import defaultdict
 from typing import cast
 import numpy as np
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import matplotlib.cm as cm
+
 from pyNastran.utils import PathLike
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
@@ -198,19 +202,6 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
     map_location = 'centroid'
     #stop_on_failure = True
     log = aero_model.log
-    #---------------------------------------------------------------
-
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-    import matplotlib.cm as cm
-
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
-    ax.set_box_aspect((1, 1, 1))
 
     #---------------------------------------------------------------
     aero_dict = get_aero_pressure_centroid(
@@ -228,6 +219,7 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
     aero_area = aero_dict['tri_area']
     aero_centroid = aero_dict['tri_centroid']
     aero_normal = aero_dict['tri_normal']
+    assert np.abs(aero_normal).max() <= 1.001, (aero_normal.min(), aero_normal.max())
 
     aero_tri_nodes = aero_dict['tri_nodes']
     aero_xyz = aero_dict['xyz_nodal']
@@ -288,99 +280,152 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
     nz_structure = len(iz_structure)
     log.info(f'nstructure={len(structure_eids)} = ny_structure={ny_structure} + nz_structure={nz_structure}')
     if nz_structure > 0:
-        assert len(aero_centroid) == len(aero_force_coeff_per_q), (len(aero_centroid), len(aero_force_coeff_per_q))
-        # aero_centroid_z = aero_centroid[iz_structure, :]
-        # aero_Cp_z = aero_Cp[iz]
+        panel_dim = 'z'
+        _map_pressure_panel_model(
+            structure_model, model2,
+            map_type, map_location, panel_dim,
+            aero_node_id, aero_xyz, aero_tri_nodes,
+            aero_area, aero_Cp, aero_normal,
+            aero_centroid, aero_force_coeff_per_q,
+            structure_nodes, structure_xyz,
+            structure_eids, structure_area, structure_centroid, iz_structure,
+            qinf=qinf,
+            pressure_sid=pressure_sid,
+            force_sid=force_sid,
+            moment_sid=moment_sid,
+            fdtype=fdtype,
+        )
+    return model2
 
-        structure_eids_z = structure_eids[iz_structure]
-        structure_area_z = structure_area[iz_structure]
-        structure_box_centroid = structure_centroid[iz_structure, :]
-        structure_box_moment_center = np.zeros((nz_structure, 3), dtype=fdtype)
 
-        for i, eid, aero_forcei in zip(count(), eids_z, aero_force_coeff_per_q):
-            elem = structure_model.elements[eid]
-            assert elem.type == 'CQUAD4', elem
-            inids = np.searchsorted(structure_nodes, elem.nodes)
-            quad_xyz = structure_xyz[inids, ]
-            quad_xy = quad_xyz[:, [0, 1]]
-            p1 = quad_xyz[0, :]
-            p4 = quad_xyz[1, :]
-            p3 = quad_xyz[2, :]
-            p2 = quad_xyz[3, :]
-            # print(f'p1={p1}')
-            # print(f'p2={p2}')
-            # print(f'p3={p3}')
-            # print(f'p4={p4}')
-            p14 = (p1 + p4) / 2.
-            p23 = (p2 + p3) / 2.
-            d14 = (p4 - p1)[1:]
-            span = np.linalg.norm(d14)
-            chord = abs(p23[0] - p14[0])
-            x12 = p2[0] - p1[0]
-            x43 = p2[0] - p1[0]
-            # print(f'x12={x12}')
-            assert x12.min() >= 0., x12
-            assert x43.min() >= 0., x43
-            assert chord > 0, chord
-            assert span > 0, span
-            # for p1, p2, p3, p4, moment_center in zip(p1, p2, p3, p4, moment_center):
-            structure_box_moment_center[i, :] = p14 + chord/4.
+def _map_pressure_panel_model(structure_model: BDF,
+                              model2: BDF,
+                              map_type: str, map_location: str, panel_dim: str,
+                              aero_node_id, aero_xyz, aero_tri_nodes,
+                              aero_area, aero_Cp, aero_normal,
+                              aero_centroid, aero_force_coeff_per_q,
+                              structure_nodes, structure_xyz,
+                              structure_eids, structure_area, structure_centroid, iz_structure,
+                              qinf: float=1.0,
+                              pressure_sid: int=1,
+                              force_sid: int=2,
+                              moment_sid: int=3,
+                              fdtype: str='float64') -> None:
+    eids_z = structure_eids[iz_structure]
 
-        # for each aero element, get the closest structure box
-        assert len(structure_box_centroid) > 0, structure_box_centroid
-        assert len(structure_box_centroid) > 0, aero_xyz_nodal
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
+    ax.set_box_aspect((1, 1, 1))
 
-        structure_box_centroid_panel = structure_box_centroid[:, [0, 1]]
-        aero_centroid_panel = aero_centroid[:, [0, 1]]
-        # structure_box_moment_center_panel = structure_box_moment_center[:, [0, 1]]
 
-        neidsi = 10
-        msg = f'structure_box_centroid[:{neidsi},:]; n={len(structure_box_centroid)}\n'
-        for x, y, z in structure_box_centroid[:neidsi, :]:
-            msg += f'    [{x:.3f}, {y:.3f}, {z:.3f}]\n'
-        log.debug(msg)
-        # del structure_box_centroid, structure_box_moment_center
-        # del aero_centroid
+    nz_structure = len(iz_structure)
+    #-------------------------------------------
+    log = structure_model.log
+    assert len(aero_centroid) == len(aero_force_coeff_per_q), (len(aero_centroid), len(aero_force_coeff_per_q))
+    # aero_centroid_z = aero_centroid[iz_structure, :]
+    # aero_Cp_z = aero_Cp[iz]
 
-        tree = _get_tree(structure_box_centroid_panel)
-        nnodes_structure = len(structure_box_centroid_panel)
-        print(structure_box_centroid_panel.shape, aero_centroid_panel.shape)
-        if map_location == 'centroid':
-            unused_deq, ieq = tree.query(aero_centroid_panel, k=1)
-            slots = np.where(ieq < nnodes_structure)
-            iaero = ieq[slots]
-        else:
-            raise RuntimeError(map_location)
+    structure_eids_z = structure_eids[iz_structure]
+    structure_area_z = structure_area[iz_structure]
+    structure_box_centroid = structure_centroid[iz_structure, :]
+    structure_box_moment_center = np.zeros((nz_structure, 3), dtype=fdtype)
 
-        log.info(f'deq={unused_deq} n={len(unused_deq)} nnodes={nnodes_structure}')
-        log.info(f'ieq={ieq} n={len(ieq)} max={ieq.max()}')
-        uieq = np.unique(ieq)
-        log.info(f'unique ieq={uieq} n={len(uieq)}')
+    for i, eid, aero_forcei in zip(count(), eids_z, aero_force_coeff_per_q):
+        elem = structure_model.elements[eid]
+        assert elem.type == 'CQUAD4', elem
+        inids = np.searchsorted(structure_nodes, elem.nodes)
+        quad_xyz = structure_xyz[inids, ]
+        quad_xy = quad_xyz[:, [0, 1]]
+        p1 = quad_xyz[0, :]
+        p4 = quad_xyz[1, :]
+        p3 = quad_xyz[2, :]
+        p2 = quad_xyz[3, :]
+        # print(f'p1={p1}')
+        # print(f'p2={p2}')
+        # print(f'p3={p3}')
+        # print(f'p4={p4}')
+        p14 = (p1 + p4) / 2.
+        p23 = (p2 + p3) / 2.
+        d14 = (p4 - p1)[1:]
+        span = np.linalg.norm(d14)
+        chord = abs(p23[0] - p14[0])
+        x12 = p2[0] - p1[0]
+        x43 = p2[0] - p1[0]
+        # print(f'x12={x12}')
+        assert x12.min() >= 0., x12
+        assert x43.min() >= 0., x43
+        assert chord > 0, chord
+        assert span > 0, span
+        # for p1, p2, p3, p4, moment_center in zip(p1, p2, p3, p4, moment_center):
+        structure_box_moment_center[i, :] = p14 + chord/4.
 
-        # irows: aero?
-        # icols: structure?
-        # iaero = slots[0]
-        # print(f'slots = {slots}')
-        # print(f'slots[1] = {slots[1]}')
-        log.info(f'unique iaero={iaero} n={len(iaero)}')
+    # for each aero element, get the closest structure box
+    assert len(structure_box_centroid) > 0, structure_box_centroid
+    assert len(structure_box_centroid) > 0, aero_xyz_nodal
 
-        istructure = np.arange(len(iz_structure))
-        # if map_type == 'pressure':
-        #     aero_pressure_centroidal = aero_Cp_centroidal[iaero] * scale
-        #     mapped_structure_elements = structure_nodes[istructure]
-        #     for eid, pressure in zip(mapped_structure_elements, aero_pressure_centroidal):
-        #         model2.add_pload2(pressure_sid, eids=[eid], pressure=pressure)
-        if map_type == 'force_moment':
-            assert len(aero_area) == len(aero_force_coeff_per_q)
-            assert len(structure_eids_z) == len(structure_box_moment_center)
-            assert len(structure_box_moment_center) == len(structure_area_z), (len(structure_box_moment_center), len(structure_area_z))
+    structure_box_centroid_panel = structure_box_centroid[:, [0, 1]]
+    aero_centroid_panel = aero_centroid[:, [0, 1]]
+    # structure_box_moment_center_panel = structure_box_moment_center[:, [0, 1]]
 
-            # n = 100
+    neidsi = 10
+    msg = f'structure_box_centroid[:{neidsi},:]; n={len(structure_box_centroid)}\n'
+    for x, y, z in structure_box_centroid[:neidsi, :]:
+        msg += f'    [{x:.3f}, {y:.3f}, {z:.3f}]\n'
+    log.debug(msg)
+    # del structure_box_centroid, structure_box_moment_center
+    # del aero_centroid
 
-            eid0 = eids_z[0]
+    tree = _get_tree(structure_box_centroid_panel)
+    nnodes_structure = len(structure_box_centroid_panel)
+    print(structure_box_centroid_panel.shape, aero_centroid_panel.shape)
+    if map_location == 'centroid':
+        unused_deq, ieq = tree.query(aero_centroid_panel, k=1)
+        slots = np.where(ieq < nnodes_structure)
+        iaero = ieq[slots]
+    else:
+        raise RuntimeError(map_location)
+
+    log.info(f'deq={unused_deq} n={len(unused_deq)} nnodes={nnodes_structure}')
+    log.info(f'ieq={ieq} n={len(ieq)} max={ieq.max()}')
+    uieq = np.unique(ieq)
+    log.info(f'unique ieq={uieq} n={len(uieq)}')
+
+    # irows: aero?
+    # icols: structure?
+    # iaero = slots[0]
+    # print(f'slots = {slots}')
+    # print(f'slots[1] = {slots[1]}')
+    log.info(f'unique iaero={iaero} n={len(iaero)}')
+
+    istructure = np.arange(len(iz_structure))
+    # if map_type == 'pressure':
+    #     aero_pressure_centroidal = aero_Cp_centroidal[iaero] * scale
+    #     mapped_structure_elements = structure_nodes[istructure]
+    #     for eid, pressure in zip(mapped_structure_elements, aero_pressure_centroidal):
+    #         model2.add_pload2(pressure_sid, eids=[eid], pressure=pressure)
+    if map_type == 'force_moment':
+        assert len(aero_area) == len(aero_force_coeff_per_q)
+        assert len(structure_eids_z) == len(structure_box_moment_center)
+        assert len(structure_box_moment_center) == len(structure_area_z), (len(structure_box_moment_center), len(structure_area_z))
+
+        # n = 100
+
+        # plot all aero centroids associated with this structure box id
+        # eid_filter = 4205006
+        #eid_filter = 4_212_002
+        eid_filter = 1_201_035
+        istructure_box_id = np.where(eids_z == eid_filter)[0]
+
+        plot_special_quad = (eid_filter > 0)
+
+        plot_base_quads = plot_special_quad
+        if plot_base_quads:
             polygons = []
             for i, eid in enumerate(eids_z):
-                if i == 0:
+                if i == istructure_box_id:
                     continue
                 elem0 = structure_model.elements[eid]
                 nodes0 = elem0.nodes
@@ -390,9 +435,9 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
             quad = Poly3DCollection(polygons, facecolor='blue', edgecolor='black', linewidth=1, alpha=0.2)
             ax.add_collection3d(quad)
 
+        if plot_special_quad:
             # the important one...
-            polygons2 = []
-            elem0 = structure_model.elements[eid0]
+            elem0 = structure_model.elements[eid_filter]
             nodes0 = elem0.nodes
             inodes0 = np.searchsorted(structure_nodes, nodes0)
             elem_xyz0 = structure_xyz[inodes0, :]
@@ -400,67 +445,76 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
             quad = Poly3DCollection(polygons2, facecolor='red', edgecolor='black', linewidth=1, alpha=0.8)
             ax.add_collection3d(quad)
 
-            #--------------------------
+        #--------------------------
 
-            print(f'iaero = {iaero}')
-            show = False
-            if 0:
-                # plot all aero centroids associated with structure box id=0
-                structure_box_id = 0
-                iaero0 = np.where(iaero == structure_box_id)[0]
-                aero_centroid_plot = aero_centroid[iaero0, :]
-                # scatter = ax.scatter(x, y, z, c=color_values, cmap='viridis', s=50)
-                ax.scatter3D(aero_centroid_plot[:, 0], aero_centroid_plot[:, 1], aero_centroid_plot[:, 2],
-                             c=aero_Cp[iaero0], cmap='viridis')
-                show = True
+        print(f'iaero = {iaero}')
+        show = False
 
-            if 0:
-                # plot all aero elements associated with structure box id=0
-                structure_box_id = 0
-                iaero0 = np.where(iaero == structure_box_id)[0]
-                assert len(iaero) == len(aero_tri_nodes), (len(iaero), len(aero_tri_nodes))
+        if 0:
+            # only the first box
+            # istructure_box_id = 0
 
-                iaero_tri_nodes = np.searchsorted(aero_node_id, aero_tri_nodes[iaero0, :])
-                polygon_tris = aero_xyz[iaero_tri_nodes, :]
-                print('polygon_tris.shape =', polygon_tris.shape)
+            iaero0 = np.where(iaero == istructure_box_id)[0]
+            aero_centroid_plot = aero_centroid[iaero0, :]
+            # scatter = ax.scatter(x, y, z, c=color_values, cmap='viridis', s=50)
+            ax.scatter3D(aero_centroid_plot[:, 0], aero_centroid_plot[:, 1], aero_centroid_plot[:, 2],
+                         c=aero_Cp[iaero0], cmap='viridis')
+            show = True
 
-                # works - hard to see colors
-                # tri = Poly3DCollection(polygon_tris, facecolor='blue', edgecolor='black', linewidth=0, alpha=1.0)
+        if plot_special_quad:
+            # plot all aero elements associated with structure box id=0
+            iaero0 = np.where(iaero == istructure_box_id)[0]
+            assert len(iaero) == len(aero_tri_nodes), (len(iaero), len(aero_tri_nodes))
 
-                # works - bit transparent tho
-                cmap = cm.get_cmap('viridis')
-                scalar_values = aero_Cp[iaero0]
-                norm = plt.Normalize(vmin=min(scalar_values), vmax=max(scalar_values))
-                facecolor = cmap(norm(scalar_values))
-                tri = Poly3DCollection(polygon_tris, linewidth=0, alpha=1.0, facecolor=facecolor)
-                ax.add_collection3d(tri)
-                show = True
+            iaero_tri_nodes = np.searchsorted(aero_node_id, aero_tri_nodes[iaero0, :])
+            polygon_tris = aero_xyz[iaero_tri_nodes, :]
 
-            if 0:
-                # plot the whole aero model
-                iaero_tri_nodes = np.searchsorted(aero_node_id, aero_tri_nodes)
-                polygon_tris = aero_xyz[iaero_tri_nodes, :]
-                tri = Poly3DCollection(polygon_tris, facecolor='blue', edgecolor='black', linewidth=1, alpha=0.2)
-                ax.add_collection3d(tri)
-                show = True
+            # works - hard to see colors
+            # tri = Poly3DCollection(polygon_tris, facecolor='blue', edgecolor='black', linewidth=0, alpha=1.0)
 
-            if show:
-                plt.show()
+            # works - bit transparent tho
+            cmap = cm.get_cmap('viridis')
+            scalar_values = aero_Cp[iaero0]
+            norm = plt.Normalize(vmin=scalar_values.min(), vmax=scalar_values.max())
+            facecolor = cmap(norm(scalar_values))
+            tri = Poly3DCollection(polygon_tris, linewidth=0, alpha=1.0, facecolor=facecolor)
+            ax.add_collection3d(tri)
 
-            panel_dim = 'z'
-            # assert len(istructure) == len(iaero), (len(istructure), len(iaero))
-            structure_eids_z[iaero]
-            map_force_moment_centroid_tri(
-                model2, panel_dim,
-                aero_centroid, aero_force_coeff_per_q,
-                structure_eids_z[iaero], structure_box_moment_center[iaero, :], structure_area_z[iaero],
-                pressure_sid=pressure_sid,
-                qinf=qinf,
-            )
-        else:  # pragma: no cover
-            raise RuntimeError(map_type)
+            elem0 = structure_model.elements[eid_filter]
+            x, y, z = elem0.Centroid()
+            areai = elem0.Area()
+            delta = scalar_values.max() - scalar_values.min()
+            msg = (f'eid={eid_filter}, xyz_centroid=[{x:.3f}, {y:.3f}, {z:.3f}], area_box={areai:.3f}\n'
+                   f'Cp: min={scalar_values.min():.3f}; max={scalar_values.max():.3f}; delta={delta:.3f}')
+            fig.suptitle(msg)
+            show = True
 
-    return model2
+        if 0:
+            # plot the whole aero model
+            iaero_tri_nodes = np.searchsorted(aero_node_id, aero_tri_nodes)
+            polygon_tris = aero_xyz[iaero_tri_nodes, :]
+            tri = Poly3DCollection(polygon_tris, facecolor='blue', edgecolor='black', linewidth=1, alpha=0.2)
+            ax.add_collection3d(tri)
+            show = True
+
+        if show:
+            # Add a color bar which maps values to colors.
+            # fig.colorbar(surf, shrink=0.5, aspect=5)
+            plt.show()
+
+        # assert len(istructure) == len(iaero), (len(istructure), len(iaero))
+        structure_eids_z[iaero]
+        map_force_moment_centroid_tri(
+            model2, panel_dim,
+            aero_area, aero_Cp, aero_normal,
+            aero_centroid, aero_force_coeff_per_q,
+            structure_eids_z[iaero], structure_box_moment_center[iaero, :], structure_area_z[iaero],
+            pressure_sid=pressure_sid,
+            qinf=qinf,
+        )
+    else:  # pragma: no cover
+        raise RuntimeError(map_type)
+
 
 
 def map_pressure_centroid_avg(model2: BDF,
@@ -516,6 +570,7 @@ def map_force_centroid_tri(model2: BDF,
 
 def map_force_moment_centroid_tri(model2: BDF,
                                   panel_dim: str,
+                                  aero_area, aero_Cp, aero_normal,
                                   aero_centroid, aero_force_per_q_centroidal,
                                   structure_eids: np.ndarray,
                                   structure_xyz: np.ndarray,
@@ -556,7 +611,9 @@ def map_force_moment_centroid_tri(model2: BDF,
     assert panel_dim in ['y', 'z'], panel_dim
     assert len(structure_eids) == len(structure_xyz), (len(structure_eids), len(structure_xyz))
     assert len(structure_eids) == len(structure_area), (len(structure_eids), len(structure_area))
+    assert len(aero_centroid) == len(aero_Cp), (len(aero_centroid), len(aero_Cp))
     assert len(aero_centroid) == len(aero_force_per_q_centroidal), (len(aero_centroid), len(aero_force_per_q_centroidal))
+    assert len(aero_centroid) == len(aero_area), (len(aero_centroid), len(aero_area))
 
     #---------------------
 
@@ -574,22 +631,47 @@ def map_force_moment_centroid_tri(model2: BDF,
     assert len(aero_centroid) == len(aero_force_centroidal), (len(aero_centroid), len(aero_force_centroidal))
     assert len(structure_eids) == len(aero_centroid), (len(structure_eids), len(aero_centroid))
 
-    for eid, scentroid, acentroid, aforce in zip_longest(structure_eids, structure_xyz,
-                                                         aero_centroid, aero_force_centroidal):
+    # TODO: slow?
+    # this is a pivot table
+
+    eid_filter = 0
+    # eid_filter = 4_212_002
+    eid_filter = 1_201_035
+    is_eid_filter = (eid_filter > 0)
+
+    for eid in np.unique(structure_eids):
+        if is_eid_filter and eid != eid_filter:
+            continue
         if eid not in force_temp:
             force_temp[eid] = np.zeros(3, dtype=fdtype)
             moment_temp[eid] = np.zeros(3, dtype=fdtype)
             nforce_total[eid] = np.zeros(3, dtype=fdtype)
 
+    print(f'eid, area, Cp, normal, aforce')
+
+    drs = aero_centroid - structure_xyz
+    aero_moments = np.cross(drs, aero_force_centroidal, axis=1)
+    assert aero_moments.shape == drs.shape, (aero_moments.shape, drs.shape)
+
+    for eid, scentroid, aarea, acp, anormal, acentroid, aforce, amoment in zip_longest(
+            structure_eids, structure_xyz,
+            aero_area, aero_Cp, aero_normal,
+            aero_centroid, aero_force_centroidal, aero_moments):
+        if is_eid_filter and eid != eid_filter:
+            continue
+
         # print(f'force_temp[{nid}] = {force_temp[nid]}')
-        # print(f'aforce = {aforce}')
+        if is_eid_filter:
+            print(f'{eid}, {aarea:.3f}, {acp:.3f}, {anormal}, {aforce}')
         force_temp[eid] += aforce
 
+        # dr = acentroid - scentroid
         # print(f'acentroid = {acentroid}')
         # print(f'scentroid = {scentroid}')
-        dr = acentroid - scentroid
         # print(f'dr     = {dr}')
-        moment_temp[eid] += np.cross(dr, aforce)
+        # amoment_expected = np.cross(dr, aforce)
+        # assert np.allclose(amoment, amoment_expected), (amoment, amoment_expected)
+        moment_temp[eid] += amoment
         nforce_total[eid] += 1
 
     # assert len(structure_area) == len(nforce_total), (len(structure_area), len(nforce_total))
@@ -598,10 +680,11 @@ def map_force_moment_centroid_tri(model2: BDF,
     # need to offset it by 1 because indices are 0-based
     structure_area_dict = {eid: area for eid, area in zip(structure_eids, structure_area)}
     mag = 1.0
-    for eid, ntotal in nforce_total.items():
-        sarea = structure_area_dict[eid]
-        force = force_temp[eid]    # / ntotal
-        moment = moment_temp[eid]  # / ntotal
+    for seid, ntotal in nforce_total.items():
+        sarea = structure_area_dict[seid]
+        force = force_temp[seid]    # / ntotal
+        moment = moment_temp[seid]  # / ntotal
+
         pressure = force / sarea
         if panel_dim == 'z':
             pressurei = pressure[2]
@@ -618,11 +701,14 @@ def map_force_moment_centroid_tri(model2: BDF,
         else:
             raise RuntimeError(panel_dim)
 
-        model2.add_pload2(pressure_sid, eids=[eid], pressure=pressurei)
+        if is_eid_filter:
+            print(f'seid={seid:d} force={force} sarea={sarea:.3f}\n'
+                  f'  pressure={pressure} pressurei={pressurei}')
+        model2.add_pload2(pressure_sid, eids=[seid], pressure=pressurei)
 
         # sid: int, node: int, mag: float, xyz: np.ndarray
-        # model2.add_force(force_sid, eid, mag, force)
-        # model2.add_moment(moment_sid, eid, mag, moment)
+        # model2.add_force(force_sid, seid, mag, force)
+        # model2.add_moment(moment_sid, seid, mag, moment)
     return
 
 
