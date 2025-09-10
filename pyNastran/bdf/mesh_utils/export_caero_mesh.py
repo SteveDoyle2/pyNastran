@@ -189,7 +189,12 @@ def export_caero_mesh(model: BDF,
                 #mid = caero_eid
                 jeid = 0
                 for elem in elements + inid:
-                    p1, p2, p3, p4 = elem
+                    # p1 = points[elements[i, 0], :]
+                    # p4 = points[elements[i, 1], :]
+                    # p3 = points[elements[i, 2], :]
+                    # p2 = points[elements[i, 3], :]
+                    # p1, p2, p3, p4 = elem
+                    p1, p4, p3, p2 = elem
                     eid2 = jeid + caero_eid
                     pidi = _get_aerobox_property(
                         model, caero_eid, eid2, pid_method=pid_method)
@@ -334,7 +339,7 @@ def _write_subcases_loads(model: BDF,
                           aero_eid_map: dict[int, int],
                           is_aerobox_model: bool) -> tuple[str, str]:
     """writes the DMI, DMIJ, DMIK cards to a series of load cases"""
-    naeroboxes = len(aero_eid_map)
+    # naeroboxes = len(aero_eid_map)
     if len(model.dmi) == 0 and len(model.dmij) == 0 and len(model.dmik) == 0 and len(model.dmiji) == 0:
         loads = ''
         subcases = ''
@@ -650,7 +655,7 @@ def get_area_arm_dict_panel(model: BDF,
     """get the aerobox (area, area*moment_arm dict)"""
     area_arm_dict = {}
     for caero_eid, caero in sorted(model.caeros.items()):
-            scaero = str(caero).rstrip().split('\n')
+            # scaero = str(caero).rstrip().split('\n')
             if caero.type == 'CAERO2':
                 raise RuntimeError(caero)
                 # _write_caero2_aerobox(bdf_file, caero)
@@ -671,10 +676,10 @@ def _area_arm_dict_panel(area_arm_dict: dict[int, tuple[float, float]],
                          points: np.ndarray, elements: np.ndarray,
                          percent_location: int=25) -> None:
     """writes the strips for the aeroboxes at some % chord"""
-    caero_eid = caero.eid
+    # caero_eid = caero.eid
     percent = percent_location / 100.
-    area = caero.area()
-    total_area = 0.
+    # area = caero.area()
+    # total_area = 0.
     for i in range(elements.shape[0]):
         # The point numbers here are consistent with the CAERO1
         elem = elements[i, :]
@@ -682,10 +687,10 @@ def _area_arm_dict_panel(area_arm_dict: dict[int, tuple[float, float]],
         p4 = points[elements[i, 1], :]
         p3 = points[elements[i, 2], :]
         p2 = points[elements[i, 3], :]
-        centroid = (p1 + p2 + p3 + p4) / 4.
+        # centroid = (p1 + p2 + p3 + p4) / 4.
         axb = np.cross(p3 - p1, p4 - p2)
         areai = 0.5 * np.linalg.norm(axb)
-        total_area += areai
+        # total_area += areai
 
         if areai == 0.0:
             raise RuntimeError(f'area={areai}; caero:\n{str(caero)}\nelem={elem}\n'
@@ -695,12 +700,13 @@ def _area_arm_dict_panel(area_arm_dict: dict[int, tuple[float, float]],
                                f'p4 = {p4}')
         le: list[float] = (p1 + p4) * 0.5
         te: list[float] = (p2 + p3) * 0.5
-        dy = (p4 - p1)[1]
-        dz = (p4 - p1)[2]
+        # dy = (p4 - p1)[1]
+        # dz = (p4 - p1)[2]
         chord: float = te[0] - le[0]
         r_arm = chord * percent
         area_arm_dict[caero_eid+i] = (areai, r_arm)
     #print(f'area={area:.1f} total_area={total_area:.1f}')
+
 
 def _get_aerobox_property(model: BDF, caero_id: int, eid: int,
                           pid_method: str='aesurf') -> int:

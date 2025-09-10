@@ -239,6 +239,12 @@ class Fluent:
                                                              np.ndarray, np.ndarray]:
         tri_nodes = tris[:, 2:]
         quad_nodes = quads[:, 2:]
+        return self.get_area_centroid_normal_from_nodes(tri_nodes, quad_nodes)
+
+    def get_area_centroid_normal_from_nodes(self, tri_nodes: np.ndarray,
+                                            quad_nodes: np.ndarray) -> tuple[np.ndarray, np.ndarray,
+                                                                             np.ndarray, np.ndarray,
+                                                                             np.ndarray, np.ndarray]:
         assert tri_nodes.shape[1] == 3, tri_nodes.shape
         assert quad_nodes.shape[1] == 4, quad_nodes.shape
 
@@ -257,6 +263,7 @@ class Fluent:
         tri_areai = np.linalg.norm(tri_normal, axis=1)
         tri_area = 0.5 * tri_areai
         tri_normal /= tri_areai[:, np.newaxis]
+        assert np.abs(tri_normal).max() <= 1.001, (tri_normal.min(), tri_normal.max())
 
         iquad = np.searchsorted(self.node_id, quad_nodes)
         xyz1 = self.xyz[iquad[:, 0]]
@@ -269,6 +276,8 @@ class Fluent:
         quad_areai = np.linalg.norm(quad_normal, axis=1)
         quad_area = 0.5 * quad_areai
         quad_normal /= quad_areai[:, np.newaxis]
+        assert np.abs(quad_normal).max() <= 1.001, (quad_normal.min(), quad_normal.max())
+
         assert len(tri_centroid) == len(tri_area)
         assert len(quad_centroid) == len(quad_area)
         out = (
