@@ -62,27 +62,32 @@ class FluentIO:
         regions_to_include = other_settings.cart3d_fluent_include
 
         assert len(model.result_element_id) > 0
-        model2 = model.get_filtered_data(
-            regions_to_remove, regions_to_include, return_model=True)
-        str(model2)
-
-        result_element_id = model2.result_element_id
-        assert len(result_element_id) > 0, result_element_id
-        assert len(result_element_id) == len(np.unique(result_element_id))
-        tris = model2.tris
-        quads = model2.quads
-        region = model2.region
-
-        # support multiple results
-        titles = model2.titles
-        if 0:
-            results = model2.results
+        if 1:  # hack fix
+            titles = model.titles
+            result_element_id, tris, quads, region, results = model.get_filtered_data(
+            regions_to_remove, regions_to_include, return_model=False)
         else:
-            iquad = np.searchsorted(model2.result_element_id, quads[:, 0])
-            itri = np.searchsorted(model2.result_element_id, tris[:, 0])
-            quad_results = model2.results[iquad, :]
-            tri_results = model2.results[itri, :]
-            results = np.vstack([quad_results, tri_results])
+            model2 = model.get_filtered_data(
+                regions_to_remove, regions_to_include, return_model=True)
+            str(model2)
+
+            result_element_id = model2.result_element_id
+            assert len(result_element_id) > 0, result_element_id
+            assert len(result_element_id) == len(np.unique(result_element_id))
+            tris = model2.tris
+            quads = model2.quads
+            region = model2.region
+
+            # support multiple results
+            titles = model2.titles
+            if 0:
+                results = model2.results
+            else:
+                iquad = np.searchsorted(model2.result_element_id, quads[:, 0])
+                itri = np.searchsorted(model2.result_element_id, tris[:, 0])
+                quad_results = model2.results[iquad, :]
+                tri_results = model2.results[itri, :]
+                results = np.vstack([quad_results, tri_results])
         assert len(titles)-1 == results.shape[1], (len(titles), results.shape)
 
         out = model.get_area_centroid_normal(tris, quads)

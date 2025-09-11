@@ -28,7 +28,7 @@ USAGE_145 = (
     '[--in_units IN] [--out_units OUT] [--rhoref] '
     f'[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] {AXES} '
     f'[--noline] [--nopoints] [--ncol NCOL] {EXPORTS} '
-    '[--modal IVEL MODE] [--freq_tol FREQ_TOL]  [--mag_tol MAG_TOL]\n'
+    '[--modal IVEL MODE] [--freq_tol FREQ_TOL] [--freq_tol_remove FREQ_TOL_REMOVE] [--mag_tol MAG_TOL]\n'
 )
 USAGE_144 = (
     'Usage:\n'

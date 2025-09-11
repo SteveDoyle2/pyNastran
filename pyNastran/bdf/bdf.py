@@ -1494,7 +1494,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         validate : bool; default=True
             runs various checks on the BDF
         xref :  bool; default=True
-            should the bdf be cross referenced
+            should the bdf be cross-referenced
         punch : bool; default=False
             indicates whether the file is a punch file
         read_includes : bool; default=True
@@ -2135,7 +2135,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         Parameters
         ----------
         sol : int
-            the solution type (101, 103, etc)
+            the solution type (101, 103, etc.)
         method : str
             the solution method (only for SOL=600)
         sol_iline : int
@@ -3303,7 +3303,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             dmix = class_obj.add_card(card_obj, comment=comment)
             add_method(dmix)
         else:
-            if class_obj.type not in {'DMIAX', 'DTI', 'DMIG', 'DMIK', 'DMIJI'}:
+            if class_obj.type not in {'DMIAX', 'DTI', 'DMIG', 'DMIK', 'DMIJ', 'DMIJI'}:
                 field4 = double(
                     card_obj, 4, f'{class_obj.type} column',
                     end=('did you mean to set field 2 to 0 to '
@@ -5234,6 +5234,7 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
        >>> g1 = bdf.Node(1)
        >>> print(g1.get_position())
        [10.0, 12.0, 42.0]
+       >>> bdf_filename2 = 'fem_out.bdf'
        >>> bdf.write_card(bdf_filename2)
        >>> print(bdf.card_stats())
 

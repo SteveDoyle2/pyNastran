@@ -25,14 +25,14 @@ def run_lots_of_files(files, write_op4=True,
         base_name = os.path.basename(op4file)
         #if baseName not in skipFiles and not base_name.startswith('acms') and i not in nSkip:
         if base_name not in skip_files and '#' not in op4file:
-            print("%"*80)
+            print("%" * 80)
             print(f'file={op4file}\n')
             n = f'{i} '
             sys.stderr.write(f'{n}file={op4file}\n')
             ntotal += 1
             is_passed = run_op4(op4file,
                                 debug=debug,
-                                stop_on_failure=stop_on_failure) # True/False
+                                stop_on_failure=stop_on_failure)  # True/False
             if not is_passed:
                 sys.stderr.write('**file=%s\n' % op4file)
                 failed_cases.append(op4file)
@@ -50,7 +50,7 @@ def run_lots_of_files(files, write_op4=True,
     minutes = seconds/60.
     print(f'dt = {seconds} seconds = {minutes} minutes')
 
-    msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(
+    msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (
         npassed, ntotal, 100.*npassed/float(ntotal), ntotal-npassed)
     print(msg)
     sys.exit(msg)

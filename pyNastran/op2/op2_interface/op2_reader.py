@@ -3701,8 +3701,9 @@ class OP2Reader:
 
     def _read_subtables(self) -> None:
         """reads a series of subtables"""
-        # this parameters is used for numpy streaming
         op2: OP2 = self.op2
+
+        # _table4_count is used for numpy streaming
         op2._table4_count = 0
         op2.is_table_1 = True
         op2._data_factor = 1
@@ -3717,7 +3718,7 @@ class OP2Reader:
         # get the parsing functions (table3_parser, table4_parser)
         # or find out we're going to be skipping the tables
         #
-        # table3 - the table with the meta data (e.g. subcase_id, time, is_stress/strain)
+        # table3 - the table with the metadata (e.g. subcase_id, time, is_stress/strain)
         # table4 - the actual results data
         #
         # we indicate table3/4 by isubtable, which starts from -3 (so table3) and counts
@@ -4239,6 +4240,7 @@ def read_ovg(op2_reader: OP2Reader) -> None:
         #(60, 2002, 4, 1, 10, 1039199643, 1067257355, 0, 1, 4, 1)
         (acode, tcode, method_int, subcase_id, point_device, mach, rho, kfreq, fcode, numwide, imode,
          b, title, subtitle, subcase) = out
+
         device_code = acode % 10
         imode10 = point_device
         assert device_code == 0, (acode, device_code)
@@ -4459,8 +4461,10 @@ def read_oaerotv(op2_reader: OP2Reader) -> None:
              point_device, mach, q, aerosg2d, numwide, symxy, symxz,
              cref, bref, sref, *outi,
              title, subtitle, subcase) = out
+
             op2.subtable_name = ''
             op2.parse_approach_code(data)
+
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} symxy={symxy} symxz={symxz}\n'
                       f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
             if max(outi) != 0 or min(outi) != 0:
@@ -5127,8 +5131,10 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
              point_device, mach, q, aerosg2d, numwide, zero, coord,
              cref, bref, sref, *outi,
              title, subtitle, subcase) = out
+
             op2.subtable_name = ''
             op2.parse_approach_code(data)
+
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}')
             log.debug(f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')
             #assert zero == 0, zero
@@ -5301,6 +5307,7 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
 
         op2.subtable_name = ''
         op2.parse_approach_code(data)
+
         #op2.show_data(data[14*4:15*4])
         cs_name = cs_name_bytes.decode('latin1').rstrip()
         aerosg2d = aerosg2d_bytes.decode('latin1').rstrip()
@@ -5363,7 +5370,6 @@ def read_oaerohmd(op2_reader: OP2Reader) -> None:
                 values_list.append(data_listi)
                 # log.debug(f'HMD {name}: values={values.round(6)}')
                 idata += numwide
-
 
             nnames = len(names_list)
             names = np.array(names_list, dtype='U8')

@@ -768,6 +768,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         form0 = form[2]
         assert icase is not None
         nsubcases = len(model.subcases)
+        log = gui.log
         for subcase_idi, subcase in sorted(model.subcases.items()):
             if not xref_nodes:
                 continue
@@ -2501,8 +2502,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             #model.log.debug('self.plot_applied_loads=False')
             #return icase
 
+        log = model.log
         if not xref_loads:
-            model.log.debug('returning from plot_applied_loads_early')
+            log.debug('returning from plot_applied_loads_early')
             return icase
 
         try:
@@ -2513,7 +2515,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 normals=self.normals, nid_map=self.nid_map,)
             is_loads, is_temperatures, temperature_data, load_data = out
 
-            #self.log.info('subcase_id=%s is_loads=%s is_temperatures=%s' % (
+            #log.info('subcase_id=%s is_loads=%s is_temperatures=%s' % (
                 #subcase_id, is_loads, is_temperatures))
             if is_loads:
                 centroidal_pressures, forces, moments, spcd = load_data

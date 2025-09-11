@@ -5226,8 +5226,13 @@ class AddAero:
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
 
     def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int,
-                    mesh: str, force: int, dmik: str, perq: str) -> None:
-        """adds an AEPRESS card"""
+                    mesh: str, force: int, dmik: str, perq: str='') -> None:
+        """adds an AEFORCE card
+
+        Parameters
+        ----------
+        perq : not used by NX
+        """
         assert isinstance(mesh, str), mesh
         assert isinstance(sym_xz, str), sym_xz
         assert isinstance(sym_xy, str), sym_xy
@@ -9607,7 +9612,7 @@ class AddCards(AddCoords, AddContact, AddBolts,
         fields = ['RCROSS', sid, rtype1, id1, comp1, rtype2, id2, comp2, curid]
         self.reject_card_lines('RCROSS', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float]):
+    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float], comment: str='') -> None:
         fields = ['UXVEC', idi, None, None, None, None, None, None, None]
         for label, ux in zip(labels, uxs):
             fields.extend([label, ux])
