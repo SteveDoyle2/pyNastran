@@ -166,7 +166,7 @@ def write_cell(vrt_filename: PathLike, quads: np.ndarray, tris: np.ndarray) -> N
     return
 
 def read_cell(cell_filename: PathLike, log) -> tuple[tuple[np.ndarray, np.ndarray],
-                                                np.ndarray]:
+                                                           np.ndarray]:
     """
     PROSTAR_CELL
      4000         0         0         0         0         0         0         0

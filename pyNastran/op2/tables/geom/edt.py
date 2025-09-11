@@ -255,7 +255,7 @@ class EDT:
         9 FORCE    I
         10 DMIK(2) CHAR4
         """
-        op2 = self.op2
+        op2: OP2Geom = self.op2
         ntotal = 44 * self.factor  # 4*11
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -289,8 +289,8 @@ class EDT:
         10 DMIK(2) CHAR4
         12 PERQ(2) CHAR4
         """
-        op2 = self.op2
-        ntotal = 52 * self.factor  # 4*13
+        op2: OP2Geom = self.op2
+        ntotal = 52 * self.factor # 4*13
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0

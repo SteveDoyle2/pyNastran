@@ -4795,13 +4795,8 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
              point_device, mach, q, aerosg2d, numwide, zero, coord,
              cref, bref, sref, *outi,
              title_bytes, subtitle_bytes, subcase_bytes) = out
-            # op2.analysis_code = acode
             op2.subtable_name = ''
             op2.parse_approach_code(data)
-            # op2.data_code = {
-            #     'analysis_code': acode,
-            #     'analysis_fmt': 'i',
-            # }
 
             log.debug(f'mach={mach:g} q={q:g} aerosg2d={aerosg2d!r} coord={coord}\n'
                       f'  cbs_ref=[{cref:g},{bref:g},{sref:g}]')

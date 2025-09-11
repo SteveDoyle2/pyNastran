@@ -340,7 +340,7 @@ def modal_components(card: BDFCard, ifield: int, fieldname: str) -> int:
 
     """
     value = integer(card, ifield, fieldname)
-    if not(-1 <= value <= 6):
+    if not (-1 <= value <= 6):
         raise SyntaxError('%s=%s (field #%s) on card must be an integer '
                           '(-1 <= val <= 6).\n'
                           'card=%s' % (fieldname, value, ifield, card))
@@ -363,7 +363,7 @@ def modal_components_or_blank(card: BDFCard, ifield: int, fieldname: str,
 
     """
     value = integer_or_blank(card, ifield, fieldname, default=default)
-    if not(-1 <= value <= 6):
+    if not (-1 <= value <= 6):
         raise SyntaxError('%s=%s (field #%s) on card must be an integer '
                           '(-1 <= val <= 6).\n'
                           'card=%s' % (fieldname, value, ifield, card))
@@ -392,10 +392,11 @@ def integer(card: BDFCard, ifield: int, fieldname: str) -> int:
 
     try:
         return int(svalue)
-    except(ValueError, TypeError):
+    except (ValueError, TypeError):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
 
 def integer_or_blank(card: BDFCard, ifield: int, fieldname: str,
                      default: Optional[int]=None) -> int:
@@ -431,7 +432,7 @@ def integer_or_blank(card: BDFCard, ifield: int, fieldname: str,
 
         try:
             return int(svalue)
-        except(ValueError, TypeError):
+        except (ValueError, TypeError):
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -521,10 +522,8 @@ def double_from_str(svalue: str) -> float:
     ----------
     card : BDFCard()
         BDF card as a list
-    ifield : int
-        field number
-    fieldname : str
-        name of field
+    svalue : str
+        field
 
     Returns
     -------
@@ -761,7 +760,7 @@ def integer_or_double(card: BDFCard, ifield: int, fieldname: str) -> int | float
         # int
         try:
             value = int(svalue)
-        except(ValueError, TypeError):
+        except (ValueError, TypeError):
             value = interpret_value(svalue, card)
             if isinstance(value, (int, float)):
                 return value
@@ -977,7 +976,7 @@ def integer_double_or_string(card: BDFCard, ifield: int, fieldname: str) -> int 
             # int
             try:
                 value = int(svalue)
-            except(ValueError, TypeError):
+            except (ValueError, TypeError):
                 raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, '
                                   'or string (not blank).\n'
                                   'card=%s' % (fieldname, svalue, ifield, card))

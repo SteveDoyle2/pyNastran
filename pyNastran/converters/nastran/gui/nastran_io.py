@@ -793,9 +793,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             formii = formi[2]
 
             assert icase is not None
-            log.info(f'normals = {self.normals}')
+            #log.info(f'normals = {self.normals}')
             if self.normals is not None and self.plot_applied_loads:
-                log.info('_plot_applied_loads')
+                #log.info('_plot_applied_loads')
                 icase = self._plot_applied_loads(
                     model, cases, formii, icase, subcase_idi, xref_loads=xref_loads,
                     colormap=colormap,
@@ -804,7 +804,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 plot_pressures = False
             else:
                 plot_pressures = True
-            log.info(f'plot_pressures = {plot_pressures}')
+            #log.info(f'plot_pressures = {plot_pressures}')
 
             if plot_pressures:  # and self._plot_pressures:
                 try:

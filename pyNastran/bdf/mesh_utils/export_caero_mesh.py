@@ -189,11 +189,6 @@ def export_caero_mesh(model: BDF,
                 #mid = caero_eid
                 jeid = 0
                 for elem in elements + inid:
-                    # p1 = points[elements[i, 0], :]
-                    # p4 = points[elements[i, 1], :]
-                    # p3 = points[elements[i, 2], :]
-                    # p2 = points[elements[i, 3], :]
-                    # p1, p2, p3, p4 = elem
                     p1, p4, p3, p2 = elem
                     eid2 = jeid + caero_eid
                     pidi = _get_aerobox_property(
