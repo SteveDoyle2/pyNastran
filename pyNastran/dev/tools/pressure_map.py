@@ -101,6 +101,9 @@ def pressure_map(aero_filename: PathLike,
         - same aero model
         - different bdfs
         - different aero regions
+
+    TODO: add support for excluding y/z pressure mapping
+    TODO: consider aero panel dihedral; need to reduce load by cos(theta); do a dot product
     """
     assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
     assert map_type in {'pressure', 'force', 'force_moment'}, aero_format

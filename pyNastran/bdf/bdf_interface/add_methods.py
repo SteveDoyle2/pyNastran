@@ -570,7 +570,7 @@ class AddMethods:
     def add_amlreg_object(self, amlreg: AMLREG) -> None:
         """adds an ACPLNW object"""
         key = amlreg.rid
-        assert key not in self.model.acplnw, '\amlreg=\n%s old=\n%s' % (
+        assert key not in self.model.acplnw, '\namlreg=\n%s old=\n%s' % (
             amlreg, self.model.amlreg[key])
         assert key >= 0
         self.model.amlreg[key] = amlreg
@@ -579,7 +579,7 @@ class AddMethods:
     def add_micpnt_object(self, micpnt: MICPNT) -> None:
         """adds an MICPNT object"""
         key = micpnt.eid
-        assert key not in self.model.micpnt, rf'\micpnt=\n{micpnt} old=\n{self.model.micpnt[key]}'
+        assert key not in self.model.micpnt, rf'\nmicpnt=\n{micpnt} old=\n{self.model.micpnt[key]}'
         assert key >= 0
         self.model.micpnt[key] = micpnt
         self.model._type_to_id_map[micpnt.type].append(key)
