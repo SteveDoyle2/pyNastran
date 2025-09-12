@@ -25,6 +25,7 @@ class PreferencesDialog(PyDialog):
         """
         PyDialog.__init__(self, data, win_parent)
         self.gui_obj = gui_obj
+        self.use_vtk = gui_obj.use_vtk
         #print(f'data = {data}')
         self.setup_widgets(data)
         self.on_font_size()
@@ -55,7 +56,6 @@ class PreferencesDialog(PyDialog):
         self.icase_edit.setMinimum(0)
         # self.nphase_edit.setMaximum(51)
 
-
         # self.nframes_label = QLabel('Animation Update Time (ms):')
         # self.nframes_edit = QSpinBox()
         # self.nframes_edit.setValue(data['dt_ms'])
@@ -82,6 +82,13 @@ class PreferencesDialog(PyDialog):
         self.export_csv_checkbox.setChecked(data['export_to_csv'])
         self.export_f06_checkbox.setChecked(data['export_to_f06'])
         self.export_zona_checkbox.setChecked(data['export_to_zona'])
+
+        if not self.use_vtk:
+            objs = [self.icase_label, self.icase_edit,
+                    self.nphase_label, self.nphase_edit,
+                    self.dt_ms_label, self.dt_ms_edit, self.animate_checkbox]
+            for obj in objs:
+                obj.setVisible(False)
 
     def setup_layout(self) -> None:
         irow = 0

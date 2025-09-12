@@ -81,13 +81,14 @@ else:
     BDF_FILENAME = BASE_PATH / '0012_flutter.bdf'
     OP2_FILENAME = BASE_PATH / '0012_flutter.op2'
 USE_TABS = False
+USE_VTK = False
 
 
 class FlutterGui(LoggableGui):
     def __init__(self, f06_filename: str=''):
         super().__init__(html_logging=False)
 
-        self._export_settings_obj = PreferencesObject(self)
+        self._export_settings_obj = PreferencesObject(self, USE_VTK)
         self._vtk_window_obj = VtkWindowObject(self, ICON_PATH)
         self.font_size = 10
         self.plot_font_size = 10
@@ -121,7 +122,8 @@ class FlutterGui(LoggableGui):
         self.alt_lim = []
         self.q_lim = []
         self.rho_lim = []
-        self.eas_damping_lim = [None, None]
+        self.eas_flutter_range = [None, None]
+        # self.eas_diverg_range = [None, None]
         self.freq_lim = [None, None]
         self.damping_lim = [None, None]
         self.kfreq_lim = [None, None]
@@ -162,13 +164,13 @@ class FlutterGui(LoggableGui):
         #self.on_open_new_window()
         self.show()
 
-    def dragEnterEvent(self, event):
+    def dragEnterEvent(self, event) -> None:
         if event.mimeData().hasUrls():
             event.accept()
         else:
             event.ignore()
 
-    def dropEvent(self, event):
+    def dropEvent(self, event) -> None:
         ifile = self.ifile
         filenames = [url.toLocalFile() for url in event.mimeData().urls()]
         for filename in filenames:
@@ -182,7 +184,7 @@ class FlutterGui(LoggableGui):
             else:
                 self.log.error(f'unknown extension (bdf/f06/op2) format for {filename}')
 
-    def setup_toolbar(self):
+    def setup_toolbar(self) -> None:
         #frame = QFrame(self)
         actions_dict = {
             #'file_load': Action(name='file_load', text='Load...', func=self.on_file_load, icon='folder.png'),
@@ -241,7 +243,7 @@ class FlutterGui(LoggableGui):
         self.f06_filename_edit[self.ifile].setText(f06_filename)
         self.on_load_f06(None)
 
-    def setup_modes(self):
+    def setup_modes(self) -> None:
         self.modes_widget = QListWidget(self)
         self.modes_widget.setMaximumWidth(200)  # was 100 when no freq
         self.modes_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -257,10 +259,10 @@ class FlutterGui(LoggableGui):
     #     return wrapper
 
     # @dontcrash
-    def on_export_settings(self):
+    def on_export_settings(self) -> None:
         self._export_settings_obj.show()
 
-    def on_file_exit(self):
+    def on_file_exit(self) -> None:
         if hasattr(self, 'on_file_save') and hasattr(self, 'save_filename'):
             self.on_file_save()
 
@@ -286,7 +288,7 @@ class FlutterGui(LoggableGui):
         #self.log.warning('on_file_save_as; _save')
         self._save(json_filename)
 
-    def _save(self, json_filename: str):
+    def _save(self, json_filename: str) -> None:
         #self.log.warning('_save')
         is_valid = self.validate()
         #self.log.info(f'self.data = {self.data}')
@@ -371,7 +373,8 @@ class FlutterGui(LoggableGui):
             ('ikfreq_lim', self.ikfreq_lim_edit_min, self.ikfreq_lim_edit_max),
 
             ('damp_lim', self.damp_lim_edit_min, self.damp_lim_edit_max),
-            ('eas_damping_lim', self.eas_damping_lim_edit_min, self.eas_damping_lim_edit_max),
+            ('eas_flutter_range', self.eas_flutter_range_edit_min, self.eas_flutter_range_edit_max),
+            # ('eas_diverg_range', self.eas_diverg_range_edit_min, self.eas_diverg_range_edit_max),
             ('freq_lim', self.freq_lim_edit_min, self.freq_lim_edit_max),
             ('kfreq_lim', self.kfreq_lim_edit_min, self.kfreq_lim_edit_max),
         ]
@@ -540,7 +543,7 @@ class FlutterGui(LoggableGui):
         else:
             self.setWindowTitle(f'Flutter Plot: {self.save_filename}')
 
-    def setup_lists(self):
+    def setup_lists(self) -> None:
         self.f06_filename_label = []
         self.f06_filename_edit = []
         self.f06_filename_browse = []
@@ -654,9 +657,13 @@ class FlutterGui(LoggableGui):
         # self.damping_label = []
         # self.damping_edit = []
         #
-        # self.eas_damping_lim_label = []
-        # self.eas_damping_lim_edit_min = []
-        # self.eas_damping_lim_edit_max = []
+        # self.eas_flutter_range_label = []
+        # self.eas_flutter_range_edit_min = []
+        # self.eas_flutter_range_edit_max = []
+        #
+        # self.eas_diverg_range_label = []
+        # self.eas_diverg_range_edit_min = []
+        # self.eas_diverg_range_edit_max = []
         #
         # self.point_removal_label = []
         # self.point_removal_edit = []
@@ -847,11 +854,17 @@ class FlutterGui(LoggableGui):
         self.damping_edit = QFloatEdit('', self)
         self.damping_edit.setToolTip('Enables the flutter crossing (e.g., 0.03 for 3%)')
 
-        self.eas_damping_lim_label = QLabel('EAS Crossing Range:', self)
-        self.eas_damping_lim_edit_min = QFloatEdit('', self)
-        self.eas_damping_lim_edit_max = QFloatEdit('', self)
-        self.eas_damping_lim_edit_min.setToolTip('Defines the flutter crossing range')
-        self.eas_damping_lim_edit_max.setToolTip('Defines the flutter crossing range')
+        self.eas_flutter_range_label = QLabel('EAS Flutter/Diverg Range:', self)
+        self.eas_flutter_range_edit_min = QFloatEdit('', self)
+        self.eas_flutter_range_edit_max = QFloatEdit('', self)
+        self.eas_flutter_range_edit_min.setToolTip('Defines the flutter/divergence crossing range')
+        self.eas_flutter_range_edit_max.setToolTip('Defines the flutter/divergence crossing range')
+
+        # self.eas_diverg_range_label = QLabel('EAS Diverg Range:', self)
+        # self.eas_diverg_range_edit_min = QFloatEdit('', self)
+        # self.eas_diverg_range_edit_max = QFloatEdit('', self)
+        # self.eas_diverg_range_edit_min.setToolTip('Defines the divergence crossing range')
+        # self.eas_diverg_range_edit_max.setToolTip('Defines the divergence crossing range')
 
         self.point_removal_label = QLabel('Point Removal:', self)
         self.point_removal_edit = QLineEdit('', self)
@@ -884,6 +897,15 @@ class FlutterGui(LoggableGui):
         self.on_plot_type()
         self.on_enable_bdf()
         self.on_enable_op2()
+        if not USE_VTK:
+            objs = [
+                self.bdf_filename_checkbox, self.bdf_filename_edit, self.bdf_filename_browse,
+                self.op2_filename_checkbox, self.op2_filename_edit, self.op2_filename_browse,
+                self.pop_vtk_gui_button, self.solution_type_label, self.solution_type_pulldown,
+                self.mode2_label, self.mode2_pulldown,
+            ]
+            for obj in objs:
+                obj.setVisible(False)
 
     def on_plot_type(self) -> None:
         x_plot_type = self.x_plot_type_pulldown.currentText()
@@ -1237,10 +1259,15 @@ class FlutterGui(LoggableGui):
         grid.addWidget(self.damping_edit, irow, 1)
         irow += 1
 
-        grid.addWidget(self.eas_damping_lim_label, irow, 0)
-        grid.addWidget(self.eas_damping_lim_edit_min, irow, 1)
-        grid.addWidget(self.eas_damping_lim_edit_max, irow, 2)
+        grid.addWidget(self.eas_flutter_range_label, irow, 0)
+        grid.addWidget(self.eas_flutter_range_edit_min, irow, 1)
+        grid.addWidget(self.eas_flutter_range_edit_max, irow, 2)
         irow += 1
+
+        # grid.addWidget(self.eas_diverg_range_label, irow, 0)
+        # grid.addWidget(self.eas_diverg_range_edit_min, irow, 1)
+        # grid.addWidget(self.eas_diverg_range_edit_max, irow, 2)
+        # irow += 1
 
         grid.addWidget(self.point_removal_label, irow, 0)
         grid.addWidget(self.point_removal_edit, irow, 1)
@@ -1520,7 +1547,7 @@ class FlutterGui(LoggableGui):
 
     # @dontcrash
     def _set_modes_table(self, modes_widget: QListWidget,
-                         modes: list[int], freqs: list[float]):
+                         modes: list[int], freqs: list[float]) -> None:
         modes_widget.clear()
         for imode, freq in zip(modes, freqs):
             mode = QListWidgetItem(f'Mode {imode}; f={freq:.2f}')
@@ -1528,7 +1555,7 @@ class FlutterGui(LoggableGui):
             mode.setSelected(True)
             modes_widget.addItem(mode)
 
-    def _on_update_mode(self):
+    def _on_update_mode(self) -> None:
         if not self.is_valid:
             #self.log.warning('_on_update_mode')
             self.validate()
@@ -1629,7 +1656,8 @@ class FlutterGui(LoggableGui):
 
         damping_required = self.damping_required
         damping_limit = self.damping  # % damping
-        eas_range = self.eas_damping_lim
+        eas_flutter_range = self.eas_flutter_range
+        # eas_diverg_range = self.eas_diverg_range
 
         # changing directory so we don't make a long filename
         # in the plot header
@@ -1747,7 +1775,7 @@ class FlutterGui(LoggableGui):
                     plot_type=x_plot_type,
                     modes=modes,
                     xlim=xlim, ylim_damping=ylim_damping, ylim_freq=ylim_freq,
-                    eas_range=eas_range,
+                    eas_range=eas_flutter_range,
                     freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                     show=True, clear=False, close=False,
                     legend=True,
@@ -1792,46 +1820,40 @@ class FlutterGui(LoggableGui):
                                 Limit, Limit, Limit, Limit, Limit,
                                 Optional[float], Optional[float], Optional[float],
                                 Optional[float], Optional[float], bool]:
-        index_lim_min, is_passed0a = get_float_or_none(self.index_lim_edit_min)
-        index_lim_max, is_passed0b = get_float_or_none(self.index_lim_edit_max)
-        eas_lim_min, is_passed1a = get_float_or_none(self.eas_lim_edit_min)
-        eas_lim_max, is_passed1b = get_float_or_none(self.eas_lim_edit_max)
-        tas_lim_min, is_passed2a = get_float_or_none(self.tas_lim_edit_min)
-        tas_lim_max, is_passed2b = get_float_or_none(self.tas_lim_edit_max)
-        mach_lim_min, is_passed3a = get_float_or_none(self.mach_lim_edit_min)
-        mach_lim_max, is_passed3b = get_float_or_none(self.mach_lim_edit_max)
-        alt_lim_min, is_passed4a = get_float_or_none(self.alt_lim_edit_min)
-        alt_lim_max, is_passed4b = get_float_or_none(self.alt_lim_edit_max)
-        q_lim_min, is_passed5a = get_float_or_none(self.q_lim_edit_min)
-        q_lim_max, is_passed5b = get_float_or_none(self.q_lim_edit_max)
-        rho_lim_min, is_passed6a = get_float_or_none(self.rho_lim_edit_min)
-        rho_lim_max, is_passed6b = get_float_or_none(self.rho_lim_edit_max)
+        index_lim, is_passed0 = get_list_float_or_none(
+            [self.index_lim_edit_min, self.index_lim_edit_max])
+        eas_lim, is_passed1 = get_list_float_or_none(
+            [self.eas_lim_edit_min, self.eas_lim_edit_max])
+        tas_lim, is_passed2 = get_list_float_or_none(
+            [self.tas_lim_edit_min, self.tas_lim_edit_max])
+
+        mach_lim, is_passed3 = get_list_float_or_none(
+            [self.mach_lim_edit_min, self.mach_lim_edit_max])
+        alt_lim, is_passed4 = get_list_float_or_none(
+            [self.alt_lim_edit_min, self.alt_lim_edit_max])
+        q_lim, is_passed5 = get_list_float_or_none(
+            [self.q_lim_edit_min, self.q_lim_edit_max])
+        rho_lim, is_passed6 = get_list_float_or_none(
+            [self.rho_lim_edit_min, self.rho_lim_edit_max])
 
         is_passed_x = all([
-            is_passed0a, is_passed0b,
-            is_passed1a, is_passed1b,
-            is_passed2a, is_passed2b,
-            is_passed3a, is_passed3b,
-            is_passed4a, is_passed4b,
-            is_passed5a, is_passed5b,
-            is_passed6a, is_passed6b,
+            is_passed0, is_passed1, is_passed2, is_passed3,
+            is_passed4, is_passed5, is_passed6,
         ])
+        damp_lim, is_passed_damp = get_list_float_or_none(
+            [self.damp_lim_edit_min, self.damp_lim_edit_max])
 
-        damp_lim_min, is_passed_damp1 = get_float_or_none(self.damp_lim_edit_min)
-        damp_lim_max, is_passed_damp2 = get_float_or_none(self.damp_lim_edit_max)
-        freq_lim_min, is_passed_freq1 = get_float_or_none(self.freq_lim_edit_min)
-        freq_lim_max, is_passed_freq2 = get_float_or_none(self.freq_lim_edit_max)
-        kfreq_lim_min, is_passed_kfreq1 = get_float_or_none(self.kfreq_lim_edit_min)
-        kfreq_lim_max, is_passed_kfreq2 = get_float_or_none(self.kfreq_lim_edit_max)
-        ikfreq_lim_min, is_passed_ikfreq1 = get_float_or_none(self.ikfreq_lim_edit_min)
-        ikfreq_lim_max, is_passed_ikfreq2 = get_float_or_none(self.ikfreq_lim_edit_max)
-
-        eigr_lim_min, is_passed_eigr1 = get_float_or_none(self.eigr_lim_edit_min)
-        eigr_lim_max, is_passed_eigr2 = get_float_or_none(self.eigr_lim_edit_max)
-        eigi_lim_min, is_passed_eigi1 = get_float_or_none(self.eigi_lim_edit_min)
-        eigi_lim_max, is_passed_eigi2 = get_float_or_none(self.eigi_lim_edit_max)
-        is_passed_eig = all([is_passed_eigr1, is_passed_eigr2,
-                             is_passed_eigi1, is_passed_eigi2])
+        freq_lim, is_passed_freq = get_list_float_or_none(
+            [self.freq_lim_edit_min, self.freq_lim_edit_max])
+        kfreq_lim, is_passed_kfreq = get_list_float_or_none(
+            [self.kfreq_lim_edit_min, self.kfreq_lim_edit_max])
+        ikfreq_lim, is_passed_ikfreq = get_list_float_or_none(
+            [self.ikfreq_lim_edit_min, self.ikfreq_lim_edit_max])
+        eigr_lim, is_passed_eigr = get_list_float_or_none(
+            [self.eigr_lim_edit_min, self.eigr_lim_edit_max])
+        eigi_lim, is_passed_eigi = get_list_float_or_none(
+            [self.eigr_lim_edit_min, self.eigr_lim_edit_max])
+        is_passed_eig = all([is_passed_eigr, is_passed_eigi])
 
         freq_tol, is_passed_tol1 = get_float_or_none(self.freq_tol_edit)
         freq_tol_remove, is_passed_tol2 = get_float_or_none(self.freq_tol_remove_edit)
@@ -1843,22 +1865,12 @@ class FlutterGui(LoggableGui):
         if is_passed_tol3 and mag_tol is None:
             mag_tol = -1.0
 
-        index_lim = [index_lim_min, index_lim_max]
-        eas_lim = [eas_lim_min, eas_lim_max]
-        tas_lim = [tas_lim_min, tas_lim_max]
-        mach_lim = [mach_lim_min, mach_lim_max]
-        alt_lim = [alt_lim_min, alt_lim_max]
-        q_lim = [q_lim_min, q_lim_max]
-        rho_lim = [rho_lim_min, rho_lim_max]
-        #kfreq_lim = [kfreq_lim_min, kfreq_lim_max]
-        ikfreq_lim = [ikfreq_lim_min, ikfreq_lim_max]
-
         vl, is_passed_vl = get_float_or_none(self.VL_edit)
         vf, is_passed_vf = get_float_or_none(self.VF_edit)
         damping_required, is_passed_damping_required = get_float_or_none(self.damping_required_edit)
         damping, is_passed_damping = get_float_or_none(self.damping_edit)
-        eas_damping_lim_min, is_passed_eas_damping_lim1 = get_float_or_none(self.eas_damping_lim_edit_min)
-        eas_damping_lim_max, is_passed_eas_damping_lim2 = get_float_or_none(self.eas_damping_lim_edit_max)
+        eas_flutter_range, is_passed_flutter_range = get_list_float_or_none(
+            [self.eas_flutter_range_edit_min, self.eas_flutter_range_edit_max])
 
         # 595:596,600:601
         point_removal_str = self.point_removal_edit.text().strip()
@@ -1875,23 +1887,16 @@ class FlutterGui(LoggableGui):
         #if is_passed_eas_damping_lim2 and eas_damping_lim_max is None:
         #    eas_damping_lim_max = None
 
-        eas_damping_lim = [eas_damping_lim_min, eas_damping_lim_max]
-        damp_lim = [damp_lim_min, damp_lim_max]
-        freq_lim = [freq_lim_min, freq_lim_max]
-        kfreq_lim = [kfreq_lim_min, kfreq_lim_max]
-        eigr_lim = [eigr_lim_min, eigr_lim_max]
-        eigi_lim = [eigi_lim_min, eigi_lim_max]
         #self.log.info(f'XLim = {xlim}')
         is_passed_flags = [
             is_passed_x,
-            is_passed_damp1, is_passed_damp2,
-            is_passed_freq1, is_passed_freq2,
-            is_passed_kfreq1, is_passed_kfreq2,
-            is_passed_ikfreq1, is_passed_ikfreq2,
+            is_passed_damp,
+            is_passed_freq, is_passed_kfreq, is_passed_ikfreq,
             is_passed_eig,
             is_passed_tol1, is_passed_tol2, is_passed_tol3,
             is_passed_vl, is_passed_vf,
             is_passed_damping_required, is_passed_damping,
+            is_passed_flutter_range,
         ]
         is_passed = all(is_passed_flags)
         # if not is_passed:
@@ -1902,7 +1907,7 @@ class FlutterGui(LoggableGui):
             damp_lim, freq_lim, kfreq_lim, ikfreq_lim,
             eigr_lim, eigi_lim,
             freq_tol, freq_tol_remove, mag_tol,
-            vl, vf, damping_required, damping, eas_damping_lim, point_removal, is_passed,
+            vl, vf, damping_required, damping, eas_flutter_range, point_removal, is_passed,
         )
         return out
 
@@ -1921,7 +1926,7 @@ class FlutterGui(LoggableGui):
          ydamp_lim, freq_lim, kfreq_lim, ikfreq_lim,
          eigr_lim, eigi_lim,
          freq_tol, freq_tol_remove, mag_tol,
-         vl, vf, damping_required, damping, eas_damping_lim, point_removal,
+         vl, vf, damping_required, damping, eas_flutter_range, point_removal,
          is_valid_xlim) = self.get_xlim()
 
         selected_modes = []
@@ -1952,7 +1957,7 @@ class FlutterGui(LoggableGui):
         self.vf = vf
         self.damping_required = damping_required
         self.damping = damping
-        self.eas_damping_lim = eas_damping_lim
+        self.eas_flutter_range = eas_flutter_range
         self.point_removal = point_removal
 
         self.x_plot_type = self.x_plot_type_pulldown.currentText()
@@ -2034,7 +2039,7 @@ class FlutterGui(LoggableGui):
             'vf': vf,
             'damping': damping,
             'damping_required': damping_required,
-            'eas_damping_lim': eas_damping_lim,
+            'eas_flutter_range': eas_flutter_range,
             'point_removal': point_removal,
             'mode_switch_method': self.mode_switch_method,
         }
@@ -2180,6 +2185,17 @@ def validate_json(data: dict[str, Any],
             default_value = allowed_values[0]
             data[key] = default_value
     return is_valid
+
+
+def get_list_float_or_none(list_line_edit: list[QLineEdit]) -> tuple[list[Optional[float | str]], bool]:
+    value_list = []
+    is_passed_flags = []
+    for line_edit in list_line_edit:
+        value, is_passedi = get_float_or_none(line_edit)
+        value_list.append(value)
+        is_passed_flags.append(is_passedi)
+    is_passed = all(is_passed_flags)
+    return value_list, is_passed
 
 
 def get_float_or_none(line_edit: QLineEdit) -> tuple[Optional[float | str], bool]:
