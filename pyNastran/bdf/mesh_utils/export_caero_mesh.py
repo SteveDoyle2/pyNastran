@@ -3,15 +3,13 @@ defines:
  - export_caero_mesh(model, caero_bdf_filename='caero.bdf', is_aerobox_model=True)
 
 """
-from __future__ import annotations
+# from __future__ import annotations
 import math
 from typing import TextIO, TYPE_CHECKING
 import numpy as np
 
-if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.utils import PathLike
-    from pyNastran.bdf.bdf import BDF, Coord, AELIST
-
+from pyNastran.utils import PathLike
+from pyNastran.bdf.bdf import read_bdf, BDF, Coord, AELIST
 from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2
 from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -46,6 +44,8 @@ def export_caero_mesh(model: BDF,
         $$        1        2    0.0988    0.2500    0.0000    0.0988    0.5000    0.1234
     """
     rotate_panel_angle = np.radians(rotate_panel_angle_deg)
+    if isinstance(model, PathLike):
+        model = read_bdf(model)
     log = model.log
     if pid_method not in {'aesurf', 'caero', 'paero'}:
         raise RuntimeError(f'pid_method={pid_method!r} is not [aesurf, caero, paero]')
