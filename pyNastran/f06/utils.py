@@ -39,6 +39,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.f06.flutter_response import FlutterResponse
 
+
 def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
                        log: Optional[SimpleLogger]=None):
     """the interface to ``f06 plot_144`` on the command line"""

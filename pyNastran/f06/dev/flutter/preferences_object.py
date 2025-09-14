@@ -13,10 +13,11 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class PreferencesObject:
     """defines PreferencesObject, which is an interface to the PreferencesWindow"""
-    def __init__(self, gui: FlutterGui):
+    def __init__(self, gui: FlutterGui, use_vtk: bool):
         self.gui = gui
         self.window_shown = None
         self.window = None
+        self.use_vtk = use_vtk
 
     # def show_window(self) -> None:
     #     """shows the window"""
@@ -57,8 +58,8 @@ class PreferencesObject:
             'export_to_csv': gui.export_to_csv,
             'export_to_f06': gui.export_to_f06,
             'export_to_zona': gui.export_to_zona,
-            'clicked_ok' : False,
-            'close' : False,
+            'clicked_ok': False,
+            'close': False,
         }
         if self.window_shown in {True, False}:
             self.window_shown = True
@@ -86,8 +87,10 @@ class PreferencesObject:
 
     def on_nphase(self, nphase: int) -> None:
         self.gui._vtk_window_obj.set_preferences(nphase=nphase)
+
     def on_icase(self, icase: int) -> None:
         self.gui._vtk_window_obj.set_preferences(icase=icase)
+
     def on_animate(self, animate: bool) -> None:
         self.gui._vtk_window_obj.set_preferences(animate=animate)
 
