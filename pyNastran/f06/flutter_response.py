@@ -718,22 +718,8 @@ class FlutterResponse:
             **legend_kwargs)
         return fig, axes
 
-    #@property
-    # def flutter_speed(self, modes=None,
-    #                   dfreq: float=-1.0,
-    #                   #ddamp: float=-1.0,
-    #                   damping_range: Limit=None,
-    #                   velocity_range: Limit=None):
-    #     """gets the flutter speed"""
-    #     if damping_range is None:
-    #         damping_range = [None, None]
-    #     if velocity_range is None:
-    #         velocity_range = [None, None]
-    #     is_damping_range = damping_range[0] is not None or damping_range[1] is not None
-    #     is_velocity_range = velocity_range[0] is not None or velocity_range[1] is not None
-
     def get_flutter_crossings(self,
-                              damping_crossings: Optional[list[tuple[float, float]]]=None,
+                              damping_crossings: Optional[dict[float, float]]=None,
                               freq_crossings: Optional[list[tuple[float, float]]]=None,
                               modes=None,
                               eas_range: Optional[tuple[float, float]]=None,
@@ -2509,14 +2495,51 @@ class FlutterResponse:
         """
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip)
 
+    def hump_modes_from_VL_VF_dict(self,
+                                   vl_vf_crossing_dict: dict[int, list[Crossing]],
+                                   vl_hump: float,
+                                   vf_hump: float,
+                                   Vbaseline_hump: float, log: SimpleLogger):
+        """
+        Parameters
+        ----------
+        vl_vf_crossing_dict: dict[int, list[Crossing]]
+            mode_num: int
+                mode number
+            Crossing: (damping, freq, vel)
+                3 floats
+        vl_hump : float
+            report all points below this
+        vf_hump : float
+            report all points below this
+        V_baseline : float
+            the value for VL/VF if no crossing occurs
+        """
+        # vbaseline_hump = vl_hump
+        vl_array, vf_array = _get_vl_vf_array(
+            vl_vf_crossing_dict,
+            vl_hump, vf_hump,
+            Vbaseline_hump, log)
+        vl_array2 = vl_array[1:, :]
+        vf_array2 = vf_array[1:, :]
+
+        # [mode, velocity, freq]
+        iv0 = np.where(vl_array2[:, 1] < vl_hump)[0]
+        iv3 = np.where(vf_array2[:, 1] < vf_hump)[0]
+
+        vl_array3 = vl_array2[iv0, :]
+        vf_array3 = vf_array2[iv3, :]
+
+        return vl_array3, vf_array3
+
     @staticmethod
     def xcrossing_dict_to_VL_VF_VD(vl_vf_crossing_dict: dict[int, list[Crossing]],
                                    vd_crossing_dict: dict[int, list[Crossing]],
                                    log: SimpleLogger,
                                    freq_target: float,
-                                   VL_target: float,
-                                   VF_target: float,
-                                   V_baseline: float=1000.,
+                                   vl_target: float,
+                                   vf_target: float,
+                                   v_baseline: float=1000.,
                                    ) -> tuple[float, float, float, float, float, float]:
         """
         Parameters
@@ -2535,11 +2558,11 @@ class FlutterResponse:
             the logger
         freq_target : float
             desired freq; throws warning if not satisfied
-        VL_target : float
+        vl_target : float
             desired VL; throws warning if not satisfied
-        VF_target : float
+        vf_target : float
             desired VF; throws warning if not satisfied
-        V_baseline : float; default=1000.
+        v_baseline : float; default=1000.
             the value for VL/VF if no crossing occurs
 
         Returns
@@ -2547,44 +2570,37 @@ class FlutterResponse:
 
         """
         # print('mode\tdamping\tfreq\tvel')
-        VLs = [(V_baseline, np.nan)]
-        VFs = [(V_baseline, np.nan)]
-        VDs = [(V_baseline, np.nan)]
-        # log.info(f'V_baseline={V_baseline} KEAS')
-        for freq, mode_vd_crossings in vd_crossing_dict.items():
-            for mode, vd_crossing in mode_vd_crossings.items():
-                (damping, freq, vel) = vd_crossing
-                if freq < freq_target and vel <= V_baseline:
-                    log.error(f'VD: mode={mode} damping={damping} freq={freq} VD={vel}')
-                VDs.append((vel, freq))
 
-        for damping_target, vl_vf_crossings in vl_vf_crossing_dict.items():
-            if damping_target == 0.0:  # VL
-                for mode, crossings in vl_vf_crossings.items():
-                    for (damping, freq, vel) in crossings:
-                        if vel < VL_target and vel <= V_baseline:
-                            log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
-                        VLs.append((vel, freq))
-            else:
-                assert damping_target == 0.03, damping_target  # VF
-                for mode, crossings in vl_vf_crossings.items():
-                    for (damping, freq, vel) in crossings:
-                        if vel < VF_target and vel <= V_baseline:
-                            log.error(f'VF: mode={mode} damping={damping} freq={freq} VF={vel}')
-                        VFs.append((vel, freq))
+        vd_array = _get_vd_array(
+            vd_crossing_dict, v_baseline, freq_target, log)
+        vl_array, vf_array = _get_vl_vf_array(
+            vl_vf_crossing_dict,
+            vl_target, vf_target,
+            v_baseline, log)
 
-        vl_array = np.array(VLs)
-        vf_array = np.array(VFs)
-        vd_array = np.array(VDs)
+        # find minimum velocity in [mode, velocity, frequency] table
+        ivl = np.where(vl_array[:, 1] == vl_array[:, 1].min())[0]
+        ivf = np.where(vf_array[:, 1] == vf_array[:, 1].min())[0]
+        ivd = np.where(vd_array[:, 1] == vd_array[:, 1].min())[0]
 
-        # find minimum velocity in [velocity, frequency] table
-        ivl = np.where(vl_array[:, 0] == vl_array[:, 0].min())[0][0]
-        ivf = np.where(vf_array[:, 0] == vf_array[:, 0].min())[0][0]
-        ivd = np.where(vd_array[:, 0] == vd_array[:, 0].min())[0][0]
+        # if the array is not empty, pull the lowest value
 
-        vl, freql = vl_array[ivl, :]  # limit
-        vf, freqf = vf_array[ivf, :]  # flutter
-        vd, freqd = vd_array[ivd, :]  # divergence
+        vl = v_baseline
+        vf = v_baseline
+        vd = v_baseline
+        freql = np.nan
+        freqf = np.nan
+        freqd = np.nan
+        if len(ivl):
+            ivl = ivl[0]
+            mode0, vl, freql = vl_array[ivl, :]  # limit
+        if len(ivf):
+            ivf = ivf[0]
+            mode3, vf, freqf = vf_array[ivf, :]  # flutter
+        if len(ivd):
+            ivd = ivd[0]
+            moded, vd, freqd = vd_array[ivd, :]  # divergence
+
         return vl, freql, vf, freqf, vd, freqd
 
 
@@ -3326,3 +3342,43 @@ def _sort_vd_crossings_by_mode(vd_crossing_dict: dict[float, dict[int, list[Cros
                     vd_crossing_dict_modes_sort[mode].append(crossing)
         # print(f'plot_crossings B = {vd_crossing_dict_modes_sort}')
     return vd_crossing_dict_modes_sort
+
+
+def _get_vd_array(vd_crossing_dict: dict[int, list[Crossing]],
+                  V_baseline: float, freq_target: float,
+                  log: SimpleLogger) -> np.ndarray:
+    VDs = [(V_baseline, np.nan)]
+    # log.info(f'V_baseline={V_baseline} KEAS')
+    for freq, mode_vd_crossings in vd_crossing_dict.items():
+        for mode, vd_crossing in mode_vd_crossings.items():
+            (damping, freq, vel) = vd_crossing
+            if freq < freq_target and vel <= V_baseline:
+                log.error(f'VD: mode={mode} damping={damping} freq={freq} VD={vel}')
+            VDs.append((vel, freq))
+    vd_array = np.array(VDs)
+    return vd_array
+
+def _get_vl_vf_array(vl_vf_crossing_dict: dict[float, list[Crossing]],
+                     VL_target: float, VF_target: float,
+                     V_baseline: float,
+                     log: SimpleLogger) -> tuple[np.ndarray, np.ndarray]:
+    VLs = [(-1, V_baseline, np.nan)]
+    VFs = [(-1, V_baseline, np.nan)]
+    for damping_target, vl_vf_crossings in vl_vf_crossing_dict.items():
+        if damping_target == 0.0:  # VL
+            for mode, crossings in vl_vf_crossings.items():
+                for (damping, freq, vel) in crossings:
+                    if vel < VL_target and vel <= V_baseline:
+                        log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
+                    VLs.append((mode, vel, freq))
+        else:
+            assert damping_target == 0.03, damping_target  # VF
+            for mode, crossings in vl_vf_crossings.items():
+                for (damping, freq, vel) in crossings:
+                    if vel < VF_target and vel <= V_baseline:
+                        log.error(f'VF: mode={mode} damping={damping} freq={freq} VF={vel}')
+                    VFs.append((mode, vel, freq))
+
+    vl_array = np.array(VLs)
+    vf_array = np.array(VFs)
+    return vl_array, vf_array

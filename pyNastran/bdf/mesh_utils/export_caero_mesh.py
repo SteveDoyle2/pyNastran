@@ -3,7 +3,6 @@ defines:
  - export_caero_mesh(model, caero_bdf_filename='caero.bdf', is_aerobox_model=True)
 
 """
-# from __future__ import annotations
 import math
 from typing import TextIO, TYPE_CHECKING
 import numpy as np
