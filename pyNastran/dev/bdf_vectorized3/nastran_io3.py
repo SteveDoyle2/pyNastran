@@ -967,16 +967,16 @@ def gui_material_ids(model: BDF,
                     material_dicti = {
                         'mid': material_id,
                     }
-            for card in property_cards2:
-                card_pids = card.property_id
+            for card_ in property_cards2:
+                card_pids = card_.property_id
                 index_pid = np.array([(i, pid) for i, pid in enumerate(pids)
                                       if pid in card_pids])
                 if index_pid.shape[0] == 0:
                     continue
                 index = index_pid[:, 0]
                 pidsi = index_pid[:, 1]
-                cardi = card.slice_card_by_id(pidsi)
-                ptype = card.type
+                cardi = card_.slice_card_by_id(pidsi)
+                ptype = card_.type
                 if flag in {'Rod'}:
                     material_idi = cardi.material_id
                     material_id[index] = material_idi
@@ -986,9 +986,9 @@ def gui_material_ids(model: BDF,
 
                 elif ptype in {'PCOMP', 'PCOMPG', 'PCOMPS'}:
                     upids = np.unique(cardi.property_id)
-                    ucard = card.slice_card_by_id(upids)
+                    ucard = card_.slice_card_by_id(upids)
                     #nlayer = ucard.nlayer.max()
-                    nlayer = card.nlayer.max()
+                    nlayer = card_.nlayer.max()
                     #print('nlayer =', nlayer)
                     if ptype in {'PCOMP', 'PCOMPG'}:
                         flag = 'Shell - Composite'
@@ -1021,7 +1021,7 @@ def gui_material_ids(model: BDF,
                         ieid = index[ipid]
                         npid = len(ipid)
                         pids_layer = cardi.property_id[ipid]
-                        cardii = card.slice_card_by_id(pids_layer)
+                        cardii = card_.slice_card_by_id(pids_layer)
                         material_id_rect = cardii.material_id.reshape(npid, ilayer)
                         thickness_rect = cardii.thickness.reshape(npid, ilayer)
                         theta_rect = cardii.theta.reshape(npid, ilayer)

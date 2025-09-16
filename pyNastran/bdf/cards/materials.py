@@ -4547,7 +4547,7 @@ class EQUIV(Material):
         mid = integer(card, 1, 'mid')
         field2 = integer(card, 2, 'field2')
         field3 = integer(card, 3, 'field3')
-        field4 = blank(card, 4, 'field4')
+        blank(card, 4, 'field4')
 
         field5 = integer(card, 5, 'field5')
         field6 = integer(card, 6, 'field6')

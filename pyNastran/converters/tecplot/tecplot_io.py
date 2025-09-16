@@ -21,7 +21,7 @@ class TecplotIO:
     def __init__(self, gui: MainWindow):
         self.gui = gui
 
-    def _remove_old_cart3d_geometry(self, tecplot_filename: str) -> None:
+    def _remove_old_tecplot_geometry(self, tecplot_filename: str) -> None:
         pass
 
     def get_tecplot_wildcard_geometry_results_functions(self):
@@ -36,7 +36,7 @@ class TecplotIO:
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self._remove_old_cart3d_geometry(tecplot_filename)
+        skip_reading = self._remove_old_tecplot_geometry(tecplot_filename)
         #skip_reading = False
         if skip_reading:
             return

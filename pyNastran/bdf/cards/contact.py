@@ -412,8 +412,8 @@ class BCBODY(BaseCard):
                 # | ADVANCE | SANGLE | COPTB | | MIDNO |
                 sangle = double_or_blank(card, i+1, 'sangle', default=60.)
                 coptb = integer(card, i+2, 'coptb')
-                user = blank(card, i+3, 'user')
-                min_nod = blank(card, i+4, 'min_nod')
+                blank(card, i+3, 'user')
+                blank(card, i+4, 'min_nod')
                 # “ADVANCE”
                 #     The entries for this continuation line are for advanced options starting with
                 #     MD Nastran R2.

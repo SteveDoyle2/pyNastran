@@ -927,7 +927,7 @@ def _store_loads(model: BDF, unused_card_type, unused_ids,
                 # tbi: [100.0, 100.0, 100.0, 100.0]
                 # tp1: [None, None]
                 # tp2: [None, None]
-                # type: 'TEMPRB'
+                # type_card: TEMPRB
                 #
                 # eids
                 pass

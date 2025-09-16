@@ -5,12 +5,15 @@ TODO:
  -
 """
 from __future__ import annotations
+
+import io
 import os
 import warnings
 from itertools import count
 from typing import Iterable, TextIO, Optional, Any, TYPE_CHECKING
 
 import numpy as np
+import numpy.typing as npt
 import scipy
 import scipy.interpolate
 try:
@@ -38,7 +41,8 @@ Color = str
 LineData = tuple[str, float, Color, str]
 LINESTYLES = ['-', '--', '-.', ':', 'None', ' ', '',
               'solid', 'dashed', 'dashdot', 'dotted']
-Crossing = tuple[float, float, float]
+Crossing = tuple[np.floating | float,
+                 float, float]
 Limit = tuple[Optional[float], Optional[float]] | None
 
 
@@ -726,8 +730,8 @@ class FlutterResponse:
                               point_removal: Optional[list[tuple[float, float]]]=None,
                               freq_round: int=2,
                               eas_round: int=3,
-                              ) -> tuple[dict[float, dict[int, list[Crossing]]],
-                                         dict[float, dict[int, list[Crossing]]]]:
+                              ) -> tuple[dict[npt.floating, dict[int, list[Crossing]]],
+                                         dict[npt.floating, dict[int, list[Crossing]]]]:
         """
         Gets the flutter crossings
 
@@ -2529,7 +2533,6 @@ class FlutterResponse:
 
         vl_array3 = vl_array2[iv0, :]
         vf_array3 = vf_array2[iv3, :]
-
         return vl_array3, vf_array3
 
     @staticmethod
@@ -2540,7 +2543,9 @@ class FlutterResponse:
                                    vl_target: float,
                                    vf_target: float,
                                    v_baseline: float=1000.,
-                                   ) -> tuple[float, float, float, float, float, float]:
+                                   ) -> tuple[npt.floating, npt.floating,
+                                              npt.floating, npt.floating,
+                                              npt.floating, npt.floating]:
         """
         Parameters
         ----------
@@ -2570,7 +2575,6 @@ class FlutterResponse:
 
         """
         # print('mode\tdamping\tfreq\tvel')
-
         vd_array = _get_vd_array(
             vd_crossing_dict, v_baseline, freq_target, log)
         vl_array, vf_array = _get_vl_vf_array(
@@ -2584,7 +2588,6 @@ class FlutterResponse:
         ivd = np.where(vd_array[:, 1] == vd_array[:, 1].min())[0]
 
         # if the array is not empty, pull the lowest value
-
         vl = v_baseline
         vf = v_baseline
         vd = v_baseline
@@ -3347,15 +3350,18 @@ def _sort_vd_crossings_by_mode(vd_crossing_dict: dict[float, dict[int, list[Cros
 def _get_vd_array(vd_crossing_dict: dict[int, list[Crossing]],
                   V_baseline: float, freq_target: float,
                   log: SimpleLogger) -> np.ndarray:
-    VDs = [(V_baseline, np.nan)]
+    vd_list = [(-1, V_baseline, np.nan)]
     # log.info(f'V_baseline={V_baseline} KEAS')
     for freq, mode_vd_crossings in vd_crossing_dict.items():
         for mode, vd_crossing in mode_vd_crossings.items():
             (damping, freq, vel) = vd_crossing
-            if freq < freq_target and vel <= V_baseline:
-                log.error(f'VD: mode={mode} damping={damping} freq={freq} VD={vel}')
-            VDs.append((vel, freq))
-    vd_array = np.array(VDs)
+            # if freq < freq_target and vel <= V_baseline:
+            #     log.error(f'VD: mode={mode} damping={damping} freq={freq} VD={vel}')
+            vd_list.append((mode, vel, freq))
+    vd_array = np.array(vd_list)
+
+    if len(vd_array) > 1:
+        log.error(f'VD (freq={freq_target})\nmode, vel, freq\n{_to_csv(vd_array[1:,])}')
     return vd_array
 
 def _get_vl_vf_array(vl_vf_crossing_dict: dict[float, list[Crossing]],
@@ -3369,16 +3375,26 @@ def _get_vl_vf_array(vl_vf_crossing_dict: dict[float, list[Crossing]],
             for mode, crossings in vl_vf_crossings.items():
                 for (damping, freq, vel) in crossings:
                     if vel < VL_target and vel <= V_baseline:
-                        log.error(f'VL: mode={mode} damping={damping} freq={freq} VL={vel}')
-                    VLs.append((mode, vel, freq))
+                        VLs.append((mode, vel, freq))
         else:
             assert damping_target == 0.03, damping_target  # VF
             for mode, crossings in vl_vf_crossings.items():
                 for (damping, freq, vel) in crossings:
                     if vel < VF_target and vel <= V_baseline:
-                        log.error(f'VF: mode={mode} damping={damping} freq={freq} VF={vel}')
-                    VFs.append((mode, vel, freq))
+                        VFs.append((mode, vel, freq))
 
     vl_array = np.array(VLs)
     vf_array = np.array(VFs)
+
+    if len(vl_array) > 1:
+        log.error(f'VL (damping=0.00)\nmode, vel, freq\n{_to_csv(vl_array[1:,])}')
+    if len(vf_array) > 1:
+        log.error(f'VF (damping=0.03)\nmode, vel, freq\n{_to_csv(vf_array[1:,])}')
     return vl_array, vf_array
+
+
+def _to_csv(myarray: np.ndarray) -> str:
+    msg_list = []
+    for mode, vel, freq in myarray:
+        msg_list.append(f'{mode:.0f},{vel:.3f},{freq:.3g}')
+    return '\n'.join(msg_list)

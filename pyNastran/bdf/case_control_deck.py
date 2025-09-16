@@ -168,8 +168,8 @@ class CaseControlDeck:
     def object_methods(self, mode: str='public', keys_to_skip=None) -> list[str]:
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip)
 
-    def object_methods(self, mode: str='public', keys_to_skip=None,
-                       filter_properties: bool=False) -> list[str]:
+    def object_attributes(self, mode: str='public', keys_to_skip=None,
+                          filter_properties: bool=False) -> list[str]:
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip,
                                  filter_properties=filter_properties)
 
