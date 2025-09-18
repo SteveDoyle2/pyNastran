@@ -95,6 +95,7 @@ class FlutterGui(LoggableGui):
         self.show_lines = True
         self.show_points = True
         self.show_mode_number = False
+        self.show_detailed_mode_info = False
         self.point_spacing = 0
         self._units_in = ''
         self._units_out = ''
@@ -349,6 +350,7 @@ class FlutterGui(LoggableGui):
             ('use_rhoref', self.use_rhoref_checkbox),
             ('show_points', self.show_points_checkbox[ifile]),
             ('show_mode_number', self.show_mode_number_checkbox[ifile]),
+            ('show_detailed_mode_info', self.show_detailed_mode_info_checkbox[ifile]),
             ('show_lines', self.show_lines_checkbox[ifile]),
         ]
         # attrs aren't stored
@@ -401,6 +403,7 @@ class FlutterGui(LoggableGui):
             ('vf', -1, self.VF_edit),
             ('damping', -1, self.damping_edit),
             ('damping_required', -1, self.damping_required_edit),
+            ('damping_required_tol', -1, self.damping_required_tol_edit),
             ('output_directory', -1, self.output_directory_edit),
         ]
         for key, index, line_edit in line_edits:
@@ -564,6 +567,7 @@ class FlutterGui(LoggableGui):
 
         self.show_points_checkbox = []
         self.show_mode_number_checkbox = []
+        self.show_detailed_mode_info_checkbox = []
         self.point_spacing_label = []
         self.point_spacing_spinner = []
         self.show_lines_checkbox = []
@@ -719,6 +723,7 @@ class FlutterGui(LoggableGui):
 
         self.show_points_checkbox.append(QCheckBox('Show Points', self))
         self.show_mode_number_checkbox.append(QCheckBox('Show Mode Number', self))
+        self.show_detailed_mode_info_checkbox.append(QCheckBox('Show Detailed Mode Info', self))
         self.point_spacing_label.append(QLabel('Point Spacing', self))
         self.point_spacing_spinner.append(QSpinBox(self))
         self.show_lines_checkbox.append(QCheckBox('Show Lines', self))
@@ -726,6 +731,7 @@ class FlutterGui(LoggableGui):
         self.show_lines_checkbox[-1].setChecked(True)
         self.show_points_checkbox[-1].setToolTip('The points are symbols')
         self.show_mode_number_checkbox[-1].setToolTip('The points are the mode number')
+        self.show_detailed_mode_info_checkbox[-1].setToolTip('Lists the 0% eas/freq range')
         self.point_spacing_spinner[-1].setToolTip('Skip Every Nth Point; 0=Plot All')
         self.point_spacing_spinner[-1].setValue(0)
         self.point_spacing_spinner[-1].setMinimum(0)
@@ -849,6 +855,10 @@ class FlutterGui(LoggableGui):
         self.damping_required_label = QLabel('Damping Required, g:', self)
         self.damping_required_edit = QFloatEdit('', self)
         self.damping_required_edit.setToolTip('Enables the flutter crossing (e.g., 0.0 for 0%)')
+
+        self.damping_required_tol_label = QLabel('Damping Required Tol, g:', self)
+        self.damping_required_tol_edit = QFloatEdit('', self)
+        self.damping_required_tol_edit.setToolTip('Tolerance for Damping Required. The crossing will be reported at the required value')
 
         self.damping_label = QLabel('Damping, g:', self)
         self.damping_edit = QFloatEdit('', self)
@@ -1031,6 +1041,8 @@ class FlutterGui(LoggableGui):
 
         self.damping_required_label.setVisible(show_crossing)
         self.damping_required_edit.setVisible(show_crossing)
+        self.damping_required_tol_label.setVisible(show_crossing)
+        self.damping_required_tol_edit.setVisible(show_crossing)
 
         self.damping_label.setVisible(show_crossing)
         self.damping_edit.setVisible(show_crossing)
@@ -1070,6 +1082,7 @@ class FlutterGui(LoggableGui):
             (not show_modal_participation, (
                 self.point_spacing_label[ifile], self.point_spacing_spinner[ifile],
                 self.show_mode_number_checkbox[ifile],
+                self.show_detailed_mode_info_checkbox[ifile],
                 self.show_lines_checkbox[ifile],
                 self.log_xscale_checkbox,
                 self.log_yscale1_checkbox, self.log_yscale2_checkbox,
@@ -1255,6 +1268,10 @@ class FlutterGui(LoggableGui):
         grid.addWidget(self.damping_required_edit, irow, 1)
         irow += 1
 
+        grid.addWidget(self.damping_required_tol_label, irow, 0)
+        grid.addWidget(self.damping_required_tol_edit, irow, 1)
+        irow += 1
+
         grid.addWidget(self.damping_label, irow, 0)
         grid.addWidget(self.damping_edit, irow, 1)
         irow += 1
@@ -1286,6 +1303,7 @@ class FlutterGui(LoggableGui):
 
         grid_check.addWidget(self.show_points_checkbox[ifile], jrow, 0)
         grid_check.addWidget(self.show_mode_number_checkbox[ifile], jrow, 1)
+        grid_check.addWidget(self.show_detailed_mode_info_checkbox[ifile], jrow, 2)
         jrow += 1
         grid_check.addWidget(self.point_spacing_label[ifile], jrow, 0)
         grid_check.addWidget(self.point_spacing_spinner[ifile], jrow, 1)
@@ -1655,9 +1673,14 @@ class FlutterGui(LoggableGui):
         ylim_freq = self.freq_lim
 
         damping_required = self.damping_required
+        damping_required_tol = self.damping_required_tol
         damping_limit = self.damping  # % damping
         eas_flutter_range = self.eas_flutter_range
         # eas_diverg_range = self.eas_diverg_range
+        if damping_required_tol is None:
+            damping_required_tol = 0.01
+        if damping_required_tol < 0.0:
+            damping_required_tol = 0.0
 
         # changing directory so we don't make a long filename
         # in the plot header
@@ -1761,12 +1784,12 @@ class FlutterGui(LoggableGui):
                 #log.info(f'v_lines={v_lines!r}')
                 damping_crossings = []
                 if damping_required is not None and damping_required > -0.99:
-                    damping_crossings.append((damping_required, damping_required+0.01))
+                    damping_crossings.append((damping_required, damping_required+damping_required_tol))
                 if damping_limit is not None and damping_limit > -0.99:
                     damping_crossings.append((damping_limit, damping_limit))
                 if len(damping_crossings) == 0:
                     damping_crossings = [
-                        (0.00, 0.01),
+                        (0.00, damping_required_tol),
                         (0.03, 0.03),
                     ]
 
@@ -1786,6 +1809,7 @@ class FlutterGui(LoggableGui):
                     png_filename=png_filename,
                     point_removal=self.point_removal,
                     mode_switch_method=self.mode_switch_method,
+                    show_detailed_mode_info=self.show_detailed_mode_info,
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
                 fig.canvas.draw()
@@ -1868,6 +1892,7 @@ class FlutterGui(LoggableGui):
         vl, is_passed_vl = get_float_or_none(self.VL_edit)
         vf, is_passed_vf = get_float_or_none(self.VF_edit)
         damping_required, is_passed_damping_required = get_float_or_none(self.damping_required_edit)
+        damping_required_tol, is_passed_damping_required_tol = get_float_or_none(self.damping_required_tol_edit)
         damping, is_passed_damping = get_float_or_none(self.damping_edit)
         eas_flutter_range, is_passed_flutter_range = get_list_float_or_none(
             [self.eas_flutter_range_edit_min, self.eas_flutter_range_edit_max])
@@ -1895,7 +1920,8 @@ class FlutterGui(LoggableGui):
             is_passed_eig,
             is_passed_tol1, is_passed_tol2, is_passed_tol3,
             is_passed_vl, is_passed_vf,
-            is_passed_damping_required, is_passed_damping,
+            is_passed_damping_required, is_passed_damping_required_tol,
+            is_passed_damping,
             is_passed_flutter_range,
         ]
         is_passed = all(is_passed_flags)
@@ -1907,7 +1933,8 @@ class FlutterGui(LoggableGui):
             damp_lim, freq_lim, kfreq_lim, ikfreq_lim,
             eigr_lim, eigi_lim,
             freq_tol, freq_tol_remove, mag_tol,
-            vl, vf, damping_required, damping, eas_flutter_range, point_removal, is_passed,
+            vl, vf, damping_required, damping_required_tol, damping,
+            eas_flutter_range, point_removal, is_passed,
         )
         return out
 
@@ -1926,7 +1953,8 @@ class FlutterGui(LoggableGui):
          ydamp_lim, freq_lim, kfreq_lim, ikfreq_lim,
          eigr_lim, eigi_lim,
          freq_tol, freq_tol_remove, mag_tol,
-         vl, vf, damping_required, damping, eas_flutter_range, point_removal,
+         vl, vf, damping_required, damping_required_tol, damping,
+         eas_flutter_range, point_removal,
          is_valid_xlim) = self.get_xlim()
 
         selected_modes = []
@@ -1956,6 +1984,7 @@ class FlutterGui(LoggableGui):
         self.vl = vl
         self.vf = vf
         self.damping_required = damping_required
+        self.damping_required_tol = damping_required_tol
         self.damping = damping
         self.eas_flutter_range = eas_flutter_range
         self.point_removal = point_removal
@@ -1971,6 +2000,7 @@ class FlutterGui(LoggableGui):
         self.show_lines = self.show_lines_checkbox[ifile].isChecked()
         self.show_points = self.show_points_checkbox[ifile].isChecked()
         self.show_mode_number = self.show_mode_number_checkbox[ifile].isChecked()
+        self.show_detailed_mode_info = self.show_detailed_mode_info_checkbox[ifile].isChecked()
         self.point_spacing = self.point_spacing_spinner[ifile].value()
         self.use_rhoref = self.use_rhoref_checkbox.isChecked()
 
@@ -2039,6 +2069,7 @@ class FlutterGui(LoggableGui):
             'vf': vf,
             'damping': damping,
             'damping_required': damping_required,
+            'damping_required_tol': damping_required_tol,
             'eas_flutter_range': eas_flutter_range,
             'point_removal': point_removal,
             'mode_switch_method': self.mode_switch_method,
