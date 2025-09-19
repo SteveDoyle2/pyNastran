@@ -887,15 +887,14 @@ class PBAR(Property):
 
         i12 = fdouble_or_blank(card, 19, 'I12', default=0.0)
 
+        k1 = np.nan
+        k2 = np.nan
         if A == 0.0:
             blank(card, 17, 'K1')
             blank(card, 18, 'K2')
-            k1 = np.nan
-            k2 = np.nan
         elif i12 != 0.0:
             # K1 / K2 are ignored
-            k1 = np.nan
-            k2 = np.nan
+            pass
         else:
             #: default=infinite; assume 1e8
             k1 = fdouble_or_blank(card, 17, 'K1', default=1e8)

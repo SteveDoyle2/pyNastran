@@ -1284,13 +1284,14 @@ class PBAR(LineProperty):
 
         i12 = double_or_blank(card, 19, 'I12', default=0.0)
 
+        k1 = None
+        k2 = None
         if A == 0.0:
             blank(card, 17, 'K1')
             blank(card, 18, 'K2')
         elif i12 != 0.0:
             # K1 / K2 are ignored
-            k1 = None
-            k2 = None
+            pass
         else:
             #: default=infinite; assume 1e8
             k1 = double_or_blank(card, 17, 'K1', default=1e8)
@@ -1335,13 +1336,14 @@ class PBAR(LineProperty):
 
         i12 = force_double_or_blank(card, 19, 'I12', default=0.0)
 
+        k1 = None
+        k2 = None
         if A == 0.0:
             blank(card, 17, 'K1')
             blank(card, 18, 'K2')
         elif i12 != 0.0:
             # K1 / K2 are ignored
-            k1 = None
-            k2 = None
+            pass
         else:
             #: default=infinite; assume 1e8
             k1 = force_double_or_blank(card, 17, 'K1', default=1e8)
