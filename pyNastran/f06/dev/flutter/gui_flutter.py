@@ -44,7 +44,7 @@ from pyNastran.gui.qt_files.named_dock_widget import NamedDockWidget
 from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
 from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
-from pyNastran.f06.dev.flutter.preferences_object import PreferencesObject
+from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
 from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
@@ -88,8 +88,13 @@ class FlutterGui(LoggableGui):
     def __init__(self, f06_filename: str=''):
         super().__init__(html_logging=False)
 
-        self._export_settings_obj = PreferencesObject(self, USE_VTK)
+        self._export_settings_obj = FlutterPreferencesObject(self, USE_VTK)
         self._vtk_window_obj = VtkWindowObject(self, ICON_PATH)
+
+        self.divergence_legend_loc = 'best'
+        self.flutter_bbox_to_anchor_x = 1.02
+        self.flutter_ncolumns = None
+
         self.font_size = 10
         self.plot_font_size = 10
         self.show_lines = True
@@ -1810,6 +1815,9 @@ class FlutterGui(LoggableGui):
                     point_removal=self.point_removal,
                     mode_switch_method=self.mode_switch_method,
                     show_detailed_mode_info=self.show_detailed_mode_info,
+                    ncol=self.flutter_ncolumns,
+                    divergence_legend_loc=self.divergence_legend_loc,
+                    flutter_bbox_to_anchor=(self.flutter_bbox_to_anchor_x, 1.),
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
                 fig.canvas.draw()

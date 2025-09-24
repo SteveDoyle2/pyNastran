@@ -4,20 +4,29 @@ TODO: change from dt_ms to FPS
 """
 from qtpy.QtWidgets import (
     QLabel,
-    #QWidget,
-    #QApplication, QMenu, QVBoxLayout, QLineEdit, QComboBox,
-    #QHBoxLayout, QPushButton,
+    # QWidget,
+    # QApplication, QMenu, QVBoxLayout, QLineEdit,
+    # QHBoxLayout, QPushButton,
     QGridLayout,
-    #QAction,
-    QCheckBox,
-    ##QRadioButton,
-    #QListWidgetItem, QAbstractItemView,
-    #QListWidget,
-    QSpinBox,
+    # QAction,
+    QCheckBox, QComboBox,
+    # QRadioButton,
+    # QListWidgetItem, QAbstractItemView,
+    # QListWidget,
+    QSpinBox, QDoubleSpinBox,
 )
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
+from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text
 
-class PreferencesDialog(PyDialog):
+LEGEND_LOCS = [
+    'best', 'none',
+    'upper right', 'upper center', 'upper left',
+    'center left', 'center', 'center right',
+    'lower left', 'lower center', 'lower right',
+]
+
+
+class FlutterPreferencesDialog(PyDialog):
     def __init__(self, data, gui_obj, win_parent=None):
         """
         Saves the data members from data and
@@ -26,7 +35,7 @@ class PreferencesDialog(PyDialog):
         PyDialog.__init__(self, data, win_parent)
         self.gui_obj = gui_obj
         self.use_vtk = gui_obj.use_vtk
-        #print(f'data = {data}')
+        # print(f'data = {data}')
         self.setup_widgets(data)
         self.on_font_size()
         self.setup_layout()
@@ -38,7 +47,7 @@ class PreferencesDialog(PyDialog):
         self.font_size_label = QLabel('Font Size')
         self.font_size_edit = QSpinBox()
         self.font_size_edit.setValue(data['font_size'])
-        #self.font_size_edit.setValue(data['font_size'])
+        # self.font_size_edit.setValue(data['font_size'])
 
         self.plot_font_size_label = QLabel('Plot Font Size')
         self.plot_font_size_edit = QSpinBox()
@@ -71,7 +80,32 @@ class PreferencesDialog(PyDialog):
         self.animate_checkbox = QCheckBox('Animate')
         self.animate_checkbox.setChecked(data['animate'])
         self.animate_checkbox.setEnabled(False)
-        #self.dt_ms_edit.setMaximum(2000)
+        # self.dt_ms_edit.setMaximum(2000)
+
+        # 'divergence_legend_loc': gui.divergence_legend_loc
+        # 'flutter_bbox_to_anchor': gui.flutter_bbox_to_anchor
+        # 'flutter_ncolumns': gui.flutter_ncolumns
+
+        self.divergence_legend_loc_label = QLabel('Divergence Legend Location:')
+        self.divergence_legend_loc_combobox = QComboBox()
+        self.divergence_legend_loc_combobox.addItems(LEGEND_LOCS)
+        set_combo_box_text(self.divergence_legend_loc_combobox, data['divergence_legend_loc'])
+
+        self.flutter_bbox_to_anchor_x_label = QLabel('Flutter BBox to Anchor:')
+        self.flutter_bbox_to_anchor_x_spinner = QDoubleSpinBox()
+        self.flutter_bbox_to_anchor_x_spinner.setValue(data['flutter_bbox_to_anchor_x'])
+        self.flutter_bbox_to_anchor_x_spinner.setMinimum(1.0)
+        self.flutter_bbox_to_anchor_x_spinner.setMaximum(2.0)
+        self.flutter_bbox_to_anchor_x_spinner.setSingleStep(0.01)
+
+        print('keys', list(data))
+        self.flutter_ncolumns_label = QLabel('Flutter nColumns:')
+        self.flutter_ncolumns_spinner = QSpinBox()
+        self.flutter_ncolumns_spinner.setMinimum(0)
+        self.flutter_ncolumns_spinner.setMaximum(3)
+
+        flutter_ncolumns = 0 if data['flutter_ncolumns'] is None else data['flutter_ncolumns']
+        self.flutter_ncolumns_spinner.setValue(flutter_ncolumns)
 
         self.export_png_checkbox = QCheckBox('Export PNG')
         self.export_csv_checkbox = QCheckBox('Export CSV')
@@ -111,6 +145,16 @@ class PreferencesDialog(PyDialog):
         grid.addWidget(self.animate_checkbox, irow, 2)
         irow += 1
 
+        grid.addWidget(self.flutter_bbox_to_anchor_x_label, irow, 0)
+        grid.addWidget(self.flutter_bbox_to_anchor_x_spinner, irow, 1)
+        irow += 1
+        grid.addWidget(self.flutter_ncolumns_label, irow, 0)
+        grid.addWidget(self.flutter_ncolumns_spinner, irow, 1)
+        irow += 1
+        grid.addWidget(self.divergence_legend_loc_label, irow, 0)
+        grid.addWidget(self.divergence_legend_loc_combobox, irow, 1)
+        irow += 1
+
         grid.addWidget(self.export_png_checkbox, irow, 0)
         irow += 1
         grid.addWidget(self.export_csv_checkbox, irow, 0)
@@ -118,9 +162,9 @@ class PreferencesDialog(PyDialog):
         grid.addWidget(self.export_zona_checkbox, irow, 2)
         irow += 1
         grid.setColumnStretch(grid.columnCount(), 2)
-        #widget = QWidget()
-        #widget.setLayout(vbox2)
-        #self.setCentralWidget(widget)
+        # widget = QWidget()
+        # widget.setLayout(vbox2)
+        # self.setCentralWidget(widget)
         self.setLayout(grid)
 
     def setup_connections(self) -> None:
@@ -135,6 +179,10 @@ class PreferencesDialog(PyDialog):
         self.dt_ms_edit.valueChanged.connect(self.on_dt_ms)
         self.icase_edit.valueChanged.connect(self.on_icase)
 
+        self.flutter_bbox_to_anchor_x_spinner.valueChanged.connect(self.on_flutter_bbox_to_anchor_x)
+        self.flutter_ncolumns_spinner.valueChanged.connect(self.on_flutter_ncolumns)
+        self.divergence_legend_loc_combobox.currentIndexChanged.connect(self.on_divergence_legend_loc)
+
     def on_font_size(self) -> None:
         font_size = self.font_size_edit.value()
         assert font_size > 0, font_size
@@ -148,10 +196,13 @@ class PreferencesDialog(PyDialog):
 
     def on_export_f06(self) -> None:
         self.win_parent.export_to_f06 = self.export_f06_checkbox.isChecked()
+
     def on_export_csv(self) -> None:
         self.win_parent.export_to_csv = self.export_csv_checkbox.isChecked()
+
     def on_export_png(self) -> None:
         self.win_parent.export_to_png = self.export_png_checkbox.isChecked()
+
     def on_export_zona(self) -> None:
         self.win_parent.export_to_zona = self.export_zona_checkbox.isChecked()
 
@@ -159,16 +210,36 @@ class PreferencesDialog(PyDialog):
         """TODO: move this behind an apply button"""
         value = self.dt_ms_edit.value()
         self.gui_obj.on_dt_ms(value)
+
     def on_nphase(self) -> None:
         """TODO: move this behind an apply button"""
         value = self.nphase_edit.value()
         self.gui_obj.on_nphase(value)
+
     def on_icase(self) -> None:
         """TODO: move this behind an apply button"""
         value = self.icase_edit.value()
         self.gui_obj.on_icase(value)
     # 'animate': True,
 
+    def on_flutter_ncolumns(self) -> None:
+        """TODO: move this behind an apply button"""
+        value = self.flutter_ncolumns_spinner.value()
+        # if value == 0:
+        #     value = None
+        self.gui_obj.on_flutter_ncolumns(value)
+
+    def on_flutter_bbox_to_anchor_x(self) -> None:
+        """TODO: move this behind an apply button"""
+        value = self.flutter_bbox_to_anchor_x_spinner.value()
+        self.gui_obj.on_flutter_bbox_to_anchor_x(value)
+
+    def on_divergence_legend_loc(self) -> None:
+        """TODO: move this behind an apply button"""
+        value = self.divergence_legend_loc_combobox.currentText()
+        self.gui_obj.on_divergence_legend_loc(value)
+
+
     def closeEvent(self, event):
-        #event.accept()
+        # event.accept()
         self.gui_obj.on_close()

@@ -1649,6 +1649,8 @@ class FlutterResponse:
                    filter_freq: bool=False,
                    damping_crossings: list[tuple[float, float]]=None,
                    show_detailed_mode_info: bool=False,
+                   divergence_legend_loc: str='best',
+                   flutter_bbox_to_anchor: Optional[tuple[float, float]]=None,
                    filter_damping: bool=False,
                    eas_range: Optional[tuple[float, float]]=None,
                    png_filename=None, show: bool=False,
@@ -1730,6 +1732,9 @@ class FlutterResponse:
             should the plot be closed after being saved
 
         """
+        ncol = 0 if ncol is None else ncol
+        if flutter_bbox_to_anchor is None:
+            flutter_bbox_to_anchor = (1.02, 1.)
         self._apply_mode_switch_method(mode_switch_method)
 
         # assert vl_limit is None or isinstance(vl_limit, float_types), vl_limit
@@ -1887,17 +1892,18 @@ class FlutterResponse:
         # print(f'legend_elements_freq = {legend_elements_freq}')
         # print(f'legend_elements_damp = {legend_elements_damp}')
         if legend:
-            if legend_elements_freq:
+            if legend_elements_freq and divergence_legend_loc != 'none':
                 # print('making freq axes legend')
                 freq_axes.legend(
                     handles=legend_elements_freq,
+                    loc=divergence_legend_loc,
                 )
             if legend_elements_damp:
                 # print('making damp axes legend')
                 damp_axes.legend(
                     handles=legend_elements_damp,
                     # bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol,  # OG
-                    bbox_to_anchor=(1.02, 1.), loc=2, ncol=ncol,  # tighter gap for legend
+                    bbox_to_anchor=flutter_bbox_to_anchor, loc=2, ncol=ncol,  # tighter gap for legend
                     # fontsize=10,
                 )
             # damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol)

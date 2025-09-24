@@ -1,4 +1,5 @@
 from __future__ import annotations
+import warnings
 from copy import deepcopy
 from itertools import count
 from collections import defaultdict
@@ -7,8 +8,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
-#from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string, integer_or_double,
     integer_or_blank, double_or_blank, string_or_blank,
@@ -18,7 +18,6 @@ from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank 
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default # init_x_g0,
 from pyNastran.bdf.cards.properties.bars import (
     _bar_areaL, to_fields, get_beam_sections, parse_pbrsect_options)
-# PBARL as pbarl, A_I1_I2_I12
 
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -65,7 +64,8 @@ class BAROR(BaseCard):
         #x = None
         #return BAROR(pid, is_g0, g0, x, offt='GGG', comment='')
 
-    def __init__(self, pid: int=0, g0: int=0, x=None, offt: str='GGG', comment: str=''):
+    def __init__(self, pid: int=0, g0: int=0, x=None,
+                 offt: str='GGG', comment: str=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -90,7 +90,8 @@ class BAROR(BaseCard):
         return copy
 
     @classmethod
-    def add_card(cls, model: BDF, card: BDFCard, ifile: int, comment: str=''):
+    def add_card(cls, model: BDF, card: BDFCard, ifile: int,
+                 comment: str=''):
         PROPERTY_ID_DEFAULT = 0
         GO_X_DEFAULT = 0
         OFFT_DEFAULT = ''
@@ -143,11 +144,10 @@ def init_x_g0(card: BDFCard, eid: int):
         x = np.array([field5,
                       double_or_blank(card, 6, 'x2', default=np.nan),
                       double_or_blank(card, 7, 'x3', default=np.nan)], dtype='float64')
-        #if norm(x) == 0.0:
-            #msg = 'G0 vector defining plane 1 is not defined.\n'
-            #msg += 'G0 = %s\n' % g0
-            #msg += 'X  = %s\n' % x
-            #raise RuntimeError(msg)
+        if np.linalg.norm(x) == 0.0:
+            msg = 'G0 vector defining plane 1 is not defined.\n'
+            msg += f'eid={eid} G0={g0} x={x}\n'
+            warnings.warn(msg)
     else:
         msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
                'type=%s' % (card.field(0), eid, field5, type(field5)))
@@ -1045,18 +1045,23 @@ class PBAR(Property):
     @property
     def i1(self) -> np.ndarray:
         return self.I[:, 0]
+
     @property
     def i2(self) -> np.ndarray:
         return self.I[:, 1]
+
     @property
     def i12(self) -> np.ndarray:
         return self.I[:, 2]
+
     @property
     def j(self) -> np.ndarray:
         return self.J
+
     @property
     def k1(self) -> np.ndarray:
         return self.k[:, 0]
+
     @property
     def k2(self) -> np.ndarray:
         return self.k[:, 1]
@@ -1064,24 +1069,31 @@ class PBAR(Property):
     @property
     def c1(self) -> np.ndarray:
         return self.c[:, 0]
+
     @property
     def c2(self) -> np.ndarray:
         return self.c[:, 1]
+
     @property
     def d1(self) -> np.ndarray:
         return self.d[:, 0]
+
     @property
     def d2(self) -> np.ndarray:
         return self.d[:, 1]
+
     @property
     def e1(self) -> np.ndarray:
         return self.e[:, 0]
+
     @property
     def e2(self) -> np.ndarray:
         return self.e[:, 1]
+
     @property
     def f1(self) -> np.ndarray:
         return self.f[:, 0]
+
     @property
     def f2(self) -> np.ndarray:
         return self.f[:, 1]
@@ -1089,12 +1101,15 @@ class PBAR(Property):
     @i1.setter
     def i1(self, i1: np.ndarray) -> None:
         self.I[:, 0] = i1
+
     @i2.setter
     def i2(self, i2: np.ndarray) -> None:
         self.I[:, 1] = i2
+
     @i12.setter
     def i12(self, i12: np.ndarray) -> None:
         self.I[:, 2] = i12
+
     @j.setter
     def j(self, j: np.ndarray) -> None:
         self.J = j
@@ -1102,6 +1117,7 @@ class PBAR(Property):
     @k1.setter
     def k1(self, k1: np.ndarray) -> None:
         self.k[:, 0] = k1
+
     @k2.setter
     def k2(self, k2: np.ndarray) -> None:
         self.k[:, 1] = k2
@@ -1109,24 +1125,31 @@ class PBAR(Property):
     @c1.setter
     def c1(self, c1: np.ndarray) -> None:
         self.c[:, 0] = c1
+
     @c2.setter
     def c2(self, c2: np.ndarray) -> None:
         self.c[:, 1] = c2
+
     @d1.setter
     def d1(self, d1: np.ndarray) -> None:
         self.d[:, 0] = d1
+
     @d2.setter
     def d2(self, d2: np.ndarray) -> None:
         self.d[:, 1] = d2
+
     @e1.setter
     def e1(self, e1: np.ndarray) -> None:
         self.e[:, 0] = e1
+
     @e2.setter
     def e2(self, e2: np.ndarray) -> None:
         self.e[:, 1] = e2
+
     @f1.setter
     def f1(self, f1: np.ndarray) -> None:
         self.f[:, 0] = f1
+
     @f2.setter
     def f2(self, f2: np.ndarray) -> None:
         self.f[:, 1] = f2
@@ -1561,7 +1584,7 @@ class PBARL(Property):
                                                                 groups, nsms):
             #nsm = set_blank_if_default(nsm, 0.)
             idim0, idim1 = idim
-            dim = self.dims[idim0 : idim1].tolist()
+            dim = self.dims[idim0:idim1].tolist()
             ndim = self.valid_types[beam_type]
             assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
             list_fields = ['PBARL', pid, mid, group, beam_type, None,
@@ -1634,7 +1657,7 @@ class PBARL(Property):
         for i, pid, beam_type, idim in zip(count(), self.property_id,
                                            self.Type, self.idim):
             idim0, idim1 = idim
-            dim = self.dims[idim0 : idim1].tolist()
+            dim = self.dims[idim0:idim1].tolist()
             #from pyNastran.bdf.cards.properties.bars import A_I1_I2_I12
             I[i] = _bar_areaL('PBARL', beam_type, dim, self)
         return I
@@ -1642,9 +1665,11 @@ class PBARL(Property):
     def i1(self):
         i1 = self.I()[:, 1]
         return i1
+
     def i2(self):
         i1 = self.I()[:, 2]
         return i1
+
     def i12(self):
         i12 = self.I()[:, 3]
         return i12
@@ -1657,7 +1682,8 @@ class PBRSECT(Property):
         self.material_id = np.array([], dtype='int32')
         self.form = np.array([], dtype='|U8')
 
-    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int,
+                 comment: str='') -> int:
         """
         Adds a PBRSECT card from ``BDF.add_card(...)``
 
@@ -1934,7 +1960,6 @@ class CBARAO(Element):
         self.nstation = nstation
         self.station = np.array(station, dtype=self.model.fdtype)
 
-
     @property
     def istation(self) -> np.ndarray:
         istation = make_idim(self.n, self.nstation)
@@ -1950,9 +1975,7 @@ class CBARAO(Element):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
-
         element_ids = array_str(self.element_id, size=size)
-
         for eid, scale, (istation0, istation1) in zip(element_ids, self.scale, self.istation):
             station = self.station[istation0:istation1].tolist()
             assert len(station) > 0, station
@@ -2015,6 +2038,7 @@ class CBARAO(Element):
         #self.scale = scale
         #self.x = np.unique(x).tolist()
 
+
 def apply_bar_default(bar: CBAR | CBEAM,
                       baror: BAROR | BEAMOR) -> None:
     model = bar.model
@@ -2051,9 +2075,9 @@ def apply_bar_default(bar: CBAR | CBEAM,
     #print(bar.x)
     #print(bar.g0)
     is_x_nan = np.isnan(bar.x)
-    x_any_nan = ~np.any(is_x_nan, axis=1) # x is blank
-    x_all_nan = ~np.all(is_x_nan, axis=1) # x is blank
-    g0_blank = (bar.g0 == G0_DEFAULT)     # g0 is blank
+    x_any_nan = ~np.any(is_x_nan, axis=1)  # x is blank
+    x_all_nan = ~np.all(is_x_nan, axis=1)  # x is blank
+    g0_blank = (bar.g0 == G0_DEFAULT)      # g0 is blank
 
     # we need to fix things that have:
     #   - x = nan (for all values)
@@ -2121,6 +2145,7 @@ def inertia_from_property_id(property_id: np.ndarray,
         inertia[i_lookup] = inertiai[i_all]
     return inertia
 
+
 def k_from_property_id(property_id: np.ndarray,
                        allowed_properties: list[Property]) -> np.ndarray:
     npid = len(property_id)
@@ -2137,6 +2162,7 @@ def k_from_property_id(property_id: np.ndarray,
             k1_k2i = prop.k()
         k1_k2[i_lookup] = k1_k2i[i_all]
     return k1_k2
+
 
 def check_offt(etype: str, element_id: np.ndarray, offt: np.ndarray) -> None:
     bad_offt = defaultdict(list)

@@ -1564,7 +1564,7 @@ class Add1dElements(BDFAttributes):
         dim_station0 = dims[0]
         assert len(dim_station0) == len(dim_constraints), f'len(dim_station0)={len(dim_station0)} len(dim_constraints)={len(dim_constraints)}'
         pbeaml = self.add_pbeaml(pid, mid, beam_type, xxb, dims,
-                                group=group, so=so, nsm=nsm, comment=comment)
+                                 group=group, so=so, nsm=nsm, comment=comment)
 
         prop_type = 'PBEAML'
         desvar_id = 1 if len(self.desvars) == 0 else max(self.desvars) + 1
@@ -1609,7 +1609,6 @@ class Add1dElements(BDFAttributes):
                     t_min_max = [t_min, t_max]
                     dim_min_max = t_min_max
                     xinit = t_init
-                #x = 1
             else:
                 xinit = dim
 
@@ -1659,7 +1658,6 @@ class Add1dElements(BDFAttributes):
             #dresp_id = add_beam_stress_strain_constraints(self, pid, label, response_type,
                                                           #static_stress_constraints, dresp_id,
                                                           #dconstrs)
-
         return pbeaml, desvars, dvprels
 
     def add_cbend(self, eid: int, pid: int, nids,

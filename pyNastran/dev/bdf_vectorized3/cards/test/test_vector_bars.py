@@ -912,5 +912,6 @@ class TestBars(unittest.TestCase):
             pid += 1
         save_load_deck(model)
 
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
