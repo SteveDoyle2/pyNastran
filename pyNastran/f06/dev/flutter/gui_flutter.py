@@ -34,7 +34,7 @@ from qtpy.QtWidgets import (
 #     QMainWindow, QDockWidget, QFrame, QToolBar,
 #     QToolButton, QMenuBar,
 # )
-#from qtpy.QtGui import QIcon
+# from qtpy.QtGui import QIcon
 QLINEEDIT_WHITE = 'QLineEdit {background-color: white;}'
 QLINEEDIT_RED = 'QLineEdit {background-color: red;}'
 
@@ -59,7 +59,7 @@ MODE_SWITCH_METHODS = ['None', 'Frequency', 'Damping']
 
 UNITS_OUT = UNITS_IN
 
-#FONT_SIZE = 12
+# FONT_SIZE = 12
 from pyNastran.f06.dev.flutter.utils import (
     get_plot_file, update_ylog_style, load_f06_op2,
     get_png_filename,)
@@ -167,7 +167,7 @@ class FlutterGui(LoggableGui):
         self.on_plot_type()
         self._set_f06_default_names(self.f06_filename_edit[0].text())
         self.setAcceptDrops(True)
-        #self.on_open_new_window()
+        # self.on_open_new_window()
         self.show()
 
     def dragEnterEvent(self, event) -> None:
@@ -191,11 +191,11 @@ class FlutterGui(LoggableGui):
                 self.log.error(f'unknown extension (bdf/f06/op2) format for {filename}')
 
     def setup_toolbar(self) -> None:
-        #frame = QFrame(self)
+        # frame = QFrame(self)
         actions_dict = {
-            #'file_load': Action(name='file_load', text='Load...', func=self.on_file_load, icon='folder.png'),
-            #'file_save': Action(name='file_save', text='Save...', func=self.on_file_save, icon='save.png'),
-            #'file_save_as': Action(name='file_save_as', text='Save As...', func=self.on_file_save_as),
+            # 'file_load': Action(name='file_load', text='Load...', func=self.on_file_load, icon='folder.png'),
+            # 'file_save': Action(name='file_save', text='Save...', func=self.on_file_save, icon='save.png'),
+            # 'file_save_as': Action(name='file_save_as', text='Save As...', func=self.on_file_save_as),
             'file_exit':       Action(name='exit', text='Exit...', icon='exit2.jpg', func=self.on_file_exit),
             'export_settings': Action(name='Export Settings', text='Export Settings...', icon='preferences.jpg',
                                       shortcut='Ctrl+P', func=self.on_export_settings),
@@ -206,7 +206,7 @@ class FlutterGui(LoggableGui):
         self.qactions = actions_input.build_qactions(self)
 
         file_actions = [
-            #'file_load',
+            # 'file_load',
             # 'file_save', 'file_save_as',
             ] + recent_files + [
             'file_exit']
@@ -215,20 +215,20 @@ class FlutterGui(LoggableGui):
         self.menubar = self.menuBar()
         self.file_menu = self.menubar.addMenu('File')
         self.view_menu = self.menubar.addMenu('View')
-        #self.help_menu = self.menubar.addMenu('Help')
+        # self.help_menu = self.menubar.addMenu('Help')
 
-        help_actions = []
+        # help_actions = []
         menus_dict = {
             'File': (self.file_menu, file_actions),
             'View': (self.view_menu, view_actions),
-            #'Help': (self.help_menu, help_actions),
+            # 'Help': (self.help_menu, help_actions),
         }
         build_menus(menus_dict, self.qactions)
-        #self.file_menu.addAction(actions['file_load'])
-        #self.file_menu.addAction(actions['exit'])
+        # self.file_menu.addAction(actions['file_load'])
+        # self.file_menu.addAction(actions['exit'])
 
-        #self.toolbar = self.addToolBar('Show toolbar')
-        #self.toolbar.setObjectName('main_toolbar')
+        # self.toolbar = self.addToolBar('Show toolbar')
+        # self.toolbar.setObjectName('main_toolbar')
         self.statusbar = self.statusBar()
 
     def dont_crash(func):
@@ -276,7 +276,7 @@ class FlutterGui(LoggableGui):
         if self.save_filename == '' or not os.path.exists(self.save_filename):
             self.on_file_save_as()
         else:
-            #self.log.warning('on_file_save; _save')
+            # self.log.warning('on_file_save; _save')
             self._save(self.save_filename)
 
     def on_file_save_as(self) -> None:
@@ -291,17 +291,16 @@ class FlutterGui(LoggableGui):
         #     )
         #     self.log.info(f'json_filename={json_filename!r} wildcard={wildcard!r}')
         json_filename = self.save_filename
-        #self.log.warning('on_file_save_as; _save')
+        # self.log.warning('on_file_save_as; _save')
         self._save(json_filename)
 
     def _save(self, json_filename: str) -> None:
-        #self.log.warning('_save')
         is_valid = self.validate()
-        #self.log.info(f'self.data = {self.data}')
+        # self.log.info(f'self.data = {self.data}')
         if json_filename == '' or len(self.data) == 0:
             return
-        #print(f'json_filename={json_filename!r} wildcard={wildcard!r}')
-        #print(f'self.data = {self.data}')
+        # print(f'json_filename={json_filename!r} wildcard={wildcard!r}')
+        # print(f'self.data = {self.data}')
         out_data = copy.deepcopy(self.data)
         out_data['vtk'] = self._vtk_window_obj.data
         out_data['preferences'] = {
@@ -317,13 +316,14 @@ class FlutterGui(LoggableGui):
         }
         with open(json_filename, 'w') as json_file:
             json.dump(out_data, json_file, indent=4)
-        #print(f'fname="{fname}"')
+        # print(f'fname="{fname}"')
         self.log.info(f'finished saving {json_filename!r}\n')
         self.save_filename = json_filename
         self._set_window_title()
 
     def _apply_settings(self, data: dict[str, Any]) -> None:
         self._vtk_window_obj.apply_settings(data)
+        log = self.log
         font_size0 = self.font_size
         # radios = [
         #     ('show_points', self.show_points_radio),
@@ -344,7 +344,7 @@ class FlutterGui(LoggableGui):
         #     setattr(self, key, value)
 
         spinners = [
-             #('plot_font_size', self.plot_font_size_edit),
+             # ('plot_font_size', self.plot_font_size_edit),
         ]
         for (key, spinner) in spinners:
             if key not in data:
@@ -354,16 +354,19 @@ class FlutterGui(LoggableGui):
             spinner.setValue(val)
 
         type_names = [
-            (int,  ('preferences/font_size', 'preferences/plot_font_size',
+            (int,  ('preferences/font_size',
+                    'preferences/plot_font_size',
                     'preferences/flutter_ncolumns')),
             (float, ('preferences/flutter_bbox_to_anchor_x',)),
             (str, ('preferences/divergence_legend_loc',)),
             (bool, ('preferences/export_to_png',
-                    'preferences/export_to_f06', 'preferences/export_to_csv', 'preferences/export_to_zona')),
+                    'preferences/export_to_f06',
+                    'preferences/export_to_csv',
+                    'preferences/export_to_zona')),
         ]
         for value_type, keys in type_names:
             for key in keys:
-                print(f'loading key={key!r}')
+                # print(f'loading key={key!r}')
                 if '/' in key:
                     skey = key.split('/')
                     assert len(skey) == 2, f'key={key!r} skey={skey}'
@@ -373,7 +376,7 @@ class FlutterGui(LoggableGui):
                     assert hasattr(self, key1), (key, value)
                 else:
                     if key not in data:
-                        print(f'skipping {key!r}')
+                        log.warning(f'skipping {key!r}')
                         assert len(key) > 1, keys
                         continue
                     value = data[key]
@@ -418,7 +421,7 @@ class FlutterGui(LoggableGui):
         ]
         for key, line_edit_min, line_edit_max in min_max_line_edits:
             if key not in data:
-                #print(f'apply_settings: skipping key={key!r}')
+                # print(f'apply_settings: skipping key={key!r}')
                 continue
             values = data[key]
             value0 = _to_str(values[0])
@@ -444,7 +447,7 @@ class FlutterGui(LoggableGui):
         ]
         for key, index, line_edit in line_edits:
             if key not in data:
-                #print(f'apply_settings: skipping key={key!r}')
+                # print(f'apply_settings: skipping key={key!r}')
                 continue
             values = data[key]
             if index != -1:
@@ -454,8 +457,8 @@ class FlutterGui(LoggableGui):
 
             str_value = _to_str(value)
 
-            #print('type(value) =', type(value))
-            #print(f'{key+":":<10} values={values}[{index!r}]={value!r} -> {str_value!r}')
+            # print('type(value) =', type(value))
+            # print(f'{key+":":<10} values={values}[{index!r}]={value!r} -> {str_value!r}')
             try:
                 line_edit.setText(str_value)
             except AttributeError:  # pragma: no cover
@@ -471,7 +474,7 @@ class FlutterGui(LoggableGui):
         ]
         for key, pulldown_edit, values in pulldown_edits:
             if key not in data:
-                #print(f'apply_settings: skipping key={key!r}')
+                # print(f'apply_settings: skipping key={key!r}')
                 continue
             value = data[key]
             index = values.index(value)
@@ -539,7 +542,7 @@ class FlutterGui(LoggableGui):
             return
         self.bdf_filename_edit.setText(fname)
         self.bdf_filename = fname
-        #self.ok_button.setEnabled(False)
+        # self.ok_button.setEnabled(False)
 
     def on_browse_op2(self) -> None:
         """pops a dialog to select the op2 file"""
@@ -569,11 +572,11 @@ class FlutterGui(LoggableGui):
         except Exception as e:
             self.log.error(f'failed to load {json_filename}\n{str(e)}')
             print(traceback.format_exc())
-            #print(traceback.format_exception_only(e))
-            #raise
+            # print(traceback.format_exception_only(e))
+            # raise
             return
         self.log.info(f'finished loading {json_filename!r}')
-        #return wildcard_level, fname
+        # return wildcard_level, fname
         self._set_window_title()
 
     def _set_window_title(self) -> None:
@@ -825,7 +828,7 @@ class FlutterGui(LoggableGui):
         self.eigi_lim_edit_min = QFloatEdit(self)
         self.eigi_lim_edit_max = QFloatEdit(self)
 
-        #--------------------------------------------
+        # --------------------------------------------
         self.freq_tol_label = QLabel('dFreq Tol (Hz) Dash:', self)
         self.freq_tol_edit = QFloatEdit('-1.0', self)
         self.freq_tol_edit.setToolTip("Applies a dotted line for modes that don't change by more than some amount")
@@ -856,7 +859,7 @@ class FlutterGui(LoggableGui):
         self.plot_type_label = QLabel('Plot Type:', self)
         self.plot_type_pulldown = QComboBox(self)
         self.plot_type_pulldown.addItems(PLOT_TYPES)
-        #self.plot_type_pulldown.setToolTip(units_msg)
+        # self.plot_type_pulldown.setToolTip(units_msg)
 
         self.units_in_label = QLabel('Units In:', self)
         self.units_in_pulldown = QComboBox(self)
@@ -919,7 +922,7 @@ class FlutterGui(LoggableGui):
         self.mode_label = QLabel('Mode:', self)
         self.mode_edit = QSpinBox(self)
         self.mode_edit.setMinimum(1)
-        #self.mode_edit.SetValue(3)
+        # self.mode_edit.SetValue(3)
         self.mode_edit.setToolTip('Sets the mode')
 
         self.velocity_label = QLabel('Velocity Point:', self)
@@ -972,7 +975,7 @@ class FlutterGui(LoggableGui):
         show_zimmerman = False
         show_modal_participation = False
 
-        #PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
+        # PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
         assert plot_type in PLOT_TYPES, plot_type
         self.on_units_out()
 
@@ -999,10 +1002,10 @@ class FlutterGui(LoggableGui):
             show_zimmerman = True
         elif plot_type == 'root-locus':
             show_root_locus = True
-            #show_kfreq = False
+            # show_kfreq = False
         elif plot_type == 'modal-participation':
             show_modal_participation = True
-            #show_kfreq = False
+            # show_kfreq = False
         else:  # pragma: no cover
             raise RuntimeError(f'plot_type={plot_type!r}')
 
@@ -1025,8 +1028,8 @@ class FlutterGui(LoggableGui):
                 show_kfreq_lim = True
             elif 'ikfreq' == x_plot_type:
                 show_ikfreq_lim = True
-        #print(f'x_plot_type={x_plot_type} show_damp={show_damp}; show_xlim={show_xlim}')
-        #assert show_xlim is False, show_xlim
+        # print(f'x_plot_type={x_plot_type} show_damp={show_damp}; show_xlim={show_xlim}')
+        # assert show_xlim is False, show_xlim
 
         show_eigenvalue = show_root_locus or show_modal_participation
         show_xaxis = not show_eigenvalue
@@ -1107,7 +1110,7 @@ class FlutterGui(LoggableGui):
         self.VL_edit.setVisible(show_eas_lim)
         self.VF_label.setVisible(show_eas_lim)
         self.VF_edit.setVisible(show_eas_lim)
-        #ifile = self.ifile
+        # ifile = self.ifile
         ifile = -1
 
         show_items = [
@@ -1135,10 +1138,10 @@ class FlutterGui(LoggableGui):
             main_tab = QWidget()
             tab_file1 = QWidget()
             tab_plus = QWidget()
-            #self.add_button = QToolButton(self.parent(), text='+')
-            #self.add_button.clicked.connect(self.addClicked)
+            # self.add_button = QToolButton(self.parent(), text='+')
+            # self.add_button.clicked.connect(self.addClicked)
             iwindow_compare = self.tabs.addTab(main_tab, 'Compare')
-            #window_compare.tabText()
+            # window_compare.tabText()
             # self.tabs.tabText(iwindow)
             iwindow1 = self.tabs.addTab(tab_file1, 'File 1')
             iwindow_plus = self.tabs.addTab(tab_plus, '+')
@@ -1149,7 +1152,7 @@ class FlutterGui(LoggableGui):
 
             # tabs.setTabIcon(2, plus_icon)
             # tabs.setTabIcon(1, plus_icon)
-            #self.f06_load_button.clicked.connect(self.on_load_f06)
+            # self.f06_load_button.clicked.connect(self.on_load_f06)
             self.tabs.currentChanged.connect(self.on_new_tab)
             # window_plus = tabs.addTab(tab1, '+')
         if 0:
@@ -1195,7 +1198,7 @@ class FlutterGui(LoggableGui):
         grid.addWidget(self.plot_type_pulldown, irow, 1)
         irow += 1
 
-        #--------------------------------------------------
+        # --------------------------------------------------
         # x-axis
         grid.addWidget(self.index_lim_label, irow, 0)
         grid.addWidget(self.index_lim_edit_min, irow, 1)
@@ -1241,7 +1244,7 @@ class FlutterGui(LoggableGui):
         grid.addWidget(self.ikfreq_lim_edit_min, irow, 1)
         grid.addWidget(self.ikfreq_lim_edit_max, irow, 2)
         irow += 1
-        #--------------------------------------------------
+        # --------------------------------------------------
         # y-axes
         grid.addWidget(self.damp_lim_label, irow, 0)
         grid.addWidget(self.damp_lim_edit_min, irow, 1)
@@ -1252,8 +1255,8 @@ class FlutterGui(LoggableGui):
         grid.addWidget(self.freq_lim_edit_min, irow, 1)
         grid.addWidget(self.freq_lim_edit_max, irow, 2)
         irow += 1
-        #--------------------------------------------------
 
+        # --------------------------------------------------
         grid.addWidget(self.eigr_lim_label, irow, 0)
         grid.addWidget(self.eigr_lim_edit_min, irow, 1)
         grid.addWidget(self.eigr_lim_edit_max, irow, 2)
@@ -1263,7 +1266,7 @@ class FlutterGui(LoggableGui):
         grid.addWidget(self.eigi_lim_edit_min, irow, 1)
         grid.addWidget(self.eigi_lim_edit_max, irow, 2)
         irow += 1
-        #------------------------------------------
+        # ------------------------------------------
         grid.addWidget(self.freq_tol_label, irow, 0)
         grid.addWidget(self.freq_tol_edit, irow, 1)
         irow += 1
@@ -1365,7 +1368,7 @@ class FlutterGui(LoggableGui):
         vbox.addLayout(ok_cancel_hbox)
         vbox.addWidget(self.pop_vtk_gui_button)
         vbox.addLayout(grid_modes)
-        #log_widget = ApplicationLogWidget(self)
+        # log_widget = ApplicationLogWidget(self)
 
         log_widget = self.setup_logging()
         if self.use_dock_widgets:
@@ -1374,12 +1377,12 @@ class FlutterGui(LoggableGui):
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock_widget)
             vbox2 = vbox
         else:
-            #self.log_dock_widget.hide()
+            # self.log_dock_widget.hide()
             vbox2 = QHBoxLayout()
             vbox2.addWidget(self.modes_widget)
             vbox2.addLayout(vbox)
         if USE_TABS:
-            #tab_main.setLayout(vbox_main_tab)
+            # tab_main.setLayout(vbox_main_tab)
             tab_file1.setLayout(vbox2)
             self.setCentralWidget(self.tabs)
             tab_file1.activateWindow()
@@ -1427,8 +1430,8 @@ class FlutterGui(LoggableGui):
 
     def setup_connections(self) -> None:
         self.f06_load_button.clicked.connect(self.on_load_f06)
-        #self.bdf_load_button.clicked.connect(self.on_load_bdf)
-        #self.op2_load_button.clicked.connect(self.on_load_op2)
+        # self.bdf_load_button.clicked.connect(self.on_load_bdf)
+        # self.op2_load_button.clicked.connect(self.on_load_op2)
 
         self.x_plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
         self.plot_type_pulldown.currentIndexChanged.connect(self.on_plot_type)
@@ -1439,7 +1442,7 @@ class FlutterGui(LoggableGui):
             f06_filename_browse.clicked.connect(self.on_browse_f06)
         self.bdf_filename_browse.clicked.connect(self.on_browse_bdf)
         self.op2_filename_browse.clicked.connect(self.on_browse_op2)
-        #self.modes_widget.itemSelectionChanged.connect(self.on_modes)
+        # self.modes_widget.itemSelectionChanged.connect(self.on_modes)
         # self.modes_widget.itemClicked.connect(self.on_modes)
         # self.modes_widget.currentRowChanged.connect(self.on_modes)
         self.ok_button.clicked.connect(self.on_ok)
@@ -1466,7 +1469,7 @@ class FlutterGui(LoggableGui):
         self.VF_label.setText(f'VF, Flutter ({eas_units}):')
 
     def on_font_size(self) -> None:
-        #font_size = self.font_size_edit.value()
+        # font_size = self.font_size_edit.value()
         self.on_set_font_size(self.font_size)
 
     def on_set_font_size(self, font_size: int) -> None:
@@ -1497,7 +1500,7 @@ class FlutterGui(LoggableGui):
         if len(subcases) == 0:
             self.log.error('No subcases found')
             return
-        #self.log.info(f'on_load_f06: subcases={subcases}')
+        # self.log.info(f'on_load_f06: subcases={subcases}')
         self.f06_filename = f06_filename
         self._units_in = f06_units
         self._units_out = out_units
@@ -1548,10 +1551,10 @@ class FlutterGui(LoggableGui):
         if not is_subcase_valid:
             return
         response: FlutterResponse = self.responses[subcase]
-        #self.log.info(f'on_subcase; response.results.shape={response.results.shape}')
+        # self.log.info(f'on_subcase; response.results.shape={response.results.shape}')
         freqs = response.results[:, 0, response.ifreq].ravel()
         self._update_modal_participation_velocity(response)
-        #self.log.info(f'on_subcase; freqs={freqs}')
+        # self.log.info(f'on_subcase; freqs={freqs}')
         self.update_modes_table(response.modes, freqs)
 
     def _update_modal_participation_velocity(self, response: FlutterResponse) -> None:
@@ -1567,9 +1570,9 @@ class FlutterGui(LoggableGui):
 
     def _get_subcase(self) -> tuple[int, bool]:
         subcase_str = self.subcase_edit.currentText()
-        #self.log.info(f'_get_subcase: subcase_str={subcase_str!r}')
+        # self.log.info(f'_get_subcase: subcase_str={subcase_str!r}')
         subcase_sline = subcase_str.split()
-        #self.log.info(f'_get_subcase: subcase_sline={subcase_sline}')
+        # self.log.info(f'_get_subcase: subcase_sline={subcase_sline}')
         try:
             subcase = int(subcase_sline[1])
             is_valid = True
@@ -1584,7 +1587,7 @@ class FlutterGui(LoggableGui):
         subcases_text = [f'Subcase {isubcase}' for isubcase in subcases]
         self.log.info(f'update_subcases={subcases_text}')
         self.subcase_edit.clear()
-        #self.log.info(f'update_subcases setting...')
+        # self.log.info(f'update_subcases setting...')
         self.subcase_edit.addItems(subcases_text)
 
     def update_modes_table(self, modes: list[int],
@@ -1611,12 +1614,12 @@ class FlutterGui(LoggableGui):
 
     def _on_update_mode(self) -> None:
         if not self.is_valid:
-            #self.log.warning('_on_update_mode')
+            # self.log.warning('_on_update_mode')
             self.validate()
         self.plot()
 
     def on_ok(self) -> None:
-        #self.log.warning('on_ok')
+        # self.log.warning('on_ok')
         is_valid = self.validate()
         if not is_valid:
             return
@@ -1625,11 +1628,11 @@ class FlutterGui(LoggableGui):
         if len(modes) == 0:
             self.log.warning(f'modes = {modes}; assuming all modes -> {self.modes}')
             modes = self.modes
-            #return
+            # return
         self.log.info(f'is_valid = {is_valid}\n')
         self.is_valid = True
         self.plot(modes)
-        #self.log.warning('on_ok; _save')
+        # self.log.warning('on_ok; _save')
         self._save(self.save_filename)
 
     @dont_crash
@@ -1676,17 +1679,17 @@ class FlutterGui(LoggableGui):
             xlim = self.ikfreq_lim
         else:  # pragma: no cover
             log.error(f'x_plot_type={x_plot_type!r} is not supported')
-            #raise RuntimeError(x_plot_type)
+            # raise RuntimeError(x_plot_type)
             xlim = (None, None)
 
-        #log.info(f'xlim={xlim}\n')
+        # log.info(f'xlim={xlim}\n')
         if plot_type == 'zimmerman':
             print('skipping xlim check')
         else:
             assert xlim[0] != '' and xlim[1] != '', (xlim, x_plot_type)
 
         v_lines = []
-        #log.info(f'vf={self.vf!r}; vl={self.vl!r}\n')
+        # log.info(f'vf={self.vf!r}; vl={self.vl!r}\n')
         if isinstance(self.vf, float) and self.vf > 0.:
             # name, velocity, color, linestyle
             v_lines.append(('VF', self.vf, 'r', '-'))
@@ -1699,11 +1702,11 @@ class FlutterGui(LoggableGui):
             v_lines.append(('VL', self.vl, 'k', '--'))
             v_lines.append(('1.15*VL', 1.15*self.vl, 'k', '-'))
 
-        #log.info(f'v_lines={v_lines}\n')
-        #log.info(f'kfreq_lim={self.kfreq_lim}\n')
-        #log.info(f'ydamp_lim={self.ydamp_lim}\n')
-        #log.info(f'freq_lim={self.freq_lim}\n')
-        #log.info(f'damping={self.damping}\n')
+        # log.info(f'v_lines={v_lines}\n')
+        # log.info(f'kfreq_lim={self.kfreq_lim}\n')
+        # log.info(f'ydamp_lim={self.ydamp_lim}\n')
+        # log.info(f'freq_lim={self.freq_lim}\n')
+        # log.info(f'damping={self.damping}\n')
         xlim_kfreq = self.kfreq_lim
         ylim_damping = self.ydamp_lim
         ylim_freq = self.freq_lim
@@ -1720,7 +1723,7 @@ class FlutterGui(LoggableGui):
 
         # changing directory so we don't make a long filename
         # in the plot header
-        #log.info(f'damping_limit = {damping_limit}\n')
+        # log.info(f'damping_limit = {damping_limit}\n')
         dirname = os.path.abspath(os.path.dirname(self.f06_filename))
         basename = os.path.basename(self.f06_filename)
 
@@ -1747,19 +1750,19 @@ class FlutterGui(LoggableGui):
         response.noline = noline
         response.set_symbol_settings(
             nopoints, self.show_mode_number, self.point_spacing)
-        #log.info(f'self.plot_font_size = {self.plot_font_size}')
+        # log.info(f'self.plot_font_size = {self.plot_font_size}')
         response.set_font_settings(self.plot_font_size)
         response.log = log
-        #print('trying plots...')
+        # print('trying plots...')
 
-        #log.info(f'getting logs\n')
+        # log.info(f'getting logs\n')
         log_scale_x = self.data['log_scale_x']
         log_scale_y1 = self.data['log_scale_y1']
         log_scale_y2 = self.data['log_scale_y2']
         print(f'log_scale_x={log_scale_x}; log_scale_y1={log_scale_y1}; log_scale_y2={log_scale_y2}')
-        #print(f'export_to_png={self.export_to_png}')
+        # print(f'export_to_png={self.export_to_png}')
 
-        #print(f'point_removal = {self.point_removal}')
+        # print(f'point_removal = {self.point_removal}')
         self.export_to_png = False
         png_filename0, png_filename = get_png_filename(
             base, x_plot_type, plot_type,
@@ -1771,8 +1774,8 @@ class FlutterGui(LoggableGui):
                 response.plot_zimmerman(fig=fig, axes=axes, modes=modes, show=True)
             elif plot_type == 'root-locus':
                 axes = fig.add_subplot(111)
-                #log.info(f'modes={modes}; eigr_lim={self.eigr_lim}; eigi_lim={self.eigi_lim}; freq_tol={freq_tol}')
-                #log.info(f'png_filename={png_filename}')
+                # log.info(f'modes={modes}; eigr_lim={self.eigr_lim}; eigi_lim={self.eigi_lim}; freq_tol={freq_tol}')
+                # log.info(f'png_filename={png_filename}')
                 response.plot_root_locus(
                     fig=fig, axes=axes,
                     modes=modes, eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
@@ -1785,7 +1788,7 @@ class FlutterGui(LoggableGui):
                 axes = fig.add_subplot(111)
                 mode = self.mode_edit.value()
                 ivel = self.velocity_edit.currentIndex()
-                #print(f'ivel={ivel}; mode={mode}')
+                # print(f'ivel={ivel}; mode={mode}')
                 response.plot_modal_participation(
                     ivel, mode,
                     fig=fig, axes=axes,
@@ -1797,10 +1800,10 @@ class FlutterGui(LoggableGui):
                     png_filename=png_filename,
                 )
             elif plot_type == 'x-damp-kfreq':
-                #xlabel: eas
-                #ylabel1 = r'Structural Damping; $g = 2 \gamma $'
-                #ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
-                #print('plot_kfreq_damping')
+                # xlabel: eas
+                # ylabel1 = r'Structural Damping; $g = 2 \gamma $'
+                # ylabel2 = r'KFreq [rad]; $ \omega c / (2 V)$'
+                # print('plot_kfreq_damping')
                 response.plot_kfreq_damping(
                     fig=fig, damp_axes=damp_axes, freq_axes=freq_axes,
                     modes=modes, plot_type=x_plot_type,
@@ -1813,11 +1816,11 @@ class FlutterGui(LoggableGui):
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
             else:
                 assert plot_type in 'x-damp-freq', plot_type
-                #print('plot_vg_vf')
-                #log.info(f'png_filename={png_filename!r}')
-                #log.info(f'modes={modes!r}')
-                #log.info(f'freq_tol={freq_tol!r}')
-                #log.info(f'v_lines={v_lines!r}')
+                # print('plot_vg_vf')
+                # log.info(f'png_filename={png_filename!r}')
+                # log.info(f'modes={modes!r}')
+                # log.info(f'freq_tol={freq_tol!r}')
+                # log.info(f'v_lines={v_lines!r}')
                 damping_crossings = []
                 if damping_required is not None and damping_required > -0.99:
                     damping_crossings.append((damping_required, damping_required+damping_required_tol))
@@ -1856,7 +1859,7 @@ class FlutterGui(LoggableGui):
             log.error(f'plot_type={plot_type}')
             log.error(str(e))
             print(traceback.format_exc())
-            #print(traceback.print_tb())
+            # print(traceback.print_tb())
             print(traceback.print_exception(e))
             raise
 
@@ -1946,12 +1949,12 @@ class FlutterGui(LoggableGui):
         damping_required = _float_passed_to_default(damping_required, is_passed_damping_required)
         damping = _float_passed_to_default(damping, is_passed_damping)
 
-        #if is_passed_eas_damping_lim1 and eas_damping_lim_min is None:
+        # if is_passed_eas_damping_lim1 and eas_damping_lim_min is None:
         #    eas_damping_lim_min = None
-        #if is_passed_eas_damping_lim2 and eas_damping_lim_max is None:
+        # if is_passed_eas_damping_lim2 and eas_damping_lim_max is None:
         #    eas_damping_lim_max = None
 
-        #self.log.info(f'XLim = {xlim}')
+        # self.log.info(f'XLim = {xlim}')
         is_passed_flags = [
             is_passed_x,
             is_passed_damp,
@@ -1965,8 +1968,8 @@ class FlutterGui(LoggableGui):
         ]
         is_passed = all(is_passed_flags)
         # if not is_passed:
-        #self.log.warning(f'is_passed_flags = {is_passed_flags}')
-        #print(f'freq_tol = {freq_tol}')
+        # self.log.warning(f'is_passed_flags = {is_passed_flags}')
+        # print(f'freq_tol = {freq_tol}')
         out = (
             index_lim, eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim,
             damp_lim, freq_lim, kfreq_lim, ikfreq_lim,
@@ -1979,7 +1982,7 @@ class FlutterGui(LoggableGui):
 
     def get_selected_modes(self) -> list[int]:
         mode_strs = get_selected_items_flat(self.modes_widget)
-        #self.log.info(f'mode_strs = {mode_strs}')
+        # self.log.info(f'mode_strs = {mode_strs}')
         modes = [int(mode_str.split(';')[0].split(' ')[1])
                  for mode_str in mode_strs]
         self.log.info(f'modes = {modes}')
@@ -1987,7 +1990,7 @@ class FlutterGui(LoggableGui):
 
     def validate(self) -> bool:
         ifile = self.ifile
-        #self.log.warning('validate')
+        # self.log.warning('validate')
         (index_lim, eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim,
          ydamp_lim, freq_lim, kfreq_lim, ikfreq_lim,
          eigr_lim, eigi_lim,
@@ -2075,7 +2078,7 @@ class FlutterGui(LoggableGui):
 
             'recent_files': self.recent_files,
             'subcase': subcase,
-            #'modes': modes,
+            # 'modes': modes,
             'selected_modes': selected_modes,
             'x_plot_type': self.x_plot_type,
             'plot_type': self.plot_type,
@@ -2113,12 +2116,12 @@ class FlutterGui(LoggableGui):
         is_passed = all([is_valid_xlim, is_subcase_valid, is_passed_modal_partipation])
         if is_passed:
             self.data = data
-            #self.xlim = xlim
-            #self.ylim = ydamp_lim
-            #self.data = data
+            # self.xlim = xlim
+            # self.ylim = ydamp_lim
+            # self.data = data
             # is_valid = validate_json(self.data, self.log)
-            #if is_valid != is_passed:
-            #self.log.info(f'passed data:\n{str(self.data)}')
+            # if is_valid != is_passed:
+            # self.log.info(f'passed data:\n{str(self.data)}')
         else:
             del data['recent_files']
             self.log.error(
@@ -2127,12 +2130,12 @@ class FlutterGui(LoggableGui):
                 f'is_passed_modal_partipation = {is_passed_modal_partipation}\n'
                 f'failed data:\n{str(data)}'
             )
-            #self.log.error(f'failed data:\n{str(data)}')
+            # self.log.error(f'failed data:\n{str(data)}')
         return is_passed
 
     def on_open_new_window(self):
-        #bdf_filename = self.bdf_filename if not (self.bdf_filename and os.path.exists(self.bdf_filename)) else BDF_FILENAME
-        #op2_filename = self.op2_filename if not (self.op2_filename and os.path.exists(self.op2_filename)) else OP2_FILENAME
+        # bdf_filename = self.bdf_filename if not (self.bdf_filename and os.path.exists(self.bdf_filename)) else BDF_FILENAME
+        # op2_filename = self.op2_filename if not (self.op2_filename and os.path.exists(self.op2_filename)) else OP2_FILENAME
         bdf_filename = self.bdf_filename if os.path.exists(self.bdf_filename) else ''
         op2_filename = self.op2_filename if os.path.exists(self.op2_filename) else ''
         self._vtk_window_obj.show(bdf_filename, op2_filename)
@@ -2233,7 +2236,7 @@ def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
 def validate_json(data: dict[str, Any],
                   log: SimpleLogger) -> bool:
     is_valid = True
-    #log.warning(f'keys = {list(data.keys())}')
+    # log.warning(f'keys = {list(data.keys())}')
     key_allowed_values = [
         ('units_in', UNITS_IN),
         ('units_out', UNITS_OUT),
@@ -2272,11 +2275,11 @@ def get_float_or_none(line_edit: QLineEdit) -> tuple[Optional[float | str], bool
     if not line_edit.isVisible():
         # just echo it back...who cares if it's wrong
         text = line_edit.text().strip()
-        #try:
-            #value = float(text)
-        #except ValueError:
-            #value = text
-        #value = None
+        # try:
+        #     value = float(text)
+        # except ValueError:
+        #     value = text
+        # value = None
         value = text
         is_passed = True
         return value, is_passed
@@ -2308,6 +2311,7 @@ def _float_passed_to_default(value: float, is_passed: bool,
     if is_passed and value is None:
         value = default
     return value
+
 
 def main(f06_filename: str='') -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
