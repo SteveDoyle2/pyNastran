@@ -304,6 +304,17 @@ class FlutterGui(LoggableGui):
         #print(f'self.data = {self.data}')
         out_data = copy.deepcopy(self.data)
         out_data['vtk'] = self._vtk_window_obj.data
+        out_data['preferences'] = {
+            'flutter_ncolumns': self.flutter_ncolumns,
+            'flutter_bbox_to_anchor_x': self.flutter_bbox_to_anchor_x,
+            'divergence_legend_loc': self.divergence_legend_loc,
+            'export_to_png': self.export_to_png,
+            'export_to_csv': self.export_to_csv,
+            'export_to_f06': self.export_to_f06,
+            'export_to_zona': self.export_to_zona,
+            'font_size': self.font_size,
+            'plot_font_size': self.plot_font_size,
+        }
         with open(json_filename, 'w') as json_file:
             json.dump(out_data, json_file, indent=4)
         #print(f'fname="{fname}"')
@@ -324,6 +335,14 @@ class FlutterGui(LoggableGui):
         #     assert isinstance(val, bool), (key, val)
         #     checkbox.setChecked(val)
 
+        # preferences = data.get('preferences', {})
+        # for key, value in preferences.items():
+        #     if not hasattr(self, key):
+        #         self.log.error(f'load failure: skipping {key!r}={value!r} because key doesnt exist')
+        #         continue
+        #     self.log.error(f'load success: loaded {key!r}={value!r}')
+        #     setattr(self, key, value)
+
         spinners = [
              #('plot_font_size', self.plot_font_size_edit),
         ]
@@ -335,19 +354,31 @@ class FlutterGui(LoggableGui):
             spinner.setValue(val)
 
         type_names = [
-            (int,  ('font_size', 'plot_font_size',)),
-            (bool, ('export_to_png',
-                    'export_to_f06', 'export_to_csv', 'export_to_zona')),
+            (int,  ('preferences/font_size', 'preferences/plot_font_size',
+                    'preferences/flutter_ncolumns')),
+            (float, ('preferences/flutter_bbox_to_anchor_x',)),
+            (str, ('preferences/divergence_legend_loc',)),
+            (bool, ('preferences/export_to_png',
+                    'preferences/export_to_f06', 'preferences/export_to_csv', 'preferences/export_to_zona')),
         ]
         for value_type, keys in type_names:
             for key in keys:
-                if key not in data:
-                    print(f'skipping {key!r}')
-                    assert len(key) > 1, keys
-                    continue
-                value = data[key]
+                print(f'loading key={key!r}')
+                if '/' in key:
+                    skey = key.split('/')
+                    assert len(skey) == 2, f'key={key!r} skey={skey}'
+                    key0, key1 = skey
+                    data0 = data[key0]
+                    value = data0[key1]
+                    assert hasattr(self, key1), (key, value)
+                else:
+                    if key not in data:
+                        print(f'skipping {key!r}')
+                        assert len(key) > 1, keys
+                        continue
+                    value = data[key]
+                    assert hasattr(self, key), (key, value)
                 assert isinstance(value, value_type), (key, value, value_type)
-                assert hasattr(self, key), (key, value)
                 setattr(self, key, value)
 
         ifile = self.ifile
@@ -2038,16 +2069,11 @@ class FlutterGui(LoggableGui):
             'use_rhoref': self.use_rhoref,
             'show_points': self.show_points,
             'show_mode_number': self.show_mode_number,
+            'show_detailed_mode_info': self.show_detailed_mode_info,
             'point_spacing': self.point_spacing,
             'show_lines': self.show_lines,
-            'export_to_png': self.export_to_png,
-            'export_to_csv': self.export_to_csv,
-            'export_to_f06': self.export_to_f06,
-            'export_to_zona': self.export_to_zona,
 
             'recent_files': self.recent_files,
-            'font_size': self.font_size,
-            'plot_font_size': self.plot_font_size,
             'subcase': subcase,
             #'modes': modes,
             'selected_modes': selected_modes,
@@ -2173,21 +2199,25 @@ def get_point_removal_str(point_removal: list[tuple[float, float]]):
 def point_removal_str_to_point_removal(point_removal_str: str,
                                        log: SimpleLogger) -> list[tuple[float, float]]:
     point_removal = []
-    try:
-        point_removal_list = point_removal_str.split(',')
-        for ipoint, point in enumerate(point_removal_list):
-            sline = point.split(':')
-            assert len(sline) == 2, f'point_removal[{ipoint}]={sline}; point_removal={str(point_removal_list)}'
-            a_str = sline[0].strip()
-            b_str = sline[1].strip()
-            a = float(a_str) if a_str != '' else -1.0
-            b = float(b_str) if b_str != '' else -1.0
-            point_float = (a, b)
-            point_removal.append(point_float)
-    except Exception as e:
-        log.error(str(e))
-        # print(traceback.print_tb(e))
-        print(traceback.print_exception(e))
+    point_removal_list = point_removal_str.split(',')
+
+    if point_removal_list == ['']:
+        pass
+    else:
+        try:
+            for ipoint, point in enumerate(point_removal_list):
+                sline = point.split(':')
+                assert len(sline) == 2, f'point_removal[{ipoint}]={sline}; point_removal={str(point_removal_list)}'
+                a_str = sline[0].strip()
+                b_str = sline[1].strip()
+                a = float(a_str) if a_str != '' else -1.0
+                b = float(b_str) if b_str != '' else -1.0
+                point_float = (a, b)
+                point_removal.append(point_float)
+        except Exception as e:
+            log.error(str(e))
+            # print(traceback.print_tb(e))
+            print(traceback.print_exception(e))
     return point_removal
 
 
