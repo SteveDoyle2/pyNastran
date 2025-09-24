@@ -90,6 +90,7 @@ class FlutterGui(LoggableGui):
 
         self._export_settings_obj = FlutterPreferencesObject(self, USE_VTK)
         self._vtk_window_obj = VtkWindowObject(self, ICON_PATH)
+        self.iwindows = []
 
         self.divergence_legend_loc = 'best'
         self.flutter_bbox_to_anchor_x = 1.02
@@ -102,6 +103,7 @@ class FlutterGui(LoggableGui):
         self.show_mode_number = False
         self.show_detailed_mode_info = False
         self.point_spacing = 0
+        self.use_rhoref = False
         self._units_in = ''
         self._units_out = ''
         self.units_in = ''
@@ -122,6 +124,9 @@ class FlutterGui(LoggableGui):
         self.subcase = 0
         self.x_plot_type = 'eas'
         self.plot_type = 'x-damp-freq'
+        self.mode_switch_method = MODE_SWITCH_METHODS[0]
+        self.point_removal = ''
+
         self.eas_lim = []
         self.tas_lim = []
         self.mach_lim = []
