@@ -599,16 +599,12 @@ def map_pressure_centroid_avg(bdf_model_out: BDF,
 
 
 def map_pressure_centroid(bdf_model_out: BDF,
-                          aero_area,
-                          aero_cp_centroid,
-                          iaero,
-                          structure_nodes, istructure,
-                          pressure_sid: int=1,
-                          qinf: float=1.0) -> None:
+                          aero_pressure_centroid,
+                          structure_eids,
+                          pressure_sid: int=1) -> None:
     """maps the pressure at the centroid of the panel (not the average)"""
-    aero_pressure_centroid = aero_cp_centroid[iaero] * qinf
-    mapped_structure_elements = structure_nodes[istructure]
-    for eid, pressure in zip(mapped_structure_elements, aero_pressure_centroid):
+    assert len(structure_eids) == len(aero_pressure_centroid), (len(structure_eids), len(aero_pressure_centroid))
+    for eid, pressure in zip(structure_eids, aero_pressure_centroid):
         bdf_model_out.add_pload2(pressure_sid, eids=[eid], pressure=pressure)
     return
 
@@ -885,40 +881,57 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
         regions_to_remove=regions_to_remove,
     )
     aero_xyz_nodal = aero_dict['xyz_nodal']
+    aero_centroid = aero_dict['centroid']
     aero_cp_centroid = aero_dict['Cp_centroid']
     aero_area = aero_dict['area']
+    naero_elem = len(aero_area)
+    naero_node = len(aero_xyz_nodal)
 
     structure_nodes, structure_xyz = get_structure_xyz(structure_model)
+    nstructure_node = len(structure_nodes)
     out = get_mapped_structure(
         structure_model, structure_eids, fdtype=fdtype)
     structure_eids, structure_areas, structure_centroids, structure_normals = out
+    nstructure_elem = len(structure_eids)
+    assert len(structure_centroids) == len(structure_eids)
 
-    tree = _get_tree(aero_xyz_nodal)
     if map_location == 'centroid':
+        tree = _get_tree(aero_centroid)
         unused_deq, ieq = tree.query(structure_centroids, k=1)
+        slots = np.where(ieq < naero_elem)
+        iaero_elem = ieq[slots]
+        istructure = None
+        # tree = _get_tree(structure_centroids)
+        # unused_deq, ieq = tree.query(aero_centroid, k=1)
+        # slots = np.where(ieq < nstructure_elem)
+        # iaero_elem = None
+        # istructure = ieq[slots]
+
     elif map_location == 'node':
+        tree = _get_tree(aero_xyz_nodal)
         unused_deq, ieq = tree.query(structure_xyz, k=4)
-        nnodes = len(aero_xyz_nodal)
-        slots = np.where(ieq[:, :] < nnodes)
+        slots = np.where(ieq[:, :] < naero_node)
+
+        # irows: aero?
+        # icols: structure?
+        irows, icols = slots
+        iaero = irows
+        istructure = icols
     else:  # pragma: no cover
         raise RuntimeError(map_location)
-
-    # irows: aero?
-    # icols: structure?
-    irows, icols = slots
-    iaero = irows
-    istructure = icols
 
     #mapped_structure_elements = structure_nodes[istructure]
 
     bdf_model_out = BDF(log=structure_model.log)
     if map_type == 'pressure':
+        aero_pressure_centroid = aero_cp_centroid[iaero_elem] * qinf
+        # mapped_structure_elements = structure_nodes[istructure]
+        assert nstructure_elem == len(aero_pressure_centroid), (len(mapped_structure_elements), len(aero_pressure_centroid))
         map_pressure_centroid(
             bdf_model_out,
-            aero_area, aero_cp_centroid, iaero,
-            structure_nodes, istructure,
+            aero_pressure_centroid,
+            structure_eids,
             pressure_sid=pressure_sid,
-            qinf=qinf,
         )
     # elif map_type == 'force_moment':
     #     map_force_moment_centroid(

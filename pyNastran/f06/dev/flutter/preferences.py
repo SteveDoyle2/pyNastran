@@ -82,10 +82,6 @@ class FlutterPreferencesDialog(PyDialog):
         self.animate_checkbox.setEnabled(False)
         # self.dt_ms_edit.setMaximum(2000)
 
-        # 'divergence_legend_loc': gui.divergence_legend_loc
-        # 'flutter_bbox_to_anchor': gui.flutter_bbox_to_anchor
-        # 'flutter_ncolumns': gui.flutter_ncolumns
-
         self.divergence_legend_loc_label = QLabel('Divergence Legend Location:')
         self.divergence_legend_loc_combobox = QComboBox()
         self.divergence_legend_loc_combobox.addItems(LEGEND_LOCS)
@@ -98,7 +94,6 @@ class FlutterPreferencesDialog(PyDialog):
         self.flutter_bbox_to_anchor_x_spinner.setMaximum(2.0)
         self.flutter_bbox_to_anchor_x_spinner.setSingleStep(0.01)
 
-        print('keys', list(data))
         self.flutter_ncolumns_label = QLabel('Flutter nColumns:')
         self.flutter_ncolumns_spinner = QSpinBox()
         self.flutter_ncolumns_spinner.setMinimum(0)
