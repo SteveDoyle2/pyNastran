@@ -32,7 +32,7 @@ from pyNastran.utils.atmosphere import (
     convert_altitude, convert_velocity, convert_density, convert_pressure,
 )
 from pyNastran.utils import object_attributes, object_methods, PathLike
-from pyNastran.utils.numpy_utils import float_types, integer_float_types
+from pyNastran.utils.numpy_utils import integer_types, float_types, integer_float_types
 
 if TYPE_CHECKING and IS_MATPLOTLIB:  # pragma: no cover
     from matplotlib.axes import Axes
@@ -804,7 +804,9 @@ class FlutterResponse:
             easi = self.results[imode, :, self.ieas].flatten()
             freqi = self.results[imode, :, self.ifreq].flatten()
             easi, dampi, freqi = remove_excluded_points(
-                easi, dampi, freqi, point_removal, eas_range=eas_range)
+                easi, dampi, freqi, point_removal)
+            easi, dampi, freqi = remove_eas_range(
+                easi, dampi, freqi, eas_range)
 
             for damping_targeti, damping_requiredi in damping_crossings_dict.items():
                 if dampi.max() < damping_requiredi:
@@ -813,7 +815,7 @@ class FlutterResponse:
                 # target different percent dampings
                 ddamping = dampi - damping_targeti
                 p1, p2, pmax = get_zero_crossings_hump(
-                    easi, freqi, ddamping, damping_targeti,
+                    easi, dampi, ddamping, damping_targeti,
                     x_round=eas_round, freq_round=freq_round,
                 )
                 # [i1, x1, 0., f1]
@@ -1789,7 +1791,9 @@ class FlutterResponse:
                 freq = freq[irigid]
 
             vel, damping, freq = remove_excluded_points(
-                vel, damping, freq, point_removal, eas_range=eas_range)
+                vel, damping, freq, point_removal)
+            vel_calc, damping_calc, freq_calc = remove_eas_range(
+                vel, damping, freq, eas_range)
 
             jcolor, color, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
@@ -1810,13 +1814,13 @@ class FlutterResponse:
             # freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
             # print(color, symbol, linestyle)
             # dfreq = freq.max() - freq.min()
-            label = _get_mode_freq_label(mode, freq[0])
-            if filter_freq and freq.min() > ylim_freq[1] and damping.max() < 0.0:
+            if filter_freq and freq_calc.min() > ylim_freq[1] and damping_calc.max() < 0.0:
                 # if we're entirely greater than the max, skip line
                 continue
-            if filter_freq and freq.max() < ylim_freq[0] and damping.max() < 0.0:
+            if filter_freq and freq_calc.max() < ylim_freq[0] and damping_calc.max() < 0.0:
                 # if we're entirely below than the min, skip line
                 continue
+            label = _get_mode_freq_label(mode, freq[0])
             # print(mode, color, symbol, linestyle, dfreq, freq)
 
             # _plot_axes(damp_axes,
@@ -3380,9 +3384,38 @@ def _is_tick(values: Optional[tuple[float, ...]], index: int):
     return out
 
 
+def _ieas_range(eas: np.ndarray, eas_range) -> np.ndarray:
+    eas_min0, eas_max0 = _get_eas_range(eas_range)
+    if eas_min0 is None and eas_max0 is None:
+        return None
+
+    if eas_min0 is not None and eas_max0 is not None:
+        ieas = np.where((eas_min0 <= eas) & (eas <= eas_max0))
+    elif eas_min0 is not None:
+        ieas = np.where(eas_min0 <= eas)
+    elif eas_max0 is not None:
+        ieas = np.where(eas <= eas_max0)
+    else:
+        raise RuntimeError(f'eas error; eas_min0={eas_min0} eas_max0={eas_max0}')
+    return ieas
+
+
+def remove_eas_range(eas: np.ndarray,
+                     damping: np.ndarray,
+                     freq: np.ndarray,
+                     eas_range: Optional[tuple[Optional[float]], Optional[float]]=None,
+                     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ieas = _ieas_range(eas, eas_range)
+    if ieas is None:
+        return eas, damping, freq
+    eas = eas[ieas]
+    damping = damping[ieas]
+    freq = freq[ieas]
+    return eas, damping, freq
+
+
 def remove_excluded_points(vel: np.ndarray, damping: np.ndarray, freq: np.ndarray,
                            point_removal: list[tuple[float, float]],
-                           eas_range: Optional[tuple[Optional[float]], Optional[float]]=None,
                            ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Removes points in a given velocity range
@@ -3397,28 +3430,11 @@ def remove_excluded_points(vel: np.ndarray, damping: np.ndarray, freq: np.ndarra
         point_removal = [(400.0, 410.0),]
 
     """
-    eas_min0, eas_max0 = _get_eas_range(eas_range)
-    if eas_min0 is None and eas_max0 is None:
-        pass
-    else:
-        if eas_min0 is not None and eas_max0 is not None:
-            ieas = np.where((eas_min0 <= vel) & (vel <= eas_max0))
-        elif eas_min0 is not None:
-            ieas = np.where(eas_min0 <= vel)
-        elif eas_max0 is not None:
-            ieas = np.where(vel <= eas_max0)
-        else:
-            raise RuntimeError(f'eas error; eas_min0={eas_min0} eas_max0={eas_max0}')
-        vel = vel[ieas]
-        damping = damping[ieas]
-        freq = freq[ieas]
-
     if point_removal is None or len(point_removal) == 0:
         return vel, damping, freq
 
     istack_list = []
     for (a, b) in point_removal:
-
         if a > 0 and b > 0:
             i = ((vel <= a) | (b <= vel))
         elif a > 0:
@@ -3629,8 +3645,11 @@ def _get_divergence(self,
         dampi = self.results[imode, :, self.idamping].flatten()
         easi = self.results[imode, :, self.ieas].flatten()
         freqi = self.results[imode, :, self.ifreq].flatten()
+
         easi, dampi, freqi = remove_excluded_points(
-            easi, dampi, freqi, point_removal, eas_range=eas_range)
+            easi, dampi, freqi, point_removal)
+        easi, dampi, freqi = remove_eas_range(
+            easi, dampi, freqi, eas_range)
 
         for freq_targeti, freq_requiredi in freq_crossings_dict.items():
             if freqi.min() > freq_requiredi:
@@ -3639,7 +3658,6 @@ def _get_divergence(self,
             # dfreq sign is flipped because get_zero_crossings
             # requires a positive crossing
             dfreq = freqi - freq_targeti
-
             # v1
             # ifreqs = np.where(dfreq > 0)[0]
             # ifreq = ifreqs[-1] + 1
@@ -3653,6 +3671,8 @@ def _get_divergence(self,
             if len(ifreqs) == 0:
                 continue
             ifreq = ifreqs[0]
+            if not isinstance(ifreq, integer_types):
+                raise RuntimeError(f'ifreq={ifreq!r} and must be an integer; type={str(type(ifreq))}')
 
             if ifreq >= len(freqi):
                 continue

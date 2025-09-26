@@ -45,6 +45,9 @@ from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
 from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
 from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
+from pyNastran.f06.dev.flutter.preferences import (
+    FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
+    FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT)
 from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
@@ -92,12 +95,12 @@ class FlutterGui(LoggableGui):
         self._vtk_window_obj = VtkWindowObject(self, ICON_PATH)
         self.iwindows = []
 
-        self.divergence_legend_loc = 'best'
-        self.flutter_bbox_to_anchor_x = 1.02
-        self.flutter_ncolumns = None
+        self.divergence_legend_loc = LEGEND_LOC_DEFAULT
+        self.flutter_bbox_to_anchor_x = FLUTTER_BBOX_TO_ANCHOR_DEFAULT
+        self.flutter_ncolumns = FLUTTER_NCOLUMNS_DEFAULT
 
-        self.font_size = 10
-        self.plot_font_size = 10
+        self.font_size = FONT_SIZE_DEFAULT
+        self.plot_font_size = FONT_SIZE_DEFAULT
         self.show_lines = True
         self.show_points = True
         self.show_mode_number = False
@@ -379,6 +382,11 @@ class FlutterGui(LoggableGui):
                     data0 = data[key0]
                     value = data0[key1]
                     assert hasattr(self, key1), (key, value)
+                    if not isinstance(value, value_type):
+                        log.warning(f'{key!r}={value!r} and is not {value_type}...skipping')
+                        continue
+                    log.info(f'setting {key!r} (key1={key1!r}) -> {value!r}')
+                    setattr(self, key1, value)
                 else:
                     if key not in data:
                         log.warning(f'skipping {key!r}')
@@ -386,8 +394,11 @@ class FlutterGui(LoggableGui):
                         continue
                     value = data[key]
                     assert hasattr(self, key), (key, value)
-                assert isinstance(value, value_type), (key, value, value_type)
-                setattr(self, key, value)
+                    if not isinstance(value, value_type):
+                        log.warning(f'{key!r}={value!r} and is not {value_type}...skipping')
+                        continue
+                    log.info(f'setting {key!r} -> {value!r}')
+                    setattr(self, key, value)
 
         ifile = self.ifile
         checkboxs = [
@@ -1769,7 +1780,6 @@ class FlutterGui(LoggableGui):
         # print(f'export_to_png={self.export_to_png}')
 
         # print(f'point_removal = {self.point_removal}')
-        self.export_to_png = False
         png_filename0, png_filename = get_png_filename(
             base, x_plot_type, plot_type,
             self.export_to_png)
