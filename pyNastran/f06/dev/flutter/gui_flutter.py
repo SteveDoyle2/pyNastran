@@ -726,6 +726,7 @@ class FlutterGui(LoggableGui):
         # self.ok_button = []
         #
         # self.pop_vtk_gui_button = []
+
         # self.solution_type_label = []
         # self.solution_type_pulldown = []
         # self.mode2_label = []
