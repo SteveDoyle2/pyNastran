@@ -384,7 +384,7 @@ MSC_MATRIX_TABLES: list[bytes] = [
     b'PMRF', b'PERF', b'PFRF', b'PGRF', b'AFRF', b'AGRF', b'MP3F',
 
     b'FEFFMOD',  #  think this is right
-] # type: list[bytes]
+]
 
 MSC_RESULT_TABLES: list[bytes] = [b'ASSIG', b'ASEPS'] + [
     # Qualifier Information Table - which is what???
@@ -459,13 +459,13 @@ MSC_RESULT_TABLES: list[bytes] = [b'ASSIG', b'ASEPS'] + [
     #----------------------
     # applied loads
     # OPG1 - Applied static loads
-    b'OPNL1', # nonlinear applied loads - sort 1
+    b'OPNL1',  # nonlinear applied loads - sort 1
     b'OPG1',  # applied loads - gset? - sort 1
     b'OPGV1',
     b'OPG2',  # applied loads - sort 2 - v0.8
 
     # grid point stresses
-    b'OGS1', # grid point stresses/strains - sort 1
+    b'OGS1',  # grid point stresses/strains - sort 1
 
     #-----------------------------------------------------
     # random analysis
@@ -571,11 +571,11 @@ MSC_RESULT_TABLES: list[bytes] = [b'ASSIG', b'ASEPS'] + [
     b'IBULK',
     #b'FRL',  # frequency response list
     b'TOL',
-    b'DSCM2', # normalized design sensitivity coeff. matrix (nDESVAR, nDRESPx)
+    b'DSCM2',  # normalized design sensitivity coeff. matrix (nDESVAR, nDRESPx)
 
     # dont seem to crash
     b'DESCYC',
-    b'DBCOPT', # design optimization history for post-processing
+    b'DBCOPT',  # design optimization history for post-processing
     b'PVT',    # table containing PARAM data
     b'XSOP2DIR',
     b'ONRGY',
@@ -586,15 +586,15 @@ MSC_RESULT_TABLES: list[bytes] = [b'ASSIG', b'ASEPS'] + [
     b'EXTDB',
 
 
-    b'OQG2', # single point forces - sort 2 - v0.8
-    b'OBC1', b'OBC2', # contact pressures and tractions at grid points
+    b'OQG2',  # single point forces - sort 2 - v0.8
+    b'OBC1', b'OBC2',  # contact pressures and tractions at grid points
     b'OBG1',  # glue normal and tangential tractions at grid points in basic coordinate system
     b'OES2',  # element stresses - sort 2 - v0.8
     b'OEF2',  # element forces - sort 2 - v0.8
-    b'OUGV2', # absolute displacements/velocity/acceleration - sort 2
+    b'OUGV2',  # absolute displacements/velocity/acceleration - sort 2
 
     # contact
-    b'OSPDSI1', # initial separation distance
+    b'OSPDSI1',  # initial separation distance
     b'OSPDS1',  # final separation distance
     b'OQGCF1', b'OQGCF2', # contact force at grid point
     b'OQGGF1', b'OQGGF2', # glue forces in grid point basic coordinate system
@@ -644,14 +644,14 @@ MSC_RESULT_TABLES: list[bytes] = [b'ASSIG', b'ASEPS'] + [
     b'OERPDSN',
     b'OUG1S',
     b'OVG1',
-    b'OUGSTRS0', # OUG-type table of geometry adjustment by initial stress-free contact
-    b'OBCNURB0', # Table of analytical contact surface spline
+    b'OUGSTRS0',  # OUG-type table of geometry adjustment by initial stress-free contact
+    b'OBCNURB0',  # Table of analytical contact surface spline
     b'OBCNURBD',
     b'OETEMP',
     b'OCNTCHKD',
 
-    #C:\MSC.Software\msc_nastran_runs\pcomp1.op2
-    #C:\MSC.Software\msc_nastran_runs\pcdyn111s2.op2
+    # C:\MSC.Software\msc_nastran_runs\pcomp1.op2
+    # C:\MSC.Software\msc_nastran_runs\pcdyn111s2.op2
     b'OGPSTRN', b'OGPFIN', b'OESRTN', b'OGPSRN',
 
     # msc/units_mass_spring_damper/units_mass_spring_damper/op2

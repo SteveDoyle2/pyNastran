@@ -4,14 +4,14 @@ defines:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from qtpy.QtWidgets import QMainWindow
-from pyNastran.f06.dev.flutter.preferences import PreferencesDialog
+from typing import Optional, TYPE_CHECKING
+# from qtpy.QtWidgets import QMainWindow
+from pyNastran.f06.dev.flutter.preferences import FlutterPreferencesDialog
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.f06.dev.flutter.gui_flutter import FlutterGui
 
 
-class PreferencesObject:
+class FlutterPreferencesObject:
     """defines PreferencesObject, which is an interface to the PreferencesWindow"""
     def __init__(self, gui: FlutterGui, use_vtk: bool):
         self.gui = gui
@@ -58,6 +58,10 @@ class PreferencesObject:
             'export_to_csv': gui.export_to_csv,
             'export_to_f06': gui.export_to_f06,
             'export_to_zona': gui.export_to_zona,
+
+            'divergence_legend_loc': gui.divergence_legend_loc,
+            'flutter_bbox_to_anchor_x': gui.flutter_bbox_to_anchor_x,
+            'flutter_ncolumns': gui.flutter_ncolumns,
             'clicked_ok': False,
             'close': False,
         }
@@ -67,7 +71,7 @@ class PreferencesObject:
             self.window.show()
         else:
             self.window_shown = True
-            self.window = PreferencesDialog(data, self, win_parent=gui)
+            self.window = FlutterPreferencesDialog(data, self, win_parent=gui)
 
         # if data['close']:
         #     # if not self.window._updated_legend:
@@ -88,6 +92,15 @@ class PreferencesObject:
     def on_nphase(self, nphase: int) -> None:
         self.gui._vtk_window_obj.set_preferences(nphase=nphase)
 
+    def on_flutter_ncolumns(self, value: Optional[int]) -> None:
+        self.gui.flutter_ncolumns = value
+
+    def on_flutter_bbox_to_anchor_x(self, value: float) -> None:
+        self.gui.flutter_bbox_to_anchor_x = value
+
+    def on_divergence_legend_loc(self, value: str) -> None:
+        self.gui.divergence_legend_loc = value
+
     def on_icase(self, icase: int) -> None:
         self.gui._vtk_window_obj.set_preferences(icase=icase)
 
@@ -95,6 +108,6 @@ class PreferencesObject:
         self.gui._vtk_window_obj.set_preferences(animate=animate)
 
     def on_close(self):
-        #del self.window
+        # del self.window
         self.window_shown = False
         self.window.hide()

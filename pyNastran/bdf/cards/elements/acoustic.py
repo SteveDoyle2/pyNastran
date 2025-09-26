@@ -1166,7 +1166,7 @@ class MATPOR(BaseCard):
                  porosity: float, tortuosity: float,
                  frame: str,
                  gamma: float, prandtl_number: float,
-                 mu: float, L1, L2,
+                 mu: float, L1: float, L2: float,
                  density: float=0.0, comment: str=''):
         """
         Creates a MATPOR card

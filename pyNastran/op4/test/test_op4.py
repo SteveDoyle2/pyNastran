@@ -96,12 +96,12 @@ def run_op4(op4_filename, write_op4=True, debug=True,
 
         if write_op4:
             model = os.path.splitext(op4_filename)[0]
-            model.write_op4(model+'.test_op4_ascii.op4', matrices, is_binary=False)
-            model.write_op4(model+'.test_op4_binary.op4', matrices, is_binary=True)
+            model.write_op4(model + '.test_op4_ascii.op4', matrices, is_binary=False)
+            model.write_op4(model + '.test_op4_binary.op4', matrices, is_binary=True)
             if delete_op4:
                 try:
-                    os.remove(model+'.test_op4_ascii.op4')
-                    os.remove(model+'.test_op4_binary.op4')
+                    os.remove(model + '.test_op4_ascii.op4')
+                    os.remove(model + '.test_op4_binary.op4')
                 except Exception:
                     pass
 
@@ -118,7 +118,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
     #    else:
     #        is_passed = True
 
-    except IOError: # missing file
+    except IOError:  # missing file
         if stop_on_failure:
             raise
     #except AssertionError:
@@ -136,7 +136,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
     #        is_passed = True
     #except IndexError:
     #    is_passed = True
-    except SyntaxError: #Param Parse
+    except SyntaxError:  # Param Parse
         if stop_on_failure:
             raise
         is_passed = True

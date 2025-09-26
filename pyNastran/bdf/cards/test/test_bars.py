@@ -758,5 +758,6 @@ class TestBars(unittest.TestCase):
             assert np.allclose(areai, area2), 'bar_type=%r dims=%s area=%s area_expected=%s' % (bar_type, dims, area2, areai)
             pid += 1
 
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

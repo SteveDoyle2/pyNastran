@@ -66,13 +66,11 @@ from .cards.elements.plot import (
 from .cards.properties.properties import PFAST, PWELD, PGAP, PRAC2D, PRAC3D
 from .cards.properties.solid import PLSOLID, PSOLID, PCOMPS, PCOMPLS
 from .cards.cyclic import CYAX, CYJOIN
-#from .cards.msgmesh import CGEN
 
 from .cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from .cards.properties.springs import PELAS, PELAST
 
 from .cards.elements.solid import (
-    #CTETRA, CPYRAM, CPENTA, CHEXA,
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
@@ -266,8 +264,7 @@ ThermalMaterial = MAT4 | MAT5
 REMOVED_CARDS = {
     'ADAPT',
     'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE', 'GMSPC', 'GMLOAD',
-    #'OUTPUT'
-    #'OUTRCV'
+    #'OUTPUT', 'OUTRCV'
     'GMBNDS', 'GMINTS', 'PINTS',
     'GMBNDC', 'GMINTC', 'PINTC'
     'CGEN', 'EGRID', 'GRIDG', 'SPCG',
@@ -661,7 +658,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'ECHOON', 'ECHOOFF',
             'PARAM', 'MDLPRM',
 
-            ## nodes
+            # nodes
             'GRID', 'GRDSET', 'SPOINT', 'EPOINT', 'SEQGP',
             #'GRIDB', (removed)
 
@@ -3442,6 +3439,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def _prepare_acmodl(self, unused_card: list[str], card_obj: BDFCard, comment='') -> ACMODL:
         acmodl = ACMODL.add_card(card_obj, self._nastran_format, comment=comment)
         self._add_methods.add_acmodl_object(acmodl)
+        return acmodl
 
     def add_card_ifile(self, ifile: int, card_lines: list[str], card_name: str,
                        comment: str='', is_list: bool=True, has_none: bool=True) -> Any:

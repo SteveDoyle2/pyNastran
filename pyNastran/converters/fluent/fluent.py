@@ -253,30 +253,40 @@ class Fluent:
         assert len(np.setdiff1d(uquad_nodes, self.node_id)) == 0
         assert len(np.setdiff1d(utri_nodes, self.node_id)) == 0
 
-        itri = np.searchsorted(self.node_id, tri_nodes)
-        tri_xyz1 = self.xyz[itri[:, 0]]
-        tri_xyz2 = self.xyz[itri[:, 1]]
-        tri_xyz3 = self.xyz[itri[:, 2]]
-        tri_centroid = (tri_xyz1 + tri_xyz2 + tri_xyz3) / 3
+        if len(tri_nodes):
+            itri = np.searchsorted(self.node_id, tri_nodes)
+            tri_xyz1 = self.xyz[itri[:, 0]]
+            tri_xyz2 = self.xyz[itri[:, 1]]
+            tri_xyz3 = self.xyz[itri[:, 2]]
+            tri_centroid = (tri_xyz1 + tri_xyz2 + tri_xyz3) / 3
 
-        tri_normal = np.cross(tri_xyz2 - tri_xyz1, tri_xyz3 - tri_xyz1)
-        tri_areai = np.linalg.norm(tri_normal, axis=1)
-        tri_area = 0.5 * tri_areai
-        tri_normal /= tri_areai[:, np.newaxis]
-        assert np.abs(tri_normal).max() <= 1.001, (tri_normal.min(), tri_normal.max())
+            tri_normal = np.cross(tri_xyz2 - tri_xyz1, tri_xyz3 - tri_xyz1)
+            tri_areai = np.linalg.norm(tri_normal, axis=1)
+            tri_area = 0.5 * tri_areai
+            tri_normal /= tri_areai[:, np.newaxis]
+            assert np.abs(tri_normal).max() <= 1.001, (tri_normal.min(), tri_normal.max())
+        else:
+            tri_centroid = np.zeros((0, 3), dtype='float64')
+            tri_normal = np.zeros((0, 3), dtype='float64')
+            tri_area = np.zeros(0, dtype='float64')
 
-        iquad = np.searchsorted(self.node_id, quad_nodes)
-        xyz1 = self.xyz[iquad[:, 0]]
-        xyz2 = self.xyz[iquad[:, 1]]
-        xyz3 = self.xyz[iquad[:, 2]]
-        xyz4 = self.xyz[iquad[:, 3]]
+        if len(quad_nodes):
+            iquad = np.searchsorted(self.node_id, quad_nodes)
+            xyz1 = self.xyz[iquad[:, 0]]
+            xyz2 = self.xyz[iquad[:, 1]]
+            xyz3 = self.xyz[iquad[:, 2]]
+            xyz4 = self.xyz[iquad[:, 3]]
 
-        quad_centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4
-        quad_normal = np.cross(xyz3 - xyz1, xyz4 - xyz2)
-        quad_areai = np.linalg.norm(quad_normal, axis=1)
-        quad_area = 0.5 * quad_areai
-        quad_normal /= quad_areai[:, np.newaxis]
-        assert np.abs(quad_normal).max() <= 1.001, (quad_normal.min(), quad_normal.max())
+            quad_centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4
+            quad_normal = np.cross(xyz3 - xyz1, xyz4 - xyz2)
+            quad_areai = np.linalg.norm(quad_normal, axis=1)
+            quad_area = 0.5 * quad_areai
+            quad_normal /= quad_areai[:, np.newaxis]
+            assert np.abs(quad_normal).max() <= 1.001, (quad_normal.min(), quad_normal.max())
+        else:
+            quad_centroid = np.zeros((0, 3), dtype='float64')
+            quad_normal = np.zeros((0, 3), dtype='float64')
+            quad_area = np.zeros(0, dtype='float64')
 
         assert len(tri_centroid) == len(tri_area)
         assert len(quad_centroid) == len(quad_area)
