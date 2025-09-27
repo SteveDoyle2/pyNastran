@@ -1888,7 +1888,7 @@ class FlutterGui(LoggableGui):
             response.export_to_csv(csv_filename, modes=modes)
         if self.export_to_zona:
             log.debug(f'writing {veas_filename}')
-            response.export_to_veas(veas_filename, modes=modes, xlim=None)
+            response.export_to_veas(veas_filename, modes=modes)
         if self.export_to_f06:
             log.debug(f'writing {f06_filename}')
             response.export_to_f06(f06_filename, modes=modes)
