@@ -815,7 +815,7 @@ class FlutterResponse:
                 # target different percent dampings
                 ddamping = dampi - damping_targeti
                 p1, p2, pmax = get_zero_crossings_hump(
-                    easi, dampi, ddamping, damping_targeti,
+                    easi, freqi, ddamping, damping_targeti,
                     x_round=eas_round, freq_round=freq_round,
                 )
                 # [i1, x1, 0., f1]
