@@ -370,6 +370,9 @@ class FlutterGui(LoggableGui):
                     skey = key.split('/')
                     assert len(skey) == 2, f'key={key!r} skey={skey}'
                     key0, key1 = skey
+                    if key0 not in data:
+                        log.warning(f'skipping {key!r} because {key0} does not exist')
+                        continue
                     data0 = data[key0]
                     value = data0[key1]
                     assert hasattr(self, key1), (key, value)
