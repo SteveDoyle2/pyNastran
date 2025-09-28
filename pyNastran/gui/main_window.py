@@ -119,6 +119,7 @@ class MainWindow(GuiCommon, NastranIO):
             'nastran',  # results
         ]
         if DEV:
+            # fmt_order += ['h5nastran', 'nastran2']
             fmt_order.append('nastran3')
 
         fmt_order += [
