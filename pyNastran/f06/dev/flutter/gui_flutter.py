@@ -45,6 +45,9 @@ from pyNastran.gui.qt_files.loggable_gui import LoggableGui
 
 from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_menus
 from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
+from pyNastran.f06.dev.flutter.preferences import (
+    FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
+    FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT)
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import get_flutter_units
@@ -88,17 +91,20 @@ class FlutterGui(LoggableGui):
         super().__init__(html_logging=False)
 
         self._export_settings_obj = FlutterPreferencesObject(self, USE_VTK)
-        self.divergence_legend_loc = 'best'
-        self.flutter_bbox_to_anchor_x = 1.02
-        self.flutter_ncolumns = None
+        self.iwindows = []
 
-        self.font_size = 10
-        self.plot_font_size = 10
+        self.divergence_legend_loc = LEGEND_LOC_DEFAULT
+        self.flutter_bbox_to_anchor_x = FLUTTER_BBOX_TO_ANCHOR_DEFAULT
+        self.flutter_ncolumns = FLUTTER_NCOLUMNS_DEFAULT
+
+        self.font_size = FONT_SIZE_DEFAULT
+        self.plot_font_size = FONT_SIZE_DEFAULT
         self.show_lines = True
         self.show_points = True
         self.show_mode_number = False
         self.show_detailed_mode_info = False
         self.point_spacing = 0
+        self.use_rhoref = False
         self._units_in = ''
         self._units_out = ''
         self.units_in = ''
@@ -119,6 +125,9 @@ class FlutterGui(LoggableGui):
         self.subcase = 0
         self.x_plot_type = 'eas'
         self.plot_type = 'x-damp-freq'
+        self.mode_switch_method = MODE_SWITCH_METHODS[0]
+        self.point_removal = ''
+
         self.eas_lim = []
         self.tas_lim = []
         self.mach_lim = []
@@ -1633,7 +1642,6 @@ class FlutterGui(LoggableGui):
         # print(f'export_to_png={self.export_to_png}')
 
         # print(f'point_removal = {self.point_removal}')
-        self.export_to_png = False
         png_filename0, png_filename = get_png_filename(
             base, x_plot_type, plot_type,
             self.export_to_png)
@@ -1742,7 +1750,7 @@ class FlutterGui(LoggableGui):
             response.export_to_csv(csv_filename, modes=modes)
         if self.export_to_zona:
             log.debug(f'writing {veas_filename}')
-            response.export_to_veas(veas_filename, modes=modes, xlim=None)
+            response.export_to_veas(veas_filename, modes=modes)
         if self.export_to_f06:
             log.debug(f'writing {f06_filename}')
             response.export_to_f06(f06_filename, modes=modes)

@@ -12,6 +12,7 @@ import webbrowser
 import urllib
 from typing import Optional
 
+from pyNastran import DEV
 from pyNastran.gui.qt_version import qt_version
 from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
 from qtpy import QtCore
@@ -117,20 +118,16 @@ class MainWindow(GuiCommon, NastranIO):
             # no results unless specified
             'nastran',  # results
         ]
-        if ISPY2:
-            fmt_order += ['h5nastran', 'nastran2']
-        fmt_order.append('nastran3')
+        if DEV:
+            fmt_order.append('nastran3')
 
         fmt_order += [
             'abaqus',
-            'avus',
             'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr
             'cart3d',  # results
             'fld', 'fluent',
-            'degen_geom',
             'fast',
             'lawgs',
-            'obj',
             'panair',  # results
             'shabp',  # results
             'stl',
@@ -139,9 +136,11 @@ class MainWindow(GuiCommon, NastranIO):
             'tetgen',
             'usm3d',  # results
             'avl', # no results
-            'vrml', # no results
             'vtk',
         ]
+        if DEV:
+            # no results
+            fmt_order.extend(['avus', 'degen_geom', 'obj', 'vrml'])
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
         kwds['fmt_order'] = fmt_order

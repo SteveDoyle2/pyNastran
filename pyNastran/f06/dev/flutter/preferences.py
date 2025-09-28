@@ -2,11 +2,11 @@
 """
 TODO: change from dt_ms to FPS
 """
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout
 from qtpy.QtWidgets import (
     QLabel,
     # QWidget,
     # QApplication, QMenu, QVBoxLayout, QLineEdit,
-    # QHBoxLayout, QPushButton,
     QGridLayout,
     # QAction,
     QCheckBox, QComboBox,
@@ -17,6 +17,11 @@ from qtpy.QtWidgets import (
 )
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text
+
+FONT_SIZE_DEFAULT = 10
+LEGEND_LOC_DEFAULT = 'best'
+FLUTTER_BBOX_TO_ANCHOR_DEFAULT = 1.02
+FLUTTER_NCOLUMNS_DEFAULT = 0
 
 LEGEND_LOCS = [
     'best', 'none',
@@ -94,12 +99,11 @@ class FlutterPreferencesDialog(PyDialog):
         self.flutter_bbox_to_anchor_x_spinner.setMaximum(2.0)
         self.flutter_bbox_to_anchor_x_spinner.setSingleStep(0.01)
 
+        flutter_ncolumns = 0 if data['flutter_ncolumns'] is None else data['flutter_ncolumns']
         self.flutter_ncolumns_label = QLabel('Flutter nColumns:')
         self.flutter_ncolumns_spinner = QSpinBox()
         self.flutter_ncolumns_spinner.setMinimum(0)
         self.flutter_ncolumns_spinner.setMaximum(3)
-
-        flutter_ncolumns = 0 if data['flutter_ncolumns'] is None else data['flutter_ncolumns']
         self.flutter_ncolumns_spinner.setValue(flutter_ncolumns)
 
         self.export_png_checkbox = QCheckBox('Export PNG')
@@ -111,6 +115,8 @@ class FlutterPreferencesDialog(PyDialog):
         self.export_csv_checkbox.setChecked(data['export_to_csv'])
         self.export_f06_checkbox.setChecked(data['export_to_f06'])
         self.export_zona_checkbox.setChecked(data['export_to_zona'])
+
+        self.default_button = QPushButton('Default')
 
         if not self.use_vtk:
             objs = [self.icase_label, self.icase_edit,
@@ -157,12 +163,17 @@ class FlutterPreferencesDialog(PyDialog):
         grid.addWidget(self.export_zona_checkbox, irow, 2)
         irow += 1
         grid.setColumnStretch(grid.columnCount(), 2)
+
+        vbox = QVBoxLayout()
+        vbox.addLayout(grid)
+        vbox.addWidget(self.default_button)
         # widget = QWidget()
         # widget.setLayout(vbox2)
         # self.setCentralWidget(widget)
-        self.setLayout(grid)
+        self.setLayout(vbox)
 
     def setup_connections(self) -> None:
+        self.default_button.clicked.connect(self.on_default)
         self.export_csv_checkbox.clicked.connect(self.on_export_csv)
         self.export_f06_checkbox.clicked.connect(self.on_export_f06)
         self.export_png_checkbox.clicked.connect(self.on_export_png)
@@ -200,6 +211,23 @@ class FlutterPreferencesDialog(PyDialog):
 
     def on_export_zona(self) -> None:
         self.win_parent.export_to_zona = self.export_zona_checkbox.isChecked()
+
+    def on_default(self) -> None:
+        self.font_size_edit.setValue(FONT_SIZE_DEFAULT)
+        self.plot_font_size_edit.setValue(FONT_SIZE_DEFAULT)
+        self.flutter_bbox_to_anchor_x_spinner.setValue(FLUTTER_BBOX_TO_ANCHOR_DEFAULT)
+        self.flutter_ncolumns_spinner.setValue(FLUTTER_NCOLUMNS_DEFAULT)
+        set_combo_box_text(self.divergence_legend_loc_combobox, LEGEND_LOC_DEFAULT)
+
+        self.export_png_checkbox.setChecked(True)
+        self.export_f06_checkbox.setChecked(False)
+        self.export_csv_checkbox.setChecked(False)
+        self.export_zona_checkbox.setChecked(False)
+        # self.icase_edit
+        # self.nphase_edit
+        # self.dt_ms_edit
+        # self.animate_checkbox
+
 
     def on_dt_ms(self) -> None:
         """TODO: move this behind an apply button"""
