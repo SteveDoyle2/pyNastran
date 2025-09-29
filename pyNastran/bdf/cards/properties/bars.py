@@ -2252,7 +2252,7 @@ class PBRSECT(LineProperty):
             assert len(self.ts) >= 0, 'form=%s ts=%s' % (self.form, self.ts)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBRSECT card from ``BDF.add_card(...)``
 

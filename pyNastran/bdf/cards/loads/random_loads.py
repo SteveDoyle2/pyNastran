@@ -100,7 +100,7 @@ class RANDPS(RandomLoad):
         assert self.k >= self.j, 'k=%s j=%s\n%s' % (self.k, self.j, self)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RANDPS card from ``BDF.add_card(...)``
 

@@ -820,7 +820,7 @@ class AEPARM(BaseCard):
         self.units = units
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AEPARM card from ``BDF.add_card(...)``
 
@@ -1026,7 +1026,7 @@ class AESURF(BaseCard):
         #assert self.ldw in {'LDW', 'NOLDW'}, self.ldw
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AESURF card from ``BDF.add_card(...)``
 
@@ -3574,7 +3574,7 @@ class CAERO4(BaseCard):
         assert self.x43 >= 0., 'x43=%s' % self.x43
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CAERO4 card from ``BDF.add_card(...)``
 
@@ -3924,7 +3924,7 @@ class CAERO5(BaseCard):
         assert self.ntheory in [0, 1, 2], 'ntheory=%r' % self.ntheory
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CAERO5 card from ``BDF.add_card(...)``
 
@@ -4753,7 +4753,7 @@ class MONDSP1(BaseCard):
         self.cd_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         row0 = card[0]
         row1 = card[1]
         assert len(card) == 2, card

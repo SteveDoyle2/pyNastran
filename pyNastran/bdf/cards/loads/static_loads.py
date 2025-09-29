@@ -1223,7 +1223,7 @@ class Load1(BaseCard):
         self.xyz = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FORCE1/MOMENT1 card from ``BDF.add_card(...)``
 
@@ -1445,7 +1445,7 @@ class Load2(BaseCard):
         assert self.g3 != self.g4, 'g3=%s g4=%s' % (self.g3, self.g4)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FORCE2/MOMENT2 card from ``BDF.add_card(...)``
 
@@ -1911,7 +1911,7 @@ class PLOAD(Load):
         assert len(self.nodes) in [3, 4], 'nodes=%s' % self.nodes
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PLOAD card from ``BDF.add_card(...)``
 
@@ -2094,7 +2094,7 @@ class PLOAD1(Load):
         self.load_type = load_type
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PLOAD1 card from ``BDF.add_card(...)``
 

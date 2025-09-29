@@ -40,7 +40,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM, BEAMOR
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from ..coord import COORD
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.beam import BEAMOR, CBEAM
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.beam import BEAMOR, CBEAM
 
 
 class BAROR(BaseCard):
@@ -56,13 +56,13 @@ class BAROR(BaseCard):
     """
     type = 'BAROR'
 
-    #@classmethod
-    #def _init_from_empty(cls):
-        #pid = 1
-        #is_g0 = True
-        #g0 = 1
-        #x = None
-        #return BAROR(pid, is_g0, g0, x, offt='GGG', comment='')
+    # @classmethod
+    # def _init_from_empty(cls):
+    #     pid = 1
+    #     is_g0 = True
+    #     g0 = 1
+    #     x = None
+    #     return BAROR(pid, is_g0, g0, x, offt='GGG', comment='')
 
     def __init__(self, pid: int=0, g0: int=0, x=None,
                  offt: str='GGG', comment: str=''):
@@ -75,8 +75,8 @@ class BAROR(BaseCard):
         self.g0 = g0
         self.x = x
         self.offt = offt
-        #if isinstance(offt, integer_types):
-            #raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
+        # if isinstance(offt, integer_types):
+        #     raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
 
     def __deepcopy__(self, memo: dict[str, Any]):
         copy = type(self)()
@@ -107,10 +107,11 @@ class BAROR(BaseCard):
             blank(card, 7, 'x3')
         elif isinstance(field5, float):
             g0 = GO_X_DEFAULT
-            x = np.array([field5,
-                          fdouble_or_blank(card, 6, 'x2', default=0.),
-                          fdouble_or_blank(card, 7, 'x3', default=0.)],
-                          dtype='float64')
+            x = np.array([
+                field5,
+                fdouble_or_blank(card, 6, 'x2', default=0.),
+                fdouble_or_blank(card, 7, 'x3', default=0.)],
+                dtype='float64')
         else:  # pragma: no cover
             raise NotImplementedError('BAROR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', default=OFFT_DEFAULT)
@@ -135,7 +136,7 @@ def init_x_g0(card: BDFCard, eid: int):
     """common method to read the x/g0 field for the CBAR, CBEAM, CBEAM3"""
     field5 = integer_double_or_blank(card, 5, 'g0_x1', default=np.nan)
 
-    #GO_DEFAULT = -100
+    # GO_DEFAULT = -100
     if isinstance(field5, integer_types):
         g0 = field5
         x = [np.nan, np.nan, np.nan]
@@ -154,23 +155,25 @@ def init_x_g0(card: BDFCard, eid: int):
         raise RuntimeError(msg)
     return x, g0
 
+
 def split_offt_vector(offt: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     neids = len(offt)
     offt_vector = np.full(neids, '', dtype='|U1')
     offt_end_a = np.full(neids, '', dtype='|U1')
     offt_end_b = np.full(neids, '', dtype='|U1')
-    #print(offt)
+    # print(offt)
     for i, (offt_vectori, offt_end_ai, offt_end_bi) in enumerate(offt):
         offt_vector[i] = offt_vectori
         offt_end_a[i] = offt_end_ai
         offt_end_b[i] = offt_end_bi
     return offt_vector, offt_end_a, offt_end_b
 
+
 def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    #if self.g0:
-        #v = xyz[self.g0] - xyz[self.Ga()]
-    #else:
-        #v = self.x
+    # if self.g0:
+    #     v = xyz[self.g0] - xyz[self.Ga()]
+    # else:
+    #     v = self.x
 
     # get the vector v, which defines the projection on to the elemental
     # coordinate frame
@@ -185,10 +188,10 @@ def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     grid = elem.model.grid
     # get the cd frames for the nodes
 
-    #n1 = self.nodes[:, 0]
-    #in1 = np.searchsorted(grid.node_id, n1)
-    #assert np.array_equal(grid.node_id[in1], n1)
-    #cd = grid.cd[in1]
+    # n1 = self.nodes[:, 0]
+    # in1 = np.searchsorted(grid.node_id, n1)
+    # assert np.array_equal(grid.node_id[in1], n1)
+    # cd = grid.cd[in1]
 
     # get the cd frames for nodes A/B (1/2)
     inode = np.searchsorted(grid.node_id, elem.nodes)
@@ -202,14 +205,14 @@ def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
         v[is_x, :] = elem.x[is_x, :]
         if np.any(is_cd1):
-            #cd1_ref = coords.slice_card_by_id(cd1, sort_ids=False)
-            #print(cd1_ref.get_stats())
-            #print(cd1_ref.get_object_methods())
-            #v[is_cd1, :] = cd1_ref.transform_local_xyz_to_global(self.x)
+            # cd1_ref = coords.slice_card_by_id(cd1, sort_ids=False)
+            # print(cd1_ref.get_stats())
+            # print(cd1_ref.get_object_methods())
+            # v[is_cd1, :] = cd1_ref.transform_local_xyz_to_global(self.x)
             x_vector = elem.x[is_cd1, :]
             cd1i = cd1[is_cd1]
 
-            #vi = coords.transform_local_xyz_to_global_coords(x_vector, cd1i)  # old
+            # vi = coords.transform_local_xyz_to_global_coords(x_vector, cd1i)  # old
             # transform_node_to_global
             vi = coords.transform_offset_xyz_to_global_xyz(x_vector, cd1i)
             v[is_cd1, :] = vi
@@ -257,17 +260,17 @@ class CBAR(Element):
 
         eid = integer(card, 1, 'eid')
 
-        #pid_default = eid
-        #if baror is not None:
-            #if baror.pid is not None:
-                #pid_default = baror.pid
-            #if baror.x is None:
-                #x1_default = baror.g0
-                #x2_default = None
-                #x3_default = None
-            #else:
-                #x1_default, x2_default, x3_default = baror.x
-            #offt_default = baror.offt
+        # pid_default = eid
+        # if baror is not None:
+        #     if baror.pid is not None:
+        #         pid_default = baror.pid
+        #     if baror.x is None:
+        #         x1_default = baror.g0
+        #         x2_default = None
+        #         x3_default = None
+        #     else:
+        #         x1_default, x2_default, x3_default = baror.x
+        #     offt_default = baror.offt
 
         pid = integer_or_blank(card, 2, 'pid', default=PROPERTY_ID_DEFAULT)
         ga = integer(card, 3, 'ga')
@@ -392,8 +395,8 @@ class CBAR(Element):
         self.ifile = ifile
         self.element_id = element_id
         self.property_id = property_id
-        #print(element_id)
-        #print(property_id)
+        # print(element_id)
+        # print(property_id)
         self.nodes = nodes
         self.offt = offt
         self.g0 = g0
@@ -442,14 +445,14 @@ class CBAR(Element):
                                                                 self.g0, self.x, self.offt, pas, pbs, was, wbs):
             n1, n2 = nodes
             w1a, w2a, w3a = wa
-            #w1a = set_blank_if_default(wa[0], 0.0)
-            #w2a = set_blank_if_default(wa[1], 0.0)
-            #w3a = set_blank_if_default(wa[2], 0.0)
+            # w1a = set_blank_if_default(wa[0], 0.0)
+            # w2a = set_blank_if_default(wa[1], 0.0)
+            # w3a = set_blank_if_default(wa[2], 0.0)
 
             w1b, w2b, w3b = wb
-            #w1b = set_blank_if_default(wb[0], 0.0)
-            #w2b = set_blank_if_default(wb[1], 0.0)
-            #w3b = set_blank_if_default(wb[2], 0.0)
+            # w1b = set_blank_if_default(wb[0], 0.0)
+            # w2b = set_blank_if_default(wb[1], 0.0)
+            # w3b = set_blank_if_default(wb[2], 0.0)
             if g0 in {-1, 0}:
                 x1, x2, x3 = x # self.get_x_g0_defaults()
             else:
@@ -462,7 +465,7 @@ class CBAR(Element):
 
             list_fields = ['CBAR', eid, pid, n1, n2,
                            x1, x2, x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
-            #print(list_fields)
+            # print(list_fields)
             bdf_file.write(print_card(list_fields))
         return
 
@@ -572,7 +575,7 @@ class CBAR(Element):
         return ~self.is_x
 
     def get_xyz(self) -> tuple[np.ndarray, np.ndarray]:
-        #neids = len(self.element_id)
+        # neids = len(self.element_id)
         grid = self.model.grid
         xyz = grid.xyz_cid0()
         nid = grid.node_id
@@ -594,7 +597,7 @@ class CBAR(Element):
         check_offt(self.type, self.element_id, self.offt)
         log = self.model.log
         coords: COORD = self.model.coord
-        #xyz1, xyz2 = self.get_xyz()
+        # xyz1, xyz2 = self.get_xyz()
 
         neids = xyz1.shape[0]
         i = xyz2 - xyz1
@@ -606,8 +609,8 @@ class CBAR(Element):
             raise ValueError(msg)
         i_offset = i / ihat_norm[:, np.newaxis]
 
-        #log.info(f'x =\n{self.x}')
-        #log.info(f'g0   = {self.g0}')
+        # log.info(f'x =\n{self.x}')
+        # log.info(f'g0   = {self.g0}')
         v, cd = self.get_bar_vector(xyz1)
         cd1 = cd[:, 0]
         cd2 = cd[:, 1]
@@ -620,9 +623,9 @@ class CBAR(Element):
         is_rotate_wa_g = (offt_end_a == 'G')
         is_rotate_wb_g = (offt_end_b == 'G')
 
-        #is_rotate_v_b = (offt_vector == 'B')
-        #is_rotate_wa_b = (offt_end_a == 'B')
-        #is_rotate_wb_b = (offt_end_b == 'B')
+        # is_rotate_v_b = (offt_vector == 'B')
+        # is_rotate_wa_b = (offt_end_a == 'B')
+        # is_rotate_wb_b = (offt_end_b == 'B')
 
         is_rotate_wa_o = (offt_end_a == 'O')
         is_rotate_wb_o = (offt_end_b == 'O')
@@ -645,11 +648,11 @@ class CBAR(Element):
             log.error(msg)
             raise ValueError(msg)
 
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         # rotate v
-        #log.info(f'offt = {self.offt}')
-        #log.info(f'v0 =\n{v}')
-        #log.info(f'cd =\n{cd}')
+        # log.info(f'offt = {self.offt}')
+        # log.info(f'v0 =\n{v}')
+        # log.info(f'cd =\n{cd}')
 
         if np.any(is_rotate_v_g):
             # end A
@@ -665,9 +668,9 @@ class CBAR(Element):
                 del v1v, v2
             del icd1_v_vector, cd1_v_vector, eid_v_vector
 
-        #elif offt_vector == 'B':
-            # basic - cid = 0
-            #pass
+        # elif offt_vector == 'B':
+        #     # basic - cid = 0
+        #     pass
 
         if np.any(np.isnan(v.max(axis=1))):
             raise RuntimeError(f'v = {v}')
@@ -676,39 +679,39 @@ class CBAR(Element):
         if np.any(vnorm == 0.):
             raise RuntimeError(f'vnorm = {vnorm}')
 
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         # determine the bar vectors
-        #log.info(f'v =\n{v}')
-        #log.info(f'ihat =\n{i_offset}')
+        # log.info(f'v =\n{v}')
+        # log.info(f'ihat =\n{i_offset}')
         ihat = i_offset
-        #vhat = safe_normalize(v)
+        # vhat = safe_normalize(v)
 
         vnorm = np.linalg.norm(v, axis=1)
         vhat = np.full(v.shape, np.nan, dtype=v.dtype)
         izero = (vnorm > 0)
         if np.any(izero):
             vhat[izero] = v[izero, :] / vnorm[izero, np.newaxis]
-            #vhat = v / vnorm[:, np.newaxis] # j
-        z = np.cross(ihat, vhat) # k
+            # vhat = v / vnorm[:, np.newaxis] # j
+        z = np.cross(ihat, vhat)  # k
         norm_z = np.linalg.norm(z, axis=1)
         assert len(norm_z) == neids
 
-        #if np.any(np.isnan(zhat.max(axis=1))):
-        #print(f'norm_z = {norm_z}')
+        # if np.any(np.isnan(zhat.max(axis=1))):
+        # print(f'norm_z = {norm_z}')
 
         zhat = safe_normalize(z)
 
-        #zhat = z / norm_z[:, np.newaxis]
-        yhat = np.cross(zhat, ihat) # j
+        # zhat = z / norm_z[:, np.newaxis]
+        yhat = np.cross(zhat, ihat)  # j
         norm_i = np.linalg.norm(ihat, axis=1)
         norm_yhat = np.linalg.norm(yhat, axis=1)
-        xform_offset = np.dstack([ihat, yhat, zhat]) # 3x3 unit matrix
+        xform_offset = np.dstack([ihat, yhat, zhat])  # 3x3 unit matrix
 
-        #if np.any(np.isnan(yhat.max(axis=1))):
-            #print(f'norm_yhat = {norm_yhat}')
+        # if np.any(np.isnan(yhat.max(axis=1))):
+        #     print(f'norm_yhat = {norm_yhat}')
 
         del norm_i, norm_z, norm_yhat
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         # rotate wa
         # wa defines the offset at end A
         wa = self.wa.copy()  # we're going to be inplace hacking it, so copy :)
@@ -721,20 +724,20 @@ class CBAR(Element):
                 cd1_ref = coords.slice_card_by_id(cd1_vector, sort_ids=False)
                 wai1 = wa[icd1_vector, :]
                 wai2 = cd1_ref.transform_xyz_to_global_assuming_rectangular(wai1)
-                #print('eids.shape =', self.element_id.shape)
-                #print('len(cd1_vector) =', len(cd1_vector))
-                #print('icd1_vector.shape =', icd1_vector.shape)
-                #print('is_rotate_wa.shape =', is_rotate_wa.shape)
-                #print('wai1.shape =', wai1.shape)
-                #print('wai2.shape =', wai2.shape)
-                #print('wa.shape =', wa.shape)
+                # print('eids.shape =', self.element_id.shape)
+                # print('len(cd1_vector) =', len(cd1_vector))
+                # print('icd1_vector.shape =', icd1_vector.shape)
+                # print('is_rotate_wa.shape =', is_rotate_wa.shape)
+                # print('wai1.shape =', wai1.shape)
+                # print('wai2.shape =', wai2.shape)
+                # print('wa.shape =', wa.shape)
                 wa[icd1_vector, :] = wai2
             del cd1_vector, icd1_vector
-        #elif offt_end_a == 'B':
-            #pass
+        # elif offt_end_a == 'B':
+        #     pass
         if np.any(is_rotate_wa_o):
             # rotate point wa from the local frame to the global frame
-            #wa = wa @ xform_offset
+            # wa = wa @ xform_offset
             wao1 = wa[is_rotate_wa_o, :]
             To = xform_offset[is_rotate_wa_o, :, :]
             wao = np.einsum('ni,nij->nj', wao1, To)
@@ -743,25 +746,25 @@ class CBAR(Element):
 
         assert not np.isnan(np.max(wa)), wa
 
-        #--------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # rotate wb
         # wb defines the offset at end B
         wb = self.wb.copy()  # we're going to be inplace hacking it, so copy :)
         if np.any(is_rotate_wb_g):
             icd2_vector = is_rotate_wb_g & (cd2 != 0)
             cd2_vector = cd2[icd2_vector]
-            #cd2_vector = cd2[is_rotate_wb]
-            #icd2_vector = (cd2_vector != 0)
+            # cd2_vector = cd2[is_rotate_wb]
+            # icd2_vector = (cd2_vector != 0)
             if np.any(icd2_vector):
                 # MasterModelTaxi
-                #wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+                # wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
                 cd2_ref = coords.slice_card_by_id(cd2_vector, sort_ids=False)
                 wbi1 = wb[icd2_vector, :]
                 wbi2 = cd2_ref.transform_xyz_to_global_assuming_rectangular(wbi1)
                 wb[icd2_vector, :] = wbi2
             del cd2_vector, icd2_vector
-        #elif offt_end_b == 'B':
-            #pass
+        # elif offt_end_b == 'B':
+        #     pass
 
         if np.any(is_rotate_wb_o):
             # rotate point wb from the local frame to the global frame
@@ -771,15 +774,15 @@ class CBAR(Element):
             wbo = np.einsum('ni,nij->nj', wbo1, To)
             wb[is_rotate_wb_o, :] = wbo
             del wbo1, To, wbo
-            #wb = wb @ xform_offset
-            #ib = n2 + wb
+            # wb = wb @ xform_offset
+            # ib = n2 + wb
 
         assert not np.isnan(np.max(wb)), wb
 
-        #ihat = xform[0, :]
-        #yhat = xform[1, :]
-        #zhat = xform[2, :]
-        #wa, wb, _ihat, jhat, khat = out
+        # ihat = xform[0, :]
+        # yhat = xform[1, :]
+        # zhat = xform[2, :]
+        # wa, wb, _ihat, jhat, khat = out
 
         # we finally have the nodal coordaintes!!!! :)
         return v, ihat, yhat, zhat, wa, wb
@@ -794,6 +797,7 @@ class CBAR(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+
 def safe_normalize(vector: np.ndarray, axis: int=1) -> np.ndarray:
     norm_vector = np.linalg.norm(vector, axis=1)
     vector_hat = np.full(vector.shape, np.nan, dtype=vector.dtype)
@@ -801,6 +805,7 @@ def safe_normalize(vector: np.ndarray, axis: int=1) -> np.ndarray:
     if np.any(izero):
         vector_hat[izero] = vector[izero, :] / norm_vector[izero, np.newaxis]
     return vector_hat
+
 
 PBARL_MSG = '\n' + """
 +-------+------+------+-------+------+------+------+------+------+
@@ -812,6 +817,7 @@ PBARL_MSG = '\n' + """
 +-------+------+------+-------+------+------+------+------+------+
 |       | DIM9 | etc. |  NSM  |      |      |      |      |      |
 +-------+------+------+-------+------+------+------+------+------+""".strip()
+
 
 class PBAR(Property):
     """
@@ -834,6 +840,7 @@ class PBAR(Property):
     """
     _show_attributes = ['property_id', 'material_id', 'A', 'J',
                         'c', 'd', 'e', 'f', 'I', 'k', 'nsm']
+
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -851,16 +858,16 @@ class PBAR(Property):
         self.k = np.zeros((0, 2), dtype='float64')
         self.nsm = np.array([], dtype='float64')
 
-    def add(self, pid: int, mid: int, A: float=0.,
-                i1: float=0., i2: float=0., i12: float=0., j: float=0.,
-                nsm: float=0.,
-                c1: float=0., c2: float=0.,
-                d1: float=0., d2: float=0.,
-                e1: float=0., e2: float=0.,
-                f1: float=0., f2: float=0.,
-                k1: float=1.e8, k2: float=1.e8,
-                ifile: int=0, comment: str='') -> int:
-        self.cards.append((pid, mid, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
+    def add(self, pid: int, mid: int, area: float=0.,
+            i1: float=0., i2: float=0., i12: float=0., j: float=0.,
+            nsm: float=0.,
+            c1: float=0., c2: float=0.,
+            d1: float=0., d2: float=0.,
+            e1: float=0., e2: float=0.,
+            f1: float=0., f2: float=0.,
+            k1: float=1.e8, k2: float=1.e8,
+            ifile: int=0, comment: str='') -> int:
+        self.cards.append((pid, mid, area, i1, i2, i12, j, nsm, c1, c2, d1, d2,
                            e1, e2, f1, f2, k1, k2, ifile, comment))
         self.n += 1
         return self.n - 1
@@ -937,7 +944,7 @@ class PBAR(Property):
             ifile[icard] = ifilei
             property_id[icard] = pid
             material_id[icard] = mid
-            #group[icard] = group
+            # group[icard] = group
             A[icard] = Ai
             I[icard, :] = [i1, i2, i12]
             J[icard] = j
@@ -975,11 +982,11 @@ class PBAR(Property):
         self.ifile = ifile
         self.property_id = property_id
         self.material_id = material_id
-        #Type = np.full(ncards, '', dtype='|U8')
-        #group = np.full(ncards, '', dtype='|U8')
+        # Type = np.full(ncards, '', dtype='|U8')
+        # group = np.full(ncards, '', dtype='|U8')
 
-        #material_id[icard] = mid
-        #group[icard] = group
+        # material_id[icard] = mid
+        # group[icard] = group
         self.A = A
         self.I = I
         self.J = J
@@ -1017,10 +1024,10 @@ class PBAR(Property):
         prop.ifile = self.ifile[i]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
-        #self.Type = np.full(ncards, '', dtype='|U8')
+        # self.Type = np.full(ncards, '', dtype='|U8')
 
-        #prop.Type = Type[i]
-        #prop.group = self.group[i]
+        # prop.Type = Type[i]
+        # prop.group = self.group[i]
         prop.A = self.A[i]
         prop.I = self.I[i, :]
         prop.J = self.J[i]
@@ -1195,26 +1202,26 @@ class PBAR(Property):
             i1, i2, i12 = I
             k1, k2 = k
 
-            #i1 = set_blank_if_default(i1, 0.0)
-            #i2 = set_blank_if_default(i2, 0.0)
-            #i12 = set_blank_if_default(i12, 0.0)
-            #j = set_blank_if_default(j, 0.0)
-            #nsm = set_blank_if_default(nsm, 0.0)
-
-            #c1 = set_blank_if_default(c1, 0.0)
-            #c2 = set_blank_if_default(c2, 0.0)
-
-            #d1 = set_blank_if_default(d1, 0.0)
-            #d2 = set_blank_if_default(d2, 0.0)
-
-            #e1 = set_blank_if_default(e1, 0.0)
-            #e2 = set_blank_if_default(e2, 0.0)
-
-            #f1 = set_blank_if_default(f1, 0.0)
-            #f2 = set_blank_if_default(f2, 0.0)
-
-            #k1 = set_blank_if_default(k1, 1e8)
-            #k2 = set_blank_if_default(k2, 1e8)
+            # i1 = set_blank_if_default(i1, 0.0)
+            # i2 = set_blank_if_default(i2, 0.0)
+            # i12 = set_blank_if_default(i12, 0.0)
+            # j = set_blank_if_default(j, 0.0)
+            # nsm = set_blank_if_default(nsm, 0.0)
+            #
+            # c1 = set_blank_if_default(c1, 0.0)
+            # c2 = set_blank_if_default(c2, 0.0)
+            #
+            # d1 = set_blank_if_default(d1, 0.0)
+            # d2 = set_blank_if_default(d2, 0.0)
+            #
+            # e1 = set_blank_if_default(e1, 0.0)
+            # e2 = set_blank_if_default(e2, 0.0)
+            #
+            # f1 = set_blank_if_default(f1, 0.0)
+            # f2 = set_blank_if_default(f2, 0.0)
+            #
+            # k1 = set_blank_if_default(k1, 1e8)
+            # k2 = set_blank_if_default(k2, 1e8)
 
             list_fields = ['PBAR', pid, mid, A, i1, i2, j, nsm,
                            None, c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, i12]
@@ -1252,6 +1259,7 @@ class PBAR(Property):
         """calculates E, G, nu"""
         e_g_nu = e_g_nu_from_isotropic_material(self.material_id, self.allowed_materials)
         return e_g_nu
+
 
 def e_g_nu_from_isotropic_material(material_id: np.ndarray,
                                    allowed_materials: list[Material]) -> np.ndarray:
@@ -1305,13 +1313,14 @@ class PBARL(Property):
         "DBOX": 10,  # was 12
 
         # approximate
-        #'I', 'CHAN', 'T', 'CHAN1', 'T1', 'CHAN2', 'T2', 'L' and 'BOX1'.
-        'L' : 4,
+        # 'I', 'CHAN', 'T', 'CHAN1', 'T1', 'CHAN2', 'T2', 'L' and 'BOX1'.
+        'L': 4,
     }  # for GROUP="MSCBML0"
 
     _skip_equality_check = True  # assume unequal
     _show_attributes = ['property_id', 'material_id', 'ndim', 'Type',
                         'group', 'nsm', 'dims']
+
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -1322,11 +1331,11 @@ class PBARL(Property):
         self.nsm = np.array([], dtype='float64')
         self.dims = np.array([], dtype='float64')
 
-    #def slice_card_by_property_id(self, property_id: np.ndarray) -> PBARL:
-        #"""uses a node_ids to extract PBARLs"""
-        #iprop = self.index(property_id)
-        #prop = self.slice_card_by_index(iprop)
-        #return prop
+    # def slice_card_by_property_id(self, property_id: np.ndarray) -> PBARL:
+    #     """uses a node_ids to extract PBARLs"""
+    #     iprop = self.index(property_id)
+    #     prop = self.slice_card_by_index(iprop)
+    #     return prop
 
     def validate(self) -> None:
         utypes = np.unique(self.Type)
@@ -1334,30 +1343,30 @@ class PBARL(Property):
             if utype not in self.valid_types:
                 raise ValueError(f'PBARL Type={utype!r} is not valid')
 
-        #try:
-            #ndim = self.valid_types[self.Type]
-        #except KeyError:
-            #allowed = list(self.valid_types.keys())
-            #msg = f'PBARL pid={self.pid}; Type={self.Type}; allowed={allowed}'
-            #raise KeyError(msg)
-
-        #print(self.valid_types)
-        #print(self.Type)
-        #print(self.property_id)
+        # try:
+        #     ndim = self.valid_types[self.Type]
+        # except KeyError:
+        #     allowed = list(self.valid_types.keys())
+        #     msg = f'PBARL pid={self.pid}; Type={self.Type}; allowed={allowed}'
+        #     raise KeyError(msg)
+        #
+        # print(self.valid_types)
+        # print(self.Type)
+        # print(self.property_id)
         ndim = [self.valid_types[Type] for Type in self.Type]
-        #print(ndim)
-        #if not isinstance(self.dim, list):
-            #msg = 'PBARL pid=%s; dim must be a list; type=%r' % (self.pid, type(self.dim))
-            #raise TypeError(msg)
-        #if len(self.dim) != ndim:
-            #msg = 'dim=%s len(dim)=%s Type=%s len(dimType)=%s' % (
-                #self.dim, len(self.dim), self.Type,
-                #self.valid_types[self.Type])
-            #raise RuntimeError(msg)
-
-        #assert len(self.dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
-        #if not isinstance(self.group, str):
-            #raise TypeError('Invalid group; pid=%s group=%r' % (self.pid, self.group))
+        # print(ndim)
+        # if not isinstance(self.dim, list):
+        #     msg = 'PBARL pid=%s; dim must be a list; type=%r' % (self.pid, type(self.dim))
+        #     raise TypeError(msg)
+        # if len(self.dim) != ndim:
+        #     msg = 'dim=%s len(dim)=%s Type=%s len(dimType)=%s' % (
+        #         self.dim, len(self.dim), self.Type,
+        #         self.valid_types[self.Type])
+        #     raise RuntimeError(msg)
+        #
+        # assert len(self.dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
+        # if not isinstance(self.group, str):
+        #     raise TypeError('Invalid group; pid=%s group=%r' % (self.pid, self.group))
 
     def __apply_slice__(self, prop: PBARL, i: np.ndarray) -> None:  # ignore[override]
         assert self.ndim.sum() == len(self.dims)
@@ -1440,7 +1449,7 @@ class PBARL(Property):
 
         #: dimension list
         assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
-        #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
+        # assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
         ndim = len(dim)
         assert ndim > 0, f'PBARL: property_id={pid} dims={dim}'
@@ -1510,7 +1519,7 @@ class PBARL(Property):
         for pid, beam_type, ndimi, idim in zip(
             self.property_id, self.Type, self.ndim, self.idim):
             idim0, idim1 = idim
-            dim = self.dims[idim0 : idim1].tolist()
+            dim = self.dims[idim0:idim1].tolist()
             ndim = self.valid_types[beam_type]
             assert len(dim) == ndim, f'PBARL pid={pid:d} bar_type={beam_type} ndim={ndim:d} len(dims)={dim}'
 
@@ -1557,7 +1566,7 @@ class PBARL(Property):
             raise RuntimeError(f'too many dimensions for pid={pidi} bar_type={bar_typei} '
                                f'min(bar_lengths)={min_length}; dim.shape={dim.shape}')
 
-        #bar_type = self.bar_type[ipid]
+        # bar_type = self.bar_type[ipid]
         idim_ = self.idim[ipid, :]
         for pid, (i0, i1), dimi in zip(property_id, idim_, dim):
             dimensions = self.dims[i0:i1]
@@ -1582,7 +1591,7 @@ class PBARL(Property):
                                                                 self.Type, self.ndim,
                                                                 self.idim,
                                                                 groups, nsms):
-            #nsm = set_blank_if_default(nsm, 0.)
+            # nsm = set_blank_if_default(nsm, 0.)
             idim0, idim1 = idim
             dim = self.dims[idim0:idim1].tolist()
             ndim = self.valid_types[beam_type]
@@ -1644,8 +1653,8 @@ class PBARL(Property):
         for i, beam_type, idim in zip(count(), self.Type, self.idim):
             idim0, idim1 = idim
             dim = self.dims[idim0:idim1]
-            #prop = pbarl(self.property_id[i], self.material_id[i], beam_type, dim)
-            #A, I1, I2, I12 = A_I1_I2_I12(prop, beam_type, dim)
+            # prop = pbarl(self.property_id[i], self.material_id[i], beam_type, dim)
+            # A, I1, I2, I12 = A_I1_I2_I12(prop, beam_type, dim)
             A = _bar_areaL('PBARL', beam_type, dim, self)[0]
             area[i] = A
         return area
@@ -1658,7 +1667,7 @@ class PBARL(Property):
                                            self.Type, self.idim):
             idim0, idim1 = idim
             dim = self.dims[idim0:idim1].tolist()
-            #from pyNastran.bdf.cards.properties.bars import A_I1_I2_I12
+            # from pyNastran.bdf.cards.properties.bars import A_I1_I2_I12
             I[i] = _bar_areaL('PBARL', beam_type, dim, self)
         return I
 
@@ -1706,17 +1715,17 @@ class PBRSECT(Property):
         if lines_joined:
             fields = get_beam_sections(lines_joined)
             options = [field.split('=', 1) for field in fields]
-            #C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\zbr3.dat
-            #options = [
-                #[u'OUTP', u'201'],
-                #[u'T', u'1.0'],
-                #[u'BRP', u'202'],
-                #[u'T(11)', u'[1.2'],
-                #[u'PT', u'(202'], [u'224)]'],
-                #[u'T(12)', u'[1.2'],
-                #[u'PT', u'(224'],
-                #[u'205)]'],
-            #]
+            # C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\zbr3.dat
+            # options = [
+            #     [u'OUTP', u'201'],
+            #     [u'T', u'1.0'],
+            #     [u'BRP', u'202'],
+            #     [u'T(11)', u'[1.2'],
+            #     [u'PT', u'(202'], [u'224)]'],
+            #     [u'T(12)', u'[1.2'],
+            #     [u'PT', u'(224'],
+            #     [u'205)]'],
+            # ]
         else:
             options = []
 
@@ -1730,7 +1739,7 @@ class PBRSECT(Property):
             raise RuntimeError(f'PBRSECT pid={pid:d}; nsm={nsm} brps={brps} inps={inps} outp={outp} ts={ts}')
         self.cards.append((pid, mid, form, nsm, brps, inps, outp, ts, ifile, comment))
         self.n += 1
-        #return PBRSECT(pid, mid, form, options, comment=comment)
+        # return PBRSECT(pid, mid, form, options, comment=comment)
         return self.n - 1
 
     @Property.parse_cards_check
@@ -1740,23 +1749,23 @@ class PBRSECT(Property):
         ifile = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype=idtype)
         material_id = np.zeros(ncards, dtype=idtype)
-        #self.Type = np.full(ncards, '', dtype='|U8')
-        #self.group = np.full(ncards, '', dtype='|U8')
+        # self.Type = np.full(ncards, '', dtype='|U8')
+        # self.group = np.full(ncards, '', dtype='|U8')
 
-        #self.material_id[icard] = mid
-        #self.group[icard] = group
+        # self.material_id[icard] = mid
+        # self.group[icard] = group
         form = np.zeros(ncards, dtype='|U8')
-        #self.A = np.zeros(ncards, dtype='float64')
-        #self.J = np.zeros(ncards, dtype='float64')
+        # self.A = np.zeros(ncards, dtype='float64')
+        # self.J = np.zeros(ncards, dtype='float64')
 
-        #self.c = np.zeros((ncards, 2), dtype='float64')
-        #self.d = np.zeros((ncards, 2), dtype='float64')
-        #self.e = np.zeros((ncards, 2), dtype='float64')
-        #self.f = np.zeros((ncards, 2), dtype='float64')
+        # self.c = np.zeros((ncards, 2), dtype='float64')
+        # self.d = np.zeros((ncards, 2), dtype='float64')
+        # self.e = np.zeros((ncards, 2), dtype='float64')
+        # self.f = np.zeros((ncards, 2), dtype='float64')
 
-        #self.I = np.zeros((ncards, 3), dtype='float64')
-        #self.k = np.zeros((ncards, 2), dtype='float64')
-        #self.nsm = np.zeros(ncards, dtype='float64')
+        # self.I = np.zeros((ncards, 3), dtype='float64')
+        # self.k = np.zeros((ncards, 2), dtype='float64')
+        # self.nsm = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
             (pid, mid, form, nsm, brps, inps, outp, ts, ifilei, comment) = card
@@ -1765,16 +1774,16 @@ class PBRSECT(Property):
             property_id[icard] = pid
             material_id[icard] = mid
             form[icard] = form
-            #self.I[icard, :] = [i1, i2, i12]
-            #self.J[icard] = j
+            # self.I[icard, :] = [i1, i2, i12]
+            # self.J[icard] = j
 
-            #self.c[icard, :] = [c1, c2]
-            #self.d[icard, :] = [d1, d2]
-            #self.e[icard, :] = [e1, e2]
-            #self.f[icard, :] = [f1, f2]
+            # self.c[icard, :] = [c1, c2]
+            # self.d[icard, :] = [d1, d2]
+            # self.e[icard, :] = [e1, e2]
+            # self.f[icard, :] = [f1, f2]
 
-            #self.k[icard, :] = [k1, k2]
-            #self.nsm[icard] = nsm
+            # self.k[icard, :] = [k1, k2]
+            # self.nsm[icard] = nsm
         self._save(property_id, material_id, form, ifile)
         self.sort()
         self.cards = []
@@ -1821,7 +1830,7 @@ class CBARAO(Element):
         self.property_id = np.array([], dtype='int32')
         self.scale = np.array([], dtype='|U3')
         self.g0 = np.array([], dtype='int32')
-        #self.x = np.array([], dtype='float64')
+        # self.x = np.array([], dtype='float64')
         self.station = np.array([], dtype='float64')
 
     def add(self, eid: int, scale: str, x: list[float],
@@ -1902,8 +1911,8 @@ class CBARAO(Element):
         used_dict['element_id'].append(self.element_id)
 
     def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
-        #LE : x is in absolute coordinates along the bar
-        #FR : x is in fractional
+        # LE : x is in absolute coordinates along the bar
+        # FR : x is in fractional
         is_le = (self.scale == 'LE')
         nle = is_le.sum()
         if nle:
@@ -1995,48 +2004,48 @@ class CBARAO(Element):
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         eid = self.model.cbar.element_id
-        #pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
-                          #msg=f'no bar properties for {self.type}')
+        # pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
+        #                   msg=f'no bar properties for {self.type}')
         eid.sort()
         geom_check(self,
                    missing,
                    element_id=(eid, self.element_id),
                    )
 
-#class CBARAO(BaseCard):
-
-    #def __init__(self, eid, scale, x, comment=''):
-        #"""
-        #Creates a CBARAO card, which defines additional output locations
-        #for the CBAR card.
-
-        #It also changes the OP2 element type from a CBAR-34 to a CBAR-100.
-        #However, it is ignored if there are no PLOAD1s in the model.
-        #Furthermore, the type is changed for the whole deck, regardless of
-        #whether there are PLOAD1s in the other load cases.
-
-        #Parameters
-        #----------
-        #eid : int
-            #element id
-        #scale : str
-            #defines what x means
-            #LE : x is in absolute coordinates along the bar
-            #FR : x is in fractional
-        #x : list[float]
-            #the additional output locations (doesn't include the end points)
-            #len(x) <= 6
-        #comment : str; default=''
-            #a comment for the card
-
-        #MSC only
-
-        #"""
-        #if comment:
-            #self.comment = comment
-        #self.eid = eid
-        #self.scale = scale
-        #self.x = np.unique(x).tolist()
+# class CBARAO(BaseCard):
+#
+#     def __init__(self, eid, scale, x, comment=''):
+#         """
+#         Creates a CBARAO card, which defines additional output locations
+#         for the CBAR card.
+#
+#         It also changes the OP2 element type from a CBAR-34 to a CBAR-100.
+#         However, it is ignored if there are no PLOAD1s in the model.
+#         Furthermore, the type is changed for the whole deck, regardless of
+#         whether there are PLOAD1s in the other load cases.
+#
+#         Parameters
+#         ----------
+#         eid : int
+#             element id
+#         scale : str
+#             defines what x means
+#             LE : x is in absolute coordinates along the bar
+#             FR : x is in fractional
+#         x : list[float]
+#             the additional output locations (doesn't include the end points)
+#             len(x) <= 6
+#         comment : str; default=''
+#             a comment for the card
+#
+#         MSC only
+#
+#         """
+#         if comment:
+#             self.comment = comment
+#         self.eid = eid
+#         self.scale = scale
+#         self.x = np.unique(x).tolist()
 
 
 def apply_bar_default(bar: CBAR | CBEAM,
@@ -2072,8 +2081,8 @@ def apply_bar_default(bar: CBAR | CBEAM,
         else:
             data_temp_default.append((bar.bit, -1, baror.offt))
 
-    #print(bar.x)
-    #print(bar.g0)
+    # print(bar.x)
+    # print(bar.g0)
     is_x_nan = np.isnan(bar.x)
     x_any_nan = ~np.any(is_x_nan, axis=1)  # x is blank
     x_all_nan = ~np.all(is_x_nan, axis=1)  # x is blank

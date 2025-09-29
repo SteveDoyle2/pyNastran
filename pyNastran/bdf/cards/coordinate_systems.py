@@ -2597,7 +2597,7 @@ class CORD3G(CoordBase):
         #raise NotImplementedError(data)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CORD3G card from ``BDF.add_card(...)``
 

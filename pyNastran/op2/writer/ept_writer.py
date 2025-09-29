@@ -1197,9 +1197,9 @@ def write_pconv(name: str, props: list, itable: int,
         for prop in props:
             mid = 0 if prop.mid is None else prop.mid
             tid = 0 if prop.tid is None else prop.tid
-            e1 = 0.0 if prop.e1 is None else prop.e1
-            e2 = 0.0 if prop.e2 is None else prop.e2
-            e3 = 0.0 if prop.e3 is None else prop.e3
+            e1 = 0.0 if prop.e[0] is None else prop.e[0]
+            e2 = 0.0 if prop.e[1] is None else prop.e[1]
+            e3 = 0.0 if prop.e[2] is None else prop.e[2]
             chlen = 0.0 if prop.chlen is None else prop.chlen
             gidin = 0 if prop.gidin is None else prop.gidin
             ftype = 0 if prop.ftype is None else prop.ftype

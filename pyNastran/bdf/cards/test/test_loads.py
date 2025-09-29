@@ -1511,7 +1511,7 @@ class TestLoads(unittest.TestCase):
         #nid = 4
         eids = [eid]
         q0 = 2.0
-        model.add_qvect(qvect_id, q0, eids, t_source=None, ce=0, vector_tableds=None, control_id=0, comment='qvect')
+        model.add_qvect(qvect_id, q0, eids, t_source=None, ce=0, vector_tableds=None, control_node=0, comment='qvect')
         lines = [
             'SUBCASE 1',
             '  DLOAD = %s' % tload_id,

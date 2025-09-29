@@ -1266,7 +1266,7 @@ class GEOM3:
         element_id = ints[:, 11]
         nelement = np.ones(nloads, dtype='int32')
         load = op2.qvect
-        #load_id, q0, t_source, control_id, ce, vector_tableds,
+        #load_id, q0, t_source, control_node, ce, vector_tableds,
                       #element, nelement
 
         vector = floats[:, [5, 7, 9]]

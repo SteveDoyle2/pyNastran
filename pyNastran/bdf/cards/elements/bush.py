@@ -272,7 +272,7 @@ class CBUSH(BushElement):
         h5_file.create_dataset('si', data=si)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CBUSH card from ``BDF.add_card(...)``
 
@@ -540,7 +540,7 @@ class CBUSH1D(BushElement):
         h5_file.create_dataset('cid', data=cid)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CBUSH1D card from ``BDF.add_card(...)``
 
@@ -684,7 +684,7 @@ class CBUSH2D(BushElement):
         self.cid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CBUSH2D card from ``BDF.add_card(...)``
 

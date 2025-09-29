@@ -5344,7 +5344,7 @@ class AddThermal:
         return load
 
     def add_qbdy3(self, sid: int, q0: float, eids: list[int],
-                  cntrlnd: int=0, comment: str='') -> QBDY3:
+                  control_node: int=0, comment: str='') -> QBDY3:
         """
         Creates a QBDY3 card
 
@@ -5354,7 +5354,7 @@ class AddThermal:
             Load set identification number. (Integer > 0)
         q0 : float; default=None
             Magnitude of thermal flux vector into face
-        control_id : int; default=0
+        control_node : int; default=0
             Control point
         eids : list[int] or THRU
             Element identification number of a CHBDYE, CHBDYG, or
@@ -5379,7 +5379,7 @@ class AddThermal:
                   t_source: Optional[float]=None,
                   ce: int=0,
                   vector_tableds: Optional[list[int]]=None,
-                  control_id: int=0,
+                  control_node: int=0,
                   comment: str='') -> QVECT:
         """
         Creates a QVECT card
@@ -5401,7 +5401,7 @@ class AddThermal:
             tabled : int
                 TABLEDi entry identification numbers defining the
                 components as a function of time
-        control_id : int; default=0
+        control_node : int; default=0
             Control point
         eids : list[int] or THRU
             Element identification number of a CHBDYE, CHBDYG, or
@@ -5411,7 +5411,7 @@ class AddThermal:
 
         """
         load = QVECT(sid, q0, eids, t_source=t_source, ce=ce,
-                     vector_tableds=vector_tableds, control_id=control_id,
+                     vector_tableds=vector_tableds, control_node=control_node,
                      comment=comment)
         self._add_methods.add_dload_entry(load)
         return load
@@ -5707,7 +5707,7 @@ class AddThermal:
 
     def add_pconv(self, pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
                   chlen=None, gidin=None, ce=0,
-                  e1=None, e2=None, e3=None,
+                  e=None,
                   comment='') -> PCONV:
         """
         Creates a PCONV card
@@ -5736,7 +5736,7 @@ class AddThermal:
             Grid ID of the referenced inlet point
         ce : int; default=0
             Coordinate system for defining orientation vector.
-        e1 / e2 / e3 : list[float]; default=None
+        e : list[float]; default=None
             Components of the orientation vector in coordinate system CE.
             The origin of the orientation vector is grid point G1
         comment : str; default=''
@@ -5746,7 +5746,7 @@ class AddThermal:
         prop = PCONV(pconid, mid=mid,
                      form=form, expf=expf, ftype=ftype,
                      tid=tid, chlen=chlen, gidin=gidin,
-                     ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)
+                     ce=ce, e=e, comment=comment)
         self._add_methods.add_convection_property_object(prop)
         return prop
 

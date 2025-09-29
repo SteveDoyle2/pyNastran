@@ -997,7 +997,7 @@ class GEOM3:
             if op2.is_debug_file:
                 op2.binary_debug.write('  QVECT=%s\n' % str(out))
             # (sid, q0, t_source, ce, flag1, e1, flag2,
-            #  e2, flag3, e3, control_id, eid) = out
+            #  e2, flag3, e3, control_node, eid) = out
 
             load = QVECT.add_op2_data(out)
             str(load)

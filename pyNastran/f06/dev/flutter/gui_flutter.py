@@ -19,7 +19,7 @@ import matplotlib.gridspec as gridspec
 
 from qtpy import QtCore
 from qtpy.compat import getopenfilename  # getsavefilename
-#from qtpy.QtGui import QIcon, QPixmap
+# from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (
     QLabel, QWidget,
     QApplication, QVBoxLayout, QComboBox,  # QMenu, QLineEdit,
@@ -48,7 +48,6 @@ from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObjec
 from pyNastran.f06.dev.flutter.preferences import (
     FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
     FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT)
-from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import get_flutter_units
@@ -84,7 +83,10 @@ else:
     BDF_FILENAME = BASE_PATH / '0012_flutter.bdf'
     OP2_FILENAME = BASE_PATH / '0012_flutter.op2'
 USE_TABS = False
-USE_VTK = False
+USE_VTK = True
+
+if USE_VTK or 1:
+    from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
 
 class FlutterGui(LoggableGui):
@@ -92,7 +94,8 @@ class FlutterGui(LoggableGui):
         super().__init__(html_logging=False)
 
         self._export_settings_obj = FlutterPreferencesObject(self, USE_VTK)
-        self._vtk_window_obj = VtkWindowObject(self, ICON_PATH)
+        if USE_VTK:
+            self._vtk_window_obj = VtkWindowObject(self, ICON_PATH)
         self.iwindows = []
 
         self.divergence_legend_loc = LEGEND_LOC_DEFAULT
@@ -310,7 +313,8 @@ class FlutterGui(LoggableGui):
         # print(f'json_filename={json_filename!r} wildcard={wildcard!r}')
         # print(f'self.data = {self.data}')
         out_data = copy.deepcopy(self.data)
-        out_data['vtk'] = self._vtk_window_obj.data
+        if USE_VTK:
+            out_data['vtk'] = self._vtk_window_obj.data
         out_data['preferences'] = {
             'flutter_ncolumns': self.flutter_ncolumns,
             'flutter_bbox_to_anchor_x': self.flutter_bbox_to_anchor_x,
@@ -330,7 +334,8 @@ class FlutterGui(LoggableGui):
         self._set_window_title()
 
     def _apply_settings(self, data: dict[str, Any]) -> None:
-        self._vtk_window_obj.apply_settings(data)
+        if USE_VTK:
+            self._vtk_window_obj.apply_settings(data)
         log = self.log
         font_size0 = self.font_size
         # radios = [

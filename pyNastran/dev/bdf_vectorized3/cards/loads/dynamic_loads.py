@@ -1,12 +1,12 @@
 from __future__ import annotations
 from collections import defaultdict
 from itertools import zip_longest
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.field_writer_8 import set_blank_if_default # , set_string8_blank_if_default
-from pyNastran.bdf.cards.base_card import expand_thru_by # expand_thru # BaseCard, expand_thru_by #  _node_ids,
+from pyNastran.bdf.field_writer_8 import set_blank_if_default  # set_string8_blank_if_default
+from pyNastran.bdf.cards.base_card import expand_thru_by  # expand_thru # BaseCard, expand_thru_by #  _node_ids,
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double,
@@ -19,7 +19,7 @@ from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.bdf.cards.loads.dloads import (
     fix_loadtype_tload1, fix_loadtype_tload2,
-    fix_loadtype_rload1, # fix_loadtype_rload2,
+    fix_loadtype_rload1,  # fix_loadtype_rload2,
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
@@ -33,7 +33,7 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_default_int, array_default_float,
     get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import LoadCombination
-#from .static_loads import get_loads_by_load_id, get_reduced_loads
+# from .static_loads import get_loads_by_load_id, get_reduced_loads
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -54,12 +54,12 @@ class DLOAD(LoadCombination):
     +-------+-----+------+------+----+-----+----+----+----+
 
     """
-    #def clear(self) -> None:
-        #self.n = 0
-        #self.load_id = np.array([], dtype='int32')
-        #self.nloads = np.array([], dtype='int32')
-        #self.load_ids = np.array([], dtype='int32')
-        #self.scale_factors = np.array([], dtype='float64')
+    # def clear(self) -> None:
+    #     self.n = 0
+    #     self.load_id = np.array([], dtype='int32')
+    #     self.nloads = np.array([], dtype='int32')
+    #     self.load_ids = np.array([], dtype='int32')
+    #     self.scale_factors = np.array([], dtype='float64')
 
     def add(self, sid: int, scale: float,
             scale_factors: list[float], load_ids: list[int],
@@ -175,6 +175,7 @@ class DAREA(VectorizedBaseCard):
     +-------+-----+----+----+-----+----+----+------+
     """
     _id_name = 'load_id'
+
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -247,7 +248,6 @@ class DAREA(VectorizedBaseCard):
 
         #: Set identification number
         load_id = np.zeros(ncards, dtype='int32')
-
 
         #: Identification number of DAREA or SPCD entry set or a thermal load
         #: set (in heat transfer analysis) that defines {A}. (Integer > 0)
@@ -328,6 +328,7 @@ class TLOAD1(VectorizedBaseCard):
     +--------+-----+----------+-------+------+-----+
     """
     _id_name = 'load_id'
+
     def clear(self) -> None:
         self.n = 0
         #: Set identification number
@@ -440,7 +441,6 @@ class TLOAD1(VectorizedBaseCard):
 
         #: Set identification number
         load_id = np.zeros(ncards, dtype='int32')
-
 
         #: Identification number of DAREA or SPCD entry set or a thermal load
         #: set (in heat transfer analysis) that defines {A}. (Integer > 0)
@@ -592,6 +592,7 @@ class TLOAD2(VectorizedBaseCard):
 
     """
     _id_name = 'load_id'
+
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -856,6 +857,7 @@ class RLOAD1(VectorizedBaseCard):
     NX allows DELAY and DPHASE to be floats
     """
     _id_name = 'load_id'
+
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -1098,6 +1100,7 @@ class RLOAD2(VectorizedBaseCard):
     NX allows DELAY and DPHASE to be floats
     """
     _id_name = 'load_id'
+
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -1156,7 +1159,7 @@ class RLOAD2(VectorizedBaseCard):
         tb : int/float; default=0
             TABLEDi id that defines B(f) for all degrees of freedom in
             EXCITEID entry
-        tp : int/float; default=0
+        tphi : int/float; default=0
             TABLEDi id that defines phi(f) for all degrees of freedom in
             EXCITEID entry
         load_type : int/str; default='LOAD'
@@ -1174,7 +1177,7 @@ class RLOAD2(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, ifile: int, comment:str='') -> None:
+    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> None:
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', default=0)
@@ -2322,7 +2325,7 @@ class QVECT(VectorizedBaseCard):
             t_source: float=None,
             ce: int=0,
             vector_tableds: list[int | float]=0.0,
-            control_id: int=0, comment: str='') -> int:
+            control_node: int=0, comment: str='') -> int:
         """
         Creates a QVECT card
 
@@ -2343,7 +2346,7 @@ class QVECT(VectorizedBaseCard):
             tabled : int
                 TABLEDi entry identification numbers defining the
                 components as a function of time
-        control_id : int; default=0
+        control_node : int; default=0
             Control point
         eids : list[int] or THRU
             Element identification number of a CHBDYE, CHBDYG, or
@@ -2363,7 +2366,7 @@ class QVECT(VectorizedBaseCard):
             integer_double_or_blank(card, 6, 'e2_tabled2', default=0.0),
             integer_double_or_blank(card, 7, 'e3_tabled3', default=0.0),
         ]
-        control_id = integer_or_blank(card, 8, 'control_id', default=0)
+        control_node = integer_or_blank(card, 8, 'control_node', default=0)
 
         i = 1
         eids = []
@@ -2373,7 +2376,7 @@ class QVECT(VectorizedBaseCard):
             assert eid != 0, card
             i += 1
         elements = expand_thru_by(eids)
-        self.cards.append((sid, q0, t_source, control_id, ce, vector_tableds, elements, comment))
+        self.cards.append((sid, q0, t_source, control_node, ce, vector_tableds, elements, comment))
         self.n += 1
         return self.n - 1
 
@@ -2383,7 +2386,7 @@ class QVECT(VectorizedBaseCard):
 
         #: Set identification number
         load_id = np.zeros(ncards, dtype='int32')
-        control_id = np.zeros(ncards, dtype='int32')
+        control_node = np.zeros(ncards, dtype='int32')
         nelement = np.zeros(ncards, dtype='int32')
         q0 = np.full(ncards, np.nan, dtype='float64')
         t_source = np.full(ncards, np.nan, dtype='float64')
@@ -2394,12 +2397,12 @@ class QVECT(VectorizedBaseCard):
         assert ncards > 0, ncards
         all_elements = []
         for icard, card in enumerate(self.cards):
-            (sid, q0i, t_sourcei, control_idi, cei, vector_tabledsi, elementsi, comment) = card
+            (sid, q0i, t_sourcei, control_nodei, cei, vector_tabledsi, elementsi, comment) = card
             load_id[icard] = sid
             q0[icard] = q0i
             t_source[icard] = t_sourcei
             nelement[icard] = len(elementsi)
-            control_id[icard] = control_idi
+            control_node[icard] = control_nodei
             ce[icard] = cei
             for i, vector_tabled in enumerate(vector_tabledsi):
                 if isinstance(vector_tabled, int):
@@ -2409,12 +2412,12 @@ class QVECT(VectorizedBaseCard):
             all_elements.extend(elementsi)
 
         elements = np.array(all_elements, dtype='int32')
-        self._save(load_id, q0, t_source, control_id, ce, vector, tableds,
+        self._save(load_id, q0, t_source, control_node, ce, vector, tableds,
                    elements, nelement)
         assert len(self.load_id) == self.n
         self.cards = []
 
-    def _save(self, load_id, q0, t_source, control_id, ce, vector, tableds,
+    def _save(self, load_id, q0, t_source, control_node, ce, vector, tableds,
               element, nelement):
         if len(self.load_id) != 0:
             adf
@@ -2423,7 +2426,7 @@ class QVECT(VectorizedBaseCard):
         self.load_id = load_id
         self.q0 = q0
         self.t_source = t_source
-        self.control_id = control_id
+        self.control_node = control_node
         self.ce = ce
         self.vector = vector
         self.tableds = tableds
@@ -2435,7 +2438,7 @@ class QVECT(VectorizedBaseCard):
     def __apply_slice__(self, load: QVECT, i: np.ndarray) -> None:
         load.n = len(i)
         load.load_id = self.load_id[i]
-        load.control_id = self.control_id[i]
+        load.control_node = self.control_node[i]
         load.q0 = self.q0[i]
         load.t_source = self.t_source[i]
         load.ce = self.ce[i]
@@ -2456,7 +2459,7 @@ class QVECT(VectorizedBaseCard):
         uce = np.unique(self.ce)
         utabled = np.unique(self.tableds)
         uthermal_element = np.unique(self.element)
-        unode = np.unique(self.control_id)
+        unode = np.unique(self.control_node)
 
         geom_check(
             self,
@@ -2469,7 +2472,7 @@ class QVECT(VectorizedBaseCard):
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(),
-                   self.control_id.max(),
+                   self.control_node.max(),
                    self.element.max(),)
 
     @parse_check
@@ -2480,11 +2483,11 @@ class QVECT(VectorizedBaseCard):
         #array_str, array_default_int
 
         load_ids = array_str(self.load_id, size=size)
-        control_id = array_default_int(self.control_id, size=size)
+        control_node = array_default_int(self.control_node, size=size)
         for sid, q0, t_source, ce, vector, tableds, \
-            control_id, (ieid0, ieid1) in zip_longest(load_ids, self.q0, self.t_source,
+            control_node, (ieid0, ieid1) in zip_longest(load_ids, self.q0, self.t_source,
                                                       self.ce, self.vector, self.tableds,
-                                                      control_id, self.ielement):
+                                                      control_node, self.ielement):
             element_ids = self.element[ieid0:ieid1].tolist()
             eids = collapse_thru_by(element_ids)
             vector_tableds = []
@@ -2495,7 +2498,7 @@ class QVECT(VectorizedBaseCard):
                     vector_tableds.append(tabled)
             list_fields = [
                 'QVECT', sid, q0, t_source, ce
-                ] + vector_tableds + [control_id] + eids
+                ] + vector_tableds + [control_node] + eids
             bdf_file.write(print_card(list_fields))
         return
 

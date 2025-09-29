@@ -1880,7 +1880,7 @@ class BODY7(BaseCard):
         #return self.acoord_ref
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BODY7 card from ``BDF.add_card(...)``
 
@@ -2785,7 +2785,7 @@ class CAERO7(BaseCard):
         assert self.nchord < 100, 'nchord=%s\n%s' % (self.nchord, str(self))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CAERO7 card from ``BDF.add_card(...)``
 
@@ -3541,7 +3541,7 @@ class TRIMLNK(BaseCard):
         assert sym in ['SYM', 'ASYM', 'ANTI'], sym
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a TRIMLNK card from ``BDF.add_card(...)``
 
@@ -3967,7 +3967,7 @@ class SPLINE1_ZONA(Spline):
         self.aero_element_ids = []
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPLINE1 card from ``BDF.add_card(...)``
 
@@ -4148,7 +4148,7 @@ class SPLINE2_ZONA(Spline):
         self.aero_element_ids = []
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPLINE1 card from ``BDF.add_card(...)``
 
@@ -4255,7 +4255,7 @@ class SPLINE3_ZONA(Spline):
         self.aero_element_ids = []
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPLINE3 card from ``BDF.add_card(...)``
 

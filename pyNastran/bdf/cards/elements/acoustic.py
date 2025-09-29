@@ -68,7 +68,7 @@ class CHACAB(Element):
         self.pid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CHACAB card from ``BDF.add_card(...)``
 
@@ -156,7 +156,7 @@ class CHACBR(Element):
         self.nodes = self.prepare_node_ids(nodes, allow_empty_nodes=True)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CHACBR card from ``BDF.add_card(...)``
 
@@ -248,7 +248,7 @@ class CAABSF(Element):
         self.nodes = self.prepare_node_ids(nodes, allow_empty_nodes=True)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CHACAB card from ``BDF.add_card(...)``
 
@@ -327,7 +327,7 @@ class PACBAR(Property):
         self.kreson = kreson
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PACBAR card from ``BDF.add_card(...)``
 
@@ -428,7 +428,7 @@ class PAABSF(Property):
                         self.b is None, self.k is None]), str(self)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PAABSF card from ``BDF.add_card(...)``
 

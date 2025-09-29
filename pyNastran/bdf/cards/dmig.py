@@ -490,7 +490,7 @@ class NastranMatrix(BaseCard):
         return DMI_MATRIX_MAP[self.matrix_form]
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a NastranMatrix (DMIG, DMIJ, DMIK, DMIJI) card from ``BDF.add_card(...)``
 
@@ -929,7 +929,7 @@ class DMIG_UACCEL(BaseCard):
         _export_dmig_to_hdf5(h5_file, model, model.dmig, encoding)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DMIG,UACCEL card from ``BDF.add_card(...)``
 
@@ -1311,7 +1311,7 @@ class DMIAX(BaseCard):
         return matrix_type
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a NastranMatrix (DMIAX) card from ``BDF.add_card(...)``
 

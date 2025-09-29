@@ -1016,7 +1016,7 @@ class BEAMOR(BaseCard):
         return BEAMOR(pid, is_g0, g0, x, offt='GGG', comment='')
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         pid = integer_or_blank(card, 2, 'pid')
 
         # x / g0

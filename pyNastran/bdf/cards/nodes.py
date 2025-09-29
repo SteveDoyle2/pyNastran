@@ -90,7 +90,7 @@ class SEQGP(BaseCard):
         self.seqids = seqids
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SEQGP card from ``BDF.add_card(...)``
 
@@ -394,7 +394,7 @@ class XPoints(BaseCard):
         self.points = set(expand_thru(ids))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPOINT/EPOINT card from ``BDF.add_card(...)``
 
@@ -637,7 +637,7 @@ class GRDSET(BaseCard):
         self.seid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a GRDSET card from ``BDF.add_card(...)``
 

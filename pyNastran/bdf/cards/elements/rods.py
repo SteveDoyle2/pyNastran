@@ -105,7 +105,7 @@ class CROD(RodElement):
         self.pid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CROD card from ``BDF.add_card(...)``
 

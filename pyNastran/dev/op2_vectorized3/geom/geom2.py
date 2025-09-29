@@ -2527,14 +2527,14 @@ class GEOM2:
             #out = s.unpack(edata)
             #if op2.is_debug_file:
                 #op2.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
-            #(eid, pcon_id, flmnd, cntrlnd,
+            #(eid, pcon_id, flmnd, control_node,
              #ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8) = out
             #assert eid > 0, out
             ##assert eid > 0, out
 
             ##ta = [ta1, ta2, ta3, ta5, ta6, ta7, ta8]
             #weights = [None] * 8
-            #data_in = [eid, pcon_id, flmnd, cntrlnd,
+            #data_in = [eid, pcon_id, flmnd, control_node,
                        #[ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8],
                        #weights]
 
@@ -2572,12 +2572,12 @@ class GEOM2:
             #out = s.unpack(edata)
             #if op2.is_debug_file:
                 #op2.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
-            #(eid, pcon_id, flmnd, cntrlnd,
+            #(eid, pcon_id, flmnd, control_node,
              ## TODO: why is ta4 and wt4 unused?
              #ta1, ta2, ta3, unused_ta4, ta5, ta6, ta7, ta8,
              #wt1, wt2, wt3, unused_wt4, wt5, wt6, wt7, wt8) = out
             #assert eid > 0, out
-            #data_in = [eid, pcon_id, flmnd, cntrlnd,
+            #data_in = [eid, pcon_id, flmnd, control_node,
                        #[ta1, ta2, ta3, ta5, ta6, ta7, ta8],
                        #[wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
             #elem = CONV.add_op2_data(data_in)

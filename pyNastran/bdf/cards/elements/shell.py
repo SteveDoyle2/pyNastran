@@ -937,7 +937,7 @@ class CPLSTx3(TriShell):
         #return CPLSTN3(eid, pid, nids, theta, comment=comment)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CPLSTx3 card from ``BDF.add_card(...)``
 
@@ -1550,7 +1550,7 @@ class CTRIAR(TriShell):
         #self.validate_node_ids(allow_empty_nodes=False)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CTRIAR card from ``BDF.add_card(...)``
 
@@ -2072,7 +2072,7 @@ class CSHEAR(QuadShell):
         assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CSHEAR card from ``BDF.add_card(...)``
 

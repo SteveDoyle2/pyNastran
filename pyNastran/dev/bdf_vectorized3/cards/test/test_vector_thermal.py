@@ -155,7 +155,7 @@ class TestThermal(unittest.TestCase):
         ta = 2
         ta1 = 2
         pconid = 11
-        conv = model.add_conv(eid, pconid, ta, film_node=0, cntrlnd=0,
+        conv = model.add_conv(eid, pconid, ta, film_node=0, control_node=0,
                               comment='conv')
         #conv.raw_fields()
         pconv = model.add_pconv(
@@ -163,7 +163,7 @@ class TestThermal(unittest.TestCase):
             exponent_free_convection=0.0,
             free_convection_type=0,
             table_id=0, chlen=None, gidin=None,
-            ce=0, e1=None, e2=None, e3=None,
+            ce=0, e=None,
             comment='pconv')
         #pconv.raw_fields()
 
@@ -185,8 +185,8 @@ class TestThermal(unittest.TestCase):
         famb = 100.
         nodamb = 33
         eids = [1]
-        cntrlnd = 1000
-        radbci = model.add_radbc(nodamb, famb, cntrlnd, eids, comment='radbc')
+        control_node = 1000
+        radbci = model.add_radbc(nodamb, famb, control_node, eids, comment='radbc')
         #radbc.raw_fields()
 
         sid = 43
@@ -200,7 +200,7 @@ class TestThermal(unittest.TestCase):
         t_source = 19.
         eids = [2]
         qvecti = model.add_qvect(sid, q0, eids, t_source, ce=0,
-                                 vector_tableds=None, control_id=0,
+                                 vector_tableds=None, control_node=0,
                                  comment='qvect')
         #qvecti.raw_fields()
 
@@ -223,7 +223,7 @@ class TestThermal(unittest.TestCase):
         q0 = 14.
         cntrlnd = 57
         eids = [1, 2]
-        qbdy3i = model.add_qbdy3(sid, q0, eids, cntrlnd=cntrlnd, comment='qbdy3')
+        qbdy3i = model.add_qbdy3(sid, q0, eids, control_node=cntrlnd, comment='qbdy3')
         #qbdy3i.raw_fields()
 
         icavity = 12
@@ -331,18 +331,18 @@ class TestThermal(unittest.TestCase):
         pconv = model.add_pconv(pconv_id, mid, form=0, exponent_free_convection=0.0,
                                 free_convection_type=0,
                                 table_id=tid_tableht, chlen=None, gidin=None,
-                                ce=0, e1=None, e2=None, e3=None, comment='pconv')
+                                ce=0, e=None, comment='pconv')
         #pconv.raw_fields()
 
         # Every surface to which free convection is to be applied must
         # reference a PCONV entry. PCONV is referenced on the CONV Bulk Data entry.
         eid = 1
         ta = 1
-        conv = model.add_conv(eid, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+        conv = model.add_conv(eid, pconv_id, ta, film_node=0, control_node=0, comment='conv')
         #conv.raw_fields()
 
-        conv = model.add_conv(2, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
-        conv = model.add_conv(3, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+        conv = model.add_conv(2, pconv_id, ta, film_node=0, control_node=0, comment='conv')
+        conv = model.add_conv(3, pconv_id, ta, film_node=0, control_node=0, comment='conv')
 
         # CHBDYG, CHBDYE, or CHBDYP surface element identification number.
         eid_fem = 1

@@ -156,7 +156,7 @@ class CTRAX3(AxisymmetricTri):
         #self.validate_node_ids(allow_empty_nodes=True)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CTRAX3 card from ``BDF.add_card(...)``
 
