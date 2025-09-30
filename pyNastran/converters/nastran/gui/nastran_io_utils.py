@@ -2954,10 +2954,11 @@ def _set_nid_to_pid_map_or_blank(nid_to_pid_map: dict[int, list[int]],
             nid_to_pid_map[nid].append(pid)
 
 def get_caero_control_surface_grid(grid: vtkUnstructuredGrid,
+                                   name: str,
                                    box_id_to_caero_element_map: dict[int, int],
                                    caero_points: np.ndarray,
                                    boxes_to_show: list[int],
-                                   log):
+                                   log: SimpleLogger):
     j = 0
     areas = []
     centroids = []
@@ -2965,17 +2966,23 @@ def get_caero_control_surface_grid(grid: vtkUnstructuredGrid,
     plot_elements = []
     assert isinstance(boxes_to_show, list), type(boxes_to_show)
 
-    vtk_type = 9 # vtkQuad
+    all_points_min_max = []
+    vtk_type = 9  # vtkQuad
     for box_id in boxes_to_show:
         elementi = box_id_to_caero_element_map[box_id]
         pointsi = caero_points[elementi]
         p1, p2, p3, p4 = pointsi
+        all_points_min_max.append(p1)
+        all_points_min_max.append(p2)
+        all_points_min_max.append(p3)
+        all_points_min_max.append(p4)
         area = np.linalg.norm(np.cross(p3 - p1, p4 - p2)) / 2.
         if area == 0.0:
             log.warning(f'box_id={box_id:d} has 0 area')
             continue
         #centroid = pointsi.sum(axis=0) / 4.
         centroid = (p1 + p2 + p3 + p4) / 4.
+        # print(f'  {box_id}: centroid={centroid}')
         #assert len(centroid) == 3, centroid
 
         elem = vtkQuad()
@@ -2991,6 +2998,17 @@ def get_caero_control_surface_grid(grid: vtkUnstructuredGrid,
         areas.append(area)
         j += 4
     elements = np.asarray(plot_elements, dtype='int32')
+    all_points_min_max_array = np.array(all_points_min_max)
+    amax = all_points_min_max_array.max(axis=0)
+    amin = all_points_min_max_array.min(axis=0)
+    msg = (
+        f'cs_name={name!r}\n'
+        f'  min   = {amin}\n'
+        f'  max   = {amax}\n'
+        f'  delta = {amax - amin}\n'
+    )
+    if not name.startswith(('spline1_', 'spline2_')):
+        log.info(msg)
     return all_points, elements, centroids, areas
 
 def get_model_unvectorized(log: SimpleLogger,

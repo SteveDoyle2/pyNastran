@@ -72,18 +72,18 @@ from pyNastran.bdf.bdf import (BDF,
                                )
 from pyNastran.bdf.cards.aero.aero import get_caero_box_grid, build_caero_paneling
 from pyNastran.bdf.cards.aero.zona import CAERO7, BODY7
-#from pyNastran.bdf.cards.elements.shell import (
-    #CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
-    #CTRIA3, CTRIA6, CTRIAR,
-    #CTRIA3, CTRIA6, CTRIAR,
-    #CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
-    #CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
-#)
-#from pyNastran.bdf.cards.elements.solid import (
-    #CTETRA4, CTETRA10, CPENTA6, CPENTA15,
-    #CHEXA8, CHEXA20,
-    #CPYRAM5, CPYRAM13,
-#)
+# from pyNastran.bdf.cards.elements.shell import (
+#     CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
+#     CTRIA3, CTRIA6, CTRIAR,
+#     CTRIA3, CTRIA6, CTRIAR,
+#     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
+#     CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
+# )
+# from pyNastran.bdf.cards.elements.solid import (
+#     CTETRA4, CTETRA10, CPENTA6, CPENTA15,
+#     CHEXA8, CHEXA20,
+#     CPYRAM5, CPYRAM13,
+# )
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids_all
 from pyNastran.bdf.mesh_utils.forces_moments import get_load_arrays, get_pressure_array
 from pyNastran.bdf.mesh_utils.mpc_dependency import get_mpc_node_ids
@@ -476,19 +476,19 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         skip_reading = self._remove_old_nastran_geometry(bdf_filename)
         # if 0:
-            # line_width = 3
-            # opacity = 1
-            # alt_grids = [
-                # ['caero', yellow, line_width, opacity],
-                # ['caero_boxes', yellow, line_width, opacity],
-            # ]
-            # skip_reading = self._remove_old_geometry2(bdf_filename, alt_grids=alt_grids)
+        #     line_width = 3
+        #     opacity = 1
+        #     alt_grids = [
+        #         ['caero', yellow, line_width, opacity],
+        #         ['caero_boxes', yellow, line_width, opacity],
+        #     ]
+        #     skip_reading = self._remove_old_geometry2(bdf_filename, alt_grids=alt_grids)
         if skip_reading:
             return
 
-        #if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
-            ## if we're running test_pynastrangui or we have the --test flag on the command line
-            ## this has (technically) nothing to do with if we're running the tests or not
+        # if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
+        #     # if we're running test_pynastrangui or we have the --test flag on the command line
+        #     # this has (technically) nothing to do with if we're running the tests or not
         self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
         gui.format = 'nastran'
 
@@ -683,14 +683,14 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         build_map_centroidal_result(
             model, nid_map, stop_on_failure=stop_on_failure)
 
-        #if self.create_secondary_actors and not IS_TESTING and 'dev' in __version__:
-            #self.sidebar_nastran = ModelSidebar(self.gui, nastran_io=self)
-            #self.sidebar_nastran.set_model(model)
-
-            #self.res_dock_nastran = QDockWidget("Nastran Model", self)
-            #self.res_dock_nastran.setObjectName("nastran_model")
-            #self.res_dock_nastran.setWidget(self.sidebar_nastran)
-            #self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock_nastran)
+        # if self.create_secondary_actors and not IS_TESTING and 'dev' in __version__:
+        #     self.sidebar_nastran = ModelSidebar(self.gui, nastran_io=self)
+        #     self.sidebar_nastran.set_model(model)
+        #
+        #     self.res_dock_nastran = QDockWidget("Nastran Model", self)
+        #     self.res_dock_nastran.setObjectName("nastran_model")
+        #     self.res_dock_nastran.setWidget(self.sidebar_nastran)
+        #     self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock_nastran)
 
         #self.res_dock.setWidget(self.res_widget)
         if plot:
@@ -1028,6 +1028,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         zfighting_offset = 0.0001
         caero_grid = gui.alt_grids['caero']
+        quad_type = 9
         j = 0
         for unused_eid, element in sorted(model.caeros.items()):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5, CAERO7)):
@@ -1048,7 +1049,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 xyzs.append(cpoints[1])
                 xyzs.append(cpoints[2])
                 xyzs.append(cpoints[3])
-                caero_grid.InsertNextCell(elem.GetCellType(), point_ids)
+                caero_grid.InsertNextCell(quad_type, point_ids)
                 j += 4
             elif isinstance(element, (CAERO2, BODY7)):
                 # slender body
@@ -1093,14 +1094,20 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     #cpoints[1][2] += zfighting_offset
                     #max_cpoints.append(np.array(cpoints).max(axis=0))
                     #min_cpoints.append(np.array(cpoints).min(axis=0))
-                    caero_grid.InsertNextCell(elem.GetCellType(), point_ids)
+                    caero_grid.InsertNextCell(quad_type, point_ids)
                     j += 4
             else:
                 gui.log_info(f'skipping {element.type}')
 
         if len(xyzs) and len(max_cpoints):
-            gui.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
-            gui.log_info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
+            amax = np.vstack(max_cpoints).max(axis=0)
+            amin = np.vstack(min_cpoints).min(axis=0)
+            dxyz = amin - amax
+            gui.log_info(
+                f'CAERO.max  = {amax}\n'
+                f'CAERO.min  = {amin}\n'
+                f'CAERO.dxyz = {dxyz}'
+            )
 
         xyz = np.array(xyzs)
         xyz = gui.scale_length(xyz)
@@ -1186,8 +1193,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         grid = gui.alt_grids[name]
         grid.Reset()
 
+        # print(f'control surface: {name!r}')
+        # print(f'  boxes_to_show = {boxes_to_show}')
         all_points, elements, centroids, areas = get_caero_control_surface_grid(
-            grid,
+            grid, name,
             box_id_to_caero_element_map,
             caero_points, boxes_to_show, log)
 
@@ -1208,6 +1217,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         # combine all the points
         all_points_array = np.vstack(all_points)
+        all_points_array = gui.scale_length(all_points_array)
 
         #vtk_etype = 9 # vtkQuad
         #create_vtk_cells_of_constant_element_type(grid, elements, vtk_etype)
@@ -1224,7 +1234,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             #gui.log_error(msg)
         if note:
             # points_list (15, 4, 3) = (elements, nodes, 3)
-            x, y, z = np.average(centroids, weights=areas, axis=0)
+            xyz_centroid = np.average(centroids, weights=areas, axis=0)
+            x, y, z = gui.scale_length(xyz_centroid)
+
             text = str(note)
             #slot = gui.label_actors[-1]
 
