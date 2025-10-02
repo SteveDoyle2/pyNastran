@@ -272,7 +272,6 @@ class AddMethods:
         """adds a GRID card"""
         key = node.nid
         model = self.model
-
         assert key > 0, 'nid=%s node=%s' % (key, node)
         add_object_to_dict_no_dupes(model, key, 'node', node, model.nodes,
                                     model._duplicate_nodes, allow_overwrites)
@@ -889,7 +888,11 @@ class AddMethods:
                          allow_overwrites: bool=False) -> None:
         """adds a Coord object"""
         key = coord.cid
+        model = self.model
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)
+        # add_object_to_dict_no_dupes(model, key, 'coords', coord, model.coords,
+        #                             model._duplicate_coords, allow_overwrites)
+
         if key in self.model.coords:
             #if not allow_overwrites:
             if not coord == self.model.coords[key]:

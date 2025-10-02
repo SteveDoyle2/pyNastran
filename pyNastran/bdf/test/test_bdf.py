@@ -471,6 +471,7 @@ def run_and_compare_fems(
     fem1 = BDF(debug=debug, log=log)
     fem1.allow_tabs = allow_tabs
     #fem1.force_echo_off = False
+    log = fem1.log
     if is_lax_parser:
         fem1.log.warning('using lax card parser')
         fem1.is_strict_card_parser = False
@@ -537,6 +538,7 @@ def run_and_compare_fems(
         diff_cards = compare(fem1, fem2, xref=xref,
                              run_mass=run_mass, check=check,
                              print_stats=print_stats, quiet=quiet)
+        log.debug('test_get_cards_by_card_types')
         test_get_cards_by_card_types(fem2)
 
         fem2.update_model_by_desvars(xref)
@@ -2145,13 +2147,22 @@ def compute(cards1: dict[str, int],
         else:
             value2 = 0
 
-        if key == 'INCLUDE':
-            if not quiet:
-                msg += '    key=%-7s value1=%-7s value2=%-7s' % (
-                    key, value1, value2)
-        else:
-            msg += '   *key=%-7s value1=%-7s value2=%-7s' % (
-                key, value1, value2)
+        star = ' ' if key == 'INCLUDE' else '*'
+        msg += f'   {star}key={key:-7s} value1={value1:<7d} value2={value2:<7d}\n'
+        #if star == '*': #value1 != value2:
+        #    asdf
+        #    if len(lost_keys):
+        #        msg += f'   lost:  {lost_keys}\n'
+        #    if len(extra_keys):
+        #        msg += f'   extra: {extra_keys}\n'
+
+        # if key == 'INCLUDE':
+        #     if not quiet:
+        #         msg += '    key=%-7s value1=%-7s value2=%-7s' % (
+        #             key, value1, value2)
+        # else:
+        #     msg += '   *key=%-7s value1=%-7s value2=%-7s' % (
+        #         key, value1, value2)
         msg = msg.rstrip()
         if msg:
             print(msg)

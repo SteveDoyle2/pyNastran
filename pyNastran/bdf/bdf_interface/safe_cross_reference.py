@@ -27,12 +27,12 @@ class SafeXrefMesh(XrefMesh):
         XrefMesh.__init__(self)
 
     # def geom_check(self):
-        # """
-        # Performs various geometry checks
-          # 1.  nodal uniqueness on elements
-        # """
-        # for elem in model.elements:
-            # elem.check_unique_nodes()
+    #     """
+    #     Performs various geometry checks
+    #       1.  nodal uniqueness on elements
+    #     """
+    #     for elem in model.elements:
+    #         elem.check_unique_nodes()
 
     def safe_cross_reference(self, xref: bool=True,
                              xref_nodes: bool=True,
@@ -398,6 +398,7 @@ class SafeXrefMesh(XrefMesh):
         ----------
         ref_id : int
             the referencing value (e.g., an MATT1 eid references a TABLEH1)
+
         """
         return _safe_attr(self, tableh_id, ref_id, xref_errors,
                           func=self.TableH, word='tableh', msg=msg)
@@ -409,6 +410,7 @@ class SafeXrefMesh(XrefMesh):
         ----------
         ref_id : int
             the referencing value (e.g., an DVPREL1 eid references a DESVAR)
+
         """
         return _safe_attr(self, desvar_id, ref_id, xref_errors,
                           func=self.Desvar, word='desvar', msg=msg)

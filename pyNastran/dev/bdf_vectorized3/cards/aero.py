@@ -3070,7 +3070,7 @@ class PAERO2(PAERO):
         self.thi = np.zeros((0, 3), dtype='int32')
         self.thn = np.zeros((0, 3), dtype='int32')
 
-    def add(self, pid: int, orient: str, width: float, AR: float,
+    def add(self, pid: int, orient: str, width: float, aspect_ratio: float,
             thi: list[int], thn: list[int],
             lrsb: Optional[int]=None,
             lrib: Optional[int]=None,
@@ -3091,7 +3091,7 @@ class PAERO2(PAERO):
         width : float
             Reference half-width of body and the width of the constant
             width interference tube
-        AR : float
+        aspect_ratio : float
             Aspect ratio of the interference tube (height/width)
         thi / thn : list[int]
             The first (thi) and last (thn) interference element of a body
@@ -3111,7 +3111,7 @@ class PAERO2(PAERO):
             a comment for the card
 
         """
-        self.cards.append((pid, orient, width, AR, thi, thn,
+        self.cards.append((pid, orient, width, aspect_ratio, thi, thn,
                            lrsb, lrib, lth, ifile, comment))
         self.n += 1
         return self.n - 1
@@ -3131,7 +3131,7 @@ class PAERO2(PAERO):
         pid = integer(card, 1, 'pid')
         orient = string(card, 2, 'orient')
         width = double(card, 3, 'width')
-        AR = double(card, 4, 'AR')
+        aspect_ratio = double(card, 4, 'AR')
         lrsb = integer_or_blank(card, 5, 'lrsb')
         lrib = integer_or_blank(card, 6, 'lrib')
         lth1 = integer_or_blank(card, 7, 'lth1', default=0)
@@ -3148,7 +3148,7 @@ class PAERO2(PAERO):
                       #lrsb=lrsb, lrib=lrib, lth=lth,
                       #comment=comment)
         assert len(thi) <= 3, thi
-        self.cards.append((pid, orient, width, AR, thi, thn,
+        self.cards.append((pid, orient, width, aspect_ratio, thi, thn,
                            lrsb, lrib, lth, ifile, comment))
         self.n += 1
         return self.n - 1
@@ -3171,13 +3171,13 @@ class PAERO2(PAERO):
         comment = {}
 
         for icard, card in enumerate(self.cards):
-            (pid, orienti, widthi, AR, thii, thni,
+            (pid, orienti, widthi, aspect_ratioi, thii, thni,
              lrsbi, lribi, lthi, ifilei, commenti) = card
             ifile[icard] = ifilei
             if commenti:
                 comment[pid] = commenti
             property_id[icard] = pid
-            aspect_ratio[icard] = AR
+            aspect_ratio[icard] = aspect_ratioi
             width[icard] = widthi
             orientation[icard] = orienti
             thi[icard, :len(thii)] = thii

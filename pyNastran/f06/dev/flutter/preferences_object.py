@@ -42,15 +42,24 @@ class FlutterPreferencesObject:
         # if not hasattr(gui, 'case_keys') or len(gui.case_keys) == 0:
         #     gui.log_error('No model has been loaded.')
         #     return
-        vtk_obj = gui._vtk_window_obj
-        data = {
-            # vtk
-            'nphase': vtk_obj.nphase,
-            'icase': vtk_obj.icase,
-            'ncase': vtk_obj.ncase,
-            'animate': vtk_obj.animate,
-            'dt_ms': vtk_obj.dt_ms,
-
+        if hasattr(gui, '_vtk_window_obj'):
+            vtk_obj = gui._vtk_window_obj
+            data = {
+                'nphase': vtk_obj.nphase,
+                'icase': vtk_obj.icase,
+                'ncase': vtk_obj.ncase,
+                'animate': vtk_obj.animate,
+                'dt_ms': vtk_obj.dt_ms,
+            }
+        else:
+            data = {
+                'nphase': 30,
+                'icase': 0,
+                'ncase': 1,
+                'animate': True,
+                'dt_ms': 100,
+            }
+        data.update({
             # plotting
             'font_size': gui.font_size,
             'plot_font_size': gui.plot_font_size,
@@ -62,9 +71,10 @@ class FlutterPreferencesObject:
             'divergence_legend_loc': gui.divergence_legend_loc,
             'flutter_bbox_to_anchor_x': gui.flutter_bbox_to_anchor_x,
             'flutter_ncolumns': gui.flutter_ncolumns,
+            'freq_ndigits': gui.freq_ndigits,
             'clicked_ok': False,
             'close': False,
-        }
+        })
         if self.window_shown in {True, False}:
             self.window_shown = True
             self.window.activateWindow()
@@ -94,6 +104,9 @@ class FlutterPreferencesObject:
 
     def on_flutter_ncolumns(self, value: Optional[int]) -> None:
         self.gui.flutter_ncolumns = value
+
+    def on_freq_ndigits(self, value: int) -> None:
+        self.gui.freq_ndigits = value
 
     def on_flutter_bbox_to_anchor_x(self, value: float) -> None:
         self.gui.flutter_bbox_to_anchor_x = value

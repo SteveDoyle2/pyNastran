@@ -3295,7 +3295,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return dmig
 
     def _prepare_dmix(self, class_obj, add_method, card_obj,
-                      comment: str='') -> DMI | DMIJ | DMIJI | DMIK | DMIAX:
+                      comment: str='') -> DMI | DMIJ | DMIJI | DMIK:
         """adds a DMI, DMIJ, DMIJI, or DMIK"""
         field2 = integer(card_obj, 2, 'flag')
         if field2 == 0:
@@ -3853,11 +3853,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 self._stored_parse_errors.append((card, var))
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
-            #except AssertionError as exception:
-                #self.log.error(str(card_obj))
-                #raise
+            # except AssertionError as exception:
+            #     self.log.error(str(card_obj))
+            #     raise
         else:
-            #raise RuntimeError(card_obj)
+            # raise RuntimeError(card_obj)
             self.reject_cards.append(card_obj)
 
     def is_acoustic(self) -> bool:

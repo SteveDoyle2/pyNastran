@@ -17,7 +17,7 @@ import traceback
 import numpy
 
 from pyNastran.utils import check_path
-from pyNastran.dev.bdf_vectorized.bdf import BDF #, NastranMatrix
+from pyNastran.dev.bdf_vectorized.bdf import BDF, NastranMatrix
 from pyNastran.dev.bdf_vectorized.test.compare_card_content import compare_card_content
 
 import pyNastran.dev.bdf_vectorized.test
@@ -394,14 +394,14 @@ def compute(cards1, cards2):
     card_keys1 = set(cards1.keys())
     card_keys2 = set(cards2.keys())
     all_keys = card_keys1.union(card_keys2)
-    diff_keys1 = list(all_keys.difference(card_keys1))
-    diff_keys2 = list(all_keys.difference(card_keys2))
+    lost_keys = list(all_keys.difference(card_keys1))
+    extra_keys = list(all_keys.difference(card_keys2))
 
     list_keys1 = list(card_keys1)
     list_keys2 = list(card_keys2)
     msg = ''
-    if diff_keys1 or diff_keys2:
-        msg = 'diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2)
+    if lost_keys or extra_keys:
+        msg = 'lost_keys=%s diff_keys2=%s' % (lost_keys, extra_keys)
 
     for key in sorted(all_keys):
         msg = ''
@@ -415,12 +415,12 @@ def compute(cards1, cards2):
         else:
             value2 = 0
 
-        if key == 'INCLUDE':
-            msg += '    key=%-7s value1=%-7s value2=%-7s' % (key,
-                                                             value1, value2)
-        else:
-            msg += '   *key=%-7s value1=%-7s value2=%-7s' % (key,
-                                                             value1, value2)
+        star = ' ' if key == 'INCLUDE' else '*'
+        msg += f'   {star}key={key:-7s} value1={value1:<7d} value2={value2:<7d}\n'
+        if len(lost_keys):
+            msg += f'   lost:  {lost_keys}\n'
+        if len(extra_keys):
+            msg += f'   extra: {extra_keys}\n'
         msg = msg.rstrip()
         print(msg)
 

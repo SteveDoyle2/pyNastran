@@ -17,17 +17,25 @@ def node_id(node_ref: GRID, nid: int) -> int:
     return nid
 
 
+def node_id_blank(node_ref: GRID, nid: Optional[int]) -> int:
+    if node_ref is not None:
+        return node_ref.nid
+    return nid
+
+
 def coord_id_blank(coord_ref: Coord, cid: Optional[int]) -> int:
     assert cid is None or cid >= 0, cid
     if coord_ref is not None:
         return coord_ref.cid
     return cid
 
+
 def coord_id_negative(coord_ref: Coord, cid: int) -> int:
     assert cid >= -1, cid
     if coord_ref is not None:
         return coord_ref.cid
     return cid
+
 
 def coord_id(coord_ref: Coord, cid: int) -> int:
     if coord_ref is not None:

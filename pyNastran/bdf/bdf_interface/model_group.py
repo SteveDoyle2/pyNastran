@@ -9,6 +9,7 @@ ALLOWED_MODEL_GROUP_TERMS = {
     'is_visible',
 }
 
+
 class ModelGroup:
     def __init__(self, name: str,
                  nodes: Optional[list[tuple[int, int, int]]]=None,
@@ -71,7 +72,7 @@ class ModelGroup:
         """
         sline = [val.strip() for val in comment.strip().split(';')]
         group_dict = {}
-        group_keywords = {'name'} | ALLOWED_MODEL_GROUP_TERMS  #  union
+        group_keywords = {'name'} | ALLOWED_MODEL_GROUP_TERMS  # union
 
         for keyword_value in sline:
             keyword, value = keyword_value.split('=', 1)
@@ -95,8 +96,8 @@ class ModelGroup:
             group_dict[keyword] = value_list
 
         group = ModelGroup(**group_dict)
-        #group = ModelGroup(name, nodes=nodes, elements=elements,
-                   #properties=properties, materials=materials)
+        # group = ModelGroup(name, nodes=nodes, elements=elements,
+        #            properties=properties, materials=materials)
 
         # check the repr
         str(group)

@@ -22,6 +22,7 @@ FONT_SIZE_DEFAULT = 10
 LEGEND_LOC_DEFAULT = 'best'
 FLUTTER_BBOX_TO_ANCHOR_DEFAULT = 1.02
 FLUTTER_NCOLUMNS_DEFAULT = 0
+FREQ_NDIGITS_DEFAULT = 1
 
 LEGEND_LOCS = [
     'best', 'none',
@@ -106,6 +107,14 @@ class FlutterPreferencesDialog(PyDialog):
         self.flutter_ncolumns_spinner.setMaximum(3)
         self.flutter_ncolumns_spinner.setValue(flutter_ncolumns)
 
+        freq_ndigits = 0 if data['freq_ndigits'] is None else data['freq_ndigits']
+        self.freq_ndigits_label = QLabel('Freq Digits:')
+        self.freq_ndigits_spinner = QSpinBox()
+        self.freq_ndigits_spinner.setMinimum(0)
+        self.freq_ndigits_spinner.setMaximum(4)
+        self.freq_ndigits_spinner.setValue(freq_ndigits)
+        self.freq_ndigits_spinner.setEnabled(False)
+
         self.export_png_checkbox = QCheckBox('Export PNG')
         self.export_csv_checkbox = QCheckBox('Export CSV')
         self.export_f06_checkbox = QCheckBox('Export F06')
@@ -152,6 +161,9 @@ class FlutterPreferencesDialog(PyDialog):
         grid.addWidget(self.flutter_ncolumns_label, irow, 0)
         grid.addWidget(self.flutter_ncolumns_spinner, irow, 1)
         irow += 1
+        grid.addWidget(self.freq_ndigits_label, irow, 0)
+        grid.addWidget(self.freq_ndigits_spinner, irow, 1)
+        irow += 1
         grid.addWidget(self.divergence_legend_loc_label, irow, 0)
         grid.addWidget(self.divergence_legend_loc_combobox, irow, 1)
         irow += 1
@@ -187,6 +199,7 @@ class FlutterPreferencesDialog(PyDialog):
 
         self.flutter_bbox_to_anchor_x_spinner.valueChanged.connect(self.on_flutter_bbox_to_anchor_x)
         self.flutter_ncolumns_spinner.valueChanged.connect(self.on_flutter_ncolumns)
+        self.freq_ndigits_spinner.valueChanged.connect(self.on_freq_ndigits)
         self.divergence_legend_loc_combobox.currentIndexChanged.connect(self.on_divergence_legend_loc)
 
     def on_font_size(self) -> None:
@@ -217,6 +230,7 @@ class FlutterPreferencesDialog(PyDialog):
         self.plot_font_size_edit.setValue(FONT_SIZE_DEFAULT)
         self.flutter_bbox_to_anchor_x_spinner.setValue(FLUTTER_BBOX_TO_ANCHOR_DEFAULT)
         self.flutter_ncolumns_spinner.setValue(FLUTTER_NCOLUMNS_DEFAULT)
+        self.freq_ndigits_spinner.setValue(FREQ_NDIGITS_DEFAULT)
         set_combo_box_text(self.divergence_legend_loc_combobox, LEGEND_LOC_DEFAULT)
 
         self.export_png_checkbox.setChecked(True)
@@ -251,6 +265,11 @@ class FlutterPreferencesDialog(PyDialog):
         # if value == 0:
         #     value = None
         self.gui_obj.on_flutter_ncolumns(value)
+
+    def on_freq_ndigits(self) -> None:
+        """TODO: move this behind an apply button"""
+        value = self.freq_ndigits_spinner.value()
+        self.gui_obj.on_freq_ndigits(value)
 
     def on_flutter_bbox_to_anchor_x(self) -> None:
         """TODO: move this behind an apply button"""

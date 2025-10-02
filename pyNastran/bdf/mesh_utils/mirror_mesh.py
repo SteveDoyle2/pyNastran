@@ -442,13 +442,13 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             continue
 
         nodes1 = element.node_ids
-        #try:
-            #nodes = [node_id + nid_offset for node_id in nodes]
-        #except TypeError:
-            #msg = 'cannot mirror %r eid=%s because None exists in nodes=%s' % (
-                #element.type, eid, nodes)
-            #model.log.warning(msg)
-            #continue
+        # try:
+        #     nodes = [node_id + nid_offset for node_id in nodes]
+        # except TypeError:
+        #     msg = 'cannot mirror %r eid=%s because None exists in nodes=%s' % (
+        #         element.type, eid, nodes)
+        #     model.log.warning(msg)
+        #     continue
 
         eid_mirror = eid + eid_offset
         fields = element.repr_fields()
@@ -552,11 +552,11 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             element2.g0 = g0
 
         elif etype == 'CGAP':
-            #nodes = [node_id + nid_offset if node_id is not None else None
-                     #for node_id in nodes]
-            #_set_nodes(element2, nodes)
-            ga = element2.ga + nid_offset if element2.ga is not None else None
-            gb = element2.gb + nid_offset if element2.gb is not None else None
+            # nodes = [node_id + nid_offset if node_id is not None else None
+            #          for node_id in nodes]
+            # _set_nodes(element2, nodes)
+            ga = element2.nodes[0] + nid_offset if element2.nodes[0] is not None else None
+            gb = element2.nodes[1] + nid_offset if element2.nodes[1] is not None else None
             g0 = element2.g0 + nid_offset if element2.g0 is not None else None
             element2.ga = ga
             element2.gb = gb
@@ -574,8 +574,8 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
                 element_cids.add(element.cid)
                 element2.cid += cid_offset
         elif etype == 'CBUSH1D':
-            ga = element2.ga + nid_offset if element2.ga is not None else None
-            gb = element2.gb + nid_offset if element2.gb is not None else None
+            ga = element2.nodes[0] + nid_offset if element2.nodes[0] is not None else None
+            gb = element2.nodes[1] + nid_offset if element2.nodes[1] is not None else None
             element2.ga = ga
             element2.gb = gb
             if isinstance(element.cid, int) and update_mcids:
@@ -594,8 +594,8 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
         elif etype in spring_dampers:
             nodes2 = [node_id + nid_offset if node_id is not None else None for node_id in nodes1]
             _set_nodes(element2, nodes2)
-            #print(nodes)
-            #element2.nodes = nodes
+            # print(nodes)
+            # element2.nodes = nodes
         elif etype == 'GENEL':
             element2.ul = element2.ul + nid_offset
             element2.ud = element2.ud + nid_offset

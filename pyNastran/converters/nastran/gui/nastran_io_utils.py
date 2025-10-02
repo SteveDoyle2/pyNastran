@@ -26,16 +26,15 @@ from pyNastran.femutils.nan import (
 # bdf
 from pyNastran.bdf.bdf import (
     BDF,
-    #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-    CTRAX3, CTRIAX6, CTRIAX, #CTRAX6,
+    # CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+    CTRAX3, CTRIAX6, CTRIAX,  # CTRAX6,
     CQUADX4, CQUADX8, CQUADX,
-    #CONM2,
+    # CONM2,
     PCOMP, PCOMPG, PCOMPS, PCOMPLS,
     SET1, MONPNT1, CORD2R, AECOMP)
 
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
-    CTRIA3, CTRIA6, CTRIAR,
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
     CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
@@ -71,14 +70,15 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 
-SIDE_MAP = {}
-SIDE_MAP['CHEXA'] = {
-    1: [4, 3, 2, 1],
-    2: [1, 2, 6, 5],
-    3: [2, 3, 7, 6],
-    4: [3, 4, 8, 7],
-    5: [4, 1, 5, 8],
-    6: [5, 6, 7, 8],
+SIDE_MAP = {
+    'CHEXA': {
+        1: [4, 3, 2, 1],
+        2: [1, 2, 6, 5],
+        3: [2, 3, 7, 6],
+        4: [3, 4, 8, 7],
+        5: [4, 1, 5, 8],
+        6: [5, 6, 7, 8],
+    },
 }
 
 NO_THETA = [
@@ -146,7 +146,6 @@ def map_elements1_quality_helper(self,
     # |   \
     # |     \
     # 1------2
-
 
     # these normals point inwards
     #      4
@@ -233,21 +232,21 @@ def map_elements1_quality_helper(self,
             print('  map_elements = %i' % i)
         etype = element.type
         # if element.Pid() >= 82:
-            # continue
+        #     continue
         # if element.Pid() in pids_to_drop:
-            # continue
+        #     continue
         # if element.Pid() not in pids_to_keep:
-            # continue
+        #     continue
         # if element.pid.type == 'PSOLID':
-            # continue
+        #     continue
 
         pid = np.nan
         dideal_thetai = np.nan
         min_thetai = np.nan
         max_thetai = np.nan
-        #max_thetai = np.nan
+        # max_thetai = np.nan
         max_skew = np.nan
-        #max_warp = np.nan
+        # max_warp = np.nan
         max_warp = np.nan
         aspect_ratio = np.nan
         areai = np.nan
@@ -692,19 +691,19 @@ def map_elements1_quality_helper(self,
 
                 #c = nid_map[nid]
 
-                #if 1:
+                # if 1:
                 elem = vtkVertex()
                 point_ids = elem.GetPointIds()
                 point_ids.SetId(0, j)
-                #else:
-                    #elem = vtkSphere()
-                    #elem = vtkSphereSource()
-                    #if d == 0.:
-                    #d = sphere_size
-                    #elem.SetRadius(sphere_size)
+                # else:
+                #     elem = vtkSphere()
+                #     elem = vtkSphereSource()
+                #     if d == 0.:
+                #     d = sphere_size
+                #     elem.SetRadius(sphere_size)
             else:
                 # 2 points
-                #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
+                # d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
                 eid_to_nid_map[eid] = node_ids
                 elem = vtkLine()
                 point_ids = elem.GetPointIds()
@@ -734,8 +733,8 @@ def map_elements1_quality_helper(self,
             _set_nid_to_pid_map(nid_to_pid_map, pid, node_ids)
 
             # 2 points
-            #min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
-                                    #element.nodes_ref[1].get_position())
+            # min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
+            #                         element.nodes_ref[1].get_position())
             try:
                 n1, n2 = np.searchsorted(nids, element.nodes)
             except Exception:
@@ -770,10 +769,10 @@ def map_elements1_quality_helper(self,
             n1, n2 = np.searchsorted(nids, element.nodes)
             xyz1 = xyz_cid0[n1, :]
             xyz2 = xyz_cid0[n2, :]
-            #min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
-                                    #element.nodes_ref[1].get_position())
+            # min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
+            #                         element.nodes_ref[1].get_position())
 
-            g0 = element.g0  #_vector
+            g0 = element.g0  # vector
             if not isinstance(g0, integer_types):
                 log.warning('removing\n%s' % (element))
                 log.warning('removing CBEND/g0 eid=%s; %s' % (eid, element.type))
@@ -796,7 +795,7 @@ def map_elements1_quality_helper(self,
         elif etype == 'CHBDYG':
             node_ids = element.node_ids
             pid = 0
-            #pid = element.Pid()
+            # pid = element.Pid()
             _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
 
             if element.surface_type in ('AREA4', 'AREA8'):
@@ -899,16 +898,16 @@ def map_elements1_quality_helper(self,
             pid = 0
             unused_nnodes = len(side_inids)
             node_ids = [nodes[inid] for inid in side_inids]
-            #inids = np.searchsorted(all_nids, node_ids)
+            # inids = np.searchsorted(all_nids, node_ids)
 
-            #if len(side_inids) == 2:
-                #n1, n2 = [nid_map[nid] for nid in node_ids[:2]]
-                #p1 = xyz_cid0[n1, :]
-                #p2 = xyz_cid0[n2, :]
-                #elem = vtkLine()
-                #point_ids = elem.GetPointIds()
-                #point_ids.SetId(0, n1)
-                #point_ids.SetId(1, n2)
+            # if len(side_inids) == 2:
+            #     n1, n2 = [nid_map[nid] for nid in node_ids[:2]]
+            #     p1 = xyz_cid0[n1, :]
+            #     p2 = xyz_cid0[n2, :]
+            #     elem = vtkLine()
+            #     point_ids = elem.GetPointIds()
+            #     point_ids.SetId(0, n1)
+            #     point_ids.SetId(1, n2)
             if len(side_inids) == 3:
                 n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
                 p1 = xyz_cid0[n1, :]
@@ -1080,7 +1079,6 @@ def map_elements1_no_quality_helper(self,
     # |     \
     # 1------2
 
-
     # these normals point inwards
     #      4
     #    / | \
@@ -1089,12 +1087,12 @@ def map_elements1_no_quality_helper(self,
     #   \  |   /
     #    \ | /
     #      1
-    #_ctetra_faces = (
-        #(0, 1, 2), # (1, 2, 3),
-        #(0, 3, 1), # (1, 4, 2),
-        #(0, 3, 2), # (1, 3, 4),
-        #(1, 3, 2), # (2, 4, 3),
-    #)
+    # _ctetra_faces = (
+    #     (0, 1, 2), # (1, 2, 3),
+    #     (0, 3, 1), # (1, 4, 2),
+    #     (0, 3, 2), # (1, 3, 4),
+    #     (1, 3, 2), # (2, 4, 3),
+    # )
 
     # these normals point inwards
     #
@@ -1107,13 +1105,13 @@ def map_elements1_no_quality_helper(self,
     #    /    \   /
     #   /      \ /
     # 1---------2
-    #_cpyram_faces = (
-        #(0, 1, 2, 3), # (1, 2, 3, 4),
-        #(1, 4, 2), # (2, 5, 3),
-        #(2, 4, 3), # (3, 5, 4),
-        #(0, 3, 4), # (1, 4, 5),
-        #(0, 4, 1), # (1, 5, 2),
-    #)
+    # _cpyram_faces = (
+    #     (0, 1, 2, 3), # (1, 2, 3, 4),
+    #     (1, 4, 2), # (2, 5, 3),
+    #     (2, 4, 3), # (3, 5, 4),
+    #     (0, 3, 4), # (1, 4, 5),
+    #     (0, 4, 1), # (1, 5, 2),
+    # )
 
     # these normals point inwards
     #       /6
@@ -1126,14 +1124,14 @@ def map_elements1_no_quality_helper(self,
     # |  /    \   /
     # | /      \ /
     # 1---------2
-    #_cpenta_faces = (
-        #(0, 2, 1), # (1, 3, 2),
-        #(3, 4, 5), # (4, 5, 6),
-
-        #(0, 1, 4, 3), # (1, 2, 5, 4), # bottom
-        #(1, 2, 5, 4), # (2, 3, 6, 5), # right
-        #(0, 3, 5, 2), # (1, 4, 6, 3), # left
-    #)
+    # _cpenta_faces = (
+    #     (0, 2, 1), # (1, 3, 2),
+    #     (3, 4, 5), # (4, 5, 6),
+    #
+    #     (0, 1, 4, 3), # (1, 2, 5, 4), # bottom
+    #     (1, 2, 5, 4), # (2, 3, 6, 5), # right
+    #     (0, 3, 5, 2), # (1, 4, 6, 3), # left
+    # )
 
     # these normals point inwards
     #      8----7
@@ -1144,14 +1142,14 @@ def map_elements1_no_quality_helper(self,
     # |  /  |  /
     # | /   | /
     # 1-----2
-    #_chexa_faces = (
-        #(4, 5, 6, 7), # (5, 6, 7, 8),
-        #(0, 3, 2, 1), # (1, 4, 3, 2),
-        #(1, 2, 6, 5), # (2, 3, 7, 6),
-        #(2, 3, 7, 6), # (3, 4, 8, 7),
-        #(0, 4, 7, 3), # (1, 5, 8, 4),
-        #(0, 6, 5, 4), # (1, 7, 6, 5),
-    #)
+    # _chexa_faces = (
+    #     (4, 5, 6, 7), # (5, 6, 7, 8),
+    #     (0, 3, 2, 1), # (1, 4, 3, 2),
+    #     (1, 2, 6, 5), # (2, 3, 7, 6),
+    #     (2, 3, 7, 6), # (3, 4, 8, 7),
+    #     (0, 4, 7, 3), # (1, 5, 8, 4),
+    #     (0, 6, 5, 4), # (1, 7, 6, 5),
+    # )
     line_type = 3  # vtkLine().GetCellType()
 
     nid_to_pid_map = defaultdict(list)
@@ -1160,7 +1158,7 @@ def map_elements1_no_quality_helper(self,
     log = self.log
     grid = self.gui.grid
 
-    #print("map_elements...")
+    # print("map_elements...")
     eid_to_nid_map = self.eid_to_nid_map
     eid_map = self.gui.eid_map
     for (eid, element) in sorted(elements.items()):
@@ -1169,13 +1167,13 @@ def map_elements1_no_quality_helper(self,
             print('  map_elements (no quality) = %i' % i)
         etype = element.type
         # if element.Pid() >= 82:
-            # continue
+        #     continue
         # if element.Pid() in pids_to_drop:
-            # continue
+        #     continue
         # if element.Pid() not in pids_to_keep:
-            # continue
+        #     continue
         # if element.pid.type == 'PSOLID':
-            # continue
+        #     continue
 
         pid = np.nan
 
@@ -1590,23 +1588,23 @@ def map_elements1_no_quality_helper(self,
                     log.warning('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
                     continue
 
-                #c = nid_map[nid]
+                # c = nid_map[nid]
 
-                #if 1:
-                #print(str(element))
+                # if 1:
+                # print(str(element))
                 elem = vtkVertex()
                 point_ids = elem.GetPointIds()
                 point_ids.SetId(0, j)
-                #else:
-                    #elem = vtkSphere()
-                    #elem = vtkSphereSource()
-                    #if d == 0.:
-                    #d = sphere_size
-                    #elem.SetRadius(sphere_size)
+                # else:
+                #     elem = vtkSphere()
+                #     elem = vtkSphereSource()
+                #     if d == 0.:
+                #     d = sphere_size
+                #     elem.SetRadius(sphere_size)
                 grid.InsertNextCell(elem.GetCellType(), point_ids)
             else:
                 # 2 points
-                #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
+                # d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
                 eid_to_nid_map[eid] = node_ids
                 elem = vtkLine()
                 point_ids = elem.GetPointIds()
@@ -1622,22 +1620,22 @@ def map_elements1_no_quality_helper(self,
         elif etype in ('CBAR', 'CBEAM', 'CROD', 'CONROD', 'CTUBE'):
             if etype == 'CONROD':
                 pid = 0
-                #areai = element.Area()
+                # areai = element.Area()
             else:
                 pid = element.Pid()
-                #try:
-                    #areai = element.pid_ref.Area()
-                #except Exception:
-                    #print(element)
-                    #raise
+                # try:
+                #     areai = element.pid_ref.Area()
+                # except Exception:
+                #     print(element)
+                #     raise
 
             node_ids = element.node_ids
             _set_nid_to_pid_map(nid_to_pid_map, pid, node_ids)
 
             # 2 points
             n1, n2 = np.searchsorted(nids, element.nodes)
-            #xyz1 = xyz_cid0[n1, :]
-            #xyz2 = xyz_cid0[n2, :]
+            # xyz1 = xyz_cid0[n1, :]
+            # xyz2 = xyz_cid0[n2, :]
             eid_to_nid_map[eid] = node_ids
             elem = vtkLine()
             try:
@@ -1659,12 +1657,12 @@ def map_elements1_no_quality_helper(self,
 
             # 2 points
             n1, n2 = np.searchsorted(nids, element.nodes)
-            #xyz1 = xyz_cid0[n1, :]
-            #xyz2 = xyz_cid0[n2, :]
+            # xyz1 = xyz_cid0[n1, :]
+            # xyz2 = xyz_cid0[n2, :]
             eid_to_nid_map[eid] = node_ids
 
             if 0:
-                g0 = element.g0 #_vector
+                g0 = element.g0  # vector
                 if not isinstance(g0, integer_types):
                     msg = 'CBEND: g0 must be an integer; g0=%s x=%s\n%s' % (
                         g0, element.x, element)
@@ -1886,12 +1884,13 @@ def map_elements1_no_quality_helper(self,
     )
     return out
 
+
 def create_ugrid_from_elements(gui: MainWindow,
                                grid: vtkUnstructuredGrid,
                                elements: dict[int, Any],
                                xyz_cid0: np.ndarray,
                                nid_cp_cd: np.ndarray,
-                               #model: BDF,
+                               # model: BDF,
                                nid_map: dict[int, int],
                                log: SimpleLogger):
     nids = nid_cp_cd[:, 0]
@@ -1919,13 +1918,13 @@ def create_ugrid_from_elements(gui: MainWindow,
             print('  map_elements (no quality) = %i' % i)
         etype = element.type
         # if element.Pid() >= 82:
-            # continue
+        #     continue
         # if element.Pid() in pids_to_drop:
-            # continue
+        #     continue
         # if element.Pid() not in pids_to_keep:
-            # continue
+        #     continue
         # if element.pid.type == 'PSOLID':
-            # continue
+        #     continue
 
         pid = np.nan
 
@@ -1933,7 +1932,7 @@ def create_ugrid_from_elements(gui: MainWindow,
             elem = vtkTriangle()
             node_ids = element.node_ids
             pid = element.Pid()
-            #eid_to_nid_map[eid] = node_ids
+            # eid_to_nid_map[eid] = node_ids
             _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
 
             n1, n2, n3 = [nid_map[nid] for nid in node_ids]
@@ -1994,19 +1993,19 @@ def create_ugrid_from_elements(gui: MainWindow,
                 point_ids.SetId(3, nid_map[node_ids[1]])
                 point_ids.SetId(4, nid_map[node_ids[3]])
                 point_ids.SetId(5, nid_map[node_ids[5]])
-                #eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4],
-                                       #node_ids[1], node_ids[3], node_ids[5]]
+                # eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4],
+                #                        node_ids[1], node_ids[3], node_ids[5]]
             else:
                 elem = vtkTriangle()
                 point_ids = elem.GetPointIds()
-                #eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
+                # eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
 
             n1 = nid_map[node_ids[0]]
             n2 = nid_map[node_ids[2]]
             n3 = nid_map[node_ids[4]]
-            #p1 = xyz_cid0[n1, :]
-            #p2 = xyz_cid0[n2, :]
-            #p3 = xyz_cid0[n3, :]
+            # p1 = xyz_cid0[n1, :]
+            # p2 = xyz_cid0[n2, :]
+            # p3 = xyz_cid0[n3, :]
             point_ids.SetId(0, n1)
             point_ids.SetId(1, n2)
             point_ids.SetId(2, n3)
@@ -2274,7 +2273,7 @@ def create_ugrid_from_elements(gui: MainWindow,
             node_ids = element.node_ids
             _set_nid_to_pid_map_or_blank(nid_to_pid_map, pid, node_ids)
 
-            if node_ids[0] is None and node_ids[1] is None: # CELAS2
+            if node_ids[0] is None and node_ids[1] is None:  # CELAS2
                 log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
                 #del self.eid_map[eid]
                 continue
@@ -2298,17 +2297,17 @@ def create_ugrid_from_elements(gui: MainWindow,
                 elem = vtkVertex()
                 point_ids = elem.GetPointIds()
                 point_ids.SetId(0, j)
-                #else:
-                    #elem = vtkSphere()
-                    #elem = vtkSphereSource()
-                    #if d == 0.:
-                    #d = sphere_size
-                    #elem.SetRadius(sphere_size)
+                # else:
+                #     elem = vtkSphere()
+                #     elem = vtkSphereSource()
+                #     if d == 0.:
+                #     d = sphere_size
+                #     elem.SetRadius(sphere_size)
                 grid.InsertNextCell(elem.GetCellType(), point_ids)
             else:
                 # 2 points
-                #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
-                #eid_to_nid_map[eid] = node_ids
+                # d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
+                # eid_to_nid_map[eid] = node_ids
                 elem = vtkLine()
                 point_ids = elem.GetPointIds()
                 try:
@@ -2346,37 +2345,38 @@ def create_ugrid_from_elements(gui: MainWindow,
 
             # 2 points
             n1, n2 = np.searchsorted(nids, element.nodes)
-            #xyz1 = xyz_cid0[n1, :]
-            #xyz2 = xyz_cid0[n2, :]
-            #eid_to_nid_map[eid] = node_ids
+            # xyz1 = xyz_cid0[n1, :]
+            # xyz2 = xyz_cid0[n2, :]
+            # eid_to_nid_map[eid] = node_ids
 
             point_ids.SetId(0, nid_map[node_ids[0]])
             point_ids.SetId(1, nid_map[node_ids[1]])
             grid.InsertNextCell(elem.GetCellType(), point_ids)
         else:
             log.warning('removing\n%s' % (element))
-            log.warning('removing eid=%s; %s' % (eid, element.type))
-            #del self.eid_map[eid]
-            gui.log_info("skipping %s" % element.type)
+            log.warning(f'removing eid={eid}; {element.type}')
+            # del self.eid_map[eid]
+            gui.log_info(f'skipping {element.type}')
             continue
         # what about MPCs, RBE2s (rigid elements)?
         #   are they plotted as elements?
         #   and thus do they need a property?
 
-        #print(eid, min_thetai, max_thetai, '\n', element)
+        # print(eid, min_thetai, max_thetai, '\n', element)
         i += 1
-    #assert len(self.eid_map) > 0, self.eid_map
-    #print('mapped elements')
-
-    #nelements = i
-    #print('nelements=%s pids=%s' % (nelements, list(pids)))
+    # assert len(self.eid_map) > 0, self.eid_map
+    # print('mapped elements')
+    #
+    # nelements = i
+    # print('nelements=%s pids=%s' % (nelements, list(pids)))
 
     out = grid
-    #(
-        #nid_to_pid_map, xyz_cid0, superelements, pids, nelements,
-        #material_coord, material_theta,
-    #)
+    # (
+    #     nid_to_pid_map, xyz_cid0, superelements, pids, nelements,
+    #     material_coord, material_theta,
+    # )
     return out
+
 
 def create_monpnt(gui: MainWindow,
                   model: BDF,
@@ -2549,6 +2549,7 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
         exclude_results.add('grid_point_forces')
     return exclude_results
 
+
 def get_pcomp_nplies(properties: dict[int, PCOMP | PCOMPG | PCOMPS | PCOMPLS],
                      property_ids_pcomp: list[int]) -> int:
     """
@@ -2574,17 +2575,18 @@ def get_pcomp_nplies(properties: dict[int, PCOMP | PCOMPG | PCOMPS | PCOMPLS],
     npliesi = max(npliesi, pcomp_nplies)
     return npliesi
 
+
 def build_superelement_model(model: BDF, cid: int=0,
                              fdtype: str='float32'):
-    models = {0 : model}
+    models = {0: model}
     models.update(model.superelement_models)
     #nmodels = len(models)
 
     xyz_cid0 = {}
     nid_cp_cd = {}
     icd_transform = {}
-    #nid_map = {}
-    #inode = 0
+    # nid_map = {}
+    # inode = 0
 
     for superelement_tuple, modeli in models.items():
         if isinstance(superelement_tuple, int):
@@ -2600,7 +2602,7 @@ def build_superelement_model(model: BDF, cid: int=0,
             xyz_cpi, nid_cp_cdi[:, 0], icp_transformi, cid=cid,
             in_place=False)
 
-        if super_id in model.seloc and super_id: # in model.initial_superelement_models and 0:
+        if super_id in model.seloc and super_id:  # in model.initial_superelement_models and 0:
             # TODO: when should seloc get applied?
             #       during superelement creation or now?
             #       I'm going with superelement creation...
@@ -2609,28 +2611,29 @@ def build_superelement_model(model: BDF, cid: int=0,
             seloc = model.seloc[super_id]
             xyz_cid0i = seloc.transform(model, xyz_cid0i)
 
-        #print('model.spoints =', model.spoints)
-        #import json
-        #for spoint_id, spoint in model.spoints.items():
-            #if spoint.comment: # or spoint._comment?
-                #print('SPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
-                #comment_lower = spoint.comment.lower()
-                #print('comment_lower = %r' % comment_lower)
-                ## pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}
-                #if 'pynastran' in comment_lower and 'spoint' in comment_lower:
-                    #dict_str = jsonify(comment_lower)
-                    #print('dict_str = %r' % dict_str)
-                    #dicti = json.loads(dict_str)
-                    #print(dicti)
-        #for epoint_id, epoint in model.epoints.items():
-            #if epoints.comment:
-                #print('EPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
-        #sys.stdout.flush()
+        # print('model.spoints =', model.spoints)
+        # import json
+        # for spoint_id, spoint in model.spoints.items():
+        #     if spoint.comment: # or spoint._comment?
+        #         print('SPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
+        #         comment_lower = spoint.comment.lower()
+        #         print('comment_lower = %r' % comment_lower)
+        #         # pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}
+        #         if 'pynastran' in comment_lower and 'spoint' in comment_lower:
+        #             dict_str = jsonify(comment_lower)
+        #             print('dict_str = %r' % dict_str)
+        #             dicti = json.loads(dict_str)
+        #             print(dicti)
+        # for epoint_id, epoint in model.epoints.items():
+        #     if epoints.comment:
+        #         print('EPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
+        # sys.stdout.flush()
 
-        #------------------------------
+        # ------------------------------
         nid_cp_cd[super_id] = nid_cp_cdi
         xyz_cid0[super_id] = xyz_cid0i
     return xyz_cid0, nid_cp_cd, icd_transform
+
 
 def build_normals_quality(settings: Settings,
                           model: BDF, eid_map, nelements: int, cases, form0, icase: int,
@@ -2904,18 +2907,18 @@ def build_normals_quality(settings: Settings,
             max_theta_res = GuiResult(
                 0, header='Max Interior Angle', title='Max Interior Angle',
                 location='centroid', scalar=np.degrees(max_interior_angle))
-            #skew = 90. - np.degrees(max_skew_angle)
-            #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
-                                    #location='centroid', scalar=skew)
+            # skew = 90. - np.degrees(max_skew_angle)
+            # skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
+            #                         location='centroid', scalar=skew)
 
             form_checks.append(('Min Edge Length', icase, []))
             form_checks.append(('Min Interior Angle', icase + 1, []))
             form_checks.append(('Max Interior Angle', icase + 2, []))
-            #form_checks.append(('Max Skew Angle', icase + 3, []))
+            # form_checks.append(('Max Skew Angle', icase + 3, []))
             cases[icase] = (min_edge_length_res, (0, 'Min Edge Length'))
             cases[icase + 1] = (min_theta_res, (0, 'Min Interior Angle'))
             cases[icase + 2] = (max_theta_res, (0, 'Max Interior Angle'))
-            #cases[icase + 3] = (skew_res, (0, 'Max Skew Angle'))
+            # cases[icase + 3] = (skew_res, (0, 'Max Skew Angle'))
             icase += 3
 
     else:
@@ -2940,18 +2943,21 @@ def build_normals_quality(settings: Settings,
         icase += 1
     return icase, normals
 
+
 def _set_nid_to_pid_map(nid_to_pid_map: dict[int, list[int]],
                         pid: int,
                         node_ids: list[int]) -> None:
     for nid in node_ids:
         nid_to_pid_map[nid].append(pid)
 
+
 def _set_nid_to_pid_map_or_blank(nid_to_pid_map: dict[int, list[int]],
-                            pid: int,
-                            node_ids: list[Optional[int]]) -> None:
+                                 pid: int,
+                                 node_ids: list[Optional[int]]) -> None:
     for nid in node_ids:
         if nid is not None:
             nid_to_pid_map[nid].append(pid)
+
 
 def get_caero_control_surface_grid(grid: vtkUnstructuredGrid,
                                    name: str,
@@ -2998,18 +3004,21 @@ def get_caero_control_surface_grid(grid: vtkUnstructuredGrid,
         areas.append(area)
         j += 4
     elements = np.asarray(plot_elements, dtype='int32')
-    all_points_min_max_array = np.array(all_points_min_max)
-    amax = all_points_min_max_array.max(axis=0)
-    amin = all_points_min_max_array.min(axis=0)
-    msg = (
-        f'cs_name={name!r}\n'
-        f'  min   = {amin}\n'
-        f'  max   = {amax}\n'
-        f'  delta = {amax - amin}\n'
-    )
-    if not name.startswith(('spline1_', 'spline2_')):
-        log.info(msg)
+
+    if len(all_points_min_max):
+        all_points_min_max_array = np.array(all_points_min_max)
+        amax = all_points_min_max_array.max(axis=0)
+        amin = all_points_min_max_array.min(axis=0)
+        msg = (
+            f'cs_name={name!r}\n'
+            f'  min   = {amin}\n'
+            f'  max   = {amax}\n'
+            f'  delta = {amax - amin}\n'
+        )
+        if not name.startswith(('spline1_', 'spline2_')):
+            log.info(msg)
     return all_points, elements, centroids, areas
+
 
 def get_model_unvectorized(log: SimpleLogger,
                            bdf_filename: str | BDF,

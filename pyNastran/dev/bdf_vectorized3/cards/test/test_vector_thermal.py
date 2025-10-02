@@ -104,8 +104,8 @@ class TestThermal(unittest.TestCase):
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
 
-        RUN_THRMAL = False
-        if RUN_THRMAL:
+        RUN_THERMAL = False
+        if RUN_THERMAL:
             eid = 2
             Type = 'AREA3'
             chbdygi = CHBDYG(eid, Type, nodes,
@@ -277,7 +277,7 @@ class TestThermal(unittest.TestCase):
                         is_double=True,
                         interspersed=False,
                         enddata=None, close=False)
-        if RUN_THRMAL:
+        if RUN_THERMAL:
             write_bdf_symmetric(model, bdf_filename4, encoding=None, size=8,
                                 is_double=False,
                                 enddata=None, close=False, plane='xz')
@@ -373,10 +373,10 @@ class TestThermal(unittest.TestCase):
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [0., 1., 0.])
 
-        #if RUN_THRMAL:
-            #chbdye.raw_fields()
-            #chbdyg.raw_fields()
-            #chbdyp.raw_fields()
+        # if RUN_THERMAL:
+        #     chbdye.raw_fields()
+        #     chbdyg.raw_fields()
+        #     chbdyp.raw_fields()
 
         model.validate()
         save_load_deck(model)

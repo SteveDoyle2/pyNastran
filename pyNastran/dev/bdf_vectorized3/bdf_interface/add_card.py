@@ -2795,7 +2795,8 @@ class AddAero(BDFAttributes):
         paero = self.paero1.add(pid, caero_body_ids=caero_body_ids, comment=comment)
         return paero
 
-    def add_paero2(self, pid: int, orient: str, width: float, AR: float,
+    def add_paero2(self, pid: int, orient: str,
+                   width: float, aspect_ratio: float,
                    thi: list[int], thn: list[int],
                    lrsb: Optional[int]=None,
                    lrib: Optional[int]=None,
@@ -2816,7 +2817,7 @@ class AddAero(BDFAttributes):
         width : float
             Reference half-width of body and the width of the constant
             width interference tube
-        AR : float
+        aspect_ratio : float
             Aspect ratio of the interference tube (height/width)
         thi / thn : list[int]
             The first (thi) and last (thn) interference element of a body
@@ -2837,7 +2838,7 @@ class AddAero(BDFAttributes):
 
         """
         paero = self.paero2.add(
-            pid, orient, width, AR, thi, thn, lrsb=lrsb, lrib=lrib,
+            pid, orient, width, aspect_ratio, thi, thn, lrsb=lrsb, lrib=lrib,
             lth=lth, comment=comment)
         return paero
 
@@ -5157,8 +5158,6 @@ class AddThermal(BDFAttributes):
 
         Parameters
         ----------
-        eid : int
-            element id
         pid : int
             property id
         area_factor: float
@@ -5207,7 +5206,7 @@ class AddThermal(BDFAttributes):
             comment=comment)
         return boundary_condition
 
-    def add_convm(self, eid: int, pconvm: int, ta1: int,
+    def add_convm(self, eid: int, pconvm_id: int, ta1: int,
                   film_node: int=0, cntmdot: int=0,
                   ta2: int=0, mdot: float=1.0,
                   comment: str='') -> int:
@@ -5218,10 +5217,8 @@ class AddThermal(BDFAttributes):
         ----------
         eid : int
             element id (CHBDYP)
-        pconid : int
+        pconvm_id : int
             property ID (PCONVM)
-        mid : int
-            Material ID
         ta1 : int
             ambient point for convection
         ta2 : int; default=None
@@ -5240,7 +5237,7 @@ class AddThermal(BDFAttributes):
 
         """
         boundary_condition = self.convm.add(
-            eid, pconvm, ta1,
+            eid, pconvm_id, ta1,
             film_node=film_node, cntmdot=cntmdot,
             ta2=ta2, mdot=mdot,
             comment=comment)
@@ -5299,10 +5296,10 @@ class AddThermal(BDFAttributes):
         form : int; default=0
             Type of formula used for free convection
             Must be {0, 1, 10, 11, 20, or 21}
-        expf : float; default=0.0
+        exponent_free_convection : float; default=0.0
             Free convection exponent as implemented within the context
             of the particular form that is chosen
-        ftype : int; default=0
+        free_convection_type : int; default=0
             Formula type for various configurations of free convection
         table_id : int; default=None
             Identification number of a TABLEHT entry that specifies the

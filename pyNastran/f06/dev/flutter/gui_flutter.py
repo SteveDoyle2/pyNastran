@@ -47,7 +47,7 @@ from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_men
 from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
 from pyNastran.f06.dev.flutter.preferences import (
     FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
-    FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT)
+    FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT, FREQ_NDIGITS_DEFAULT)
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import get_flutter_units
@@ -83,9 +83,9 @@ else:
     BDF_FILENAME = BASE_PATH / '0012_flutter.bdf'
     OP2_FILENAME = BASE_PATH / '0012_flutter.op2'
 USE_TABS = False
-USE_VTK = True
+USE_VTK = False
 
-if USE_VTK or 1:
+if USE_VTK:
     from pyNastran.f06.dev.flutter.vtk_window_object import VtkWindowObject
 
 
@@ -101,6 +101,7 @@ class FlutterGui(LoggableGui):
         self.divergence_legend_loc = LEGEND_LOC_DEFAULT
         self.flutter_bbox_to_anchor_x = FLUTTER_BBOX_TO_ANCHOR_DEFAULT
         self.flutter_ncolumns = FLUTTER_NCOLUMNS_DEFAULT
+        self.freq_ndigits = FREQ_NDIGITS_DEFAULT
 
         self.font_size = FONT_SIZE_DEFAULT
         self.plot_font_size = FONT_SIZE_DEFAULT
@@ -317,6 +318,7 @@ class FlutterGui(LoggableGui):
             out_data['vtk'] = self._vtk_window_obj.data
         out_data['preferences'] = {
             'flutter_ncolumns': self.flutter_ncolumns,
+            'freq_ndigits': self.freq_ndigits,
             'flutter_bbox_to_anchor_x': self.flutter_bbox_to_anchor_x,
             'divergence_legend_loc': self.divergence_legend_loc,
             'export_to_png': self.export_to_png,
@@ -384,13 +386,16 @@ class FlutterGui(LoggableGui):
                     skey = key.split('/')
                     assert len(skey) == 2, f'key={key!r} skey={skey}'
                     key0, key1 = skey
+                    if key0 not in data:
+                        log.warning(f'skipping {key!r} because {key0} does not exist')
+                        continue
                     data0 = data[key0]
                     value = data0[key1]
                     assert hasattr(self, key1), (key, value)
                     if not isinstance(value, value_type):
                         log.warning(f'{key!r}={value!r} and is not {value_type}...skipping')
                         continue
-                    log.info(f'setting {key!r} (key1={key1!r}) -> {value!r}')
+                    # log.info(f'setting {key!r} (key1={key1!r}) -> {value!r}')
                     setattr(self, key1, value)
                 else:
                     if key not in data:
@@ -402,7 +407,7 @@ class FlutterGui(LoggableGui):
                     if not isinstance(value, value_type):
                         log.warning(f'{key!r}={value!r} and is not {value_type}...skipping')
                         continue
-                    log.info(f'setting {key!r} -> {value!r}')
+                    # log.info(f'setting {key!r} -> {value!r}')
                     setattr(self, key, value)
 
         ifile = self.ifile

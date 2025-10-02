@@ -1155,7 +1155,7 @@ class BDFAttributes:
         self.boltfrc: dict[int, BOLTFRC] = {}
         self.boltld: dict[int, BOLTLD] = {}
         # ---------------------------------------------------------------------
-        self.model_groups: dict[int, ModelGroup] = {}
+        self.model_groups: dict[str, ModelGroup] = {}
         self._type_to_id_map: dict[int, list[Any]] = defaultdict(list)
         self._slot_to_type_map = SLOT_TO_TYPE_MAP
         self._type_to_slot_map = self.get_rslot_map()
