@@ -389,7 +389,7 @@ class CONV(VectorizedBaseCard):
         eid = integer(card, 1, 'eid')
         pconid = integer(card, 2, 'pconid')
         film_node = integer_or_blank(card, 3, 'film_node', default=0)
-        control_node = integer_or_blank(card, 4, 'cntrlnd', default=0)
+        control_node = integer_or_blank(card, 4, 'control_node', default=0)
 
         ta1 = integer(card, 5, 'TA1')
         assert ta1 > 0, ta1
@@ -1228,7 +1228,7 @@ class PHBDY(VectorizedBaseCard):
 #             eid = integer(card, 1, 'eid')
 #             pconid = integer(card, 2, 'pconid')
 #             film_node = integer_or_blank(card, 3, 'film_node', 0)
-#             cntrlnd = integer_or_blank(card, 4, 'cntrlnd', 0)
+#             control_node = integer_or_blank(card, 4, 'control_node', 0)
 #
 #             ta1 = integer(card, 5, 'TA1')
 #             assert ta1 > 0, ta1
@@ -1245,7 +1245,7 @@ class PHBDY(VectorizedBaseCard):
 #             self.element_id[icard] = eid
 #             self.pconv_id[icard] = pconid
 #             self.film_node[icard] = film_node
-#             self.control_node[icard] = cntrlnd
+#             self.control_node[icard] = control_node
 #             self.temp_ambient[icard] = ta
 #             assert len(card) <= 13, f'len(CONV card) = {len(card):d}\ncard={card}'
 #
@@ -1600,7 +1600,7 @@ class CONVM(VectorizedBaseCard):
             0/blank is only allowed when mdot > 0
         mdot : float; default=1.0
             a multiplier for the mass flow rate in case there is no
-            point associated with the CNTRLND field
+            point associated with the CONTROL_NODE field
             required if cntmdot = 0
         comment : str; default=''
             a comment for the card
@@ -1668,7 +1668,7 @@ class CONVM(VectorizedBaseCard):
 
         # mdot : float; default=1.0
         #     a multiplier for the mass flow rate in case there is no
-        #     point associated with the CNTRLND field
+        #     point associated with the CONTROL_NODE field
         #     required if cntmdot = 0
         mdot = np.zeros(ncards, dtype='float64')
 
@@ -1683,7 +1683,7 @@ class CONVM(VectorizedBaseCard):
             element_id[icard] = eid
             pconvm_id[icard] = pconvm
             film_node[icard] = film_nodei
-            #control_node[icard] = cntrlnd
+            #control_node[icard] = control_node
             temp_ambient[icard] = ta
             control_node_mdot[icard] = cntmdot
             mdot[icard] = mdoti

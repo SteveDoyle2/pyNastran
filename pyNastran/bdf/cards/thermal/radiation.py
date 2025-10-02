@@ -193,7 +193,7 @@ class RADBC(ThermalBC):
         """
         nodamb = integer(card, 1, 'nodamb')
         famb = double(card, 2, 'famb')
-        control_node = integer_or_blank(card, 3, 'cntrlnd', default=0)
+        control_node = integer_or_blank(card, 3, 'control_node', default=0)
 
         nfields = card.nfields
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)

@@ -338,7 +338,7 @@ class TestThermal(unittest.TestCase):
         # reference a PCONV entry. PCONV is referenced on the CONV Bulk Data entry.
         eid = 1
         ta = 1
-        conv = model.add_conv(eid, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+        conv = model.add_conv(eid, pconv_id, ta, film_node=0, control_node=0, comment='conv')
         conv.raw_fields()
 
         conv = model.add_conv(2, pconv_id, ta, film_node=0, control_node=0, comment='conv')

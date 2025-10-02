@@ -547,9 +547,9 @@ def _write_qbdy3(load_type, loads, nloads: int,
     nloads = _get_nloads_from_eids(loads)
     nbytes = write_header(load_type, nfields, nloads, key, op2_file, op2_ascii)
     for load in loads:
-        #(sid, q0, cntrlnd, eid) = out
+        #(sid, q0, control_node, eid) = out
         for eid in load.eids:
-            data = [load.sid, load.q0, load.cntrlnd, eid]
+            data = [load.sid, load.q0, load.control_node, eid]
             op2_ascii.write('  QBDY3 data=%s\n' % str(data))
             op2_file.write(spack.pack(*data))
     return nbytes
@@ -616,7 +616,7 @@ def _write_qvect(load_type, loads, nloads: int,
     nloads = _get_nloads_from_eids(loads)
     nbytes = write_header(load_type, nfields, nloads, key, op2_file, op2_ascii)
     for load in loads:
-        #(sid, qvol, cntrlnd, eid) = out
+        #(sid, qvol, control_node, eid) = out
         # flags = [flag1, flag2, flag3]
         # assert flag1 in [0, 2], (sid, flags, es)
         # assert flag2 in [0, 2], (sid, flags, es)
@@ -652,7 +652,7 @@ def _write_qvol(load_type, loads, nloads: int,
     nloads = _get_nloads_from_elements(loads)
     nbytes = write_header(load_type, nfields, nloads, key, op2_file, op2_ascii)
     for load in loads:
-        #(sid, qvol, cntrlnd, eid) = out
+        #(sid, qvol, control_node, eid) = out
         for eid in load.elements:
             data = [load.sid, load.qvol, load.control_point, eid]
             op2_ascii.write('  QVOL data=%s\n' % str(data))

@@ -1069,7 +1069,7 @@ class GEOM3:
         #for unused_i in range(nloads):
             #edata = data[n:n + 16]
             #out = struct_if2i.unpack(edata)
-            ##(sid, q0, cntrlnd, eid) = out
+            ##(sid, q0, control_node, eid) = out
             #load = QBDY3.add_op2_data(out)
             #op2._add_methods.add_thermal_load_object(load)
             #n += 16
@@ -1234,7 +1234,7 @@ class GEOM3:
         Words 5 through 6 repeat 3 times
         5b, 6b
         5c, 6c
-        7 CNTRLND I Control point
+        7 CONTROL_NODE I Control point
         8 EID     I Element identification number
         ints    = (200, 442.0, 10400.0, 0,   0,   0,   0,   0,   0,   -1.0, 0,   10)
         floats  = (200, 442.0, 10400.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 10)
@@ -1284,7 +1284,7 @@ class GEOM3:
             #out = struct_if.unpack(edata)
             #if op2.is_debug_file:
                 #op2.binary_debug.write('  QHBDY=%s\n' % str(out))
-            #(sid, q0, t_source, ce, flag1, e1, flag2, e2, flag3, e3, cntrlnd, eid) = out
+            #(sid, q0, t_source, ce, flag1, e1, flag2, e2, flag3, e3, control_node, eid) = out
 
             #load = QVECT.add_op2_data(out)
             #str(load)
@@ -1301,7 +1301,7 @@ class GEOM3:
         1 SID      I Load set identification number
         2 QVOL    RS Power input per unit volume produced by a
                      conduction element
-        3 CNTRLND  I Control point used for controlling heat generation
+        3 CONTROL_NODE  I Control point used for controlling heat generation
         4 EID      I Element identification number
 
         """
@@ -1327,7 +1327,7 @@ class GEOM3:
             #out = struc.unpack(edata)
             #if op2.is_debug_file:
                 #op2.binary_debug.write('  QVOL=%s\n' % str(out))
-            ##(sid, qvol, cntrlnd, eid) = out
+            ##(sid, qvol, control_node, eid) = out
             #load = QVOL.add_op2_data(out)
             #op2._add_methods.add_load_object(load)
             #n += ntotal

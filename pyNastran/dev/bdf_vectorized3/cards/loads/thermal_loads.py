@@ -528,13 +528,13 @@ class QBDY3(Load):
     def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
-        cntrlnd = integer_or_blank(card, 3, 'cntrlnd', default=0)
+        control_node = integer_or_blank(card, 3, 'control_node', default=0)
 
         nfields = card.nfields
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
         eids = expand_thru_by(eids)
 
-        self.cards.append((sid, q0, cntrlnd, eids, comment))
+        self.cards.append((sid, q0, control_node, eids, comment))
         self.n += 1
         return self.n - 1
 
@@ -1068,7 +1068,7 @@ class RADBC(VectorizedBaseCard):
     def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         node_amb = integer(card, 1, 'nodamb')
         famb = double(card, 2, 'famb')
-        control_node = integer_or_blank(card, 3, 'cntrlnd', default=0)
+        control_node = integer_or_blank(card, 3, 'control_node', default=0)
         nfields = card.nfields
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
         eids_expand = expand_thru_by(eids)

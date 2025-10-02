@@ -2719,14 +2719,14 @@ class GEOM2:
             #out = structi.unpack(edata)
             #if op2.is_debug_file:
                 #op2.binary_debug.write('  CONVM=%s\n' % str(out))
-            #(eid, pcon_id, flmnd, cntrlnd, ta1, ta2) = out
+            #(eid, pcon_id, flmnd, control_node, ta1, ta2) = out
             ##if eid <= 0:
-            #if eid <= 0 or pcon_id <= 0 or flmnd < 0 or cntrlnd <= 0 or ta1 <= 0 or ta2 <= 0:
+            #if eid <= 0 or pcon_id <= 0 or flmnd < 0 or control_node <= 0 or ta1 <= 0 or ta2 <= 0:
                 ##self.show_data(data, 'if')
                 ## TODO: I'm not sure that this really has 6 fields...
-                #raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} cntrlnd={cntrlnd} ta1={ta1} ta2={ta2} < 0')
+                #raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} control_node={control_node} ta1={ta1} ta2={ta2} < 0')
             #mdot = 0.
-            #data_in = [eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot]
+            #data_in = [eid, pcon_id, flmnd, control_node, ta1, ta2, mdot]
             #elem = CONVM.add_op2_data(data_in)
             #n += 24
             #elements.append(elem)
@@ -2754,14 +2754,14 @@ class GEOM2:
             #out = structi.unpack(edata)
             #if op2.is_debug_file:
                 #op2.binary_debug.write('  CONVM=%s\n' % str(out))
-            #(eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot) = out
+            #(eid, pcon_id, flmnd, control_node, ta1, ta2, mdot) = out
 
-            #if eid <= 0 or pcon_id <= 0 or flmnd < 0 or cntrlnd <= 0 or ta1 <= 0 or ta2 <= 0:
+            #if eid <= 0 or pcon_id <= 0 or flmnd < 0 or control_node <= 0 or ta1 <= 0 or ta2 <= 0:
                 #op2.show_data(data, 'if')
                 ## TODO: I'm not sure that this really has 7 fields...
                 #raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} '
-                                   #f'cntrlnd={cntrlnd} ta1={ta1} ta2={ta2} < 0')
-            #data_in = [eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot]
+                                   #f'control_node={control_node} ta1={ta1} ta2={ta2} < 0')
+            #data_in = [eid, pcon_id, flmnd, control_node, ta1, ta2, mdot]
             #elem = CONVM.add_op2_data(data_in)
             #n += 28
             #elements.append(elem)
@@ -5382,7 +5382,7 @@ class GEOM2:
         Word Name Type Description
         1 EID      I Element identification number
         2 FAMB    RS Radiation view factor between the face and the ambient point
-        3 CNTRLND  I Control point for radiation boundary condition
+        3 CONTROL_NODE  I Control point for radiation boundary condition
         4 NODAMB   I
         """
         op2 = self.op2
@@ -5400,9 +5400,9 @@ class GEOM2:
             out = structi.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  RADBC=%s\n' % str(out))
-            eid, famb, cntrlnd, nodamb = out
+            eid, famb, control_node, nodamb = out
             eids = [eid]
-            radbc = op2.add_radbc(nodamb, famb, cntrlnd, eids)
+            radbc = op2.add_radbc(nodamb, famb, control_node, eids)
             #op2._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
             n += ntotal
         #self._save(node_id, factor_ambient, control_node, nelement, elements)

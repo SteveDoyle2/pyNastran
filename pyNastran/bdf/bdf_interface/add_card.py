@@ -5362,7 +5362,7 @@ class AddThermal:
             a comment for the card
 
         """
-        load = QBDY3(sid, q0, cntrlnd, eids, comment=comment)
+        load = QBDY3(sid, q0, control_node, eids, comment=comment)
         self._add_methods.add_thermal_load_object(load)
         return load
 
@@ -5543,7 +5543,8 @@ class AddThermal:
         self._add_methods.add_phbdy_object(prop)
         return prop
 
-    def add_conv(self, eid, pconid, ta, film_node=0, cntrlnd=0, comment='') -> CONV:
+    def add_conv(self, eid, pconid, ta,
+                 film_node: int=0, control_node: int=0, comment='') -> CONV:
         """
         Creates a CONV card
 
@@ -5560,14 +5561,14 @@ class AddThermal:
             and higher
         film_node : int; default=0
             Point for film convection fluid property temperature
-        cntrlnd : int; default=0
+        control_node : int; default=0
             Control point for free convection boundary condition
         comment : str; default=''
             a comment for the card
 
         """
         boundary_condition = CONV(eid, pconid, ta,
-                                  film_node=film_node, cntrlnd=cntrlnd,
+                                  film_node=film_node, control_node=control_node,
                                   comment=comment)
         self._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.eid)
         return boundary_condition
@@ -5597,7 +5598,7 @@ class AddThermal:
             0/blank is only allowed when mdot > 0
         mdot : float; default=1.0
             a multiplier for the mass flow rate in case there is no
-            point associated with the CNTRLND field
+            point associated with the CONTROL_NODE field
             required if cntmdot = 0
         comment : str; default=''
             a comment for the card
@@ -5621,10 +5622,10 @@ class AddThermal:
         self._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.radmid)
         return boundary_condition
 
-    def add_radbc(self, nodamb: int, famb: float, cntrlnd: int, eids: list[int],
+    def add_radbc(self, nodamb: int, famb: float, control_node: int, eids: list[int],
                   comment: str='') -> RADBC:
         """Creates a RADBC card"""
-        boundary_condition = RADBC(nodamb, famb, cntrlnd, eids, comment=comment)
+        boundary_condition = RADBC(nodamb, famb, control_node, eids, comment=comment)
         self._add_methods.add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
         return boundary_condition
 

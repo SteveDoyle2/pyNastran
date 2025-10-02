@@ -1113,7 +1113,7 @@ def write_radbc(model, name: str, elems, nelements: int, itable: int,
     Word Name Type Description
     1 EID      I Element identification number
     2 FAMB    RS Radiation view factor between the face and the ambient point
-    3 CNTRLND  I Control point for radiation boundary condition
+    3 CONTROL_NODE  I Control point for radiation boundary condition
     4 NODAMB   I
     """
     structi = Struct(endian + b'ifii')
@@ -1128,10 +1128,10 @@ def write_radbc(model, name: str, elems, nelements: int, itable: int,
                                        op2_file, op2_ascii)
     for elem in elems:
         famb = elem.famb
-        cntrlnd = elem.cntrlnd
+        control_node = elem.control_node
         nodamb = elem.nodamb
         for eid in elem.eids:
-            data = [eid, famb, cntrlnd, nodamb]
+            data = [eid, famb, control_node, nodamb]
             # print(data) # 'ifii'
 
             # print('  RADBC eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))

@@ -383,9 +383,17 @@ class CBUSH(BushElement):
                     xb = gb_ref.get_position()
                     dx = xb - xa
                     inorm = np.linalg.norm(dx)
-                    ihat = dx / inorm
                     jvector = self.orientation_vector()
                     jnorm = np.linalg.norm(jvector)
+                    if inorm == 0.:
+                        warnings.warn(f'coincident CBUSH eid={self.eid}\n'
+                                      f'nodes={self.nodes} \n'
+                                      f'xa={xa} xb={xb} dx={dx} L={inorm:g}\n'
+                                      f'v={jvector}\n'
+                                      f'cid={cid}; ocid={ocid}; x={self.x} g0={self.g0}\n'
+                                      f'{str(self)}')
+                        return
+                    ihat = dx / inorm
                     kvector = np.cross(ihat, jvector)
                     knorm = np.linalg.norm(kvector)
                     is_coincident = (

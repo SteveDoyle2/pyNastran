@@ -1396,9 +1396,11 @@ class CONV(ThermalBC):
         #nodamb = 1
         pconid = 2
         ta = 1.0
-        return CONV(eid, pconid, ta, film_node=0, cntrlnd=0, comment='')
+        return CONV(eid, pconid, ta, film_node=0, control_node=0, comment='')
 
-    def __init__(self, eid, pconid, ta, film_node=0, cntrlnd=0, comment=''):
+    def __init__(self, eid: int, pconid: int, ta,
+                 film_node: int=0, control_node: int=0,
+                 comment: str=''):
         """
         Creates a CONV card
 
@@ -1415,7 +1417,7 @@ class CONV(ThermalBC):
             and higher
         film_node : int; default=0
             Point for film convection fluid property temperature
-        cntrlnd : int; default=0
+        control_node : int; default=0
             Control point for free convection boundary condition
         comment : str; default=''
             a comment for the card
@@ -1436,7 +1438,7 @@ class CONV(ThermalBC):
         self.film_node = film_node
 
         #: Control point for free convection boundary condition.
-        self.cntrlnd = cntrlnd
+        self.control_node = control_node
 
         #: Ambient points used for convection 0's are allowed for TA2 and
         #: higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
@@ -1463,8 +1465,8 @@ class CONV(ThermalBC):
         """
         eid = integer(card, 1, 'eid')
         pconid = integer(card, 2, 'pconid')
-        film_node = integer_or_blank(card, 3, 'film_node', 0)
-        cntrlnd = integer_or_blank(card, 4, 'cntrlnd', 0)
+        film_node = integer_or_blank(card, 3, 'film_node', default=0)
+        control_node = integer_or_blank(card, 4, 'control_node', default=0)
 
         ta1 = integer(card, 5, 'TA1')
         assert ta1 > 0, ta1
@@ -1478,7 +1480,7 @@ class CONV(ThermalBC):
         ta8 = integer_or_blank(card, 12, 'ta8', ta1)
         ta = [ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8]
         assert len(card) <= 13, f'len(CONV card) = {len(card):d}\ncard={card}'
-        return CONV(eid, pconid, ta, film_node, cntrlnd, comment=comment)
+        return CONV(eid, pconid, ta, film_node, control_node, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1493,16 +1495,17 @@ class CONV(ThermalBC):
             a comment for the card
 
         """
-        #data_in = [eid, pconid, flmnd, cntrlnd,
+        #data_in = [eid, pconid, flmnd, control_node,
                    #[ta1, ta2, ta3, ta5, ta6, ta7, ta8],
                    #[wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
         ## weights are unique to MSC nastran
-        eid, pconid, film_node, cntrlnd, ta, weights = data
+        eid, pconid, film_node, control_node, ta, weights = data
         del weights
         #ta1, ta2, ta3, ta5, ta6, ta7, ta8 = ta
         #wt1, wt2, wt3, wt5, wt6, wt7, wt8 = aft
 
-        return CONV(eid, pconid, ta, film_node, cntrlnd, comment=comment)
+        return CONV(eid, pconid, ta, film_node, control_node,
+                    comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -1536,18 +1539,18 @@ class CONV(ThermalBC):
 
     def raw_fields(self):
         list_fields = ['CONV', self.Eid(), self.pconid, self.film_node,
-                       self.cntrlnd] + self.ta
+                       self.control_node] + self.ta
         return list_fields
 
     def repr_fields(self):
         film_node = set_blank_if_default(self.film_node, 0)
-        cntrlnd = set_blank_if_default(self.cntrlnd, 0)
+        control_node = set_blank_if_default(self.control_node, 0)
 
         ta0 = self.ta[0]
         ta = [ta0]
         for tai in self.ta[1:]:
             ta.append(set_blank_if_default(tai, ta0))
-        list_fields = ['CONV', self.Eid(), self.pconid, film_node, cntrlnd] + ta
+        list_fields = ['CONV', self.Eid(), self.pconid, film_node, control_node] + ta
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -1688,7 +1691,7 @@ class CONVM(ThermalBC):
             0/blank is only allowed when mdot > 0
         mdot : float; default=1.0
             a multiplier for the mass flow rate in case there is no
-            point associated with the CNTRLND field
+            point associated with the CONTROL_NODE field
             required if cntmdot = 0
         comment : str; default=''
             a comment for the card
@@ -1753,8 +1756,8 @@ class CONVM(ThermalBC):
             a comment for the card
 
         """
-        (eid, pconvm_id, film_node, cntrlnd, ta1, ta2, mdot) = data
-        return CONVM(eid, pconvm_id, ta1, film_node, cntrlnd, ta2, mdot,
+        (eid, pconvm_id, film_node, control_node, ta1, ta2, mdot) = data
+        return CONVM(eid, pconvm_id, ta1, film_node, control_node, ta2, mdot,
                      comment=comment)
 
     def cross_reference(self, model: BDF) -> None:

@@ -5230,7 +5230,7 @@ class AddThermal(BDFAttributes):
             0/blank is only allowed when mdot > 0
         mdot : float; default=1.0
             a multiplier for the mass flow rate in case there is no
-            point associated with the CNTRLND field
+            point associated with the CONTROL_NODE field
             required if cntmdot = 0
         comment : str; default=''
             a comment for the card
@@ -5254,9 +5254,10 @@ class AddThermal(BDFAttributes):
         boundary_condition = self.radm.add(radmid, absorb, emissivity, comment=comment)
         return boundary_condition
 
-    def add_radbc(self, nodamb, famb, cntrlnd, eids, comment: str='') -> int:
+    def add_radbc(self, nodamb, famb, control_node,
+                  eids, comment: str='') -> int:
         """Creates a RADBC card"""
-        boundary_condition = self.radbc.add(nodamb, famb, cntrlnd, eids, comment=comment)
+        boundary_condition = self.radbc.add(nodamb, famb, control_node, eids, comment=comment)
         return boundary_condition
 
     def add_view(self, iview: int, icavity: int, shade: str='BOTH',

@@ -221,9 +221,9 @@ class TestThermal(unittest.TestCase):
         #qbdy2i.raw_fields()
 
         q0 = 14.
-        cntrlnd = 57
+        control_node = 57
         eids = [1, 2]
-        qbdy3i = model.add_qbdy3(sid, q0, eids, control_node=cntrlnd, comment='qbdy3')
+        qbdy3i = model.add_qbdy3(sid, q0, eids, control_node=control_node, comment='qbdy3')
         #qbdy3i.raw_fields()
 
         icavity = 12
