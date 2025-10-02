@@ -71,6 +71,7 @@ class FlutterPreferencesObject:
             'divergence_legend_loc': gui.divergence_legend_loc,
             'flutter_bbox_to_anchor_x': gui.flutter_bbox_to_anchor_x,
             'flutter_ncolumns': gui.flutter_ncolumns,
+            'freq_ndigits': gui.freq_ndigits,
             'clicked_ok': False,
             'close': False,
         })
@@ -103,6 +104,9 @@ class FlutterPreferencesObject:
 
     def on_flutter_ncolumns(self, value: Optional[int]) -> None:
         self.gui.flutter_ncolumns = value
+
+    def on_freq_ndigits(self, value: int) -> None:
+        self.gui.freq_ndigits = value
 
     def on_flutter_bbox_to_anchor_x(self, value: float) -> None:
         self.gui.flutter_bbox_to_anchor_x = value

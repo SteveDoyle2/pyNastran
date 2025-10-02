@@ -41,7 +41,7 @@ class CYAX(BaseCard):
         self.nids = nids
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a AXIF card from ``BDF.add_card(...)``
 
@@ -97,7 +97,7 @@ class CYJOIN(BaseCard):
         pass
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CYJOIN card from ``BDF.add_card(...)``
 

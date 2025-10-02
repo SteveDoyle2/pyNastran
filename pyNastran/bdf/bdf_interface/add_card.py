@@ -111,8 +111,8 @@ from pyNastran.bdf.cards.aero.static_loads import (
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.zona import (
     CAERO7, PAFOIL7, BODY7, AESURFZ, ACOORD, MKAEROZ,
-    #AEROZ, MKAEROZ, PANLST1, PANLST3,
-    #SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
+    # AEROZ, MKAEROZ, PANLST1, PANLST3,
+    # SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
     ZONA)
 
 from pyNastran.bdf.cards.optimization import (
@@ -165,7 +165,7 @@ from pyNastran.utils.numpy_utils import integer_string_types
 from pyNastran.bdf.write_path import write_include
 
 CARD_MAP = {
-    #'=': Crash, None),
+    # '=': Crash, None),
     'RELEASE': RELEASE,
     'SETREE': SETREE,
     'SENQSET': SENQSET,
@@ -192,39 +192,38 @@ CARD_MAP = {
     'BOLTLD': BOLTLD,
     'BOLTSEQ': BOLTSEQ,
 
-    #'CBEAR', 'PBEAR', 'ROTORB',
-    #'CBEAR': Crash, None),
-    #'PBEAR': Crash, None),
-    #'ROTORB': Crash, None),
-
-    #'SWLDPRM': Crash, None),
-
-    #'PWSEAM': Crash, None),
-    #'CWSEAM': Crash, None),
-    #'CSEAM': Crash, None),
-    #'PSEAM': Crash, None),
-
-    #'DVSHAP': Crash, None),
-    #'BNDGRID': Crash, None),
-
-    #'CYSYM': Crash, None),
-    #'CYJOIN': Crash, None),
-    #'MODTRAK': Crash, None),
-    #'TEMPP1': Crash, None),
-    #'TEMPRB': Crash, None),
-    #'DSCONS': Crash, None),
-    #'DVAR': Crash, None),
-    #'DVSET': Crash, None),
-    #'DYNRED': Crash, None),
-    #'BNDFIX': Crash, None),
-    #'BNDFIX1': Crash, None),
-
-    #'AEFORCE': Crash, None),
-    #'UXVEC': Crash, None),
-    #'GUST2': Crash, None),
-
-    #'RADBND': RADBND,
-
+    # 'CBEAR', 'PBEAR', 'ROTORB',
+    # 'CBEAR': Crash, None),
+    # 'PBEAR': Crash, None),
+    # 'ROTORB': Crash, None),
+    #
+    # 'SWLDPRM': Crash, None),
+    #
+    # 'PWSEAM': Crash, None),
+    # 'CWSEAM': Crash, None),
+    # 'CSEAM': Crash, None),
+    # 'PSEAM': Crash, None),
+    #
+    # 'DVSHAP': Crash, None),
+    # 'BNDGRID': Crash, None),
+    #
+    # 'CYSYM': Crash, None),
+    # 'CYJOIN': Crash, None),
+    # 'MODTRAK': Crash, None),
+    # 'TEMPP1': Crash, None),
+    # 'TEMPRB': Crash, None),
+    # 'DSCONS': Crash, None),
+    # 'DVAR': Crash, None),
+    # 'DVSET': Crash, None),
+    # 'DYNRED': Crash, None),
+    # 'BNDFIX': Crash, None),
+    # 'BNDFIX1': Crash, None),
+    #
+    # 'AEFORCE': Crash, None),
+    # 'UXVEC': Crash, None),
+    # 'GUST2': Crash, None),
+    #
+    # 'RADBND': RADBND,
 
     # nodes
     'GRDSET': GRDSET,
@@ -5343,7 +5342,7 @@ class AddThermal:
         return load
 
     def add_qbdy3(self, sid: int, q0: float, eids: list[int],
-                  cntrlnd: int=0, comment: str='') -> QBDY3:
+                  control_node: int=0, comment: str='') -> QBDY3:
         """
         Creates a QBDY3 card
 
@@ -5353,7 +5352,7 @@ class AddThermal:
             Load set identification number. (Integer > 0)
         q0 : float; default=None
             Magnitude of thermal flux vector into face
-        control_id : int; default=0
+        control_node : int; default=0
             Control point
         eids : list[int] or THRU
             Element identification number of a CHBDYE, CHBDYG, or
@@ -5378,7 +5377,7 @@ class AddThermal:
                   t_source: Optional[float]=None,
                   ce: int=0,
                   vector_tableds: Optional[list[int]]=None,
-                  control_id: int=0,
+                  control_node: int=0,
                   comment: str='') -> QVECT:
         """
         Creates a QVECT card
@@ -5400,7 +5399,7 @@ class AddThermal:
             tabled : int
                 TABLEDi entry identification numbers defining the
                 components as a function of time
-        control_id : int; default=0
+        control_node : int; default=0
             Control point
         eids : list[int] or THRU
             Element identification number of a CHBDYE, CHBDYG, or
@@ -5410,7 +5409,7 @@ class AddThermal:
 
         """
         load = QVECT(sid, q0, eids, t_source=t_source, ce=ce,
-                     vector_tableds=vector_tableds, control_id=control_id,
+                     vector_tableds=vector_tableds, control_node=control_node,
                      comment=comment)
         self._add_methods.add_dload_entry(load)
         return load
@@ -5706,7 +5705,7 @@ class AddThermal:
 
     def add_pconv(self, pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
                   chlen=None, gidin=None, ce=0,
-                  e1=None, e2=None, e3=None,
+                  e=None,
                   comment='') -> PCONV:
         """
         Creates a PCONV card
@@ -5735,7 +5734,7 @@ class AddThermal:
             Grid ID of the referenced inlet point
         ce : int; default=0
             Coordinate system for defining orientation vector.
-        e1 / e2 / e3 : list[float]; default=None
+        e : list[float]; default=None
             Components of the orientation vector in coordinate system CE.
             The origin of the orientation vector is grid point G1
         comment : str; default=''
@@ -5745,7 +5744,7 @@ class AddThermal:
         prop = PCONV(pconid, mid=mid,
                      form=form, expf=expf, ftype=ftype,
                      tid=tid, chlen=chlen, gidin=gidin,
-                     ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)
+                     ce=ce, e=e, comment=comment)
         self._add_methods.add_convection_property_object(prop)
         return prop
 
@@ -6586,7 +6585,8 @@ class AddSuperelements:
         self._add_methods.add_selabel_object(selabel)
         return selabel
 
-    def add_seloc(self, seid, nodes_seid, nodes0, comment='') -> SELOC:
+    def add_seloc(self, seid, nodes_seid: list[int], nodes0: list[int],
+                  comment: str='') -> SELOC:
         """
         Creates an SELOC card, which transforms the superelement SEID
         from PA to PB.  Basically, define two CORD1Rs.
@@ -6595,10 +6595,10 @@ class AddSuperelements:
         ----------
         seid : int
             the superelement to transform
-        nodes_seid : list[int, int, int]
-            the nodes in the superelement than define the resulting coordinate system
-        nodes0 : list[int, int, int]
-            the nodes in the superelement than define the starting coordinate system
+        nodes_seid : list[int]
+            the 3 nodes in the superelement than define the resulting coordinate system
+        nodes0 : list[int]
+            the 3 nodes in the superelement than define the starting coordinate system
         comment : str; default=''
             a comment for the card
 
@@ -8666,32 +8666,32 @@ class AddCards(AddCoords, AddContact, AddBolts,
         """.. seealso:: ``add_cset``"""
         return self.add_cset(ids, components, comment=comment)
 
-    #def add_omit1(self, ids, components, comment='') -> OMIT | OMIT1:
-        #""".. seealso:: ``add_omit``"""
-        #return self.add_omit(ids, components, comment=comment)
-
-    #def add_omit(self, ids, components, comment='') -> OMIT | OMIT1:
-        #"""
-        #Creates an OMIT1 card, which defines the degree of freedoms that
-        #will be excluded (o-set) from the analysis set (a-set).
-
-        #Parameters
-        #----------
-        #ids : list[int]
-            #the GRID/SPOINT ids
-        #components : list[str]; str
-            #the degree of freedoms to be retained (e.g., '1', '123')
-            #if a list is passed in, a OMIT is made
-            #if a str is passed in, a OMIT1 is made
-        #comment : str; default=''
-            #a comment for the card
-        #"""
-        #if isinstance(components, str):
-            #omit = OMIT1(ids, components, comment=comment)
-        #else:
-            #omit = OMIT(ids, components, comment=comment)
-        #self._add_omit_object(omit)
-        #return omit
+    # def add_omit1(self, ids, components, comment='') -> OMIT | OMIT1:
+    #     """.. seealso:: ``add_omit``"""
+    #     return self.add_omit(ids, components, comment=comment)
+    #
+    # def add_omit(self, ids, components, comment='') -> OMIT | OMIT1:
+    #     """
+    #     Creates an OMIT1 card, which defines the degree of freedoms that
+    #     will be excluded (o-set) from the analysis set (a-set).
+    #
+    #     Parameters
+    #     ----------
+    #     ids : list[int]
+    #         the GRID/SPOINT ids
+    #     components : list[str]; str
+    #         the degree of freedoms to be retained (e.g., '1', '123')
+    #         if a list is passed in, a OMIT is made
+    #         if a str is passed in, a OMIT1 is made
+    #     comment : str; default=''
+    #         a comment for the card
+    #     """
+    #     if isinstance(components, str):
+    #         omit = OMIT1(ids, components, comment=comment)
+    #     else:
+    #         omit = OMIT(ids, components, comment=comment)
+    #     self._add_omit_object(omit)
+    #     return omit
 
     def add_omit1(self, ids: list[int], components: str, comment='') -> OMIT | OMIT1:
         """

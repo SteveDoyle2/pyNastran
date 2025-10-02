@@ -108,7 +108,7 @@ class CELAS1(SpringElement):
         h5_file.create_dataset('components', data=components)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CELAS1 card from ``BDF.add_card(...)``
 
@@ -321,7 +321,7 @@ class CELAS2(SpringElement):
         h5_file.create_dataset('components', data=components)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CELAS2 card from ``BDF.add_card(...)``
 
@@ -513,7 +513,7 @@ class CELAS3(SpringElement):
         h5_file.create_dataset('nodes', data=nodes)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CELAS3 card from ``BDF.add_card(...)``
 

@@ -19,7 +19,7 @@ import matplotlib.gridspec as gridspec
 
 from qtpy import QtCore
 from qtpy.compat import getopenfilename  # getsavefilename
-#from qtpy.QtGui import QIcon, QPixmap
+# from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (
     QLabel, QWidget,
     QApplication, QVBoxLayout, QComboBox,  # QMenu, QLineEdit,
@@ -47,7 +47,7 @@ from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_men
 from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
 from pyNastran.f06.dev.flutter.preferences import (
     FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
-    FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT)
+    FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT, FREQ_NDIGITS_DEFAULT)
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import get_flutter_units
@@ -96,6 +96,7 @@ class FlutterGui(LoggableGui):
         self.divergence_legend_loc = LEGEND_LOC_DEFAULT
         self.flutter_bbox_to_anchor_x = FLUTTER_BBOX_TO_ANCHOR_DEFAULT
         self.flutter_ncolumns = FLUTTER_NCOLUMNS_DEFAULT
+        self.freq_ndigits = FREQ_NDIGITS_DEFAULT
 
         self.font_size = FONT_SIZE_DEFAULT
         self.plot_font_size = FONT_SIZE_DEFAULT
@@ -305,6 +306,7 @@ class FlutterGui(LoggableGui):
         out_data = copy.deepcopy(self.data)
         out_data['preferences'] = {
             'flutter_ncolumns': self.flutter_ncolumns,
+            'freq_ndigits': self.freq_ndigits,
             'flutter_bbox_to_anchor_x': self.flutter_bbox_to_anchor_x,
             'divergence_legend_loc': self.divergence_legend_loc,
             'export_to_png': self.export_to_png,
@@ -376,6 +378,11 @@ class FlutterGui(LoggableGui):
                     data0 = data[key0]
                     value = data0[key1]
                     assert hasattr(self, key1), (key, value)
+                    if not isinstance(value, value_type):
+                        log.warning(f'{key!r}={value!r} and is not {value_type}...skipping')
+                        continue
+                    # log.info(f'setting {key!r} (key1={key1!r}) -> {value!r}')
+                    setattr(self, key1, value)
                 else:
                     if key not in data:
                         log.warning(f'skipping {key!r}')
@@ -383,8 +390,11 @@ class FlutterGui(LoggableGui):
                         continue
                     value = data[key]
                     assert hasattr(self, key), (key, value)
-                assert isinstance(value, value_type), (key, value, value_type)
-                setattr(self, key, value)
+                    if not isinstance(value, value_type):
+                        log.warning(f'{key!r}={value!r} and is not {value_type}...skipping')
+                        continue
+                    # log.info(f'setting {key!r} -> {value!r}')
+                    setattr(self, key, value)
 
         ifile = self.ifile
         checkboxs = [

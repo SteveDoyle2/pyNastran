@@ -134,7 +134,7 @@ class CREEP(Material):
         self.mid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CREEP card from ``BDF.add_card(...)``
 
@@ -297,7 +297,7 @@ class NXSTRAT(BaseCard):
         self.params = params
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an NXSTRAT card from ``BDF.add_card(...)``
 
@@ -3499,7 +3499,7 @@ class MAT3D(Material):
         self._validate_input()
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a MAT3D card from ``BDF.add_card(...)``
 

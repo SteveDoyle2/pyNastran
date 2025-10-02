@@ -91,7 +91,7 @@ class EIGB(Method):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an EIGB card from ``BDF.add_card(...)``
 
@@ -382,7 +382,7 @@ class EIGC(Method):
             assert isinstance(kstep, int), self.ksteps
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an EIGC card from ``BDF.add_card(...)``
 
@@ -609,7 +609,7 @@ class EIGP(Method):
         self.m2 = m2
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an EIGPX card from ``BDF.add_card(...)``
 
@@ -763,7 +763,7 @@ class EIGR(Method):
         assert norm in ['POINT', 'MASS', 'MAX']
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an EIGR card from ``BDF.add_card(...)``
 
@@ -965,7 +965,7 @@ class EIGRL(Method):
                 raise NotImplementedError('option=%r value=%r' % (option, value))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an EIGRL card from ``BDF.add_card(...)``
 
@@ -1194,7 +1194,7 @@ class MODTRAK(BaseCard):
         return MODTRAK(sid, low_range, high_range, mt_filter, comment='')
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         sid = integer(card, 1, 'sid')
         low_range = integer_or_blank(card, 2, 'low_range', default=0)
         high_range = integer(card, 3, 'high_range')

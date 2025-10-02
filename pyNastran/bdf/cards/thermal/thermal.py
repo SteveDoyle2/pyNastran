@@ -40,6 +40,7 @@ class ThermalElement(ThermalCard):
     #def center_of_mass(self):
         #return self.Centroid()
 
+
 class ThermalProperty(ThermalCard):
     def __init__(self):
         ThermalCard.__init__(self)
@@ -426,12 +427,12 @@ class CHBDYG(ThermalElement):
         rad_mid_back = data[5]
         nodes = [datai for datai in data[6:14] if datai > 0]
         surface_type_int_to_str = {
-            3 : 'REV',
-            4 : 'AREA3',
-            5 : 'AREA4',
+            3: 'REV',
+            4: 'AREA3',
+            5: 'AREA4',
             #7: 'AREA6',# ???
-            8 : 'AREA6',
-            9 : 'AREA8',
+            8: 'AREA6',
+            9: 'AREA8',
         }
         try:
             surface_type = surface_type_int_to_str[surface_type]
@@ -719,11 +720,11 @@ class CHBDYP(ThermalElement):
         #rad_mid_back = data[5]
         #nodes = [datai for datai in data[6:14] if datai > 0]
         surface_type_int_to_str = {
-            1 : 'POINT',
-            2 : 'LINE',
-            6 : 'ELCYL',
-            7 : 'FTUBE',
-            10 : 'TUBE',
+            1: 'POINT',
+            2: 'LINE',
+            6: 'ELCYL',
+            7: 'FTUBE',
+            10: 'TUBE',
         }
         try:
             surface_type = surface_type_int_to_str[surface_type]
@@ -898,11 +899,11 @@ class PCONV(ThermalProperty):
         pconid = 1
         #mid = 1
         return PCONV(pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
-                     chlen=None, gidin=None, ce=0, e1=None, e2=None, e3=None, comment='')
+                     chlen=None, gidin=None, ce=0, e=None, comment='')
 
     def __init__(self, pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
                  chlen=None, gidin=None, ce=0,
-                 e1=None, e2=None, e3=None, comment=''):
+                 e: list[float]=None, comment=''):
         """
         Creates a PCONV card
 
@@ -930,7 +931,7 @@ class PCONV(ThermalProperty):
             Grid ID of the referenced inlet point
         ce : int; default=0
             Coordinate system for defining orientation vector.
-        e1 / e2 / e3 : list[float]; default=None
+        e : list[float]; default=None
             Components of the orientation vector in coordinate system CE.
             The origin of the orientation vector is grid point G1
         comment : str; default=''
@@ -974,9 +975,9 @@ class PCONV(ThermalProperty):
 
         #: Components of the orientation vector in coordinate system CE. The
         #: origin of the orientation vector is grid point G1. (Real or blank)
-        self.e1 = e1
-        self.e2 = e2
-        self.e3 = e3
+        if e is None:
+            e = [None, None, None]
+        self.e = e
         assert self.pconid > 0
         assert mid is None or self.mid > 0
         assert self.form in [0, 1, 10, 11, 20, 21]
@@ -1005,14 +1006,16 @@ class PCONV(ThermalProperty):
         chlen = double_or_blank(card, 9, 'chlen')
         gidin = integer_or_blank(card, 10, 'gidin')
         ce = integer_or_blank(card, 11, 'ce', default=0)
-        e1 = double_or_blank(card, 12, 'e1')
-        e2 = double_or_blank(card, 13, 'e2')
-        e3 = double_or_blank(card, 14, 'e3')
+        e = [
+            double_or_blank(card, 12, 'e1'),
+            double_or_blank(card, 13, 'e2'),
+            double_or_blank(card, 14, 'e3'),
+        ]
         assert len(card) <= 15, f'len(PCONV card) = {len(card):d}\ncard={card}'
         return PCONV(pconid, mid=mid,
                      form=form, expf=expf, ftype=ftype,
                      tid=tid, chlen=chlen, gidin=gidin,
-                     ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)
+                     ce=ce, e=e, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment: str=''):
@@ -1029,16 +1032,17 @@ class PCONV(ThermalProperty):
         """
         (pconid, mid, form, expf, ftype, tid, chlen, gidin, ce, e1, e2, e3) = data
         mid = mid if mid > 0 else None
+        e = [e1, e2, e3]
         return PCONV(pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
-                     e1, e2, e3, comment=comment)
+                     e, comment=comment)
 
-    def Ce(self):
+    def Ce(self) -> int:
         """gets the coordinate system, CE"""
         if self.ce_ref is not None:
             return self.ce_ref.cid
         return self.ce
 
-    def Gidin(self):
+    def Gidin(self) -> int:
         """gets the grid input node, gidin"""
         if self.gidin_ref is not None:
             return self.gidin_ref.nid
@@ -1060,7 +1064,7 @@ class PCONV(ThermalProperty):
     def raw_fields(self):
         list_fields = ['PCONV', self.pconid, self.mid, self.form, self.expf,
                        self.ftype, self.tid, None, None, self.chlen, self.Gidin(),
-                       self.Ce(), self.e1, self.e2, self.e3]
+                       self.Ce()] + self.e
         return list_fields
 
     def repr_fields(self):
@@ -1069,8 +1073,7 @@ class PCONV(ThermalProperty):
         ftype = set_blank_if_default(self.ftype, 0)
         ce = set_blank_if_default(self.Ce(), 0)
         list_fields = ['PCONV', self.pconid, self.mid, form, expf, ftype, self.tid,
-                       None, None, self.chlen, self.Gidin(), ce, self.e1, self.e2,
-                       self.e3]
+                       None, None, self.chlen, self.Gidin(), ce] + self.e
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -1304,7 +1307,7 @@ class PHBDY(ThermalProperty):
         self.d2 = d2
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PHBDY card from ``BDF.add_card(...)``
 

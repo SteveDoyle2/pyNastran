@@ -157,7 +157,7 @@ class DELAY(BaseCard):
         self.nodes_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DELAY card from ``BDF.add_card(...)``
 
@@ -322,7 +322,7 @@ class DPHASE(BaseCard):
         self.nodes_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DPHASE card from ``BDF.add_card(...)``
 
@@ -470,7 +470,7 @@ class FREQ(BaseCard):
         self.freqs = np.unique(freqs)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FREQ card from ``BDF.add_card(...)``
 
@@ -690,7 +690,7 @@ class FREQ2(BaseCard):
         self.freqs = np.unique(freqs)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FREQ2 card from ``BDF.add_card(...)``
 
@@ -821,7 +821,7 @@ class FREQ3(FREQ):
         return frequencies
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FREQ3 card from ``BDF.add_card(...)``
 
@@ -903,7 +903,7 @@ class FREQ4(FREQ):
         self.nfm = nfm
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FREQ4 card from ``BDF.add_card(...)``
 
@@ -1026,7 +1026,7 @@ class FREQ5(FREQ):
         return frequencies
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         sid = integer(card, 1, 'sid')
         f1 = double(card, 2, 'f1')
         f2 = double_or_blank(card, 3, 'f2', f1)
@@ -1194,7 +1194,7 @@ class NLPARM(BaseCard):
         assert self.rtol_b > 0.0, self.get_stats()
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an NLPARM card from ``BDF.add_card(...)``
 
@@ -1364,7 +1364,7 @@ class NLPCI(BaseCard):
         self.mxinc = mxinc
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an NLPCI card from ``BDF.add_card(...)``
 
@@ -1610,7 +1610,7 @@ class ROTORD(BaseCard):
         # ..todo :: RSETi
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a ROTORD card from ``BDF.add_card(...)``
 

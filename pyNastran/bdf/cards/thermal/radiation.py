@@ -68,7 +68,7 @@ class RADM(ThermalBC):
             #raise RuntimeError(msg + str(self))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RADM card from ``BDF.add_card(...)``
 
@@ -142,11 +142,11 @@ class RADBC(ThermalBC):
     def _init_from_empty(cls):
         nodamb = 1
         famb = 1.0
-        cntrlnd = 10
+        control_node = 10
         eids = [1, 2]
-        return RADBC(nodamb, famb, cntrlnd, eids, comment='')
+        return RADBC(nodamb, famb, control_node, eids, comment='')
 
-    def __init__(self, nodamb: int, famb: float, cntrlnd: int,
+    def __init__(self, nodamb: int, famb: float, control_node: int,
                  eids: list[int], comment: str=''):
         ThermalBC.__init__(self)
         if comment:
@@ -160,7 +160,7 @@ class RADBC(ThermalBC):
         self.famb = famb
 
         #: Control point for thermal flux load. (Integer > 0; Default = 0)
-        self.cntrlnd = cntrlnd
+        self.control_node = control_node
 
         #: CHBDYi element identification number
         if isinstance(eids, int):
@@ -169,7 +169,7 @@ class RADBC(ThermalBC):
 
         assert self.nodamb > 0
         assert self.famb > 0.0
-        assert self.cntrlnd >= 0
+        assert self.control_node >= 0
         self.eids_ref = None
 
     def validate(self):
@@ -179,7 +179,7 @@ class RADBC(ThermalBC):
             warnings.warn(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RADBC card from ``BDF.add_card(...)``
 
@@ -193,11 +193,11 @@ class RADBC(ThermalBC):
         """
         nodamb = integer(card, 1, 'nodamb')
         famb = double(card, 2, 'famb')
-        cntrlnd = integer_or_blank(card, 3, 'cntrlnd', default=0)
+        control_node = integer_or_blank(card, 3, 'cntrlnd', default=0)
 
         nfields = card.nfields
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
-        return RADBC(nodamb, famb, cntrlnd, eids, comment=comment)
+        return RADBC(nodamb, famb, control_node, eids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -225,14 +225,14 @@ class RADBC(ThermalBC):
         return eids
 
     def raw_fields(self):
-        list_fields = (['RADBC', self.nodamb, self.famb, self.cntrlnd] +
+        list_fields = (['RADBC', self.nodamb, self.famb, self.control_node] +
                        self.Eids())
         return list_fields
 
     def repr_fields(self):
-        cntrlnd = set_blank_if_default(self.cntrlnd, 0)
+        control_node = set_blank_if_default(self.control_node, 0)
         eids = collapse_thru_by(self.Eids())
-        list_fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
+        list_fields = ['RADBC', self.nodamb, self.famb, control_node] + eids
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -314,7 +314,7 @@ class VIEW(BaseCard):
         self.dislin = dislin
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a VIEW card from ``BDF.add_card(...)``
 
@@ -439,7 +439,7 @@ class VIEW3D(BaseCard):
         self.rad_check = rad_check
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a VIEW3D card from ``BDF.add_card(...)``
 

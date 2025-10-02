@@ -168,7 +168,7 @@ class PDAMP5(DamperProperty):
         self.mid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PDAMP5 card from ``BDF.add_card(...)``
 

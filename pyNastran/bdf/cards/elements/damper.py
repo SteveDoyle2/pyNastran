@@ -108,7 +108,7 @@ class CDAMP1(LineDamper):
         h5_file.create_dataset('components', data=components)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CDAMP1 card from ``BDF.add_card(...)``
 

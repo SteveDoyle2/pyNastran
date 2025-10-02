@@ -775,7 +775,7 @@ class SETREE(BaseCard):
         self.superelements_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         seid = integer(card, 1, 'seid')
         superelements = []
         i = 1
@@ -876,7 +876,7 @@ class CSUPER(BaseCard):
         self.nodes_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         seid = integer(card, 1, 'seid')
         psid = integer_or_blank(card, 2, 'psid', 0)
         nodes = []

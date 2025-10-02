@@ -262,7 +262,7 @@ class PBUSH(BushingProperty):
         assert isinstance(self.GEi, list), 'PBUSH: pid=%i type(GEi)=%s GEi=%s' % (self.pid, type(self.GEi), self.GEi)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBUSH card from ``BDF.add_card(...)``
 
@@ -642,7 +642,7 @@ class PBUSH1D(BushingProperty):
             self.vars.sort()
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBUSH1D card from ``BDF.add_card(...)``
 
@@ -1046,7 +1046,7 @@ class PBUSHT(BushingProperty):
         self.kn_tables = kn_tables
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBUSHT card from ``BDF.add_card(...)``
 

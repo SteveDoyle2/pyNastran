@@ -633,7 +633,7 @@ def _write_qvect(load_type, loads, nloads: int,
             e_flags.append(value)
 
         data0 = [load.sid, load.q0, load.t_source, load.ce,
-                 ] + e_flags + [load.control_id]
+                 ] + e_flags + [load.control_node]
         assert None not in data0, data0
         for eid in load.eids:
             data = data0 + [eid]

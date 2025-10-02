@@ -272,7 +272,6 @@ class AddMethods:
         """adds a GRID card"""
         key = node.nid
         model = self.model
-
         assert key > 0, 'nid=%s node=%s' % (key, node)
         add_object_to_dict_no_dupes(model, key, 'node', node, model.nodes,
                                     model._duplicate_nodes, allow_overwrites)

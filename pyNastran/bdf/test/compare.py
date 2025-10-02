@@ -5,7 +5,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.bdf_interface.compare_card_content import compare_card_content
 from pyNastran.bdf.mesh_utils.mass_properties import (
-    mass_properties, mass_properties_nsm)  #, mass_properties_breakdown
+    mass_properties, mass_properties_nsm)  # mass_properties_breakdown
 
 
 def compare(fem1: BDF,
@@ -98,17 +98,18 @@ def compute_ints(cards1: dict[str, int],
         factor1 = divide(value1, value2)
         factor2 = divide(value2, value1)
         factor_msg = ''
-        if not quiet or not star or factor1 != factor2:
+        if not star or factor1 != factor2:
             if factor1 != factor2:
                 factor_msg = 'diff=%s factor1=%g factor2=%g' % (
                     diff, factor1, factor2)
             msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (
                 star, key, value1, value2) + factor_msg
-        if msg:
+        if not quiet and msg:
             msg = msg.rstrip()
             print(msg)
     #return list_keys1 + list_keys2
     return diff_keys1 + diff_keys2
+
 
 def get_element_stats(fem1: BDF,
                       unused_fem2: BDF,
@@ -123,14 +124,15 @@ def get_element_stats(fem1: BDF,
                                     % (type(all_loads)))
             except Exception:
                 raise
-                #print("load statistics not available - load.type=%s "
-                      #"load.sid=%s" % (load.type, load.sid))
+                # print("load statistics not available - load.type=%s "
+                #       "load.sid=%s" % (load.type, load.sid))
 
     fem1._verify_bdf()
 
     if fem1.elements:
         fem1.get_elements_nodes_by_property_type()
     check_mass(fem1, run_mass=run_mass, quiet=quiet)
+
 
 def check_mass(fem1: BDF, run_mass: bool=True, quiet: bool=False):
     if not run_mass:
@@ -225,6 +227,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
             print("*stats - dmik.type=%s name=%s  matrix=\n%s"
                   % (dmik.type, dmik.name, str(dmik)))
             raise
+
 
 def divide(value1: int, value2: int) -> float:
     """

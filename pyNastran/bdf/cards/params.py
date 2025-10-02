@@ -1091,7 +1091,7 @@ class PARAM_MYSTRAN(BaseCard):
         self.values = values
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PARAM card from ``BDF.add_card(...)``
 

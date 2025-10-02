@@ -39,7 +39,7 @@ class PSET(BaseCard):
         return PSET(sid, poly1, poly2, poly3, cid, typei, idi, comment='')
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         sid = integer(card, 1, 'sid')
         poly1 = integer(card, 2, 'poly1')
         poly2 = integer_or_blank(card, 3, 'poly2', poly1)
@@ -89,7 +89,7 @@ class PVAL(BaseCard):
         return PVAL(idi, poly1, poly2, poly3, cid, typei, typeids)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         idi = integer(card, 1, 'idi')
         poly1 = integer(card, 2, 'nid1')
         poly2 = integer_or_blank(card, 3, 'poly2', poly1)
@@ -149,7 +149,7 @@ class FEEDGE(BaseCard):
         return FEEDGE(edge_id, nids, cid, geom_ids, geomin='POINT', comment='')
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         edge_id = integer(card, 1, 'edge_id')
         nid1 = integer(card, 2, 'nid1')
         nid2 = integer(card, 3, 'nid2')
@@ -195,7 +195,7 @@ class FEFACE(BaseCard):
         return FEFACE(face_id, nids, cid, surf_id, comment='')
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         face_id = integer(card, 1, 'face_id')
         nid1 = integer(card, 2, 'nid1')
         nid2 = integer(card, 3, 'nid2')
