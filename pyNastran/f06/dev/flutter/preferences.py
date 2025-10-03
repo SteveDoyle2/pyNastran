@@ -113,7 +113,6 @@ class FlutterPreferencesDialog(PyDialog):
         self.freq_ndigits_spinner.setMinimum(0)
         self.freq_ndigits_spinner.setMaximum(4)
         self.freq_ndigits_spinner.setValue(freq_ndigits)
-        self.freq_ndigits_spinner.setEnabled(False)
 
         self.export_png_checkbox = QCheckBox('Export PNG')
         self.export_csv_checkbox = QCheckBox('Export CSV')

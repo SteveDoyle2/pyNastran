@@ -1775,6 +1775,7 @@ class FlutterGui(LoggableGui):
             self._units_out = self.units_out
 
         response.noline = noline
+        response.freq_ndigits = self.freq_ndigits
         response.set_symbol_settings(
             nopoints, self.show_mode_number, self.point_spacing)
         # log.info(f'self.plot_font_size = {self.plot_font_size}')

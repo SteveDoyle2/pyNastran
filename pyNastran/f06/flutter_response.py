@@ -6,10 +6,10 @@ TODO:
 """
 from __future__ import annotations
 
-import io
 import os
 import warnings
 from itertools import count
+from pathlib import PurePath
 from typing import Iterable, TextIO, Optional, Any, TYPE_CHECKING
 
 import numpy as np
@@ -334,6 +334,7 @@ class FlutterResponse:
 
         assert eigr_eigi_velocity.ndim == 2, eigr_eigi_velocity
         assert eigr_eigi_velocity.shape[1] == 3, eigr_eigi_velocity
+        self.freq_ndigits = 1
         self.markevery = 0
         self.eigenvector = eigenvector
         self.eigr_eigi_velocity = eigr_eigi_velocity
@@ -1157,7 +1158,7 @@ class FlutterResponse:
             # print(f'freq={freq}')
             iplot = np.where(freq != np.nan)
             # iplot = np.where(freq > 0.0)
-            label = _get_mode_freq_label(mode, freq[0])
+            label = _get_mode_freq_label(mode, freq[0], freq_ndigits=self.freq_ndigits)
             # print(f'iplot={iplot}')
             assert len(xs[iplot]) > 0
             line = axes.plot(xs[iplot], ys[iplot],
@@ -1293,7 +1294,7 @@ class FlutterResponse:
             # iplot = np.where(freq > 0.0)
 
             # plot the line
-            label = _get_mode_freq_label(mode, freq[0])
+            label = _get_mode_freq_label(mode, freq[0], freq_ndigits=self.freq_ndigits)
             legend_element = Line2D([0], [0], color=color2,
                                     marker=symbol2, label=label, linestyle=linestyle2)
             if self.nopoints:
@@ -1820,7 +1821,7 @@ class FlutterResponse:
             if filter_freq and freq_calc.max() < ylim_freq[0] and damping_calc.max() < 0.0:
                 # if we're entirely below than the min, skip line
                 continue
-            label = _get_mode_freq_label(mode, freq[0])
+            label = _get_mode_freq_label(mode, freq[0], freq_ndigits=self.freq_ndigits)
             # print(mode, color, symbol, linestyle, dfreq, freq)
 
             # _plot_axes(damp_axes,
@@ -1891,7 +1892,6 @@ class FlutterResponse:
         damp_axes.set_title(title)  # , fontsize=self.font_size)
         # plt.suptitle(title)
 
-        nmodes = min(1, nmodes)
         ncol = _update_ncol(nmodes, ncol)
         # print(f'legend_elements_freq = {legend_elements_freq}')
         # print(f'legend_elements_damp = {legend_elements_damp}')
@@ -2982,19 +2982,24 @@ def get_flutter_units(units: Optional[str | dict[str, str]]) -> dict[str, str]:
     return units_dict
 
 
-def _apply_subcase_to_filename(filename: str, subcase: int) -> str:
+def _apply_subcase_to_filename(filename: PathLike, subcase: int) -> str:
     """helper for filename management"""
+    if isinstance(filename, PurePath):
+        filename = str(filename)
+
     filename_out = filename
     if '%' in filename:
         filename_out = filename % subcase
     return filename_out
 
 
-def _update_ncol(nmodes: int, ncol: int=0) -> int:
+def _update_ncol(nmodes: int, ncol: int=0,
+                 nmodes_per_column: int=40) -> int:
     """Updates ncol to be a valid number"""
     if ncol > 0:
         return ncol
-    nmodes_per_column = 40
+
+    nmodes = max(1, nmodes)
     ncol = nmodes // nmodes_per_column
     if nmodes % nmodes_per_column > 0:
         ncol += 1
@@ -3029,13 +3034,16 @@ def _symbols_colors_from_nlines(colors: list[str], symbols: list[str],
     return symbols, colors
 
 
-def _get_mode_freq_label(mode: int, freq: float) -> str:
-    # write tiny numbers
+def _get_mode_freq_label(mode: int, freq: float,
+                         freq_ndigits: int=1) -> str:
     if abs(freq) > 1.0:
         # don't write big numbers in scientific
-        freq_num = f'{freq:.1f}'
+        freq_ndigitsi = max(1, freq_ndigits)
+        freq_num = f'{freq:.{freq_ndigitsi}f}'
     else:
-        freq_num = f'{freq:.3g}'
+        # write tiny numbers
+        freq_ndigitsi = max(3, freq_ndigits)
+        freq_num = f'{freq:.{freq_ndigitsi}g}'
         # strip silly scientific notation
         freq_num = freq_num.replace('-0', '-').replace('-0', '-').replace('+0', '+')
     label = f'Mode {mode:d}; {freq_num} Hz'
