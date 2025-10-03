@@ -113,7 +113,7 @@ def remove_unused(bdf_filename: PathLike,
 
         'TABRNDG', 'DTI', 'TABLEH1',
         'GROUP',
-    } + unreferenced_properties
+    } | unreferenced_properties
 
     # this haven't been referenced yet
     not_implemented_types = {
