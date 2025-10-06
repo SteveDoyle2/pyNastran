@@ -799,8 +799,8 @@ class TestShells(unittest.TestCase):
 
         plsolid.raw_fields()
         plsolid.write_card(size=8)
-        #plsolid.write_card(size=16)
-        #plsolid.write_card(size=16, is_double=True)
+        # plsolid.write_card(size=16)
+        # plsolid.write_card(size=16, is_double=True)
 
         model._verify_bdf(xref=False)
 
@@ -819,6 +819,28 @@ class TestShells(unittest.TestCase):
         #pcomp.write_card(size=16)
         #pcomp.write_card(size=16, is_double=True)
         save_load_deck(model, run_convert=False)
+
+    def test_plsolid(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        mid = 1
+        E = 30.e7
+        G = None
+        nu = 0.3
+        # model.add_mat1(mid, E, G, nu, rho=0.1)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 0., 1.])
+        eid = 1
+        pid = 1
+        mid = 1
+        nodes = [1, 2, 3, 4]
+        model.add_ctetra(eid, pid, nodes)
+        plsolid = model.add_plsolid(pid, mid, stress_strain='GRID', ge=0.,
+                                    comment='plsolid')
+        mathp = model.add_mathp(mid)
+        save_load_deck(model, run_mass_properties=False)
 
     def test_ctriar_cquadr(self):
         """tests a CTRIAR/PSHELL/MAT8"""

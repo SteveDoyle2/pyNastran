@@ -1187,16 +1187,18 @@ EDOM_MAP = {
     'DVPREL1': write_dvprel1,
     'DVMREL1': write_dvmrel1,
     'DVCREL1': write_dvcrel1,
-    'DVPREL2': write_dvprel2, 'DVMREL2': write_dvmrel2,
+
     'DVCREL2': write_dvcrel2,
+    'DVPREL2': write_dvprel2,
+    'DVMREL2': write_dvmrel2,
 
     'DESVAR': write_desvar,
-    #'DOPTPRM': _write_doptprm,
+    # 'DOPTPRM': _write_doptprm,
     'DTABLE': write_dtable,
     'DCONSTR': write_dconstr,
-    #'DCONADD': _write_dconadd,
+    # 'DCONADD': _write_dconadd,
 
-    #'DLINK': _write_dlink,
+    # 'DLINK': write_dlink,
     'DVGRID': write_dvgrid,
     'DSCREEN': write_dscreen,
     'DRESP1': write_dresp1,
