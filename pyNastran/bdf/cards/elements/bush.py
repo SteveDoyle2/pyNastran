@@ -255,6 +255,7 @@ class CBUSH(BushElement):
             if element.si[0] is None:
                 si.append(nan)
             else:
+                assert None not in element.si, element.get_stats()
                 si.append(element.si)
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('eid', data=eids)
@@ -269,7 +270,7 @@ class CBUSH(BushElement):
 
         h5_file.create_dataset('s', data=s)
         h5_file.create_dataset('ocid', data=ocid)
-        #print('si =', si)
+        print('si =', si)
         h5_file.create_dataset('si', data=si)
 
     @classmethod
@@ -358,7 +359,7 @@ class CBUSH(BushElement):
         dx = np.linalg.norm(p2 - p1)
         return dx
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -640,7 +641,7 @@ class CBUSH1D(BushElement):
         self.cid_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -775,7 +776,7 @@ class CBUSH2D(BushElement):
     #     raise NotImplementedError(data)
     #     return CBUSH2D(eid, pid, [ga, gb], cid, plane, sptid, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()

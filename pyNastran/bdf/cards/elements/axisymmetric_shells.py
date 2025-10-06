@@ -179,7 +179,7 @@ class CTRAX3(AxisymmetricTri):
         assert len(card) <= 7, f'len(CTRAX3 card) = {len(card):d}\ncard={card}'
         return CTRAX3(eid, pid, nids, theta=theta, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -360,7 +360,7 @@ class CTRAX6(AxisymmetricTri):
         assert len(card) <= 10, f'len(CTRAX6 card) = {len(card):d}\ncard={card}'
         return CTRAX6(eid, pid, nids, theta=theta, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -549,7 +549,7 @@ class CTRIAX(AxisymmetricTri):
         assert len(card) <= 10, f'len(CTRIAX card) = {len(card):d}\ncard={card}'
         return CTRIAX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -780,7 +780,7 @@ class CTRIAX6(TriShell):
         self.nodes_ref: Optional[list[Any]] = None
         self.mid_ref: Optional[Any] = None
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         nids = self.node_ids
         unused_edges = self.get_edge_ids()
@@ -1100,7 +1100,7 @@ class CQUADX(AxisymmetricQuad):
             return self.nodes
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -1250,7 +1250,7 @@ class CQUADX4(AxisymmetricQuad):
     def node_ids(self):
         return self._node_ids(allow_empty_nodes=True)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -1404,7 +1404,7 @@ class CQUADX8(AxisymmetricQuad):
     def node_ids(self):
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 

@@ -522,20 +522,9 @@ class VtkWindow(QMainWindow):
         asdf
 
     def fill_table_tree(self, model: BDF) -> None:
-        for card in model.element_cards:
-            if card.n == 0:
-                continue
-            if not len(card.ifile) == card.n:
-                model.log.warning(f'{card.type} ifile not created')
-        self.ifile_name_dict = get_ifile_name_dict(
-            self.analysis.model)
-        #fill_table_tree(self.table_tree, self.ifile_name_dict)
-
-        #tree = self.tree
-        log = model.log
-        etypes, element_types, etype_to_n = get_element_table(model)
-        pids, properties, pid_to_type_name = get_property_table(model)
-        mids, materials, mid_to_type_name = get_material_table(model)
+        out = get_table_trees(model, self.analysis.model)
+        ifile_name_dict, pid_to_type_name, mid_to_type_name = out
+        self.ifile_name_dict = ifile_name_dict
         self.pid_to_type_name = pid_to_type_name
         self.mid_to_type_name = mid_to_type_name
 
@@ -1338,3 +1327,20 @@ def _qitem_text_to_sline(text: str) -> tuple[str, int, str, str]:
         idi = int(idi_str)
     type = type.strip()
     return text, idi, type, comment
+
+def get_table_trees(model: BDF, analysis_model: BDF):
+    for card in model.element_cards:
+        if card.n == 0:
+            continue
+        if not len(card.ifile) == card.n:
+            model.log.warning(f'{card.type} ifile not created')
+    ifile_name_dict = get_ifile_name_dict(
+        analysis_model)
+    #fill_table_tree(self.table_tree, self.ifile_name_dict)
+
+    #tree = self.tree
+    log = model.log
+    etypes, element_types, etype_to_n = get_element_table(model)
+    pids, properties, pid_to_type_name = get_property_table(model)
+    mids, materials, mid_to_type_name = get_material_table(model)
+    return ifile_name_dict, pid_to_type_name, mid_to_type_name

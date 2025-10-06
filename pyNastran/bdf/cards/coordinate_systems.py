@@ -1488,7 +1488,7 @@ class MATCID(BaseCard):
         return list_fields
 
     # Not working
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -2127,7 +2127,7 @@ class Cord2x(CoordBase):
             self.setup()
             #self.setup_global_cord2x()
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -2401,7 +2401,7 @@ class Cord1x(CoordBase):
         model.coords[self.cid] = coord
         return coord
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 

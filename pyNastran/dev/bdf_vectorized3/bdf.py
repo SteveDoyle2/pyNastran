@@ -178,8 +178,8 @@ from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, UnsupportedCard, DisabledCardError,
                                   SuperelementFlagError, ReplicationError)
 from pyNastran.bdf.bdf_interface.pybdf import (
-    BDFInputPy, _clean_comment, _clean_comment_bulk,
-    add_superelements_from_deck_lines)
+    BDFInputPy, _clean_comment, _clean_comment_bulk, _check_for_spaces,
+    add_superelements_from_deck_lines,)
 
 #from .bdf_interface.add_card import CARD_MAP
 if TYPE_CHECKING:  # pragma: no cover
@@ -540,7 +540,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         #AddCards.__init__(self)
         #WriteMesh.__init__(self)
         #BDFAttributes.__init__(self)
-        assert debug in [True, False, None], f'debug={debug!r}'
+        assert isinstance(debug, str) or debug in [True, False, None], f'debug={debug!r}'
         self.echo = False
         self.read_includes = True
         self._remove_disabled_cards = False
@@ -4747,7 +4747,7 @@ def _echo_card(card, card_obj):
         else:
             print(print_card_16(card_obj).rstrip())
 
-def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=True, punch: bool=False,
+def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True, xref: bool=True, punch: bool=False,
              save_file_structure: bool=False,
              skip_cards: Optional[list[str]]=None,
              read_cards: Optional[list[str]]=None,

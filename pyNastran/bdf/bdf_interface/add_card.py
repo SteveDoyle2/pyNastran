@@ -764,9 +764,9 @@ class AddCoords:
         self._add_methods = add_methods
 
     def add_cord2r(self, cid: int,
-                   origin: Optional[list[float] | NDArray3float],
-                   zaxis: Optional[list[float] | NDArray3float],
-                   xzplane: Optional[list[float] | NDArray3float],
+                   origin: list[float] | NDArray3float,
+                   zaxis: list[float] | NDArray3float,
+                   xzplane: list[float] | NDArray3float,
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2R:
         """
         Creates the CORD2R card, which defines a rectangular coordinate
@@ -794,9 +794,9 @@ class AddCoords:
         return coord
 
     def add_cord2c(self, cid: int,
-                   origin: Optional[list[float] | NDArray3float],
-                   zaxis: Optional[list[float] | NDArray3float],
-                   xzplane: Optional[list[float] | NDArray3float],
+                   origin: list[float] | NDArray3float,
+                   zaxis: list[float] | NDArray3float,
+                   xzplane: list[float] | NDArray3float,
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2C:
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
@@ -824,9 +824,9 @@ class AddCoords:
         return coord
 
     def add_cord2s(self, cid: int,
-                   origin: Optional[list[float] | NDArray3float],
-                   zaxis: Optional[list[float] | NDArray3float],
-                   xzplane: Optional[list[float] | NDArray3float],
+                   origin: list[float] | NDArray3float,
+                   zaxis: list[float] | NDArray3float,
+                   xzplane: list[float] | NDArray3float,
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2S:
         """
         Creates the CORD2C card, which defines a spherical coordinate
