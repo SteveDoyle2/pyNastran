@@ -637,6 +637,10 @@ class FlutterGui(LoggableGui):
         self.point_spacing_spinner = []
         self.show_lines_checkbox = []
 
+        self.include_rigid_body_modes_checkbox = []
+        self.number_rigid_body_modes_label = []
+        self.number_rigid_body_modes_spinner = []
+
         # self.index_lim_label = []
         # self.index_lim_edit_min = []
         # self.index_lim_edit_max = []
@@ -792,6 +796,17 @@ class FlutterGui(LoggableGui):
         self.show_detailed_mode_info_checkbox.append(QCheckBox('Show Detailed Mode Info', self))
         self.point_spacing_label.append(QLabel('Point Spacing', self))
         self.point_spacing_spinner.append(QSpinBox(self))
+        self.include_rigid_body_modes_checkbox.append(QCheckBox('Include Rigid Body Modes', self))
+        self.number_rigid_body_modes_label.append(QLabel('nRigid Body Modes', self))
+        self.number_rigid_body_modes_spinner.append(QSpinBox(self))
+
+        for obj in self.include_rigid_body_modes_checkbox:
+            obj.setVisible(False)
+        for obj in self.number_rigid_body_modes_label:
+            obj.setVisible(False)
+        for obj in self.number_rigid_body_modes_spinner:
+            obj.setVisible(False)
+
         self.show_lines_checkbox.append(QCheckBox('Show Lines', self))
         self.show_points_checkbox[-1].setChecked(True)
         self.show_lines_checkbox[-1].setChecked(True)
@@ -1374,6 +1389,10 @@ class FlutterGui(LoggableGui):
         grid_check.addWidget(self.point_spacing_label[ifile], jrow, 0)
         grid_check.addWidget(self.point_spacing_spinner[ifile], jrow, 1)
         jrow += 1
+        grid_check.addWidget(self.include_rigid_body_modes_checkbox[ifile], jrow, 0)
+        grid_check.addWidget(self.number_rigid_body_modes_label[ifile], jrow, 1)
+        grid_check.addWidget(self.number_rigid_body_modes_spinner[ifile], jrow, 1)
+        jrow += 1
         grid_check.addWidget(self.show_lines_checkbox[ifile], jrow, 0)
         jrow += 1
 
@@ -1474,6 +1493,8 @@ class FlutterGui(LoggableGui):
         # self.modes_widget.currentRowChanged.connect(self.on_modes)
         self.ok_button.clicked.connect(self.on_ok)
         self.units_out_pulldown.currentIndexChanged.connect(self.on_units_out)
+        # for ifile, box in include_rigid_body_modes_checkbox.items():
+        # self.include_rigid_body_modes_checkbox[ifile].clicked.connect(self.on_rigid_body_modes)
 
         self.pop_vtk_gui_button.clicked.connect(self.on_open_new_window)
 
