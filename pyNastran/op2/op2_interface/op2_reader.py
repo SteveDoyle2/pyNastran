@@ -3875,8 +3875,8 @@ class OP2Reader:
         if self.binary_debug:
             self.binary_debug.write('-' * 60 + '\n')
 
-        if table_name == b'GEOM2':
-            self.show(100)
+        # if table_name == b'GEOM2':
+        #     self.show(100)
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
         if self.is_debug_file:
