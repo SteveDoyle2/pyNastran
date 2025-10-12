@@ -212,7 +212,7 @@ class CBUSH(BushElement):
         s = []
         ocid = []
         si = []
-        nan = np.full(3, np.nan)
+        nans = np.full(3, np.nan)
         for eid in eids:
             element = model.elements[eid]
             #comments.append(element.comment)
@@ -225,12 +225,12 @@ class CBUSH(BushElement):
                 #print(g0i, element.x)
                 if g0i is not None:
                     assert element.x[0] is None
-                    x.append(nan)
+                    x.append(nans)
                     g0.append(g0i)
                 else:
                     #assert element.x[0] is not None, element.get_stats()
                     if element.x[0] is None:
-                        x.append(nan)
+                        x.append(nans)
                     else:
                         x.append(element.x)
                     g0.append(-1)
@@ -239,11 +239,11 @@ class CBUSH(BushElement):
                 g0i = element.g0
                 if g0i is not None:
                     assert element.x[0] is None
-                    x.append(nan)
+                    x.append(nans)
                     g0.append(g0i)
                 else:
                     if element.x[0] is None:
-                        x.append(nan)
+                        x.append(nans)
                     else:
                         x.append(element.x)
                     #assert element.x[0] is None, element.get_stats()
@@ -253,7 +253,7 @@ class CBUSH(BushElement):
             s.append(element.s)
             ocid.append(element.ocid)
             if element.si[0] is None:
-                si.append(nan)
+                si.append(nans)
             else:
                 assert None not in element.si, element.get_stats()
                 si.append(element.si)
@@ -270,7 +270,6 @@ class CBUSH(BushElement):
 
         h5_file.create_dataset('s', data=s)
         h5_file.create_dataset('ocid', data=ocid)
-        print('si =', si)
         h5_file.create_dataset('si', data=si)
 
     @classmethod

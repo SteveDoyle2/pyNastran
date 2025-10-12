@@ -47,7 +47,7 @@ from pyNastran.gui.test.all_tests_no_gui import *
     #import pyNastran.gui.gui
 #import pyNastran.gui.gui
 
-
+import pyNastran.dev
 from pyNastran.dev.tools.test_pressure_map import TestPrssureMap
 try:
     from pyNastran.dev.solver.test_springs import *

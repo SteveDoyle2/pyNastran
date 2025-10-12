@@ -5,7 +5,7 @@ from struct import pack, Struct
 import numpy as np
 
 from .geom1_writer import write_geom_header, close_geom_table
-from .geom4_writer import _write_spcadd
+from .geom4_writer import write_spcadd
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
@@ -874,8 +874,8 @@ def write_nsmadd(card_type: str, cards: list, itable: int,
                  op2_file: BinaryIO, op2_ascii, model: BDF, endian: bytes=b'<',
                  nastran_format: str='nx', size: int=4) -> int:
     ncards = len(cards)
-    nbytes = _write_spcadd(card_type, cards, ncards, op2_file, op2_ascii,
-                           endian)
+    nbytes = write_spcadd(card_type, cards, ncards, op2_file, op2_ascii,
+                          endian)
     itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
     return itable
 
