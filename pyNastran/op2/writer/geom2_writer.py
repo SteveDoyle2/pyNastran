@@ -89,10 +89,6 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
         'CELAS3': ((801, 8, 75), b'4i', 4),
         'CELAS4': ((901, 9, 76), b'ifii', 4),
 
-        'CMASS1': ((1001, 10, 65), b'6i', 6),
-        'CMASS3': ((1201, 12, 67), b'4i', 4),
-        'CMASS4': ((1301, 13, 68), b'ifii', 4),
-
         'CVISC': ((3901, 39, 50), b'4i', 4),
         'CTRAX3': ((6111, 61, 996), b'5if', 6),
         'CQUADX4': ((6112, 61, 997), b'6if', 7),
@@ -109,8 +105,6 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
 
         'CPLSTN6': ((5801, 58, 982), b'2i 6i f 7i', 16),
         'CPLSTN8': ((7201, 72, 983), b'2i 8i f 5i', 16),
-
-        'RADBC': ((12801, 128, 417), b'ifii', 4),
     }
     allowed_etypes = list(geom2_key_mapper) + list(GEOM2_MAP)
     for name, eids in sorted(out.items()):
@@ -779,21 +773,6 @@ def write_card(name, eids, spack, model: OP2Geom, op2_file, op2_ascii, endian):
             op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
             op2_file.write(spack.pack(*data))
 
-    elif name == 'CMASS1':
-        for eid in sorted(eids):
-            elem = model.masses[eid]
-            pid = elem.pid
-            #(eid, pid, g1, g2, c1, c2)
-            gc = []
-            gc1, gc2 = elem.grid_component()
-            data = [eid, pid, gc1[0], gc2[0], gc1[1], gc2[1]]
-            #print(name, data)
-            op2_ascii.write('  eid=%s pid=%s gc=[%s, %s]\n' % (eid, pid, gc1, gc2))
-            op2_file.write(spack.pack(*data))
-    elif name == 'CMASS3':
-        write_cmass3(eids, spack, model, op2_file, op2_ascii, endian)
-    elif name == 'CMASS4':
-        write_cmass4(eids, spack, model, op2_file, op2_ascii, endian)
     elif name == 'SPOINT':
         write_spoint(eids, model, op2_file, op2_ascii, endian)
     #--------------------------------------
@@ -811,6 +790,27 @@ def write_spoint(nids, model: OP2Geom, op2_file, op2_ascii, endian):
     spack = Struct('%ii' % len(nids))
     op2_ascii.write('  spoints%s\n' % str(nids))
     op2_file.write(spack.pack(*nids))
+
+
+def write_cmass1(model: OP2Geom, name, eids, nelements, itable,
+                op2_file, op2_ascii, endian):
+    key = (1001, 10, 65)
+    nfields = 6
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
+    spack = Struct(endian + b'6i')
+
+    for eid in sorted(eids):
+        elem = model.masses[eid]
+        pid = elem.pid
+        #(eid, pid, g1, g2, c1, c2)
+        gc = []
+        gc1, gc2 = elem.grid_component()
+        data = [eid, pid, gc1[0], gc2[0], gc1[1], gc2[1]]
+        #print(name, data)
+        op2_ascii.write('  eid=%s pid=%s gc=[%s, %s]\n' % (eid, pid, gc1, gc2))
+        op2_file.write(spack.pack(*data))
+    itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
+    return itable
 
 
 def write_cmass2(model: OP2Geom, name, eids, nelements, itable,
@@ -832,7 +832,14 @@ def write_cmass2(model: OP2Geom, name, eids, nelements, itable,
     itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
     return itable
 
-def write_cmass3(eids, spack, model, op2_file, op2_ascii, endian):
+
+def write_cmass3(model: OP2Geom, name, eids, nelements, itable,
+                 op2_file, op2_ascii, endian):
+    key = (1201, 12, 67)
+    nfields = 4
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
+    spack = Struct(endian + b'4i')
+
     for eid in sorted(eids):
         elem = model.masses[eid]
         n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
@@ -842,18 +849,26 @@ def write_cmass3(eids, spack, model, op2_file, op2_ascii, endian):
         #print(name, data)
         op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, n1, n2))
         op2_file.write(spack.pack(*data))
+    itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
+    return itable
 
 
-def write_cmass4(eids, spack, model: OP2Geom, op2_file, op2_ascii, endian):
+def write_cmass4(model: OP2Geom, name, eids, nelements, itable,
+                op2_file, op2_ascii, endian):
+    key = (1301, 13, 68)
+    nfields = 4
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
+    spack = Struct(endian + b'ifii')
     for eid in sorted(eids):
         elem = model.masses[eid]
-    n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
-    # (eid, b, s1, s2) = out
-    data = [eid, elem.mass, n1, n2]
-    # print(name, data)
-    op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
-    op2_file.write(spack.pack(*data))
-
+        n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
+        # (eid, b, s1, s2) = out
+        data = [eid, elem.mass, n1, n2]
+        # print(name, data)
+        op2_ascii.write('  eid=%s nids=[%s, %s]\n' % (eid, n1, n2))
+        op2_file.write(spack.pack(*data))
+    itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
+    return itable
 
 
 def write_conm1(eids, spack, model: OP2Geom, op2_file, op2_ascii, endian):
@@ -1235,7 +1250,10 @@ def write_micpnt(model, name: str, eids: np.ndarray, nelements: int, itable: int
         name = name_bytes.decode('latin1').rstrip()
 
 GEOM2_MAP = {
+    'CMASS1': write_cmass1,
     'CMASS2': write_cmass2,
+    'CMASS3': write_cmass3,
+    'CMASS4': write_cmass4,
     'CBUSH': write_cbush,
     'CBAR': write_cbar,
     'CBEAM': write_cbeam,
