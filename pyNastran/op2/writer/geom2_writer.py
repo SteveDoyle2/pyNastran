@@ -923,7 +923,7 @@ def write_conrod(model: OP2Geom, name, eids, nelements, itable,
     key = (1601, 16, 47)
     nfields = 8
     nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
-    spack = Struct(endian + b'i4f')
+    spack = Struct(endian + b'4i4f')
     for eid in sorted(eids):
         elem = model.elements[eid]
         nids = elem.node_ids
