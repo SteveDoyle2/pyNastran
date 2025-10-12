@@ -25,6 +25,12 @@ except ModuleNotFoundError:  # pragma: no cover
     IS_H5PY = False
 
 
+try:
+    import matplotlib  # pylint: disable=unused-import
+    IS_MATPLOTLIB = True
+except ModuleNotFoundError:  # pragma: no cover
+    IS_MATPLOTLIB = False
+
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2  # FatalError, FortranMarkerError
@@ -738,7 +744,8 @@ class TestNX(Tester):
         assert campbell_data.is_sort2() is False
         assert campbell_data.is_real() is False
         assert campbell_data.is_complex() is True
-        campbell_data.plot()
+        if IS_MATPLOTLIB:
+            campbell_data.plot()
 
     def test_nx_normalized_mass_density_1(self):
         log = get_logger(level='warning')

@@ -1256,7 +1256,10 @@ class GEOM2:
         """
         op2 = self.op2
         ntotal = 56 * self.factor
-        nelements = (len(data) - n) // ntotal
+        ndata = len(data) - n
+        nelements = ndata // ntotal
+        assert ndata % ntotal == 0, (ndata, ntotal, nelements) 
+        assert nelements > 0, (ndata, ntotal, nelements)
         struct_obj1 = Struct(mapfmt(op2._endian + b'4i iii i ifi3f', self.size))
         struct_obj2 = Struct(mapfmt(op2._endian + b'4i fff i ifi3f', self.size))
         cbush = op2.cbush

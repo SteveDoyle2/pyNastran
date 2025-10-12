@@ -641,9 +641,10 @@ class OP2Common(Op2Codes, F06Writer):
         if not self.make_geom:
             return ndata
 
+        log = self.log
         max_geom_id = self.get_table_count()
         if max_geom_id > 1:
-            self.log.warning('superelement 2 not supported.  This may crash.')
+            log.warning('superelement 2 not supported.  This may crash.')
 
         n = 0
         if self.size == 4:
@@ -692,16 +693,21 @@ class OP2Common(Op2Codes, F06Writer):
                     #mapper.keys())
                 #raise NotImplementedError(msg)
 
+        if keys not in mapper:
+            log.warning(f'skipping {self.table_name} keys={str(keys)}')
+            return n
         try:
             name, func = mapper[keys]
         except KeyError:
-            #raise KeyError('table_name=%s keys=%s' % (self.table_name_str, str(keys)))
+            #raise KeyError(f'table_name={self.table_name_str} keys={str(keys)}')
             return n
+
+        #log.warning(f'keys={str(keys)}: {name} {self.table_name}')
         if self.is_debug_file:
             self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (
                 str(keys), name, self.table_name))
         if self.debug:
-            self.log.debug("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (
+            log.debug("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (
                 keys[0], keys[1], keys[2], name, self.table_name))
         self.card_name = name
         n = func(data, n)  # gets all the grid/mat cards
@@ -709,7 +715,7 @@ class OP2Common(Op2Codes, F06Writer):
         if n != ndata:  # pragma: no cover
             assert isinstance(n, int), f'mishandled geometry table for {name}; n must be an int; n={n}; type={type(n)}'
             msg = f'mishandled geometry table for {name}; n={n} len(data)={ndata}; should be equal'
-            self.log.error(msg)
+            log.error(msg)
             #raise RuntimeError(msg)
         del self.card_name
 

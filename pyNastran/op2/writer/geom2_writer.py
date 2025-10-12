@@ -54,6 +54,9 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
     if nplotels:
         out['PLOTEL'] = list(model.plotels.keys())
 
+    #if 'CBUSH' in out:
+        #del out['CBUSH']
+
     # elements with fixed lengths
     geom2_key_mapper = {
         # key, spack, nfields
@@ -87,7 +90,6 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
         'CELAS4': ((901, 9, 76), b'ifii', 4),
 
         'CMASS1': ((1001, 10, 65), b'6i', 6),
-        'CMASS2': ((1101, 11, 66), b'if4i', 6),
         'CMASS3': ((1201, 12, 67), b'4i', 4),
         'CMASS4': ((1301, 13, 68), b'ifii', 4),
 
@@ -130,10 +132,13 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
             #continue
 
         cards_written[name] = nelements
+        log.warning(f'GEOM2: {name}')
         if name in GEOM2_MAP:
             func = GEOM2_MAP[name]
+            assert name not in geom2_key_mapper, name
             itable = func(model, name, eids, nelements, itable,
                           op2_file, op2_ascii, endian)
+            assert isinstance(itable, int), itable
             continue
         #elif name == 'CFAST':
             #_write_cfast(model, name, eids, nelements, itable, op2_file, op2_ascii, endian,
@@ -143,10 +148,6 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
             key, spacki, nfields = geom2_key_mapper[name]
             spack = Struct(endian + spacki)
             #print(name, spacki)
-        elif name == 'CBUSH':
-            key = (2608, 26, 60)
-            spack = None
-            nfields = 14
         elif name == 'CBUSH1D':
             key = (5608, 56, 218)
             spack = Struct(endian + b'8i')
@@ -334,6 +335,7 @@ def write_cbar(model: OP2Geom, name, eids, nelements, itable, op2_file, op2_asci
     itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
     return itable
 
+
 def write_solid(model, name: str, eids: np.ndarray, nelements: int, itable: int,
                 op2_file: BinaryIO, op2_ascii, endian: bytes) -> int:
     """writes the solid elements"""
@@ -449,7 +451,12 @@ def write_plotel(eids, spack, model: OP2Geom, op2_file, op2_ascii, endian):
         op2_file.write(spack.pack(*data))
 
 
-def write_cbush(eids, model: OP2Geom, op2_file, op2_ascii, endian):
+def write_cbush(model: OP2Geom, name, eids, nelements, itable,
+                op2_file, op2_ascii, endian):
+    key = (2608, 26, 60)
+    nfields = 14
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
+
     spacki = Struct(endian + b'4i iii i ifi3f')
     spackf = Struct(endian + b'4i fff i ifi3f')
     for eid in sorted(eids):
@@ -493,6 +500,9 @@ def write_cbush(eids, model: OP2Geom, op2_file, op2_ascii, endian):
             op2_file.write(spacki.pack(*data))
         else:
             raise RuntimeError('invalid CBUSH')
+    itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
+    return itable
+
 
 def write_cbush1d(eids, spack, model: OP2Geom, op2_file, op2_ascii, endian):
     for eid in sorted(eids):
@@ -541,8 +551,8 @@ def write_cgap(eids, spack, model: OP2Geom, op2_file, op2_ascii, endian):
             op2_file.write(structi.pack(*data))
 
 def write_cfast(model: OP2Geom,
-                 name, eids, nelements, itable, op2_file, op2_ascii, endian,
-                 nastran_format='nx') -> int:
+                name, eids, nelements, itable, op2_file, op2_ascii, endian,
+                nastran_format='nx') -> int:
     # MSC 2005r2 -> 2016
     # CFAST(9801,98,506) - the marker for Record 34
     # gs     : 1
@@ -620,8 +630,6 @@ def write_card(name, eids, spack, model: OP2Geom, op2_file, op2_ascii, endian):
 
     elif name == 'PLOTEL':
         write_plotel(eids, spack, model, op2_file, op2_ascii, endian)
-    elif name == 'CBUSH':
-        write_cbush(eids, model, op2_file, op2_ascii, endian)
 
     elif name == 'CBUSH1D':
         write_cbush1d(eids, spack, model, op2_file, op2_ascii, endian)
@@ -782,8 +790,6 @@ def write_card(name, eids, spack, model: OP2Geom, op2_file, op2_ascii, endian):
             #print(name, data)
             op2_ascii.write('  eid=%s pid=%s gc=[%s, %s]\n' % (eid, pid, gc1, gc2))
             op2_file.write(spack.pack(*data))
-    elif name == 'CMASS2':
-        write_cmass2(eids, spack, model, op2_file, op2_ascii, endian)
     elif name == 'CMASS3':
         write_cmass3(eids, spack, model, op2_file, op2_ascii, endian)
     elif name == 'CMASS4':
@@ -807,16 +813,24 @@ def write_spoint(nids, model: OP2Geom, op2_file, op2_ascii, endian):
     op2_file.write(spack.pack(*nids))
 
 
-def write_cmass2(eids, spack, model, op2_file, op2_ascii, endian):
+def write_cmass2(model: OP2Geom, name, eids, nelements, itable,
+                op2_file, op2_ascii, endian):
+    key = (1101, 11, 66)
+    nfields = 6
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
+    spack = Struct(endian + b'if4i')
+
     for eid in sorted(eids):
         elem = model.masses[eid]
-    # (eid, mass, g1, g2, c1, c2) = out
-    gc1, gc2 = elem.grid_component()
-    data = [eid, elem.mass, gc1[0], gc2[0], gc1[1], gc2[1]]
-    assert None not in data, data
-    # print(name, data)
-    op2_ascii.write(f'  eid={eid} data={data}\n')
-    op2_file.write(spack.pack(*data))
+        # (eid, mass, g1, g2, c1, c2) = out
+        gc1, gc2 = elem.grid_component()
+        data = [eid, elem.mass, gc1[0], gc2[0], gc1[1], gc2[1]]
+        assert None not in data, data
+        # print(name, data)
+        op2_ascii.write(f'  eid={eid} data={data}\n')
+        op2_file.write(spack.pack(*data))
+    itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
+    return itable
 
 def write_cmass3(eids, spack, model, op2_file, op2_ascii, endian):
     for eid in sorted(eids):
@@ -1221,6 +1235,8 @@ def write_micpnt(model, name: str, eids: np.ndarray, nelements: int, itable: int
         name = name_bytes.decode('latin1').rstrip()
 
 GEOM2_MAP = {
+    'CMASS2': write_cmass2,
+    'CBUSH': write_cbush,
     'CBAR': write_cbar,
     'CBEAM': write_cbeam,
     'CTETRA': write_solid,

@@ -3697,6 +3697,8 @@ class OP2Reader:
             else:
                 self.generic_stop_table(data, ndata)
         op2.subtable_name = subtable_name.rstrip()
+        #if subtable_name == b'GEOM2':
+            #self.show(200)
         self._read_subtables()
 
     def _read_subtables(self) -> None:
@@ -3868,9 +3870,13 @@ class OP2Reader:
 
         """
         op2: OP2 = self.op2
+        table_name = op2.table_name
         IS_TESTING = op2.IS_TESTING
         if self.binary_debug:
             self.binary_debug.write('-' * 60 + '\n')
+
+        if table_name == b'GEOM2':
+            self.show(100)
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
         if self.is_debug_file:
@@ -3879,7 +3885,6 @@ class OP2Reader:
         oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR']  # 'OESCP'?
         factor = self.factor
         #print('record_len =', record_len)
-        table_name = op2.table_name
         if record_len == 584 * factor:  # table3 has a length of 584
             if table_name in oes_nl and hasattr(op2, 'num_wide') and op2.num_wide == 146:
                 data_code_old = deepcopy(op2.data_code)
