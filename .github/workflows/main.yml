@@ -90,18 +90,18 @@ jobs:
           #- {python-version: '3.11', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
           #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
-          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}  # DLL error
+          - {python-version: '3.11', mode: 'latest_pyside6_gui'}  # DLL error
 
           - {python-version: '3.12', mode: 'old'}               # redundant
           - {python-version: '3.12', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.12', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.12', mode: 'latest_pyside2_gui'}
-          - {python-version: '3.11', mode: 'latest_pyside6_gui'}
+          - {python-version: '3.12', mode: 'latest_pyside6_gui'}
 
           - {python-version: '3.13', mode: 'old'}               # redundant
           - {python-version: '3.13', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.13', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.13', mode: 'latest_pyside2_gui'}
+          #- {python-version: '3.13', mode: 'latest_pyside2_gui'}
 
           - {python-version: '3.14', mode: 'old'}               # redundant
           - {python-version: '3.14', mode: 'latest_pyqt5_gui'}
