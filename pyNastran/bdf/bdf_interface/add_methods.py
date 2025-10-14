@@ -471,6 +471,7 @@ class AddMethods:
             # already handled
             #model._type_to_id_map[elem.type].append(key)
         else:
+            model.log.error(f'duplicate element {key}:\n{model.elements[key]}with:\n{elem}')
             model._duplicate_elements.append(elem)
             if model._stop_on_duplicate_error:
                 model.pop_parse_errors()
@@ -1862,12 +1863,14 @@ def add_object_to_dict(model: BDF, key: int,
         # already handled
         #model._type_to_id_map[prop.type].append(key)
     else:
+        model.log.error(f'duplicate {obj_name} {key}:\n{obj_dict[key]}with:\n{obj}')
         # duplicate_list.append(obj)
         # if model._stop_on_duplicate_error:
         #     model.pop_parse_errors()
         raise RuntimeError(f'id={key!r}\n'
                            f'old_{obj_name}=\n{str(obj_dict[key])}'
                            f'new_{obj_name}=\n{str(obj)}')
+
 
 def add_object_to_dict_no_dupes(model: BDF, key: int, obj_name: str,
                                 obj: BaseCard, obj_dict: dict[int, BaseCard],
@@ -1916,6 +1919,7 @@ def add_object_to_dict_no_dupes(model: BDF, key: int, obj_name: str,
         # already handled
         #model._type_to_id_map[prop.type].append(key)
     else:
+        model.log.error(f'duplicate {obj_name} {key}:\n{obj_dict[key]}with:\n{obj}')
         duplicate_list.append(obj)
         if model._stop_on_duplicate_error:
             model.pop_parse_errors()

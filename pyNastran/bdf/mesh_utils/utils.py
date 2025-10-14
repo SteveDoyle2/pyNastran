@@ -1163,7 +1163,7 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
         dirname = os.path.dirname(abs_name)
         basename = os.path.basename(abs_name)
         out_bdf_filename = os.path.join(dirname, f'clean_{basename}')
-        dict_filename = os.path.join(dirname, f'clean_summary+{basename}')
+        dict_filename = os.path.join(dirname, f'clean_summary_{basename}')
     else:
         dirname = os.path.dirname(out_bdf_filename)
         dict_filename = os.path.join(dirname, f'clean_summary.out')
@@ -1182,13 +1182,17 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
         remove_optimization=True,
         reset_type_to_id_map=False)
 
+    if os.path.exists(dict_filename):
+        os.remove(dict_filename)
+
     if out_dict:
         with open(dict_filename, 'w') as dict_file:
+            dict_file.write('removed:')
             for key, myarray in out_dict.items():
                 assert isinstance(key, str), key
                 assert isinstance(myarray, np.ndarray), (key, myarray)
                 ids = myarray.tolist()
-                dict_file.write(f'key = {ids}\n')
+                dict_file.write(f'  {key} = {ids}\n')
 
     model.write_bdf(out_bdf_filename,
                     nodes_size=None,
