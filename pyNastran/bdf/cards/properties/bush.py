@@ -329,10 +329,34 @@ class PBUSH(BushingProperty):
         return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, mass,
                      comment=comment)
 
+    @property
+    def k(self) -> list[float]:
+        return self.Ki
+
+    @k.setter
+    def k(self, k: list[float]):
+        return self.Ki
+
+    @property
+    def b(self) -> list[float]:
+        return self.Bi
+
+    @b.setter
+    def b(self, b: list[float]):
+        return self.Bi
+
+    @property
+    def ge(self) -> list[float]:
+        return self.GEi
+
+    @ge.setter
+    def ge(self, ge: list[float]):
+        return self.GEi
+
     @classmethod
-    def _read_var(cls, card, var_prefix, istart, iend):
-        Ki = fields(double_or_blank, card, var_prefix, istart, iend)
-        return Ki
+    def _read_var(cls, card: BDFCard, var_prefix: str, istart: int, iend: int):
+        ki = fields(double_or_blank, card, var_prefix, istart, iend)
+        return ki
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1351,8 +1375,8 @@ class PBUSH_OPTISTRUCT(BushingProperty):
     def _read_var(cls, card: BDFCard, var_prefix: str,
                   istart: int, iend: int) -> list[float]:
         print(card[istart:iend+1])
-        Ki = fields(double_string_or_blank, card, var_prefix, istart, iend)
-        return Ki
+        ki = fields(double_string_or_blank, card, var_prefix, istart, iend)
+        return ki
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

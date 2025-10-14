@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from pyNastran.gui.gui_objects.settings import (
         OtherSettings)
 
+
 class FluentIO:
     def __init__(self, gui: MainWindow):
         self.gui = gui
@@ -96,7 +97,8 @@ class FluentIO:
          tri_normal, quad_normal) = out
         normal = np.vstack([quad_normal, tri_normal])
         #centroid = np.vstack([quad_centroid, tri_centroid])
-        #area = np.hstack([quad_area, tri_area])
+        area = np.hstack([quad_area, tri_area])
+
         nnodes_array = np.hstack([quad_area*0+4, tri_area*0+3])
         del quad_centroid, tri_centroid, quad_area, tri_area
 
@@ -117,11 +119,25 @@ class FluentIO:
         nodes = gui.scale_length(nodes)
         units_pressure_in = other_settings.units_model_in[-1]
         units_pressure_out = other_settings.units_pressure
+
         if units_pressure_in != '' and 'Pressure' in titles:
             ipressure = titles.index('Pressure')
             results[:, ipressure] = convert_pressure(
                 results[:, ipressure],
                 units_pressure_in, units_pressure_out)
+
+        if 'Pressure Coefficient' in titles:
+            ipressure = -1  # titles.index('Pressure Coefficient')
+            Cp = results[:, ipressure]
+            S = 1.0  # 130 m^2
+            CfS = (Cp*area/S)[:,np.newaxis] * normal
+            gui.log_info(f'Sref = {S}')
+            gui.log_info(f'Cxyz_total = {CfS.sum(axis=0)}')
+            for regioni in np.unique(region):
+                iregion = np.where(region == regioni)[0]
+                Cxyz = CfS[iregion, :].sum(axis=0)
+                assert len(Cxyz) == 3, Cxyz
+                gui.log_info(f'Cxyz[{regioni}] = {Cxyz}')
 
         nnodes = len(nodes)
         gui.nnodes = nnodes

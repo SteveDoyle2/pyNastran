@@ -26,7 +26,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     for unused_key, card in sorted(model.elements.items()):
         try:
             card._verify(xref)
-        except Exception:
+        except Exception:  # pragma: no cover
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print(repr(traceback.format_exception(exc_type, exc_value,
                                                   exc_traceback)))
@@ -43,6 +43,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     _verify_dict(model.properties, xref)
     _verify_dict(model.properties_mass, xref)
     _verify_dict(model.materials, xref)
+    _verify_dict(model.plotels, xref)
 
     _verify_dict(model.dequations, xref)
     _verify_dict(model.desvars, xref)

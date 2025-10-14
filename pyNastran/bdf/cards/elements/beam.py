@@ -857,7 +857,7 @@ class CBEAM(LineElement):
         self.g0_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         unused_pid = self.Pid()
         unused_edges = self.get_edge_ids()

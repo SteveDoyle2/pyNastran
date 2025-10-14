@@ -266,10 +266,12 @@ class TestAero(unittest.TestCase):
 
     def test_aefact_1(self):
         """checks the AEFACT card"""
-        data = ['AEFACT', 97, .3, 0.7, 1.0]
         log = SimpleLogger(level='warning')
         #log = SimpleLogger(level='debug')
         model = BDF(log=log)
+        model.add_aero(1.0, 1.0, 1.0)
+
+        data = ['AEFACT', 97, 0.3, 0.7, 1.0]
         model.add_card(data, data[0], COMMENT_BAD, is_list=True)
 
         data = ['AEFACT', 97, .3, 0.7, 1.0]

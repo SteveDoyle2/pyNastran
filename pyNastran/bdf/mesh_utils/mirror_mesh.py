@@ -867,7 +867,7 @@ def _mirror_loads(model: BDF, mirror_model: BDF,
                 loads_new.append(load)
             elif load_type == 'QBDY3':
                 eids = [eid + eid_offset for eid in load.eids]
-                load = QBDY3(load.sid, load.q0, load.cntrlnd + nid_offset, eids)
+                load = QBDY3(load.sid, load.q0, load.control_node + nid_offset, eids)
                 loads_new.append(load)
 
             elif load_type == 'TEMP':

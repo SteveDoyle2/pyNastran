@@ -645,9 +645,9 @@ class QBDY3(ThermalLoad):
     def _init_from_empty(cls):
         sid = 1
         q0 = 1.0
-        cntrlnd = 10
+        control_node = 10
         eids = [1, 2]
-        return QBDY3(sid, q0, cntrlnd, eids, comment='')
+        return QBDY3(sid, q0, control_node, eids, comment='')
 
     def __init__(self, sid, q0, control_node, eids, comment=''):
         """
@@ -700,7 +700,7 @@ class QBDY3(ThermalLoad):
         """
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
-        control_node = integer_or_blank(card, 3, 'cntrlnd', default=0)
+        control_node = integer_or_blank(card, 3, 'control_node', default=0)
 
         nfields = card.nfields
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
@@ -772,10 +772,10 @@ class QBDY3(ThermalLoad):
         return list_fields
 
     def repr_fields(self):
-        cntrlnd = set_blank_if_default(self.control_node, 0)
+        control_node = set_blank_if_default(self.control_node, 0)
         eids = self.element_ids
         eids.sort()
-        list_fields = ['QBDY3', self.sid, self.q0, cntrlnd] + collapse_thru_by(eids)
+        list_fields = ['QBDY3', self.sid, self.q0, control_node] + collapse_thru_by(eids)
         return list_fields
 
     def get_loads(self):

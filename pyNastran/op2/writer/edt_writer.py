@@ -44,6 +44,8 @@ def write_edt(op2_file: BinaryIO, op2_ascii, model: BDF | OP2Geom,
         out[paero.type].append(pid)
     for spline_id, spline in sorted(model.splines.items()):
         out[spline.type].append(spline_id)
+    for aefact_id, aefact in sorted(model.aefacts.items()):
+        out[aefact.type].append(aefact_id)
     for aelist_id, aelist in sorted(model.aelists.items()):
         out[aelist.type].append(aelist_id)
     for aesurf_id, aesurf in sorted(model.aesurf.items()):
@@ -1706,7 +1708,8 @@ def write_aefact(model: BDF | OP2Geom, name: str,
     nvalues = 0
     for aefact_id in aefact_ids:
         aefacti = model.aefacts[aefact_id]
-        nvalues += 2 + len(aefacti.factors)
+        # print(aefacti.get_stats())
+        nvalues += 2 + len(aefacti.fractions)
 
     # 2* = sid and the -1 flag
     nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
@@ -1714,13 +1717,11 @@ def write_aefact(model: BDF | OP2Geom, name: str,
     all_data = []
     for aefact_id in aefact_ids:
         aefacti = model.aefacts[aefact_id]
-        nfactors = len(aefacti.factors)
+        nfractions = len(aefacti.fractions)
 
-        fmt = endian + b'i %df i' % nfactors
-        #print(fmt)
+        fmt = endian + b'i %df i' % nfractions
         structi = Struct(fmt)
-
-        data = [aefacti.sid,] + aefacti.factors + [-1]
+        data = [aefacti.sid] + list(aefacti.fractions) + [-1]
 
         assert None not in data, data
         op2_ascii.write(f'  AEFACT data={data}\n')

@@ -164,7 +164,7 @@ class CELAS1(SpringElement):
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         node_ids = self.node_ids
         c1 = self.c1
@@ -415,7 +415,7 @@ class CELAS2(SpringElement):
         self.nodes = self.node_ids
         self.nodes_ref = None
 
-    def _verify(self, xref=True):
+    def _verify(self, xref: bool=True) -> None:
         eid = self.eid
         k = self.K()
         node_ids = self.node_ids

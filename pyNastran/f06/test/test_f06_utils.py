@@ -400,7 +400,9 @@ class TestF06Flutter(unittest.TestCase):
     @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
     def test_plot_func_0012(self):
         log = SimpleLogger(level='warning')
-        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
+        dirname = AERO_PATH / '2_mode_flutter'
+        f06_filename = dirname / '0012_flutter.f06'
+        zona_filename = dirname / 'junk.zona'
         flutters, data = make_flutter_response(f06_filename, f06_units='si', log=log)
         flutter = flutters[1]
         flutter.set_plot_settings(
@@ -427,7 +429,14 @@ class TestF06Flutter(unittest.TestCase):
             markersize=None,
         )
         flutter.plot_vg_vf(plot_type='eas')
+        flutter.plot_vg_vf(plot_type='eas', show_detailed_mode_info=True)
+        flutter.plot_vg_vf(plot_type='eas', mode_switch_method='freq')
+        flutter.plot_vg_vf(plot_type='eas', mode_switch_method='damping')
+        with self.assertRaises(RuntimeError):
+            flutter.plot_vg_vf(plot_type='eas', mode_switch_method='cat')
         flutter.plot_vg(plot_type='eas')
+        flutter.export_to_zona(zona_filename)
+        str(flutter.object_methods())
 
         flutter.set_symbol_settings(
             nopoints=False,
@@ -515,7 +524,7 @@ def fix_modes_2024(flutter: FlutterResponse,
         if debug:
             print('no mode switching')
     else:
-        mode_switching
+        raise RuntimeError('mode_switching')
     return
 
 

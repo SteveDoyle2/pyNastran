@@ -1,30 +1,9 @@
 import os
 from pathlib import Path
 from functools import partial
-from typing import Callable
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QAction, QMenu
-
-
-class Action:
-    def __init__(self, name: str, text: str, icon: str='',
-                 shortcut: str='',
-                 tip: str='',
-                 func=Callable, show: bool=True):
-        self.name = name
-        self.text = text
-        self.ico = icon
-        self.shortcut = shortcut
-        self.tip = tip
-        self.func = func
-        self.show = show
-
-    def __repr__(self) -> str:
-        return f'Action(name={self.name}, text={self.text}'
-
-    @property
-    def icon_path(self) -> str:
-        return self.ico
+from pyNastran.f06.dev.flutter.action import Action
 
 
 class Actions:

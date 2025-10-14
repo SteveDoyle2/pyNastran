@@ -339,7 +339,7 @@ class CBARAO(BaseCard):
         assert len(card) <= 9, f'len(CBARAO card) = {len(card):d}\ncard={card}'
         return CBARAO(eid, scale, x, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         pass
 
     def raw_fields(self):
@@ -675,7 +675,7 @@ class CBAR(LineElement):
         return CBAR(eid, pid, [ga, gb], x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
-    def _verify(self, xref: bool):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         unused_pid = self.Pid()
         unused_edges = self.get_edge_ids()
@@ -1473,7 +1473,7 @@ class CBEAM3(LineElement):  # was CBAR
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         unused_edges = self.get_edge_ids()
 
 
@@ -1967,7 +1967,7 @@ class CBEND(LineElement):
             raise RuntimeError(msg)
         return self.pid_ref.Area()
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         unused_edges = self.get_edge_ids()
 
     def cross_reference(self, model: BDF) -> None:

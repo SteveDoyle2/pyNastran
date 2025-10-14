@@ -887,12 +887,12 @@ def _convert_pbush(scales: set[str],
         # TODO: I think this needs to consider rotation
         if var == 'K':
             scales.update(['stiffness'])
-            prop.Ki = [ki*stiffness_scale if ki is not None else None
-                       for ki in prop.Ki]
+            prop.k = [ki*stiffness_scale if ki is not None else None
+                      for ki in prop.k]
         elif var == 'B':
             scales.update(['velocity'])
-            prop.Bi = [bi*velocity_scale if bi is not None else None
-                       for bi in prop.Bi]
+            prop.b = [bi*velocity_scale if bi is not None else None
+                       for bi in prop.b]
         elif var == 'RCV':
             log.warning('Skipping RCV for PBUSH %i' % prop.pid)
         elif var == 'GE':
@@ -903,7 +903,14 @@ def _convert_pbush(scales: set[str],
     #prop.rcv
     if prop.mass is not None:
         scales.update(['mass'])
-        prop.mass *= mass_scale
+        print(prop.get_stats(), prop.mass)
+        if isinstance(prop.mass, list):
+            # Optistruct
+            prop.mass = [massi*mass_scale for massi in prop.mass]
+        elif isinstance(prop.mass, float_types):
+            prop.mass *= mass_scale
+        else:  # pragma: no cover
+            raise TypeError(f'mass must be a float/list\n{prop.get_stats()}')
     #rcv : list[float]; default=None -> (None, None, None, None)
         #[sa, st, ea, et] = rcv
         #length(mass_fields) = 4

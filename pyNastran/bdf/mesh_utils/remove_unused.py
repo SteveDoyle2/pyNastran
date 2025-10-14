@@ -86,6 +86,13 @@ def remove_unused(bdf_filename: PathLike,
         'TRIM', 'TRIM2', 'DIVERG', 'GUST', 'FLUTTER',
     }
 
+    # properties that don't reference anything (e.g., materials)
+    unreferenced_properties = {
+        'PELAS', 'PDAMP', 'PBUSH',
+        'PELAST', 'PDAMPT', 'PBUSHT',
+        'PGAP', 'PBUSH1D', 'PFAST', 'PVISC', 'PMASS',
+    }
+
     # ureferenced types aren't referenced by any card
     # (but may be referenced by the case control deck)
     unreferenced_types = {
@@ -97,11 +104,6 @@ def remove_unused(bdf_filename: PathLike,
         'DELAY', 'DPHASE',
         'CBARAO', 'AEPARM',
 
-        # properties
-        'PELAS', 'PDAMP', 'PBUSH',
-        'PELAST', 'PDAMPT', 'PBUSHT',
-        'PGAP', 'PBUSH1D', 'PFAST', 'PVISC', 'PMASS',
-
         'FLFACT', 'DLINK', 'DDVAL',
         'AELINK', 'AELIST', 'AEFACT', 'AESTAT',
 
@@ -111,7 +113,7 @@ def remove_unused(bdf_filename: PathLike,
 
         'TABRNDG', 'DTI', 'TABLEH1',
         'GROUP',
-    }
+    } | unreferenced_properties
 
     # this haven't been referenced yet
     not_implemented_types = {
@@ -438,7 +440,8 @@ def remove_unused(bdf_filename: PathLike,
         elif card_type in unreferenced_types_case_control:
             log.debug(f'{card_type} (case control) is unreferenced')
         elif card_type in unreferenced_types:
-            log.debug(f'{card_type} is unreferenced')
+            if card_type not in unreferenced_properties:
+                log.debug(f'{card_type} is unreferenced')
         elif card_type in {'USET', 'USET1'}:
             for set_cards in model.usets.values():
                 for set_card in set_cards:
@@ -1121,7 +1124,7 @@ def _remove(model: BDF,
         mids_to_remove.sort()
         if mids_to_remove:
             model.log.debug('removing materials %s' % mids_to_remove)
-            out_dict['materials'] = mids_to_remove
+            out_dict['materials'] = np.array(mids_to_remove, dtype='int64')
 
     #if remove_spcs and spcs_to_remove:
     #    for spc_id in spcs_to_remove:

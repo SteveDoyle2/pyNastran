@@ -214,7 +214,7 @@ class CFAST(Element):
             return self.gb
         return self.gb_ref.nid
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -726,7 +726,7 @@ class CGAP(Element):
             cid = None
         return CGAP(eid, pid, [ga, gb], x, g0, cid=cid, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -973,7 +973,7 @@ class CRAC2D(CrackElement):
         nids = data[2:]
         return CRAC2D(eid, pid, nids, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         unused_nids = self.node_ids
@@ -1070,7 +1070,7 @@ class CRAC3D(CrackElement):
         nids = data[2:]
         return CRAC3D(eid, pid, nids, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         unused_nids = self.node_ids
