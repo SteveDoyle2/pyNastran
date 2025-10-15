@@ -129,7 +129,7 @@ class FluentIO:
         if 'Pressure Coefficient' in titles:
             ipressure = -1  # titles.index('Pressure Coefficient')
             Cp = results[:, ipressure]
-            S = 1.0  # 130 m^2
+            S = 1.0
             CfS = (Cp*area/S)[:,np.newaxis] * normal
             gui.log_info(f'Sref = {S}')
             gui.log_info(f'Cxyz_total = {CfS.sum(axis=0)}')

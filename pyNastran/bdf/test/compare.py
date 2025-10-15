@@ -125,13 +125,13 @@ def compute_ints(cards1: dict[str, int],
     all_keys = card_keys1.union(card_keys2)
     diff_keys1 = list(all_keys.difference(card_keys1))
     diff_keys2 = list(all_keys.difference(card_keys2))
-    fem1.log.debug(f"all_keys = {all_keys}")
+    #fem1.log.debug(f"all_keys = {all_keys}")
 
     list_keys1 = list(card_keys1)
     list_keys2 = list(card_keys2)
-    fem1.log.debug(f"list_keys1 = {list_keys1}")
+    #fem1.log.debug(f"list_keys1 = {list_keys1}")
     if diff_keys1 or diff_keys2:
-        print(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
+        fem1.log.debug(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
 
     for key in sorted(all_keys):
         msg = ''
