@@ -89,6 +89,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       run_mcid: bool=True,
                       run_export_caero: bool=True,
                       run_skin_solids: bool=True,
+                      allow_similar_eid: bool=True,
                       dev: bool=True,
                       crash_cards: Optional[list[str]]=None,
                       run_pickle: bool=True, quiet: bool=False) -> list[str]:
@@ -212,6 +213,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                         run_extract_bodies=False,
                         run_export_caero=run_export_caero,
                         run_skin_solids=run_skin_solids,
+                        allow_similar_eid=allow_similar_eid,
 
                         dev=dev,
                         crash_cards=crash_cards,
@@ -288,6 +290,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             hdf5: bool=False,
             is_lax_parser: bool=False,
             allow_duplicates: bool=False,
+            allow_similar_eid: bool=True,
             stop: bool=False, nastran: str='', post: int=-1,
             dynamic_vars=None,
             quiet: bool=False, dumplines: bool=False, dictsort: bool=False,
@@ -396,6 +399,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         print_stats=print_stats, encoding=encoding,
         sum_load=sum_load, size=size, is_double=is_double,
         is_lax_parser=is_lax_parser,
+        allow_similar_eid=allow_similar_eid,
         allow_tabs=allow_tabs,
         allow_duplicates=allow_duplicates,
         stop=stop, nastran=nastran, post=post, hdf5=hdf5,
@@ -439,6 +443,7 @@ def run_and_compare_fems(
         is_lax_parser: bool=False,
         allow_tabs: bool=True,
         allow_duplicates: bool=False,
+        allow_similar_eid: bool=True,
         stop: bool=False,
         nastran: str='',
         post: int=-1,
@@ -470,6 +475,8 @@ def run_and_compare_fems(
     assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDF(debug=debug, log=log)
     fem1.allow_tabs = allow_tabs
+    fem1.allow_duplicate_element_rbe_mass = allow_similar_eid
+    #assert allow_similar_eid is False, allow_similar_eid
     #fem1.force_echo_off = False
     log = fem1.log
     if is_lax_parser:
@@ -2258,6 +2265,8 @@ def test_bdf_argparse(argv=None):
                                help='skip the element checks (default=False)')
     parent_parser.add_argument('--skip_mcid', action='store_true',
                                help='skip the material coordinate system exporting (default=False)')
+    parent_parser.add_argument('--no_similar_eid', action='store_false',
+                               help='No duplicate eids among elements, rigids, and masses (default=False)')
 
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
@@ -2429,6 +2438,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_skin    skip the solid skinning (default=False)\n'
         '  --skip_eid_checks  skips some element checks (default=False)\n'
         '  --skip_mcid        skip the material coordinate system exporting (default=False)\n'
+        '  --no_similar_eid   No duplicate eids among elements, rigids, and masses\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2463,6 +2473,7 @@ def main(argv=None):
     data['run_skin_solids'] = not data['skip_skin']
     data['run_eid_checks'] = not data['skip_eid_checks']
     data['run_mcid'] = not data['skip_mcid']
+    allow_similar_eid = not data['no_similar_eid']
 
     is_double = False
     if data['double']:
@@ -2512,6 +2523,7 @@ def main(argv=None):
             run_eid_checks=data['run_eid_checks'],
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
+            allow_similar_eid=allow_similar_eid,
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],
@@ -2569,6 +2581,7 @@ def main(argv=None):
             run_eid_checks=data['run_eid_checks'],
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
+            allow_similar_eid=allow_similar_eid,
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],

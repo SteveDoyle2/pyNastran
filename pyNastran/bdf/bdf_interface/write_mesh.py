@@ -595,11 +595,11 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(suport.write_card(size, is_double))
 
         if self.spcs or self.spcadds or self.spcoffs:
-            #bdf_file.write('$SPCs\n')
-            #str_spc = str(self.spcObject) # old
-            #if str_spc:
-                #bdf_file.write(str_spc)
-            #else:
+            # bdf_file.write('$SPCs\n')
+            # str_spc = str(self.spcObject) # old
+            # if str_spc:
+            #     bdf_file.write(str_spc)
+            # else:
             bdf_file.write('$SPCs\n')
             for (unused_id, spcadds) in sorted(self.spcadds.items()):
                 for spcadd in spcadds:
@@ -661,18 +661,35 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(bgset.write_card(size, is_double))
 
     def _write_coords(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
-                      is_long_ids: Optional[bool]=None) -> None:
+                      is_long_ids: Optional[bool]=None,
+                      breakout_coords: bool=False) -> None:
         """Writes the coordinate cards in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if len(self.coords) > 1:
             bdf_file.write('$COORDS\n')
-        for (coord_id, coord) in sorted(self.coords.items()):
-            if coord_id == 0:
-                continue
-            try:
-                bdf_file.write(coord.write_card(size, is_double))
-            except RuntimeError:
-                bdf_file.write(coord.write_card_16(is_double))
+
+        if breakout_coords:
+            for (coord_id, coord) in sorted(self.coords.items()):
+                if coord_id == 0:
+                    continue
+                if coord.origin is not None:
+                    bdf_file.write(f'$ cid={coord_id}\n')
+                    bdf_file.write(f'$   origin={coord.origin}\n')
+                    bdf_file.write(f'$   i={coord.i}\n')
+                    bdf_file.write(f'$   j={coord.j}\n')
+                    bdf_file.write(f'$   k={coord.k}\n')
+                try:
+                    bdf_file.write(coord.write_card(size, is_double))
+                except RuntimeError:
+                    bdf_file.write(coord.write_card_16(is_double))
+        else:
+            for (coord_id, coord) in sorted(self.coords.items()):
+                if coord_id == 0:
+                    continue
+                try:
+                    bdf_file.write(coord.write_card(size, is_double))
+                except RuntimeError:
+                    bdf_file.write(coord.write_card_16(is_double))
 
     def _write_matcids(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:
@@ -797,12 +814,12 @@ class WriteMesh(BDFAttributes):
             else:
                 for (key, loadcase) in sorted(self.loads.items()):
                     for load in loadcase:
-                       # if load.type == 'PLOAD2':
-                       #     try:
-                       #         load.raw_fields()
-                       #     except Exception:
-                       #         bdf_file.write(load.write_card_separate(self, size, is_double))
-                       #         continue
+                        # if load.type == 'PLOAD2':
+                        #     try:
+                        #         load.raw_fields()
+                        #     except Exception:
+                        #         bdf_file.write(load.write_card_separate(self, size, is_double))
+                        #         continue
                         try:
                             bdf_file.write(load.write_card(size, is_double))
                         except Exception:
@@ -940,49 +957,63 @@ class WriteMesh(BDFAttributes):
             #self._write_nodes_associated(bdf_file, size, is_double)
 
     def _write_grids(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
-                     is_long_ids: Optional[bool]=None) -> None:
+                     is_long_ids: Optional[bool]=None,
+                     write_as_cid0: bool=False,
+                     ) -> None:
         """Writes the GRID-type cards"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        if self.nodes:
+        if self.nodes or self.grdset:
             bdf_file.write('$NODES\n')
             if self.grdset:
                 bdf_file.write(self.grdset.write_card(size))
-            write_dict(bdf_file, self.nodes, size, is_double, is_long_ids)
 
-    #def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
-        #"""
-        #Writes the NODE-type in associated and unassociated groups.
+            if write_as_cid0:
+                for (unused_nid, node) in sorted(self.nodes.items()):
+                    if node.cp != 0:
+                        xyz = node.get_position()
+                        node.uncross_reference()
+                        node.cp = 0
+                        node.xyz = xyz
+                        bdf_file.write(node.write_card(size, is_double))
+                    else:
+                        bdf_file.write(node.write_card(size, is_double))
+            else:
+                write_dict(bdf_file, self.nodes, size, is_double, is_long_ids)
 
-        #.. warning:: Sometimes crashes, probably on invalid BDFs.
-        #"""
-        #associated_nodes = set()
-        #for (eid, element) in self.elements.items():
-            #associated_nodes = associated_nodes.union(set(element.node_ids))
-
-        #all_nodes = set(self.nodes.keys())
-        #unassociated_nodes = list(all_nodes.difference(associated_nodes))
-        ##missing_nodes = all_nodes.difference(
-
-        ## TODO: this really shouldn't be a list...???
-        #associated_nodes = list(associated_nodes)
-
-        #if associated_nodes:
-            #bdf_file.write('$ASSOCIATED NODES\n')
-            #if self.grdset:
-                #bdf_file.write(self.grdset.write_card(size, is_double))
-            ## TODO: this really shouldn't be a dictionary...???
-            #for key, node in sorted(associated_nodes.items()):
-                #bdf_file.write(node.write_card(size, is_double))
-
-        #if unassociated_nodes:
-            #bdf_file.write('$UNASSOCIATED NODES\n')
-            #if self.grdset and not associated_nodes:
-                #v(self.grdset.write_card(size, is_double))
-            #for key, node in sorted(unassociated_nodes.items()):
-                #if key in self.nodes:
-                    #bdf_file.write(node.write_card(size, is_double))
-                #else:
-                    #bdf_file.write('$ Missing NodeID=%s' % key)
+    # def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
+    #     """
+    #     Writes the NODE-type in associated and unassociated groups.
+    #
+    #     .. warning:: Sometimes crashes, probably on invalid BDFs.
+    #     """
+    #     associated_nodes = set()
+    #     for (eid, element) in self.elements.items():
+    #         associated_nodes = associated_nodes.union(set(element.node_ids))
+    #
+    #     all_nodes = set(self.nodes.keys())
+    #     unassociated_nodes = list(all_nodes.difference(associated_nodes))
+    #     #missing_nodes = all_nodes.difference(
+    #
+    #     # TODO: this really shouldn't be a list...???
+    #     associated_nodes = list(associated_nodes)
+    #
+    #     if associated_nodes:
+    #         bdf_file.write('$ASSOCIATED NODES\n')
+    #         if self.grdset:
+    #             bdf_file.write(self.grdset.write_card(size, is_double))
+    #         # TODO: this really shouldn't be a dictionary...???
+    #         for key, node in sorted(associated_nodes.items()):
+    #             bdf_file.write(node.write_card(size, is_double))
+    #
+    #     if unassociated_nodes:
+    #         bdf_file.write('$UNASSOCIATED NODES\n')
+    #         if self.grdset and not associated_nodes:
+    #             v(self.grdset.write_card(size, is_double))
+    #         for key, node in sorted(unassociated_nodes.items()):
+    #             if key in self.nodes:
+    #                 bdf_file.write(node.write_card(size, is_double))
+    #             else:
+    #                 bdf_file.write('$ Missing NodeID=%s' % key)
 
     def _write_optimization(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                             is_long_ids: Optional[bool]=None) -> None:
@@ -1049,20 +1080,15 @@ class WriteMesh(BDFAttributes):
         if is_parametric:
             for (unused_id, pset) in sorted(self.pset.items()):
                 bdf_file.write(pset.write_card(size, is_double))
-
             for (unused_adapt_id, pvals) in sorted(self.pval.items()):
                 for pval in pvals:
                     bdf_file.write(pval.write_card(size, is_double))
-
             for (unused_id, gmcurv) in sorted(self.gmcurv.items()):
                 bdf_file.write(gmcurv.write_card(size, is_double))
-
             for (unused_id, gmsurf) in sorted(self.gmsurf.items()):
                 bdf_file.write(gmsurf.write_card(size, is_double))
-
             for (unused_id, feedge) in sorted(self.feedge.items()):
                 bdf_file.write(feedge.write_card(size, is_double))
-
             for (unused_id, feface) in sorted(self.feface.items()):
                 bdf_file.write(feface.write_card(size, is_double))
 
@@ -1124,11 +1150,11 @@ class WriteMesh(BDFAttributes):
 
         bdf_file.write('$PROPERTIES\n')
         for prop_class, prop_types in propertys_class_to_property_types.items():
-            #print(prop_class, prop_types)
-            #for prop_type in prop_types:
-                #if prop_type not in properties_by_class:
-                    #continue
-                #print('  ', prop_type)
+            # print(prop_class, prop_types)
+            # for prop_type in prop_types:
+            #     if prop_type not in properties_by_class:
+            #         continue
+            #     print('  ', prop_type)
             props = properties_by_class[prop_class]
             if not props:
                 continue

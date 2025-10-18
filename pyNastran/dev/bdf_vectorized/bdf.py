@@ -922,7 +922,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
          additional_deck_lines, additional_deck_ilines) = out
         self._set_pybdf_attributes(obj)
 
-
         self.case_control_lines = case_control_lines
         self.executive_control_lines = executive_control_lines
 

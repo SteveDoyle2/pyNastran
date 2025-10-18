@@ -46,7 +46,7 @@ class FluentIO:
             model = fld_filename
         else:
             model = read_fluent(
-                fld_filename, #auto_read_write_h5=False,
+                fld_filename,  # auto_read_write_h5=False,
                 log=log, debug=False)
         model = cast(Fluent, model)
         assert len(model.result_element_id) > 0, str(model)
@@ -66,7 +66,7 @@ class FluentIO:
         if 1:  # hack fix
             titles = model.titles
             result_element_id, tris, quads, region, results = model.get_filtered_data(
-            regions_to_remove, regions_to_include, return_model=False)
+                regions_to_remove, regions_to_include, return_model=False)
         else:
             model2 = model.get_filtered_data(
                 regions_to_remove, regions_to_include, return_model=True)
@@ -81,7 +81,7 @@ class FluentIO:
 
             # support multiple results
             titles = model2.titles
-            if 0:
+            if 0:  # pragma: no cover
                 results = model2.results
             else:
                 iquad = np.searchsorted(model2.result_element_id, quads[:, 0])
@@ -96,7 +96,7 @@ class FluentIO:
          tri_centroid, quad_centroid,
          tri_normal, quad_normal) = out
         normal = np.vstack([quad_normal, tri_normal])
-        #centroid = np.vstack([quad_centroid, tri_centroid])
+        centroid = np.vstack([quad_centroid, tri_centroid])
         area = np.hstack([quad_area, tri_area])
 
         nnodes_array = np.hstack([quad_area*0+4, tri_area*0+3])
@@ -112,6 +112,7 @@ class FluentIO:
             node_id = node_id[inode_used]
             nodes = nodes[inode_used, :]
 
+        titles_list = titles #.tolist()
         nelement = len(result_element_id)
         assert len(result_element_id) == len(region), f'neids={len(result_element_id)} nregion={len(region)}'
 
@@ -120,24 +121,29 @@ class FluentIO:
         units_pressure_in = other_settings.units_model_in[-1]
         units_pressure_out = other_settings.units_pressure
 
-        if units_pressure_in != '' and 'Pressure' in titles:
-            ipressure = titles.index('Pressure')
+        if units_pressure_in != '' and 'Pressure' in titles_list:
+            ipressure = titles_list.index('Pressure')
             results[:, ipressure] = convert_pressure(
                 results[:, ipressure],
                 units_pressure_in, units_pressure_out)
 
-        if 'Pressure Coefficient' in titles:
-            ipressure = -1  # titles.index('Pressure Coefficient')
-            Cp = results[:, ipressure]
-            S = 1.0
-            CfS = (Cp*area/S)[:,np.newaxis] * normal
-            gui.log_info(f'Sref = {S}')
-            gui.log_info(f'Cxyz_total = {CfS.sum(axis=0)}')
+        if 'Pressure Coefficient' in titles_list:
+            ipressure = -1  # titles_list.index('Pressure Coefficient')
+            cp = results[:, ipressure]
+            sref = 1.0
+            lref = 1.0
+            cfs = (cp*area/sref)[:, np.newaxis] * normal
+            cml = np.cross(centroid, cfs) / lref
+
+            gui.log_info(f'Sref={sref}; lref={lref} xyz_ref=[0.,0.,0.]')
+            gui.log_info(f'total: CFxyz={cfs.sum(axis=0)} CMxyz={cml.sum(axis=0)}')
             for regioni in np.unique(region):
                 iregion = np.where(region == regioni)[0]
-                Cxyz = CfS[iregion, :].sum(axis=0)
-                assert len(Cxyz) == 3, Cxyz
-                gui.log_info(f'Cxyz[{regioni}] = {Cxyz}')
+                cf_xyz = cfs[iregion, :].sum(axis=0)
+                cm_xyz = cml[iregion, :].sum(axis=0)
+                assert len(cf_xyz) == 3, cxyz
+                assert len(cm_xyz) == 3, cxyz
+                gui.log_info(f'  region {regioni}: CFxyz={cf_xyz} CMxyz={cm_xyz}')
 
         nnodes = len(nodes)
         gui.nnodes = nnodes
@@ -172,12 +178,12 @@ class FluentIO:
 
         cases = {}
         gui.isubcase_name_map = {}
-        ID = 1
+        idi = 1
 
-        gui.isubcase_name_map[ID] = ('Fluent', '')
+        gui.isubcase_name_map[idi] = ('Fluent', '')
         form, cases = _fill_fluent_case(
-            cases, ID, node_id, result_element_id,
-            region, results, titles, normal,
+            cases, idi, node_id, result_element_id,
+            region, results, titles_list, normal,
             nnodes_array)
 
         gui.node_ids = node_id
@@ -185,6 +191,7 @@ class FluentIO:
         #log.debug(f'running _finish_results_io2')
         gui._finish_results_io2(model_name, form, cases)
         #log.info(f'finished')
+
 
 def _create_elements(ugrid: vtkUnstructuredGrid,
                      node_id: np.ndarray,
@@ -195,7 +202,6 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
 
     nquad = len(quads)
     ntri = len(tris)
-    nelement_total = nquad + ntri
     cell_offset0 = 0
     n_nodes_list = []
 
@@ -242,6 +248,7 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
         cell_offset_list.append(cell_offseti)
 
     if 0:  # pragma: no cover
+        nelement_total = nquad + ntri
         n_nodes = np.hstack(n_nodes_list)
         cell_type = np.hstack(cell_type_list)
         cell_offset = np.hstack(cell_offset_list)
@@ -253,15 +260,17 @@ def _create_elements(ugrid: vtkUnstructuredGrid,
 
     return
 
+
 def _fill_fluent_case(cases: dict[int, Any],
-                      ID: int,
+                      idi: int,
                       node_id: np.ndarray,
                       element_id: np.ndarray,
                       region: np.ndarray,
                       results: np.ndarray,
-                      titles: np.ndarray,
+                      titles: list[str],
                       normal: np.ndarray,
-                      nnodes_array: np.ndarray,) -> None:
+                      nnodes_array: np.ndarray,) -> tuple[list[tuple[str, int, list]],
+                                                          dict[int, Any]]:
     """adds the sidebar results"""
     # reorg the ids
     #element_ids = np.unique(np.hstack([tris[:, 0], quads[:, 0]]))
@@ -270,11 +279,11 @@ def _fill_fluent_case(cases: dict[int, Any],
     itime = 0
     colormap = 'jet'
 
-    nid_res = GuiResult(ID, header='NodeID', title='NodeID',
+    nid_res = GuiResult(idi, header='NodeID', title='NodeID',
                         location='node', scalar=node_id)
-    eid_res = GuiResult(ID, header='ElementID', title='ElementID',
+    eid_res = GuiResult(idi, header='ElementID', title='ElementID',
                         location='centroid', scalar=element_id)
-    region_res = GuiResult(ID, header='Region', title='Region',
+    region_res = GuiResult(idi, header='Region', title='Region',
                            location='centroid', scalar=region)
 
     nxyz_res = NormalResult(0, 'Normals', 'Normals',
@@ -282,14 +291,14 @@ def _fill_fluent_case(cases: dict[int, Any],
                             #colormap=colormap,
                             data_format='%.1f',
                             uname='NormalResult')
-    nx_res = GuiResult(ID, 'normal_x', 'NormalX', 'centroid', normal[:, 0],
+    nx_res = GuiResult(idi, 'normal_x', 'NormalX', 'centroid', normal[:, 0],
                        data_format='%.3f', colormap=colormap, uname='NormalX')
-    ny_res = GuiResult(ID, 'normal_y', 'NormalY', 'centroid', normal[:, 1],
+    ny_res = GuiResult(idi, 'normal_y', 'NormalY', 'centroid', normal[:, 1],
                        data_format='%.3f', colormap=colormap, uname='NormalY')
-    nz_res = GuiResult(ID, 'normal_z', 'NormalZ', 'centroid', normal[:, 2],
+    nz_res = GuiResult(idi, 'normal_z', 'NormalZ', 'centroid', normal[:, 2],
                        data_format='%.3f', colormap=colormap, uname='NormalZ')
 
-    nnodes_res = GuiResult(ID, 'nnodes', 'Nnodes', 'centroid', nnodes_array,
+    nnodes_res = GuiResult(idi, 'nnodes', 'Nnodes', 'centroid', nnodes_array,
                            data_format='%.0f', colormap=colormap, uname='Nnodes')
 
     assert len(element_id) == len(region), f'neids={len(element_id)} nregion={len(region)}'
@@ -319,7 +328,7 @@ def _fill_fluent_case(cases: dict[int, Any],
     for i, title in enumerate(titles[1:]):
         result = results[:, i]
         assert len(element_id) == len(result)
-        pressure_res = GuiResult(ID, header=title, title=title,
+        pressure_res = GuiResult(idi, header=title, title=title,
                                  location='centroid', scalar=result)
         cases[icase] = (pressure_res, (itime, title))
         formi = (title, icase, [])

@@ -245,9 +245,9 @@ class AddMethods:
         model = self.model
         if key in model.params and not allow_overwrites:
             if not param == model.params[key]:
-                #if param.key in self.params:
-                    #msg = 'key=%s param=%s old_param=%s' % (key, param, self.params[key])
-                    #raise KeyError(msg)
+                # if param.key in self.params:
+                #     msg = 'key=%s param=%s old_param=%s' % (key, param, self.params[key])
+                #     raise KeyError(msg)
                 model.log.warning('key=%s param=%s old_param=%s' %
                                   (key, param, model.params[key]))
                 model.params[key] = param
@@ -485,9 +485,9 @@ class AddMethods:
         assert key > 0, 'eid=%s must be positive; elem_flag=\n%s' % (key, elem_flag)
         if key in model.ao_element_flags and not allow_overwrites:
             if not elem_flag == model.ao_element_flags[key]:
-                #self.model._duplicate_elements.append(elem_flag)
-                #if self.model._stop_on_duplicate_error:
-                    #self.model.pop_parse_errors()
+                # self.model._duplicate_elements.append(elem_flag)
+                # if self.model._stop_on_duplicate_error:
+                #     self.model.pop_parse_errors()
                 assert elem_flag.eid not in self.model.ao_element_flags, 'eid=%s\nold_ao_element=\n%snew_ao_element=\n%s' % (
                     elem_flag.eid, model.ao_element_flags[elem_flag.eid], elem_flag)
         else:
@@ -894,13 +894,32 @@ class AddMethods:
         # add_object_to_dict_no_dupes(model, key, 'coords', coord, model.coords,
         #                             model._duplicate_coords, allow_overwrites)
 
-        if key in self.model.coords:
-            #if not allow_overwrites:
-            if not coord == self.model.coords[key]:
-                self.model._duplicate_coords.append(coord)
+        # v1.4
+        # if key in self.model.coords:
+        #     #if not allow_overwrites:
+        #     if not coord == self.model.coords[key]:
+        #         self.model._duplicate_coords.append(coord)
+        # else:
+        #     self.model.coords[key] = coord
+        #     self.model._type_to_id_map[coord.type].append(key)
+
+        if key not in model.coords:
+            model.coords[key] = coord
+            model._type_to_id_map[coord.type].append(key)
+        elif coord == model.coords[key]:
+            model.log.warning(f'replacing equivalent coord:\n{coord}')
+        elif allow_overwrites:
+            model.log.warning(f'replacing coord:\n{model.coords[key]}with:\n{coord}')
+            model.coords[key] = coord
+            # already handled
+            #model._type_to_id_map[prop.type].append(key)
         else:
-            self.model.coords[key] = coord
-            self.model._type_to_id_map[coord.type].append(key)
+            # error, but no crash b/c op2
+            model.log.error(f'duplicate coord {key}:\n{model.coords[key]}with:\n{coord}')
+            # duplicate_list.append(obj)
+            # if model._stop_on_duplicate_error:
+            #     model.pop_parse_errors()
+            #raise RuntimeError('pid=%s\nold_prop=\n%snew_prop=\n%s' % (prop.pid, model.properties[key], prop))
 
     def add_matcid_object(self, matcid: MATCID) -> None:
         """adds a MATCID object"""
@@ -1120,18 +1139,18 @@ class AddMethods:
         # only one AEROS card allowed
         assert self.model.aeros is None, '\naeros=\n%s old=\n%s' % (aeros, self.model.aeros)
         self.model.aeros = aeros
-        #self.model._type_to_id_map[aeros.type].append(key)
+        # self.model._type_to_id_map[aeros.type].append(key)
 
-    #def add_aeroz_object(self, aeroz: AEROZ) -> None:
-        #"""adds an AEROZ object"""
-        #key = aeroz.sid
-        #if key in self.model.aeroz and not allow_overwrites:
-            #if not aeroz == self.model.zona.aeroz[key]:
-                #assert key not in self.model.aeroz, 'AEROZ.sid=%s\nold=\n%snew=\n%s' % (key, self.model.aeroz[key], aeroz)
-        #else:
-            #assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
-            #self.model.aeroz[key] = aeroz
-            #self.model._type_to_id_map[aeroz.type].append(key)
+    # def add_aeroz_object(self, aeroz: AEROZ) -> None:
+    #     """adds an AEROZ object"""
+    #     key = aeroz.sid
+    #     if key in self.model.aeroz and not allow_overwrites:
+    #         if not aeroz == self.model.zona.aeroz[key]:
+    #             assert key not in self.model.aeroz, 'AEROZ.sid=%s\nold=\n%snew=\n%s' % (key, self.model.aeroz[key], aeroz)
+    #     else:
+    #         assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
+    #         self.model.aeroz[key] = aeroz
+    #         self.model._type_to_id_map[aeroz.type].append(key)
 
     def add_baror_object(self, baror: BAROR) -> None:
         """adds an BAROR object"""
@@ -1147,17 +1166,17 @@ class AddMethods:
         if self.model.beamor is None:
             self.model.beamor = beamor
 
-    #def add_axic_object(self, axic: AXIC) -> None:
-        #"""adds an AXIC object"""
-        ## only one AXIC card allowed
-        #assert self.model.axic is None, '\naxic=\n%s old=\n%s' % (axic, self.model.axic)
-        #self.model.axic = axic
-
-    #def add_axif_object(self, axif: AXIF) -> None:
-        #"""adds an AXIF object"""
-        ## only one AXIC card allowed
-        #assert self.model.axif is None, '\naxif=\n%s old=\n%s' % (axif, self.model.axif)
-        #self.model.axif = axif
+    # def add_axic_object(self, axic: AXIC) -> None:
+    #     """adds an AXIC object"""
+    #     # only one AXIC card allowed
+    #     assert self.model.axic is None, '\naxic=\n%s old=\n%s' % (axic, self.model.axic)
+    #     self.model.axic = axic
+    #
+    # def add_axif_object(self, axif: AXIF) -> None:
+    #     """adds an AXIF object"""
+    #     # only one AXIC card allowed
+    #     assert self.model.axif is None, '\naxif=\n%s old=\n%s' % (axif, self.model.axif)
+    #     self.model.axif = axif
 
     def add_acmodl_object(self, acmodl: ACMODL) -> None:
         """adds a ACMODL object"""
@@ -1335,7 +1354,6 @@ class AddMethods:
         self.model.divergs[key] = diverg
         self.model._type_to_id_map[diverg.type].append(key)
 
-
     def add_uxvec_object(self, uxvec: UXVEC,
                          allow_overwrites: bool=False) -> None:
         """adds an UXVEC object"""
@@ -1376,16 +1394,16 @@ class AddMethods:
             self.model.dconstrs[key] = [dconstr]
         self.model._type_to_id_map[dconstr.type].append(key)
 
-    #def add_DCONADD(self, dconadd, allow_overwrites: bool=False) -> None:
-        #key = dconadd.oid
-        #if key in self.model.dconstrs and not allow_overwrites:
-            #if not dconadd == self.model.dconstrs[key]:
-                #assert key not in self.model.dconstrs, 'DCONADD=%s old=\n%snew=\n%s' % (
-                    #key, self.model.dconstrs[key], dconadd)
-        #else:
-            #assert key > 0, 'dcid=%s dconadd=%s' % (key, dconadd)
-            #self.model.dconstrs[key] = dconadd
-            #self.model._type_to_id_map[dconadd.type].append(key)
+    # def add_dconadd(self, dconadd, allow_overwrites: bool=False) -> None:
+    #     key = dconadd.oid
+    #     if key in self.model.dconstrs and not allow_overwrites:
+    #         if not dconadd == self.model.dconstrs[key]:
+    #             assert key not in self.model.dconstrs, 'DCONADD=%s old=\n%snew=\n%s' % (
+    #                 key, self.model.dconstrs[key], dconadd)
+    #     else:
+    #         assert key > 0, 'dcid=%s dconadd=%s' % (key, dconadd)
+    #         self.model.dconstrs[key] = dconadd
+    #         self.model._type_to_id_map[dconadd.type].append(key)
 
     def add_desvar_object(self, desvar: DESVAR) -> None:
         """adds a DESVAR object"""
@@ -1822,7 +1840,7 @@ def _add_value_to_dict(result: dict[int, Any], key: int, card: Any,
 
 
 def add_object_to_dict(model: BDF, key: int,
-                       obj_name : str,
+                       obj_name: str,
                        obj: BaseCard,
                        obj_dict: dict[int, BaseCard],
                        allow_overwrites: bool) -> None:

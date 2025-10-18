@@ -5,7 +5,7 @@ from typing import Optional
 
 import pyNastran
 from pyNastran.utils import PathLike
-from pyNastran.utils.dev import get_files_of_types # get_files_of_type,
+from pyNastran.utils.dev import get_files_of_types  # get_files_of_type,
 PKG_PATH = Path(pyNastran.__path__[0])
 
 
@@ -81,6 +81,7 @@ def get_directories(folders_file: str) -> list[str]:
             dirnames.append(move_dir)
     return dirnames
 
+
 def get_all_files(folders_file: str, file_types: list[str],
                   max_size: float=4.2) -> list[str]:
     """
@@ -103,6 +104,7 @@ def get_all_files(folders_file: str, file_types: list[str],
     dirnames = get_directories(folders_file)
     files2 = get_files_from_directories(dirnames, file_types, max_size=max_size)
     return files2
+
 
 def get_files_from_directories(dirnames: list[str], file_types: list[str],
                                max_size: float=4.2) -> list[str]:
@@ -134,6 +136,7 @@ def get_files_from_directories(dirnames: list[str], file_types: list[str],
         #print('nfiles = %s/%s' % (len(files_in_dir), len(files2)))
     print('nfiles = %s' % len(files2))
     return files2
+
 
 def get_files_of_types2(dirnames: list[str], extensions: list[str],
                         max_size_mb: float=0.0,
@@ -187,6 +190,7 @@ def get_files_of_types2(dirnames: list[str], extensions: list[str],
         assert len(files_out) > 0, files_out
     return files_out
 
+
 def get_op2_model_directories(folders_filennames: list[str],
                               filter_simcenter: bool) -> list[str]:
     dirnames = []
@@ -202,6 +206,7 @@ def get_op2_model_directories(folders_filennames: list[str],
                 #print('*', filename)
         dirnames = dirnames2
     return dirnames
+
 
 def run(regenerate=True, make_geom=False, combine=True,
         write_bdf=False, build_pandas=True,
@@ -229,8 +234,8 @@ def run(regenerate=True, make_geom=False, combine=True,
     stop_on_failure = False
     get_skip_cards = False
 
-    #max_size = 4000. # MB
-    max_size = 500. # MB
+    # max_size = 4000. # MB
+    max_size = 500.  # MB
     filter_simcenter = False
     failed_cases_filename = 'failed_cases%s%s.in' % tuple(sys.version_info[:2])
     failed_cases_temp_filename = 'failed_cases%s%s.temp.in' % tuple(sys.version_info[:2])
@@ -255,8 +260,8 @@ def run(regenerate=True, make_geom=False, combine=True,
     files = list(set(files2))
     files.sort()
     files = [filename for filename in files if '.test_op2.' not in filename]
-        #files = [filename for filename in files
-                 #if 'Siemens' not in filename and 'simcenter' not in filename]
+    # files = [filename for filename in files
+    #          if 'Siemens' not in filename and 'simcenter' not in filename]
     assert len(files)
     if regenerate:
         print('files:')
@@ -372,7 +377,7 @@ def main():
     short_stats = data['--short_stats']
     compare = not data['--disablecompare']
     build_pandas = not data['--skip_dataframe']
-    include_results = [] # data['--include']
+    include_results = []  # data['--include']
     exclude_results = data['--exclude']
     xref_safe = data['--safe']
     combine = not data['--nocombine']

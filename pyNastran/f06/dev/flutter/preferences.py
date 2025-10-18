@@ -15,7 +15,7 @@ from qtpy.QtWidgets import (
     # QListWidget,
     QSpinBox, QDoubleSpinBox,
 )
-from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_font, check_color
 from pyNastran.gui.utils.qt.qcombobox import set_combo_box_text
 
 FONT_SIZE_DEFAULT = 10
@@ -23,6 +23,7 @@ LEGEND_LOC_DEFAULT = 'best'
 FLUTTER_BBOX_TO_ANCHOR_DEFAULT = 1.02
 FLUTTER_NCOLUMNS_DEFAULT = 0
 FREQ_NDIGITS_DEFAULT = 1
+FREQ_DIVERGENCE_TOL = 0.05
 
 LEGEND_LOCS = [
     'best', 'none',
@@ -58,6 +59,9 @@ class FlutterPreferencesDialog(PyDialog):
         self.plot_font_size_label = QLabel('Plot Font Size')
         self.plot_font_size_edit = QSpinBox()
         self.plot_font_size_edit.setValue(data['plot_font_size'])
+
+        self.auto_update_checkbox = QCheckBox('Auto_Update')
+        self.auto_update_checkbox.setChecked(data['auto_update'])
 
         self.nphase_label = QLabel('Num Phase:')
         self.nphase_edit = QSpinBox()
@@ -100,19 +104,26 @@ class FlutterPreferencesDialog(PyDialog):
         self.flutter_bbox_to_anchor_x_spinner.setMaximum(2.0)
         self.flutter_bbox_to_anchor_x_spinner.setSingleStep(0.01)
 
-        flutter_ncolumns = 0 if data['flutter_ncolumns'] is None else data['flutter_ncolumns']
+        flutter_ncolumns = _get_dict_value(data, 'flutter_ncolumns', 0)
         self.flutter_ncolumns_label = QLabel('Flutter nColumns:')
         self.flutter_ncolumns_spinner = QSpinBox()
         self.flutter_ncolumns_spinner.setMinimum(0)
         self.flutter_ncolumns_spinner.setMaximum(3)
         self.flutter_ncolumns_spinner.setValue(flutter_ncolumns)
 
-        freq_ndigits = 0 if data['freq_ndigits'] is None else data['freq_ndigits']
+        freq_ndigits = _get_dict_value(data, 'freq_ndigits', FREQ_NDIGITS_DEFAULT)
         self.freq_ndigits_label = QLabel('Freq Digits:')
         self.freq_ndigits_spinner = QSpinBox()
         self.freq_ndigits_spinner.setMinimum(0)
         self.freq_ndigits_spinner.setMaximum(4)
         self.freq_ndigits_spinner.setValue(freq_ndigits)
+
+        freq_diveregence_tol = _get_dict_value(data, 'freq_divergernce_tol', str(FREQ_DIVERGENCE_TOL))
+        self.freq_divergence_tol_label = QLabel('Divergence Freq Tol (Hz):')
+        self.freq_divergence_tol_edit = QFloatEdit('0', self)
+        self.freq_divergence_tol_edit.setText(freq_diveregence_tol)
+        self.freq_divergence_tol_label.setEnabled(False)
+        self.freq_divergence_tol_edit.setEnabled(False)
 
         self.export_png_checkbox = QCheckBox('Export PNG')
         self.export_csv_checkbox = QCheckBox('Export CSV')
@@ -136,6 +147,8 @@ class FlutterPreferencesDialog(PyDialog):
     def setup_layout(self) -> None:
         irow = 0
         grid = QGridLayout()
+        grid.addWidget(self.auto_update_checkbox, irow, 0)
+        irow += 1
         grid.addWidget(self.font_size_label, irow, 0)
         grid.addWidget(self.font_size_edit, irow, 1)
         irow += 1
@@ -162,6 +175,10 @@ class FlutterPreferencesDialog(PyDialog):
         irow += 1
         grid.addWidget(self.freq_ndigits_label, irow, 0)
         grid.addWidget(self.freq_ndigits_spinner, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.freq_divergence_tol_label, irow, 0)
+        grid.addWidget(self.freq_divergence_tol_edit, irow, 1)
         irow += 1
         grid.addWidget(self.divergence_legend_loc_label, irow, 0)
         grid.addWidget(self.divergence_legend_loc_combobox, irow, 1)
@@ -200,6 +217,8 @@ class FlutterPreferencesDialog(PyDialog):
         self.flutter_ncolumns_spinner.valueChanged.connect(self.on_flutter_ncolumns)
         self.freq_ndigits_spinner.valueChanged.connect(self.on_freq_ndigits)
         self.divergence_legend_loc_combobox.currentIndexChanged.connect(self.on_divergence_legend_loc)
+        self.freq_divergence_tol_edit.textChanged.connect(self.on_freq_divergence_tol)
+        self.auto_update_checkbox.clicked.connect(self.on_auto_update)
 
     def on_font_size(self) -> None:
         font_size = self.font_size_edit.value()
@@ -270,6 +289,18 @@ class FlutterPreferencesDialog(PyDialog):
         value = self.freq_ndigits_spinner.value()
         self.gui_obj.on_freq_ndigits(value)
 
+    def on_freq_divergence_tol(self) -> None:
+        value_str = self.freq_divergence_tol_edit.text()
+        try:
+            value = float(value_str)
+        except ValueError:
+            return
+        self.gui_obj.on_freq_divergence_tol(value)
+
+    def on_auto_update(self) -> None:
+        value = self.auto_update_checkbox.value()
+        self.gui_obj.on_auto_update(value)
+
     def on_flutter_bbox_to_anchor_x(self) -> None:
         """TODO: move this behind an apply button"""
         value = self.flutter_bbox_to_anchor_x_spinner.value()
@@ -280,7 +311,13 @@ class FlutterPreferencesDialog(PyDialog):
         value = self.divergence_legend_loc_combobox.currentText()
         self.gui_obj.on_divergence_legend_loc(value)
 
-
     def closeEvent(self, event):
         # event.accept()
         self.gui_obj.on_close()
+
+
+def _get_dict_value(data: dict, name, default):
+    value = data.get(name, default)
+    if value is None:
+        return default
+    return value
