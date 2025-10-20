@@ -690,6 +690,8 @@ class GetMethods(BDFAttributes):
 
     def safe_acsid(self, msg: str='') -> Optional[Coord]:
         """gets the aerodynamic coordinate system"""
+        acsid_aero = -1
+        acsid_aeros = -1
         if self.aero is not None:
             acsid_aero = self.aero.Acsid()
         if self.aeros is not None:

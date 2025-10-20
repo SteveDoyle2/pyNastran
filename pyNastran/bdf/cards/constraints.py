@@ -18,10 +18,12 @@ The ConstraintObject contain multiple constraints.
 """
 from __future__ import annotations
 from itertools import count
+import warnings
 from typing import TYPE_CHECKING
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf import MAX_INT
+from pyNastran.bdf.cards.expand_card import remove_blanks_capitalize, set_list_print
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, parse_components,
@@ -74,10 +76,10 @@ class SUPORT1(Constraint):
     def _init_from_empty(cls):
         conid = 1
         nodes = [1]
-        Cs = ['123']
-        return SUPORT1(conid, nodes, Cs, comment='')
+        components = ['123']
+        return SUPORT1(conid, nodes, components, comment='')
 
-    def __init__(self, conid, nodes, Cs, comment=''):
+    def __init__(self, conid, nodes, components, comment=''):
         """
         Creates a SUPORT card, which defines free-body reaction points.
 
@@ -87,7 +89,7 @@ class SUPORT1(Constraint):
             Case Control SUPORT id
         nodes : list[int]
             the nodes to release
-        Cs : list[str]
+        components : list[str]
             components to support at each node
         comment : str; default=''
             a comment for the card
@@ -98,7 +100,7 @@ class SUPORT1(Constraint):
             self.comment = comment
         self.conid = conid
         self.nodes = nodes
-        self.Cs = Cs
+        self.Cs = components
         assert len(self.nodes) > 0
         assert len(self.nodes) == len(self.Cs)
         self.nodes_ref = None
@@ -123,15 +125,15 @@ class SUPORT1(Constraint):
         nterms = int((nfields - 1.) / 2.)
         n = 1
         nodes = []
-        Cs = []
+        components = []
         for i in range(nterms):
             nstart = 2 + 2 * i
             nid = integer(card, nstart, 'ID%s' % n)
-            C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
+            comp = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
             nodes.append(nid)
-            Cs.append(C)
+            components.append(comp)
             n += 1
-        return SUPORT1(conid, nodes, Cs, comment=comment)
+        return SUPORT1(conid, nodes, components, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -149,13 +151,13 @@ class SUPORT1(Constraint):
         conid = data[0]
         assert (len(data) - 1) % 2 == 0, data
         nodes = []
-        Cs = []
+        components = []
         for i in range(1, len(data), 2):
             nid = data[i]
-            C = data[i+1]
+            comp = data[i+1]
             nodes.append(nid)
-            Cs.append(C)
-        return SUPORT1(conid, nodes, Cs, comment=comment)
+            components.append(comp)
+        return SUPORT1(conid, nodes, components, comment=comment)
 
     def add_suport1_to_set(self, suport1):
         assert self.conid == suport1.conid, 'SUPORT1 conid=%s new_conid=%s; they must be the same' % (self.conid, suport1.conid)
@@ -166,7 +168,7 @@ class SUPORT1(Constraint):
         self.Cs += suport1.Cs
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         msg = ', which is required by SUPORT1'
         if self.nodes_ref is None:
             return self.nodes
@@ -193,8 +195,7 @@ class SUPORT1(Constraint):
                 nid2 = model.Node(nid, msg=msg)
             except KeyError:
                 if debug:
-                    msg = 'Couldnt find nid=%i, which is required by SUPORT1=%s' % (
-                        nid, self.conid)
+                    msg = f'Couldnt find nid={nid}, which is required by SUPORT1={self.conid}'
                     model.log.warning(msg)
                 continue
             nids2.append(nid2)
@@ -207,8 +208,8 @@ class SUPORT1(Constraint):
 
     def raw_fields(self):
         fields = ['SUPORT1', self.conid]
-        for nid, c in zip(self.node_ids, self.Cs):
-            fields += [nid, c]
+        for nid, comp in zip(self.node_ids, self.Cs):
+            fields += [nid, comp]
         return fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -235,7 +236,7 @@ class SUPORT(Constraint):
         components = ['123', '456']
         return SUPORT(nodes, components, comment='')
 
-    def __init__(self, nodes, Cs, comment=''):
+    def __init__(self, nodes, components, comment=''):
         """
         Creates a SUPORT card, which defines free-body reaction points.
         This is always active.
@@ -244,7 +245,7 @@ class SUPORT(Constraint):
         ----------
         nodes : list[int]
             the nodes to release
-        Cs : list[str]
+        components : list[str]
             components to support at each node
         comment : str; default=''
             a comment for the card
@@ -255,10 +256,10 @@ class SUPORT(Constraint):
             self.comment = comment
         self.nodes = nodes
         self.Cs = []
-        for ci in Cs:
-            if isinstance(ci, integer_types):
-                ci = str(ci)
-            self.Cs.append(ci)
+        for compi in components:
+            if isinstance(compi, integer_types):
+                compi = str(compi)
+            self.Cs.append(compi)
         self.nodes_ref = None
 
     def validate(self):
@@ -374,11 +375,11 @@ class SESUP(SUPORT):
     @classmethod
     def _init_from_empty(cls):
         nodes = [1, 2]
-        Cs = ['1', '2']
-        return SESUP(nodes, Cs, comment='')
+        components = ['1', '2']
+        return SESUP(nodes, components, comment='')
 
-    def __init__(self, nodes, Cs, comment=''):
-        SUPORT.__init__(self, nodes, Cs, comment='')
+    def __init__(self, nodes, components, comment=''):
+        SUPORT.__init__(self, nodes, components, comment='')
 
 
 class MPC(Constraint):
@@ -524,6 +525,7 @@ class MPC(Constraint):
         components = [str(component) for component in data[2]]
         enforced = data[3]
         return MPC(conid, nodes, components, enforced, comment=comment)
+
     @property
     def independent_dofs(self) -> tuple[list[int], list[int]]:
         """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
@@ -535,6 +537,7 @@ class MPC(Constraint):
         if isinstance(nodes, integer_types):
             return [nodes], [components]
         return nodes, components
+
     @property
     def dependent_dofs(self) -> tuple[list[int], list[int]]:
         """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
@@ -561,6 +564,7 @@ class MPC(Constraint):
         one MPC entry cannot be assigned dependent by another MPC entry or by a
         rigid element."""
         return [self.nodes[0]]
+
     @property
     def node_ids(self):
         if self.nodes_ref is None:
@@ -793,13 +797,13 @@ class SPC(Constraint):
         components_str = str(components)
         assert len(components_str) <= 6, data
         components = [components_str]
-        #if components[0] == 0:
-            #components[0] = 0
-        #if components[0] == 16:
-            #components[0] = '16'
-        #else:
-            #raise RuntimeError('SPC; components=%s data=%s' % (components, data))
-        #assert 0 < components[0] > 1000, data
+        # if components[0] == 0:
+        #     components[0] = 0
+        # if components[0] == 16:
+        #     components[0] = '16'
+        # else:
+        #     raise RuntimeError('SPC; components=%s data=%s' % (components, data))
+        # assert 0 < components[0] > 1000, data
         return SPC(spc_id, nodes, components, enforced, comment=comment)
 
     @property
@@ -1060,7 +1064,7 @@ class SPC1(Constraint):
 
     """
     type = 'SPC1'
-    _properties = ['node_ids'] # 'constraints',
+    _properties = ['node_ids']  # 'constraints',
 
     @classmethod
     def _init_from_empty(cls):
@@ -1195,6 +1199,7 @@ class SPC1(Constraint):
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
+
 class SPCOFF(Constraint):
     """
     +-----+----+----+----+----+----+----+----+----+
@@ -1210,9 +1215,9 @@ class SPCOFF(Constraint):
 
     @classmethod
     def _init_from_empty(cls):
-        nodes= [1, 2]
-        Cs = ['1', '2']
-        return SPCOFF(nodes, Cs, comment='')
+        nodes = [1, 2]
+        components = ['1', '2']
+        return SPCOFF(nodes, components, comment='')
 
     def __init__(self, nodes, components, comment: str=''):
         Constraint.__init__(self)
@@ -1325,7 +1330,7 @@ class SPCOFF1(Constraint):
     @classmethod
     def _init_from_empty(cls):
         components = '1'
-        nodes= [1, 2]
+        nodes = [1, 2]
         return SPCOFF1(components, nodes, comment='')
 
     def __init__(self, components, nodes, comment=''):
@@ -1474,7 +1479,13 @@ class SPCADD(ConstraintAdd):
         if comment:
             self.comment = comment
         self.conid = conid
-        self.sets = expand_thru(sets)
+
+        sets_clean = remove_blanks_capitalize(sets)
+        if len(sets) != len(sets_clean):
+            warnings.warn(f'NSMADD={conid} set length is changed\n'
+                          f'old; n={len(sets)}: {set_list_print(sets)}\n'
+                          f'new; n={len(sets_clean)}: {set_list_print(sets_clean)}')
+        self.sets = expand_thru(sets_clean)
         self.sets.sort()
 
     @classmethod
@@ -1596,12 +1607,18 @@ class MPCADD(ConstraintAdd):
         sets = [1, 2]
         return MPCADD(conid, sets, comment='')
 
-    def __init__(self, conid, sets, comment=''):
+    def __init__(self, conid: int, sets: list[str | int], comment: str=''):
         ConstraintAdd.__init__(self)
         if comment:
             self.comment = comment
         self.conid = conid
-        self.sets = expand_thru(sets)
+
+        sets_clean = remove_blanks_capitalize(sets)
+        if len(sets) != len(sets_clean):
+            warnings.warn(f'NSMADD={conid} set length is changed\n'
+                          f'old; n={len(sets)}: {set_list_print(sets)}\n'
+                          f'new; n={len(sets_clean)}: {set_list_print(sets_clean)}')
+        self.sets = expand_thru(sets_clean)
         self.sets.sort()
 
     @classmethod

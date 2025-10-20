@@ -4,13 +4,19 @@ defines:
  - expand_thru_by
 
 """
-from typing import  Optional
+from typing import Optional
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 
 
-def expand_thru(fields: list[str],
+def set_list_print(mylist: list[Optional[int | str]]):
+    """write a list of [1, None 2] as [1, None, 2]"""
+    lst = ', '.join([str(val) for val in mylist])
+    return f'[{lst}]'
+
+
+def expand_thru(fields: list[str | int],
                 set_fields: bool=True,
                 sort_fields: bool=False) -> list[int]:
     """
@@ -36,7 +42,7 @@ def expand_thru(fields: list[str],
     elif len(fields) == 1:
         return [int(fields[0])]
 
-    fields = _remove_blanks_capitalize(fields)
+    fields = remove_blanks_capitalize(fields)
 
     out = []
     nfields = len(fields)
@@ -60,10 +66,11 @@ def expand_thru(fields: list[str],
         out.sort()
     return out
 
-def _remove_blanks_capitalize(fields: list[Optional[str]]) -> list[Optional[str]]:
+
+def remove_blanks_capitalize(fields: list[Optional[str | int]]) -> list[Optional[str | int]]:
     """remove any blanks and capitalize any strings"""
-    #fields2 = [field.upper()
-               #if isinstance(field, str) else field for field in fields]
+    # fields2 = [field.upper()
+    #            if isinstance(field, str) else field for field in fields]
     fields2 = []
     for field in fields:
         if field is None:
@@ -76,7 +83,7 @@ def _remove_blanks_capitalize(fields: list[Optional[str]]) -> list[Optional[str]
     return fields2
 
 
-def expand_thru_by(fields: list[str], set_fields: bool=True, sort_fields: bool=True,
+def expand_thru_by(fields: list[str | int], set_fields: bool=True, sort_fields: bool=True,
                    require_int: bool=True, allow_blanks: bool=False) -> list[int]:
     """
     Expands a list of values of the form [1,5,THRU,9,BY,2,13]
@@ -115,7 +122,7 @@ def expand_thru_by(fields: list[str], set_fields: bool=True, sort_fields: bool=T
         func = interpret_value
 
     # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = _remove_blanks_capitalize(fields)
+    fields = remove_blanks_capitalize(fields)
 
     if len(fields) == 1:
         return [func(fields[0])]
