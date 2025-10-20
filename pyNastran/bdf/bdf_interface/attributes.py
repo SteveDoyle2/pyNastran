@@ -587,8 +587,6 @@ class BDFAttributes:
 
         Parameters
         ----------
-        obj : instance
-            the object for checking
         mode : str
             defines what kind of methods will be listed
             * "public" - names that do not begin with underscore
@@ -1402,7 +1400,6 @@ class BDFAttributes:
             return param.value
         return default
 
-    #--------------------
 
 def map_version(fem: BDF, version: str) -> None:
     version_map = {
@@ -1422,13 +1419,13 @@ def map_version(fem: BDF, version: str) -> None:
 
 
 def map_update(fem: BDF, version: str) -> None:
-    #if self.nastran_format == 'zona':
-        #self.zona.update_for_zona()
-    #elif self.nastran_format == 'mystran':
-        #self._update_for_mystran()
-    #else:
-        # msc / nx / optistruct
-        #self._update_for_nastran()
+    # if self.nastran_format == 'zona':
+    #     self.zona.update_for_zona()
+    # elif self.nastran_format == 'mystran':
+    #     self._update_for_mystran()
+    # else:
+    #     msc / nx / optistruct
+    #     self._update_for_nastran()
 
     map_version(fem, version)
     version_map = {

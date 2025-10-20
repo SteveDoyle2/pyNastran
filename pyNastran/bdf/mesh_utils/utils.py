@@ -1187,7 +1187,7 @@ def cmd_line_remove_unused(argv=None, quiet: bool=False) -> None:
 
     if out_dict:
         with open(dict_filename, 'w') as dict_file:
-            dict_file.write('removed:')
+            dict_file.write('removed:\n')
             for key, myarray in out_dict.items():
                 assert isinstance(key, str), key
                 assert isinstance(myarray, np.ndarray), (key, myarray)
