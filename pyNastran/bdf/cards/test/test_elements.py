@@ -233,7 +233,57 @@ class TestElements(unittest.TestCase):
         model.add_pbusht(pid, k_tables, b_tables, ge_tables, kn_tables, comment='pbusht')
         save_load_deck(model)
 
-    def test_gap_01(self):
+    def test_cbush_02(self):
+        """tests a CGAP/PGAP"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        eid = 10
+        pid = 11
+        nodes = [1, None]
+        g0 = None
+        x = [1., 2., 3.]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        # assert cbush.ga == 1
+        # assert cbush.gb is None
+        model.add_cord2r(1, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.])
+        cbush1 = model.add_cbush(
+            eid, pid, nodes, x, g0,
+            cid=1, s=0.5, ocid=1,
+            si=[1., 2., 3.])
+        cbush2 = model.add_cbush(eid+1, pid, [1, 2], x, g0)
+        model.add_pbush(pid, k=[1.,], b=[2.])
+        model.cross_reference()
+        cbush1.Centroid()
+        cbush2.Centroid()
+        save_load_deck(model)
+
+    def test_cbush_optistruct(self):
+        """tests a CGAP/PGAP in optistruct"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        eid = 10
+        pid = 11
+        nodes = [1, None]
+        g0 = None
+        x = [1., 2., 3.]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        # assert cbush.ga == 1
+        # assert cbush.gb is None
+        model.add_cord2r(1, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.])
+        cbush1 = model.add_cbush(
+            eid, pid, nodes, x, g0,
+            cid=1, s=0.5, ocid=1,
+            si=[1., 2., 3.])
+        cbush2 = model.add_cbush(eid+1, pid, [1, 2], x, g0)
+        model.add_pbush_optistruct(pid, k=[1.,], b=[2.])
+        model.cross_reference()
+        cbush1.Centroid()
+        cbush2.Centroid()
+        save_load_deck(model, run_op2_writer=False)
+
+    def test_cgap_01(self):
         """tests a CGAP/PGAP"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -284,7 +334,7 @@ class TestElements(unittest.TestCase):
 
     def test_cweld_elemid_x(self):
         connectype = 'ELEMID'
-        log = get_logger(level='debug')
+        log = get_logger(level='warning')
         model = BDF(log=log)
         eid = 10
         pid = 20
@@ -312,7 +362,7 @@ class TestElements(unittest.TestCase):
 
     def test_cweld_elpat(self):
         connectype = 'ELPAT'
-        log = get_logger(level='debug')
+        log = get_logger(level='warning')
         model = BDF(log=log)
         eid = 10
         pid = 20
@@ -453,7 +503,10 @@ class TestElements(unittest.TestCase):
         kt3 = 0.1
         pfast = model.add_pfast(pid, d, kt1, kt2, kt3, mcid=-1, mflag=0, kr1=0.,
                                 kr2=0., kr3=0., mass=0., ge=0.,
-                                comment='')
+                                comment='pfast')
+        pfastb = model.add_pfast(
+            pid+1, d, kt1, kt2, kt3, mcid=0, mflag=0, kr1=0.,
+            kr2=0., kr3=0., mass=0., ge=0.)
         model.validate()
 
         cfast.raw_fields()

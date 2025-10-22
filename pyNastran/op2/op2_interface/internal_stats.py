@@ -13,12 +13,13 @@ def get_op2_stats(model: OP2, short: bool=False) -> str:
     """see OP2.get_op2_stats(...)"""
     msg = []
     #msg += model.op2_results.responses.get_stats(short=short)
+    op2_results = model.op2_results
 
     msg.extend(write_params_stats(model.params))
     for key, weight in model.grid_point_weight.items():
         msg += weight.get_stats(key, short=short)
 
-    msg += model.op2_results.psds.get_stats(short=short)
+    msg += op2_results.psds.get_stats(short=short)
 
     table_types = model._get_table_types_testing()
 
@@ -160,12 +161,14 @@ def _get_op2_stats_full(model: OP2, table_types: list[str],
                 msg.append(f'{table_type_print}[{key}]\n')
             continue
 
+        #if not len(table):
+            #continue
         try:
-            for isubcase, subcase in sorted(table.items(), key=_compare):
-                class_name = subcase.__class__.__name__
-                if hasattr(subcase, 'get_stats'):
+            for isubcase, case in sorted(table.items(), key=_compare):
+                class_name = case.__class__.__name__
+                if hasattr(case, 'get_stats'):
                     try:
-                        stats = subcase.get_stats() # short=short
+                        stats = case.get_stats() # short=short
                     except Exception:
                         msgi = 'errored reading %s %s[%s]\n\n' % (
                             class_name, table_type_print, isubcase)
@@ -176,10 +179,11 @@ def _get_op2_stats_full(model: OP2, table_types: list[str],
                         msg.extend(stats)
                         msg.append('\n')
                 else:
-                    msgi = 'skipping %s %s[%s]\n\n' % (class_name, table_type_print, isubcase)
+                    msgi = 'No get_stats for %s %s[%s]\n\n' % (class_name, table_type_print, isubcase)
                     msg.append(msgi)
                     raise RuntimeError(msgi)
         except Exception:
+            # if you're getting a crash here, make sure self.subcase_key is set correctly
             log.warning(f'table_type={table_type}; type(table)={type(table)}')
             log.warning(str(table))
             raise

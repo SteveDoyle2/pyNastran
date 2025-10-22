@@ -7,7 +7,8 @@ from pyNastran.op2.errors import SixtyFourBitError
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
-def write_geom1(op2_file, op2_ascii, obj: OP2, endian: bytes=b'<'):
+def write_geom1(op2_file, op2_ascii, obj: OP2, endian: bytes=b'<',
+                nastran_format: str='nx'):
     #if not hasattr(obj, 'nodes'):
         #return
     if not hasattr(obj, 'nodes'):

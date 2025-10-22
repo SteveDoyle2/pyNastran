@@ -7,7 +7,9 @@ from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
-from pyNastran import is_release
+from pyNastran import (
+    warn_on_op2_missed_table,
+    stop_on_op2_missed_table)
 from pyNastran.op2.errors import OverwriteTableError
 from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2_interface.function_codes import func7
@@ -432,7 +434,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.nonlinear_factor = np.nan #np.float32(None)
         self.data_code['nonlinear_factor'] = np.nan
 
-    def _read_title_helper(self, data: bytes) -> None:
+    def _read_title_helper(self, data: bytes) -> dict[str, Any]:
         if self.size == 4:
             assert len(data) == 584, len(data)
             # title_subtitle_label
@@ -502,6 +504,7 @@ class OP2Common(Op2Codes, F06Writer):
                     'label', self.label,
                     'pval_step', self.pval_step,
                     'superelement_adaptivity_index', self.superelement_adaptivity_index))
+        return self.data_code
 
     def _read_title(self, data: bytes) -> None:
         self._read_title_helper(data)
@@ -638,9 +641,10 @@ class OP2Common(Op2Codes, F06Writer):
         if not self.make_geom:
             return ndata
 
+        log = self.log
         max_geom_id = self.get_table_count()
         if max_geom_id > 1:
-            self.log.warning('superelement 2 not supported.  This may crash.')
+            log.warning('superelement 2 not supported.  This may crash.')
 
         n = 0
         if self.size == 4:
@@ -689,24 +693,29 @@ class OP2Common(Op2Codes, F06Writer):
                     #mapper.keys())
                 #raise NotImplementedError(msg)
 
+        if keys not in mapper:
+            log.warning(f'skipping {self.table_name} keys={str(keys)}')
+            return n
         try:
             name, func = mapper[keys]
         except KeyError:
-            #raise KeyError('table_name=%s keys=%s' % (self.table_name_str, str(keys)))
+            #raise KeyError(f'table_name={self.table_name_str} keys={str(keys)}')
             return n
+
+        #log.warning(f'keys={str(keys)}: {name} {self.table_name}')
         if self.is_debug_file:
             self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (
                 str(keys), name, self.table_name))
         if self.debug:
-            self.log.debug("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (
+            log.debug("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (
                 keys[0], keys[1], keys[2], name, self.table_name))
         self.card_name = name
         n = func(data, n)  # gets all the grid/mat cards
         assert n is not None, name
         if n != ndata:  # pragma: no cover
-            assert isinstance(n, int), f'mishandled geometry table for {name}; n must be an int; n={n}'
+            assert isinstance(n, int), f'mishandled geometry table for {name}; n must be an int; n={n}; type={type(n)}'
             msg = f'mishandled geometry table for {name}; n={n} len(data)={ndata}; should be equal'
-            self.log.error(msg)
+            log.error(msg)
             #raise RuntimeError(msg)
         del self.card_name
 
@@ -1648,7 +1657,12 @@ class OP2Common(Op2Codes, F06Writer):
                                      #69, # CBEND
                                      #]:
                 #return ndata
-        if is_release:
+        if stop_on_op2_missed_table:
+            msg = 'table_name=%s table_code=%s %s\n%s' % (
+                self.table_name, self.table_code, msg, self.code_information())
+            raise NotImplementedError(msg)
+
+        if warn_on_op2_missed_table:
             if msg != self._last_comment:
                 #print(self.code_information())
                 if self.read_mode == 2:
@@ -1668,13 +1682,8 @@ class OP2Common(Op2Codes, F06Writer):
                 #    pass
                 #else:
                 #    self.log.warning(self.code_information())
-
                 self._last_comment = msg
             return ndata
-        else:  # pragma: no cover
-            msg = 'table_name=%s table_code=%s %s\n%s' % (
-                self.table_name, self.table_code, msg, self.code_information())
-            raise NotImplementedError(msg)
 
     @property
     def size(self) -> int:

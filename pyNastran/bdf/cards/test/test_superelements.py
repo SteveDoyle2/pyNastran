@@ -11,16 +11,118 @@ MODEL_PATH = PKG_PATH / '..' / 'models'
 
 class TestSuperelements(unittest.TestCase):
 
+    def test_seconct(self):
+        model = BDF(debug=None)
+        model.sol = 103
+
+        super_a = BDF(debug=None)
+        super_a.add_grid(11, [1., 0., 0.])
+        super_a.add_grid(12, [2., 0., 0.])
+        super_a.add_grid(13, [3., 0., 0.])
+
+        super_a.add_grid(101, [1., 0., 0.])
+        super_a.add_grid(102, [2., 0., 0.])
+        super_a.add_grid(103, [3., 0., 0.])
+        seid_a = 10
+        seid_b = 10
+        model.superelement_models[('SUPER', 10, '')] = super_a
+
+        tol = 0.1
+        loc = 'NO'
+        nodes_a = [11, 12, 13]
+        nodes_b = [101, 102, 103]
+
+        seconct = model.add_seconct(
+            seid_a, seid_b,
+            nodes_a, nodes_b,
+            tol=tol, loc=loc, comment='seconct')
+        seconct.raw_fields()
+        model.cross_reference()
+        save_load_deck(model)
+
+    def test_seelt(self):
+        model = BDF(debug=None)
+        model.sol = 101
+
+        super_a = BDF(debug=None)
+        model.superelement_models[('SUPER', 10, '')] = super_a
+
+        seid = 10
+        eids = [4, 5]
+        seelt = super_a.add_seelt(seid, eids, comment='seelt')
+        super_a.add_grid(11, [1., 0., 0.])
+        super_a.add_grid(12, [2., 0., 0.])
+        super_a.add_grid(13, [3., 0., 0.])
+        super_a.add_conrod(4, 100, [11, 12], A=1.0)
+        super_a.add_conrod(5, 100, [12, 13], A=1.0)
+        super_a.add_mat1(100, 3.0e7, None, 0.3)
+        seelt.raw_fields()
+        model.cross_reference()
+        save_load_deck(model)
+
+    def test_setree(self):
+        model = BDF(debug=None)
+        model.sol = 101
+
+        seid_a = 10
+        seid_b = seid_a + 1
+        super_a = BDF(debug=None)
+        super_b = BDF(debug=None)
+        super_a.add_grid(11, [1., 0., 0.])
+        super_b.add_grid(21, [1., 0., 0.])
+        model.superelement_models[('SUPER', seid_a, '')] = super_a
+        model.superelement_models[('SUPER', seid_b, '')] = super_b
+
+        seid_c = 50
+        seids = [seid_a, seid_b]
+        setree = model.add_setree(seid_c, seids, comment='')
+        setree.raw_fields()
+        model.cross_reference()
+        save_load_deck(model)
+
+    def test_release(self):
+        model = BDF(debug=None)
+        comp = '3'
+        psid = 42
+        nodes = [11, 12, 13]
+
+        label = 'CAT'
+        comment = 'release'
+        for seid in [10, 11]:
+            release = model.add_release(seid, comp, nodes, comment=comment)
+            csuper = model.add_csuper(
+                seid, psid, nodes,
+                comment=comment)
+            csupext = model.add_csupext(seid, nodes, comment=comment)
+            selabel = model.add_selabel(seid, label, comment=comment)
+            comment = ''
+
+        comps = ['A', 'B', 'C']
+        sesup = model.add_sesup(nodes, comps, comment='sesup')
+
+        model.add_grid(11, [1., 0., 0.])
+        model.add_grid(12, [2., 0., 0.])
+        model.add_grid(13, [3., 0., 0.])
+        release.raw_fields()
+        csuper.raw_fields()
+        csupext.raw_fields()
+        selabel.raw_fields()
+        sesup.raw_fields()
+        model.cross_reference()
+        save_load_deck(model)
+
     def _test_superelements_pch(self):
         model = BDF(mode='nx')
         model.is_superelements = True
         bdf_filename = MODEL_PATH / 'bugs' / 'outboard_op4asmblk.pch'
         model.read_bdf(bdf_filename, punch=True)
-        #save_load_deck(model)
+        model.sol = 103
+        save_load_deck(model)
 
     def test_superelements_1(self):
         """SEMPLN/SELOC/SEBULK test"""
         model = BDF(debug=False)
+        model.sol = 103
         model.add_grid(2, [0., 0., 0.])
         model.add_grid(3, [0., 0., 1.])
         model.add_grid(4, [1., 0., 0.])
@@ -63,8 +165,10 @@ class TestSuperelements(unittest.TestCase):
             xref_loads=True, xref_constraints=True, xref_aero=True,
             xref_sets=True, xref_optimization=True,
             create_superelement_geometry=True, debug=True, word='')
+        model.uncross_reference()
+        model.cross_reference()
         os.remove('super_2.bdf')
-        #save_load_deck(model, punch=True)
+        save_load_deck(model)
 
     def test_superelement_2(self):
         """
@@ -73,7 +177,7 @@ class TestSuperelements(unittest.TestCase):
          - SELOAD
          - SEEXCLD
         """
-        model = BDF(debug=False)
+        model = BDF(debug=None)
         seid_a = 101
         seid_b = 102
         ids = [10, 20]
@@ -98,11 +202,11 @@ class TestSuperelements(unittest.TestCase):
         senqset.raw_fields()
 
         model.validate()
-
         save_load_deck(model, run_save_load_hdf5=False)
 
     def test_seexclude(self):
-        model = BDF(debug=False)
+        model = BDF(debug=None)
+        model.sol = 103
         seid_a = 1
         seid_b = 2
         nodes = [10, 11, 12]
@@ -129,11 +233,12 @@ class TestSuperelements(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
-        #save_load_deck(model, run_save_load_hdf5=False)
+        save_load_deck(model, run_save_load_hdf5=False)
 
     def test_superelement_setree(self):
         """tests the SETREE"""
         model = BDF(debug=False)
+        model.sol = 101
         super1, super1_key = create_superelement(101, debug=True)
         super2, super2_key = create_superelement(102, debug=True)
         model.superelement_models[super1_key] = super1
@@ -144,8 +249,7 @@ class TestSuperelements(unittest.TestCase):
         setree = model.add_setree(seid, seids, comment='setree')
         setree.raw_fields()
         model.validate()
-        #TODO: enable this...fix error
-        #save_load_deck(model, run_test_bdf=False, run_save_load_hdf5=False)
+        save_load_deck(model)
 
     def test_super_sets(self):
         model = BDF(debug=False, log=None, mode='msc')

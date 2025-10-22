@@ -96,9 +96,9 @@ def _triangle_area_centroid_normal(nodes, card):
     except FloatingPointError as error:
         #CTRIA3     20152     701   20174   20175   20176    8020
         #vector: [ 0.  0.  0.]; length: 0.0
-        #   [207.42750549, 0.0, -0.22425441]
-        #   [207.42750549, 0.0, 0.00631836]
-        #   [207.42750549, 0.0, 0.69803673]
+        #  [207.42750549, 0.0, -0.22425441]
+        #  [207.42750549, 0.0, 0.00631836]
+        #  [207.42750549, 0.0, 0.69803673]
         msg = error.message  # strerror
         msg += '\nvector: %s; length: %s' % (vector, length)
         msg += '\n  %s\n  %s\n  %s' % (n1.tolist(), n2.tolist(), n3.tolist())
@@ -268,8 +268,8 @@ class ShellElement(Element):
 class TriShell(ShellElement):
     def __init__(self):
         ShellElement.__init__(self)
-        self.nodes_ref = None  # type: Optional[list[Any]]
-        self.pid_ref = None  # type: Optional[Any]
+        self.nodes_ref: Optional[list[Any]] = None
+        self.pid_ref: Optional[Any] = None
 
     def get_edge_ids(self):
         """Return the edge IDs"""
@@ -591,7 +591,7 @@ class CTRIA3(TriShell):
         self.T2 = T2
         self.T3 = T3
         assert len(self.nodes) == 3
-        self.theta_mcid_ref = None  # type: Optional[Any]
+        self.theta_mcid_ref: Optional[Any] = None
 
     def validate(self):
         assert len(set(self.nodes)) == 3, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
@@ -937,7 +937,7 @@ class CPLSTx3(TriShell):
         #return CPLSTN3(eid, pid, nids, theta, comment=comment)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CPLSTx3 card from ``BDF.add_card(...)``
 
@@ -1140,7 +1140,7 @@ class CTRIA6(TriShell):
         self.T3 = T3
         self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
-        self.theta_mcid_ref = None  # type: Optional[Any]
+        self.theta_mcid_ref: Optional[Any] = None
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, eids):
@@ -1550,7 +1550,7 @@ class CTRIAR(TriShell):
         #self.validate_node_ids(allow_empty_nodes=False)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CTRIAR card from ``BDF.add_card(...)``
 
@@ -2072,7 +2072,7 @@ class CSHEAR(QuadShell):
         assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CSHEAR card from ``BDF.add_card(...)``
 
@@ -2357,8 +2357,12 @@ class CQUAD4(QuadShell):
         h5_file.create_dataset('zoffset', data=zoffsets)
         #self.tflag = tflag
 
-    def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-                 tflag=0, T1=None, T2=None, T3=None, T4=None, comment=''):
+    def __init__(self, eid: int, pid: int, nids: list[int],
+                 theta_mcid: int | float=0.0, zoffset: float=0.0,
+                 tflag: int=0,
+                 T1: Optional[float]=None, T2: Optional[float]=None,
+                 T3: Optional[float]=None, T4: Optional[float]=None,
+                 comment: str=''):
         """
         Creates a CQUAD4 card
 
@@ -2404,7 +2408,7 @@ class CQUAD4(QuadShell):
         self.T2 = T2
         self.T3 = T3
         self.T4 = T4
-        self.theta_mcid_ref = None  # type: Optional[Any]
+        self.theta_mcid_ref: Optional[Any] = None
 
     def validate(self):
         assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
@@ -3917,7 +3921,7 @@ class CQUADR(QuadShell):
         self.T4 = T4
         self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 4, 'CQUADR'
-        self.theta_mcid_ref = None  # type: Optional[Any]
+        self.theta_mcid_ref: Optional[Any] = None
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, eids):

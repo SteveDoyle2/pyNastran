@@ -27,7 +27,7 @@ class SpringElement(Element):
         Element.__init__(self)
         self.nodes = [None, None]
 
-    def Mass(self):
+    def Mass(self) -> float:
         return 0.0
 
     def repr_fields(self):
@@ -108,7 +108,7 @@ class CELAS1(SpringElement):
         h5_file.create_dataset('components', data=components)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CELAS1 card from ``BDF.add_card(...)``
 
@@ -164,7 +164,7 @@ class CELAS1(SpringElement):
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         node_ids = self.node_ids
         c1 = self.c1
@@ -255,7 +255,9 @@ class CELAS2(SpringElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, k, nids, c1=0, c2=0, ge=0., s=0., comment=''):
+    def __init__(self, eid: int, k: float, nids: list[int],
+                 c1: int=0, c2: int=0,
+                 ge: float=0., s: float=0., comment: str=''):
         """
         Creates a CELAS2 card
 
@@ -265,9 +267,8 @@ class CELAS2(SpringElement):
             element id
         k : float
             spring stiffness
-        nids : list[int, int]
-            SPOINT ids
-            node ids
+        nids : list[int]
+            2 SPOINT ids or 2 node ids
         c1 / c2 : int; default=0
             DOF for nid1 / nid2
         ge : int; default=0.0
@@ -320,7 +321,7 @@ class CELAS2(SpringElement):
         h5_file.create_dataset('components', data=components)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CELAS2 card from ``BDF.add_card(...)``
 
@@ -414,7 +415,7 @@ class CELAS2(SpringElement):
         self.nodes = self.node_ids
         self.nodes_ref = None
 
-    def _verify(self, xref=True):
+    def _verify(self, xref: bool=True) -> None:
         eid = self.eid
         k = self.K()
         node_ids = self.node_ids
@@ -512,7 +513,7 @@ class CELAS3(SpringElement):
         h5_file.create_dataset('nodes', data=nodes)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CELAS3 card from ``BDF.add_card(...)``
 

@@ -7,14 +7,13 @@ Safe cross-referencing skips failed xref's
 from __future__ import annotations
 from typing import Callable, Any, TYPE_CHECKING
 
-import numpy as np
-from numpy import zeros, argsort, arange, array_equal
 from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import (
         BDF,
         Element, Property, Material, PAEROs, CAEROs, Coord,
-        AEFACT, AELIST, TABLEDs, TABLEMs)
+        AEFACT, AELIST, TABLEDs, TABLEMs,
+        DESVAR)
     from pyNastran.bdf.cards.nodes import GRID
     from pyNastran.bdf.bdf_interface.cross_reference_obj import CrossReference
 
@@ -28,12 +27,12 @@ class SafeXrefMesh(XrefMesh):
         XrefMesh.__init__(self)
 
     # def geom_check(self):
-        # """
-        # Performs various geometry checks
-          # 1.  nodal uniqueness on elements
-        # """
-        # for elem in model.elements:
-            # elem.check_unique_nodes()
+    #     """
+    #     Performs various geometry checks
+    #       1.  nodal uniqueness on elements
+    #     """
+    #     for elem in model.elements:
+    #         elem.check_unique_nodes()
 
     def safe_cross_reference(self, xref: bool=True,
                              xref_nodes: bool=True,
@@ -48,7 +47,7 @@ class SafeXrefMesh(XrefMesh):
                              xref_sets: bool=True,
                              xref_optimization: bool=True,
                              create_superelement_geometry: bool=False,
-                             debug=True,
+                             debug: bool=True,
                              word: str='') -> None:
         """
         Performs cross referencing in a way that skips data gracefully.
@@ -165,6 +164,8 @@ class SafeXrefMesh(XrefMesh):
 
         Parameters
         ----------
+        eid : int
+            the element id to find
         ref_id : int
             the referencing value (e.g., a load references an element)
 
@@ -181,7 +182,7 @@ class SafeXrefMesh(XrefMesh):
                    xref_errors: dict[str, tuple[int, int]],
                    msg: str='') -> list[Element]:
         """
-        Gets an series of GRIDs/SPOINTs/EPOINTs
+        Gets a series of GRIDs/SPOINTs/EPOINTs
 
         Parameters
         ----------
@@ -222,6 +223,7 @@ class SafeXrefMesh(XrefMesh):
         """
         return _safe_attrs(self, eids, ref_id, xref_errors,
                           func=self.Element, word='eid', msg=msg)
+
     def safe_node(self, nid: int, ref_id: int, xref_errors,
                   msg: str='') -> Property:
         """
@@ -276,7 +278,7 @@ class SafeXrefMesh(XrefMesh):
         mid : int
             the material_id
         ref_id : int
-            the referencing value (e.g., an property references a material, so use self.pid)
+            the referencing value (e.g., a property references a material, so use self.pid)
         """
         return _safe_attr(self, mid, ref_id, xref_errors,
                           func=self.Material, word='mid', msg=msg)
@@ -291,20 +293,21 @@ class SafeXrefMesh(XrefMesh):
         mid : int
             the material_id
         ref_id : int
-            the referencing value (e.g., an property references a material, so use self.pid)
+            the referencing value (e.g., a property references a material, so use self.pid)
         """
         return _safe_attr(self, mid, ref_id, xref_errors,
                           func=self.HyperelasticMaterial, word='mid', msg=msg)
 
-    def safe_coord(self, cid: int, ref_id: int,
+    def safe_coord(self, cid: int, ref_id: int | str,
                    xref_errors: dict[str, tuple[int, int]], msg: str='') -> Coord:
         """
         Gets a Coord card
 
         Parameters
         ----------
-        ref_id : int
-            the referencing value (e.g., an node and element references a coord)
+        ref_id : varies
+            int: the referencing value (e.g., a node and element references a coord)
+            str: MONPNT3 uses this
 
         """
         return _safe_attr(self, cid, ref_id, xref_errors,
@@ -382,7 +385,7 @@ class SafeXrefMesh(XrefMesh):
         Parameters
         ----------
         ref_id : int
-            the referencing value (e.g., an node and element references a coord)
+            the referencing value (e.g., a node and element references a coord)
 
         """
         return _safe_attr(self, tablem_id, ref_id, xref_errors,
@@ -395,6 +398,7 @@ class SafeXrefMesh(XrefMesh):
         ----------
         ref_id : int
             the referencing value (e.g., an MATT1 eid references a TABLEH1)
+
         """
         return _safe_attr(self, tableh_id, ref_id, xref_errors,
                           func=self.TableH, word='tableh', msg=msg)
@@ -406,9 +410,11 @@ class SafeXrefMesh(XrefMesh):
         ----------
         ref_id : int
             the referencing value (e.g., an DVPREL1 eid references a DESVAR)
+
         """
         return _safe_attr(self, desvar_id, ref_id, xref_errors,
                           func=self.Desvar, word='desvar', msg=msg)
+
 
 def _safe_attr(model: BDF, idi: int, ref_id: int,
                xref_errors: dict[str, Any],
@@ -421,6 +427,7 @@ def _safe_attr(model: BDF, idi: int, ref_id: int,
         # self.log.error('cant find Property=%s%s' % (mid, msg))
         xref_errors[word].append((ref_id, idi))
     return id_ref
+
 
 def _safe_attrs(model: BDF, ids: list[int], ref_id: int,
                 xref_errors: dict[str, Any],

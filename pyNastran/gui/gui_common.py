@@ -9,6 +9,7 @@ from typing import Callable, Optional, Any, cast
 
 import numpy as np
 from cpylog import SimpleLogger
+from cpylog.html_utils import str_to_html
 
 from pyNastran.gui.arg_handling import determine_format, determine_input_output_formats
 from pyNastran.gui.qt_version import qt_int, qt_version
@@ -58,13 +59,6 @@ from .menus.legend.write_gif import (
     setup_animation, update_animation_inputs, write_gif, make_two_sided)
 from .utils.vtk.animation_callback import AnimationCallback
 from .utils.vtk.base_utils import numpy_to_vtk_idtype
-
-try:
-    from cpylog.html_utils import str_to_html
-except ImportError:
-    import warnings
-    warnings.warn('upgrade your cpylog to v1.4')
-    from .utils.html_utils import str_to_html
 
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
@@ -467,8 +461,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if 'nastran' in self.fmt_order:
             tools += [
-                ('caero',           'Show/Hide CAERO Panels', '', 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels, is_visible),
-                ('caero_subpanels', 'Toggle CAERO Subpanels', '', 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels, is_visible),
+                ('caero',       'Show/Hide CAERO Panels', '', 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels, is_visible),
+                ('caero_boxes', 'Toggle CAERO Boxes', '', 'Show/Hide CAERO Box Outlines', self.toggle_caero_boxes, is_visible),
                 ('conm2', 'Toggle CONM2s', '', 'Show/Hide CONM2s', self.toggle_conms, is_visible),
                 ('min',   'Min',           '', 'Show/Hide Min Label', self.view_actions.on_show_hide_min_actor, is_visible),
                 ('max',   'Max',           '', 'Show/Hide Max Label', self.view_actions.on_show_hide_max_actor, is_visible),

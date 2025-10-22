@@ -18,6 +18,7 @@ from pyNastran.bdf.mesh_utils.breakdowns import (
 
 from pyNastran.nptyping_interface import NDArray3float
 
+
 class BDFMethods(BDFAttributes):
     """
     Has the following methods:
@@ -157,9 +158,6 @@ class BDFMethods(BDFAttributes):
             stop_if_no_mass=stop_if_no_mass, detailed=True)
         return pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass
 
-
-
-
     #def __gravity_load(self, loadcase_id):
         #"""
         #.. todo::
@@ -174,8 +172,6 @@ class BDFMethods(BDFAttributes):
         #gi = gravity_i.N * gravity_i.scale
         #p0 = array([0., 0., 0.])  ## .. todo:: hardcoded
         #mass, cg, I = mass_properties(self, reference_point=p0, sym_axis=None)
-
-
 
     def get_element_faces(self,
                           element_ids: Optional[list[int]]=None,
@@ -223,16 +219,15 @@ class BDFMethods(BDFAttributes):
                         eid_faces.append((eid, face))
         return eid_faces
 
-
     def update_model_by_desvars(self, xref=True, desvar_values=None):
         """doesn't require cross referenceing"""
         # these are the nominal values of the desvars
-        desvar_init = {key : desvar.value
+        desvar_init = {key: desvar.value
                        for key, desvar in self.desvars.items()}
 
         # these are the current values of the desvars
         if desvar_values is None:
-            desvar_values = {key : min(max(desvar.value + 0.1, desvar.xlb), desvar.xub)
+            desvar_values = {key: min(max(desvar.value + 0.1, desvar.xlb), desvar.xub)
                              for key, desvar in self.desvars.items()}
 
         # Relates one design variable to one or more other design variables.
@@ -247,9 +242,8 @@ class BDFMethods(BDFAttributes):
             desvar_values[dlink_id] = value2
 
         # calculates the real delta to be used by DVGRID
-        desvar_delta = {key : (desvar_init[key] - desvar_values[key])
+        desvar_delta = {key: (desvar_init[key] - desvar_values[key])
                         for key in self.desvars}
-
         #min(max(self.xinit, self.xlb), self.xub)
 
         # DVxREL1

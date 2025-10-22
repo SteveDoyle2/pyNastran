@@ -1,6 +1,11 @@
 """reads the panair.out file"""
 import numpy as np
-from cpylog import get_logger2
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
+
 
 def read_panair_out(panair_out_filename='panair.out', log=None, debug=False):
     """reads the panair.out file"""
@@ -46,7 +51,7 @@ class Network:
 class PanairOut:
     """reads the panair.out file"""
     def __init__(self, log=None, debug=False):
-        self.log = get_logger2(log=log, debug=debug, encoding='utf-8')
+        self.log = get_logger(log, debug, encoding='utf-8')
         self.headers = [
             'x', 'y', 'z', 'wx', 'wy', 'wz', 'cp2ndu', 'cpisnu', 'lmachu', 'source', 'doublet'
         ]

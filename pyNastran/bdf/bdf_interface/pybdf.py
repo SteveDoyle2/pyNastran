@@ -26,10 +26,11 @@ import warnings
 from io import StringIO
 from itertools import count
 from collections import defaultdict
-from typing import Optional, Any, cast
+from functools import cache
+from typing import Sequence, Optional, Any, cast
 
 import numpy as np
-from cpylog import get_logger2, SimpleLogger
+# from cpylog import get_logger, SimpleLogger
 from pyNastran.nptyping_interface import NDArrayN2int
 from pyNastran.utils import print_bad_path, PathLike
 
@@ -37,6 +38,11 @@ from pyNastran.bdf import BULK_DATA_CARDS, CASE_BULK_CARDS
 from pyNastran.bdf.errors import AuxModelError, MissingDeckSections, SuperelementFlagError
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename, parse_include_lines
+from cpylog import SimpleLogger, __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 # these allow spaces
@@ -60,9 +66,9 @@ EXECUTIVE_SPACES = ('ALTER ', 'APP ', 'COMPILE ', 'COMPILER ', 'DIAG ',
 #}
 
 CASE_CARDS_NO_BULK = (
-    #'LOAD'
-    #NX 2019.2
-    'A2GG', 'ACCE', # ACCELERATION
+    # 'LOAD'
+    # NX 2019.2
+    'A2GG', 'ACCE',  # ACCELERATION
     'ACINTENSITY', 'ACORDCHK', 'ACPOWER', 'ACVELOCITY', 'ADAMSMNF',
     'ADAPTERR', 'ADMRECVR', 'AECONFIG', 'AEROF', 'AESYMXY', 'AESYMXZ', 'ALOAD',
     'ANALYSIS', 'APRESSURE', 'ATVOUT', 'AUXCASE', 'B2GG', 'B2PP', 'BC', 'BCRESULTS',
@@ -72,16 +78,16 @@ CASE_CARDS_NO_BULK = (
     #CSSCHD - in bulk
     'CYCFORCES', 'CYCSET', 'CZRESULTS',
     'DEFORM', 'DESGLB', 'DESOBJ', 'DESSUB',
-    'DISP', # DISPLACEMENT
-    #DIVERG - in bulk
-    #DLOAD - in bulk
+    'DISP',  # DISPLACEMENT
+    # DIVERG - in bulk
+    # DLOAD - in bulk
     'DMTRCOEF', 'DMTRLOSS', 'DRSPAN', 'DSAPRT', 'DSYM', 'DTEMP', 'EBDSET',
-    #'ECHO'
+    # 'ECHO'
     'EDE', 'EFLOAD', 'EKE', 'ELAR', 'ELAROUT', 'ELSDCON', 'ELSTRN', 'ELSUM',
     'ENTHALPY', 'ERP', 'ESE', 'EXTSEOUT', 'FLSFSEL', 'FLSPOUT', 'FLSTCNT',
     'FLUX', 'FLXSLI', 'FLXRESULTS', 'FMETHOD',
     #FORCE - in bulk
-    'FREQU', # 'FREQUENCY',
+    'FREQU',  # 'FREQUENCY',
     'FRFIN',
     'GCRSTRN', 'GELSTRN', 'GKRESULTS', 'GPFORCE', 'GPKE', 'GPLSTRN', 'GPRSORT',
     'GPSDCON', 'GPSTRAIN', 'GPSTRESS', 'GRDCON', 'GROUNDCHECK', 'GSTRAIN', 'GSTRESS',
@@ -94,7 +100,7 @@ CASE_CARDS_NO_BULK = (
     'MEFFMASS', 'METHOD', 'MFLUID', 'MODALE', 'MODCON', 'MODES', 'MODSEL',
     'MODTRAK', 'MONITOR', 'MONVAR',
     #MPC - in bulk
-    'MPCF', # MPCFORCES
+    'MPCF',  # MPCFORCES
     'MPRES', 'NLARCL', 'NLCNTL', 'NLLOAD', 'NLPARM', 'NLSTRESS', 'NONLINEAR',
     'NOUTPUT',
     #NSM - in bulk
@@ -104,9 +110,9 @@ CASE_CARDS_NO_BULK = (
     'PARTN', 'PEAKOUT', 'PFRESULTS', 'PLOTID', 'PLSTRN', 'PRESSURE',
     'RANDOM', 'RCROSS', 'REPCASE', 'RESVEC', 'RIGID', 'RMAXMIN', 'RMETHOD',
     'RSMETHOD',
-    'SACCEL' # SACCELERATION
+    'SACCEL'  # SACCELERATION
     'SDAMPING',
-    'SDISP', # SDISPLACEMENT
+    'SDISP',  # SDISPLACEMENT
     'SEALL', 'SEDR', 'SEDV',
     'SEEXCLUDE', 'SEFINAL',
     'SEKREDUCE',
@@ -117,22 +123,22 @@ CASE_CARDS_NO_BULK = (
     'SETMC', 'SETMCNAME', 'SETS DEFINITION', 'SHELLTHK', 'SKIP',
     'SMETHOD',
     # SPC - in bulk
-    'SPCF', # SPCFORCES
+    'SPCF',  # SPCFORCES
     'STATSUB', 'STATVAR', 'STRAIN', 'STRESS', 'STRFIELD', 'SUBCASE', 'SUBCOM',
     'SUBSEQ',
-    'SUBT', # SUBTITLE
+    'SUBT',  # SUBTITLE
     #'SUPER',
-    #SUPORT - in bulk
-    #SUPORT1 - in bulk
+    # SUPORT - in bulk
+    # SUPORT1 - in bulk
     'SVECTOR',
-    'SVELO', # SVELOCITY
+    'SVELO',  # SVELOCITY
     'SYM', 'SYMCOM', 'SYMSEQ', 'TEMPERATURE', 'TFL', 'THERMAL', 'TITLE',
-    #TRIM - in bulk
+    # TRIM - in bulk
     'TRLOSS', 'TRPOWER',
     # TSTEP - in bulk
     # TSTEPNL - in bulk
     'TSTRU', 'VATVOUT',
-    'VELO', # VELOCITY
+    'VELO',  # VELOCITY
     'VOLUME', 'WEIGHTCHECK',
 )
 
@@ -192,7 +198,7 @@ class BDFInputPy:
 
         self.consider_superelements: bool = consider_superelements
         self.debug: bool = debug
-        self.log = get_logger2(log, debug)
+        self.log = get_logger(log, debug)
         self.use_new_parser: bool = False
 
     def get_lines(self, bdf_filename: PathLike | StringIO,
@@ -200,7 +206,6 @@ class BDFInputPy:
                   make_ilines: bool=True) -> tuple[list[str], list[str], list[str],
                                                    list[str], Optional[np.ndarray],
                                                    dict[tuple[str, str], list[str]],
-                                                    #list[str], Optional[np.ndarray],
                                                    ]:
         """
         Opens the bdf and extracts the lines by group
@@ -606,7 +611,7 @@ class BDFInputPy:
         #print('include_comment = %r' % include_comment)
 
         nlines2 = len(lines2)
-        if 1: #make_ilines:
+        if 1:  # make_ilines:
             ilines2 = _make_ilines(nlines2, ifile)
             #n_ilines = ilines.shape[0]
             #print(ilines[j:, :])
@@ -781,7 +786,11 @@ class BDFInputPy:
         # bdf_filename
         self._validate_open_file(bdf_filename_inc, check)
 
-        self.log.debug('opening %r' % bdf_filename_inc)
+        if is_file_case_sensitive(bdf_filename_inc):
+            self.log.debug('opening %r' % bdf_filename_inc)
+        else:
+            self.log.warning('opening %r (not case sensitive)' % bdf_filename_inc)
+
         self.active_filenames.append(bdf_filename_inc)
         self.loaded_filenames.append(bdf_filename_inc)
 
@@ -836,6 +845,18 @@ class BDFInputPy:
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
 
 
+@cache
+def listdir(directory: str) -> Sequence[str]:
+    return os.listdir(directory)
+
+
+def is_file_case_sensitive(path: str) -> bool:
+    if not os.path.isfile(path):
+        return False  # exit early
+    directory, filename = os.path.split(path)
+    return any(f == filename for f in listdir(directory))
+
+
 def _is_bulk_data_line(text: str) -> bool:
     """
     Returns True if there is a Bulk Data Deck
@@ -879,6 +900,7 @@ def _is_bulk_data_line(text: str) -> bool:
             return False
         return True
     return False
+
 
 def _is_case_control_line(text: str) -> bool:
     """
@@ -1040,7 +1062,7 @@ def _lines_to_decks(lines: list[str],
 
     """
     start_flag = 0  # default
-    if punch and not consider_superelements: # True
+    if punch and not consider_superelements:  # True
         system_lines = []
         executive_control_lines = []
         case_control_lines = []
@@ -1053,7 +1075,7 @@ def _lines_to_decks(lines: list[str],
             system_lines, executive_control_lines, case_control_lines,
             bulk_data_lines, bulk_data_ilines,
             superelement_lines, superelement_ilines)
-    elif punch and consider_superelements: # True
+    elif punch and consider_superelements:  # True
         # start_flag=2 forces the model into 'begin bulk' mode
         start_flag = 2
 
@@ -1067,7 +1089,6 @@ def _lines_to_decks(lines: list[str],
      bulk_data_lines, bulk_data_ilines,
      superelement_lines, superelement_ilines,
      auxmodel_lines, afpm_lines) = out
-
 
     # break out system commands
     system_lines, executive_control_lines = _break_system_lines(executive_control_lines)
@@ -1103,6 +1124,7 @@ def _lines_to_decks(lines: list[str],
         system_lines, executive_control_lines, case_control_lines,
         bulk_data_lines, bulk_data_ilines,
         superelement_lines, superelement_ilines)
+
 
 def _lines_to_decks_main(lines: list[str],
                          ilines: np.ndarray,
@@ -1210,8 +1232,8 @@ def _lines_to_decks_main(lines: list[str],
         if guess_deck_sections and flag == 1 and line_upper.startswith('BEGIN'):
             # we're in the executive deck and found the bulk data deck
             section_name_map = {
-                1 : 'executive control',
-                2 : 'case control',
+                1: 'executive control',
+                2: 'case control',
             }
             section_name = section_name_map[flag]
 
@@ -1234,8 +1256,8 @@ def _lines_to_decks_main(lines: list[str],
             # we found the case control deck successfully from the executive deck
             # then we found the bulk data deck unexpectedly
             section_name_map = {
-                1 : 'executive control',
-                2 : 'case control',
+                1: 'executive control',
+                2: 'case control',
             }
             section_name = section_name_map[flag]
             log.warning(f'currently in {section_name} deck and skipping directly '
@@ -1317,7 +1339,7 @@ def _lines_to_decks_main(lines: list[str],
                     case_control_lines.append(line.rstrip())
                     continue
 
-                elif 'SUPER' in line_upper: # and '=' in line_upper:
+                elif 'SUPER' in line_upper:  # and '=' in line_upper:
                     super_id = _get_super_id(line, line_upper)
                     log.info(f'super_id={super_id}')
                     old_flags.append(flag)
@@ -1451,6 +1473,7 @@ def _lines_to_decks_main(lines: list[str],
     )
     return out
 
+
 def _bulk_data_lines_extract(lines: list[str],
                              ilines: Any,
                              bulk_data_lines: list[str],
@@ -1480,6 +1503,7 @@ def _bulk_data_lines_extract(lines: list[str],
         #raise RuntimeError(msg)
     return bulk_data_ilines
 
+
 def _is_begin_bulk(line_upper: str) -> bool:
     """
     is this a:
@@ -1495,6 +1519,7 @@ def _is_begin_bulk(line_upper: str) -> bool:
         'AFPM' not in line_upper and
         'SUPER' not in line_upper)
     return is_begin_bulk
+
 
 def _read_bulk_for_model(ifile_iline, line: str, flag: int, bulk_data_lines: list[str],
                          current_lines: list[str], current_ilines,
@@ -1596,6 +1621,7 @@ def _read_bulk_for_model(ifile_iline, line: str, flag: int, bulk_data_lines: lis
         afpm_id, is_afpm_active,
         flag, current_lines)
     return out
+
 
 def _break_system_lines(executive_control_lines: list[str]) -> tuple[list[str],
                                                                      list[str]]:
@@ -1711,6 +1737,7 @@ def _check_valid_deck(flag: int, old_flags: list[int],
         raise MissingDeckSections(msg)
     return
 
+
 def _show_bad_file(self: Any, bdf_filename: str | StringIO,
                    encoding: str,
                    nlines_previous: int=10) -> None:
@@ -1727,7 +1754,7 @@ def _show_bad_file(self: Any, bdf_filename: str | StringIO,
         the number of lines to show
 
     """
-    lines = []  # type: list[str]
+    lines: list[str] = []
     print('ENCODING - show_bad_file=%r' % encoding)
 
     with open(bdf_filename, 'r', encoding=encoding) as bdf_file:
@@ -1754,6 +1781,7 @@ def _show_bad_file(self: Any, bdf_filename: str | StringIO,
             iline += 1
             lines.append(line)
 
+
 def _get_module_id(line: str, line_upper: str) -> tuple[int, str]:
     """
     parses the module header::
@@ -1778,6 +1806,7 @@ def _get_module_id(line: str, line_upper: str) -> tuple[int, str]:
         raise SyntaxError(f'module_id={module_id:d} must be greater than 0; line={line!r}')
     return module_id, label
 
+
 def split_quoted_string(line: str) -> list[str]:
     """
     this is "a test"
@@ -1785,6 +1814,7 @@ def split_quoted_string(line: str) -> list[str]:
     """
     sline = shlex.split(line)
     return sline
+
 
 def parse_begin(line_upper: str) -> None:
     """
@@ -1830,6 +1860,7 @@ def parse_begin(line_upper: str) -> None:
     #line_upper = replace_multiple_spaces_with_single(line_upper)
     return
 
+
 def _get_auxmodel_id(line: str, line_upper: str) -> int:
     """
     parses the superelement header::
@@ -1854,6 +1885,7 @@ def _get_auxmodel_id(line: str, line_upper: str) -> int:
             auxmodel_id, line))
     return auxmodel_id
 
+
 def _get_afpm_id(line: str, line_upper: str) -> int:
     """
     parses the superelement header::
@@ -1874,6 +1906,7 @@ def _get_afpm_id(line: str, line_upper: str) -> int:
         raise SyntaxError('afpm_id=%i must be greater than 0; line=%s' % (
             afpm_id, line))
     return afpm_id
+
 
 def _get_super_id(line: str, line_upper: str) -> int:
     """
@@ -1913,6 +1946,7 @@ def _get_super_id(line: str, line_upper: str) -> int:
             super_id, line))
     return super_id
 
+
 def _clean_comment_bulk(comment: str) -> str:
     """
     Removes specific pyNastran comment lines so duplicate lines aren't
@@ -1942,12 +1976,14 @@ def _clean_comment_bulk(comment: str) -> str:
         #print(comment)
     return comment
 
+
 def _make_ilines(nlines: int, ifile: int) -> NDArrayN2int:
     """helper method"""
     ilines = np.empty((nlines, 2), dtype='int32')
     ilines[:, 0] = ifile
-    ilines[:, 1] = np.arange(nlines) # 0 to N-1
+    ilines[:, 1] = np.arange(nlines)  # 0 to N-1
     return ilines
+
 
 def _check_for_spaces(card_name: str, card_lines: list[str], comment: str,
                       log: SimpleLogger) -> None:
@@ -1984,8 +2020,10 @@ def _check_for_spaces(card_name: str, card_lines: list[str], comment: str,
 
 #-------------------------------------------------------------------------------
 
+
 DECK_TAGS = ('AFPM', 'ARBMODEL', 'AUXMODEL', 'MASSID', 'MODULE', 'FLXBDY', 'SUPER', 'TRMC', 'UDS')
 ALLOW_LABEL = ('MASSID', 'MODULE')
+
 
 def lines_to_decks2(lines: list[str],
                     ilines: NDArrayN2int,
@@ -2054,7 +2092,7 @@ def lines_to_decks2(lines: list[str],
     bulk_data_lines = []           # flag = 3
     additional_deck_lines = {}
     additional_deck_ilines = {}
-    if punch: # True
+    if punch:  # True
         bulk_data_lines = lines
         bulk_data_ilines = ilines
         return (
@@ -2096,7 +2134,7 @@ def lines_to_decks2(lines: list[str],
     bulk_data_ilines_list = []
     active_ilines = executive_control_ilines_list
     active_lines = executive_control_lines
-    ibulk0  = -1
+    ibulk0 = -1
     save_comment_flag = False
     for i, line in enumerate(lines):
         # handle empty comments
@@ -2124,7 +2162,7 @@ def lines_to_decks2(lines: list[str],
             line_upper = line.rstrip().upper()
             if len(line_upper) == 0:  # no comment
                 continue
-		#----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         #log.info(f'i={i} flag={flag!r} guess={guess_deck_sections} line={line_upper!r}')
         #assert len(bulk_data_lines) == len(bulk_data_ilines_list)
         #if line_upper.startswith('SOL '):
@@ -2189,7 +2227,7 @@ def lines_to_decks2(lines: list[str],
             #log.info(f'begin_tag={begin_tag!r}')
             continue
 
-        elif guess_deck_sections and _is_bulk_data_line(line) and flag in {'N/A', 'case_control'}: #  and flag in [1, 2]
+        elif guess_deck_sections and _is_bulk_data_line(line) and flag in {'N/A', 'case_control'}:  # and flag in [1, 2]
             #log.debug('bulk')
             section_name = flag
             log.warning(f'currently in {section_name} deck and skipping directly '
@@ -2233,7 +2271,7 @@ def lines_to_decks2(lines: list[str],
     bulk_data_flag = ('BULK', 0, '')
     #log.info(f'additional_deck_ilines.keys = {list(additional_deck_ilines.keys())}')
 
-    if 'bulk'  in additional_deck_ilines:
+    if 'bulk' in additional_deck_ilines:
         bulk_data_flag = 'bulk'
     if bulk_data_flag in additional_deck_ilines:
         #bulk_data_ilines = additional_deck_ilines[bulk_data_flag]
@@ -2269,6 +2307,7 @@ def lines_to_decks2(lines: list[str],
         additional_deck_lines, additional_deck_ilines,
     )
     return out
+
 
 def split_words_by_spaces(line: str) -> list[str]:
     """
@@ -2323,6 +2362,7 @@ def split_words_by_spaces(line: str) -> list[str]:
 
     assert len(''.join(words)) == len(''.join(words2)), (words, words2)
     return words2
+
 
 def _get_begin_flag(line_upper: str) -> list[tuple[str, int, str]]:
     """
@@ -2403,6 +2443,7 @@ def _get_begin_flag(line_upper: str) -> list[tuple[str, int, str]]:
     write_tag(out_words)
     return out_words
 
+
 def _remove_bulk_words(words, *args) -> list[str]:
     words2 = [word.strip(' =') for word in words
               if 'BEGIN' != word and 'BULK' != word and 'BULKDATA' != word and '=' != word]
@@ -2424,6 +2465,7 @@ def _remove_bulk_words(words, *args) -> list[str]:
     #if words in ('BEGIN', ('BEGIN', 'BULK')):
         #return True
     #return False
+
 
 def add_superelements_from_deck_lines(self,
                                       BDF,
@@ -2457,6 +2499,7 @@ def add_superelements_from_deck_lines(self,
         self.superelement_models[superelement_key] = model
         self.initial_superelement_models.append(superelement_key)
 
+
 def write_tag(begin_tags: list[tuple[str, int, str]]) -> str:
     word = 'BEGIN'
     for begin_tag in begin_tags:
@@ -2471,6 +2514,7 @@ def write_tag(begin_tags: list[tuple[str, int, str]]) -> str:
         if label:
             word += f" LABEL='{label}'"
     return word
+
 
 def _dump_file(bdf_filename: str,
                lines: list[str],

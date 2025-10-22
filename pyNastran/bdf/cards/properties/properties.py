@@ -14,7 +14,7 @@ from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdf_interface.internal_get import material_id
+from pyNastran.bdf.bdf_interface.internal_get import material_id, coord_id
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -210,12 +210,13 @@ class PFAST(Property):
         #if self.mcid != -1:
         self.mcid_ref = None
 
-    def Mcid(self):
-        if self.mcid_ref is None:
-            return self.mcid
-        return self.mcid_ref.cid
+    def Mcid(self) -> int:
+        return coord_id(self.mcid_ref, self.mcid)
+        # if self.mcid_ref is None:
+        #     return self.mcid
+        # return self.mcid_ref.cid
 
-    def Mass(self):
+    def Mass(self) -> float:
         return self.mass
 
     def raw_fields(self):

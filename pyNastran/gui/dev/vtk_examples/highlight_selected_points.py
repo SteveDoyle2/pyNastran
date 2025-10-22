@@ -35,7 +35,7 @@ class InteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
 
         if vtk.VTK_MAJOR_VERSION <= 5:
             extract_geometry.SetInput(self.Points)
-         else:
+        else:
             extract_geometry.SetInputData(self.Points)
         extract_geometry.Update()
 

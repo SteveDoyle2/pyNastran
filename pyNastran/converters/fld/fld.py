@@ -8,8 +8,12 @@ import numpy as np
 import scipy
 from scipy.spatial import KDTree
 
-from cpylog import get_logger2, SimpleLogger
 from pyNastran.utils import is_binary_file
+from cpylog import __version__ as CPYLOG_VERSION, SimpleLogger
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 def read_fld(fld_filename: str,
@@ -53,7 +57,7 @@ class FLD:
             if log is set, debug is ignored and uses the
             settings the logging object has
         """
-        self.log = get_logger2(log, debug=debug)
+        self.log = get_logger(log, debug)
 
         #self.nodes = None
         #self.elements = None
@@ -113,42 +117,52 @@ class FLD:
         with open(fld_filename, 'r') as infile:
             lines = infile.readlines()
 
-        header_lines = []
-        data_lines = []
+        line0 = lines[0].strip()
+        # PRESS
+        # x1 y1 z1 p1
+        # x2 y2 z2 p2
+        if line0 == 'PRESS' and fld_filename.lower().endswith('.txt'):
+            data_lines = []
+            for line in lines[1:]:
+                data_lines.append(line.strip().split())
+            self.xyzp = np.array(data_lines, dtype='float64')
+        else:
+            header_lines = []
+            data_lines = []
 
-        for i, line in enumerate(lines):
-            line = line.strip()
-            if line.startswith('START'):
-                break
-            header_lines.append(line)
+            for i, line in enumerate(lines):
+                line = line.strip()
+                if line.startswith('START'):
+                    break
+                header_lines.append(line)
 
-        i += 1
-        while i < len(lines):
-            line = lines[i].strip()
-            if line.startswith('END'):
-                break
-            sline = line.split(',')
-            data_lines.append(sline)
             i += 1
-        self.xyzp = np.array(data_lines, dtype='float64')
+            while i < len(lines):
+                line = lines[i].strip()
+                if line.startswith('END'):
+                    break
+                sline = line.split(',')
+                data_lines.append(sline)
+                i += 1
+            self.xyzp = np.array(data_lines, dtype='float64')
 
-        ind_vars = []
-        dep_vars = []
-        for line in header_lines:
-            if line.startswith('INDEP VAR'):
-                sline = line.split(':')
-                print(sline)
-                indep_, var__, var_, unit_, zero_ = sline
-                var = var_.strip('[] ')
-                unit = unit_.strip('[] ')
-                ind_vars.append((var, unit))
-            elif line.startswith('DEP VAR'):
-                sline = line.split(':')
-                indep_, var__, var_, unit_, zero_ = sline
-                var = var_.strip('[] ')
-                unit = unit_.strip('[] ')
-                ind_vars.append((var, unit))
-        for var in ind_vars:
-            print(f'I: {var}')
-        for var in dep_vars:
-            print(f'D: {var}')
+            ind_vars = []
+            dep_vars = []
+            for line in header_lines:
+                if line.startswith('INDEP VAR'):
+                    sline = line.split(':')
+                    print(sline)
+                    indep_, var__, var_, unit_, zero_ = sline
+                    var = var_.strip('[] ')
+                    unit = unit_.strip('[] ')
+                    ind_vars.append((var, unit))
+                elif line.startswith('DEP VAR'):
+                    sline = line.split(':')
+                    indep_, var__, var_, unit_, zero_ = sline
+                    var = var_.strip('[] ')
+                    unit = unit_.strip('[] ')
+                    ind_vars.append((var, unit))
+            for var in ind_vars:
+                print(f'I: {var}')
+            for var in dep_vars:
+                print(f'D: {var}')

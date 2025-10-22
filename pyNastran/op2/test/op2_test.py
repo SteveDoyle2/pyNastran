@@ -4,11 +4,12 @@ from pathlib import Path
 from typing import Optional
 
 import pyNastran
-from pyNastran.utils.dev import get_files_of_types # get_files_of_type,
+from pyNastran.utils import PathLike
+from pyNastran.utils.dev import get_files_of_types  # get_files_of_type,
 PKG_PATH = Path(pyNastran.__path__[0])
 
 
-def get_failed_files(filename):
+def get_failed_files(filename: PathLike) -> list[str]:
     """Gets the list of failed files"""
     with open(filename, 'r') as infile:
         lines = infile.readlines()
@@ -65,8 +66,8 @@ def get_directories(folders_file: str) -> list[str]:
         if '"' in line:
             # "C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\nast"
             line = line.strip('"')
-            pthi = line.split('\\')
-            unused_pth = os.path.join(*pthi)
+            #pthi = line.split('\\')
+            #unused_pth = os.path.join(*pthi)
             move_dir = os.path.join(line)
         else:
             # C:\MSC.Software\MSC.Nastran\msc20051\nast\doc
@@ -79,6 +80,7 @@ def get_directories(folders_file: str) -> list[str]:
                 continue
             dirnames.append(move_dir)
     return dirnames
+
 
 def get_all_files(folders_file: str, file_types: list[str],
                   max_size: float=4.2) -> list[str]:
@@ -102,6 +104,7 @@ def get_all_files(folders_file: str, file_types: list[str],
     dirnames = get_directories(folders_file)
     files2 = get_files_from_directories(dirnames, file_types, max_size=max_size)
     return files2
+
 
 def get_files_from_directories(dirnames: list[str], file_types: list[str],
                                max_size: float=4.2) -> list[str]:
@@ -133,6 +136,7 @@ def get_files_from_directories(dirnames: list[str], file_types: list[str],
         #print('nfiles = %s/%s' % (len(files_in_dir), len(files2)))
     print('nfiles = %s' % len(files2))
     return files2
+
 
 def get_files_of_types2(dirnames: list[str], extensions: list[str],
                         max_size_mb: float=0.0,
@@ -186,6 +190,7 @@ def get_files_of_types2(dirnames: list[str], extensions: list[str],
         assert len(files_out) > 0, files_out
     return files_out
 
+
 def get_op2_model_directories(folders_filennames: list[str],
                               filter_simcenter: bool) -> list[str]:
     dirnames = []
@@ -201,6 +206,7 @@ def get_op2_model_directories(folders_filennames: list[str],
                 #print('*', filename)
         dirnames = dirnames2
     return dirnames
+
 
 def run(regenerate=True, make_geom=False, combine=True,
         write_bdf=False, build_pandas=True,
@@ -221,16 +227,18 @@ def run(regenerate=True, make_geom=False, combine=True,
     folders_file2 = str(PKG_PATH / 'op2' / 'test' / 'folders_read.txt')
 
     #unused_isubcases = []
-    binary_debug = [True, False]  # catch any errors
+    # binary_debug = [True, False]  # catch any errors
+    binary_debug = [False]
     quiet = True
 
     stop_on_failure = False
     get_skip_cards = False
 
-    #max_size = 4000. # MB
-    max_size = 500. # MB
+    # max_size = 4000. # MB
+    max_size = 500.  # MB
     filter_simcenter = False
     failed_cases_filename = 'failed_cases%s%s.in' % tuple(sys.version_info[:2])
+    failed_cases_temp_filename = 'failed_cases%s%s.temp.in' % tuple(sys.version_info[:2])
     if get_skip_cards:
         files2 = parse_skipped_cards('skipped_cards.out')
     elif regenerate or not os.path.exists(failed_cases_filename):
@@ -252,8 +260,8 @@ def run(regenerate=True, make_geom=False, combine=True,
     files = list(set(files2))
     files.sort()
     files = [filename for filename in files if '.test_op2.' not in filename]
-        #files = [filename for filename in files
-                 #if 'Siemens' not in filename and 'simcenter' not in filename]
+    # files = [filename for filename in files
+    #          if 'Siemens' not in filename and 'simcenter' not in filename]
     assert len(files)
     if regenerate:
         print('files:')
@@ -273,25 +281,28 @@ def run(regenerate=True, make_geom=False, combine=True,
     #except F:
         #pass
 
-    print("nfiles = %s" % len(files))
+    print(f'nfiles = {len(files):d}')
     import time
     time0 = time.time()
 
     from pyNastran.op2.test.test_op2 import run_lots_of_files
-    failed_files = run_lots_of_files(files, make_geom=make_geom, combine=combine,
-                                     write_bdf=write_bdf,
-                                     xref_safe=xref_safe,
-                                     include_results=include_results,
-                                     exclude_results=exclude_results,
-                                     write_f06=write_f06, delete_f06=True,
-                                     write_op2=write_op2, delete_op2=True,
-                                     write_hdf5=write_hdf5, delete_hdf5=True,
-                                     build_pandas=build_pandas,
-                                     debug=debug,
-                                     skip_files=skip_files, stop_on_failure=stop_on_failure,
-                                     nstart=nstart, nstop=nstop, binary_debug=binary_debug,
-                                     compare=compare, short_stats=short_stats,
-                                     quiet=quiet, dev=True)
+    with open(failed_cases_temp_filename, 'w') as temp_file:
+        failed_files = run_lots_of_files(
+            files, temp_file,
+            make_geom=make_geom, combine=combine,
+            write_bdf=write_bdf,
+            xref_safe=xref_safe,
+            include_results=include_results,
+            exclude_results=exclude_results,
+            write_f06=write_f06, delete_f06=True,
+            write_op2=write_op2, delete_op2=True,
+            write_hdf5=write_hdf5, delete_hdf5=True,
+            build_pandas=build_pandas,
+            debug=debug,
+            skip_files=skip_files, stop_on_failure=stop_on_failure,
+            nstart=nstart, nstop=nstop, binary_debug=binary_debug,
+            compare=compare, short_stats=short_stats,
+            quiet=quiet, dev=True)
     if save_cases:
         with open(failed_cases_filename, 'w') as failed_cases_file:
             for op2file in failed_files:
@@ -349,7 +360,7 @@ def main():
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
-    msg += "  -d, --debug            debug logging\n"
+    msg += "   -d, --debug            debug logging\n"
     if len(sys.argv) == 0:
         sys.exit(msg)
 
@@ -366,7 +377,7 @@ def main():
     short_stats = data['--short_stats']
     compare = not data['--disablecompare']
     build_pandas = not data['--skip_dataframe']
-    include_results = [] # data['--include']
+    include_results = []  # data['--include']
     exclude_results = data['--exclude']
     xref_safe = data['--safe']
     combine = not data['--nocombine']
@@ -376,8 +387,9 @@ def main():
         xref_safe=xref_safe,
         include_results=include_results,
         exclude_results=exclude_results,
-        save_cases=save_cases, write_f06=write_f06, write_op2=write_op2,
-        write_hdf5=write_hdf5, short_stats=short_stats,
+        save_cases=save_cases, write_f06=write_f06,
+        write_op2=write_op2, write_hdf5=write_hdf5,
+        short_stats=short_stats,
         build_pandas=build_pandas, compare=compare, debug=debug)
 
 

@@ -66,14 +66,14 @@ class CuttingPlaneObject(BaseGui):
             cids = [0]
 
         data = {
-            'font_size' : settings.font_size,
-            'cids' : cids,
-            'plane_color' : (1., 0., 1.), # purple
-            'name' : model_name,
+            'font_size': settings.font_size,
+            'cids': cids,
+            'plane_color': (1., 0., 1.),  # purple
+            'name': model_name,
 
-            'model_name' : model_name,
-            'clicked_ok' : False,
-            'close' : False,
+            'model_name': model_name,
+            'clicked_ok': False,
+            'close': False,
         }
         if not self._cutting_plane_window_shown:
             self._cutting_plane_window = CuttingPlaneWindow(
@@ -221,7 +221,7 @@ class CuttingPlaneObject(BaseGui):
             actor_name='plane')
         prop = plane_actor.GetProperty()
         prop.SetColor(*plane_color)
-        prop.SetOpacity(plane_opacity) # 0=transparent, 1=solid
+        prop.SetOpacity(plane_opacity)  # 0=transparent, 1=solid
 
         gui.rend.Render()
 
@@ -271,7 +271,7 @@ class CuttingPlaneObject(BaseGui):
                 title = obj.title
             else:  # pragma: no cover
                 raise NotImplementedError(obj)
-        except Exception: # pragma: no cover
+        except Exception:  # pragma: no cover
             print(f'icase={gui.icase_fringe}\n{obj}')
             raise
 
@@ -315,7 +315,6 @@ class CuttingPlaneObject(BaseGui):
                     nodal_result, yslices, xyz=xyz_rel)
             plot_cuts(title, xyz_rel2, res2)
 
-
     #def create_plane_actor(self,
                            #xyz1: np.ndarray,
                            #xyz2: np.ndarray,
@@ -349,6 +348,7 @@ class CuttingPlaneObject(BaseGui):
         #plane_actor.VisibilityOn()
         #gui.rend.Render()
         #return plane_actor, prop
+
 
 def get_xyz_cid0(model, class_name: str) -> np.ndarray:
     if class_name in {'Cart3D'}:

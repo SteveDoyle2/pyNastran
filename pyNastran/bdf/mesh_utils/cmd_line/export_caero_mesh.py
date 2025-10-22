@@ -13,7 +13,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     import pyNastran
     msg = (
         'Usage:\n'
-        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--subpanels] [--pid PID]\n'
+        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--aerobox] [--pid PID]\n'
         '  bdf export_caero_mesh -h | --help\n'
         '  bdf export_caero_mesh -v | --version\n'
         '\n'
@@ -25,7 +25,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
         'Options:\n'
         '  -o OUT, --output  OUT_CAERO_BDF_FILENAME  path to output BDF file\n'
         '  --punch                                   flag to identify a *.pch/*.inc file\n'
-        '  --subpanels                               write the subpanels (default=False)\n'
+        '  --aerobox                                 write the aeroboxes (default=False)\n'
         '  --pid PID                                 sets the pid; {aesurf, caero, paero} [default: aesurf]\n'
         '\n'
 
@@ -50,10 +50,10 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     bdf_filename = data['IN_BDF_FILENAME']
     punch = data['--punch']
     caero_bdf_filename = data['--output']
-    base = os.path.splitext(bdf_filename)
+    base = os.path.splitext(bdf_filename)[0]
     if caero_bdf_filename is None:
         caero_bdf_filename = base + '.caero.bdf'
-    is_subpanel_model = data['--subpanels']
+    is_aerobox_model = data['--aerobox']
 
     pid_method = 'aesurf'
     if data['--pid']:
@@ -91,4 +91,4 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     log = SimpleLogger(level=level, encoding='utf-8')
     model = read_bdf(bdf_filename, punch=punch, log=log, skip_cards=skip_cards)
     export_caero_mesh(model, caero_bdf_filename,
-                      is_subpanel_model=is_subpanel_model, pid_method=pid_method)
+                      is_aerobox_model=is_aerobox_model, pid_method=pid_method)

@@ -920,7 +920,7 @@ class GuiQtCommon(GuiAttributes):
         """
         return []
 
-    def _set_case(self, unused_result_name, icase: int,
+    def _set_case(self, unused_result_name: str, icase: int,
                   sidebar_kwargs=None,
                   explicit: bool=False,
                   cycle: bool=False,

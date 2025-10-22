@@ -104,8 +104,8 @@ class TestThermal(unittest.TestCase):
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
 
-        RUN_THRMAL = False
-        if RUN_THRMAL:
+        RUN_THERMAL = False
+        if RUN_THERMAL:
             eid = 2
             Type = 'AREA3'
             chbdygi = CHBDYG(eid, Type, nodes,
@@ -155,7 +155,7 @@ class TestThermal(unittest.TestCase):
         ta = 2
         ta1 = 2
         pconid = 11
-        conv = model.add_conv(eid, pconid, ta, film_node=0, cntrlnd=0,
+        conv = model.add_conv(eid, pconid, ta, film_node=0, control_node=0,
                               comment='conv')
         #conv.raw_fields()
         pconv = model.add_pconv(
@@ -163,7 +163,7 @@ class TestThermal(unittest.TestCase):
             exponent_free_convection=0.0,
             free_convection_type=0,
             table_id=0, chlen=None, gidin=None,
-            ce=0, e1=None, e2=None, e3=None,
+            ce=0, e=None,
             comment='pconv')
         #pconv.raw_fields()
 
@@ -185,8 +185,8 @@ class TestThermal(unittest.TestCase):
         famb = 100.
         nodamb = 33
         eids = [1]
-        cntrlnd = 1000
-        radbci = model.add_radbc(nodamb, famb, cntrlnd, eids, comment='radbc')
+        control_node = 1000
+        radbci = model.add_radbc(nodamb, famb, control_node, eids, comment='radbc')
         #radbc.raw_fields()
 
         sid = 43
@@ -200,7 +200,7 @@ class TestThermal(unittest.TestCase):
         t_source = 19.
         eids = [2]
         qvecti = model.add_qvect(sid, q0, eids, t_source, ce=0,
-                                 vector_tableds=None, control_id=0,
+                                 vector_tableds=None, control_node=0,
                                  comment='qvect')
         #qvecti.raw_fields()
 
@@ -221,9 +221,9 @@ class TestThermal(unittest.TestCase):
         #qbdy2i.raw_fields()
 
         q0 = 14.
-        cntrlnd = 57
+        control_node = 57
         eids = [1, 2]
-        qbdy3i = model.add_qbdy3(sid, q0, eids, cntrlnd=cntrlnd, comment='qbdy3')
+        qbdy3i = model.add_qbdy3(sid, q0, eids, control_node=control_node, comment='qbdy3')
         #qbdy3i.raw_fields()
 
         icavity = 12
@@ -277,7 +277,7 @@ class TestThermal(unittest.TestCase):
                         is_double=True,
                         interspersed=False,
                         enddata=None, close=False)
-        if RUN_THRMAL:
+        if RUN_THERMAL:
             write_bdf_symmetric(model, bdf_filename4, encoding=None, size=8,
                                 is_double=False,
                                 enddata=None, close=False, plane='xz')
@@ -331,18 +331,18 @@ class TestThermal(unittest.TestCase):
         pconv = model.add_pconv(pconv_id, mid, form=0, exponent_free_convection=0.0,
                                 free_convection_type=0,
                                 table_id=tid_tableht, chlen=None, gidin=None,
-                                ce=0, e1=None, e2=None, e3=None, comment='pconv')
+                                ce=0, e=None, comment='pconv')
         #pconv.raw_fields()
 
         # Every surface to which free convection is to be applied must
         # reference a PCONV entry. PCONV is referenced on the CONV Bulk Data entry.
         eid = 1
         ta = 1
-        conv = model.add_conv(eid, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+        conv = model.add_conv(eid, pconv_id, ta, film_node=0, control_node=0, comment='conv')
         #conv.raw_fields()
 
-        conv = model.add_conv(2, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
-        conv = model.add_conv(3, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+        conv = model.add_conv(2, pconv_id, ta, film_node=0, control_node=0, comment='conv')
+        conv = model.add_conv(3, pconv_id, ta, film_node=0, control_node=0, comment='conv')
 
         # CHBDYG, CHBDYE, or CHBDYP surface element identification number.
         eid_fem = 1
@@ -373,10 +373,10 @@ class TestThermal(unittest.TestCase):
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [0., 1., 0.])
 
-        #if RUN_THRMAL:
-            #chbdye.raw_fields()
-            #chbdyg.raw_fields()
-            #chbdyp.raw_fields()
+        # if RUN_THERMAL:
+        #     chbdye.raw_fields()
+        #     chbdyg.raw_fields()
+        #     chbdyp.raw_fields()
 
         model.validate()
         save_load_deck(model)

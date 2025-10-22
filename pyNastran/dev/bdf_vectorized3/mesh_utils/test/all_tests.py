@@ -8,7 +8,7 @@ from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_vector_equivalence impor
 from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_vector_remove_unused import TestRemoveUnused
 #from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_sum_loads import TestLoadSum
 #from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_refine import TestRefine
-#from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_flutter import TestFlutter
+#from pyNastran.dev.bdf_vectorized3.mesh_utils.test.test_flutter import TestBDFFlutter
 
 if __name__ == "__main__":  # pragma: no cover
     import os

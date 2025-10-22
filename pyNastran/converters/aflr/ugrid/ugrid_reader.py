@@ -11,7 +11,6 @@ from itertools import zip_longest
 from typing import Optional
 
 import numpy as np
-from cpylog import get_logger
 
 #from pyNastran.bdf.field_writer_double import print_card_double
 #from pyNastran.bdf.field_writer_16 import print_card_16
@@ -20,6 +19,11 @@ from cpylog import get_logger
 from pyNastran.bdf.field_writer_8 import print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16
 from pyNastran.utils import PathLike
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 def read_ugrid(ugrid_filename: Optional[PathLike]=None,
@@ -62,7 +66,7 @@ class UGRID:
     """
     def __init__(self, log=None, debug: bool=False,
                  read_shells: bool=True, read_solids: bool=True):
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger(log, debug)
         self.debug = debug
         self.n = 0
 

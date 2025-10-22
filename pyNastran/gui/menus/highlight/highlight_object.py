@@ -34,10 +34,10 @@ class HighlightObject(BaseGui):
 
         model_name = 'main'
         data = {
-            'font_size' : settings.font_size,
-            'model_name' : model_name,
-            'clicked_ok' : False,
-            'close' : False,
+            'font_size': settings.font_size,
+            'model_name': model_name,
+            'clicked_ok': False,
+            'close': False,
         }
         gui = self.gui
         nodes = gui.get_node_ids(model_name=model_name)
@@ -94,10 +94,10 @@ class MarkObject(BaseGui):
 
         model_name = 'main'
         data = {
-            'font_size' : settings.font_size,
-            'model_name' : model_name,
-            'clicked_ok' : False,
-            'close' : False,
+            'font_size': settings.font_size,
+            'model_name': model_name,
+            'clicked_ok': False,
+            'close': False,
         }
         gui = self.gui
         nodes = gui.get_node_ids(model_name=model_name)

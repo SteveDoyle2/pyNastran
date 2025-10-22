@@ -9,6 +9,25 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestContact(unittest.TestCase):
 
+    def test_bgset_bgadd(self):
+        """checks the BGADD, BGSET cards"""
+        model = BDF(debug=False)
+        glue_id = 10
+        sids = [11, 12]
+        tids = [13, 14]
+        sdists = [1.0, 2.0]
+        exts = [3.0, 4.0]
+        bgset = model.add_bgset(
+            glue_id, sids, tids,
+            sdists, exts, comment='bgset', sol=101)
+
+        add_id = 42
+        glue_ids = [glue_id]
+        bgadd = model.add_bgadd(add_id, glue_ids, comment='bgadd')
+        bgset.raw_fields()
+        bgadd.raw_fields()
+        save_load_deck(model)
+
     def test_contact_01(self):
         """checks the BSURF cards"""
         model = BDF(debug=False)

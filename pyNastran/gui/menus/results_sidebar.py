@@ -47,6 +47,7 @@ SkippableSpinBox = QSpinBox
 
 SHOW_DEV = False
 
+
 class ResultsSidebar(QWidget):
     """
     +----------------------+
@@ -318,7 +319,7 @@ class ResultsSidebar(QWidget):
     def set_derivation_visible(self, is_visible: bool,
                                min_max_averages_dict: dict[str, Any]) -> None:
         """
-        Derivation sets how multi-valued results get squashed down into a
+        Derivation sets how multivalued results get squashed down into a
         single result.  For example, a PSHELL stress result has 2 values per
         node/centroid.  For nodal averaging, the results need to be squashed
         down into nnode nodal values for each element (vs. 2*nnode).
@@ -502,7 +503,7 @@ class ResultsSidebar(QWidget):
             hbox_avg = create_hbox_with_widgets([self.min_max_average_label, self.min_max_average_pulldown])
             hbox_coord = create_hbox_with_widgets([self.transform_coords_label, self.transform_coords_pulldown])
             hbox_combine = create_hbox_with_widgets([self.combine_label, self.combine_pulldown])
-            if 1: # include_vector_checks:
+            if 1:  # include_vector_checks:
                 hbox_checks = create_hbox_with_widgets([self.fringe_checkbox, self.disp_checkbox, self.vector_checkbox])
 
         #self.case_spinner_label, self.case_spinner,
@@ -533,8 +534,10 @@ class ResultsSidebar(QWidget):
 
         iname = 0
         if self._use_new_sidebar:
-            vbox_top_widget = QWidget(self); vbox_top_widget.setLayout(vbox_top)
-            vbox_btm_widget = QWidget(self); vbox_btm_widget.setLayout(vbox_btm)
+            vbox_top_widget = QWidget(self)
+            vbox_btm_widget = QWidget(self)
+            vbox_top_widget.setLayout(vbox_top)
+            vbox_btm_widget.setLayout(vbox_btm)
 
             vbox_btm.addWidget(self.result_method_window)
 
@@ -785,7 +788,7 @@ class ResultsSidebar(QWidget):
             nodal_combine = get_combo_box_text(self.combine_pulldown)
 
             #fringe is always active
-            is_checked_fringe = self.fringe_checkbox.isChecked() # self.fringe_checkbox.isEnabled() and
+            is_checked_fringe = self.fringe_checkbox.isChecked()  # self.fringe_checkbox.isEnabled() and
             is_checked_disp = self.disp_checkbox.isEnabled() and self.disp_checkbox.isChecked()
             is_checked_vector = self.vector_checkbox.isEnabled() and self.vector_checkbox.isChecked()
             if not(is_checked_fringe or is_checked_disp or is_checked_vector):
@@ -827,12 +830,15 @@ class ResultsSidebar(QWidget):
     def on_clear_results(self) -> None:
         if hasattr(self.parent, 'on_clear_results'):
             self.parent.on_clear_results()
+
     def on_fringe(self, icase: int) -> None:
         if hasattr(self.parent, 'on_fringe'):
             self.parent.on_fringe(icase)
+
     def on_disp(self, icase: int) -> None:
         if hasattr(self.parent, 'on_disp'):
             self.parent.on_disp(icase)
+
     def on_vector(self, icase: int) -> None:
         if hasattr(self.parent, 'on_vector'):
             self.parent.on_vector(icase)
@@ -867,6 +873,7 @@ def main():  # pragma: no cover
         ],
     ]
     #form = []
+
     def func(case: int):
         print(f'case={case}')
         x = 1
@@ -884,6 +891,7 @@ def main():  # pragma: no cover
 
     res_widget.show()
     sys.exit(app.exec_())
+
 
 if __name__ == "__main__":  # pragma: no cover
     main()

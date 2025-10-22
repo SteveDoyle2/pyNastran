@@ -118,7 +118,7 @@ class CMASS1(PointMassElement):
         self.pid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CMASS1 card from ``BDF.add_card(...)``
 

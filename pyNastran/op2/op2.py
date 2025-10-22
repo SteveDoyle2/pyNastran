@@ -99,6 +99,14 @@ class OP2(OP2_Scalar, OP2Writer):
         if mode is not None:
             self.set_mode(mode)
         make_geom = False
+
+        # Interlacing only applies to 64-bit strings
+        #   Non-interlaced string:
+        #    - 'ABCDEFGH        '
+        #   Interlaced string:
+        #    - 'ABCD    EFGH    '
+        # MSC likes to be different, so they interlace, while
+        # NX does not. Non-interlaced strings are easier to parse.
         self.is_interlaced = True
         assert make_geom is False, make_geom
         OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
@@ -111,7 +119,8 @@ class OP2(OP2_Scalar, OP2Writer):
         if hasattr(self, 'h5_file') and self.h5_file is not None:
             self.h5_file.close()
 
-    def object_attributes(self, mode: str='public', keys_to_skip: Optional[list[str]]=None,
+    def object_attributes(self, mode: str='public',
+                          keys_to_skip: Optional[list[str]]=None,
                           filter_properties: bool=False) -> list[str]:
         """
         List the names of attributes of a class as strings. Returns public
@@ -200,7 +209,8 @@ class OP2(OP2_Scalar, OP2Writer):
             raise
         return is_equal
 
-    def assert_op2_equal(self, op2_model, skip_results: Optional[list[str]]=None,
+    def assert_op2_equal(self, op2_model,
+                         skip_results: Optional[list[str]]=None,
                          stop_on_failure: bool=True, debug: bool=False) -> bool:
         """
         Diffs the current op2 model vs. another op2 model.
@@ -241,6 +251,7 @@ class OP2(OP2_Scalar, OP2Writer):
                 self.read_mode, op2_model.read_mode))
             return True
 
+        warned_classes: list[str] = []
         table_types = self.get_table_types()
         for table_type in table_types:
             if table_type in skip_results_set or table_type.startswith('responses.'):
@@ -266,15 +277,18 @@ class OP2(OP2_Scalar, OP2Writer):
 
                 # get the displacement for model B
                 bvalue = bdict[key]
-                is_equal = self._is_op2_case_equal(table_type, key, avalue, bvalue,
-                                                   stop_on_failure=stop_on_failure, debug=debug)
+                is_equal = self._is_op2_case_equal(
+                    table_type, key, avalue, bvalue,
+                    warned_classes, stop_on_failure=stop_on_failure, debug=debug)
                 if not is_equal and stop_on_failure:
                     return is_equal
         return True
 
     def _is_op2_case_equal(self, table_type: str,
                            key, a_obj, b_obj,
-                           stop_on_failure: bool=True, debug: bool=False) -> bool:
+                           warned_classes: list[str],
+                           stop_on_failure: bool=True,
+                           debug: bool=False) -> bool:
         """
         Helper method for ``assert_op2_equal``
 
@@ -331,13 +345,25 @@ class OP2(OP2_Scalar, OP2Writer):
             self.log.warning(f'type(a)={aname} type(b)={bname}')
             return False
 
-        if aname == 'PARAM': # TODO: update this
+        if aname == 'PARAM':  # TODO: update this
             return True
 
         # does this ever hit?
         skip_names = [
             'Array', 'Eigenvalues', 'GridPointWeight', 'TRMBU', 'TRMBD',
-            'FlutterResponse']
+            'FlutterResponse', 'CampbellData',
+            # trim
+            'TrimVariables',
+            'TrimDerivatives', 'HingeMomentDerivatives',
+            'ControlSurfacePositionHingeMoment',
+            'AeroPressure', 'AeroForce',
+        ]
+        if aname in skip_names:
+            if aname not in warned_classes:
+                msg = f'{aname} is not an Array ... assume equal'
+                self.log.warning(msg)
+                warned_classes.append(aname)
+            return True
         if not any(word in aname for word in skip_names):
             msg = f'{aname} is not an Array ... assume equal'
             self.log.warning(msg)
@@ -438,8 +464,6 @@ class OP2(OP2_Scalar, OP2Writer):
         del state['log']
         if hasattr(self, 'results') and hasattr(self._results, 'log'):
             del state['_results'].log
-        #if hasattr(self, '_card_parser_b'):
-            #del state['_card_parser_b']
         #if hasattr(self, '_card_parser_prepare'):
             #del state['_card_parser_prepare']
 
@@ -544,7 +568,7 @@ class OP2(OP2_Scalar, OP2Writer):
     def is_geometry(self) -> bool:
         return False
 
-    def read_op2(self, op2_filename: Optional[str]=None,
+    def read_op2(self, op2_filename: Optional[PathLike]=None,
                  combine: bool=True,
                  build_dataframe: Optional[bool]=False,
                  skip_undefined_matrices: bool=False,
@@ -634,7 +658,7 @@ class OP2(OP2_Scalar, OP2Writer):
         result_types = self.get_table_types()
         skip_results = (
             'params', 'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3',
-             'cstm', 'trmbu', 'trmbd',
+            'cstm', 'trmbu', 'trmbd',
         )
         for result_type in result_types:
             if result_type in skip_results or result_type.startswith('responses.'):
@@ -1163,7 +1187,6 @@ class OP2(OP2_Scalar, OP2Writer):
         #subcase_ids.sort()
         #print('subcase_ids =', subcase_ids)
 
-
         # isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step
         #(1, 2, 1, 0, 0, 'SUPERELEMENT 0')  : result1
 
@@ -1230,7 +1253,7 @@ class OP2(OP2_Scalar, OP2Writer):
                             for sort_method in sort_method_list:
                                 for ogs in ogs_list:
                                     key = (isubcase, analysis_code, sort_method, count, ogs,  # ints
-                                           superelement_adaptivity_index, pval_step) # str
+                                           superelement_adaptivity_index, pval_step)  # str
                                     if key not in keys3:
                                         #print('adding ', key)
                                         #assert key in used_keys, key
@@ -1402,6 +1425,7 @@ def _inlist(case_key: int, keys: list[Any]) -> bool:
         if key == case_key:
             return True
     return found_case_key
+
 
 def _inlist_int_tuple(case_key: int | tuple,
                       keys: list[Any]) -> bool:
@@ -1620,6 +1644,7 @@ def _create_hdf5_info(h5_file: H5File, op2_model: OP2) -> None:
     from pyNastran.op2.op2_interface.hdf5_interface import create_info_group
     create_info_group(h5_file, op2_model)
 
+
 def _get_keys_to_skip(model: OP2) -> list[str]:
     stress = model.op2_results.stress
     strain = model.op2_results.strain
@@ -1633,6 +1658,7 @@ def _get_keys_to_skip(model: OP2) -> list[str]:
         strain_energy.get_table_types(include_class=False)
     assert isinstance(my_keys_to_skip, list), my_keys_to_skip
     return my_keys_to_skip
+
 
 def get_disp_like_dicts(model: OP2) -> list[dict]:
     ato = model.op2_results.ato

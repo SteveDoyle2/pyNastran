@@ -27,6 +27,7 @@ class SurfGui(SurfIO, FakeGUIMethods):
         SurfIO.__init__(self, self)
         self.build_fmts(['surf'], stop_on_failure=True)
 
+
 class TestSurfGui(unittest.TestCase):
     """defines *.surf tests"""
     def test_surf_gui_01(self):

@@ -39,8 +39,8 @@ __all__ = ['CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
 class AxisymmetricTri(Element):
     def __init__(self):
         Element.__init__(self)
-        self.nodes_ref = None  # type: Optional[list[Any]]
-        self.pid_ref = None  # type: Optional[Any]
+        self.nodes_ref: Optional[list[Any]] = None
+        self.pid_ref: Optional[Any] = None
 
     def get_edge_ids(self):
         """
@@ -74,8 +74,8 @@ class AxisymmetricTri(Element):
 class AxisymmetricQuad(Element):
     def __init__(self):
         Element.__init__(self)
-        self.nodes_ref = None  # type: Optional[list[Any]]
-        self.pid_ref = None  # type: Optional[Any]
+        self.nodes_ref: Optional[list[Any]] = None
+        self.pid_ref: Optional[Any] = None
 
     def get_edge_ids(self):
         """
@@ -156,7 +156,7 @@ class CTRAX3(AxisymmetricTri):
         #self.validate_node_ids(allow_empty_nodes=True)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CTRAX3 card from ``BDF.add_card(...)``
 
@@ -179,7 +179,7 @@ class CTRAX3(AxisymmetricTri):
         assert len(card) <= 7, f'len(CTRAX3 card) = {len(card):d}\ncard={card}'
         return CTRAX3(eid, pid, nids, theta=theta, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -256,8 +256,8 @@ class CTRAX3(AxisymmetricTri):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        self.nodes_ref = None  # type: Optional[list[Any]]
-        self.pid_ref = None  # type: Optional[Any]
+        self.nodes_ref: Optional[list[Any]] = None
+        self.pid_ref: Optional[Any] = None
 
     @property
     def node_ids(self):
@@ -360,7 +360,7 @@ class CTRAX6(AxisymmetricTri):
         assert len(card) <= 10, f'len(CTRAX6 card) = {len(card):d}\ncard={card}'
         return CTRAX6(eid, pid, nids, theta=theta, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -549,7 +549,7 @@ class CTRIAX(AxisymmetricTri):
         assert len(card) <= 10, f'len(CTRIAX card) = {len(card):d}\ncard={card}'
         return CTRIAX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -628,8 +628,8 @@ class CTRIAX(AxisymmetricTri):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        self.nodes_ref = None  # type: Optional[list[Any]]
-        self.pid_ref = None  # type: Optional[Any]
+        self.nodes_ref: Optional[list[Any]] = None
+        self.pid_ref: Optional[Any] = None
 
     @property
     def node_ids(self):
@@ -777,10 +777,10 @@ class CTRIAX6(TriShell):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.mid = self.Mid()
-        self.nodes_ref = None  # type: Optional[list[Any]]
-        self.mid_ref = None  # type: Optional[Any]
+        self.nodes_ref: Optional[list[Any]] = None
+        self.mid_ref: Optional[Any] = None
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         nids = self.node_ids
         unused_edges = self.get_edge_ids()
@@ -1072,8 +1072,8 @@ class CQUADX(AxisymmetricQuad):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        self.nodes_ref = None  # type: Optional[list[Any]]
-        self.pid_ref = None  # type: Optional[Any]
+        self.nodes_ref: Optional[list[Any]] = None
+        self.pid_ref: Optional[Any] = None
 
     def Thickness(self):
         """
@@ -1100,7 +1100,7 @@ class CQUADX(AxisymmetricQuad):
             return self.nodes
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -1230,8 +1230,8 @@ class CQUADX4(AxisymmetricQuad):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        self.nodes_ref = None  # type: Optional[list[Any]]
-        self.pid_ref = None  # type: Optional[Any]
+        self.nodes_ref: Optional[list[Any]] = None
+        self.pid_ref: Optional[Any] = None
 
     def flip_normal(self):
         r"""
@@ -1250,7 +1250,7 @@ class CQUADX4(AxisymmetricQuad):
     def node_ids(self):
         return self._node_ids(allow_empty_nodes=True)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -1380,8 +1380,8 @@ class CQUADX8(AxisymmetricQuad):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        self.nodes_ref = None  # type: Optional[list[Any]]
-        self.pid_ref = None  # type: Optional[Any]
+        self.nodes_ref: Optional[list[Any]] = None
+        self.pid_ref: Optional[Any] = None
 
     def Normal(self):
         (n1, n2, n3, n4) = self.get_node_positions()[:4]
@@ -1404,7 +1404,7 @@ class CQUADX8(AxisymmetricQuad):
     def node_ids(self):
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 

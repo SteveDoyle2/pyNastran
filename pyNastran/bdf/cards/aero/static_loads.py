@@ -54,9 +54,9 @@ class AEROS(Aero):
         return AEROS(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
 
     def __init__(self, cref: float, bref: float, sref: float,
-                  acsid: int=0, rcsid: int=0,
-                  sym_xz: int=0, sym_xy: int=0,
-                  comment: str=''):
+                 acsid: int=0, rcsid: int=0,
+                 sym_xz: int=0, sym_xy: int=0,
+                 comment: str=''):
         """
         Creates an AEROS card
 
@@ -430,10 +430,10 @@ class CSSCHD(Aero):
         self.lschd_ref = None
 
     def validate(self) -> None:
-        if not(self.lalpha is None or isinstance(self.lalpha, integer_types)):
+        if not (self.lalpha is None or isinstance(self.lalpha, integer_types)):
             raise TypeError('lalpha=%r must be an int or None' % self.lalpha)
 
-        if not(self.lmach is None or isinstance(self.lmach, integer_types)):
+        if not (self.lmach is None or isinstance(self.lmach, integer_types)):
             raise TypeError('lmach=%r must be an int or None' % self.lmach)
 
         if self.lalpha is None and self.lmach is None:
@@ -891,7 +891,8 @@ class TRIM(BaseCard):
                     dof = (nid, componenti)
                     suport_dof_msg += '    (%s, %s)\n' % (nid, componenti)
                     if dof in suport_dofs:
-                        msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
+                        msg = ('Duplicate SUPORT DOF\n'
+                               'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs)))
                         raise RuntimeError(msg)
                     suport_dofs.add(dof)
                     nsuport1_dofs += 1
@@ -1175,3 +1176,84 @@ def _fill_label_list(aestat: dict) -> list[str]:
         if aestati.label not in labels:
             labels.append(aestati.label)
     return labels
+
+
+class UXVEC(BaseCard):
+    """
+    Defines the state of the aerodynamic extra points for a trim analysis.
+    All undefined extra points will be set to zero.
+
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    |   1   |   2    |   3  |    4   |    5   |  6  |    7   |  8  |     9    |
+    +=======+========+======+========+========+=====+========+=====+==========+
+    | UXVEC |   ID   |      |        |        |     |        |     |          |
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    |       | LABEL1 |  UX1 | LABEL2 |   UX2  | ... |        |     |          |
+    +-------+--------+------+--------+--------+-----+--------+-----+----------+
+    """
+    type = 'UXVEC'
+    _field_map = {1: 'sid', }
+    def __init__(self, sid: int, labels: list[str], uxs: list[float],
+                 comment: str=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.labels = labels
+        self.uxs = uxs
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        labels = ['ALPHA']
+        uxs = [1.0]
+        return UXVEC(sid, labels, uxs, comment='')
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a UXVEC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+
+        i = 9
+        n = 3
+        labels = []
+        uxs = []
+        while i < len(card):
+            label = string(card, i, 'label%i' % n)
+            ux = double(card, i + 1, 'ux%i' % n)
+            labels.append(label)
+            uxs.append(ux)
+            i += 2
+        return UXVEC(sid, labels, uxs, comment=comment)
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+
+        """
+        list_fields = ['UXVEC', self.sid, None, None, None, None, None, None, None]
+        nlabels = len(self.labels)
+        assert nlabels > 0, self.labels
+        for label, ux in zip(self.labels, self.uxs):
+            list_fields += [label, ux]
+        return list_fields
+
+    # def repr_fields(self):
+    #     # fixes a Nastran bug
+    #     list_fields = self.raw_fields()
+    #     return list_fields

@@ -28,7 +28,7 @@ USAGE_145 = (
     '[--in_units IN] [--out_units OUT] [--rhoref] '
     f'[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] {AXES} '
     f'[--noline] [--nopoints] [--ncol NCOL] {EXPORTS} '
-    '[--modal IVEL MODE] [--freq_tol FREQ_TOL]  [--mag_tol MAG_TOL]\n'
+    '[--modal IVEL MODE] [--freq_tol FREQ_TOL] [--freq_tol_remove FREQ_TOL_REMOVE] [--mag_tol MAG_TOL]\n'
 )
 USAGE_144 = (
     'Usage:\n'
@@ -42,6 +42,7 @@ USAGE_200 = (
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.f06.flutter_response import FlutterResponse
+
 
 def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
                        log: Optional[SimpleLogger]=None):
@@ -67,8 +68,8 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         '\n'
 
         'Positional Arguments:\n'
-        '  F06_FILENAME             path to input F06 file\n'
-        '  SUBPANEL_CAERO_FILENAME  path to input CAERO file\n'
+        '  F06_FILENAME            path to input F06 file\n'
+        '  AEROBOX_CAERO_FILENAME  path to input CAERO file\n'
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -85,7 +86,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
     assert docopt_version >= '0.9.0', docopt_version
     data = docopt(msg, version=ver, argv=argv[1:])
     f06_filename = data['F06_FILENAME']
-    subpanel_caero_filename = data['SUBPANEL_CAERO_FILENAME']
+    aerobox_caero_filename = data['AEROBOX_CAERO_FILENAME']
 
     dirname = os.path.dirname(f06_filename)
     loads_filename = os.path.join(dirname, 'loads.inc')
@@ -96,7 +97,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
     nid_csv_filename = os.path.join(dirname, 'nid_pyNastran.csv')
     eid_csv_filename = os.path.join(dirname, 'eid_pyNastran.csv')
     loads = f06_to_pressure_loads(f06_filename,
-                                  subpanel_caero_filename,
+                                  aerobox_caero_filename,
                                   loads_filename,
                                   nid_csv_filename=nid_csv_filename,
                                   eid_csv_filename=eid_csv_filename,
@@ -104,6 +105,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
                                   nlines_max=1_000_000,
                                   debug=False)
     return loads
+
 
 def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
                           log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
@@ -175,8 +177,9 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         '  --vd_limit VD_LIMIT            add a Vd and 1.15*Vd line\n'
         '  --damping_limit DAMPING_LIMIT  add a damping limit\n'
         '  --modal IVEL MODE              make a modal participation plot\n'
-        '  --freq_tol FREQ_TOL            sets the delta frequency tolerance for Vg-Vf and kfreq\n'
-        '  --mag_tol MAG_TOL              sets the magnitude tolerance for modal paricipation\n'
+        '  --freq_tol FREQ_TOL            sets the delta frequency tolerance for Vg-Vf and kfreq to dash a line\n'
+        '  --freq_tol_remove HIDE_FREQ_TOL  sets the delta frequency tolerance for Vg-Vf and kfreq to hide a line\n'
+        '  --mag_tol MAG_TOL              sets the magnitude tolerance for modal participation\n'
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -289,6 +292,10 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         #    data['--freq_tol'] = data['FREQ_TOL']
         freq_tol = get_cmd_line_float(data, '--freq_tol')
 
+    freq_tol_remove = -1.0
+    if data['--freq_tol_remove']:
+        freq_tol_remove = get_cmd_line_float(data, '--freq_tol_remove')
+
     mag_tol = -1.0
     if data['--mag_tol']:
         if isinstance(data['--mag_tol'], bool):
@@ -341,7 +348,8 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         ylim_damping=ylim_damping, ylim_freq=ylim_freq,
         vd_limit=vd_limit,
         damping_limit=damping_limit,
-        freq_tol=freq_tol, mag_tol=mag_tol,
+        freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
+        mag_tol=mag_tol,
         use_rhoref=use_rhoref,
         ivelocity=ivelocity, mode=mode,
         nopoints=nopoints,
@@ -394,7 +402,7 @@ def split_float_colons(string_values: str) -> list[float]:
             values.append(val)
     else:
         assert string_values is None, None
-        values = None # all values
+        values = None  # all values
     return values
 
 
@@ -537,6 +545,7 @@ def cmd_line_plot_optimization(argv=None, plot: bool=True, show: bool=True,
     f06_filename = data['F06_FILENAME']
 
     plot_sol_200(f06_filename, show=True)
+
 
 def cmd_line(argv=None, plot: bool=True, show: bool=True,
              log: Optional[SimpleLogger]=None) -> None:

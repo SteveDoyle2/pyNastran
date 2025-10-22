@@ -18,13 +18,14 @@ if TYPE_CHECKING:  # pragma: no cover
     #raise RuntimeError('is compare_parms used?')
     #compute(fem1.params, fem2.params)
 
+
 def assert_fields(card1: BaseCard, card2: BaseCard) -> None:
     try:
         fields1 = wipe_empty_fields(card1.repr_fields())
         fields2 = wipe_empty_fields(card2.repr_fields())
     except Exception:
-        print("card1 = \n%s" % (card1))
-        print("card2 = \n%s" % (card2))
+        print(f'card1 = \n{card1}')
+        print(f'card2 = \n{card2}')
         raise
 
     if len(fields1) != len(fields2):
@@ -59,7 +60,8 @@ def assert_fields(card1: BaseCard, card2: BaseCard) -> None:
                                                  fields1, fields2))
                 raise RuntimeError(msg + msg_end)
 
-def check_length(fem1, fem2, name):
+
+def check_length(fem1: BDF, fem2: BDF, name: str) -> None:
     obj1 = getattr(fem1, name)
     obj2 = getattr(fem2, name)
     if len(obj1) != len(obj2):
@@ -73,11 +75,13 @@ def compare_params(fem1: BDF, fem2: BDF) -> None:
         card2 = fem2.params[key]
         assert_fields(card1, card2)
 
+
 def compare_nodes(fem1: BDF, fem2: BDF) -> None:
     for key in fem1.nodes:
         card1 = fem1.nodes[key]
         card2 = fem2.nodes[key]
         assert_fields(card1, card2)
+
 
 def compare_elements(fem1: BDF, fem2: BDF) -> None:
     for key in fem1.elements:
@@ -95,6 +99,7 @@ def compare_elements(fem1: BDF, fem2: BDF) -> None:
         card2 = fem2.masses[key]
         assert_fields(card1, card2)
 
+
 def compare_properties(fem1: BDF, fem2: BDF) -> None:
     for key in fem1.properties:
         card1 = fem1.properties[key]
@@ -105,6 +110,7 @@ def compare_properties(fem1: BDF, fem2: BDF) -> None:
         card1 = fem1.properties_mass[key]
         card2 = fem2.properties_mass[key]
         assert_fields(card1, card2)
+
 
 def compare_materials(fem1: BDF, fem2: BDF) -> None:
     for key in fem1.materials:
@@ -117,7 +123,9 @@ def compare_materials(fem1: BDF, fem2: BDF) -> None:
         card2 = fem2.creep_materials[key]
         assert_fields(card1, card2)
 
+
 def compare_card_content(fem1: BDF, fem2: BDF) -> None:
+    fem1.log.debug('compare_card_content')
     check_obj_names = [
         'params', 'nodes', 'spoints', 'epoints', 'points',
         #'gridb', # removed
@@ -129,7 +137,9 @@ def compare_card_content(fem1: BDF, fem2: BDF) -> None:
         'nlparms', 'tsteps', 'tstepnls', 'dmig', 'dmiax', 'dmij', 'dmik', 'dmiji', 'dequations',
         'sets', 'asets', 'bsets', 'csets', 'qsets', 'usets',
         'se_sets', 'se_bsets', 'se_csets', 'se_qsets', 'se_usets',
-        'tables', 'tables_d', 'tables_m', 'random_tables', 'methods', 'cMethods']
+        'tables', 'tables_d', 'tables_m', 'random_tables', 'methods', 'cMethods',
+        'uxvec',
+    ]
     for name in check_obj_names:
         check_length(fem1, fem2, name)
 
@@ -247,15 +257,15 @@ def compare_card_content(fem1: BDF, fem2: BDF) -> None:
         #assert_fields(card1, card2)
 
     dict_groups = [
-        #'se_sets',
-        #'usets', 'se_usets',
+        # 'se_sets',
+        # 'usets', 'se_usets',
         'tables', 'random_tables',
         'methods', 'cMethods',
     ]
-    #list_groups = [
-        #'bsets', 'csets', 'qsets',
-        #'se_bsets', 'se_csets', 'se_qsets',
-    #]
+    # list_groups = [
+    #     'bsets', 'csets', 'qsets',
+    #     'se_bsets', 'se_csets', 'se_qsets',
+    # ]
     for name in dict_groups:
         group1 = getattr(fem1, name)
         group2 = getattr(fem2, name)

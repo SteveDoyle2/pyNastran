@@ -26,8 +26,9 @@ import warnings
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
+import scipy
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.utils import object_attributes
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
@@ -38,7 +39,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.bdf_interface.internal_get import (
     coord_id,
     caero_id, paero_id,
-    set_id,
+    set_id, aesurf_label,
     set_group, aefact_id, aelist_id)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
@@ -47,6 +48,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    from pyNastran.bdf.cards.nodes import GRID
+    from pyNastran.bdf.cards.bdf_sets import SET1
+    from pyNastran.bdf.cards.optimization_nx import GROUP
     import matplotlib
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
 
@@ -546,7 +550,7 @@ class AELINK(BaseCard):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AELINK card from ``BDF.add_card(...)``
 
@@ -587,7 +591,7 @@ class AELINK(BaseCard):
         aestat_names = {aestat.label for aestat in model.aestats.values()}
         is_aesurf = self.dependent_label in aesurf_names
         is_aeparam = self.dependent_label in aparam_names
-        if not(is_aesurf or is_aeparam):
+        if not (is_aesurf or is_aeparam):
             raise RuntimeError(f'dependent_label={self.dependent_label} is an AESURF and AEPARM\n{self}\n'
                                f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
         elif is_aesurf:
@@ -603,7 +607,7 @@ class AELINK(BaseCard):
             is_aesurf = independent_label in aesurf_names
             is_aeparam = independent_label in aparam_names
             is_aestat = independent_label in aestat_names
-            if not(is_aesurf or is_aeparam or is_aestat):
+            if not (is_aesurf or is_aeparam or is_aestat):
                 raise RuntimeError(f'independent_label={independent_label} is an AESURF and AEPARM\n{self}\n'
                                    f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
             elif is_aesurf:
@@ -816,7 +820,7 @@ class AEPARM(BaseCard):
         self.units = units
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AEPARM card from ``BDF.add_card(...)``
 
@@ -926,7 +930,7 @@ class AESURF(BaseCard):
                  hmllim: Optional[float]=None, hmulim: Optional[float]=None,
                  # TABLEDi deflection limits vs. dynamic pressure
                  tqllim: int=0, tqulim: int=0,
-                 comment='') -> None:
+                 comment: str='') -> None:
         """
         Creates an AESURF card, which defines a control surface
 
@@ -1022,7 +1026,7 @@ class AESURF(BaseCard):
         #assert self.ldw in {'LDW', 'NOLDW'}, self.ldw
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AESURF card from ``BDF.add_card(...)``
 
@@ -1097,14 +1101,14 @@ class AESURF(BaseCard):
         msg = ', which is required by AESURF eid=%s' % self.label
         self.cid1_ref = model.Coord(self.cid1, msg=msg)
         if self.cid2 is not None:
-            self.cid2_ref = model.Coord(self.cid2)
-        self.aelist_id1_ref = model.AELIST(self.aelist_id1)
+            self.cid2_ref = model.Coord(self.cid2, msg=msg)
+        self.aelist_id1_ref = model.AELIST(self.aelist_id1, msg=msg)
         if self.aelist_id2:
-            self.aelist_id2_ref = model.AELIST(self.aelist_id2)
+            self.aelist_id2_ref = model.AELIST(self.aelist_id2, msg=msg)
         if self.tqllim:  # integer
-            self.tqllim_ref = model.TableD(self.tqllim)
+            self.tqllim_ref = model.TableD(self.tqllim, msg=msg)
         if self.tqulim:  # integer
-            self.tqulim_ref = model.TableD(self.tqulim)
+            self.tqulim_ref = model.TableD(self.tqulim, msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by AESURF aesid=%s' % self.aesurf_id
@@ -1240,7 +1244,7 @@ class AESURFS(BaseCard):
         return AESURFS(aesid, label, list1, list2, comment='')
 
     def __init__(self, aesid: int, label: str,
-                 list1: int, list2: int,
+                 list1: int, list2: int=0,
                  comment: str='') -> None:
         """
         Creates an AESURFS card
@@ -1251,8 +1255,11 @@ class AESURFS(BaseCard):
             the unique id
         label : str
             the AESURF name
-        list1 / list2 : int / None
-            the list (SET1) of node ids for the primary/secondary
+        list1 : int
+            the list (SET1) of node ids for the primary
+            control surface(s) on the AESURF card
+        list2 : int; default=0
+            the list (SET1) of node ids for the secondary
             control surface(s) on the AESURF card
         comment : str; default=''
             a comment for the card
@@ -1265,11 +1272,12 @@ class AESURFS(BaseCard):
         self.label = label
         self.list1 = list1
         self.list2 = list2
+        self.label_ref = None
         self.list1_ref = None
         self.list2_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AESURFS card from ``BDF.add_card(...)``
 
@@ -1284,12 +1292,12 @@ class AESURFS(BaseCard):
         aesid = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
         list1 = integer(card, 4, 'list1')
-        list2 = integer(card, 6, 'list2')
+        list2 = integer_or_blank(card, 6, 'list2', default=0)
         assert len(card) <= 7, f'len(AESURFS card) = {len(card):d}\ncard={card}'
         return AESURFS(aesid, label, list1, list2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         aesid = data[0]
         label = data[1]
         list1 = data[2]
@@ -1307,33 +1315,42 @@ class AESURFS(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by AESURFS aesid=%s' % self.aesid
+        msg = f', which is required by AESURFS aesid={self.aesid}'
+        self.label_ref = model.AESurf(self.label, msg)
         self.list1_ref = model.Set(self.list1, msg)
         self.list1_ref.cross_reference_set(model, 'Node', msg)
 
-        self.list2_ref = model.Set(self.list1, msg=msg)
-        self.list2_ref.cross_reference_set(model, 'Node', msg)
+        if self.list2 != 0:
+            self.list2_ref = model.Set(self.list2, msg=msg)
+            self.list2_ref.cross_reference_set(model, 'Node', msg)
 
-    def safe_cross_reference(self, model):
-        msg = ', which is required by AESURFS aesid=%s' % self.aesid
+    def safe_cross_reference(self, model: BDF):
+        msg = f', which is required by AESURFS aesid={self.aesid}'
+        self.label_ref = model.safe_aesurf(self.label, msg)
         try:
             self.list1_ref = model.Set(self.list1, msg=msg)
             self.list1_ref.cross_reference_set(model, 'Node', msg)
         except KeyError:
             pass
 
-        try:
-            self.list2_ref = model.Set(self.list1, msg=msg)
-            self.list2_ref.cross_reference_set(model, 'Node', msg)
-        except KeyError:
-            pass
+        if self.list2 != 0:
+            try:
+                self.list2_ref = model.Set(self.list2, msg=msg)
+                self.list2_ref.cross_reference_set(model, 'Node', msg)
+            except KeyError:
+                pass
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
+        self.label = self.Label()
         self.list1 = self.List1()
         self.list2 = self.List2()
+        self.label_ref = None
         self.list1_ref = None
         self.list2_ref = None
+
+    def Label(self) -> str:
+        return aesurf_label(self.label_ref, self.label)
 
     def List1(self) -> int:
         return set_id(self.list1_ref, self.list1)
@@ -1341,7 +1358,7 @@ class AESURFS(BaseCard):
     def List2(self) -> int:
         return set_id(self.list2_ref, self.list2)
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         """
         Gets the fields in their unmodified form
 
@@ -1351,7 +1368,7 @@ class AESURFS(BaseCard):
             the fields that define the card
 
         """
-        list_fields = ['AESURFS', self.aesid, self.label, None, self.List1(), None,
+        list_fields = ['AESURFS', self.aesid, self.Label(), None, self.List1(), None,
                        self.List2()]
         return list_fields
 
@@ -1695,11 +1712,23 @@ class CAERO1(BaseCard):
 
         a = p3 - p1
         b = p4 - p2
-        area = np.linalg.norm(np.cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         assert area > 0, f'eid={self.eid} p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
 
+    def _verify(self, xref: bool) -> None:
+        cp = self.Cp()
+        pid = self.Pid()
+        assert isinstance(cp, integer_types), f'cp={cp!r}'
+        assert isinstance(pid, integer_types), f'pid={pid!r}'
+        self.flip_normal()
+        self.flip_normal()
+        if xref:
+            ids = self.aefact_ids
+            area = self.area()
+            assert isinstance(area, float_types), f'area={area!r}'
+
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CAERO1 card from ``BDF.add_card(...)``
 
@@ -1825,7 +1854,7 @@ class CAERO1(BaseCard):
         npanels = nchord * nspan
         try:
             self.box_ids = np.arange(self.eid, self.eid + npanels,
-                                     dtype=dtype).reshape(nspan, nchord)# .T
+                                     dtype=dtype).reshape(nspan, nchord)
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
@@ -1865,7 +1894,7 @@ class CAERO1(BaseCard):
         msg = f', which is required by CAERO1 eid={self.eid}'
         self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
-        model.log
+        #model.log
         if model.sol in [144, 145, 146, 200]:
             self.ascid_ref = model.Acsid(msg=msg)
         else:
@@ -1968,7 +1997,7 @@ class CAERO1(BaseCard):
             p4 = self.cp_ref.transform_node_to_global(self.p4)
         return p1, p4
 
-    def get_points(self):
+    def get_points(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Get the 4 corner points for the CAERO card
 
@@ -1986,13 +2015,13 @@ class CAERO1(BaseCard):
         else:
             p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
             p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
-        return [p1, p2, p3, p4]
+        return (p1, p2, p3, p4)
 
     def area(self) -> float:
         p1, p2, p3, p4 = self.get_points()
         a = p3 - p1
         b = p4 - p2
-        area = np.linalg.norm(np.cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         assert area > 0, f'eid={self.eid} p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
         return area
 
@@ -2048,8 +2077,8 @@ class CAERO1(BaseCard):
         comment_a = (self.comment + ' A').strip()
         comment_b = (self.comment + ' B').strip()
         caero_a = CAERO1(eid_a, pid, igroup, p1, self.x12, p14, x14_23,
-                        cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord, lchord=lchord,
-                        comment=comment_a)
+                         cp=cp, nspan=nspan_a, lspan=lspan, nchord=nchord, lchord=lchord,
+                         comment=comment_a)
         caero_b = CAERO1(eid_b, pid, igroup, p14, x14_23, p4, self.x43,
                          cp=cp, nspan=nspan_b, lspan=lspan, nchord=nchord, lchord=lchord,
                          comment=comment_b)
@@ -2245,8 +2274,8 @@ class CAERO1(BaseCard):
             mask2 = (m1 & m2).any(-1)
             m3 = (slope < 0) != (contour2[:, 1] < polygoni[:, 1])
             m4 = m1 & m3
-            count = np.count_nonzero(m4, axis=-1)
-            mask3 = ~(count % 2 == 0)
+            counti = np.count_nonzero(m4, axis=-1)
+            mask3 = ~(counti % 2 == 0)
             mask = mask1 | mask2 | mask3
             return mask
 
@@ -2424,7 +2453,7 @@ class CAERO1(BaseCard):
         return npoints, nelements
 
     @property
-    def xy(self):
+    def xy(self) -> tuple[np.ndarray, np.ndarray]:
         """
         Returns
         -------
@@ -2478,7 +2507,7 @@ class CAERO1(BaseCard):
         # correct paneling, wrong orientation
         #return points_elements_from_quad_points(p1, p2, p3, p4, y, x, dtype='int32')
 
-    def set_points(self, points):
+    def set_points(self, points: list[float] | list[np.ndarray]) -> None:
         self.p1 = points[0]
         p2 = points[1]
         p3 = points[2]
@@ -2529,7 +2558,7 @@ class CAERO1(BaseCard):
         int_pt[:, 0] += chord * 0.75
         return int_pt
 
-    def shift(self, dxyz) -> None:
+    def shift(self, dxyz: np.ndarray) -> None:
         """shifts the aero panel"""
         self.p1 += dxyz
         self.p4 += dxyz
@@ -2597,7 +2626,7 @@ class CAERO1(BaseCard):
     def get_LSpan(self) -> int:
         return aefact_id(self.lspan_ref, self.lspan)
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         """
         Gets the fields in their simplified form
 
@@ -2925,7 +2954,7 @@ class CAERO2(BaseCard):
 
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
-        return [p1, p2]
+        return p1, p2
 
     def get_leading_edge_points(self) -> [np.ndarray]:
         return [self.get_points()[0]]
@@ -2943,7 +2972,7 @@ class CAERO2(BaseCard):
             # print('xstation = ', xstation)
         else:
             nx = self.nsb
-            station = np.linspace(0., nx, num=nx+1) # *dx?
+            station = np.linspace(0., nx, num=nx+1)  # *dx?
         assert nx > 0, 'nx=%s' % nx
         return station
 
@@ -3165,6 +3194,7 @@ class CAERO3(BaseCard):
         self.list_w_ref = None
         self.list_c1_ref = None
         self.list_c2_ref = None
+        self.box_ids = None
 
     def validate(self):
         assert len(self.p1) == 3, 'p1=%s' % self.p1
@@ -3174,7 +3204,7 @@ class CAERO3(BaseCard):
         assert isinstance(self.cp, int), 'cp=%r' % self.cp
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CAERO3 card from ``BDF.add_card(...)``
 
@@ -3226,6 +3256,7 @@ class CAERO3(BaseCard):
         if self.list_c2 is not None:
             self.list_c2_ref = model.AEFact(self.list_c2, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
+        self._init_ids()
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = f', which is required by CAERO3 eid={self.eid}'
@@ -3244,6 +3275,7 @@ class CAERO3(BaseCard):
             self.ascid_ref = model.Acsid(msg=msg)
         except KeyError:
             model.log.warning('cannot find an aero coordinate system for %s' % msg)
+        self._init_ids()
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -3283,7 +3315,7 @@ class CAERO3(BaseCard):
         p1, p2, p3, p4 = self.get_points()
         a = p3 - p1
         b = p4 - p2
-        area = np.linalg.norm(np.cross(a, b))
+        area = 0.5 * np.linalg.norm(np.cross(a, b))
         assert area > 0, f'eid={self.eid} p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
         return area
 
@@ -3320,6 +3352,29 @@ class CAERO3(BaseCard):
         nelements = nchord * nspan
         npoints = (nchord + 1) * (nspan + 1)
         return npoints, nelements
+
+    def _init_ids(self, dtype: str='int32') -> np.ndarray:
+        """
+        Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
+
+        """
+        nchord, nspan = self.shape
+        assert nchord >= 1, 'nchord=%s' % nchord
+        assert nspan >= 1, 'nspan=%s' % nspan
+        self.box_ids = np.zeros((nchord, nspan), dtype=dtype)
+
+        npanels = nchord * nspan
+        try:
+            self.box_ids = np.arange(self.eid, self.eid + npanels,
+                                     dtype=dtype).reshape(nspan, nchord)
+        except OverflowError:
+            if dtype == 'int64':
+                # we already tried int64
+                msg = 'eid=%s lchord=%s lspan=%s nchord=%s' % (
+                    self.eid, self.lchord, self.lspan, nchord)
+                raise OverflowError(msg)
+            self._init_ids(dtype='int64')
+        return self.box_ids
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -3519,7 +3574,7 @@ class CAERO4(BaseCard):
         assert self.x43 >= 0., 'x43=%s' % self.x43
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CAERO4 card from ``BDF.add_card(...)``
 
@@ -3605,7 +3660,7 @@ class CAERO4(BaseCard):
         return (paero_id
                 (self.pid_ref, self.pid))
 
-    def _init_ids(self, dtype='int32'):
+    def _init_ids(self, dtype: str='int32') -> np.ndarray:
         """
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
         """
@@ -3869,7 +3924,7 @@ class CAERO5(BaseCard):
         assert self.ntheory in [0, 1, 2], 'ntheory=%r' % self.ntheory
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CAERO5 card from ``BDF.add_card(...)``
 
@@ -4114,7 +4169,7 @@ class MONPNT1(BaseCard):
         xyz = [0., 1., 2.]
         return MONPNT1(name, label, axes, aecomp_name, xyz, cp=0, cd=None, comment='')
 
-    def __init__(self, name: str, label: str, axes: int, aecomp_name: str,
+    def __init__(self, name: str, label: str, axes: str, aecomp_name: str,
                  xyz: list[float], cp: int=0, cd: Optional[int]=None, comment: str=''):
         """
         Creates a MONPNT1 card
@@ -4698,7 +4753,7 @@ class MONDSP1(BaseCard):
         self.cd_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         row0 = card[0]
         row1 = card[1]
         assert len(card) == 2, card
@@ -5398,7 +5453,7 @@ class PAERO4(BaseCard):
     """
     type = 'PAERO4'
     _field_map = {
-        1: 'pid', #2:'orient', 3:'width', 4:'AR',
+        1: 'pid',  # 2:'orient', 3:'width', 4:'AR',
     }
 
     #def _get_field_helper(self, n):
@@ -5461,7 +5516,7 @@ class PAERO4(BaseCard):
         """
         Parameters
         ----------
-        PID : int
+        pid : int
             Property identification number. (Integer > 0)
         cla : int; default=0
             Select Prandtl-Glauert correction. (Integer = -1, 0, 1)
@@ -5484,12 +5539,12 @@ class PAERO4(BaseCard):
             for each Mach number. See Remark 3, 4, and 5 below; variable b’s
             and β’s for each mi on the MKAEROi entry.
             (Integer = 0 if CIRC = 0, > 0 if CIRC ≠ 0)
-        DOCi : list[float]
+        docs : list[float]
             d/c = distance of the control surface hinge aft of the quarter-chord
             divided by the strip chord (Real ≥ 0.0)
-        CAOCi : list[float]
+        caocs : list[float]
             ca/c = control surface chord divided by the strip chord. (Real ≥ 0.0)
-        GAPOCi : list[float]
+        gapocs : list[float]
             g/c = control surface gap divided by the strip chord. (Real ≥ 0.0)
 
         """
@@ -5856,7 +5911,7 @@ class SPLINE1(Spline):
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'usage = %s' % self.usage
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPLINE1 card from ``BDF.add_card(...)``
 
@@ -5883,7 +5938,7 @@ class SPLINE1(Spline):
                        nelements, melements, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         eid = data[0]
         caero = data[1]
         box1 = data[2]
@@ -5899,7 +5954,7 @@ class SPLINE1(Spline):
                        nelements, melements, comment=comment)
 
     @property
-    def aero_element_ids(self):
+    def aero_element_ids(self) -> np.ndarray:
         return np.arange(self.box1, self.box2 + 1)
 
     def CAero(self) -> int:
@@ -5964,7 +6019,94 @@ class SPLINE1(Spline):
         self.caero_ref = None
         self.setg_ref = None
 
-    def raw_fields(self):
+    def _verify(self, xref: bool) -> None:
+        self.aero_element_ids
+        if xref:
+            caero: CAERO1 = self.caero_ref
+            p1, p2, p3, p4 = caero.get_points()
+            # p1---p4
+            # |    |
+            # p2---p3
+            a = p3 - p1
+            b = p2 - p4
+            # print(f'p1 = {p1}')
+            # print(f'p2 = {p2}')
+            # print(f'p3 = {p3}')
+            # print(f'p4 = {p4}')
+
+            # print(f'a = {a}')
+            # print(f'b = {b}')
+            axb = np.cross(a, b)
+            # print(f'axb = {axb}')
+            normi = np.linalg.norm(axb)
+            area = 0.5 * normi
+            normal = axb / normi
+            # print(f'area = {area}')
+            # print(f'normal = {normal}')
+
+            # just toss the "z" value of the spline
+            # this is nice, so we can find the point in local xy space (so there's no xform for a wing spline)
+            centroid = (p1 + p2 + p3 + p4) / 4.
+            # centroid = np.zeros(3)
+            # print(f'centroid = {centroid}')
+
+            setg: SET1 = self.setg_ref
+
+            p12 = (p1 + p2) / 2.
+            p34 = (p3 + p4) / 2.
+            j = p34 - p12
+            j /= np.linalg.norm(j)
+            i = np.cross(j, normal)
+            # print(f'i = {i}')
+            xform = np.vstack([i, j, normal]).round(2)
+
+            nodes_ref: list[GRID] = setg.ids_ref
+            # print(f'xform:\n{xform}')
+            local_spline_points = []
+            for ipoint, node in enumerate(nodes_ref):
+                xyz = node.get_position()
+
+                # Vector from the panel point to the point
+                vector_to_point = xyz - centroid
+
+                # Distance from the point to the panel along the normal
+                distance_to_panel = np.dot(vector_to_point, normal)
+
+                # Project the point onto the panel
+                projected_point = xyz - distance_to_panel * normal
+                # projected_point2 = xform @ (xyz - centroid)
+                # projected_point3 = xform.T @ (xyz - centroid)
+                # print(f'xyz[{ipoint}] = {xyz}')
+                # print(f'projected_point1[{ipoint}] = proj          = {projected_point}')
+                # print(f'projected_point2[{ipoint}] = xform   @ xyz = {projected_point2}\n')
+                # print(f'projected_point3[{ipoint}] = xform.T @ xyz = {projected_point3}\n')
+                local_spline_points.append(projected_point)
+
+            del xform
+            local_spline_points_array = np.array(local_spline_points)
+            try:
+                hull = scipy.spatial.ConvexHull(local_spline_points_array[:, :2])
+                area_hull = hull.area
+            except scipy.spatial._qhull.QhullError:
+                area_hull = np.nan
+
+            # The points are now projected (with no z value)
+            # Let's find the convex hull of points
+            # Finally, compute the area of the convex hull
+            #area_hull = 0.95 * area
+            area_ratio = area_hull / area
+            msg = (
+                f'Spline Points for SPLINE1 eid={self.eid} caero={self.caero} dont span the surface\n'
+                f' area_hull/area = {area_hull:g}/{area:g} = {area_ratio:.3g}\n'
+                f' local_spline_points:\n{local_spline_points_array}'
+            )
+            if np.isnan(area_ratio) or area_ratio <= 0.25:
+                # model.log.error(msg)
+                # raise RuntimeError(msg)
+                #warnings.warn(msg)
+                pass
+
+    def raw_fields(self) -> list:
         """
         Gets the fields in their unmodified form
 
@@ -5979,7 +6121,7 @@ class SPLINE1(Spline):
                        self.melements]
         return list_fields
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         dz = set_blank_if_default(self.dz, 0.)
         method = set_blank_if_default(self.method, 'IPS')
         usage = set_blank_if_default(self.usage, 'BOTH')
@@ -6096,11 +6238,11 @@ class SPLINE2(Spline):
         self.caero_ref = None
         self.setg_ref = None
 
-    def validate(self):
+    def validate(self) -> None:
         assert self.box2 >= self.box1, 'box2=%s box1=%s' % (self.box2, self.box1)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPLINE2 card from ``BDF.add_card(...)``
 
@@ -6127,6 +6269,39 @@ class SPLINE2(Spline):
         assert len(card) <= 13, f'len(SPLINE2 card = {len(card):d}\ncard={card}'
         return SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid,
                        dthx, dthy, usage, comment=comment)
+
+    def _verify(self, xref: bool) -> None:
+        self.aero_element_ids
+        if xref:
+            caero: CAERO1 | CAERO2 = self.caero_ref
+            if isinstance(caero, CAERO1):
+                p1, p2, p3, p4 = caero.get_points()
+                centroid = (p1 + p2 + p3 + p4) / 4.
+                area = caero.area()
+                assert isinstance(area, float_types), f'area={area}'
+            elif isinstance(caero, CAERO2):
+                p1, p2 = caero.get_points()
+                # p1---p4
+                # |    |
+                # p2---p3
+                ihat = p2 - p1
+                length = np.linalg.norm(ihat)
+                assert isinstance(length, float_types), f'length={length}'
+                # print(f'p1 = {p1}')
+                # print(f'p2 = {p2}')
+
+                centroid = (p1 + p2) / 2.
+                # print(f'centroid = {centroid}')
+            else:
+                raise TypeError(str(caero))
+
+            setg: SET1 = self.setg_ref
+            nodes_ref: list[GRID] = setg.ids_ref
+            local_spline_points = []
+            for ipoint, node in enumerate(nodes_ref):
+                xyz = node.get_position()
+                local_spline_points.append(xyz)
+            local_spline_points_array = np.array(local_spline_points)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -6977,7 +7152,7 @@ def get_caero_count(model: BDF) -> tuple[int, int, int, int]:
         number of CAEROx sub-panels
     ncaeros_points : int
         number of CAERO points that define the panels
-        (4 per CAERO1/3/4/5 subpanel; 2 per CAERO2 panel)
+        (4 per CAERO1/3/4/5 aero box; 2 per CAERO2 panel)
     ncaero_sub_points : int
         number of CAEROx sub-points (1 per panel)
         CAERO2, BODY7 not supported
@@ -7053,8 +7228,8 @@ def get_caero_points(model: BDF,
     return caero_points, has_caero
 
 
-def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
-    """builds the CAERO subpanel grid in 3d space"""
+def get_caero_box_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
+    """builds the CAERO aerobox grid in 3d space"""
     j = 0
     points = []
     elements = []
@@ -7074,7 +7249,7 @@ def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
 
     if len(elements) == 1:
         points_array = np.vstack(points)
-        elements_array = elements[0] # .reshape(1, 4)
+        elements_array = elements[0]  # .reshape(1, 4)
     else:
         points_array = np.vstack(points)
         elements_array = np.vstack(elements)
@@ -7093,7 +7268,7 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
     """
     Creates the CAERO panel inputs including:
      - caero
-     - caero_subpanels
+     - caero_boxes
      - caero_control_surfaces
      - N control surfaces
 
@@ -7124,7 +7299,7 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
         ncaeros_points : int
             number of points for the caero coarse grid
         ncaero_sub_points : int
-            number of points for the caero fine/subpanel grid
+            number of points for the caero fine/aerobox grid
         has_control_surface : bool
             is there a control surface
         box_id_to_caero_element_map : dict[box_id] = box_index

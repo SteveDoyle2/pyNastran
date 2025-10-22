@@ -1,10 +1,10 @@
 import os
 
-from cpylog import get_logger2
+from cpylog import get_logger
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 
 def main():
-    log = get_logger2(debug=True)
+    log = get_logger(level=True)
 
     dirnames = ['ascii', 'binary']
     filenames = [

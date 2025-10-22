@@ -11,6 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, USET, RBE1, RBE2, RBE3, RBAR
     from pyNastran.op2.op2_geom import OP2Geom
 
+
 def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<',
                 nastran_format: str='nx') -> None:
     if not hasattr(obj, 'rigid_elements'):
@@ -166,57 +167,57 @@ def write_card(op2_file, op2_ascii, card_type: str, cards, endian: bytes,
     ncards = len(cards)
     #log.debug(f'GEOM4: writing {card_type}')
     if card_type in {'ASET1', 'BSET1', 'CSET1', 'QSET1', 'OMIT1'}:
-        nbytes = _write_xset1(card_type, cards, ncards, op2_file, op2_ascii,
-                              endian)
-    elif card_type in {'ASET', 'BSET', 'CSET', 'OMIT', 'QSET'}:
-        nbytes = _write_xset(card_type, cards, ncards, op2_file, op2_ascii,
+        nbytes = write_xset1(card_type, cards, ncards, op2_file, op2_ascii,
                              endian)
+    elif card_type in {'ASET', 'BSET', 'CSET', 'OMIT', 'QSET'}:
+        nbytes = write_xset(card_type, cards, ncards, op2_file, op2_ascii,
+                            endian)
     elif card_type in {'SEBSET1', 'SECSET1', 'SEQSET1'}:
-        nbytes = _write_sexset1(card_type, cards, ncards, op2_file, op2_ascii,
-                                endian)
-    elif card_type in {'SEBSET', 'SECSET', 'SEQSET'}:
-        nbytes = _write_sexset(card_type, cards, ncards, op2_file, op2_ascii,
+        nbytes = write_sexset1(card_type, cards, ncards, op2_file, op2_ascii,
                                endian)
+    elif card_type in {'SEBSET', 'SECSET', 'SEQSET'}:
+        nbytes = write_sexset(card_type, cards, ncards, op2_file, op2_ascii,
+                              endian)
 
     elif card_type == 'SUPORT':
-        nbytes = _write_suport(card_type, cards, ncards, op2_file, op2_ascii,
-                               endian)
+        nbytes = write_suport(card_type, cards, ncards, op2_file, op2_ascii,
+                              endian)
 
     elif card_type == 'SUPORT1':
-        nbytes = _write_suport1(card_type, cards, ncards, op2_file, op2_ascii,
-                                endian)
+        nbytes = write_suport1(card_type, cards, ncards, op2_file, op2_ascii,
+                               endian)
 
     elif card_type == 'MPC':
-        nbytes = _write_mpc(card_type, cards, ncards, op2_file, op2_ascii,
-                            endian)
+        nbytes = write_mpc(card_type, cards, ncards, op2_file, op2_ascii,
+                           endian)
 
     elif card_type == 'RBE1':
-        nbytes = _write_rbe1(card_type, cards, ncards, op2_file, op2_ascii,
-                             endian)
+        nbytes = write_rbe1(card_type, cards, ncards, op2_file, op2_ascii,
+                            endian)
     elif card_type == 'RBE2':
-        nbytes = _write_rbe2(card_type, cards, ncards, op2_file, op2_ascii,
-                             endian)
+        nbytes = write_rbe2(card_type, cards, ncards, op2_file, op2_ascii,
+                            endian)
     elif card_type == 'RBE3':
-        nbytes = _write_rbe3(card_type, cards, ncards, op2_file, op2_ascii,
-                             endian)
+        nbytes = write_rbe3(card_type, cards, ncards, op2_file, op2_ascii,
+                            endian)
 
     elif card_type == 'RBAR':
-        nbytes = _write_rbar(card_type, cards, ncards, op2_file, op2_ascii,
-                             endian, nastran_format=nastran_format)
+        nbytes = write_rbar(card_type, cards, ncards, op2_file, op2_ascii,
+                            endian, nastran_format=nastran_format)
 
     elif card_type == 'SPC1':
-        nbytes = _write_spc1(card_type, cards, ncards, op2_file, op2_ascii,
-                             endian)
+        nbytes = write_spc1(card_type, cards, ncards, op2_file, op2_ascii,
+                            endian)
 
     elif card_type in {'SPCADD', 'MPCADD'}:
-        nbytes = _write_spcadd(card_type, cards, ncards, op2_file, op2_ascii,
-                               endian)
+        nbytes = write_spcadd(card_type, cards, ncards, op2_file, op2_ascii,
+                              endian)
     elif card_type == 'SPC':
-        nbytes = _write_spc(card_type, cards, ncards, op2_file, op2_ascii, endian,
-                            log, nastran_format=nastran_format)
+        nbytes = write_spc(card_type, cards, ncards, op2_file, op2_ascii, endian,
+                           log, nastran_format=nastran_format)
     elif card_type == 'USET':
-        nbytes = _write_uset(card_type, cards, ncards, op2_file, op2_ascii, endian,
-                             log, nastran_format=nastran_format)
+        nbytes = write_uset(card_type, cards, ncards, op2_file, op2_ascii, endian,
+                            log, nastran_format=nastran_format)
 
     #elif card_type == 'TEMPD':
         #key = (5641, 65, 98)
@@ -252,8 +253,8 @@ def write_header(name: str, nfields: int, ncards: int, key: tuple[int, int, int]
     nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
     return nbytes
 
-def _write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
-               endian: bytes, log, nastran_format: str='nx') -> int:
+def write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
+              endian: bytes, log, nastran_format: str='nx') -> int:
     """writes an SPC"""
     key = (5501, 55, 16)
     #nastran_format = 'msc'
@@ -278,8 +279,8 @@ def _write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
             node_ids = spc.node_ids
             for nid, comp, enforcedi in zip(node_ids, spc.components, spc.enforced):
                 datai = [spc.conid, nid, int(comp), 0, enforcedi]
-            op2_ascii.write('  SPC data=%s\n' % str(datai))
-            data += datai
+                op2_ascii.write('  SPC data=%s\n' % str(datai))
+                data += datai
         nfields = len(data)
         nbytes = write_header_nvalues(card_type, nfields, key, op2_file, op2_ascii)
         fmt = endian + b'4if' * (nfields // 5)
@@ -310,9 +311,9 @@ def _write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
         raise RuntimeError(f'nastran_format={nastran_format} not msc, nx')
     return nbytes
 
-def _write_uset(card_type: str, cards: list[USET],
-                ncards: int, op2_file, op2_ascii,
-                endian: bytes, log, nastran_format: str='nx') -> int:
+def write_uset(card_type: str, cards: list[USET],
+               ncards: int, op2_file, op2_ascii,
+               endian: bytes, log, nastran_format: str='nx') -> int:
     """writes a USET"""
     key = (2010, 20, 193)
     max_uset_id = max([uset.sid for uset in cards])
@@ -342,9 +343,9 @@ def _write_uset(card_type: str, cards: list[USET],
     op2_file.write(pack(fmt, *data))
     return nbytes
 
-def _write_rbe1(card_type: str, cards: list[RBE1],
-                unused_ncards: int, op2_file, op2_ascii,
-                endian: bytes) -> int:
+def write_rbe1(card_type: str, cards: list[RBE1],
+               unused_ncards: int, op2_file, op2_ascii,
+               endian: bytes) -> int:
     """
     RBE1(6801,68,294) - Record 23
 
@@ -394,9 +395,9 @@ def _write_rbe1(card_type: str, cards: list[RBE1],
     del fields, fmt
     return nbytes
 
-def _write_rbe2(card_type: str, cards: list[RBE2],
-                unused_ncards: int, op2_file, op2_ascii,
-                endian: bytes) -> int:
+def write_rbe2(card_type: str, cards: list[RBE2],
+               unused_ncards: int, op2_file, op2_ascii,
+               endian: bytes) -> int:
     """
     RBE2(6901,69,295) - Record 24
 
@@ -442,9 +443,9 @@ def _write_rbe2(card_type: str, cards: list[RBE2],
     op2_file.write(pack(fmt, *fields))
     return nbytes
 
-def _write_rbe3(card_type: str, cards: list[RBE3],
-                unused_ncards: int, op2_file, op2_ascii,
-                endian: bytes) -> int:
+def write_rbe3(card_type: str, cards: list[RBE3],
+               unused_ncards: int, op2_file, op2_ascii,
+               endian: bytes) -> int:
     """
     1 EID   I Element identification number
     2 REFG  I Reference grid point identification number
@@ -495,9 +496,9 @@ def _write_rbe3(card_type: str, cards: list[RBE3],
     del fields, fmt
     return nbytes
 
-def _write_rbar(card_type: str, cards: list[RBAR],
-                ncards: int, op2_file, op2_ascii,
-                endian: bytes, nastran_format: str='nx') -> int:
+def write_rbar(card_type: str, cards: list[RBAR],
+               ncards: int, op2_file, op2_ascii,
+               endian: bytes, nastran_format: str='nx') -> int:
     """writes an RBAR"""
     # MSC
     key = (6601, 66, 292)
@@ -532,8 +533,8 @@ def _write_rbar(card_type: str, cards: list[RBAR],
     del fields, fmt
     return nbytes
 
-def _write_spc1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
-                endian: bytes) -> int:
+def write_spc1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+               endian: bytes) -> int:
     key = (5481, 58, 12)
     #sid, components = out[:2]
     #thru_flag = out[2]
@@ -592,8 +593,8 @@ def _write_spc1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     op2_file.write(pack(endian + b'%ii' % nfields, *fields))
     return nbytes
 
-def _write_xset(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
-                endian: bytes) -> int:
+def write_xset(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+               endian: bytes) -> int:
     """
     Word Name Type Description
     1 ID I Grid or scalar point identification number
@@ -626,8 +627,8 @@ def _write_xset(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     del data, fmt
     return nbytes
 
-def _write_xset1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
-                 endian: bytes) -> int:
+def write_xset1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+                endian: bytes) -> int:
     """
     Word Name Type Description
     1 C        I Component numbers
@@ -678,8 +679,8 @@ def _write_xset1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     del data, fmt
     return nbytes
 
-def _write_sexset1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
-                   endian: bytes) -> int:
+def write_sexset1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+                  endian: bytes) -> int:
     """
     Word Name Type Description
     SEID
@@ -728,8 +729,8 @@ def _write_sexset1(card_type: str, cards, unused_ncards: int, op2_file, op2_asci
     del data, fmt
     return nbytes
 
-def _write_sexset(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
-                  endian: bytes) -> int:
+def write_sexset(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+                 endian: bytes) -> int:
     """
     Word Name Type Description
     SEID
@@ -770,8 +771,8 @@ def _write_sexset(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii
     del data, fmt
     return nbytes
 
-def _write_mpc(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
-               endian: bytes) -> int:
+def write_mpc(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+              endian: bytes) -> int:
     key = (4901, 49, 17)
     data = []
     fmt = endian
@@ -789,8 +790,8 @@ def _write_mpc(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     op2_file.write(pack(fmt, *data))
     return nbytes
 
-def _write_suport(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
-                  endian: bytes) -> int:
+def write_suport(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+                 endian: bytes) -> int:
     key = (5601, 56, 14)
     data = []
     fmt = endian
@@ -809,8 +810,8 @@ def _write_suport(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii
     op2_file.write(pack(fmt, *data))
     return nbytes
 
-def _write_suport1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
-                   endian: bytes) -> int:
+def write_suport1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+                  endian: bytes) -> int:
     key = (10100, 101, 472)
     data = []
     fmt = endian
@@ -830,12 +831,14 @@ def _write_suport1(card_type: str, cards, unused_ncards: int, op2_file, op2_asci
     op2_file.write(pack(fmt, *data))
     return nbytes
 
-def _write_spcadd(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
-                   endian: bytes) -> int:
+def write_spcadd(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+                 endian: bytes) -> int:
     if card_type == 'SPCADD':
         key = (5491, 59, 13)
     elif card_type == 'MPCADD':
         key = (4891, 60, 83)
+    elif card_type == 'NSMADD':
+        key = (3401, 34, 993)
     else:  # pragma: no cover
         raise NotImplementedError(card_type)
     #SPCADD(5491,59,13)

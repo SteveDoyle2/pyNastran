@@ -47,9 +47,9 @@ VELOCITY_UNITS = ['knots', 'ft/s', 'in/s', 'm/s', 'cm/s', 'mm/s']
 ALTITUDE_UNITS = ['ft', 'm']
 UNIT_SYSTEMS_MAP = {
     'in-slinch-s (English-in)': 'english_in',
-    'ft-slug-s (English-ft)' : 'english_ft',
-    'm-kg-s (SI)' : 'si',
-    'mm-Mg-s (SI-mm)' : 'si_mm',
+    'ft-slug-s (English-ft)': 'english_ft',
+    'm-kg-s (SI)': 'si',
+    'mm-Mg-s (SI-mm)': 'si_mm',
 }
 UNIT_SYSTEMS = list(UNIT_SYSTEMS_MAP.keys())
 
@@ -57,7 +57,7 @@ CONSTANT_TYPE_MAP = {
     'Mach': 'mach',
     'Altitude': 'alt',
     'Velocity': 'tas',
-    'Equivalent Airspeed' : 'eas',
+    'Equivalent Airspeed': 'eas',
 }
 # same as const formats
 SWEEP_FORMATS = list(CONSTANT_TYPE_MAP.keys())

@@ -631,7 +631,7 @@ class DVTREL1(BaseCard):
         self.group_id_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DVTREL1 card from ``BDF.add_card(...)``
 

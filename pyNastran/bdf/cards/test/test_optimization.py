@@ -22,6 +22,31 @@ class TestOpt(unittest.TestCase):
     The cards tested are:
      * DEQATN
     """
+    def test_dvcrel2(self):
+        model = BDF(debug=None)
+        oid = 20
+
+        equation_id = 100
+        eqs = ['fstress(x,y) = x + 10.']
+        model.add_deqatn(equation_id, eqs, comment='deqatn')
+
+        model.add_desvar(10, 'VAR', 1.0)
+        model.add_desvar(11, 'VAR2', 3.0)
+        desvar_ids = [10, 11]
+        eid = 100
+        pid = 101
+        mid = 102
+        model.add_grid(20, [0., 0., 0.])
+        model.add_grid(21, [1., 0., 0.])
+        model.add_mat1(mid, 3.0e7, None, 0.3)
+        model.add_pbarl(pid, mid, 'BAR', [1., 2.,])
+        model.add_cbar(eid, pid, [20, 21], [0., 1., 0.], None)
+        model.add_dvcrel2(oid, 'CBAR', eid, 'X3', equation_id,
+                          desvar_ids, labels=None,
+                          cp_min=2., cp_max=4.,
+                          validate=True,)
+        save_load_deck(model, run_convert=False)
+
     def test_validate_dvprel(self):
         prop_type = 'PSHELL'
         pname_fid = 'T'

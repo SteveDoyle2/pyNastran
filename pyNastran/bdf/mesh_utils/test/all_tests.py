@@ -5,11 +5,13 @@ from pyNastran.bdf.mesh_utils.test.test_mass import TestMass
 from pyNastran.bdf.mesh_utils.test.test_mesh_quality import TestMeshQuality
 from pyNastran.bdf.mesh_utils.test.test_mesh_utils import (
     TestMeshUtils, TestMeshUtilsCmdLine, TestMeshUtilsAero, TestRbeTools)
-from pyNastran.bdf.mesh_utils.test.test_renumber import TestRenumber
-from pyNastran.bdf.mesh_utils.test.test_remove_unused import TestRemoveUnused
-from pyNastran.bdf.mesh_utils.test.test_sum_loads import TestLoadSum
 from pyNastran.bdf.mesh_utils.test.test_refine import TestRefine
-from pyNastran.bdf.mesh_utils.test.test_flutter import TestFlutter
+from pyNastran.bdf.mesh_utils.test.test_remove_unused import TestRemoveUnused
+from pyNastran.bdf.mesh_utils.test.test_renumber import TestRenumber
+from pyNastran.bdf.mesh_utils.test.test_run_host_jobs import TestRunHostJobs
+from pyNastran.bdf.mesh_utils.test.test_sum_loads import TestLoadSum
+from pyNastran.bdf.mesh_utils.test.test_flutter import TestBDFFlutter
+
 
 if __name__ == "__main__":  # pragma: no cover
     import os

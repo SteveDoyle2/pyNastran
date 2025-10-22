@@ -1,17 +1,24 @@
-from typing import Optional, TextIO
+from typing import Optional, TextIO, Any
 import os
 import numpy as np
 #import scipy.sparse
-from cpylog import SimpleLogger, get_logger2
+from cpylog import SimpleLogger  # get_logger
 from pyNastran.utils import print_bad_path
 from pyNastran.f06.f06_tables.trim import (
     MonitorLoads, TrimResults, ControllerState,
-    AeroPressure, AeroForce)
+    AeroPressure, AeroForce, TrimVariables, TrimVariable)
+
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
 
-MONTHS = {'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'}
+MONTHS = {'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+          'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'}
 SKIP_FLAGS = [
     'This software and related documentation are',
     'LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED',
@@ -39,27 +46,33 @@ SKIP_FLAGS = [
     #'* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',  # causes a crash
 ]
 
+
 def read_f06_trim(f06_filename: str,
                   log: Optional[SimpleLogger]=None,
                   nlines_max: int=1_000_000,
                   debug: bool=False) -> dict[str, TrimResults]:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
-    log = get_logger2(log=log, debug=debug, encoding='utf-8')
+    log = get_logger(log, debug, encoding='utf-8')
     dirname = os.path.dirname(os.path.abspath(f06_filename))
     assert os.path.exists(f06_filename), print_bad_path(f06_filename)
     log.info(f'reading {f06_filename!r}')
     with open(f06_filename, 'r') as f06_file:
-        trim_results, tables, matrices = _read_f06_trim(f06_file, log, nlines_max, dirname,
-                                                        debug=debug)
+        trim_results, tables, matrices = _read_f06_trim(
+            f06_file, log, nlines_max, dirname,
+            debug=debug)
 
-    stacked_aero_pressure = _stack_data_dict(trim_results.aero_pressure)
-    stacked_aero_force = _stack_data_dict(trim_results.aero_force)
+    stacked_aero_pressure = _stack_data_dict(trim_results.aero_pressure, 2)
+    stacked_aero_force = _stack_data_dict(trim_results.aero_force, 3)
 
     for subcase, aero_pressure in stacked_aero_pressure.items():
+        metadata = trim_results.metadata[subcase]
         trim_results.aero_pressure[subcase] = AeroPressure.from_f06(
-            subcase, *aero_pressure)
+            subcase, *aero_pressure, metadata)
+
     for subcase, aero_force in stacked_aero_force.items():
-        trim_results.aero_force[subcase] = AeroForce.from_f06(subcase, *aero_force)
+        metadata = trim_results.metadata[subcase]
+        trim_results.aero_force[subcase] = AeroForce.from_f06(
+            subcase, *aero_force, metadata)
 
     out = {
         'trim_results': trim_results,
@@ -75,19 +88,30 @@ def read_f06_trim(f06_filename: str,
 
 
 def _stack_data_dict(results: dict[np.ndarray, np.ndarray],
-                     ) -> dict[np.ndarray, np.ndarray]:
+                     narray: int) -> dict[np.ndarray, np.ndarray]:
     results_out = {}
     for subcase, press_data in results.items():
-        #print(type(press_data), len(press_data))
         all_nids = []
         all_data = []
-        for nid, datai in press_data:
-            all_nids.append(nid)
-            all_data.append(datai)
-        nids2 = np.hstack(all_nids)
-        data2 = np.vstack(all_data)
-        results_out[subcase] = (nids2, data2)
+        all_labels = []
+        if narray == 3:
+            for nid, datai, labeli in press_data:
+                all_nids.append(nid)
+                all_data.append(datai)
+                all_labels.extend(labeli)
+            nids2 = np.hstack(all_nids)
+            data2 = np.vstack(all_data)
+            labels = np.array(all_labels)
+            results_out[subcase] = (nids2, data2, labels)
+        else:
+            for nid, datai in press_data:
+                all_nids.append(nid)
+                all_data.append(datai)
+            nids2 = np.hstack(all_nids)
+            data2 = np.vstack(all_data)
+            results_out[subcase] = (nids2, data2)
     return results_out
+
 
 def _skip_to_page_stamp_and_rewind(f06_file: TextIO, line: str, i: int,
                                    nlines_max: int) -> tuple[str, int, int]:
@@ -157,20 +181,20 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
         elif 'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S' in line:
             log.debug('reading aero static data recovery tables')
             iblank_count = 0
-            line, i, ipressure, iforce = _read_aerostatic_data_recovery_output_table(
+            line, i, ipressure, iforce, metadata = _read_aerostatic_data_recovery_output_table(
                 f06_file, line, i, nlines_max,
                 trim_results,
                 title, subtitle, subcase,
-                dirname, ipressure, iforce, log)
+                ipressure, iforce, log)
         elif 'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S' in line:
             log.debug('reading aero static data recovery tables')
             iblank_count = 0
             line, i = _read_structural_monitor_point_integrated_loads(
                 f06_file, line, i, nlines_max, trim_results,
-                title, subtitle, subcase,
-                dirname, log)
+                title, subtitle, subcase, log)
         elif 'PAGE' in line and any(month in line for month in MONTHS):
-            line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
+            line, i, title, subtitle, subcase = _get_title_subtitle_subcase(
+                f06_file, line, i, nlines_max)
             #log.info(f'title={title!r} subtitle={subtitle!r}')
         else:
             #log.debug(f'else: i={i} {line.strip()}')
@@ -228,7 +252,6 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
                                                     line: str, i: int, nlines_max: int,
                                                     trim_results: TrimResults,
                                                     title: str, subtitle: str, subcase: str,
-                                                    dirname: str,
                                                     #ipressure: int, iforce: int,
                                                     log: SimpleLogger) -> tuple[str, int]:
     """
@@ -265,7 +288,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         #line, i = _read_structural_monitor_point_integrated_loads(
         #f06_file, line, i, nlines_max,
         #title, subtitle, subcase,
-        #dirname, log)
+        #log)
 
     if 'MONITOR POINT NAME' not in line:
         raise RuntimeError("'MONITOR POINT NAME' not in line")
@@ -495,7 +518,8 @@ def _get_controller_state(header_lines: list[str]) -> ControllerState:
 
 def _read_aeroelastic_trim_variables(f06_file: TextIO,
                                      line: str, i: int, nlines_max: int,
-                                     trim_results: TrimResults, isubcase: int) -> tuple[str, int]:
+                                     trim_results: TrimResults, isubcase: int,
+                                     metadata: dict[str, Any]) -> tuple[str, int]:
     """
     '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = SYMMETRIC      XZ-SYMMETRY = SYMMETRIC'
@@ -529,8 +553,8 @@ def _read_aeroelastic_trim_variables(f06_file: TextIO,
 
     trim_variables: dict[str, TrimVariable] = {}
     assert 'INTERCEPT' in line, line
-    idi, name, Type, trim_status, ux, ux_unit = _split_trim_variable(line)
-    trim_variables[name] = (idi, Type, trim_status, ux, ux_unit)
+    idi, name, trim_type, trim_status, ux, ux_unit = _split_trim_variable(line)
+    trim_variables[name] = (idi, trim_type, trim_status, ux, ux_unit)
 
     line_end, iend, seek1 = _skip_to_page_stamp_and_rewind(f06_file, line, i, nlines_max)
 
@@ -541,11 +565,11 @@ def _read_aeroelastic_trim_variables(f06_file: TextIO,
         line2 = line.rstrip()
         if len(line2) == 0:
             continue
-        idi, name, Type, trim_status, ux, ux_unit = _split_trim_variable(line2)
-        trim_variables[name] = (idi, Type, trim_status, ux, ux_unit)
-    trim_results.trim_variables[isubcase] = trim_variables
+        idi, name, trim_type, trim_status, ux, ux_unit = _split_trim_variable(line2)
+        trim_variables[name] = (idi, trim_type, trim_status, ux, ux_unit)
+    trim_results.trim_variables[isubcase] = TrimVariables.from_f06(
+        trim_variables, metadata, isubcase)
     f06_file.seek(seek1)
-
     return line_end, iend
 
 
@@ -563,7 +587,7 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
 
     id_str = line2[30:40].strip()
     name = line2[40:50].strip()
-    Type = line2[50:70].strip()
+    trim_type = line2[50:70].strip()
     trim_status = line2[70:90].strip()
     ux_str = line2[90:106]
     ux_unit = line2[106:130]
@@ -577,11 +601,11 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
 
     #print('%r %r %r %r ux=%r %r' % (int_id, name, Type, trim_status, ux_str, ux_unit))
     ux = float(ux_str)
-    assert Type in {'RIGID BODY', 'CONTROL SURFACE'}, Type
+    assert trim_type in {'RIGID BODY', 'CONTROL SURFACE'}, trim_type
     assert trim_status in {'FIXED', 'FREE', 'LINKED'}, trim_status
     assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE', 'RAD/S/S PER G'}, ux_unit
 
-    return int_id, name, Type, trim_status, ux, ux_unit
+    return int_id, name, trim_type, trim_status, ux, ux_unit
 
 
 def _read_metadata_header(f06_file: TextIO,
@@ -600,13 +624,13 @@ def _read_metadata_header(f06_file: TextIO,
     assert xy_symmetry in {'ANTISYMMETRIC', 'ASYMMETRIC', 'SYMMETRIC'}, xy_symmetry
     return i, aero_config, xz_symmetry, xy_symmetry
 
+
 def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                                                 line: str, i: int, nlines_max: int,
                                                 trim_results: TrimResults,
                                                 title: str, subtitle: str, subcase: str,
-                                                dirname: str,
                                                 ipressure: int, iforce: int,
-                                                log: SimpleLogger) -> tuple[str, int, int, int]:
+                                                log: SimpleLogger) -> tuple[str, int, int, int, dict[str, Any]]:
     """
     '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'      <----- you are here
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
@@ -650,24 +674,28 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     cref = float(sline[2])
     bref = float(sline[5])
     sref = float(sline[8])
-    trim_results.metadata[isubcase] = {
+    label = ''
+    metadata = {
         'mach': mach, 'q': q,
-        'cref': cref, 'bref': bref, 'sref': sref}
+        'cref': cref, 'bref': bref, 'sref': sref,
+        'title': title, 'subtitle': subtitle, 'label': label,
+    }
+    trim_results.metadata[isubcase] = metadata
 
     unused_line1 = f06_file.readline()
     line2 = f06_file.readline()
     i += 2
     if 'TRIM ALGORITHM USED: LINEAR TRIM SOLUTION WITHOUT REDUNDANT CONTROL SURFACES.' in line2:
-        line, i = _read_aeroelastic_trim_variables(f06_file, line, i, nlines_max,
-                                                   trim_results, isubcase)
-        return line, i, ipressure, iforce
+        line, i = _read_aeroelastic_trim_variables(
+            f06_file, line, i, nlines_max, trim_results, isubcase, metadata)
+        return line, i, ipressure, iforce, metadata
 
     line3 = f06_file.readline()
     i += 1
     if 'TRANSFORMATION FROM REFERENCE TO WIND AXES:' in line3:
         line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
         #line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
-        return line, i, ipressure, iforce
+        return line, i, ipressure, iforce, metadata
 
     if 'AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS' in line3:
         line, i, grid_id, Cp_pressure = _read_aerostatic_data_recover_output_table_pressure(
@@ -683,7 +711,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
         ipressure += 1
 
     elif 'AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS' in line3:
-        line, i, grid_id, loads = _read_aerostatic_data_recover_output_table_force(
+        line, i, grid_id, loads, labels = _read_aerostatic_data_recover_output_table_force(
             f06_file, line3, i, nlines_max, log)
 
         if subtitle:
@@ -691,12 +719,11 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
         if isubcase not in trim_results.aero_force:
             trim_results.aero_force[isubcase] = []
 
-        trim_results.aero_force[isubcase].append((grid_id, loads))
+        trim_results.aero_force[isubcase].append((grid_id, loads, labels))
         iforce += 1
     else:
         raise NotImplementedError(line3.strip())
-
-    return line, i, ipressure, iforce
+    return line, i, ipressure, iforce, metadata
 
 
 def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
@@ -733,21 +760,20 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
 
     ndata = len(data_lines)
     grid_id = np.zeros(ndata, dtype='int32')
-    Cp_pressure = np.zeros((ndata, 2), dtype='float64')
+    cp_pressure = np.zeros((ndata, 2), dtype='float64')
     for i, line in enumerate(data_lines):
         sline = line.split()
         #print(sline)
         if len(sline) == 4:  # MSC
-            grid_str, label, Cp_str, pressure_str = sline
+            grid_str, label, cp_str, pressure_str = sline
         else:  # NX
-            grid_str, label, Cp_str, pressure_str, eid_str = sline
+            grid_str, label, cp_str, pressure_str, eid_str = sline
         grid = int(grid_str)
-        Cp = float(Cp_str)
+        cp = float(cp_str)
         pressure = float(pressure_str)
         grid_id[i] = grid
-        Cp_pressure[i, :] = [Cp, pressure]
-
-    return line, i, grid_id, Cp_pressure
+        cp_pressure[i, :] = [cp, pressure]
+    return line, i, grid_id, cp_pressure
 
 
 def _read_aerostatic_data_recover_output_table_force(f06_file: TextIO,
@@ -792,6 +818,7 @@ def _read_aerostatic_data_recover_output_table_force(f06_file: TextIO,
     ndata = len(data_lines)
     grid_id = np.zeros(ndata, dtype='int32')
     loads = np.zeros((ndata, 6), dtype='float64')
+    labels = []
     for i, line in enumerate(data_lines):
         group_str, grid_str, label, *force_moment = line.split()
         unused_group = int(group_str)
@@ -799,4 +826,5 @@ def _read_aerostatic_data_recover_output_table_force(f06_file: TextIO,
         grid_id[i] = grid
         force_moment_float = [float(val) for val in force_moment]
         loads[i] = force_moment_float
-    return line, i, grid_id, loads
+        labels.append(label)
+    return line, i, grid_id, loads, labels

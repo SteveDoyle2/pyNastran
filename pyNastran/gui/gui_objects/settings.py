@@ -29,7 +29,7 @@ from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.utils import get_setting
 from pyNastran.gui.utils.colormaps import colormap_keys as COLORMAPS
-from pyNastran.utils import object_attributes #, object_stats
+from pyNastran.utils import object_attributes  # object_stats
 
 from pyNastran.gui.qt_files.colors import (
     BLACK_FLOAT, WHITE_FLOAT, GREY_FLOAT, ORANGE_FLOAT, HOT_PINK_FLOAT,
@@ -88,7 +88,7 @@ ANNOTATION_COLOR = BLACK_FLOAT
 POINT_SIZE_MIN = 5.0
 POINT_SIZE_MAX = 30.0
 
-COORD_TEXT_SCALE = 0.5 # percent of nominal
+COORD_TEXT_SCALE = 0.5  # percent of nominal
 COORD_TEXT_SCALE_MIN = 0.1
 COORD_TEXT_SCALE_MAX = 2000.
 
@@ -151,7 +151,7 @@ NASTRAN_BOOL_KEYS = [
     'nastran_grid_point_force', 'nastran_strain_energy',
 
     # --------------------------------------------------------------
-    'nastran_show_caero_sub_panels',
+    'nastran_show_caero_boxes',
     'nastran_show_caero_actor',
     #'nastran_show_control_surfaces',
     #'nastran_show_conm',
@@ -182,7 +182,7 @@ class OtherSettings:
         self.cart3d_fluent_include = ()
         self.cart3d_fluent_remove = ()
         #('in', 'lbf', 's', 'psi')
-        self.units_model_in = ('unitless','','','')
+        self.units_model_in = ('unitless', '', '', '')
         self.units_length = 'in'
         #self.units_area = 'in^2'
         self.units_force = 'lbf'
@@ -228,6 +228,7 @@ class OtherSettings:
                 value = str(value)
             msg += '  %r = %r\n' % (key, value)
         return msg
+
 
 class NastranSettings:
     def __init__(self, parent):
@@ -301,10 +302,10 @@ class NastranSettings:
 
         # ------------------------------------------------------
 
-        #: flips the nastran CAERO subpaneling
+        #: flips the nastran CAERO aeroboxes
         #:   False -> borders of CAEROs can be seen
-        #:   True  -> individual subpanels can be seen
-        self.show_caero_sub_panels = False
+        #:   True  -> individual aeroboxes can be seen
+        self.show_caero_boxes = False
 
         self.show_caero_actor = True  # show the caero mesh
         #self.show_control_surfaces = True
@@ -442,10 +443,10 @@ class Settings:
         self.highlight_point_size = HIGHLIGHT_POINT_SIZE  # int
         self.highlight_line_width = HIGHLIGHT_LINE_WIDTH  # float
 
-        self.shear_moment_torque_color = SHEAR_MOMENT_TORQUE_COLOR           # float
-        self.shear_moment_torque_opacity = SHEAR_MOMENT_TORQUE_OPACITY       # rgb floats
-        self.shear_moment_torque_point_size = SHEAR_MOMENT_TORQUE_POINT_SIZE # float
-        self.shear_moment_torque_line_width = SHEAR_MOMENT_TORQUE_LINE_WIDTH # float
+        self.shear_moment_torque_color = SHEAR_MOMENT_TORQUE_COLOR            # float
+        self.shear_moment_torque_opacity = SHEAR_MOMENT_TORQUE_OPACITY        # rgb floats
+        self.shear_moment_torque_point_size = SHEAR_MOMENT_TORQUE_POINT_SIZE  # float
+        self.shear_moment_torque_line_width = SHEAR_MOMENT_TORQUE_LINE_WIDTH  # float
 
         self.is_trackball_camera = IS_TRACKBALL_CAMERA
         self.use_parallel_projection = USE_PARALLEL_PROJECTION
@@ -472,12 +473,12 @@ class Settings:
         self.animation_time = ANIMATION_TIME
 
         # string
-        self.colormap = 'jet' # 'viridis'
+        self.colormap = 'jet'  # 'viridis'
 
         if resize:
             self.parent.resize(1100, 700)
 
-        if reset_dim_max: # not stored
+        if reset_dim_max:  # not stored
             self.dim_max = 1.0
         #self.annotation_scale = 1.0
 
@@ -616,7 +617,7 @@ class Settings:
         self._set_setting(settings, setting_keys, ['annotation_color'],
                           default=ANNOTATION_COLOR, save=True, auto_type=float)
         self._set_setting(settings, setting_keys, ['annotation_size'],
-                          default=ANNOTATION_SIZE, save=True, auto_type=int) # int
+                          default=ANNOTATION_SIZE, save=True, auto_type=int)  # int
         self.annotation_color = force_color_ranged(self.annotation_color, ANNOTATION_COLOR)
         self.annotation_size = force_ranged(
             self.annotation_size,
@@ -739,7 +740,7 @@ class Settings:
             #width, height = screen_shape
 
         pos = self._set_setting(settings, setting_keys, ['screen_position'],
-                          default=None, save=False)
+                                default=None, save=False)
         #if pos is not None:
             #x = 1
             #qpos = parent.pos()
@@ -796,7 +797,6 @@ class Settings:
                 settings, setting_keys, [key],
                 default=default, save=False, auto_type=str)
             setattr(other_settings, key, tuple(value))
-
 
     def _load_nastran_settings(self, settings: QSettings,
                                setting_keys: list[str]) -> None:
@@ -1231,7 +1231,7 @@ class Settings:
             RGB values as floats
         """
         self.text_color = color
-        text_actors =  self.parent.corner_text_actors
+        text_actors = self.parent.corner_text_actors
         for text_actor in text_actors.values():
             text_actor.GetTextProperty().SetColor(color)
         if render:
@@ -1250,7 +1250,7 @@ class Settings:
         """
         # we built these actors in reverse order,
         # so that's how we update their sizes
-        text_actors =  self.parent.corner_text_actors
+        text_actors = self.parent.corner_text_actors
         i = len(text_actors) - 1
         dtext_size = corner_text_size + 1
         self.text_size = corner_text_size
@@ -1268,7 +1268,7 @@ class Settings:
     def update_corner_text_size(self, magnify: float=1.0) -> None:
         """Internal method for updating the bottom-left text when we go to take a picture"""
         text_size = int(14 * magnify)
-        text_actors =  self.parent.corner_text_actors
+        text_actors = self.parent.corner_text_actors
         for text_actor in text_actors.values():
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
@@ -1306,6 +1306,7 @@ class Settings:
             msg += '  %r = %r\n' % (key, value)
         return msg
 
+
 def update_axes_text_size(axes: dict[int, vtkAxes],
                           coord_text_scale: float,
                           width: float=1.0, height: float=0.25):
@@ -1326,6 +1327,7 @@ def update_axes_text_size(axes: dict[int, vtkAxes],
             text.SetWidth(coord_text_scale * width)
             text.SetHeight(coord_text_scale * height)
 
+
 def isfloat(value) -> bool:
     """is the value floatable"""
     try:
@@ -1334,6 +1336,7 @@ def isfloat(value) -> bool:
     except ValueError:
         return False
 
+
 def repr_settings(settings: QSettings) -> str:
     """works on a QSettings, not a Settings"""
     msg = 'QSettings:\n'
@@ -1341,6 +1344,7 @@ def repr_settings(settings: QSettings) -> str:
         value = settings.value(key)
         msg += '    %r : %r\n' % (key, value)
     return msg
+
 
 def filter_recent_files(recent_files: list[tuple[str, str]]):
     if IS_WINDOWS:
@@ -1362,6 +1366,7 @@ def filter_recent_files(recent_files: list[tuple[str, str]]):
                             if os.path.exists(fname) and fmt is not None]
     return recent_files_out
 
+
 def force_ranged(value, min_value=None, max_value=None):
     """make sure a value is in the proper range"""
     if min_value is not None and max_value is not None:
@@ -1375,6 +1380,7 @@ def force_ranged(value, min_value=None, max_value=None):
     #if out != value:
         #print(out, value)
     return out
+
 
 def force_color_ranged(color: ColorFloat,
                        default_color: ColorFloat) -> ColorFloat:

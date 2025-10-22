@@ -26,7 +26,7 @@ from qtpy.QtWidgets import (
     QTabWidget, QWidget, QScrollArea, QTextEdit, QMessageBox, QFrame, QGroupBox)
 
 import cpylog
-from pyNastran.gui import ICON_PATH, IS_LINUX, IS_MAC # IS_WINDOWS
+from pyNastran.gui import ICON_PATH, IS_LINUX, IS_MAC  # IS_WINDOWS
 from pyNastran.gui.default_controls import CONTROLS
 from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments
 from pyNastran.gui.menus.python_console import QSCINTILLA_VERSION
@@ -36,22 +36,23 @@ QLayout = QVBoxLayout | QHBoxLayout | QGridLayout
 
 def get_qt_license(qt_namei: str) -> str:
     if qt_namei == 'PyQt5':
-        qt  = '* Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt = '* Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += '* PyQt5 Python bindings for Qt5, by Riverbank Computing Limited.\n\n'
         qt += '* Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.'
     elif qt_namei == 'PyQt6':
-        qt  = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += '* PyQt6 Python bindings for Qt6, by Riverbank Computing Limited.\n\n'
         qt += '* Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.'
     elif qt_namei == 'PySide2':
-        qt  = '* Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt = '* Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += '* PySide2 Python bindings for Qt5, by Qt for Python.'
     elif qt_namei == 'PySide6':
-        qt  = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += '* PySide6 Python bindings for Qt6, by Qt for Python.'
     else:  # pragma: no cover
         raise NotImplementedError(qt_namei)
     return qt
+
 
 QT = get_qt_license(qt_name)
 
@@ -198,6 +199,7 @@ class AboutWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
+
 def get_packages() -> dict[str, str]:
     """makes the packages data"""
     #python = str(sys.version_info)
@@ -245,6 +247,7 @@ def get_packages() -> dict[str, str]:
         packages[name] = pkg_version
     return packages
 
+
 def get_version() -> dict[str, str]:
     """makes the version data"""
     sys_platform = sys.platform
@@ -289,6 +292,7 @@ def get_version() -> dict[str, str]:
         version_data[key.title()] = str(value)
     return version_data
 
+
 def _version_tab(ok_cancel_box: QHBoxLayout) -> QWidget:
     """makes the version tab"""
     version_data = get_version()
@@ -302,6 +306,7 @@ def _version_tab(ok_cancel_box: QHBoxLayout) -> QWidget:
     version_tab.setLayout(vbox)
     return version_tab
 
+
 def _package_tab() -> QWidget:
     """makes the packages tab"""
     packages = get_packages()
@@ -313,6 +318,7 @@ def _package_tab() -> QWidget:
     package_tab = QWidget()
     package_tab.setLayout(vbox)
     return package_tab
+
 
 def grid_from_dict(mydict: dict[str, str]) -> QGridLayout:
     irow = 0
@@ -327,6 +333,7 @@ def grid_from_dict(mydict: dict[str, str]) -> QGridLayout:
         grid.addWidget(value, irow, 1)
         irow += 1
     return grid
+
 
 def _credits_tab() -> QWidget:
     """creates the credits tab"""
@@ -346,6 +353,7 @@ def _credits_tab() -> QWidget:
     package_tab = QWidget()
     package_tab.setLayout(vbox)
     return package_tab
+
 
 def _shortcuts_tab() -> QWidget:
     """creates the credits tab"""
@@ -389,23 +397,26 @@ def _shortcuts_tab() -> QWidget:
     shortcuts_tab.setLayout(vbox)
     return shortcuts_tab
 
+
 def get_shortcuts() -> tuple[dict[str, str], dict[str, str]]:
     """makes the shortcuts data"""
 
     mouse_shortcuts = {
-        'Left Click' : 'Rotate',
-        'Middle Click' : 'Pan/Recenter Rotation Point',
-        'Shift + Left Click' : 'Pan/Recenter Rotation Point',
-        'Right Mouse / Wheel' : 'Zoom',
+        'Left Click': 'Rotate',
+        'Middle Click': 'Pan/Recenter Rotation Point',
+        'Shift + Left Click': 'Pan/Recenter Rotation Point',
+        'Right Mouse / Wheel': 'Zoom',
     }
     shortcuts_order = [
         'reset', 'xsnap', 'ysnap', 'zsnap', 'fwd_scale', 'rev_scale',
         'scale', 'rotate', 'pick', 'edge1', 'edge2', 'rotation_center',
     ]
 
-    keyboard_shortcuts = {shortcut_msg[0]: shortcut_msg[1]
+    keyboard_shortcuts = {
+        shortcut_msg[0]: shortcut_msg[1]
         for unused_key, shortcut_msg in CONTROLS.items()}
     return mouse_shortcuts, keyboard_shortcuts
+
 
 def layout_to_vlayout(layout: QLayout) -> QVBoxLayout:
     vbox = QVBoxLayout()
@@ -413,11 +424,13 @@ def layout_to_vlayout(layout: QLayout) -> QVBoxLayout:
     vbox.addStretch()
     return vbox
 
+
 def layout_to_hlayout(layout: QLayout) -> QHBoxLayout:
     hbox = QHBoxLayout()
     hbox.addLayout(layout)
     hbox.addStretch()
     return hbox
+
 
 def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
@@ -425,19 +438,19 @@ def main():  # pragma: no cover
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-
     import sys
     # Someone is launching this directly
     # Create the QApplication
     app = QApplication(sys.argv)
     #The Main window
     data = {
-        'font_size' : 8,
+        'font_size': 8,
     }
     main_window = AboutWindow(data, show_tol=True)
     main_window.show()
     # Enter the main loop
     app.exec_()
+
 
 if __name__ == '__main__':   # pragma: no cover
     main()

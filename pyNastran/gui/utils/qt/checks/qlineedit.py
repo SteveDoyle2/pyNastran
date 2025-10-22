@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import os
 import numpy as np
 from pyNastran.gui.utils.qt.checks.utils import (check_locale_float, is_ranged_value,
                                                  check_format_str)
 if TYPE_CHECKING:  # pragma: no cover
-    from qtpy.QtWidgets import QLineEdit, QSpinBox
+    from qtpy.QtWidgets import QLineEdit, QSpinBox, QDoubleSpinBox
 
 QLINEEDIT_ERROR = "QLineEdit{background: red;}"
 QLINEEDIT_GOOD = "QLineEdit{background: white;}"
@@ -14,6 +14,7 @@ QLINEEDIT_DISABLED = "QLineEdit{background: lightgray;}"
 QTEXTEDIT_ERROR = "QTextEdit{background: red;}"
 QTEXTEDIT_GOOD = "QTextEdit{background: white;}"
 QTEXTEDIT_DISABLED = "QTextEdit{background: lightgray;}"
+
 
 def check_path(cell: QLineEdit) -> tuple[str, bool]:
     """verifies that the path exists"""
@@ -27,6 +28,7 @@ def check_path(cell: QLineEdit) -> tuple[str, bool]:
     cell.setStyleSheet(QLINEEDIT_GOOD)
     return path, True
 
+
 def check_save_path(cell: QLineEdit) -> tuple[str, bool]:
     """verifies that the path is saveable..."""
     text, passed = check_name_str(cell)
@@ -35,7 +37,9 @@ def check_save_path(cell: QLineEdit) -> tuple[str, bool]:
     return text, passed
 
 #-------------------------------------------------------------------------------
-def check_int(cell: QLineEdit) -> tuple[int, bool]:
+
+
+def check_int(cell: QLineEdit | QSpinBox) -> tuple[int, bool]:
     """
     Colors the cell red if the integer is invalid
 
@@ -47,7 +51,7 @@ def check_int(cell: QLineEdit) -> tuple[int, bool]:
     Returns
     -------
     value : int / None
-        int : the value as a int
+        int : the value as an int
         None : is_passed=False
     is_passed : bool
         is this a valid integer
@@ -61,6 +65,7 @@ def check_int(cell: QLineEdit) -> tuple[int, bool]:
     except ValueError:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         return 0, False
+
 
 def check_positive_int_or_blank(cell: QLineEdit) -> tuple[int, bool]:
     text = str(cell.text()).strip()
@@ -89,7 +94,8 @@ def check_positive_int_or_blank(cell: QLineEdit) -> tuple[int, bool]:
         #cell.setStyleSheet(QLINEEDIT_ERROR)
         #return None, False
 
-def check_float(cell: QLineEdit | QSpinBox) -> tuple[float, bool]:
+
+def check_float(cell: QLineEdit | QSpinBox | QDoubleSpinBox) -> tuple[float, bool]:
     """
     Colors the cell red if the float is invalid
 
@@ -107,14 +113,13 @@ def check_float(cell: QLineEdit | QSpinBox) -> tuple[float, bool]:
         is this a valid float
 
     # Examples
-    >>> cell = QLineEdit('3.14')
-    >>> value, is_passed = check_float(cell)
-    # value=3.14, is_passed=True
+    >>> line_edit = QLineEdit('3.14')
+    >>> value1, is_passed = check_float(line_edit)
+    # value1=3.14, is_passed=True
 
-    >>> cell = QLineEdit('cat')
-    >>> value, is_passed = check_float(cell)
-    # value=0.0, is_passed=False
-
+    >>> line_edit = QLineEdit('cat')
+    >>> value2, is_passed = check_float(line_edit)
+    # value2=0.0, is_passed=False
 
     """
     text = cell.text()
@@ -126,8 +131,10 @@ def check_float(cell: QLineEdit | QSpinBox) -> tuple[float, bool]:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         return np.nan, False
 
+
 def check_float_ranged(cell: QLineEdit,
-                       min_value=None, max_value=None,
+                       min_value: Optional[float]=None,
+                       max_value: Optional[float]=None,
                        min_inclusive: bool=True,
                        max_inclusive: bool=True) -> tuple[float, bool]:
     """
@@ -138,10 +145,18 @@ def check_float_ranged(cell: QLineEdit,
     ----------
     cell : QLineEdit()
         a PyQt/PySide object
-    min_value / max_value : float / None
+    min_value : float / None
         float : the constraint is active
         None : the constraint is inactive
-    min_inclusive / max_inclusive; bool; default=True
+    max_value : float / None
+        float : the constraint is active
+        None : the constraint is inactive
+    min_inclusive; bool; default=True
+        flips [min_value, max_value] to:
+          - (min_value, max_value)
+          - [min_value, max_value)
+          - (min_value, max_value]
+    max_inclusive; bool; default=True
         flips [min_value, max_value] to:
           - (min_value, max_value)
           - [min_value, max_value)
@@ -173,6 +188,8 @@ def check_float_ranged(cell: QLineEdit,
     return value, is_ranged
 
 #-------------------------------------------------------------------------------
+
+
 def check_name_str(cell: QLineEdit) -> tuple[str, bool]:
     """
     Verifies that the data is string-able.
@@ -197,6 +214,7 @@ def check_name_str(cell: QLineEdit) -> tuple[str, bool]:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         return '', False
 
+
 def check_name_length(cell: QLineEdit) -> tuple[str, bool]:
     """
     Verifies that the string has at least 1 non-whitespace character.
@@ -216,6 +234,7 @@ def check_name_length(cell: QLineEdit) -> tuple[str, bool]:
     else:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         return '', False
+
 
 def check_format(cell: QLineEdit) -> tuple[str, bool]:
     """

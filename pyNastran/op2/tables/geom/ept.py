@@ -81,17 +81,17 @@ class EPT:
             (1802, 18, 31): ['PVISC', self.read_pvisc],    # record 59
             (10201, 102, 400): ['PVAL', self.read_pval],   # record 58 - not done
             (2606, 26, 289): ['VIEW', self.read_view],     # record 62 - not done
-            (3201, 32, 991) : ['NSM', self.read_nsm_2],  # record
-            (3301, 33, 992) : ['NSM1', self.read_nsm1],  # record
-            (3701, 37, 995) : ['NSML1', self.read_nsml1_nx],    # record
+            (3201, 32, 991): ['NSM', self.read_nsm_2],  # record
+            (3301, 33, 992): ['NSM1', self.read_nsm1],  # record
+            (3701, 37, 995): ['NSML1', self.read_nsml1_nx],    # record
             (3601, 36, 62): ['NSML1', self.read_nsml1_msc],  # record 7
             (15006, 150, 604): ['PCOMPG', self.read_pcompg],  # record
 
             (702, 7, 38): ['PBUSHT', self.read_pbusht],  # record 1
             (3301, 33, 56): ['NSM1', self.read_fake],  # record 3
-            (3401, 34, 57) : ['NSMADD', self.read_fake],    # record 5
+            (3401, 34, 57): ['NSMADD', self.read_fake],    # record 5
             (3501, 35, 58): ['NSML', self.read_fake],  # record 6
-            (3501, 35, 994) : ['NSML', self.read_nsml],
+            (3501, 35, 994): ['NSML', self.read_nsml],
             (1502, 15, 36): ['PAABSF', self.read_paabaf],  # record 8
             (8300, 83, 382): ['PACABS', self.read_fake],  # record 9
             (8500, 85, 384): ['PACBAR', self.read_fake],  # record 10
@@ -110,14 +110,14 @@ class EPT:
             (10301, 103, 399): ['PSET', self.read_pset],  # record 57
             (3002, 30, 415): ['VIEW3D', self.read_view3d],  # record 63
 
-            (13501, 135, 510) : ['PFAST', self.read_pfast_msc],  # MSC-specific
-            (3601, 36, 55) : ['PFAST', self.read_pfast_nx],  # NX-specific
-            (3801, 38, 979) : ['PPLANE', self.read_pplane],
-            (11801, 118, 560) : ['PWELD', self.read_fake],
-            (3401, 34, 993) : ['NSMADD', self.read_nsmadd],
-            (9300, 93, 684) : ['ELAR', self.read_fake],
-            (9400, 94, 685) : ['ELAR2', self.read_fake],
-            (16006, 160, 903) : ['PCOMPS', self.read_pcomps],
+            (13501, 135, 510): ['PFAST', self.read_pfast_msc],  # MSC-specific
+            (3601, 36, 55): ['PFAST', self.read_pfast_nx],  # NX-specific
+            (3801, 38, 979): ['PPLANE', self.read_pplane],
+            (11801, 118, 560): ['PWELD', self.read_fake],
+            (3401, 34, 993): ['NSMADD', self.read_nsmadd],
+            (9300, 93, 684): ['ELAR', self.read_fake],
+            (9400, 94, 685): ['ELAR2', self.read_fake],
+            (16006, 160, 903): ['PCOMPS', self.read_pcomps],
 
             # MSC-specific
             (14602, 146, 692): ['PSLDN1', self.read_fake],
@@ -399,6 +399,22 @@ class EPT:
         ntotal1 = 8 * size
         s2 = Struct(mapfmt(op2._endian + b'2i 2f 4i', size))
 
+        fti_to_ft_map = {
+            0: None,
+            1: 'HILL',
+            2: 'HOFF',
+            3: 'TSAI',
+            4: 'STRN',
+            5: 'STRS',
+            6: 'TS',
+            9: 'PFA',
+        }
+        lam_fti_to_lam_ft_map = {
+            0: None,
+            7: 'SB',
+            8: 'NB',
+        }
+
         eight_minus1 = Struct(mapfmt(op2._endian + b'8i', size))
         ndata = len(data)
         ntotal2 = 8 * self.size
@@ -437,23 +453,9 @@ class EPT:
                 #
                 #9-PFA for progressive ply failure. See Remark 6.
                 #0-(Character; Default = No failure theory). Not supported
-                if fti == 0:
-                    ft = None
-                elif fti == 1:
-                    ft = 'HILL'
-                elif fti == 2:
-                    ft = 'HOFF'
-                elif fti == 3:
-                    ft = 'TSAI'
-                elif fti == 4:
-                    ft = 'STRN'
-                elif fti == 5:
-                    ft = 'STRS'
-                elif fti == 6:
-                    ft = 'TS'
-                elif fti == 9:
-                    ft = 'PFA'
-                else:  # pragma: no cover
+                try:
+                    ft = fti_to_ft_map[fti]
+                except KeyError:  # pragma: no cover
                     self.log.error(f'PCOMPS pid={pid} global_ply_id={global_ply_id} mid={mid} t={t:g} '
                                    f'theta={theta} fti={fti} lam_ft={lam_fti} sout={souti} tflag={tflagi}')
                     raise NotImplementedError(fti)
@@ -461,13 +463,9 @@ class EPT:
                 #SB for transverse shear stress failure index.
                 #NB for normal stress failure index.
                 #(Character; Default = No failure index)
-                if lam_fti == 0:
-                    lam_ft = None
-                elif lam_fti == 7:
-                    lam_ft = 'SB'
-                elif lam_fti == 8:
-                    lam_ft = 'NB'
-                else:  # pragma: no cover
+                try:
+                    lam_ft = lam_fti_to_lam_ft_map[lam_fti]
+                except KeyError:  # pragma: no cover
                     raise NotImplementedError(lam_fti)
 
                 if souti == 0:
@@ -575,7 +573,7 @@ class EPT:
         data = (1, 14, 'FACE CONTACT(1)                                         ')
         """
         op2: OP2Geom = self.op2
-        assert self.size == 4, 'DESC size={self.size} is not supported'
+        assert self.size == 4, f'DESC size={self.size} is not supported'
         #op2.show_data(data[n:], types='ifs')
         struct_2i = Struct(op2._endian + b'2i')
         while n < len(data):
@@ -774,6 +772,12 @@ class EPT:
                     #print('ivalues =', ivalues)
                     pid_eids = ints[ivalues].tolist()
                     #print('pid_eids =', pid_eids)
+                elif spec_opt == 2:
+                    all_word = data[n0+(istarti + 1) * size:
+                                    n0+(istarti + 3) * size].decode('latin1').rstrip()
+                    assert all_word == 'ALL', all_word
+                    pid_eids = ['ALL']
+
                 elif spec_opt == 3:
                     # datai = (3, 249311, 'THRU    ', 250189)
                     #print(f'i0={i0}')
@@ -900,7 +904,7 @@ class EPT:
             zero_two = ints[i0+3]
             value = float(floats[i0+4])
             spec_opt = ints[i0+5]
-            assert zero_two in [0, 2], zero_two
+            assert zero_two in [0, 2], f'sid={sid} nsm_type={nsm_type!r} value={value}; 0/2={zero_two}'
             #nii = 6
             #print(ints[i0+nii:i1])
             #print(floats[i0+nii:i1])
@@ -917,8 +921,8 @@ class EPT:
                 # 7 ID I
                 ids = ints[i0+6:i1]
             elif spec_opt == 2:
-                word = data[n0+(i0+6)*size:n0+i1*size]
-                ids = word
+                word = data[n0+(i0+6)*size:n0+i1*size].decode('latin1').rstrip()
+                ids = [word]
             elif spec_opt == 3:  # thru
                 # datai = (249311, 'THRU    ', 250189)
                 #datai = data[n0+(i0+6)*size:n0+i1*size]
@@ -939,7 +943,7 @@ class EPT:
             n += (i1 - i0 + 1) * size
             ncards += 1
         op2.card_count['NSM1'] = ncards
-        return n
+        return int(n)
 
     def read_nsm(self, data: bytes, n: int) -> int:
         """NSM"""
@@ -2842,12 +2846,12 @@ class EPT:
         """
         op2: OP2Geom = self.op2
         ntotal = 56  # 14*4
-        s = Struct(op2._endian + b'3if 4i fii 3f')
+        struct1 = Struct(op2._endian + b'3if 4i fii 3f')
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         props = []
         for unused_i in range(nentries):
-            out = s.unpack(data[n:n+ntotal])
+            out = struct1.unpack(data[n:n+ntotal])
             (pconid, mid, form, expf, ftype, tid, unused_undef1, unused_undef2, chlen,
              gidin, ce, e1, e2, e3) = out
             data_in = (pconid, mid, form, expf, ftype, tid, chlen,
@@ -3524,7 +3528,7 @@ class EPT:
                     nproperties -= 1
                     continue
                 #assert propi.type in ['PCOMP', 'PCOMPG'], propi.get_stats()
-                op2.log.error(f'PSHELL {pid:d} is also {propi.type} (skipping PSHELL):\n{propi}{prop}')
+                op2.log.debug(f'PSHELL {pid:d} is also {propi.type} (skipping PSHELL):\n{propi}{prop}')
                 nproperties -= 1
                 continue
             #continue

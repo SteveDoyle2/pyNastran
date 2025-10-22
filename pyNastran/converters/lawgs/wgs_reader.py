@@ -10,7 +10,13 @@ from math import sin, cos
 
 import numpy as np
 from numpy import array, radians, dot, zeros
-from cpylog import get_logger2
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
+
+
 
 class Panel:
     """
@@ -200,7 +206,7 @@ class LaWGS:
             settings the logging object has
 
         """
-        self.log = get_logger2(log=log, debug=debug)
+        self.log = get_logger(log, debug)
         self.panels = {}
 
     def read_lawgs(self, wgs_filename):

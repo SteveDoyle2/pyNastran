@@ -90,7 +90,7 @@ class SEQGP(BaseCard):
         self.seqids = seqids
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SEQGP card from ``BDF.add_card(...)``
 
@@ -270,6 +270,7 @@ class XPoint(BaseCard):
         """
         pass
 
+
 class SPOINT(XPoint):
     """defines the SPOINT class"""
     type = 'SPOINT'
@@ -309,6 +310,7 @@ class EPOINT(XPoint):
 
         """
         XPoint.__init__(self, nid, comment)
+
 
 def write_xpoints(cardtype: str, points, comment: str='') -> str:
     """writes SPOINTs/EPOINTs"""
@@ -369,6 +371,7 @@ def compress_xpoints(point_type: str, xpoints: list[int]) -> list[list[int]]:
             lists_fields.append(list_fields)
     return lists_fields
 
+
 class XPoints(BaseCard):
     """common class for EPOINTs and SPOINTs"""
 
@@ -391,7 +394,7 @@ class XPoints(BaseCard):
         self.points = set(expand_thru(ids))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPOINT/EPOINT card from ``BDF.add_card(...)``
 
@@ -490,6 +493,7 @@ class XPoints(BaseCard):
             else:
                 msg += print_card_8(list_fields)
         return msg
+
 
 class SPOINTs(XPoints):
     """
@@ -633,7 +637,7 @@ class GRDSET(BaseCard):
         self.seid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a GRDSET card from ``BDF.add_card(...)``
 
@@ -1139,7 +1143,6 @@ class GRID(BaseCard):
             return self.cd
         return self.cd_ref.cid
 
-
     def Cp(self) -> int:
         """
         Gets the analysis coordinate system
@@ -1264,7 +1267,7 @@ class GRID(BaseCard):
 
     def get_position_wrt_no_xref(self, model: BDF, cid: int) -> NDArray3float:
         """see get_position_wrt"""
-        if cid == self.cp: # same coordinate system
+        if cid == self.cp:  # same coordinate system
             return self.xyz
         msg = ', which is required by GRID nid=%s' % self.nid
 
@@ -1295,10 +1298,10 @@ class GRID(BaseCard):
             the position of the GRID in an arbitrary coordinate system
 
         """
-        if cid == self.Cp(): # same coordinate system
+        if cid == self.Cp():  # same coordinate system
             return self.xyz
         # a matrix global->local matrix is found
-        msg = ', which is required by GRID nid=%s' % (self.nid)
+        msg = f', which is required by GRID nid={self.nid:d}'
         coord_b: Coord = model.Coord(cid, msg=msg)
         return self.get_position_wrt_coord_ref(coord_b)
 
@@ -1382,7 +1385,7 @@ class GRID(BaseCard):
                 self.ps_ref = grdset.ps
             if not self.seid:
                 self.seid_ref = grdset.seid
-        msg = ', which is required by GRID nid=%s' % (self.nid)
+        msg = f', which is required by GRID nid={self.nid:d}'
         self.cp_ref = model.safe_coord(self.cp, self.nid, xref_errors, msg=msg)
         if self.cd != -1:
             self.cd_ref = model.safe_coord(self.cd, self.nid, xref_errors, msg=msg)
@@ -1662,13 +1665,12 @@ class POINT(BaseCard):
             a comment for the card
 
         """
-        nid = data[0] # type: int
-        cp = data[1] # type: int
-        xyz = np.array(data[2:5]) # type: np.ndarray
+        nid: int = data[0]
+        cp: int = data[1]
+        xyz: np.ndarray = np.array(data[2:5])
         return POINT(nid, xyz, cp=cp, comment=comment)
 
-    def set_position(self, model, xyz, cid=0):
-        # type: (Any, np.ndarray, int) -> None
+    def set_position(self, model: BDF, xyz: np.ndarray, cid: int=0) -> None:
         """
         Updates the POINT location
 
@@ -1697,8 +1699,7 @@ class POINT(BaseCard):
         p = self.cp_ref.transform_node_to_global(self.xyz)
         return p
 
-    def get_position_wrt(self, model, cid):
-        # type: (Any, int) -> np.ndarray
+    def get_position_wrt(self, model: BDF, cid: int) -> np.ndarray:
         """
         Gets the location of the POINT which started in some arbitrary
         system and returns it in the desired coordinate system
@@ -1716,7 +1717,7 @@ class POINT(BaseCard):
             the position of the POINT in an arbitrary coordinate system
 
         """
-        if cid == self.Cp(): # same coordinate system
+        if cid == self.Cp():  # same coordinate system
             return self.xyz
 
         # converting the xyz point arbitrary->global

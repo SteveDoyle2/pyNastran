@@ -118,6 +118,7 @@ def create_node_label_actor(actor: vtkLODActor, rend: vtkRenderer,
         point_id_filter, mygrid, rend, label_size=label_size)
     return label_actor
 
+
 def create_node_labels(point_id_filter: vtkIdFilter,
                        grid: vtkUnstructuredGrid,
                        rend: vtkRenderer,
@@ -147,6 +148,7 @@ def create_node_labels(point_id_filter: vtkIdFilter,
     label_actor = vtkActor2D()
     label_actor.SetMapper(label_mapper)
     return label_actor
+
 
 def create_highlighted_ugrids(gui, grid: vtkUnstructuredGrid,
                               all_nodes=None, nodes=None, set_node_scalars: bool=True,
@@ -212,6 +214,7 @@ def create_highlighted_ugrids(gui, grid: vtkUnstructuredGrid,
         ugrid_element = ugrid
     return ugrid_node, ugrid_element
 
+
 def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
                               all_nodes=None, nodes=None, set_node_scalars: bool=True,
                               all_elements=None, elements=None, set_element_scalars: bool=True,
@@ -234,6 +237,7 @@ def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
             add_actor=add_actors)
         actors.append(actor)
     return actors
+
 
 def create_highlighted_actors_old(gui, grid: vtkUnstructuredGrid,
                                   all_nodes=None, nodes=None, set_node_scalars: bool=True,
@@ -300,6 +304,7 @@ def create_highlighted_actors_old(gui, grid: vtkUnstructuredGrid,
                                          add_actor=add_actors)
         actors.append(actor)
     return actors
+
 
 def create_highlighted_actor(gui: MainWindow, ugrid: vtkUnstructuredGrid,
                              representation: str='wire',

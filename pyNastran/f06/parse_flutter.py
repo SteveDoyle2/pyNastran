@@ -22,11 +22,16 @@ except ModuleNotFoundError:  # pragma: no cover
     #plt.switch_backend('Agg')
 
 
-from cpylog import get_logger2, SimpleLogger
 from pyNastran.f06.flutter_response import FlutterResponse, get_flutter_units
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import float_types, integer_types
 from pyNastran.f06.f06_matrix_parser import read_real_eigenvalues
+
+from cpylog import SimpleLogger, __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 Crossing = tuple[float, float, float]
 
 
@@ -35,7 +40,7 @@ def make_flutter_response(f06_filename: PathLike,
                           use_rhoref: bool=False,
                           read_flutter: bool=True,
                           log: Optional[SimpleLogger]=None) -> tuple[dict[int, FlutterResponse],
-                                                               dict[str, Any]]:
+                                                                     dict[str, Any]]:
     """
     Creates the FlutterResponse object
 
@@ -66,7 +71,7 @@ def make_flutter_response(f06_filename: PathLike,
     out_units = get_flutter_units(out_units)
 
     if log is None:
-        log = get_logger2(log=None, debug=True, encoding='utf-8')
+        log = get_logger(None, True, encoding='utf-8')
     #log.level = 'debug'
     flutters = {}
     iline = 0
@@ -139,7 +144,8 @@ def make_flutter_response(f06_filename: PathLike,
                     if is_heavy_debug:  # pragma: no cover
                         log.debug(f'found break iline={iline}; line={line}')
                     while 'PAGE' not in line:
-                        line = f06_file.readline(); iline += 1
+                        line = f06_file.readline()
+                        iline += 1
                         if len(line) == 0:
                             nblank += 1
                             if nblank == 100:
@@ -153,7 +159,7 @@ def make_flutter_response(f06_filename: PathLike,
 
             if 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R' in line:
                 print(f'line = {line}')
-                asdf
+                raise RuntimeError('need to parse OPGWG')
             elif 'R E A L   E I G E N V A L U E S' in line and load_eigenvalues:
                 real_eigenvaluesi = read_real_eigenvalues(
                     f06_file, log, line, iline)
@@ -319,7 +325,7 @@ def make_flutter_response(f06_filename: PathLike,
                 #assert methodi == method, f'methodi={methodi!r}; method={method!r}'
 
             if len(eigenvectors):
-                eigr_eigi_velocity = np.array(eigr_eigi_velocity_list, dtype='float64') # eigr, eigi, velo
+                eigr_eigi_velocity = np.array(eigr_eigi_velocity_list, dtype='float64')  # eigr, eigi, velo
                 assert eigr_eigi_velocity.ndim == 2, eigr_eigi_velocity
                 eigenvectors_array = np.column_stack(eigenvectors)
                 #print(f'eigr_eigi_velocity.shape = {eigr_eigi_velocity.shape}')
@@ -609,6 +615,7 @@ def _read_opgwg(f06_file: TextIO, iline: int,
     #print(opgwg)
     return iline, line, opgwg
 
+
 def plot_flutter_f06(f06_filename: PathLike,
                      f06_units: Optional[dict[str, str]]=None,
                      out_units: Optional[dict[str, str]]=None,
@@ -625,6 +632,7 @@ def plot_flutter_f06(f06_filename: PathLike,
                      vd_limit: Optional[float]=None,
                      damping_limit: Optional[float]=None,
                      freq_tol: float=-1.0,
+                     freq_tol_remove: float=-1.0,
                      mag_tol: float=-1.0,
                      ivelocity: Optional[int]=None,
                      mode: Optional[int]=None,
@@ -732,7 +740,8 @@ def plot_flutter_f06(f06_filename: PathLike,
                            nopoints, noline, ncol=ncol,
                            ivelocity=ivelocity, mode=mode,
                            vd_limit=vd_limit, damping_limit=damping_limit,
-                           freq_tol=freq_tol, mag_tol=mag_tol,
+                           freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
+                           mag_tol=mag_tol,
                            export_csv_filename=export_csv_filename,
                            export_zona_filename=export_zona_filename,
                            export_veas_filename=export_veas_filename,
@@ -745,6 +754,7 @@ def plot_flutter_f06(f06_filename: PathLike,
                            subcases=subcases,
                            show=show, clear=clear, close=close)
     return flutters, mass_lama
+
 
 def make_flutter_plots(modes: list[int],
                        flutters: dict[int, FlutterResponse],
@@ -764,6 +774,7 @@ def make_flutter_plots(modes: list[int],
                        vd_limit: Optional[float]=None,
                        damping_limit: Optional[float]=None,
                        freq_tol: float=-1.0,
+                       freq_tol_remove=-1.0,
                        mag_tol: float=-1.0,
                        ivelocity: Optional[int]=None,
                        mode: Optional[int]=None,
@@ -793,7 +804,7 @@ def make_flutter_plots(modes: list[int],
         subcases_set = set(subcases)
     missing_cases_set = subcases_set - subcases_flutter_set
 
-    log = get_logger2(log=log, debug=True, encoding='utf-8')
+    log = get_logger(log, True, encoding='utf-8')
     if missing_cases_set:
         missing_cases_list = list(missing_cases_set)
         missing_cases_list.sort()
@@ -811,7 +822,8 @@ def make_flutter_plots(modes: list[int],
             ncol=ncol, legend=legend,
             vd_limit=vd_limit,
             damping_limit=damping_limit,
-            freq_tol=freq_tol, mag_tol=mag_tol,
+            freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
+            mag_tol=mag_tol,
             vg_filename=vg_filename,
             vg_vf_filename=vg_vf_filename,
             root_locus_filename=root_locus_filename,
@@ -852,6 +864,7 @@ def _make_flutter_subcase_plot(modes, response: FlutterResponse,
                                vd_limit: Optional[float]=None,
                                damping_limit: Optional[float]=None,
                                freq_tol: float=-1.0,
+                               freq_tol_remove: float=-1.0,
                                mag_tol: float=-1.0,
                                vg_filename: Optional[str]=None,
                                vg_vf_filename: Optional[str]=None,
@@ -880,7 +893,7 @@ def _make_flutter_subcase_plot(modes, response: FlutterResponse,
                                 ylim_damping=ylim_damping, ylim_freq=ylim_freq,
                                 damping_limit=damping_limit,
                                 v_lines=v_lines,
-                                freq_tol=freq_tol,
+                                freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                                 ivelocity=ivelocity,
                                 ncol=ncol, legend=legend,
                                 png_filename=filenamei, show=False, clear=clear, close=close)
@@ -889,7 +902,7 @@ def _make_flutter_subcase_plot(modes, response: FlutterResponse,
             response.plot_root_locus(modes=modes,
                                      fig=None, axes=None,
                                      eigr_lim=None, eigi_lim=None,
-                                     freq_tol=freq_tol,
+                                     freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                                      ivelocity=ivelocity,
                                      ncol=ncol,
                                      clear=clear, legend=True,
@@ -905,7 +918,7 @@ def _make_flutter_subcase_plot(modes, response: FlutterResponse,
                     ivelocity, modei,
                     modes=modes,
                     fig=None, axes=None,
-                    freq_tol=freq_tol,
+                    freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                     mag_tol=mag_tol,
                     ncol=ncol,
                     clear=clear, legend=True,
@@ -1027,8 +1040,8 @@ def _find_modes_to_keep(response: FlutterResponse,
     freq_atol = -0.1
     ifilter = np.where(
         ((abs_dreal < tol) & (abs_dimag < tol)) |  # remove root-locus dots
-        ((abs_ddamp < damp_ztol) & (abs_damp > damp_atol)) | # remove flat damping lines far from the damping axis
-        ((abs_dfreq < freq_ztol) & (abs_freq > freq_atol))   # remove flat freq lines far from the damping axis
+        ((abs_ddamp < damp_ztol) & (abs_damp > damp_atol)) |  # remove flat damping lines far from the damping axis
+        ((abs_dfreq < freq_ztol) & (abs_freq > freq_atol))    # remove flat freq lines far from the damping axis
     )
     nmodes = results.shape[0]
     iall = np.arange(nmodes)
@@ -1037,7 +1050,6 @@ def _find_modes_to_keep(response: FlutterResponse,
     #isave = np.where(
         #((abs_dreal > tol) | (abs_dimag > tol)) |
     #)
-
 
     #return isave
     #iimag = np.where(dimag != 0.)[0]

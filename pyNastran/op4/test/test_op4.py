@@ -15,7 +15,7 @@ def run_lots_of_files(files, write_op4=True,
     """runs lots of op4 files"""
     if skip_files is None:
         skip_files = []
-    n = ''
+    # n = ''
     failed_cases = []
     nfailed = 0
     ntotal = 0
@@ -25,14 +25,14 @@ def run_lots_of_files(files, write_op4=True,
         base_name = os.path.basename(op4file)
         #if baseName not in skipFiles and not base_name.startswith('acms') and i not in nSkip:
         if base_name not in skip_files and '#' not in op4file:
-            print("%"*80)
-            print('file=%s\n' % op4file)
-            n = '%s ' % i
-            sys.stderr.write('%sfile=%s\n' %(n, op4file))
+            print("%" * 80)
+            print(f'file={op4file}\n')
+            n = f'{i} '
+            sys.stderr.write(f'{n}file={op4file}\n')
             ntotal += 1
             is_passed = run_op4(op4file,
                                 debug=debug,
-                                stop_on_failure=stop_on_failure) # True/False
+                                stop_on_failure=stop_on_failure)  # True/False
             if not is_passed:
                 sys.stderr.write('**file=%s\n' % op4file)
                 failed_cases.append(op4file)
@@ -48,9 +48,9 @@ def run_lots_of_files(files, write_op4=True,
 
     seconds = time.time()-t0
     minutes = seconds/60.
-    print("dt = %s seconds = %s minutes" % (seconds, minutes))
+    print(f'dt = {seconds} seconds = {minutes} minutes')
 
-    msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(
+    msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (
         npassed, ntotal, 100.*npassed/float(ntotal), ntotal-npassed)
     print(msg)
     sys.exit(msg)
@@ -85,7 +85,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
                 #delta = matrix - matrix2
                 #assert np.array_equal(matrix, matrix2), 'delta=\n%s' % delta
 
-        for key, (form, matrix) in sorted(matrices.items()):
+        for key, matrix in sorted(matrices.items()):
             print(key, matrix.shape)
             #if isinstance(matrix, np.ndarray):
                 #print(key, matrix.shape, matrix)
@@ -96,12 +96,12 @@ def run_op4(op4_filename, write_op4=True, debug=True,
 
         if write_op4:
             model = os.path.splitext(op4_filename)[0]
-            model.write_op4(model+'.test_op4_ascii.op4', matrices, is_binary=False)
-            model.write_op4(model+'.test_op4_binary.op4', matrices, is_binary=True)
+            model.write_op4(model + '.test_op4_ascii.op4', matrices, is_binary=False)
+            model.write_op4(model + '.test_op4_binary.op4', matrices, is_binary=True)
             if delete_op4:
                 try:
-                    os.remove(model+'.test_op4_ascii.op4')
-                    os.remove(model+'.test_op4_binary.op4')
+                    os.remove(model + '.test_op4_ascii.op4')
+                    os.remove(model + '.test_op4_binary.op4')
                 except Exception:
                     pass
 
@@ -109,7 +109,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
-        sys.stderr.write('**file=%s\n' % op4_filename)
+        sys.stderr.write(f'**file={op4_filename}\n')
         sys.exit('keyboard stop...')
     #except RuntimeError: # the op2 is bad, not my fault
     #    is_passed = True
@@ -118,7 +118,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
     #    else:
     #        is_passed = True
 
-    except IOError: # missing file
+    except IOError:  # missing file
         if stop_on_failure:
             raise
     #except AssertionError:
@@ -136,7 +136,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
     #        is_passed = True
     #except IndexError:
     #    is_passed = True
-    except SyntaxError: #Param Parse
+    except SyntaxError:  # Param Parse
         if stop_on_failure:
             raise
         is_passed = True

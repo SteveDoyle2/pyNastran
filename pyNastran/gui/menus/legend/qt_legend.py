@@ -30,6 +30,7 @@ ANIMATE_TOOLTIP_OFF = 'This must be a displacement-like result to animate'
 ANIMATE_TOOLTIP_ON = 'Creates an scale/phase/time animation'
 DEFAULT_COLORMAP = 'jet'
 
+
 class LegendPropertiesWindow(PyDialog):
     """
     +-------------------+
@@ -281,7 +282,7 @@ class LegendPropertiesWindow(PyDialog):
             self._scale = set_cell_to_blank_if_value_is_none(self.scale_edit, scale)
             self._phase = set_cell_to_blank_if_value_is_none(self.phase_edit, phase)
 
-        if self._default_icase_disp is None: # or self._default_icase_vector is None:
+        if self._default_icase_disp is None:  # or self._default_icase_vector is None:
             self.animate_button.setEnabled(False)
             self.animate_button.setToolTip(ANIMATE_TOOLTIP_OFF)
         else:
@@ -371,7 +372,7 @@ class LegendPropertiesWindow(PyDialog):
 
     def _set_legend_fringe(self, is_fringe: bool) -> None:
         """
-        Show/hide buttons if we dont have a result.  This is used for normals.
+        Show/hide buttons if we don't have a result.  This is used for normals.
         A result can still exist (i.e., icase_fringe is not None).
         """
         # lots of hacking for the Normal vectors
@@ -545,7 +546,7 @@ class LegendPropertiesWindow(PyDialog):
         self.animate_button.setVisible(show_animation_button)
         #self.advanced_button = QPushButton('Advanced')
 
-        if self._default_icase_disp is None: # or self._default_icase_vector is None:
+        if self._default_icase_disp is None:  # or self._default_icase_vector is None:
             self.animate_button.setEnabled(False)
             self.animate_button.setToolTip(ANIMATE_TOOLTIP_OFF)
         else:
@@ -625,7 +626,6 @@ class LegendPropertiesWindow(PyDialog):
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
-
 
         grid2 = QGridLayout()
         grid2.addWidget(self.grid2_title, 0, 0)
@@ -914,6 +914,7 @@ class LegendPropertiesWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
+
 def set_cell_to_blank_if_value_is_none(cell_edit, value):
     if value is None:
         cell_edit.setText('0.0')
@@ -932,13 +933,12 @@ def set_cell_to_blank_if_value_is_none(cell_edit, value):
         #return None, False
 
 
-def main(): # pragma: no cover
+def main():  # pragma: no cover
     """tests out the legend"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-
 
     import sys
     # Someone is launching this directly

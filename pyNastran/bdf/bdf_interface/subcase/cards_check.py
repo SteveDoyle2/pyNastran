@@ -32,13 +32,14 @@ class DISPLACEMENT(CheckCard):
     }
     allowed_strings = {'ALL', 'NONE'}
     duplicate_names = {
-        'PHAS' : 'PHASE',
+        'PHAS': 'PHASE',
     }
     allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class VELOCITY(CheckCard):
     """
@@ -57,13 +58,14 @@ class VELOCITY(CheckCard):
     }
     allowed_strings = {'ALL', 'NONE'}
     duplicate_names = {
-        'PHAS' : 'PHASE',
+        'PHAS': 'PHASE',
     }
     allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class ACCELERATION(CheckCard):
     """
@@ -86,6 +88,7 @@ class ACCELERATION(CheckCard):
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
 
+
 class VECTOR(CheckCard):
     """
     VECTOR=5
@@ -102,13 +105,14 @@ class VECTOR(CheckCard):
     }
     allowed_strings = {'ALL', 'NONE'}
     duplicate_names = {
-        'PHAS' : 'PHASE',
+        'PHAS': 'PHASE',
     }
     allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class SDISPLACEMENT(CheckCard):
     """
@@ -175,6 +179,7 @@ class SACCELERATION(CheckCard):
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
 
+
 class SVECTOR(CheckCard):
     """
     SVECTOR=5
@@ -195,6 +200,7 @@ class SVECTOR(CheckCard):
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class SPCFORCES(CheckCard):
     """
@@ -217,6 +223,7 @@ class SPCFORCES(CheckCard):
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
 
+
 class MPCFORCES(CheckCard):
     """
     MPCFORCES=5
@@ -238,6 +245,7 @@ class MPCFORCES(CheckCard):
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
 
+
 class NLLOAD(CheckCard):
     """
     NLLOAD(PRINT, PUNCH)=ALL
@@ -254,6 +262,7 @@ class NLLOAD(CheckCard):
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class NLSTRESS(CheckCard):
     """
@@ -289,6 +298,7 @@ class NOUTPUT(CheckCard):
     #def __init__(self, key, value, options):
         #super(NLLOAD, self).__init__(key, value, options)
 
+
 class OLOAD(CheckCard):
     """
     OLOAD=ALL
@@ -307,6 +317,7 @@ class OLOAD(CheckCard):
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
 
+
 class PRESSURE(CheckCard):
     """
     PRESSURE=5
@@ -318,13 +329,14 @@ class PRESSURE(CheckCard):
     allowed_keys = {'PRINT', 'PUNCH', 'PLOT'
                     'SORT1', 'SORT2',
                     'REAL'}
-    allowed_strings = {'ALL'} # , 'NONE'}
+    allowed_strings = {'ALL'}  # , 'NONE'}
     #allowed_values: dict[str, str | int] = {}
     alternate_names = {'PRES'}
     allow_ints = True
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class OPRESS(CheckCard):
     """
@@ -340,6 +352,7 @@ class OPRESS(CheckCard):
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class OTEMP(CheckCard):
     """
@@ -389,6 +402,7 @@ class STRESS(CheckCard):
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
 
+
 class STRAIN(CheckCard):
     """
     STRAIN=5
@@ -416,6 +430,7 @@ class STRAIN(CheckCard):
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
 
+
 class FORCE(CheckCard):
     """
     FORCE=5
@@ -442,6 +457,7 @@ class FORCE(CheckCard):
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
 
+
 class GPFORCE(CheckCard):
     """
     GPFORCE=5
@@ -463,6 +479,7 @@ class GPFORCE(CheckCard):
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
 
+
 class EDE(CheckCard):
     """
     EDE=5
@@ -480,12 +497,13 @@ class EDE(CheckCard):
         #'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
         #'NOPRINT', 'RPUNCH',
     }
-    allowed_strings = {'ALL', } # 'NONE'
+    allowed_strings = {'ALL', }  # 'NONE'
     allowed_values: dict[str, str | int] = {}
     allow_ints = True
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class ESE(CheckCard):
     """
@@ -508,6 +526,7 @@ class ESE(CheckCard):
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class GPSTRESS(CheckCard):
     """
@@ -552,7 +571,9 @@ class GPSTRAIN(CheckCard):
     allow_ints = True
 
     def __init__(self, key, value, options):
+
         CheckCard.__init__(self, key, value, options)
+
 
 class STRFIELD(CheckCard):
     """
@@ -574,6 +595,7 @@ class STRFIELD(CheckCard):
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class GPSDCON(CheckCard):
     """
@@ -618,6 +640,7 @@ class ELSDCON(CheckCard):
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
 
+
 class OUTPUT(CheckCard):
     """
     OUTPUT
@@ -647,11 +670,12 @@ class ENTHALPY(CheckCard):
         'PLOT', 'PRINT',
         'SORT1',
     }
-    allowed_strings = {'ALL'} # , 'NONE'}
+    allowed_strings = {'ALL'}  # , 'NONE'}
     allow_ints = True
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class THERMAL(CheckCard):
     """
@@ -663,11 +687,12 @@ class THERMAL(CheckCard):
         'PLOT', 'PRINT', 'PUNCH',
         'SORT1', 'SORT2',
     }
-    allowed_strings = {'ALL'} # , 'NONE'}
+    allowed_strings = {'ALL'}  # , 'NONE'}
     allow_ints = True
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class TEMPERATURE(CheckCard):
     """
@@ -684,15 +709,16 @@ class TEMPERATURE(CheckCard):
         'INITIAL', 'LOAD', 'MATERIAL', 'BOTH', 'ESTIMATE',
     }
     duplicate_names = {
-        'INIT' : 'INITIAL',
-        'MATE' : 'MATERIAL',
-        'ESTI' : 'ESTIMATE',
+        'INIT': 'INITIAL',
+        'MATE': 'MATERIAL',
+        'ESTI': 'ESTIMATE',
     }
     #allowed_strings = {'ALL'} # , 'NONE'}
     allow_ints = True
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class FLUX(CheckCard):
     """
@@ -704,7 +730,7 @@ class FLUX(CheckCard):
         'PLOT', 'PRINT',
         'SORT1', 'SORT2',
     }
-    allowed_strings = {'ALL'} # , 'NONE'}
+    allowed_strings = {'ALL'}  # , 'NONE'}
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -728,6 +754,7 @@ class FLUX(CheckCard):
     #def __init__(self, key, value, options):
         #CheckCard.__init__(self, key, value, options)
 
+
 class RESVEC(CheckCard):
     """
     RESVEC(APPLOD,RVDOF) = YES
@@ -739,11 +766,12 @@ class RESVEC(CheckCard):
         'APPLOD', 'RVDOF', 'INRLOD',
         'NOAPPL', 'NOINER', 'NOINRL', 'NORVDO', 'NODYNRSP',
     }
-    allowed_strings = {'YES', 'NO', 'NOCOMPONENT', 'NOSYSTEM', 'SYSTEM'} # , 'NONE'}
+    allowed_strings = {'YES', 'NO', 'NOCOMPONENT', 'NOSYSTEM', 'SYSTEM'}  # , 'NONE'}
     allow_ints = True
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class ELSUM(CheckCard):
     """
@@ -763,7 +791,6 @@ class ELSUM(CheckCard):
         CheckCard.__init__(self, key, value, options)
 
 
-
 class DATAREC(CheckCard):
     """
     DATAREC = 11
@@ -773,8 +800,10 @@ class DATAREC(CheckCard):
     type = 'DATAREC'
     allowed_keys = {'SORT1', 'SORT2'}
     allow_ints = True
+
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class BOUTPUT(CheckCard):
     """
@@ -783,8 +812,10 @@ class BOUTPUT(CheckCard):
     type = 'BOUTPUT'
     allowed_keys = {'SORT1', 'SORT2'}
     allow_ints = True
+
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
 
 class BGRESULTS(CheckCard):
     """
@@ -804,7 +835,7 @@ class SENSITY(CheckCard):
     """
     type = 'SENSITY'
     allowed_keys = {'STORE', }
-    allowed_strings = {'ALL'} # , 'NONE'}
+    allowed_strings = {'ALL'}  # , 'NONE'}
     #allowed_values: dict[str, str | int] = {}
     #alternate_names = {'PRES'}
     #allow_ints = True
@@ -812,7 +843,8 @@ class SENSITY(CheckCard):
     #def __init__(self, key, value, options):
         #CheckCard.__init__(self, key, value, options)
 
-CHECK_CARDS = [
+
+CHECK_CARDS: list[Any] = [
     DATAREC, DISPLACEMENT, VELOCITY, ACCELERATION, VECTOR,
     SDISPLACEMENT, SVELOCITY, SACCELERATION, SVECTOR,
     NLLOAD, NLSTRESS, OLOAD, OPRESS,
@@ -822,16 +854,15 @@ CHECK_CARDS = [
     STRFIELD, GPSDCON, ELSDCON,
     NOUTPUT, OUTPUT, RESVEC, ELSUM,
     BOUTPUT, BGRESULTS, PRESSURE, SENSITY,
-
-]  # type: list[Any]
+]
 
 #-------------------------------------------------------------------------------
-CHECK_CARD_DICT = {card.type : card for card in CHECK_CARDS} # type: dict[str, str]
+CHECK_CARD_DICT: dict[str, str] = {card.type: card for card in CHECK_CARDS}
 for card in CHECK_CARDS:
     if hasattr(card, 'alternate_names'):
         for name in card.alternate_names:
             CHECK_CARD_DICT[name] = card
 
 
-# CHECK_CARD_NAMES = tuple([card.short_name for card in CHECK_CARDS])  # type: tuple[str]
+# CHECK_CARD_NAMES: tuple[str] = tuple([card.short_name for card in CHECK_CARDS])
 CHECK_CARD_NAMES = tuple(CHECK_CARD_DICT.keys())

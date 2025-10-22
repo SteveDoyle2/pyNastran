@@ -125,7 +125,6 @@ def main():  # pragma: no cover
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-
     import sys
     # Someone is launching this directly
     # Create the QApplication
@@ -133,13 +132,14 @@ def main():  # pragma: no cover
     #The Main window
     d = {
         'font_size': 10,
-        'min_clip' : 0.,
-        'max_clip' : 10,
+        'min_clip': 0.,
+        'max_clip': 10,
     }
     main_window = ClippingPropertiesWindow(d)
     main_window.show()
     # Enter the main loop
     app.exec_()
+
 
 if __name__ == '__main__':   # pragma: no cover
     main()

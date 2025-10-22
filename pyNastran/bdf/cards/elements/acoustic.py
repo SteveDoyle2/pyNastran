@@ -68,7 +68,7 @@ class CHACAB(Element):
         self.pid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CHACAB card from ``BDF.add_card(...)``
 
@@ -156,7 +156,7 @@ class CHACBR(Element):
         self.nodes = self.prepare_node_ids(nodes, allow_empty_nodes=True)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CHACBR card from ``BDF.add_card(...)``
 
@@ -248,7 +248,7 @@ class CAABSF(Element):
         self.nodes = self.prepare_node_ids(nodes, allow_empty_nodes=True)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CHACAB card from ``BDF.add_card(...)``
 
@@ -327,7 +327,7 @@ class PACBAR(Property):
         self.kreson = kreson
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PACBAR card from ``BDF.add_card(...)``
 
@@ -428,7 +428,7 @@ class PAABSF(Property):
                         self.b is None, self.k is None]), str(self)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PAABSF card from ``BDF.add_card(...)``
 
@@ -488,9 +488,12 @@ class PACABS(Element):
         m = 1.
         return PACABS(pid, cutfr, b, k, m)
 
-    def __init__(self, pid, cutfr, b, k, m,
-                 synth=True, tid_resistance=None, tid_reactance=None, tid_weight=None,
-                 comment=''):
+    def __init__(self, pid: int, cutfr: float,
+                 b: float, k: float, m: float,
+                 synth: bool=True,
+                 tid_resistance: int=0,
+                 tid_reactance: int=0,
+                 tid_weight: int=0, comment: str=''):
         """
         Creates a PACABS card
 
@@ -500,11 +503,11 @@ class PACABS(Element):
             Property identification number.
         synth : bool; default=True
             Request the calculation of B, K, and M from the tables TIDi below
-        tid_resistance : int; default=None
+        tid_resistance : int; default=0
             Identification of the TABLEDi entry that defines the resistance.
-        tid_reactance : int; default=None
+        tid_reactance : int; default=0
             Identification of the TABLEDi entry that defines the reactance.
-        tid_weight : int; default=None
+        tid_weight : int; default=0
             Identification of the TABLEDi entry that defines the weighting function.
         cutfr : float
             Cutoff frequency for tables referenced above. (Real > 0.0)
@@ -528,7 +531,7 @@ class PACABS(Element):
         self.m = m
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PACABS card from ``BDF.add_card(...)``
 
@@ -549,7 +552,7 @@ class PACABS(Element):
         b = double_or_blank(card, 8, 'b')
         k = double_or_blank(card, 9, 'k')
         m = double_or_blank(card, 10, 'm')
-        assert len(card) <= 8, f'len(PACABS card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 11, f'len(PACABS card) = {len(card):d}\ncard={card}'
 
         assert synth in ['YES', 'NO'], synth
         is_synth = synth == 'YES'
@@ -575,7 +578,7 @@ class PACABS(Element):
         fields = self.raw_fields()
         return print_card_8(fields)
 
-def is_msc(nastran_version: str):
+def is_msc(nastran_version: str) -> bool:
     return nastran_version == 'msc'
 
 
@@ -1073,10 +1076,13 @@ class ACMODL(Element):
         fset = None if self.fset == 0 else self.fset
         sset = None if self.sset == 0 else self.sset
         if is_msc(self.nastran_version):
+            #     | ACMODL | INTER |  INFOR  |   FSET   | SSET | NORMAL | METHOD | SKNEPSG | DSKNEPS  |
+            #     |        | INTOL | ALLSSET | SRCHUNIT |      |        |        |         |          |
             list_fields = ['ACMODL', self.inter, infor,
                            fset, sset, self.normal, self.method,
                            self.sk_neps, self.dsk_neps, self.intol,
                            self.all_set, self.search_unit, ]
+            assert isinstance(self.dsk_neps, float), self.dsk_neps
         else:
             list_fields = ['ACMODL', None, infor, fset, sset, self.normal, None, self.olvpang, self.search_unit,
                            self.intol, self.area_op, None, None, self.ctype]
@@ -1160,7 +1166,7 @@ class MATPOR(BaseCard):
                  porosity: float, tortuosity: float,
                  frame: str,
                  gamma: float, prandtl_number: float,
-                 mu: float, L1, L2,
+                 mu: float, L1: float, L2: float,
                  density: float=0.0, comment: str=''):
         """
         Creates a MATPOR card

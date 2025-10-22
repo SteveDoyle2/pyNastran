@@ -41,7 +41,7 @@ class LoadActions(BaseGui):
     def on_load_geometry(self, infile_name=None, geometry_format=None,
                          name: str='main',
                          plot: bool=True,
-                         stop_on_failure: bool=False):
+                         stop_on_failure: bool=False) -> bool:
         """
         Loads a baseline geometry
 
@@ -59,13 +59,18 @@ class LoadActions(BaseGui):
         stop_on_failure : bool; default=True
             stop the code if True
 
+        Returns
+        -------
+        is_failed : bool
+            did the function fail?
+
         """
         assert isinstance(name, str), f'name={name!r} type={type(name)}; infile_name={infile_name} geometry_format={geometry_format!r}; plot={plot}; stop_on_failure={stop_on_failure}'
         is_failed, out = self._load_geometry_filename(
             geometry_format, infile_name)
         print("is_failed =", is_failed)
         if is_failed:
-            return
+            return is_failed
 
         if not hasattr(self, 'model_objs'):
             self.model_objs = {}
@@ -164,7 +169,7 @@ class LoadActions(BaseGui):
             unused_enable = has_results
             #self.load_results.Enable(enable)
         else: # no file specified
-            return
+            return is_failed
         #print("on_load_geometry(infile_name=%r, geometry_format=None)" % infile_name)
         gui.infile_name = infile_name
         gui.out_filename = None
@@ -182,6 +187,8 @@ class LoadActions(BaseGui):
 
         gui.log_command("self.on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
             infile_name, geometry_format_out, main_str))
+        is_failed = False
+        return is_failed
 
     def _set_last_dir(self, infile_name: str) -> None:
         """

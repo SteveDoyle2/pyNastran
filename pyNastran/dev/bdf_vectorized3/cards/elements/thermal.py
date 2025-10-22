@@ -2,15 +2,16 @@ from __future__ import annotations
 from itertools import zip_longest
 from typing import TYPE_CHECKING
 import numpy as np
-from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
-#from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
-#from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.bdf.field_writer_8 import print_card_8  # , print_float_8, print_field_8
+# from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
+# from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double, force_double_or_blank
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, # string,
+    integer, double,  # string,
     blank,
     integer_or_blank, double_or_blank, string_or_blank,
 )
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check, find_missing
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
@@ -26,7 +27,7 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
-    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    # from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
 class BDYOR:
@@ -154,9 +155,9 @@ class BDYOR:
 
 class ThermalElement(VectorizedBaseCard):
     pass
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-        #self.element_id = np.array([], dtype='int32')
+    # def __init__(self, model: BDF):
+    #     super().__init__(model)
+    #     self.element_id = np.array([], dtype='int32')
 
 
 class CHBDYE(ThermalElement):
@@ -172,6 +173,7 @@ class CHBDYE(ThermalElement):
 
     """
     _id_name = 'element_id'
+
     def clear(self) -> None:
         self.element_id = np.zeros((0, 2), dtype='int32')
         self.n = 0
@@ -275,12 +277,15 @@ class CHBDYE(ThermalElement):
     @property
     def iview_front(self) -> np.ndarray:
         return self.iview[:, 0]
+
     @property
     def iview_back(self) -> np.ndarray:
         return self.iview[:, 1]
+
     @property
     def rad_mid_front(self) -> np.ndarray:
         return self.rad_mid[:, 0]
+
     @property
     def rad_mid_back(self) -> np.ndarray:
         return self.rad_mid[:, 1]
@@ -288,6 +293,7 @@ class CHBDYE(ThermalElement):
     @iview_front.setter
     def iview_front(self, iview_front: np.ndarray) -> None:
         self.iview[:, 0] = iview_front
+
     @iview_back.setter
     def iview_back(self, iview_back: np.ndarray) -> None:
         self.iview[:, 1] = iview_back
@@ -295,6 +301,7 @@ class CHBDYE(ThermalElement):
     @rad_mid_front.setter
     def rad_mid_front(self, rad_mid_front: np.ndarray) -> None:
         self.rad_mid[:, 0] = rad_mid_front
+
     @rad_mid_back.setter
     def rad_mid_back(self, rad_mid_back: np.ndarray) -> None:
         self.rad_mid[:, 1] = rad_mid_back
@@ -317,9 +324,10 @@ class CHBDYE(ThermalElement):
         iview_backs    = array_default_int(self.iview[:, 1],   default=0, size=size)
         rad_mid_fronts = array_default_int(self.rad_mid[:, 0], default=0, size=size)
         rad_mid_backs  = array_default_int(self.rad_mid[:, 1], default=0, size=size)
-        for eid, eid2, side, iview_front, iview_back, rad_mid_front, rad_mid_back in zip(element_ids, element_id2s, sides,
-                                                                                         iview_fronts, iview_backs,
-                                                                                         rad_mid_fronts, rad_mid_backs):
+        for eid, eid2, side, iview_front, iview_back, rad_mid_front, rad_mid_back in zip(
+                element_ids, element_id2s, sides,
+                iview_fronts, iview_backs,
+                rad_mid_fronts, rad_mid_backs):
             assert eid != 0, eid
             assert eid2 != 0, eid2
             #assert iview_front != 0, iview_front
@@ -345,12 +353,13 @@ class CONV(VectorizedBaseCard):
 
     """
     _id_name = 'element_id'
+
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.n = 0
 
     def add(self, eid: int, pconid: int,
-            ta: list[int], film_node: int=0, cntrlnd: int=0,
+            ta: list[int], film_node: int=0, control_node: int=0,
             comment: str='') -> int:
         """
         Creates a CONV card
@@ -361,20 +370,18 @@ class CONV(VectorizedBaseCard):
             element id
         pconid : int
             Convection property ID
-        mid : int
-            Material ID
         ta : list[int]
             Ambient points used for convection 0's are allowed for TA2
             and higher
         film_node : int; default=0
             Point for film convection fluid property temperature
-        cntrlnd : int; default=0
+        control_node : int; default=0
             Control point for free convection boundary condition
         comment : str; default=''
             a comment for the card
 
         """
-        self.cards.append((eid, pconid, film_node, cntrlnd, ta, comment))
+        self.cards.append((eid, pconid, film_node, control_node, ta, comment))
         self.n += 1
         return self.n - 1
 
@@ -382,7 +389,7 @@ class CONV(VectorizedBaseCard):
         eid = integer(card, 1, 'eid')
         pconid = integer(card, 2, 'pconid')
         film_node = integer_or_blank(card, 3, 'film_node', default=0)
-        cntrlnd = integer_or_blank(card, 4, 'cntrlnd', default=0)
+        control_node = integer_or_blank(card, 4, 'control_node', default=0)
 
         ta1 = integer(card, 5, 'TA1')
         assert ta1 > 0, ta1
@@ -396,7 +403,7 @@ class CONV(VectorizedBaseCard):
         ta8 = integer_or_blank(card, 12, 'ta8', default=ta1)
         ta = [ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8]
         assert len(card) <= 13, f'len(CONV card) = {len(card):d}\ncard={card}'
-        self.cards.append((eid, pconid, film_node, cntrlnd, ta, comment))
+        self.cards.append((eid, pconid, film_node, control_node, ta, comment))
         self.n += 1
         return self.n - 1
 
@@ -425,11 +432,11 @@ class CONV(VectorizedBaseCard):
 
         #grids = []
         for icard, card in enumerate(self.cards):
-            (eid, pconid, film_nodei, cntrlnd, ta, comment) = card
+            (eid, pconid, film_nodei, control_nodei, ta, comment) = card
             element_id[icard] = eid
             pconv_id[icard] = pconid
             film_node[icard] = film_nodei
-            control_node[icard] = cntrlnd
+            control_node[icard] = control_nodei
             temp_ambient[icard, :] = ta
         self._save(element_id, pconv_id, film_node, control_node, temp_ambient)
         self.sort()
@@ -455,6 +462,15 @@ class CONV(VectorizedBaseCard):
         load.control_node = self.control_node[i]
         load.temp_ambient = self.temp_ambient[i]
         load.n = len(i)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        node_id = np.unique(np.hstack([self.film_node, self.control_node]))
+        geom_check(self,
+                   missing,
+                   node=(nid, node_id), filter_node0=True,
+                   pconv_id=(self.model.pconv.pconv_id, self.pconv_id),
+                   )
 
     @property
     def max_id(self) -> int:
@@ -500,6 +516,7 @@ class CHBDYG(ThermalElement):
 
     """
     _id_name = 'element_id'
+
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.n = 0
@@ -546,21 +563,21 @@ class CHBDYG(ThermalElement):
         #: eid2: A heat conduction element identification
         element_id = np.zeros(ncards, dtype=idtype)
 
-        #: A consistent element side identification number
-        #: (1 < Integer < 6)
-        #self.side = np.zeros(ncards, dtype='int32')
-        #if self.surface_type == 'AREA3':
-            #nnodes_required = 3
-            #nnodes_allowed = 3
-        #elif self.surface_type == 'AREA4':
-            #nnodes_required = 4
-            #nnodes_allowed = 4
-        #elif self.surface_type == 'AREA6':
-            #nnodes_required = 3
-            #nnodes_allowed = 6
-        #elif self.surface_type == 'AREA8':
-            #nnodes_required = 4
-            #nnodes_allowed = 8
+        # : A consistent element side identification number
+        # : (1 < Integer < 6)
+        # self.side = np.zeros(ncards, dtype='int32')
+        # if self.surface_type == 'AREA3':
+        #     nnodes_required = 3
+        #     nnodes_allowed = 3
+        # elif self.surface_type == 'AREA4':
+        #     nnodes_required = 4
+        #     nnodes_allowed = 4
+        # elif self.surface_type == 'AREA6':
+        #     nnodes_required = 3
+        #     nnodes_allowed = 6
+        # elif self.surface_type == 'AREA8':
+        #     nnodes_required = 4
+        #     nnodes_allowed = 8
         surface_type = np.zeros(ncards, dtype='|U5')
 
         #: A VIEW entry identification number for the front face
@@ -620,12 +637,15 @@ class CHBDYG(ThermalElement):
     @property
     def iview_front(self) -> np.ndarray:
         return self.iview[:, 0]
+
     @property
     def iview_back(self) -> np.ndarray:
         return self.iview[:, 1]
+
     @property
     def rad_mid_front(self) -> np.ndarray:
         return self.rad_mid[:, 0]
+
     @property
     def rad_mid_back(self) -> np.ndarray:
         return self.rad_mid[:, 1]
@@ -633,6 +653,7 @@ class CHBDYG(ThermalElement):
     @iview_front.setter
     def iview_front(self, iview_front: np.ndarray) -> None:
         self.iview[:, 0] = iview_front
+
     @iview_back.setter
     def iview_back(self, iview_back: np.ndarray) -> None:
         self.iview[:, 1] = iview_back
@@ -640,6 +661,7 @@ class CHBDYG(ThermalElement):
     @rad_mid_front.setter
     def rad_mid_front(self, rad_mid_front: np.ndarray) -> None:
         self.rad_mid[:, 0] = rad_mid_front
+
     @rad_mid_back.setter
     def rad_mid_back(self, rad_mid_back: np.ndarray) -> None:
         self.rad_mid[:, 1] = rad_mid_back
@@ -693,6 +715,7 @@ class CHBDYP(ThermalElement):
 
     """
     _id_name = 'element_id'
+
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.n = 0
@@ -874,12 +897,15 @@ class CHBDYP(ThermalElement):
     @property
     def iview_front(self) -> np.ndarray:
         return self.iview[:, 0]
+
     @property
     def iview_back(self) -> np.ndarray:
         return self.iview[:, 1]
+
     @property
     def rad_mid_front(self) -> np.ndarray:
         return self.rad_mid[:, 0]
+
     @property
     def rad_mid_back(self) -> np.ndarray:
         return self.rad_mid[:, 1]
@@ -887,6 +913,7 @@ class CHBDYP(ThermalElement):
     @iview_front.setter
     def iview_front(self, iview_front: np.ndarray) -> None:
         self.iview[:, 0] = iview_front
+
     @iview_back.setter
     def iview_back(self, iview_back: np.ndarray) -> None:
         self.iview[:, 1] = iview_back
@@ -894,6 +921,7 @@ class CHBDYP(ThermalElement):
     @rad_mid_front.setter
     def rad_mid_front(self, rad_mid_front: np.ndarray) -> None:
         self.rad_mid[:, 0] = rad_mid_front
+
     @rad_mid_back.setter
     def rad_mid_back(self, rad_mid_back: np.ndarray) -> None:
         self.rad_mid[:, 1] = rad_mid_back
@@ -1035,6 +1063,7 @@ class PHBDY(VectorizedBaseCard):
 
     """
     _id_name = 'property_id'
+
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.n = 0
@@ -1048,8 +1077,6 @@ class PHBDY(VectorizedBaseCard):
 
         Parameters
         ----------
-        eid : int
-            element id
         pid : int
             property id
         area_factor : int
@@ -1148,105 +1175,105 @@ class PHBDY(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
-    #@property
-    #def allowed_materials(self) -> list[Any]:
-        #return [mat for mat in [self.model.mat1] if mat.n > 0]
+    # @property
+    # def allowed_materials(self) -> list[Any]:
+    #     return [mat for mat in [self.model.mat1] if mat.n > 0]
+    #
+    # def mass_per_length(self) -> np.ndarray:
+    #     return line_mid_mass_per_length(self.material_id, self.nsm, self.A,
+    #                                     self.allowed_materials)
+    #
+    # def area(self) -> np.ndarray:
+    #     return self.A
 
-    #def mass_per_length(self) -> np.ndarray:
-        #return line_mid_mass_per_length(self.material_id, self.nsm, self.A,
-                                        #self.allowed_materials)
 
-    #def area(self) -> np.ndarray:
-        #return self.A
-
-
-#class CONV(VectorizedBaseCard):
-    #"""
-    #Specifies a free convection boundary condition for heat transfer analysis
-    #through connection to a surface element (CHBDYi entry).
-
-    #"""
-    #def clear(self) -> None:
-        #self.element_id = np.array([], dtype='int32')
-        #self.n = 0
-
-    #@VectorizedBaseCard.parse_cards_check
-    #def parse_cards(self) -> None:
-        #ncards = len(self.cards)
-        #if ncards == 0:
-            #return
-
-        ##: CHBDYG, CHBDYE, or CHBDYP surface element identification number.
-        ##: (Integer > 0)
-        #self.element_id = np.zeros(ncards, dtype='int32')
-
-        ##: Convection property identification number of a PCONV entry
-        #self.pconv_id = np.zeros(ncards, dtype='int32')
-
-        ##: Point for film convection fluid property temperature
-        #self.film_node = np.zeros(ncards, dtype='int32')
-
-        ##: Control point for free convection boundary condition.
-        #self.control_node = np.zeros(ncards, dtype='int32')
-
-        ##: Ambient points used for convection 0's are allowed for TA2 and
-        ##: higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
-        ##: Default for TA2 through TA8 is TA1.)
-        #self.temp_ambient = np.zeros((ncards, 8), dtype='int32')
-
-        ##grids = []
-        #for icard, card_comment in enumerate(self.cards):
-            #card, comment = card_comment
-
-            #eid = integer(card, 1, 'eid')
-            #pconid = integer(card, 2, 'pconid')
-            #film_node = integer_or_blank(card, 3, 'film_node', 0)
-            #cntrlnd = integer_or_blank(card, 4, 'cntrlnd', 0)
-
-            #ta1 = integer(card, 5, 'TA1')
-            #assert ta1 > 0, ta1
-
-            #ta2 = integer_or_blank(card, 6, 'ta2', ta1)
-            #ta3 = integer_or_blank(card, 7, 'ta3', ta1)
-            #ta4 = integer_or_blank(card, 8, 'ta4', ta1)
-            #ta5 = integer_or_blank(card, 9, 'ta5', ta1)
-            #ta6 = integer_or_blank(card, 10, 'ta6', ta1)
-            #ta7 = integer_or_blank(card, 11, 'ta7', ta1)
-            #ta8 = integer_or_blank(card, 12, 'ta8', ta1)
-            #ta = [ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8]
-
-            #self.element_id[icard] = eid
-            #self.pconv_id[icard] = pconid
-            #self.film_node[icard] = film_node
-            #self.control_node[icard] = cntrlnd
-            #self.temp_ambient[icard] = ta
-            #assert len(card) <= 13, f'len(CONV card) = {len(card):d}\ncard={card}'
-
-    #def write(self, size: int=8) -> str:
-        #if len(self.element_id) == 0:
-            #return ''
-        #lines = []
-        #if size == 8:
-            #print_card = print_card_8
-
-        #element_ids = array_str(self.element_id, size=size)
-        ##pconv_ids = array_str(self.pconv_id, size=size)
-        #film_nodes = array_default_int(self.film_node, default=0, size=size)
-        #control_nodes = array_default_int(self.control_node, default=0, size=size)
-        #temp_ambients = array_default_int(self.temp_ambient, default=0, size=size)
-        ##self.temp_ambient[icard] = ta
-        #for eid, pconv_id, film_node, control_node, tas in zip(element_ids, self.pconv_id,
-                                                              #film_nodes, control_nodes, temp_ambients):
-            #assert pconv_id > 0, pconv_id
-
-            #ta0 = tas[0]
-            #ta = [ta0]
-            #for tai in tas[1:]:
-                #ta.append(set_blank_if_default(tai, ta0))
-            #list_fields = ['CONV', eid, pconv_id, film_node, control_node] + ta
-
-            #lines.append(print_card(list_fields))
-        #return ''.join(lines)
+# class CONV(VectorizedBaseCard):
+#     """
+#     Specifies a free convection boundary condition for heat transfer analysis
+#     through connection to a surface element (CHBDYi entry).
+#
+#     """
+#     def clear(self) -> None:
+#         self.element_id = np.array([], dtype='int32')
+#         self.n = 0
+#
+#     @VectorizedBaseCard.parse_cards_check
+#     def parse_cards(self) -> None:
+#         ncards = len(self.cards)
+#         if ncards == 0:
+#             return
+#
+#         #: CHBDYG, CHBDYE, or CHBDYP surface element identification number.
+#         #: (Integer > 0)
+#         self.element_id = np.zeros(ncards, dtype='int32')
+#
+#         #: Convection property identification number of a PCONV entry
+#         self.pconv_id = np.zeros(ncards, dtype='int32')
+#
+#         #: Point for film convection fluid property temperature
+#         self.film_node = np.zeros(ncards, dtype='int32')
+#
+#         #: Control point for free convection boundary condition.
+#         self.control_node = np.zeros(ncards, dtype='int32')
+#
+#         #: Ambient points used for convection 0's are allowed for TA2 and
+#         #: higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
+#         #: Default for TA2 through TA8 is TA1.)
+#         self.temp_ambient = np.zeros((ncards, 8), dtype='int32')
+#
+#         #grids = []
+#         for icard, card_comment in enumerate(self.cards):
+#             card, comment = card_comment
+#
+#             eid = integer(card, 1, 'eid')
+#             pconid = integer(card, 2, 'pconid')
+#             film_node = integer_or_blank(card, 3, 'film_node', 0)
+#             control_node = integer_or_blank(card, 4, 'control_node', 0)
+#
+#             ta1 = integer(card, 5, 'TA1')
+#             assert ta1 > 0, ta1
+#
+#             ta2 = integer_or_blank(card, 6, 'ta2', ta1)
+#             ta3 = integer_or_blank(card, 7, 'ta3', ta1)
+#             ta4 = integer_or_blank(card, 8, 'ta4', ta1)
+#             ta5 = integer_or_blank(card, 9, 'ta5', ta1)
+#             ta6 = integer_or_blank(card, 10, 'ta6', ta1)
+#             ta7 = integer_or_blank(card, 11, 'ta7', ta1)
+#             ta8 = integer_or_blank(card, 12, 'ta8', ta1)
+#             ta = [ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8]
+#
+#             self.element_id[icard] = eid
+#             self.pconv_id[icard] = pconid
+#             self.film_node[icard] = film_node
+#             self.control_node[icard] = control_node
+#             self.temp_ambient[icard] = ta
+#             assert len(card) <= 13, f'len(CONV card) = {len(card):d}\ncard={card}'
+#
+#     def write(self, size: int=8) -> str:
+#         if len(self.element_id) == 0:
+#             return ''
+#         lines = []
+#         if size == 8:
+#             print_card = print_card_8
+#
+#         element_ids = array_str(self.element_id, size=size)
+#         #pconv_ids = array_str(self.pconv_id, size=size)
+#         film_nodes = array_default_int(self.film_node, default=0, size=size)
+#         control_nodes = array_default_int(self.control_node, default=0, size=size)
+#         temp_ambients = array_default_int(self.temp_ambient, default=0, size=size)
+#         #self.temp_ambient[icard] = ta
+#         for eid, pconv_id, film_node, control_node, tas in zip(element_ids, self.pconv_id,
+#                                                               film_nodes, control_nodes, temp_ambients):
+#             assert pconv_id > 0, pconv_id
+#
+#             ta0 = tas[0]
+#             ta = [ta0]
+#             for tai in tas[1:]:
+#                 ta.append(set_blank_if_default(tai, ta0))
+#             list_fields = ['CONV', eid, pconv_id, film_node, control_node] + ta
+#
+#             lines.append(print_card(list_fields))
+#         return ''.join(lines)
 
 
 class PCONV(VectorizedBaseCard):
@@ -1286,6 +1313,7 @@ class PCONV(VectorizedBaseCard):
 
     """
     _id_name = 'pconv_id'
+
     def clear(self) -> None:
         self.pconv_id = np.array([], dtype='int32')
         self.n = 0
@@ -1295,7 +1323,7 @@ class PCONV(VectorizedBaseCard):
             free_convection_type: int=0,
             table_id: int=0,
             chlen: float=None, gidin: int=None, ce: int=0,
-            e1: float=None, e2: float=None, e3: float=None,
+            e: list[float]=None,
             comment: str='') -> int:
         """
         Creates a PCONV card
@@ -1309,12 +1337,12 @@ class PCONV(VectorizedBaseCard):
         form : int; default=0
             Type of formula used for free convection
             Must be {0, 1, 10, 11, 20, or 21}
-        expf : float; default=0.0
+        exponent_free_convection : float; default=0.0
             Free convection exponent as implemented within the context
             of the particular form that is chosen
-        ftype : int; default=0
+        free_convection_type : int; default=0
             Formula type for various configurations of free convection
-        tid : int; default=None
+        table_id : int; default=None
             Identification number of a TABLEHT entry that specifies the
             two variable tabular function of the free convection heat
             transfer coefficient
@@ -1324,7 +1352,7 @@ class PCONV(VectorizedBaseCard):
             Grid ID of the referenced inlet point
         ce : int; default=0
             Coordinate system for defining orientation vector.
-        e1 / e2 / e3 : list[float]; default=None
+        e : list[float]; default=None
             Components of the orientation vector in coordinate system CE.
             The origin of the orientation vector is grid point G1
         comment : str; default=''
@@ -1337,7 +1365,7 @@ class PCONV(VectorizedBaseCard):
         coord_e = ce
         self.cards.append((pconv_id, mid, form, exponent_free_convection,
                            free_convection_type, table_id,
-                           chlen, gidin, coord_e, [e1, e2, e3], comment))
+                           chlen, gidin, coord_e, e, comment))
         self.n += 1
         return self.n - 1
 
@@ -1352,13 +1380,15 @@ class PCONV(VectorizedBaseCard):
         chlen = fdouble_or_blank(card, 9, 'chlen', default=np.nan)
         gidin = integer_or_blank(card, 10, 'gidin', default=0)
         coord_e = integer_or_blank(card, 11, 'ce', default=0)
-        e1 = fdouble_or_blank(card, 12, 'e1', default=np.nan)
-        e2 = fdouble_or_blank(card, 13, 'e2', default=np.nan)
-        e3 = fdouble_or_blank(card, 14, 'e3', default=np.nan)
+        e = [
+            fdouble_or_blank(card, 12, 'e1', default=np.nan),
+            fdouble_or_blank(card, 13, 'e2', default=np.nan),
+            fdouble_or_blank(card, 14, 'e3', default=np.nan),
+        ]
         assert len(card) <= 15, f'len(PCONV card) = {len(card):d}\ncard={card}'
         self.cards.append((pconv_id, mid, form, exponent_free_convection,
                            free_convection_type, table_id,
-                           chlen, gidin, coord_e, [e1, e2, e3], comment))
+                           chlen, gidin, coord_e, e, comment))
         self.n += 1
         return self.n - 1
 
@@ -1420,7 +1450,8 @@ class PCONV(VectorizedBaseCard):
             characteristic_length[icard] = chleni
             grid_inlet[icard] = gidini
             coord_e[icard] = coord_ei
-            e[icard] = e123i
+            if e123i is not None:
+                e[icard] = e123i
         self._save(pconv_id, material_id, form,
                    exponent_free_convection,
                    free_convection_type,
@@ -1511,16 +1542,16 @@ class PCONV(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
-    #@property
-    #def allowed_materials(self) -> list[Any]:
-        #return [mat for mat in [self.model.mat1] if mat.n > 0]
-
-    #def mass_per_length(self) -> np.ndarray:
-        #return line_mid_mass_per_length(self.material_id, self.nsm, self.A,
-                                        #self.allowed_materials)
-
-    #def area(self) -> np.ndarray:
-        #return self.A
+    # @property
+    # def allowed_materials(self) -> list[Any]:
+    #     return [mat for mat in [self.model.mat1] if mat.n > 0]
+    #
+    # def mass_per_length(self) -> np.ndarray:
+    #     return line_mid_mass_per_length(self.material_id, self.nsm, self.A,
+    #                                     self.allowed_materials)
+    #
+    # def area(self) -> np.ndarray:
+    #     return self.A
 
 
 class CONVM(VectorizedBaseCard):
@@ -1538,6 +1569,7 @@ class CONVM(VectorizedBaseCard):
 
     """
     _id_name = 'element_id'
+
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
         self.n = 0
@@ -1568,7 +1600,7 @@ class CONVM(VectorizedBaseCard):
             0/blank is only allowed when mdot > 0
         mdot : float; default=1.0
             a multiplier for the mass flow rate in case there is no
-            point associated with the CNTRLND field
+            point associated with the CONTROL_NODE field
             required if cntmdot = 0
         comment : str; default=''
             a comment for the card
@@ -1636,7 +1668,7 @@ class CONVM(VectorizedBaseCard):
 
         # mdot : float; default=1.0
         #     a multiplier for the mass flow rate in case there is no
-        #     point associated with the CNTRLND field
+        #     point associated with the CONTROL_NODE field
         #     required if cntmdot = 0
         mdot = np.zeros(ncards, dtype='float64')
 
@@ -1651,7 +1683,7 @@ class CONVM(VectorizedBaseCard):
             element_id[icard] = eid
             pconvm_id[icard] = pconvm
             film_node[icard] = film_nodei
-            #control_node[icard] = cntrlnd
+            #control_node[icard] = control_node
             temp_ambient[icard] = ta
             control_node_mdot[icard] = cntmdot
             mdot[icard] = mdoti
@@ -1730,6 +1762,7 @@ class PCONVM(VectorizedBaseCard):
 
     """
     _id_name = 'pconvm_id'
+
     def clear(self) -> None:
         self.pconvm_id = np.array([], dtype='int32')
         self.n = 0

@@ -26,7 +26,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     for unused_key, card in sorted(model.elements.items()):
         try:
             card._verify(xref)
-        except Exception:
+        except Exception:  # pragma: no cover
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print(repr(traceback.format_exception(exc_type, exc_value,
                                                   exc_traceback)))
@@ -43,6 +43,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     _verify_dict(model.properties, xref)
     _verify_dict(model.properties_mass, xref)
     _verify_dict(model.materials, xref)
+    _verify_dict(model.plotels, xref)
 
     _verify_dict(model.dequations, xref)
     _verify_dict(model.desvars, xref)
@@ -50,6 +51,11 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     _verify_dict(model.dvcrels, xref)
     _verify_dict(model.dvmrels, xref)
     _verify_dict(model.dvprels, xref)
+    _verify_dict(model.caeros, xref)
+    _verify_dict(model.paeros, xref)
+    _verify_dict(model.splines, xref)
+    _verify_dict(model.aesurfs, xref)
+    _verify_dict(model.aesurf, xref)
     _verify_model_dict(model.dresps, model, xref)
     _verify_dict_list(model.dvgrids, xref)
 
@@ -61,6 +67,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     for unused_super_id, superelement in model.superelement_models.items():
         verify_bdf(superelement, xref)
 
+
 def _verify_dict(dict_obj: dict[Any, Any], xref: bool) -> None:
     """helper for ``verify_bdf``"""
     for unused_key, card in sorted(dict_obj.items()):
@@ -69,6 +76,7 @@ def _verify_dict(dict_obj: dict[Any, Any], xref: bool) -> None:
         except Exception:
             print(str(card))
             raise
+
 
 def _verify_model_dict(dict_obj: dict[Any, Any], model: BDF, xref: bool) -> None:
     """helper for ``verify_bdf``"""
@@ -81,6 +89,7 @@ def _verify_model_dict(dict_obj: dict[Any, Any], model: BDF, xref: bool) -> None
             log.error(e)
             #raise
 
+
 def _verify_dict_list(dict_list: dict[Any, list[Any]], xref: bool) -> None:
     """helper for ``verify_bdf``"""
     for unused_key, cards in sorted(dict_list.items()):
@@ -91,12 +100,14 @@ def _verify_dict_list(dict_list: dict[Any, list[Any]], xref: bool) -> None:
                 print(str(card))
                 raise
 
+
 def _print_card(card: Any) -> str:
     """helper for ``_validate_msg``"""
     try:
         return card.write_card(size=8)
     except RuntimeError:
         return ''
+
 
 def _validate_msg(card_obj: Any) -> str:
     """helper for ``_validate_traceback``"""
@@ -106,6 +117,7 @@ def _validate_msg(card_obj: Any) -> str:
     except KeyError:
         msg += '\n' + card_obj.get_stats().rstrip()
     return msg
+
 
 def _validate_traceback(model: BDF, obj, unused_error,
                         ifailed: int, nmax_failed: int) -> tuple[int, Any, Any, Any]:
@@ -133,6 +145,7 @@ def _validate_traceback(model: BDF, obj, unused_error,
         # PY3: raise error from None
         raise
     return ifailed, exc_type, exc_value, exc_traceback
+
 
 def validate_bdf(model: BDF) -> None:
     _validate_dict(model, model.nodes)
@@ -313,6 +326,7 @@ def validate_bdf(model: BDF) -> None:
     for unused_super_id, superelement in model.superelement_models.items():
         validate_bdf(superelement)
 
+
 def _validate_dict_list(model: BDF, objects_dict: dict[Any, Any]) -> None:
     """helper method for validate_bdf"""
     ifailed = 0
@@ -325,12 +339,13 @@ def _validate_dict_list(model: BDF, objects_dict: dict[Any, Any]) -> None:
             #print(obj.rstrip())
             try:
                 obj.validate()
-            except(ValueError, AssertionError, RuntimeError, IndexError) as error:
+            except (ValueError, AssertionError, RuntimeError, IndexError) as error:
                 ifailed, exc_type, exc_value, exc_traceback = _validate_traceback(
                     model, obj, error, ifailed, nmax_failed)
 
         if ifailed:
             raise
+
 
 def _validate_dict(model: BDF, objects: dict[Any, Any]) -> None:
     """helper method for validate_bdf"""
@@ -340,11 +355,12 @@ def _validate_dict(model: BDF, objects: dict[Any, Any]) -> None:
     for unused_id, obj in sorted(objects.items()):
         try:
             obj.validate()
-        except(ValueError, AssertionError, RuntimeError, IndexError) as error:
+        except (ValueError, AssertionError, RuntimeError, IndexError) as error:
             ifailed, exc_type, exc_value, exc_traceback = _validate_traceback(
                 model, obj, error, ifailed, nmax_failed)
     if ifailed:
         raise
+
 
 def _validate_list(model: BDF, objects: list[Any]) -> None:
     """helper method for validate_bdf"""
@@ -354,7 +370,7 @@ def _validate_list(model: BDF, objects: list[Any]) -> None:
     for obj in objects:
         try:
             obj.validate()
-        except(ValueError, AssertionError, RuntimeError) as error:
+        except (ValueError, AssertionError, RuntimeError) as error:
             ifailed, exc_type, exc_value, exc_traceback = _validate_traceback(
                 model, obj, error, ifailed, nmax_failed)
     if ifailed:

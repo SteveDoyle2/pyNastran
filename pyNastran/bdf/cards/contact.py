@@ -412,8 +412,8 @@ class BCBODY(BaseCard):
                 # | ADVANCE | SANGLE | COPTB | | MIDNO |
                 sangle = double_or_blank(card, i+1, 'sangle', default=60.)
                 coptb = integer(card, i+2, 'coptb')
-                user = blank(card, i+3, 'user')
-                min_nod = blank(card, i+4, 'min_nod')
+                blank(card, i+3, 'user')
+                blank(card, i+4, 'min_nod')
                 # “ADVANCE”
                 #     The entries for this continuation line are for advanced options starting with
                 #     MD Nastran R2.
@@ -799,7 +799,12 @@ class BSURFS(BaseCard):
         g3s = [1]
         return BSURFS(bsurfs_id, eids, g1s, g2s, g3s, comment='')
 
-    def __init__(self, bsurfs_id, eids, g1s, g2s, g3s, comment=''):
+    def __init__(self, bsurfs_id: int,
+                 eids: list[int],
+                 g1s: list[int],
+                 g2s: list[int],
+                 g3s: list[int],
+                 comment: str=''):
         if comment:
             self.comment = comment
         #: Identification number of a contact region. See Remarks 2 and 3.
@@ -1843,8 +1848,12 @@ class BGSET(BaseCard):
         exts = [1.]
         return BGSET(glue_id, sids, tids, sdists, exts, comment='', sol=101)
 
-    def __init__(self, glue_id, sids, tids, sdists, exts,
-                 comment='', sol=101):
+    def __init__(self, glue_id: int,
+                 sids: list[int],
+                 tids: list[int],
+                 sdists: list[float],
+                 exts: list[float],
+                 comment: str='', sol: int=101):
         if comment:
             self.comment = comment
         #: GSID Glue set identification number. (Integer > 0)
@@ -1863,7 +1872,7 @@ class BGSET(BaseCard):
         self.exts = exts
 
     @classmethod
-    def add_card(cls, card, comment='', sol=101):
+    def add_card(cls, card: BDFCard, comment: str='', sol: int=101):
         glue_id = integer(card, 1, 'glue_id')
         sids = []
         tids = []

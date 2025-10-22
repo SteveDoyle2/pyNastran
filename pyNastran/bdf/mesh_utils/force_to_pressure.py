@@ -5,7 +5,9 @@ import numpy as np
 from pyNastran.bdf.bdf import read_bdf, BDF, FORCE, PLOAD4
 from pyNastran.utils import PathLike
 
-def force_to_pressure(bdf_filename: str | BDF, bdf_filename_out=None,
+
+def force_to_pressure(bdf_filename: PathLike | BDF,
+                      bdf_filename_out: Optional[PathLike]=None,
                       clear_model: bool=False):
     """converts FORCE cards to PLOAD4s for a shell model"""
     if isinstance(bdf_filename, BDF):
@@ -42,6 +44,7 @@ def force_to_pressure(bdf_filename: str | BDF, bdf_filename_out=None,
         forces[load_id] = defaultdict(float)
         for load in loads:
             if load.type == 'FORCE':
+                scale = load.mag
                 # cid: 0
                 # cid_ref: None
                 # comment: ''
@@ -51,14 +54,13 @@ def force_to_pressure(bdf_filename: str | BDF, bdf_filename_out=None,
                 # node_ref: None
                 # scaled_vector: array([0., 0., 1.])
                 # sid: 1
-                # type: 'FORCE'
+                # type_card: FORCE
                 # xyz: array([0., 0., 1.])
 
                 #loadi = FORCE(sid, node, cid, mag, xyz)
 
                 #if load.node_id not in nids:
                     #continue
-                scale = load.mag
                 node_id = load.node
                 if load.Cid() != 0:  # pragma: no cover
                     cp = load.cid

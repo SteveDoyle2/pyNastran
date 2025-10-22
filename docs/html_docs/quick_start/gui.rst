@@ -156,7 +156,7 @@ Nastran Specific Features
  * Edit Geometry Properties
 
    * SPC/MPC/RBE constraints
-   * CAERO panel, subpanels
+   * CAERO panel & boxes
    * AEFACT control surfaces
    * SPLINE panels/points
    * bar/beam orientation vectors
@@ -495,8 +495,8 @@ aides in creating models.  The CAERO panels are seen when a model is loaded:
 
 .. image:: ../../../pyNastran/gui/images/caero.png
 
-Additionally, by clicking the ``Toggle CAERO Subpanels`` button,
-the subpanels may be seen:
+Additionally, by clicking the ``Toggle CAERO Boxes`` button,
+the boxes may be seen:
 
 .. image:: ../../../pyNastran/gui/images/caero_subpanels.png
 

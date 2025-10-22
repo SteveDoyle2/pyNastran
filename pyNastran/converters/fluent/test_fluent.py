@@ -33,7 +33,8 @@ class TestFluent(unittest.TestCase):
              2      8.91578650948743      1.88831278193532      1.27715047467296
              3      8.91578650948743      1.88831278193532      1.27715047467296
              4      8.91578650948743      1.88831278193532      1.27715047467296""")
-        node_id, xyz = read_vrt(vrt_filename)
+        log = SimpleLogger(level='warning')
+        node_id, xyz = read_vrt(vrt_filename, log)
         assert len(xyz) == 4, xyz
         assert np.array_equal(node_id, [1, 2, 3, 4]), node_id
 
@@ -44,7 +45,8 @@ class TestFluent(unittest.TestCase):
              4000         0         0         0         0         0         0         0
                  1          3          3          3          4
                  1          1          2          3""")
-        (quads, tris), element_ids = read_cell(cell_filename)
+        log = SimpleLogger(level='warning')
+        (quads, tris), element_ids = read_cell(cell_filename, log)
         regions = tris[:, 1]
         assert len(quads) == 0, quads
         assert len(tris) == 1, tris
@@ -58,7 +60,8 @@ class TestFluent(unittest.TestCase):
              4000         0         0         0         0         0         0         0
                  1          3          4         100         4
                  1          1          2          3          4""")
-        (quads, tris), element_ids = read_cell(cell_filename)
+        log = SimpleLogger(level='warning')
+        (quads, tris), element_ids = read_cell(cell_filename, log)
         assert len(quads) == 1, quads
         assert len(tris) == 0, tris
         regions = quads[:, 1]
@@ -93,12 +96,12 @@ class TestFluent(unittest.TestCase):
         #is_loaded = model.read_h5(h5_filename)
         #assert is_loaded is True, h5_filename
 
-        log = SimpleLogger('debug')
+        log = SimpleLogger('warning')
         nastran_to_fluent(nastran_filename, vrt_filename, log=log)
 
-        node_id, xyz = read_vrt(vrt_filename)
+        node_id, xyz = read_vrt(vrt_filename, log)
         assert len(xyz) == 10135, xyz.shape
-        (quads, tris), element_ids = read_cell(cel_filename)
+        (quads, tris), element_ids = read_cell(cel_filename, log)
         element_id, titles, results = read_daten(daten_filename, scale=2.0)
         model = read_fluent(vrt_filename, log=log)
         model.write_fluent(vrt_filename2)

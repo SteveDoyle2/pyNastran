@@ -1342,7 +1342,7 @@ class SPCOFF1(Constraint):
         assert isinstance(self.components, str), 'components=%s\n%s' % (self.components, str(self))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPCOFF1 card from ``BDF.add_card(...)``
 
@@ -1478,7 +1478,7 @@ class SPCADD(ConstraintAdd):
         self.sets.sort()
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPCADD card from ``BDF.add_card(...)``
 
@@ -1605,7 +1605,7 @@ class MPCADD(ConstraintAdd):
         self.sets.sort()
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a MPCADD card from ``BDF.add_card(...)``
 

@@ -10,21 +10,33 @@ def filter_by_region(model: Fluent,
                      regions_to_remove: list[int],
                      regions_to_include: list[int]) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                                              np.ndarray, np.ndarray]:
+    assert len(model.result_element_id) > 0, model.result_element_id
+
     tris = model.tris
     quads = model.quads
     results = model.results
-    assert len(model.result_element_id) > 0, model.result_element_id
+
+    tri_eids0 = tris[:, 0]
+    quad_eids0 = quads[:, 0]
+
+    # we reordered the tris/quads to be continuous to make them easier to add
+    iquad = np.searchsorted(model.result_element_id, quad_eids0)
+    itri = np.searchsorted(model.result_element_id, tri_eids0)
+    quad_results0 = results[iquad, :]
+    tri_results0 = results[itri, :]
+
+    if len(regions_to_include) == 0 and len(regions_to_remove) == 0:
+        element_id = np.unique(np.hstack([quad_eids0, tri_eids0]))
+        return element_id, tris, quads, quad_results0, tri_results0
+
+    is_remove = (len(regions_to_remove) == 0)
+    is_include = (len(regions_to_include) == 0)
+    assert (is_remove and not is_include) or (not is_remove and is_include)
 
     tri_regions = tris[:, 1]
     quad_regions = quads[:, 1]
 
-    # we reordered the tris/quads to be continuous to make them easier to add
-    iquad = np.searchsorted(model.result_element_id, quads[:, 0])
-    itri = np.searchsorted(model.result_element_id, tris[:, 0])
     #-----------------------------
-    is_remove = (len(regions_to_remove) == 0)
-    is_include = (len(regions_to_include) == 0)
-    assert (is_remove and not is_include) or (not is_remove and is_include)
     if regions_to_remove:
         itri_regions = np.logical_and.reduce([(tri_regions != regioni) for regioni in regions_to_remove])
         iquad_regions = np.logical_and.reduce([(quad_regions != regioni) for regioni in regions_to_remove])
@@ -32,15 +44,17 @@ def filter_by_region(model: Fluent,
         itri_regions = np.logical_or.reduce([(tri_regions == regioni) for regioni in regions_to_include])
         iquad_regions = np.logical_or.reduce([(quad_regions == regioni) for regioni in regions_to_include])
 
-    quad_results = results[iquad, :][iquad_regions, :]
-    tri_results = results[itri, :][itri_regions, :]
+    quad_results = quad_results0[iquad_regions, :]
+    tri_results = tri_results0[itri_regions, :]
 
-    tris = tris[itri_regions, :]
-    quads = quads[iquad_regions, :]
-    tri_eids = tris[:, 0]
-    quad_eids = quads[:, 0]
+    tris_out = tris[itri_regions, :]
+    quads_out = quads[iquad_regions, :]
+    tri_eids = tris_out[:, 0]
+    quad_eids = quads_out[:, 0]
     element_id = np.unique(np.hstack([quad_eids, tri_eids]))
-    return element_id, tris, quads, quad_results, tri_results
+
+    assert len(tris_out) == len(tri_results), (len(tris), len(tri_results))
+    return element_id, tris_out, quads_out, quad_results, tri_results
 
 
 def write_daten(daten_filename: PathLike,
@@ -99,7 +113,7 @@ def write_vrt(vrt_filename: PathLike, node_id: str, xyz: np.ndarray) -> None:
             vrt_file.write(fmt % (nid, x, y, z))
     return
 
-def read_vrt(vrt_filename: PathLike) -> tuple[np.ndarray, np.ndarray]:
+def read_vrt(vrt_filename: PathLike, log) -> tuple[np.ndarray, np.ndarray]:
     """
      PROSTAR_VERTEX
      4000         0         0         0         0         0         0         0
@@ -151,8 +165,8 @@ def write_cell(vrt_filename: PathLike, quads: np.ndarray, tris: np.ndarray) -> N
             cel_file.write(quad_fmt % (eid, n1, n2, n3, n4))
     return
 
-def read_cell(cell_filename: PathLike) -> tuple[tuple[np.ndarray, np.ndarray],
-                                                np.ndarray]:
+def read_cell(cell_filename: PathLike, log) -> tuple[tuple[np.ndarray, np.ndarray],
+                                                           np.ndarray]:
     """
     PROSTAR_CELL
      4000         0         0         0         0         0         0         0
@@ -163,7 +177,9 @@ def read_cell(cell_filename: PathLike) -> tuple[tuple[np.ndarray, np.ndarray],
    4175456    2118943    2118954    2118941
 
     """
+    #log.debug(f'reading cell={cell_filename}')
     with open(cell_filename, 'r') as cell_file:
+        # may fail for a file on a disconnected mapped drive (e.g., OneDrive/Sharepoint)
         lines = cell_file.readlines()
 
     element_ids_list = []

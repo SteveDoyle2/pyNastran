@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import annotations
 import os
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -24,7 +24,7 @@ from pyNastran.gui.utils.qt.checks.qlineedit import (
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.menus.results_sidebar import ResultsWindow
 from pyNastran.gui.menus.results_sidebar_utils import (
-    get_cases_from_tree, #build_pruned_tree
+    get_cases_from_tree,  # build_pruned_tree
 )
 
 from pyNastran.gui.menus.legend.write_gif import IS_IMAGEIO
@@ -46,6 +46,8 @@ ANIMATION_PROFILES = [
 IS_TIME_FRINGE = True
 HIDE_WHEN_INACTIVE = False
 IS_RESULTS_SELECTOR = True
+
+
 class AnimationWindow(PyDialog):
     """
     +-------------------+
@@ -247,6 +249,8 @@ class AnimationWindow(PyDialog):
         self.fps_edit = QSpinBox(self)
         self.fps_edit.setRange(1, 60)
         self.fps_edit.setSingleStep(1)
+
+        self._default_fps = int(self._default_fps)
         self.fps_edit.setValue(self._default_fps)
         self.fps_button = QPushButton("Default")
         self.fps_edit.setToolTip("A higher FPS is smoother, but may not play well for large gifs")
@@ -339,6 +343,9 @@ class AnimationWindow(PyDialog):
         #self.min_value_edit.setValue(1)
         self.max_value_button = QPushButton('Default')
 
+        self.animate_in_gui_checkbox = QCheckBox('Animate in GUI?')
+        self.animate_in_gui_checkbox.setChecked(True)
+
         # TODO: enable this (uncomment) ------------------------------------------
         #self.min_value_enable.hide()
         #self.min_value.hide()
@@ -386,7 +393,7 @@ class AnimationWindow(PyDialog):
             self.gif_button.setEnabled(False)
 
         # scale / phase
-        if 0: # pragma: no cover
+        if 0:  # pragma: no cover
             self.animate_scale_radio = QRadioButton('Animate Scale')
             self.animate_phase_radio = QRadioButton('Animate Phase')
             self.animate_time_radio = QRadioButton('Animate Time')
@@ -434,7 +441,7 @@ class AnimationWindow(PyDialog):
             )
 
         self.animation_type = QLabel('Animation Type:')
-        animation_type = {}
+        #animation_type = {}
         #scale_msg = 'Scale\n'
         #phase_msg = 'Phase\n'
         #time_msg = 'Time\n'
@@ -522,7 +529,8 @@ class AnimationWindow(PyDialog):
         self.wipe_button.setEnabled(False)
         #self.wipe_button.hide()
         self.stop_button.setEnabled(False)
-        self.cancel_button = QPushButton('Close')
+        self.close_button = QPushButton('Close')
+        self.cancel_button = self.close_button
 
         #self.set_grid_time(enabled=False)
         #self.set_grid_scale(enabled=self._default_is_scale)
@@ -567,12 +575,11 @@ class AnimationWindow(PyDialog):
         self.animation_type_edit.currentIndexChanged.connect(self.on_animate)
         #self.animate_freq_sweeep_radio
 
-        self.cancel_button.clicked.connect(self.on_cancel)
+        self.close_button.clicked.connect(self.on_close)
 
         self.save_animation_checkbox.clicked.connect(self.on_save_animation)
         self.save_animation_checkbox.setChecked(False)
         self.on_save_animation()
-
 
     def on_time_checkbox_disp(self) -> None:
         is_enabled = self.time_checkbox_disp.isEnabled()
@@ -612,6 +619,7 @@ class AnimationWindow(PyDialog):
             self.delete_images_checkbox.setVisible(enable)
             self.make_gif_checkbox.setVisible(enable)
             self.repeat_checkbox.setVisible(enable)
+            self.animate_in_gui_checkbox.setVisible(enable)
             self.resolution_button.setVisible(enable)
             self.resolution_label.setVisible(enable)
             self.resolution_edit.setVisible(enable)
@@ -626,6 +634,7 @@ class AnimationWindow(PyDialog):
         self.make_images_checkbox.setEnabled(enable)
         self.delete_images_checkbox.setEnabled(enable)
         self.repeat_checkbox.setEnabled(enable)
+        self.animate_in_gui_checkbox.setEnabled(enable)
         self.resolution_button.setEnabled(enable)
         self.resolution_edit.setEnabled(enable)
         if IS_IMAGEIO:
@@ -683,7 +692,8 @@ class AnimationWindow(PyDialog):
             self.set_grid_time(False, 'phase')
         self._animate_type = 'phase'
 
-    def set_grid_scale(self, enabled: bool=True, word: str='') -> None:
+    def set_grid_scale(self, enabled: bool=True,
+                       word: str='') -> None:
         """enables/disables the secondary input"""
         #print('%s-set_grid_scale; enabled = %r' % (word, enabled))
         if HIDE_WHEN_INACTIVE:
@@ -705,7 +715,6 @@ class AnimationWindow(PyDialog):
         self.max_value_enable.setEnabled(enabled)
         self.on_min_value_enable()
         self.on_max_value_enable()
-
 
     def set_grid_time(self, enabled: bool=True, word: str='') -> None:
         """enables/disables the secondary input"""
@@ -944,7 +953,6 @@ class AnimationWindow(PyDialog):
         grid.addWidget(self.fps_button, irow, 2)
         irow += 1
 
-
         grid.addWidget(self.animation_type, irow, 0)
         grid.addWidget(self.animation_type_edit, irow, 1)
         irow += 1
@@ -1024,10 +1032,10 @@ class AnimationWindow(PyDialog):
         self.csv_profile_edit = QLineEdit()
         self.csv_profile_button = QPushButton('Browse')
 
-        if 0:
-            grid_scale.addWidget(self.csv_profile, 1, 0)
-            grid_scale.addWidget(self.csv_profile_edit, 1, 1)
-            grid_scale.addWidget(self.csv_profile_browse_button, 1, 2)
+        # if 0:
+        #     grid_scale.addWidget(self.csv_profile, 1, 0)
+        #     grid_scale.addWidget(self.csv_profile_edit, 1, 1)
+        #     grid_scale.addWidget(self.csv_profile_browse_button, 1, 2)
 
         #box_time = QVBoxLayout()
         # TODO: It's super annoying that the animate time box doesn't
@@ -1068,6 +1076,7 @@ class AnimationWindow(PyDialog):
         grid2.addWidget(self.make_gif_checkbox, irow, 2)
         irow += 1
         grid2.addWidget(self.repeat_checkbox, irow, 0)
+        grid2.addWidget(self.animate_in_gui_checkbox, irow, 1)
         irow += 1
         grid2.addWidget(spacer, irow, 0)
 
@@ -1083,8 +1092,8 @@ class AnimationWindow(PyDialog):
         step_run_box.addWidget(self.stop_button)
         step_run_box.addWidget(self.run_button)
 
-        ok_cancel_box = QHBoxLayout()
-        ok_cancel_box.addWidget(self.cancel_button)
+        ok_close_box = QHBoxLayout()
+        ok_close_box.addWidget(self.close_button)
 
         vbox = QVBoxLayout()
         vbox.addLayout(grid)
@@ -1094,7 +1103,7 @@ class AnimationWindow(PyDialog):
         vbox.addLayout(grid_hbox)
         vbox.addStretch()
         vbox.addLayout(step_run_box)
-        vbox.addLayout(ok_cancel_box)
+        vbox.addLayout(ok_close_box)
 
         if IS_RESULTS_SELECTOR and self.fringe_cases:
             cases = get_cases_from_tree(self.fringe_cases)
@@ -1145,10 +1154,12 @@ class AnimationWindow(PyDialog):
         #self.gui.log.warning(f'passed = {passed}')
         if passed:
             try:
-                self._make_gif(validate_out, istep=self.istep)
+                self._make_gif(validate_out, istep=self.istep,
+                               stop_animation=False)
                 self.istep += 1
             except IndexError:
-                self._make_gif(validate_out, istep=0)
+                self._make_gif(validate_out, istep=0,
+                               stop_animation=False)
                 self.istep += 1
             self.wipe_button.setEnabled(True)
 
@@ -1172,7 +1183,6 @@ class AnimationWindow(PyDialog):
         self.wipe_button.setEnabled(True)
         self.stop_button.setEnabled(False)
 
-
     def on_run(self) -> bool:
         """click the Run button"""
         self.istep = 0
@@ -1181,7 +1191,7 @@ class AnimationWindow(PyDialog):
 
         passed, validate_out = self.on_validate()
         if passed:
-            self._make_gif(validate_out, istep=None)
+            self._make_gif(validate_out, istep=None, stop_animation=False)
         return passed
 
     def _make_gif(self, validate_out, istep=None,
@@ -1192,27 +1202,14 @@ class AnimationWindow(PyDialog):
          min_value, max_value) = validate_out
         fps = int(fps)
 
-        gif_filename = None
-        if not stop_animation and not animate_in_gui and gifbase is not None:
-            if gifbase.lower().endswith('.gif'):
-                gifbase = gifbase[:-4]
-            gif_filename = os.path.join(output_dir, gifbase + '.gif')
-
+        gif_filename = get_gif_filename(
+            gifbase, output_dir, stop_animation, animate_in_gui)
         #animate_scale = self.animate_scale_radio.isChecked()
         #animate_phase = self.animate_phase_radio.isChecked()
         #animate_time = self.animate_time_radio.isChecked()
 
-        animate_scale = False
-        animate_phase = False
-        animate_time = False
-        if self._animate_type == 'scale':
-            animate_scale = True
-        elif self._animate_type == 'phase':
-            animate_phase = True
-        elif self._animate_type == 'time':
-            animate_time = True
-        else:  # pragma: no cover
-            raise NotImplementedError(self._animate_type)
+        animate_scale, animate_phase, animate_time = get_animation_flags(
+            self._animate_type)
 
         if animate_time:
             animate_fringe = self.time_checkbox_fringe.isChecked()
@@ -1230,9 +1227,10 @@ class AnimationWindow(PyDialog):
         if not (animate_disp or animate_vector):
             scale = 1.0  # faking it because scaling doesn't matter
 
-        make_images = self.make_images_checkbox.isChecked()
-        delete_images = self.delete_images_checkbox.isChecked()
-        make_gif = self.make_gif_checkbox.isChecked()
+        is_gif = self.make_gif_checkbox.isEnabled()
+        make_images = is_gif and self.make_images_checkbox.isChecked()
+        delete_images = is_gif and self.delete_images_checkbox.isChecked()
+        make_gif = is_gif and self.make_gif_checkbox.isChecked()
         animation_profile = get_combo_box_text(self.animation_profile_edit)
 
         icase_fringe_start = icase_fringe_end = icase_fringe_delta = None
@@ -1296,9 +1294,10 @@ class AnimationWindow(PyDialog):
         return min_value, max_value
 
     def on_validate(self, wipe: bool=False) -> tuple[bool,
-            tuple[int, int, int,
+            tuple[int, int, Optional[int],
                   float, float, int, bool,
-                  int, str, str, float, float]]:
+                  int, str, str,
+                  Optional[float], Optional[float], ]]:
         """checks to see if the input is valid"""
         # requires no special validation
         icase_fringe, flag0 = check_int(self.icase_fringe_edit)
@@ -1322,17 +1321,20 @@ class AnimationWindow(PyDialog):
         if self.max_value_edit.isEnabled():
             max_value, flag5 = check_float(self.max_value_edit)
 
+        is_gif_enabled = self.animate_in_gui_checkbox.isEnabled()
         if wipe:
             animate_in_gui = False
             scale = 0.
             flag1 = True
         else:
-            animate_in_gui = self.animate_in_gui_checkbox.isChecked()
+            animate_in_gui = True
+            if is_gif_enabled:
+                animate_in_gui = self.animate_in_gui_checkbox.isChecked()
             if scale == 0.0:
                 self.scale_edit.setStyleSheet(QLINEEDIT_ERROR)
                 flag1 = False
 
-        if animate_in_gui or wipe:
+        if wipe or not is_gif_enabled:
             passed = all([flag0, flag1, flag2, flag3, flag4, flag5])
             magnify, output_dir, gifbase = None, None, None
         else:
@@ -1370,25 +1372,56 @@ class AnimationWindow(PyDialog):
             self.settings.animation_time = time
             self.settings.animation_frame_rate = fps
 
-    def on_cancel(self) -> None:
+    def on_close(self) -> None:
         """click the Cancel button"""
         self._set_settings()
         self.on_stop()
         self.out_data['close'] = True
         self.close()
 
+
 def enable_disable_objects(qt_objects: list[QSpinBox],
                            enable: bool=True) -> None:
     for obj in qt_objects:
         obj.setEnabled(enable)
 
-def main(): # pragma: no cover
+
+def get_gif_filename(gif_base: Optional[str],
+                     output_dir: str,
+                     stop_animation: bool,
+                     animate_in_gui: bool) -> Optional[str]:
+    gif_filename = None
+    #if gif_base is not None:  # and not animate_in_gui and not stop_animation
+    if gif_base is not None and not stop_animation:
+        if gif_base.lower().endswith('.gif'):
+            gif_base = gif_base[:-4]
+        if gif_base == '':
+            return gif_filename
+        gif_filename = os.path.join(output_dir, gif_base + '.gif')
+    return gif_filename
+
+
+def get_animation_flags(animate_type: str) -> tuple[bool, bool, bool]:
+    animate_scale = False
+    animate_phase = False
+    animate_time = False
+    if animate_type == 'scale':
+        animate_scale = True
+    elif animate_type == 'phase':
+        animate_phase = True
+    elif animate_type == 'time':
+        animate_time = True
+    else:  # pragma: no cover
+        raise NotImplementedError(animate_type)
+    return animate_scale, animate_phase, animate_time
+
+
+def main():  # pragma: no cover
     """test example for AnimationWindow"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-
 
     import sys
     # Someone is launching this directly
@@ -1432,17 +1465,17 @@ def main(): # pragma: no cover
     data2['phase'] = 0.  # uncomment for phase
 
     form = [
-        [u'Geometry', None, [
-            (u'NodeID', 0, []),
-            (u'ElementID', 1, []),
-            (u'PropertyID', 2, []),
-            (u'MaterialID', 3, []),
-            (u'E', 4, []),
-            (u'Element Checks', None, [
-                (u'ElementDim', 5, []),
-                (u'Min Edge Length', 6, []),
-                (u'Min Interior Angle', 7, []),
-                (u'Max Interior Angle', 8, [])],
+        ['Geometry', None, [
+            ('NodeID', 0, []),
+            ('ElementID', 1, []),
+            ('PropertyID', 2, []),
+            ('MaterialID', 3, []),
+            ('E', 4, []),
+            ('Element Checks', None, [
+                ('ElementDim', 5, []),
+                ('Min Edge Length', 6, []),
+                ('Min Interior Angle', 7, []),
+                ('Max Interior Angle', 8, [])],
             ),],
         ],
     ]

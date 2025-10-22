@@ -136,6 +136,55 @@ class EDT:
 
         }
     def _read_aeforce(self, data: bytes, n: int) -> int:
+        op2 = self.op2
+        card_name = 'AEFORCE'
+        card_obj = AEFORCE
+        methods = {
+            44: self._read_aeforce_nx_44,
+            # 52: self._read_aeforce_msc_52,
+        }
+        try:
+            n = op2.reader_geom2._read_double_card(
+                card_name, card_obj,
+                op2._add_methods.add_acmodl_object,
+                methods, data, n)
+        except DoubleCardError:
+            raise
+        return n
+
+    def _read_aeforce_nx_44(self, data: bytes, n: int) -> int:
+        """Word Name Type Description
+        1 MACH     RS
+        2 SYMXZ(2) CHAR4
+        4 SYMXY(2) CHAR4
+        6 UXID     I
+        7 MESH(2)  CHAR4
+        9 FORCE    I
+        10 DMIK(2) CHAR4
+        """
+        op2 = self.op2
+        ntotal = 44 * self.factor  # 4*11
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert self.factor == 1, self.factor
+        structi = Struct(op2._endian + b'f 8s 8s i 8s i 8s')
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+
+            mach, sym_xz_bytes, sym_xy_bytes, ux_id, mesh_bytes, force, dmik_bytes = out
+            sym_xz = reshape_bytes_block_size(sym_xz_bytes, size=self.size)
+            sym_xy = reshape_bytes_block_size(sym_xy_bytes, size=self.size)
+            mesh = reshape_bytes_block_size(mesh_bytes, size=self.size)
+            dmik = reshape_bytes_block_size(dmik_bytes, size=self.size)
+
+            aeforce = op2.add_aeforce(mach, sym_xz, sym_xy, ux_id, mesh, force, dmik)
+            str(aeforce)
+            n += ntotal
+        return n
+
+    def _read_aeforce_msc_52(self, data: bytes, n: int) -> int:
         """Word Name Type Description
         1 MACH     RS
         2 SYMXZ(2) CHAR4
@@ -147,7 +196,7 @@ class EDT:
         12 PERQ(2) CHAR4
         """
         op2 = self.op2
-        ntotal = 52 * self.factor # 4*13
+        ntotal = 52 * self.factor  # 4*13
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
@@ -652,9 +701,9 @@ class EDT:
         data  = (5001, 'PLOAD   ', 1.0, 'INTERCPT', 0.0, -1, -1)
         """
         op2 = self.op2
-        ntotal1 = 4 * self.factor # 4*1
-        ntotal_end = 8 * self.factor # 4*2
-        ntotal2 = 12 * self.factor # 4*3
+        ntotal1 = 4 * self.factor  # 4*1
+        ntotal_end = 8 * self.factor  # 4*2
+        ntotal2 = 12 * self.factor  # 4*3
         #ndatai = len(data) - n
         #ncards = ndatai // ntotal
         #assert ndatai % ntotal == 0

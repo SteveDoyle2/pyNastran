@@ -37,7 +37,7 @@ AUTODESK_VERSIONS = [
 
 
 def parse_nastran_version(data: bytes, version: bytes, encoding: bytes,
-                           log: SimpleLogger) -> tuple[str, str]:
+                          log: SimpleLogger) -> tuple[str, str]:
     """parses a Nastran version string"""
     version_str = ''
     if len(data) == 32:

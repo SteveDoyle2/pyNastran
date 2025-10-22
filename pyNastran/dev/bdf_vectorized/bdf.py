@@ -13,7 +13,8 @@ from collections import defaultdict
 from typing import Optional
 
 import numpy as np
-from cpylog import SimpleLogger, get_logger2, __version__ as CPYLOG_VERSION
+from cpylog import SimpleLogger, get_logger, __version__ as CPYLOG_VERSION
+assert CPYLOG_VERSION >= '1.6.0', CPYLOG_VERSION
 
 from pyNastran.utils import object_attributes, check_path, PathLike
 from pyNastran.bdf.bdf_interface.utils import (
@@ -258,8 +259,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         # (multiple BDF passes among other things)
         self._fast_add = True
 
-        log_args = {} if CPYLOG_VERSION <= '1.5.0' else {'nlevels': 2}
-        self.log = get_logger2(log=log, debug=debug, **log_args)
+        self.log = get_logger(log=log, level=debug, **log_args)
 
         #: list of all read in cards - useful in determining if entire BDF
         #: was read & really useful in debugging
@@ -428,7 +428,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         state = self.__dict__.copy()
         # Remove the unpicklable entries.
         #del state['spcObject'], state['mpcObject'],
-        del state['_card_parser'], state['_card_parser_b'], state['log']
+        del state['_card_parser'], state['log']
         return state
 
     def save(self, obj_filename='model.obj', unxref=True):
@@ -477,7 +477,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
-            '_card_parser', '_card_parser_b',
+            '_card_parser',
         ]
         for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
             if key.startswith('__') and key.endswith('__'):
@@ -921,7 +921,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
          bulk_data_lines, bulk_data_ilines,
          additional_deck_lines, additional_deck_ilines) = out
         self._set_pybdf_attributes(obj)
-
 
         self.case_control_lines = case_control_lines
         self.executive_control_lines = executive_control_lines

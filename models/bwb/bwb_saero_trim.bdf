@@ -22,11 +22,13 @@ PARAM,POST,-1
 PLOTEL,2,2356,1002
 PLOTEL3,10,2356,7996,20032
 PLOTEL4,20,2356,7996,20032,10342
-AEROS   1       1       131.1   2556.4  734000.01       0       
+$       acsid   rcsid   chord   bref    sref    symxz   symxy
+AEROS   1       1       131.1   2556.4  734000. 1       0       
 AESTAT  500     ANGLEA  
 AESTAT  501     PITCH   
 AESTAT  502     URDD3   
 AESTAT  503     URDD5   
+$       id      mach    q
 TRIM    1       0.789   1.5     PITCH   0.0     URDD3   2.5     
         URDD5   0.0
 INCLUDE 'bwb_geom.blk'

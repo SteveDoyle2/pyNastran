@@ -30,7 +30,7 @@ Nastran
 
  - CAERO panels
    - CAERO panel actor
-   - CAERO subpanel actor
+   - CAERO aerobox actor
    - AEFACT flap actor
    - SPLINE actor
    - SPLINE points actor

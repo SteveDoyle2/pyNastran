@@ -336,12 +336,12 @@ def _save_dict_list_cards(old_model: BDF, new_model: BDF,
             keys = list(set(list(old_cards.keys())).union(set(list(new_cards.keys()))))
             for key in keys:
                 if key not in old_cards:
-                    for card in new_cards[key]:
-                        added_group.append(card)
+                    for cardi in new_cards[key]:
+                        added_group.append(cardi)
                     continue
                 if key not in new_cards:
-                    for card in old_cards[key]:
-                        removed_group.append(card)
+                    for cardi in old_cards[key]:
+                        removed_group.append(cardi)
                     continue
                 ## TODO: haven't checked for inconsistent lengths
                 ##       (e.g., duplicate FORCE cards)

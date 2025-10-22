@@ -1,8 +1,8 @@
 import unittest
 from io import StringIO
 
-from cpylog import get_logger
-from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, CDAMP1, read_bdf#, get_logger2
+from cpylog import SimpleLogger, get_logger
+from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, CDAMP1, read_bdf
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.test.test_shells import (
     make_dvprel_optimization, make_dvcrel_optimization,
@@ -254,6 +254,52 @@ class TestDampers(unittest.TestCase):
 
     def test_pbusht(self):
         """tests CBUSH, PBUSH, PBUSHT"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, mode='msc')
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [0., 0., 0.])
+
+        eid = 8
+        pid = 8
+        k = [1.0]
+        b = [2.0]
+        ge = [0.01]
+        nids = [10, 11]
+        x = [1., 0., 0.]
+        g0 = None
+        unused_cbush = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
+                                       ocid=-1, si=None, comment='cbush')
+        pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
+                                comment='pbush')
+        names = [
+            'K1', 'K2', 'K3', 'K4', 'K5', 'K6',
+            'B1', 'B2', 'B3', 'B4', 'B5', 'B6',
+            'GE1', 'GE2', 'GE3', 'GE4', 'GE5', 'GE6',
+            'SA', 'ST', 'EA', 'ET',
+            #'MASS'  # M or MASS
+        ]
+        for name in names:
+            pbush.update_by_pname_fid(name, 3.14)
+
+        k_tables = [2]
+        b_tables = [2]
+        ge_tables = [2]
+        kn_tables = [2]
+        pbushta = model.add_pbusht(pid, k_tables, b_tables, ge_tables, kn_tables,
+                                   comment='pbusht')
+        pbushtk = model.add_pbusht(pid+1, k_tables=k_tables, comment='pbusht')
+        pbushtb = model.add_pbusht(pid+2, b_tables=b_tables, comment='pbusht')
+        pbushta.raw_fields()
+        pbushtk.raw_fields()
+        pbushtb.raw_fields()
+        model.validate()
+        model._verify_bdf()
+        model.cross_reference()
+        model._verify_bdf()
+        save_load_deck(model, xref='standard', punch=True)
+
+    def test_pbusht_optistruct(self):
+        """tests CBUSH, PBUSH, PBUSHT"""
         model = BDF(debug=False, log=None, mode='msc')
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(11, [0., 0., 0.])
@@ -268,23 +314,31 @@ class TestDampers(unittest.TestCase):
         g0 = None
         unused_cbush = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
                                        ocid=-1, si=None, comment='cbush')
-        unused_pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
-                                       comment='pbush')
+        pbush = model.add_pbush_optistruct(
+            pid, k, b, ge, mass=None,
+            comment='pbush')
 
-        k_tables = [2]
-        b_tables = [2]
-        ge_tables = [2]
-        kn_tables = [2]
-        pbusht = model.add_pbusht(pid, k_tables, b_tables, ge_tables, kn_tables,
-                                  comment='pbusht')
-        pbusht = model.add_pbusht(pid+1, k_tables, comment='pbusht')
-        pbusht.raw_fields()
+        # k_tables = [2]
+        # b_tables = [2]
+        # ge_tables = [2]
+        # kn_tables = [2]
+        # pbushta = model.add_pbusht(pid, k_tables, b_tables, ge_tables, kn_tables,
+        #                            comment='pbusht')
+        # pbushtk = model.add_pbusht(pid+1, k_tables=k_tables, comment='pbusht')
+        # pbushtb = model.add_pbusht(pid+2, b_tables=b_tables, comment='pbusht')
+        # pbushta.raw_fields()
+        # pbushtk.raw_fields()
+        # pbushtb.raw_fields()
+        pbush.raw_fields()
+        pbush.write_card(size=8, is_double=False)
+        pbush.write_card(size=16, is_double=False)
         model.validate()
         model._verify_bdf()
         model.cross_reference()
         model._verify_bdf()
-        save_load_deck(model, xref='standard', punch=True)
-
+        save_load_deck(
+            model, xref='standard', punch=True,
+            run_convert=False, run_op2_writer=False)
 
     def test_pdamp(self):
         """PDAMP"""

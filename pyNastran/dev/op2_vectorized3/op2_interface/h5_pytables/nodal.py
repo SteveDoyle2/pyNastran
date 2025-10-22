@@ -344,7 +344,6 @@ def load_eigenvector_complex(result_name: str,
             model.subcase_key[isubcase].append(isubcase)
             getattr(model, result_name)[isubcase] = disp
             #model.displacements[isubcase] = disp
-
     return iresult
 
 def _get_data_by_group_node(basename: str,

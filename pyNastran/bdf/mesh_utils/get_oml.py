@@ -11,7 +11,6 @@ import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
-#from pyNastran.bdf.bdf_interface.dev_utils import get_free_edges
 
 
 def get_oml_eids(bdf_filename: str | BDF | PurePath | StringIO,

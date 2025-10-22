@@ -62,8 +62,9 @@ else:
     # only for release; 1.4.0
     #__version__ = __version_release__
     # 1.4.0+dev.0eccfa918
+    # __version__ = f'{__version_release__}'  # release version
+    # year, month, day = ('2025', '9', 'xx')  # release version
     __version__ = f'{__version_release__}+{revision}'
-
     months = {
         '1': 'JANUARY', '2': 'FEBRUARY', '3': 'MARCH',
         '4': 'APRIL', '5': 'MAY', '6': 'JUNE',
@@ -95,3 +96,15 @@ __issue__ = 'https://github.com/SteveDoyle2/pyNastran/issues'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'
 
 is_release = True  ## True=turns on skipping of tables that aren't supported
+
+# separarate table_passer crasher; previously controlled by is_release
+# TODO: currently no warn option
+stop_on_op2_table_passer = False
+
+# stop takes priority; previously controlled by is_release
+# a missed table refers to the not_implemented_error_or_skip method
+stop_on_op2_missed_table = False
+
+## True=turns on skipping of tables that aren't supported
+# a missed table refers to the not_implemented_error_or_skip method
+warn_on_op2_missed_table = True

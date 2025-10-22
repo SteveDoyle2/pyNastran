@@ -224,6 +224,7 @@ def set_caero_grid(alt_grids, ncaeros_points: int, model: BDF):
     max_cpoints = []
     min_cpoints = []
 
+    quad_type = 9
     zfighting_offset = 0.0001
     caero_grid = alt_grids['caero']
     j = 0
@@ -257,7 +258,7 @@ def set_caero_grid(alt_grids, ncaeros_points: int, model: BDF):
             #points.InsertPoint(j + 1, *cpoints[1])
             #points.InsertPoint(j + 2, *cpoints[2])
             #points.InsertPoint(j + 3, *cpoints[3])
-            caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            caero_grid.InsertNextCell(quad_type, elem.GetPointIds())
             j += 4
         elif element.type in ('CAERO2', 'BODY7'):
             # slender body
@@ -305,15 +306,20 @@ def set_caero_grid(alt_grids, ncaeros_points: int, model: BDF):
                 #max_cpoints.append(np.array(cpoints).max(axis=0))
                 #min_cpoints.append(np.array(cpoints).min(axis=0))
 
-                caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                caero_grid.InsertNextCell(quad_type, elem.GetPointIds())
                 j += 4
         else:
             log.info("skipping %s" % element.type)
 
     if ncaeros_points and len(max_cpoints):
-        log.info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
-        log.info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
-
+        amax = np.vstack(max_cpoints).max(axis=0)
+        amin = np.vstack(min_cpoints).min(axis=0)
+        dxyz = amin - amax
+        gui.log_info(
+            f'CAERO.max  = {amax}\n'
+            f'CAERO.min  = {amin}\n'
+            f'CAERO.dxyz = {dxyz}'
+        )
 
     nodes = np.array(points, dtype='float32')
     vtk_points = numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1)

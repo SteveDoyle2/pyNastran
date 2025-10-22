@@ -46,12 +46,13 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup the junk output files (log, f04, plt)')
     parser.add_argument('-r', '--recursive', action='store_true', help='recursively search for directories')
     parser.add_argument('--skip', nargs='+', help='dont process specific files')
-    parser.add_argument('-a', '--all', help='dont skip files that have an op2')
+    parser.add_argument('-a', '--all', action='store_true', help='dont skip files that have an op2')
+    #parser.add_argument('--nthreads', default=1, help='set the number of threads; mem/parallel are per job (default=1)')
     parser.add_argument('--args', help='additional arguments')
 
     file_group = parser.add_mutually_exclusive_group(required=False)
     file_group.add_argument('--infile', help='run only files listed in the file; overwrites bdf_dirname_filename')
-    file_group.add_argument('--outfile', help='skip run the jobs')
+    file_group.add_argument('--outfile', help='write the files listed to be run')
 
     parser.add_argument('--test', action='store_false', help='skip run the jobs')
     parser.add_argument('--debug', action='store_true', help='more debugging')
@@ -67,7 +68,7 @@ def cmd_line_run_jobs(argv=None, quiet: bool=False) -> int:
     recursive = args.recursive
     debug = args.debug
     #print(args)
-    skip_files = args.skip
+    skip_files = args.skip if args.skip else []
     nastran_args = args.args
     process_all = args.all
     if nastran_args is None or len(nastran_args) == 0:
@@ -450,7 +451,7 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
         eta = new.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
         eta_next = nexti.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
         all_call_args.append(call_args)
-    log.info('done')
+    log.info(f'done at {now.strftime("%Y-%m-%d %I:%M %p")}')
     return nfiles, all_call_args
 
 

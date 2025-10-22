@@ -28,7 +28,7 @@ from typing import (
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
-from cpylog import get_logger2
+from cpylog import get_logger
 
 from pyNastran.utils import object_attributes, check_path, PathLike
 from pyNastran.utils.numpy_utils import (
@@ -178,8 +178,8 @@ from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, UnsupportedCard, DisabledCardError,
                                   SuperelementFlagError, ReplicationError)
 from pyNastran.bdf.bdf_interface.pybdf import (
-    BDFInputPy, _clean_comment, _clean_comment_bulk,
-    add_superelements_from_deck_lines)
+    BDFInputPy, _clean_comment, _clean_comment_bulk, _check_for_spaces,
+    add_superelements_from_deck_lines,)
 
 #from .bdf_interface.add_card import CARD_MAP
 if TYPE_CHECKING:  # pragma: no cover
@@ -535,12 +535,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             valid_modes = {'msc', 'nx', 'mystran', 'zona'}
 
         """
-        self.log = get_logger2(log=log, debug=debug)
+        self.log = get_logger(log=log, level=debug)
         super().__init__()
         #AddCards.__init__(self)
         #WriteMesh.__init__(self)
         #BDFAttributes.__init__(self)
-        assert debug in [True, False, None], f'debug={debug!r}'
+        assert isinstance(debug, str) or debug in [True, False, None], f'debug={debug!r}'
         self.echo = False
         self.read_includes = True
         self._remove_disabled_cards = False
@@ -986,8 +986,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         state = self.__dict__.copy()
         # Remove the unpicklable entries.
         del state['_card_parser'], state['log']
-        if hasattr(self, '_card_parser_b'):
-            del state['_card_parser_b']
         if hasattr(self, '_card_parser_prepare'):
             del state['_card_parser_prepare']
         return state
@@ -1107,7 +1105,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'dmig', 'dmij', 'dmik', 'dmiji', 'dti', 'dmi',
 
             'point_ids', 'subcases',
-            '_card_parser', '_card_parser_b', '_card_parser_prepare',
+            '_card_parser', '_card_parser_prepare',
             'wtmass',
         ]
         for key in object_attributes(self, mode='all', keys_to_skip=keys_to_skip):
@@ -4749,7 +4747,7 @@ def _echo_card(card, card_obj):
         else:
             print(print_card_16(card_obj).rstrip())
 
-def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=True, punch: bool=False,
+def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True, xref: bool=True, punch: bool=False,
              save_file_structure: bool=False,
              skip_cards: Optional[list[str]]=None,
              read_cards: Optional[list[str]]=None,

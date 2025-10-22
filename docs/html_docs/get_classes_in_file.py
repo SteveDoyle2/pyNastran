@@ -1,7 +1,7 @@
 from __future__ import print_function, unicode_literals
 import os
 from io import open
-from pyNastran.utils.log import get_logger2
+from cpylog import get_logger
 import shutil
 
 IGNORE_DIRS = ['src', 'dmap', 'solver', '__pycache__',

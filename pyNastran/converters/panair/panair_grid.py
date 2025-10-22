@@ -14,8 +14,13 @@ from pyNastran.converters.panair.panair_grid_patch import (
     PanairPatch, PanairWakePatch, print_float)
 from pyNastran.converters.panair.assign_type import (
     integer, double, integer_or_blank, double_or_blank, fortran_value)
-from cpylog import get_logger2
 from pyNastran.utils import check_path
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
+
 
 #from pyNastran.utils import list_print
 
@@ -105,7 +110,7 @@ class PanairGrid:
         self.symmetry_section = ''
 
         self.msg = ''
-        self.log = get_logger2(log, debug=debug)
+        self.log = get_logger(log, debug)
 
     def write_plot3d(self, p3dname, is_binary=False, is_iblank=False):
         assert not is_binary, is_binary
@@ -286,17 +291,19 @@ class PanairGrid:
 
         return points
 
-    def add_wake_patch(self, network_name: str, options, xyz: np.ndarray) -> None:
+    def add_wake_patch(self, network_name: str, options, xyz: np.ndarray) -> PanairWakePatch:
         patch = PanairWakePatch(self.nnetworks, network_name, options, xyz, self.log)
         self.msg += patch.process()
         self.patches[patch.inetwork] = patch  # deepcopy?
         self.nnetworks += 1
+        return patch
 
-    def add_patch(self, network_name: str, kt: int, cp_norm: int, xyz: np.ndarray) -> None:
+    def add_patch(self, network_name: str, kt: int, cp_norm: int, xyz: np.ndarray) -> PanairPatch:
         patch = PanairPatch(self.nnetworks, network_name, kt, cp_norm, xyz, self.log)
         self.msg += patch.process()
         self.patches[patch.inetwork] = patch  # deepcopy?
         self.nnetworks += 1
+        return patch
 
     def find_patch_by_name(self, network_name):
         names = []
@@ -699,6 +706,7 @@ class PanairGrid:
             options = [kt, cp_norm, matchw, trailed_panel, edge_number, xwake,
                        twake]
             patch = self.add_wake_patch(network_name, options, xyz)
+            del patch
             self.log.info('----------------------------')
             n += 1
         return True

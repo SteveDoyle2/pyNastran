@@ -1,5 +1,6 @@
 from pyNastran.bdf.bdf import BDF
 
+
 def remap_cards(model: BDF,
                 cross_reference: bool=True,
                 remap_nodes: bool=True,
@@ -51,6 +52,7 @@ def remap_cards(model: BDF,
     if cross_reference:
         model.cross_reference()
 
+
 def delete_properties(bdf_model: BDF, property_types_to_save=None):
     """early version of way to delete specific property cards"""
     pids_to_delete = set()
@@ -62,6 +64,7 @@ def delete_properties(bdf_model: BDF, property_types_to_save=None):
                 bdf_model._type_to_id_map[ptype].remove(pid)
     for pid in pids_to_delete:
         del bdf_model.properties[pid]
+
 
 def delete_elements(bdf_model: BDF, element_types_to_save=None):
     """early version of way to delete specific element cards"""

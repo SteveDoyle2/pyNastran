@@ -88,8 +88,7 @@ def get_inertia_rectangular(sections):
     return A, Ixx, Iyy, Ixy
 
 
-def _IAreaL(prop, dim):
-    # type: (Any, list[float]) -> tuple[float, float, float, float]
+def _IAreaL(prop: Any, dim: list[float]) -> tuple[float, float, float, float]:
     beam_type = prop.beam_type
     if beam_type == 'ROD':
         A, I1, I2, I12 = rod_section(prop.type, prop.beam_type, dim, prop)
@@ -1285,13 +1284,14 @@ class PBAR(LineProperty):
 
         i12 = double_or_blank(card, 19, 'I12', default=0.0)
 
+        k1 = None
+        k2 = None
         if A == 0.0:
-            k1 = blank(card, 17, 'K1')
-            k2 = blank(card, 18, 'K2')
+            blank(card, 17, 'K1')
+            blank(card, 18, 'K2')
         elif i12 != 0.0:
             # K1 / K2 are ignored
-            k1 = None
-            k2 = None
+            pass
         else:
             #: default=infinite; assume 1e8
             k1 = double_or_blank(card, 17, 'K1', default=1e8)
@@ -1336,13 +1336,14 @@ class PBAR(LineProperty):
 
         i12 = force_double_or_blank(card, 19, 'I12', default=0.0)
 
+        k1 = None
+        k2 = None
         if A == 0.0:
-            k1 = blank(card, 17, 'K1')
-            k2 = blank(card, 18, 'K2')
+            blank(card, 17, 'K1')
+            blank(card, 18, 'K2')
         elif i12 != 0.0:
             # K1 / K2 are ignored
-            k1 = None
-            k2 = None
+            pass
         else:
             #: default=infinite; assume 1e8
             k1 = force_double_or_blank(card, 17, 'K1', default=1e8)
@@ -2251,7 +2252,7 @@ class PBRSECT(LineProperty):
             assert len(self.ts) >= 0, 'form=%s ts=%s' % (self.form, self.ts)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBRSECT card from ``BDF.add_card(...)``
 

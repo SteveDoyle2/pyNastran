@@ -35,7 +35,7 @@ from pyNastran.bdf.bdf_interface.subcase.cards import (
     #SURFACE, VOLUME, CSCALE,
     #EXTSEOUT,
     WEIGHTCHECK, GROUNDCHECK, DSAPRT,
-    MODCON, SET, SETMC, #AXISYMMETRIC,
+    MODCON, SET, SETMC,  # AXISYMMETRIC,
     INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
     split_by_mixed_commas_parentheses,
 )
@@ -43,8 +43,9 @@ from pyNastran.bdf.bdf_interface.subcase.cards import (
 from pyNastran.bdf.bdf_interface.subcase.cards_str import STR_CARD_DICT, STR_CARD_NAMES
 from pyNastran.bdf.bdf_interface.subcase.cards_int import INT_CARD_DICT, INT_CARD_NAMES
 from pyNastran.bdf.bdf_interface.subcase.cards_check import CHECK_CARD_DICT, CHECK_CARD_NAMES
-
 from pyNastran.utils import object_attributes
+
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
@@ -62,13 +63,17 @@ class CaseControlDeck:
         del state['log']
         return state
 
-    def __init__(self, lines: list[str], log: Optional[Any]=None) -> None:
+    def __init__(self, lines: list[str],
+                 allow_tabs: bool=True,
+                 log: Optional[Any]=None) -> None:
         """
         Parameters
         ----------
         lines : list[str]
             list of lines that represent the case control deck
             ending with BEGIN BULK
+        allow_tabs : bool; default=True
+            allows for disabling tab support
         log : log()
             a :mod: `logging` object
 
@@ -76,36 +81,39 @@ class CaseControlDeck:
         self.use_card_dict = True
 
         # pulls the logger from the BDF object
-        self.log = get_logger(log=log, level="debug")
+        self.log = get_logger(log, "debug")
         self.debug = False
 
+        self.allow_tabs = allow_tabs
+        assert allow_tabs is False
+
         self.sol_200_map = {
-            'STATICS' : 101,
-            'STATIC' : 101,
+            'STATICS': 101,
+            'STATIC': 101,
 
-            'MODES' : 103,
-            'MODE' : 103,
+            'MODES': 103,
+            'MODE': 103,
 
-            'BUCK' : 105,
-            'BUCKLING' : 105,
+            'BUCK': 105,
+            'BUCKLING': 105,
 
-            'DFREQ' : 108,
-            'MFREQ' : 111,
+            'DFREQ': 108,
+            'MFREQ': 111,
             'MFREQI': 111,
-            'SAERO' : 144,
+            'SAERO': 144,
 
-            'FLUTTER' : 145,
-            'FLUT' : 145,
+            'FLUTTER': 145,
+            'FLUT': 145,
 
-            'DIVERGE' : 144,
-            'DIVERG' : 145,
+            'DIVERGE': 144,
+            'DIVERG': 145,
 
             # 'HEAT' : ,
             # 'STRUCTURE' : ,
-            'NLSTATICS' : 400,
-            'LNSTATICS' : 400,
-            'MTRAN' : 112,
-            'DCEIG' : 107,
+            'NLSTATICS': 400,
+            'LNSTATICS': 400,
+            'MTRAN': 112,
+            'DCEIG': 107,
         }
         # 'HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
         # 'MTRAN', 'BUCK', 'MCEIG', 'DCEIG', 'SAERO', 'NLSTATIC', 'NLSTAT',
@@ -116,7 +124,7 @@ class CaseControlDeck:
         self.reject_lines: list[str] = []
         self.begin_bulk = ['BEGIN', 'BULK']
 
-        # allows BEGIN BULK to be turned off
+        # allows the BEGIN BULK to be turned off
         self.write_begin_bulk = True
         self._begin_count = 0
 
@@ -134,10 +142,10 @@ class CaseControlDeck:
 
         keys = list(hdf5_file.keys())
         for key in keys:
-            if key in ['_begin_count', 'debug', 'write_begin_bulk']: # scalars
+            if key in ['_begin_count', 'debug', 'write_begin_bulk']:  # scalars
                 value = _cast(hdf5_file[key])
                 setattr(self, key, value)
-            elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
+            elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']:  # lists of strings
                 unused_lines_str = decode_lines(
                     _cast(hdf5_file[key]),
                     encoding)
@@ -181,7 +189,7 @@ class CaseControlDeck:
         h5attrs = object_attributes(self, mode='both', keys_to_skip=keys_to_skip)
         for h5attr in h5attrs:
             value = getattr(self, h5attr)
-            if h5attr in ['_begin_count', 'debug', 'write_begin_bulk', 'use_card_dict']: # scalars
+            if h5attr in ['_begin_count', 'debug', 'write_begin_bulk', 'use_card_dict']:  # scalars
                 # simple export
                 hdf5_file.create_dataset(h5attr, data=value)
             elif h5attr in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']:
@@ -400,12 +408,15 @@ class CaseControlDeck:
         sol : str
             the solution type to change the solution to
 
-        >>> bdf.case_control
+        >>> from pyNastran.bdf import read_bdf
+        >>> bdf_filename = 'fem.bdf'
+        >>> model = read_bdf(bdf_filename)
+        >>> model.case_control
         SUBCASE 1
             DISP = ALL
 
-        >>> bdf.case_control.update_solution(1, 'FLUTTER')
-        >>> bdf.case_control
+        >>> model.case_control.update_solution(1, 'FLUTTER')
+        >>> model.case_control
         SUBCASE 1
             ANALYSIS FLUTTER
             DISP = ALL
@@ -429,10 +440,11 @@ class CaseControlDeck:
 
         Examples
         --------
-        >>> bdf = BDF()
-        >>> bdf.read_bdf(bdf_filename)
-        >>> bdf.case_control.add_parameter_to_global_subcase('DISP=ALL')
-        >>> bdf.case_control
+        >>> from pyNastran.bdf import read_bdf
+        >>> bdf_filename = 'fem.bdf'
+        >>> model = read_bdf(bdf_filename)
+        >>> model.case_control.add_parameter_to_global_subcase('DISP=ALL')
+        >>> model.case_control
         TITLE = DUMMY LINE
         DISP = ALL
 
@@ -459,10 +471,11 @@ class CaseControlDeck:
 
         Examples
         --------
-        >>> bdf = BDF()
-        >>> bdf.read_bdf(bdf_filename)
-        >>> bdf.case_control.add_parameter_to_local_subcase(1, 'DISP=ALL')
-        >>> print(bdf.case_control)
+        >>> from pyNastran.bdf import read_bdf
+        >>> bdf_filename = 'fem.bdf'
+        >>> model = read_bdf(bdf_filename)
+        >>> model.case_control.add_parameter_to_local_subcase(1, 'DISP=ALL')
+        >>> print(model.case_control)
         TITLE = DUMMY LINE
         SUBCASE 1
             DISP = ALL
@@ -501,7 +514,7 @@ class CaseControlDeck:
         #self.read([param])
         lines = _clean_lines([param])
         (j, fail_flag, key, value, options, param_type) = parse_entry(
-            lines, self.log, debug=self.debug)
+            lines, self.log, self.allow_tabs, debug=self.debug)
         return j, key, value, options, param_type
 
     def _read(self, lines: list[str]) -> None:
@@ -516,6 +529,7 @@ class CaseControlDeck:
                      follow that when it's written out
 
         """
+        allow_tabs = self.allow_tabs
         isubcase = 0
         log = self.log
         lines = _clean_lines(lines)
@@ -523,7 +537,7 @@ class CaseControlDeck:
         i = 0
         #is_output_lines = False
         while i < len(lines):
-            line = lines[i] #[:72]
+            line = lines[i]  # [:72]
             #comment = lines[i][72:]
 
             lines2 = [line]
@@ -532,7 +546,7 @@ class CaseControlDeck:
                 lines2.append(lines[i])
                 #comment = lines[i][72:]
             (unused_j, fail_flag, key, value, options, param_type) = _parse_entry(
-                lines2, log, debug=self.debug)
+                self, lines2, log, allow_tabs, debug=self.debug)
             i += 1
 
             if fail_flag:
@@ -694,11 +708,15 @@ class CaseControlDeck:
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 
-def _split_param(line: str, line_upper: str) -> tuple[str, str, str]:
+
+def _split_param(line: str, line_upper: str,
+                 allow_tabs: bool) -> tuple[str, str, str]:
     """parses a PARAM card"""
     if ',' in line_upper:
         sline = line_upper.split(',')
     elif '\t' in line_upper:
+        if not allow_tabs:
+            raise RuntimeError(f'tabs not allowed in line\n{line}')
         sline = line_upper.expandtabs().split()
     elif ' ' in line_upper:
         sline = line_upper.split()
@@ -712,6 +730,7 @@ def _split_param(line: str, line_upper: str) -> tuple[str, str, str]:
     assert key.upper() == key, key
     return key, value, options, param_type
 
+
 def verify_card(key: int, value: Any, options: Any, line: str) -> None:
     """Make sure there are no obvious errors"""
     if key in ['AUXMODEL', 'BC', 'BCHANGE', 'BCMOVE', 'CAMPBELL', 'CLOAD',
@@ -721,6 +740,7 @@ def verify_card(key: int, value: Any, options: Any, line: str) -> None:
                'MFLUID', 'MODES', 'MODTRAK', 'MPC', 'NLHARM',]:
         value2 = integer(value, line)
         assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
+
 
 def verify_card2(key, value, options, line):
     """Make sure there are no obvious errors"""
@@ -830,6 +850,7 @@ def verify_card2(key, value, options, line):
 
 def _parse_entry(self, lines: list[str],
                  log: SimpleLogger,
+                 allow_tabs: bool,
                  debug: bool=False):
     r"""
     Internal method for parsing a card of the case control deck
@@ -1082,7 +1103,8 @@ def _parse_entry(self, lines: list[str],
 
     elif line_upper.startswith('PARAM'):
         #line2 = line_upper.replace('\t', ' ').replace(',' , ' ')
-        key, value, options, param_type = _split_param(line, line_upper)
+        key, value, options, param_type = _split_param(
+            line, line_upper, allow_tabs)
 
     elif self.use_card_dict:
         raise RuntimeError(f'case control work...\n{line_upper}')
@@ -1130,7 +1152,7 @@ def _parse_entry(self, lines: list[str],
             msg = 'expected item of form "name = value"   line=%r' % line.strip()
             raise RuntimeError(msg)
         #print('line_upper=%r' % line_upper)
-        assert key == 'RIGID', 'key=%r value=%r line=%r'  % (key, value, line)
+        assert key == 'RIGID', 'key=%r value=%r line=%r' % (key, value, line)
         param_type = 'STRESS-type'
         options = []
         #RIGID = LAGR, LGELIM, LAGRANGE, STIFF, LINEAR
@@ -1139,7 +1161,7 @@ def _parse_entry(self, lines: list[str],
         elif value in ['LGELIM', 'LAGRANGE', 'STIFF', 'LINEAR', 'AUTO']:
             pass
         else:
-            raise NotImplementedError('key=%r value=%r line=%r'  % (key, value, line))
+            raise NotImplementedError('key=%r value=%r line=%r' % (key, value, line))
 
     elif equals_count == 1:  # STRESS
         if '=' in line:
@@ -1221,7 +1243,8 @@ def _parse_entry(self, lines: list[str],
         param_type = 'BEGIN_BULK-type'
         assert key.upper() == key, key
     elif 'PARAM' in line_upper:  # param
-        key, value, options, param_type = _split_param(line, line_upper)
+        key, value, options, param_type = _split_param(
+            line, line_upper, allow_tabs)
     elif ' ' not in line:
         key = line.strip().upper()
         value = line.strip()

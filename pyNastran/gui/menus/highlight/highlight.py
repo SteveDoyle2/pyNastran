@@ -11,7 +11,7 @@ import numpy as np
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog) # QCheckBox
+    QSpinBox, QDoubleSpinBox, QColorDialog)
 
 #from vtk import (
     #vtkLODActor,
@@ -39,6 +39,7 @@ if TYPE_CHECKING:
     from pyNastran.gui.menus.groups_modify.groups import Group
 
 USE_LINEEDIT = True
+
 
 class HighlightWindow(PyDialog):
     """
@@ -96,7 +97,7 @@ class HighlightWindow(PyDialog):
         #self._default_annotation_size = data['annotation_size'] # int
         #self.default_magnify = data['magnify']
 
-        if 'nodes_pound' in data: # testing
+        if 'nodes_pound' in data:  # testing
             nodes_pound = data['nodes_pound']
             elements_pound = data['elements_pound']
             nodes = np.arange(1, nodes_pound+1)
@@ -438,11 +439,13 @@ def create_mark_actors(rend: vtkRenderer,
         iactor += 1
     return actors2
 
+
 def check_float(cell) -> tuple[float, bool]:
     """validate the value is floatable"""
     text = cell.text()
     value = float(text)
     return value, True
+
 
 def create_color_menu(parent, win_parent, title: str,
                       color_edit: QPushButtonColor,
@@ -457,6 +460,7 @@ def create_color_menu(parent, win_parent, title: str,
             func_background_color = getattr(settings, func_name)
             func_background_color(rgb_color_floats)
     return passed, rgb_color_ints, rgb_color_floats
+
 
 def _pop_color_dialog(parent,
                       color_edit: QPushButtonColor,
@@ -497,17 +501,16 @@ def main():  # pragma: no cover
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-
     import sys
     # Someone is launching this directly
     # Create the QApplication
     app = QApplication(sys.argv)
     #The Main window
     data = {
-        'font_size' : 8,
-        'model_name' : 'main',
-        'nodes_pound' : 100,
-        'elements_pound' : 200,
+        'font_size': 8,
+        'model_name': 'main',
+        'nodes_pound': 100,
+        'elements_pound': 200,
     }
     if 1:
         main_window = HighlightWindow(data, menu_type='highlight')
@@ -516,6 +519,7 @@ def main():  # pragma: no cover
     main_window.show()
     # Enter the main loop
     app.exec_()
+
 
 if __name__ == "__main__":  # pragma: no cover
     main()

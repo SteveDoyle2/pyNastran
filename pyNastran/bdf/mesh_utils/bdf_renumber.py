@@ -22,8 +22,9 @@ from pyNastran.utils.mathematics import roundup
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
 
+
 def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
-                 bdf_filename_out: str,
+                 bdf_filename_out: PathLike,
                  size: int=8, is_double: bool=False,
                  starting_id_dict: Optional[dict[str, int]]=None,
                  round_ids: bool=False,
@@ -433,7 +434,7 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
     if 'caero_id' in starting_id_dict and caero_id is not None:
         # caeros
         for caero_idi, caero in sorted(model.caeros.items()):
-            if caero.type in ['CAERO1', 'CAERO3', 'CAERO4']: # not CAERO5
+            if caero.type in ['CAERO1', 'CAERO3', 'CAERO4']:  # not CAERO5
                 caero.eid = caero_id
                 caero_id_map[caero_idi] = caero_id
                 caero_id += caero.shape[0] * caero.shape[1]
@@ -585,8 +586,8 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
         tranfer_function_map[tf_idi] = tf_id
         load_id += 1
 
-    lseq_map = load_map # wrong???
-    temp_map = load_map # wrong???
+    lseq_map = load_map  # wrong???
+    temp_map = load_map  # wrong???
 
     mapper = {
         'elements': eid_map,
@@ -609,7 +610,7 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
         'caeros': caero_id_map,
 
         'DLOAD': dload_map,
-        'RANDOM': dload_map, # RANDPS, RANDT1
+        'RANDOM': dload_map,  # RANDPS, RANDT1
         'LOAD': load_map,
         'LOADSET': lseq_map,
         'CLOAD': lseq_map,
@@ -689,7 +690,7 @@ def get_renumber_starting_ids_from_model(model: BDF) -> dict[str, int]:
         'set_id': max(model.sets) + 1 if model.sets else 1,
         'spline_id': max(model.splines) + 1 if model.splines else 1,
         'caero_id': max(caero.box_ids[-1, -1]
-                         for caero in model.caeros.values()) + 1 if model.caeros else 1,
+                        for caero in model.caeros.values()) + 1 if model.caeros else 1,
     }
     return starting_id_dict
 
@@ -744,7 +745,7 @@ def get_starting_ids_dict_from_mapper(model, mapper):
             #if key2 == 'nid':
                 #print("  nid_offset = %s" % offset)
                 #print("  nid map = %s" % old_new_map)
-            starting_id_dict2[key2] = max(old_new_map.values()) + 1 # offset
+            starting_id_dict2[key2] = max(old_new_map.values()) + 1  # offset
         else:
             if len(old_new_map):
                 missed_keys.append(key)
@@ -827,7 +828,7 @@ def superelement_renumber(bdf_filename: PathLike | BDF,
         model.write_bdf(bdf_filename_out)
 
     _write_bdf(model, bdf_filename_out, size=size, is_double=is_double)
-    return model #, mapper
+    return model  # mapper
 
 
 def _create_nid_maps(model: BDF,
@@ -1206,7 +1207,7 @@ def _update_case_control(model: BDF,
                             if seti_key in sets_analyzed:
                                 continue
                             sets_analyzed.add(seti_key)
-                            msgi = 'seti_key=%s must be an integer; type(seti_key)=%s\n'  % (
+                            msgi = 'seti_key=%s must be an integer; type(seti_key)=%s\n' % (
                                 seti_key, type(seti_key))
                             msgi += '  key=%r value=%r options=%r param_type=%r\n' % (
                                 key, value, options, param_type)
@@ -1229,7 +1230,6 @@ def _update_case_control(model: BDF,
                             model.log.warning(f"  couldn't find eids={eids_missing}...dropping")
                         if nids_missing:
                             model.log.warning(f"  couldn't find nids={nids_missing}...dropping")
-
 
                         param_type = 'SET-type'
                         #print('adding seti=%r values2=%r seti_key=%r param_type=%r'  % (
@@ -1281,6 +1281,7 @@ def _update_case_control(model: BDF,
                 raise RuntimeError(key)
                     #if value ==
         #print()
+
 
 def _update_case_key(key, elemental_quantities, seti2, eid_map, nid_map):
     """Updates a Case Control SET card.  A set may have an elemental result

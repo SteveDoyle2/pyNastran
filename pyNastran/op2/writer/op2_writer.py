@@ -4,7 +4,7 @@ import datetime
 from collections import defaultdict
 from struct import pack, Struct
 from typing import Optional, Any, TYPE_CHECKING
-from cpylog import get_logger2
+from cpylog import get_logger
 
 #import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
@@ -40,7 +40,7 @@ class TrashWriter:
 
 class OP2Writer(OP2_F06_Common):
     def __init__(self, log=None, debug: bool=False):
-        self.log = get_logger2(log, debug)
+        self.log = get_logger(log, debug)
         OP2_F06_Common.__init__(self)
         self.card_count = {}
 
@@ -173,9 +173,9 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
         #write_casecc(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     obj.log.debug(f'nastran_format={nastran_format}')
     if 'GEOM1' not in skips:  # nodes
-        write_geom1(op2_file, fop2_ascii, obj, endian=endian)
+        write_geom1(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'GEOM2' not in skips:  # elements
-        write_geom2(op2_file, fop2_ascii, obj, endian=endian)
+        write_geom2(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'GEOM3' not in skips:  # constraints
         write_geom3(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'GEOM4' not in skips:  # loads

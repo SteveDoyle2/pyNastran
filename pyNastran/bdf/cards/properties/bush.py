@@ -59,9 +59,9 @@ class PBUSH(BushingProperty):
     +-------+-----+-------+------+-------+-----+-----+-----+----+
     |       | RCV |  SA   |  ST  |   EA  |  ET |     |     |    |
     +-------+-----+-------+------+-------+-----+-----+-----+----+
-    |       |  M  |  MASS |      |       |     |     |     |    |
+    |       |  M* | MASS  |      |       |     |     |     |    |
     +-------+-----+-------+------+-------+-----+-----+-----+----+
-    |       |  T  | ALPHA | TREF | COINL |     |     |     |    |
+    |       |  T* | ALPHA | TREF | COINL |     |     |     |    |
     +-------+-----+-------+------+-------+-----+-----+-----+----+
 
     RCV was added <= MSC 2016
@@ -73,12 +73,12 @@ class PBUSH(BushingProperty):
         1: 'pid',
     }
     pname_map = {
-        -2 : 'K1', -3 : 'K2', -4 : 'K3', -5 : 'K4', -6 : 'K5', -7 : 'K6',
-        -8 : 'B1', -9 : 'B2', -10 : 'B3', -11 : 'B4', -12 : 'B5', -13 : 'B6',
-        -14 : 'GE1', -15 : 'GE2', -16 : 'GE3', -17 : 'GE4', -18 : 'GE5', -19 : 'GE6',
-        -20 : 'SA', -21 : 'ST', -22 : 'EA', -23 : 'ET',
+        -2: 'K1', -3: 'K2', -4: 'K3', -5: 'K4', -6: 'K5', -7: 'K6',
+        -8: 'B1', -9: 'B2', -10: 'B3', -11: 'B4', -12: 'B5', -13: 'B6',
+        -14: 'GE1', -15: 'GE2', -16: 'GE3', -17: 'GE4', -18: 'GE5', -19: 'GE6',
+        -20: 'SA', -21: 'ST', -22: 'EA', -23: 'ET',
     }
-    def update_by_pname_fid(self, name, value):
+    def update_by_pname_fid(self, name: str, value: float):
         if name == 'B1':
             self.Bi[0] = value
         elif name == 'B2':
@@ -117,8 +117,18 @@ class PBUSH(BushingProperty):
             self.GEi[4] = value
         elif name == 'GE6':
             self.GEi[5] = value
-        #elif name == 'M':
-            #self.mass
+
+        # sa, st, ea, et
+        elif name == 'SA':
+            self.sa = value
+        elif name == 'ST':
+            self.st = value
+        elif name == 'EA':
+            self.ea = value
+        elif name == 'ET':
+            self.et = value
+        elif name == 'M':
+            self.mass = value
         elif isinstance(name, int) and name in self.pname_map:
             name2 = self.pname_map[name]
             self.update_by_pname_fid(name2, value)
@@ -134,8 +144,12 @@ class PBUSH(BushingProperty):
     #}
 
     def __init__(self, pid: int,
-                  k=None, b=None, ge=None,
-                  rcv=None, mass=None, t=None, comment: str=''):
+                 k: Optional[list[float]]=None,
+                 b: Optional[list[float]]=None,
+                 ge: Optional[list[float]]=None,
+                 rcv: Optional[list[float]]=None,
+                 mass: Optional[float]=None,
+                 t=None, comment: str=''):
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -248,7 +262,7 @@ class PBUSH(BushingProperty):
         assert isinstance(self.GEi, list), 'PBUSH: pid=%i type(GEi)=%s GEi=%s' % (self.pid, type(self.GEi), self.GEi)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBUSH card from ``BDF.add_card(...)``
 
@@ -315,10 +329,34 @@ class PBUSH(BushingProperty):
         return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, mass,
                      comment=comment)
 
+    @property
+    def k(self) -> list[float]:
+        return self.Ki
+
+    @k.setter
+    def k(self, k: list[float]):
+        return self.Ki
+
+    @property
+    def b(self) -> list[float]:
+        return self.Bi
+
+    @b.setter
+    def b(self, b: list[float]):
+        return self.Bi
+
+    @property
+    def ge(self) -> list[float]:
+        return self.GEi
+
+    @ge.setter
+    def ge(self, ge: list[float]):
+        return self.GEi
+
     @classmethod
-    def _read_var(cls, card, var_prefix, istart, iend):
-        Ki = fields(double_or_blank, card, var_prefix, istart, iend)
-        return Ki
+    def _read_var(cls, card: BDFCard, var_prefix: str, istart: int, iend: int):
+        ki = fields(double_or_blank, card, var_prefix, istart, iend)
+        return ki
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -628,7 +666,7 @@ class PBUSH1D(BushingProperty):
             self.vars.sort()
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBUSH1D card from ``BDF.add_card(...)``
 
@@ -1032,7 +1070,7 @@ class PBUSHT(BushingProperty):
         self.kn_tables = kn_tables
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBUSHT card from ``BDF.add_card(...)``
 
@@ -1118,10 +1156,10 @@ class PBUSH_OPTISTRUCT(BushingProperty):
         1: 'pid',
     }
     pname_map = {
-        -2 : 'K1', -3 : 'K2', -4 : 'K3', -5 : 'K4', -6 : 'K5', -7 : 'K6',
-        -8 : 'B1', -9 : 'B2', -10 : 'B3', -11 : 'B4', -12 : 'B5', -13 : 'B6',
-        -14 : 'GE1', -15 : 'GE2', -16 : 'GE3', -17 : 'GE4', -18 : 'GE5', -19 : 'GE6',
-        -20 : 'SA', -21 : 'ST', -22 : 'EA', -23 : 'ET',
+        -2: 'K1', -3: 'K2', -4 : 'K3', -5 : 'K4', -6 : 'K5', -7 : 'K6',
+        -8: 'B1', -9: 'B2', -10 : 'B3', -11 : 'B4', -12 : 'B5', -13 : 'B6',
+        -14: 'GE1', -15: 'GE2', -16 : 'GE3', -17 : 'GE4', -18 : 'GE5', -19 : 'GE6',
+        -20: 'SA', -21: 'ST', -22 : 'EA', -23 : 'ET',
     }
     #def update_by_pname_fid(self, name, value):
         #if name == 'B1':
@@ -1178,7 +1216,12 @@ class PBUSH_OPTISTRUCT(BushingProperty):
         #5 : 'j', 'J' : 'j',
     #}
 
-    def __init__(self, pid, k, b, ge, mass, comment=''):
+    def __init__(self, pid: int,
+                 k: list[float],
+                 b: list[float],
+                 ge: list[float],
+                 mass: list[float],
+                 comment: str=''):
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -1205,6 +1248,15 @@ class PBUSH_OPTISTRUCT(BushingProperty):
         BushingProperty.__init__(self)
         if comment:
             self.comment = comment
+
+        if k is None:
+            k = []
+        if b is None:
+            b = []
+        if ge is None:
+            ge = []
+        if mass is None:
+            mass = []
 
         #: Property ID
         self.pid = pid
@@ -1257,7 +1309,7 @@ class PBUSH_OPTISTRUCT(BushingProperty):
         assert isinstance(self.mass, list), 'PBUSH: pid=%i type(mass)=%s mass=%s' % (self.pid, type(self.mass), self.mass)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PBUSH card from ``BDF.add_card(...)``
 
@@ -1320,10 +1372,11 @@ class PBUSH_OPTISTRUCT(BushingProperty):
                                 comment=comment)
 
     @classmethod
-    def _read_var(cls, card, var_prefix, istart, iend):
+    def _read_var(cls, card: BDFCard, var_prefix: str,
+                  istart: int, iend: int) -> list[float]:
         print(card[istart:iend+1])
-        Ki = fields(double_string_or_blank, card, var_prefix, istart, iend)
-        return Ki
+        ki = fields(double_string_or_blank, card, var_prefix, istart, iend)
+        return ki
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

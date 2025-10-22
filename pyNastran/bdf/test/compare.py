@@ -5,7 +5,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.bdf_interface.compare_card_content import compare_card_content
 from pyNastran.bdf.mesh_utils.mass_properties import (
-    mass_properties, mass_properties_nsm)  #, mass_properties_breakdown
+    mass_properties, mass_properties_nsm)  # mass_properties_breakdown
 
 
 def compare(fem1: BDF,
@@ -16,8 +16,10 @@ def compare(fem1: BDF,
             print_stats: bool=True,
             quiet: bool=False) -> list[str]:
     """compares two fem objects"""
-    diff_cards = compare_card_count(fem1, fem2,
-                                    print_stats=print_stats, quiet=quiet)
+    fem1.log.debug('compare')
+    diff_cards = compare_card_count(
+        fem1, fem2,
+        print_stats=print_stats, quiet=quiet)
     if xref and check:
         get_element_stats(fem1, fem2, run_mass=run_mass, quiet=quiet)
         get_matrix_stats(fem1, fem2)
@@ -42,15 +44,65 @@ def compare_card_count(fem1: BDF,
         if key != key.upper():
             raise RuntimeError('Proper capitalization wasnt determined')
     if print_stats and not quiet:
+        fem1.log.debug('get_bdf_stats')
         print(fem1.get_bdf_stats())
     else:
         fem1.get_bdf_stats()
-    return compute_ints(cards1, cards2, fem1, quiet=quiet)
+    lines = compute_ints(cards1, cards2, fem1, fem2, quiet=quiet)
+    return lines
+
+
+def get_card_difference(fem1: BDF, fem2: BDF,
+                        card_name: str, prefix: str='    ') -> str:
+    msg = ''
+    if not hasattr(fem1, '_slot_to_type_map'):
+        return msg
+    card_group = ''
+    for card_groupi, card_names in fem1._slot_to_type_map.items():
+        if card_name in card_names:
+            card_group = card_groupi
+            break
+    assert card_group != '', card_name
+
+    cards1 = getattr(fem1, card_group)
+    cards2 = getattr(fem2, card_group)
+    scalar_types = ['aero', 'aeros', 'doptprm']
+    list_dict_types = ['loads', 'spcs', 'mpcs']
+    list_types = ['suport']
+    if card_group in scalar_types:
+        assert cards1 is None or hasattr(cards1, 'type'), cards1.get_stats()
+    elif card_group in list_types:
+        # suport
+        assert isinstance(cards1, list), card_group
+    elif card_group in list_dict_types:
+        # loads, spcs, mpcs
+        assert isinstance(cards1, dict), card_group
+        for sid, cards in cards1.items():
+            assert isinstance(cards, list), (card_group, sid)
+    else:
+        # typical; nodes, elements, rigid_elements, ...
+        assert isinstance(cards1, dict), card_group
+        keys1 = set(list(cards1))
+        keys2 = set(list(cards1))
+        missing = list(keys1 - keys2)
+        extra = list(keys2 - keys1)
+        missing.sort()
+        extra.sort()
+        # missing_dict = {key: cards1[key] for key in missing}
+        # extra_dict = {key: cards2[key] for key in extra}
+        if len(missing):
+            msg += f'{prefix}missing: {missing}\n'
+        if len(missing):
+            msg += f'{prefix}extra:   {extra}\n'
+            # for key, value in missing_dict.items():
+            #     lines.append(f'{prefix}missing:\n')
+    return msg
 
 
 def compute_ints(cards1: dict[str, int],
                  cards2: dict[str, int],
                  fem1: BDF,
+                 fem2: BDF,
                  quiet: str=True) -> list[str]:
     """
     computes the difference / ratio / inverse-ratio between
@@ -67,16 +119,19 @@ def compute_ints(cards1: dict[str, int],
     The * indicates a change, which may or may not be a problem.
 
     """
+    fem1.log.debug('compute_ints')
     card_keys1 = set(cards1.keys())
     card_keys2 = set(cards2.keys())
     all_keys = card_keys1.union(card_keys2)
     diff_keys1 = list(all_keys.difference(card_keys1))
     diff_keys2 = list(all_keys.difference(card_keys2))
+    #fem1.log.debug(f"all_keys = {all_keys}")
 
     list_keys1 = list(card_keys1)
     list_keys2 = list(card_keys2)
+    #fem1.log.debug(f"list_keys1 = {list_keys1}")
     if diff_keys1 or diff_keys2:
-        print(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
+        fem1.log.debug(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
 
     for key in sorted(all_keys):
         msg = ''
@@ -88,6 +143,9 @@ def compute_ints(cards1: dict[str, int],
         if key in list_keys2:
             value2 = cards2[key]
 
+        lost_keys = list(all_keys.difference(card_keys1))
+        extra_keys = list(all_keys.difference(card_keys2))
+
         diff = abs(value1 - value2)
         star = ' '
         if diff and key not in ['INCLUDE']:
@@ -98,22 +156,25 @@ def compute_ints(cards1: dict[str, int],
         factor1 = divide(value1, value2)
         factor2 = divide(value2, value1)
         factor_msg = ''
-        if not quiet or not star or factor1 != factor2:
+        if not star or factor1 != factor2:
             if factor1 != factor2:
-                factor_msg = 'diff=%s factor1=%g factor2=%g' % (
-                    diff, factor1, factor2)
-            msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (
-                star, key, value1, value2) + factor_msg
-        if msg:
+                factor_msg = f'diff={diff} factor1={factor1:g} {factor2:g}\n'
+            msg += f'  {star}key={key:<7s} value1={value1:<7d} value2={value2:<7d}{factor_msg}'
+            if star:
+                msg += get_card_difference(fem1, fem2, key)
+
+        if not quiet and msg:
             msg = msg.rstrip()
             print(msg)
     #return list_keys1 + list_keys2
     return diff_keys1 + diff_keys2
 
+
 def get_element_stats(fem1: BDF,
                       unused_fem2: BDF,
                       run_mass: bool=True, quiet: bool=False) -> None:
     """verifies that the various element methods work"""
+    fem1.log.debug('get_element_stats')
     for (unused_key, loads) in sorted(fem1.loads.items()):
         for load in loads:
             try:
@@ -123,14 +184,15 @@ def get_element_stats(fem1: BDF,
                                     % (type(all_loads)))
             except Exception:
                 raise
-                #print("load statistics not available - load.type=%s "
-                      #"load.sid=%s" % (load.type, load.sid))
+                # print("load statistics not available - load.type=%s "
+                #       "load.sid=%s" % (load.type, load.sid))
 
     fem1._verify_bdf()
 
     if fem1.elements:
         fem1.get_elements_nodes_by_property_type()
     check_mass(fem1, run_mass=run_mass, quiet=quiet)
+
 
 def check_mass(fem1: BDF, run_mass: bool=True, quiet: bool=False):
     if not run_mass:
@@ -166,6 +228,10 @@ def check_mass(fem1: BDF, run_mass: bool=True, quiet: bool=False):
 
 def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
     """Verifies the dmig.get_matrix() method works."""
+    is_matrix = len(fem1.dmig) or len(fem1.dmi) or len(fem1.dmij) or len(fem1.dmik) or len(fem1.dmiji)
+    if not is_matrix:
+        return
+    fem1.log.debug('get_matrix_stats')
     for (unused_key, dmig) in sorted(fem1.dmig.items()):
         try:
             if isinstance(dmig, NastranMatrix):
@@ -225,6 +291,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
             print("*stats - dmik.type=%s name=%s  matrix=\n%s"
                   % (dmik.type, dmik.name, str(dmik)))
             raise
+
 
 def divide(value1: int, value2: int) -> float:
     """

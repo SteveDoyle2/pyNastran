@@ -3,7 +3,8 @@ import unittest
 from pyNastran.bdf.mesh_utils.utils import cmd_line, cmd_line_create_flutter
 TEST_DIR = os.path.dirname(__file__)
 
-class TestFlutter(unittest.TestCase):
+
+class TestBDFFlutter(unittest.TestCase):
     """test for bdf flutter"""
     def test_bdf_flutter(self):
         """tests a flutter sweep"""
@@ -104,6 +105,7 @@ class TestFlutter(unittest.TestCase):
         args = ['bdf', 'flutter', 'english_in', 'alt', '0', '10000', 'ft', '10', 'mach', '0.5', 'none', '--clean']
         cmd_line_create_flutter(args, quiet=True)
         cmd_line(argv=args, quiet=True)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1076,7 +1076,7 @@ class CPENTA6(SolidElement):
             area = 0.5 * norm(cross(p1 - p3, p2 - p4))
         return [face_node_ids, area]
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         _verify_solid_elem_linear(self, xref)
 
     def Centroid(self):
@@ -1630,7 +1630,7 @@ class CPYRAM5(SolidElement):
             tuple(sorted([node_ids[3], node_ids[4]])),
         ]
 
-    def _verify(self, xref: bool):
+    def _verify(self, xref: bool) -> None:
         _verify_solid_elem_linear(self, xref)
 
     def Centroid(self):
@@ -2055,7 +2055,7 @@ class CTETRA4(SolidElement):
         centroid, xe, ye, ze = _ctetra_element_coordinate_system(self, xyz=None)
         return centroid, xe, ye, ze
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         _verify_solid_elem_linear(self, xref)
 
     def get_edge_ids(self):

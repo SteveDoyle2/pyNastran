@@ -529,7 +529,7 @@ def _convert_properties(model: BDF,
 
     Supports:  PELAS, PDAMP, PDAMP5, PVISC, PROD, PBAR, PBARL, PBEAM, PBEAML,
                PSHELL, PSHEAR, PCOMP, PCOMPG, PELAS, PTUBE, PBUSH,
-               PCONEAX, PGAP, PBUSH1D
+               PCONEAX, PGAP, PBUSH1D, PCOMPLS
     Skips : PSOLID, PLSOLID, PLPLANE
 
     Skips are unscaled (intentionally)
@@ -643,6 +643,12 @@ def _convert_properties(model: BDF,
             scales.update(['length', 'nsm_plate'])
             prop.t *= xyz_scale
             prop.nsm *= nsm_plate_scale
+
+        elif prop_type == 'PCOMPLS':
+            scales.update(['length'])
+            prop.thicknesses = [t * xyz_scale for t in prop.thicknesses]
+            if prop.sb is not None:
+                prop.sb *= stress_scale
 
         elif prop_type in ['PCOMP', 'PCOMPG']:
             scales.update(['length', 'nsm_plate', 'stress'])
@@ -881,12 +887,12 @@ def _convert_pbush(scales: set[str],
         # TODO: I think this needs to consider rotation
         if var == 'K':
             scales.update(['stiffness'])
-            prop.Ki = [ki*stiffness_scale if ki is not None else None
-                       for ki in prop.Ki]
+            prop.k = [ki*stiffness_scale if ki is not None else None
+                      for ki in prop.k]
         elif var == 'B':
             scales.update(['velocity'])
-            prop.Bi = [bi*velocity_scale if bi is not None else None
-                       for bi in prop.Bi]
+            prop.b = [bi*velocity_scale if bi is not None else None
+                       for bi in prop.b]
         elif var == 'RCV':
             log.warning('Skipping RCV for PBUSH %i' % prop.pid)
         elif var == 'GE':
@@ -897,7 +903,14 @@ def _convert_pbush(scales: set[str],
     #prop.rcv
     if prop.mass is not None:
         scales.update(['mass'])
-        prop.mass *= mass_scale
+        print(prop.get_stats(), prop.mass)
+        if isinstance(prop.mass, list):
+            # Optistruct
+            prop.mass = [massi*mass_scale for massi in prop.mass]
+        elif isinstance(prop.mass, float_types):
+            prop.mass *= mass_scale
+        else:  # pragma: no cover
+            raise TypeError(f'mass must be a float/list\n{prop.get_stats()}')
     #rcv : list[float]; default=None -> (None, None, None, None)
         #[sa, st, ea, et] = rcv
         #length(mass_fields) = 4
@@ -1441,6 +1454,11 @@ def _convert_loads(model: BDF,
             elif load_type == 'PRESAX':
                 scales.add('pressure')
                 load.pressure *= pressure_scale
+            elif load_type == 'TEMPP1':
+                # t_stress: [3.14]
+                load.tbar *= temperature_scale
+                load.tprime *= temperature_scale
+                scales.add('temperature')
             elif load_type == 'TEMPRB':
                 scales.add('temperature')
                 load.ta *= temperature_scale

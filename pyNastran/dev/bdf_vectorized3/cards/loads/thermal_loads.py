@@ -1,9 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_string8_blank_if_default
-from pyNastran.bdf.cards.base_card import expand_thru, expand_thru_by # BaseCard, expand_thru_by #  _node_ids,
+from pyNastran.bdf.cards.base_card import expand_thru, expand_thru_by  # BaseCard, expand_thru_by #  _node_ids,
 #from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
@@ -32,15 +32,16 @@ if TYPE_CHECKING:  # pragma: no cover
 class QHBDY(Load):
     """Defines a uniform heat flux into a set of grid points."""
     flag_to_nnodes = {
-        'POINT' : (1, 1),
-        'LINE' : (2, 2),
-        'REV' : (2, 2),
-        'AREA3' : (3, 3),
-        'AREA4' : (4, 4),
-        'AREA6' : (4, 6), # 4-6
-        'AREA8' : (5, 8), # 5-8
+        'POINT': (1, 1),
+        'LINE': (2, 2),
+        'REV': (2, 2),
+        'AREA3': (3, 3),
+        'AREA4': (4, 4),
+        'AREA6': (4, 6),  # 4-6
+        'AREA8': (5, 8),  # 5-8
     }
     _id_name = 'load_id'
+
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -230,6 +231,7 @@ class QBDY1(VectorizedBaseCard):
 
     """
     _id_name = 'load_id'
+
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -355,6 +357,7 @@ class QBDY2(VectorizedBaseCard):
 
     """
     _id_name = 'load_id'
+
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -479,6 +482,7 @@ class QBDY3(Load):
 
     """
     _id_name = 'load_id'
+
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -497,7 +501,7 @@ class QBDY3(Load):
         #load.pressure = self.pressure[i, :]
         #return load
 
-    def add(self, sid: int, q0, eids: list[int], cntrlnd: int=0,
+    def add(self, sid: int, q0, eids: list[int], control_node: int=0,
             ifile: int=0, comment: str='') -> int:
         """
         Creates a QBDY3 card
@@ -508,7 +512,7 @@ class QBDY3(Load):
             Load set identification number. (Integer > 0)
         q0 : float; default=None
             Magnitude of thermal flux vector into face
-        control_id : int; default=0
+        control_node : int; default=0
             Control point
         eids : list[int] or THRU
             Element identification number of a CHBDYE, CHBDYG, or
@@ -517,20 +521,20 @@ class QBDY3(Load):
             a comment for the card
 
         """
-        self.cards.append((sid, q0, cntrlnd, eids, comment))
+        self.cards.append((sid, q0, control_node, eids, comment))
         self.n += 1
         return self.n - 1
 
     def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
-        cntrlnd = integer_or_blank(card, 3, 'cntrlnd', default=0)
+        control_node = integer_or_blank(card, 3, 'control_node', default=0)
 
         nfields = card.nfields
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
         eids = expand_thru_by(eids)
 
-        self.cards.append((sid, q0, cntrlnd, eids, comment))
+        self.cards.append((sid, q0, control_node, eids, comment))
         self.n += 1
         return self.n - 1
 
@@ -550,12 +554,12 @@ class QBDY3(Load):
         assert ncards > 0, ncards
         elements_list = []
         for icard, card in enumerate(self.cards):
-            (sid, q0i, cntrlnd, eids, comment) = card
+            (sid, q0i, control_nodei, eids, comment) = card
             nelementi = len(eids)
 
             load_id[icard] = sid
             q0[icard] = q0i
-            control_node[icard] = cntrlnd
+            control_node[icard] = control_nodei
             nelement[icard] = nelementi
             elements_list.extend(eids)
 
@@ -645,6 +649,7 @@ class QVOL(Load):
 
     """
     _id_name = 'load_id'
+
     def clear(self) -> None:
         self.n = 0
         self.load_id = np.array([], dtype='int32')
@@ -674,7 +679,7 @@ class QVOL(Load):
     def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         qvol = double(card, 2, 'qvol')
-        control_point = integer_or_blank(card, 3, 'control_id', default=0)
+        control_point = integer_or_blank(card, 3, 'control_node', default=0)
 
         i = 1
         eids = []
@@ -931,6 +936,7 @@ class RADM(VectorizedBaseCard):
 
     """
     _id_name = 'rad_mid'
+
     def clear(self) -> None:
         self.n = 0
         self.rad_mid = np.array([], dtype='int32')
@@ -1033,6 +1039,7 @@ class RADBC(VectorizedBaseCard):
 
     """
     _id_name = 'node_id'
+
     def clear(self) -> None:
         self.n = 0
         self.node_id = np.array([], dtype='int32')
@@ -1041,15 +1048,15 @@ class RADBC(VectorizedBaseCard):
         self.elements = np.array([], dtype='int32')
         self.nelement = np.array([], dtype='int32')
 
-    #def slice_card_by_index(self, i: np.ndarray) -> RADBC:
-        #load = RADBC(self.model)
-        #load.n = len(i)
-        #load.load_id = self.load_id[i]
-        #load.element_id = self.element_id[i]
-        #load.scale = self.scale[i]
-        #load.x = self.x[i, :]
-        #load.pressure = self.pressure[i, :]
-        #return load
+    # def slice_card_by_index(self, i: np.ndarray) -> RADBC:
+    #     load = RADBC(self.model)
+    #     load.n = len(i)
+    #     load.load_id = self.load_id[i]
+    #     load.element_id = self.element_id[i]
+    #     load.scale = self.scale[i]
+    #     load.x = self.x[i, :]
+    #     load.pressure = self.pressure[i, :]
+    #     return load
 
     def add(self, node_amb, famb, control_node, eids,
             ifile: int=0, comment: str='') -> int:
@@ -1061,7 +1068,7 @@ class RADBC(VectorizedBaseCard):
     def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
         node_amb = integer(card, 1, 'nodamb')
         famb = double(card, 2, 'famb')
-        control_node = integer_or_blank(card, 3, 'cntrlnd', default=0)
+        control_node = integer_or_blank(card, 3, 'control_node', default=0)
         nfields = card.nfields
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
         eids_expand = expand_thru_by(eids)

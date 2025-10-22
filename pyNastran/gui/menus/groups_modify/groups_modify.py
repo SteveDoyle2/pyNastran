@@ -16,7 +16,7 @@ from qtpy.QtWidgets import (
     QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QListWidgetItem
 )
 
-from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
+from pyNastran.bdf.utils import parse_patran_syntax  # parse_patran_syntax_dict
 #from pyNastran.gui.menus.manage_actors import Model
 from pyNastran.gui import ICON_PATH
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
@@ -37,6 +37,8 @@ if TYPE_CHECKING:
 USE_LINEEDIT = True
 
 MAX_EDIT_SIZE = 100_000
+
+
 class GroupsModify(PyDialog):
     """
     +-------------------------------+
@@ -210,7 +212,6 @@ class GroupsModify(PyDialog):
         #self.apply_button.setEnabled(False)
         #self.ok_button.setEnabled(False)
 
-
     def create_layout(self) -> None:
         """displays the menu objects"""
         hbox = QHBoxLayout()
@@ -255,7 +256,6 @@ class GroupsModify(PyDialog):
         #ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         #ok_cancel_box.addWidget(self.cancel_button)
-
 
         main_create_delete = QHBoxLayout()
         main_create_delete.addWidget(self.set_as_main_button)
@@ -688,7 +688,6 @@ class GroupsModify(PyDialog):
         #self.elements_edit # obj.eids
 
 
-
 def _add(adict, keys, values_to_add):
     value_stack = []
     for key in keys:
@@ -707,6 +706,7 @@ def _add(adict, keys, values_to_add):
     #values_add = np.unique(hstack(value_stack))
     #return values_add
 
+
 def _remove(adict, keys, values_to_remove):
     value_stack = []
     for key in keys:
@@ -719,7 +719,7 @@ def _remove(adict, keys, values_to_remove):
     return values_to_remove
 
 
-def main() -> None: # pragma: no cover
+def main() -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
@@ -738,28 +738,29 @@ def main() -> None: # pragma: no cover
     nodes = {'node_str': '50:60',
              'nodes_pound': '103', }
     data = {
-        'font_size' : 8,
-        0 : Group(name='main', element_str='1:#', elements_pound='103', **nodes, editable=False),
-        1 : Group(name='wing', element_str='1:10', elements_pound='103', **nodes, editable=True),
-        2 : Group(name='fuselage1', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        3 : Group(name='fuselage2', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        4 : Group(name='fuselage3', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        5 : Group(name='fuselage4', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        6 : Group(name='fuselage5', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        7 : Group(name='fuselage6', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        8 : Group(name='fuselage7', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        9 : Group(name='fuselage8', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        10 : Group(name='fuselage9', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        11 : Group(name='fuselage10', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        12 : Group(name='fuselage11', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        13 : Group(name='fuselage12', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        14 : Group(name='fuselage13', element_str='50:60', elements_pound='103', **nodes, editable=True),
-        15 : Group(name='fuselage14', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        'font_size': 8,
+        0: Group(name='main', element_str='1:#', elements_pound='103', **nodes, editable=False),
+        1: Group(name='wing', element_str='1:10', elements_pound='103', **nodes, editable=True),
+        2: Group(name='fuselage1', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        3: Group(name='fuselage2', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        4: Group(name='fuselage3', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        5: Group(name='fuselage4', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        6: Group(name='fuselage5', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        7: Group(name='fuselage6', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        8: Group(name='fuselage7', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        9: Group(name='fuselage8', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        10: Group(name='fuselage9', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        11: Group(name='fuselage10', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        12: Group(name='fuselage11', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        13: Group(name='fuselage12', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        14: Group(name='fuselage13', element_str='50:60', elements_pound='103', **nodes, editable=True),
+        15: Group(name='fuselage14', element_str='50:60', elements_pound='103', **nodes, editable=True),
     }
     main_window = GroupsModify(data, win_parent=None, group_active='main')
     main_window.show()
     # Enter the main loop
     app.exec_()
+
 
 if __name__ == '__main__':  # pragma: no cover
     main()

@@ -11,7 +11,7 @@ import numpy as np
 from scipy.spatial import KDTree
 from scipy.interpolate import interp1d, splrep, splev
 
-from cpylog import SimpleLogger, get_logger2
+from cpylog import SimpleLogger, get_logger
 try:
     import matplotlib  # pylint: disable=unused-import
     IS_MATPLOTLIB = True
@@ -146,12 +146,11 @@ class TestF06Flutter(unittest.TestCase):
         assert np.allclose(eigenvectors2, eigenvectors_expected)
         assert np.allclose(eigr_eigi_vel2, eigr_eigi_vel_expected)
 
-
     def test_make_grid_point_singularity_table(self):
         model = OP2()
         failed = [
-            (1,1), (1,2), (1,7),
-            (2,1), (2,2), (2,7),
+            (1, 1), (1, 2), (1, 7),
+            (2, 1), (2, 2), (2, 7),
         ]
         table = model.make_grid_point_singularity_table(failed)
         msg = '\n'.join(table.split('\n')[:-2]) + '\n'
@@ -177,7 +176,7 @@ class TestF06Flutter(unittest.TestCase):
 
     def test_f06_pt145(self):
         """tests read_f06_trim"""
-        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        log = get_logger(log=None, level=None, encoding='utf-8')
         f06_filename = AERO_PATH / 'pt145.f06'
         #trim_results = read_f06_trim(f06_filename,
         #                             log=None, nlines_max=1_000_000, debug=None)
@@ -194,8 +193,7 @@ class TestF06Flutter(unittest.TestCase):
     def test_plot_flutter_bah(self):
         """tests plot_flutter_f06"""
         f06_filename = AERO_PATH / 'bah_plane' / 'bah_plane.f06'
-        log = get_logger2(log=None, debug=None, encoding='utf-8')
-        #log = get_logger2(log=None, debug=True, encoding='utf-8')
+        log = get_logger(log=None, level=None, encoding='utf-8')
         flutters, data = plot_flutter_f06(
             f06_filename, show=False, close=True,
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True, plot_kfreq_damping=True,
@@ -223,8 +221,8 @@ class TestF06Flutter(unittest.TestCase):
         has issues with writing the subcase...
         """
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
-        #log = get_logger2(log=None, debug=None, encoding='utf-8')
-        log = get_logger2(log=None, debug=True, encoding='utf-8')
+        #log = get_logger(log=None, level=None, encoding='utf-8')
+        log = get_logger(log=None, level=False, encoding='utf-8')
 
         plot_flutter_f06(
             f06_filename,
@@ -376,23 +374,24 @@ class TestF06Flutter(unittest.TestCase):
                                show=False, clear=True, close=True)
 
     def test_cmd_line_plot_flutter_0012(self):
-        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        log = get_logger(log=None, level=None, encoding='utf-8')
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
         ivel = '0'
         mode = '1:2'
-        argv = ['f06', 'plot_145', str(f06_filename), '--eas',
-                '--in_units', 'si', '--out_units', 'english_in',
-                '--modal', ivel, mode,
-                '--mag_tol', '0.1',
-                '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv',
-                '--ncol', '2',
-            ]
+        argv = [
+            'f06', 'plot_145', str(f06_filename), '--eas',
+            '--in_units', 'si', '--out_units', 'english_in',
+            '--modal', ivel, mode,
+            '--mag_tol', '0.1',
+            '--modes', '1:', '--ylimdamp', '-.3:', '--export_csv',
+            '--ncol', '2',
+        ]
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 
     def test_cmd_line_plot_flutter_no_input_0012(self):
         """no input???"""
-        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        log = get_logger(log=None, level=None, encoding='utf-8')
         f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
         argv = ['f06', 'plot_145', str(f06_filename), '--eas',
                 '--out_units', 'english_in']
@@ -402,7 +401,9 @@ class TestF06Flutter(unittest.TestCase):
     @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
     def test_plot_func_0012(self):
         log = SimpleLogger(level='warning')
-        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
+        dirname = AERO_PATH / '2_mode_flutter'
+        f06_filename = dirname / '0012_flutter.f06'
+        zona_filename = dirname / 'junk.zona'
         flutters, data = make_flutter_response(f06_filename, f06_units='si', log=log)
         flutter = flutters[1]
         flutter.set_plot_settings(
@@ -421,7 +422,7 @@ class TestF06Flutter(unittest.TestCase):
         flutter.plot_vg_vf(plot_type='eas')
         flutter.plot_vg(plot_type='eas')
         #---------------------------------
-        flutter.set_plot_settings(figsize=(4,4),)
+        flutter.set_plot_settings(figsize=(4, 4),)
         flutter.set_symbol_settings(
             nopoints=False,
             show_mode_number=True,
@@ -429,7 +430,14 @@ class TestF06Flutter(unittest.TestCase):
             markersize=None,
         )
         flutter.plot_vg_vf(plot_type='eas')
+        flutter.plot_vg_vf(plot_type='eas', show_detailed_mode_info=True)
+        flutter.plot_vg_vf(plot_type='eas', mode_switch_method='freq')
+        flutter.plot_vg_vf(plot_type='eas', mode_switch_method='damping')
+        with self.assertRaises(RuntimeError):
+            flutter.plot_vg_vf(plot_type='eas', mode_switch_method='cat')
         flutter.plot_vg(plot_type='eas')
+        flutter.export_to_zona(zona_filename)
+        str(flutter.object_methods())
 
         flutter.set_symbol_settings(
             nopoints=False,
@@ -453,12 +461,12 @@ class TestF06Flutter(unittest.TestCase):
         """constant to check dxyz"""
         # nmodes, nvel
         eigr = np.array([
-            [0.,1., 2.],
-            [0.,1., 2.],
+            [0., 1., 2.],
+            [0., 1., 2.],
         ])
         eigi = np.array([
-            [1.,1.,1.],
-            [10.,10,10],
+            [1., 1., 1.],
+            [10., 10., 10.],
         ])
         nmodes, nvel = eigr.shape
         out = _fix_modes(eigr, eigi, nmodes, nvel, kmodes=0)
@@ -484,7 +492,7 @@ class TestF06Flutter(unittest.TestCase):
             """
             coeffs = [0, -40, -2, 0.5]
             x = np.linspace(-10, 13., num=100)
-            y1 = coeffs[0] + coeffs[1] * x + coeffs[2] * x**2 + coeffs[3]  * x**3
+            y1 = coeffs[0] + coeffs[1] * x + coeffs[2] * x**2 + coeffs[3] * x**3
 
             coeffs2 = [-20, 5, 1, 0.1]
             y2 = coeffs[0] + coeffs[1] * x + coeffs[2] * x ** 2 + coeffs[3] * x ** 3
@@ -496,6 +504,7 @@ class TestF06Flutter(unittest.TestCase):
             plt.grid(True)
             #plt.show()
             #flutter.sort_modes_by_freq(freq)
+
 
 def fix_modes_2024(flutter: FlutterResponse,
                    kmodes: int=0,
@@ -516,8 +525,9 @@ def fix_modes_2024(flutter: FlutterResponse,
         if debug:
             print('no mode switching')
     else:
-        mode_switching
+        raise RuntimeError('mode_switching')
     return
+
 
 def _fix_modes(eigr: np.ndarray,
                eigi: np.ndarray,
@@ -532,7 +542,7 @@ def _fix_modes(eigr: np.ndarray,
 
     # all_data = [nmode, nvel, 2]
     all_data = np.dstack([eigr, eigi])
-    data0 = np.column_stack([eigr[:,0],eigi[:, 0]])
+    data0 = np.column_stack([eigr[:, 0], eigi[:, 0]])
     assert np.array_equal(data0, all_data[:, 0, :])
     assert all_data.shape == (nmodes, nvel, 2), all_data.shape
     imode_expected = np.arange(nmodes, dtype='int32')
@@ -554,7 +564,7 @@ def _fix_modes(eigr: np.ndarray,
             print(f'dxyz[{ivel}]:\n{dxyz}')
             print(f'ixyz[{ivel}]:\n{ixyz}')
 
-        imode_next = ixyz[:,0]
+        imode_next = ixyz[:, 0]
         iunique, idx, inv, counts = np.unique(
             imode_next,
             return_index=True,
@@ -673,7 +683,7 @@ def _fix_modes(eigr: np.ndarray,
         elif debug:
             print(f'ivel={ivel}: no switching')
 
-        out[:,ivel] = isort
+        out[:, ivel] = isort
         imode_next
         data0 = all_data[:, ivel, :]
         tree0 = KDTree(data0)
@@ -695,14 +705,14 @@ class TestZonaFlutter(unittest.TestCase):
             assert len(responses) == 2, list(responses.keys())
 
 
-
 class TestF06Utils(unittest.TestCase):
     def test_opt_aerobeam(self):
         """tests optimization"""
+        log = SimpleLogger('warning')
         f06_filename = AERO_PATH / 'aerobeam.f06'
         png_filename = AERO_PATH / 'aerobeam.png'
         plot_sol_200(f06_filename, png_filename=png_filename,
-                     show=True)
+                     show=True, log=log)
         #read_sol_200(f06_filename)
 
     def test_opt_mdb200(self):
@@ -714,39 +724,54 @@ class TestF06Utils(unittest.TestCase):
 
     def test_f06_trim_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.bdf'
-        subpanel_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
+        aerobox_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
         f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.f06'
         loads_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.blk'
-        model = read_bdf(bdf_filename)
+        nid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.nid'
+        eid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.eid'
+        model = read_bdf(bdf_filename, debug=None)
+        # export_caero_mesh(
+        #     model,
+        #     caero_bdf_filename=aerobox_caero_filename,
+        #     is_aerobox_model=True,
+        #     pid_method='caero',
+        #     rotate_panel_angle_deg=45.,
+        #     write_panel_xyz=False)
         export_caero_mesh(
             model,
-            caero_bdf_filename=subpanel_caero_filename,
-            is_subpanel_model=True,
+            caero_bdf_filename=aerobox_caero_filename,
+            is_aerobox_model=True,
             pid_method='caero',
             write_panel_xyz=True)
 
         trim_results = f06_to_pressure_loads(
-            f06_filename, subpanel_caero_filename, loads_filename,
+            f06_filename, aerobox_caero_filename, loads_filename,
+            log=None, nlines_max=1_000_000, debug=None)
+        trim_results = f06_to_pressure_loads(
+            f06_filename, aerobox_caero_filename, loads_filename,
+            nid_csv_filename=nid_csv_filename,
+            eid_csv_filename=eid_csv_filename,
             log=None, nlines_max=1_000_000, debug=None)
 
     def test_f06_trim_freedlm(self):
         """tests read_f06_trim"""
         bdf_filename = AERO_PATH / 'freedlm' / 'freedlm.bdf'
         caero_filename = AERO_PATH / 'freedlm' / 'freedlm_caero.bdf'
-        model = read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, debug=None)
         export_caero_mesh(
             model,
             caero_bdf_filename=caero_filename,
-            is_subpanel_model=True,
+            is_aerobox_model=True,
             pid_method='caero',
             write_panel_xyz=True)
-        model2 = read_bdf(bdf_filename)
+        model2 = read_bdf(bdf_filename, debug=None)
         #print(f'nnodes = {len(model2.nodes)}')
         #print(f'nelements = {len(model2.elements)}')
 
         f06_filename = AERO_PATH / 'freedlm' / 'freedlm.f06'
-        trim_results = read_f06_trim(f06_filename,
-                                     log=None, nlines_max=1_000_000, debug=None)['trim_results']
+        trim_results = read_f06_trim(
+            f06_filename,
+            log=None, nlines_max=1_000_000, debug=None)['trim_results']
         assert len(trim_results.aero_force.keys()) == 2
         assert len(trim_results.aero_pressure.keys()) == 2
         assert len(trim_results.controller_state.keys()) == 2
@@ -767,7 +792,6 @@ class TestF06Utils(unittest.TestCase):
         #print(press)
         #print(f'npressure = {len(press)}')
         #print(f'nforce = {len(force)}')
-
 
     def test_f06_trim_aerobeam(self):
         """tests read_f06_trim"""

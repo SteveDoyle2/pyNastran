@@ -4,20 +4,21 @@ import numpy as np
 
 from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import read_bdf, print_card_8
+from pyNastran.utils import PathLike
 #from pyNastran.f06.f06_tables.trim import AeroPressure
 from pyNastran.f06.parse_trim import read_f06_trim
 
 
-def f06_to_pressure_loads(f06_filename: str,
-                          subpanel_caero_filename: str,
-                          loads_filename: str,
-                          nid_csv_filename: str='',
-                          eid_csv_filename: str='',
+def f06_to_pressure_loads(f06_filename: PathLike,
+                          aerobox_caero_filename: PathLike,
+                          loads_filename: PathLike,
+                          nid_csv_filename: PathLike='',
+                          eid_csv_filename: PathLike='',
                           log: Optional[SimpleLogger]=None,
                           nlines_max: int=1_000_000,
                           debug: bool=False) -> None:
-    caero_model = read_bdf(subpanel_caero_filename, log=log,
-                           xref=False, validate=False)
+    caero_model = read_bdf(aerobox_caero_filename, log=log,
+                           xref=False, validate=False, debug=debug)
     log = caero_model.log
 
     nid_to_eid_map = defaultdict(list)
@@ -32,22 +33,31 @@ def f06_to_pressure_loads(f06_filename: str,
     metadata = trim_results.metadata
     #print('trim_results.aero_pressure', trim_results.aero_pressure)
 
-    element_pressures = {}
+    element_pressure_dict = {}
     for subcase, apress in trim_results.aero_pressure.items():
         element_pressure = apress.get_element_pressure(nid_to_eid_map)
-        element_pressures[subcase] = element_pressure
+        element_pressure_dict[subcase] = element_pressure
 
-    import sys
     if loads_filename is not None:
         with open(loads_filename, 'w') as loads_file:
-            for subcase, element_pressure in element_pressures.items():
-                metadatai = metadata[subcase]
-                subtitle = metadatai.get('subtitle', '')
-                mach = metadatai['mach']
-                q = metadatai['q']
-                cref = metadatai['cref']
-                bref = metadatai['bref']
-                sref = metadatai['sref']
+            for subcase, element_pressure in element_pressure_dict.items():
+                apress = trim_results.aero_pressure[subcase]
+                # if 0:  # pragma: no cover
+                #     metadatai = metadata[subcase]
+                #     subtitle = metadatai.get('subtitle', '')
+                #     mach = metadatai['mach']
+                #     q = metadatai['q']
+                #     cref = metadatai['cref']
+                #     bref = metadatai['bref']
+                #     sref = metadatai['sref']
+                # else:
+                # print(element_pressure)
+                subtitle = apress.subtitle
+                mach = apress.mach
+                q = apress.q
+                cref = apress.cref
+                bref = apress.bref
+                sref = apress.sref
 
                 comment = f'$ subtitle={subtitle!r}\n'
                 comment += f'$ mach={mach:g} q={q:g}\n'
@@ -61,14 +71,14 @@ def f06_to_pressure_loads(f06_filename: str,
 
     if nid_csv_filename:
         node_line0 = '# Nid,'
-        for subcase, element_pressure in element_pressures.items():
+        for subcase, element_pressure in element_pressure_dict.items():
             node_line0 += f'CpSubcase{subcase:d}(f),'
             eids = list(element_pressure)
         node_line0 += '\n'
 
         nodes = apress.nodes
         nnodes = len(nodes)
-        nsubcases = len(element_pressures)
+        nsubcases = len(element_pressure_dict)
         isubcase = 0
         node_cp_array = np.zeros((nnodes, nsubcases))
         for subcase, apress in trim_results.aero_pressure.items():
@@ -86,7 +96,7 @@ def f06_to_pressure_loads(f06_filename: str,
     if eid_csv_filename:
         line0 = '# Eid,'
         cps_list = []
-        for subcase, element_pressure in element_pressures.items():
+        for subcase, element_pressure in element_pressure_dict.items():
             line0 += f'CpSubcase{subcase:d}(f),'
             eids = list(element_pressure)
             neids = len(eids)

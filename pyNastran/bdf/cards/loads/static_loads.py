@@ -26,7 +26,7 @@ from pyNastran.bdf import MAX_INT
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by #  _node_ids,
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by  #  _node_ids,
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 
 from pyNastran.bdf.bdf_interface.internal_get import coord_id
@@ -138,9 +138,9 @@ class LOAD(LoadCombination):
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'PLOAD1', 'PLOAD2', 'PLOAD4',
             'GRAV', 'ACCEL', 'ACCEL1']
-        load_scale = self.scale # global
+        load_scale = self.scale  # global
         for (loads_pack, i_scale) in zip(self.load_ids, self.scale_factors):
-            scale = i_scale * load_scale # actual scale = global * local
+            scale = i_scale * load_scale  # actual scale = global * local
             if isinstance(loads_pack, integer_types):
                 raise RuntimeError('the load have not been cross-referenced')
             if scale == 0.0 and filter_zero_scale_factors:
@@ -149,7 +149,7 @@ class LOAD(LoadCombination):
             for load in loads_pack:
                 if simple_loads:
                     loads.append(load)
-                    scale_factors.append(scale) # local
+                    scale_factors.append(scale)  # local
                 elif isinstance(load, LOAD):
                     if not resolve_load_card:
                         msg = (
@@ -238,6 +238,7 @@ class LOAD(LoadCombination):
         self.load_ids = self.get_load_ids()
         self.load_ids_ref = None
 
+
 class CLOAD(LoadCombination):
     """
     Static Load Combination for Superelement Loads (Superposition)
@@ -265,7 +266,7 @@ class CLOAD(LoadCombination):
 
         """
         load_ids2 = []
-        msg = f', which is required by CLOAD={self.sid:d}'
+        # msg = f', which is required by CLOAD={self.sid:d}'
         for load_id in self.load_ids:
             if load_id == self.sid:
                 msg = 'Type=%s sid=%s load_id=%s creates a recursion error' % (
@@ -988,7 +989,7 @@ class Load0(BaseCard):
         assert self.xyz.size == 3, self.xyz.shape
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FORCE/MOMENT card from ``BDF.add_card(...)``
 
@@ -1002,11 +1003,34 @@ class Load0(BaseCard):
         """
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
-        cid = integer_or_blank(card, 3, 'cid', 0)
+        cid = integer_or_blank(card, 3, 'cid', default=0)
         mag = double(card, 4, 'mag')
-        xyz = np.array([double_or_blank(card, 5, 'X1', 0.0),
-                        double_or_blank(card, 6, 'X2', 0.0),
-                        double_or_blank(card, 7, 'X3', 0.0)])
+        xyz = np.array([double_or_blank(card, 5, 'X1', default=0.0),
+                        double_or_blank(card, 6, 'X2', default=0.0),
+                        double_or_blank(card, 7, 'X3', default=0.0)])
+        assert len(card) <= 8, 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
+        return cls(sid, node, mag, xyz, cid=cid, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a FORCE/MOMENT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        node = integer(card, 2, 'node')
+        cid = integer_or_blank(card, 3, 'cid', default=0)
+        mag = force_double(card, 4, 'mag')
+        xyz = np.array([force_double_or_blank(card, 5, 'X1', default=0.0),
+                        force_double_or_blank(card, 6, 'X2', default=0.0),
+                        force_double_or_blank(card, 7, 'X3', default=0.0)])
         assert len(card) <= 8, 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
         return cls(sid, node, mag, xyz, cid=cid, comment=comment)
 
@@ -1199,7 +1223,7 @@ class Load1(BaseCard):
         self.xyz = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FORCE1/MOMENT1 card from ``BDF.add_card(...)``
 
@@ -1421,7 +1445,7 @@ class Load2(BaseCard):
         assert self.g3 != self.g4, 'g3=%s g4=%s' % (self.g3, self.g4)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a FORCE2/MOMENT2 card from ``BDF.add_card(...)``
 
@@ -1558,7 +1582,7 @@ class Load2(BaseCard):
 
         if not is_failed:
             v43 = xyz4 - xyz3
-            v2 = v43
+            #v2 = v43
             try:
                 v21 /= norm(v21)
             except FloatingPointError:
@@ -1675,9 +1699,9 @@ class FORCE2(Load2):
     """
     type = 'FORCE2'
     _properties = ['scaled_vector', 'node_id', 'node_ids']
+
     def __init__(self, sid, node, mag, g1, g2, g3, g4, comment=''):
         Load2.__init__(self, sid, node, mag, g1, g2, g3, g4, comment)
-
 
 
 class MOMENT(Load0):
@@ -1887,7 +1911,7 @@ class PLOAD(Load):
         assert len(self.nodes) in [3, 4], 'nodes=%s' % self.nodes
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PLOAD card from ``BDF.add_card(...)``
 
@@ -2070,7 +2094,7 @@ class PLOAD1(Load):
         self.load_type = load_type
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PLOAD1 card from ``BDF.add_card(...)``
 
@@ -2348,7 +2372,8 @@ class PLOAD2(Load):
         # Sort array of element ids and calculate the differences between consecutive elements
         eids.sort()
         diffs = np.diff(eids)
-        # If all differences are equal to 1 use keyword THRU, otherwise just append the list of element ids to the list of fields
+        # If all differences are equal to 1 use keyword THRU,
+        # otherwise just append the list of element ids to the list of fields
         if np.all(diffs == 1):
             list_fields += [eids[0], 'THRU', eids[-1]]
         else:
@@ -2388,66 +2413,6 @@ class PLOAD2(Load):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
-#def PLOAD4_func(self, sid, eids, pressures,
-                #g1=None, g34=None, cid=0, nvector=None, surf_or_line='SURF',
-                #line_load_dir='NORM', comment=''):
-    #"""
-    #Creates a PLOAD4 card
-
-    #Solid Format
-    #============
-    #Defines a pressure load on a face of a CHEXA, CPENTA, or CTETRA element.
-
-    #+--------+-----+-----+----+----+------+------+------+-------+
-    #|   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
-    #+========+=====+=====+====+====+======+======+======+=======+
-    #| PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  |  G1  | G3/G4 |
-    #+--------+-----+-----+----+----+------+------+------+-------+
-    #|        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
-    #+--------+-----+-----+----+----+------+------+------+-------+
-
-    #Shell Format
-    #============
-    #Defines a pressure load on a face of a CTRIA3, CTRIA6, CTRIAR,
-    #CQUAD4, CQUAD8, or CQUADR element.
-    #+--------+-----+-----+----+----+------+------+------+-------+
-    #|   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
-    #+========+=====+=====+====+====+======+======+======+=======+
-    #| PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  | THRU | EID2  |
-    #+--------+-----+-----+----+----+------+------+------+-------+
-    #|        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
-    #+--------+-----+-----+----+----+------+------+------+-------+
-
-    #.. warning:: NX does not support SORL and LDIR, MSC does
-    #"""
-    #if g34 is None:
-        #return PLOAD4Solid(
-            #sid, eids, pressures,
-            #g1=None, g34=None, cid=0, nvector=None, surf_or_line='SURF',
-            #line_load_dir='NORM', comment='')
-    #return PLOAD4Shell(
-        #sid, eids, pressures, cid=0, nvector=None, surf_or_line='SURF',
-        #line_load_dir='NORM', comment='')
-
-
-#class PLOAD4Shell(PLOAD4):
-    #def __init__(self, sid, eids, pressures, g1=None, g34=None, cid=0,
-                 #nvector=None, surf_or_line='SURF',
-                 #line_load_dir='NORM', comment=''):
-        #PLOAD4.__init__(self, sid, eids, pressures, g1=None, g34=None,
-                        #cid=0, nvector=None,
-                        #surf_or_line='SURF',
-                        #line_load_dir='NORM',
-                        #comment='')
-#class PLOAD4Shell(PLOAD4):
-    #def __init__(self, sid, eids, pressures, g1=None, g34=None, cid=0,
-                 #nvector=None, surf_or_line='SURF',
-                 #line_load_dir='NORM', comment=''):
-        #PLOAD4.__init__(self, sid, eids, pressures, g1=g1, g34=g34,
-                        #cid=cid, nvector=nvector,
-                        #surf_or_line=surf_or_line,
-                        #line_load_dir=line_load_dir,
-                        #comment=comment)
 
 class PLOAD4(Load):
     """
@@ -2906,7 +2871,8 @@ class PLOAD4(Load):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-def update_pload4_vector(pload4: PLOAD4, normal, cid: int):
+
+def update_pload4_vector(pload4: PLOAD4, normal: np.ndarray, cid: int) -> np.ndarray:
     """helper method"""
     if np.abs(pload4.nvector).max() == 0.:
         # element surface normal

@@ -857,7 +857,7 @@ class CBEAM(LineElement):
         self.g0_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         unused_pid = self.Pid()
         unused_edges = self.get_edge_ids()
@@ -1016,7 +1016,7 @@ class BEAMOR(BaseCard):
         return BEAMOR(pid, is_g0, g0, x, offt='GGG', comment='')
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         pid = integer_or_blank(card, 2, 'pid')
 
         # x / g0

@@ -1,6 +1,6 @@
 import numpy as np
 from numpy import zeros, empty
-from cpylog import get_logger2
+from cpylog import get_logger
 
 
 def convert_to_int(sline):
@@ -13,7 +13,7 @@ def read_avus(avus_filename, log=None, debug=False):
 
 class AvusGrid:
     def __init__(self, log=None, debug: str | bool | None=False):
-        self.log = get_logger2(log=log, debug=debug)
+        self.log = get_logger(log=log, level=debug)
         self.infilename = None
 
         self.zones = None

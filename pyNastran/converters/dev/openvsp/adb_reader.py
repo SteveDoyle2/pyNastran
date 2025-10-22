@@ -1,12 +1,12 @@
 import sys
 from struct import unpack
 from numpy import degrees, array, zeros, vstack, where
-from cpylog import get_logger2
+from cpylog import get_logger
 
 
 class ADB_Reader:
     def __init__(self, log=None, debug: str | bool | None=None, batch=False):
-        self.log = get_logger2(log, debug)
+        self.log = get_logger(log, debug)
         self.debug = debug
         self.n = 0
         #self.p_inf =

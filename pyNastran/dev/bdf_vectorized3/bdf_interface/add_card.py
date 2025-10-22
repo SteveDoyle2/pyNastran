@@ -36,38 +36,43 @@ from pyNastran.bdf.cards.bdf_tables import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray66float
-    from pyNastran.dev.bdf_vectorized3.bdf import PARAM # BDF,
-    #from pyNastran.dev.bdf_vectorized3.cards.grid import GRID
-    #from pyNastran.dev.bdf_vectorized3.cards.coord import COORD # CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
-    #from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2, LOADSET
-    #from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import PLOAD, PLOAD1, PLOAD2, PLOAD4 # , PLOADX1
-    #from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
-        #DAREA, DELAY, DLOAD, DPHASE, LSEQ, QVECT, RANDPS,
-        #TIC, RLOAD1, RLOAD2, TLOAD1, TLOAD2)
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
-        #CTRIA3, CTRIA6, CTRIAR,
-        #CQUAD4, CQUAD8, CQUAD, CQUADR)
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.shell_axi import (
-        #CTRIAX, CTRIAX6,
-        #CQUADX, CQUADX4, CQUADX8)
-    #from pyNastran.dev.bdf_vectorized3.cards.aero.aero import (
-        #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7,
-        #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-        #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
-        #MONPNT1, MONPNT2, MONPNT3,
-        #AECOMP, AECOMPL, AEFACT, AELIST, AEPARM, AELINK,
-        #AESURF, AESURFS,
-        #CSSCHD, FLFACT, GUST)
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, CELAS3, CELAS4, PELAS, PELAST
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.damper import CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5, PDAMP, PDAMPT, CGAP, CVISC, PGAP, PVISC
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSM, NSM1, NSML, NSML1, NSMADD
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, CTUBE, CONROD, PROD, PTUBE
-    #from pyNastran.dev.bdf_vectorized3.cards.elements.solid import CTETRA, CPYRAM, CPENTA, CHEXA, PSOLID, PLSOLID # , PCOMPS, PCOMPLS
-    #from pyNastran.dev.bdf_vectorized3.cards.materials import MAT1, MAT2, MAT8, MAT9 # MAT3, MAT4, MAT5, , MAT10, MAT10C, MAT11
+    from pyNastran.dev.bdf_vectorized3.bdf import PARAM  # BDF
+    # from pyNastran.dev.bdf_vectorized3.cards.grid import GRID
+    # from pyNastran.dev.bdf_vectorized3.cards.coord import COORD # CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+    # from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
+    #     LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2, LOADSET)
+    # from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import (
+    #     PLOAD, PLOAD1, PLOAD2, PLOAD4) # , PLOADX1
+    # from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
+    #     DAREA, DELAY, DLOAD, DPHASE, LSEQ, QVECT, RANDPS,
+    #     TIC, RLOAD1, RLOAD2, TLOAD1, TLOAD2)
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
+    #     CTRIA3, CTRIA6, CTRIAR,
+    #     CQUAD4, CQUAD8, CQUAD, CQUADR)
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.shell_axi import (
+    #     CTRIAX, CTRIAX6,
+    #     CQUADX, CQUADX4, CQUADX8)
+    # from pyNastran.dev.bdf_vectorized3.cards.aero.aero import (
+    #     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7,
+    #     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    #     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
+    #     MONPNT1, MONPNT2, MONPNT3,
+    #     AECOMP, AECOMPL, AEFACT, AELIST, AEPARM, AELINK,
+    #     AESURF, AESURFS,
+    #     CSSCHD, FLFACT, GUST)
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, CELAS3, CELAS4, PELAS, PELAST
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
+    #     CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5, PDAMP, PDAMPT, CGAP, CVISC, PGAP, PVISC)
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSM, NSM1, NSML, NSML1, NSMADD
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, CTUBE, CONROD, PROD, PTUBE
+    # from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
+    #     CTETRA, CPYRAM, CPENTA, CHEXA, PSOLID, PLSOLID # , PCOMPS, PCOMPLS)
+    # from pyNastran.dev.bdf_vectorized3.cards.materials import (
+    #     MAT1, MAT2, MAT8, MAT9 # MAT3, MAT4, MAT5, , MAT10, MAT10C, MAT11)
 
 
 class AddCoords(BDFAttributes):
@@ -123,6 +128,8 @@ class AddCoords(BDFAttributes):
             the z-axis of the coordinate system
         xzplane : list[float, float, float]
             a point on the xz plane
+        setup : bool; default=True
+            calculate the local to global transform
         comment : str; default=''
             a comment for the card
 
@@ -238,10 +245,10 @@ class AddCoords(BDFAttributes):
         coord = CORD3G(cid, method_es, method_int, form, thetas, rid, comment=comment)
         return coord
 
-    #def add_gmcord(self, cid, entity, gm_ids, comment: str='') -> GMCORD:
-        #"""Creates a GMCORD coordinate card"""
-        #coord = GMCORD(cid, entity, gm_ids, comment=comment)
-        #return coord
+    # def add_gmcord(self, cid, entity, gm_ids, comment: str='') -> GMCORD:
+    #     """Creates a GMCORD coordinate card"""
+    #     coord = GMCORD(cid, entity, gm_ids, comment=comment)
+    #     return coord
 
 
 class AddBolts(BDFAttributes):
@@ -764,7 +771,9 @@ class Add0dElements(BDFAttributes):
             a comment for the card
 
         """
-        prop = self.pbush.add(pid, k, b, ge, rcv=rcv, mass=mass, comment=comment)
+        prop = self.pbush.add(pid, k, b, ge, rcv=rcv, mass=mass,
+                              alpha=alpha, tref=tref, coincident_length=coincident_length,
+                              comment=comment)
         return prop
 
     def add_cbush1d(self, eid: int, pid: int, nids: list[int], cid: Optional[int]=None,
@@ -788,13 +797,13 @@ class Add0dElements(BDFAttributes):
                                 optional_vars=optional_vars, comment=comment)
         return prop
 
-    #def add_pbush2d(self, pid, k, c, m, sa, se, optional_vars, comment: str='') -> int:
-        #"""
-        #Creates a PBUSH2D card
-        #"""
-        #prop = PBUSH2D(pid. comment=comment)
-        #self.add_property_object(prop)
-        #return prop
+    # def add_pbush2d(self, pid, k, c, m, sa, se, optional_vars, comment: str='') -> int:
+    #     """
+    #     Creates a PBUSH2D card
+    #     """
+    #     prop = PBUSH2D(pid. comment=comment)
+    #     self.add_property_object(prop)
+    #     return prop
 
     def add_pbusht(self, pid: int,
                    k_tables: Optional[list[int]]=None,
@@ -1049,7 +1058,7 @@ class Add1dElements(BDFAttributes):
            material id
         A : float
            area
-        J : float; default=0.
+        j : float; default=0.
            polar moment of inertia
         c : float; default=0.
            stress factor
@@ -1107,7 +1116,8 @@ class Add1dElements(BDFAttributes):
         prop = self.ptube.add(pid, mid, OD1, t=t, nsm=nsm, OD2=OD2, comment=comment)
         return prop
 
-    def add_baror(self, pid: int, is_g0, g0, x, offt: str='GGG', comment: str='') -> BAROR:
+    def add_baror(self, pid: int, is_g0, g0, x, offt: str='GGG',
+                  comment: str='') -> BAROR:
         baror = BAROR(pid, g0, x, offt=offt, comment=comment)
         assert self.baror is None
         self.baror = baror
@@ -1155,10 +1165,10 @@ class Add1dElements(BDFAttributes):
 
         Parameters
         ----------
+        eid : int
+            element id
         pid : int
             property id
-        mid : int
-            material id
         nids : list[int, int]
             node ids; connected grid points at ends A and B
         x : list[float, float, float]
@@ -1186,54 +1196,54 @@ class Add1dElements(BDFAttributes):
                              wa=wa, wb=wb, comment=comment)
         return elem
 
-    #def add_pbarl_dvprel1(self, pid: int, mid: int,
-                          #Type: str, dim: list[float], dim_constraints: list[Any],
-                          #group: str='MSCBML0', nsm: float=0.,
-                          #comment: str='') -> tuple[PBARL, list[DESVAR], list[DVPREL1]]:
-        #"""
-        #dim = [0.1, 0.2, 0.3, 0.4]
-        #dim_constraints = [
-            #None,
-            #[0.01, 1.0],
-            #[None, 1.0],
-            #None,
-        #]"""
-        #assert len(dim) == len(dim_constraints), f'len(dim)={len(dim)} len(dim_constraints)={len(dim_constraints)}'
-        #pbarl = self.add_pbarl(
-            #pid, mid, Type, dim, group=group, nsm=nsm,
-            #comment: str='')
-        #prop_type = 'PBAR'
-        #desvar_id = max(self.desvars) + 1
-        #oid = max(self.dvprels) + 1
-        #desvars = []
-        #dvprels = []
-        #for i, dim, dim_min_max in zip(count(), dim, dim_constraints):
-            #if dim_min_max is None:
-                #continue
-            #xinit = dim
-            #dim_min, dim_max = dim_min_max
-            #pname_fid = f'DIM{i+1:d}'
-            #label = pname_fid
-            #dvids = [desvar_id]
-            #coeffs = [1.]
-            #xlb = -1e20 if dim_min is None else dim_min
-            #xub = 1e20 if dim_max is None else dim_max
-            #desvar = self.add_desvar(
-                #desvar_id, label, xinit,
-                #xlb=xlb, xub=xub,
-                #delx=None, ddval=None,
-                #comment: str='')
-            #dvprel1 = self.add_dvprel1(
-                #oid, prop_type, pid, pname_fid, dvids, coeffs,
-                #p_min=None, p_max=1e20, c0=0.0,
-                #validate=True, comment: str='')
-            #desvars.append(desvar)
-            #dvprels.append(dvprel1)
-            #desvar_id += 1
-            #oid += 1
-        #return pbarl, desvars, dvprels
+    # def add_pbarl_dvprel1(self, pid: int, mid: int,
+    #                       Type: str, dim: list[float], dim_constraints: list[Any],
+    #                       group: str='MSCBML0', nsm: float=0.,
+    #                       comment: str='') -> tuple[PBARL, list[DESVAR], list[DVPREL1]]:
+    #     """
+    #     dim = [0.1, 0.2, 0.3, 0.4]
+    #     dim_constraints = [
+    #         None,
+    #         [0.01, 1.0],
+    #         [None, 1.0],
+    #         None,
+    #     ]"""
+    #     assert len(dim) == len(dim_constraints), f'len(dim)={len(dim)} len(dim_constraints)={len(dim_constraints)}'
+    #     pbarl = self.add_pbarl(
+    #         pid, mid, Type, dim, group=group, nsm=nsm,
+    #         comment: str='')
+    #     prop_type = 'PBAR'
+    #     desvar_id = max(self.desvars) + 1
+    #     oid = max(self.dvprels) + 1
+    #     desvars = []
+    #     dvprels = []
+    #     for i, dim, dim_min_max in zip(count(), dim, dim_constraints):
+    #         if dim_min_max is None:
+    #             continue
+    #         xinit = dim
+    #         dim_min, dim_max = dim_min_max
+    #         pname_fid = f'DIM{i+1:d}'
+    #         label = pname_fid
+    #         dvids = [desvar_id]
+    #         coeffs = [1.]
+    #         xlb = -1e20 if dim_min is None else dim_min
+    #         xub = 1e20 if dim_max is None else dim_max
+    #         desvar = self.add_desvar(
+    #             desvar_id, label, xinit,
+    #             xlb=xlb, xub=xub,
+    #             delx=None, ddval=None,
+    #             comment: str='')
+    #         dvprel1 = self.add_dvprel1(
+    #             oid, prop_type, pid, pname_fid, dvids, coeffs,
+    #             p_min=None, p_max=1e20, c0=0.0,
+    #             validate=True, comment: str='')
+    #         desvars.append(desvar)
+    #         dvprels.append(dvprel1)
+    #         desvar_id += 1
+    #         oid += 1
+    #     return pbarl, desvars, dvprels
 
-    def add_pbar(self, pid: int, mid: int, A: float=0.,
+    def add_pbar(self, pid: int, mid: int, area: float=0.,
                  i1: float=0., i2: float=0., i12: float=0., j: float=0.,
                  nsm: float=0.,
                  c1: float=0., c2: float=0.,
@@ -1267,7 +1277,7 @@ class Add1dElements(BDFAttributes):
             a comment for the card
 
         """
-        prop = self.pbar.add(pid, mid, A=A, i1=i1, i2=i2, i12=i12, j=j, nsm=nsm,
+        prop = self.pbar.add(pid, mid, area=area, i1=i1, i2=i2, i12=i12, j=j, nsm=nsm,
                              c1=c1, c2=c2, d1=d1, d2=d2, e1=e1, e2=e2,
                              f1=f1, f2=f2, k1=k1, k2=k2, comment=comment)
         return prop
@@ -1542,9 +1552,9 @@ class Add1dElements(BDFAttributes):
     def add_pbeaml_dvprel1(self, pid: int, mid: int, beam_type: str,
                            xxb, dims, dim_constraints,
                            so=None, nsm=None,
-                           #static_stress_constraints=None,
-                           #static_strain_constraints=None,
-                           #static_force_constraints=None,
+                           # static_stress_constraints=None,
+                           # static_strain_constraints=None,
+                           # static_force_constraints=None,
                            group: str='MSCBML0',
                            comment: str='') -> tuple[int, list[int], list[int]]:
         """
@@ -1564,13 +1574,13 @@ class Add1dElements(BDFAttributes):
         dim_station0 = dims[0]
         assert len(dim_station0) == len(dim_constraints), f'len(dim_station0)={len(dim_station0)} len(dim_constraints)={len(dim_constraints)}'
         pbeaml = self.add_pbeaml(pid, mid, beam_type, xxb, dims,
-                                group=group, so=so, nsm=nsm, comment=comment)
+                                 group=group, so=so, nsm=nsm, comment=comment)
 
         prop_type = 'PBEAML'
         desvar_id = 1 if len(self.desvars) == 0 else max(self.desvars) + 1
         oid = 1 if len(self.dvprels) == 0 else max(self.dvprels) + 1
-        #dresp_id = 1 if len(self.dresps) == 0 else max(self.dresps) + 1
-        #dconstr_id = 1 # if len(self.dconstrs) == 0 else max(self.dconstrs) + 1
+        # dresp_id = 1 if len(self.dresps) == 0 else max(self.dresps) + 1
+        # dconstr_id = 1 # if len(self.dconstrs) == 0 else max(self.dconstrs) + 1
         desvars = []
         dvprels = []
         comment = f'PBEAML-pid={pid:d}'
@@ -1586,7 +1596,7 @@ class Add1dElements(BDFAttributes):
             if len(desvar_label) > 8:
                 desvar_label = f'D{i+1:d}{pid}'
             assert len(desvar_label) <= 8, desvar_label
-            #label = pname_fid
+            # label = pname_fid
 
             if beam_type == 'TUBE':  # t
                 # desvar defines Ri, t
@@ -1609,7 +1619,6 @@ class Add1dElements(BDFAttributes):
                     t_min_max = [t_min, t_max]
                     dim_min_max = t_min_max
                     xinit = t_init
-                #x = 1
             else:
                 xinit = dim
 
@@ -1627,7 +1636,7 @@ class Add1dElements(BDFAttributes):
                 # desvar defines Ri, t
                 # dvprel defines Ro, Ri
                 dvids = [desvar_Ri, desvar_t]  # Ro
-                #Ri = 0*Ro + 1*Ri
+                # Ri = 0*Ro + 1*Ri
                 if i == 0:
                     coeffs = [1., 1.]  # Ro
                 else:
@@ -1645,21 +1654,20 @@ class Add1dElements(BDFAttributes):
             desvar_id += 1
             oid += 1
             comment = ''
-        #dconstrs = []
-        #if static_stress_constraints:
-            #label = f'o_resp{pid:d}'
-            #response_type = 'STRESS'
-            #dresp_id = add_beam_stress_strain_constraints(self, pid, label, response_type,
-                                                          #static_stress_constraints,
-                                                          #dresp_id, dconstr_id,
-                                                          #dconstrs)
-        #if static_strain_constraints:
-            #label = f'o_resp{pid:d}'
-            #response_type = 'STRAIN'
-            #dresp_id = add_beam_stress_strain_constraints(self, pid, label, response_type,
-                                                          #static_stress_constraints, dresp_id,
-                                                          #dconstrs)
-
+        # dconstrs = []
+        # if static_stress_constraints:
+        #     label = f'o_resp{pid:d}'
+        #     response_type = 'STRESS'
+        #     dresp_id = add_beam_stress_strain_constraints(self, pid, label, response_type,
+        #                                                   static_stress_constraints,
+        #                                                   dresp_id, dconstr_id,
+        #                                                   dconstrs)
+        # if static_strain_constraints:
+        #     label = f'o_resp{pid:d}'
+        #     response_type = 'STRAIN'
+        #     dresp_id = add_beam_stress_strain_constraints(self, pid, label, response_type,
+        #                                                   static_stress_constraints, dresp_id,
+        #                                                   dconstrs)
         return pbeaml, desvars, dvprels
 
     def add_cbend(self, eid: int, pid: int, nids,
@@ -1675,10 +1683,11 @@ class Add1dElements(BDFAttributes):
                   nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b,
                   comment: str='') -> int:
         """Creates a PBEND card"""
-        prop = self.pbend.add(pid, mid, beam_type, A, i1, i2, j,
-                     c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
-                     nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b,
-                     comment=comment)
+        prop = self.pbend.add(
+            pid, mid, beam_type, A, i1, i2, j,
+            c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+            nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b,
+            comment=comment)
         return prop
 
     def add_cbeam3(self, eid, pid, nids, x=None, g0=None,
@@ -2020,6 +2029,8 @@ class Add2dElements(BDFAttributes):
             defines transverse shear material
         mid4 : int; default=None
             defines membrane-bending coupling material
+        t : float | None; default=None
+            thickness
         twelveIt3 : float; default=1.0
             Bending moment of inertia ratio, 12I/T^3. Ratio of the actual
             bending moment inertia of the shell, I, to the bending
@@ -2398,7 +2409,7 @@ class AddRigidElements(BDFAttributes):
         comps : list[str]
             independent components
             len(comps) = len(weights)
-        GiJs : varies
+        Gijs : varies
             independent nodes
             list[list[int]]:
                 allows for different nodes for the different weights
@@ -2414,11 +2425,13 @@ class AddRigidElements(BDFAttributes):
             thermal expansion coefficient
         tref : float; default=0.0
             reference temperature
+        validate : bool; default=True
+            verify the nodes exist
         comment : str; default=''
             a comment for the card
 
         """
-        #weights: list[float], comps: list[str], Gijs: list[int],
+        # weights: list[float], comps: list[str], Gijs: list[int],
         if isinstance(Gijs[0], integer_types):
             Gijs2 = []
             for Gij in Gijs:
@@ -2435,8 +2448,8 @@ class AddRigidElements(BDFAttributes):
                 except TypeError:
                     msg = f'weights={weights} comps={comps} Gijs={Gijs}'
                     raise TypeError(f'RBE3 eid={eid} ' + msg)
-            #independent_nodes.extend(Gij)
-            #ngrid_per_weight.append(len(Gij))
+            # independent_nodes.extend(Gij)
+            # ngrid_per_weight.append(len(Gij))
 
         elem = self.rbe3.add(eid, refgrid, refc, weights, comps, Gijs,
                              Gmi=Gmi, Cmi=Cmi, alpha=alpha, tref=tref, comment=comment)
@@ -2782,7 +2795,8 @@ class AddAero(BDFAttributes):
         paero = self.paero1.add(pid, caero_body_ids=caero_body_ids, comment=comment)
         return paero
 
-    def add_paero2(self, pid: int, orient: str, width: float, AR: float,
+    def add_paero2(self, pid: int, orient: str,
+                   width: float, aspect_ratio: float,
                    thi: list[int], thn: list[int],
                    lrsb: Optional[int]=None,
                    lrib: Optional[int]=None,
@@ -2803,7 +2817,7 @@ class AddAero(BDFAttributes):
         width : float
             Reference half-width of body and the width of the constant
             width interference tube
-        AR : float
+        aspect_ratio : float
             Aspect ratio of the interference tube (height/width)
         thi / thn : list[int]
             The first (thi) and last (thn) interference element of a body
@@ -2824,7 +2838,7 @@ class AddAero(BDFAttributes):
 
         """
         paero = self.paero2.add(
-            pid, orient, width, AR, thi, thn, lrsb=lrsb, lrib=lrib,
+            pid, orient, width, aspect_ratio, thi, thn, lrsb=lrsb, lrib=lrib,
             lth=lth, comment=comment)
         return paero
 
@@ -2862,35 +2876,35 @@ class AddAero(BDFAttributes):
         """
         Parameters
         ----------
-        PID : int
+        pid : int
             Property identification number. (Integer > 0)
-        CLA : int; default=0
+        cla : int; default=0
             Select Prandtl-Glauert correction. (Integer = -1, 0, 1)
             -1 Compressibility correction made to lift curve slope data for a reference Mach number.
             0  No correction and no list needed. (Default)
             +1 No correction and lift curve slope provided by a list as a
                function of strip location and Mach number.
-        LCLA : int
+        lcla : int
             ID number of the AEFACT entry that lists the lift curve slope
             on all strips for each Mach number on the MKAEROi entry. See
             Remark 2 below. (Integer = 0 if CLA = 0, > 0 if CLA ≠ 0)
-        CIRC : int; default=0
+        circ : int; default=0
             Select Theodorsen’s function C(k) or the number of exponential
             coefficients used to approximate C(k).
             (Integer = 0, 1, 2, 3; Must be zero if CLA ≠ 0.)
             0 Theodorsen function.
             1, 2, 3 Approximate function with b0, b1, β1, ..., bn, βn n = 1, 2, 3.
-        LCIRC : int
+        lcirc : int
             Identification number of the AEFACT entry that lists the b, β values
             for each Mach number. See Remark 3, 4, and 5 below; variable b’s
             and β’s for each mi on the MKAEROi entry.
             (Integer = 0 if CIRC = 0, > 0 if CIRC ≠ 0)
-        DOCi : list[float]
+        docs : list[float]
             d/c = distance of the control surface hinge aft of the quarter-chord
             divided by the strip chord (Real ≥ 0.0)
-        CAOCi : list[float]
+        caocs : list[float]
             ca/c = control surface chord divided by the strip chord. (Real ≥ 0.0)
-        GAPOCi : list[float]
+        gapocs : list[float]
             g/c = control surface gap divided by the strip chord. (Real ≥ 0.0)
 
         """
@@ -3150,10 +3164,10 @@ class AddAero(BDFAttributes):
         """
         if trim_type == 1:
             trim = self.trim.add(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
-            #trim = self.trim
+            # trim = self.trim
         elif trim_type == 2:
             trim = self.trim2.add(sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
-            #trim = self.trim2
+            # trim = self.trim2
         else:  # pragma: no cover
             raise ValueError(trim_type)
         return trim
@@ -3362,8 +3376,7 @@ class AddAero(BDFAttributes):
             a comment for the card
 
         """
-        aecompl = AECOMPL(name, labels, comment=comment)
-        self._add_methods.add_aecomp_object(aecompl)
+        aecompl = self.aecompl.add(name, labels, comment=comment)
         return aecompl
 
     def add_aestat(self, aestat_id: int, label: str, comment: str='') -> int:
@@ -3498,8 +3511,8 @@ class AddAero(BDFAttributes):
                    eff: float=1.0, ldw: str='LDW',
                    crefc: float=1.0, crefs: float=1.0,
                    pllim: float=-np.pi/2., pulim: float=np.pi/2.,
-                   hmllim=None, hmulim=None, # hinge moment lower/upper limits
-                   tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
+                   hmllim=None, hmulim=None,  # hinge moment lower/upper limits
+                   tqllim=None, tqulim=None,  # TABLEDi deflection limits vs. dynamic pressure
                    comment: str='') -> int:
         """
         Creates an AESURF card, which defines a control surface
@@ -3549,7 +3562,7 @@ class AddAero(BDFAttributes):
 
         Parameters
         ----------
-        aesid : int
+        aesurfs_id : int
             the unique id
         label : str
             the AESURF name
@@ -3583,7 +3596,7 @@ class AddAero(BDFAttributes):
         return aeparm
 
     def add_aepress(self, mach, sym_xz: str, sym_xy: str, ux_id: int, dmij: str, dmiji: str):
-        #AEPRESS MACH SYMXZ SYMXY UXID DMIJ DMIJI
+        # AEPRESS MACH SYMXZ SYMXY UXID DMIJ DMIJI
         """adds an AEPRESS card"""
         assert isinstance(sym_xz, str), sym_xz
         assert isinstance(sym_xy, str), sym_xy
@@ -3631,6 +3644,8 @@ class AddOptimization(BDFAttributes):
             'F1(A,B,C,D,R) = A+B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B - C)',
             'F = A + B - F1 * D',
         ]
+        >>> from pyNastran.bdf.bdf import BDF
+        >>> model = BDF()
         >>> deqatn = model.add_deqatn(41, eqs, comment: str='')
 
         """
@@ -3836,9 +3851,11 @@ class AddOptimization(BDFAttributes):
     def add_dresp3(self, dresp_id, label, group, Type, region, params,
                    validate=True, comment: str='') -> DRESP3:
         """Creates a DRESP3 card"""
-        dresp = DRESP3(dresp_id, label, group, Type, region, params,
-                       validate=validate, comment=comment)
-        self._add_methods.add_dresp_object(dresp)
+        assert len(label) <= 8, label
+        # dresp = DRESP3(dresp_id, label, group, Type, region, params,
+        #                validate=validate, comment=comment)
+        self.dresp3.add(dresp_id, label, group, Type, region, params,
+                        validate=validate, comment=comment)
         return dresp
 
     def add_dvcrel1(self, dvcrel_id: int, element_type: str, eid: int, cp_name: str,
@@ -3909,7 +3926,7 @@ class AddOptimization(BDFAttributes):
             property id
         pname_fid : str/int
             optimization parameter as a pname (property name; T) or field number (fid)
-        dvids : list[int]
+        desvar_ids : list[int]
             DESVAR ids
         coeffs : list[float]
             scale factors for DESVAR ids
@@ -3985,7 +4002,7 @@ class AddOptimization(BDFAttributes):
         ----------
         oid : int
             optimization id
-        prop_type : str
+        mat_type : str
             material card name (e.g., MAT1)
         mid : int
             material id
@@ -4171,6 +4188,7 @@ class AddOptimization(BDFAttributes):
         dscreen = self.dscreen.add(response_type, trs=trs, nstr=nstr, comment=comment)
         return dscreen
     # ------------------------------------------
+
     # nx optimization
     def add_dvtrel1(self, dvtrel_id: int, label: str, group_id: int,
                     state: str='ACTIVE', dsv_flag: int=0, dvid1: int=0,
@@ -4249,14 +4267,14 @@ class AddOptimization(BDFAttributes):
 
         Parameters
         ----------
-        BID : int
+        bid : int
             Design variable identification number. Must be unique for all DVAR.
-        LABEL : str
+        label : str
             Label used to describe variable in output.
-        DELTAB : float; default=0.02
+        deltab : float; default=0.02
             The change in the dimensionless design variable B to be used in the
             calculation of the design sensitivity coefficients.
-        VIDi : list[int]
+        vids : list[int]
             Identification number of DVSET entry.
 
         """
@@ -4268,9 +4286,10 @@ class AddMaterial(BDFAttributes):
     def add_creep(self, mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
                   a, b, c, d, e, f, g, comment: str='') -> int:
         """Creates a CREEP card"""
-        mat = CREEP(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
-                    a, b, c, d, e, f, g, comment=comment)
-        self._add_methods.add_creep_material_object(mat)
+        # mat = CREEP(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
+        #             a, b, c, d, e, f, g, comment=comment)
+        mat = self.creep.add(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
+                             a, b, c, d, e, f, g, comment=comment)
         return mat
 
     def add_mat1(self, mid: int,
@@ -4295,7 +4314,7 @@ class AddMaterial(BDFAttributes):
             Poisson's ratio
         rho : float; default=0.
             density
-        a : float; default=0.
+        alpha : float; default=0.
             coefficient of thermal expansion
         tref : float; default=0.
             reference temperature
@@ -4469,24 +4488,27 @@ class AddMaterial(BDFAttributes):
             comment=comment)
         return mat
 
-    def add_mat3d(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
-                  comment: str='') -> int:
-        """
-        This is a VABS specific card that is almost identical to the MAT11.
-        """
-        mat = MAT3D(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
-                    comment=comment)
-        self._add_methods.add_structural_material_object(mat)
-        return mat
+    # def add_mat3d(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
+    #               comment: str='') -> int:
+    #     """
+    #     This is a VABS specific card that is almost identical to the MAT11.
+    #     """
+    #     # mat = MAT3D(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
+    #     #             comment=comment)
+    #     self.mat3d.add(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
+    #                    comment=comment)
+    #     return mat
 
     def add_matg(self, mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap=0.,
                  tab_yprs=None, tab_epl=None,
                  tab_gpl=None, tab_gap=None, comment: str='') -> int:
         """Creates a MATG card"""
-        mat = MATG(mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap=gap,
-                   tab_yprs=tab_yprs, tab_epl=tab_epl,
-                   tab_gpl=tab_gpl, tab_gap=tab_gap, comment=comment)
-        self._add_methods.add_structural_material_object(mat)
+        # mat = MATG(mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap=gap,
+        #            tab_yprs=tab_yprs, tab_epl=tab_epl,
+        #            tab_gpl=tab_gpl, tab_gap=tab_gap, comment=comment)
+        self.matg.add(mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap=gap,
+                      tab_yprs=tab_yprs, tab_epl=tab_epl,
+                      tab_gpl=tab_gpl, tab_gap=tab_gap, comment=comment)
         return mat
 
     def add_mathe(self, mid: int, model: str, bulk: float,
@@ -4695,7 +4717,7 @@ class AddContact(BDFAttributes):
 
         Parameters
         ----------
-        crid : int
+        contact_region_id : int
             CRID Contact region ID.
         offset : float; default=None
             Offset distance for the contact region (Real > 0.0).
@@ -4722,12 +4744,13 @@ class AddContact(BDFAttributes):
         return bcrpara
 
     def add_bedge(self, bedge_id: int,
-            eids: list[int],
-            grids: list[tuple[int, int]],
-            comment: str='') -> int:
+                  eids: list[int],
+                  grids: list[tuple[int, int]],
+                  comment: str='') -> int:
         """Creates a BEDGE card"""
         bcrpara = self.bedge.add(bedge_id, eids, grids, comment=comment)
         return bcrpara
+
 
 class AddSuperelements(BDFAttributes):
     def add_sebset(self, seid: int, ids: list[int], components: int | list[int], comment: str='') -> int:
@@ -4899,10 +4922,10 @@ class AddThermal(BDFAttributes):
         temp = self.temp.add(load_id, temperature_dict, comment=comment)
         return temp
 
-    #def add_tempp1(self) -> TEMPP1:
-        #temp = TEMPP1()
-        #self._add_thermal_load_object(temp)
-        #return temp
+    # def add_tempp1(self) -> TEMPP1:
+    #     temp = TEMPP1()
+    #     self._add_thermal_load_object(temp)
+    #     return temp
 
     def add_tempd(self, sid: int, temperature: float, comment: str='') -> int:
         """
@@ -4958,7 +4981,7 @@ class AddThermal(BDFAttributes):
         return load
 
     def add_qbdy3(self, sid: int, q0, eids: list[int],
-                  cntrlnd: int=0, comment: str='') -> int:
+                  control_node: int=0, comment: str='') -> int:
         """
         Creates a QBDY3 card
 
@@ -4968,7 +4991,7 @@ class AddThermal(BDFAttributes):
             Load set identification number. (Integer > 0)
         q0 : float; default=None
             Magnitude of thermal flux vector into face
-        control_id : int; default=0
+        control_node : int; default=0
             Control point
         eids : list[int] or THRU
             Element identification number of a CHBDYE, CHBDYG, or
@@ -4977,7 +5000,7 @@ class AddThermal(BDFAttributes):
             a comment for the card
 
         """
-        load = self.qbdy3.add(sid, q0, eids, cntrlnd=cntrlnd, comment=comment)
+        load = self.qbdy3.add(sid, q0, eids, control_node=control_node, comment=comment)
         return load
 
     def add_qvol(self, sid: int, qvol: float,
@@ -4991,7 +5014,7 @@ class AddThermal(BDFAttributes):
                   t_source: float=None,
                   ce: int=0,
                   vector_tableds: list[int | float]=0.0,
-                  control_id: int=0, comment: str='') -> int:
+                  control_node: int=0, comment: str='') -> int:
         """
         Creates a QVECT card
 
@@ -5012,7 +5035,7 @@ class AddThermal(BDFAttributes):
             tabled : int
                 TABLEDi entry identification numbers defining the
                 components as a function of time
-        control_id : int; default=0
+        control_node : int; default=0
             Control point
         eids : list[int] or THRU
             Element identification number of a CHBDYE, CHBDYG, or
@@ -5023,14 +5046,14 @@ class AddThermal(BDFAttributes):
         """
         load = self.qvect.add(
             sid, q0, eids, t_source=t_source, ce=ce,
-            vector_tableds=vector_tableds, control_id=control_id,
+            vector_tableds=vector_tableds, control_node=control_node,
             comment=comment)
         return load
 
     def add_chbdyg(self, eid: int, surface_type: str, nodes: list[int],
-            iview_front: int=0, iview_back: int=0,
-            rad_mid_front: int=0, rad_mid_back: int=0,
-            comment: str='') -> int:
+                   iview_front: int=0, iview_back: int=0,
+                   rad_mid_front: int=0, rad_mid_back: int=0,
+                   comment: str='') -> int:
         """Creates a CHBDYG card"""
         elem = self.chbdyg.add(
             eid, surface_type, nodes,
@@ -5135,8 +5158,6 @@ class AddThermal(BDFAttributes):
 
         Parameters
         ----------
-        eid : int
-            element id
         pid : int
             property id
         area_factor: float
@@ -5155,7 +5176,7 @@ class AddThermal(BDFAttributes):
         return prop
 
     def add_conv(self, eid: int, pconid: int,
-                 ta: list[int], film_node: int=0, cntrlnd: int=0,
+                 ta: list[int], film_node: int=0, control_node: int=0,
                  comment: str='') -> int:
         """
         Creates a CONV card
@@ -5173,7 +5194,7 @@ class AddThermal(BDFAttributes):
             and higher
         film_node : int; default=0
             Point for film convection fluid property temperature
-        cntrlnd : int; default=0
+        control_node : int; default=0
             Control point for free convection boundary condition
         comment : str; default=''
             a comment for the card
@@ -5181,11 +5202,11 @@ class AddThermal(BDFAttributes):
         """
         boundary_condition = self.conv.add(
             eid, pconid, ta,
-            film_node=film_node, cntrlnd=cntrlnd,
+            film_node=film_node, control_node=control_node,
             comment=comment)
         return boundary_condition
 
-    def add_convm(self, eid: int, pconvm: int, ta1: int,
+    def add_convm(self, eid: int, pconvm_id: int, ta1: int,
                   film_node: int=0, cntmdot: int=0,
                   ta2: int=0, mdot: float=1.0,
                   comment: str='') -> int:
@@ -5196,10 +5217,8 @@ class AddThermal(BDFAttributes):
         ----------
         eid : int
             element id (CHBDYP)
-        pconid : int
+        pconvm_id : int
             property ID (PCONVM)
-        mid : int
-            Material ID
         ta1 : int
             ambient point for convection
         ta2 : int; default=None
@@ -5211,14 +5230,14 @@ class AddThermal(BDFAttributes):
             0/blank is only allowed when mdot > 0
         mdot : float; default=1.0
             a multiplier for the mass flow rate in case there is no
-            point associated with the CNTRLND field
+            point associated with the CONTROL_NODE field
             required if cntmdot = 0
         comment : str; default=''
             a comment for the card
 
         """
         boundary_condition = self.convm.add(
-            eid, pconvm, ta1,
+            eid, pconvm_id, ta1,
             film_node=film_node, cntmdot=cntmdot,
             ta2=ta2, mdot=mdot,
             comment=comment)
@@ -5235,9 +5254,10 @@ class AddThermal(BDFAttributes):
         boundary_condition = self.radm.add(radmid, absorb, emissivity, comment=comment)
         return boundary_condition
 
-    def add_radbc(self, nodamb, famb, cntrlnd, eids, comment: str='') -> int:
+    def add_radbc(self, nodamb, famb, control_node,
+                  eids, comment: str='') -> int:
         """Creates a RADBC card"""
-        boundary_condition = self.radbc.add(nodamb, famb, cntrlnd, eids, comment=comment)
+        boundary_condition = self.radbc.add(nodamb, famb, control_node, eids, comment=comment)
         return boundary_condition
 
     def add_view(self, iview: int, icavity: int, shade: str='BOTH',
@@ -5263,7 +5283,7 @@ class AddThermal(BDFAttributes):
                   free_convection_type: int=0,
                   table_id: int=0,
                   chlen: float=None, gidin: int=None, ce: int=0,
-                  e1: float=None, e2: float=None, e3: float=None,
+                  e: np.ndarray=None,
                   comment: str='') -> int:
         """
         Creates a PCONV card
@@ -5277,12 +5297,12 @@ class AddThermal(BDFAttributes):
         form : int; default=0
             Type of formula used for free convection
             Must be {0, 1, 10, 11, 20, or 21}
-        expf : float; default=0.0
+        exponent_free_convection : float; default=0.0
             Free convection exponent as implemented within the context
             of the particular form that is chosen
-        ftype : int; default=0
+        free_convection_type : int; default=0
             Formula type for various configurations of free convection
-        tid : int; default=None
+        table_id : int; default=None
             Identification number of a TABLEHT entry that specifies the
             two variable tabular function of the free convection heat
             transfer coefficient
@@ -5292,7 +5312,7 @@ class AddThermal(BDFAttributes):
             Grid ID of the referenced inlet point
         ce : int; default=0
             Coordinate system for defining orientation vector.
-        e1 / e2 / e3 : list[float]; default=None
+        e : list[float]; default=None
             Components of the orientation vector in coordinate system CE.
             The origin of the orientation vector is grid point G1
         comment : str; default=''
@@ -5304,7 +5324,7 @@ class AddThermal(BDFAttributes):
             form=form, exponent_free_convection=exponent_free_convection,
             free_convection_type=free_convection_type,
             table_id=table_id, chlen=chlen, gidin=gidin,
-            ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)
+            ce=ce, e=e, comment=comment)
         return prop
 
     def add_pconvm(self, pconid: int, mid: int, coeff: float,
@@ -5432,7 +5452,7 @@ class AddAcoustic(BDFAttributes):
             Identification of the TABLEDi entry that defines the weighting function.
         cutfr : float
             Cutoff frequency for tables referenced above. (Real > 0.0)
-        B, K, M : float
+        b, k, m : float
             Equivalent damping, stiffness and mass values per unit area. (Real > 0.0)
 
         ..note:: tables are defined as a function of frequency in cycles/time
@@ -5449,7 +5469,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                AddRigidElements, AddAero, AddOptimization, AddMaterial, AddContact,
                AddSuperelements, AddThermal, AddBolts, AddAcoustic):
     def __init__(self):
-        #BDFAttributes.__init__(self)
+        # BDFAttributes.__init__(self)
         super().__init__()
         self._add_methods = AddMethods(self)
         self.is_superelements = False
@@ -5479,7 +5499,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             except:  # pragma: no cover
                 print(card)
                 raise
-            #print(class_name)
+            # print(class_name)
             if not (class_name == 'COORD' or
                     class_name in self._card_parser_prepare):
                 msg = (
@@ -5491,11 +5511,11 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                     msg += 'add it to self.cards_to_read'
                 raise RuntimeError(msg)
             assert isinstance(card.n, int), f'{card.type} n={card.n} type={type(card.n)}'
-            #print(class_name, card.n)
+            # print(class_name, card.n)
             if card.n > 0:
                 try:
                     card.parse_cards()
-                    #log.info(class_name)
+                    # log.info(class_name)
                 except Exception as error:
                     log.error(str(error))
                     log.error(class_name)
@@ -5506,18 +5526,18 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
     def setup(self, run_setup: bool=True,
               run_geom_check: bool=True) -> None:
-        #if not run_setup:
-            #return
+        # if not run_setup:
+        #     return
         self.parse_cards()
         self._check_duplicates()
         if not run_geom_check:
             return
-        #missing = {
-            #'node_id': np.array([], dtype='int32'),
-            #'coord_id': np.array([], dtype='int32'),
-            #'property_id': np.array([], dtype='int32'),
-            #'material_id': np.array([], dtype='int32'),
-        #}
+        # missing = {
+        #     'node_id': np.array([], dtype='int32'),
+        #     'coord_id': np.array([], dtype='int32'),
+        #     'property_id': np.array([], dtype='int32'),
+        #     'material_id': np.array([], dtype='int32'),
+        # }
 
         self._geom_check()
 
@@ -5537,27 +5557,27 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         cards = [card for card in self._cards_to_setup if card.n > 0]
 
         for card in cards:
-            #missing = {
-                #'node_id': np.array([], dtype='int32'),
-                #'coord_id': np.array([], dtype='int32'),
-                #'property_id': np.array([], dtype='int32'),
-                #'material_id': np.array([], dtype='int32'),
-            #}
+            # missing = {
+            #     'node_id': np.array([], dtype='int32'),
+            #     'coord_id': np.array([], dtype='int32'),
+            #     'property_id': np.array([], dtype='int32'),
+            #     'material_id': np.array([], dtype='int32'),
+            # }
             class_name = card.type
             if class_name not in NO_GEOM_CHECK:
                 missing = {
-                    #'node_id': np.array([], dtype='int32'),
-                    #'coord_id': np.array([], dtype='int32'),
-                    #'property_id': np.array([], dtype='int32'),
-                    #'material_id': np.array([], dtype='int32'),
+                    # 'node_id': np.array([], dtype='int32'),
+                    # 'coord_id': np.array([], dtype='int32'),
+                    # 'property_id': np.array([], dtype='int32'),
+                    # 'material_id': np.array([], dtype='int32'),
                 }
                 if not hasattr(card, 'geom_check'):
                     self.log.error(f"{class_name!r} has no method 'geom_check'")
                     continue
                 try:
                     card.geom_check(missing)
-                #except (AttributeError, ValueError) as e:
-                    #self.log.error(str(e))
+                # except (AttributeError, ValueError) as e:
+                #     self.log.error(str(e))
                 except (AttributeError, ValueError) as e:
                     log.error(str(e))
                     raise
@@ -5565,9 +5585,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                     if len(value):
                         log.warning(f'{card.type}: {key}={value} referenced by and is missing')
 
-        #for k, v in missing.items():
-            #if len(v):
-                #log.warning(f'{k}={v} referenced by and is missing')
+        # for k, v in missing.items():
+        #     if len(v):
+        #         log.warning(f'{k}={v} referenced by and is missing')
 
     @property
     def subcases(self) -> dict[int, Optional[Any]]:
@@ -5599,7 +5619,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                         run_geom_check: bool=True):
         self.setup(run_setup=run_setup,
                    run_geom_check=run_geom_check)
-        #self.log.warning('no xref')
+        # self.log.warning('no xref')
 
     def add_param(self, key: str, values: list[int | float | str],
                   comment: str='') -> PARAM:
@@ -5746,22 +5766,6 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         point = self.point.add(nid, xyz, cp=cp, comment=comment)
         return point
 
-    #def add_cgen(self, Type, field_eid, pid, field_id, th_geom_opt,
-                 #eidl, eidh, t_abcd=None, direction='L', comment: str='') -> CGEN:
-        #"""Creates a CGEN element card"""
-        #elem = CGEN(Type, field_eid, pid, field_id, th_geom_opt,
-                    #eidl, eidh, t_abcd=t_abcd, direction=direction, comment=comment)
-        #self.add_element_object(elem)
-        #return elem
-
-    #def add_gmload(self, sid, normal, entity, entity_id, method, load_magnitudes,
-                   #cid=0, comment: str='') -> GMLOAD:
-        #"""Creates a GMLOAD load card"""
-        #load = GMLOAD(sid, normal, entity, entity_id, method, load_magnitudes,
-                      #cid=cid, comment=comment)
-        #self.add_load_object(load)
-        #return load
-
     def add_param(self, key: str, values: list[int | float | str],
                   comment: str='') -> PARAM:
         return self._add_param_nastran(key, values, comment=comment)
@@ -5804,7 +5808,6 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         mdlprm = MDLPRM(mdlprm_dict, comment=comment)
         self._add_methods.add_mdlprm_object(mdlprm)
         return mdlprm
-
 
     def _add_param_mystran(self, key: str, values: list[int | float | str],
                            comment: str='') -> PARAM_MYSTRAN:
@@ -5875,12 +5878,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         assert isinstance(value, list), value
         assert len(pid_eid) == len(value), 'len(pid_eid)=%s len(value)=%s' % (len(pid_eid), len(value))
 
-        #nsms = []
         nsm = self.nsm.add(sid, nsm_type, pid_eid, value, comment=comment)
-        #for pid_eidi, valuei in zip(pid_eid, value):
-            #nsm = NSM(sid, nsm_type, pid_eidi, valuei, comment=comment)
-            #self._add_methods.add_nsm_object(nsm)
-            #nsms.append(nsm)
+        # nsms = []
+        # for pid_eidi, valuei in zip(pid_eid, value):
+        #     nsm = NSM(sid, nsm_type, pid_eidi, valuei, comment=comment)
+        #     self._add_methods.add_nsm_object(nsm)
+        #     nsms.append(nsm)
         return nsm
 
     def add_nsm1(self, sid: int, nsm_type: str, value: float, ids: list[int],
@@ -5945,10 +5948,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         assert len(pid_eid) == len(value), 'len(pid_eid)=%s len(value)=%s' % (len(pid_eid), len(value))
 
         nsm = self.nsml.add(sid, nsm_type, pid_eid, value, comment=comment)
-        #nsms = []
-        #for pid_eidi, valuei in zip(pid_eid, value):
-            #nsm = self.nsml.add(sid, nsm_type, pid_eidi, valuei, comment=comment)
-            #nsms.append(nsm)
+        # nsms = []
+        # for pid_eidi, valuei in zip(pid_eid, value):
+        #     nsm = self.nsml.add(sid, nsm_type, pid_eidi, valuei, comment=comment)
+        #     nsms.append(nsm)
         return nsm
 
     def add_nsml1(self, sid: int, nsm_type: str, value: float, ids: list[int],
@@ -6125,38 +6128,6 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         assert z is not None
         genel = self.genel.add(eid, ul, ud, None, z, s)
         return genel
-
-    #def add_axic(self, nharmonics, comment: str='') -> AXIC:
-        #"""Creates a AXIC card"""
-        #axic = AXIC(nharmonics, comment=comment)
-        #self._add_methods.add_axic_object(axic)
-        #return axic
-
-    #def add_pointax(self, nid, ringax, phi, comment: str='') -> POINTAX:
-        #"""Creates a POINTAX card"""
-        #node = POINTAX(nid, ringax, phi, comment=comment)
-        #self._add_methods.add_ringax_object(node)
-        #return node
-
-    #def add_ringax(self, nid, R, z, ps=None, comment: str='') -> RINGAX:
-        #"""Creates a RINGAX card"""
-        #node = RINGAX(nid, R, z, ps=ps, comment=comment)
-        #self._add_methods.add_ringax_object(node)
-        #return node
-
-    #def add_cconeax(self, eid, pid, rings, comment: str='') -> CCONEAX:
-        #"""Creates a CCONEAX card"""
-        #elem = CCONEAX(eid, pid, rings, comment=comment)
-        #self._add_methods.add_element_object(elem)
-        #return elem
-
-    #def add_pconeax(self, pid, mid1, t1=None, mid2=0, i=None, mid3=None, t2=None,
-                    #nsm=0., z1=None, z2=None, phi=None, comment: str='') -> PCONEAX:
-        #"""Creates a PCONEAX card"""
-        #prop = PCONEAX(pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
-                       #comment=comment)
-        #self._add_methods.add_property_object(prop)
-        #return prop
 
     def add_tempax(self, sid, ring, phi, temperature, comment: str='') -> int:
         """Creates a TEMPAX card"""
@@ -6354,7 +6325,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return darea
 
     def add_tload1(self, sid: int, excite_id: int, tabled_id: int, delay: int=0,
-                   load_type: str='LOAD', us0: float=0.0, vs0: foat=0.0,
+                   load_type: str='LOAD', us0: float=0.0, vs0: float=0.0,
                    comment: str='') -> int:
         """
         Creates a TLOAD1 card, which defines a load based on a table
@@ -6373,7 +6344,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             the delay; if it's 0/blank there is no delay
             float : delay in units of time
             int : delay id
-        Type : int/str; default='LOAD'
+        load_type : int/str; default='LOAD'
             the type of load
             0/LOAD
             1/DISP
@@ -6482,7 +6453,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         td : int/float; default=0
             TABLEDi id that defines D(f) for all degrees of freedom in
             EXCITEID entry
-        Type : int/str; default='LOAD'
+        load_type : int/str; default='LOAD'
             the type of load
             0/LOAD
             1/DISP
@@ -7095,7 +7066,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                                 comment=comment)
         return load
 
-    def add_spc(self, conid :int, nodes: list[int], components: list[str],
+    def add_spc(self, conid: int, nodes: list[int], components: list[str],
                 enforced: list[float], comment: str='') -> int:
         """
         Creates an SPC card, which defines the degree of freedoms to be
@@ -7189,12 +7160,6 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         spcax = self.spcax.add(conid, ringax, hid, component, enforced, comment=comment)
         return spcax
 
-    #def add_gmspc(self, conid, component, entity, entity_id, comment: str='') -> GMSPC:
-        #"""Creates a GMSPC card"""
-        #spc = GMSPC(conid, component, entity, entity_id, comment=comment)
-        #self._add_methods.add_constraint_spc_object(spc)
-        #return spc
-
     def add_mpc(self, mpc_id: int,
                 nodes: list[int], components: list[str], coefficients: list[float],
                 comment: str='') -> int:
@@ -7203,7 +7168,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         Parameters
         ----------
-        conid : int
+        mpc_id : int
             Case Control MPC id
         nodes : list[int]
             GRID/SPOINT ids
@@ -7238,9 +7203,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         self.suport.add_set(nodes, components, comment=comment)
-        #suport = SUPORT(nodes, Cs, comment=comment)
-        #self._add_methods.add_suport_object(suport)
-        #return suport
+        # suport = SUPORT(nodes, Cs, comment=comment)
+        # self._add_methods.add_suport_object(suport)
+        # return suport
         return self.suport
 
     def add_suport1(self, suport_id, nodes: list[int], components: list[int],
@@ -7250,7 +7215,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         Parameters
         ----------
-        conid : int
+        suport_id : int
             Case Control SUPORT id
         nodes : list[int]
             the nodes to release
@@ -7264,7 +7229,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return suport1
 
     def add_eigr(self, sid, method='LAN', f1=None, f2=None, ne=None, nd=None,
-                 norm='MASS', G=None, C=None, comment: str='') -> EIGR:
+                 norm='MASS', grid=None, comp=None, comment: str='') -> EIGR:
         """
         Adds a EIGR card
 
@@ -7293,16 +7258,16 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         norm : str; default=None
             {MAX, MASS, AF, POINT}
             default=MASS (NX)
-        G : int; default=None
+        grid : int; default=None
             node id for normalization; only for POINT
-        C : int; default=None
+        comp : int; default=None
             component for normalization (1-6); only for POINT
         comment : str; default=''
             a comment for the card
 
         """
         method = EIGR(sid, method=method, f1=f1, f2=f2, ne=ne, nd=nd,
-                      norm=norm, G=G, C=C, comment=comment)
+                      norm=norm, grid=grid, comp=comp, comment=comment)
         self._add_methods.add_method_object(method)
         return method
 
@@ -7351,7 +7316,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return method
 
     def add_eigc(self, sid, method, grid, component, epsilon, neigenvalues,
-                 norm='MAX', # common
+                 norm='MAX',  # common
                  mblkszs=None, iblkszs=None, ksteps=None, NJIs=None,
                  alphaAjs=None, omegaAjs=None,
                  alphaBjs=None, omegaBjs=None,
@@ -7556,8 +7521,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return self.add_omit(ids, components, comment=comment)
 
     def add_omit(self, ids: list[int],
-                  components: str | list[str],
-                  comment: str='') -> int:
+                 components: str | list[str],
+                 comment: str='') -> int:
         """
         Creates an OMIT1 card, which defines the degree of freedoms that
         will be excluded (o-set) from the analysis set (a-set).
@@ -7970,9 +7935,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
     def add_group(self, group_id: int, nodes, elements, properties, comment: str='') -> GROUP:
         self.log.warning('skipping GROUP')
-        #group = GROUP(group_id, nodes, elements, properties, comment=comment)
-        #self._add_methods.add_group_object(group)
-        #return group
+        # group = GROUP(group_id, nodes, elements, properties, comment=comment)
+        # self._add_methods.add_group_object(group)
+        # return group
 
     # ------------------------------------------
     def add_modtrak(self, modtrak_id: int, low_range: int, high_range: int,
@@ -7981,7 +7946,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return modtrak
 
     def add_mondsp1(self, name, label, axes, aecomp_name, xyz,
-                          cp=0, cd=None, ind_dof='123', comment: str='') -> MONDSP1:
+                    cp: int=0, cd: Optional[int]=None, ind_dof: str='123',
+                    comment: str='') -> int:
         """
         Creates a MONDSP1 card
 
@@ -8015,9 +7981,11 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         MSC specific card
 
         """
-        mondsp1 = MONDSP1(name, label, axes, aecomp_name, xyz,
-                          cp=cp, cd=cd, ind_dof=ind_dof, comment=comment)
-        self._add_methods.add_monpnt_object(mondsp1)
+        # mondsp1 = MONDSP1(name, label, axes, aecomp_name, xyz,
+        #                   cp=cp, cd=cd, ind_dof=ind_dof, comment=comment)
+        mondsp1 = self.mondsp1.add(
+            name, label, axes, aecomp_name, xyz,
+            cp=cp, cd=cd, ind_dof=ind_dof, comment=comment)
         return mondsp1
 
     def add_monpnt1(self, name: str, label: str, axes: str, aecomp_name: str,
@@ -8073,9 +8041,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                     cp: int=0, cd: Optional[int]=None,
                     xflag=None, comment: str='') -> int:
         """Creates a MONPNT3 card"""
-        monitor_point = self.monpnt3.add(name, label, axes, grid_set, xyz,
-                         elem_set=elem_set,
-                         cp=cp, cd=cd, xflag=xflag, comment=comment)
+        monitor_point = self.monpnt3.add(
+            name, label, axes, grid_set, xyz,
+            elem_set=elem_set,
+            cp=cp, cd=cd, xflag=xflag, comment=comment)
         return monitor_point
 
     def add_tic(self, sid: int, nodes: list[int], components: list[int],
@@ -8220,13 +8189,13 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         if isinstance(lines, str):
             lines = [lines]
         self.reject_lines.append(lines)
-        #self.reject_card_lines('dummy', lines, show_log=True)
+        # self.reject_card_lines('dummy', lines, show_log=True)
 
     def add_include_file(self, include_filename: str,
                          is_windows: Optional[bool]=None) -> None:
         lines = write_include(include_filename, is_windows=is_windows).rstrip().split('\n')
         self.reject_lines.append(lines)
-        #self.reject_card_lines('INCLUDE', lines, show_log=True)
+        # self.reject_card_lines('INCLUDE', lines, show_log=True)
 
     def add_panel(self, names: list[str], set_ids: list[int]) -> None:
         fields = ['PANEL']
@@ -8412,7 +8381,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods.add_dmik_object(dmik)
         return dmik
 
-    #---------------------------------------------------------------------
+    # ---------------------------------------------------------------------
 
     def add_nlrsfd(self, sid, ga, gb, plane, bdia, blen, bclr, soln,
                    visco, pvapco, nport,
@@ -8449,46 +8418,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         fields = ['RCROSS', sid, rtype1, id1, comp1, rtype2, id2, comp2, curid]
         self.reject_card_lines('RCROSS', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float]):
-        fields = ['UXVEC', idi, None, None, None, None, None, None, None]
-        for label, ux in zip(labels, uxs):
-            fields.extend([label, ux])
-        self.reject_card_lines('UXVEC', print_card_8(fields).split('\n'), show_log=False)
-    #----------------------------------------------------------------------------------
-    # parametric
-    #def add_pset(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment: str='') -> PSET:
-        #"""PSET ID POLY1 POLY2 POLY3 CID SETTYP ID"""
-        #pset = PSET(idi, poly1, poly2, poly3, cid, typei, typeids, comment=comment)
-        #self.pset[idi] = pset
-        #return pset
+    def add_uxvec(self, idi: int, labels: list[str], uxs: list[float], comment: str='') -> UXVEC:
+        uxvec = UXVEC(idi, labels, uxs, comment=comment)
+        self._add_methods.add_uxvec_object(uxvec)
+        return uxvec
 
-    #def add_pval(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment: str='') -> PVAL:
-        #"""PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID"""
-        #pval = PVAL(idi, poly1, poly2, poly3, cid, typei, typeids, comment=comment)
-        #self._add_methods.add_pval(pval, allow_overwrites=False)
-        #return pval
-
-    #def add_gmcurv(self, curve_id, group, data, cid_in=0, cid_bc=0, comment: str='') -> GMCURV:
-        #curve = GMCURV(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc,
-                       #comment=comment)
-        #self._add_methods.add_gmcurv(curve, allow_overwrites=False)
-        #return curve
-
-    #def add_gmsurf(self, curve_id, group, data, cid_in=0, cid_bc=0, comment: str='') -> GMSURF:
-        #surf = GMSURF(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc, comment=comment)
-        #self._add_methods.add_gmsurf(surf, allow_overwrites=False)
-        #return surf
-
-    #def add_feedge(self, edge_id, nids, cid, geom_ids, geomin='POINT', comment: str='') -> FEEDGE:
-        #edge = FEEDGE(edge_id, nids, cid, geom_ids, geomin=geomin, comment=comment)
-        #self._add_methods.add_feedge(edge, allow_overwrites=False)
-        #return edge
-
-    #def add_feface(self, face_id, nids, cid, surf_ids, comment: str='') -> FEFACE:
-        #face = FEFACE(face_id, nids, cid, surf_ids, comment=comment)
-        #self._add_methods.add_feface(face, allow_overwrites=False)
-        #return face
-    #----------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------
     # cyclic
     def add_cyax(self, nids, comment: str='') -> CYAX:
         cyax = CYAX(nids, comment=comment)
@@ -8500,7 +8435,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods.add_cyjoin_object(cyjoin)
         return cyjoin
 
-    #def add_cysym(self, side, coord, nids, comment: str='') -> CYSYM:
-        #cysym = CYSYM(side, coord, nids, comment=comment)
-        #self._add_cysym_object(cysym)
-        #return cysym
+    # def add_cysym(self, side, coord, nids, comment: str='') -> CYSYM:
+    #     cysym = CYSYM(side, coord, nids, comment=comment)
+    #     self._add_cysym_object(cysym)
+    #     return cysym

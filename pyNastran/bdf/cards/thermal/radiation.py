@@ -8,7 +8,7 @@ All set cards are defined in this file.  This includes:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import warnings
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -68,7 +68,7 @@ class RADM(ThermalBC):
             #raise RuntimeError(msg + str(self))
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RADM card from ``BDF.add_card(...)``
 
@@ -142,11 +142,12 @@ class RADBC(ThermalBC):
     def _init_from_empty(cls):
         nodamb = 1
         famb = 1.0
-        cntrlnd = 10
+        control_node = 10
         eids = [1, 2]
-        return RADBC(nodamb, famb, cntrlnd, eids, comment='')
+        return RADBC(nodamb, famb, control_node, eids, comment='')
 
-    def __init__(self, nodamb, famb, cntrlnd, eids, comment=''):
+    def __init__(self, nodamb: int, famb: float, control_node: int,
+                 eids: list[int], comment: str=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment
@@ -159,7 +160,7 @@ class RADBC(ThermalBC):
         self.famb = famb
 
         #: Control point for thermal flux load. (Integer > 0; Default = 0)
-        self.cntrlnd = cntrlnd
+        self.control_node = control_node
 
         #: CHBDYi element identification number
         if isinstance(eids, int):
@@ -168,7 +169,7 @@ class RADBC(ThermalBC):
 
         assert self.nodamb > 0
         assert self.famb > 0.0
-        assert self.cntrlnd >= 0
+        assert self.control_node >= 0
         self.eids_ref = None
 
     def validate(self):
@@ -178,7 +179,7 @@ class RADBC(ThermalBC):
             warnings.warn(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RADBC card from ``BDF.add_card(...)``
 
@@ -192,11 +193,11 @@ class RADBC(ThermalBC):
         """
         nodamb = integer(card, 1, 'nodamb')
         famb = double(card, 2, 'famb')
-        cntrlnd = integer_or_blank(card, 3, 'cntrlnd', default=0)
+        control_node = integer_or_blank(card, 3, 'control_node', default=0)
 
         nfields = card.nfields
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
-        return RADBC(nodamb, famb, cntrlnd, eids, comment=comment)
+        return RADBC(nodamb, famb, control_node, eids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -224,14 +225,14 @@ class RADBC(ThermalBC):
         return eids
 
     def raw_fields(self):
-        list_fields = (['RADBC', self.nodamb, self.famb, self.cntrlnd] +
+        list_fields = (['RADBC', self.nodamb, self.famb, self.control_node] +
                        self.Eids())
         return list_fields
 
     def repr_fields(self):
-        cntrlnd = set_blank_if_default(self.cntrlnd, 0)
+        control_node = set_blank_if_default(self.control_node, 0)
         eids = collapse_thru_by(self.Eids())
-        list_fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
+        list_fields = ['RADBC', self.nodamb, self.famb, control_node] + eids
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -313,7 +314,7 @@ class VIEW(BaseCard):
         self.dislin = dislin
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a VIEW card from ``BDF.add_card(...)``
 
@@ -438,7 +439,7 @@ class VIEW3D(BaseCard):
         self.rad_check = rad_check
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a VIEW3D card from ``BDF.add_card(...)``
 
@@ -517,9 +518,13 @@ class RADCAV(ThermalBC):
         return RADCAV(icavity, sets, ele_amb=None, shadow='YES', scale=0.0,
                       prtpch=None, nefci=None, rmax=0.1, ncomp=32, comment='')
 
-    def __init__(self, icavity, sets, ele_amb=None,
-                 shadow='YES', scale=0.0, prtpch=None,
-                 nefci=None, rmax=0.1, ncomp=32, comment=''):
+    def __init__(self, icavity: int, sets: list[int],
+                 ele_amb: Optional[int]=None,
+                 shadow: str='YES',
+                 scale: float=0.0,
+                 prtpch: Optional[int]=None,  # ???
+                 nefci: Optional[int]=None,  # ???
+                 rmax: float=0.1, ncomp: int=32, comment: str=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment
@@ -538,7 +543,7 @@ class RADCAV(ThermalBC):
         self.sets = sets
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a RADCAV card from ``BDF.add_card(...)``
 
@@ -552,12 +557,12 @@ class RADCAV(ThermalBC):
         """
         icavity = integer(card, 1, 'icavity')
         ele_amb = integer_or_blank(card, 2, 'ele_amb')
-        shadow = string_or_blank(card, 3, 'shadow', 'YES')
-        scale = double_or_blank(card, 4, 'scale', 0.0)
+        shadow = string_or_blank(card, 3, 'shadow', default='YES')
+        scale = double_or_blank(card, 4, 'scale', default=0.0)
         prtpch = integer_or_blank(card, 5, 'prtpch')
         nefci = string_or_blank(card, 6, 'nefci')
-        rmax = double_or_blank(card, 7, 'rmax', 1.0)
-        ncomp = integer_or_blank(card, 8, 'ncomp', 32)
+        rmax = double_or_blank(card, 7, 'rmax', default=1.0)
+        ncomp = integer_or_blank(card, 8, 'ncomp', default=32)
 
         sets = fields(integer, card, 'set', i=9, j=card.nfields)
         return RADCAV(icavity, sets, ele_amb=ele_amb,
@@ -622,7 +627,7 @@ class RADLST(ThermalBC):
     +--------+---------+--------+------+-------+--------+-------+------+--------+
 
     """
-    type = 'RADCAV'
+    type = 'RADLST'
 
     @classmethod
     def _init_from_empty(cls):
@@ -630,7 +635,8 @@ class RADLST(ThermalBC):
         eids = [1, 2, 3]
         return RADLST(icavity, eids, matrix_type=1, comment='')
 
-    def __init__(self, icavity, eids, matrix_type=1, comment=''):
+    def __init__(self, icavity: int, eids: list[int],
+                 matrix_type: int=1, comment: str=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment
@@ -710,7 +716,8 @@ class RADMTX(ThermalBC):
         exchange_factors = [1., 2.]
         return RADMTX(icavity, index, exchange_factors, comment='')
 
-    def __init__(self, icavity, index, exchange_factors, comment=''):
+    def __init__(self, icavity: int, index: int,
+                 exchange_factors: list[float], comment: str=''):
         ThermalBC.__init__(self)
         if comment:
             self.comment = comment

@@ -1,0 +1,141 @@
+NASTRAN $
+assign output4='OUTDIR:rotor049.gpf',unit=22, form=formatted
+assign output4='OUTDIR:rotor049.csv',unit=25, form=formatted
+$
+ID NX Nastran, ROTOR049
+$
+$ DESCRIPTION - Rotor Dynamics
+$               Laval rotor using CBARs with inertia
+$               single rotor, fixed reference system
+$               MODESEL
+$               all output
+$               ROTPRT = 2 optional output
+$               damping
+$
+$ SOLUTION    - 110
+$
+SOL 110
+$
+TIME 20000
+compile semceig,nolist $
+alter 'cddata' $
+tabpt cddata,// $
+endalter $
+CEND
+TITLE = ROTOR DYNAMICS TEST CASE ROTOR049
+SUBTITLE = TESTING OF ROTOR DYNAMICS MATH AND DMAP CAPABILITIES
+$
+SPC = 1
+$
+SET 1 = 1006
+$
+DISP = 1
+$
+SET 2 = 3,4
+MODSEL = 2
+$
+RMETHOD = 99
+$
+$
+METHOD = 1
+CMETHOD = 2
+$
+$
+BEGIN BULK
+$
+$
+PARAM	ROTGPF	22
+PARAM	ROTCSV	25
+$
+PARAM	COUPMASS -1
+$
+$
+PARAM       POST      -1
+$
+PARAM	G	0.00
+$
+$
+PARAM,OGEOM,NO
+PARAM,AUTOSPC,YES
+PARAM,GRDPNT,0
+$
+ROTORG  11      1001    THRU    1011
+$
+$	SID	RSTART	RSTEP	NUMSTEP REFSYS	CMOUT	RUNIT	FUNIT	
+ROTORD  99	0.0	200.0	118	FIX	-1.0		CPS	+ROT0
+$	ZSTEIN	ORBEPS	ROTPRT						
++ROT0	NO	1.0E-5	2						+ROT1
+$	RID1	RSET1	RSEED1	RCORD1	W3-1	W4-1	RFORCE1
++ROT1		11		1	0.0	0.0		
+$
+$	.	.	.	.	.	.	.
+EIGRL   1                       4 	1
+EIGC	2	CLAN					4
+EIGC	3	HESS					4
+$
+$
+$
+CORD2R  1                0.      0.      0.      0.      0.      1.     +XCRD001
++XCRD001 1.      0.      0.
+$
+$
+PBAR    1000    1000     7853.98 4.909+6 4.909+6 9.817+6                +P00V8AA
++P00V8AA 0.      50.     50.     0.      0.     -50.    -50.     0.     +P00V8AB
++P00V8AB 0.9     0.9
+MAT1    1000     2.000+9         0.3     0.0
+$
+$      Nodes
+$
+GRID    1001             0.      0.     -500.
+GRID    1006             0.      0.      0.
+GRID    1011             0.      0.      500.
+$
+$      Elements
+$
+CBAR    1001    1000    1001    1006     1.      0.      0.
+CBAR    1010    1000    1006    1011     1.      0.      0.
+$
+$
+CONM2	1106	1006		0.150					+C1106
++C1106	2500.0		2500.0			1250.0
+$
+$
+GRID	101		0.	0.	-500.
+GRID	111		0.	0.	 500.
+$
+GRID	201		0.	0.	-500.
+GRID	211		0.	0.	 500.
+$
+CELAS1	101	101	101	1	201	1
+CELAS1	102	102	101	2	201	2
+$
+CELAS1	111	111	111	1	211	1
+CELAS1	112	112	111	2	211	2
+$
+PELAS	101	1974.
+PELAS	102	1974.
+PELAS	111	1974.
+PELAS	112	1974.
+$
+$
+$
+CDAMP1	301	301	101	1	201	1
+CDAMP1	302	302	101	2	201	2
+$
+CDAMP1	311	311	111	1	211	1
+CDAMP1	312	312	111	2	211	2
+$
+PDAMP	301	1.0-6
+PDAMP	302	1.0-6
+PDAMP	311	1.0-6
+PDAMP	312	1.0-6
+$
+$
+$
+RBE2	201	1001	123456	201
+RBE2	211	1011	123456	211
+$
+SPC1	1	36	1001
+SPC1	1	123456	101	111
+$
+ENDDATA	

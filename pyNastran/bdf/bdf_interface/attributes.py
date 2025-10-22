@@ -2,7 +2,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from typing import Optional, Any, TYPE_CHECKING
-from numpy import array
+import numpy as np
 #from pyNastran.bdf.cards.superelements import SEEXCLD  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods, deprecated
@@ -15,6 +15,7 @@ from pyNastran.bdf.cards.aero.zona import ZONA
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.model_group import ModelGroup
+    from pyNastran.bdf.cards.nodes import GRID
     from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATT11
     from pyNastran.bdf.bdf import (
         Element, Property,
@@ -24,7 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover
         PARAM, MDLPRM,
         # grids/points
         POINT, SPOINT, EPOINT,
-        GRDSET, SEQGP, # GRIDB,
+        GRDSET, SEQGP,  # GRIDB,
         # bar
         BAROR, BEAMOR,
         CBARAO, CBEAMAO,
@@ -37,10 +38,10 @@ if TYPE_CHECKING:  # pragma: no cover
         NLPCI, NLPARM,
         TABRNDG,
         TABLES1,
-        TABLEDs, #TABLED1, TABLED2, TABLED3, TABLED4,
-        TABLEMs, #TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+        TABLEDs,  # TABLED1, TABLED2, TABLED3, TABLED4,
+        TABLEMs,  # TABLEM1, TABLEM2, TABLEM3, TABLEM4,
         TABDMP1,
-        TF, DELAY, #DPHASE,
+        TF, DELAY,  # DPHASE,
         # axisymmetric
         # RINGAX, AXIF, RINGFL, AXIC,  # removed
         CYJOIN, CYAX,
@@ -54,11 +55,11 @@ if TYPE_CHECKING:  # pragma: no cover
         # loads
         TEMPD,
         # thermal
-        #CHBYDP, CHBDYE, CHBDYP,
+        # CHBYDP, CHBDYE, CHBDYP,
         PHBDY,
-        CONV, PCONV, PCONVM, #CONVM,
+        CONV, PCONV, PCONVM,  # CONVM,
         RADCAV, RADMTX, VIEW, VIEW3D,
-        RADBC, RADSET, #TEMPBC,
+        RADBC, RADSET,  # TEMPBC,
         # aero
         MONPNT1, MONPNT2, MONPNT3,
         AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS, AESTAT,
@@ -68,7 +69,7 @@ if TYPE_CHECKING:  # pragma: no cover
         #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
         #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
         FLUTTER, MKAERO1, MKAERO2, FLFACT,
-        TRIM, TRIM2, GUST, GUST2, DIVERG, CSSCHD,
+        TRIM, TRIM2, GUST, GUST2, DIVERG, CSSCHD, UXVEC,
         # roter
         ROTORD, ROTORG,
         # modal
@@ -98,7 +99,7 @@ if TYPE_CHECKING:  # pragma: no cover
         PMASS, CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
         NSMs, NSMADD,
 
-        PMIC, ACPLNW, AMLREG, ACMODL, MICPNT, # MATPOR,
+        PMIC, ACPLNW, AMLREG, ACMODL, MICPNT,  # MATPOR,
         SUPORT, SUPORT1,
         BOLT, BOLTFOR, BOLTSEQ, BOLTFRC, BOLTLD,
         PELAST, PDAMPT, PBUSHT, TIC,
@@ -125,6 +126,338 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.subcase import Subcase
 
 BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'mystran'}
+SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
+    'params': ['PARAM'],
+    'mdlprm': ['MDLPRM'],
+    'nodes': ['GRID', 'SPOINT', 'EPOINT'],  # 'RINGAX',
+    'points': ['POINT'],
+    #'ringaxs': ['RINGAX', 'POINTAX'],  # removed
+    #'ringfl': ['RINGFL'],  # removed
+    # 'axic': ['AXIC'],  # removed
+    # 'axif': ['AXIF'],  # removed
+    'acmodl': ['ACMODL'],
+    'grdset': ['GRDSET'],
+    #'gridb': ['GRIDB'],  # removed
+    'seqgp': ['SEQGP'],
+    'ao_element_flags': ['CBARAO'],
+    #'POINTAX', 'RINGAX',
+
+    # CMASS4 lies in the QRG
+    'masses': ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'],
+
+    'elements': [
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        # 'CELAS5',
+        'CBUSH', 'CBUSH1D', 'CBUSH2D',
+
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+        'CFAST', 'CWELD', 'GENEL',
+
+        'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
+        'CTRIA3', 'CTRIA6', 'CTRIAR',
+        'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
+        'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
+        'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
+        'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
+        'CQUADX', 'CQUADX4', 'CQUADX8',
+        'CCONEAX',
+
+        'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+        #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2', # nastran95-removed
+        'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
+        'CGAP',
+
+        # thermal
+        'CHBDYE', 'CHBDYG', 'CHBDYP',
+
+        # acoustic
+        'CHACAB', 'CAABSF', 'CHACBR',
+        # nastran95
+        #'CTRSHL', 'CQUAD1'
+    ],
+    'normals': ['SNORM'],
+    'nsms': ['NSM', 'NSM1', 'NSML', 'NSML1'],
+    'nsmadds': ['NSMADD'],
+    'rigid_elements': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON'],
+    'plotels': ['PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
+                'PLOTTET', 'PLOTPYR', 'PLOTPEN', 'PLOTHEX'],
+
+    'properties_mass': ['PMASS'],
+    #'properties_acoustic' : ['PACABS'],
+    'properties': [
+        #  acoustic
+        'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
+
+        # 0d
+        'PELAS', 'PGAP', 'PFAST', 'PWELD',
+        'PBUSH', 'PBUSH1D', 'PBUSH2D',
+        'PDAMP', 'PDAMP5',
+
+        # 1d
+        'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP', 'PBRSECT', 'PBMSECT',
+        'PBEAML',  # not fully supported
+        'PBEAM3',
+
+        # 2d
+        'PLPLANE', 'PPLANE',
+        'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
+        'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
+        'PCOMPS', 'PCOMPLS',
+        'PCONEAX',
+    ],
+    'pdampt': ['PDAMPT'],
+    'pelast': ['PELAST'],
+    'pbusht': ['PBUSHT'],
+
+    # materials
+    'materials': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
+                  'MAT3D', 'MATG',
+                  # acoustic
+                  'MATPOR'],
+    'hyperelastic_materials': ['MATHE', 'MATHP'],
+    'creep_materials': ['CREEP'],
+    'MATT1': ['MATT1'],
+    'MATT2': ['MATT2'],
+    'MATT3': ['MATT3'],
+    'MATT4': ['MATT4'],  # thermal
+    'MATT5': ['MATT5'],  # thermal
+    'MATT8': ['MATT8'],
+    'MATT9': ['MATT9'],
+    'MATT11': ['MATT11'],
+    'MATS1': ['MATS1'],
+    'MATDMG': ['MATDMG'],
+    'MATS3': ['MATS3'],
+    'MATS8': ['MATS8'],
+    'nxstrats': ['NXSTRAT'],
+
+    # 'MATHE'
+    #'EQUIV', # testing only, should never be activated...
+
+    # thermal materials
+    'thermal_materials': ['MAT4', 'MAT5'],
+
+    # spc/mpc constraints - TODO: is this correct?
+    'spcadds': ['SPCADD'],
+    'spcs': ['SPC', 'SPC1', 'GMSPC'],  # 'SPCAX' removed
+    'spcoffs': ['SPCOFF', 'SPCOFF1'],
+    'mpcadds': ['MPCADD'],
+    'mpcs': ['MPC'],
+    'suport': ['SUPORT'],
+    'suport1': ['SUPORT1'],
+    'se_suport': ['SESUP'],
+
+    'setree': ['SETREE'],
+    'senqset': ['SENQSET'],
+    'sebulk': ['SEBULK'],
+    'sebndry': ['SEBNDRY'],
+    'release': ['RELEASE'],
+    'seloc': ['SELOC'],
+    'sempln': ['SEMPLN'],
+    'seconct': ['SECONCT'],
+    'selabel': ['SELABEL'],
+    'seexcld': ['SEEXCLD'],
+    'seelt': ['SEELT'],
+    'seload': ['SELOAD'],
+    'csuper': ['CSUPER'],
+    'csupext': ['CSUPEXT'],
+
+    # loads
+    'load_combinations': ['LOAD', 'LSEQ', 'CLOAD'],
+    'loads': [
+        'FORCE', 'FORCE1', 'FORCE2',
+        'MOMENT', 'MOMENT1', 'MOMENT2',
+        'GRAV', 'ACCEL', 'ACCEL1',
+        'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
+        'RFORCE', 'RFORCE1', 'SLOAD',
+        'SPCD', 'LOADCYN', 'LOADCYH', 'DEFORM',
+
+        # msgmesh
+        #'GMLOAD',
+
+        # thermal
+        'TEMP', 'TEMPB3', 'TEMPRB',
+        'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY', 'QVOL',
+
+        # axisymmetric
+        'PLOADX1', 'FORCEAX', 'PRESAX', 'TEMPAX',
+        ],
+    'cyjoin': ['CYJOIN'],
+    'cyax': ['CYAX'],
+    'modtrak': ['MODTRAK'],
+    'dloads': ['DLOAD'],
+    # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
+    'dload_entries': ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+                      'QVECT', 'RANDPS', 'RANDT1'],
+
+    # aero cards
+    'aero': ['AERO'],
+    'aeros': ['AEROS'],
+    'gusts': ['GUST', 'GUST2'],
+    'flutters': ['FLUTTER'],
+    'flfacts': ['FLFACT'],
+    'mkaeros': ['MKAERO1', 'MKAERO2', 'MKAEROZ'],
+    'aecomps': ['AECOMP', 'AECOMPL'],
+    'aefacts': ['AEFACT'],
+    'aelinks': ['AELINK'],
+    'aelists': ['AELIST'],
+    'aeparams': ['AEPARM'],
+    'aesurf': ['AESURF'],
+    'aesurfs': ['AESURFS'],
+    'aestats': ['AESTAT'],
+    'caeros': ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', 'BODY7'],
+    'paeros': ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', 'SEGMESH'],
+    'monitor_points': ['MONPNT1', 'MONPNT2', 'MONPNT3', 'MONDSP1'],
+    'splines': ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7'],
+    'csschds': ['CSSCHD',],
+    'trims': ['TRIM', 'TRIM2'],
+    'divergs': ['DIVERG'],
+
+    # coords
+    'coords': ['CORD1R', 'CORD1C', 'CORD1S',
+               'CORD2R', 'CORD2C', 'CORD2S',
+               'GMCORD', 'ACOORD', 'CORD3G'],
+    'matcid': ['MATCID'],
+
+    # temperature cards
+    'tempds': ['TEMPD'],
+
+    'phbdys': ['PHBDY'],
+    'convection_properties': ['PCONV', 'PCONVM'],
+
+    # stores thermal boundary conditions
+    'bcs': ['CONV', 'CONVM', 'RADBC', 'RADM', 'TEMPBC'],
+
+    # dynamic cards
+    'dareas': ['DAREA'],
+    'tics': ['TIC'],
+    'dphases': ['DPHASE'],
+    'nlparms': ['NLPARM'],
+    'nlpcis': ['NLPCI'],
+    'tsteps': ['TSTEP'],
+    'tstepnls': ['TSTEPNL', 'TSTEP1'],
+    'transfer_functions': ['TF'],
+    'delays': ['DELAY'],
+    'rotors': ['ROTORG', 'ROTORD'],
+
+    'frequencies': ['FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5'],
+
+    # direct matrix input cards
+    'dmig': ['DMIG'],
+    'dmiax': ['DMIAX'],
+    'dmij': ['DMIJ'],
+    'dmiji': ['DMIJI'],
+    'dmik': ['DMIK'],
+    'dmi': ['DMI'],
+    'dti': ['DTI'],
+
+    # optimzation
+    'dequations': ['DEQATN'],
+    'dtable': ['DTABLE'],
+    'dconstrs': ['DCONSTR', 'DCONADD'],
+    'desvars': ['DESVAR'],
+    'topvar': ['TOPVAR'],
+    'ddvals': ['DDVAL'],
+    'dlinks': ['DLINK'],
+    'dresps': ['DRESP1', 'DRESP2', 'DRESP3'],
+    'dvprels': ['DVPREL1', 'DVPREL2'],
+    'dvmrels': ['DVMREL1', 'DVMREL2'],
+    'dvcrels': ['DVCREL1', 'DVCREL2'],
+    'dvgrids': ['DVGRID'],
+    'doptprm': ['DOPTPRM'],
+    'dscreen': ['DSCREEN'],
+
+    # optimization - nx
+    'dmncon': ['DMNCON'],
+    'dvtrels': ['DVTREL1'],
+    'group': ['GROUP'],
+
+    # sets
+    'asets': ['ASET', 'ASET1'],
+    'omits': ['OMIT', 'OMIT1'],
+    'bsets': ['BSET', 'BSET1'],
+    'qsets': ['QSET', 'QSET1'],
+    'csets': ['CSET', 'CSET1'],
+    'usets': ['USET', 'USET1'],
+    'sets': ['SET1', 'SET2', 'SET3'],
+
+    # super-element sets
+    'se_bsets': ['SEBSET', 'SEBSET1'],
+    'se_csets': ['SECSET', 'SECSET1'],
+    'se_qsets': ['SEQSET', 'SEQSET1'],
+    'se_usets': ['SEUSET', 'SEUSET1'],
+    'se_sets': ['SESET'],
+    'radset': ['RADSET'],
+    'radcavs': ['RADCAV', 'RADLST'],
+    'radmtx': ['RADMTX'],
+    # SEBSEP
+
+    # acoustic
+    'acplnw': ['ACPLNW'],
+    'amlreg': ['AMLREG'],
+    'micpnt': ['MICPNT'],
+
+    # parametric
+    'pset': ['PSET'],
+    'pval': ['PVAL'],
+    'gmcurv': ['GMCURV'],
+    'gmsurf': ['GMSURF'],
+    'feedge': ['FEEDGE'],
+    'feface': ['FEFACE'],
+
+    # tables
+    'tables': [
+        'TABLEH1', 'TABLEHT',
+        'TABLES1', 'TABLEST',
+    ],
+    'tables_d': ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLED5'],
+    'tables_m': ['TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4'],
+    'tables_sdamping': ['TABDMP1'],
+    'random_tables': ['TABRND1', 'TABRNDG'],
+
+    # initial conditions - sid (set ID)
+    ##'TIC',  (in bdf_tables.py)
+
+    # methods
+    'methods': ['EIGB', 'EIGR', 'EIGRL'],
+
+    # cMethods
+    'cMethods': ['EIGC', 'EIGP'],
+
+    # contact
+    'bcbodys': ['BCBODY'],
+    'bcparas': ['BCPARA'],
+    'bctparas': ['BCTPARA'],
+    'bcrparas': ['BCRPARA'],
+    'bctparms': ['BCTPARM'],
+
+    'bctadds': ['BCTADD'],
+    'bctsets': ['BCTSET'],
+    'bgadds': ['BGADD'],
+    'bgsets': ['BGSET'],
+    'bsurf': ['BSURF'],
+    'bsurfs': ['BSURFS'],
+    'bconp': ['BCONP'],
+    'blseg': ['BLSEG'],
+    'bfric': ['BFRIC'],
+    'views': ['VIEW'],
+    'view3ds': ['VIEW3D'],
+
+    # nx bolts
+    'bolt': ['BOLT'],
+    'boltld': ['BOLTLD'],
+    'boltfor': ['BOLTFOR'],
+    'boltfrc': ['BOLTFRC'],
+    'boltseq': ['BOLTSEQ'],
+    ## other
+    #'INCLUDE',  # '='
+    #'ENDDATA',
+    #------------------
+    # zone
+    'panlsts': ['PANLST1', 'PANLST2', 'PANLST3'],
+    'pafoils': ['PAFOIL7'],
+    'attach': ['ATTACH'],
+    'pltmode': ['PLTMODE'],
+}
 
 
 class BDFAttributes:
@@ -143,6 +476,7 @@ class BDFAttributes:
         self.is_zona = False
         self.save_file_structure = False
         self.is_superelements = False
+        self._nastran_format = ''
         self.set_as_msc()
         self.units: list[str] = []
 
@@ -233,26 +567,26 @@ class BDFAttributes:
             'nmaterials', 'ncaeros', 'npoints',
 
             'point_ids', 'subcases',
-            '_card_parser', '_card_parser_b', '_card_parser_prepare',
+            '_card_parser', '_card_parser_prepare',
             'object_methods', 'object_attributes',
         ]
         # get rid of deprecation warnings
         backup_level = self.log.level
         self.log.level = 'error'
-        out = object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
-                                filter_properties=filter_properties)
+        out = object_attributes(
+            self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+            filter_properties=filter_properties)
         self.log.level = backup_level
         return out
 
-    def object_methods(self, mode: str='public', keys_to_skip: Optional[list[str]]=None) -> list[str]:
+    def object_methods(self, mode: str='public',
+                       keys_to_skip: Optional[list[str]]=None) -> list[str]:
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
 
         Parameters
         ----------
-        obj : instance
-            the object for checking
         mode : str
             defines what kind of methods will be listed
             * "public" - names that do not begin with underscore
@@ -281,7 +615,7 @@ class BDFAttributes:
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
-            '_card_parser', '_card_parser_b',
+            '_card_parser',
             'object_methods', 'object_attributes',
         ]
         # get rid of deprecation warnings
@@ -300,7 +634,7 @@ class BDFAttributes:
         """removes the attributes from the model"""
         self.__init_attributes()
 
-        self.nodes = {}
+        self.nodes: dict[int, GRID] = {}
         self.loads: dict[int, list[Any]] = {}
         self.load_combinations: dict[int, list[LOAD]] = {}
 
@@ -315,13 +649,13 @@ class BDFAttributes:
         inheritance
 
         References:
-          1.  http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
+          1.  https://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
         """
         self.xref_obj = CrossReference(self)
         self.bdf_filename = None
         self.punch = None
         self._encoding = None
-        self._is_long_ids = False # ids > 8 characters
+        self._is_long_ids = False  # ids > 8 characters
 
         #: ignore any ECHOON flags
         self.force_echo_off = True
@@ -335,9 +669,13 @@ class BDFAttributes:
         #: list of case control deck lines
         self.case_control_lines: list[str] = []
 
+        # allow tabs in main bdf lines
+        self.allow_tabs = True
+
         # dictionary of BDFs
-        self.superelement_models = {}
-        self.initial_superelement_models = []  # the keys before superelement mirroring
+        self.superelement_models: dict[tuple[str, int, str], BDF] = {}
+        # the keys before superelement mirroring
+        self.initial_superelement_models = []
 
         self._auto_reject = False
         self._solmap_to_value = {
@@ -370,7 +708,7 @@ class BDFAttributes:
 
             # guessing
             #'CTRAN' : 115,
-            'CFREQ' : 118,
+            'CFREQ': 118,
 
             # solution 200 names
             'STATICS': 101,
@@ -425,6 +763,7 @@ class BDFAttributes:
 
         self._duplicate_nodes: list[str] = []
         self._duplicate_elements: list[str] = []
+        self._duplicate_rigid_elements: list[str] = []
         self._duplicate_properties: list[str] = []
         self._duplicate_materials: list[str] = []
         self._duplicate_masses: list[str] = []
@@ -443,12 +782,11 @@ class BDFAttributes:
 
         #: store the PARAM cards
         self.params: dict[str, PARAM] = {}
-        self.mdlprm = None  # type: MDLPRM
+        self.mdlprm: Optional[MDLPRM] = None
         # ------------------------------- nodes -------------------------------
         # main structural block
         #: stores POINT cards
         self.points: dict[int, POINT] = {}
-        #self.grids = {}
 
         self.spoints: dict[int, SPOINT] = {}
         self.epoints: dict[int, EPOINT] = {}
@@ -539,11 +877,11 @@ class BDFAttributes:
         #self.random = {} # Case Control RANDOM = 100
 
         #: stores coordinate systems
-        origin = array([0., 0., 0.])
-        zaxis = array([0., 0., 1.])
-        xzplane = array([1., 0., 0.])
+        origin = np.array([0., 0., 0.])
+        zaxis = np.array([0., 0., 1.])
+        xzplane = np.array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
-        self.coords: dict[int, Coord] = {0 : coord}
+        self.coords: dict[int, Coord] = {0: coord}
         self.matcid: dict[int, MATCID] = {}
 
         # --------------------------- constraints ----------------------------
@@ -635,7 +973,7 @@ class BDFAttributes:
         # ---------------------------- optimization --------------------------
         # optimization
         self.dconadds: dict[int, DCONADD] = {}
-        self.dconstrs: dict[int, DCONSTR] = {}
+        self.dconstrs: dict[int, list[DCONSTR]] = {}
         self.desvars: dict[int, DESVAR] = {}
         self.topvar: dict[int, TOPVAR] = {}
         self.ddvals: dict[int, DDVAL] = {}
@@ -649,12 +987,12 @@ class BDFAttributes:
         self.dvprels: dict[int, DVPREL1 | DVPREL2] = {}
         self.dvmrels: dict[int, DVMREL1 | DVMREL2] = {}
         self.dvcrels: dict[int, DVCREL1 | DVCREL2] = {}
-        self.dvgrids: dict[int, DVGRID] = {}
+        self.dvgrids: dict[int, list[DVGRID]] = {}
         self.doptprm: Optional[DOPTPRM] = None
         self.dscreen: dict[int, DSCREEN] = {}
 
         # nx optimization
-        self.group : dict[int, GROUP]= {}
+        self.group: dict[int, GROUP] = {}
         self.dmncon: dict[int, DMNCON] = {}
         self.dvtrels: dict[int, DVTREL1 | DVTREL2] = {}
 
@@ -668,7 +1006,7 @@ class BDFAttributes:
         #: stores TSTEPNL
         self.tstepnls: dict[int, TSTEPNL] = {}
         #: stores TF
-        self.transfer_functions: dict[int, TF] = {}
+        self.transfer_functions: dict[int, list[TF]] = {}
         #: stores DELAY
         self.delays: dict[int, DELAY] = {}
 
@@ -736,6 +1074,9 @@ class BDFAttributes:
         #: stores DIVERG
         self.divergs: dict[int, DIVERG] = {}
 
+        #: stores UXVEC
+        self.uxvec: dict[int, UXVEC] = {}
+
         # ------ SOL 145 ------
         #: stores AERO
         self.aero: Optional[AERO] = None
@@ -794,13 +1135,13 @@ class BDFAttributes:
         self.setree: dict[int, SETREE] = {}
         self.senqset: dict[int, SENQSET | SENQSET1] = {}
         self.sebulk: dict[int, SEBULK] = {}
-        self.sebndry: dict[int, SEBNDRY] = {}
+        self.sebndry: dict[tuple[int, int], SEBNDRY] = {}
         self.release: dict[int, RELEASE] = {}
         self.seloc: dict[int, SELOC] = {}
         self.sempln: dict[int, SEMPLN] = {}
         self.seconct: dict[int, SECONCT] = {}
         self.selabel: dict[int, SELABEL] = {}
-        self.seexcld: dict[int, SEEXCLD] = {}
+        self.seexcld: dict[tuple[int, int], SEEXCLD] = {}
         self.seelt: dict[int, SEELT] = {}
         self.seload: dict[int, SELOAD] = {}
         self.csuper: dict[int, CSUPER] = {}
@@ -812,343 +1153,9 @@ class BDFAttributes:
         self.boltfrc: dict[int, BOLTFRC] = {}
         self.boltld: dict[int, BOLTLD] = {}
         # ---------------------------------------------------------------------
-        self.model_groups: dict[int, ModelGroup] = {}
+        self.model_groups: dict[str, ModelGroup] = {}
         self._type_to_id_map: dict[int, list[Any]] = defaultdict(list)
-        self._slot_to_type_map = {
-            'params': ['PARAM'],
-            'mdlprm': ['MDLPRM'],
-            'nodes': ['GRID', 'SPOINT', 'EPOINT'],  # 'RINGAX',
-            'points': ['POINT'],
-            #'ringaxs': ['RINGAX', 'POINTAX'],  # removed
-            #'ringfl': ['RINGFL'],  # removed
-            # 'axic': ['AXIC'],  # removed
-            # 'axif': ['AXIF'],  # removed
-            'acmodl': ['ACMODL'],
-            'grdset': ['GRDSET'],
-            #'gridb': ['GRIDB'],  # removed
-            'seqgp': ['SEQGP'],
-            'ao_element_flags': ['CBARAO'],
-            #'POINTAX', 'RINGAX',
-
-            # CMASS4 lies in the QRG
-            'masses': ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'],
-
-            'elements': [
-                'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                # 'CELAS5',
-                'CBUSH', 'CBUSH1D', 'CBUSH2D',
-
-                'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                'CFAST', 'CWELD', 'GENEL',
-
-                'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
-                'CTRIA3', 'CTRIA6', 'CTRIAR',
-                'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
-                'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
-                'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
-                'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
-                'CQUADX', 'CQUADX4', 'CQUADX8',
-                'CCONEAX',
-
-                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-                #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2', # nastran95-removed
-                'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
-                'CGAP',
-
-                # thermal
-                'CHBDYE', 'CHBDYG', 'CHBDYP',
-
-                # acoustic
-                'CHACAB', 'CAABSF', 'CHACBR',
-                # nastran95
-                #'CTRSHL', 'CQUAD1'
-            ],
-            'normals': ['SNORM'],
-            'nsms': ['NSM', 'NSM1', 'NSML', 'NSML1'],
-            'nsmadds': ['NSMADD'],
-            'rigid_elements': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON'],
-            'plotels': ['PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
-                        'PLOTTET', 'PLOTPYR', 'PLOTPEN', 'PLOTHEX'],
-
-            'properties_mass': ['PMASS'],
-            #'properties_acoustic' : ['PACABS'],
-            'properties': [
-                #  acoustic
-                'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
-
-                # 0d
-                'PELAS', 'PGAP', 'PFAST', 'PWELD',
-                'PBUSH', 'PBUSH1D', 'PBUSH2D',
-                'PDAMP', 'PDAMP5',
-
-                # 1d
-                'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP', 'PBRSECT', 'PBMSECT',
-                'PBEAML',  # not fully supported
-                'PBEAM3',
-
-                # 2d
-                'PLPLANE', 'PPLANE',
-                'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
-                'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
-                'PCOMPS', 'PCOMPLS',
-                'PCONEAX',
-            ],
-            'pdampt': ['PDAMPT'],
-            'pelast': ['PELAST'],
-            'pbusht': ['PBUSHT'],
-
-            # materials
-            'materials': ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
-                          'MAT3D', 'MATG',
-                          # acoustic
-                          'MATPOR'],
-            'hyperelastic_materials': ['MATHE', 'MATHP'],
-            'creep_materials': ['CREEP'],
-            'MATT1': ['MATT1'],
-            'MATT2': ['MATT2'],
-            'MATT3': ['MATT3'],
-            'MATT4': ['MATT4'],  # thermal
-            'MATT5': ['MATT5'],  # thermal
-            'MATT8': ['MATT8'],
-            'MATT9': ['MATT9'],
-            'MATT11': ['MATT11'],
-            'MATS1': ['MATS1'],
-            'MATDMG': ['MATDMG'],
-            'MATS3': ['MATS3'],
-            'MATS8': ['MATS8'],
-            'nxstrats': ['NXSTRAT'],
-
-            # 'MATHE'
-            #'EQUIV', # testing only, should never be activated...
-
-            # thermal materials
-            'thermal_materials': ['MAT4', 'MAT5'],
-
-            # spc/mpc constraints - TODO: is this correct?
-            'spcadds': ['SPCADD'],
-            'spcs': ['SPC', 'SPC1', 'GMSPC'],  # 'SPCAX' removed
-            'spcoffs': ['SPCOFF', 'SPCOFF1'],
-            'mpcadds' : ['MPCADD'],
-            'mpcs' : ['MPC'],
-            'suport' : ['SUPORT'],
-            'suport1' : ['SUPORT1'],
-            'se_suport' : ['SESUP'],
-
-            'setree' : ['SETREE'],
-            'senqset' : ['SENQSET'],
-            'sebulk' : ['SEBULK'],
-            'sebndry' : ['SEBNDRY'],
-            'release' : ['RELEASE'],
-            'seloc' : ['SELOC'],
-            'sempln' : ['SEMPLN'],
-            'seconct' : ['SECONCT'],
-            'selabel' : ['SELABEL'],
-            'seexcld' : ['SEEXCLD'],
-            'seelt' : ['SEELT'],
-            'seload' : ['SELOAD'],
-            'csuper' : ['CSUPER'],
-            'csupext' : ['CSUPEXT'],
-
-            # loads
-            'load_combinations' : ['LOAD', 'LSEQ', 'CLOAD'],
-            'loads' : [
-                'FORCE', 'FORCE1', 'FORCE2',
-                'MOMENT', 'MOMENT1', 'MOMENT2',
-                'GRAV', 'ACCEL', 'ACCEL1',
-                'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-                'RFORCE', 'RFORCE1', 'SLOAD',
-                'SPCD', 'LOADCYN', 'LOADCYH', 'DEFORM',
-
-                # msgmesh
-                #'GMLOAD',
-
-                # thermal
-                'TEMP', 'TEMPB3', 'TEMPRB',
-                'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY', 'QVOL',
-
-                # axisymmetric
-                'PLOADX1', 'FORCEAX', 'PRESAX', 'TEMPAX',
-                ],
-            'cyjoin' : ['CYJOIN'],
-            'cyax' : ['CYAX'],
-            'modtrak' : ['MODTRAK'],
-            'dloads' : ['DLOAD'],
-            # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
-            'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-                               'QVECT', 'RANDPS', 'RANDT1'],
-
-            # aero cards
-            'aero' : ['AERO'],
-            'aeros' : ['AEROS'],
-            'gusts' : ['GUST', 'GUST2'],
-            'flutters' : ['FLUTTER'],
-            'flfacts' : ['FLFACT'],
-            'mkaeros' : ['MKAERO1', 'MKAERO2', 'MKAEROZ'],
-            'aecomps' : ['AECOMP', 'AECOMPL'],
-            'aefacts' : ['AEFACT'],
-            'aelinks' : ['AELINK'],
-            'aelists' : ['AELIST'],
-            'aeparams' : ['AEPARM'],
-            'aesurf' : ['AESURF'],
-            'aesurfs' : ['AESURFS'],
-            'aestats' : ['AESTAT'],
-            'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', 'BODY7'],
-            'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', 'SEGMESH'],
-            'monitor_points' : ['MONPNT1', 'MONPNT2', 'MONPNT3', 'MONDSP1'],
-            'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7'],
-            'panlsts' : ['PANLST1', 'PANLST2', 'PANLST3'],
-            'csschds' : ['CSSCHD',],
-            #'SPLINE3', 'SPLINE6', 'SPLINE7',
-            'trims': ['TRIM', 'TRIM2'],
-            'divergs': ['DIVERG'],
-
-            # coords
-            'coords': ['CORD1R', 'CORD1C', 'CORD1S',
-                       'CORD2R', 'CORD2C', 'CORD2S',
-                       'GMCORD', 'ACOORD', 'CORD3G'],
-            'matcid': ['MATCID'],
-
-            # temperature cards
-            'tempds': ['TEMPD'],
-
-            'phbdys': ['PHBDY'],
-            'convection_properties': ['PCONV', 'PCONVM'],
-
-            # stores thermal boundary conditions
-            'bcs' : ['CONV', 'CONVM', 'RADBC', 'RADM', 'TEMPBC'],
-
-
-            # dynamic cards
-            'dareas': ['DAREA'],
-            'tics': ['TIC'],
-            'dphases': ['DPHASE'],
-            'nlparms': ['NLPARM'],
-            'nlpcis': ['NLPCI'],
-            'tsteps': ['TSTEP'],
-            'tstepnls': ['TSTEPNL', 'TSTEP1'],
-            'transfer_functions': ['TF'],
-            'delays': ['DELAY'],
-            'rotors': ['ROTORG', 'ROTORD'],
-
-            'frequencies': ['FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5'],
-
-            # direct matrix input cards
-            'dmig': ['DMIG'],
-            'dmiax': ['DMIAX'],
-            'dmij': ['DMIJ'],
-            'dmiji': ['DMIJI'],
-            'dmik': ['DMIK'],
-            'dmi': ['DMI'],
-            'dti': ['DTI'],
-
-            # optimzation
-            'dequations': ['DEQATN'],
-            'dtable': ['DTABLE'],
-            'dconstrs': ['DCONSTR', 'DCONADD'],
-            'desvars': ['DESVAR'],
-            'topvar': ['TOPVAR'],
-            'ddvals': ['DDVAL'],
-            'dlinks': ['DLINK'],
-            'dresps': ['DRESP1', 'DRESP2', 'DRESP3'],
-            'dvprels': ['DVPREL1', 'DVPREL2'],
-            'dvmrels': ['DVMREL1', 'DVMREL2'],
-            'dvcrels': ['DVCREL1', 'DVCREL2'],
-            'dvgrids': ['DVGRID'],
-            'doptprm': ['DOPTPRM'],
-            'dscreen': ['DSCREEN'],
-
-            # optimization - nx
-            'dmncon': ['DMNCON'],
-            'dvtrels': ['DVTREL1'],
-            'group': ['GROUP'],
-
-            # sets
-            'asets': ['ASET', 'ASET1'],
-            'omits': ['OMIT', 'OMIT1'],
-            'bsets': ['BSET', 'BSET1'],
-            'qsets': ['QSET', 'QSET1'],
-            'csets': ['CSET', 'CSET1'],
-            'usets': ['USET', 'USET1'],
-            'sets': ['SET1', 'SET2', 'SET3'],
-
-            # super-element sets
-            'se_bsets': ['SEBSET', 'SEBSET1'],
-            'se_csets': ['SECSET', 'SECSET1'],
-            'se_qsets': ['SEQSET', 'SEQSET1'],
-            'se_usets': ['SEUSET', 'SEUSET1'],
-            'se_sets': ['SESET'],
-            'radset': ['RADSET'],
-            'radcavs': ['RADCAV', 'RADLST'],
-            'radmtx': ['RADMTX'],
-            # SEBSEP
-
-            # acoustic
-            'acplnw': ['ACPLNW'],
-            'amlreg': ['AMLREG'],
-            'micpnt': ['MICPNT'],
-
-            # parametric
-            'pset': ['PSET'],
-            'pval': ['PVAL'],
-            'gmcurv': ['GMCURV'],
-            'gmsurf': ['GMSURF'],
-            'feedge': ['FEEDGE'],
-            'feface': ['FEFACE'],
-
-            # tables
-            'tables': [
-                'TABLEH1', 'TABLEHT',
-                'TABLES1', 'TABLEST',
-            ],
-            'tables_d': ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLED5'],
-            'tables_m': ['TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4'],
-            'tables_sdamping': ['TABDMP1'],
-            'random_tables': ['TABRND1', 'TABRNDG'],
-
-            # initial conditions - sid (set ID)
-            ##'TIC',  (in bdf_tables.py)
-
-            # methods
-            'methods': ['EIGB', 'EIGR', 'EIGRL'],
-
-            # cMethods
-            'cMethods': ['EIGC', 'EIGP'],
-
-            # contact
-            'bcbodys': ['BCBODY'],
-            'bcparas': ['BCPARA'],
-            'bctparas': ['BCTPARA'],
-            'bcrparas': ['BCRPARA'],
-            'bctparms': ['BCTPARM'],
-
-            'bctadds': ['BCTADD'],
-            'bctsets': ['BCTSET'],
-            'bgadds': ['BGADD'],
-            'bgsets': ['BGSET'],
-            'bsurf': ['BSURF'],
-            'bsurfs': ['BSURFS'],
-            'bconp': ['BCONP'],
-            'blseg': ['BLSEG'],
-            'bfric': ['BFRIC'],
-            'views': ['VIEW'],
-            'view3ds': ['VIEW3D'],
-
-            # nx bolts
-            'bolt': ['BOLT'],
-            'boltld': ['BOLTLD'],
-            'boltfor': ['BOLTFOR'],
-            'boltfrc': ['BOLTFRC'],
-            'boltseq': ['BOLTSEQ'],
-            ## other
-            #'INCLUDE',  # '='
-            #'ENDDATA',
-            #------------------
-            # zone
-            'panlsts': ['PANLST1', 'PANLST2', 'PANLST3'],
-            'pafoils': ['PAFOIL7'],
-            'attach': ['ATTACH'],
-            'pltmode': ['PLTMODE'],
-        }  # type: dict[str, list[str]]
+        self._slot_to_type_map = SLOT_TO_TYPE_MAP
         self._type_to_slot_map = self.get_rslot_map()
 
     @property
@@ -1161,7 +1168,7 @@ class BDFAttributes:
             nchars = max(nchars, len(card_group))
 
         nline = 58
-        fmt =     '| %%-%ss | %%-%ss |\n' % (nchars, nline)
+        fmt = '| %%-%ss | %%-%ss |\n' % (nchars, nline)
         fmt_plus = '+%%-%ss+%%-%ss+\n' % (nchars + 2, nline + 2)
 
         dash1 = '-' * (nchars + 2)
@@ -1393,50 +1400,6 @@ class BDFAttributes:
             return param.value
         return default
 
-    #--------------------
-    # deprecations
-    # @property
-    # def dmis(self) -> dict[str, DMI]:
-    #     self.deprecated('dmis', 'dmi', '1.5')
-    #     return self.dmi
-    # @property
-    # def dmigs(self) -> dict[str, DMIG]:
-    #     self.deprecated('dmig', 'dmigs', '1.5')
-    #     return self.dmig
-    # @property
-    # def dmiks(self) -> dict[str, DMIK]:
-    #     self.deprecated('dmik', 'dmiks', '1.5')
-    #     return self.dmik
-    # @property
-    # def dmijs(self) -> dict[str, DMIJ]:
-    #     self.deprecated('dmij', 'dmijs', '1.5')
-    #     return self.dmij
-    # @property
-    # def dmijis(self) -> dict[str, DMIJI]:
-    #     self.deprecated('dmiji', 'dmiji', '1.5')
-    #     return self.dmiji
-    #
-    # @dmis.setter
-    # def dmis(self, dmi):
-    #     self.deprecated('dmis', 'dmi', '1.5')
-    #     self.dmi = dmi
-    # @dmigs.setter
-    # def dmigs(self, dmig):
-    #     self.deprecated('dmig', 'dmigs', '1.5')
-    #     self.dmig = dmig
-    # @dmiks.setter
-    # def dmiks(self, dmik):
-    #     self.deprecated('dmik', 'dmiks', '1.5')
-    #     self.dmik = dmik
-    # @dmijs.setter
-    # def dmijs(self, dmij):
-    #     self.deprecated('dmij', 'dmijs', '1.5')
-    #     self.dmij = dmij
-    # @dmijis.setter
-    # def dmijis(self, dmiji):
-    #     self.deprecated('dmiji', 'dmiji', '1.5')
-    #     self.dmiji = dmiji
-
 
 def map_version(fem: BDF, version: str) -> None:
     version_map = {
@@ -1456,13 +1419,13 @@ def map_version(fem: BDF, version: str) -> None:
 
 
 def map_update(fem: BDF, version: str) -> None:
-    #if self.nastran_format == 'zona':
-        #self.zona.update_for_zona()
-    #elif self.nastran_format == 'mystran':
-        #self._update_for_mystran()
-    #else:
-        # msc / nx / optistruct
-        #self._update_for_nastran()
+    # if self.nastran_format == 'zona':
+    #     self.zona.update_for_zona()
+    # elif self.nastran_format == 'mystran':
+    #     self._update_for_mystran()
+    # else:
+    #     msc / nx / optistruct
+    #     self._update_for_nastran()
 
     map_version(fem, version)
     version_map = {

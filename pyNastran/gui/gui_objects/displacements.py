@@ -1,4 +1,3 @@
-import getpass
 from copy import deepcopy
 from typing import Optional, Any
 
@@ -12,7 +11,7 @@ class VectorTable(GuiResultCommon):
     def __init__(self, subcase_id: int, location: str,
                  titles: list[str], headers: list[str],
                  dxyz: np.ndarray,
-                 linked_scale_factor: bool, #xyz, scalar,
+                 linked_scale_factor: bool,  # xyz, scalar,
                  scales: list[float],
                  data_formats: Optional[str]=None,
                  nlabels: Optional[int]=None,
@@ -69,7 +68,6 @@ class VectorTable(GuiResultCommon):
         self.dxyz = dxyz
         self.dim = len(self.dxyz.shape)
 
-
         self.uname = uname
         #self.dxyz_norm = norm(dxyz, axis=1)
 
@@ -79,7 +77,7 @@ class VectorTable(GuiResultCommon):
         self.scales = scales
         self.arrow_scales = scales
         self.subcase_id = subcase_id
-        self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
+        self.data_type = self.dxyz.dtype.str  # '<c8', '<f4'
         self.is_real = True if self.data_type in ['<f4', '<f8'] else False
         #print('self.data_type = %r' % self.data_type)
         self.is_complex = not self.is_real
@@ -160,14 +158,17 @@ class VectorTable(GuiResultCommon):
     def has_coord_transform(self, i: int,
                             resname: str) -> tuple[bool, list[str]]:
         return True, ['Global']
+
     def has_derivation_transform(self, i: int, res_name: str,
                                  ) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
         return False, {}
+
     def has_nodal_combine_transform(self, i: int,
                                     resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return False, []
+
     def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
                                                                bool, bool, bool]:
         is_enabled_fringe = True
@@ -200,6 +201,7 @@ class VectorTable(GuiResultCommon):
 
     def get_scale(self, i: int, name: str) -> float:
         return self.scales[i]
+
     def get_arrow_scale(self, i: int, name: str) -> float:
         return self.arrow_scales[i]
 
@@ -208,6 +210,7 @@ class VectorTable(GuiResultCommon):
 
     def get_min_max(self, i: int, name: str) -> tuple[float, float]:
         return self.min_values[i], self.max_values[i]
+
     def get_imin_imax(self, i: int, name: str) -> tuple[None, None]:
         return None, None
 
@@ -223,6 +226,7 @@ class VectorTable(GuiResultCommon):
             self.scales[:] = scale
         else:
             self.scales[i] = scale
+
     def set_arrow_scale(self, i: int, name: str, scale: float) -> None:
         #j = self.titles_default.index(name)
         if self.linked_scale_factor:
@@ -268,6 +272,7 @@ class VectorTable(GuiResultCommon):
 
     def get_default_scale(self, i: int, name: str) -> float:
         return self.scales_default[i]
+
     def get_default_arrow_scale(self, i: int, name: str) -> float:
         return self.scales_default[i]
 
@@ -290,7 +295,7 @@ class VectorTable(GuiResultCommon):
         """the precision of the data"""
         return self.data_type
 
-    def get_vector_size(self, i:int, resname: str) -> int:
+    def get_vector_size(self, i: int, resname: str) -> int:
         """vector_size=1 is the default and displacement has 3 components"""
         #print(i)
         #j = self.titles_default.index(name)
@@ -353,6 +358,7 @@ class VectorTable(GuiResultCommon):
     def get_force_vector_result(self, i: int, name: str,
                                 ) -> tuple[np.ndarray, np.ndarray]:
         return self.get_vector_result(i, name)
+
     def get_vector_result(self, i: int, name: str,
                           ) -> tuple[np.ndarray, np.ndarray]:
         #assert len(self.xyz.shape) == 2, self.xyz.shape
@@ -373,7 +379,6 @@ class VectorTable(GuiResultCommon):
 
         #self.dxyz = dxyz
         #self.dim = len(self.dxyz.shape)
-
 
         #self.uname = uname
         #self.dxyz_norm = norm(dxyz, axis=1)
@@ -453,8 +458,11 @@ class ElementalTableResults(VectorTable):
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return xyz, deflected_xyz
 
+
 forces = ['Magnitude', 'Fx', 'Fy', 'Fz']
 moments = ['Magnitude', 'Mx', 'My', 'Mz']
+
+
 class ForceTableResults(VectorTable):
     def __init__(self, subcase_id: int, titles: list[str], headers: list[str],
                  dxyz: Any,
@@ -477,12 +485,12 @@ class ForceTableResults(VectorTable):
             colormap=colormap, set_max_min=set_max_min,
             uname=uname)
 
-    def get_location(self, i:int, name):
+    def get_location(self, i: int, name):
         """the result type"""
         return 'node'
-    def get_methods(self, i:int, name) -> list[str]:
-        return ['Magnitude']
 
+    def get_methods(self, i: int, name) -> list[str]:
+        return ['Magnitude']
 
     def get_vector_result_by_scale_phase(self, i: int, name: str,
                                          unused_scale: float,
@@ -542,6 +550,8 @@ class ForceTableResults(VectorTable):
 
 translation = ['Magnitude', 'tx', 'ty', 'tz']
 rotation = ['Magnitude', 'rx', 'ry', 'rz']
+
+
 class DisplacementResults(VectorTable):
     def __init__(self, subcase_id: int,
                  titles: list[str],

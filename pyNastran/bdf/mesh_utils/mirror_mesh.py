@@ -20,7 +20,7 @@ from pyNastran.bdf.cards.loads.static_loads import (
     PLOAD, PLOAD2, PLOAD4)
 from pyNastran.bdf.cards.thermal.loads import TEMP, QVOL, QBDY1, QBDY2, QBDY3, QHBDY
 from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2, SPLINE1
-from pyNastran.bdf.cards.bdf_sets import SET1 #, SET3
+from pyNastran.bdf.cards.bdf_sets import SET1  # SET3
 from pyNastran.bdf.bdf import BDF, MPC
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 if TYPE_CHECKING:
@@ -56,6 +56,10 @@ def bdf_mirror(bdf_filename: PathLike | BDF,
     bdf_filename : str / BDF()
         str : the bdf filename
         BDF : the BDF model object
+    log : SimpleLogger | None
+        the logger
+    debug: bool | str; default=True
+        debug flag (True=debug, False=warning, info, error)
     plane : str; {'xy', 'yz', 'xz'}; default='xz'
         the plane to mirror about
         xz : +y/-y
@@ -79,6 +83,7 @@ def bdf_mirror(bdf_filename: PathLike | BDF,
     _mirror_loads(model, mirror_model, nid_offset, eid_offset)
     _mirror_aero(model, mirror_model, nid_offset, plane=plane)
     return model, nid_offset, eid_offset
+
 
 def write_bdf_symmetric(bdf_filename: PathLike | BDF,
                         out_filename=None, encoding=None,
@@ -145,6 +150,7 @@ def write_bdf_symmetric(bdf_filename: PathLike | BDF,
                     interspersed=False, enddata=enddata, close=close)
     return model, nid_offset, eid_offset
 
+
 def _mirror_nodes(model: BDF,
                   mirror_model: BDF,
                   plane: str='xz') -> tuple[int, str]:
@@ -182,6 +188,7 @@ def _mirror_nodes(model: BDF,
     #if model.epoints:
 
     return nid_offset, plane
+
 
 def _mirror_nodes_plane(model: BDF, mirror_model: BDF,
                         plane: NDArray33float,
@@ -269,19 +276,21 @@ def _mirror_nodes_plane(model: BDF, mirror_model: BDF,
             mirror_model.add_grid(nid2, xyz2, cp=0, cd=node.cd, ps=node.ps, seid=node.seid)
     return nid_offset, plane
 
+
 def _plane_to_iy(plane: str) -> tuple[int, str]:
     """gets the index fo the mirror plane"""
     plane = plane.strip().lower()
-    plane_sorted =  ''.join(sorted(set(plane)))
+    plane_sorted = ''.join(sorted(set(plane)))
     if plane_sorted == 'yz':
         iy = 0
-    if plane_sorted == 'xz':
+    elif plane_sorted == 'xz':
         iy = 1
     elif plane_sorted == 'xy':
         iy = 2
     else:  # pragma: no cover
         raise NotImplementedError(f"plane={plane!r} and must be 'yz', 'xz', or 'xy'.")
     return iy, plane_sorted
+
 
 def _get_eid_offset(model: BDF, use_eid_offset: bool) -> int:
     eid_offset = 0
@@ -301,11 +310,13 @@ def _get_eid_offset(model: BDF, use_eid_offset: bool) -> int:
         eid_offset = max(eid_max_elements, eid_max_masses, eid_max_rigid, eid_max_plotels)
     return eid_offset
 
+
 def _get_cid_offset(model: BDF, use_cid_offset: bool) -> int:
     cid_offset = 0
     if use_cid_offset:
         cid_offset = 1 if len(model.coords) == 1 else max(model.coords.keys())
     return cid_offset
+
 
 def _mirror_elements(model: BDF,
                      mirror_model: BDF,
@@ -387,6 +398,7 @@ def _mirror_elements(model: BDF,
 
     return eid_offset
 
+
 def __mirror_elements(model: BDF, mirror_model: BDF,
                       nid_offset: int, eid_offset: int, cid_offset: int, plane: str='xz') -> None:
     """mirrors model.elements"""
@@ -430,13 +442,13 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             continue
 
         nodes1 = element.node_ids
-        #try:
-            #nodes = [node_id + nid_offset for node_id in nodes]
-        #except TypeError:
-            #msg = 'cannot mirror %r eid=%s because None exists in nodes=%s' % (
-                #element.type, eid, nodes)
-            #model.log.warning(msg)
-            #continue
+        # try:
+        #     nodes = [node_id + nid_offset for node_id in nodes]
+        # except TypeError:
+        #     msg = 'cannot mirror %r eid=%s because None exists in nodes=%s' % (
+        #         element.type, eid, nodes)
+        #     model.log.warning(msg)
+        #     continue
 
         eid_mirror = eid + eid_offset
         fields = element.repr_fields()
@@ -447,14 +459,14 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
         if etype in shells:
             nodes2 = [node_id + nid_offset for node_id in nodes1]
             element2.nodes = nodes2
-            element.flip_normal() # nodes = nodes[::-1]
+            element.flip_normal()  # nodes = nodes[::-1]
             if isinstance(element.theta_mcid, int) and update_mcids:
                 element_cids.add(element.theta_mcid)
                 element2.theta_mcid += cid_offset
         elif etype in solids:
             # what about inverting solids?
             nodes2 = [node_id + nid_offset if node_id is not None else None
-                     for node_id in nodes1]
+                      for node_id in nodes1]
             if etype == 'CHEXA':
                 if len(nodes1) == 8:
                     n1, n2, n3, n4, n5, n6, n7, n8 = nodes2
@@ -519,9 +531,9 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             assert vol >= 0., vol
         elif etype in shell_nones:
             nodes2 = [node_id + nid_offset if node_id is not None else None
-                     for node_id in nodes1]
+                      for node_id in nodes1]
             element2.nodes = nodes2
-            element.flip_normal() # nodes = nodes[::-1]
+            element.flip_normal()  # nodes = nodes[::-1]
             if isinstance(element.theta_mcid, int) and update_mcids:
                 element_cids.add(element.theta_mcid)
                 element2.theta_mcid += cid_offset
@@ -540,11 +552,11 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             element2.g0 = g0
 
         elif etype == 'CGAP':
-            #nodes = [node_id + nid_offset if node_id is not None else None
-                     #for node_id in nodes]
-            #_set_nodes(element2, nodes)
-            ga = element2.ga + nid_offset if element2.ga is not None else None
-            gb = element2.gb + nid_offset if element2.gb is not None else None
+            # nodes = [node_id + nid_offset if node_id is not None else None
+            #          for node_id in nodes]
+            # _set_nodes(element2, nodes)
+            ga = element2.nodes[0] + nid_offset if element2.nodes[0] is not None else None
+            gb = element2.nodes[1] + nid_offset if element2.nodes[1] is not None else None
             g0 = element2.g0 + nid_offset if element2.g0 is not None else None
             element2.ga = ga
             element2.gb = gb
@@ -562,8 +574,8 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
                 element_cids.add(element.cid)
                 element2.cid += cid_offset
         elif etype == 'CBUSH1D':
-            ga = element2.ga + nid_offset if element2.ga is not None else None
-            gb = element2.gb + nid_offset if element2.gb is not None else None
+            ga = element2.nodes[0] + nid_offset if element2.nodes[0] is not None else None
+            gb = element2.nodes[1] + nid_offset if element2.nodes[1] is not None else None
             element2.ga = ga
             element2.gb = gb
             if isinstance(element.cid, int) and update_mcids:
@@ -582,8 +594,8 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
         elif etype in spring_dampers:
             nodes2 = [node_id + nid_offset if node_id is not None else None for node_id in nodes1]
             _set_nodes(element2, nodes2)
-            #print(nodes)
-            #element2.nodes = nodes
+            # print(nodes)
+            # element2.nodes = nodes
         elif etype == 'GENEL':
             element2.ul = element2.ul + nid_offset
             element2.ud = element2.ud + nid_offset
@@ -615,8 +627,10 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
         cids = list(element_cids)
         cids.sort()
         model.log.warning(f'verify material coordinate systems {cids}')
-        _asymmetrically_mirror_coords(model, element_cids, cid_offset, plane)
+        _asymmetrically_mirror_coords(
+            model, mirror_model, element_cids, cid_offset, plane)
     return
+
 
 def __mirror_masses(model: BDF, mirror_model: BDF,
                     nid_offset: int, eid_offset: int) -> None:
@@ -631,12 +645,14 @@ def __mirror_masses(model: BDF, mirror_model: BDF,
             cid = element.cid
             X = element.X
             I = element.I
-            mirror_model.add_conm2(eid_mirror, new_nid, mass, cid=cid, X=X, I=I, comment='')
+            mirror_model.add_conm2(eid_mirror, new_nid, mass,
+                                   cid=cid, X=X, I=I, comment='')
         elif element.type == 'CONM1':
             new_nid = element.node_ids[0] + nid_offset
             mass_matrix = element.mass_matrix
             cid = element.Cid()
-            mirror_model.add_conm1(eid_mirror, new_nid, mass_matrix, cid=cid, comment='')
+            mirror_model.add_conm1(eid_mirror, new_nid, mass_matrix,
+                                   cid=cid, comment='')
         elif element.type == 'CMASS1':
             old_node_ids = [element.G1(), element.G2()]
             new_nids = [nid + nid_offset if nid is not None else None
@@ -663,6 +679,7 @@ def __mirror_masses(model: BDF, mirror_model: BDF,
             mirror_model.log.warning('skipping mass element:\n%s' % str(element))
     del eid_mirror
 
+
 def __mirror_mpcs(model: BDF, mirror_model: BDF,
                   nid_offset: int) -> None:
     """mirrors model.rigid_elements"""
@@ -685,6 +702,7 @@ def __mirror_mpcs(model: BDF, mirror_model: BDF,
                 mirror_model.log.warning('skipping MPC:\n%s' % str(mpc))
         #print(f'adding {len(mpcs_new)} mpcs')
         model.mpcs[sid].extend(mpcs_new)
+
 
 def __mirror_rigid_elements(model: BDF, mirror_model: BDF,
                             nid_offset: int, eid_offset: int) -> None:
@@ -720,7 +738,8 @@ def __mirror_rigid_elements(model: BDF, mirror_model: BDF,
             node_ids = [node_id + nid_offset for node_id in
                         [rigid_element.ga, rigid_element.gb]]
             mirror_model.add_rbar1(
-                eid_mirror, node_ids, rigid_element.cb, alpha=rigid_element.alpha, comment='')
+                eid_mirror, node_ids, rigid_element.cb,
+                alpha=rigid_element.alpha, comment='')
             continue
         elif rigid_element.type == 'RBE1':
             Gni = [node_id + nid_offset for node_id in rigid_element.Gni]
@@ -796,7 +815,7 @@ def _mirror_loads(model: BDF, mirror_model: BDF,
 
             elif load_type == 'FORCE':
                 load = FORCE(load.sid, load.node + nid_offset, load.mag, load.xyz,
-                              cid=load.cid, comment='')
+                             cid=load.cid, comment='')
                 loads_new.append(load)
             elif load_type == 'FORCE1':
                 load = FORCE1(load.sid, load.node + nid_offset, load.mag,
@@ -848,7 +867,7 @@ def _mirror_loads(model: BDF, mirror_model: BDF,
                 loads_new.append(load)
             elif load_type == 'QBDY3':
                 eids = [eid + eid_offset for eid in load.eids]
-                load = QBDY3(load.sid, load.q0, load.cntrlnd + nid_offset, eids)
+                load = QBDY3(load.sid, load.q0, load.control_node + nid_offset, eids)
                 loads_new.append(load)
 
             elif load_type == 'TEMP':
@@ -865,6 +884,7 @@ def _mirror_loads(model: BDF, mirror_model: BDF,
                 model.log.warning('skipping:\n%s' % load.rstrip())
         if loads_new:
             mirror_model.loads[sid_].extend(loads_new)
+
 
 def _mirror_aero(model: BDF,
                  mirror_model: BDF,
@@ -927,25 +947,25 @@ def _mirror_aero(model: BDF,
         else:
             log.error(f'not mirroring plane {plane!r}; only xz, yz')
 
-    ncaero_subpanels = 0
+    ncaero_boxes = 0
     for unused_caero_id, caero in model.caeros.items():
         if caero.type == 'CAERO1':
             npoints, nelements = caero.get_panel_npoints_nelements()
         elif caero.type == 'CAERO2':
             npoints, nelements = caero.get_panel_npoints_nelements()
         else:
-            log.error('skipping (only supports CAERO1):\n%s' % caero.rstrip())
+            log.error('skipping (only supports CAERO1/CAERO2):\n%s' % caero.rstrip())
             continue
         del npoints
-        ncaero_subpanels += nelements
+        ncaero_boxes += nelements
     w2gj = []
-    w2gj0 = np.zeros(ncaero_subpanels, dtype='float32')
+    w2gj0 = np.zeros(ncaero_boxes, dtype='float32')
     if 'W2GJ' in model.dmi:
         w2gj0 = model.dmi['W2GJ'].Real
-    if ncaero_subpanels:
+    if ncaero_boxes:
         w2gj = [w2gj0]
 
-    isubpanel_offset = 0
+    iaerobox_offset = 0
     caero_id_offset = 0
     if len(model.caeros):
         is_aero = True
@@ -967,16 +987,16 @@ def _mirror_aero(model: BDF,
                 x12 = caero.x12
                 x43 = caero.x43
                 npoints, nelements = caero.get_panel_npoints_nelements()
-                w2gji = w2gj0[isubpanel_offset:isubpanel_offset+nelements]
+                w2gji = w2gj0[iaerobox_offset:iaerobox_offset+nelements]
                 #print(f'w2gji = {w2gji}')
-                isubpanel_offset += nelements
-                if plane == 'xz': # flip the y
+                iaerobox_offset += nelements
+                if plane == 'xz':  # flip the y
                     if np.allclose(p1[1], p4[1]):
                         log.error(f'skipping {plane} symmetric panel; p1={p1}; p4={p4}')
                         continue
                     p1[1] *= -1.
                     p4[1] *= -1.
-                elif  plane == 'xy':
+                elif plane == 'xy':
                     if np.allclose(p1[2], p4[2]):
                         log.error(f'skipping {plane} symmetric panel; p1={p1}; p4={p4}')
                         continue
@@ -1001,10 +1021,10 @@ def _mirror_aero(model: BDF,
                 p1 = caero.get_leading_edge_points()[0]
                 p1 = p1.copy()
 
-                w2gji = w2gj0[isubpanel_offset:isubpanel_offset+nelements]
+                w2gji = w2gj0[iaerobox_offset:iaerobox_offset+nelements]
                 #print(f'w2gji = {w2gji}')
-                isubpanel_offset += nelements
-                if plane == 'xz': # flip the y
+                iaerobox_offset += nelements
+                if plane == 'xz':  # flip the y
                     if np.allclose(p1[1], 0.):
                         log.error(f'skipping {plane} symmetric panel; p1={p1}')
                         continue
@@ -1143,6 +1163,7 @@ def _mirror_aero(model: BDF,
                                       aero_cids_set, cid_offset, plane=plane)
     model.pop_parse_errors()
 
+
 def _asymmetrically_mirror_coords2(model: BDF,
                                    mirror_model: BDF,
                                    cids_nominal_set: set[int],
@@ -1155,6 +1176,7 @@ def _asymmetrically_mirror_coords2(model: BDF,
     as some arbitrary y-direction.  We'll try to make y look mirrored.
     """
     return
+
 
 def _asymmetrically_mirror_coords(model: BDF,
                                   mirror_model: BDF,

@@ -13,12 +13,13 @@ if TYPE_CHECKING:
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForceArray
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
-              '|i1', # this is a boolean
+              '|i1',  # this is a boolean
               #'|b1', # this is officially a boolean...
               '>i4', '>i8', '>f4', '>f8']
 #COMPLEX_TYPES = ['<c8']
 INT_TYPES = ['<i4', '<i8', '|i1',
              '>i4', '>i8']
+
 
 class GuiResultCommon:
     def __init__(self):
@@ -40,17 +41,22 @@ class GuiResultCommon:
 
     def set_sidebar_args(self, i: int, name: str, **kwargs) -> None:
         pass
+
     def has_methods_table(self, i: int, res_name: str) -> bool:
         return False
+
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.has_coord_transform')
+
     def has_derivation_transform(self, i: int, res_name: str,
                                  ) -> tuple[bool, dict[str, Any]]:  # pragma: no cover
         """min/max/avg"""
         raise NotImplementedError(f'{self.class_name}.has_derivation_transform')
+
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         raise NotImplementedError(f'{self.class_name}.has_nodal_combine_transform')
+
     def has_output_checks(self, i: int, resname: str) -> tuple[bool, bool, bool,
                                                                bool, bool, bool]:
         is_enabled_fringe = False
@@ -68,6 +74,7 @@ class GuiResultCommon:
     def deflects(self, unused_i: int, unused_res_name: str) -> bool:
         """deflection is opt-in"""
         return False
+
     def is_normal_result(self, i: int, name: str) -> bool:
         """normal result is opt-in"""
         return False
@@ -88,6 +95,7 @@ class GuiResultCommon:
     def get_imin_imax(self, i: int, name: str,
                       ) -> tuple[int, int] | tuple[None, None]:  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_imin_imax')
+
     @abstractmethod
     def get_min_max(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_min_max')
@@ -114,6 +122,7 @@ class GuiResultCommon:
 
     def get_scale(self, i: int, name: str) -> float:
         return 0.0
+
     def get_arrow_scale(self, i: int, name: str) -> float:
         return 0.0
 
@@ -138,6 +147,7 @@ class GuiResultCommon:
 
     def set_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
+
     def set_arrow_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a vector scale factor.')
 
@@ -158,11 +168,13 @@ class GuiResultCommon:
     def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):  # pragma: no cover
         raise NotImplementedError(self.class_name)
 
-    def get_default_scale(self, i: int, name: str):
+    def get_default_scale(self, i: int, name: str) -> float:
         return 0.
-    def get_default_arrow_scale(self, i: int, name: str):
+
+    def get_default_arrow_scale(self, i: int, name: str) -> float:
         return 0.
-    def get_default_phase(self, i: int, name: str):
+
+    def get_default_phase(self, i: int, name: str) -> None:
         return None
 
     def _get_complex_displacements_by_phase(self, i: int, name: str, phase: float):
@@ -179,6 +191,7 @@ class NullResult(GuiResultCommon):
     def __repr__(self) -> str:
         msg = '<NormalResult>'
         return msg
+
 
 class GridPointForceResult(GuiResultCommon):
     def __init__(self, subcase_id: int,
@@ -215,10 +228,12 @@ class GridPointForceResult(GuiResultCommon):
 
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         return False, []
+
     def has_derivation_transform(self, i: int, res_name: str,
                                  ) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
         return False, {}
+
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return False, []
@@ -229,34 +244,48 @@ class GridPointForceResult(GuiResultCommon):
     def get_fringe_result(self, i: int, name: str) -> np.ndarray:
         fringe = np.full(self.nnodes, np.nan, dtype='float32')
         return fringe
+
     def get_fringe_vector_result(self, i: int, name: str) -> tuple[np.ndarray, None]:
         fringe = self.get_fringe_result(i, name)
         return fringe, None
+
     def get_legend_title(self, i: int, name: str) -> str:
         return self.title
+
     def get_location(self, i: int, name: str) -> str:
         return self.location
+
     def get_annotation(self, i: int, name: str) -> str:
         return self.header
+
     def get_methods(self, i: int, name: str) -> list[None]:
         return [None]
+
     def get_data_format(self, i: int, name: str) -> None:
         return None
+
     def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str) -> tuple[Any, Any, Any, Any]:
         return None, None, None, None
+
     def get_default_data_format(self, i: int, name: str) -> None:
         return None
+
     def get_default_min_max(self, i: int, name: str) -> tuple[Optional[float], Optional[float]]:
         return np.nan, np.nan
+
     def get_default_legend_title(self, i: int, name: str) -> str:
         return self.title
+
     def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str) -> tuple[Any, Any, Any, Any]:
         return None, None, None, None
+
     def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str,
                                                nlabels, labelsize, ncolors, colormap) -> None:
         return
+
     def get_imin_imax(self, i: int, name: str) -> tuple[int, int]:
         return 0, 0
+
     def get_min_max(self, i: int, name: str) -> tuple[float, float]:
         return np.nan, np.nan
 
@@ -265,6 +294,7 @@ class GridPointForceResult(GuiResultCommon):
     def __repr__(self) -> str:
         msg = '<GridPointForceResult>'
         return msg
+
 
 class NormalResult(GuiResultCommon):
     def __init__(self, subcase_id: int,
@@ -313,10 +343,12 @@ class NormalResult(GuiResultCommon):
 
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         return False, []
+
     def has_derivation_transform(self, i: int, res_name: str,
                                  ) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
         return False, {}
+
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return False, []
@@ -348,6 +380,7 @@ class NormalResult(GuiResultCommon):
 
     def get_imin_imax(self, i: int, name: str) -> tuple[None, None]:
         return None, None
+
     def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
@@ -366,6 +399,7 @@ class NormalResult(GuiResultCommon):
 
     def set_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
+
     def set_arrow_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a vector scale factor.')
 
@@ -390,12 +424,13 @@ class NormalResult(GuiResultCommon):
     def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
         return self.min_default, self.max_default
 
-    def get_default_scale(self, i: int, name: str):
-        return 0.
-    def get_default_arrow_scale(self, i: int, name: str):
+    def get_default_scale(self, i: int, name: str) -> float:
         return 0.
 
-    def get_default_phase(self, i: int, name: str):
+    def get_default_arrow_scale(self, i: int, name: str) -> float:
+        return 0.
+
+    def get_default_phase(self, i: int, name: str) -> None:
         return None
 
     def get_default_legend_title(self, i: int, name: str) -> str:
@@ -408,6 +443,7 @@ class NormalResult(GuiResultCommon):
     # unmodifyable getters
     def get_scale(self, i: int, name: str) -> float:
         return 0.
+
     def get_arrow_scale(self, i: int, name: str) -> float:
         return 0.
 
@@ -416,6 +452,7 @@ class NormalResult(GuiResultCommon):
 
     def get_fringe_result(self, i: int, name: str) -> None:
         return None
+
     def get_fringe_vector_result(self, i: int, name: str) -> tuple[None, None]:
         return None, None
 
@@ -431,6 +468,7 @@ class NormalResult(GuiResultCommon):
 
 class GuiResult(GuiResultCommon):
     deflects = False
+
     def __init__(self, subcase_id: int, header: str, title: str, location: str,
                  scalar: np.ndarray,
                  mask_value: Optional[int]=None, nlabels: Optional[int]=None,
@@ -482,7 +520,7 @@ class GuiResult(GuiResultCommon):
         assert scalar.shape[0] == scalar.size, 'shape=%s size=%s' % (str(scalar.shape), scalar.size)
         self.scalar = scalar
         #self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
-        self.data_type = self.scalar.dtype.str # '<c8', '<f4'
+        self.data_type = self.scalar.dtype.str  # '<c8', '<f4'
         self.is_real = True if self.data_type in REAL_TYPES else False
         self.is_complex = not self.is_real
         self.nlabels = nlabels
@@ -564,10 +602,12 @@ class GuiResult(GuiResultCommon):
 
     def has_coord_transform(self, i: int, name: str) -> tuple[bool, list[str]]:
         return False, []
+
     def has_derivation_transform(self, i: int, res_name: str,
                                  ) -> tuple[bool, dict[str, Any]]:
         """min/max/avg"""
         return False, {}
+
     def has_nodal_combine_transform(self, i: int, resname: str) -> tuple[bool, list[str]]:
         """elemental -> nodal"""
         return False, []
@@ -708,6 +748,7 @@ class GuiResult(GuiResultCommon):
 
     def get_imin_imax(self, i: int, name: str) -> tuple[int, int]:
         return self.imin, self.imax
+
     def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
@@ -726,6 +767,7 @@ class GuiResult(GuiResultCommon):
 
     def set_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
+
     def set_arrow_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a vector scale factor.')
 
@@ -750,12 +792,13 @@ class GuiResult(GuiResultCommon):
     def get_default_min_max(self, i: int, name: str) -> tuple[float, float]:
         return self.min_default, self.max_default
 
-    def get_default_scale(self, i: int, name: str):
-        return 0.
-    def get_default_arrow_scale(self, i: int, name: str):
+    def get_default_scale(self, i: int, name: str) -> float:
         return 0.
 
-    def get_default_phase(self, i: int, name: str):
+    def get_default_arrow_scale(self, i: int, name: str) -> float:
+        return 0.
+
+    def get_default_phase(self, i: int, name: str) -> None:
         return None
 
     def get_default_legend_title(self, i: int, name: str):
@@ -767,10 +810,11 @@ class GuiResult(GuiResultCommon):
 
     #------------
     # unmodifyable getters
-    def get_scale(self, i: int, name: str) -> int:
-        return 0.
-    def get_arrow_scale(self, i: int, name: str) -> int:
-        return 0.
+    def get_scale(self, i: int, name: str) -> float:
+        return 0.0
+
+    def get_arrow_scale(self, i: int, name: str) -> float:
+        return 0.0
 
     def get_methods(self, i: int, name: str) -> list[str]:
         if self.is_real:

@@ -646,7 +646,7 @@ class BDFAttributes:
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
-            '_card_parser', '_card_parser_b',
+            '_card_parser',
             'object_methods', 'object_attributes',
         ]
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
@@ -689,7 +689,7 @@ class BDFAttributes:
             'nmaterials', 'ncaeros',
 
             'point_ids', 'subcases',
-            '_card_parser', '_card_parser_b',
+            '_card_parser',
             'object_methods', 'object_attributes',
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)

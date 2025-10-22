@@ -18,28 +18,29 @@ def remove_marc_files(filenames):
     return filenames2
 
 # def get_open_fds():
-    # import resource
-    # fds = []
-    # soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-    # for fd in range(0, soft):
-        # try:
-            # flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-        # except IOError:
-            # continue
-        # fds.append(fd)
-    # return fds
-
+#     import resource
+#     fds = []
+#     soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+#     for fd in range(0, soft):
+#         try:
+#             flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+#         except IOError:
+#             continue
+#         fds.append(fd)
+#     return fds
+#
 # def get_file_names_from_file_number(fds):
-    # names = []
-    # for fd in fds:
-        # names.append(os.readlink('/proc/self/fd/%d' % fd))
-    # return names
+#     names = []
+#     for fd in fds:
+#         names.append(os.readlink('/proc/self/fd/%d' % fd))
+#     return names
 
 
 def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
         sum_load: bool=True, sum_mass: bool=True, run_mcid: bool=True,
         run_skin_solids: bool=True,
         run_export_caero: bool=True,
+        allow_similar_eid: bool=True,
         xref: bool=True, is_lax_parser: bool=False,
         crash_cards=None):
     """Runs the full BDF test suite"""
@@ -92,7 +93,7 @@ def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
     files = remove_marc_files(files2)
     files = [fname for fname in files
              if not os.path.basename(fname).startswith('out_')
-             and '.test_op2.' not in fname # removing test output files
+             and '.test_op2.' not in fname  # removing test output files
              and '.test_bdf.' not in fname
              and '.test_bdfv.' not in fname
              and 'tecplot' not in fname
@@ -118,6 +119,7 @@ def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
         run_mcid=run_mcid,
         run_export_caero=run_export_caero,
         run_skin_solids=run_skin_solids,
+        allow_similar_eid=allow_similar_eid,
         encoding='latin1', crash_cards=crash_cards,
         dev=True, run_pickle=True)
     ntotal = len(files)
@@ -137,7 +139,7 @@ def main():
     ver = str(pyNastran.__version__)
 
     #is_release = False
-    skips = '[--skip_loads] [--skip_mass] [--skip_mcid] [--skip_aero] [--skip_skin]'
+    skips = '[--skip_loads] [--skip_mass] [--skip_mcid] [--skip_aero] [--skip_skin] [--no_similar_eid]'
     msg = (
         f'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-x] [-c C] [--safe] [--lax] {skips}\n'
         '        bdf_test -h | --help\n'
@@ -159,6 +161,7 @@ def main():
         '  --skip_mcid          Disables MCID checks\n'
         '  --skip_aero          Disables aero exporting\n'
         '  --skip_skin          Disables solid skinning\n'
+        '  --no_similar_eid     No duplicate eids among elements, rigids, and masses\n'
         '  --lax                Use the lax card parser (default=False)\n'
     )
     if len(sys.argv) == 0:
@@ -173,6 +176,7 @@ def main():
     run_mcid = not data['--skip_mcid']
     run_skin_solids = not data['--skip_skin']
     run_export_caero = not data['--skip_aero']
+    allow_similar_eid = not data['--no_similar_eid']
     xref = not data['--xref']
     is_lax_parser = data['--lax']
 
@@ -182,6 +186,7 @@ def main():
     run(regenerate=regenerate, run_nastran=run_nastran,
         sum_load=sum_load, sum_mass=sum_mass,
         run_mcid=run_mcid,
+        allow_similar_eid=allow_similar_eid,
         run_export_caero=run_export_caero,
         run_skin_solids=run_skin_solids,
         is_lax_parser=is_lax_parser,

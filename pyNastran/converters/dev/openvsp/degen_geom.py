@@ -7,10 +7,14 @@ from copy import deepcopy
 from collections import defaultdict
 
 import numpy as np
-from cpylog import get_logger2
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.panair.panair_grid import PanairGrid, PanairPatch
+from cpylog import __version__ as CPYLOG_VERSION
+if CPYLOG_VERSION > '1.6.0':
+    from cpylog import get_logger
+else:  # pragma: no cover
+    from cpylog import get_logger2 as get_logger
 
 
 def read_degen_geom(degen_geom_csv, log=None, debug=False):
@@ -22,7 +26,7 @@ def read_degen_geom(degen_geom_csv, log=None, debug=False):
 
 class DegenGeom:
     def __init__(self, log=None, debug=False):
-        self.log = get_logger2(log=log, debug=debug, encoding='utf-8')
+        self.log = get_logger(log, debug, encoding='utf-8')
         self.debug = debug
         self.components = defaultdict(list)
 

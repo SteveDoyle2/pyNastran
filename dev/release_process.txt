@@ -21,5 +21,14 @@
 
 7. per https://pypi.org/project/twine/
 >>> twine upload --repository pypi pyNastran-1.4.0-py3-none-any.whl
+ a. Enter your API token:
+    - the api token should be found in the recovery_codes folder
+    - works; reset the pypi code if you can't find it
+
+AI:
+>>> twine upload dist/* -u __token__ -p pypi-AgENdGVzdC5weXBp... 
+
+guess:
+>>> twine upload -u __token__ --repository pypi pyNastran-1.4.0-py3-none-any.whl
 
 8. fix website version

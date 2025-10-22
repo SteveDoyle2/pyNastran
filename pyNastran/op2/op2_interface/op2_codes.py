@@ -8,7 +8,7 @@ SORT1_TABLES_BYTES = [
     b'OUG1S',
 
     b'OES1', b'OES1C', b'OES1X', b'OES1X1', b'OESVM1', b'OESVM1C',
-    b'OSTR1C', b'OSTR1X', b'OSTRVM1', b'OSTRVM1C',
+    b'OSTR1', b'OSTR1C', b'OSTR1X', b'OSTRVM1', b'OSTRVM1C',
     b'OSTRMS1C',
 
     b'OESNLXR', b'OESTRCP',
@@ -22,7 +22,7 @@ SORT1_TABLES_BYTES = [
     # properly labeled
     b'OESXRMS1', b'OESPSD1C', b'OESXNO1', b'OESXNO1C', b'OESXRM1C',
     b'OSTRMS1C', b'OSTPSD1C', b'OSTNO1C', b'OSTRRMS1',
-    b'OEFATO1', b'OEFRMS1',  b'OEFPSD1',  b'OEFNO1', b'OEFCRM1',
+    b'OEFATO1', b'OEFRMS1', b'OEFPSD1', b'OEFNO1', b'OEFCRM1',
     b'OESPSD1',
     b'OSTRNO1',
     b'OSTRPSD1',
@@ -35,6 +35,9 @@ SORT1_TABLES_BYTES = [
 
     # SATK
     b'OUGPK1', b'OEFPK1',
+    
+    # doesn't really matter
+    b'OAEROP', b'OAEROTV', b'OAERCSHM', b'OAEROSCD', b'OAEROHMD',
 ]
 SORT2_TABLES_BYTES = [
     b'OUGPSD2', b'OUGATO2', b'OESCP',

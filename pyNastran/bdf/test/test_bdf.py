@@ -16,7 +16,7 @@ from pathlib import PurePath
 from typing import Optional, Any
 
 import numpy as np
-from cpylog import get_logger2, SimpleLogger, WarningRedirector
+from cpylog import get_logger, SimpleLogger, WarningRedirector
 #warnings.simplefilter('always')
 warnings.simplefilter('default')
 
@@ -27,7 +27,7 @@ np.seterr(all='raise')
 #import matplotlib
 #matplotlib.use('Qt5Agg')
 
-from pyNastran.utils import check_path, print_bad_path
+from pyNastran.utils import check_path, print_bad_path, PathLike
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
@@ -62,12 +62,15 @@ TEST_PATH = pyNastran.bdf.test.__path__[0]
 #warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 MESH_OPT_CARDS = [
-    'GRIDG', 'CGEN', 'SPCG', 'FEEDGE', 'FEFACE', 'ADAPT', # 'EQUIV',
+    'GRIDG', 'CGEN', 'SPCG', 'FEEDGE', 'FEFACE', 'ADAPT',  # 'EQUIV',
     'PVAL', 'GMCURV', 'GMSURF',
 ]
 FREQS = FREQ1 | FREQ2 | FREQ3 | FREQ4 | FREQ5
+
+
 class MeshOptimizationError(RuntimeError):
     pass
+
 
 def run_lots_of_files(filenames: list[str], folder: str='',
                       debug: bool=False,
@@ -86,6 +89,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       run_mcid: bool=True,
                       run_export_caero: bool=True,
                       run_skin_solids: bool=True,
+                      allow_similar_eid: bool=True,
                       dev: bool=True,
                       crash_cards: Optional[list[str]]=None,
                       run_pickle: bool=True, quiet: bool=False) -> list[str]:
@@ -187,7 +191,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
     failed_files = []
     npass = 1
     nfailed = 1
-    log = get_logger2(log=None, debug=debug, encoding='utf-8')
+    log = get_logger(None, debug, encoding='utf-8')
     with WarningRedirector(log) as unused_warn:
         for ifile, filename in enumerate(filenames2):
             abs_filename = os.path.abspath(os.path.join(folder, filename))
@@ -209,6 +213,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                         run_extract_bodies=False,
                         run_export_caero=run_export_caero,
                         run_skin_solids=run_skin_solids,
+                        allow_similar_eid=allow_similar_eid,
 
                         dev=dev,
                         crash_cards=crash_cards,
@@ -271,33 +276,40 @@ def run_lots_of_files(filenames: list[str], folder: str='',
     return failed_files
 
 
-def run_bdf(folder: str, bdf_filename: str,
+def test_bdf(bdf_filename: PathLike, **kwargs):
+    run_bdf('.', bdf_filename, **kwargs)
+
+def run_bdf(folder: str, bdf_filename: PathLike,
             debug: bool=False, xref: bool=True, check: bool=True,
             punch: bool=False,
             mesh_form: str='separate', is_folder: bool=False,
             print_stats: bool=False,
             encoding=None,
             size: int=8, is_double: bool=False,
+            allow_tabs: bool=True,
             hdf5: bool=False,
             is_lax_parser: bool=False,
             allow_duplicates: bool=False,
+            allow_similar_eid: bool=True,
             stop: bool=False, nastran: str='', post: int=-1,
             dynamic_vars=None,
             quiet: bool=False, dumplines: bool=False, dictsort: bool=False,
             limit_mesh_opt: bool=False,
             sum_load: bool=True,
             run_mass: bool=True,
+            run_dependent_checks: bool=True,
+            run_eid_checks: bool=True,
             run_mcid: bool=True,
             run_extract_bodies: bool=False,
             run_skin_solids: bool=True,
             run_export_caero: bool=True,
             save_file_structure: bool=False,
-            nerrors=0, dev: bool=False,
+            nerrors: int=0, dev: bool=False,
             crash_cards=None, cards_to_ignore=None,
             safe_xref: bool=False, run_pickle: bool=False,
             version: Optional[str]=None,
             validate_case_control: bool=True,
-            stop_on_failure: bool=True, log=None, name: str=''):
+            stop_on_failure: bool=True, log: Optional[SimpleLogger]=None, name: str=''):
     """
     Runs a single BDF
 
@@ -374,19 +386,22 @@ def run_bdf(folder: str, bdf_filename: str,
 
     bdf_model = bdf_filename
     if not quiet:
-        print("bdf_model = %s" % bdf_model)
+        print(f'bdf_model = {bdf_model}')
     if is_folder:
         bdf_model = os.path.join(TEST_PATH, folder, bdf_filename)
 
     model, ext = os.path.splitext(bdf_model)
-    out_model = '%s.test_bdf%s' % (model, ext)
+    out_model = f'{model}.test_bdf{ext}'
 
     fem1, fem2, diff_cards = run_and_compare_fems(
         bdf_model, out_model, debug=debug, xref=xref, check=check,
         punch=punch, mesh_form=mesh_form,
         print_stats=print_stats, encoding=encoding,
         sum_load=sum_load, size=size, is_double=is_double,
-        is_lax_parser=is_lax_parser, allow_duplicates=allow_duplicates,
+        is_lax_parser=is_lax_parser,
+        allow_similar_eid=allow_similar_eid,
+        allow_tabs=allow_tabs,
+        allow_duplicates=allow_duplicates,
         stop=stop, nastran=nastran, post=post, hdf5=hdf5,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
@@ -399,7 +414,8 @@ def run_bdf(folder: str, bdf_filename: str,
         run_skin_solids=run_skin_solids,
         run_export_caero=run_export_caero,
         run_mass=run_mass,
-        run_mcid=run_mcid,
+        run_dependent_checks=run_dependent_checks,
+        run_eid_checks=run_eid_checks, run_mcid=run_mcid,
         save_file_structure=save_file_structure,
         run_pickle=run_pickle,
         validate_case_control=validate_case_control,
@@ -408,6 +424,7 @@ def run_bdf(folder: str, bdf_filename: str,
         name=name,
     )
     return fem1, fem2, diff_cards
+
 
 def run_and_compare_fems(
         bdf_model: str,
@@ -424,7 +441,9 @@ def run_and_compare_fems(
         is_double: bool=False,
         save_file_structure: bool=False,
         is_lax_parser: bool=False,
+        allow_tabs: bool=True,
         allow_duplicates: bool=False,
+        allow_similar_eid: bool=True,
         stop: bool=False,
         nastran: str='',
         post: int=-1,
@@ -444,6 +463,8 @@ def run_and_compare_fems(
         run_skin_solids: bool=True,
         run_export_caero: bool=True,
         run_mass: bool=True,
+        run_dependent_checks: bool=True,
+        run_eid_checks: bool=True,
         run_mcid: bool=True,
         run_pickle: bool=False,
         validate_case_control: bool=True,
@@ -453,7 +474,11 @@ def run_and_compare_fems(
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDF(debug=debug, log=log)
+    fem1.allow_tabs = allow_tabs
+    fem1.allow_duplicate_element_rbe_mass = allow_similar_eid
+    #assert allow_similar_eid is False, allow_similar_eid
     #fem1.force_echo_off = False
+    log = fem1.log
     if is_lax_parser:
         fem1.log.warning('using lax card parser')
         fem1.is_strict_card_parser = False
@@ -490,7 +515,8 @@ def run_and_compare_fems(
             run_extract_bodies=run_extract_bodies,
             run_skin_solids=run_skin_solids,
             run_export_caero=run_export_caero,
-            run_mcid=run_mcid,
+            run_dependent_checks=run_dependent_checks,
+            run_eid_checks=run_eid_checks, run_mcid=run_mcid,
             save_file_structure=save_file_structure,
             hdf5=hdf5,
             encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
@@ -519,6 +545,7 @@ def run_and_compare_fems(
         diff_cards = compare(fem1, fem2, xref=xref,
                              run_mass=run_mass, check=check,
                              print_stats=print_stats, quiet=quiet)
+        log.debug('test_get_cards_by_card_types')
         test_get_cards_by_card_types(fem2)
 
         fem2.update_model_by_desvars(xref)
@@ -661,12 +688,14 @@ def run_nastran(bdf_model: str, nastran: str, post: int=-1,
         op2 = read_op2(op2_model2)
         print(op2.get_op2_stats())
 
+
 def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              xref: bool, punch: bool, sum_load: bool,
              size: int, is_double: bool,
              run_extract_bodies: bool=False, run_skin_solids: bool=True,
              run_export_caero: bool=True,
-             run_mcid: bool=True,
+             run_dependent_checks: bool=True,
+             run_eid_checks: bool=True, run_mcid: bool=True,
              save_file_structure: bool=False, hdf5: bool=False,
              encoding: Optional[str]=None,
              crash_cards: Optional[list[str]]=None,
@@ -697,12 +726,12 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
         size flag
     is_double : bool
         double flag
-    cid : int / None
-        cid flag
     safe_xref : bool; default=False
         ???
     run_extract_bodies : bool; default=False
         isolate the fem bodies; typically 1 body; code is still buggy
+    run_eid_checks: bool; default=True
+        runs lots of element checks
     run_mcid: bool; default=True
         export the material coordinate systems
     encoding : str; default=None
@@ -736,7 +765,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
             if not stop and run_export_caero and len(fem1.caeros):
                 caero_bdf_filename = base + '.caero.bdf'
                 export_caero_mesh(fem1, caero_bdf_filename,
-                                  is_subpanel_model=True,
+                                  is_aerobox_model=True,
                                   pid_method='caero', write_panel_xyz=True)
 
             if not stop and not xref and run_skin_solids:
@@ -771,7 +800,9 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
                     log.debug('fem1.cross_reference()')
                     fem1.cross_reference()
 
-                _fem_xref_methods_check(fem1, run_mcid=run_mcid)
+                _fem_xref_methods_check(
+                    fem1, run_dependent_checks=run_dependent_checks,
+                    run_eid_checks=run_eid_checks, run_mcid=run_mcid)
 
                 fem1._xref = True
                 #what was this for???
@@ -839,6 +870,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
             fem1.get_mass_breakdown(stop_if_no_mass=False)
     return fem1
 
+
 def limit_mesh_optimization(model: BDF):
     is_mesh_opt = [card_name in model.card_count for card_name in MESH_OPT_CARDS]
     mesh_opt_cards = [card_name for is_mesh_opti, card_name in zip(is_mesh_opt, MESH_OPT_CARDS)
@@ -846,6 +878,7 @@ def limit_mesh_optimization(model: BDF):
     _cards = ', '.join(mesh_opt_cards)
     if any(is_mesh_opt):
         raise MeshOptimizationError(f'model contains [{_cards}]; mesh optimization is not supported')
+
 
 def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
     fem1.export_hdf5_filename(hdf5_filename)
@@ -855,7 +888,7 @@ def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
     bdf_stream = StringIO()
     fem1a.write_bdf(bdf_stream, encoding=None, size=8,
                     is_double=False, interspersed=False,
-                    enddata=None, write_header=True, close=True) # hdf5
+                    enddata=None, write_header=True, close=True)  # hdf5
     for key, unused_value in fem1.card_count.items():
         if key in ['ECHOOFF', 'ECHOON']:
             continue
@@ -871,43 +904,52 @@ def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
             raise RuntimeError(hdf5_msg)
     #sys.exit('hdf5')
 
-def _fem_xref_methods_check(fem1: BDF,run_mcid: bool) -> None:
+
+def _fem_xref_methods_check(fem1: BDF,
+                            run_dependent_checks: bool,
+                            run_eid_checks: bool,
+                            run_mcid: bool) -> None:
     """
     testing that these methods work with xref
     """
     log = fem1.log
     log.debug('_fem_xref_methods_check(fem1)')
 
-    fem1._get_rigid()
-    common_node_ids = list(fem1.nodes.keys())
-    fem1.get_rigid_elements_with_node_ids(common_node_ids)
+    if run_dependent_checks:
+        fem1._get_rigid()
+        common_node_ids = list(fem1.nodes.keys())
+        fem1.get_rigid_elements_with_node_ids(common_node_ids)
 
-    for spc_id in set(list(fem1.spcadds.keys()) + list(fem1.spcs.keys())):
-        fem1.get_reduced_spcs(spc_id, consider_spcadd=True)
-    for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
-        fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
+        for spc_id in set(list(fem1.spcadds.keys()) + list(fem1.spcs.keys())):
+            fem1.get_reduced_spcs(spc_id, consider_spcadd=True)
+        for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
+            fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
 
-    get_dependent_nid_to_components(fem1)
-    fem1._get_maps(eids=None, map_names=None,
-                   consider_0d=True, consider_0d_rigid=True,
-                   consider_1d=True, consider_2d=True, consider_3d=True)
-    get_dependent_nid_to_components(fem1)
+        get_dependent_nid_to_components(fem1)
+        get_dependent_nid_to_components(fem1)
 
-    fem1.get_pid_to_node_ids_and_elements_array(
-        pids=None, etypes=None, idtype='int32',
-        msg=' which is required by test_bdf')
-    fem1.get_property_id_to_element_ids_map(msg=' which is required by test_bdf')
-    fem1.get_material_id_to_property_ids_map(msg=' which is required by test_bdf')
-    fem1.get_element_ids_list_with_pids(pids=None)
-    fem1.get_element_ids_dict_with_pids(pids=None, stop_if_no_eids=False,
-                                        msg=' which is required by test_bdf')
-    fem1.get_node_id_to_element_ids_map()
-    fem1.get_node_id_to_elements_map()
+    if run_eid_checks:
+        fem1.log.debug('run_eid_checks=True check')
+        fem1._get_maps(eids=None, map_names=None,
+                       consider_0d=True, consider_0d_rigid=True,
+                       consider_1d=True, consider_2d=True, consider_3d=True)
+        fem1.get_pid_to_node_ids_and_elements_array(
+            pids=None, etypes=None, idtype='int32',
+            msg=' which is required by test_bdf')
+        fem1.get_property_id_to_element_ids_map(msg=' which is required by test_bdf')
+        fem1.get_material_id_to_property_ids_map(msg=' which is required by test_bdf')
+        fem1.get_element_ids_list_with_pids(pids=None)
+        fem1.get_element_ids_dict_with_pids(pids=None, stop_if_no_eids=False,
+                                            msg=' which is required by test_bdf')
+        fem1.get_node_id_to_element_ids_map()
+        fem1.get_node_id_to_elements_map()
 
     if run_mcid:
+        fem1.log.debug('run_mcid=True check')
         export_mcids(fem1, csv_filename=None, eids=None,
                      export_xaxis=True, export_yaxis=False, iply=0, log=None, debug=False)
         export_mcids_all(fem1)
+
 
 def remake_model(bdf_model: str, fem1: BDF, run_pickle: bool) -> BDF:
     """reloads the model if we're testing pickling"""
@@ -925,6 +967,7 @@ def remake_model(bdf_model: str, fem1: BDF, run_pickle: bool) -> BDF:
     fem1.get_bdf_stats()
 
     fem1 = BDF(debug=fem1.debug, log=fem1.log)
+    # fem1.allow_tabs = allow_tabs
     fem1.load(obj_model)
     #fem1.write_bdf(out_model_8)
     #fem1.log = log
@@ -936,6 +979,7 @@ def remake_model(bdf_model: str, fem1: BDF, run_pickle: bool) -> BDF:
     fem1._xref = True
     return fem1
 
+
 def check_for_cd_frame(fem1: BDF) -> None:
     """
     A cylindrical/spherical CD frame will cause problems with the
@@ -943,7 +987,7 @@ def check_for_cd_frame(fem1: BDF) -> None:
 
     """
     is_grid_points = any([card_name in fem1.card_count
-                          for card_name in ['GRID', 'SPOINT', 'EPOINT']]) # , 'RINGAX'
+                          for card_name in ['GRID', 'SPOINT', 'EPOINT']])  # , 'RINGAX'
     if is_grid_points:
         out = fem1.get_displacement_index_xyz_cp_cd(
             fdtype='float64', idtype='int64', sort_ids=True)
@@ -963,6 +1007,7 @@ def check_for_cd_frame(fem1: BDF) -> None:
                 'be careful' % cd_coords
             )
             fem1.log.warning(msg)
+
 
 def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
              sum_load: bool, size: int, is_double: bool, mesh_form: str,
@@ -1056,12 +1101,14 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
     #fem2.write_as_ctria3(out_model_2)
     return fem2
 
-def _has_restart(fem: BDF):
+
+def _has_restart(fem: BDF) -> bool:
     is_restart = False
     for line in fem.system_command_lines:
         if line.strip().upper().startswith('RESTART'):
             is_restart = True
     return is_restart
+
 
 def _assert_has_spc(subcase, fem):
     """
@@ -1076,6 +1123,7 @@ def _assert_has_spc(subcase, fem):
                 has_ps = True
                 break
         assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
+
 
 def _validate_case_control(fem: BDF, p0: Any, sol_base: int,
                            subcase_keys: list[int],
@@ -1113,6 +1161,7 @@ def _validate_case_control(fem: BDF, p0: Any, sol_base: int,
             stop_on_failure=stop_on_failure)
     return ierror
 
+
 def check_for_flag_in_subcases(fem2: BDF, subcase: Any,
                                parameters: list[str]) -> None:
     """
@@ -1140,12 +1189,14 @@ def check_for_flag_in_subcases(fem2: BDF, subcase: Any,
                 msg += str(subcasei)
             raise RuntimeError(msg)
 
+
 def stop_if_max_error(msg: str, error: Any, ierror: int, nerrors: int) -> int:
     """if the error count is greater than nerrors, stop"""
     if ierror == nerrors:
         raise error(msg)
     ierror += 1
     return ierror
+
 
 def check_for_optional_param(keys: list[str], subcase: Subcase,
                              msg: str, error: Any, log: SimpleLogger,
@@ -1158,6 +1209,7 @@ def check_for_optional_param(keys: list[str], subcase: Subcase,
             raise error(msg)
         ierror += 1
     return ierror
+
 
 def check_sol(sol: int,
               subcase: Any,
@@ -1178,6 +1230,7 @@ def check_sol(sol: int,
             raise RuntimeError(msg)
         ierror += 1
     return ierror
+
 
 def check_subcase_dmig_matrices(fem: BDF, subcase: Subcase) -> None:
     """verifies that all the DMIG matrices exist"""
@@ -1203,6 +1256,7 @@ def check_subcase_dmig_matrices(fem: BDF, subcase: Subcase) -> None:
     # load matrices
     check_subcase_dmig_matrix(fem, subcase, 'P2G')
 
+
 def check_subcase_dmig_matrix(fem: BDF,
                               subcase: Subcase,
                               matrix_name: str,
@@ -1226,8 +1280,8 @@ def check_subcase_dmig_matrix(fem: BDF,
     else:
         for scale1, scale2, name in scale_names:
             dmig = fem.dmig[name]
-
     del dmig
+
 
 def check_case(sol: int,
                subcase: Subcase,
@@ -1235,7 +1289,7 @@ def check_case(sol: int,
                p0: np.ndarray,
                isubcase: int,
                subcases: dict[int, Subcase],
-               sum_load:bool =True,
+               sum_load: bool =True,
                ierror: int=0, nerrors: int=100,
                stop_on_failure: bool=True) -> int:
     """
@@ -1312,7 +1366,7 @@ def check_case(sol: int,
                     #raise RuntimeError(msg)
 
         #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), 'sol=%s\n%s' % (sol, subcase)
-    elif sol in {106, 'NLSTATIC', 'NLSTATICS'}: # freq
+    elif sol in {106, 'NLSTATIC', 'NLSTATICS'}:  # freq
         assert 'NLPARM' in subcase, subcase
         ierror = check_for_optional_param(
             ('LOAD', 'TEMPERATURE(LOAD)', 'CLOAD'),
@@ -1325,7 +1379,7 @@ def check_case(sol: int,
             subcase, msg, RuntimeError, log, ierror, nerrors)
         #ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
                                           #RuntimeError, log, ierror, nerrors)
-    elif sol in {8, 108}: # freq
+    elif sol in {8, 108}:  # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol in {109, 'DTRAN', 'SEDTRAN'}:  # time
         check_for_flag_in_subcases(fem2, subcase, ('TIME', 'TSTEP', 'TSTEPNL'))
@@ -1383,7 +1437,7 @@ def check_case(sol: int,
         else:
             assert any(subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)')), 'sol=%s\n%s' % (sol, subcase)
 
-    elif sol == 159: #  nonlinear transient; heat?
+    elif sol == 159:  # nonlinear transient; heat?
         if 'NLPARM' not in subcase:
             msg = (
                 'A NLPARM card is required for NONLINEAR_TRANSIENT? '
@@ -1397,7 +1451,8 @@ def check_case(sol: int,
             assert any(subcase.has_parameter('TEMPERATURE(LOAD)', 'TEMPERATURE(INITIAL)')), msg
 
     elif sol in {200, 'DESOPT'}:
-        _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log)
+        _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log,
+                            ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
     elif sol in [114, 116, 118]:
         # cyclic statics, buckling, frequency
         pass
@@ -1405,7 +1460,7 @@ def check_case(sol: int,
         pass
     elif sol in {402, 'NLSTPKIN'}:  # nx
         pass
-    elif sol in {187, 'RESDDAM'}:  ## DDAM
+    elif sol in {187, 'RESDDAM'}:  # DDAM
         pass
     elif sol in {21, 26, 27, 28, 30, 31, 38, 39,
                  47, 48, 61, 63, 67, 68,
@@ -1418,7 +1473,7 @@ def check_case(sol: int,
                  'PARAMS', 'PRINT68', 'TABTSTB', 'TSTGINO', 'UPWARD', 'USERDMAP',
                  'U24'}:
         pass
-    else:
+    else:  # pramga: no cover
         msg = f'SOL = {sol!r}\n'
         msg += str(subcase)
         raise NotImplementedError(msg)
@@ -1430,6 +1485,7 @@ def check_case(sol: int,
         stop_on_failure=stop_on_failure)
     assert isinstance(ierror, int)
     return ierror
+
 
 def _check_static_aero_case(fem2: BDF, log: SimpleLogger, sol: int,
                             subcase: Subcase, ierror: int, nerrors: int) -> int:
@@ -1452,6 +1508,7 @@ def _check_static_aero_case(fem2: BDF, log: SimpleLogger, sol: int,
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     return ierror
+
 
 def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase,
                         ierror: int, nerrors: int) -> int:
@@ -1482,7 +1539,7 @@ def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase
 
     ierror = require_cards(['FMETHOD'], log, soltype, sol, subcase,
                            RuntimeError, ierror, nerrors)
-    flutter_id = subcase.get_int_parameter('FMETHOD')
+    flutter_id: int = subcase.get_int_parameter('FMETHOD')
     flutter = fem2.Flutter(flutter_id, msg=', which is required by test_bdf')
 
     #valid methods = [K, KE,
@@ -1497,6 +1554,7 @@ def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase
         ierror = require_cards(['METHOD'], log, soltype, sol, subcase,
                                RuntimeError, ierror, nerrors)
     return ierror
+
 
 def _check_gust_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase,
                      ierror: int, nerrors: int) -> int:
@@ -1535,13 +1593,27 @@ def _check_gust_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase,
     unused_mklist = fem2.get_mklist()
     return ierror
 
+
+def _check_options(key: str, options: list[str], allowed_options: list[str],
+                   ierror: int, nerrors: int) -> int:
+    allowed_options_str = ', '.join(allowed_options)
+    for option in options:
+        if option not in allowed_options:
+            msg = f'{key!r} option={option} not in [{allowed_options_str}]'
+            ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
+        #assert option in {'MIN', 'MAX'},
+    return ierror
+
+
 def _check_case_sol_200(sol: int,
                         subcase: Subcase,
                         fem2: BDF,
                         p0: np.ndarray,
                         isubcase: int,
                         subcases: dict[int, Subcase],
-                        log: SimpleLogger) -> None:
+                        log: SimpleLogger,
+                        ierror: int=0, nerrors: int=100,
+                        stop_on_failure: bool=True) -> None:
     """
     helper method for ``check_case``
 
@@ -1558,17 +1630,22 @@ def _check_case_sol_200(sol: int,
     1 DESOBJ is required
 
     """
+    ierror = 0
+    nerrors = 100
     log = fem2.log
     log.info('checking SOL 200...')
     assert 'ANALYSIS' in subcase, 'sol=%s\n%s' % (sol, subcase)
 
-    analysis = subcase.get_str_parameter('ANALYSIS')
+    analysis: str = subcase.get_str_parameter('ANALYSIS')
     if analysis.startswith('SE'):
         analysis = analysis[2:]
 
     # BUCKLING
     if 'DESOBJ' in subcase:
-        value = subcase.get_int_parameter('DESOBJ')
+        key = 'DESOBJ'
+        value, options = subcase.get_parameter(key)
+        allowed_options = ['MIN', 'MAX']
+        _check_options(key, options, allowed_options, ierror, nerrors)
         assert value in fem2.dresps, f'value={value} not in dresps'
     else:
         log.warning('no DESOBJ (DRESPi) in this subcase; '
@@ -1602,44 +1679,45 @@ def _check_case_sol_200(sol: int,
 
     if analysis in {'STATIC', 'STATICS'}:
         solution = 101
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
     elif analysis in {'MODE', 'MODES'}:
         solution = 103
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
     elif analysis in {'BUCK', 'BUCKLING'}:
         solution = 105
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
     elif analysis == 'DFREQ':
         solution = 108
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
     elif analysis == 'MFREQ':
         if 'GUST' in subcase:
             solution = 146
         else:
             solution = 111
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
     elif analysis in {'MTRAN', 'MTRANS'}:
         solution = 112
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
     elif analysis in {'SAERO', 'DIVERG', 'DIVERGE'}:
         solution = 144
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
     elif analysis in {'FLUT', 'FLUTTER', 'FLUTTR'}:
         solution = 145
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
-    elif analysis == 'DCEIG': # direct complex eigenvalues
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
+    elif analysis == 'DCEIG':  # direct complex eigenvalues
         solution = 107
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
     #elif analysis == 'MCEIG': # modal direct complex eigenvalues
-    elif analysis == 'HEAT': # heat transfer analysis
+    elif analysis == 'HEAT':  # heat transfer analysis
         solution = 159
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
-    elif analysis == 'MCEIG': # modal complex eigenvalues
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
+    elif analysis == 'MCEIG':  # modal complex eigenvalues
         solution = 110
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
-    else:
+        check_case(solution, subcase, fem2, p0, isubcase, subcases, ierror=ierror, nerrors=nerrors)
+    else:  # pragma: no cover
         msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
         raise NotImplementedError(msg)
+
 
 def require_cards(card_names: list[str], log: SimpleLogger,
                   soltype: str, sol: int, subcase: Subcase,
@@ -1653,6 +1731,7 @@ def require_cards(card_names: list[str], log: SimpleLogger,
                 raise error(msg)
             ierror += 1
     return ierror
+
 
 def require_either_cards(card_names: list[str], log: SimpleLogger,
                          soltype: str, sol: int, subcase: Subcase,
@@ -1670,6 +1749,7 @@ def require_either_cards(card_names: list[str], log: SimpleLogger,
         if ierror == nerrors:
             raise error(msg)
     return ierror
+
 
 def _tstep_msg(fem: BDF,
                subcase: Subcase,
@@ -1700,7 +1780,7 @@ def _check_case_parameters(subcase: Subcase,
         # TSTEP1s are stored in tstepnls
         if any(subcase.has_parameter('TIME', 'TSTEP')):
             if 'TSTEP' in subcase:
-                tstep_id = subcase.get_int_parameter('TSTEP')
+                tstep_id: int = subcase.get_int_parameter('TSTEP')
             else:  # pragma: no cover
                 raise NotImplementedError(subcase)
             if tstep_id not in fem.tstepnls:
@@ -1710,9 +1790,9 @@ def _check_case_parameters(subcase: Subcase,
     else:
         if any(subcase.has_parameter('TIME', 'TSTEP')):
             if 'TIME' in subcase:
-                tstep_id = subcase.get_int_parameter('TIME')
+                tstep_id: int = subcase.get_int_parameter('TIME')
             elif 'TSTEP' in subcase:
-                tstep_id = subcase.get_int_parameter('TSTEP')
+                tstep_id: int = subcase.get_int_parameter('TSTEP')
             else:  # pragma: no cover
                 raise NotImplementedError(subcase)
             if tstep_id not in fem.tsteps:
@@ -1720,18 +1800,18 @@ def _check_case_parameters(subcase: Subcase,
 
     check_subcase_dmig_matrices(fem, subcase)
     if 'TSTEPNL' in subcase:
-        tstepnl_id = subcase.get_int_parameter('TSTEPNL')
+        tstepnl_id: int = subcase.get_int_parameter('TSTEPNL')
         assert tstepnl_id in fem.tstepnls, _tstep_msg(fem, subcase, tstepnl_id, tstep_type='nl')
 
     if 'SUPORT1' in subcase:
-        suport1_id = subcase.get_int_parameter('SUPORT1')
+        suport1_id: int = subcase.get_int_parameter('SUPORT1')
         assert suport1_id in fem.suport1, f'suport1_id={suport1_id}\n suport1={fem.suport1}\n subcase:\n{subcase}'
 
     ierror = _check_case_parameters_aero(
         subcase, fem, sol,
         ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
 
-    if 'METHOD' in subcase: # or 'CMETHOD' in subcase:
+    if 'METHOD' in subcase:  # or 'CMETHOD' in subcase:
         method_id = subcase.get_int_parameter('METHOD')
         if method_id in fem.methods:
             unused_method = fem.methods[method_id]
@@ -1771,16 +1851,16 @@ def _check_case_parameters(subcase: Subcase,
 
     nid_map = fem.nid_map
     if 'TEMPERATURE(LOAD)' in subcase:
-        loadcase_id = subcase.get_int_parameter('TEMPERATURE(LOAD)')
+        loadcase_id: int = subcase.get_int_parameter('TEMPERATURE(LOAD)')
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
     if 'TEMPERATURE(BOTH)' in subcase:
-        loadcase_id = subcase.get_int_parameter('TEMPERATURE(BOTH)')
+        loadcase_id: int = subcase.get_int_parameter('TEMPERATURE(BOTH)')
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
     if 'TEMPERATURE(INITIAL)' in subcase:
-        loadcase_id = subcase.get_int_parameter('TEMPERATURE(INITIAL)')
+        loadcase_id: int = subcase.get_int_parameter('TEMPERATURE(INITIAL)')
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
     if 'TEMPERATURE(MATERIAL)' in subcase:
-        loadcase_id = subcase.get_int_parameter('TEMPERATURE(MATERIAL)')
+        loadcase_id: int = subcase.get_int_parameter('TEMPERATURE(MATERIAL)')
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
 
     is_not_acoustic = not fem.is_acoustic()
@@ -1844,13 +1924,13 @@ def _check_case_parameters(subcase: Subcase,
     if 'SDAMPING' in subcase:
         sdamping_id = subcase.get_int_parameter('SDAMPING')
         sdamp_sols = [110, 111, 112, 145, 146, 200]
-        if not sdamping_id in fem.tables_sdamping and fem.sol in sdamp_sols:
+        if sdamping_id not in fem.tables_sdamping and fem.sol in sdamp_sols:
             msg = 'SDAMPING = %s; not in TABDMP1, but must since its SOL %i\n' % (
                 sdamping_id, fem.sol)
             msg += 'TABDMP1 = %s\n' % list(fem.tables_sdamping.keys())
             raise RuntimeError(msg)
         if not(sdamping_id in fem.tables_sdamping or fem.tables_d):
-            msg = 'SDAMPING = %s; not in TABDMP1/TABLEDi\n' % sdamping_id
+            msg = f'SDAMPING = {sdamping_id}; not in TABDMP1/TABLEDi\n'
             msg += 'TABDMP1 = %s\n' % list(fem.tables_sdamping.keys())
             msg += 'TABLEDi = %s\n' % list(fem.tables_d.keys())
             raise RuntimeError(msg)
@@ -1945,7 +2025,7 @@ def _check_case_parameters(subcase: Subcase,
             # 700:
             for load2, scale_factor in zip(loads, scale_factors):
                 force = load2.get_load_at_time(0.) * scale_factor
-        elif  sol == 200:
+        elif sol == 200:
             pass
         else:
             # 112-
@@ -1958,6 +2038,7 @@ def _check_case_parameters(subcase: Subcase,
         nlparm_id = subcase.get_int_parameter('NLPARM')
         unused_nlparm = fem.NLParm(nlparm_id, f', which is required for {subcase}')
     return ierror
+
 
 def _check_case_parameters_aero(subcase: Subcase, fem: BDF, sol: int,
                                 ierror: int=0, nerrors: int=100,
@@ -2004,11 +2085,12 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDF, sol: int,
 
     if 'FMETHOD' in subcase:
         # FLUTTER
-        fmethod_id = subcase.get_int_parameter('FMETHOD')
+        fmethod_id: int = subcase.get_int_parameter('FMETHOD')
         unused_fmethod = fem.flutters[fmethod_id]
         allowed_sols = [145, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'FMETHOD', log, ierror, nerrors)
     return ierror
+
 
 def test_get_cards_by_card_types(model: BDF) -> None:
     """Verifies the ``model.get_cards_by_card_types`` method works"""
@@ -2072,13 +2154,22 @@ def compute(cards1: dict[str, int],
         else:
             value2 = 0
 
-        if key == 'INCLUDE':
-            if not quiet:
-                msg += '    key=%-7s value1=%-7s value2=%-7s' % (
-                    key, value1, value2)
-        else:
-            msg += '   *key=%-7s value1=%-7s value2=%-7s' % (
-                key, value1, value2)
+        star = ' ' if key == 'INCLUDE' else '*'
+        msg += f'   {star}key={key:-7s} value1={value1:<7d} value2={value2:<7d}\n'
+        #if star == '*': #value1 != value2:
+        #    asdf
+        #    if len(lost_keys):
+        #        msg += f'   lost:  {lost_keys}\n'
+        #    if len(extra_keys):
+        #        msg += f'   extra: {extra_keys}\n'
+
+        # if key == 'INCLUDE':
+        #     if not quiet:
+        #         msg += '    key=%-7s value1=%-7s value2=%-7s' % (
+        #             key, value1, value2)
+        # else:
+        #     msg += '   *key=%-7s value1=%-7s value2=%-7s' % (
+        #         key, value1, value2)
         msg = msg.rstrip()
         if msg:
             print(msg)
@@ -2127,7 +2218,7 @@ def test_bdf_argparse(argv=None):
         help='disables BDF checks.  Checks run the methods on \n'
         '                 every element/property to test them.  May fails if a \n'
         '                 card is fully not supported (default=False)')
-    stop_check_group.add_argument('--stop', action='store_true', # dev
+    stop_check_group.add_argument('--stop', action='store_true',  # dev
                                   help='Stop after first read/write (default=False)\n')
 
     width_group = parent_parser.add_mutually_exclusive_group()
@@ -2170,6 +2261,12 @@ def test_bdf_argparse(argv=None):
                                help='skip the processing of the caero mesh (default=False)')
     parent_parser.add_argument('--skip_skin', action='store_true',
                                help='skip the solid skinning (default=False)')
+    parent_parser.add_argument('--skip_eid_checks', action='store_true',
+                               help='skip the element checks (default=False)')
+    parent_parser.add_argument('--skip_mcid', action='store_true',
+                               help='skip the material coordinate system exporting (default=False)')
+    parent_parser.add_argument('--no_similar_eid', action='store_false',
+                               help='No duplicate eids among elements, rigids, and masses (default=False)')
 
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
@@ -2182,7 +2279,7 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument('--crash', nargs=1, type=str,
                                help='Crash on specific cards (e.g. CGEN,EGRID)')
     parent_parser.add_argument('--ignore', nargs=1, type=str,
-                                  help='Ignores specific cards (e.g. DMI,RBE2)\n')
+                               help='Ignores specific cards (e.g. DMI,RBE2)\n')
 
     parent_parser.add_argument('--dumplines', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
@@ -2203,7 +2300,7 @@ def test_bdf_argparse(argv=None):
 
     #argv
     #print(argv)
-    from pyNastran.utils.arg_handling import argparse_to_dict, update_message # swap_key
+    from pyNastran.utils.arg_handling import argparse_to_dict, update_message  # swap_key
     update_message(parent_parser, usage, args, examples)
 
     #try:
@@ -2233,6 +2330,7 @@ def log_error(sol: int, error_solutions, msg: str, log: SimpleLogger) -> None:
         raise RuntimeError(msg)
     else:
         log.warning(msg)
+
 
 def _set_version(args: dict[str, Any]):
     """sets the version flag"""
@@ -2269,6 +2367,7 @@ def _set_version(args: dict[str, Any]):
 #stop         = False
 #version      = False
 #xref         = True
+
 
 def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
@@ -2314,7 +2413,7 @@ def get_test_bdf_usage_args_examples(encoding):
         #'  --filter       Filters unused cards\n'
 
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
-        f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n'  +
+        f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n' +
         '  -q, --quiet        prints debug messages (default=False)\n'
 
         '\n'
@@ -2337,6 +2436,9 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_mass    skip the mass properties calculations (default=False)\n'
         '  --skip_aero    skip the processing of the caero mesh (default=False)\n'
         '  --skip_skin    skip the solid skinning (default=False)\n'
+        '  --skip_eid_checks  skips some element checks (default=False)\n'
+        '  --skip_mcid        skip the material coordinate system exporting (default=False)\n'
+        '  --no_similar_eid   No duplicate eids among elements, rigids, and masses\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2369,6 +2471,9 @@ def main(argv=None):
     data['run_mass'] = not data['skip_mass']
     data['run_export_caero'] = not data['skip_aero']
     data['run_skin_solids'] = not data['skip_skin']
+    data['run_eid_checks'] = not data['skip_eid_checks']
+    data['run_mcid'] = not data['skip_mcid']
+    allow_similar_eid = not data['no_similar_eid']
 
     is_double = False
     if data['double']:
@@ -2404,7 +2509,7 @@ def main(argv=None):
             debug=debug,
             xref=data['xref'],
             #filter_unused=data['filter'],
-            check=not(data['check']),
+            check=not data['check'],
             punch=data['punch'],
             size=size,
             is_double=is_double,
@@ -2414,7 +2519,11 @@ def main(argv=None):
             run_mass=data['run_mass'],
             run_export_caero=data['run_export_caero'],
             run_skin_solids=data['run_skin_solids'],
+            run_dependent_checks=True,
+            run_eid_checks=data['run_eid_checks'],
+            run_mcid=data['run_mcid'],
             run_extract_bodies=False,
+            allow_similar_eid=allow_similar_eid,
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],
@@ -2460,7 +2569,7 @@ def main(argv=None):
             #filter_unused=data['filter'],
             xref=data['xref'],
             # xref_safe=data['xref_safe'],
-            check=not(data['check']),
+            check=not data['check'],
             punch=data['punch'],
             size=size,
             is_double=is_double,
@@ -2468,7 +2577,11 @@ def main(argv=None):
             run_mass=data['run_mass'],
             run_export_caero=data['run_export_caero'],
             run_skin_solids=data['run_skin_solids'],
+            run_dependent_checks=True,
+            run_eid_checks=data['run_eid_checks'],
+            run_mcid=data['run_mcid'],
             run_extract_bodies=False,
+            allow_similar_eid=allow_similar_eid,
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],

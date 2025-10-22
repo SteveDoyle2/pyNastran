@@ -566,8 +566,8 @@ def split_by_mixed_commas_parentheses(str_options: str) -> list[str]:
     """
     options_start = []
     options_end = []
-    options_start_new = []  # type: list[str]
-    options_end_new = []  # type: list[str]
+    options_start_new: list[str] = []
+    options_end_new: list[str] = []
 
     # search for ',' until one is '(' closer to the beginning
     # of the string; put it in options_start
@@ -677,14 +677,14 @@ class MEFFMASS(CheckCard):
         'SUMMARY', 'PARTFAC', 'MEFFM', 'MEFFW', 'FRACSUM', 'ALL'}
     allowed_strings = {'YES', 'NO'}
     alternate_names = {'MEFF'}
-    allowed_values = {
-        'GRID' : (int, None),
-        'MINT1' : (int, None),
-        'MINT2' : (int, None),
-        'MINT3' : (int, None),
-        'MAXIT' : (int, None),
-        'THRESH' : (float, None),
-    }  # type: dict[str, str | int]
+    allowed_values: dict[str, str | int] = {
+        'GRID': (int, None),
+        'MINT1': (int, None),
+        'MINT2': (int, None),
+        'MINT3': (int, None),
+        'MAXIT': (int, None),
+        'THRESH': (float, None),
+    }
     #alternate_names = {'PRES'}
     #allow_ints = True
 

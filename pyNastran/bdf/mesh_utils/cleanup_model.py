@@ -57,7 +57,7 @@ def _cleanup_rigid_elements(model: BDF, nids_to_delete: list[int]) -> None:
 
 def _cleanup_pload4(load: PLOAD4,
                     all_eids: list[int],
-                    loads2: list[Any]):
+                    loads2: list[Any]) -> None:
     _eids = []
     for eid in load.eids:
         if eid not in all_eids:
@@ -107,7 +107,7 @@ def _cleanup_loads(model: BDF,
             load_type = load.type
             if load_type == 'PLOAD4':
                 # adding loads handled within the function
-                load = _cleanup_pload4(load, all_eids, loads2)
+                _cleanup_pload4(load, all_eids, loads2)
                 continue
             elif load_type in {'FORCE', 'MOMENT'}:
                 if load.node not in all_nids:

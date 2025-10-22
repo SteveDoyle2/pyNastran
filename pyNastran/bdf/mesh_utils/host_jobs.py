@@ -2,18 +2,16 @@ import os
 import sys
 import time
 import shlex
-import shutil
 import datetime
 import getpass
 import subprocess
 import argparse
 from pathlib import Path
-from typing import Optional
 
 from cpylog import SimpleLogger, FileLogger
 import pyNastran
-from pyNastran.utils import print_bad_path, PathLike
-#from pyNastran.bdf.test.run_jobs import run_jobs_by_filenames
+from pyNastran.utils import PathLike
+from pyNastran.bdf.mesh_utils.run_jobs import run_jobs_by_filenames
 
 def cmd_line_host_jobs(argv=None, quiet: bool=False) -> int:
     """
@@ -181,7 +179,8 @@ def host_jobs(host_dirnames: PathLike,  # | list[PathLike],
             if run:
                 rename_file(run_filename1, run_filename2)
             nfiles = run_jobs_by_filenames(
-                command_line_args_list, exe_paths_dict, log, #cleanup=cleanup,
+                command_line_args_list, exe_paths_dict, log,
+                #cleanup=cleanup,
                 run=run)
             #asdf
         time.sleep(2)
@@ -357,11 +356,11 @@ def run_jobs_by_filenames(command_line_args: list[list[str]],
     return nfiles
 
 
-def main():
+def main():  # pragma: no cover
     dirname = '.'
     args = ['bdf', 'host_jobs', dirname]
     cmd_line_host_jobs(argv=args)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

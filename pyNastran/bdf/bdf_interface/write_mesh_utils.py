@@ -40,20 +40,21 @@ def find_aero_location(model: BDF) -> tuple[bool, bool]:
             write_aero_in_flutter = True
     return write_aero_in_flutter, write_aero_in_gust
 
+
 def get_properties_by_element_type(model: BDF) -> tuple[dict[str, list[str]],
                                                         dict[str, Any],
                                                         dict[str, Any]]:
     """helper for ``_write_properties_by_element_type``"""
     propertys_class_to_property_types = {
         # prop_class -> property types
-        'spring' : ['PELAS', 'PELAST'],
-        'damper' : ['PDAMP', 'PDAMPT'],
-        'rod' : ['PROD', 'PTUBE'],
-        'bar' : ['PBAR', 'PBARL', 'PBRSECT'],
-        'beam' : ['PBEAM', 'PBEAML', 'PBMSECT'],
-        'bush' : ['PBUSH', 'PBUSH1D', 'PBUSH2D'],
-        'shell' : ['PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG'],
-        'solid' : ['PSOLID', 'PLSOLID'],
+        'spring': ['PELAS', 'PELAST'],
+        'damper': ['PDAMP', 'PDAMPT'],
+        'rod': ['PROD', 'PTUBE'],
+        'bar': ['PBAR', 'PBARL', 'PBRSECT'],
+        'beam': ['PBEAM', 'PBEAML', 'PBMSECT'],
+        'bush': ['PBUSH', 'PBUSH1D', 'PBUSH2D'],
+        'shell': ['PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG'],
+        'solid': ['PSOLID', 'PLSOLID'],
     }
 
     property_type_to_property_class = {

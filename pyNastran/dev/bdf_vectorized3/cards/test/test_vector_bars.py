@@ -147,7 +147,7 @@ class TestBars(unittest.TestCase):
         i12 = -3.
         j = -4.
         model = BDF(debug=False)
-        pbari = model.add_pbar(pid, mid, A=0., i1=i1, i2=i2, i12=i12, j=j, nsm=0., c1=0., c2=0.,
+        pbari = model.add_pbar(pid, mid, area=0., i1=i1, i2=i2, i12=i12, j=j, nsm=0., c1=0., c2=0.,
                               d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
                               k2=1.e8, comment='pbar')
         E = 3.0e7
@@ -171,7 +171,7 @@ class TestBars(unittest.TestCase):
         pbar.validate()
 
         model = BDF(debug=False)
-        pbari = model.add_pbar(pid, mid, A=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
+        pbari = model.add_pbar(pid, mid, area=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
                                d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
                                k2=1.e8, comment='pbar')
         #pbar.validate()
@@ -246,7 +246,7 @@ class TestBars(unittest.TestCase):
         model = BDF(debug=False)
         pid = 200
         mid = 6
-        model.add_pbar(pid, mid, A=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
+        model.add_pbar(pid, mid, area=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
                        d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
                        k2=1.e8, comment='pbar')
 
@@ -274,7 +274,7 @@ class TestBars(unittest.TestCase):
         model = BDF(debug=False)
         pid = 200
         mid = 6
-        model.add_pbar(pid, mid, A=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
+        model.add_pbar(pid, mid, area=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
                        d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
                        k2=1.e8, comment='pbar')
 
@@ -551,7 +551,7 @@ class TestBars(unittest.TestCase):
         #cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
                               #pa=42, pb=5, wa=None, wb=None,
                               #comment='CBAR')
-        unused_pbar = model.add_pbar(pid, mid, A=1., i1=0., i2=0., i12=0., j=0., nsm=0.1,
+        unused_pbar = model.add_pbar(pid, mid, area=1., i1=0., i2=0., i12=0., j=0., nsm=0.1,
                                      c1=0., c2=0.,
                                      d1=0., d2=0.,
                                      e1=0., e2=0.,
@@ -584,7 +584,7 @@ class TestBars(unittest.TestCase):
         nsm = 1.
         area = 2.0
         model.add_pbar(
-            pid, mid, A=area, i1=0., i2=0., i12=0., j=0., nsm=nsm,
+            pid, mid, area=area, i1=0., i2=0., i12=0., j=0., nsm=nsm,
             c1=0., c2=0., d1=0., d2=0.,
             e1=0., e2=0., f1=0., f2=0.,
             k1=1.e8, k2=1.e8,
@@ -911,6 +911,7 @@ class TestBars(unittest.TestCase):
             assert np.allclose(areai, area2), 'bar_type=%r dims=%s area=%s area_expected=%s' % (bar_type, dims, area2, areai)
             pid += 1
         save_load_deck(model)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

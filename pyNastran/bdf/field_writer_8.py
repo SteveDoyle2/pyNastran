@@ -250,7 +250,7 @@ def print_field_8(value: Optional[int | float | str]) -> str:
     return field
 
 
-def print_card_8(fields: list[Optional[int | float | str]]) -> str:
+def print_card_8(fields: list[int | float | str | None]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.
 
@@ -274,8 +274,8 @@ def print_card_8(fields: list[Optional[int | float | str]]) -> str:
 
     .. code-block:: python
 
-       >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
-       >>> print_card_8(fields)
+       >>> card = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
+       >>> print_card_8(card)
        DUMMY          1       2       3               4       5       6       7
                      8.
 

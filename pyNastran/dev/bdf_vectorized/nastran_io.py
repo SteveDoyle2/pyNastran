@@ -192,7 +192,7 @@ class NastranIO(NastranIO_xref):
                         elem.GetPointIds().SetId(3, j + elementsi[3])
                         self.grid2.InsertNextCell(eType, elem.GetPointIds())
                     j += ipoint + 1
-                    #isubpanel += ipoint
+                    #iaerobox += ipoint
                 else:
                     cpoints = element.Points()
                     elem = vtkQuad()

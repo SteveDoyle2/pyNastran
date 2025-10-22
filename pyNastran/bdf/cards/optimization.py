@@ -1462,7 +1462,7 @@ class DLINK(OptConstraint):
     #     self.coeffs = coeffs
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DLINK card from ``BDF.add_card(...)``
 

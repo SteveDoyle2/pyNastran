@@ -14,6 +14,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 from pyNastran.gui.qt_files.colors import BLACK_FLOAT
 
+
 class BEdge_IO:
     """creates BEdge_IO"""
     def __init__(self, gui):
@@ -139,7 +140,6 @@ class BEdge_IO:
         eids = np.arange(1, nelements + 1)
         nids = np.arange(1, nnodes + 1)
 
-
         eid_res = GuiResult(0, header='ElementID', title='ElementID',
                             location='centroid', scalar=eids)
         nid_res = GuiResult(0, header='NodeID', title='NodeID',
@@ -158,7 +158,6 @@ class BEdge_IO:
         cases[icase + 3] = (subcurve_res, (0, 'SubcurveID'))
         cases[icase + 4] = (gridbc_res, (0, 'GridBC'))
         icase += 5
-
 
         #if 0:
             #surf_ids = element_props[:, 0]

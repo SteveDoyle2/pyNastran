@@ -32,7 +32,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.cards.elements.solid import PSOLID
 
 
-
 class EPT:
     """defines methods for reading op2 properties"""
 
@@ -673,7 +672,6 @@ class EPT:
             op2.log.info("MSC: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
                 sid, prop_set, pid, values))
 
-            cards.append()
             card = [sid, prop_set, pid, values]
             cards.append(card)
             #op2._add_methods.add_nsm_object(prop)

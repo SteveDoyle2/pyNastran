@@ -144,7 +144,6 @@ class CELAS1(Element):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
-
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
@@ -160,7 +159,6 @@ class CELAS1(Element):
     def allowed_properties(self):
         return [prop for prop in [self.model.pelas]
                 if prop.n > 0]
-
 
     #def length(self) -> np.ndarray:
         #length = line_length(self.model, self.nodes)
@@ -527,7 +525,6 @@ class CELAS4(Element):
         spoints = spoints[spoints > 0]
         used_dict['spoint_id'].append(spoints)
 
-
     def geom_check(self, missing: dict[str, np.ndarray]):
         spoint = self.model.spoint
         geom_check(self,
@@ -776,7 +773,6 @@ class PELAST(Property):
         prop.table_k_nonlinear = self.table_k_nonlinear[i]
         prop.n = len(i)
 
-
     def set_used(self, used_dict: dict[str, np.ndarray]) -> None:
         pass
 
@@ -793,7 +789,6 @@ class PELAST(Property):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
-
 
         property_id = array_str(self.property_id, size=size)
         table_ks = array_default_int(self.table_k, default=0, size=size)

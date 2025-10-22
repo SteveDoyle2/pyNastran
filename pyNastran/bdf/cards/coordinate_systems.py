@@ -35,9 +35,9 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.femutils.coord_transforms import (
-    xyz_to_rtz_array, xyz_to_rtp_array, # xyz to xxx transforms
-    rtz_to_xyz_array, rtp_to_xyz_array, # xxx to xyz transforms
-    #rtz_to_rtp_array, rtp_to_rtz_array, # rtp/rtz and rtz/rtp transforms
+    xyz_to_rtz_array, xyz_to_rtp_array,  # xyz to xxx transforms
+    rtz_to_xyz_array, rtp_to_xyz_array,  # xxx to xyz transforms
+    # rtz_to_rtp_array, rtp_to_rtz_array, # rtp/rtz and rtz/rtp transforms
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float
@@ -45,20 +45,23 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from typing import Optional
 
+
 def global_to_basic_rectangular(coord, unused_xyz_global, dtype='float64'):
     coord_transform = coord.local_to_global
     return coord_transform
     #transform = array([ex, ey, ez], dtype=dtype)
     #return transform
 
+
 def _primary_axes(coord):
     """gets the i,j,k axes from the ???"""
-    ## TODO: not sure...needs testing
+    # TODO: not sure...needs testing
     coord_transform = coord.beta()
     ex = coord_transform[0, :]
     ey = coord_transform[1, :]
     ez = coord_transform[2, :]
     return ex, ey, ez
+
 
 def global_to_basic_cylindrical(coord, xyz_global, dtype='float64'):
     ex, ey, ez = _primary_axes(coord)
@@ -68,6 +71,7 @@ def global_to_basic_cylindrical(coord, xyz_global, dtype='float64'):
     et = ey * cos(r1_rad) - ex * sin(r1_rad)
     transform = np.array([er, et, ez], dtype=dtype)
     return transform
+
 
 def global_to_basic_spherical(coord, xyz_global, dtype='float64'):
     ex, ey, ez = _primary_axes(coord)
@@ -92,7 +96,8 @@ def global_to_basic_spherical(coord, xyz_global, dtype='float64'):
     transform = np.array([er, et, ep], dtype=dtype)
     return transform
 
-def normalize(v):
+
+def normalize(v: np.ndarray) -> np.ndarray:
     r"""
     Normalizes v into a unit vector.
 
@@ -138,12 +143,12 @@ class CoordBase(BaseCard):
 
     def setup_global_cord2x(self):
         """Sets up a global CORD2R, CORD2S, CORD2C"""
-        #if self.Cid() == 0:
-            #self.origin = np.array([0., 0., 0.], dtype='float64')
-            #return
-        #self.i = np.array([1., 0., 0.], dtype='float64')
-        #self.j = np.array([0., 1., 0.], dtype='float64')
-        #self.k = np.array([0., 0., 1.], dtype='float64')
+        # if self.Cid() == 0:
+        #     self.origin = np.array([0., 0., 0.], dtype='float64')
+        #     return
+        # self.i = np.array([1., 0., 0.], dtype='float64')
+        # self.j = np.array([0., 1., 0.], dtype='float64')
+        # self.k = np.array([0., 0., 1.], dtype='float64')
 
         self.origin = copy.deepcopy(self.e1)
         e1 = self.e1
@@ -245,8 +250,8 @@ class CoordBase(BaseCard):
           i = j \times k
 
         """
-        #if self.is_resolved:
-            #return
+        # if self.is_resolved:
+        #     return
         try:
             assert len(self.e1) == 3, self.e1
             assert len(self.e2) == 3, self.e2
@@ -573,11 +578,11 @@ class CoordBase(BaseCard):
 
     def resolve(self):
         if not self.is_resolved:
-            #if self.rid_ref is None and self.rid != 0:
-                #msg = "BDF has not been cross referenced; rid=%s rid_ref:\n%s" % (
-                    #self.rid, self.rid_ref,
-                #)
-                #raise RuntimeError(msg)
+            # if self.rid_ref is None and self.rid != 0:
+            #     msg = "BDF has not been cross referenced; rid=%s rid_ref:\n%s" % (
+            #         self.rid, self.rid_ref,
+            #     )
+            #     raise RuntimeError(msg)
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 self.rid_ref.setup()
             else:
@@ -587,12 +592,12 @@ class CoordBase(BaseCard):
         if self.cid == 0:
             return p
 
-        #if not self.is_resolved:
-            #if isinstance(self.rid, integer_types) and self.rid != 0:
-                #raise RuntimeError("BDF has not been cross referenced.")
-            #if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
-                #self.rid_ref.setup()
-            #else:
+        # if not self.is_resolved:
+        #     if isinstance(self.rid, integer_types) and self.rid != 0:
+        #         raise RuntimeError("BDF has not been cross referenced.")
+        #     if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+        #         self.rid_ref.setup()
+        #     else:
         self.setup_no_xref(model)
 
         # the ijk axes arent resolved as R-theta-z, only points
@@ -745,7 +750,7 @@ class CoordBase(BaseCard):
         """
         if self.cid == 0:
             return xyz
-        return self.transform_vector_to_global_assuming_rectangular(xyz) #+ self.origin
+        return self.transform_vector_to_global_assuming_rectangular(xyz)  # + self.origin
 
     def _transform_node_to_global_array(self, xyz):
         if self.cid == 0:
@@ -935,10 +940,10 @@ class CoordBase(BaseCard):
         matrix_out = T.T @ matrix @ T
         return matrix_out
 
-    def transform_matrix_to_global_from_element_coord(self, matrix:np.ndarray, n: int,
-                                                      i:np.ndarray,
-                                                      j:np.ndarray,
-                                                      k:np.ndarray) -> np.ndarray:
+    def transform_matrix_to_global_from_element_coord(self, matrix: np.ndarray, n: int,
+                                                      i: np.ndarray,
+                                                      j: np.ndarray,
+                                                      k: np.ndarray) -> np.ndarray:
         Tlocal = np.vstack([i, j, k])
         _check_square(Tlocal)
         n = matrix.shape[0] // 3
@@ -973,6 +978,7 @@ class CoordBase(BaseCard):
         else:
             raise RuntimeError('Cannot move %s; cid=%s' % (self.type, self.cid))
         self.origin = xyz
+
 
 def _check_square(matrix: np.ndarray) -> None:
     nx, ny = matrix.shape
@@ -1180,7 +1186,7 @@ def define_coord_e123(model: BDF, cord2_type: str, cid: int,
         elif zaxis is not None:
             # standard
             k = zaxis / norm(zaxis)
-            jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
+            jhat = np.cross(k, xzplane)  # xzplane is "defining" xaxis
             j = jhat / norm(jhat)
             i = np.cross(j, k)
     return define_coord_ijk(model, cord2_type, cid, origin, rid, i, j, k, add=add)
@@ -1242,8 +1248,8 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
     # define e1, e2, e3
     rcoord = model.Coord(rid, ', which is required to create cid=%s' % cid)
     e1 = rcoord.transform_node_to_local(origin)
-    e2 = rcoord.transform_node_to_local(origin + k) # point on z axis
-    e3 = rcoord.transform_node_to_local(origin + i) # point on x-z plane / point on x axis
+    e2 = rcoord.transform_node_to_local(origin + k)  # point on z axis
+    e3 = rcoord.transform_node_to_local(origin + i)  # point on x-z plane / point on x axis
     card = [cord2_type, cid, rid] + list(e1) + list(e2) + list(e3)
 
     origin = e1
@@ -1299,6 +1305,7 @@ class MATCID(BaseCard):
     .. note :: no type checking
     """
     type = 'MATCID'
+
     def __init__(self, cid: int,
                  eids=None,
                  start: Optional[int]=None,
@@ -1488,7 +1495,7 @@ class MATCID(BaseCard):
         return list_fields
 
     # Not working
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -1948,78 +1955,78 @@ class Cord2x(CoordBase):
             xyplane=xyplane, yzplane=yzplane, xzplane=xzplane)
         return cls.add_ijk(cid, origin, i, j, k, rid=rid, comment=comment)
 
-        #assert cls.type in ['CORD2R', 'CORD2C', 'CORD2S'], cls.type
-        #if origin is None:
-            #origin = np.array([0., 0., 0.], dtype='float64')
-        #else:
-            #origin = _fix_xyz_shape(origin, 'origin')
-
-        ## check for overdefined axes
-        #if xaxis is not None:
-            #assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
-            #xaxis = _fix_xyz_shape(xaxis, 'xaxis')
-            #xaxis = cls.coord_to_xyz(xaxis)
-        #elif yaxis is not None:
-            #assert zaxis is None, 'zaxis=%s' % (zaxis)
-            #yaxis = _fix_xyz_shape(yaxis, 'yaxis')
-            #yaxis = cls.coord_to_xyz(yaxis)
-        #else:
-            #zaxis = _fix_xyz_shape(zaxis, 'zaxis')
-            #zaxis = cls.coord_to_xyz(zaxis)
-
-        ## check for invalid planes
-        #if xyplane is not None:
-            #assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
-            #assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
-            #xyplane = _fix_xyz_shape(xyplane, 'xyplane')
-            #xyplane = cls.coord_to_xyz(xyplane)
-        #elif yzplane is not None:
-            #assert xzplane is None, 'xzplane=%s' % (xzplane)
-            #assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
-            #yzplane = _fix_xyz_shape(yzplane, 'yzplane')
-            #yzplane = cls.coord_to_xyz(yzplane)
-        #else:
-            #assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
-            #xzplane = _fix_xyz_shape(xzplane, 'xzplane')
-            #xzplane = cls.coord_to_xyz(xzplane)
-
-        #if xyplane is not None:
-            #if xaxis is not None:
-                #i = xaxis / norm(xaxis)
-                #khat = np.cross(i, xyplane)  # xyplane is "defining" yaxis
-                #k = khat / norm(khat)
-                #j = np.cross(k, i)
-            #elif yaxis is not None:
-                #j = yaxis / norm(yaxis)
-                #khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
-                #k = khat / norm(khat)
-                #i = np.cross(j, k)
-
-        #elif yzplane is not None:
-            #if yaxis is not None:
-                #j = yaxis / norm(yaxis)
-                #ihat = np.cross(j, yzplane)  # yzplane is "defining" zaxis
-                #i = ihat / norm(ihat)
-                #k = np.cross(i, j)
-            #elif zaxis is not None:
-                #k = zaxis / norm(zaxis)
-                #ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
-                #i = ihat / norm(ihat)
-                #j = np.cross(k, i)
-
-        #elif xzplane is not None:
-            #if xaxis is not None:
-                #i = xaxis / norm(xaxis)
-                #jhat = np.cross(xzplane, i)  # xzplane is "defining" zaxis
-                #j = jhat / norm(jhat)
-                #k = np.cross(i, j)
-            #elif zaxis is not None:
-                ## standard
-                #k = zaxis / norm(zaxis)
-                #jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
-                #j = jhat / norm(jhat)
-                #i = np.cross(j, k)
-        #return cls.add_ijk(cid, origin, i, j, k, rid=rid, comment=comment)
+        # assert cls.type in ['CORD2R', 'CORD2C', 'CORD2S'], cls.type
+        # if origin is None:
+        #     origin = np.array([0., 0., 0.], dtype='float64')
+        # else:
+        #     origin = _fix_xyz_shape(origin, 'origin')
+        #
+        # # check for overdefined axes
+        # if xaxis is not None:
+        #     assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+        #     xaxis = _fix_xyz_shape(xaxis, 'xaxis')
+        #     xaxis = cls.coord_to_xyz(xaxis)
+        # elif yaxis is not None:
+        #     assert zaxis is None, 'zaxis=%s' % (zaxis)
+        #     yaxis = _fix_xyz_shape(yaxis, 'yaxis')
+        #     yaxis = cls.coord_to_xyz(yaxis)
+        # else:
+        #     zaxis = _fix_xyz_shape(zaxis, 'zaxis')
+        #     zaxis = cls.coord_to_xyz(zaxis)
+        #
+        # # check for invalid planes
+        # if xyplane is not None:
+        #     assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
+        #     assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
+        #     xyplane = _fix_xyz_shape(xyplane, 'xyplane')
+        #     xyplane = cls.coord_to_xyz(xyplane)
+        # elif yzplane is not None:
+        #     assert xzplane is None, 'xzplane=%s' % (xzplane)
+        #     assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+        #     yzplane = _fix_xyz_shape(yzplane, 'yzplane')
+        #     yzplane = cls.coord_to_xyz(yzplane)
+        # else:
+        #     assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
+        #     xzplane = _fix_xyz_shape(xzplane, 'xzplane')
+        #     xzplane = cls.coord_to_xyz(xzplane)
+        #
+        # if xyplane is not None:
+        #     if xaxis is not None:
+        #         i = xaxis / norm(xaxis)
+        #         khat = np.cross(i, xyplane)  # xyplane is "defining" yaxis
+        #         k = khat / norm(khat)
+        #         j = np.cross(k, i)
+        #     elif yaxis is not None:
+        #         j = yaxis / norm(yaxis)
+        #         khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
+        #         k = khat / norm(khat)
+        #         i = np.cross(j, k)
+        #
+        # elif yzplane is not None:
+        #     if yaxis is not None:
+        #         j = yaxis / norm(yaxis)
+        #         ihat = np.cross(j, yzplane)  # yzplane is "defining" zaxis
+        #         i = ihat / norm(ihat)
+        #         k = np.cross(i, j)
+        #     elif zaxis is not None:
+        #         k = zaxis / norm(zaxis)
+        #         ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
+        #         i = ihat / norm(ihat)
+        #         j = np.cross(k, i)
+        #
+        # elif xzplane is not None:
+        #     if xaxis is not None:
+        #         i = xaxis / norm(xaxis)
+        #         jhat = np.cross(xzplane, i)  # xzplane is "defining" zaxis
+        #         j = jhat / norm(jhat)
+        #         k = np.cross(i, j)
+        #     elif zaxis is not None:
+        #         # standard
+        #         k = zaxis / norm(zaxis)
+        #         jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
+        #         j = jhat / norm(jhat)
+        #         i = np.cross(j, k)
+        # return cls.add_ijk(cid, origin, i, j, k, rid=rid, comment=comment)
 
     @classmethod
     def add_ijk(cls, cid: int, origin=None, i=None, j=None, k=None,
@@ -2102,7 +2109,7 @@ class Cord2x(CoordBase):
             force_double_or_blank(card, 6, 'e2x', default=0.0),
             force_double_or_blank(card, 7, 'e2y', default=0.0),
             force_double_or_blank(card, 8, 'e2z', default=0.0),
-        ],dtype='float64')
+        ], dtype='float64')
         #: a point on the xz-plane relative to the rid coordinate system
         xzplane = np.array([
             force_double_or_blank(card, 9, 'e3x', default=0.0),
@@ -2127,7 +2134,7 @@ class Cord2x(CoordBase):
             self.setup()
             #self.setup_global_cord2x()
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -2401,7 +2408,7 @@ class Cord1x(CoordBase):
         model.coords[self.cid] = coord
         return coord
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -2597,7 +2604,7 @@ class CORD3G(CoordBase):
         #raise NotImplementedError(data)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CORD3G card from ``BDF.add_card(...)``
 
@@ -3025,13 +3032,13 @@ def create_coords_along_line(model, p1, p2, percents, cid=0, axis=1):
 
     cids = []
     origins = []
-    if axis == 0: # x axis, yz plane
+    if axis == 0:  # x axis, yz plane
         z_axisi = [1., 0., 0.]
         xz_planei = [0., 1., 0.]
-    elif axis == 1: # xz plane, y axis
+    elif axis == 1:  # xz plane, y axis
         z_axisi = [0., 1., 0.]
         xz_planei = [0., 0., 1.]
-    elif axis == 2: # xy plane, z axis
+    elif axis == 2:  # xy plane, z axis
         z_axisi = [0., 0., 1.]
         xz_planei = [0., 1., 0.]
     else:
@@ -3058,6 +3065,7 @@ def create_coords_along_line(model, p1, p2, percents, cid=0, axis=1):
         origins.append(origin)
         cid += 1
     return cids
+
 
 def get_nodes_along_axis_in_coords(model, nids, xyz_cp, icp_transform, cids):
     """
@@ -3090,9 +3098,9 @@ def get_nodes_along_axis_in_coords(model, nids, xyz_cp, icp_transform, cids):
     # setup the cutting planes
     # down the axis from the outboard to the inboard
     cid_to_inids = {}
-    for icid, cid in enumerate(cids): # 114 cids
-        #origin = origins[icid]
-        #origin = model.coords[cid].origin
+    for icid, cid in enumerate(cids):  # 114 cids
+        # origin = origins[icid]
+        # origin = model.coords[cid].origin
 
         xyz_cid = model.transform_xyzcp_to_xyz_cid(xyz_cp, nids, icp_transform,
                                                    cid=cid, in_place=False, atol=1e-6)
@@ -3101,6 +3109,7 @@ def get_nodes_along_axis_in_coords(model, nids, xyz_cp, icp_transform, cids):
         cid_to_inids[cid] = inids
         model.log.debug('nnodes[icid=%3s, cid=%s] = %s' % (icid, cid, len(inids)))
     return cid_to_inids
+
 
 def transform_coords_vectorized(cps_to_check0, icp_transform,
                                 nids, xyz_cp, xyz_cid0, xyz_cid0_correct,
@@ -3162,16 +3171,16 @@ def transform_coords_vectorized(cps_to_check0, icp_transform,
 
         if origin is None:
             # the coord has not been xref'd, so add it to cps_to_check
-            #if self.is_bdf_vectorized:
-                #assert in_place is False, 'in_place=%r must be False for vectorized' % in_place
-            #else:
-                #raise RuntimeError('you must cross-reference the nodes')
+            # if self.is_bdf_vectorized:
+            #     assert in_place is False, 'in_place=%r must be False for vectorized' % in_place
+            # else:
+            #     raise RuntimeError('you must cross-reference the nodes')
 
             cps_to_check.append(cp)
             if cp in icp_transform:
                 inode = icp_transform[cp]
                 xyz_cid0[inode, :] = np.nan
-            #print("  cp=%s used, but not done (%s)..." % (cp, coord.type))
+            # print("  cp=%s used, but not done (%s)..." % (cp, coord.type))
             continue
 
         cps_checked.append(cp)
@@ -3187,20 +3196,20 @@ def transform_coords_vectorized(cps_to_check0, icp_transform,
         beta = coord.beta()
         inode = icp_transform[cp]
         nids_checked.append(nids[inode])
-        #print('***nids_checked=%s' % nids[inode])
+        # print('***nids_checked=%s' % nids[inode])
         xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
-        #try:
+        # try:
         new = xyzi @ beta + origin
-        #except TypeError:
-            #msg = 'Bad Math...\n'
-            #msg += '%s\n' % coord.rstrip()
-            #msg += '  origin = %s\n' % origin
-            #msg += '  i = %s\n' % coord.i
-            #msg += '  j = %s\n' % coord.j
-            #msg += '  k = %s\n' % coord.k
-            #msg += '  beta = \n%s' % beta
-            #self.log.error(msg)
-            #raise
+        # except TypeError:
+        #     msg = 'Bad Math...\n'
+        #     msg += '%s\n' % coord.rstrip()
+        #     msg += '  origin = %s\n' % origin
+        #     msg += '  i = %s\n' % coord.i
+        #     msg += '  j = %s\n' % coord.j
+        #     msg += '  k = %s\n' % coord.k
+        #     msg += '  beta = \n%s' % beta
+        #     self.log.error(msg)
+        #     raise
 
         xyz_cid0[inode, :] = new
         if do_checks and not np.array_equal(xyz_cid0_correct[inode, :], new):
@@ -3226,6 +3235,7 @@ def transform_coords_vectorized(cps_to_check0, icp_transform,
         assert len(nids_checked) > 0, nids_checked
     cps_to_check.sort()
     return nids_checked, cps_checked, cps_to_check
+
 
 def setup_add_axes(cid: int, coord_type: str, rid: int=0, origin=None,
                    xaxis=None, yaxis=None, zaxis=None,
@@ -3304,6 +3314,7 @@ def setup_add_axes(cid: int, coord_type: str, rid: int=0, origin=None,
             i = np.cross(j, k)
     return origin, i, j, k
 
+
 def setup_add_ijk(coord_type: str,
                   origin=None, i=None, j=None, k=None,
                   ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -3348,6 +3359,7 @@ def setup_add_ijk(coord_type: str,
     e3 = origin + i
     return origin, e1, e2, e3
 
+
 def _coord_to_xyz(xyz: np.ndarray, coord_type: str) -> np.ndarray:
     if coord_type == 'R':
         pass
@@ -3359,6 +3371,7 @@ def _coord_to_xyz(xyz: np.ndarray, coord_type: str) -> np.ndarray:
         raise RuntimeError(coord_type)
     return xyz
 
+
 def transform_cylindrical_to_rectangular(rtz: np.ndarray) -> np.ndarray:
     """vectorized?"""
     R, t, z = rtz
@@ -3367,6 +3380,7 @@ def transform_cylindrical_to_rectangular(rtz: np.ndarray) -> np.ndarray:
     y = R * np.sin(theta)
     xyz = np.array([x, y, z], dtype=rtz.dtype)
     return xyz
+
 
 def transform_spherical_to_rectangular(rtp: np.ndarray) -> np.ndarray:
     """vectorized?"""

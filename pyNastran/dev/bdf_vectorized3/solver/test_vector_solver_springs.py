@@ -844,7 +844,7 @@ class TestModalBar(unittest.TestCase):
         i2 = 1 / 12 * h * b ** 3
         i12 = 0.
         j = i1 + i2
-        model.add_pbar(pid, mid, A=A, i1=i1, i2=i2, i12=i12, j=j, nsm=0.,
+        model.add_pbar(pid, mid, area=A, i1=i1, i2=i2, i12=i12, j=j, nsm=0.,
                        c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
                        k1=1.e8, k2=1.e8, comment='')
 
@@ -894,7 +894,7 @@ class TestStaticBar(unittest.TestCase):
         A = 1.
         k_axial = A * E / L
         model.add_pbar(pid, mid,
-                       A=A, i1=1., i2=1., i12=1., j=1.,
+                       area=A, i1=1., i2=1., i12=1., j=1.,
                        nsm=0.,
                        c1=0., c2=0., d1=0., d2=0.,
                        e1=0., e2=0., f1=0., f2=0.,
@@ -994,7 +994,7 @@ class TestStaticBar(unittest.TestCase):
         A = 1.
         k_axial = A * E / L
         model.add_pbar(pid, mid,
-                       A=A, i1=1., i2=1., i12=1., j=1.,
+                       area=A, i1=1., i2=1., i12=1., j=1.,
                        nsm=0.,
                        c1=0., c2=0., d1=0., d2=0.,
                        e1=0., e2=0., f1=0., f2=0.,

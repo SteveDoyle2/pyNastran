@@ -107,7 +107,7 @@ def setup_animation(scale, istep=None,
         analysis_time, fps)
     phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2 = out
 
-    if istep is None and animate_scale: # and not animate_in_gui:
+    if istep is None and animate_scale:  # and not animate_in_gui:
         scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2 = make_symmetric(
             scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, is_symmetric, endpoint)
         #if animate_in_gui:
@@ -150,6 +150,7 @@ def fix_nframes(nframes: int, profile: str) -> int:
         nframes_div_4 = nframes // 4
         nframes = 4 * (nframes_div_4 + 1) + 1
     return nframes
+
 
 def _get_scale_profile_info(profile: str) -> tuple[str, bool, bool, bool]:
     if isinstance(profile, str):
@@ -207,6 +208,7 @@ def _get_scale_profile_info(profile: str) -> tuple[str, bool, bool, bool]:
         raise NotImplementedError(msg)
     return profile, onesided, endpoint, is_symmetric
 
+
 def setup_animate_scale(scale: float,
                         icase_fringe: int,
                         icase_disp: int,
@@ -215,7 +217,7 @@ def setup_animate_scale(scale: float,
     """
     Gets the inputs for a displacement scale/real modal animation
 
-    A onesided animation is an animation that:
+    A one-sided animation is an animation that:
      - does not need to loop back on itself because it ends back at the
        start point
      - is symmetric
@@ -314,6 +316,7 @@ def setup_animate_scale(scale: float,
     )
     return out
 
+
 def setup_animate_phase(scale: float,
                         icase_fringe: int, icase_disp: int, icase_vector: int,
                         time: float, fps: int):
@@ -333,6 +336,7 @@ def setup_animate_phase(scale: float,
     icases_disp = icase_disp
     icases_vector = icase_vector
     return phases, icases_fringe, icases_disp, icases_vector, isteps, scales, time
+
 
 def setup_animate_time(scale: float, time: float, fps: int,
                        icase_fringe_start=None, icase_fringe_end=None, icase_fringe_delta=None,
@@ -396,6 +400,7 @@ def setup_animate_time(scale: float, time: float, fps: int,
     isteps = np.linspace(0, nfiles, num=nfiles, endpoint=True, dtype='int32')
     return icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, fps
 
+
 def get_analysis_time(time: float, onesided: bool=True) -> float:
     """
     The analysis time is the time that needs to be simulated for the analysis.
@@ -416,6 +421,7 @@ def get_analysis_time(time: float, onesided: bool=True) -> float:
     else:
         analysis_time = time
     return analysis_time
+
 
 def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
                             isteps: list[int], scales: list[float],
@@ -495,6 +501,7 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
     scales2 = np.array(scales)
     return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2
 
+
 def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector,
                    isteps, is_symmetric: bool, endpoint: bool):
     """
@@ -550,6 +557,7 @@ def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector,
         scales = scales[:i]
     return scales, phases, icases_fringe, icases_disp, icases_vector, isteps
 
+
 def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, isteps,
                    onesided: bool):
     """
@@ -557,11 +565,11 @@ def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, is
 
     Examples
     --------
-    this is a onesided "mountain", we only go up
+    this is a one-sided "mountain", we only go up
     >>> a = [1, 2, 3, 4, 5]
     >>> a + a[-2::-1]
 
-    this is a two sided "mountain"; we have to go back down
+    this is a two-sided "mountain"; we have to go back down
     [1, 2, 3, 4, 5, 4, 3, 2, 1]
     """
     is_endpoint = np.allclose(scales[0], scales[-1])
@@ -594,6 +602,7 @@ def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, is
     scales = np.hstack([scales[:end], scales[:end]])
     #print('scales2     =%s n=%s, isteps2=%s' % (scales, len(scales), isteps))
     return scales, phases, icases_fringe, icases_disp, icases_vector, isteps
+
 
 def write_gif(gif_filename: PathLike, png_filenames: list[PathLike], time: float=2.0,
               onesided: bool=True, nrepeat: int=0,

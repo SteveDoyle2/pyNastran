@@ -61,7 +61,7 @@ jobs:
     strategy:
       matrix:
          # '3.9', '3.11-dev'
-         python-version: ['3.10', '3.11', '3.12', '3.13']
+         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
          os: [ubuntu-latest]
          # , macos-latest, windows-latest
          mode: ['latest', 'latest_basic', 'old', 'latest_pyqt5_gui', 'latest_pyqt6_gui', 'latest_pyside2_gui', ]
@@ -96,12 +96,19 @@ jobs:
           - {python-version: '3.12', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.12', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.12', mode: 'latest_pyside2_gui'}
-          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}
+          - {python-version: '3.12', mode: 'latest_pyside6_gui'}
 
           - {python-version: '3.13', mode: 'old'}               # redundant
           - {python-version: '3.13', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.13', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.13', mode: 'latest_pyside2_gui'}
+          #- {python-version: '3.13', mode: 'latest_pyside2_gui'}
+
+          - {python-version: '3.14', mode: 'old'}               # redundant
+          - {python-version: '3.14', mode: 'latest_pyqt5_gui'}
+          - {python-version: '3.14', mode: 'latest_pyqt6_gui'}
+          - {python-version: '3.14', mode: 'latest_pyside2_gui'}
+
+          #- {python-version: '3.15-dev', mode: 'old'}
       fail-fast: false
      #- continue-on-error: ${{ matrix.experimental }}
 #strategy:
@@ -185,7 +192,7 @@ jobs:
           pip install 'pandas>=1.0' matplotlib
 
       - name: Install latest packages (h5py)
-        if: ${{  matrix.python-version != '3.12' && (matrix.mode == 'latest' ||
+        if: ${{  matrix.python-version != '3.14-dev' && (matrix.mode == 'latest' ||
                  matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
@@ -193,39 +200,39 @@ jobs:
 
       - name: Install latest packages (imageio, pillow)
         #if: ${{ (
-        #if: ${{ matrix.python-version != '3.12' && (
-        #        matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
-        #        matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
-        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
-                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        if: ${{ matrix.python-version != '3.14-dev' && (
+                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
+                matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        #if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
+        #         matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install imageio pillow>=10.1.0
 
       - name: Install latest packages (vtk)
-        #if: ${{ matrix.python-version != '3.13' && (
-        #       matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
-        #       matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
-        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
-                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        if: ${{ matrix.python-version != '3.14-dev' && (
+               matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
+               matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        #if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
+        #         matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install vtk qtpy
 
-      - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.13' }}
+      - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.15-dev' }}
         name: Install PySide2
         run: |
           pip install PySide2
 
-      - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.13' }}
+      - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.15-dev' }}
         name: Install PySide6
         run: |
           pip install PySide6
 
-      - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.13' }}
+      - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.15-dev' }}
         name: Install PyQt5
         run: |
           pip install PyQt5
 
-      - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.13' }}
+      - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.15-dev' }}
         name: Install PyQt6
         run: |
           pip install PyQt6

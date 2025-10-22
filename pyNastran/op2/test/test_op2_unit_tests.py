@@ -25,9 +25,15 @@ except ModuleNotFoundError:  # pragma: no cover
     IS_H5PY = False
 
 
+try:
+    import matplotlib  # pylint: disable=unused-import
+    IS_MATPLOTLIB = True
+except ModuleNotFoundError:  # pragma: no cover
+    IS_MATPLOTLIB = False
+
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.op2.op2 import OP2, read_op2  #, FatalError, FortranMarkerError
+from pyNastran.op2.op2 import OP2, read_op2  # FatalError, FortranMarkerError
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
@@ -47,7 +53,7 @@ from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
 from pyNastran.f06.csv_writer import write_csv
 
 PKG_PATH = Path(pyNastran.__path__[0])
-MODEL_PATH = (PKG_PATH / '..'/ 'models').resolve()
+MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
 OP2_TEST_PATH = (PKG_PATH / 'op2' / 'test' / 'examples').resolve()
 OP2_TEST = PKG_PATH / 'op2' / 'test'
 
@@ -71,22 +77,21 @@ class TestOP2Unit(Tester):
             superelement_adaptivity_index='')
         str(weight)
 
-
     def test_cd_displacement(self):
         log = get_logger(level='debug')
         data_code = {
-            'device_code' : 1,
-            'analysis_code' : 1,
-            'table_code' : 1,
-            'nonlinear_factor' : None,
-            'sort_bits' : [0, 0, 0],
-            'sort_method' : 1,
-            'is_msc' : True,
-            'format_code' : 1,
-            'data_names' : [],
-            'tCode' : 1,
-            'table_name' : 'OUGV1',
-            '_encoding' : 'utf-8',
+            'device_code': 1,
+            'analysis_code': 1,
+            'table_code': 1,
+            'nonlinear_factor': None,
+            'sort_bits': [0, 0, 0],
+            'sort_method': 1,
+            'is_msc': True,
+            'format_code': 1,
+            'data_names': [],
+            'tCode': 1,
+            'table_name': 'OUGV1',
+            '_encoding': 'utf-8',
         }
 
         bdf_model = BDF(log=log)
@@ -119,17 +124,17 @@ class TestOP2Unit(Tester):
         bdf_model.add_cord2c(3, origin, zaxis, xzplane, rid=0, comment='')
 
         dxyz = np.array([[
-            [1., 0., 0., 0., 0., 0.], # 1
-            [1., 0., 0., 0., 0., 0.], # 2
-            [1., 0., 0., 0., 0., 0.], # 3
+            [1., 0., 0., 0., 0., 0.],  # 1
+            [1., 0., 0., 0., 0., 0.],  # 2
+            [1., 0., 0., 0., 0., 0.],  # 3
 
-            [1., 0., 0., 0., 0., 0.], # 11
-            [1., 0., 0., 0., 0., 0.], # 12
-            [1., 0., 0., 0., 0., 0.], # 13
+            [1., 0., 0., 0., 0., 0.],  # 11
+            [1., 0., 0., 0., 0., 0.],  # 12
+            [1., 0., 0., 0., 0., 0.],  # 13
 
-            [1., 0., 0., 0., 0., 0.], # 23 - [0., 1., 0.]
-            [1., 0., 0., 0., 0., 0.], # 24 - answer=same as 23
-            [1., 0., 0., 0., 0., 0.], # 25 - [-1, 0., 0.]
+            [1., 0., 0., 0., 0., 0.],  # 23 - [0., 1., 0.]
+            [1., 0., 0., 0., 0., 0.],  # 24 - answer=same as 23
+            [1., 0., 0., 0., 0., 0.],  # 25 - [-1, 0., 0.]
 
             #[1., 0., 0., 0., 0., 0.], # 31 - [0,1,0]
             #[1., 0., 0., 0., 0., 0.], # 32 - [0,-1,0]
@@ -154,7 +159,6 @@ class TestOP2Unit(Tester):
         op2_model.transform_displacements_to_global(
             icd_transform, bdf_model.coords, xyz_cid0=xyz_cid0, debug=True)
 
-
         # we're working in a 2D plane
         icd2 = icd_transform[2]
         unused_dispi_cd2 = op2_model.displacements[1].data[0, icd2, :2]
@@ -162,20 +166,20 @@ class TestOP2Unit(Tester):
 
         dispi = op2_model.displacements[1].data[0, :, :2]
         expected_disp = np.array([
-            [1., 0.,], # 1
-            [1., 0.,], # 2
-            [1., 0.,], # 3
+            [1., 0.,],  # 1
+            [1., 0.,],  # 2
+            [1., 0.,],  # 3
 
-            [1., 0.,], # 11
-            [1., 0.,], # 12
-            [1., 0.,], # 13
+            [1., 0.,],  # 11
+            [1., 0.,],  # 12
+            [1., 0.,],  # 13
 
-            [0., 1.,], # 23
-            [0., 1.,], # 24
-            [-1., 0.,], # 25
+            [0., 1.,],  # 23
+            [0., 1.,],  # 24
+            [-1., 0.,],  # 25
 
-            #[0., 1.,], # 31
-            #[0., -1.,], # 32
+            #[0., 1.,],  # 31
+            #[0., -1.,],  # 32
         ])
         assert is_array_close(dispi, expected_disp)
         #print(is_array_close(dispi, expected_disp))
@@ -192,7 +196,6 @@ class TestOP2Unit(Tester):
 
         datai = np.array([3, 1, -1], dtype='int32')
         _read_spcadd_mpcadd(model, 'SPCADD', datai)
-
 
         datai = np.array([4, 1, 10, -1], dtype='int32')
         _read_spcadd_mpcadd(model, 'MPCADD', datai)
@@ -359,6 +362,7 @@ class TestAutodeskOP2(Tester):
         assert len(stress.chexa_stress) == 0, len(stress.chexa_stress)
         assert len(op2.grid_point_forces) == 4, len(op2.grid_point_forces)
 
+
 class TestOptistructOP2(Tester):
     """various OP2 tests"""
     def test_op2_optistruct_1(self):
@@ -391,7 +395,6 @@ class TestOptistructOP2(Tester):
         # rod_force = force.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
         # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
-
 
         # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
         # isubcase = isubcases[1]
@@ -562,7 +565,8 @@ class TestSATKOP2(Tester):
 
         assert len(op2.op2_results.force.cbar_force[1].modes) == 8
             #type=RealCBarForceArray ntimes=8 nelements=5; table_name='OEF1'
-            #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+            #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1,
+            #                                   bending_moment_b2, shear1, shear2, axial, torque]
             #data.shape = (8, 5, 8)
             #element.shape = (5,)
             #element name: CBAR-34
@@ -694,7 +698,8 @@ class TestSATKOP2(Tester):
 
         assert len(op2.op2_results.psd.cbar_force[(1, 5, 2, 0, 0, '', '')].freqs) == 298
           #type=RealCBarForceArray ntimes=298 nelements=5; table_name='OEFPSD1'
-          #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+          #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2,
+          #                                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
           #data.shape = (298, 10, 8)
           #element.shape = (5,)
           #element name: CBAR-34
@@ -710,20 +715,98 @@ class TestSATKOP2(Tester):
           #sort1
           #freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
 
-        assert len(op2.op2_results.rms.displacements[(1, 5, 1, 0, 0, '', '')].freqs) == 1
-        assert len(op2.op2_results.rms.velocities[(1, 5, 1, 0, 0, '', '')].freqs) == 1
-        assert len(op2.op2_results.rms.accelerations[(1, 5, 1, 0, 0, '', '')].freqs) == 1
-        assert len(op2.op2_results.rms.cbar_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
-        assert len(op2.op2_results.rms.cbush_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        rms = op2.op2_results.rms
+        assert len(rms.displacements[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(rms.velocities[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(rms.accelerations[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(rms.cbar_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(rms.cbush_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
 
 
 class TestNX(Tester):
+    def test_nx_rotor_1(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'nx' / 'rotor'
+        op2_filename = folder / 'rotor049.op2'
+        bdf_filename = folder / 'rotor049.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        op2_model, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+        cddata = op2_model.op2_results.cddata # campbell_data
+        campbell_data = cddata[2]
+        assert campbell_data.is_sort1() is True
+        assert campbell_data.is_sort2() is False
+        assert campbell_data.is_real() is False
+        assert campbell_data.is_complex() is True
+        if IS_MATPLOTLIB:
+            campbell_data.plot()
+
+    def test_nx_normalized_mass_density_1(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'nx' / 'normalized_mass_density'
+        op2_filename = folder / 's200tpgdsobj2e.op2'
+        bdf_filename = folder / 's200tpgdsobj2e.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_nx_normalized_mass_density_2(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'nx' / 'normalized_mass_density'
+        op2_filename = folder / 's200tpgext1.op2'
+        bdf_filename = folder / 's200tpgext1.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
     def test_op2_bwb_trim(self):
         log = SimpleLogger(level='warning')
-        #log = SimpleLogger(level='debug')
+        # log = SimpleLogger(level='debug')
         BWB_PATH = MODEL_PATH / 'bwb'
         op2_filename = BWB_PATH / 'bwb_saero_trim.op2'
-        read_op2(op2_filename, log=log)
+        f06_filename = BWB_PATH / 'bwb_saero_trim.test_op2.f06'
+        model = read_op2_geom(op2_filename, log=log)
+        trim = model.op2_results.trim
+
+        assert len(trim.variables) == 1, trim.variables
+        assert len(trim.derivatives) == 1, trim.derivatives
+        assert len(trim.hinge_moment_derivatives) == 1, trim.hinge_moment_derivatives
+        assert len(trim.control_surface_position_hinge_moment) == 1, trim.control_surface_position_hinge_moment
+        assert len(trim.aero_pressure) == 1, trim.aero_pressure
+        assert len(trim.aero_force) == 1, trim.aero_force
+
+        #key = 1
+        key = (1, 1, 1, 0, 0, '', '')
+        str(trim.derivatives[key])
+        str(trim.control_surface_position_hinge_moment[key])
+        str(trim.aero_pressure[key])
+        str(trim.aero_force[key])
+        str(trim.variables[key])
+
+        key = (1, 1, 1, 0, 0, '', 'TFLAP')
+        str(trim.hinge_moment_derivatives[key])
+
+        model.get_op2_stats(short=True)
+        model.get_op2_stats(short=False)
+        model.write_f06(f06_filename)
 
     def test_nx_flutter(self):
         log = get_logger(level='warning')
@@ -738,9 +821,12 @@ class TestNX(Tester):
 
     def test_nx_glue_slide_distance(self):
         """test NX 2020 version"""
-        log = get_logger(level='warning')
+        # log = SimpleLogger(level='warning')
+        log = SimpleLogger(level='info')
+        # log = SimpleLogger(level='debug')
         op2_filename = MODEL_PATH / 'nx' / 'glue' / 'n401gsh01.op2'
-        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
+        # read_op2(op2_filename)
+        #bdf_filename = folder / 'rms_tr0i_oesrmx1.bdf'
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         unused_op2, unused_is_passed = run_op2(
@@ -859,7 +945,6 @@ class TestNX(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-
     def test_nx_composite_solids_corner(self):
         """
         checks nx/composite_solids/test_nx_corner.bdf, which tests
@@ -910,9 +995,9 @@ class TestNX(Tester):
         save_load_deck(model, run_save_load=False, run_renumber=False)
 
         log = get_logger(level='warning')
-        exclude_results = None  #['*cplstn3*']
+        exclude_results = None  # ['*cplstn3*']
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
-                write_f06=True, write_op2=False, write_hdf5=False, # IS_H5PY
+                write_f06=True, write_op2=False, write_hdf5=False,  # IS_H5PY
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=exclude_results,
@@ -953,10 +1038,53 @@ class TestMSC(Tester):
     def test_cantilever_plate_nonlinear_msc_2021(self):
         log = get_logger(level='debug')
         folder = MODEL_PATH / 'bugs' / 'cantilevered_plate'
-        op2_filename1 =  folder / '3Delements' / 'non_linear' / 'cantilevered_plate_3d.op2'
+        op2_filename1 = folder / '3Delements' / 'non_linear' / 'cantilevered_plate_3d.op2'
         unused_op2, unused_is_passed = run_op2(
             op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_msc_pcompts(self):
+        """per https://github.com/SteveDoyle2/pyNastran/issues/840"""
+        log = get_logger(level='warning')
+        op2_filename = MODEL_PATH / 'msc' / 'sol103_test_pcompg_2021.op2'
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+
+    def test_msc_force_vector(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'msc' / 'force_vector'
+        op2_filename = folder / 'nas102_ws21.op2'
+        bdf_filename = folder / 'nas102_ws21.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_msc_contact_stress(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'msc' / 'contact'
+        op2_filename = folder / 'nsc01a_n.op2'
+        bdf_filename = folder / 'nsc01a_n.dat'
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
             exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
@@ -1205,7 +1333,7 @@ class TestOP2Main(Tester):
 
         model2 = OP2Geom(log=log)
         tables = {
-            b'GEOM1S' : read_some_table,
+            b'GEOM1S': read_some_table,
         }
         model2.set_additional_generalized_tables_to_read(tables)
         with self.assertRaises(NotImplementedError):
@@ -1258,8 +1386,8 @@ class TestOP2Main(Tester):
         op2_2.read_op2(op2_filename_m2)
         op2_1.write_f06(f06_filename)
 
-        op2_1.write_op2(op2_filename_m1_out, skips=['grid_point_weight']) #, is_mag_phase=False)
-        op2_2.write_op2(op2_filename_m2_out, skips=['grid_point_weight']) #, is_mag_phase=False)
+        op2_1.write_op2(op2_filename_m1_out, skips=['grid_point_weight'])  # is_mag_phase=False)
+        op2_2.write_op2(op2_filename_m2_out, skips=['grid_point_weight'])  # is_mag_phase=False)
         os.remove(f06_filename)
         os.remove('temp.debug')
         os.remove(op2_filename_m1_out)
@@ -1330,7 +1458,6 @@ class TestOP2Main(Tester):
             quiet=True,
             stop_on_failure=True, dev=False, log=log)
         write_csv(op2, csv_filename)
-
 
     def test_bdf_op2_elements_03(self):
         """tests a large number of elements and results in SOL 108-freq"""
@@ -1636,7 +1763,6 @@ class TestOP2Main(Tester):
             build_pandas=True, log=log)
         write_csv(op2, csv_filename)
 
-
     def test_cbar100(self):
         """tests a CBAR-100 model"""
         log = get_logger(level='warning')
@@ -1746,7 +1872,7 @@ class TestOP2Main(Tester):
                 build_pandas=False, log=log)  # TODO:enable pandas
 
     def test_bdf_op2_other_04(self):
-        """checks v10111.bdf, which is an conical problem"""
+        """checks v10111.bdf, which is a conical problem"""
         log = get_logger(level='warning')
         #bdf_filename = MODEL_PATH / 'other' / 'v10111.bdf'
         op2_filename = MODEL_PATH / 'other' / 'v10111.op2'
@@ -1946,11 +2072,12 @@ class TestOP2Main(Tester):
         bdf_filename = MODEL_PATH / 'other' / 'api3.bdf'
         op2_filename = MODEL_PATH / 'other' / 'api3.op2'
         fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, run_skin_solids=False, log=log)
-        expected = {'ENDDATA': 1, 'PARAM': 4, 'MAT1': 1, 'RLOAD1': 1, 'TLOAD2': 1, 'TABLED1': 1, 'FREQ': 1, 'TSTEP': 1,
-         'RANDPS': 2, 'RANDT1': 1, 'TABRNDG': 1, 'GRID': 144, 'CBEAM': 2, 'SPC1': 35, 'FORCE': 48, 'MOMENT': 3,
-         'DAREA': 19, 'DESVAR': 6, 'DVPREL1': 6, 'PBEAM': 2, 'CQUAD4': 2, 'PSHELL': 6, 'CBAR': 2, 'PBAR': 2,
-         'CQUAD8': 4, 'CHEXA': 3, 'PSOLID': 2, 'CPENTA': 4, 'CBEND': 2, 'PBEND': 2, 'CTRIAR': 2, 'CTRIA3': 2,
-         'CTRIA6': 4, 'CQUADR': 2}
+        expected = {
+            'ENDDATA': 1, 'PARAM': 4, 'MAT1': 1, 'RLOAD1': 1, 'TLOAD2': 1, 'TABLED1': 1, 'FREQ': 1, 'TSTEP': 1,
+            'RANDPS': 2, 'RANDT1': 1, 'TABRNDG': 1, 'GRID': 144, 'CBEAM': 2, 'SPC1': 35, 'FORCE': 48, 'MOMENT': 3,
+            'DAREA': 19, 'DESVAR': 6, 'DVPREL1': 6, 'PBEAM': 2, 'CQUAD4': 2, 'PSHELL': 6, 'CBAR': 2, 'PBAR': 2,
+            'CQUAD8': 4, 'CHEXA': 3, 'PSOLID': 2, 'CPENTA': 4, 'CBEND': 2, 'PBEND': 2, 'CTRIAR': 2, 'CTRIA3': 2,
+            'CTRIA6': 4, 'CQUADR': 2}
         assert fem1.card_count == expected
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
@@ -1972,7 +2099,7 @@ class TestOP2Main(Tester):
                 build_pandas=IS_PANDAS, log=log)
 
     def test_bdf_op2_other_13(self):
-        """checks v10601s.bdf, which is an superelement complex cgap_force example"""
+        """checks v10601s.bdf, which is a superelement complex cgap_force example"""
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'v10601s.bdf'
         op2_filename = MODEL_PATH / 'other' / 'v10601s.op2'
@@ -1996,7 +2123,7 @@ class TestOP2Main(Tester):
                 build_pandas=IS_PANDAS, log=log)
 
     def test_bdf_op2_other_14(self):
-        """checks sbuckl2a.bdf, which is an buckling elgenvalues example"""
+        """checks sbuckl2a.bdf, which is a buckling elgenvalues example"""
         log = get_logger(level='warning')
         bdf_filename = MODEL_PATH / 'other' / 'sbuckl2a.bdf'
         op2_filename = MODEL_PATH / 'other' / 'sbuckl2a.op2'
@@ -2633,7 +2760,7 @@ class TestOP2Main(Tester):
         model.read_op2(op2_filename)
 
     def test_op2_solid_bending_01(self):
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = MODEL_PATH / 'solid_bending'
         op2_filename = folder / 'solid_bending.op2'
         f06_filename = folder / 'solid_bending.test_op2.f06'
@@ -2645,23 +2772,24 @@ class TestOP2Main(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
 
-        read_op2(op2_filename, debug=False, log=log)
-        run_op2(op2_filename, write_bdf=False,
-                write_f06=True,
+        op2 = read_op2(op2_filename, debug=False, log=log, combine=False)
+        run_op2(op2_filename, write_bdf=False, write_f06=True,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
+                build_pandas=True,
                 load_as_h5=False, log=log)
-        run_op2(op2_filename, write_bdf=False,
-                write_f06=True,
-                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
-                slice_nodes=[1,2,3],
-                slice_elements=[4,5,6],
+        run_op2(op2_filename, write_bdf=False, write_f06=False, make_geom=False,
+                debug=False, stop_on_failure=True, binary_debug=True, quiet=True,
+                slice_nodes=[1, 2, 3],
+                slice_elements=[4, 5, 6],
                 load_as_h5=False, log=log)
-        assert os.path.exists(debug_file), os.listdir(folder)
-
-        op2 = run_op2(op2_filename, make_geom=False, write_bdf=False,
-                      write_f06=True,
-                      debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
-                      build_pandas=True, log=log)[0]
+        run_op2(op2_filename, write_bdf=False, write_f06=False, make_geom=False,
+                debug=False, stop_on_failure=True, binary_debug=True, quiet=True,
+                slice_nodes=[1, 2, 3],
+                load_as_h5=False, log=log)
+        run_op2(op2_filename, make_geom=False, write_bdf=False, write_f06=False,
+                debug=False, stop_on_failure=True, binary_debug=True, quiet=True,
+                slice_elements=[4, 5, 6],
+                load_as_h5=False, log=log)
         assert os.path.exists(debug_file), os.listdir(folder)
 
         subcase = op2.case_control_deck.subcases[1]
@@ -2696,9 +2824,9 @@ class TestOP2Main(Tester):
     def test_op2_solid_bending_02_geom(self):
         log = get_logger(level='warning')
         #log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'solid_bending')
-        op2_filename = os.path.join(folder, 'solid_bending.op2')
-        hdf5_filename = os.path.join(folder, 'solid_bending.test_op2_solid_bending_02_geom.h5')
+        folder = MODEL_PATH / 'solid_bending'
+        op2_filename = folder / 'solid_bending.op2'
+        hdf5_filename = folder / 'solid_bending.test_op2_solid_bending_02_geom.h5'
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False, write_hdf5=False,
@@ -2757,7 +2885,7 @@ class TestOP2Main(Tester):
 
     def test_op2_buckling_solid_shell_bar_01_geom(self):
         """single subcase buckling"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'buckling_solid_shell_bar.op2')
         subcases = 1
@@ -2782,7 +2910,7 @@ class TestOP2Main(Tester):
 
     def test_op2_buckling_solid_shell_bar_02_geom(self):
         """multi subcase buckling"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'buckling2_solid_shell_bar.op2')
         unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
@@ -2832,7 +2960,7 @@ class TestOP2Main(Tester):
 
     def test_op2_transient_solid_shell_bar_01_geom(self):
         """transient test"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
         f06_filename = os.path.join(folder, 'transient_solid_shell_bar.test_op2.f06')
@@ -2849,7 +2977,7 @@ class TestOP2Main(Tester):
 
     def test_op2_frequency_solid_shell_bar_01_geom(self):
         """frequency test"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = MODEL_PATH / 'sol_101_elements'
         op2_filename = folder / 'freq_solid_shell_bar.op2'
         f06_filename = folder / 'freq_solid_shell_bar.test_op2.f06'
@@ -2867,7 +2995,7 @@ class TestOP2Main(Tester):
 
     def test_op2_transfer_function_01(self):
         """tests the transfer function cards work"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'transfer_function')
         #bdf_filename = os.path.join(folder, 'actuator_tf_modeling.bdf')
         op2_filename = os.path.join(folder, 'actuator_tf_modeling.op2')
@@ -2905,7 +3033,7 @@ class TestOP2Main(Tester):
 
     def test_monpnt3(self):
         """creates the MONPNT3 table"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'aero', 'monpnt3')
         op2_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.op2')
         f06_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06')
@@ -2920,7 +3048,7 @@ class TestOP2Main(Tester):
 
     def test_op2_solid_shell_bar_01(self):
         """tests sol_101_elements/static_solid_shell_bar.op2"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         op2_filename = os.path.join('static_solid_shell_bar.op2')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, op2_filename)
@@ -3026,7 +3154,7 @@ class TestOP2Main(Tester):
 
     def test_op2_solid_shell_bar_01_straincurvature(self):
         """tests sol_101_elements/static_solid_shell_bar_straincurve.op2"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         unused_bdf_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve.op2')
@@ -3056,7 +3184,7 @@ class TestOP2Main(Tester):
         assert ctria3_stress.is_von_mises, ctria3_stress
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2
+        assert cquad4_stress.nelements == 4, cquad4_stress.nelements  # TODO: this should be 2
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises, cquad4_stress
@@ -3070,7 +3198,7 @@ class TestOP2Main(Tester):
 
         cquad4_strain = strain.cquad4_strain[isubcase]
         sword = get_scode_word(cquad4_strain.s_code, cquad4_strain.stress_bits)
-        assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2
+        assert cquad4_strain.nelements == 4, cquad4_strain.nelements  # TODO: this should be 2
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
         assert not cquad4_strain.is_fiber_distance, cquad4_strain
         assert cquad4_strain.is_von_mises, cquad4_strain
@@ -3107,7 +3235,7 @@ class TestOP2Main(Tester):
         assert ctria3_stress.is_von_mises, ctria3_stress
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2?
+        assert cquad4_stress.nelements == 4, cquad4_stress.nelements  # TODO: this should be 2?
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises, cquad4_stress
@@ -3120,7 +3248,7 @@ class TestOP2Main(Tester):
 
         cquad4_strain = strain.cquad4_strain[isubcase]
         sword = get_scode_word(cquad4_strain.s_code, cquad4_strain.stress_bits)
-        assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2?
+        assert cquad4_strain.nelements == 4, cquad4_strain.nelements  # TODO: this should be 2?
         assert cquad4_strain.data.shape == (1, 4, 8), '%s\n%s' % (cquad4_strain.data.shape, sword)
         assert cquad4_strain.is_fiber_distance, '%s\n%s' % (cquad4_strain, sword)
         assert cquad4_strain.is_von_mises, '%s\n%s' % (cquad4_strain, sword)
@@ -3157,7 +3285,7 @@ class TestOP2Main(Tester):
         assert not ctria3_stress.is_von_mises, ctria3_stress
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2?
+        assert cquad4_stress.nelements == 4, cquad4_stress.nelements  # TODO: this should be 2?
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert not cquad4_stress.is_von_mises, cquad4_stress
@@ -3169,7 +3297,7 @@ class TestOP2Main(Tester):
         assert not ctria3_strain.is_von_mises, ctria3_strain
 
         cquad4_strain = strain.cquad4_strain[isubcase]
-        assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2?
+        assert cquad4_strain.nelements == 4, cquad4_strain.nelements  # TODO: this should be 2?
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
         assert not cquad4_strain.is_fiber_distance, cquad4_strain
         assert not cquad4_strain.is_von_mises, cquad4_strain
@@ -3206,7 +3334,7 @@ class TestOP2Main(Tester):
         assert ctria3_stress.is_von_mises is False, ctria3_stress
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2
+        assert cquad4_stress.nelements == 4, cquad4_stress.nelements  # TODO: this should be 2
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises is False, cquad4_stress
@@ -3218,7 +3346,7 @@ class TestOP2Main(Tester):
         assert ctria3_strain.is_von_mises is False, ctria3_strain
 
         cquad4_strain = strain.cquad4_strain[isubcase]
-        assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2
+        assert cquad4_strain.nelements == 4, cquad4_strain.nelements  # TODO: this should be 2
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
         assert cquad4_strain.is_fiber_distance, cquad4_strain
         assert cquad4_strain.is_von_mises is False, cquad4_strain
@@ -3428,12 +3556,12 @@ class TestOP2Main(Tester):
 
         cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.data.shape == (7, 40, 3), cquad4_stress.data.shape
-        assert cquad4_stress.nelements == 40, cquad4_stress.nelements # TODO: wrong?
+        assert cquad4_stress.nelements == 40, cquad4_stress.nelements  # TODO: wrong?
 
         #print(stress.ctria3_stress.keys())
         ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.data.shape == (7, 16, 3), ctria3_stress.data.shape
-        assert ctria3_stress.nelements == 8, ctria3_stress.nelements # TODO: wrong
+        assert ctria3_stress.nelements == 8, ctria3_stress.nelements  # TODO: wrong
 
         ctetra_stress = stress.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
@@ -3491,7 +3619,7 @@ class TestOP2Main(Tester):
 
         op2 = OP2()
         #result_set = op2._result_set
-        assert op2._results.is_not_saved('stress.ctetra_stress') == False
+        assert op2._results.is_not_saved('stress.ctetra_stress') is False
 
         read_op2(op2_filename, debug=debug, log=log)
 
@@ -3505,7 +3633,6 @@ class TestOP2Main(Tester):
         # rod_force = op2.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
         # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
-
 
         # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
         # isubcase = isubcases[1]
@@ -3527,7 +3654,7 @@ class TestOP2Main(Tester):
         assert cbar_force.data.shape == (21, 1, 8), cbar_force.data.shape
 
         cbar_stress = stress.cbar_stress[isubcase]
-        assert cbar_stress.nelements == 21, cbar_stress.nelements # 1-wrong
+        assert cbar_stress.nelements == 21, cbar_stress.nelements  # 1-wrong
         assert cbar_stress.data.shape == (21, 1, 15), cbar_stress.data.shape
 
         #print(op2.cbeam_stress.keys())
@@ -3607,7 +3734,7 @@ class TestOP2Main(Tester):
         write_f06 = False
         log = get_logger(level='warning')
         read_op2(op2_filename, log=log)
-        build_pandas = False # IS_TRANSIENT_PANDAS
+        build_pandas = False  # IS_TRANSIENT_PANDAS
         op2i, unused_is_passed = run_op2(
             op2_filename, make_geom=make_geom, write_bdf=write_bdf,
             write_f06=write_f06,
@@ -3843,7 +3970,7 @@ class TestOP2Main(Tester):
         model = OP2(debug=False, log=log, debug_file=None, mode='msc')
 
         # subcase : times
-        times = {1 : [2, 3]}
+        times = {1: [2, 3]}
         model.set_transient_times(times)
         op2_filename = os.path.abspath(os.path.join(MODEL_PATH, 'sol_101_elements',
                                                     'mode_solid_shell_bar.op2'))
@@ -4108,7 +4235,7 @@ def _verify_ids(bdf, op2: OP2, isubcase=1):
                 isubcase, stress.cquad4_stress.keys()))
         eids = np.unique(case.element_node[:, 0])
         for eid in eids:
-            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s' % (eid, out[card_type], card_type)
     if strain.cquad4_strain:
         try:
             case = strain.cquad4_strain[isubcase]
@@ -4117,7 +4244,7 @@ def _verify_ids(bdf, op2: OP2, isubcase=1):
                 isubcase, strain.cquad4_strain.keys()))
         eids = np.unique(case.element_node[:, 0])
         for eid in eids:
-            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s' % (eid, out[card_type], card_type)
     if strain.cquad4_composite_strain:
         try:
             case = strain.cquad4_composite_strain[isubcase]
@@ -4126,7 +4253,7 @@ def _verify_ids(bdf, op2: OP2, isubcase=1):
                 isubcase, strain.cquad4_composite_strain.keys()))
         eids = np.unique(case.element_layer[:, 0])
         for eid in eids:
-            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s' % (eid, out[card_type], card_type)
     if stress.cquad4_composite_stress:
         try:
             case = stress.cquad4_composite_stress[isubcase]
@@ -4136,7 +4263,7 @@ def _verify_ids(bdf, op2: OP2, isubcase=1):
 
         eids = np.unique(case.element_layer[:, 0])
         for eid in eids:
-            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s' % (eid, out[card_type], card_type)
     if force.cquad4_force:
         try:
             case = force.cquad4_force[isubcase]
@@ -4146,35 +4273,34 @@ def _verify_ids(bdf, op2: OP2, isubcase=1):
 
         eids = np.unique(case.element)
         for eid in eids:
-            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
-
+            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s' % (eid, out[card_type], card_type)
 
     card_type = 'CTRIA3'
     if stress.ctria3_stress:
         case = stress.ctria3_stress[isubcase]
         eids = np.unique(case.element_node[:, 0])
         for eid in eids:
-            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s' % (eid, out[card_type], card_type)
     if strain.ctria3_strain:
         case = strain.ctria3_strain[isubcase]
         eids = np.unique(case.element_node[:, 0])
         for eid in eids:
-            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s' % (eid, out[card_type], card_type)
     if strain.ctria3_composite_strain:
         case = strain.ctria3_composite_strain[isubcase]
         eids = np.unique(case.element_layer[:, 0])
         for eid in eids:
-            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s' % (eid, out[card_type], card_type)
     if stress.ctria3_composite_stress:
         case = stress.ctria3_composite_stress[isubcase]
         eids = np.unique(case.element_layer[:, 0])
         for eid in eids:
-            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s' % (eid, out[card_type], card_type)
     if force.ctria3_force:
         case = force.ctria3_force[isubcase]
         eids = np.unique(case.element)
         for eid in eids:
-            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+            assert eid in out[card_type], 'eid=%s eids=%s card_type=%s' % (eid, out[card_type], card_type)
 
 
 if __name__ == '__main__':  # pragma: no cover

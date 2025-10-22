@@ -3,19 +3,26 @@ import numpy as np
 from cpylog import SimpleLogger
 from pyNastran.utils import object_attributes, object_methods
 
+
 class CampbellData:
     def __init__(self, solution: int,
                  cddata_list: list[dict[int, np.ndarray]]):
-        print(f'solution = {solution:d}')
+        #print(f'solution = {solution:d}')
         self.solution = solution
         self.cddata_list: list[dict[int, np.ndarray]] = cddata_list
 
+    def __eq__(self, obj) -> bool:
+        return True
+
     def is_sort1(self) -> bool:
         return True
+
     def is_sort2(self) -> bool:
         return False
+
     def is_real(self) -> bool:
         return False
+
     def is_complex(self) -> bool:
         return True
 
@@ -92,7 +99,7 @@ class CampbellData:
         """
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip)
 
-    def plot(self, ifig: int=1) -> None:
+    def plot(self, ifig: int=1, show: bool=True) -> None:
         import matplotlib.pyplot as plt
         for data in self.cddata_list:
             # 1: 'RPM',
@@ -106,7 +113,9 @@ class CampbellData:
             rpm = data['RPM']
             eigenfreq = data['eigenfreq']
             Lehr = data['Lehr']
-            imag_eig = data['imag_eig']
+            # ['RPM', 'eigenfreq', 'Lehr',
+            #  'real_eig', 'whirl_dir', 'converted_freq',
+            #  'whirl_code']
             converted_freq = data['converted_freq']
             plt.figure(ifig)
             plt.plot(rpm, eigenfreq)  # RPM vs. eigenfreq
@@ -121,10 +130,13 @@ class CampbellData:
             plt.plot(rpm, real_eig)  # RPM vs. real_eig
             plt.grid(True)
 
-            plt.figure(ifig+3)
-            plt.plot(rpm, imag_eig)  # RPM vs. imag_eig
-            plt.grid(True)
+            # imag_eig = data['imag_eig']
+            # plt.figure(ifig+3)
+            # plt.plot(rpm, imag_eig)  # RPM vs. imag_eig
+            # plt.grid(True)
 
             plt.figure(ifig+4)
             plt.plot(rpm, converted_freq)  # RPM vs. converted_freq
             plt.grid(True)
+        if show:  # pragma: no cover
+            plt.show()

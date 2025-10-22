@@ -2,6 +2,7 @@ from typing import Any
 import numpy as np
 Group = Any
 
+
 def get_groups_sorted_by_name(data: dict[str, Group]) -> list[str]:
     out = [group.name for key, group in data.items() if isinstance(key, int)]
     return out

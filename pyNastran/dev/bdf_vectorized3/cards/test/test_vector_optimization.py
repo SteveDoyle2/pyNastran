@@ -994,7 +994,7 @@ class TestOpt(unittest.TestCase):
         model.add_cbeam(eid+3, pid+3, nids, x, g0, offt='GGG', bit=None, pa=0, pb=0,
                         wa=wa, wb=wb, sa=0, sb=0, comment='')
 
-        model.add_pbar(pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
+        model.add_pbar(pid, mid, area=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
                        c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
                        k1=1.e8, k2=1.e8, comment='')
         Type = 'BAR'

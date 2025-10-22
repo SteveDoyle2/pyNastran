@@ -3070,7 +3070,7 @@ class PAERO2(PAERO):
         self.thi = np.zeros((0, 3), dtype='int32')
         self.thn = np.zeros((0, 3), dtype='int32')
 
-    def add(self, pid: int, orient: str, width: float, AR: float,
+    def add(self, pid: int, orient: str, width: float, aspect_ratio: float,
             thi: list[int], thn: list[int],
             lrsb: Optional[int]=None,
             lrib: Optional[int]=None,
@@ -3091,7 +3091,7 @@ class PAERO2(PAERO):
         width : float
             Reference half-width of body and the width of the constant
             width interference tube
-        AR : float
+        aspect_ratio : float
             Aspect ratio of the interference tube (height/width)
         thi / thn : list[int]
             The first (thi) and last (thn) interference element of a body
@@ -3111,7 +3111,7 @@ class PAERO2(PAERO):
             a comment for the card
 
         """
-        self.cards.append((pid, orient, width, AR, thi, thn,
+        self.cards.append((pid, orient, width, aspect_ratio, thi, thn,
                            lrsb, lrib, lth, ifile, comment))
         self.n += 1
         return self.n - 1
@@ -3131,7 +3131,7 @@ class PAERO2(PAERO):
         pid = integer(card, 1, 'pid')
         orient = string(card, 2, 'orient')
         width = double(card, 3, 'width')
-        AR = double(card, 4, 'AR')
+        aspect_ratio = double(card, 4, 'AR')
         lrsb = integer_or_blank(card, 5, 'lrsb')
         lrib = integer_or_blank(card, 6, 'lrib')
         lth1 = integer_or_blank(card, 7, 'lth1', default=0)
@@ -3148,7 +3148,7 @@ class PAERO2(PAERO):
                       #lrsb=lrsb, lrib=lrib, lth=lth,
                       #comment=comment)
         assert len(thi) <= 3, thi
-        self.cards.append((pid, orient, width, AR, thi, thn,
+        self.cards.append((pid, orient, width, aspect_ratio, thi, thn,
                            lrsb, lrib, lth, ifile, comment))
         self.n += 1
         return self.n - 1
@@ -3171,13 +3171,13 @@ class PAERO2(PAERO):
         comment = {}
 
         for icard, card in enumerate(self.cards):
-            (pid, orienti, widthi, AR, thii, thni,
+            (pid, orienti, widthi, aspect_ratioi, thii, thni,
              lrsbi, lribi, lthi, ifilei, commenti) = card
             ifile[icard] = ifilei
             if commenti:
                 comment[pid] = commenti
             property_id[icard] = pid
-            aspect_ratio[icard] = AR
+            aspect_ratio[icard] = aspect_ratioi
             width[icard] = widthi
             orientation[icard] = orienti
             thi[icard, :len(thii)] = thii
@@ -4819,7 +4819,7 @@ class SPLINE1(VectorizedBaseCard):
 
         caero_ids = array_str(self.caero_id, size=size)
         spline_ids = array_str(self.spline_id, size=size)
-        boxs = array_str(self.box_id, size=size)
+        boxes = array_str(self.box_id, size=size)
         set_ids = array_str(self.set_id, size=size)
 
         nelements = array_default_int(self.nelement, default=0, size=size)
@@ -4827,7 +4827,7 @@ class SPLINE1(VectorizedBaseCard):
         dzs = array_default_float(self.dz, default=0., size=size, is_double=False)
         for eid, caero, (box1, box2), setg, dz, \
             method, usage, nelement, melement in zip(
-                spline_ids, caero_ids, boxs, set_ids, dzs,
+                spline_ids, caero_ids, boxes, set_ids, dzs,
                 self.method, self.usage, nelements, melements):
             #dz = set_blank_if_default(self.dz, 0.)
             #method = set_blank_if_default(self.method, 'IPS')
@@ -5117,7 +5117,7 @@ class SPLINE2(VectorizedBaseCard):
 
         caero_ids = array_str(self.caero_id, size=size)
         spline_ids = array_str(self.spline_id, size=size)
-        boxs = array_str(self.box_id, size=size)
+        boxes = array_str(self.box_id, size=size)
         set_ids = array_str(self.set_id, size=size)
 
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
@@ -5127,7 +5127,7 @@ class SPLINE2(VectorizedBaseCard):
         dthys = array_default_float(self.dthy, default=0.0, size=size, is_double=False)
         for eid, caero, (box1, box2), setg, dz, dtor, \
             cid, usage, dthx, dthy in zip(
-                spline_ids, caero_ids, boxs, set_ids, dzs, dtors,
+                spline_ids, caero_ids, boxes, set_ids, dzs, dtors,
                 coord_ids, self.usage, dthxs, dthys):
 
             list_fields = ['SPLINE2', eid, caero, box1, box2,
@@ -5471,7 +5471,7 @@ class SPLINE3(VectorizedBaseCard):
 
         caero_ids = array_str(self.caero_id, size=size)
         spline_ids = array_str(self.spline_id, size=size)
-        boxs = array_str(self.box_id, size=size)
+        boxes = array_str(self.box_id, size=size)
         components = array_str(self.components, size=size)
         nodes = array_str(self.nodes, size=size)
         disp = array_str(self.displacement_components, size=size)
@@ -5479,7 +5479,7 @@ class SPLINE3(VectorizedBaseCard):
         #spline_id, caero_id, box_id, components,
         #nnodes, nodes, displacement_components, coeffs
         for eid, caero, box_id, component, (inode0, inode1), usage in zip(
-                spline_ids, caero_ids, boxs, components,
+                spline_ids, caero_ids, boxes, components,
                 self.inode, self.usage):
             usages = set_blank_if_default(usage, 'BOTH')
             nodesi = nodes[inode0:inode1]

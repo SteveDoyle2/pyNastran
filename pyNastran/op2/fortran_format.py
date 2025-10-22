@@ -22,6 +22,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
 from pyNastran.op2.tables.oqg_constraintForces.obc import OBC
+from pyNastran.op2.tables.oqg_constraintForces.obg import OBG
 from pyNastran.op2.tables.oug.oug import OUG
 from pyNastran.op2.tables.oug.otemp import OTEMP
 from pyNastran.op2.tables.oug.ougpk import OUGPK
@@ -63,6 +64,7 @@ class Op2Tables:
         self.reader_obolt = OBOLT(op2) # NX 2019.2 Bolt output
         # contact
         self.reader_obc = OBC(op2)
+        self.reader_obg = OBG(op2)
         self.reader_oslide = OSLIDE(op2) # Incremental and total slide output for contact/glue
         self.reader_ofcon3d = OFCON3D(op2)
         self.reader_ougstrs = OUGSTRS(op2)

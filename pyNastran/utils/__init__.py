@@ -10,7 +10,7 @@ from types import MethodType, FunctionType
 import os
 import io
 import sys
-import getpass
+#import getpass
 import inspect
 import warnings
 from pathlib import PurePath
@@ -27,6 +27,7 @@ def ipython_info() -> Optional[str]:
         return get_ipython()
     except NameError:
         return None
+
 
 def is_file_obj(filename: PathLike) -> bool:
     """does this object behave like a file object?"""
@@ -54,6 +55,7 @@ def is_file_obj(filename: PathLike) -> bool:
                 #print('key=%r is dropped?' % key)
     #return dict_out
 
+
 def remove_files(filenames: list[PathLike]) -> None:
     """remvoes a series of files; quietly continues if the file can't be removed"""
     for filename in filenames:
@@ -61,6 +63,7 @@ def remove_files(filenames: list[PathLike]) -> None:
             os.remove(filename)
         except OSError:
             pass
+
 
 def is_binary_file(filename: PathLike) -> bool:
     """
@@ -103,6 +106,7 @@ def check_path(filename: PathLike, name: str='file') -> None:
         msg = 'cannot find %s=%r\n%s' % (name, filename, print_bad_path(filename))
         raise FileNotFoundError(msg)
 
+
 def print_bad_path(path: PathLike) -> str:
     """
     Prints information about the existence (access possibility) of the parts
@@ -124,6 +128,7 @@ def print_bad_path(path: PathLike) -> str:
     #raw_path = path
     if isinstance(path, PurePath):
         path = str(path)
+    path0 = path
     #if len(path) > 255:
         #path = os.path.abspath(_filename(path))
         #npath = os.path.dirname(path)
@@ -141,6 +146,8 @@ def print_bad_path(path: PathLike) -> str:
         path, npath = npath, os.path.dirname(npath)
         res.append(path)
     msg = {True: 'passed', False: 'failed'}
+    if not os.path.exists(path0):
+        return 'Missing File:\n' + '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i) for i in res])
     return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i) for i in res])
 
 #def _filename(filename: str) -> str:
@@ -153,6 +160,7 @@ def print_bad_path(path: PathLike) -> str:
         #return '\\\\?\\' + filename
     #return filename
 
+
 def __object_attr(obj: Any,
                   mode: str,
                   keys_to_skip: list[str],
@@ -162,14 +170,14 @@ def __object_attr(obj: Any,
     #print('keys_to_skip=%s' % keys_to_skip)
     keys_to_skip = [] if keys_to_skip is None else keys_to_skip
     test = {
-        'public':  lambda k: (not k.startswith('_') and k not in keys_to_skip),
+        'public': lambda k: (not k.startswith('_') and k not in keys_to_skip),
         'private': lambda k: (k.startswith('_') and not k.startswith('__')
                               and k not in keys_to_skip),
         'both': lambda k: (not k.startswith('__') and k not in keys_to_skip),
-        'all':  lambda k: (k not in keys_to_skip),
+        'all': lambda k: (k not in keys_to_skip),
     }
 
-    if not mode in test:  # pragma: no cover
+    if mode not in test:  # pragma: no cover
         raise ValueError(f'Wrong mode={mode!r}! Accepted modes: public, private, both, all.')
     check = test[mode]
 
@@ -232,6 +240,7 @@ def object_methods(obj: Any, mode: str='public',
     """
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
+
 def simplify_object_keys(keys_to_skip: Optional[list[str]]) -> list[str]:
     if keys_to_skip is None:
         keys_to_skip = []
@@ -239,11 +248,12 @@ def simplify_object_keys(keys_to_skip: Optional[list[str]]) -> list[str]:
         keys_to_skip = [keys_to_skip]
     return keys_to_skip
 
+
 def object_stats(obj: Any,
                  mode: str='public',
                  keys_to_skip: Optional[list[str]]=None,
                  filter_properties: bool=False) -> str:
-    """Prints out an easy to read summary of the object"""
+    """Prints an easy to read summary of the object"""
     msg = '%s:\n' % obj.__class__.__name__
     attrs = object_attributes(
         obj, mode=mode, keys_to_skip=keys_to_skip,
@@ -255,6 +265,7 @@ def object_stats(obj: Any,
         value = getattr(obj, name)
         msg += '  %-6s : %r\n' % (name, value)
     return msg
+
 
 def object_attributes(obj: Any, mode: str='public',
                       keys_to_skip: Optional[list[str]]=None,
@@ -383,7 +394,7 @@ def deprecated(old_name: str, new_name: str, deprecated_version: str,
         msg += '  %-25s:%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
 
     #user_name = getpass.getuser()
-    if ver_tuple > dep_ver_tuple: # or 'id' in msg:
+    if ver_tuple > dep_ver_tuple:  # or 'id' in msg:
         # fail
         raise NotImplementedError(msg)
     #elif user_name not in ['travis']:

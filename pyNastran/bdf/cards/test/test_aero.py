@@ -266,10 +266,12 @@ class TestAero(unittest.TestCase):
 
     def test_aefact_1(self):
         """checks the AEFACT card"""
-        data = ['AEFACT', 97, .3, 0.7, 1.0]
         log = SimpleLogger(level='warning')
         #log = SimpleLogger(level='debug')
         model = BDF(log=log)
+        model.add_aero(1.0, 1.0, 1.0)
+
+        data = ['AEFACT', 97, 0.3, 0.7, 1.0]
         model.add_card(data, data[0], COMMENT_BAD, is_list=True)
 
         data = ['AEFACT', 97, .3, 0.7, 1.0]
@@ -492,7 +494,7 @@ class TestAero(unittest.TestCase):
         aeparm = AEPARM.add_card(BDFCard(['AEPARM', aeparm_id, 'THRUST', 'lb']),
                                  comment='aeparm_comment')
 
-        model = BDF(debug=False)
+        model = BDF(debug=None)
         aeparm = model.add_aeparm(aeparm_id, 'THRUST', 'lb', comment='aeparm_comment')
         assert aeparm.aeparm_id == aeparm_id
         aeparm.validate()
@@ -527,16 +529,28 @@ class TestAero(unittest.TestCase):
 
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model.add_card(bdf_card, 'AESURFS', comment='aesurfs',
-                       is_list=True, has_none=True)
-        aesurfs = AESURFS(aesid, label, list1, list2, comment='aesurfs')
+        AESURFS.add_card(bdf_card, comment='')
+        AESURFS.add_card(bdf_card, comment='aesurfs')
+
+        # model.add_card(bdf_card, 'AESURFS', comment='aesurfs',
+        #                is_list=True, has_none=True)
+
+        cid = 0
+        aelist_id1 = 7000
+        aesurf = model.add_aesurf(aesid, label, cid, aelist_id1)
+        caero_box_elements = [1001, 1002, 1003, 1004]
+        aelist = model.add_aelist(aelist_id1, caero_box_elements)
+
+        aesid += 1
+        aesurfs = model.add_aesurfs(aesid, label, list1, list2, comment='aesurfs')
         str(aesurfs)
         aesurfs.write_card()
 
-        model.add_set1(6002, [1, 2, 3])
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [0., 0., 0.])
-        model.add_grid(3, [0., 0., 0.])
+        model.add_set1(6002, [11, 12, 13])
+        model.add_set1(6003, [12, 13])
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [0., 0., 0.])
+        model.add_grid(13, [0., 0., 0.])
 
         model.validate()
         save_load_deck(model)
@@ -2606,7 +2620,7 @@ class TestAero(unittest.TestCase):
             '             .01     .02     .03',
         ]
         # ----------------------------------------------------------------------
-        model = BDF(debug=False)
+        model = BDF(debug=None)
 
         machs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         reduced_freqs = [0.01, 0.02, 0.03]
@@ -2796,7 +2810,7 @@ class TestAero(unittest.TestCase):
 
     def test_trim_02(self):
         """checks the TRIM card with a 2.5g pullup"""
-        model = BDF()
+        model = BDF(debug=None)
         sid = 75
         mach = 0.75
         q = 100.
@@ -3135,7 +3149,7 @@ class TestAero(unittest.TestCase):
         """tests the bah_plane"""
         bdf_filename = AERO_PATH / 'bah_plane' / 'bah_plane.bdf'
         folder = ''
-        run_bdf(folder, bdf_filename, debug=False, xref=True, check=True,
+        run_bdf(folder, bdf_filename, debug=None, xref=True, check=True,
                 punch=False, mesh_form='combined',
                 is_folder=False, print_stats=False,
                 encoding=None, sum_load=True, size=8,
@@ -3358,7 +3372,7 @@ def build_structure_from_caero(model: BDF,
                                caero_bdf_filename: str,
                                write_panel_xyz: bool=True):
     export_caero_mesh(model, caero_bdf_filename=caero_bdf_filename,
-                      is_subpanel_model=True, pid_method='caero',
+                      is_aerobox_model=True, pid_method='caero',
                       write_panel_xyz=write_panel_xyz)
     model_quads = read_bdf(caero_bdf_filename)
     model.nodes = model_quads.nodes

@@ -34,5 +34,6 @@ class TestBEdgeGUI(unittest.TestCase):
         test.on_load_geometry(bedge_filename, geometry_format='bedge', stop_on_failure=True)
         #test.load_bedge_geometry(bedge_filename)
 
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
