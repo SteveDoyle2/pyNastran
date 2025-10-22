@@ -88,13 +88,13 @@ class MATS1(MaterialDependence):
     (SOLs 106 and 129).
 
     Format (NX Nastran):
-    +--------+---------+-------+-------+------+-----+-----+--------+--------+-----+
-    |   1    |   2     |    3  |  4    |  5   |  6  |  7  |  8     |  9     | 10  |
-    +========+=========+=======+=======+======+=====+=====+========+========+=====+
-    | MATS1  |  MID    | TID   | TYPE  |  H   | YF  | HR  | LIMIT1 | LIMIT2 |     |
-    +--------+---------+-------+-------+------+-----+-----+--------+--------+-----+
-    |        | STRMEAS |       |       |      |     |     |        |        |     |
-    +--------+---------+-------+-------+------+-----+-----+--------+--------+-----+
+    +--------+---------+-------+-------+------+-----+-----+--------+--------+
+    |   1    |   2     |    3  |  4    |  5   |  6  |  7  |  8     |  9     |
+    +========+=========+=======+=======+======+=====+=====+========+========+
+    | MATS1  |  MID    | TID   | TYPE  |  H   | YF  | HR  | LIMIT1 | LIMIT2 |
+    +--------+---------+-------+-------+------+-----+-----+--------+--------+
+    |        | STRMEAS |       |       |      |     |     |        |        |
+    +--------+---------+-------+-------+------+-----+-----+--------+--------+
 
     """
     type = 'MATS1'
@@ -102,7 +102,7 @@ class MATS1(MaterialDependence):
     def __init__(self, mid: int, nl_type: Optional[str],
                  h: float, hr: float, yf: float,
                  limit1: Optional[float], limit2: Optional[float],
-                 strmeas: Optional[str],
+                 strmeas: Optional[str] = None,
                  tid: int=0, comment: str=''):
         MaterialDependence.__init__(self)
         if comment:
@@ -148,7 +148,7 @@ class MATS1(MaterialDependence):
         self.limit2 = limit2
 
         #: Stress/strain measure of the TABLES1 or TABLEST data referenced by the TID field.
-        #: Valid for SOLs 401 and 402 only.
+        #: Valid for NX Nastran SOL 401 and SOL 402 only.
         self.strmeas = strmeas
 
         self.tid_ref = None
@@ -214,7 +214,11 @@ class MATS1(MaterialDependence):
             else:
                 #limit2 = blank(card, 8, 'limit2')
                 limit2 = None
-        strmeas = string_or_blank(card, 10, 'strmeas')
+
+        if len(card) > 9:
+            strmeas = string_or_blank(card, 9, 'strmeas')
+        else:
+            strmeas = None
 
         assert len(card) <= 10, f'len(MATS1 card) = {len(card):d}\ncard={card}'
         return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas, tid=tid, comment=comment)
@@ -232,7 +236,21 @@ class MATS1(MaterialDependence):
             a comment for the card
 
         """
-        (mid, tid, nl_type_int, h, yf, hr, limit1, limit2, strmeas_int) = data
+
+        if len(data) < 9:
+            (mid, tid, nl_type_int, h, yf, hr, limit1, limit2) = data
+            strmeas = None
+        else:
+            (mid, tid, nl_type_int, h, yf, hr, limit1, limit2, strmeas_int) = data
+            strmeas_map = {
+                0: None,  # NULL
+                1: 'UNDEF',
+                2: 'ENG',
+                3: 'TRUE',
+                4: 'CAUCHY',
+            }
+            strmeas = strmeas_map[strmeas_int]
+
         if nl_type_int == 1:
             nl_type = 'NLELAST'
         elif nl_type_int == 2:
@@ -242,15 +260,6 @@ class MATS1(MaterialDependence):
         else:  # pragma: no cover
             raise RuntimeError(f'Invalid Type:  mid={mid}; Type={nl_type_int}; must be 1=NLELAST, '
                                '2=PLASTIC, or 3=PLSTRN')
-
-        strmeas_map = {
-            None: 0,  # NULL
-            'UNDEF': 1,
-            'ENG': 2,
-            'TRUE': 3,
-            'CAUCHY': 4,
-        }
-        strmeas = strmeas_map[strmeas_int]
 
         return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas, tid=tid, comment=comment)
 
