@@ -887,6 +887,31 @@ class TestShells(unittest.TestCase):
 
         save_load_deck(model)
 
+    def test_pgplsn(self):
+        """tests a PGPLSN property card"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+
+        # create control grid point, mat1 material and pgplsn property
+        # test both integer and float-valued knr properties
+        for knr in (1, 0.):
+            model = BDF(log=log)
+
+            cgrid = model.add_grid(1, [0., 0., 0.])
+            mat1 = model.add_mat1(mid=1, E=1e7, G=None, nu=0.3)
+            pgplsn = model.add_pgplsn(pid=1, mid=mat1.mid, cgid=cgrid.nid,
+                                      t=1.0, kn=knr, kr1=knr, kr2=knr,)
+
+            model.validate()
+            model._verify_bdf(xref=False)
+            pgplsn.write_card(size=8)
+            model.cross_reference()
+            model.pop_xref_errors()
+
+            model.uncross_reference()
+            model.safe_cross_reference()
+            save_load_deck(model)
+
     def test_cplsts3(self):
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
