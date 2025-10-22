@@ -1681,6 +1681,10 @@ def _add_parser_arguments(parser, args: list[str]) -> None:
             parser.add_argument('--punch', action='store_true', help='assume a punch file')
         elif arg == '--lax':
             parser.add_argument('--lax', action='store_true', help='lax card parser')
+        elif arg == '--nosort':
+            parser.add_argument(
+                '--nosort', action='store_false',
+                help='Dont sort the nodes, elements, ... (default=False -> sort)')
         elif arg == '--allow_dup':
             parser.add_argument('--allow_dup', help='allow duplicate cards -> "GRID,CONM2"')
         else:

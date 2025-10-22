@@ -41,6 +41,7 @@ def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
         run_skin_solids: bool=True,
         run_export_caero: bool=True,
         allow_similar_eid: bool=True,
+        sort_cards: bool=True,
         xref: bool=True, is_lax_parser: bool=False,
         crash_cards=None):
     """Runs the full BDF test suite"""
@@ -120,6 +121,7 @@ def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
         run_export_caero=run_export_caero,
         run_skin_solids=run_skin_solids,
         allow_similar_eid=allow_similar_eid,
+        sort_cards=sort_cards,
         encoding='latin1', crash_cards=crash_cards,
         dev=True, run_pickle=True)
     ntotal = len(files)
@@ -141,7 +143,7 @@ def main():
     #is_release = False
     skips = '[--skip_loads] [--skip_mass] [--skip_mcid] [--skip_aero] [--skip_skin] [--no_similar_eid]'
     msg = (
-        f'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-x] [-c C] [--safe] [--lax] {skips}\n'
+        f'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-x] [-c C] [--safe] [--lax] [--nosort] {skips}\n'
         '        bdf_test -h | --help\n'
         '        bdf_test -v | --version\n'
         '\n'
@@ -163,6 +165,7 @@ def main():
         '  --skip_skin          Disables solid skinning\n'
         '  --no_similar_eid     No duplicate eids among elements, rigids, and masses\n'
         '  --lax                Use the lax card parser (default=False)\n'
+        '  --nosort             Dont sort the nodes, elements, ... (default=False -> nosort)\n'
     )
     if len(sys.argv) == 0:
         sys.exit(msg)
@@ -178,6 +181,7 @@ def main():
     run_export_caero = not data['--skip_aero']
     allow_similar_eid = not data['--no_similar_eid']
     xref = not data['--xref']
+    sort_cards = not data['--nosort']
     is_lax_parser = data['--lax']
 
     crash_cards = []
@@ -190,6 +194,7 @@ def main():
         run_export_caero=run_export_caero,
         run_skin_solids=run_skin_solids,
         is_lax_parser=is_lax_parser,
+        sort_cards=sort_cards,
         xref=xref, crash_cards=crash_cards)
 
 
