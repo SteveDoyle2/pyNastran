@@ -113,6 +113,7 @@ class EPT:
             (13501, 135, 510): ['PFAST', self.read_pfast_msc],  # MSC-specific
             (3601, 36, 55): ['PFAST', self.read_pfast_nx],  # NX-specific
             (3801, 38, 979): ['PPLANE', self.read_pplane],
+            (4102,41,904): ['PGPLSN', self.read_pgplsn],
             (11801, 118, 560): ['PWELD', self.read_fake],
             (3401, 34, 993): ['NSMADD', self.read_nsmadd],
             (9300, 93, 684): ['ELAR', self.read_fake],
@@ -3368,6 +3369,56 @@ class EPT:
             str(pplane)
             n += ntotal
         op2.card_count['PLPLANE'] = nentries
+        return n
+
+    def read_pgplsn(self, data: bytes, n: int) -> int:
+        """
+        RECORD – PGPLSN(4102,41,904)
+
+        Word Name Type Description
+        1 PID    I Property identification number
+        2 MID    I Material identification number
+        3 CGID   I Control grid point identification number
+        4 T   RS Default membrane thickness for Ti on the connection entry
+        5-8 UNDEF(4)
+        9 TYPE  I Integer flag indicating the data type for KNR (word 10)
+                    TYPE=0, KNR will be undefined
+                    TYPE=1, KNR will be an integer
+                    TYPE=2, KNR will be a real value
+        10 KNR I, RS, blank I: Table ID for time dependent user specified stiffness
+                            RS: User specified additive stiffness
+        Words 9 and 10 repeat 3 times
+        15 CSOPT I Reserved for coordinate system definition of plane
+        16 UNDEF
+        """
+        op2: OP2Geom = self.op2
+        ntotal = 64 * self.factor # 16*4
+        struct_i = Struct(mapfmt(op2._endian + b'3i 1f 12i', self.size))
+        struct_f = Struct(mapfmt(op2._endian + b'3i 1f 5i 1f 1i 1f 1i 1f 2i', self.size))
+
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        for unused_i in range(nentries):
+            out_i = struct_i.unpack(data[n:n+ntotal])
+            out_f = struct_f.unpack(data[n:n+ntotal])
+
+            pid, mid, cgid = out_i[:3]
+            t = out_f[4]
+
+            kn_type, kr1_type, kr2_type, csopt = out_i[8], out_i[10], out_i[12], out_i[14]
+            kn = out_i[9] if kn_type != 2 else out_f[9]
+            kr1 = out_i[11] if kr1_type != 2 else out_f[11]
+            kr2 = out_i[13] if kr2_type != 2 else out_f[13]
+
+            #print(out)
+            assert csopt == 0, csopt
+            pgplsn = op2.add_pgplsn(pid, mid, cgid=cgid, t=t, kn=kn, kr1=kr1, kr2=kr2)
+            pgplsn.validate()
+            #print(pplane)
+            str(pgplsn)
+            n += ntotal
+        op2.card_count['PGPLSN'] = nentries
         return n
 
     def read_plplane(self, data: bytes, n: int) -> int:

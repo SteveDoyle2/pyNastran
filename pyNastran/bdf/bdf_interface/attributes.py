@@ -199,7 +199,7 @@ SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
         'PBEAM3',
 
         # 2d
-        'PLPLANE', 'PPLANE',
+        'PLPLANE', 'PPLANE', 'PGPLSN',
         'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
         'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
         'PCOMPS', 'PCOMPLS',
