@@ -3868,6 +3868,7 @@ class OP2Reader:
 
         """
         op2: OP2 = self.op2
+        table_name = op2.table_name
         IS_TESTING = op2.IS_TESTING
         if self.binary_debug:
             self.binary_debug.write('-' * 60 + '\n')
@@ -3879,7 +3880,6 @@ class OP2Reader:
         oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR']  # 'OESCP'?
         factor = self.factor
         #print('record_len =', record_len)
-        table_name = op2.table_name
         if record_len == 584 * factor:  # table3 has a length of 584
             if table_name in oes_nl and hasattr(op2, 'num_wide') and op2.num_wide == 146:
                 data_code_old = deepcopy(op2.data_code)

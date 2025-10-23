@@ -47,7 +47,7 @@ from pyNastran.f06.dev.flutter.actions_builder import Actions, Action, build_men
 from pyNastran.f06.dev.flutter.preferences_object import FlutterPreferencesObject
 from pyNastran.f06.dev.flutter.preferences import (
     FLUTTER_BBOX_TO_ANCHOR_DEFAULT, LEGEND_LOC_DEFAULT,
-    FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT, FREQ_NDIGITS_DEFAULT)
+    FONT_SIZE_DEFAULT, FLUTTER_NCOLUMNS_DEFAULT, FREQ_NDIGITS_DEFAULT, FREQ_DIVERGENCE_TOL)
 
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import get_flutter_units
@@ -97,6 +97,8 @@ class FlutterGui(LoggableGui):
         self.flutter_bbox_to_anchor_x = FLUTTER_BBOX_TO_ANCHOR_DEFAULT
         self.flutter_ncolumns = FLUTTER_NCOLUMNS_DEFAULT
         self.freq_ndigits = FREQ_NDIGITS_DEFAULT
+        self.freq_divergence_tol = FREQ_DIVERGENCE_TOL
+        self.auto_update = True
 
         self.font_size = FONT_SIZE_DEFAULT
         self.plot_font_size = FONT_SIZE_DEFAULT
@@ -307,6 +309,8 @@ class FlutterGui(LoggableGui):
         out_data['preferences'] = {
             'flutter_ncolumns': self.flutter_ncolumns,
             'freq_ndigits': self.freq_ndigits,
+            'freq_divergence_tol': self.freq_divergence_tol,
+            'auto_update': self.auto_update,
             'flutter_bbox_to_anchor_x': self.flutter_bbox_to_anchor_x,
             'divergence_legend_loc': self.divergence_legend_loc,
             'export_to_png': self.export_to_png,
@@ -511,7 +515,7 @@ class FlutterGui(LoggableGui):
         if fname == '':
             return
         self.f06_filename_edit[self.ifile].setText(fname)
-        self.ok_button.setEnabled(False)
+        self.run_button.setEnabled(False)
         self._set_f06_default_names(fname)
 
     def _set_f06_default_names(self, f06_filename: str) -> None:
@@ -682,7 +686,7 @@ class FlutterGui(LoggableGui):
         # self.velocity_edit = []
         #
         # self.f06_load_button = []
-        # self.ok_button = []
+        # self.run_button = []
 
         # self.solution_type_label = []
         # self.solution_type_pulldown = []
@@ -888,7 +892,7 @@ class FlutterGui(LoggableGui):
         self.velocity_edit.setToolTip('Sets the velocity (input units)')
 
         self.f06_load_button = QPushButton('Load F06', self)
-        self.ok_button = QPushButton('Run', self)
+        self.run_button = QPushButton('Run', self)
 
         self.mode_switch_method_label = QLabel('Mode Switch Method:', self)
         self.mode_switch_method_pulldown = QComboBox(self)
@@ -1285,7 +1289,7 @@ class FlutterGui(LoggableGui):
 
         ok_cancel_hbox = QHBoxLayout()
         ok_cancel_hbox.addWidget(self.f06_load_button)
-        ok_cancel_hbox.addWidget(self.ok_button)
+        ok_cancel_hbox.addWidget(self.run_button)
 
         hbox_check = QHBoxLayout()
         hbox_check.addLayout(grid_check)
@@ -1354,7 +1358,7 @@ class FlutterGui(LoggableGui):
         # self.modes_widget.itemSelectionChanged.connect(self.on_modes)
         # self.modes_widget.itemClicked.connect(self.on_modes)
         # self.modes_widget.currentRowChanged.connect(self.on_modes)
-        self.ok_button.clicked.connect(self.on_ok)
+        self.run_button.clicked.connect(self.on_run)
         self.units_out_pulldown.currentIndexChanged.connect(self.on_units_out)
 
     def on_units_out(self):
@@ -1413,7 +1417,7 @@ class FlutterGui(LoggableGui):
         self._units_out = out_units
         self.add_recent_file(f06_filename)
         self.update_subcases(subcases)
-        self.ok_button.setEnabled(True)
+        self.run_button.setEnabled(True)
 
     def add_recent_file(self, f06_filename: str) -> None:
         path = os.path.abspath(f06_filename)
@@ -1501,11 +1505,11 @@ class FlutterGui(LoggableGui):
                            freqs: list[float]) -> None:
         self.modes = modes
         self._set_modes_table(self.modes_widget, modes, freqs)
-        self.ok_button.setEnabled(True)
+        self.run_button.setEnabled(True)
         self.log.info(f'modes = {self.modes}')
 
     def on_modes(self) -> None:
-        self.on_ok()
+        self.on_run()
         # self.validate()
         # self.plot(self.modes)
 
@@ -1525,8 +1529,8 @@ class FlutterGui(LoggableGui):
             self.validate()
         self.plot()
 
-    def on_ok(self) -> None:
-        # self.log.warning('on_ok')
+    def on_run(self) -> None:
+        # self.log.warning('on_run')
         is_valid = self.validate()
         if not is_valid:
             return
@@ -1539,7 +1543,7 @@ class FlutterGui(LoggableGui):
         self.log.info(f'is_valid = {is_valid}\n')
         self.is_valid = True
         self.plot(modes)
-        # self.log.warning('on_ok; _save')
+        # self.log.warning('on_run; _save')
         self._save(self.save_filename)
 
     @dont_crash

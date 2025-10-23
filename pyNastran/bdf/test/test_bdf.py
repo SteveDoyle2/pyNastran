@@ -89,6 +89,8 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       run_mcid: bool=True,
                       run_export_caero: bool=True,
                       run_skin_solids: bool=True,
+                      allow_similar_eid: bool=True,
+                      sort_cards: bool=True,
                       dev: bool=True,
                       crash_cards: Optional[list[str]]=None,
                       run_pickle: bool=True, quiet: bool=False) -> list[str]:
@@ -212,6 +214,8 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                         run_extract_bodies=False,
                         run_export_caero=run_export_caero,
                         run_skin_solids=run_skin_solids,
+                        allow_similar_eid=allow_similar_eid,
+                        sort_cards=sort_cards,
 
                         dev=dev,
                         crash_cards=crash_cards,
@@ -288,6 +292,8 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             hdf5: bool=False,
             is_lax_parser: bool=False,
             allow_duplicates: bool=False,
+            allow_similar_eid: bool=True,
+            sort_cards: bool=True,
             stop: bool=False, nastran: str='', post: int=-1,
             dynamic_vars=None,
             quiet: bool=False, dumplines: bool=False, dictsort: bool=False,
@@ -396,6 +402,8 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         print_stats=print_stats, encoding=encoding,
         sum_load=sum_load, size=size, is_double=is_double,
         is_lax_parser=is_lax_parser,
+        allow_similar_eid=allow_similar_eid,
+        sort_cards=sort_cards,
         allow_tabs=allow_tabs,
         allow_duplicates=allow_duplicates,
         stop=stop, nastran=nastran, post=post, hdf5=hdf5,
@@ -439,6 +447,8 @@ def run_and_compare_fems(
         is_lax_parser: bool=False,
         allow_tabs: bool=True,
         allow_duplicates: bool=False,
+        allow_similar_eid: bool=True,
+        sort_cards: bool=True,
         stop: bool=False,
         nastran: str='',
         post: int=-1,
@@ -470,7 +480,9 @@ def run_and_compare_fems(
     assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDF(debug=debug, log=log)
     fem1.allow_tabs = allow_tabs
+    fem1.allow_duplicate_element_rbe_mass = allow_similar_eid
     #fem1.force_echo_off = False
+    log = fem1.log
     if is_lax_parser:
         fem1.log.warning('using lax card parser')
         fem1.is_strict_card_parser = False
@@ -512,6 +524,7 @@ def run_and_compare_fems(
             save_file_structure=save_file_structure,
             hdf5=hdf5,
             encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
+            sort_cards=sort_cards,
             limit_mesh_opt=limit_mesh_opt,
             run_pickle=run_pickle, stop=stop, name=name)
 
@@ -691,6 +704,7 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              encoding: Optional[str]=None,
              crash_cards: Optional[list[str]]=None,
              limit_mesh_opt: bool=False,
+             sort_cards: bool=True,
              safe_xref: bool=True, run_pickle: bool=False, stop: bool=False,
              name: str='') -> BDF:
     """
@@ -823,12 +837,17 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
         hdf5_filename = f'{out_model}{name}.h5'
         _test_hdf5(fem1, hdf5_filename)
 
+    args = {
+        'size': size,
+        'is_double': is_double,
+        'sort_cards': sort_cards,
+    }
     if mesh_form is None:
         pass
     elif mesh_form == 'combined':
-        fem1.write_bdf(out_model, interspersed=True, size=size, is_double=is_double)
+        fem1.write_bdf(out_model, interspersed=True, **args)
     elif mesh_form == 'separate':
-        fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
+        fem1.write_bdf(out_model, interspersed=False, **args)
     else:
         msg = "mesh_form=%r; allowed_mesh_forms=['combined','separate']" % mesh_form
         raise NotImplementedError(msg)
@@ -2247,9 +2266,15 @@ def test_bdf_argparse(argv=None):
                                help='skip the element checks (default=False)')
     parent_parser.add_argument('--skip_mcid', action='store_true',
                                help='skip the material coordinate system exporting (default=False)')
+    parent_parser.add_argument('--no_similar_eid', action='store_false',
+                               help='No duplicate eids among elements, rigids, and masses (default=False)')
 
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
+    parent_parser.add_argument(
+        '--nosort', action='store_false',
+        help='Dont sort the nodes, elements, ... (default=False -> sort)')
+
     parent_parser.add_argument('--duplicate', action='store_true',
                                help='overwrite duplicates; takes the later card (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
@@ -2355,7 +2380,7 @@ def get_test_bdf_usage_args_examples(encoding):
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--ignore I] [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
-        '              [--skip_loads] [--skip_mass] [--lax] [--duplicate]\n'
+        '              [--skip_loads] [--skip_mass] [--lax] [--nosort] [--duplicate]\n'
     )
     usage = (
         "Usage:\n"
@@ -2386,6 +2411,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '                 every element/property to test them.  May fails if a \n'
         '                 card is fully not supported (default=False)\n'
         '  --lax          dont be strict on float parsing\n'
+        '  --nosort       Dont sort the nodes, elements, ... (default=False -> nosort)\n'
         '  --duplicate    overwrite duplicate GRIDs\n'
         '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
@@ -2418,6 +2444,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_skin    skip the solid skinning (default=False)\n'
         '  --skip_eid_checks  skips some element checks (default=False)\n'
         '  --skip_mcid        skip the material coordinate system exporting (default=False)\n'
+        '  --no_similar_eid   No duplicate eids among elements, rigids, and masses\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2452,6 +2479,7 @@ def main(argv=None):
     data['run_skin_solids'] = not data['skip_skin']
     data['run_eid_checks'] = not data['skip_eid_checks']
     data['run_mcid'] = not data['skip_mcid']
+    allow_similar_eid = not data['no_similar_eid']
 
     is_double = False
     if data['double']:
@@ -2501,6 +2529,7 @@ def main(argv=None):
             run_eid_checks=data['run_eid_checks'],
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
+            allow_similar_eid=allow_similar_eid,
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],
@@ -2558,6 +2587,7 @@ def main(argv=None):
             run_eid_checks=data['run_eid_checks'],
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
+            allow_similar_eid=allow_similar_eid,
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],

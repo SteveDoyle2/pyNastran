@@ -35,6 +35,7 @@ class FlutterPreferencesObject:
             self.window.set_font_size(font_size)
         # if self._animation_window_shown:
         #     self._animation_window.set_font_size(font_size)
+        self.gui.on_run()
 
     def show(self):
         """Opens a dialog box to set"""
@@ -72,6 +73,8 @@ class FlutterPreferencesObject:
             'flutter_bbox_to_anchor_x': gui.flutter_bbox_to_anchor_x,
             'flutter_ncolumns': gui.flutter_ncolumns,
             'freq_ndigits': gui.freq_ndigits,
+            'freq_divergence_tol': gui.freq_divergence_tol,
+            'auto_update': gui.auto_update,
             'clicked_ok': False,
             'close': False,
         })
@@ -104,15 +107,31 @@ class FlutterPreferencesObject:
 
     def on_flutter_ncolumns(self, value: Optional[int]) -> None:
         self.gui.flutter_ncolumns = value
+        self._on_run()
 
     def on_freq_ndigits(self, value: int) -> None:
         self.gui.freq_ndigits = value
+        self._on_run()
+
+    def on_freq_divergence_tol(self, value: float) -> None:
+        self.gui.freq_divergence_tol = value
+        self._on_run()
+
+    def on_auto_update(self, value: bool) -> None:
+        self.gui.auto_update = value
+        self._on_run()
 
     def on_flutter_bbox_to_anchor_x(self, value: float) -> None:
         self.gui.flutter_bbox_to_anchor_x = value
+        self._on_run()
 
     def on_divergence_legend_loc(self, value: str) -> None:
         self.gui.divergence_legend_loc = value
+        self._on_run()
+
+    def _on_run(self) -> None:
+        if self.gui.auto_update:
+            self.gui.on_run()
 
     def on_icase(self, icase: int) -> None:
         self.gui._vtk_window_obj.set_preferences(icase=icase)
@@ -120,7 +139,7 @@ class FlutterPreferencesObject:
     def on_animate(self, animate: bool) -> None:
         self.gui._vtk_window_obj.set_preferences(animate=animate)
 
-    def on_close(self):
+    def on_close(self) -> None:
         # del self.window
         self.window_shown = False
         self.window.hide()

@@ -88,6 +88,20 @@ def print_scientific_8(value: float) -> str:
     return field
 
 
+def print_int_default_8(value: int, default: int) -> str:
+    """combine set_blank_if_default and print_field"""
+    if value == default:
+        return '        '
+    return '%8d' % value
+
+
+def print_float_default_8(value: float, default: float) -> str:
+    """combine set_blank_if_default and print_float_8"""
+    if value == default:
+        return '        '
+    return print_float_8(value)
+
+
 def print_float_8(value: float) -> str:
     """
     Prints a float in nastran 8-character width syntax using the

@@ -14,7 +14,9 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pyNastran.bdf.cards.base_card import expand_thru_by, expand_thru, BaseCard, Property
+from pyNastran.bdf.cards.expand_card import remove_blanks_capitalize, set_list_print
+from pyNastran.bdf.cards.base_card import (
+    expand_thru_by, expand_thru, BaseCard, Property)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_string, double, double_or_blank, string)
 from pyNastran.bdf.bdf_interface.assign_type_force import (
@@ -30,14 +32,14 @@ if TYPE_CHECKING:  # pragma: no cover
 class NSMx(Property):
     """Common class for NSM and NSML"""
     _field_map = {
-        1: 'sid', 2:'Type', 3:'id', 4:'value'
+        1: 'sid', 2: 'Type', 3: 'id', 4: 'value'
     }
 
     #: Set points to either Property entries or Element entries.
     #: Properties are:
     valid_properties = [
         'PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
-        'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PRAC2D', # 'PCONEAX',
+        'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PRAC2D',  # 'PCONEAX',
         'ELEMENT', 'PDUM8',
     ]
 
@@ -126,8 +128,6 @@ class NSMx(Property):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-
-
     def raw_fields(self):
         #nodes = self.node_ids
         list_fields = [self.type, self.sid, self.nsm_type, self.id, self.value]
@@ -147,12 +147,14 @@ class NSM1x(Property):
     """Common class for NSM1 and NSML1"""
     valid_properties = [
         'PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
-        'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PRAC2D', # 'PCONEAX',
+        'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PRAC2D',  # 'PCONEAX',
         'PBUSH',
         'ELEMENT',
     ]
 
-    def __init__(self, sid, nsm_type, value, ids, comment=''):
+    def __init__(self, sid: int, nsm_type: str,
+                 value: float, ids: list[int],
+                 comment: str=''):
         """
         Creates an NSM1/NSML1 card
 
@@ -212,7 +214,7 @@ class NSM1x(Property):
         if self.nsm_type not in self.valid_properties:
             raise TypeError('nsm_type=%r must be in [%s]' % (
                 self.nsm_type, ', '.join(self.valid_properties)))
-        assert isinstance(ids, list), 'ids=%r is not a list' % (ids)
+        assert isinstance(ids, list), f'ids={ids} is not a list'
 
     @property
     def Type(self):
@@ -383,7 +385,7 @@ def get_id_id0(ids: list[int] | list[str],
         all_ids = ids
         assert isinstance(all_ids, list), all_ids
         assert isinstance(all_ids[0], integer_types), all_ids
-    assert isinstance(id0, integer_types), (self.ids, all_ids)
+    assert isinstance(id0, integer_types), (ids, all_ids)
     return all_ids, id0
 
 
@@ -628,7 +630,7 @@ class NSMADD(BaseCard):
         sets = [1, 2]
         return NSMADD(sid, sets, comment='')
 
-    def __init__(self, sid, sets, comment=''):
+    def __init__(self, sid: int, sets: list[int], comment: str=''):
         """
         Creates an NSMADD card, which sum NSM sets
 
@@ -640,12 +642,19 @@ class NSMADD(BaseCard):
             the NSM, NSM1, NSML, NSML1 values
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.sid = sid
-        self.sets = expand_thru(sets)
+
+        sets_clean = remove_blanks_capitalize(sets)
+        if len(sets) != len(sets_clean):
+            warnings.warn(f'{self.type}={sid} set length is changed\n'
+                          f'old; n={len(sets)}: {set_list_print(sets)}\n'
+                          f'new; n={len(sets_clean)}: {set_list_print(sets_clean)}')
+        self.sets = expand_thru(sets_clean)
         self.sets.sort()
         self.sets_ref = None
 
@@ -780,11 +789,11 @@ class PMASS(Property):
     """
     type = 'PMASS'
     _field_map = {
-        1: 'pid', 2:'mass',
+        1: 'pid', 2: 'mass',
     }
     pname_fid_map = {
         # 1-based
-        3 : 'mass',
+        3: 'mass',
     }
     _properties = ['node_ids']
 
@@ -900,5 +909,6 @@ class PMASS(Property):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
 
 NSMs = NSM | NSM1 | NSML | NSML1

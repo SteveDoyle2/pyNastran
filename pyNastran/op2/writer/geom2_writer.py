@@ -123,7 +123,7 @@ def write_geom2(op2_file: BinaryIO, op2_ascii,
             #continue
 
         cards_written[name] = nelements
-        log.warning(f'GEOM2: {name}')
+        # log.warning(f'GEOM2: {name}')
         if name in GEOM2_MAP:
             func = GEOM2_MAP[name]
             assert name not in geom2_key_mapper, name

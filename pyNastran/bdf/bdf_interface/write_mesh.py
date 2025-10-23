@@ -149,6 +149,7 @@ class WriteMesh(BDFAttributes):
                   #table_size: Optional[int]=None,
                   flfact_size: int=0,
                   is_double: bool=False,
+                  sort_cards: bool=True,
                   interspersed: bool=False, enddata: Optional[bool]=None,
                   write_header: bool=True, close: bool=True) -> None:
         """
@@ -169,6 +170,8 @@ class WriteMesh(BDFAttributes):
         is_double : bool; default=False
             False : small field
             True : large field
+        sort_cards : bool; default=True
+            sort the nodes, elements, ... to make finding things easier
         interspersed : bool; default=True
             Writes a bdf with properties & elements
             interspersed like how Patran writes the bdf.  This takes
@@ -219,6 +222,7 @@ class WriteMesh(BDFAttributes):
                 superelement.write_bdf(out_filename=bdf_file, encoding=encoding,
                                        size=size, is_double=is_double,
                                        interspersed=interspersed, enddata=False,
+                                       sort_cards=sort_cards,
                                        write_header=False, close=False)
                 bdf_file.write('$' + '*'*80+'\n')
             bdf_file.write('BEGIN BULK\n')
@@ -227,6 +231,7 @@ class WriteMesh(BDFAttributes):
                              enddata=enddata, close=close,
                              nodes_size=nodes_size, elements_size=elements_size, loads_size=loads_size,
                              flfact_size=flfact_size,
+                             sort_cards=sort_cards,
                              is_long_ids=is_long_ids)
 
     def write_bulk_data(self, bdf_file,
@@ -237,6 +242,7 @@ class WriteMesh(BDFAttributes):
                         elements_size: Optional[int]=None,
                         loads_size: Optional[int]=None,
                         flfact_size: Optional[int]=None,
+                        sort_cards: bool=True,
                         is_long_ids: bool=False) -> None:
         """
         Writes the BDF.
@@ -260,6 +266,8 @@ class WriteMesh(BDFAttributes):
         enddata : bool; default=None
             bool - enable/disable writing ENDDATA
             None - depends on input BDF
+        sort_cards : bool; default=True
+            sort the nodes, elements, ... to make finding things easier
         close : bool; default=True
             should the output file be closed
 
@@ -271,31 +279,31 @@ class WriteMesh(BDFAttributes):
         size, nodes_size, elements_size, loads_size, flfact_size = _fix_sizes(
             size, nodes_size, elements_size, loads_size, flfact_size)
 
-        self._write_params(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_model_groups(bdf_file)
-        self._write_nodes(bdf_file, nodes_size, is_double, is_long_ids=is_long_ids)
+        self._write_params(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_model_groups(bdf_file, sort_cards=sort_cards)
+        self._write_nodes(bdf_file, nodes_size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
 
         if interspersed:
-            self._write_elements_interspersed(bdf_file, elements_size, is_double, is_long_ids=is_long_ids)
+            self._write_elements_interspersed(bdf_file, elements_size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
         else:
-            self._write_elements(bdf_file, elements_size, is_double, is_long_ids=is_long_ids)
-            self._write_properties(bdf_file, size, is_double, is_long_ids=is_long_ids)
-            #self._write_properties_by_element_type(bdf_file, size, is_double, is_long_ids)
+            self._write_elements(bdf_file, elements_size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+            self._write_properties(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+            #self._write_properties_by_element_type(bdf_file, size, is_double, is_long_ids, sort_cards=sort_cards)
 
         for cards in (self.bolt, self.boltseq, self.boltfor, self.boltfrc, self.boltld):
-            for key, card in cards.items():
+            for key, card in sorteddict(cards, sort_cards):
                 bdf_file.write(card.write_card(size, is_double))
 
-        self._write_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_materials(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
 
-        self._write_masses(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_masses(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
 
         # split out for write_bdf_symmetric
-        self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
 
         self._write_common(bdf_file, loads_size, flfact_size,
-                           is_double, is_long_ids=is_long_ids)
+                           is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
             bdf_file.write('ENDDATA\n')
         if close:
@@ -350,38 +358,40 @@ class WriteMesh(BDFAttributes):
             bdf_file.write(''.join(msg))
 
     def _write_elements(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+                        sort_cards: bool=True,
                         is_long_ids: Optional[bool]=None) -> None:
         """Writes the elements in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.elements:
             bdf_file.write('$ELEMENTS\n')
             if is_long_ids:
-                for (eid, element) in sorted(self.elements.items()):
+                for (eid, element) in sorteddict(self.elements, sort_cards):
                     bdf_file.write(element.write_card_16(is_double))
             else:
-                for (eid, element) in sorted(self.elements.items()):
+                for (eid, element) in sorteddict(self.elements, sort_cards):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
                     except Exception:
                         print(f'failed printing element...type={element.type} eid={eid}')
                         raise
         if self.ao_element_flags:
-            for (eid, element) in sorted(self.ao_element_flags.items()):
+            for (eid, element) in sorteddict(self.ao_element_flags, sort_cards):
                 bdf_file.write(element.write_card(size, is_double))
         if self.normals:
-            for (unused_nid, snorm) in sorted(self.normals.items()):
+            for (unused_nid, snorm) in sorteddict(self.normals, sort_cards):
                 bdf_file.write(snorm.write_card(size, is_double))
-        self._write_nsm(bdf_file, size, is_double)
+        self._write_nsm(bdf_file, size, is_double, sort_cards)
 
     def _write_nsm(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+                   sort_cards: bool=True,
                    is_long_ids: Optional[bool]=None) -> None:
         """Writes the nsm in a sorted order"""
         if self.nsms or self.nsmadds:
             bdf_file.write('$NSM\n')
-            for (unused_id, nsmadds) in sorted(self.nsmadds.items()):
+            for (unused_id, nsmadds) in sorteddict(self.nsmadds, sort_cards):
                 for nsmadd in nsmadds:
                     bdf_file.write(str(nsmadd))
-            for (key, nsms) in sorted(self.nsms.items()):
+            for (key, nsms) in sorteddict(self.nsms, sort_cards):
                 for nsm in nsms:
                     try:
                         bdf_file.write(nsm.write_card(size, is_double))
@@ -390,6 +400,7 @@ class WriteMesh(BDFAttributes):
                         raise
 
     def _write_elements_interspersed(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+                                     sort_cards: bool=True,
                                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the elements and properties in and interspersed order"""
         missing_properties = []
@@ -431,11 +442,11 @@ class WriteMesh(BDFAttributes):
 
         if missing_properties or self.pdampt or self.pbusht or self.pelast:
             bdf_file.write('$UNASSOCIATED_PROPERTIES\n')
-            for card in sorted(self.pbusht.values()):
+            for pid, card in sorteddict(self.pbusht, sort_cards):
                 bdf_file.write(card.write_card(size, is_double))
-            for card in sorted(self.pdampt.values()):
+            for pid, card in sorteddict(self.pdampt, sort_cards):
                 bdf_file.write(card.write_card(size, is_double))
-            for card in sorted(self.pelast.values()):
+            for pid, card in sorteddict(self.pelast, sort_cards):
                 bdf_file.write(card.write_card(size, is_double))
             for card in missing_properties:
                 # this is a string...
@@ -451,52 +462,56 @@ class WriteMesh(BDFAttributes):
         self._write_nsm(bdf_file, size, is_double)
 
     def _write_aero(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                    sort_cards: bool=True,
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the aero cards"""
 
         if self.caeros or self.paeros or self.monitor_points or self.splines:
             bdf_file.write('$AERO\n')
-            for (unused_id, caero) in sorted(self.caeros.items()):
+            for (unused_id, caero) in sorteddict(self.caeros, sort_cards):
                 bdf_file.write(caero.write_card(size, is_double))
-            for (unused_id, paero) in sorted(self.paeros.items()):
+            for (unused_id, paero) in sorteddict(self.paeros, sort_cards):
                 bdf_file.write(paero.write_card(size, is_double))
-            for (unused_id, spline) in sorted(self.splines.items()):
+            for (unused_id, spline) in sorteddict(self.splines, sort_cards):
                 bdf_file.write(spline.write_card(size, is_double))
 
         if self.monitor_points or self.group:
             for monitor_point in self.monitor_points:
                 bdf_file.write(monitor_point.write_card(size, is_double))
-            for (unused_id, group) in sorted(self.group.items()):
+            for (unused_id, group) in sorteddict(self.group, sort_cards):
                 bdf_file.write(group.write_card(size, is_double))
         self.zona.write_bdf(bdf_file, size=8, is_double=False)
 
     def _write_aero_control(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                            sort_cards: bool=True,
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the aero control surface cards"""
-        if(self.aecomps or self.aefacts or self.aeparams or self.aelinks or
-           self.aelists or self.aestats or self.aesurf or self.aesurfs):
+        is_aero = (self.aecomps or self.aefacts or self.aeparams or self.aelinks or
+                   self.aelists or self.aestats or self.aesurf or self.aesurfs)
+        if is_aero:
             bdf_file.write('$AERO CONTROL SURFACES\n')
-            for (unused_id, aelinks) in sorted(self.aelinks.items()):
+            for (unused_id, aelinks) in sorteddict(self.aelinks, sort_cards):
                 for aelink in aelinks:
                     bdf_file.write(aelink.write_card(size, is_double))
 
-            for (unused_id, aecomp) in sorted(self.aecomps.items()):
+            for (unused_id, aecomp) in sorteddict(self.aecomps, sort_cards):
                 bdf_file.write(aecomp.write_card(size, is_double))
-            for (unused_id, aeparam) in sorted(self.aeparams.items()):
+            for (unused_id, aeparam) in sorteddict(self.aeparams, sort_cards):
                 bdf_file.write(aeparam.write_card(size, is_double))
-            for (unused_id, aestat) in sorted(self.aestats.items()):
+            for (unused_id, aestat) in sorteddict(self.aestats, sort_cards):
                 bdf_file.write(aestat.write_card(size, is_double))
 
-            for (unused_id, aelist) in sorted(self.aelists.items()):
+            for (unused_id, aelist) in sorteddict(self.aelists, sort_cards):
                 bdf_file.write(aelist.write_card(size, is_double))
-            for (unused_id, aesurf) in sorted(self.aesurf.items()):
+            for (unused_id, aesurf) in sorteddict(self.aesurf, sort_cards):
                 bdf_file.write(aesurf.write_card(size, is_double))
-            for (unused_id, aesurfs) in sorted(self.aesurfs.items()):
+            for (unused_id, aesurfs) in sorteddict(self.aesurfs, sort_cards):
                 bdf_file.write(aesurfs.write_card(size, is_double))
-            for (unused_id, aefact) in sorted(self.aefacts.items()):
+            for (unused_id, aefact) in sorteddict(self.aefacts, sort_cards):
                 bdf_file.write(aefact.write_card(size, is_double))
 
     def _write_static_aero(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                           sort_cards: bool=True,
                            is_long_ids: Optional[bool]=None) -> None:
         """Writes the static aero cards"""
         if self.aeros or self.trims or self.divergs:
@@ -504,14 +519,15 @@ class WriteMesh(BDFAttributes):
             # static aero
             if self.aeros:
                 bdf_file.write(self.aeros.write_card(size, is_double))
-            for (unused_id, trim) in sorted(self.trims.items()):
+            for (unused_id, trim) in sorteddict(self.trims, sort_cards):
                 bdf_file.write(trim.write_card(size, is_double))
-            for (unused_id, diverg) in sorted(self.divergs.items()):
+            for (unused_id, diverg) in sorteddict(self.divergs, sort_cards):
                 bdf_file.write(diverg.write_card(size, is_double))
 
     def _write_flutter(self, bdf_file: TextFile, size: int=8,
                        flfact_size: int=8,
                        is_double: bool=False,
+                       sort_cards: bool=True,
                        write_aero_in_flutter: bool=True,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the flutter cards"""
@@ -519,15 +535,16 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$FLUTTER\n')
             if write_aero_in_flutter:
                 bdf_file.write(self.aero.write_card(size, is_double))
-            for (unused_id, flutter) in sorted(self.flutters.items()):
+            for (unused_id, flutter) in sorteddict(self.flutters, sort_cards):
                 bdf_file.write(flutter.write_card(size, is_double))
-            for (unused_id, flfact) in sorted(self.flfacts.items()):
+            for (unused_id, flfact) in sorteddict(self.flfacts, sort_cards):
                 bdf_file.write(flfact.write_card(flfact_size, is_double))
             for mkaero in self.mkaeros:
                 bdf_file.write(mkaero.write_card(size, is_double))
 
     def _write_gust(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                     write_aero_in_gust: bool=True,
+                    sort_cards: bool=True,
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the gust cards"""
         if (write_aero_in_gust and self.aero) or self.gusts:
@@ -535,12 +552,13 @@ class WriteMesh(BDFAttributes):
             if write_aero_in_gust:
                 if self.aero is not None:
                     bdf_file.write(self.aero.write_card(size, is_double))
-            for (unused_id, gust) in sorted(self.gusts.items()):
+            for (unused_id, gust) in sorteddict(self.gusts, sort_cards):
                 bdf_file.write(gust.write_card(size, is_double))
 
     def _write_common(self, bdf_file: TextFile,
                       size: int=8, flfact_size: int=8,
                       is_double: bool=False,
+                      sort_cards: bool=True,
                       is_long_ids: Optional[bool]=None) -> None:
         """
         Write the common outputs so none get missed...
@@ -555,33 +573,34 @@ class WriteMesh(BDFAttributes):
             is this double precision
 
         """
-        self._write_dmigs(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_loads(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_dynamic(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_static_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_dmigs(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_loads(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_dynamic(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_static_aero(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
 
         write_aero_in_flutter, write_aero_in_gust = find_aero_location(self)
         self._write_flutter(bdf_file, size=size, flfact_size=flfact_size,
                             is_double=is_double,
                             write_aero_in_flutter=write_aero_in_flutter,
-                            is_long_ids=is_long_ids)
+                            is_long_ids=is_long_ids, sort_cards=sort_cards)
         self._write_gust(bdf_file, size, is_double, write_aero_in_gust, is_long_ids=is_long_ids)
 
-        self._write_thermal(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_thermal_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_constraints(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_optimization(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_tables(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_sets(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_superelements(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_contact(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_parametric(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_thermal(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_thermal_materials(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_constraints(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_optimization(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_tables(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_sets(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_superelements(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_contact(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_parametric(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
         self._write_rejects(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_matcids(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
+        self._write_matcids(bdf_file, size, is_double, is_long_ids=is_long_ids, sort_cards=sort_cards)
 
     def _write_constraints(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                           sort_cards: bool=True,
                            is_long_ids: Optional[bool]=None) -> None:
         """Writes the constraint cards sorted by ID"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
@@ -589,36 +608,37 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$CONSTRAINTS\n')
             for suport in self.suport:
                 bdf_file.write(suport.write_card(size, is_double))
-            for unused_suport_id, suport in sorted(self.suport1.items()):
+            for unused_suport_id, suport in sorteddict(self.suport1, sort_cards):
                 bdf_file.write(suport.write_card(size, is_double))
 
         if self.spcs or self.spcadds or self.spcoffs:
-            #bdf_file.write('$SPCs\n')
-            #str_spc = str(self.spcObject) # old
-            #if str_spc:
-                #bdf_file.write(str_spc)
-            #else:
+            # bdf_file.write('$SPCs\n')
+            # str_spc = str(self.spcObject) # old
+            # if str_spc:
+            #     bdf_file.write(str_spc)
+            # else:
             bdf_file.write('$SPCs\n')
-            for (unused_id, spcadds) in sorted(self.spcadds.items()):
+            for (unused_id, spcadds) in sorteddict(self.spcadds, sort_cards):
                 for spcadd in spcadds:
                     bdf_file.write(str(spcadd))
-            for (unused_id, spcs) in sorted(self.spcs.items()):
+            for (unused_id, spcs) in sorteddict(self.spcs, sort_cards):
                 for spc in spcs:
                     bdf_file.write(str(spc))
-            for (unused_id, spcoffs) in sorted(self.spcoffs.items()):
+            for (unused_id, spcoffs) in sorteddict(self.spcoffs, sort_cards):
                 for spc in spcoffs:
                     bdf_file.write(str(spc))
 
         if self.mpcs or self.mpcadds:
             bdf_file.write('$MPCs\n')
-            for (unused_id, mpcadds) in sorted(self.mpcadds.items()):
+            for (unused_id, mpcadds) in sorteddict(self.mpcadds, sort_cards):
                 for mpcadd in mpcadds:
                     bdf_file.write(str(mpcadd))
-            for (unused_id, mpcs) in sorted(self.mpcs.items()):
+            for (unused_id, mpcs) in sorteddict(self.mpcs, sort_cards):
                 for mpc in mpcs:
                     bdf_file.write(mpc.write_card(size, is_double))
 
     def _write_contact(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                       sort_cards: bool=True,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the contact cards sorted by ID"""
         is_contact = (self.bcrparas or self.bctadds or self.bctparas
@@ -627,59 +647,78 @@ class WriteMesh(BDFAttributes):
                       or self.bgadds or self.bgsets or self.bctparms or self.bcbodys or self.bcparas)
         if is_contact:
             bdf_file.write('$CONTACT\n')
-            for (unused_id, bcbody) in sorted(self.bcbodys.items()):
+            for (unused_id, bcbody) in sorteddict(self.bcbodys, sort_cards):
                 bdf_file.write(bcbody.write_card(size, is_double))
-            for (unused_id, bcpara) in sorted(self.bcparas.items()):
+            for (unused_id, bcpara) in sorteddict(self.bcparas, sort_cards):
                 bdf_file.write(bcpara.write_card(size, is_double))
 
-            for (unused_id, bcrpara) in sorted(self.bcrparas.items()):
+            for (unused_id, bcrpara) in sorteddict(self.bcrparas, sort_cards):
                 bdf_file.write(bcrpara.write_card(size, is_double))
-            for (unused_id, bctparam) in sorted(self.bctparms.items()):
+            for (unused_id, bctparam) in sorteddict(self.bctparms, sort_cards):
                 bdf_file.write(bctparam.write_card(size, is_double))
-            for (unused_id, bctadds) in sorted(self.bctadds.items()):
+            for (unused_id, bctadds) in sorteddict(self.bctadds, sort_cards):
                 bdf_file.write(bctadds.write_card(size, is_double))
-            for (unused_id, bctpara) in sorted(self.bctparas.items()):
+            for (unused_id, bctpara) in sorteddict(self.bctparas, sort_cards):
                 bdf_file.write(bctpara.write_card(size, is_double))
 
-            for (unused_id, bctset) in sorted(self.bctsets.items()):
+            for (unused_id, bctset) in sorteddict(self.bctsets, sort_cards):
                 bdf_file.write(bctset.write_card(size, is_double))
-            for (unused_id, bsurfi) in sorted(self.bsurf.items()):
+            for (unused_id, bsurfi) in sorteddict(self.bsurf, sort_cards):
                 bdf_file.write(bsurfi.write_card(size, is_double))
-            for (unused_id, bsurfsi) in sorted(self.bsurfs.items()):
+            for (unused_id, bsurfsi) in sorteddict(self.bsurfs, sort_cards):
                 bdf_file.write(bsurfsi.write_card(size, is_double))
-            for (unused_id, bconp) in sorted(self.bconp.items()):
+            for (unused_id, bconp) in sorteddict(self.bconp, sort_cards):
                 bdf_file.write(bconp.write_card(size, is_double))
-            for (unused_id, blseg) in sorted(self.blseg.items()):
+            for (unused_id, blseg) in sorteddict(self.blseg, sort_cards):
                 bdf_file.write(blseg.write_card(size, is_double))
-            for (unused_id, bfric) in sorted(self.bfric.items()):
+            for (unused_id, bfric) in sorteddict(self.bfric, sort_cards):
                 bdf_file.write(bfric.write_card(size, is_double))
-            for (unused_id, bgadd) in sorted(self.bgadds.items()):
+            for (unused_id, bgadd) in sorteddict(self.bgadds, sort_cards):
                 bdf_file.write(bgadd.write_card(size, is_double))
-            for (unused_id, bgset) in sorted(self.bgsets.items()):
+            for (unused_id, bgset) in sorteddict(self.bgsets, sort_cards):
                 bdf_file.write(bgset.write_card(size, is_double))
 
     def _write_coords(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
-                      is_long_ids: Optional[bool]=None) -> None:
+                      sort_cards: bool=True,
+                      is_long_ids: Optional[bool]=None,
+                      breakout_coords: bool=False) -> None:
         """Writes the coordinate cards in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if len(self.coords) > 1:
             bdf_file.write('$COORDS\n')
-        for (coord_id, coord) in sorted(self.coords.items()):
-            if coord_id == 0:
-                continue
-            try:
-                bdf_file.write(coord.write_card(size, is_double))
-            except RuntimeError:
-                bdf_file.write(coord.write_card_16(is_double))
+
+        if breakout_coords:
+            for (coord_id, coord) in sorteddict(self.coords, sort_cards):
+                if coord_id == 0:
+                    continue
+                if coord.origin is not None:
+                    bdf_file.write(f'$ cid={coord_id}\n')
+                    bdf_file.write(f'$   origin={coord.origin}\n')
+                    bdf_file.write(f'$   i={coord.i}\n')
+                    bdf_file.write(f'$   j={coord.j}\n')
+                    bdf_file.write(f'$   k={coord.k}\n')
+                try:
+                    bdf_file.write(coord.write_card(size, is_double))
+                except RuntimeError:
+                    bdf_file.write(coord.write_card_16(is_double))
+        else:
+            for (coord_id, coord) in sorteddict(self.coords, sort_cards):
+                if coord_id == 0:
+                    continue
+                try:
+                    bdf_file.write(coord.write_card(size, is_double))
+                except RuntimeError:
+                    bdf_file.write(coord.write_card_16(is_double))
 
     def _write_matcids(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                       sort_cards: bool=True,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the MATCID cards in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
 
         if len(self.matcid):
             bdf_file.write('$MATCID\n')
-        for (cid, matcids) in sorted(self.matcid.items()):
+        for (cid, matcids) in sorteddict(self.matcid, sort_cards):
             for matcid in matcids:
                 try:
                     bdf_file.write(matcid.write_card(size, is_double))
@@ -687,6 +726,7 @@ class WriteMesh(BDFAttributes):
                     bdf_file.write(matcid.write_card_16(is_double))
 
     def _write_dmigs(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                     sort_cards: bool=True,
                      is_long_ids: Optional[bool]=None) -> None:
         """
         Writes the DMIG cards
@@ -711,6 +751,7 @@ class WriteMesh(BDFAttributes):
             bdf_file.write(dmiax.write_card(size, is_double))
 
     def _write_dynamic(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                       sort_cards: bool=True,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the dynamic cards sorted by ID"""
         is_dynamic = (self.dareas or self.dphases or self.nlparms or self.frequencies or
@@ -720,33 +761,33 @@ class WriteMesh(BDFAttributes):
 
         if is_dynamic:
             bdf_file.write('$DYNAMIC\n')
-            for (unused_id, method) in sorted(self.methods.items()):
+            for (unused_id, method) in sorteddict(self.methods, sort_cards):
                 bdf_file.write(method.write_card(size, is_double))
-            for (unused_id, cmethod) in sorted(self.cMethods.items()):
+            for (unused_id, cmethod) in sorteddict(self.cMethods, sort_cards):
                 bdf_file.write(cmethod.write_card(size, is_double))
-            for (unused_id, darea) in sorted(self.dareas.items()):
+            for (unused_id, darea) in sorteddict(self.dareas, sort_cards):
                 bdf_file.write(darea.write_card(size, is_double))
-            for (unused_id, dphase) in sorted(self.dphases.items()):
+            for (unused_id, dphase) in sorteddict(self.dphases, sort_cards):
                 bdf_file.write(dphase.write_card(size, is_double))
-            for (unused_id, nlparm) in sorted(self.nlparms.items()):
+            for (unused_id, nlparm) in sorteddict(self.nlparms, sort_cards):
                 bdf_file.write(nlparm.write_card(size, is_double))
-            for (unused_id, nlpci) in sorted(self.nlpcis.items()):
+            for (unused_id, nlpci) in sorteddict(self.nlpcis, sort_cards):
                 bdf_file.write(nlpci.write_card(size, is_double))
-            for (unused_id, tstep) in sorted(self.tsteps.items()):
+            for (unused_id, tstep) in sorteddict(self.tsteps, sort_cards):
                 bdf_file.write(tstep.write_card(size, is_double))
-            for (unused_id, tstepnl) in sorted(self.tstepnls.items()):
+            for (unused_id, tstepnl) in sorteddict(self.tstepnls, sort_cards):
                 bdf_file.write(tstepnl.write_card(size, is_double))
-            for (unused_id, freqs) in sorted(self.frequencies.items()):
+            for (unused_id, freqs) in sorteddict(self.frequencies, sort_cards):
                 for freq in freqs:
                     bdf_file.write(freq.write_card(size, is_double))
-            for (unused_id, delay) in sorted(self.delays.items()):
+            for (unused_id, delay) in sorteddict(self.delays, sort_cards):
                 bdf_file.write(delay.write_card(size, is_double))
-            for (unused_id, rotor) in sorted(self.rotors.items()):
+            for (unused_id, rotor) in sorteddict(self.rotors, sort_cards):
                 bdf_file.write(rotor.write_card(size, is_double))
-            for (unused_id, tic) in sorted(self.tics.items()):
+            for (unused_id, tic) in sorteddict(self.tics, sort_cards):
                 bdf_file.write(tic.write_card(size, is_double))
 
-            for (unused_id, tfs) in sorted(self.transfer_functions.items()):
+            for (unused_id, tfs) in sorteddict(self.transfer_functions, sort_cards):
                 for transfer_function in tfs:
                     bdf_file.write(transfer_function.write_card(size, is_double))
             if self.acmodl:
@@ -771,12 +812,13 @@ class WriteMesh(BDFAttributes):
         return size, is_long_ids
 
     def _write_loads(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                     sort_cards: bool=True,
                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the load cards sorted by ID"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.load_combinations or self.loads or self.tempds or self.cyjoin:
             bdf_file.write('$LOADS\n')
-            for (key, load_combinations) in sorted(self.load_combinations.items()):
+            for (key, load_combinations) in sorteddict(self.load_combinations, sort_cards):
                 for load_combination in load_combinations:
                     try:
                         bdf_file.write(load_combination.write_card(size, is_double))
@@ -785,7 +827,7 @@ class WriteMesh(BDFAttributes):
                         raise
 
             if is_long_ids:
-                for (key, loadcase) in sorted(self.loads.items()):
+                for (key, loadcase) in sorteddict(self.loads, sort_cards):
                     for load in loadcase:
                         try:
                             bdf_file.write(load.write_card_16(is_double))
@@ -793,33 +835,35 @@ class WriteMesh(BDFAttributes):
                             print(f'failed printing load...type={load.type} key={key!r}')
                             raise
             else:
-                for (key, loadcase) in sorted(self.loads.items()):
+                for (key, loadcase) in sorteddict(self.loads, sort_cards):
                     for load in loadcase:
-                       # if load.type == 'PLOAD2':
-                       #     try:
-                       #         load.raw_fields()
-                       #     except Exception:
-                       #         bdf_file.write(load.write_card_separate(self, size, is_double))
-                       #         continue
+                        # if load.type == 'PLOAD2':
+                        #     try:
+                        #         load.raw_fields()
+                        #     except Exception:
+                        #         bdf_file.write(load.write_card_separate(self, size, is_double))
+                        #         continue
                         try:
                             bdf_file.write(load.write_card(size, is_double))
                         except Exception:
                             print(f'failed printing load...type={load.type} key={key!r}')
                             raise
 
-            for unused_key, tempd in sorted(self.tempds.items()):
+            for unused_key, tempd in sorteddict(self.tempds, sort_cards):
                 bdf_file.write(tempd.write_card(size, is_double))
-            for unused_key, cyjoin in sorted(self.cyjoin.items()):
+            for unused_key, cyjoin in sorteddict(self.cyjoin, sort_cards):
                 bdf_file.write(cyjoin.write_card(size, is_double))
-        self._write_dloads(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
+        self._write_dloads(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids,
+                           sort_cards=sort_cards)
 
     def _write_dloads(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                      sort_cards: bool=True,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the dload cards sorted by ID"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.dloads or self.dload_entries:
             bdf_file.write('$DLOADS\n')
-            for (key, loadcase) in sorted(self.dloads.items()):
+            for (key, loadcase) in sorteddict(self.dloads, sort_cards):
                 for load in loadcase:
                     try:
                         bdf_file.write(load.write_card(size, is_double))
@@ -827,7 +871,7 @@ class WriteMesh(BDFAttributes):
                         print(f'failed printing load...type={load.type} key={key!r}')
                         raise
 
-            for (key, loadcase) in sorted(self.dload_entries.items()):
+            for (key, loadcase) in sorteddict(self.dload_entries, sort_cards):
                 for load in loadcase:
                     try:
                         bdf_file.write(load.write_card(size, is_double))
@@ -836,12 +880,13 @@ class WriteMesh(BDFAttributes):
                         raise
 
     def _write_masses(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                      sort_cards: bool=True,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the mass cards sorted by ID"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.properties_mass:
             bdf_file.write('$PROPERTIES_MASS\n')
-            for (pid, mass) in sorted(self.properties_mass.items()):
+            for (pid, mass) in sorteddict(self.properties_mass, sort_cards):
                 try:
                     bdf_file.write(mass.write_card(size, is_double))
                 except Exception:
@@ -850,7 +895,7 @@ class WriteMesh(BDFAttributes):
 
         if self.masses:
             bdf_file.write('$MASSES\n')
-            for (eid, mass) in sorted(self.masses.items()):
+            for (eid, mass) in sorteddict(self.masses, sort_cards):
                 try:
                     bdf_file.write(mass.write_card(size, is_double))
                 except Exception:
@@ -858,6 +903,7 @@ class WriteMesh(BDFAttributes):
                     raise
 
     def _write_materials(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                         sort_cards: bool=True,
                          is_long_ids: Optional[bool]=None) -> None:
         """Writes the materials in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
@@ -868,44 +914,44 @@ class WriteMesh(BDFAttributes):
                         self.MATT8 or self.MATT9 or self.nxstrats or is_big_materials)
         if is_materials:
             bdf_file.write('$MATERIALS\n')
-            for (unused_mid, material) in sorted(self.materials.items()):
+            for (unused_mid, material) in sorteddict(self.materials, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.hyperelastic_materials.items()):
+            for (unused_mid, material) in sorteddict(self.hyperelastic_materials, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.creep_materials.items()):
-                bdf_file.write(material.write_card(size, is_double))
-
-            for (unused_mid, material) in sorted(self.MATS1.items()):
-                bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.MATS3.items()):
-                bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.MATS8.items()):
+            for (unused_mid, material) in sorteddict(self.creep_materials, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
 
-            for (unused_mid, material) in sorted(self.MATT1.items()):
+            for (unused_mid, material) in sorteddict(self.MATS1, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.MATT2.items()):
+            for (unused_mid, material) in sorteddict(self.MATS3, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.MATT3.items()):
+            for (unused_mid, material) in sorteddict(self.MATS8, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.MATT4.items()):
+
+            for (unused_mid, material) in sorteddict(self.MATT1, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.MATT5.items()):
+            for (unused_mid, material) in sorteddict(self.MATT2, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.MATT8.items()):
+            for (unused_mid, material) in sorteddict(self.MATT3, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.MATT9.items()):
+            for (unused_mid, material) in sorteddict(self.MATT4, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
-            for (unused_mid, material) in sorted(self.MATDMG.items()):
+            for (unused_mid, material) in sorteddict(self.MATT5, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
-            for (unused_sid, nxstrat) in sorted(self.nxstrats.items()):
+            for (unused_mid, material) in sorteddict(self.MATT8, sort_cards):
+                bdf_file.write(material.write_card(size, is_double))
+            for (unused_mid, material) in sorteddict(self.MATT9, sort_cards):
+                bdf_file.write(material.write_card(size, is_double))
+            for (unused_mid, material) in sorteddict(self.MATDMG, sort_cards):
+                bdf_file.write(material.write_card(size, is_double))
+            for (unused_sid, nxstrat) in sorteddict(self.nxstrats, sort_cards):
                 bdf_file.write(nxstrat.write_card(size, is_double))
 
             if is_big_materials:
-                for unused_mid, mat in sorted(self.big_materials.items()):
+                for unused_mid, mat in sorteddict(self.big_materials, sort_cards):
                     bdf_file.write(mat.write_card_16(is_double))
 
-    def _write_model_groups(self, bdf_file: TextFile):
+    def _write_model_groups(self, bdf_file: TextFile, sort_cards: bool=True) -> None:
         if self.model_groups:
             #bdf_file.write('$ MODELGROUPS\n')
             for group in self.model_groups.values():
@@ -914,6 +960,7 @@ class WriteMesh(BDFAttributes):
             #x = 1
 
     def _write_nodes(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                     sort_cards: bool=True,
                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the NODE-type cards"""
         if self.spoints:
@@ -924,13 +971,13 @@ class WriteMesh(BDFAttributes):
             bdf_file.write(write_xpoints('EPOINT', self.epoints))
         if self.points:
             bdf_file.write('$POINTS\n')
-            for unused_point_id, point in sorted(self.points.items()):
+            for unused_point_id, point in sorteddict(self.points, sort_cards):
                 bdf_file.write(point.write_card(size, is_double))
 
         if self.cyax:
             bdf_file.write(self.cyax.write_card(size, is_double))
 
-        self._write_grids(bdf_file, size=size, is_double=is_double)
+        self._write_grids(bdf_file, size=size, is_double=is_double, sort_cards=sort_cards)
         if self.seqgp:
             bdf_file.write(self.seqgp.write_card(size, is_double))
 
@@ -938,51 +985,66 @@ class WriteMesh(BDFAttributes):
             #self._write_nodes_associated(bdf_file, size, is_double)
 
     def _write_grids(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
-                     is_long_ids: Optional[bool]=None) -> None:
+                     sort_cards: bool=True,
+                     is_long_ids: Optional[bool]=None,
+                     write_as_cid0: bool=False) -> None:
         """Writes the GRID-type cards"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        if self.nodes:
+        if self.nodes or self.grdset:
             bdf_file.write('$NODES\n')
             if self.grdset:
                 bdf_file.write(self.grdset.write_card(size))
-            write_dict(bdf_file, self.nodes, size, is_double, is_long_ids)
 
-    #def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
-        #"""
-        #Writes the NODE-type in associated and unassociated groups.
+            if write_as_cid0:
+                for (unused_nid, node) in sorteddict(self.nodes, sort_cards):
+                    if node.cp != 0:
+                        xyz = node.get_position()
+                        node.uncross_reference()
+                        node.cp = 0
+                        node.xyz = xyz
+                        bdf_file.write(node.write_card(size, is_double))
+                    else:
+                        bdf_file.write(node.write_card(size, is_double))
+            else:
+                write_dict(bdf_file, self.nodes, size, is_double, is_long_ids)
 
-        #.. warning:: Sometimes crashes, probably on invalid BDFs.
-        #"""
-        #associated_nodes = set()
-        #for (eid, element) in self.elements.items():
-            #associated_nodes = associated_nodes.union(set(element.node_ids))
-
-        #all_nodes = set(self.nodes.keys())
-        #unassociated_nodes = list(all_nodes.difference(associated_nodes))
-        ##missing_nodes = all_nodes.difference(
-
-        ## TODO: this really shouldn't be a list...???
-        #associated_nodes = list(associated_nodes)
-
-        #if associated_nodes:
-            #bdf_file.write('$ASSOCIATED NODES\n')
-            #if self.grdset:
-                #bdf_file.write(self.grdset.write_card(size, is_double))
-            ## TODO: this really shouldn't be a dictionary...???
-            #for key, node in sorted(associated_nodes.items()):
-                #bdf_file.write(node.write_card(size, is_double))
-
-        #if unassociated_nodes:
-            #bdf_file.write('$UNASSOCIATED NODES\n')
-            #if self.grdset and not associated_nodes:
-                #v(self.grdset.write_card(size, is_double))
-            #for key, node in sorted(unassociated_nodes.items()):
-                #if key in self.nodes:
-                    #bdf_file.write(node.write_card(size, is_double))
-                #else:
-                    #bdf_file.write('$ Missing NodeID=%s' % key)
+    # def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
+    #     """
+    #     Writes the NODE-type in associated and unassociated groups.
+    #
+    #     .. warning:: Sometimes crashes, probably on invalid BDFs.
+    #     """
+    #     associated_nodes = set()
+    #     for (eid, element) in self.elements.items():
+    #         associated_nodes = associated_nodes.union(set(element.node_ids))
+    #
+    #     all_nodes = set(self.nodes.keys())
+    #     unassociated_nodes = list(all_nodes.difference(associated_nodes))
+    #     #missing_nodes = all_nodes.difference(
+    #
+    #     # TODO: this really shouldn't be a list...???
+    #     associated_nodes = list(associated_nodes)
+    #
+    #     if associated_nodes:
+    #         bdf_file.write('$ASSOCIATED NODES\n')
+    #         if self.grdset:
+    #             bdf_file.write(self.grdset.write_card(size, is_double))
+    #         # TODO: this really shouldn't be a dictionary...???
+    #         for key, node in sorted(associated_nodes.items()):
+    #             bdf_file.write(node.write_card(size, is_double))
+    #
+    #     if unassociated_nodes:
+    #         bdf_file.write('$UNASSOCIATED NODES\n')
+    #         if self.grdset and not associated_nodes:
+    #             v(self.grdset.write_card(size, is_double))
+    #         for key, node in sorted(unassociated_nodes.items()):
+    #             if key in self.nodes:
+    #                 bdf_file.write(node.write_card(size, is_double))
+    #             else:
+    #                 bdf_file.write('$ Missing NodeID=%s' % key)
 
     def _write_optimization(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                            sort_cards: bool=True,
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the optimization cards sorted by ID"""
         is_optimization = (
@@ -996,35 +1058,35 @@ class WriteMesh(BDFAttributes):
         )
         if is_optimization:
             bdf_file.write('$OPTIMIZATION\n')
-            for (unused_id, dconadd) in sorted(self.dconadds.items()):
+            for (unused_id, dconadd) in sorteddict(self.dconadds, sort_cards):
                 bdf_file.write(dconadd.write_card(size, is_double))
-            for (unused_id, dconstrs) in sorted(self.dconstrs.items()):
+            for (unused_id, dconstrs) in sorteddict(self.dconstrs, sort_cards):
                 for dconstr in dconstrs:
                     bdf_file.write(dconstr.write_card(size, is_double))
-            for (unused_id, desvar) in sorted(self.desvars.items()):
+            for (unused_id, desvar) in sorteddict(self.desvars, sort_cards):
                 bdf_file.write(desvar.write_card(size, is_double))
-            for (unused_id, topvar) in sorted(self.topvar.items()):
+            for (unused_id, topvar) in sorteddict(self.topvar, sort_cards):
                 bdf_file.write(topvar.write_card(size, is_double))
-            for (unused_id, ddval) in sorted(self.ddvals.items()):
+            for (unused_id, ddval) in sorteddict(self.ddvals, sort_cards):
                 bdf_file.write(ddval.write_card(size, is_double))
-            for (unused_id, dlink) in sorted(self.dlinks.items()):
+            for (unused_id, dlink) in sorteddict(self.dlinks, sort_cards):
                 bdf_file.write(dlink.write_card(size, is_double))
-            for (unused_id, dresp) in sorted(self.dresps.items()):
+            for (unused_id, dresp) in sorteddict(self.dresps, sort_cards):
                 bdf_file.write(dresp.write_card(size, is_double))
 
-            for (unused_id, dvcrel) in sorted(self.dvcrels.items()):
+            for (unused_id, dvcrel) in sorteddict(self.dvcrels, sort_cards):
                 bdf_file.write(dvcrel.write_card(size, is_double))
-            for (unused_id, dvmrel) in sorted(self.dvmrels.items()):
+            for (unused_id, dvmrel) in sorteddict(self.dvmrels, sort_cards):
                 bdf_file.write(dvmrel.write_card(size, is_double))
-            for (unused_id, dvprel) in sorted(self.dvprels.items()):
+            for (unused_id, dvprel) in sorteddict(self.dvprels, sort_cards):
                 bdf_file.write(dvprel.write_card(size, is_double))
-            for (unused_id, dvgrids) in sorted(self.dvgrids.items()):
+            for (unused_id, dvgrids) in sorteddict(self.dvgrids, sort_cards):
                 for dvgrid in dvgrids:
                     bdf_file.write(dvgrid.write_card(size, is_double))
-            for (unused_id, dscreen) in sorted(self.dscreen.items()):
+            for (unused_id, dscreen) in sorteddict(self.dscreen, sort_cards):
                 bdf_file.write(str(dscreen))
 
-            for (unused_id, equation) in sorted(self.dequations.items()):
+            for (unused_id, equation) in sorteddict(self.dequations, sort_cards):
                 bdf_file.write(str(equation))
 
             if self.dtable is not None:
@@ -1035,50 +1097,48 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(self.modtrak.write_card(size, is_double))
 
             # nx optimization
-            for (unused_id, dvtrel) in sorted(self.dvtrels.items()):
+            for (unused_id, dvtrel) in sorteddict(self.dvtrels, sort_cards):
                 bdf_file.write(dvtrel.write_card(size, is_double))
-            for (unused_id, dmncon) in sorted(self.dmncon.items()):
+            for (unused_id, dmncon) in sorteddict(self.dmncon, sort_cards):
                 bdf_file.write(dmncon.write_card(size, is_double))
 
     def _write_parametric(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                          sort_cards: bool=True,
                           is_long_ids: Optional[bool]=None) -> None:
         """Writes the optimization cards sorted by ID"""
         is_parametric = self.pset or self.pval or self.gmcurv or self.feedge or self.feface
         if is_parametric:
             for (unused_id, pset) in sorted(self.pset.items()):
                 bdf_file.write(pset.write_card(size, is_double))
-
             for (unused_adapt_id, pvals) in sorted(self.pval.items()):
                 for pval in pvals:
                     bdf_file.write(pval.write_card(size, is_double))
-
             for (unused_id, gmcurv) in sorted(self.gmcurv.items()):
                 bdf_file.write(gmcurv.write_card(size, is_double))
-
             for (unused_id, gmsurf) in sorted(self.gmsurf.items()):
                 bdf_file.write(gmsurf.write_card(size, is_double))
-
             for (unused_id, feedge) in sorted(self.feedge.items()):
                 bdf_file.write(feedge.write_card(size, is_double))
-
             for (unused_id, feface) in sorted(self.feface.items()):
                 bdf_file.write(feface.write_card(size, is_double))
 
     def _write_params(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                      sort_cards: bool=True,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the PARAM cards"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.params or self.dti or self.mdlprm:
             bdf_file.write('$PARAMS\n')
-            for unused_name, dti in sorted(self.dti.items()):
+            for unused_name, dti in sorteddict(self.dti, sort_cards):
                 bdf_file.write(dti.write_card(size=size, is_double=is_double))
 
-            for (unused_key, param) in sorted(self.params.items()):
+            for (unused_key, param) in sorteddict(self.params, sort_cards):
                 bdf_file.write(param.write_card(size, is_double))
             if self.mdlprm:
                 bdf_file.write(self.mdlprm.write_card(size, is_double))
 
     def _write_properties(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                          sort_cards: bool=True,
                           is_long_ids: Optional[bool]=None) -> None:
         """Writes the properties in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
@@ -1090,18 +1150,18 @@ class WriteMesh(BDFAttributes):
             prop_groups = (self.properties, self.pelast, self.pdampt, self.pbusht)
             if is_long_ids:
                 for prop_group in prop_groups:
-                    for unused_pid, prop in sorted(prop_group.items()):
+                    for unused_pid, prop in sorteddict(prop_group, sort_cards):
                         bdf_file.write(prop.write_card_16(is_double))
                 #except Exception:
                     #print('failed printing property type=%s' % prop.type)
                     #raise
             else:
                 for prop_group in prop_groups:
-                    for unused_pid, prop in sorted(prop_group.items()):
+                    for unused_pid, prop in sorteddict(prop_group, sort_cards):
                         bdf_file.write(prop.write_card(size, is_double))
 
             if is_big_properties:
-                for unused_pid, prop in sorted(self.big_properties.items()):
+                for unused_pid, prop in sorteddict(self.big_properties, sort_cards):
                     bdf_file.write(prop.write_card_16(is_double))
 
     def _write_properties_by_element_type(self, bdf_file: TextFile, size: int=8,
@@ -1122,11 +1182,11 @@ class WriteMesh(BDFAttributes):
 
         bdf_file.write('$PROPERTIES\n')
         for prop_class, prop_types in propertys_class_to_property_types.items():
-            #print(prop_class, prop_types)
-            #for prop_type in prop_types:
-                #if prop_type not in properties_by_class:
-                    #continue
-                #print('  ', prop_type)
+            # print(prop_class, prop_types)
+            # for prop_type in prop_types:
+            #     if prop_type not in properties_by_class:
+            #         continue
+            #     print('  ', prop_type)
             props = properties_by_class[prop_class]
             if not props:
                 continue
@@ -1184,20 +1244,21 @@ class WriteMesh(BDFAttributes):
                     raise TypeError(reject_lines)
 
     def _write_rigid_elements(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                              sort_cards: bool=True,
                               is_long_ids: Optional[bool]=None) -> None:
         """Writes the rigid elements in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.rigid_elements:
             bdf_file.write('$RIGID ELEMENTS\n')
             if is_long_ids:
-                for (eid, element) in sorted(self.rigid_elements.items()):
+                for (eid, element) in sorteddict(self.rigid_elements, sort_cards):
                     try:
                         bdf_file.write(element.write_card_16(is_double))
                     except Exception:
                         print(f'failed printing element...type={element.type} eid={eid}')
                         raise
             else:
-                for (eid, element) in sorted(self.rigid_elements.items()):
+                for (eid, element) in sorteddict(self.rigid_elements, sort_cards):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
                     except Exception:
@@ -1208,13 +1269,14 @@ class WriteMesh(BDFAttributes):
             write_dict(bdf_file, self.plotels, size, is_double, is_long_ids)
 
     def _write_sets(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                    sort_cards: bool=True,
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the SETx cards sorted by ID"""
         is_sets = (self.sets or self.asets or self.omits or self.bsets or self.csets or self.qsets
                    or self.usets)
         if is_sets:
             bdf_file.write('$SETS\n')
-            for (unused_id, set_obj) in sorted(self.sets.items()):  # dict
+            for (unused_id, set_obj) in sorteddict(self.sets, sort_cards):  # dict
                 bdf_file.write(set_obj.write_card(size, is_double))
             for set_obj in self.asets:  # list
                 bdf_file.write(set_obj.write_card(size, is_double))
@@ -1231,6 +1293,7 @@ class WriteMesh(BDFAttributes):
                     bdf_file.write(set_obj.write_card(size, is_double))
 
     def _write_superelements(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                             sort_cards: bool=True,
                              is_long_ids: Optional[bool]=None) -> None:
         """
         Writes the Superelement cards
@@ -1292,25 +1355,27 @@ class WriteMesh(BDFAttributes):
             bdf_file.write(release.write_card(size, is_double))
 
     def _write_tables(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                      sort_cards: bool=True,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the TABLEx cards sorted by ID"""
         if self.tables or self.tables_d or self.tables_m or self.tables_sdamping:
             bdf_file.write('$TABLES\n')
-            for (unused_id, table) in sorted(self.tables.items()):
+            for (unused_id, table) in sorteddict(self.tables, sort_cards):
                 bdf_file.write(table.write_card(size, is_double))
-            for (unused_id, table) in sorted(self.tables_d.items()):
+            for (unused_id, table) in sorteddict(self.tables_d, sort_cards):
                 bdf_file.write(table.write_card(size, is_double))
-            for (unused_id, table) in sorted(self.tables_m.items()):
+            for (unused_id, table) in sorteddict(self.tables_m, sort_cards):
                 bdf_file.write(table.write_card(size, is_double))
-            for (unused_id, table) in sorted(self.tables_sdamping.items()):
+            for (unused_id, table) in sorteddict(self.tables_sdamping, sort_cards):
                 bdf_file.write(table.write_card(size, is_double))
 
         if self.random_tables:
             bdf_file.write('$RANDOM TABLES\n')
-            for (unused_id, table) in sorted(self.random_tables.items()):
+            for (unused_id, table) in sorteddict(self.random_tables, sort_cards):
                 bdf_file.write(table.write_card(size, is_double))
 
     def _write_thermal(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                       sort_cards: bool=True,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the thermal cards"""
         # PHBDY
@@ -1319,34 +1384,35 @@ class WriteMesh(BDFAttributes):
         if is_thermal:
             bdf_file.write('$THERMAL\n')
 
-            for (unused_key, phbdy) in sorted(self.phbdys.items()):
+            for (unused_key, phbdy) in sorteddict(self.phbdys, sort_cards):
                 bdf_file.write(phbdy.write_card(size, is_double))
 
             #for unused_key, prop in sorted(self.thermal_properties.items()):
             #    bdf_file.write(str(prop))
-            for (unused_key, prop) in sorted(self.convection_properties.items()):
+            for (unused_key, prop) in sorteddict(self.convection_properties, sort_cards):
                 bdf_file.write(prop.write_card(size, is_double))
 
             # BCs
-            for (unused_key, bcs) in sorted(self.bcs.items()):
+            for (unused_key, bcs) in sorteddict(self.bcs, sort_cards):
                 for boundary_condition in bcs:  # list
                     bdf_file.write(boundary_condition.write_card(size, is_double))
 
-            for (unused_key, view) in sorted(self.views.items()):
+            for (unused_key, view) in sorteddict(self.views, sort_cards):
                 bdf_file.write(view.write_card(size, is_double))
-            for (unused_key, view3d) in sorted(self.view3ds.items()):
+            for (unused_key, view3d) in sorteddict(self.view3ds, sort_cards):
                 bdf_file.write(view3d.write_card(size, is_double))
             if self.radset:
                 bdf_file.write(self.radset.write_card(size, is_double))
-            for unused_icavity, radcav in self.radcavs.items():
+            for unused_icavity, radcav in sorteddict(self.radcavs, sort_cards):
                 bdf_file.write(radcav.write_card(size, is_double))
 
     def _write_thermal_materials(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
+                                 sort_cards: bool=True,
                                  is_long_ids: Optional[bool]=None) -> None:
         """Writes the thermal materials in a sorted order"""
         if self.thermal_materials:
             bdf_file.write('$THERMAL MATERIALS\n')
-            for (unused_mid, material) in sorted(self.thermal_materials.items()):
+            for (unused_mid, material) in sorteddict(self.thermal_materials, sort_cards):
                 bdf_file.write(material.write_card(size, is_double))
 
 
@@ -1417,7 +1483,7 @@ def get_optimization_include(model: BDF) -> tuple[list[int], list[int]]:
     mids_to_remove = set([])
     for dvmrel_id, dvmrel in model.dvmrels.items():
         if dvmrel.mat_type in material_types:
-            mid = dvprel.mid
+            mid = dvmrel.mid
             mids_to_remove.add(mid)
     return list(pids_to_remove), list(mids_to_remove)
 
@@ -1468,7 +1534,7 @@ def _delete_optimization_data(model: BDF,
     for mid, mat in model.materials.items():
         if mat.type in mat_types:
             materials_to_write.append(mat)
-            del model.materials[pid]
+            del model.materials[mid]
             mids_to_delete.append(mid)
     for mid in mids_to_delete:
         del model.mids_to_delete[mid]
@@ -1496,3 +1562,9 @@ def write_optimization_include(model: BDF, pch_include_filename: PathLike,
         for desvar in desvars:
             pch_file.write(desvar.write_card(size=size))
     return
+
+
+def sorteddict(mydict, sort_cards):
+    if sort_cards:
+        return sorted(mydict.items())
+    return mydict.items()

@@ -18,10 +18,10 @@ if TYPE_CHECKING:  # pragma: no cover
         AEFACT, AELINK,
         AELIST,
         AEPARM, AESURF,  # AESURFS,
-        CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-        PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+        #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+        #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
         #MONPNT1, MONPNT2, MONPNT3,
-        SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
+        #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     )
     from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM  # CSSCHD, TRIM2, DIVERG
     from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST
@@ -37,8 +37,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.dynamic import (
         #DELAY, DPHASE,
         NLPARM)
-    from pyNastran.bdf.cards.elements.rigid import (
-        RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON)
+    # from pyNastran.bdf.cards.elements.rigid import (
+    #     RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON)
     from pyNastran.bdf.cards.loads.loads import SLOAD, DAREA
     from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
     from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
@@ -65,8 +65,8 @@ if TYPE_CHECKING:  # pragma: no cover
         DVPREL1, DVPREL2)
     from pyNastran.bdf.cards.bdf_sets import SET1, SET3
     from pyNastran.bdf.cards.thermal.thermal import PHBDY
-    #from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
-                                                   #TEMPRB, QVOL, QVECT)
+    # from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
+    #                                                TEMPRB, QVOL, QVECT)
     from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                                 TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                                 TABLES1, TABLEST, TABLEHT, TABLEH1,
@@ -173,13 +173,32 @@ class GetMethods(BDFAttributes):
 
         """
         nodes = []
-        try:
-            for nid in nids:
-                nodes.append(self.Node(nid, msg=msg))
-        except AssertionError:
-            print(msg)
-            print(nids)
-            raise
+        nids_failed = []
+        for nid in nids:
+            assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
+
+        for nid in nids:
+            if nid in self.nodes:
+                node = self.nodes[nid]
+            elif nid in self.spoints:
+                node = self.spoints[nid]
+            elif nid in self.epoints:
+                node = self.epoints[nid]
+            else:
+                nids_failed.append(nid)
+                continue
+            nodes.append(node)
+
+        if len(nids_failed):
+            nid_list = _unique_keys(self.nodes)
+            msg = f'nids={nids_failed} are not a GRID, SPOINT, or EPOINT{msg}\n'
+            msg += 'nids=%s\n' % nid_list
+            if self.spoints:
+                msg += 'spoints=%s\n' % _unique_keys(self.spoints)
+            if self.epoints:
+                msg += 'epoints=%s\n' % _unique_keys(self.epoints)
+            raise KeyError(msg)
+
         return nodes
 
     def Point(self, nid: int, msg: str='') -> POINT:
@@ -222,15 +241,15 @@ class GetMethods(BDFAttributes):
 
         """
         elements = []
-        bad_eids = []
+        failed_eids = []
         for eid in eids:
             try:
                 elements.append(self.Element(eid, msg))
             except KeyError:
-                bad_eids.append(eid)
-        if bad_eids:
+                failed_eids.append(eid)
+        if failed_eids:
             msg = 'eids=%s not found%s.  Allowed elements=%s' % (
-                bad_eids, msg, _unique_keys(self.elements))
+                failed_eids, msg, _unique_keys(self.elements))
             raise KeyError(msg)
         return elements
 
@@ -271,8 +290,17 @@ class GetMethods(BDFAttributes):
 
         """
         properties = []
+        failed_pids = []
         for pid in pids:
-            properties.append(self.Property(pid, msg))
+            try:
+                properties.append(self.Property(pid))
+            except KeyError:
+                failed_pids.append(pid)
+                continue
+        if failed_pids:
+            msg = 'pids=%s not found%s.  Allowed properties=%s' % (
+                failed_pids, msg, _unique_keys(self.properties))
+            raise KeyError(msg)
         return properties
 
     def PropertyMass(self, pid: int, msg: str='') -> PMASS:
@@ -402,7 +430,9 @@ class GetMethods(BDFAttributes):
                 sid, msg, np.unique(loads_ids), np.unique(load_combination_ids)))
         return load
 
-    def DLoad(self, sid: int, consider_dload_combinations: bool=True, msg: str='') -> DLOAD:
+    def DLoad(self, sid: int,
+              consider_dload_combinations: bool=True,
+              msg: str='') -> DLOAD:
         """
         Gets a DLOAD, TLOAD1, TLOAD2, etc. associated with the
         Case Control DLOAD entry
@@ -459,7 +489,9 @@ class GetMethods(BDFAttributes):
                            % (dphase_id, msg, list(self.dphases.keys())))
 
     #--------------------
-    def MPC(self, mpc_id: int, consider_mpcadd: bool=True, msg: str='') -> MPC | MPCADD:
+    def MPC(self, mpc_id: int,
+            consider_mpcadd: bool=True,
+            msg: str='') -> MPC | MPCADD:
         """
         Gets an MPCADD or MPC
 
@@ -486,7 +518,9 @@ class GetMethods(BDFAttributes):
                 mpc_id, msg, np.unique(mpc_ids), np.unique(mpcadd_ids)))
         return constraint
 
-    def SPC(self, spc_id: int, consider_spcadd: bool=True, msg: str='') -> SPC | SPC1 | SPCADD:
+    def SPC(self, spc_id: int,
+            consider_spcadd: bool=True,
+            msg: str='') -> SPC | SPC1 | SPCADD:
         """
         Gets an SPCADD or SPC
 
@@ -607,14 +641,14 @@ class GetMethods(BDFAttributes):
 
     def AESurf(self, aesurf_name: str, msg: str='') -> AESURF:
         """gets an AESURF"""
-        #if isinstance(aesurf_name, integer_types):
-            #aesurf_id = aesurf_name
-            #try:
-                #return self.aesurf[aesurf_id]
-            #except KeyError:
-                #raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
-                               #% (aesurf_id, msg, _unique_keys(self.aesurf)))
-        #else:
+        # if isinstance(aesurf_name, integer_types):
+        #     aesurf_id = aesurf_name
+        #     try:
+        #         return self.aesurf[aesurf_id]
+        #     except KeyError:
+        #         raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
+        #                        % (aesurf_id, msg, _unique_keys(self.aesurf)))
+        # else:
         assert isinstance(aesurf_name, str), f'aesurf_name={aesurf_name!r}'
 
         for aesurf_int, aesurf in self.aesurf.items():
@@ -636,6 +670,8 @@ class GetMethods(BDFAttributes):
 
     def Acsid(self, msg: str='') -> Coord:
         """gets the aerodynamic coordinate system"""
+        acsid_aero = -1
+        acsid_aeros = -1
         if self.aero is not None:
             acsid_aero = self.aero.Acsid()
         if self.aeros is not None:
@@ -654,6 +690,8 @@ class GetMethods(BDFAttributes):
 
     def safe_acsid(self, msg: str='') -> Optional[Coord]:
         """gets the aerodynamic coordinate system"""
+        acsid_aero = -1
+        acsid_aeros = -1
         if self.aero is not None:
             acsid_aero = self.aero.Acsid()
         if self.aeros is not None:
@@ -666,7 +704,7 @@ class GetMethods(BDFAttributes):
         elif self.aeros is not None:
             coord = self.Coord(acsid_aeros, msg=msg)
         else:
-            ## TODO: consider changing this...
+            # TODO: consider changing this...
             self.log.error(f'neither AERO nor AEROS cards exist; assuming global (cid=0){msg}.')
             return self.Coord(0, msg=msg)
         return coord
@@ -719,14 +757,14 @@ class GetMethods(BDFAttributes):
     # AERO CONTROL SURFACE CARDS
     def AEStat(self, aestat_name: str, msg: str='') -> AESTAT:
         """gets an AESTAT"""
-        #if isinstance(aesurf_name, integer_types):
-            #aesurf_id = aesurf_name
-            #try:
-                #return self.aesurf[aesurf_id]
-            #except KeyError:
-                #raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
-                               #% (aesurf_id, msg, _unique_keys(self.aesurf)))
-        #else:
+        # if isinstance(aesurf_name, integer_types):
+        #     aesurf_id = aesurf_name
+        #     try:
+        #         return self.aesurf[aesurf_id]
+        #     except KeyError:
+        #         raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
+        #                        % (aesurf_id, msg, _unique_keys(self.aesurf)))
+        # else:
         assert isinstance(aestat_name, str), f'aestat_name={aestat_name!r}'
 
         for aestat_int, aestat in self.aestats.items():
@@ -755,24 +793,24 @@ class GetMethods(BDFAttributes):
             raise KeyError('id=%s not found%s.  Allowed AELISTs=%s'
                            % (aid, msg, _unique_keys(self.aelists)))
 
-    def AELink(self, link_id: int, msg: str='') -> AELINK:
+    def AELink(self, aelink_id: int, msg: str='') -> AELINK:
         """gets an AELINK"""
         try:
-            return self.aelinks[link_id]
+            return self.aelinks[aelink_id]
         except KeyError:
-            raise KeyError('link_id=%s not found%s.  Allowed AELINKs=%s'
-                           % (link_id, msg, _unique_keys(self.aelinks)))
+            raise KeyError('aelink_id=%s not found%s.  Allowed AELINKs=%s'
+                           % (aelink_id, msg, _unique_keys(self.aelinks)))
 
     def AEParam(self, aeparm_name: str, msg: str='') -> AEPARM:
         """gets an AEPARM"""
-        #if isinstance(aeparam_name, integer_types):
-            #aeparam_id = aeparam_name
-            #try:
-                #return self.aeparams[aesurf_id]
-            #except KeyError:
-                #raise KeyError('aesurf=%s not found%s.  Allowed AEPARM=%s'
-                               #% (aesurf_id, msg, _unique_keys(self.aesurf)))
-        #else:
+        # if isinstance(aeparam_name, integer_types):
+        #     aeparam_id = aeparam_name
+        #     try:
+        #         return self.aeparams[aesurf_id]
+        #     except KeyError:
+        #         raise KeyError('aesurf=%s not found%s.  Allowed AEPARM=%s'
+        #                        % (aesurf_id, msg, _unique_keys(self.aesurf)))
+        # else:
         assert isinstance(aeparm_name, str), f'aeparm_name={aeparm_name!r}'
 
         for aeparam_int, aeparam in self.aeparams.items():
@@ -969,12 +1007,14 @@ class GetMethods(BDFAttributes):
             raise KeyError('equation_id=%s not found%s.  Allowed DEQATNs=%s'
                            % (equation_id, msg, _unique_keys(self.dequations)))
 
+
 def get_pid_to_eid_map(model: BDF) -> dict[int, list[int]]:
     pid_to_eid_map = defaultdict(set)
     for eid, elem in model.elements.items():
         pid = elem.pid
         pid_to_eid_map[pid].add(eid)
     return pid_to_eid_map
+
 
 def get_pid_to_nid_map(model: BDF) -> dict[int, list[int]]:
     """TODO: doesn't support CONROD"""
@@ -991,6 +1031,7 @@ def get_pid_to_nid_map(model: BDF) -> dict[int, list[int]]:
         nodes_list.sort()
         property_to_nodes_map2[pid] = nodes_list
     return property_to_nodes_map2
+
 
 def _unique_keys(mydict: dict[int, Any]) -> str:
     """helper method"""
