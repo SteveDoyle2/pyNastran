@@ -2852,7 +2852,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'NLPARM': (NLPARM, add_methods.add_nlparm_object),
             'NLPCI': (NLPCI, add_methods.add_nlpci_object),
             'TSTEP': (TSTEP, add_methods.add_tstep_object),
-            'TSTEP1': (TSTEP1, add_methods.add_tstepnl_object),
+            'TSTEP1': (TSTEP1, add_methods.add_tstep_object),
             'TSTEPNL': (TSTEPNL, add_methods.add_tstepnl_object),
 
             'TF': (TF, add_methods.add_tf_object),
