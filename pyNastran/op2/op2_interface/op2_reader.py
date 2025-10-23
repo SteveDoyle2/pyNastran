@@ -3697,8 +3697,6 @@ class OP2Reader:
             else:
                 self.generic_stop_table(data, ndata)
         op2.subtable_name = subtable_name.rstrip()
-        #if subtable_name == b'GEOM2':
-            #self.show(200)
         self._read_subtables()
 
     def _read_subtables(self) -> None:

@@ -651,7 +651,7 @@ class NSMADD(BaseCard):
 
         sets_clean = remove_blanks_capitalize(sets)
         if len(sets) != len(sets_clean):
-            warnings.warn(f'NSMADD={sid} set length is changed\n'
+            warnings.warn(f'{self.type}={sid} set length is changed\n'
                           f'old; n={len(sets)}: {set_list_print(sets)}\n'
                           f'new; n={len(sets_clean)}: {set_list_print(sets_clean)}')
         self.sets = expand_thru(sets_clean)

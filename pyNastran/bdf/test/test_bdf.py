@@ -481,7 +481,6 @@ def run_and_compare_fems(
     fem1 = BDF(debug=debug, log=log)
     fem1.allow_tabs = allow_tabs
     fem1.allow_duplicate_element_rbe_mass = allow_similar_eid
-    #assert allow_similar_eid is False, allow_similar_eid
     #fem1.force_echo_off = False
     log = fem1.log
     if is_lax_parser:

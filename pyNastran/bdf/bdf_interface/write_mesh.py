@@ -989,8 +989,7 @@ class WriteMesh(BDFAttributes):
     def _write_grids(self, bdf_file: TextFile, size: int=8, is_double: bool=False,
                      sort_cards: bool=True,
                      is_long_ids: Optional[bool]=None,
-                     write_as_cid0: bool=False,
-                     ) -> None:
+                     write_as_cid0: bool=False) -> None:
         """Writes the GRID-type cards"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.nodes or self.grdset:
