@@ -79,7 +79,7 @@ def remove_unused(bdf_filename: PathLike,
     unreferenced_types_case_control = {
         'EIGR', 'EIGRL', 'EIGB', 'EIGP', 'EIGC',
         'FREQ', 'FREQ1', 'FREQ2',
-        'TSTEP', 'TSTEPNL',
+        'TSTEP', 'TSTEP1', 'TSTEPNL',
         'NLPCI', 'NLPARM',
 
         # aero

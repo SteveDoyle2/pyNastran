@@ -2272,7 +2272,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'NLPARM' : (NLPARM, add_methods.add_nlparm_object),
             'NLPCI' : (NLPCI, add_methods.add_nlpci_object),
             'TSTEP' : (TSTEP, add_methods.add_tstep_object),
-            'TSTEP1' : (TSTEP1, add_methods.add_tstepnl_object),
+            'TSTEP1' : (TSTEP1, add_methods.add_tstep_object),
             'TSTEPNL' : (TSTEPNL, add_methods.add_tstepnl_object),
 
             # nx_opt

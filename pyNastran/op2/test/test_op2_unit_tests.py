@@ -1033,6 +1033,35 @@ class TestNX(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
+    def test_nx_sol401_tstep1(self):
+        """Test SOL401 simulation with a TSTEP1 card."""
+
+        log = get_logger(level='info')
+        bdf_filename = MODEL_PATH / 'nx' / 'sol401' / 'sol401_tstep1.dat'
+        op2_filename = MODEL_PATH / 'nx' / 'sol401' / 'sol401_tstep1.op2'
+
+        #  can't parse replication
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model.safe_cross_reference()
+        save_load_deck(model, run_save_load=False, run_renumber=False)
+
+        log = get_logger(level='warning')
+        exclude_results = None  # ['*cplstn3*']
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
+                write_f06=True, write_op2=False, write_hdf5=False,  # IS_H5PY
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=exclude_results,
+                short_stats=False,
+                compare=False, debug=True, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
 
 class TestMSC(Tester):
     def test_cantilever_plate_nonlinear_msc_2021(self):
