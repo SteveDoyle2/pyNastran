@@ -55,7 +55,7 @@ from pyNastran.bdf.cards.elements.shell import (
 from pyNastran.bdf.cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR,
     ACMODL, ACPLNW, AMLREG, PMIC, MICPNT, MATPOR)
-from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
+from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PGPLSN
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import (
     PBUSH, PBUSH1D, PBUSHT, PBUSH2D, PBUSH_OPTISTRUCT)
@@ -337,6 +337,8 @@ CARD_MAP = {
     'CPLSTS6': CPLSTS6,
     'CPLSTS8': CPLSTS8,
     'PPLANE': PPLANE,
+
+    'PGPLSN': PGPLSN,
 
     'CSHEAR': CSHEAR,
     'PSHEAR': PSHEAR,
@@ -3805,10 +3807,10 @@ class AddMaterial:
         return mat
 
     def add_mats1(self, mid: int, nl_type: str,
-                  h, hr, yf, limit1, limit2,
+                  h, hr, yf, limit1, limit2, strmeas: str | None = None,
                   tid: int=0, comment: str='') -> MATS1:
         """Creates a MATS1 card"""
-        mat = MATS1(mid, nl_type, h, hr, yf, limit1, limit2,
+        mat = MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas,
                     tid=tid, comment=comment)
         self._add_methods.add_material_dependence_object(mat)
         return mat
@@ -7191,6 +7193,15 @@ class AddCards(AddCoords, AddContact, AddBolts,
         """Creates a PPLANE card"""
         prop = PPLANE(pid, mid, t=t, nsm=nsm, formulation_option=formulation_option,
                       comment=comment)
+        self._add_methods.add_property_object(prop)
+        return prop
+
+    def add_pgplsn(self, pid: int, mid: int, cgid: int, t: float,
+                   kn: float | int = 0., kr1: float | int = 0., kr2: float | int = 0.,
+                   comment: str='') -> PGPLSN:
+        """Creates a PGPLSN card"""
+        prop = PGPLSN(pid, mid, cgid=cgid, t=t, kn=kn, kr1=kr1, kr2=kr2, comment=comment)
+
         self._add_methods.add_property_object(prop)
         return prop
 

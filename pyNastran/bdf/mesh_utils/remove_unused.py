@@ -79,7 +79,7 @@ def remove_unused(bdf_filename: PathLike,
     unreferenced_types_case_control = {
         'EIGR', 'EIGRL', 'EIGB', 'EIGP', 'EIGC',
         'FREQ', 'FREQ1', 'FREQ2',
-        'TSTEP', 'TSTEPNL',
+        'TSTEP', 'TSTEP1', 'TSTEPNL',
         'NLPCI', 'NLPARM',
 
         # aero
@@ -290,6 +290,11 @@ def remove_unused(bdf_filename: PathLike,
             for pid in ids:
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())
+        elif card_type == 'PGPLSN':
+            for pid in ids:
+                prop = model.properties[pid]
+                mids_used.add(prop.Mid())
+                nids_used.add(prop.cgid)
 
         elif card_type in {'PLOTEL', 'PLOTEL3', 'PLOTEL4',
                            'PLOTEL6', 'PLOTEL8'}:

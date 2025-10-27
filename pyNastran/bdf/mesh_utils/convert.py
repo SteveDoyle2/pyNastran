@@ -586,7 +586,7 @@ def _convert_properties(model: BDF,
         'PSOLID', 'PLSOLID', 'PLPLANE',
 
         # TODO: NX-verify
-        'PPLANE',
+        'PPLANE', 'PGPLSN',
 
         # acoustic
         'PACABS', 'PMIC',

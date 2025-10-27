@@ -1786,28 +1786,15 @@ def _check_case_parameters(subcase: Subcase,
                            stop_on_failure: bool=True) -> int:
     """helper method for ``check_case``"""
     log = fem.log
-    if fem.sol in {401, 402}:
-        # TSTEP references a TSTEP1, but not a TSTEP
-        # TSTEP1s are stored in tstepnls
-        if any(subcase.has_parameter('TIME', 'TSTEP')):
-            if 'TSTEP' in subcase:
-                tstep_id: int = subcase.get_int_parameter('TSTEP')
-            else:  # pragma: no cover
-                raise NotImplementedError(subcase)
-            if tstep_id not in fem.tstepnls:
-                raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
-        else:
-            raise RuntimeError(f'missing TSTEP in case control deck\n{subcase}')
-    else:
-        if any(subcase.has_parameter('TIME', 'TSTEP')):
-            if 'TIME' in subcase:
-                tstep_id: int = subcase.get_int_parameter('TIME')
-            elif 'TSTEP' in subcase:
-                tstep_id: int = subcase.get_int_parameter('TSTEP')
-            else:  # pragma: no cover
-                raise NotImplementedError(subcase)
-            if tstep_id not in fem.tsteps:
-                raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
+    if any(subcase.has_parameter('TIME', 'TSTEP')):
+        if 'TIME' in subcase:
+            tstep_id: int = subcase.get_int_parameter('TIME')
+        elif 'TSTEP' in subcase:
+            tstep_id: int = subcase.get_int_parameter('TSTEP')
+        else:  # pragma: no cover
+            raise NotImplementedError(subcase)
+        if tstep_id not in fem.tsteps:
+            raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
 
     check_subcase_dmig_matrices(fem, subcase)
     if 'TSTEPNL' in subcase:
