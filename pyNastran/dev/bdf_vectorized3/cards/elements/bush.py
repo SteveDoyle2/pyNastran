@@ -559,7 +559,7 @@ class PBUSH(Property):
                 t_fields = self._read_var(card, 'Ti', istart + 1, istart + 4)
                 assert len(t_fields) == 3, t_fields
             else:
-                raise RuntimeError(f'unsupported PBUSH type; pname={pname!r}')
+                raise RuntimeError(f'unsupported PBUSH type; pname={pname!r}\n{card}')
                 #break #  old version...
             istart += 8
 

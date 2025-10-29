@@ -1929,8 +1929,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         for iline_bulk, line in enumerate(bulk_data_lines):
             ifile_iline = bulk_data_ilines[iline_bulk, :]
-            #print(iline_bulk, ifile_iline, line)
-            #print('    backup=%r' % backup_comment)
+            # print(iline_bulk, ifile_iline)
+            # print(iline_bulk, ifile_iline, line)
+            # print('    backup={backup_comment!r}')
             comment = ''
             if '$' in line:
                 line, comment = line.split('$', 1)
@@ -5266,33 +5267,33 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
                    save_file_structure=save_file_structure,
                    encoding=encoding)
 
-    #if 0:
-        ### TODO: remove all the extra methods
-
-        #keys_to_suppress = []
-        #method_names = model.object_methods(keys_to_skip=keys_to_suppress)
-
-        #methods_to_remove = [
-            #'_process_card', 'read_bdf', 'disable_cards', 'set_dynamic_syntax',
-            #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
-
-            #'set_as_msc',
-            #'set_as_nx',
-
-            #'pop_parse_errors',
-            ##'pop_xref_errors',
-            #'set_error_storage',
-            #'is_reject',
-        #]
-        #for method_name in method_names:
-            #if method_name not in methods_to_remove + keys_to_suppress:
-                ##print(method_name)
-                #pass
-            #else:
-                ### TODO: doesn't work...
-                ##delattr(model, method_name)
-                #pass
-        #model.get_bdf_stats()
+    # if 0:
+    #     ## TODO: remove all the extra methods
+    #
+    #     keys_to_suppress = []
+    #     method_names = model.object_methods(keys_to_skip=keys_to_suppress)
+    #
+    #     methods_to_remove = [
+    #         '_process_card', 'read_bdf', 'disable_cards', 'set_dynamic_syntax',
+    #         'create_card_object', 'create_card_object_fields', 'create_card_object_list',
+    #
+    #         'set_as_msc',
+    #         'set_as_nx',
+    #
+    #         'pop_parse_errors',
+    #         #'pop_xref_errors',
+    #         'set_error_storage',
+    #         'is_reject',
+    #     ]
+    #     for method_name in method_names:
+    #         if method_name not in methods_to_remove + keys_to_suppress:
+    #             #print(method_name)
+    #             pass
+    #         else:
+    #             ## TODO: doesn't work...
+    #             #delattr(model, method_name)
+    #             pass
+    #     model.get_bdf_stats()
     return model
 
 

@@ -177,7 +177,8 @@ def get_rigid_elements_with_node_ids(model: BDF, node_ids):
     return rbes
 
 
-def get_dependent_nid_to_components(model: BDF, mpc_id=None, stop_on_failure=True):
+def get_dependent_nid_to_components(model: BDF, mpc_id=None,
+                                    stop_on_failure=True):
     """
     Gets a dictionary of the dependent node/components.
 
@@ -283,6 +284,7 @@ def get_dependent_nid_to_components(model: BDF, mpc_id=None, stop_on_failure=Tru
             model.log.warning(msg)
         else:
             raise RuntimeError(rigid_element.type)
+
     return dependent_nid_to_components
 
 
@@ -311,13 +313,13 @@ def get_lines_rigid(model: BDF) -> Any:
                     assert isinstance(n2, integer_types), 'RBE3 eid=%s Giji=%s' % (elem.eid, Giji)
                     lines_rigid.append([n1, n2])
         elif elem.type == 'RBE2':
-            #list_fields = ['RBE2', elem.eid, elem.Gn(), elem.cm
-                           #] + elem.Gmi_node_ids + [elem.alpha]
+            # list_fields = ['RBE2', elem.eid, elem.Gn(), elem.cm
+            #                ] + elem.Gmi_node_ids + [elem.alpha]
             n2 = elem.Gn()  # independent
             nids1 = elem.Gmi_node_ids  # dependent
             for n1 in nids1:
                 lines_rigid.append([n1, n2])
-        elif elem.type in ['RBAR', 'RBAR1', 'RROD']:  ## TODO: these aren't quite right
+        elif elem.type in ['RBAR', 'RBAR1', 'RROD']:  # TODO: these aren't quite right
             dependent = elem.Ga()
             independent = elem.Gb()
             lines_rigid.append([dependent, independent])

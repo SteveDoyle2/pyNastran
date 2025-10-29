@@ -13,6 +13,7 @@ import traceback
 import warnings
 from io import StringIO
 from pathlib import PurePath
+from collections import defaultdict
 from typing import Optional, Any
 
 import numpy as np
@@ -229,26 +230,26 @@ def run_lots_of_files(filenames: list[str], folder: str='',
             except KeyboardInterrupt:
                 sys.exit('KeyboardInterrupt...sys.exit()')
             except DisabledCardError:
-                #if dev:
-                    #pass
+                # if dev:
+                #     pass
                 raise
-            #except IOError:
-                #pass
-            #except RuntimeError:  # only temporarily uncomment this when running lots of tests
-                #pass
-            #except SyntaxError:  # only temporarily uncomment this when running lots of tests
-                #pass
-
-            #except AttributeError:  # only temporarily uncomment this when running lots of tests
-                #pass
-            #except KeyError:  # only temporarily uncomment this when running lots of tests
-                #pass
-            #except AssertionError:  # only temporarily uncomment this when running lots of tests
-                #pass
-            #except IndexError:  # only temporarily uncomment this when running lots of tests
-                #pass
-            #except ValueError:  # only temporarily uncomment this when running lots of tests
-                #pass
+            # except IOError:
+            #     pass
+            # except RuntimeError:  # only temporarily uncomment this when running lots of tests
+            #     pass
+            # except SyntaxError:  # only temporarily uncomment this when running lots of tests
+            #     pass
+            #
+            # except AttributeError:  # only temporarily uncomment this when running lots of tests
+            #     pass
+            # except KeyError:  # only temporarily uncomment this when running lots of tests
+            #     pass
+            # except AssertionError:  # only temporarily uncomment this when running lots of tests
+            #     pass
+            # except IndexError:  # only temporarily uncomment this when running lots of tests
+            #     pass
+            # except ValueError:  # only temporarily uncomment this when running lots of tests
+            #     pass
             except (ReplicationError, MeshOptimizationError) as e:
                 if not dev:
                     raise
@@ -280,6 +281,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
 
 def test_bdf(bdf_filename: PathLike, **kwargs):
     run_bdf('.', bdf_filename, **kwargs)
+
 
 def run_bdf(folder: str, bdf_filename: PathLike,
             debug: bool=False, xref: bool=True, check: bool=True,
@@ -791,12 +793,12 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
                     extract_bodies(fem1)
 
                 # 1. testing that these methods word without xref
-                #fem1._get_rigid()
-                #get_dependent_nid_to_components(fem1)
-                #fem1._get_maps(eids=None, map_names=None,
-                               #consider_0d=True, consider_0d_rigid=True,
-                               #consider_1d=True, consider_2d=True, consider_3d=True)
-                #get_dependent_nid_to_components(fem1)
+                # fem1._get_rigid()
+                # get_dependent_nid_to_components(fem1)
+                # fem1._get_maps(eids=None, map_names=None,
+                #                consider_0d=True, consider_0d_rigid=True,
+                #                consider_1d=True, consider_2d=True, consider_3d=True)
+                # get_dependent_nid_to_components(fem1)
 
                 #fem1.uncross_reference()
                 if safe_xref:
@@ -811,21 +813,21 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
                     run_eid_checks=run_eid_checks, run_mcid=run_mcid)
 
                 fem1._xref = True
-                #what was this for???
-                #if fem1._nastran_format not in ['optistruct', 'mystran']:
-                    #log.info(f'fem1.bdf_filename = {fem1.bdf_filename}')
-                    #log.info('trying read_bdf from the raw filename')
-                    #read_bdf(fem1.bdf_filename, encoding=encoding, xref=False,
-                             #debug=fem1.debug, log=fem1.log)
+                # what was this for???
+                # if fem1._nastran_format not in ['optistruct', 'mystran']:
+                #     log.info(f'fem1.bdf_filename = {fem1.bdf_filename}')
+                #     log.info('trying read_bdf from the raw filename')
+                #     read_bdf(fem1.bdf_filename, encoding=encoding, xref=False,
+                #              debug=fem1.debug, log=fem1.log)
                 if safe_xref:
                     fem1.safe_cross_reference()
                 elif xref:
                     fem1.cross_reference()
 
                 fem1 = remake_model(bdf_filename, fem1, run_pickle)
-                #fem1.geom_check(geom_check=True, xref=True)
-                #fem1.uncross_reference()
-                #fem1.cross_reference()
+                # fem1.geom_check(geom_check=True, xref=True)
+                # fem1.uncross_reference()
+                # fem1.cross_reference()
     except Exception:
         print(f'failed reading {bdf_filename!r}')
         raise
@@ -916,6 +918,66 @@ def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
     #sys.exit('hdf5')
 
 
+def get_dof_map(model: BDF,
+                spc_id: int,
+                mpc_id: int=0,
+                suport1_id: int=0):
+    """
+    doesn't consider:
+      - GRID PS
+      - loads
+      - SPC
+      - SUPORT
+    """
+    log = model.log
+    dep_nid_to_comp = get_dependent_nid_to_components(model)
+    spc_nid_to_components = {}
+    if spc_id:
+        spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True)
+        for spc in spcs:
+            # TODO: add SPC
+            if spc.type == 'SPC1':
+                for nid in spc.nodes:
+                    spc_nid_to_components[nid] = spc.components
+            else:
+                log.warning('skipping\n%s' % spc)
+                raise RuntimeError(spc.get_stats())
+
+    suport_nid_to_components = {}
+    if suport1_id:
+        suport1 = model.suport1[suport1_id]
+        for nid, comp in zip(suport1.nodes, suport1.Cs):
+            suport_nid_to_components[nid] = comp
+        # TODO: add SUPORT
+
+    dof_map = {
+        'm': dep_nid_to_comp,
+        's': spc_nid_to_components,
+        'r': suport_nid_to_components,
+    }
+    verify_dof_map(model, dof_map)
+    return dof_map
+
+
+def verify_dof_map(model: BDF,
+                   dof_map: dict[str, dict[int, str]]) -> bool:
+    log = model.log
+    used_dofs = defaultdict(str)
+    for set_type, nid_comp_dict in dof_map.items():
+        for nid, comps in nid_comp_dict.items():
+            for comp in comps:
+                dof = (nid, comp)
+                # if dof in used_dofs:
+                used_dofs[dof] += set_type
+                # else:
+                #     used_dofs[dof] = set_type
+    for dof, set_types in sorted(used_dofs.items()):
+        if len(set_types) > 1:
+            set_types_str = ', '.join(set_types)
+            log.warning(f'dof={dof} is used by multiple sets: {set_types_str}')
+    return
+
+
 def _fem_xref_methods_check(fem1: BDF,
                             run_dependent_checks: bool,
                             run_eid_checks: bool,
@@ -924,7 +986,8 @@ def _fem_xref_methods_check(fem1: BDF,
     testing that these methods work with xref
     """
     log = fem1.log
-    log.debug('_fem_xref_methods_check(fem1)')
+    log.debug(f'_fem_xref_methods_check(fem1, run_dependent_checks={run_dependent_checks}, '
+              f'run_eid_checks={run_eid_checks}, run_mcid={run_mcid})')
 
     if run_dependent_checks:
         fem1._get_rigid()
@@ -936,7 +999,6 @@ def _fem_xref_methods_check(fem1: BDF,
         for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
             fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
 
-        get_dependent_nid_to_components(fem1)
         get_dependent_nid_to_components(fem1)
 
     if run_eid_checks:
@@ -1328,6 +1390,13 @@ def check_case(sol: int,
 
     msg = f'sol={sol}\n{subcase}'
 
+    # spc_nid_to_comp = get_dependent_nid_to_components(fem1)
+    mpc_id = 0 if 'MPC' not in subcase else subcase['MPC'][0]
+    spc_id = 0 if 'SPC' not in subcase else subcase['SPC'][0]
+    suport1_id = 0 if 'SUPORT1' not in subcase else subcase['SUPORT1'][0]
+    log.info(f'subcase={subcase.id}: MPC={mpc_id} SPC={spc_id} SUPORT1={suport1_id}')
+    dof_map = get_dof_map(fem2, spc_id=mpc_id, mpc_id=spc_id, suport1_id=suport1_id)
+
     if fem2.is_acoustic():
         pass
     elif sol == 24:
@@ -1364,17 +1433,17 @@ def check_case(sol: int,
         ierror = check_for_optional_param(
             ('LOAD', 'TEMPERATURE(LOAD)', 'METHOD'),
             subcase, msg, RuntimeError, log, ierror, nerrors)
-        #if 0:  # pragma: no cover
-            #if 'METHOD' not in subcase:
-                #subcases = fem2.subcases
-                #subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
-                #assert len(subcases) == 2, 'METHOD not in subcase and not 2 subcases\n%s' % subcase
-                #subcase_id = subcase.subcase_id
-                #if subcase_id == 1 and 'METHOD' in subcases[2]:
-                    #pass
-                #else:
-                    #msg = 'METHOD not in subcase and not 2 subcases\n%s' % subcase
-                    #raise RuntimeError(msg)
+        # if 0:  # pragma: no cover
+        #     if 'METHOD' not in subcase:
+        #         subcases = fem2.subcases
+        #         subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
+        #         assert len(subcases) == 2, 'METHOD not in subcase and not 2 subcases\n%s' % subcase
+        #         subcase_id = subcase.subcase_id
+        #         if subcase_id == 1 and 'METHOD' in subcases[2]:
+        #             pass
+        #         else:
+        #             msg = 'METHOD not in subcase and not 2 subcases\n%s' % subcase
+        #             raise RuntimeError(msg)
 
         #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), 'sol=%s\n%s' % (sol, subcase)
     elif sol in {106, 'NLSTATIC', 'NLSTATICS'}:  # freq
@@ -1836,13 +1905,13 @@ def _check_case_parameters(subcase: Subcase,
 
     if 'RMETHOD' in subcase:
         unused_rmethod_id = subcase.get_int_parameter('RMETHOD')
-        #if method_id in fem.methods:
-            #method = fem.methods[method_id]
-        #elif method_id in fem.cMethods:
-            #method = fem.cMethods[method_id]
-        #else:
-            #method_ids = list(fem.methods.keys())
-            #raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
+        # if method_id in fem.methods:
+        #     method = fem.methods[method_id]
+        # elif method_id in fem.cMethods:
+        #     method = fem.cMethods[method_id]
+        # else:
+        #     method_ids = list(fem.methods.keys())
+        #     raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
 
         allowed_sols = [101, 110, 111]
         ierror = check_sol(sol, subcase, allowed_sols, 'RMETHOD', log, ierror, nerrors)
@@ -2240,9 +2309,9 @@ def test_bdf_argparse(argv=None):
             version, action='store_true',
             help=help_msg)
 
-    #parent_parser.add_argument(
-       #'-L', '--loads', action='store_false',
-        #help='Disables forces/moments summation for the different subcases (default=True)')
+    # parent_parser.add_argument(
+    #    '-L', '--loads', action='store_false',
+    #     help='Disables forces/moments summation for the different subcases (default=True)')
 
     parent_parser.add_argument('-e', '--nerrors', default=100, type=int,
                                help='Allow for cross-reference errors (default=100)')
@@ -2265,7 +2334,6 @@ def test_bdf_argparse(argv=None):
                                help='skip the material coordinate system exporting (default=False)')
     parent_parser.add_argument('--no_similar_eid', action='store_false',
                                help='No duplicate eids among elements, rigids, and masses (default=False)')
-
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
     parent_parser.add_argument(
@@ -2274,6 +2342,8 @@ def test_bdf_argparse(argv=None):
 
     parent_parser.add_argument('--duplicate', action='store_true',
                                help='overwrite duplicates; takes the later card (default=False)')
+    parent_parser.add_argument('--ifile', action='store_true',
+                               help='skip loads calcuations (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
                                help='prints debug messages (default=False)')
     # --------------------------------------------------------------------------
@@ -2305,25 +2375,25 @@ def test_bdf_argparse(argv=None):
     from pyNastran.utils.arg_handling import argparse_to_dict, update_message  # swap_key
     update_message(parent_parser, usage, args, examples)
 
-    #try:
-        #args = parent_parser.parse_args(args=argv)
-    #except SystemExit:
-        #fobj = StringIO()
-        ##args = parent_parser.format_usage()
-        #parent_parser.print_usage(file=fobj)
-        #args = fobj.getvalue()
-        #raise
+    # try:
+    #     args = parent_parser.parse_args(args=argv)
+    # except SystemExit:
+    #     fobj = StringIO()
+    #     #args = parent_parser.format_usage()
+    #     parent_parser.print_usage(file=fobj)
+    #     args = fobj.getvalue()
+    #     raise
     args = parent_parser.parse_args(args=argv)
 
     args2 = argparse_to_dict(args)
     _set_version(args2)
-    #optional_args = [
-        #'double', 'large', 'crash', 'quiet', 'profile',
-        #'xref', 'safe', 'check', 'punch', 'loads', 'stop', 'encoding',
-        #'dumplines', 'dictsort', 'nerrors', 'pickle', 'hdf5',
-    #]
-    #for arg in optional_args:
-        #swap_key(args2, arg, '--' + arg)
+    # optional_args = [
+    #     'double', 'large', 'crash', 'quiet', 'profile',
+    #     'xref', 'safe', 'check', 'punch', 'loads', 'stop', 'encoding',
+    #     'dumplines', 'dictsort', 'nerrors', 'pickle', 'hdf5',
+    # ]
+    # for arg in optional_args:
+    #     swap_key(args2, arg, '--' + arg)
     return args2
 
 
@@ -2477,6 +2547,7 @@ def main(argv=None):
     data['run_eid_checks'] = not data['skip_eid_checks']
     data['run_mcid'] = not data['skip_mcid']
     allow_similar_eid = not data['no_similar_eid']
+    save_file_structure = data['ifile']
 
     is_double = False
     if data['double']:
@@ -2527,6 +2598,7 @@ def main(argv=None):
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
             allow_similar_eid=allow_similar_eid,
+            save_file_structure=save_file_structure,
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],
@@ -2549,27 +2621,27 @@ def main(argv=None):
 
         stats = pstats.Stats("bdf.profile")
         stats.sort_stats('tottime')  # time in function
-        #stats.sort_stats('cumtime')  # time in function & subfunctions
+        # stats.sort_stats('cumtime')  # time in function & subfunctions
         stats.strip_dirs()
         stats.print_stats(40)
 
-        #retval = prof.runcall(self.method_actual, *args, **kwargs)
-        #print(prof.dump_stats(datafn))
-        #cProfile.runctx(
-            #code,
-               #None, # globs
-               #None,
-               #'junk.stats',
-               #1) # sort
+        # retval = prof.runcall(self.method_actual, *args, **kwargs)
+        # print(prof.dump_stats(datafn))
+        # cProfile.runctx(
+        #     code,
+        #        None, # globs
+        #        None,
+        #        'junk.stats',
+        #        1) # sort
 
-        #p = pstats.Stats('restats')
-        #p.strip_dirs().sort_stats(-1).print_stats()
+        # p = pstats.Stats('restats')
+        # p.strip_dirs().sort_stats(-1).print_stats()
     else:
         run_bdf(
             '.',
             data['BDF_FILENAME'],
             debug=debug,
-            #filter_unused=data['filter'],
+            # filter_unused=data['filter'],
             xref=data['xref'],
             # xref_safe=data['xref_safe'],
             check=not data['check'],
@@ -2585,6 +2657,7 @@ def main(argv=None):
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
             allow_similar_eid=allow_similar_eid,
+            save_file_structure=save_file_structure,
 
             is_lax_parser=data['lax'],
             allow_duplicates=data['duplicate'],

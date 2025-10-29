@@ -2800,6 +2800,9 @@ def test_bdf_argparse(argv=None):
                                help='skip mass calcuations (default=False)')
     parent_parser.add_argument('--skip_equivalence', action='store_true',
                                help='skip nodal equivalencing (default=False)')
+    parent_parser.add_argument('--ifile', action='store_true',
+                               help='skip loads calcuations (default=False)')
+
     parent_parser.add_argument('-q', '--quiet', action='store_true',
                                help='prints debug messages (default=False)')
     # --------------------------------------------------------------------------

@@ -751,6 +751,8 @@ class Subcase:
         subcase.add('SPC', 1, [], 'STRESS-type')
         """
         assert isinstance(value, integer_types), f'value={value!r} and is not an integer'
+        if key not in INT_CARDS:
+            self.log.warning(f'key={key!r} is not a valid case_control integer key')
         self.add(key, value, [], 'STRESS-type')
 
     def add_string_type(self, key: str, value: str) -> None:

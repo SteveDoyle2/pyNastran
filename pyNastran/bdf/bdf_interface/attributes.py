@@ -1211,12 +1211,12 @@ class BDFAttributes:
 
         html_msg.append(dash_plus)
 
-        #for card_group, card_types in sorted(self._slot_to_type_map.items()):
-            #html_msg.append('| %s | %s |' % (card_group, ', '.join(card_types)))
-
-        #html_msg.append(
-            #fmt_plus % ('-'*(nchars + 2), '-'*(nline + 2))
-        #)
+        # for card_group, card_types in sorted(self._slot_to_type_map.items()):
+        #     html_msg.append('| %s | %s |' % (card_group, ', '.join(card_types)))
+        #
+        # html_msg.append(
+        #     fmt_plus % ('-'*(nchars + 2), '-'*(nline + 2))
+        # )
         msg = ''.join(html_msg)
         return msg
 
