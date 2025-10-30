@@ -304,7 +304,7 @@ class RealBush1DStressArray(OES_Object):
         if self.size == fdtype.itemsize:
             pass
         else:
-            print(f'downcasting {self.class_name}...')
+            # print(f'downcasting {self.class_name}...')
             #cen_word_bytes = b'CEN/    '
             idtype = np.int32(1)
             fdtype = np.float32(1.0)
@@ -353,4 +353,3 @@ class RealBush1DStressArray(OES_Object):
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
-
