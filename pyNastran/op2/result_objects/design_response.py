@@ -576,6 +576,8 @@ class DSCMCOL:
                 msg += _write_dscmcol_flutter(self.responses, ids, response_name_to_f06_response_type)
             elif group_name == 'psd':
                 msg += self._write_psd(ids, response_name_to_f06_response_type)
+            elif group_name == 'equivalent radiated power':
+                msg += self._write_eq_radiated_power(ids, response_name_to_f06_response_type)
             elif group_name == '2':
                 msg += self._write_dresp2(ids)
             else:
@@ -667,8 +669,6 @@ class DSCMCOL:
 
         msg += (
             '             -----  PSD RESPONSES  -----\n'
-        )
-        msg += (
             '          ------------------------------------------------------------------------------------------------------------------------\n'
             '            COLUMN         DRESP1         RESPONSE        GRID/ELM        RANDPS         COMPONENT           SUB             PLY  \n'
             '              NO.         ENTRY ID          TYPE             ID            ID                NO.             CASE             NO. \n'
@@ -689,6 +689,40 @@ class DSCMCOL:
             else:
                 raise RuntimeError(respi)
         return msg
+
+    def _write_eq_radiated_power(self, ids, response_name_to_f06_response_type):
+        """
+        {'name': 'equivalent radiated power',
+        'panel': 555,
+        'flag': -102,
+        'subcase': 2,
+        'freq': 16.0,
+        'seid': 0,
+        'internal_response_id': 5,
+        'external_response_id': 889,
+        'response_type': 19,
+        'iresponse': 4,
+        'response_number': 1}
+        TODO: not verified
+        """
+        msg = ''
+
+        msg += (
+            '             -----  EQIVALENT RADIATED POWER RESPONSES  -----\n'
+            '          ------------------------------------------------------------------------------------------------------------------------\n'
+            '            COLUMN         DRESP1         RESPONSE        GRID/ELM        RANDPS           SUB             FREQ \n'
+            '              NO.         ENTRY ID          TYPE             ID            ID              CASE                 \n'
+            '          ------------------------------------------------------------------------------------------------------------------------\n'
+        )
+        for i in ids:
+            respi = self.responses[i]
+            external_id = respi['external_response_id']
+            name = respi['name']
+            subcase = respi['subcase']
+            freq = respi['freq']
+            response_type = response_name_to_f06_response_type[name]
+            msg += f'         {i+1:8d}        {external_id:8d}        {response_type:8s}        {subcase:8d}        {freq}\n'
+        return
 
     def _write_dresp2(self, ids):
         msg = (
