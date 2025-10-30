@@ -1,0 +1,5 @@
+[flake8]
+#ignore = E501,E203,W503
+#PEP 8: E252 missing whitespace around parameter equals
+#PEP 8: E265 block comment should start with '# '
+ignore = E252,E265
