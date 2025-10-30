@@ -1873,11 +1873,13 @@ def add_object_to_dict(model: BDF, key: int,
     #     model.properties_mass[key] = prop
     #     model._type_to_id_map[prop.type].append(key)
 
-    tag = _get_tag(model, obj, obj_dict[key])
     if key not in obj_dict:
         obj_dict[key] = obj
         model._type_to_id_map[obj.type].append(key)
-    elif obj == obj_dict[key]:
+        return
+
+    tag = _get_tag(model, obj, obj_dict[key])
+    if obj == obj_dict[key]:
         model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
     elif allow_overwrites:
         model.log.warning(f'replacing {obj_name} {key}:{tag}\n{obj_dict[key]}with:\n{obj}')
