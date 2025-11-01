@@ -470,7 +470,7 @@ def write_mats1(model: BDF, name, mids, nmaterials,
     """writes the MATS1"""
 
     # check if strmeas entry should be written
-    # strategy: check random MATS1 card. if STRMEAS field is blank, do not write it for backwards compatibility
+    # strategy: check first MATS1 card. if STRMEAS field is blank, do not write it for backwards compatibility
     test_mat = model.MATS1[mids[0]]
     write_strmeas = False if test_mat.strmeas is None else True
 

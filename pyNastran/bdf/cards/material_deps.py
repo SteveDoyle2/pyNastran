@@ -102,7 +102,7 @@ class MATS1(MaterialDependence):
     def __init__(self, mid: int, nl_type: Optional[str],
                  h: float, hr: float, yf: float,
                  limit1: Optional[float], limit2: Optional[float],
-                 strmeas: Optional[str] = None,
+                 strmeas: Optional[str]=None,
                  tid: int=0, comment: str=''):
         MaterialDependence.__init__(self)
         if comment:
@@ -215,10 +215,7 @@ class MATS1(MaterialDependence):
                 #limit2 = blank(card, 8, 'limit2')
                 limit2 = None
 
-        if len(card) > 9:
-            strmeas = string_or_blank(card, 9, 'strmeas')
-        else:
-            strmeas = None
+        strmeas = string_or_blank(card, 9, 'strmeas')
 
         assert len(card) <= 10, f'len(MATS1 card) = {len(card):d}\ncard={card}'
         return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas, tid=tid, comment=comment)
@@ -261,7 +258,7 @@ class MATS1(MaterialDependence):
             raise RuntimeError(f'Invalid Type:  mid={mid}; Type={nl_type_int}; must be 1=NLELAST, '
                                '2=PLASTIC, or 3=PLSTRN')
 
-        return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas, tid=tid, comment=comment)
+        return MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas=strmeas, tid=tid, comment=comment)
 
     def Yf(self) -> str:
         d = {1: 'VonMises', 2: 'Tresca', 3: 'MohrCoulomb', 4: 'Drucker-Prager'}

@@ -3807,7 +3807,7 @@ class AddMaterial:
         return mat
 
     def add_mats1(self, mid: int, nl_type: str,
-                  h, hr, yf, limit1, limit2, strmeas: str | None = None,
+                  h, hr, yf, limit1, limit2, strmeas: str | None=None,
                   tid: int=0, comment: str='') -> MATS1:
         """Creates a MATS1 card"""
         mat = MATS1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas,
@@ -7197,11 +7197,10 @@ class AddCards(AddCoords, AddContact, AddBolts,
         return prop
 
     def add_pgplsn(self, pid: int, mid: int, cgid: int, t: float,
-                   kn: float | int = 0., kr1: float | int = 0., kr2: float | int = 0.,
+                   kn: float | int=0., kr1: float | int=0., kr2: float | int=0.,
                    comment: str='') -> PGPLSN:
         """Creates a PGPLSN card"""
         prop = PGPLSN(pid, mid, cgid=cgid, t=t, kn=kn, kr1=kr1, kr2=kr2, comment=comment)
-
         self._add_methods.add_property_object(prop)
         return prop
 
