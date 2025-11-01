@@ -18,7 +18,9 @@ from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
+from pyNastran.bdf.field_writer_8 import (
+    set_blank_if_default, print_card_8, print_float_8,
+    print_int_default_8, print_float_default_8)
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.cards.nodes import GRID
 from pyNastran.bdf.bdf_interface.internal_get import coord_id
@@ -1684,6 +1686,31 @@ class CONM2(PointMassElement):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
+        # if 0:  # pragma: no cover
+        #     is_inertia = max(self.I) != 0 or min(self.I) != 0.0
+        #     if size == 8:
+        #         x, y, z = self.X
+        #         msg = 'CONM2   %8d%8d%s%s%s%s%s\n' % (
+        #             self.eid, self.Nid(),
+        #             print_int_default_8(self.Cid(), 0),
+        #             print_float_8(self.mass),
+        #             print_float_8(x),
+        #             print_float_8(y),
+        #             print_float_8(z))
+        #         if is_inertia:
+        #             ixx, ixy, iyy, ixz, iyz, izz = self.I
+        #             msg += '        %s%s%s%s%s%s\n' % (
+        #                 print_float_default_8(ixx, 0.0),
+        #                 print_float_default_8(ixy, 0.0),
+        #                 print_float_default_8(iyy, 0.0),
+        #                 print_float_default_8(ixz, 0.0),
+        #                 print_float_default_8(iyz, 0.0),
+        #                 print_float_default_8(izz, 0.0),
+        #             )
+        #         print(msg.rstrip())
+        #         return self.comment + msg
+
+        # card = self.raw_fields()
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

@@ -323,7 +323,7 @@ class PBUSH(BushingProperty):
                 t_fields = cls._read_var(card, 'Ti', istart + 1, istart + 4)
                 assert len(t_fields) == 3, t_fields
             else:
-                raise RuntimeError('unsupported PBUSH type; pname=%r' % pname)
+                raise RuntimeError(f'unsupported PBUSH type; pname={pname!r}\n{card}')
                 #break #  old version...
             istart += 8
         return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, mass,
@@ -1365,7 +1365,7 @@ class PBUSH_OPTISTRUCT(BushingProperty):
                 # Lumped mass of the cbush; default=0.0
                 mass_fields = cls._read_var(card, 'MASSi', istart + 1, istart + 7)
             else:
-                raise RuntimeError('unsupported PBUSH type; pname=%r' % pname)
+                raise RuntimeError(f'unsupported PBUSH type; pname={pname!r}\n{card}')
                 #break #  old version...
             istart += 8
         return PBUSH_OPTISTRUCT(pid, k_fields, b_fields, ge_fields, mass_fields,

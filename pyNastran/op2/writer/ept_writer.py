@@ -505,6 +505,75 @@ def write_plplane(name: str, pids: np.ndarray, itable: int,
     return itable
 
 
+def write_pgplsn(name: str, pids: np.ndarray, itable: int,
+                  op2_file: BinaryIO, op2_ascii, model: BDF, endian: bytes=b'<',
+                  nastran_format: str='nx') -> int:
+    """
+    writes the PGPLSN
+
+    RECORD – PGPLSN(4102,41,904)
+
+    Word Name Type Description
+    1 PID    I Property identification number
+    2 MID    I Material identification number
+    3 CGID   I Control grid point identification number
+    4 T   RS Default membrane thickness for Ti on the connection entry
+    5-8 UNDEF(4)
+    9 TYPE  I Integer flag indicating the data type for KNR (word 10)
+                TYPE=0, KNR will be undefined
+                TYPE=1, KNR will be an integer
+                TYPE=2, KNR will be a real value
+    10 KNR I, RS, blank I: Table ID for time dependent user specified stiffness
+                        RS: User specified additive stiffness
+    Words 9 and 10 repeat 3 times
+    15 CSOPT I Reserved for coordinate system definition of plane
+    16 UNDEF
+    """
+    size = 4
+    key = (4102,41,904)
+    nfields = 16
+
+    nproperties = len(pids)
+    nvalues = nfields * nproperties
+    nbytes = _write_table_header(
+        op2_file, op2_ascii, name, key, nvalues, size)
+
+    knr_type_map = {
+        None: 0,
+        int: 1,
+        float: 2,
+    }
+    data_type_map = {
+        0: b'i',
+        1: b'i',
+        2: b'f',
+    }
+
+    for pid in sorted(pids):
+        prop = model.properties[pid]
+
+        kn_type = knr_type_map[type(prop.kn)]
+        kr1_type = knr_type_map[type(prop.kr1)]
+        kr2_type = knr_type_map[type(prop.kr2)]
+
+        spack = Struct(endian + b'3i f 5i 1%b 1i 1%b 1i 1%b 2i'
+                       % (data_type_map[kn_type], data_type_map[kr1_type], data_type_map[kr2_type])
+                       )
+
+        data = [pid, prop.mid, prop.cgid, prop.t,
+                0, 0, 0, 0,
+                kn_type, prop.kn, kr1_type, prop.kr1, kr2_type, prop.kr2,
+                0, 0,  # prop.csopt, # unsupported NX
+                ]
+        # print(name, data)
+        op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
+        op2_file.write(spack.pack(*data))
+
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
+
+
+
 def write_psolid(name: str, pids: np.ndarray, itable: int,
                op2_file: BinaryIO, op2_ascii, model: BDF, endian: bytes=b'<',
                nastran_format: str='nx') -> int:
@@ -1739,4 +1808,5 @@ EPT_MAP = {
     'PDAMP': write_pdamp,
     'PELAST': write_pelast,
     'PHBDY': write_phbdy,
+    'PGPLSN': write_pgplsn,
 }

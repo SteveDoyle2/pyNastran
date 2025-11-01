@@ -468,9 +468,24 @@ def write_mat11(model: BDF, name: str, mids: list[int], nmaterials: int,
 def write_mats1(model: BDF, name, mids, nmaterials,
                 op2_file, op2_ascii, endian):
     """writes the MATS1"""
+
+    # check if strmeas entry should be written
+    # strategy: check first MATS1 card. if STRMEAS field is blank, do not write it for backwards compatibility
+    test_mat = model.MATS1[mids[0]]
+    write_strmeas = False if test_mat.strmeas is None else True
+
+    strmeas_map = {
+        None : 0,  # NULL
+        'UNDEF' : 1,
+        'ENG' : 2,
+        'TRUE': 3,
+        'CAUCHY': 4,
+    }
+
     key = (503, 5, 90)
-    nfields = 11
-    spack = Struct(endian + b'3ifiiff3i')
+    nfields = 12 if write_strmeas else 11
+    spack = Struct(endian + b'3ifiiff4i') if write_strmeas else Struct(endian + b'3ifiiff3i')
+
     nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.MATS1[mid]
@@ -488,16 +503,33 @@ def write_mats1(model: BDF, name, mids, nmaterials,
         else:  # pragma: no cover
             raise RuntimeError(f'Invalid Type:  Type={mat.nl_type}; must be 1=NLELAST '
                                '2=PLASTIC or 3=PLSTRN')
-        data = [mid,
-                # not sure
-                mat.tid,
-                nl_type_int,
-                0.0 if mat.h is None else mat.h,
-                0 if mat.yf is None else mat.yf,
-                0 if mat.hr is None else mat.hr,
-                0.0 if mat.limit1 is None else mat.limit1,
-                0.0 if mat.limit2 is None else mat.limit2,
-                a, bmat, c]
+
+        if write_strmeas:
+            data = [mid,
+                    # not sure
+                    mat.tid,
+                    nl_type_int,
+                    0.0 if mat.h is None else mat.h,
+                    0 if mat.yf is None else mat.yf,
+                    0 if mat.hr is None else mat.hr,
+                    0.0 if mat.limit1 is None else mat.limit1,
+                    0.0 if mat.limit2 is None else mat.limit2,
+                    strmeas_map[mat.strmeas],
+
+                    a, bmat, c]
+        else:
+            data = [mid,
+                    # not sure
+                    mat.tid,
+                    nl_type_int,
+                    0.0 if mat.h is None else mat.h,
+                    0 if mat.yf is None else mat.yf,
+                    0 if mat.hr is None else mat.hr,
+                    0.0 if mat.limit1 is None else mat.limit1,
+                    0.0 if mat.limit2 is None else mat.limit2,
+
+                    a, bmat, c]
+
         assert None not in data, f'MATS1 {data}'
         assert len(data) == nfields
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))

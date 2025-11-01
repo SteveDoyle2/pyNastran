@@ -23,7 +23,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string_or_blank,
 )
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, SUPORT, SUPORT1, AESURF, AEPARM, AELINK
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
@@ -656,7 +656,7 @@ class TRIM(BaseCard):
         1: 'sid', 2: 'mach', 3: 'q', 8: 'aeqr',
     }
 
-    def _get_field_helper(self, n):
+    def _get_field_helper(self, n: int):
         """
         Gets complicated parameters on the TRIM card
 
@@ -781,9 +781,13 @@ class TRIM(BaseCard):
                 len(self.labels), len(self.uxs), str(self.labels), str(self.uxs))
             raise RuntimeError(msg)
 
-    def verify_trim(self, suport, suport1,
-                    aestats, aeparms, aelinks,
-                    aesurf, xref=True):
+    def verify_trim(self,
+                    suport: list[SUPORT],
+                    suport1: SUPORT1,
+                    aestats: dict[int, AESTAT],
+                    aeparms: dict[str, AEPARM],
+                    aelinks: dict[int, AELINK],
+                    aesurf: dict[str, AESURF], xref=True):
         """
         Magic function that makes TRIM cards not frustrating.
 
@@ -938,39 +942,39 @@ class TRIM(BaseCard):
             raise RuntimeError(msg)
 
         # TODO: this doesn't work for multiple subcases
-        #ntotal_suport_dofs = nsuport_dofs, nsuport1_dofs
-        #ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurf
-        #if ndelta != 0:
-            #msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurf = ndelta = %s; ndelta != 0\n' % ndelta
-            #msg += 'ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
-                #ntrim, nsuport_dofs, nsuport1_dofs, naesurf)
-            #raise RuntimeError(msg)
-
-        #ndelta = (naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs)
-        #if ndelta != 0:
-            #msg = (
-                #'(naestat + naesurf + naeparm + ntrim_aesurf) - '
-                #'(ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
-                #'naestat=%s naesurf=%s naeparm=%s ntrim_aesurfs=%s\n'
-                #'ntrim=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
-                    #ndelta,
-                    #naestat, naesurf, naeparms, ntrim_aesurf,
-                    #ntrim, naelink, nsuport_dofs, nsuport1_dofs))
+        # ntotal_suport_dofs = nsuport_dofs, nsuport1_dofs
+        # ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurf
+        # if ndelta != 0:
+        #     msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurf = ndelta = %s; ndelta != 0\n' % ndelta
+        #     msg += 'ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
+        #         ntrim, nsuport_dofs, nsuport1_dofs, naesurf)
+        #     raise RuntimeError(msg)
+        #
+        # ndelta = (naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs)
+        # if ndelta != 0:
+        #     msg = (
+        #         '(naestat + naesurf + naeparm + ntrim_aesurf) - '
+        #         '(ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
+        #         'naestat=%s naesurf=%s naeparm=%s ntrim_aesurfs=%s\n'
+        #         'ntrim=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+        #             ndelta,
+        #             naestat, naesurf, naeparms, ntrim_aesurf,
+        #             ntrim, naelink, nsuport_dofs, nsuport1_dofs))
 
         nplus = (naestat + naesurf + naeparm)
         nminus = ntrim + naelink + nsuport_dofs + nsuport1_dofs
 
         ndelta = nplus - nminus + 0*2*ntrim_aesurfs
         if ndelta != 0:
-            #msg = (
-                #'(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
-                #'nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
-                #'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s '
-                #'naelink=%s nsuport_dofs=%s nsuport1_dofs=%s\n' % (
-                    #ndelta,
-                    #naestat, naesurf, naeparm, ntrim, ntrim_aesurf,
-                    #naelink, nsuport_dofs, nsuport1_dofs)
-            #)
+            # msg = (
+            #     '(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
+            #     'nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
+            #     'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s '
+            #     'naelink=%s nsuport_dofs=%s nsuport1_dofs=%s\n' % (
+            #         ndelta,
+            #         naestat, naesurf, naeparm, ntrim, ntrim_aesurf,
+            #         naelink, nsuport_dofs, nsuport1_dofs)
+            # )
             msg = (
                 'Invalid trim state (ndelta != 0):\n'
                 f'   (naestat + naesurf + naeparm + 0*2*ntrim_aesurf?) = ({naestat} + {naesurf} + {naeparm} + 0*2*{ntrim_aesurf}) = {nplus}\n'

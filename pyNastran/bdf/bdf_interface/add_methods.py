@@ -906,10 +906,13 @@ class AddMethods:
         if key not in model.coords:
             model.coords[key] = coord
             model._type_to_id_map[coord.type].append(key)
-        elif coord == model.coords[key]:
-            model.log.warning(f'replacing equivalent coord:\n{coord}')
+            return
+
+        tag = _get_tag(model, coord, model.coords[key])
+        if coord == model.coords[key]:
+            model.log.warning(f'replacing equivalent coord {key}:{tag}\n{coord}')
         elif allow_overwrites:
-            model.log.warning(f'replacing coord:\n{model.coords[key]}with:\n{coord}')
+            model.log.warning(f'replacing coord{key}:{tag}\n{model.coords[key]}with:\n{coord}')
             model.coords[key] = coord
             # already handled
             #model._type_to_id_map[prop.type].append(key)
@@ -1863,15 +1866,18 @@ def add_object_to_dict(model: BDF, key: int,
     if key not in obj_dict:
         obj_dict[key] = obj
         model._type_to_id_map[obj.type].append(key)
-    elif obj == obj_dict[key]:
-        model.log.warning(f'replacing equivalent {obj_name}:\n{obj}')
+        return
+
+    tag = _get_tag(model, obj, obj_dict[key])
+    if obj == obj_dict[key]:
+        model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
     elif allow_overwrites:
-        model.log.warning(f'replacing {obj_name}:\n{obj_dict[key]}with:\n{obj}')
+        model.log.warning(f'replacing {obj_name} {key}:{tag}\n{obj_dict[key]}with:\n{obj}')
         obj_dict[key] = obj
         # already handled
         #model._type_to_id_map[prop.type].append(key)
     else:
-        model.log.error(f'duplicate {obj_name} {key}:\n{obj_dict[key]}with:\n{obj}')
+        model.log.error(f'duplicate {obj_name} {key}:{tag}\n{obj_dict[key]}with:\n{obj}')
         # duplicate_list.append(obj)
         # if model._stop_on_duplicate_error:
         #     model.pop_parse_errors()
@@ -1919,16 +1925,35 @@ def add_object_to_dict_no_dupes(model: BDF, key: int, obj_name: str,
     if key not in obj_dict:
         obj_dict[key] = obj
         model._type_to_id_map[obj.type].append(key)
-    elif obj == obj_dict[key]:
-        model.log.warning(f'replacing equivalent {obj_name}:\n{obj}')
+        return
+
+    tag = _get_tag(model, obj, obj_dict[key])
+    if obj == obj_dict[key]:
+        model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
     elif allow_overwrites:
-        model.log.warning(f'replacing {obj_name}:\n{obj_dict[key]}with:\n{obj}')
+        model.log.warning(f'replacing {obj_name} {key}:{tag}\n{obj_dict[key]}\nwith:\n{obj}')
         obj_dict[key] = obj
         # already handled
         #model._type_to_id_map[prop.type].append(key)
     else:
-        model.log.error(f'duplicate {obj_name} {key}:\n{obj_dict[key]}with:\n{obj}')
+        model.log.error(f'duplicate {obj_name} {key}:{tag}\n{obj_dict[key]}\n{obj}')
         duplicate_list.append(obj)
         if model._stop_on_duplicate_error:
             model.pop_parse_errors()
         #raise RuntimeError('pid=%s\nold_prop=\n%snew_prop=\n%s' % (prop.pid, model.properties[key], prop))
+
+
+def _get_tag(model: BDF, obj1: BaseCard, obj2: BaseCard) -> str:
+    """get a list of files where things are duplicated"""
+    if not model.save_file_structure:
+        return ''
+    ifile1 = obj1.ifile
+    ifile2 = obj2.ifile
+    filename1 = model.active_filenames[ifile1]
+    filename2 = model.active_filenames[ifile2]
+    tag = (
+        f'\n'
+        f'file1: {filename1}\n'
+        f'file2: {filename2}'
+    )
+    return tag

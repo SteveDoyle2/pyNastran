@@ -211,28 +211,28 @@ def print_float_8(value: float) -> str:
     return field
 
 
-#def print_float_or_int_8(value: int | float) - str:
-    #"""
-    #Prints an 8-character width field
-
-    #Parameters
-    #----------
-    #value : int/float
-        #the value to print
-
-    #Returns
-    #-------
-    #field : str
-        #an 8-character string
-    #"""
-    #if isinstance(value, (float, float32, float64)):
-        #field = print_float_8(value)
-    #elif isinstance(value, int):
-        #field = "%8i" % value
-    #else:
-        #msg = 'Invalid Type:  value=%r type=%s' % (value, type(value))
-        #raise TypeError(msg)
-    #return field
+# def print_float_or_int_8(value: int | float) - str:
+#     """
+#     Prints an 8-character width field
+#
+#     Parameters
+#     ----------
+#     value : int/float
+#         the value to print
+#
+#     Returns
+#     -------
+#     field : str
+#         an 8-character string
+#     """
+#     if isinstance(value, (float, float32, float64)):
+#         field = print_float_8(value)
+#     elif isinstance(value, int):
+#         field = "%8i" % value
+#     else:
+#         msg = 'Invalid Type:  value=%r type=%s' % (value, type(value))
+#         raise TypeError(msg)
+#     return field
 
 
 def print_field_8(value: Optional[int | float | str]) -> str:
@@ -404,7 +404,7 @@ def print_int_card_blocks(fields_blocks: list[Any]) -> str:
        ]
        msg = print_int_card_blocks(fields_blocks)
        print(msg)
-       >>> 'SET1           a      1.       3       1       2       3\n'
+       >>> "SET1           a      1.       3       1       2       3"
 
     """
     card_name = fields_blocks[0]

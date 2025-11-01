@@ -199,7 +199,7 @@ SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
         'PBEAM3',
 
         # 2d
-        'PLPLANE', 'PPLANE',
+        'PLPLANE', 'PPLANE', 'PGPLSN',
         'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
         'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
         'PCOMPS', 'PCOMPLS',
@@ -333,8 +333,8 @@ SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
     'dphases': ['DPHASE'],
     'nlparms': ['NLPARM'],
     'nlpcis': ['NLPCI'],
-    'tsteps': ['TSTEP'],
-    'tstepnls': ['TSTEPNL', 'TSTEP1'],
+    'tsteps': ['TSTEP', 'TSTEP1'],
+    'tstepnls': ['TSTEPNL'],
     'transfer_functions': ['TF'],
     'delays': ['DELAY'],
     'rotors': ['ROTORG', 'ROTORD'],
@@ -1208,12 +1208,12 @@ class BDFAttributes:
 
         html_msg.append(dash_plus)
 
-        #for card_group, card_types in sorted(self._slot_to_type_map.items()):
-            #html_msg.append('| %s | %s |' % (card_group, ', '.join(card_types)))
-
-        #html_msg.append(
-            #fmt_plus % ('-'*(nchars + 2), '-'*(nline + 2))
-        #)
+        # for card_group, card_types in sorted(self._slot_to_type_map.items()):
+        #     html_msg.append('| %s | %s |' % (card_group, ', '.join(card_types)))
+        #
+        # html_msg.append(
+        #     fmt_plus % ('-'*(nchars + 2), '-'*(nline + 2))
+        # )
         msg = ''.join(html_msg)
         return msg
 

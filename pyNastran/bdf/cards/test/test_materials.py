@@ -587,13 +587,14 @@ class TestMaterials(unittest.TestCase):
     def test_mats1(self):
         """tests MATS1"""
         log = get_logger(level='warning')
-        model = BDF(log=log)
+
+        # MAT1 card properties
         mid = 10
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu)
 
+        # MATS1 card properties
         tid = 0
         nl_type = 'NLELAST'
         h = None
@@ -601,10 +602,15 @@ class TestMaterials(unittest.TestCase):
         yf = None
         limit1 = None
         limit2 = None
-        unused_mats1 = model.add_mats1(
-            mid, nl_type, h, hr, yf, limit1, limit2,
-            tid=tid, comment='mats1')
-        save_load_deck(model, xref='standard', punch=True, run_remove_unused=False)
+
+        # Test model with and without STRMEAS entry
+        for strmeas in ('ENG', None):
+            model = BDF(log=log)
+            model.add_mat1(mid, E, G, nu)
+            model.add_mats1(mid, nl_type, h, hr, yf, limit1, limit2, strmeas, tid=tid, comment='mats1')
+            deck = save_load_deck(model, xref='standard', punch=True, run_remove_unused=False)
+
+            self.assertEqual(strmeas, deck.MATS1[mid].strmeas)
 
     def test_matdmg(self):
         """tests MATDMG"""

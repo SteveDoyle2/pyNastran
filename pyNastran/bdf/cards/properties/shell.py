@@ -26,7 +26,7 @@ from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.bdf_interface.internal_get import coord_id, material_id
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, string_or_blank,
+    integer, integer_or_blank, double, double_or_blank, string_or_blank, integer_double_or_blank
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -2011,6 +2011,136 @@ class PPLANE(Property):
 
     def repr_fields(self) -> list:
         list_fields = ['PPLANE', self.pid, self.Mid(), self.t, self.nsm, self.formulation_option]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
+class PGPLSN(Property):
+    type = 'PGPLSN'
+    _field_map = {1: 'pid',
+                  2:'mid',
+                  3:'cgid',
+                  4:'t',
+                  5:'kn',
+                  6: 'kr1',
+                  7: 'kr2',
+                  }
+
+    @classmethod
+    def _init_from_empty(cls):
+        return PGPLSN(pid=1, mid=1, cgid=1, t=1.)
+
+    def __init__(self, pid: int, mid: int, cgid: int, t: float,
+                 kn: float | int = 0., kr1: float | int = 0., kr2: float | int = 0.,
+                 comment: str=''):
+
+        """
+        Generalized Plane Strain Element Property for SOL 401 (NX Nastran)
+        :param pid: Property identification number. (Integer > 0)
+        :param mid: Identification number of a MAT1 or MAT11 entry. (Integer > 0; No default)
+        :param cgid: Identification number of control grid point. (Integer > 0; No default)
+        :param t: Undeformed element thickness (Real > 0.0; No default)
+        :param kn: Optional user-specified additive normal stiffness relative to the planar area defined by the mesh of
+            generalized plane strain elements. (Real ≥ 0.0 or Integer > 0; Default = 0.0)
+            If real entry, value of stiffness at all times.
+            If integer entry, identification number of a TABLEDi entry that contains value of stiffness as a
+            function of time.
+        :param kr1, kr2: Optional user-specified additive rotational stiffness in the units moment/radian about the
+            ith-axis of the displacement coordinate system for the control grid point. See Remark 3.
+            (Real ≥ 0.0 or Integer > 0; Default = 0.0)
+            If real entry, value of stiffness at all times.
+            If integer entry, identification number of a TABLEDi entry that contains value of stiffness as a function of
+            time.
+        """
+
+        Property.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.pid = pid
+        self.mid = mid
+        self.cgid = cgid
+        self.t = t
+        self.kn = kn
+        self.kr1, self.kr2 = kr1, kr2
+
+        self.mid_ref = None  # for cross-referencing
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a PGPLSN card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')  # MAT1, MAT11
+        cgid = integer(card, 3, 'cgid')
+
+        t = double(card, 4, 't')
+        kn = integer_double_or_blank(card, 5, 'kn', default=0.)
+        kr1 = integer_double_or_blank(card, 6, 'kr1', default=0.)
+        kr2 = integer_double_or_blank(card, 7, 'kr2', default=0.)
+
+        return PGPLSN(pid, mid, cgid=cgid, t=t, kn=kn, kr1=kr1, kr2=kr2, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PGPLSN pid=%s' % self.pid
+        self.mid_ref = model.Material(self.mid, msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PGPLSN pid=%s' % self.pid
+        self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.mid = self.Mid()
+        self.mid_ref = None
+
+    def _verify(self, xref):
+        unused_pid = self.Pid()
+        unused_mid = self.Mid()
+        #stress_strain_output_location = self.stress_strain_output_location
+        if xref:
+            assert self.mid_ref.type in ['MAT1', 'MAT11'], 'PGPLSN: mid.type=%s' % self.mid_ref.type
+
+    def Mid(self) -> int:
+        """returns the material id"""
+        return material_id(self.mid_ref, self.mid)
+
+    def raw_fields(self) -> list:
+        list_fields = ['PGPLSN', self.pid, self.Mid(), self.cgid, self.t, self.kn, self.kr1, self.kr2]
+        return list_fields
+
+    def repr_fields(self) -> list:
+        list_fields = ['PGPLSN', self.pid, self.Mid(), self.cgid, self.t, self.kn, self.kr1, self.kr2]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

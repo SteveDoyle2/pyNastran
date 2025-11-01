@@ -63,14 +63,14 @@ def remove_unused(bdf_filename: PathLike,
 
     aecomps_used = set()
 
-    #card_types = list(model.card_count.keys())
-    #card_map = model.get_card_ids_by_card_types(
-        #card_types=card_types,
-        #reset_type_to_slot_map=False,
-        #stop_on_missing_card=True)
-
-    #for nid, node in model.nodes.items():
-        #cids_used.update([node.Cp(), node.Cd()])
+    # card_types = list(model.card_count.keys())
+    # card_map = model.get_card_ids_by_card_types(
+    #     card_types=card_types,
+    #     reset_type_to_slot_map=False,
+    #     stop_on_missing_card=True)
+    #
+    # for nid, node in model.nodes.items():
+    #     cids_used.update([node.Cp(), node.Cd()])
 
     unreferenced_types_quiet = {
         'ENDDATA', 'PARAM',
@@ -79,7 +79,7 @@ def remove_unused(bdf_filename: PathLike,
     unreferenced_types_case_control = {
         'EIGR', 'EIGRL', 'EIGB', 'EIGP', 'EIGC',
         'FREQ', 'FREQ1', 'FREQ2',
-        'TSTEP', 'TSTEPNL',
+        'TSTEP', 'TSTEP1', 'TSTEPNL',
         'NLPCI', 'NLPARM',
 
         # aero
@@ -170,9 +170,9 @@ def remove_unused(bdf_filename: PathLike,
         'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
         'QSET', 'QSET1', 'USET', 'USET1', 'OMIT', 'OMIT1',
     }
-    #seset_types = {
-        #'SESET',
-    #}
+    # seset_types = {
+    #     'SESET',
+    # }
     load_types = {
         'GRAV', 'RANDPS', 'FORCE', 'FORCE1', 'FORCE2',
         'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -290,6 +290,11 @@ def remove_unused(bdf_filename: PathLike,
             for pid in ids:
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())
+        elif card_type == 'PGPLSN':
+            for pid in ids:
+                prop = model.properties[pid]
+                mids_used.add(prop.Mid())
+                nids_used.add(prop.cgid)
 
         elif card_type in {'PLOTEL', 'PLOTEL3', 'PLOTEL4',
                            'PLOTEL6', 'PLOTEL8'}:
@@ -363,8 +368,8 @@ def remove_unused(bdf_filename: PathLike,
 
         elif card_type == 'TEMPD':
             pass
-            #for temp_id in ids:
-                #tempd = self.tempds[temp_id]
+            # for temp_id in ids:
+            #     tempd = self.tempds[temp_id]
 
         elif card_type == 'MPCADD':
             for mpcadds in model.mpcadds.values():
@@ -408,14 +413,14 @@ def remove_unused(bdf_filename: PathLike,
 
         elif card_type in {'PBUSH', 'PBUSH2D'}:
             pass
-            #for pid in ids:
-                #prop = model.properties[pid]
-                #raise RuntimeError(prop)
+            # for pid in ids:
+            #     prop = model.properties[pid]
+            #     raise RuntimeError(prop)
         elif card_type == 'PBUSHT':
             # tables
             pass
         elif card_type == 'AESURF':
-            #CID1  | ALID1 | CID2   | ALID2
+            # CID1  | ALID1 | CID2   | ALID2
             for aesurf in model.aesurf.values():
                 cids_used.add(aesurf.Cid1())
                 cid2 = aesurf.Cid2()
@@ -552,11 +557,11 @@ def remove_unused(bdf_filename: PathLike,
         elif card_type in {'NSM', 'NSM1', 'NSML', 'NSML1'}:
             _store_nsm(model, ids, pids_used)
 
-        #elif card_type in ['POINTAX', 'AXIC', 'RINGAX']:  # removed
-            #pass
-            #for eid in ids:
-                #elem = model.plotels[eid]
-                #nids_used.update(elem.node_ids)
+        # elif card_type in ['POINTAX', 'AXIC', 'RINGAX']:  # removed
+        #     pass
+        #     for eid in ids:
+        #         elem = model.plotels[eid]
+        #         nids_used.update(elem.node_ids)
         elif card_type in ['PBRSECT', 'PBMSECT']:
             for pid in ids:
                 prop = model.properties[pid]
@@ -844,6 +849,7 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
     else:
         raise NotImplementedError(card_type)
 
+
 def _store_nsm(model: BDF, ids: np.ndarray, pids_used: set[int]) -> None:
     """helper for ``remove_unused``"""
     for nsm_id in ids:
@@ -860,13 +866,14 @@ def _store_nsm(model: BDF, ids: np.ndarray, pids_used: set[int]) -> None:
                 pids_used.update(idsi)
             elif nsm.nsm_type in ['CONROD', 'ELEMENT']:
                 # we skip this because we assume all elements are used
-                #if len(idsi) == 1 and idsi[0] == 'ALL':
-                    #raise NotImplementedError('found ALL...\n%s' % str(nsm))
-                #eids_used.update(idsi)
+                # if len(idsi) == 1 and idsi[0] == 'ALL':
+                #     raise NotImplementedError('found ALL...\n%s' % str(nsm))
+                # eids_used.update(idsi)
                 pass
             else:
                 msg = 'found nsm_type=%r...\n%s' % (nsm.nsm_type, str(nsm))
                 raise NotImplementedError(msg)
+
 
 def _store_loads(model: BDF, unused_card_type, unused_ids,
                  nids_used: set[int],
@@ -1167,9 +1174,9 @@ def _remove_optimization(model: BDF,
         model.log.debug('removing DVPRELx %s' % dvprels_ids_to_remove)
     _remove_dict(model.dvprels, dvprels_to_remove, model.log)
 
-    #for dvprel_id, msg in dvprels_to_remove:
-        #del model.dvprels[dvprel_id]
-        #model.log.debug(msg)
+    # for dvprel_id, msg in dvprels_to_remove:
+    #     del model.dvprels[dvprel_id]
+    #     model.log.debug(msg)
 
 
 def _remove_dict(mydict: dict[int, Any], keys_msg,
