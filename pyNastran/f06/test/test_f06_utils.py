@@ -44,7 +44,11 @@ from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
 from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
-
+try:
+    from pyNastran.f06.dev.flutter.utils import load_f06_op2, get_png_filename
+    IS_DEV = True
+except ImportError:
+    IS_DEV = False
 
 DIRNAME = os.path.dirname(__file__)
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -214,6 +218,36 @@ class TestF06Flutter(unittest.TestCase):
         #                 subcases=[1, 3],
         #                 log=log)
 
+    @unittest.skipIf(not IS_DEV, 'no flutter-dev')
+    def test_plot_flutter_0012_dev(self):
+        """tests load_f06_op2 and get_png_filename"""
+        log = SimpleLogger(level='warning')
+        dirname = AERO_PATH / '2_mode_flutter'
+        f06_filename = dirname / '0012_flutter.f06'
+        load_f06_op2(f06_filename, log,
+            in_units='si', out_units='si', use_rhoref=False)
+
+        base = 'base'
+        x_plot_type = 'eas'
+        plot_type = 'Vg'
+        export_to_png = True
+        png_filename0, png_filename = get_png_filename(
+            base, x_plot_type, plot_type,
+            export_to_png)
+        assert png_filename0 == 'base_Vg.png', png_filename0
+        assert png_filename == 'base_Vg.png', png_filename
+        png_filename0, png_filename = get_png_filename(
+            base, 'x-'+x_plot_type, plot_type,
+            export_to_png)
+        assert png_filename0 == 'base_Vg.png', png_filename0
+        assert png_filename == 'base_Vg.png', png_filename
+
+        png_filename0, png_filename = get_png_filename(
+            base, 'x-'+x_plot_type, plot_type,
+            export_to_png=False)
+        assert png_filename0 == 'base_Vg.png', png_filename0
+        assert png_filename is None, png_filename
+
     def test_plot_flutter_0012(self):
         """
         tests plot_flutter_f06
@@ -222,6 +256,7 @@ class TestF06Flutter(unittest.TestCase):
         """
         dirname = AERO_PATH / '2_mode_flutter'
         f06_filename = dirname / '0012_flutter.f06'
+
         #log = get_logger(log=None, level=None, encoding='utf-8')
         log = get_logger(log=None, level=False, encoding='utf-8')
 

@@ -89,7 +89,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
             write_panel_xyz=False)
 
     assert os.path.exists(aerobox_caero_filename), print_bad_path(aerobox_caero_filename)
-    loads_filename = os.path.join(dirname, 'loads.inc')
+    loads_filename = os.path.join(dirname, 'loads.blk')
     base = os.path.splitext(f06_filename)[0]
     if f06_filename.lower().endswith(('.bdf', '.op2')):
         f06_filename = base + '.f06'
