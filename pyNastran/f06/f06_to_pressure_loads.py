@@ -105,7 +105,8 @@ def f06_to_pressure_loads(f06_filename: PathLike,
                 cpi = np.mean(cps)
                 cp_list.append(cpi)
             cps_list.append(cp_list)
-            line0 = line0.rstrip(',') + '\n'
+
+        line0 = line0.rstrip(',') + '\n'
         cp_array = np.column_stack(cps_list)
         assert cp_array.shape == (neids, nsubcases), f'actual_shape={cp_array.shape} expected=({neids},{nsubcases})'
 

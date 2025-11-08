@@ -744,14 +744,30 @@ class TestF06Utils(unittest.TestCase):
             pid_method='caero',
             write_panel_xyz=True)
 
+        # auto-generated files
         trim_results = f06_to_pressure_loads(
-            f06_filename, aerobox_caero_filename, loads_filename,
+            f06_filename, aerobox_caero_filename,
+            loads_filename,
             log=None, nlines_max=1_000_000, debug=None)
+        # set the file names?
         trim_results = f06_to_pressure_loads(
-            f06_filename, aerobox_caero_filename, loads_filename,
+            f06_filename, aerobox_caero_filename,
+            loads_filename,
             nid_csv_filename=nid_csv_filename,
             eid_csv_filename=eid_csv_filename,
             log=None, nlines_max=1_000_000, debug=None)
+
+        argv = [
+            'f06', 'plot_144', str(f06_filename),
+            '--caero', str(aerobox_caero_filename)]
+        log = get_logger(log=None, level=None, encoding='utf-8')
+        cmd_line_f06(argv=argv, # plot=IS_MATPLOTLIB,
+                     show=False, log=log)
+
+        argv = ['f06', 'plot_144', str(f06_filename)]
+        cmd_line_f06(argv=argv, # plot=IS_MATPLOTLIB,
+                     show=False, log=log)
+
 
     def test_f06_trim_freedlm(self):
         """tests read_f06_trim"""
