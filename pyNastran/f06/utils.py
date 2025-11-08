@@ -1,6 +1,8 @@
 """
 defines:
  - cmd_line_plot_flutter()
+ - cmd_line_plot_trim()
+ - cmd_line_plot_optimization()
 
 """
 from __future__ import annotations
@@ -31,18 +33,8 @@ USAGE_144 = (
 def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
                        log: Optional[SimpleLogger]=None):
     """the interface to ``f06 plot_144`` on the command line"""
-    from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
     if argv is None:  # pragma: no cover
         argv = sys.argv
-
-    # is_gui = '--gui' in argv
-    # if is_gui:
-    #     argv.remove('--gui')
-    #     from pyNastran.f06.dev.flutter.gui_flutter import main as gui_flutter
-    #
-    # if len(argv) == 2 and is_gui:
-    #     gui_flutter()
-    #     return
 
     msg = (
         USAGE_144 +
@@ -78,18 +70,17 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
     f06_filename = data['F06_FILENAME']
     aerobox_caero_filename = data['--caero']
     bdf_filename = data['--bdf']
+    dirname = os.path.dirname(f06_filename)
+    base = os.path.splitext(f06_filename)[0]
 
     from pyNastran.utils import print_bad_path
-    # print(aerobox_caero_filename)
-    # print(bdf_filename)
-    if bdf_filename is None:
-        base = os.path.splitext(f06_filename)[0]
-        bdf_filename = base + '.bdf'
-    assert os.path.exists(bdf_filename), print_bad_path(bdf_filename)
-
     if aerobox_caero_filename is None:
+        if bdf_filename is None:
+            bdf_filename = base + '.bdf'
+        assert os.path.exists(bdf_filename), print_bad_path(bdf_filename)
+
         from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
-        aerobox_caero_filename = 'caero.bdf'
+        aerobox_caero_filename = os.path.join(dirname, 'caero.bdf')
         export_caero_mesh(
             bdf_filename,
             caero_bdf_filename=aerobox_caero_filename,
@@ -98,7 +89,6 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
             write_panel_xyz=False)
 
     assert os.path.exists(aerobox_caero_filename), print_bad_path(aerobox_caero_filename)
-    dirname = os.path.dirname(f06_filename)
     loads_filename = os.path.join(dirname, 'loads.inc')
     base = os.path.splitext(f06_filename)[0]
     if f06_filename.lower().endswith(('.bdf', '.op2')):
@@ -273,7 +263,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         else:
             in_units = data['--in_units']
     in_units = in_units.lower()
-    assert in_units in {'si', 'si_mm', 'english_in', 'english_ft', 'english_kt'}, 'in_units=%r' % in_units
+    assert in_units in {'si', 'si_mm', 'english_in', 'english_ft', 'english_kt'}, f'in_units={in_units!r}'
 
     # The default used to be SI, but it's really weird when I'm working in
     # English units and my output is in SI

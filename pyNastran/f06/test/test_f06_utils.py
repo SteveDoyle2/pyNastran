@@ -220,7 +220,8 @@ class TestF06Flutter(unittest.TestCase):
 
         has issues with writing the subcase...
         """
-        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
+        dirname = AERO_PATH / '2_mode_flutter'
+        f06_filename = dirname / '0012_flutter.f06'
         #log = get_logger(log=None, level=None, encoding='utf-8')
         log = get_logger(log=None, level=False, encoding='utf-8')
 
@@ -240,10 +241,10 @@ class TestF06Flutter(unittest.TestCase):
             f06_units='si', out_units=None,
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
-            export_csv_filename='nastran.csv',
-            export_f06_filename='nastran.f06',
-            export_veas_filename='nastran.veas',
-            export_zona_filename='zona.f06',
+            export_csv_filename=dirname/'nastran.csv',
+            export_f06_filename=dirname/'nastran.f06',
+            export_veas_filename=dirname/'nastran.veas',
+            export_zona_filename=dirname/'zona.f06',
             vg_filename='vg_subcase_%i.png',
             vg_vf_filename='vg_vf_subcase_%i.png',
             kfreq_damping_filename='kfreq_damping_subcase_%i.png',
@@ -267,10 +268,10 @@ class TestF06Flutter(unittest.TestCase):
             os.remove('kfreq_damping_subcase_1.png')
             os.remove('root_locus_subcase_1.png')
 
-            os.remove('nastran.csv')
-            os.remove('nastran.f06')
-            os.remove('nastran.veas')
-            os.remove('zona.f06')
+            os.remove(dirname/'nastran.csv')
+            os.remove(dirname/'nastran.f06')
+            os.remove(dirname/'nastran.veas')
+            os.remove(dirname/'zona.f06')
 
         with self.assertRaises(NotImplementedError):
             plot_flutter_f06(
@@ -723,6 +724,7 @@ class TestF06Utils(unittest.TestCase):
                      show=True)
 
     def test_f06_trim_bwb(self):
+        """tests f06_to_pressure_loads"""
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.bdf'
         aerobox_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
         f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.f06'
@@ -761,13 +763,12 @@ class TestF06Utils(unittest.TestCase):
             'f06', 'plot_144', str(f06_filename),
             '--caero', str(aerobox_caero_filename)]
         log = get_logger(log=None, level=None, encoding='utf-8')
-        cmd_line_f06(argv=argv, # plot=IS_MATPLOTLIB,
+        cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB,
                      show=False, log=log)
 
         argv = ['f06', 'plot_144', str(f06_filename)]
-        cmd_line_f06(argv=argv, # plot=IS_MATPLOTLIB,
+        cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB,
                      show=False, log=log)
-
 
     def test_f06_trim_freedlm(self):
         """tests read_f06_trim"""
