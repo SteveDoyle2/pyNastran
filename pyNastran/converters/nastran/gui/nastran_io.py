@@ -418,7 +418,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                    'renumbering; duplicate nids=\n%s' % duplicates(all_nids))
             raise NotImplementedError(msg)
 
-        if not is_monotonic(all_nids):
+        if not is_monotonic(all_nids, is_strict=True):
             # msg = ('superelement nodes are not monotonic; use superelement_renumber\n'
             #        'renumbering; nids=\n%s' % all_nids)
             # self.log.warning(msg)

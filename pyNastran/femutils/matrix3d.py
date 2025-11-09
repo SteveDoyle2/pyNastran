@@ -14,14 +14,14 @@ from itertools import count
 import numpy as np
 
 
-def norm2d(v):
+def norm2d(v: np.ndarray) -> np.ndarray:
     """takes N norms of a (N,3) set of vectors"""
     mag = np.linalg.norm(v, axis=1)
     assert v.shape[0] == len(mag)
     return mag
 
 
-def normalize_vector2d(v):
+def normalize_vector2d(v: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """normalzes a series of (N,3) vectors"""
     mag = norm2d(v)
     nmag = len(mag)
@@ -29,7 +29,10 @@ def normalize_vector2d(v):
     return i, nmag
 
 
-def axes_stack(i, j, k, nmag):
+def axes_stack(i: np.ndarray,
+               j: np.ndarray,
+               k: np.ndarray,
+               nmag: int) -> np.ndarray:
     """stack coordinate axes in 3d"""
     i.shape = (nmag, 1, 3)
     j.shape = (nmag, 1, 3)
@@ -38,7 +41,8 @@ def axes_stack(i, j, k, nmag):
     return ijk
 
 
-def dot_33_n33(A, B, debug=True):
+def dot_33_n33(A: np.ndarray, B: np.ndarray,
+               debug: bool=False) -> np.ndarray:
     """
     Multiplies a (3x3) matrix by a Nx3x3 matrix
 
@@ -62,11 +66,11 @@ def dot_33_n33(A, B, debug=True):
         dtype = A.dtype
         #print('------------------------')
         D = np.zeros(B.shape, dtype=dtype)
-        print('A.shape =', A.shape)
+        # print('A.shape =', A.shape)
         for i, Bi in zip(count(), B):
-            print('Bi.shape =', Bi.shape)
+            # print('Bi.shape =', Bi.shape)
             ABi = A @ Bi
-            print('A @ Bi.shape =', ABi.shape)
+            # print('A @ Bi.shape =', ABi.shape)
             D[i, :, :] = ABi
             #print(D[i, :, :])
             #print('------------------------')
@@ -74,7 +78,8 @@ def dot_33_n33(A, B, debug=True):
     return D
 
 
-def dot_n33_33(A, B, debug=True):
+def dot_n33_33(A: np.ndarray, B: np.ndarray,
+               debug: bool=False) -> np.ndarray:
     """
     Multiplies a (3x3) matrix by a Nx3x3 matrix
 
@@ -113,7 +118,8 @@ def dot_n33_33(A, B, debug=True):
     return C
 
 
-def dot_n33_n33(A: np.ndarray, B: np.ndarray, debug: bool=True) -> np.ndarray:
+def dot_n33_n33(A: np.ndarray, B: np.ndarray,
+                debug: bool=False) -> np.ndarray:
     """
     Multiplies two matrices together
 
@@ -131,7 +137,8 @@ def dot_n33_n33(A: np.ndarray, B: np.ndarray, debug: bool=True) -> np.ndarray:
     assert A.shape[1:] == (3, 3), A.shape
     assert len(B.shape) == 3, B.shape
     assert B.shape[1:] == (3, 3), B.shape
-    #C = np.matmul(A, B)
+
+    C = np.einsum('ijk,ikm->ijm', A, B)
     if debug:
         dtype = A.dtype
         #print('------------------------')
@@ -140,13 +147,15 @@ def dot_n33_n33(A: np.ndarray, B: np.ndarray, debug: bool=True) -> np.ndarray:
             D[i, :, :] = Ai @ Bi
             #print(D[i, :, :])
             #print('------------------------')
+        assert np.allclose(C, D)
     #if not np.all(np.allclose(C, D)):
         #print('C:\n%s'% C)
         #print('D:\n%s'% D)
-    return D
+    return C
 
 
-def dot_n33_n3(A: np.ndarray, B: np.ndarray, debug: bool=True) -> np.ndarray:
+def dot_n33_n3(A: np.ndarray, B: np.ndarray,
+               debug: bool=False) -> np.ndarray:
     """
     Multiplies two N x 3 x 3 matrices together
 
@@ -189,7 +198,7 @@ def transpose3d(T: np.ndarray) -> np.ndarray:
     """
     return np.transpose(T, axes=(0, 2, 1))
 
-def triple_n33_n33(A, T, transpose: bool=False, debug: bool=True) -> np.ndarray:
+def triple_n33_n33(A, T, transpose: bool=False, debug: bool=False) -> np.ndarray:
     """
     Calculates the matrix triple product  for a series of::
 

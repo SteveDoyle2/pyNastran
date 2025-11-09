@@ -13,7 +13,10 @@ from numpy.testing import assert_equal, assert_array_equal
 import pyNastran
 from pyNastran.femutils.io import loadtxt_nice, savetxt_nice
 from pyNastran.femutils.matrix3d import dot_n33_n33, transpose3d, triple_n33_n33, triple_n33_33
-from pyNastran.femutils.utils import augmented_identity, perpendicular_vector, perpendicular_vector2d
+from pyNastran.femutils.utils import (
+    augmented_identity, perpendicular_vector,
+    perpendicular_vector2d, vstack_lists,
+    is_monotonic, duplicates, hstack_unique)
 from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
 
 from pyNastran.femutils.test.utils import is_array_close
@@ -103,7 +106,8 @@ class TestMatrix3d(unittest.TestCase):
              [0., 0., 1.],
              [1., 0., 9.],],
         ])
-        TtAT_actual = triple_n33_n33(A, T, transpose=False)
+        TtAT_actual = triple_n33_n33(A, T, transpose=False, debug=False)
+        TtAT_actual = triple_n33_n33(A, T, transpose=False, debug=True)
         TtAT_expected = [
             [[5., 6., 58.],
              [8., 9., 88.],
@@ -114,7 +118,8 @@ class TestMatrix3d(unittest.TestCase):
              [74., 84., 820.],],
         ]
         assert is_array_close(TtAT_expected, TtAT_actual)
-        TATt_actual = triple_n33_n33(A, T, transpose=True)
+        TATt_actual = triple_n33_n33(A, T, transpose=True, debug=False)
+        TATt_actual = triple_n33_n33(A, T, transpose=True, debug=True)
         TATt_expected = [
             [[9., 7., 89.],
              [3., 1., 29.],
@@ -142,7 +147,8 @@ class TestMatrix3d(unittest.TestCase):
             [0., 0., 1.],
             [1., 0., 9.],
         ])
-        TtAT_actual = triple_n33_33(A, T, transpose=False)
+        TtAT_actual = triple_n33_33(A, T, transpose=False, debug=False)
+        TtAT_actual = triple_n33_33(A, T, transpose=False, debug=True)
         TtAT_expected = [
             [[5., 6., 58.],
              [8., 9., 88.],
@@ -153,7 +159,8 @@ class TestMatrix3d(unittest.TestCase):
              [74., 84., 820.],],
         ]
         assert is_array_close(TtAT_expected, TtAT_actual)
-        TATt_actual = triple_n33_33(A, T, transpose=True)
+        TATt_actual = triple_n33_33(A, T, transpose=True, debug=False)
+        TATt_actual = triple_n33_33(A, T, transpose=True, debug=True)
         TATt_expected = [
             [[9., 7., 89.],
              [3., 1., 29.],
@@ -168,6 +175,70 @@ class TestMatrix3d(unittest.TestCase):
 
 class TestNumpyUtils(unittest.TestCase):
     """tests functions in femutils.utils"""
+    def test_hstack_unique(self):
+        list_of_arrays = [
+            [1, 2, 3], [4, 5, 6, 7, 3],
+        ]
+        stacked = [1, 2, 3, 4, 5, 6, 7, 3]
+        unique_stacked = [1, 2, 3, 4, 5, 6, 7]
+        a = hstack_unique(list_of_arrays, unique=False)
+        b = hstack_unique(list_of_arrays, unique=True)
+        assert np.array_equal(a, stacked)
+        assert np.array_equal(b, unique_stacked)
+
+        list_of_arrays = [
+            [1, 2, 3, 4, 5, 6, 7, 3],
+        ]
+        c = hstack_unique(list_of_arrays, unique=False)
+        d = hstack_unique(list_of_arrays, unique=True)
+        assert np.array_equal(c, stacked)
+        assert np.array_equal(d, unique_stacked)
+
+    def test_vstack_list(self):
+        list_of_arrays = [
+                [[1, 2, 3]],
+            [
+                [1, 2, 3],
+                [1, 2, 3],
+            ]
+        ]
+        stacked = [
+            [1, 2, 3],
+            [1, 2, 3],
+            [1, 2, 3],
+        ]
+        stacked_array = vstack_lists(list_of_arrays)
+        assert np.array_equal(stacked_array, stacked)
+
+        list_of_arrays = [
+            [[1, 2, 3]],
+        ]
+        stacked = [[1, 2, 3]]
+        stacked_array = vstack_lists(list_of_arrays)
+        assert np.array_equal(stacked_array, stacked), stacked_array
+
+    def test_duplicates(self):
+        a = [1, 2, 3, 4, 5, 2, 3]
+        b= duplicates(a)
+        assert np.array_equal(b, [2, 3])
+
+        a = [3, 2, 1, 3, 2, 4, 5]
+        b= duplicates(a)
+        assert np.array_equal(b, [2, 3])
+
+    def test_is_monotonic(self):
+        a = np.array([1, 2, 3])
+        b = np.array([1, -2, 3])
+        c = np.array([1, 2, 2, 3])
+
+        assert is_monotonic(a, is_strict=True), (np.diff(a), aa)
+        assert not is_monotonic(b, is_strict=True), np.diff(b)
+        assert not is_monotonic(c, is_strict=True), np.diff(c)
+
+        assert is_monotonic(a, is_strict=False)
+        assert not is_monotonic(b, is_strict=False)
+        assert is_monotonic(c, is_strict=False)
+
     def test_perpendicular_vector(self):
         """tests perpendicular_vector"""
         with self.assertRaises(ValueError):

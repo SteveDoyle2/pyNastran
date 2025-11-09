@@ -11,7 +11,7 @@ from .utils import cross2d, perpendicular_vector2d
 from .matrix3d import axes_stack, normalize_vector2d
 
 
-def coords_from_vector_1d(v_array):
+def coords_from_vector_1d(v_array: np.ndarray) -> np.ndarray:
     """
     Gets the coordinate systems for a series of 1D vectors.
     Fakes the j and k axes.
@@ -209,7 +209,8 @@ def hexa_coord(xyz1, xyz2, xyz3, xyz4,
     #return coords
 
 
-def _coordinate_system_from_vector_2d(v21, normal):
+def _coordinate_system_from_vector_2d(v21: np.ndarray,
+                                      normal: np.ndarray) -> np.ndarray:
     r"""
     Helper method::
 
