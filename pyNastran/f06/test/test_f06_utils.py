@@ -45,10 +45,11 @@ from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
 try:
-    from pyNastran.f06.dev.flutter.utils import load_f06_op2, get_png_filename
-    IS_DEV = True
+    from pyNastran.f06.dev.flutter.utils import (
+        load_f06_op2, get_png_filename, get_plot_file)
 except ImportError:
-    IS_DEV = False
+    pass
+IS_DEV = pyNastran.DEV
 
 DIRNAME = os.path.dirname(__file__)
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -182,15 +183,28 @@ class TestF06Flutter(unittest.TestCase):
         """tests read_f06_trim"""
         log = get_logger(log=None, level=None, encoding='utf-8')
         f06_filename = AERO_PATH / 'pt145.f06'
-        #trim_results = read_f06_trim(f06_filename,
-        #                             log=None, nlines_max=1_000_000, debug=None)
-        #assert len(trim_results.aero_force.keys()) == 0
-        #assert len(trim_results.aero_pressure.keys()) == 0
-        #assert len(trim_results.controller_state.keys()) == 0
-        #assert len(trim_results.trim_variables.keys()) == 0
-        #assert len(trim_results.structural_monitor_loads.keys()) == 4
-        argv = ['f06', 'plot_145', str(f06_filename), '--tas',
-                '--out_units', 'english_in']
+
+        plot_methods = [
+            '--eas', '--tas', '--rho', '--alt',
+            '--mach', '--q', '--index',
+        ]
+        for plot_method in plot_methods:
+            argv = ['f06', 'plot_145', str(f06_filename),
+                    plot_method]
+            cmd_line_plot_flutter(argv=argv, plot=False,
+                                  show=False, log=log)
+
+        argv = [
+            'f06', 'plot_145', str(f06_filename),
+            '--tas',
+            '--in_units', 'si',
+            '--out_units', 'english_in',
+            '--freq_tol', '0.02',
+            '--freq_tol_remove', '0.01',
+            '--vd_limit', '100.',
+            '--ylimfreq', '0:',
+            '--damping_limit', '0.001',
+        ]
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB,
                               show=False, log=log)
 
@@ -224,8 +238,22 @@ class TestF06Flutter(unittest.TestCase):
         log = SimpleLogger(level='warning')
         dirname = AERO_PATH / '2_mode_flutter'
         f06_filename = dirname / '0012_flutter.f06'
-        load_f06_op2(f06_filename, log,
+        model, responses = load_f06_op2(f06_filename, log,
             in_units='si', out_units='si', use_rhoref=False)
+        assert model is None, model
+        assert len(responses) == 1, responses
+
+        f06_filename2 = 'cat.f06'
+        model, responses = load_f06_op2(f06_filename2, log)
+        assert model is None, model
+        assert len(responses) == 0, responses
+
+        f06_filename2 = 'cat.op2'
+        model, responses = load_f06_op2(f06_filename2, log)
+        assert model is None, model
+        assert len(responses) == 0, responses
+
+        out = get_plot_file()
 
         base = 'base'
         x_plot_type = 'eas'
@@ -237,10 +265,10 @@ class TestF06Flutter(unittest.TestCase):
         assert png_filename0 == 'base_Vg.png', png_filename0
         assert png_filename == 'base_Vg.png', png_filename
         png_filename0, png_filename = get_png_filename(
-            base, 'x-'+x_plot_type, plot_type,
+            base, x_plot_type, 'x-'+plot_type,
             export_to_png)
-        assert png_filename0 == 'base_Vg.png', png_filename0
-        assert png_filename == 'base_Vg.png', png_filename
+        assert png_filename0 == 'base_eas-Vg.png', png_filename0
+        assert png_filename == 'base_eas-Vg.png', png_filename
 
         png_filename0, png_filename = get_png_filename(
             base, 'x-'+x_plot_type, plot_type,
@@ -742,6 +770,7 @@ class TestZonaFlutter(unittest.TestCase):
 
 
 class TestF06Utils(unittest.TestCase):
+    @unittest.skipIf(not IS_DEV, 'skipping plot_sol_200')
     def test_opt_aerobeam(self):
         """tests optimization"""
         log = SimpleLogger('warning')
@@ -749,8 +778,10 @@ class TestF06Utils(unittest.TestCase):
         png_filename = AERO_PATH / 'aerobeam.png'
         plot_sol_200(f06_filename, png_filename=png_filename,
                      show=True, log=log)
-        #read_sol_200(f06_filename)
+        argv = ['f06', 'plot_200', str(f06_filename)]
+        cmd_line_f06(argv, plot=False, show=False, log=log)
 
+    @unittest.skipIf(not IS_DEV, 'skipping plot_sol_200')
     def test_opt_mdb200(self):
         """tests optimization"""
         f06_filename = MODEL_PATH / 'other' / 'mdb200.f06'
@@ -786,6 +817,7 @@ class TestF06Utils(unittest.TestCase):
             f06_filename, aerobox_caero_filename,
             loads_filename,
             log=None, nlines_max=1_000_000, debug=None)
+
         # set the file names?
         trim_results = f06_to_pressure_loads(
             f06_filename, aerobox_caero_filename,
@@ -872,10 +904,12 @@ class TestF06Utils(unittest.TestCase):
         a = split_float_colons('1:')
         b = split_float_colons('1:5')
         c = split_float_colons(':4')
+        d = split_float_colons(None)
 
         assert a == [1.0, None], a
         assert b == [1.0, 5.0], b
         assert c == [None, 4.0], c
+        assert d is None, d
         with self.assertRaises(AssertionError):
             split_float_colons('1:5:2')
 
@@ -897,8 +931,11 @@ class TestF06Utils(unittest.TestCase):
         d = split_int_colon('1:5,10:15')
         assert d == [1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15], d
 
-        d = split_int_colon('10:15,1:5')
-        assert d == [1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15], d
+        e = split_int_colon('10:15,1:5')
+        assert e == [1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15], e
+
+        f = split_int_colon('1,3,5')
+        assert f == [1, 3, 5], f
 
 
 if __name__ == '__main__':  # pragma: no cover

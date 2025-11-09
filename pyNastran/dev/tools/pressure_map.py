@@ -158,6 +158,9 @@ def pressure_map(aero_filename: PathLike,
             xyz_units=xyz_units,
             # idtype=idtype,
             fdtype=fdtype)
+    # elif method == 'strip_model':
+        # make the strips
+        # just run the simple panel_mode code
     elif method == 'full_model':
         pressure_model = pressure_map_to_structure_model(
             aero_model, structure_model, structure_eids,

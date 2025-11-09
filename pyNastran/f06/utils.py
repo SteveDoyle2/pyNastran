@@ -293,7 +293,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     elif data['--index']:
         plot_type = 'index'
     else:
-        sys.stderr.write('plot_type assumed to be --tas\n')
+        sys.stderr.write('plot_type not set; assumed to be --tas\n')
 
     vd_limit = None
     if data['--vd_limit']:

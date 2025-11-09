@@ -6,7 +6,7 @@ from typing import Optional, TYPE_CHECKING
 from matplotlib import pyplot as plt
 from pyNastran.f06.parse_flutter import make_flutter_response, get_flutter_units
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.f06.flutter_response import FlutterResponse
     from pyNastran.op2.op2 import OP2
