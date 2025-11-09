@@ -700,3 +700,14 @@ def fill_dmigs(model: BDF) -> None:
 
     # empty the _dmig_temp variable
     model._dmig_temp = defaultdict(list)
+
+
+def _prep_comment(comment: str) -> str:
+    """cleans up the comment"""
+    return comment.rstrip()
+    #print('comment = %r' % comment)
+    #comment = '  this\n  is\n  a comment\n'
+    #print(comment.rstrip('\n').split('\n'))
+    #sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
+             #for comment in comment.rstrip().split('\n')]
+    #print('sline = ', sline)

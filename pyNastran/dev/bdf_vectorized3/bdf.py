@@ -32,11 +32,12 @@ from cpylog import get_logger
 
 from pyNastran.utils import object_attributes, check_path, PathLike
 from pyNastran.utils.numpy_utils import (
-    integer_types, float_types)
+    integer_types)
 from pyNastran.bdf.utils import parse_patran_syntax
 from pyNastran.bdf.bdf_interface.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck,
     fill_dmigs, _get_card_name, _parse_dynamic_syntax,
+    _prep_comment,
 )
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 from pyNastran.bdf.bdf_interface.replication import (
@@ -486,16 +487,9 @@ OBJ_CARDS = {
 def load_bdf_object(obj_filename:str, xref: bool=True, log=None, debug: bool=True):
     model = BDF(log=log, debug=debug)
     model.load(obj_filename=obj_filename)
-    model.cross_reference(xref=xref, xref_nodes=True, xref_elements=True,
-                          xref_nodes_with_elements=True,
-                          xref_properties=True,
-                          xref_masses=True,
-                          xref_materials=True,
-                          xref_loads=True,
-                          xref_constraints=True,
-                          xref_aero=True,
-                          xref_sets=True,
-                          xref_optimization=True)
+    model.cross_reference(
+        run_setup=True,
+        run_geom_check=False)
     return model
 
 
@@ -1367,7 +1361,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
            >>> g1 = bdf.Node(1)
            >>> print(g1.get_position())
            [10.0, 12.0, 42.0]
-           >>> bdf.write_card(bdf_filename2)
+           >>> bdf_filename_out = 'fem_out.bdf'
+           >>> bdf.write_card(bdf_filename_out)
            >>> print(bdf.card_stats())
 
            ---BDF Statistics---
@@ -1954,6 +1949,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
            >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
            >>> bdf = BDF()
            >>> bdf.set_dynamic_syntax(dict_of_vars)
+           >>> bdf_filename = 'fem.bdf'
            >>> bdf.read_bdf(bdf_filename, xref=True)
 
         Notes
@@ -3071,18 +3067,18 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         assert isinstance(ifile, integer_types), ifile
         return self._prepare_dmix(DMIJI, self._add_methods.add_dmiji_object, card_obj, ifile, comment=comment)
 
-    def _prepare_ringfl(self, unused_card: list[str], card_obj: BDFCard,
-                        ifile: int, comment: str='') -> None:
-        """adds a RINGFL"""
-        assert isinstance(ifile, integer_types), ifile
-        rings = [RINGFL.add_card(card_obj, icard=0, comment=comment)]
-        if card_obj.field(3):
-            rings.append(RINGFL.add_card(card_obj, icard=1, comment=comment))
-        if card_obj.field(5):
-            rings.append(RINGFL.add_card(card_obj, icard=2, comment=comment))
-        for ring in rings:
-            self._add_methods.add_ringfl_object(ring)
-        return rings
+    # def _prepare_ringfl(self, unused_card: list[str], card_obj: BDFCard,
+    #                     ifile: int, comment: str='') -> None:
+    #     """adds a RINGFL"""
+    #     assert isinstance(ifile, integer_types), ifile
+    #     rings = [RINGFL.add_card(card_obj, icard=0, comment=comment)]
+    #     if card_obj.field(3):
+    #         rings.append(RINGFL.add_card(card_obj, icard=1, comment=comment))
+    #     if card_obj.field(5):
+    #         rings.append(RINGFL.add_card(card_obj, icard=2, comment=comment))
+    #     for ring in rings:
+    #         self._add_methods.add_ringfl_object(ring)
+    #     return rings
 
     def _prepare_acmodl(self, unused_card: list[str], card_obj: BDFCard,
                         ifile: int, comment: str='') -> None:
@@ -3400,13 +3396,13 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             raise DisabledCardError(f'stopping on card={card_name}')
 
         if card_name in self._card_parser:
-
             card_class, add_card_function = self._card_parser[card_name]
-            if hasattr(card_class, 'add_card_lax'):
-                class_instance = card_class.add_card_lax(card_obj, comment=comment)
-            else:
-
-                class_instance = card_class.add_card(card_obj, comment=comment)
+            add_card = getattr(card_class, 'add_card_lax') if hasattr(card_class, 'add_card_lax') else getattr(card_class, 'add_card')
+            class_instance = add_card(card_obj, comment=comment)
+            # if hasattr(card_class, 'add_card_lax'):
+            #     class_instance = card_class.add_card_lax(card_obj, comment=comment)
+            # else:
+            #     class_instance = card_class.add_card(card_obj, comment=comment)
             add_card_function(class_instance)
 
         elif card_name in self._card_parser_prepare:
@@ -3449,11 +3445,16 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
         if card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]
+            add_card = (
+                getattr(card_class, 'add_card_lax')
+                if not self.is_strict_card_parser and hasattr(card_class, 'add_card_lax')
+                else getattr(card_class, 'add_card'))
             try:
-                if not self.is_strict_card_parser and hasattr(card_class, 'add_card_lax'):
-                    class_instance = card_class.add_card_lax(card_obj, comment=comment)
-                else:
-                    class_instance = card_class.add_card(card_obj, comment=comment)
+                class_instance = add_card(card_obj, comment=comment)
+                # if not self.is_strict_card_parser and hasattr(card_class, 'add_card_lax'):
+                #     class_instance = card_class.add_card_lax(card_obj, comment=comment)
+                # else:
+                #     class_instance = card_class.add_card(card_obj, comment=comment)
                 card_idi = add_card_function(class_instance)
                 if card_name not in OBJ_CARDS:  # pragma: no cover
                     if not isinstance(card_idi, int):
@@ -3578,6 +3579,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         # assume GRID 1 has a CD=10, CP=0
         # assume GRID 2 has a CD=10, CP=0
         # assume GRID 5 has a CD=50, CP=0
+        >>> model = BDF()
         >>> model.point_ids
         [1, 2, 5]
         >>> out = model.get_displacement_index_xyz_cp_cd()
@@ -3690,6 +3692,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
         Examples
         --------
+        >>> model = BDF()
         >>> out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
         >>> nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform = out
         """
@@ -3740,6 +3743,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         # assume GRID 1 has a CD=10, CP=0
         # assume GRID 2 has a CD=10, CP=0
         # assume GRID 5 has a CD=50, CP=1
+
+        >>> model = BDF()
         >>> model.point_ids
         [1, 2, 5]
         >>> out = model.get_displacement_index_xyz_cp_cd()
@@ -3910,6 +3915,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         # assume GRID 1 has a CD=10
         # assume GRID 2 has a CD=10
         # assume GRID 5 has a CD=50
+
+        >>> model = BDF()
         >>> model.point_ids
         [1, 2, 5]
         >>> icd_transform = model.get_displacement_index()
@@ -3948,8 +3955,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         count_num : int, optional
             the amount to increment by (default=1)
 
-        >>> bdf.read_bdf(bdf_filename)
-        >>> bdf.card_count['GRID']
+        >>> model = BDF()
+        >>> bdf_filename = 'fem.bdf'
+        >>> model.read_bdf(bdf_filename)
+        >>> model.card_count['GRID']
         50
 
         """
@@ -4437,7 +4446,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
            >>> g1 = bdf.Node(1)
            >>> print(g1.get_position())
            [10.0, 12.0, 42.0]
-           >>> bdf.write_card(bdf_filename2)
+           >>> bdf_filename_out = 'fem_out.bdf'
+           >>> bdf.write_card(bdf_filename_out)
            >>> print(bdf.card_stats())
 
            ---BDF Statistics---
@@ -4801,7 +4811,8 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True, xref: b
        >>> g1 = bdf.Node(1)
        >>> print(g1.get_position())
        [10.0, 12.0, 42.0]
-       >>> bdf.write_card(bdf_filename2)
+       >>> bdf_filename_out = 'fem_out.bdf'
+       >>> bdf.write_card(bdf_filename_out)
        >>> print(bdf.card_stats())
 
        ---BDF Statistics---
@@ -4817,7 +4828,7 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True, xref: b
     """
     model = BDF(log=log, debug=debug, mode=mode)
     if read_cards and skip_cards:
-        msg = 'read_cards=%s skip_cards=%s cannot be used at the same time'
+        msg = f'read_cards={read_cards} skip_cards={skip_cards} cannot be used at the same time'
         raise NotImplementedError(msg)
     if skip_cards:
         model.disable_cards(skip_cards)
@@ -4831,53 +4842,9 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True, xref: b
                    xref=xref, punch=punch, read_includes=True,
                    save_file_structure=save_file_structure,
                    encoding=encoding)
-
-    #if 0:
-        ### TODO: remove all the extra methods
-
-        #keys_to_suppress = []
-        #method_names = model.object_methods(keys_to_skip=keys_to_suppress)
-
-        #methods_to_remove = [
-            #'_process_card', 'read_bdf', 'disable_cards', 'set_dynamic_syntax',
-            #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
-
-            #'add_NLPARM', 'add_NLPCI',
-            #'add_PARAM',',
-
-            #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
-            #'add_convection_property', 'add_creep_material',
-            #'add_material_dependence', 'add_method',
-            #'add_random_table',
-            #'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element',
-
-            #'set_as_msc',
-            #'set_as_nx',
-
-            #'pop_parse_errors',
-            #'set_error_storage',
-            #'is_reject',
-        #]
-        #for method_name in method_names:
-            #if method_name not in methods_to_remove + keys_to_suppress:
-                ##print(method_name)
-                #pass
-            #else:
-                ### TODO: doesn't work...
-                ##delattr(model, method_name)
-                #pass
-        #model.get_bdf_stats()
     return model
 
-def _prep_comment(comment):
-    return comment.rstrip()
-    #print('comment = %r' % comment)
-    #comment = '  this\n  is\n  a comment\n'
-    #print(comment.rstrip('\n').split('\n'))
-    #sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
-             #for comment in comment.rstrip().split('\n')]
-    #print('sline = ', sline)
-def _check_replicated_cards(replicated_cards):
+def _check_replicated_cards(replicated_cards) -> None:
     """helper method for ``parse_cards_list``"""
     replicated_card_old = []
     try:

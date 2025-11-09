@@ -130,6 +130,14 @@ class TestAero(unittest.TestCase):
         ]
         assert np.array_equal(spline_nodes, expected_spline_nodes), spline_nodes.tolist()
 
+    def test_bwb_lax(self):
+        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+        model = BDF(log=None, debug=False)
+        model.is_strict_card_parser = True
+        model.read_bdf(bdf_filename, save_file_structure=False)
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
+        model.get_xyz_in_coord_array(cid=0)
+
     def test_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         model = read_bdf(bdf_filename)

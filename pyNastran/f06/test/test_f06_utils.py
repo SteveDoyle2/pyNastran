@@ -244,12 +244,16 @@ class TestF06Flutter(unittest.TestCase):
         assert len(responses) == 1, responses
 
         f06_filename2 = 'cat.f06'
-        model, responses = load_f06_op2(f06_filename2, log)
+        model, responses = load_f06_op2(
+            f06_filename2, log,
+            in_units='si', out_units='si', use_rhoref=False)
         assert model is None, model
         assert len(responses) == 0, responses
 
         f06_filename2 = 'cat.op2'
-        model, responses = load_f06_op2(f06_filename2, log)
+        model, responses = load_f06_op2(
+            f06_filename2, log,
+            in_units='si', out_units='si', use_rhoref=False)
         assert model is None, model
         assert len(responses) == 0, responses
 
