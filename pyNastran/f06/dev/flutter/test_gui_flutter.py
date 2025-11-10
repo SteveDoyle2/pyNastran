@@ -25,12 +25,16 @@ class TestGuiFlutter(unittest.TestCase):
     def test_action(self) -> None:
         act = Action('cat', 'dog', show=True)
         str(act)
+
     def test_load_f06_op2(self) -> None:
         f06_filename = MODEL_PATH / 'aero' / '2_mode_flutter' / '0012_flutter.op2'
-        log = SimpleLogger(level='debug')
+        log = SimpleLogger(level='info')
         in_units = 'si'
         out_units = 'si'
         load_f06_op2(f06_filename, log, in_units, out_units, use_rhoref=False)
+
+        op2_filename = MODEL_PATH / 'bwb' / 'bwb_saero.op2'
+        load_f06_op2(op2_filename, log, in_units, out_units, use_rhoref=False)
 
 
 if __name__ == '__main__':

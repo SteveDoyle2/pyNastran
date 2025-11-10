@@ -37,7 +37,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
-from pyNastran.bdf.bdf_interface.utils import fill_dmigs
+from pyNastran.bdf.bdf_interface.utils import fill_dmigs, _prep_comment
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.dev.bdf_vectorized.bdf_interface2.write_mesh import WriteMesh
 from pyNastran.dev.bdf_vectorized.bdf_interface2.get_card import GetMethods
@@ -3542,16 +3542,6 @@ IGNORE_COMMENTS = (
     'COORDS', 'THERMAL', 'TABLES', 'RANDOM TABLES',
     'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
     'PROPERTIES_MASS', 'MASSES')
-
-def _prep_comment(comment):
-    return comment.rstrip()
-    #print('comment = %r' % comment)
-    #comment = '  this\n  is\n  a comment\n'
-    #print(comment.rstrip('\n').split('\n'))
-    #sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
-             #for comment in comment.rstrip().split('\n')]
-    #print('sline = ', sline)
-    #asdh
 
 def _clean_comment(comment):
     """

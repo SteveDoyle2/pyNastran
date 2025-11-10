@@ -8,12 +8,13 @@ from typing import TextIO, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils import PathLike
+from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 from pyNastran.bdf.bdf import read_bdf, BDF, Coord, AELIST
 from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
-def export_caero_mesh(model: BDF,
+def export_caero_mesh(bdf_filename: PathLike | BDF,
                       caero_bdf_filename: PathLike='caero.bdf',
                       is_aerobox_model: bool=True,
                       pid_method: str='aesurf',
@@ -22,7 +23,7 @@ def export_caero_mesh(model: BDF,
     """
     Write the CAERO cards as CQUAD4s that can be visualized
 
-    model: BDF
+    model: str | Path | BDF
         a valid geometry
     caero_bdf_filename : str
         the file to write
@@ -43,6 +44,22 @@ def export_caero_mesh(model: BDF,
         $$        1        2    0.0988    0.2500    0.0000    0.0988    0.5000    0.1234
     """
     rotate_panel_angle = np.radians(rotate_panel_angle_deg)
+
+    cards_to_include = [
+        'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+        'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
+        'SET1', 'SET2', 'SET3',
+        'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',
+        'AELIST',
+        # for aero ooord
+        'AEROS', 'AERO',
+        'CORD1R', 'CORD1S', 'CORD1C',
+        'CORD2R', 'CORD2S', 'CORD2C',
+        'GRID',
+    ]
+    model = get_bdf_model(
+        bdf_filename, cards_to_include=cards_to_include,
+        log=None, debug=False)
     if isinstance(model, PathLike):
         model = read_bdf(model)
     log = model.log

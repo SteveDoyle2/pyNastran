@@ -35,6 +35,11 @@ from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, MKAERO
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS # , CSSCHD, TRIM, TRIM2, DIVERG
 #from pyNastran.bdf.cards.aero.utils import build_trim_load_cases
 from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh # build_structure_from_caero
+from pyNastran.f06.dev.flutter.nastran_utils import (
+    get_element_table, get_property_table,
+    get_material_table,
+)
+
 
 IS_MATPLOTLIB = False
 if IS_MATPLOTLIB:
@@ -125,9 +130,21 @@ class TestAero(unittest.TestCase):
         ]
         assert np.array_equal(spline_nodes, expected_spline_nodes), spline_nodes.tolist()
 
+    def test_bwb_lax(self):
+        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+        model = BDF(log=None, debug=False)
+        model.is_strict_card_parser = True
+        model.read_bdf(bdf_filename, save_file_structure=False)
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
+        model.get_xyz_in_coord_array(cid=0)
+
     def test_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         model = read_bdf(bdf_filename)
+        get_element_table(model)
+        get_property_table(model)
+        get_material_table(model)
+
         methods = SetMethods(model)
 
         check_set_methods(model)
