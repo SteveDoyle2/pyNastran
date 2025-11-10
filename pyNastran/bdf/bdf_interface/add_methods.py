@@ -1222,8 +1222,12 @@ class AddMethods:
         key = aelist.sid
         assert key not in self.model.aelists, 'AELIST.sid=%s\nold=\n%snew=\n%s' % (key, self.model.aelists[key], aelist)
         assert key >= 0
-        self.model.aelists[key] = aelist
-        self.model._type_to_id_map[aelist.type].append(key)
+
+        add_object_to_dict(
+            self.model, key, 'aelists', aelist, self.model.aelists,
+            allow_overwrites=False)
+        # self.model.aelists[key] = aelist
+        # self.model._type_to_id_map[aelist.type].append(key)
 
     def add_aelink_object(self, aelink: AELINK) -> None:
         """adds an AELINK object"""
@@ -1265,8 +1269,11 @@ class AddMethods:
         assert key not in self.model.aesurf, '\naesurf=\n%s old=\n%s' % (
             aesurf, self.model.aesurf[key])
         assert key >= 0
-        self.model.aesurf[key] = aesurf
-        self.model._type_to_id_map[aesurf.type].append(key)
+        add_object_to_dict(
+            self.model, key, 'aesurf', aesurf, self.model.aesurf,
+            allow_overwrites=False)
+        # self.model.aesurf[key] = aesurf
+        # self.model._type_to_id_map[aesurf.type].append(key)
 
     def add_aesurfs_object(self, aesurfs: AESURFS) -> None:
         """adds an AESURFS object"""

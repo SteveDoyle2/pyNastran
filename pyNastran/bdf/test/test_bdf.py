@@ -919,18 +919,22 @@ def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
 
 
 def get_dof_map(model: BDF,
-                spc_id: int,
+                spc_id: int=0,
                 mpc_id: int=0,
                 suport1_id: int=0):
     """
+    Considers:
+      - MPC, RBE1, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE
+      - SUPORT / SUPORT1
     doesn't consider:
       - GRID PS
       - loads
       - SPC
-      - SUPORT
+      - RSSCON
     """
     log = model.log
-    dep_nid_to_comp = get_dependent_nid_to_components(model)
+    dep_nid_to_comp = get_dependent_nid_to_components(
+        model, mpc_id=mpc_id)
     spc_nid_to_components = {}
     if spc_id:
         spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True)
@@ -946,14 +950,21 @@ def get_dof_map(model: BDF,
     suport_nid_to_components = {}
     if suport1_id:
         suport1 = model.suport1[suport1_id]
+        assert len(suport1.nodes) == len(suport1.Cs), suport1.get_stats()
         for nid, comp in zip(suport1.nodes, suport1.Cs):
             suport_nid_to_components[nid] = comp
-        # TODO: add SUPORT
 
+    for suport in model.suport:
+        assert len(suport.nodes) == len(suport.Cs), suport.get_stats()
+        for nid, comp in zip(suport.nodes, suport.Cs):
+            suport_nid_to_components[nid] = comp
+
+    loads_nid_to_components = {}
     dof_map = {
         'm': dep_nid_to_comp,
         's': spc_nid_to_components,
         'r': suport_nid_to_components,
+        'p': loads_nid_to_components,
     }
     verify_dof_map(model, dof_map)
     return dof_map
@@ -1395,7 +1406,11 @@ def check_case(sol: int,
     spc_id = 0 if 'SPC' not in subcase else subcase['SPC'][0]
     suport1_id = 0 if 'SUPORT1' not in subcase else subcase['SUPORT1'][0]
     log.info(f'subcase={subcase.id}: MPC={mpc_id} SPC={spc_id} SUPORT1={suport1_id}')
-    dof_map = get_dof_map(fem2, spc_id=mpc_id, mpc_id=spc_id, suport1_id=suport1_id)
+    dof_map = get_dof_map(
+        fem2,
+        spc_id=spc_id,
+        mpc_id=mpc_id,
+        suport1_id=suport1_id)
 
     if fem2.is_acoustic():
         pass

@@ -533,21 +533,37 @@ class AELINK(BaseCard):
     def dependent_label(self) -> str:
         return self.label
 
-    def validate(self):
+    def validate(self) :
+        errors = []
+        if not self.label[0].isalpha():
+            msgi = f'label={self.label!r} must start with a character'
+            errors.append(msgi)
+
+        for label in self.independent_labels:
+            if not label[0].isalpha():
+                msgi = f' ind_label={label!r} must start with a character'
+                errors.append(msgi)
+
         if isinstance(self.aelink_id, integer_types) and self.aelink_id < 0:
-            raise RuntimeError(f"aelink_id={self.aelink_id} "
-                               "and must be greater than or equal to 0 (or 'ALWAYS')")
+            msgi = "aelink_id must be greater than or equal to 0 (or 'ALWAYS')"
+            errors.append(msgi)
 
         if len(self.independent_labels) != len(self.linking_coefficients):
-            msg = 'nlabels=%d nci=%d\nindependent_labels=%s linking_coefficients=%s\n%s' % (
+            msgi = 'nlabels=%d nci=%d\nindependent_labels=%s linking_coefficients=%s\n%s' % (
                 len(self.independent_labels), len(self.linking_coefficients),
                 self.independent_labels, self.linking_coefficients, str(self))
-            raise RuntimeError(msg)
+            errors.append(msgi)
+
         if len(self.independent_labels) == 0:
-            msg = 'nlabels=%d nci=%d\nindependent_labels=%s linking_coefficients=%s\n%s' % (
+            msgi = 'nlabels=%d nci=%d\nindependent_labels=%s linking_coefficients=%s\n%s' % (
                 len(self.independent_labels), len(self.linking_coefficients),
                 self.independent_labels, self.linking_coefficients, str(self))
-            raise RuntimeError(msg)
+            errors.append(msgi)
+
+        if errors:
+            msg = f'AELINK id={self.aelink_id:d}\n -' + '\n - '.join(errors)
+            raise RuntimeError(msg.rstrip('\n- '))
+
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -1952,11 +1968,6 @@ class CAERO1(BaseCard):
     def update(self, maps: dict[str, dict[int, int]]) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
 
         """
         #msg = ', which is required by CAERO1 eid=%s' % self.eid
@@ -4863,7 +4874,7 @@ class PAERO1(BaseCard):
     _field_map = {1: 'pid'}
     _properties = ['_field_map']
 
-    def _get_field_helper(self, n):
+    def _get_field_helper(self, n: int) -> int:
         """
         Gets complicated parameters on the PAERO1 card
 
@@ -4880,7 +4891,7 @@ class PAERO1(BaseCard):
         """
         return self.caero_body_ids[n - 1]
 
-    def _update_field_helper(self, n, value):
+    def _update_field_helper(self, n: int, value: int) -> None:
         """
         Updates complicated parameters on the PAERO1 card
 
@@ -4921,6 +4932,7 @@ class PAERO1(BaseCard):
         if caero_body_ids is None:
             caero_body_ids = []
         self.caero_body_ids = caero_body_ids
+        self.caero_body_refs = []
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -4949,15 +4961,31 @@ class PAERO1(BaseCard):
                 #pass
         return PAERO1(pid, caero_body_ids, comment=comment)
 
-    def cross_reference(self, model: BDF) -> None:
+    def _verify(self, xref: bool) -> None:
         pass
 
+    def cross_reference(self, model: BDF) -> None:
+        caero_body_refs = []
+        msg = f', which is required by PAERO1 pid={self.pid}'
+        for caero_body_id in self.caero_body_ids:
+            caero = model.CAero(caero_body_id, msg)
+            assert caero.type == 'CAERO2', caero
+            caero_body_refs.append(caero)
+        self.caero_body_refs = caero_body_refs
+
     def safe_cross_reference(self, model: BDF, xref_errors):
-        pass
+        self.cross_reference(model)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        pass
+        if self.caero_body_refs is None:
+            return
+
+        caero_body_ids = []
+        for caero_body in self.caero_body_refs:
+            caero_body_id = caero_body.eid
+            caero_body_ids.append(caero_body_id)
+        self.caero_body_ids = caero_body_ids
 
     def raw_fields(self):
         """
@@ -5456,51 +5484,51 @@ class PAERO4(BaseCard):
         1: 'pid',  # 2:'orient', 3:'width', 4:'AR',
     }
 
-    #def _get_field_helper(self, n):
-        #"""
-        #Gets complicated parameters on the PAERO3 card
-
-        #Parameters
-        #----------
-        #n : int
-            #the field number to update
-
-        #Returns
-        #-------
-        #value : varies
-            #the value for the appropriate field
-        #"""
-        #nnew = n - 6
-        #if nnew < 0:
-            #raise RuntimeError('field n=%i on PAERO3 is invalid' % n)
-        #spot = nnew // 2
-        #i = nnew % 2
-        #if i == 0:
-            #value = self.x[spot]
-        #else:
-            #value = self.y[spot]
-        #return value
-
-    #def _update_field_helper(self, n, value):
-        #"""
-        #Updates complicated parameters on the PAERO3 card
-
-        #Parameters
-        #----------
-        #n : int
-            #the field number to update
-        #value :varies
-            #the value for the appropriate field
-        #"""
-        #nnew = n - 6
-        #if nnew < 0:
-            #raise RuntimeError('field n=%i on PAERO3 is invalid' % n)
-        #spot = nnew // 2
-        #i = nnew % 2
-        #if i == 0:
-            #self.x[spot] = value
-        #else:
-            #self.y[spot] = value
+    # def _get_field_helper(self, n):
+    #     """
+    #     Gets complicated parameters on the PAERO3 card
+    #
+    #     Parameters
+    #     ----------
+    #     n : int
+    #         the field number to update
+    #
+    #     Returns
+    #     -------
+    #     value : varies
+    #         the value for the appropriate field
+    #     """
+    #     nnew = n - 6
+    #     if nnew < 0:
+    #         raise RuntimeError('field n=%i on PAERO3 is invalid' % n)
+    #     spot = nnew // 2
+    #     i = nnew % 2
+    #     if i == 0:
+    #         value = self.x[spot]
+    #     else:
+    #         value = self.y[spot]
+    #     return value
+    #
+    # def _update_field_helper(self, n, value):
+    #     """
+    #     Updates complicated parameters on the PAERO3 card
+    #
+    #     Parameters
+    #     ----------
+    #     n : int
+    #         the field number to update
+    #     value :varies
+    #         the value for the appropriate field
+    #     """
+    #     nnew = n - 6
+    #     if nnew < 0:
+    #         raise RuntimeError('field n=%i on PAERO3 is invalid' % n)
+    #     spot = nnew // 2
+    #     i = nnew % 2
+    #     if i == 0:
+    #         self.x[spot] = value
+    #     else:
+    #         self.y[spot] = value
 
     @classmethod
     def _init_from_empty(cls):
@@ -5763,32 +5791,32 @@ class PAERO5(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
-    #def integrals(self):
-        ## chord location
-        #x = self.lxis.fractions
-
-        ## thickness
-        #y = self.ltaus.fractions
-
-        ## slope of airfoil semi-thickness
-        #yp = derivative1(y/2, x)
-
-        ## x hinge
-        #for xh in self.caoci:
-            #I1 = integrate(yp, x, 0., 1.)
-            #I2 = integrate(x * yp, x, 0., 1.)
-            #I3 = integrate(x**2*yp, x, 0., 1.)
-            #I4 = integrate(yp**2, x, 0., 1.)
-            #I5 = integrate(x**2 * yp**2, x, 0., 1.)
-
-            #J1 = integrate(yp, x, xh, 1.)
-            #J2 = integrate(x * yp, x, xh, 1.)
-            #J3 = integrate(x**2*yp, x, xh, 1.)
-            #J4 = integrate(yp**2, x, xh, 1.)
-            #J5 = integrate(x**2 * yp**2, x, xh, 1.)
-
-        #return(I1, I2, I3, I4, I5,
-               #J1, J2, J3, J4, J5)
+    # def integrals(self):
+    #     # chord location
+    #     x = self.lxis.fractions
+    #
+    #     # thickness
+    #     y = self.ltaus.fractions
+    #
+    #     # slope of airfoil semi-thickness
+    #     yp = derivative1(y/2, x)
+    #
+    #     # x hinge
+    #     for xh in self.caoci:
+    #         I1 = integrate(yp, x, 0., 1.)
+    #         I2 = integrate(x * yp, x, 0., 1.)
+    #         I3 = integrate(x**2*yp, x, 0., 1.)
+    #         I4 = integrate(yp**2, x, 0., 1.)
+    #         I5 = integrate(x**2 * yp**2, x, 0., 1.)
+    #
+    #         J1 = integrate(yp, x, xh, 1.)
+    #         J2 = integrate(x * yp, x, xh, 1.)
+    #         J3 = integrate(x**2*yp, x, xh, 1.)
+    #         J4 = integrate(yp**2, x, xh, 1.)
+    #         J5 = integrate(x**2 * yp**2, x, xh, 1.)
+    #
+    #     return(I1, I2, I3, I4, I5,
+    #            J1, J2, J3, J4, J5)
 
 
 class Spline(BaseCard):
@@ -6429,9 +6457,9 @@ class SPLINE3(Spline):
     _field_map = {
         1: 'eid', 2: 'caero', 3: 'box_id',
         7: 'a1', 8: 'usage',
+        # 5:'g1', 6:'c1',
+        # 9:G2,C2,A2...
     }
-        #5:'g1', 6:'c1',
-        #9:G2,C2,A2...
 
     @classmethod
     def _init_from_empty(cls):
@@ -6506,8 +6534,8 @@ class SPLINE3(Spline):
         self.eid = eid
         self.caero = caero
         self.box_id = box_id
-        #if isinstance(components, integer_types):
-            #components = str(components)
+        # if isinstance(components, integer_types):
+        #     components = str(components)
         self.components = components
         self.usage = usage
 
@@ -7325,10 +7353,10 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
     # check for any control surfcaes
     if model.aesurf:
         has_control_surface = True
-        #ncaero_cs_points = 0
-        #self.gui.create_alternate_vtk_grid(
-            #'caero_control_surfaces', color=PINK_FLOAT, line_width=5, opacity=1.0,
-            #representation='surface', is_visible=False)
+        # ncaero_cs_points = 0
+        # self.gui.create_alternate_vtk_grid(
+        #     'caero_control_surfaces', color=PINK_FLOAT, line_width=5, opacity=1.0,
+        #     representation='surface', is_visible=False)
         all_control_surface_name = 'caero_control_surfaces'
         # sort the control surfaces
         labels_to_aesurfs = {aesurf.label: aesurf for aesurf in model.aesurf.values()}
@@ -7346,9 +7374,9 @@ def build_caero_paneling(model: BDF) -> tuple[str, list[str], AeroPaneling]:
 
                 cs_name = '%s_control_surface' % aesurf.label
                 caero_control_surface_names.append(cs_name)
-                #self.gui.create_alternate_vtk_grid(
-                    #cs_name, color=PINK_FLOAT, line_width=5, opacity=0.5,
-                    #representation='surface')
+                # self.gui.create_alternate_vtk_grid(
+                #     cs_name, color=PINK_FLOAT, line_width=5, opacity=0.5,
+                #     representation='surface')
 
                 cs_box_ids['caero_control_surfaces'].extend(aero_element_ids)
                 cs_box_ids[cs_name].extend(aero_element_ids)

@@ -773,13 +773,24 @@ class TRIM(BaseCard):
         assert self.mach >= 0.0, 'mach = %r' % self.mach
         assert self.mach != 1.0, 'mach = %r' % self.mach
         assert self.q > 0.0, 'q=%s' % self.q
+
+        errors = []
+        for label in self.labels:
+            if not label[0].isalpha():
+                msgi = f' label={label!r} must start with a character'
+                errors.append(msgi)
+
         if len(set(self.labels)) != len(self.labels):
-            msg = 'not all labels are unique; labels=%s' % str(self.labels)
-            raise RuntimeError(msg)
+            msgi = 'not all labels are unique; labels=%s' % str(self.labels)
+            errors.append(msgi)
         if len(self.labels) != len(self.uxs):
-            msg = 'nlabels=%d != nux=%d; labels=%s uxs=%s' % (
+            msgi = 'nlabels=%d != nux=%d; labels=%s uxs=%s' % (
                 len(self.labels), len(self.uxs), str(self.labels), str(self.uxs))
-            raise RuntimeError(msg)
+            errors.append(msgi)
+
+        if errors:
+            msg = f'TRIM id={self.trim_id:d}\n -' + '\n - '.join(errors)
+            raise RuntimeError(msg.rstrip('\n- '))
 
     def verify_trim(self,
                     suport: list[SUPORT],
