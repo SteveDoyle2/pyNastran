@@ -4978,6 +4978,10 @@ class PAERO1(BaseCard):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
+        self.caero_body_ids = self.get_caero_body_ids()
+        self.caero_body_ids_ref = None
+
+    def get_caero_body_ids(self) -> list[int]:
         if self.caero_body_refs is None:
             return
 
@@ -4985,9 +4989,9 @@ class PAERO1(BaseCard):
         for caero_body in self.caero_body_refs:
             caero_body_id = caero_body.eid
             caero_body_ids.append(caero_body_id)
-        self.caero_body_ids = caero_body_ids
+        return caero_body_ids
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         """
         Gets the fields in their unmodified form
 
@@ -4997,7 +5001,7 @@ class PAERO1(BaseCard):
             the fields that define the card
 
         """
-        list_fields = ['PAERO1', self.pid] + self.caero_body_ids
+        list_fields = ['PAERO1', self.pid] + self.get_caero_body_ids()
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

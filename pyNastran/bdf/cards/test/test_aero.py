@@ -1429,7 +1429,6 @@ class TestAero(unittest.TestCase):
         assert len(points) == 4
         save_load_deck(model)
 
-
     def test_spline1(self):
         """checks the SPLINE1 card"""
         log = SimpleLogger(level='warning')

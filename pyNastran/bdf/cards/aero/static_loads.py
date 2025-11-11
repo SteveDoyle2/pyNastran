@@ -789,7 +789,7 @@ class TRIM(BaseCard):
             errors.append(msgi)
 
         if errors:
-            msg = f'TRIM id={self.trim_id:d}\n -' + '\n - '.join(errors)
+            msg = f'TRIM id={self.sid:d}\n -' + '\n - '.join(errors)
             raise RuntimeError(msg.rstrip('\n- '))
 
     def verify_trim(self,
