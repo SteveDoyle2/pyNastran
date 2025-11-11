@@ -950,7 +950,11 @@ def get_dof_map(model: BDF,
         model, mpc_id=mpc_id)
     spc_nid_to_components = {}
     if spc_id:
-        spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True)
+        try:
+            spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True)
+        except KeyError:
+            log.error(f'Could not find SPC={spc_id}')
+            spcs = []
         for spc in spcs:
             # TODO: add SPC
             if spc.type == 'SPC1':
@@ -963,9 +967,10 @@ def get_dof_map(model: BDF,
                 for nid, comps in zip(spc.nodes, spc.components):
                     # for comp in comps:
                     spc_nid_to_components[nid] = spc.components
-
+            elif spc.type == 'GMSPC':
+                log.warning(f'skipping\n{str(spc)}{spc.get_stats()}')
             else:
-                log.warning('skipping\n%s' % spc)
+                log.error('skipping\n%s' % spc)
                 raise RuntimeError(spc.get_stats())
 
     suport_nid_to_components = {}

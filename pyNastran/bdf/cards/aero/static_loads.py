@@ -797,8 +797,8 @@ class TRIM(BaseCard):
                     suport1: SUPORT1,
                     aestats: dict[int, AESTAT],
                     aeparms: dict[str, AEPARM],
-                    aelinks: dict[int, AELINK],
-                    aesurf: dict[str, AESURF], xref=True):
+                    aelinks: dict[int, list[AELINK]],
+                    aesurf: dict[int, AESURF], xref=True):
         """
         Magic function that makes TRIM cards not frustrating.
 

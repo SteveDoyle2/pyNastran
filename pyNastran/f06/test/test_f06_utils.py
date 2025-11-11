@@ -832,7 +832,7 @@ class TestF06Utils(unittest.TestCase):
 
         argv = [
             'f06', 'plot_144', str(f06_filename),
-            '--caero', str(aerobox_caero_filename)]
+            '--aerobox', str(aerobox_caero_filename)]
         log = get_logger(log=None, level=None, encoding='utf-8')
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB,
                      show=False, log=log)
