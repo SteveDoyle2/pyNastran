@@ -4855,10 +4855,11 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
             assert isinstance(subtitle, str), subtitle
             assert isinstance(label, str), label
             # assert isinstance(subcase_id, integer_types), subcase_id
+            elements = -np.ones(len(nodes), dtype=nodes.dtype)
             apress = AeroPressure(
                 subcase_id,
                 mach, q, cref, bref, sref,
-                nodes, cp, pressure,  # labels,
+                nodes, elements, cp, pressure,  # labels,
                 title=title, subtitle=subtitle, label=label)
 
             assert subcase_key not in op2.op2_results.trim.aero_force

@@ -2813,8 +2813,8 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument('--dumplines', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
                                '(pyNastran_dump.bdf)')
-    parent_parser.add_argument('--skip_cards', type=str,
-                               help='Define cards to skip')
+    # parent_parser.add_argument('--skip_cards', nargs=1, type=str,
+    #                            help='Define cards to skip')
     parent_parser.add_argument('--dictsort', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
                                '(pyNastran_dict.bdf)')

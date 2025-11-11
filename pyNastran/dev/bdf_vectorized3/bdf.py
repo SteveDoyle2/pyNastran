@@ -1256,7 +1256,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             xref = self._xref
         verify_bdf(self, xref)
 
-    def include_zip(self, bdf_filename: Optional[str]=None,
+    def include_zip(self, bdf_filename: Optional[PathLike]=None,
                     encoding: Optional[str]=None,
                     make_ilines: bool=True) -> tuple[list[str], Any]:
         """

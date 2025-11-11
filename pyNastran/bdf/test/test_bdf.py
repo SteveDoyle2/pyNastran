@@ -956,6 +956,14 @@ def get_dof_map(model: BDF,
             if spc.type == 'SPC1':
                 for nid in spc.nodes:
                     spc_nid_to_components[nid] = spc.components
+            elif spc.type == 'SPC':
+                # components: ['123456']
+                # nodes: [9]
+                assert len(spc.nodes) == len(spc.components), spc.get_stats()
+                for nid, comps in zip(spc.nodes, spc.components):
+                    # for comp in comps:
+                    spc_nid_to_components[nid] = spc.components
+
             else:
                 log.warning('skipping\n%s' % spc)
                 raise RuntimeError(spc.get_stats())
