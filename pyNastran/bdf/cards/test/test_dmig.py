@@ -3,6 +3,7 @@ import os
 import copy
 import numpy as np
 
+from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, read_bdf, DMI, DMIG, fill_dmigs
 from pyNastran.bdf.cards.test.utils import save_load_deck, get_matrices
@@ -172,7 +173,7 @@ class TestDMI(unittest.TestCase):
         dmi.write_card(size, 'dummy')
         #dmi.raw_fields()
 
-    def test_dmi_02(self):
+    def test_dmi_w2gj_1(self):
         data = """
 DMI         W2GJ       0       2       1       0            1200       1
 DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
@@ -305,6 +306,28 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         os.remove('dmi.bdf')
         os.remove('dmi_out.bdf')
         save_load_deck(model2)
+
+    def test_dmi_wkk_diagonal(self):
+        log = SimpleLogger(level='debug')
+        model = BDF(log=log)
+        nrows = 100
+        GCi = np.arange(1, nrows+1, dtype='int32')
+        GCj = GCi.copy()
+        form = 'square'
+        Real = 0.5 * np.ones(nrows, dtype='float32')
+        dmi = model.add_dmi(
+            name='WKK', form=form,
+            tin='float32', tout='float32',
+            nrows=nrows, ncols=nrows,
+            GCj=GCj, GCi=GCi,
+            Real=Real, Complex=None, comment='wkk')
+        # print(dmi)
+        model_out = save_load_deck(
+            model, run_op2_writer=False, run_convert=False,
+            run_mirror=False
+        )
+        dmi = model_out.dmi['WKK']
+        str(dmi)
 
     def test_dmi_complex(self):
         """tests a complex DMI"""

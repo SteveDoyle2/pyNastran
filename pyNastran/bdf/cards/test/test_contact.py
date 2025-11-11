@@ -262,7 +262,13 @@ class TestContact(unittest.TestCase):
         bctpara1.raw_fields()
         bctpara1.write_card(size=8)
         bctpara1.write_card(size=16)
-        save_load_deck(model)
+        model_out = save_load_deck(model)
+        # from io import StringIO
+        # stringio = StringIO()
+        # model_out.write_bdf(stringio, close=False)
+        # stringio.seek(0)
+        # msg = stringio.read()
+        # print(msg)
 
 
 if __name__ == '__main__':  # pragma: no cover

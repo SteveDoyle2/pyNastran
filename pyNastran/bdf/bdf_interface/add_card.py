@@ -16,7 +16,7 @@ from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
-from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
+from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC, BOLT_MSC
 from pyNastran.bdf.cards.elements.elements import (
     CFAST, CWELD, CGAP, CRAC2D, CRAC3D, GENEL)
 from pyNastran.bdf.cards.elements.plot import (
@@ -946,8 +946,16 @@ class AddBolts:
     def __init__(self, add_methods: AddMethods):
         self._add_methods = add_methods
 
-    def add_bolt_msc(self):
-        raise NotImplementedError('BOLT-MSC')
+    def add_bolt_msc(self, bolt_id: int, gridc: int,
+                     nids_top: Optional[list[int]]=None,
+                     nids_btm: Optional[list[int]]=None,
+                     comment: str=''):
+        bolt = BOLT_MSC(
+            bolt_id, gridc,
+            nids_top=nids_top, nids_btm=nids_btm,
+            comment=comment)
+        self._add_methods.add_bolt_object(bolt)
+        return bolt
 
     def add_bolt_nx(self, bolt_id: int,
                     element_type: int,
@@ -4102,10 +4110,10 @@ class AddContact:
                    comment: str='') -> BCBODY:
         """Creates a BCBODY card"""
         bcbody = BCBODY(contact_id, bsid, word_dict,
-                 dim=dim, behav=behav,
-                 istype=istype, fric=fric,
-                 idispl=idispl,
-                 comment=comment)
+                        dim=dim, behav=behav,
+                        istype=istype, fric=fric,
+                        idispl=idispl,
+                        comment=comment)
         self._add_methods.add_bcbody_object(bcbody)
         return bcbody
 

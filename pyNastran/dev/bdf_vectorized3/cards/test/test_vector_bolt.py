@@ -5,7 +5,7 @@ from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 
 class TestBolt(unittest.TestCase):
 
-    def test_bolt_msc_1(self):
+    def test_bolt_msc_1v(self):
         model = BDF(debug=False)
         boutput = model.boutput
 

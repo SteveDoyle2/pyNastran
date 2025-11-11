@@ -1665,7 +1665,7 @@ class BCTPARA(BaseCard):
             assert value is not None, '%s%i must not be None' % (param, j)
         return param, value
 
-    def raw_fields(self):
+    def raw_fields(self) -> list:
         fields = ['BCTPARA', self.csid]
         fields.extend(params_listify(self.params))
         return fields
