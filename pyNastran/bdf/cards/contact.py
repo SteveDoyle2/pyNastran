@@ -52,6 +52,7 @@ glue:
 
 """
 from __future__ import annotations
+import warnings
 from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -1396,12 +1397,14 @@ class BCTPARM(BaseCard):
         params = {'CSTIFF' : 1}
         return BCTPARM(csid, params, comment='')
 
-    def _finalize_hdf5(self, encoding):
+    def _finalize_hdf5(self, encoding: str):
         """hdf5 helper function"""
         keys, values = self.params
         self.params = {key : value for key, value in zip(keys, values)}
 
-    def __init__(self, csid, params, comment=''):
+    def __init__(self, csid: int,
+                 params: dict[str, int | float],
+    comment: str=''):
         """
         Creates a BCTPARM card
 
@@ -1447,89 +1450,77 @@ class BCTPARM(BaseCard):
 
         """
         csid = integer(card, 1, 'csid')
-        i = 2
-        j = 1
-        params = {}
-        while i < card.nfields:
-            param = string(card, i, 'param%s' % j)
-            i += 1
-            if param == 'TYPE' and 0:
-                value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
-            elif param == 'PENN':
-                #PENN 10.0
-                value = double(card, i, 'value%s' % j)
-            elif param == 'PENT':
-                #PENT 0.5
-                value = double(card, i, 'value%s' % j)
-            elif param == 'CTOL':
-                #CTOL 10.0
-                value = double(card, i, 'value%s' % j)
-            elif param == 'SHLTHK':
-                #SHLTHK 1
-                value = integer(card, i, 'value%s' % j)
-            #elif param == 'TYPE': # NX
-                #value = string_or_blank(card, i, 'value%s' % j, default='FLEX').upper()
-                #assert value in ['FLEX', 'RIGID', 'COATING'], 'TYPE must be [FLEX, RIGID, COATING.]; CSTIFF=%r' % value
-
-            #elif param == 'NSIDE':
-                #value = integer_or_blank(card, i, 'value%s' % j, default=1)
-                #assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
-            #elif param == 'TBIRTH':
-                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-            #elif param == 'TDEATH':
-                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-            #elif param == 'INIPENE':
-                #value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                #assert value in [0, 1, 2, 3], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
-            #elif param == 'PDEPTH':
-                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-            #elif param == 'SEGNORM':
-                #value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                #assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
-            #elif param == 'OFFTYPE':
-                #value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                #assert value in [0, 1, 2], 'OFFTYPE must be [0, 1, 2]; OFFTYPE=%r' % value
-            #elif param == 'OFFSET':
-                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-            #elif param == 'TZPENE':
-                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-
-            #elif param == 'CSTIFF':
-                #value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                #assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
-            #elif param == 'TIED':
-                #value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                #assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
-            #elif param == 'TIEDTOL':
-                #value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-            #elif param == 'EXTFAC':
-                #value = double_or_blank(card, i, 'value%s' % j, default=0.001)
-                #assert 1.0E-6 <= value <= 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
-            else:
-                # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
-                # NCMOD, TCMOD, RFORCE, LFORCE, RTPCHECK, RTPMAX, XTYPE
-                # ...
-                value = integer_double_or_blank(card, i, 'value%s' % j)
-                assert value is not None, '%s%i must not be None' % (param, j)
-
-            params[param] = value
-            i += 1
-            j += 1
-            if j == 4:
-                i += 1
+        params = read_param_dict(card, cls._get_param_value_from_card)
         return BCTPARM(csid, params, comment=comment)
 
-    def raw_fields(self):
+    def _get_param_value_from_card(
+            card: BDFCard,
+            i: int, j: int) -> tuple[str, int | float]:
+        param = string(card, i, 'param%s' % j)
+        if param == 'TYPE' and 0:
+            value = integer_or_blank(card, i+1, f'value{j:d}', default=0)
+            assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
+        elif param == 'PENN':
+            # PENN 10.0
+            value = double(card, i+1, 'value%s' % j)
+        elif param == 'PENT':
+            # PENT 0.5
+            value = double(card, i+1, 'value%s' % j)
+        elif param == 'CTOL':
+            # CTOL 10.0
+            value = double(card, i+1, 'value%s' % j)
+        elif param == 'SHLTHK':
+            # SHLTHK 1
+            value = integer(card, i+1, 'value%s' % j)
+        # elif param == 'TYPE': # NX
+        # value = string_or_blank(card, i, 'value%s' % j, default='FLEX').upper()
+        # assert value in ['FLEX', 'RIGID', 'COATING'], 'TYPE must be [FLEX, RIGID, COATING.]; CSTIFF=%r' % value
+
+        # elif param == 'NSIDE':
+        # value = integer_or_blank(card, i+1, 'value%s' % j, default=1)
+        # assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
+        # elif param == 'TBIRTH':
+        # value = double_or_blank(card, i+1, 'value%s' % j, default=0.0)
+        # elif param == 'TDEATH':
+        # value = double_or_blank(card, i+1, 'value%s' % j, default=0.0)
+        # elif param == 'INIPENE':
+        # value = integer_or_blank(card, i+1, 'value%s' % j, default=0)
+        # assert value in [0, 1, 2, 3], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
+        # elif param == 'PDEPTH':
+        # value = double_or_blank(card, i+1, 'value%s' % j, default=0.0)
+        # elif param == 'SEGNORM':
+        # value = integer_or_blank(card, i+1, 'value%s' % j, default=0)
+        # assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
+        # elif param == 'OFFTYPE':
+        # value = integer_or_blank(card, i+1, 'value%s' % j, default=0)
+        # assert value in [0, 1, 2], 'OFFTYPE must be [0, 1, 2]; OFFTYPE=%r' % value
+        # elif param == 'OFFSET':
+        # value = double_or_blank(card, i+1, 'value%s' % j, default=0.0)
+        # elif param == 'TZPENE':
+        # value = double_or_blank(card, i+1, 'value%s' % j, default=0.0)
+
+        # elif param == 'CSTIFF':
+        # value = integer_or_blank(card, i+1, 'value%s' % j, default=0)
+        # assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
+        # elif param == 'TIED':
+        # value = integer_or_blank(card, i+1, 'value%s' % j, default=0)
+        # assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
+        # elif param == 'TIEDTOL':
+        # value = double_or_blank(card, i+1, 'value%s' % j, default=0.0)
+        # elif param == 'EXTFAC':
+        # value = double_or_blank(card, i+1, 'value%s' % j, default=0.001)
+        # assert 1.0E-6 <= value <= 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
+        else:
+            # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
+            # NCMOD, TCMOD, RFORCE, LFORCE, RTPCHECK, RTPMAX, XTYPE
+            # ...
+            value = integer_double_or_blank(card, i+1, 'value%s' % j)
+            assert value is not None, '%s%i must not be None' % (param, j)
+        return param, value
+
+    def raw_fields(self) -> list[str | int | float]:
         fields = ['BCTPARM', self.csid]
-        i = 0
-        for key, value in sorted(self.params.items()):
-            if i == 3:
-                fields.append(None)
-                i = 0
-            fields.append(key)
-            fields.append(value)
-            i += 1
+        fields.extend(params_listify(self.params))
         return fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -1606,83 +1597,77 @@ class BCTPARA(BaseCard):
 
         """
         csid = integer(card, 1, 'csid')
-        i = 2
-        j = 1
-        params = {}
+
         all_params = [
             'TYPE', 'NSIDE', 'TBIRTH', 'TDEATH', 'INIPENE',
             'PDEPTH', 'SEGNORM', 'OFFTYPE', 'OFFSET',
             'TZPENE', 'CSTIFF', 'TIED', 'TIEDTOL', 'EXTFAC']
         all_params.sort()
-        while i < card.nfields:
-            param = string(card, i, f'param{j}')
-            assert param in all_params, f'param={param!r} is not allowed; allowed={all_params}'
-            i += 1
-            if param == 'TYPE':
-                value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
-            #elif param == 'TYPE': # NX
-                #value = string_or_blank(card, i, 'value%s' % j, 'FLEX').upper()
-                #assert value in ['FLEX', 'RIGID', 'COATING'], 'TYPE must be [FLEX, RIGID, COATING.]; CSTIFF=%r' % value
+        params = read_param_dict(card, cls._get_param_value_from_card)
+        for param in params:
+            if param not in all_params:
+                warnings.warn(f'param={param!r} is not allowed; allowed={all_params}\n{str(card)}')
 
-            elif param == 'NSIDE':
-                value = integer_or_blank(card, i, 'value%s' % j, default=1)
-                assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
-            elif param == 'TBIRTH':
-                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-            elif param == 'TDEATH':
-                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-            elif param == 'INIPENE':
-                value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                assert value in [0, 1, 2, 3], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
-            elif param == 'PDEPTH':
-                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-            elif param == 'SEGNORM':
-                value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
-            elif param == 'OFFTYPE':
-                value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                assert value in [0, 1, 2], 'OFFTYPE must be [0, 1, 2]; OFFTYPE=%r' % value
-            elif param == 'OFFSET':
-                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-            elif param == 'TZPENE':
-                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-
-            elif param == 'CSTIFF':
-                value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
-            elif param == 'TIED':
-                value = integer_or_blank(card, i, 'value%s' % j, default=0)
-                assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
-            elif param == 'TIEDTOL':
-                value = double_or_blank(card, i, 'value%s' % j, default=0.0)
-            elif param == 'EXTFAC':
-                value = double_or_blank(card, i, 'value%s' % j, default=0.001)
-                assert 1.0E-6 <= value <= 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
-            else:
-                # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
-                # NCMOD, TCMOD, RFORCE, LFORCE, RTPCHECK, RTPMAX, XTYPE
-                # ...
-                value = integer_double_or_blank(card, i, 'value%s' % j)
-                assert value is not None, '%s%i must not be None' % (param, j)
-
-            params[param] = value
-            i += 1
-            j += 1
-            if j == 4:
-                i += 1
         return BCTPARA(csid, params, comment=comment)
+
+    @staticmethod
+    def _get_param_value_from_card(card: BDFCard,
+                                   i: int, j: int) -> tuple[str, int | float]:
+        param = string(card, i, f'param{j}')
+        # assert param in all_params, f'param={param!r} is not allowed; allowed={all_params}'
+        i += 1
+        if param == 'TYPE':
+            value = integer_or_blank(card, i, 'value%s' % j, default=0)
+            assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
+        #elif param == 'TYPE': # NX
+            #value = string_or_blank(card, i, 'value%s' % j, 'FLEX').upper()
+            #assert value in ['FLEX', 'RIGID', 'COATING'], 'TYPE must be [FLEX, RIGID, COATING.]; CSTIFF=%r' % value
+
+        elif param == 'NSIDE':
+            value = integer_or_blank(card, i, 'value%s' % j, default=1)
+            assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
+        elif param == 'TBIRTH':
+            value = double_or_blank(card, i, 'value%s' % j, default=0.0)
+        elif param == 'TDEATH':
+            value = double_or_blank(card, i, 'value%s' % j, default=0.0)
+        elif param == 'INIPENE':
+            value = integer_or_blank(card, i, 'value%s' % j, default=0)
+            assert value in [0, 1, 2, 3], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
+        elif param == 'PDEPTH':
+            value = double_or_blank(card, i, 'value%s' % j, default=0.0)
+        elif param == 'SEGNORM':
+            value = integer_or_blank(card, i, 'value%s' % j, default=0)
+            assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
+        elif param == 'OFFTYPE':
+            value = integer_or_blank(card, i, 'value%s' % j, default=0)
+            assert value in [0, 1, 2], 'OFFTYPE must be [0, 1, 2]; OFFTYPE=%r' % value
+        elif param == 'OFFSET':
+            value = double_or_blank(card, i, 'value%s' % j, default=0.0)
+        elif param == 'TZPENE':
+            value = double_or_blank(card, i, 'value%s' % j, default=0.0)
+
+        elif param == 'CSTIFF':
+            value = integer_or_blank(card, i, 'value%s' % j, default=0)
+            assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
+        elif param == 'TIED':
+            value = integer_or_blank(card, i, 'value%s' % j, default=0)
+            assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
+        elif param == 'TIEDTOL':
+            value = double_or_blank(card, i, 'value%s' % j, default=0.0)
+        elif param == 'EXTFAC':
+            value = double_or_blank(card, i, 'value%s' % j, default=0.001)
+            assert 1.0E-6 <= value <= 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
+        else:
+            # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
+            # NCMOD, TCMOD, RFORCE, LFORCE, RTPCHECK, RTPMAX, XTYPE
+            # ...
+            value = integer_double_or_blank(card, i, 'value%s' % j)
+            assert value is not None, '%s%i must not be None' % (param, j)
+        return param, value
 
     def raw_fields(self):
         fields = ['BCTPARA', self.csid]
-        i = 0
-        for key, value in sorted(self.params.items()):
-            if i == 3:
-                fields.append(None)
-                i = 0
-            fields.append(key)
-            fields.append(value)
-            i += 1
+        fields.extend(params_listify(self.params))
         return fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -1912,3 +1897,50 @@ class BGSET(BaseCard):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+
+def params_listify(params: dict[str, int | float],
+                   ) -> list[str | int | float]:
+    """
+    Annoying function for contact params.
+
+    3 sets of params are allowed per line, but:
+     - 1 blank on the first line
+     - 2 blanon the 2nd/3rd/etc. line
+
+    """
+    i = 0
+    fields = []
+    for j, (key, value) in enumerate(sorted(params.items())):
+        if j == 3:
+            fields.append(None)
+            i = 0
+        elif j > 0 and i == 3:
+            fields.append(None)
+            fields.append(None)
+            i = 0
+        fields.append(key)
+        fields.append(value)
+        i += 1
+    return fields
+
+
+def read_param_dict(card: BDFCard,
+                    read_func) -> dict[str, int | float]:
+    """reading version of params_listify"""
+    params = {}
+    iline = 0
+    ifield = 2
+    iparam = 0
+    while ifield < card.nfields:
+        param, value = read_func(card, ifield, iparam+1)
+        params[param] = value
+        iparam += 1
+        if iparam % 3 == 0:
+            # every 3 params, reset the line
+            ifield = 9 + 8 * iline
+            iline += 1
+        else:
+            ifield += 2
+    assert len(params) > 0, card
+    return params

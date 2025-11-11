@@ -4073,7 +4073,15 @@ class AddContact:
         self._add_methods.add_bctpara_object(bctpara)
         return bctpara
 
-    def add_blseg(self, line_id, nodes, comment='') -> BLSEG:
+    def add_bctparm(self, csid: int,
+                    params: dict[str, Any], comment: str='') -> BCTPARM:
+        """Creates a BCTPARM card"""
+        bctparm = BCTPARM(csid, params, comment=comment)
+        self._add_methods.add_bctparam_object(bctparm)
+        return bctparm
+
+    def add_blseg(self, line_id: int, nodes: list[int],
+                  comment: str='') -> BLSEG:
         """Creates a BLSEG card"""
         blseg = BLSEG(line_id, nodes, comment=comment)
         self._add_methods.add_blseg_object(blseg)

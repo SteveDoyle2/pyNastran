@@ -139,7 +139,7 @@ def remove_unused(bdf_filename: PathLike,
         # glue
         'BGADD', 'BGSET',
         # contact
-        'BCBODY', 'BCPARA',
+        'BCBODY', 'BCPARA', 'BCTPARM',
 
         # aero
         'AESURFS', 'CSSCHD', 'AECOMP',
