@@ -12,7 +12,7 @@ from typing import Optional, TYPE_CHECKING
 
 from docopt import docopt, __version__ as docopt_version
 import pyNastran
-
+from pyNastran.utils import PathLike, print_bad_path
 
 #import matplotlib
 #matplotlib.use('Qt5Agg')
@@ -28,14 +28,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
 USAGE_144 = (
     'Usage:\n'
-    '  f06 plot_144 F06_FILENAME [--caero AEROBOX_CAERO_FILENAME] | [--bdf BDF_FILENAME]\n'
+    '  f06 plot_144 F06_FILENAME [--aerobox AEROBOX_CAERO_FILENAME] | [--bdf BDF_FILENAME]\n'
 )
+
+
 def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
                        log: Optional[SimpleLogger]=None):
     """the interface to ``f06 plot_144`` on the command line"""
-    if argv is None:  # pragma: no cover
-        argv = sys.argv
-
     msg = (
         USAGE_144 +
         '  f06 plot_144 -h | --help\n'
@@ -46,8 +45,8 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
         '  F06_FILENAME            path to input F06 file\n'
         
         'Options:\n'
-        '  --caero AEROBOX_CAERO_FILENAME  path to exported CAERO file\n'
-        '  --bdf   BDF_FILENAME            path to input BDF file containing CAEROs\n'
+        '  --aerobox AEROBOX_CAERO_FILENAME  path to exported CAERO file\n'
+        '  --bdf     BDF_FILENAME            path to input BDF file containing CAEROs\n'
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -60,27 +59,58 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
     if len(argv) == 1:
         sys.exit(msg)
 
+    #print(f'argv = {argv}')
     ver = str(pyNastran.__version__)
-    assert docopt_version >= '0.9.0', docopt_version
-    data = docopt(msg, version=ver, argv=argv[1:])
-    if data['--bdf'] is False:
-        data['--bdf'] = None
 
-    # print(data)
-    f06_filename = data['F06_FILENAME']
-    aerobox_caero_filename = data['--caero']
-    bdf_filename = data['--bdf']
+    if 1:
+        if argv is None:
+            argv = sys.argv[1:]  # ['run_jobs'] + sys.argv[2:]
+        else:
+            # FILE = os.path.abspath(__file__)
+            argv = ['f06'] + argv[2:]  # ['run_jobs'] + sys.argv[2:]
+            # print(argv)
+
+        import argparse
+        parent_parser = argparse.ArgumentParser(prog='plot_trim')
+        # positional arguments
+        parent_parser.add_argument('F06_FILENAME', help='path to input F06 file', type=str)
+        # _add_parser_arguments(parent_parser, ['--lax'])
+
+        bdf_aero_group = parent_parser.add_mutually_exclusive_group()
+        bdf_aero_group.add_argument('--bdf', type=str, help='path to input BDF file containing CAEROs')
+        bdf_aero_group.add_argument('--aerobox', type=str, help='path to exported CAERO file')
+        #bdf_aero_group.add_argument('--encoding', help=f'the encoding method (default=None -> {repr(encoding)})', type=str)
+        parent_parser.add_argument('-v', '--version', action='version', version=ver)
+        args = parent_parser.parse_args(args=argv[1:])
+
+        f06_filename = args.F06_FILENAME
+        aerobox_caero_filename = args.aerobox
+        bdf_filename = args.bdf
+    else:  # pragma: no cover
+        if argv is None:  # pragma: no cover
+            argv = sys.argv
+        assert docopt_version >= '0.9.0', docopt_version
+        data = docopt(msg, version=ver, argv=argv[1:])
+        if data['--bdf'] is False:
+            data['--bdf'] = None
+
+        # print(data)
+        f06_filename = data['F06_FILENAME']
+        aerobox_caero_filename = data['--aerobox']  # 0.9.0
+        # happens if you mess up the docopt `msg` and things are consistent
+        # aerobox_caero_filename = data['AEROBOX_CAERO_FILENAME']
+        bdf_filename = data['--bdf']
+
     dirname = os.path.dirname(f06_filename)
-    base = os.path.splitext(f06_filename)[0]
-
-    from pyNastran.utils import print_bad_path
+    base, ext = os.path.splitext(f06_filename)
     if aerobox_caero_filename is None:
         if bdf_filename is None:
             bdf_filename = base + '.bdf'
         assert os.path.exists(bdf_filename), print_bad_path(bdf_filename)
 
         from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
-        aerobox_caero_filename = os.path.join(dirname, 'caero.bdf')
+        base_bdf, ext_bdf = os.path.splitext(bdf_filename)
+        aerobox_caero_filename = f'{base_bdf}.aerobox{ext_bdf}'
         export_caero_mesh(
             bdf_filename,
             caero_bdf_filename=aerobox_caero_filename,
@@ -89,6 +119,7 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
             write_panel_xyz=False)
 
     assert os.path.exists(aerobox_caero_filename), print_bad_path(aerobox_caero_filename)
+    assert isinstance(aerobox_caero_filename, PathLike), aerobox_caero_filename
     loads_filename = os.path.join(dirname, 'loads.blk')
     base = os.path.splitext(f06_filename)[0]
     if f06_filename.lower().endswith(('.bdf', '.op2')):
@@ -120,6 +151,7 @@ USAGE_145 = (
     f'[--noline] [--nopoints] [--ncol NCOL] {EXPORTS} '
     '[--modal IVEL MODE] [--freq_tol FREQ_TOL] [--freq_tol_remove FREQ_TOL_REMOVE] [--mag_tol MAG_TOL]\n'
 )
+
 
 def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
                           log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
@@ -496,6 +528,8 @@ USAGE_200 = (
     'Usage:\n'
     '  f06 plot_200 F06_FILENAME\n'
 )
+
+
 def cmd_line_plot_optimization(argv=None, plot: bool=True, show: bool=True,
                                log: Optional[SimpleLogger]=None):
     """the interface to ``f06 plot_145`` on the command line"""

@@ -158,14 +158,19 @@ def _to_fields_group(card_lines: list[str]) -> list[str]:
     |       | ELEM | 30  | THRU | 40  |     |   |   |   |
     +-------+------+-----+------+-----+-----+---+---+---+
     |       | PROP | ALL |      |     |     |   |   |   |
-        +-------+------+-----+------+-----+-----+---+---+---+
+    +-------+------+-----+------+-----+-----+---+---+---+
+
+    # TODO: buggy
+    GROUP   991001  Description                                             +
+    +       GRID    291     293     301     302     303     304     305     +
+    +               306     1301    68408   68409   69144   69145   69146
     """
-    #for iline, line in enumerate(card_lines):
-        #print(f'GROUP {iline}: {line!r}')
+    # for iline, line in enumerate(card_lines):
+    #     print(f'GROUP {iline}: {line!r}')
 
     fields = _monpnt_line1_fields(card_lines[0])
     for j, line in enumerate(card_lines[1:]):
-        line_strip = line.lstrip()
+        line_strip = line.lstrip('+ ')
         line = line.rstrip()
         if line_strip.startswith('META'):
             fieldsi = [
@@ -180,10 +185,15 @@ def _to_fields_group(card_lines: list[str]) -> list[str]:
             # fieldsi = _expand_2_values_name(line)
             # #print(fieldsi)
         else:
-            raise NotImplementedError(line)
-        #print(f'GROUP fields[{j}]: fields={fieldsi}')
+            fieldsi = [
+                line[8:16], line[16:24], line[24:32], line[32:40], line[40:48],
+                line[48:56], line[56:64], line[64:72],
+            ]
+            # msg = f'line:\n{line!r}\nline_strip:\n{line_strip!r}'
+            # raise NotImplementedError(msg)
+        # print(f'GROUP fields[{j}]: fields={fieldsi}')
         fields.extend(fieldsi)
-    #print(f'GROUP: fields={fields}')
+    # print(f'GROUP: fields={fields}')
     return fields
 
 
@@ -218,18 +228,18 @@ def _to_fields_set1(card_lines: list[str], card_name: str) -> list[str]:
     for iline, line in enumerate(card_lines):
         if '\t' in line:
             line = expand_tabs(line)
-        #print(f'line = {line}')
+        # print(f'line = {line}')
         line = line.rstrip('\n\r,')
-        #print(f'line2 = {line}')
+        # print(f'line2 = {line}')
         if '*' in line:  # large field
             if ',' in line:  # csv
-                new_fields = line.split(',')  #[:5]
+                new_fields = line.split(',')  # [:5]
                 new_fields = [field.strip() for field in new_fields if field.strip()]
                 if iline > 0:
                     new_fields = [''] + new_fields
                 assert len(new_fields) <= 5, new_fields
-                #for unused_i in range(5 - len(new_fields)):
-                    #new_fields.append('')
+                # for unused_i in range(5 - len(new_fields)):
+                #     new_fields.append('')
                 assert len(new_fields) == 5, new_fields
             else:  # standard
                 new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
@@ -237,9 +247,9 @@ def _to_fields_set1(card_lines: list[str], card_name: str) -> list[str]:
                 end = line[72:].rstrip('+ ')
                 assert len(end) == 0, line
         else:  # small field
-            length_max = 9  #if iline == 0 else 8
+            length_max = 9  # if iline == 0 else 8
             if ',' in line:  # csv
-                new_fields = line.split(',') #[:9]
+                new_fields = line.split(',')  # [:9]
                 new_fields = [field.strip() for field in new_fields if field.strip()]
                 if iline > 0:
                     new_fields = [''] + new_fields
@@ -247,7 +257,7 @@ def _to_fields_set1(card_lines: list[str], card_name: str) -> list[str]:
                     throw_length_warning = True
                 for unused_i in range(9 - len(new_fields)):
                     new_fields.append('')
-                #assert len(new_fields) == 9, f'{new_fields}; {len(new_fields)}'
+                # assert len(new_fields) == 9, f'{new_fields}; {len(new_fields)}'
             else:  # standard
                 new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
                               line[32:40], line[40:48], line[48:56], line[56:64],
@@ -557,27 +567,28 @@ def _parse_pynastran_header(line: str) -> tuple[Optional[str], Optional[str]]:
     return key, value
 
 
-#def clean_empty_lines(lines: list[str]) -> list[str]:
-    #"""
-    #Removes leading and trailing empty lines
-    #don't remove internally blank lines
-    #"""
-    #found_lines = False
-    #if len(lines) < 2:
-        #return lines
+# def clean_empty_lines(lines: list[str]) -> list[str]:
+#     """
+#     Removes leading and trailing empty lines
+#     don't remove internally blank lines
+#     """
+#     found_lines = False
+#     if len(lines) < 2:
+#         return lines
+#
+#     for i, line in enumerate(lines):
+#         if not found_lines and line:
+#             found_lines = True
+#             n1 = i
+#             n2 = i + 1
+#         elif found_lines and line:
+#             n2 = i + 1
+#     lines2 = lines[n1:n2]
+#     return lines2
 
-    #for i, line in enumerate(lines):
-        #if not found_lines and line:
-            #found_lines = True
-            #n1 = i
-            #n2 = i + 1
-        #elif found_lines and line:
-            #n2 = i + 1
-    #lines2 = lines[n1:n2]
-    #return lines2
 
-
-def print_filename(filename: PathLike | StringIO, relpath: bool=True) -> str:
+def print_filename(filename: PathLike | StringIO,
+                   relpath: bool=True) -> str:
     """
     Takes a path such as C:/work/fem.bdf and locates the file using
     relative paths.  If it's on another drive, the path is not modified.
@@ -586,13 +597,13 @@ def print_filename(filename: PathLike | StringIO, relpath: bool=True) -> str:
     ----------
     filename : str
         a filename string
+    relpath: bool; default=True
+       should the relative path be returned
 
     Returns
     -------
     filename_string : str
         a shortened representation of the filename
-    relpath: bool; default=True
-       should the relative path be returned
 
     """
     if isinstance(filename, StringIO):
@@ -705,9 +716,9 @@ def fill_dmigs(model: BDF) -> None:
 def _prep_comment(comment: str) -> str:
     """cleans up the comment"""
     return comment.rstrip()
-    #print('comment = %r' % comment)
-    #comment = '  this\n  is\n  a comment\n'
-    #print(comment.rstrip('\n').split('\n'))
-    #sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
-             #for comment in comment.rstrip().split('\n')]
-    #print('sline = ', sline)
+    # print('comment = %r' % comment)
+    # comment = '  this\n  is\n  a comment\n'
+    # print(comment.rstrip('\n').split('\n'))
+    # sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
+    #          for comment in comment.rstrip().split('\n')]
+    # print('sline = ', sline)

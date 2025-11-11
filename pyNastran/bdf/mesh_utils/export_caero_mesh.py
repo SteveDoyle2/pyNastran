@@ -4,7 +4,7 @@ defines:
 
 """
 import math
-from typing import TextIO, TYPE_CHECKING
+from typing import TextIO
 import numpy as np
 
 from pyNastran.utils import PathLike
@@ -19,7 +19,8 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
                       is_aerobox_model: bool=True,
                       pid_method: str='aesurf',
                       rotate_panel_angle_deg: float=0.0,
-                      write_panel_xyz: bool=True) -> None:
+                      write_panel_xyz: bool=True,
+                      xref: bool=True) -> None:
     """
     Write the CAERO cards as CQUAD4s that can be visualized
 
@@ -50,7 +51,7 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
         'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
         'SET1', 'SET2', 'SET3',
         'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',
-        'AELIST',
+        'AELIST', 'AESURF',
         # for aero ooord
         'AEROS', 'AERO',
         'CORD1R', 'CORD1S', 'CORD1C',
@@ -58,7 +59,8 @@ def export_caero_mesh(bdf_filename: PathLike | BDF,
         'GRID',
     ]
     model = get_bdf_model(
-        bdf_filename, cards_to_include=cards_to_include,
+        bdf_filename, xref=xref,
+        cards_to_include=cards_to_include,
         log=None, debug=False)
     if isinstance(model, PathLike):
         model = read_bdf(model)
@@ -449,30 +451,30 @@ def _write_subcases_loads(model: BDF,
                 )
             isubcase += 2
 
-            ## TODO: assume first column is forces & second column is moments...verify
-            #loads += f'$ {name} - FORCE\n'
-            #loads += '$ PLOAD2 SID P EID1\n'
-            #for ieid, value in enumerate(data[:, 0].ravel()):
-                #eid = aero_eid_map[ieid]
-                #loads += f'PLOAD2,{isubcase},{value},{eid}\n'
-            #isubcase += 1
-
-            #subcases += (
-                #f'SUBCASE {isubcase}\n'
-                #f'  SUBTITLE = DMI {name} - MOMENT\n'
-                #f'  LOAD = {isubcase}\n')
-            #loads += f'$ {name} - MOMENT\n'
-            #loads += '$ PLOAD2 SID P EID1\n'
-            #for irow, value in enumerate(data[:, 1].ravel()):
-                #row = rows[irow]
-                #eid = row[0]
-                #loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+            # TODO: assume first column is forces & second column is moments...verify
+            # loads += f'$ {name} - FORCE\n'
+            # loads += '$ PLOAD2 SID P EID1\n'
+            # for ieid, value in enumerate(data[:, 0].ravel()):
+            #     eid = aero_eid_map[ieid]
+            #     loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+            # isubcase += 1
+            #
+            # subcases += (
+            #     f'SUBCASE {isubcase}\n'
+            #     f'  SUBTITLE = DMI {name} - MOMENT\n'
+            #     f'  LOAD = {isubcase}\n')
+            # loads += f'$ {name} - MOMENT\n'
+            # loads += '$ PLOAD2 SID P EID1\n'
+            # for irow, value in enumerate(data[:, 1].ravel()):
+            #     row = rows[irow]
+            #     eid = row[0]
+            #     loads += f'PLOAD2,{isubcase},{value},{eid}\n'
         else:
             raise NotImplementedError(msg)
 
     if not is_aerobox_model:
         # we put this here to test
-        #model.log.warning('cannot export "loads" because not an aerobox model')
+        model.log.warning('cannot export "loads" because not an aerobox model')
         subcases = ''
         loads = ''
     return subcases, loads

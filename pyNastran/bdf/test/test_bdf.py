@@ -295,6 +295,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             is_lax_parser: bool=False,
             allow_duplicates: bool=False,
             allow_similar_eid: bool=True,
+            skip_cards: Optional[list[str]]=None,
             sort_cards: bool=True,
             stop: bool=False, nastran: str='', post: int=-1,
             dynamic_vars=None,
@@ -405,6 +406,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         sum_load=sum_load, size=size, is_double=is_double,
         is_lax_parser=is_lax_parser,
         allow_similar_eid=allow_similar_eid,
+        skip_cards=skip_cards,
         sort_cards=sort_cards,
         allow_tabs=allow_tabs,
         allow_duplicates=allow_duplicates,
@@ -450,6 +452,7 @@ def run_and_compare_fems(
         allow_tabs: bool=True,
         allow_duplicates: bool=False,
         allow_similar_eid: bool=True,
+        skip_cards: Optional[list[str]] = None,
         sort_cards: bool=True,
         stop: bool=False,
         nastran: str='',
@@ -483,6 +486,16 @@ def run_and_compare_fems(
     fem1 = BDF(debug=debug, log=log)
     fem1.allow_tabs = allow_tabs
     fem1.allow_duplicate_element_rbe_mass = allow_similar_eid
+
+    read_cards = []
+    if read_cards and skip_cards:  # pragma: no cover
+        msg = f'read_cards={read_cards} skip_cards={skip_cards} cannot be used at the same time'
+        raise NotImplementedError(msg)
+    if skip_cards:
+        fem1.disable_cards(skip_cards)
+    elif read_cards:  # pragma: no cover
+        fem1.enable_cards(read_cards)
+
     #fem1.force_echo_off = False
     log = fem1.log
     if is_lax_parser:
@@ -2371,6 +2384,8 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument('--dumplines', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
                                '(pyNastran_dump.bdf)')
+    parent_parser.add_argument('--skip_cards', type=str,
+                               help='Define cards to skip')
     parent_parser.add_argument('--dictsort', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
                                '(pyNastran_dict.bdf)')
@@ -2462,7 +2477,7 @@ def get_test_bdf_usage_args_examples(encoding):
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--ignore I] [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
-        '              [--skip_loads] [--skip_mass] [--lax] [--nosort] [--duplicate]\n'
+        '              [--skip_loads] [--skip_mass] [--lax] [--nosort] [--duplicate] [skip_cards CARDS]\n'
     )
     usage = (
         "Usage:\n"
@@ -2524,9 +2539,10 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_mass    skip the mass properties calculations (default=False)\n'
         '  --skip_aero    skip the processing of the caero mesh (default=False)\n'
         '  --skip_skin    skip the solid skinning (default=False)\n'
-        '  --skip_eid_checks  skips some element checks (default=False)\n'
-        '  --skip_mcid        skip the material coordinate system exporting (default=False)\n'
-        '  --no_similar_eid   No duplicate eids among elements, rigids, and masses\n'
+        '  --skip_eid_checks   skips some element checks (default=False)\n'
+        '  --skip_mcid         skip the material coordinate system exporting (default=False)\n'
+        '  --no_similar_eid    No duplicate eids among elements, rigids, and masses\n'
+        '  --skip_cards CARDS  CSV list of cards (e.g., GRID,CONM2)\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2562,6 +2578,8 @@ def main(argv=None):
     data['run_eid_checks'] = not data['skip_eid_checks']
     data['run_mcid'] = not data['skip_mcid']
     allow_similar_eid = not data['no_similar_eid']
+    skip_cards = data['skip_cards']
+    skip_cards_list = [] if skip_cards is None else skip_cards.split(',')
     save_file_structure = data['ifile']
 
     is_double = False
@@ -2613,6 +2631,7 @@ def main(argv=None):
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
             allow_similar_eid=allow_similar_eid,
+            skip_cards=skip_cards_list,
             save_file_structure=save_file_structure,
 
             is_lax_parser=data['lax'],
@@ -2672,6 +2691,7 @@ def main(argv=None):
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
             allow_similar_eid=allow_similar_eid,
+            skip_cards=skip_cards_list,
             save_file_structure=save_file_structure,
 
             is_lax_parser=data['lax'],

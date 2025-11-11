@@ -4,6 +4,7 @@ from cpylog import SimpleLogger
 import pyNastran
 from .utils import filter_no_args
 
+
 def cmd_line_export_caero_mesh(argv=None, quiet=False):
     """command line interface to export_caero_mesh"""
     if argv is None:  # pragma: no cover
@@ -13,7 +14,8 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     import pyNastran
     msg = (
         'Usage:\n'
-        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--aerobox] [--pid PID]\n'
+        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--xref]'
+        ' [--aerobox] [--pid PID]\n'
         '  bdf export_caero_mesh -h | --help\n'
         '  bdf export_caero_mesh -v | --version\n'
         '\n'
@@ -25,6 +27,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
         'Options:\n'
         '  -o OUT, --output  OUT_CAERO_BDF_FILENAME  path to output BDF file\n'
         '  --punch                                   flag to identify a *.pch/*.inc file\n'
+        '  -x, --xref                                flag to disable xref (default=False)\n'
         '  --aerobox                                 write the aeroboxes (default=False)\n'
         '  --pid PID                                 sets the pid; {aesurf, caero, paero} [default: aesurf]\n'
         '\n'
@@ -36,19 +39,20 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
-    #type_defaults = {
+    # type_defaults = {
     #    '--nerrors' : [int, 100],
-    #}
-    #try:
+    # }
+    # try:
     data = docopt(msg, version=ver, argv=argv[1:])
-    #except:
-        #raise SystemError(msg)
+    # except:
+    #     raise SystemError(msg)
 
     if not quiet:  # pragma: no cover
         print(data)
     #size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     punch = data['--punch']
+    xref = not data['--xref']
     caero_bdf_filename = data['--output']
     base = os.path.splitext(bdf_filename)[0]
     if caero_bdf_filename is None:
@@ -89,6 +93,9 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     ]
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8')
-    model = read_bdf(bdf_filename, punch=punch, log=log, skip_cards=skip_cards)
+    model = read_bdf(bdf_filename, punch=punch, xref=xref,
+                     log=log, skip_cards=skip_cards)
     export_caero_mesh(model, caero_bdf_filename,
-                      is_aerobox_model=is_aerobox_model, pid_method=pid_method)
+                      is_aerobox_model=is_aerobox_model,
+                      pid_method=pid_method,
+                      xref=xref)

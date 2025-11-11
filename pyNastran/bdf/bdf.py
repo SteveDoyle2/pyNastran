@@ -3069,7 +3069,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #return
 
         if card_name not in self.card_count:
-            if card_name == '#INCLUDE':
+            if card_name in ['#INCLUDE', 'SUBCASE']:
                 raise RuntimeError(card_lines)
             _check_for_spaces(card_name, card_lines, comment, self.log)
             #raise RuntimeError(card_name)

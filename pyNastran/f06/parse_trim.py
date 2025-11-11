@@ -92,6 +92,7 @@ def _stack_data_dict(results: dict[np.ndarray, np.ndarray],
     results_out = {}
     for subcase, press_data in results.items():
         all_nids = []
+        all_eids = []
         all_data = []
         all_labels = []
         if narray == 3:
@@ -104,12 +105,14 @@ def _stack_data_dict(results: dict[np.ndarray, np.ndarray],
             labels = np.array(all_labels)
             results_out[subcase] = (nids2, data2, labels)
         else:
-            for nid, datai in press_data:
+            for nid, eid, datai in press_data:
                 all_nids.append(nid)
+                all_eids.append(eid)
                 all_data.append(datai)
             nids2 = np.hstack(all_nids)
+            eids2 = np.hstack(all_eids)
             data2 = np.vstack(all_data)
-            results_out[subcase] = (nids2, data2)
+            results_out[subcase] = (nids2, eids2, data2)
     return results_out
 
 
@@ -698,7 +701,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
         return line, i, ipressure, iforce, metadata
 
     if 'AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS' in line3:
-        line, i, grid_id, Cp_pressure = _read_aerostatic_data_recover_output_table_pressure(
+        line, i, grid_id, element_id, Cp_pressure = _read_aerostatic_data_recover_output_table_pressure(
             f06_file, line3, i, nlines_max, log)
         nelement, nresult = Cp_pressure.shape
 
@@ -707,7 +710,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
         if isubcase not in trim_results.aero_pressure:
             trim_results.aero_pressure[isubcase] = []
 
-        trim_results.aero_pressure[isubcase].append((grid_id, Cp_pressure))
+        trim_results.aero_pressure[isubcase].append((grid_id, element_id, Cp_pressure))
         ipressure += 1
 
     elif 'AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS' in line3:
@@ -728,8 +731,9 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
 
 def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
                                                         line: str, i: int, nlines_max: int, log: SimpleLogger) -> tuple[
-                                                            str, int, np.ndarray, np.ndarray]:
+                                                            str, int, np.ndarray, np.ndarray, np.ndarray]:
     """
+    # MSC
     '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
     '                                           MACH = 0.000000E+00                Q = 1.000000E+00'
@@ -742,6 +746,21 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
     '                                         GRID   LABEL          COEFFICIENTS           PRESSURES' <---here
     '                                          32     LS            5.390633E-02         5.390633E-02'
     '                                          33     LS            4.857536E-02         4.857536E-02'
+
+
+    # NX
+    '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
+    '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = ASYMMETRIC'
+    '                                           MACH = 8.000000E-01                Q = 1.000000E+00'
+    '                         CHORD = 6.9500E+00           SPAN = 7.5000E+01            AREA = 5.2100E+02'
+    ''
+    ''
+    '                                            AERODYNAMIC PRESSURES ON THE AERODYNAMIC ELEMENTS'
+    ''
+    '                                                             AERODYNAMIC PRES.       AERODYNAMIC'
+    '                                         GRID   LABEL          COEFFICIENTS           PRESSURES             ELEMENT'
+    '                                        3318     LS            4.405547E-01         4.405547E-01           6020022'
+    '                                        3319     LS            5.405547E-01         5.405547E-01           6020023'
     """
     log.debug(' - reading aero pressure')
     unused_line1 = f06_file.readline()
@@ -760,6 +779,7 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
 
     ndata = len(data_lines)
     grid_id = np.zeros(ndata, dtype='int32')
+    element_id = -np.ones(ndata, dtype='int32')
     cp_pressure = np.zeros((ndata, 2), dtype='float64')
     for i, line in enumerate(data_lines):
         sline = line.split()
@@ -768,12 +788,13 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
             grid_str, label, cp_str, pressure_str = sline
         else:  # NX
             grid_str, label, cp_str, pressure_str, eid_str = sline
+            element_id[i] = int(eid_str)
         grid = int(grid_str)
         cp = float(cp_str)
         pressure = float(pressure_str)
         grid_id[i] = grid
         cp_pressure[i, :] = [cp, pressure]
-    return line, i, grid_id, cp_pressure
+    return line, i, grid_id, element_id, cp_pressure
 
 
 def _read_aerostatic_data_recover_output_table_force(f06_file: TextIO,

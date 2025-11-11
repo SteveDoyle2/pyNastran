@@ -2813,6 +2813,8 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument('--dumplines', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
                                '(pyNastran_dump.bdf)')
+    parent_parser.add_argument('--skip_cards', type=str,
+                               help='Define cards to skip')
     parent_parser.add_argument('--dictsort', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
                                '(pyNastran_dict.bdf)')
@@ -2904,7 +2906,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}]\n'
         '              [--skip_nominal] [--skip_loads] [--skip_mass] [--skip_equivalence]\n'
-        '              [--lax] [--duplicate]\n'
+        '              [--lax] [--duplicate] [skip_cards CARDS]\n'
     )
     usage = (
         "Usage:\n"
