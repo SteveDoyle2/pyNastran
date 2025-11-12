@@ -39,6 +39,7 @@ def make_flutter_response(f06_filename: PathLike,
                           f06_units=None, out_units=None,
                           use_rhoref: bool=False,
                           read_flutter: bool=True,
+                          make_alt: bool=True,
                           log: Optional[SimpleLogger]=None) -> tuple[dict[int, FlutterResponse],
                                                                      dict[str, Any]]:
     """
@@ -57,7 +58,10 @@ def make_flutter_response(f06_filename: PathLike,
         False: assume the density in the table is absolute density
         True: assume the density should be defined by sea level density,
               so density is a density ratio
-
+    read_flutter : bool; default=True
+        don't parse the flutter to extract eigenvalues/mass
+    make_alt : bool; default=True
+        make altitude an output variable
 
     Returns
     -------
@@ -225,7 +229,8 @@ def make_flutter_response(f06_filename: PathLike,
                         in_units=f06_units,
                         use_rhoref=use_rhoref,
                         eigenvector=eigenvectors_array,
-                        eigr_eigi_velocity=eigr_eigi_velocity)
+                        eigr_eigi_velocity=eigr_eigi_velocity,
+                        make_alt=make_alt)
                     response.set_out_units(out_units)
                     #_remove_neutrinos(response, log)
                     flutters[subcase] = response
@@ -426,7 +431,8 @@ def make_flutter_response(f06_filename: PathLike,
                 in_units=f06_units,
                 use_rhoref=use_rhoref,
                 eigenvector=eigenvectors_array,
-                eigr_eigi_velocity=eigr_eigi_velocity)
+                eigr_eigi_velocity=eigr_eigi_velocity,
+                make_alt=make_alt)
             response.set_out_units(out_units)
             flutters[subcase] = response
 
