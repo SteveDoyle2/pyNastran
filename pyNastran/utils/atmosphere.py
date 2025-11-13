@@ -38,7 +38,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def get_alt_for_density(density: float, density_units: str='slug/ft^3',
-                        alt_units: str='ft', nmax: int=20, tol: float=5.) -> float:
+                        alt_units: str='ft', nmax: int=20, tol: float=0.1) -> float:
     """
     Gets the altitude associated with a given air density.
 
@@ -52,7 +52,7 @@ def get_alt_for_density(density: float, density_units: str='slug/ft^3',
         sets the units for the output altitude; ft, m, kft
     nmax : int; default=20
         max number of iterations for convergence
-    tol : float; default=5.
+    tol : float; default=0.1
         tolerance in alt_units
 
     Returns
@@ -71,15 +71,20 @@ def get_alt_for_density(density: float, density_units: str='slug/ft^3',
 
     # Newton's method
     alt1 = alt_old
+    log_density = np.log(density)
     while abs(alt_final - alt_old) > tol and n < nmax:
         alt_old = alt_final
         alt1 = alt_old
         alt2 = alt_old + dalt
         rho1: float = atm_density(alt1, density_units=density_units)
         rho2: float = atm_density(alt2, density_units=density_units)
-        m = dalt / (rho2 - rho1)
-        alt_final = m * (density - rho1) + alt1
+        # natural log
+        log_rho1 = np.log(rho1)
+        log_rho2 = np.log(rho2)
+        m = dalt / (log_rho2 - log_rho1)
+        alt_final = m * (log_density - log_rho1) + alt1
         n += 1
+
     if abs(alt_final - alt_old) > tol:
         raise RuntimeError(f'Did not converge; Check your units; n=nmax={nmax}\n'
                            f'target alt={alt_final} alt_current={alt1}')
@@ -91,7 +96,7 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float,
                                        mach: float,
                                        velocity_units: str='ft/s',
                                        alt_units: str='ft',
-                                       nmax: int=20, tol: float=5.) -> float:
+                                       nmax: int=20, tol: float=0.1) -> float:
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -131,6 +136,7 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float,
     k = np.sqrt(T0 / p0)
     #eas = a * mach * sqrt((p * T0) / (T * p0)) = a * mach * sqrt(p / T) * k
 
+    log_eas = np.log(equivalent_airspeed)
     # Newton's method
     while abs(alt_final - alt_old) > tol and n < nmax:
         alt_old = alt_final
@@ -144,8 +150,10 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float,
         sos2 = np.sqrt(1.4 * R * T2)
         eas1 = sos1 * mach * np.sqrt(press1 / T1) * k
         eas2 = sos2 * mach * np.sqrt(press2 / T2) * k
-        m = dalt / (eas2 - eas1)
-        alt_final = m * (equivalent_airspeed - eas1) + alt1
+        log_eas1 = np.log(eas1)
+        log_eas2 = np.log(eas2)
+        m = dalt / (log_eas2 - log_eas1)
+        alt_final = m * (log_eas - log_eas1) + alt1
         n += 1
 
     if n > nmax - 1:
@@ -156,7 +164,7 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float,
 
 def get_alt_for_q_with_constant_mach(q: float, mach: float,
                                      pressure_units: str='psf', alt_units: str='ft',
-                                     nmax: int=20, tol: float=5.) -> float:
+                                     nmax: int=20, tol: float=0.1) -> float:
     """
     Gets the altitude associated with a dynamic pressure.
 
@@ -172,7 +180,7 @@ def get_alt_for_q_with_constant_mach(q: float, mach: float,
         the altitude units; ft, kft, m
     nmax : int; default=20
         max number of iterations for convergence
-    tol : float; default=5.
+    tol : float; default=0.1
         tolerance in alt_units
 
     Returns
@@ -189,7 +197,7 @@ def get_alt_for_q_with_constant_mach(q: float, mach: float,
 
 def get_alt_for_pressure(pressure: float,
                          pressure_units: str='psf', alt_units: str='ft',
-                         nmax: int=20, tol: float=5.) -> float:
+                         nmax: int=20, tol: float=0.1) -> float:
     """
     Gets the altitude associated with a pressure.
 
@@ -203,7 +211,7 @@ def get_alt_for_pressure(pressure: float,
         the altitude units; ft, kft, m
     nmax : int; default=20
         max number of iterations for convergence
-    tol : float; default=5.
+    tol : float; default=0.1
         altitude tolerance in alt_units
 
     Returns
@@ -220,14 +228,17 @@ def get_alt_for_pressure(pressure: float,
     n = 0
 
     # Newton's method
+    log_pressure = np.log(pressure)
     while abs(alt_final - alt_old) > tol and n < nmax:
         alt_old = alt_final
         alt1 = alt_old
         alt2 = alt_old + dalt
         press1 = atm_pressure(alt1)
         press2 = atm_pressure(alt2)
-        m = dalt / (press2 - press1)
-        alt_final = m * (pressure - press1) + alt1
+        log_press1 = np.log(press1)
+        log_press2 = np.log(press2)
+        m = dalt / (log_press2 - log_press1)
+        alt_final = m * (log_pressure - log_press1) + alt1
         n += 1
 
     if n > nmax - 1:
@@ -243,7 +254,7 @@ def get_alt_for_pressure(pressure: float,
 def get_alt_for_mach_eas(mach: float,
                          eas: float, eas_units: str='knots',
                          alt_units: str='ft',
-                         nmax: int=20, tol: float=5.) -> float:
+                         nmax: int=20, tol: float=0.1) -> float:
     """
     Gets the altitude associated with an equivalent airspeed.
 
@@ -259,7 +270,7 @@ def get_alt_for_mach_eas(mach: float,
         the altitude units; ft, kft, m
     nmax : int; default=20
         max number of iterations for convergence
-    tol : float; default=5.
+    tol : float; default=0.1
         altitude tolerance in alt_units
 
     Returns
@@ -276,17 +287,20 @@ def get_alt_for_mach_eas(mach: float,
     n = 0
 
     # Newton's method
+    log_eas = np.log(eas)
     while abs(alt_final - alt_old) > tol and n < nmax:
         alt_old = alt_final
         alt1 = alt_old
         alt2 = alt_old + dalt
         eas1 = atm_equivalent_airspeed(alt1, mach, alt_units='ft', eas_units='ft/s')
         eas2 = atm_equivalent_airspeed(alt2, mach, alt_units='ft', eas_units='ft/s')
+        log_eas1 = np.log(eas1)
+        log_eas2 = np.log(eas2)
 
         # y = (y2-y1)/(x2-x1)*(x-x1) + y1
         # y = m * (x-x1) + y1
-        m = dalt / (eas2 - eas1)
-        alt_final = m * (eas - eas1) + alt1
+        m = dalt / (log_eas2 - log_eas1)
+        alt_final = m * (log_eas - log_eas1) + alt1
         n += 1
 
     if n > nmax - 1:
@@ -1236,6 +1250,7 @@ def make_flfacts_eas_sweep_constant_mach(mach: float,
     #
     # then pressure in a sane unit (e.g., psi/psf/Pa)
     # without a wacky conversion
+    assert eas.min() > 0, eas
     eas_fts = convert_velocity(eas, eas_units, 'ft/s')
     rho0_english: float = atm_density(
         0., R=1716., alt_units=alt_units,
@@ -1250,6 +1265,7 @@ def make_flfacts_eas_sweep_constant_mach(mach: float,
         alt_fti = get_alt_for_pressure(pressure_psfi, pressure_units='psf',
                                        alt_units='ft', nmax=30, tol=1.)
         rhoi = atm_density(alt_fti, R=1716., alt_units='ft', density_units=density_units)
+        assert np.isfinite(alt_ft[i]), alt_fti
         rho[i] = rhoi
         alt_ft[i] = alt_fti
     alt = convert_altitude(alt_ft, 'ft', alt_units)
