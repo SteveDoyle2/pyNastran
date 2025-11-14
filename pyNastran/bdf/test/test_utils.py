@@ -8,12 +8,46 @@ from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict, parse_patran_syntax_dict_map,
     write_patran_syntax_dict, split_eids_along_nids,
     parse_femap_syntax,
-    get_femap_property_comments_dict, get_femap_material_comments_dict)
+    split_comment_to_femap_comment,
+    get_femap_property_comments_dict,
+    get_femap_material_comments_dict)
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 class TestBdfUtils(unittest.TestCase):
+    def test_split_comment_to_femap_comment(self):
+        in1 = '$ Femap Region 12345 : Wing NSM'
+        is_passed, error_msg, (word, idi, name) = split_comment_to_femap_comment(in1)
+        assert is_passed, is_passed
+        assert error_msg == '', error_msg
+        assert word == 'Region', word
+        assert idi == 12345, idi
+        assert name == 'Wing NSM', name
+
+        in2 = '$ Femap Property 100 : Wing Skin 20 Plies\n$\n$ Femap Layup 101 : 20 Ply\n'
+        is_passed, error_msg, (word, idi, name) = split_comment_to_femap_comment(in2)
+        assert not is_passed, is_passed
+        # assert error_msg == '', error_msg
+        # assert word == 'Property', word
+        # assert idi == 100, idi
+        # assert name == 'Wing Skin 20 Plies', name
+
+        in3 = '$$ Femap Material 202 : Steel:42\n'
+        is_passed, error_msg, (word, idi, name) = split_comment_to_femap_comment(in2)
+        assert not is_passed, is_passed
+        # assert error_msg == '', error_msg
+        # assert word == 'Material', word
+        # assert idi == 202, idi
+        # assert name == 'Steel:42', name
+
+        in4 = (
+            '$ Femap Property 8000007 : Aileron, Steel Pin dia=.375\n'
+            '$ Femap PropShape 8000007 : 5,0,0.1875,0.,0.,0.,0.,0.\n'
+            '$ Femap PropMethod 8000007 : 5,0,1,0.\n'
+            '$ Femap PropOrient 8000007 : 5,0,0.,1.,2.,3.,4.,-1.,0.,0.')
+        split_comment_to_femap_comment(in4)
+
     def test_get_femap_comments_dict(self):
         """tests:
           - ``get_femap_property_comments_dict``

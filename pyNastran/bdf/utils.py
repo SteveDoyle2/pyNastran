@@ -25,7 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def split_comment_to_femap_comment(comment: str) -> tuple[bool, str, tuple[str, int, str]]:
     """
-    [$ Femap Region 12345 : Wing NSM']
+    ['$ Femap Region 12345 : Wing NSM']
     ['$ Femap Property 100 : Wing Skin 20 Plies\n$\n$ Femap Layup 101 : 20 Ply\n']
     ['$$ Femap Material 202 : Steel:42\n']
     ['$ Femap Property 8000007 : Aileron, Steel Pin dia=.375', '$ Femap PropShape 8000007 : 5,0,0.1875,0.,0.,0.,0.,0.', '$ Femap PropMethod 8000007 : 5,0,1,0.', '$ Femap PropOrient 8000007 : 5,0,0.,1.,2.,3.,4.,-1.,0.,0.']

@@ -75,7 +75,7 @@ def dot_33_n33(A: np.ndarray, B: np.ndarray,
             #print(D[i, :, :])
             #print('------------------------')
         assert np.all(np.allclose(C, D))
-    return D
+    return C
 
 
 def dot_n33_33(A: np.ndarray, B: np.ndarray,

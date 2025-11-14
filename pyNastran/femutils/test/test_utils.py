@@ -12,7 +12,10 @@ from numpy.testing import assert_equal, assert_array_equal
 
 import pyNastran
 from pyNastran.femutils.io import loadtxt_nice, savetxt_nice
-from pyNastran.femutils.matrix3d import dot_n33_n33, transpose3d, triple_n33_n33, triple_n33_33
+from pyNastran.femutils.matrix3d import (
+    dot_33_n33, dot_n33_33, dot_n33_n33,
+    transpose3d,
+    triple_n33_n33,  triple_n33_33)
 from pyNastran.femutils.utils import (
     augmented_identity, perpendicular_vector,
     perpendicular_vector2d, vstack_lists,
@@ -24,9 +27,50 @@ from pyNastran.femutils.test.utils import is_array_close
 PKG_PATH = pyNastran.__path__[0]
 
 
-#class TestNan(unittest.TestCase):
 class TestMatrix3d(unittest.TestCase):
     """tests functions in femutils.matrix3d"""
+    def test_dot_33_n33(self):
+        """tests dot_33_n33"""
+    A = np.array([
+        [[1., 0., 0.],
+         [0., 1., 0.],
+         [0., 0., 1.], ],
+
+        [[1., 0., 0.],
+         [0., 1., 0.],
+         [0., 0., 1.], ],
+
+        [[1., 0., 0.],
+         [0., 1., 0.],
+         [0., 0., 1.], ],
+    ])
+    theta = np.radians([12.])
+    B = cylindrical_rotation_matrix(theta, dtype='float64')
+    assert B.shape == (1, 3, 3), B.shape
+    C = dot_33_n33(B[0, :, :], A)
+    D = dot_33_n33(B[0, :, :], A, debug=True)
+
+    def test_dot_n33_33(self):
+        """tests dot_n33_33"""
+    A = np.array([
+        [[1., 0., 0.],
+         [0., 1., 0.],
+         [0., 0., 1.], ],
+
+        [[1., 0., 0.],
+         [0., 1., 0.],
+         [0., 0., 1.], ],
+
+        [[1., 0., 0.],
+         [0., 1., 0.],
+         [0., 0., 1.], ],
+    ])
+    theta = np.radians([12.])
+    B = cylindrical_rotation_matrix(theta, dtype='float64')
+    assert B.shape == (1, 3, 3), B.shape
+    C = dot_n33_33(A, B[0, :, :])
+    D = dot_n33_33(A, B[0, :, :], debug=True)
+
     def test_dot_n33_n33(self):
         """tests dot_n33_n33"""
         A = np.array([
