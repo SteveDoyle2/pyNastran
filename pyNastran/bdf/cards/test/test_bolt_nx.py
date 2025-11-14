@@ -15,7 +15,7 @@ class TestBoltMSC(unittest.TestCase):
              nids_top=nids_top,
              nids_btm=nids_btm,
              comment='bolt_msc')
-        bolt.cross_reference()
+        bolt.cross_reference(model)
         model.cross_reference()
         str(bolt)
         bolt.raw_fields()

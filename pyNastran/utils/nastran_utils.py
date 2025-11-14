@@ -142,6 +142,7 @@ def _get_keywords_list(keywords: Optional[str | list[str] |
                     continue
                 keywords_list.append(f'{keyword}={value}')
 
+    #print(f'keywords_list = {keywords_list}')
     allowed_keywords = list(KEYWORDS_CHECK) + [
         'parallel', 'mem', 'sdirectory', 'sdir',
         'buffsize']  # CHEMIN={path}

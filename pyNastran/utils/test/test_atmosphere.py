@@ -145,6 +145,13 @@ class TestAtmConvert(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             convert_pressure(1., 'bad', 'psf')
 
+        assert np.allclose(convert_pressure(1., 'bar', 'Pa'), 100_000.)
+        assert np.allclose(convert_pressure(1., 'Pa', 'bar'), 1 / 100_000.)
+
+        assert np.allclose(convert_pressure(1., 'bar', 'kPa'), 100.)
+        assert np.allclose(convert_pressure(1., 'kPa', 'bar'), 1 / 100.)
+
+        #------------
         assert np.allclose(convert_pressure(1., 'psf', 'Pa'), 47.880208)
         assert np.allclose(convert_pressure(1., 'Pa', 'psf'), 1 / 47.880208)
 
