@@ -529,6 +529,98 @@ class TestNastran(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             cmd_line_format_converter(argv=argv, quiet=True)
 
+    # def test_nastran_to_tecplot_crod(self):
+    #     model = BDF(debug=False)
+    #     model.add_grid(1, [0., 0., 0.])
+    #     model.add_grid(2, [0., 1., 0.])
+    #     model.add_crod(10, 100, [1, 2])
+    #     tecplot = nastran_to_tecplot(model)
+    #     zone = tecplot.zones[0]
+    #     assert len(zone.tri_elements) == 0, zone
+    #     assert len(zone.quad_elements) == 0, zone
+    #     assert len(zone.tet_elements) == 0, zone
+    #     assert len(zone.hexa_elements) == 0, zone
+
+    def test_nastran_to_tecplot_tri(self):
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 1., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_ctria3(10, 100, [1, 2, 3])
+        tecplot = nastran_to_tecplot(model)
+        zone = tecplot.zones[0]
+        assert len(zone.tri_elements) == 1, zone
+        assert len(zone.quad_elements) == 0, zone
+        assert len(zone.tet_elements) == 0, zone
+        assert len(zone.hexa_elements) == 0, zone
+
+    def test_nastran_to_tecplot_cquad4(self):
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 1., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [1., 0., 0.])
+        model.add_cquad4(10, 100, [1, 2, 3, 4])
+        tecplot = nastran_to_tecplot(model)
+        zone = tecplot.zones[0]
+        assert len(zone.tri_elements) == 0, zone
+        assert len(zone.quad_elements) == 1, zone
+        assert len(zone.tet_elements) == 0, zone
+        assert len(zone.hexa_elements) == 0, zone
+
+    def test_nastran_to_tecplot_cpenta(self):
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 1., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 0., 1.])
+        model.add_grid(5, [0., 1., 1.])
+        model.add_grid(6, [1., 1., 1.])
+        model.add_cpenta(10, 100, [1, 2, 3, 4, 5, 6])
+        tecplot = nastran_to_tecplot(model)
+        zone = tecplot.zones[0]
+        assert len(zone.tri_elements) == 0, zone
+        assert len(zone.quad_elements) == 0, zone
+        assert len(zone.tet_elements) == 0, zone
+        assert len(zone.hexa_elements) == 1, zone
+
+    def test_nastran_to_tecplot_chexa(self):
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 1., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [1., 0., 0.])
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [0., 1., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [1., 0., 1.])
+        model.add_chexa(10, 100, [1, 2, 3, 4, 5, 6, 7, 8])
+        tecplot = nastran_to_tecplot(model)
+        zone = tecplot.zones[0]
+        assert len(zone.tri_elements) == 0, zone
+        assert len(zone.quad_elements) == 0, zone
+        assert len(zone.tet_elements) == 0, zone
+        assert len(zone.hexa_elements) == 1, zone
+
+    def test_nastran_to_tecplot_chexa_cpenta(self):
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 1., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [1., 0., 0.])
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [0., 1., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [1., 0., 1.])
+        model.add_cpenta(11, 100, [1, 2, 3, 4, 5, 6])
+        model.add_chexa(10, 100, [1, 2, 3, 4, 5, 6, 7, 8])
+        tecplot = nastran_to_tecplot(model)
+        zone = tecplot.zones[0]
+        assert len(zone.tri_elements) == 0, zone
+        assert len(zone.quad_elements) == 0, zone
+        assert len(zone.tet_elements) == 0, zone
+        assert len(zone.hexa_elements) == 2, zone
+
     def test_nastran_to_ugrid_01(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
 

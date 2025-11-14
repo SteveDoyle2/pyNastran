@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.tecplot.tecplot import Tecplot, Zone
 
 
-def nastran_to_tecplot(model):
+def nastran_to_tecplot(model: BDF) -> Tecplot:
     """assumes sequential nodes"""
     tecplot = Tecplot(log=model.log)
 
@@ -30,11 +30,11 @@ def nastran_to_tecplot(model):
     zone.headers_dict['VARIABLES'] = ['X', 'Y', 'Z']
     zone.zone_data = xyz
 
-    nquads = model.card_count['CQUAD4'] if 'CQUAD4' in model.card_count else 0
-    ntets = model.card_count['CTETRA'] if 'CTETRA' in model.card_count else 0
-    #ntrias = model.card_count['CTRIA3'] if 'CTRIA3' in model.card_count else 0
-    nhexas = model.card_count['CHEXA'] if 'CHEXA' in model.card_count else 0
-    nelements = len(model.elements)
+    nquad = model.card_count['CQUAD4'] if 'CQUAD4' in model.card_count else 0
+    ntet = model.card_count['CTETRA'] if 'CTETRA' in model.card_count else 0
+    #ntria = model.card_count['CTRIA3'] if 'CTRIA3' in model.card_count else 0
+    nhexa = model.card_count['CHEXA'] if 'CHEXA' in model.card_count else 0
+    nelement = len(model.elements)
     tris = []
     quads = []
     tets = []
@@ -71,66 +71,66 @@ def nastran_to_tecplot(model):
     #print(tecplot.nodal_results.shape)
     #tecplot.result_names = ['PropertyID', 'MaterialID']
 
-    ntris = len(tris)
-    nquads = len(quads)
-    nshells = ntris + nquads
+    ntri = len(tris)
+    nquad = len(quads)
+    nshell = ntri + nquad
 
-    ntets = len(tets)
-    npentas = len(pentas)
-    nhexas = len(hexas)
-    nsolids = ntets + npentas + nhexas
-    nnot_tris = nquads
-    nnot_quads = ntris
-    nnot_tets = npentas + nhexas
-    nnot_hexas = ntets + npentas
-    if ntris and not nnot_tris and not nsolids:
+    ntet = len(tets)
+    npenta = len(pentas)
+    nhexa = len(hexas)
+    nsolid = ntet + npenta + nhexa
+    nnot_tri = nquad
+    nnot_quad = ntri
+    nnot_tet = npenta + nhexa
+    nnot_hexa = ntet + npenta
+    if ntri and not nnot_tri and not nsolid:
         zone.tri_elements = np.array(tris, dtype='int32')
         zone_type = 'FETRIANGLE'
-    elif nquads and not nnot_quads and not nsolids:
+    elif nquad and not nnot_quad and not nsolid:
         zone.quad_elements = np.array(quads, dtype='int32')
         zone_type = 'FEQUADRILATERAL'
-    elif ntets and not nnot_tets and not nshells:
+    elif ntet and not nnot_tet and not nshell:
         zone.tet_elements = np.array(tets, dtype='int32')
         zone_type = 'FETETRAHEDRON'
-    elif nhexas and not nnot_hexas and not nshells:
+    elif nhexa and not nnot_hexa and not nshell:
         zone.hexa_elements = np.array(hexas, dtype='int32')
         zone_type = 'FEBRICK'
-    elif not nshells:
-        elements = np.zeros((nelements, 8), dtype='int32')
-        if ntets:
+    elif not nshell:
+        elements = np.zeros((nelement, 8), dtype='int32')
+        if ntet:
             tets = np.array(tets, dtype='int32')
-            elements[:ntets, :4] = tets
-            elements[:ntets, 4] = elements[:ntets, 3]
-            elements[:ntets, 5] = elements[:ntets, 3]
-            elements[:ntets, 6] = elements[:ntets, 3]
-            elements[:ntets, 7] = elements[:ntets, 3]
-        if npentas:
+            elements[:ntet, :4] = tets
+            elements[:ntet, 4] = elements[:ntet, 3]
+            elements[:ntet, 5] = elements[:ntet, 3]
+            elements[:ntet, 6] = elements[:ntet, 3]
+            elements[:ntet, 7] = elements[:ntet, 3]
+        if npenta:
             # penta6
             pentas = np.array(pentas, dtype='int32')
-            elements[ntets:ntets + npentas, :6] = pentas
-            elements[ntets:ntets + npentas, 6] = elements[:ntets, 5]
-            elements[ntets:ntets + npentas, 7] = elements[:ntets, 5]
-        if nhexas:
+            elements[ntet:ntet + npenta, :6] = pentas
+            elements[ntet:ntet + npenta, 6] = elements[ntet:ntet + npenta, 5]
+            elements[ntet:ntet + npenta, 7] = elements[ntet:ntet + npenta, 5]
+        if nhexa:
             hexas = np.array(hexas, dtype='int32')
-            elements[ntets + npentas:ntets + npentas + nhexas, :6] = pentas
-            elements[ntets + npentas:ntets + npentas + nhexas, 6] = elements[:ntets, 5]
-            elements[ntets + npentas:ntets + npentas + nhexas, 7] = elements[:ntets, 5]
+            elements[ntet + npenta:ntet + npenta + nhexa, :] = hexas
+            # elements[ntet + npenta:ntet + npenta + nhexa, 6] = elements[ntets + npentas:ntet + npenta + nhexa, 5]
+            # elements[ntet + npenta:ntet + npenta + nhexa, 7] = elements[ntets + npentas:ntet + npenta + nhexa, 5]
         zone.hexa_elements = np.array(elements)
         zone_type = 'FEBRICK'
-    elif not nsolids:
-        elements = np.zeros((nelements, 4), dtype='int32')
+    elif not nsolid:
+        elements = np.zeros((nelement, 4), dtype='int32')
         tris = np.array(tris, dtype='int32')
-        elements[:ntris, :3] = tris
-        elements[:ntris, 4] = elements[:ntets, 3]
+        elements[:ntri, :3] = tris
+        elements[:ntri, 4] = elements[:ntet, 3]
 
         quads = np.array(quads, dtype='int32')
-        elements[ntris:, :] = quads
+        elements[ntri:, :] = quads
         zone_type = 'FEQUADRILATERAL'
     else:
         msg = 'Only solids or shells are allowed (not both)\n'
-        msg += '  nsolids=%s nshells=%s\n' % (nsolids, nshells)
-        msg += '  ntris=%s nquads=%s\n' % (ntris, nquads)
-        msg += '  ntets=%s npentas=%s nhexas=%s\n' % (ntets, npentas, nhexas)
+        msg += f'  nsolids={nsolid:d} nshells={nshell:d}\n'
+        msg += f'  ntris={ntri:d} nquads={nquad:d}\n'
+        msg += f'  ntets={ntet:d} npentas={npenta:d} nhexas={nhexa:d}\n'
         raise NotImplementedError(msg)
     zone.headers_dict['ZONETYPE'] = zone_type
 

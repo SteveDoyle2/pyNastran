@@ -47,7 +47,7 @@ class TestMatrix3d(unittest.TestCase):
     theta = np.radians([12.])
     B = cylindrical_rotation_matrix(theta, dtype='float64')
     assert B.shape == (1, 3, 3), B.shape
-    C = dot_33_n33(B[0, :, :], A)
+    C = dot_33_n33(B[0, :, :], A, debug=False)
     D = dot_33_n33(B[0, :, :], A, debug=True)
 
     def test_dot_n33_33(self):
@@ -68,7 +68,7 @@ class TestMatrix3d(unittest.TestCase):
     theta = np.radians([12.])
     B = cylindrical_rotation_matrix(theta, dtype='float64')
     assert B.shape == (1, 3, 3), B.shape
-    C = dot_n33_33(A, B[0, :, :])
+    C = dot_n33_33(A, B[0, :, :], debug=False)
     D = dot_n33_33(A, B[0, :, :], debug=True)
 
     def test_dot_n33_n33(self):
@@ -88,7 +88,8 @@ class TestMatrix3d(unittest.TestCase):
         ])
         theta = np.radians([0., 45., 90])
         B = cylindrical_rotation_matrix(theta, dtype='float64')
-        C = dot_n33_n33(A, B)
+        C = dot_n33_n33(A, B, debug=False)
+        D = dot_n33_n33(A, B, debug=True)
         #print('-------')
         #for Ci in C:
             #print(Ci.shape)
