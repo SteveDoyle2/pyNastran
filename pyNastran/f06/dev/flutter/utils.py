@@ -15,7 +15,8 @@ if TYPE_CHECKING:  # pragma: no cover
 def load_f06_op2(f06_filename: str, log: SimpleLogger,
                  in_units: str,
                  out_units: str,
-                 use_rhoref: bool) -> tuple[OP2, dict[int, FlutterResponse]]:
+                 use_rhoref: bool,
+                 make_alt: bool=False) -> tuple[OP2, dict[int, FlutterResponse]]:
     """
     load a Vg-Vf plot from:
      - OP2 / F06
@@ -43,6 +44,7 @@ def load_f06_op2(f06_filename: str, log: SimpleLogger,
                 f06_units=in_units_dict,
                 out_units=out_units_dict,
                 use_rhoref=use_rhoref,
+                make_alt=make_alt,
                 log=log)
         except Exception as e:
             log.error(str(e))
