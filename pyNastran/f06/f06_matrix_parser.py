@@ -346,7 +346,8 @@ def _parse_complex_row_lines(lines: list[str]) -> tuple[np.ndarray, np.ndarray]:
         line2 = line.replace('D', 'E')
         row_id_str, data_str = line2.split(')')
 
-        pairs = data_str.replace('  ', '!').split('!')
+        # split based on double spaces, but we need a character that is valid
+        pairs = data_str.replace('  ', '!').strip('!').split('!')
         #pairs = [line2[10:35], line2[35:61], line2[61:84], line2[84:110], line2[110:135]]
         row_i = int(row_id_str)
         for pair in pairs:
@@ -358,6 +359,7 @@ def _parse_complex_row_lines(lines: list[str]) -> tuple[np.ndarray, np.ndarray]:
             datai = complex(reali, complexi)
             data_list.append(datai)
             row_index_list.append(row_i)
+            # print(f'  {row_i}: {datai}')
             row_i += 1
     row_index = np.array(row_index_list, dtype='int32')
     data = np.array(data_list, dtype='complex128')
@@ -368,15 +370,6 @@ def _parse_real_row_lines(lines: list[str]) -> tuple[np.ndarray, np.ndarray]:
     """
     1)    1.1010E+01  1.3762E+00 -4.2021E+00 -5.2526E-01
     """
-    #lines = [
-        #'        1) -3.5846E+01,-1.3275E+02  -1.5510E+01, 2.3578E-01  -3.2339E+01,-4.9373E+00   6.8078E+01, 1.3428E+01   3.0262E+01, 2.4554E+01',
-        #'        6)  1.5360E-04,-1.1042E-04  -4.7606E-04, 2.3069E-04   1.0359E-03,-1.5668E-04  -1.3075E-03, 7.8472E-04   2.3471E-04,-4.8359E-04',
-    #]
-    #lines = [
-        #'        1) -3.5846E+01,-1.3275E+02',
-        #'        6)  1.5360E-04,-1.1042E-04',
-    #]
-
     row_index_list = []
     data_list = []
     for line in lines:
@@ -506,6 +499,7 @@ def main():  # pragma: no cover
         if 0:  # pragma: no cover
             for row, col, value in zip(mat.row, mat.col, mat.data):
                 print(f'{row}, {col}, {value}')
+
 
 if __name__ == '__main__':
     main()

@@ -40,13 +40,16 @@ from pyNastran.f06.parse_flutter import (
 )
 from pyNastran.f06.flutter_response import _reshape_eigenvectors
 from pyNastran.f06.parse_trim import read_f06_trim
+from pyNastran.f06.f06_matrix_parser import _parse_real_row_lines, _parse_complex_row_lines
 from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
 from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
 try:
     from pyNastran.f06.dev.flutter.utils import (
-        load_f06_op2, get_png_filename, get_plot_file)
+        load_f06_op2, get_png_filename, get_plot_file,
+        point_removal_str_to_point_removal,
+        get_point_removal_str)
 except ImportError:
     pass
 IS_DEV = pyNastran.DEV
@@ -61,6 +64,16 @@ assert AERO_EXAMPLES.exists(), print_bad_path(AERO_EXAMPLES)
 
 
 class TestF06Flutter(unittest.TestCase):
+    def test_point_removal(self):
+        log = SimpleLogger(level='debug')
+        msg = '400:410,450:500'
+        point_removal = [[400.0, 410.0], [450.0, 500.0]]
+        point_removal_list = point_removal_str_to_point_removal(
+            msg, log)
+        assert np.allclose(point_removal, point_removal_list), point_removal_list
+
+        out = get_point_removal_str(point_removal_list)
+        assert out == msg, out
 
     def test_reshape_eigenvectors(self):
         """
@@ -940,6 +953,40 @@ class TestF06Utils(unittest.TestCase):
 
         f = split_int_colon('1,3,5')
         assert f == [1, 3, 5], f
+
+    def test_parse_real_row_lines(self):
+        lines = [
+            '        1)    1.1010E+01  1.3762E+00 -4.2021E+00 -5.2526E-01',
+        ]
+        row1, data1 = _parse_real_row_lines(lines)
+        assert np.array_equal(row1, [1, 2, 3, 4])
+        assert np.array_equal(data1, [1.1010E+01, 1.3762E+00, -4.2021E+00, -5.2526E-01])
+
+    def test_parse_complex_row_lines(self):
+        lines = [
+            '        1) -3.5846E+01,-1.3275E+02  -1.5510E+01, 2.3578E-01  -3.2339E+01,-4.9373E+00   6.8078E+01, 1.3428E+01   3.0262E+01, 2.4554E+01',
+            '        6)  1.5360E-04,-1.1042E-04  -4.7606E-04, 2.3069E-04   1.0359E-03,-1.5668E-04  -1.3075E-03, 7.8472E-04   2.3471E-04,-4.8359E-04',
+        ]
+        row1, data1 = _parse_complex_row_lines(lines)
+        assert np.array_equal(row1, [1, 2, 3, 4, 5,
+                                        6, 7, 8, 9, 10]), row1
+        reals = [
+            -3.5846E+01, -1.5510E+01, -3.2339E+01,  6.8078E+01, 3.0262E+01,
+            1.5360E-04,  -4.7606E-04,  1.0359E-03, -1.3075E-03, 2.3471E-04]
+        imags = [
+            -1.3275E+02, 2.3578E-01, -4.9373E+00, 1.3428E+01,  2.4554E+01,
+            -1.1042E-04, 2.3069E-04, -1.5668E-04, 7.8472E-04, -4.8359E-04]
+        assert np.array_equal(data1.real, reals)
+        assert np.array_equal(data1.imag, imags)
+
+        lines = [
+            '        1) -3.5846E+01,-1.3275E+02',
+            '        6)  1.5360E-04,-1.1042E-04',
+        ]
+        row2, data2 = _parse_complex_row_lines(lines)
+        assert np.array_equal(row2, [1, 6])
+        assert np.array_equal(data2.real, [-3.5846E+01, 1.5360E-04])
+        assert np.array_equal(data2.imag, [-1.3275E+02, -1.1042E-04])
 
 
 if __name__ == '__main__':  # pragma: no cover
