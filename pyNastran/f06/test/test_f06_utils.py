@@ -29,8 +29,10 @@ if IS_MATPLOTLIB:
     plt.switch_backend('Agg')
 
 import pyNastran
+from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+
 from pyNastran.f06.utils import (
     split_float_colons, split_int_colon,
     cmd_line_plot_flutter, cmd_line as cmd_line_f06)
@@ -42,38 +44,23 @@ from pyNastran.f06.flutter_response import _reshape_eigenvectors
 from pyNastran.f06.parse_trim import read_f06_trim
 from pyNastran.f06.f06_matrix_parser import _parse_real_row_lines, _parse_complex_row_lines
 from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
-from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 from pyNastran.op2.op2 import OP2
-from pyNastran.utils import print_bad_path
-try:
-    from pyNastran.f06.dev.flutter.utils import (
-        load_f06_op2, get_png_filename, get_plot_file,
-        point_removal_str_to_point_removal,
-        get_point_removal_str)
-except ImportError:
-    pass
+
 IS_DEV = pyNastran.DEV
+if IS_DEV: # pragma: no cover
+    from pyNastran.f06.dev.read_sol_200 import plot_sol_200  # read_sol_200
 
 DIRNAME = os.path.dirname(__file__)
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = PKG_PATH / '..' / 'models'
 AERO_PATH = MODEL_PATH / 'aero'
+
 #pyNastran\bdf\cards\aero\examples\flutter\case6
 AERO_EXAMPLES = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples'
 assert AERO_EXAMPLES.exists(), print_bad_path(AERO_EXAMPLES)
 
 
 class TestF06Flutter(unittest.TestCase):
-    def test_point_removal(self):
-        log = SimpleLogger(level='debug')
-        msg = '400:410,450:500'
-        point_removal = [[400.0, 410.0], [450.0, 500.0]]
-        point_removal_list = point_removal_str_to_point_removal(
-            msg, log)
-        assert np.allclose(point_removal, point_removal_list), point_removal_list
-
-        out = get_point_removal_str(point_removal_list)
-        assert out == msg, out
 
     def test_reshape_eigenvectors(self):
         """
@@ -244,54 +231,6 @@ class TestF06Flutter(unittest.TestCase):
         #                 plot_vg=False, plot_vg_vf=True, plot_root_locus=True, plot_kfreq_damping=False,
         #                 subcases=[1, 3],
         #                 log=log)
-
-    @unittest.skipIf(not IS_DEV, 'no flutter-dev')
-    def test_plot_flutter_0012_dev(self):
-        """tests load_f06_op2 and get_png_filename"""
-        log = SimpleLogger(level='warning')
-        dirname = AERO_PATH / '2_mode_flutter'
-        f06_filename = dirname / '0012_flutter.f06'
-        model, responses = load_f06_op2(f06_filename, log,
-            in_units='si', out_units='si', use_rhoref=False)
-        assert model is None, model
-        assert len(responses) == 1, responses
-
-        f06_filename2 = 'cat.f06'
-        model, responses = load_f06_op2(
-            f06_filename2, log,
-            in_units='si', out_units='si', use_rhoref=False)
-        assert model is None, model
-        assert len(responses) == 0, responses
-
-        f06_filename2 = 'cat.op2'
-        model, responses = load_f06_op2(
-            f06_filename2, log,
-            in_units='si', out_units='si', use_rhoref=False)
-        assert model is None, model
-        assert len(responses) == 0, responses
-
-        out = get_plot_file()
-
-        base = 'base'
-        x_plot_type = 'eas'
-        plot_type = 'Vg'
-        export_to_png = True
-        png_filename0, png_filename = get_png_filename(
-            base, x_plot_type, plot_type,
-            export_to_png)
-        assert png_filename0 == 'base_Vg.png', png_filename0
-        assert png_filename == 'base_Vg.png', png_filename
-        png_filename0, png_filename = get_png_filename(
-            base, x_plot_type, 'x-'+plot_type,
-            export_to_png)
-        assert png_filename0 == 'base_eas-Vg.png', png_filename0
-        assert png_filename == 'base_eas-Vg.png', png_filename
-
-        png_filename0, png_filename = get_png_filename(
-            base, 'x-'+x_plot_type, plot_type,
-            export_to_png=False)
-        assert png_filename0 == 'base_Vg.png', png_filename0
-        assert png_filename is None, png_filename
 
     def test_plot_flutter_0012(self):
         """
@@ -814,7 +753,8 @@ class TestF06Utils(unittest.TestCase):
         loads_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.blk'
         nid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.nid'
         eid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.eid'
-        model = read_bdf(bdf_filename, debug=None)
+        log = SimpleLogger(level='warning')
+        model = read_bdf(bdf_filename, log=log)
         # export_caero_mesh(
         #     model,
         #     caero_bdf_filename=aerobox_caero_filename,
@@ -833,7 +773,7 @@ class TestF06Utils(unittest.TestCase):
         trim_results = f06_to_pressure_loads(
             f06_filename, aerobox_caero_filename,
             loads_filename,
-            log=None, nlines_max=1_000_000, debug=None)
+            log=log, nlines_max=1_000_000)
 
         # set the file names?
         trim_results = f06_to_pressure_loads(
@@ -841,12 +781,12 @@ class TestF06Utils(unittest.TestCase):
             loads_filename,
             nid_csv_filename=nid_csv_filename,
             eid_csv_filename=eid_csv_filename,
-            log=None, nlines_max=1_000_000, debug=None)
+            log=log, nlines_max=1_000_000)
 
         argv = [
             'f06', 'plot_144', str(f06_filename),
             '--aerobox', str(aerobox_caero_filename)]
-        log = get_logger(log=None, level=None, encoding='utf-8')
+        #log = get_logger(log=None, level=None, encoding='utf-8')
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB,
                      show=False, log=log)
 

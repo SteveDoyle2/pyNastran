@@ -56,21 +56,17 @@ from pyNastran.f06.dev.flutter.preferences import (
 from pyNastran.f06.flutter_response import FlutterResponse, Limit
 from pyNastran.f06.parse_flutter import get_flutter_units
 
-X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq', 'index']
-PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation',
-              'zimmerman']
-UNITS_IN = ['english_in', 'english_kt', 'english_ft',
-            'si', 'si_mm']
-MODE_SWITCH_METHODS = ['None', 'Frequency', 'Damping']
-
-UNITS_OUT = UNITS_IN
-
 # FONT_SIZE = 12
 from pyNastran.f06.dev.flutter.utils import (
     get_point_removal_str,
     point_removal_str_to_point_removal,
-    get_plot_file, update_ylog_style, load_f06_op2,
-    get_png_filename,)
+    _float_passed_to_default, _to_str,
+    get_plot_flags, get_plot_file,
+    update_ylog_style, get_png_filename,
+    load_f06_op2,
+    X_PLOT_TYPES, PLOT_TYPES, UNITS_IN, MODE_SWITCH_METHODS,
+)
+UNITS_OUT = UNITS_IN
 
 import pyNastran
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -1011,75 +1007,27 @@ class FlutterGui(LoggableGui):
     def on_plot_type(self) -> None:
         x_plot_type = self.x_plot_type_pulldown.currentText()
         plot_type = self.plot_type_pulldown.currentText()
-
-        show_index_lim = False
-        show_eas_lim = False
-        show_tas_lim = False
-        show_mach_lim = False
-        show_alt_lim = False
-        show_q_lim = False
-        show_rho_lim = False
-
-        show_xlim = False
-        show_freq = False
-        show_damp = False
-        show_root_locus = False
-        show_zimmerman = False
-        show_modal_participation = False
-
-        # PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
-        assert plot_type in PLOT_TYPES, plot_type
         self.on_units_out()
 
-        if x_plot_type == 'kfreq':
-            show_kfreq = True
-        else:
-            show_kfreq = False
+        flags = get_plot_flags(plot_type, x_plot_type)
+        show_index_lim = flags['show_index_lim']
+        show_eas_lim = flags['show_eas_lim']
+        show_tas_lim = flags['show_tas_lim']
+        show_mach_lim = flags['show_mach_lim']
+        show_alt_lim = flags['show_alt_lim']
+        show_q_lim = flags['show_q_lim']
+        show_rho_lim = flags['show_rho_lim']
 
-        if x_plot_type == 'ikfreq':
-            show_ikfreq = True
-        else:
-            show_ikfreq = False
+        show_xlim = flags['show_xlim']
+        show_freq = flags['show_freq']
+        show_damp = flags['show_damp']
+        show_kfreq = flags['show_kfreq']
+        show_ikfreq = flags['show_ikfreq']
+        show_root_locus = flags['show_root_locus']
+        show_zimmerman = flags['show_zimmerman']
+        show_modal_participation = flags['show_modal_participation']
 
-        if plot_type == 'x-damp-freq':
-            show_xlim = True
-            show_damp = True
-            show_freq = True
-        elif plot_type == 'x-damp-kfreq':
-            # kfreq-damp-kfreq not handled
-            show_xlim = True
-            show_damp = True
-            show_kfreq = True
-        elif plot_type == 'zimmerman':
-            show_zimmerman = True
-        elif plot_type == 'root-locus':
-            show_root_locus = True
-            # show_kfreq = False
-        elif plot_type == 'modal-participation':
-            show_modal_participation = True
-            # show_kfreq = False
-        else:  # pragma: no cover
-            raise RuntimeError(f'plot_type={plot_type!r}')
 
-        if show_xlim:
-            if 'index' == x_plot_type:
-                show_index_lim = True
-            elif 'eas' == x_plot_type:
-                show_eas_lim = True
-            elif 'tas' == x_plot_type:
-                show_tas_lim = True
-            elif 'mach' == x_plot_type:
-                show_mach_lim = True
-            elif 'alt' == x_plot_type:
-                show_alt_lim = True
-            elif 'q' == x_plot_type:
-                show_q_lim = True
-            elif 'rho' == x_plot_type:
-                show_rho_lim = True
-            elif 'kfreq' == x_plot_type:
-                show_kfreq_lim = True
-            elif 'ikfreq' == x_plot_type:
-                show_ikfreq_lim = True
         # print(f'x_plot_type={x_plot_type} show_damp={show_damp}; show_xlim={show_xlim}')
         # assert show_xlim is False, show_xlim
 
@@ -2297,21 +2245,6 @@ def get_float_or_none(line_edit: QLineEdit) -> tuple[Optional[float | str], bool
             value = None
             is_passed = False
     return value, is_passed
-
-
-def _to_str(value: Optional[int | float]) -> str:
-    if value is None:
-        str_value = ''
-    else:
-        str_value = str(value)
-    return str_value
-
-
-def _float_passed_to_default(value: float, is_passed: bool,
-                             default: float=-1.0) -> float:
-    if is_passed and value is None:
-        value = default
-    return value
 
 
 def main(f06_filename: str='') -> None:  # pragma: no cover

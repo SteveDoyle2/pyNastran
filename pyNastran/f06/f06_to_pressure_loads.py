@@ -14,8 +14,8 @@ def f06_to_pressure_loads(f06_filename: PathLike,
                           loads_filename: PathLike,
                           nid_csv_filename: PathLike='',
                           eid_csv_filename: PathLike='',
-                          log: Optional[SimpleLogger]=None,
                           nlines_max: int=1_000_000,
+                          log: Optional[SimpleLogger]=None,
                           debug: bool=False) -> dict:
     caero_model = read_bdf(aerobox_caero_filename, log=log,
                            xref=False, validate=False, debug=debug)

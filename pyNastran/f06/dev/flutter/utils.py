@@ -13,6 +13,13 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 
+X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq', 'index']
+PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation',
+              'zimmerman']
+UNITS_IN = ['english_in', 'english_kt', 'english_ft',
+            'si', 'si_mm']
+MODE_SWITCH_METHODS = ['None', 'Frequency', 'Damping']
+
 def load_f06_op2(f06_filename: str, log: SimpleLogger,
                  in_units: str,
                  out_units: str,
@@ -203,3 +210,110 @@ def point_removal_str_to_point_removal(point_removal_str: str,
             # print(traceback.print_tb(e))
             print(traceback.print_exception(e))
     return point_removal
+
+
+
+
+def _to_str(value: Optional[int | float]) -> str:
+    if value is None:
+        str_value = ''
+    else:
+        str_value = str(value)
+    return str_value
+
+
+def _float_passed_to_default(value: float, is_passed: bool,
+                             default: float=-1.0) -> float:
+    if is_passed and value is None:
+        value = default
+    return value
+
+
+def get_plot_flags(plot_type: str,
+                   x_plot_type: str) -> dict[str, bool]:
+    show_index_lim = False
+    show_eas_lim = False
+    show_tas_lim = False
+    show_mach_lim = False
+    show_alt_lim = False
+    show_q_lim = False
+    show_rho_lim = False
+
+    show_xlim = False
+    show_freq = False
+    show_damp = False
+    show_root_locus = False
+    show_zimmerman = False
+    show_modal_participation = False
+
+    # PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus']
+    assert plot_type in PLOT_TYPES, plot_type
+
+    if x_plot_type == 'kfreq':
+        show_kfreq = True
+    else:
+        show_kfreq = False
+
+    if x_plot_type == 'ikfreq':
+        show_ikfreq = True
+    else:
+        show_ikfreq = False
+
+    if plot_type == 'x-damp-freq':
+        show_xlim = True
+        show_damp = True
+        show_freq = True
+    elif plot_type == 'x-damp-kfreq':
+        # kfreq-damp-kfreq not handled
+        show_xlim = True
+        show_damp = True
+        show_kfreq = True
+    elif plot_type == 'zimmerman':
+        show_zimmerman = True
+    elif plot_type == 'root-locus':
+        show_root_locus = True
+        # show_kfreq = False
+    elif plot_type == 'modal-participation':
+        show_modal_participation = True
+        # show_kfreq = False
+    else:  # pragma: no cover
+        raise RuntimeError(f'plot_type={plot_type!r}')
+
+    if show_xlim:
+        if 'index' == x_plot_type:
+            show_index_lim = True
+        elif 'eas' == x_plot_type:
+            show_eas_lim = True
+        elif 'tas' == x_plot_type:
+            show_tas_lim = True
+        elif 'mach' == x_plot_type:
+            show_mach_lim = True
+        elif 'alt' == x_plot_type:
+            show_alt_lim = True
+        elif 'q' == x_plot_type:
+            show_q_lim = True
+        elif 'rho' == x_plot_type:
+            show_rho_lim = True
+        elif 'kfreq' == x_plot_type:
+            show_kfreq_lim = True
+        elif 'ikfreq' == x_plot_type:
+            show_ikfreq_lim = True
+    flags = {
+        'show_index_lim': show_index_lim,
+        'show_eas_lim': show_eas_lim,
+        'show_tas_lim': show_tas_lim,
+        'show_mach_lim': show_mach_lim,
+        'show_alt_lim': show_alt_lim,
+        'show_q_lim': show_q_lim,
+        'show_rho_lim': show_rho_lim,
+
+        'show_xlim': show_xlim,
+        'show_freq': show_freq,
+        'show_damp': show_damp,
+        'show_kfreq': show_kfreq,
+        'show_ikfreq': show_ikfreq,
+        'show_root_locus': show_root_locus,
+        'show_modal_participation': show_modal_participation,
+        'show_zimmerman': show_zimmerman,
+    }
+    return flags
