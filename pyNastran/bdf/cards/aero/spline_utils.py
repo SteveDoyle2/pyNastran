@@ -27,7 +27,6 @@ so:
 """
 #from typing import TYPE_CHECKING
 import numpy as np
-#if TYPE_CHECKING:
 from pyNastran.bdf.bdf import BDF
 from cpylog import SimpleLogger
 
@@ -242,5 +241,5 @@ def main():
                     deflections, apoints, log)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

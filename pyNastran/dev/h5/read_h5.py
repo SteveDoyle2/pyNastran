@@ -1261,7 +1261,7 @@ def run2(hdf5_filename: str):
     renWin.Render()
     iren.Start()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     # tasks
     # - figure out nastran hdf5
     #   - done

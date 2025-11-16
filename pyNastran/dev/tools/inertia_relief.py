@@ -658,6 +658,6 @@ def test_inertia3():
     exterior_force[:, 0] = mass * 3.
     inertia_relief3(xyz, exterior_force, mass)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     #test_inertia1()
     test_inertia3()

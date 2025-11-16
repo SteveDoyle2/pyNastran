@@ -300,5 +300,5 @@ def create_superelement(super_id: int,
     return super_model, super_key
 
 
-if __name__ == '__main__':   # pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -6,7 +6,7 @@ import numpy as np
 from cpylog import SimpleLogger
 from .utils import filter_no_args
 from pyNastran.utils.convert import convert_altitude, convert_velocity
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 UNITS_MAP = {

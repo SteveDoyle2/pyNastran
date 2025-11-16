@@ -16,7 +16,7 @@ except ModuleNotFoundError:  # pragma: no cover
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     cut_edge_model_by_coord, cut_face_model_by_coord, export_face_cut)
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF, CORD2R
 

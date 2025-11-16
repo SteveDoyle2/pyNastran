@@ -455,5 +455,5 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
     return nfiles, all_call_args
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     cmd_line_run_jobs()

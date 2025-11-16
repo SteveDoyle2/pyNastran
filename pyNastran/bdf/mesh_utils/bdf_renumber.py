@@ -19,7 +19,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 

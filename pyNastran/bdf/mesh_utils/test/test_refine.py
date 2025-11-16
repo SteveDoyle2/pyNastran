@@ -392,5 +392,5 @@ class TestRefine(unittest.TestCase):
         model.cross_reference()
         x = 1
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

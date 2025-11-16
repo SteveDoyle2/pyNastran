@@ -78,5 +78,5 @@ class TestH5(unittest.TestCase):
         ###r'C:\NASA\m4\formats\git\pyNastran\models\elements\loadstep_elements.h5',  # no nonlinear examples
         #r'C:\NASA\m4\formats\git\pyNastran\models\elements\time_thermal_elements.h5',
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

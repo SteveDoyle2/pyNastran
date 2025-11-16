@@ -163,7 +163,7 @@ def build_caero_dimensions(x12: float, x43: float, b: float,
     plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     x12 = 5.0
     x43 = 1.0
     b = 11.

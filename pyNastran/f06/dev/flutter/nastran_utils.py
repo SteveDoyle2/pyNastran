@@ -27,7 +27,7 @@ def get_element_table(model: BDF) -> tuple[list[str], list, dict[str, int]]:
         'Solids': (False, model.solid_element_cards),
     }
     elements = []
-    used_cards_set = set(['CONM2'])
+    used_cards_set = {'CONM2'}
     for group, (collapse_group, cards) in group_type_to_card_type_map.items():
         group_card_types = []
         ncards = sum([card.n for card in cards])
@@ -63,7 +63,7 @@ def get_element_table(model: BDF) -> tuple[list[str], list, dict[str, int]]:
 
     if len(other_cards):
         elements.append(('Other', True, -1, other_cards))
-    model.log.warning(f'other_card_names = {other_card_names}')
+    log.warning(f'other_card_names = {other_card_names}')
     return card_types, elements, type_to_n
 
 def get_property_table(model: BDF) -> tuple[np.ndarray, list, dict[int, tuple[str, str]]]:
@@ -151,11 +151,11 @@ def ply_format(theta: np.ndarray) -> str:
     if np.allclose(theta, thetai):
         theta = thetai
 
+    flag = ''
     ntheta = len(theta)
     if ntheta > 4:
         is_even = (ntheta % 2 == 0)
         ntheta1 = ntheta // 2
-        flag = ''
         if is_even:
             theta1 = theta[:ntheta1]
             theta2 = theta[ntheta1:]
@@ -164,6 +164,7 @@ def ply_format(theta: np.ndarray) -> str:
                 flag = ' Sym'
     theta_str = '/'.join(str(ti) for ti in theta)
     return theta_str + flag
+
 
 def engieering_format_str(value: float) -> str:
     if value > 1.0:

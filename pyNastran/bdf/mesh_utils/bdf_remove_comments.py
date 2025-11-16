@@ -19,7 +19,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.mesh_utils.bdf_renumber import _write_bdf, _get_bdf_model
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 

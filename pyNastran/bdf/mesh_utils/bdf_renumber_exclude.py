@@ -11,7 +11,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
 from pyNastran.bdf.mesh_utils.bdf_renumber import _get_bdf_model, _write_bdf
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 

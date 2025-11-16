@@ -299,5 +299,5 @@ class TestMassGeneration(unittest.TestCase):
         assert np.allclose(IQ, IQ_expected, atol=1e-4), f'IQ:\n{IQ}\nIQ_epected:\n{IQ_expected}'
         assert np.allclose(Q, Q_expected, atol=1e-4), f'Q:\n{Q}\nIQ_epected:\n{Q_expected}'
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

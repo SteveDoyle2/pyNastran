@@ -279,6 +279,6 @@ def main():
     run_vtk2(dirname)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     #main()
     run_source()

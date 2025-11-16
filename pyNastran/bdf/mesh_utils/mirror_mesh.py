@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2, SPLINE1
 from pyNastran.bdf.cards.bdf_sets import SET1  # SET3
 from pyNastran.bdf.bdf import BDF, MPC
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.utils import PathLike
 

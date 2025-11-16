@@ -107,5 +107,5 @@ class TestBDFFlutter(unittest.TestCase):
         cmd_line(argv=args, quiet=True)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

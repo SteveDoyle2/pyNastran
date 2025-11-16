@@ -296,5 +296,5 @@ def shape_functions(xhi, eta, my,
 
     return
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

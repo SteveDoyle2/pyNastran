@@ -25,5 +25,5 @@ class TestExecutive(unittest.TestCase):
         assert len(model.nodes) == 1, model.nodes
         #print(model)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()
