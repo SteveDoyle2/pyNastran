@@ -130,10 +130,17 @@ class TestGuiFlutter(unittest.TestCase):
         out = get_point_removal_str(point_removal_list)
         assert out == msg, f'out={out!r} expected={msg!r}'
         #---
+        # point_removal = []
+        msg = ''
+        point_removal_list = point_removal_str_to_point_removal(msg, log)
+        assert point_removal_list == [], point_removal_list
+        out = get_point_removal_str(point_removal_list)
+        assert out == msg, f'out={out!r} expected={msg!r}'
+        #---
         point_removal = []
         msg = ''
         point_removal_list = point_removal_str_to_point_removal(msg, log)
-        assert np.allclose(point_removal, point_removal_list), point_removal_list
+        assert point_removal_list == point_removal, point_removal_list
         out = get_point_removal_str(point_removal_list)
         assert out == msg, f'out={out!r} expected={msg!r}'
 

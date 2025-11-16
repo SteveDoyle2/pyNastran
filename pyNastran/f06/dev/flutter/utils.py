@@ -172,6 +172,8 @@ def get_point_removal_str(point_removal: list[tuple[float, float]]):
     >>> point_removal_str
     ':500'
     """
+    if point_removal == ['']:
+        return ''
     out = []
     for mini, maxi in point_removal:
         if mini > 0 and maxi > 0:
@@ -193,7 +195,7 @@ def point_removal_str_to_point_removal(point_removal_str: str,
     point_removal_list = point_removal_str.split(',')
 
     if point_removal_list == ['']:
-        return point_removal_list
+        return []
 
     try:
         for ipoint, point in enumerate(point_removal_list):
