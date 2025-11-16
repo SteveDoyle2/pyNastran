@@ -12,7 +12,9 @@ from pyNastran.f06.dev.flutter.utils import (
     get_plot_flags,
     load_f06_op2, get_png_filename, get_plot_file,
     point_removal_str_to_point_removal,
-    get_point_removal_str)
+    get_point_removal_str,
+    PLOT_TYPES, X_PLOT_TYPES,
+)
 
 IS_DEV = pyNastran.DEV
 if IS_DEV:
@@ -98,18 +100,43 @@ class TestGuiFlutter(unittest.TestCase):
         # X_PLOT_TYPES = ['eas', 'tas', 'rho', 'q', 'mach', 'alt', 'kfreq', 'ikfreq', 'index']
         # PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation', 'zimmerman']
         flags = get_plot_flags('x-damp-freq', 'eas')
+        for plot_type in PLOT_TYPES:
+            for x_plot_type in X_PLOT_TYPES:
+                flags = get_plot_flags(plot_type, x_plot_type)
         del flags
+        with self.assertRaises(AssertionError):
+            get_plot_flags('x-damp-freq???', 'eas')
 
     def test_point_removal(self):
         log = SimpleLogger(level='debug')
         msg = '400:410,450:500'
         point_removal = [[400.0, 410.0], [450.0, 500.0]]
-        point_removal_list = point_removal_str_to_point_removal(
-            msg, log)
+        point_removal_list = point_removal_str_to_point_removal(msg, log)
         assert np.allclose(point_removal, point_removal_list), point_removal_list
-
         out = get_point_removal_str(point_removal_list)
-        assert out == msg, out
+        assert out == msg, f'out={out!r} expected={msg!r}'
+        #-----------
+        point_removal = [[450.0, -1.0]]
+        msg = '450:'
+        point_removal_list = point_removal_str_to_point_removal(msg, log)
+        assert np.allclose(point_removal, point_removal_list), point_removal_list
+        out = get_point_removal_str(point_removal_list)
+        assert out == msg, f'out={out!r} expected={msg!r}'
+        #---
+        point_removal = [[-1.0, 500.0]]
+        msg = ':500'
+        point_removal_list = point_removal_str_to_point_removal(msg, log)
+        assert np.allclose(point_removal, point_removal_list), point_removal_list
+        out = get_point_removal_str(point_removal_list)
+        assert out == msg, f'out={out!r} expected={msg!r}'
+        #---
+        point_removal = []
+        msg = ''
+        point_removal_list = point_removal_str_to_point_removal(msg, log)
+        assert np.allclose(point_removal, point_removal_list), point_removal_list
+        out = get_point_removal_str(point_removal_list)
+        assert out == msg, f'out={out!r} expected={msg!r}'
+
 
 if __name__ == '__main__':
     unittest.main()

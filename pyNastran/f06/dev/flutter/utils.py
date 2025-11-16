@@ -179,7 +179,7 @@ def get_point_removal_str(point_removal: list[tuple[float, float]]):
         elif mini > 0:
             outi = f'{mini:g}:'
         elif maxi > 0:
-            outi = f'{maxi:g}:'
+            outi = f':{maxi:g}'
         else:
             continue
         out.append(outi)
@@ -193,25 +193,23 @@ def point_removal_str_to_point_removal(point_removal_str: str,
     point_removal_list = point_removal_str.split(',')
 
     if point_removal_list == ['']:
-        pass
-    else:
-        try:
-            for ipoint, point in enumerate(point_removal_list):
-                sline = point.split(':')
-                assert len(sline) == 2, f'point_removal[{ipoint}]={sline}; point_removal={str(point_removal_list)}'
-                a_str = sline[0].strip()
-                b_str = sline[1].strip()
-                a = float(a_str) if a_str != '' else -1.0
-                b = float(b_str) if b_str != '' else -1.0
-                point_float = (a, b)
-                point_removal.append(point_float)
-        except Exception as e:
-            log.error(str(e))
-            # print(traceback.print_tb(e))
-            print(traceback.print_exception(e))
+        return point_removal_list
+
+    try:
+        for ipoint, point in enumerate(point_removal_list):
+            sline = point.split(':')
+            assert len(sline) == 2, f'point_removal[{ipoint}]={sline}; point_removal={str(point_removal_list)}'
+            a_str = sline[0].strip()
+            b_str = sline[1].strip()
+            a = float(a_str) if a_str != '' else -1.0
+            b = float(b_str) if b_str != '' else -1.0
+            point_float = (a, b)
+            point_removal.append(point_float)
+    except Exception as e:
+        log.error(str(e))
+        # print(traceback.print_tb(e))
+        print(traceback.print_exception(e))
     return point_removal
-
-
 
 
 def _to_str(value: Optional[int | float]) -> str:
