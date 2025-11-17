@@ -10,7 +10,7 @@ from pyNastran.bdf.cards.test.test_deqatn import TestDEQATN
 from pyNastran.bdf.cards.test.test_dynamic import TestDynamic
 
 # standard elements
-from pyNastran.bdf.cards.test.test_bolt_nx import TestBolt
+from pyNastran.bdf.cards.test.test_bolt_nx import TestBoltNX, TestBoltMSC
 from pyNastran.bdf.cards.test.test_rods import TestRods
 from pyNastran.bdf.cards.test.test_bars import TestBars
 from pyNastran.bdf.cards.test.test_beams import TestBeams

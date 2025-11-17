@@ -490,7 +490,7 @@ class RealSpringArray(OES_Object):
         if self.size == fdtype.itemsize:
             pass
         else:
-            print(f'downcasting {self.class_name}...')
+            # print(f'downcasting {self.class_name}...')
             #idtype = np.int32(1)
             fdtype = np.float32(1.0)
 

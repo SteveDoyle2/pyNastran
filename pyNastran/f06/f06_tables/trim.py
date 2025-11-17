@@ -65,6 +65,7 @@ class AeroPressure(Statics):
                  mach: float, q: float,
                  cref: float, bref: float, sref: float,
                  nodes: np.ndarray,
+                 elements: np.ndarray,
                  cp: np.ndarray, pressure: np.ndarray,  # labels: np.ndarray,
                  subtitle: str='', title: str='', label: str=''):
         super().__init__(title, subtitle, label)
@@ -77,6 +78,7 @@ class AeroPressure(Statics):
         self.sref = sref
 
         self.nodes = nodes  # centroidal nodes
+        self.elements = elements
         self.pressure = pressure
         self.cp = cp
         # self.labels = labels
@@ -84,6 +86,7 @@ class AeroPressure(Statics):
     @classmethod
     def from_f06(cls, subcase: int,
                  nodes: np.ndarray,
+                 elements: np.ndarray,
                  cp_pressure: np.ndarray,
                  # labels: np.ndarray,
                  metadata: dict[str, Any]):
@@ -99,7 +102,7 @@ class AeroPressure(Statics):
             subcase,
             mach, q,
             cref, bref, sref,
-            nodes,
+            nodes, elements,
             cp_pressure[:, 0], cp_pressure[:, 1],  # labels,
             title=title, subtitle=subtitle, label=label,
         )
@@ -163,9 +166,10 @@ class AeroPressure(Statics):
         nnids = len(self.nodes)
         msg = (
             'AeroPressure:\n'
-            f' - nodes ({nnids})\n'
-            f' - cp ({nnids})\n'
-            f' - pressure ({nnids})'
+            f' - nodes ({nnids}); range=[{self.nodes.min()}, {self.nodes.max()}]\n'
+            f' - elements ({len(self.elements)}); range=[{self.elements.min()}, {self.elements.max()}]\n'
+            f' - cp {self.cp.shape}\n'
+            f' - pressure {self.cp.shape}'
         )
         return msg
 

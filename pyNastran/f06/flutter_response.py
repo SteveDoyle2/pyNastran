@@ -575,10 +575,6 @@ class FlutterResponse:
 
         vel_units_in = in_units['velocity']
         q_units_in = in_units['dynamic_pressure']
-        if _is_q_units_consistent(density_units_in, vel_units_in, q_units_in):
-            q = 0.5 * rho * vel**2
-        else:  # pragma: no cover
-            raise NotImplementedError((density_units_in, vel_units_in, q_units_in))
 
         # eas  = (2 * q / rho_ref)**0.5
         # eas = V * sqrt(rho / rhoSL)
@@ -590,27 +586,35 @@ class FlutterResponse:
         altitude_units = in_units['altitude']
 
         # print('density_units_in=%r density_units2=%r' % (density_units_in, density_units2))
-        kdensityi = convert_density(1., density_units_in, 'slug/ft^3')
-
         resultsi = results[:, :, :9]
         assert resultsi.shape[2] == 9, resultsi.shape
 
-        rho_in_slug_ft3 = rho * kdensityi
+        rho_in_slug_ft3 = rho_ref * rho
         ft_to_alt_unit = convert_altitude(1., 'ft', altitude_units)
         if self.make_alt:
+            nrho = len(rho)
             alt_ft = []
             for idensity, densityi in enumerate(rho_in_slug_ft3.ravel()):
                 try:
                     alt_fti = get_alt_for_density(densityi, density_units='slug/ft^3',
-                                                  alt_units='ft', nmax=20)
+                                                  alt_units='ft', nmax=50)
                 except Exception:
-                    raise RuntimeError(f'failed to find altitude for density[{idensity}]='
-                                       f'{rho.ravel()[idensity]:g}; density_units_in={density_units_in!r}')
+                    raise RuntimeError(f'Case {idensity+1}/{nrho}: failed to find altitude for density='
+                                       f'{rho.ravel()[idensity]:g}; density_units_in={density_units_in!r} ({densityi:g} slug/ft^3)\n'
+                                       '  output_rho_range = rho_ref * input_rho_range\n'
+                                       f'  rho_ref:             {rho_ref:g} {density_units_in}\n'
+                                       f'  input_rho_range:     [{rho.min():g}, {rho.max()}]\n'
+                                       f'  => output_rho_range: [{rho_in_slug_ft3.min():g}, {rho_in_slug_ft3.max()}] slug/ft^3')
                 alt_ft.append(alt_fti)
             alt = np.array(alt_ft, dtype=rho.dtype).reshape(vel.shape) * ft_to_alt_unit
         else:
             alt = np.full(vel.shape, np.nan, dtype=vel.dtype)
 
+        # get dynamic pressure
+        if _is_q_units_consistent(density_units_in, vel_units_in, q_units_in):
+            q = 0.5 * rho * vel**2
+        else:  # pragma: no cover
+            raise NotImplementedError((density_units_in, vel_units_in, q_units_in))
         results2 = np.dstack([resultsi, eas, q, alt])
         # results2[:, :, self.idensity] = rho
         return results2
@@ -808,6 +812,9 @@ class FlutterResponse:
                 easi, dampi, freqi, point_removal)
             easi, dampi, freqi = remove_eas_range(
                 easi, dampi, freqi, eas_range)
+
+            if len(freqi) == 0:
+                continue
 
             for damping_targeti, damping_requiredi in damping_crossings_dict.items():
                 if dampi.max() < damping_requiredi:
@@ -1796,6 +1803,8 @@ class FlutterResponse:
             vel_calc, damping_calc, freq_calc = remove_eas_range(
                 vel, damping, freq, eas_range)
 
+            if len(freq) == 0:
+                continue
             jcolor, color, linestyle2, symbol2, texti, is_removedi = _increment_jcolor(
                 mode, jcolor, color, linestyle, symbol,
                 freq, damping, freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
@@ -3653,14 +3662,22 @@ def _get_divergence(self,
         dampi = self.results[imode, :, self.idamping].flatten()
         easi = self.results[imode, :, self.ieas].flatten()
         freqi = self.results[imode, :, self.ifreq].flatten()
-
         easi, dampi, freqi = remove_excluded_points(
             easi, dampi, freqi, point_removal)
         easi, dampi, freqi = remove_eas_range(
             easi, dampi, freqi, eas_range)
 
+        if len(freqi) == 0:
+            continue
+
         for freq_targeti, freq_requiredi in freq_crossings_dict.items():
-            if freqi.min() > freq_requiredi:
+            try:
+                freqi_min = freqi.min()
+            except:
+                warnings.warn(f'mode={mode}; freqi={freqi}')
+                raise
+
+            if freqi_min > freq_requiredi:
                 continue
 
             # dfreq sign is flipped because get_zero_crossings

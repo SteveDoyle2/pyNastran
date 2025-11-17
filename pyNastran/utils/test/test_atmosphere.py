@@ -145,6 +145,13 @@ class TestAtmConvert(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             convert_pressure(1., 'bad', 'psf')
 
+        assert np.allclose(convert_pressure(1., 'bar', 'Pa'), 100_000.)
+        assert np.allclose(convert_pressure(1., 'Pa', 'bar'), 1 / 100_000.)
+
+        assert np.allclose(convert_pressure(1., 'bar', 'kPa'), 100.)
+        assert np.allclose(convert_pressure(1., 'kPa', 'bar'), 1 / 100.)
+
+        #------------
         assert np.allclose(convert_pressure(1., 'psf', 'Pa'), 47.880208)
         assert np.allclose(convert_pressure(1., 'Pa', 'psf'), 1 / 47.880208)
 
@@ -515,7 +522,10 @@ class TestAtm(unittest.TestCase):
 
     def test_get_alt_for_density(self):
         """tests ``get_alt_for_density``"""
-        alt_targets = [0., 10., 20., 30., 40., 50.]
+        alt_targets = [
+            0., 10., 20., 30., 40., 50.,
+            300., 350., 400.,
+        ]
         for alt_target in alt_targets:
             rho1 = atm_density(alt_target * 1000.)
             alt1 = get_alt_for_density(rho1)
@@ -523,15 +533,15 @@ class TestAtm(unittest.TestCase):
             assert np.allclose(alt1, alt_target*1000, atol=1.), 'alt1=%s alt_target=%s' % (alt1, alt_target*1000)
 
             rho2 = atm_density(alt_target, alt_units='kft', density_units='kg/m^3')
-            tol = 0.005 # 5 feet
-            alt2 = get_alt_for_density(rho2, density_units='kg/m^3', alt_units='kft', tol=tol)
+            tol = 0.005  # 5 feet
+            alt2 = get_alt_for_density(rho2, density_units='kg/m^3', alt_units='kft', tol=tol, nmax=50)
             #self.assertAlmostEqual(alt, alt_target)
             assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
 
     def test_get_alt_for_mach_eas(self):
         """tests ``get_alt_for_mach_eas``"""
         mach = 0.8
-        eas_target = 500. # knots
+        eas_target = 500.  # knots
         alt_expected = 3067.215571329515  # ft
         alt = get_alt_for_mach_eas(mach, eas_target, alt_units='ft', eas_units='knots', tol=1e-12)
         assert np.allclose(alt, alt_expected)
@@ -542,7 +552,10 @@ class TestAtm(unittest.TestCase):
 
     def test_get_alt_for_pressure(self):
         """tests ``get_alt_for_pressure``"""
-        alt_targets = [0., 10., 20., 30., 40., 50.]
+        alt_targets = [
+            0., 10., 20., 30., 40., 50.,
+            300., 350., #400.,
+        ]
         for alt_target in alt_targets:
             pressure1 = atm_pressure(alt_target*1000.)
             #alt1 = get_alt_for_pressure(pressure1, tol=5., SI=False, nmax=20)
@@ -595,7 +608,10 @@ class TestAtm(unittest.TestCase):
     def test_get_alt_for_eas_with_constant_mach(self):
         """tests get_alt_for_q_with_constant_mach"""
         mach = 0.8
-        alt_targets = [0., 10., 20., 30., 40., 50.]
+        alt_targets = [
+            0., 10., 20., 30., 40., 50.,
+            300., 350., 400.,
+        ]
         for alt_target in alt_targets:
             veq1 = atm_equivalent_airspeed(
                 alt_target*1000., mach, alt_units='ft', eas_units='ft/s')
@@ -644,6 +660,7 @@ class TestAtm(unittest.TestCase):
 
     def test_sweep_eas_mach(self):
         eass = np.linspace(0., 1000., num=101, dtype='float64')
+        eass[0] = 1e-5
         #neas = len(eass)
 
         machi = 0.5

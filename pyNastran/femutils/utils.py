@@ -72,6 +72,7 @@ def vstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:
     Stacks an array
 
     list_of_arrays = [
+        [
             [1, 2, 3],
         ],
         [
@@ -79,7 +80,7 @@ def vstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:
             [1, 2, 3],
         ]
     ]
-    stacked [
+    stacked = [
         [1, 2, 3],
         [1, 2, 3],
         [1, 2, 3],
@@ -210,15 +211,22 @@ def unique2d(a: np.ndarray, return_index=False):
     #return uniq.view(data.dtype).reshape(-1, data.shape[1])
 
 
-def duplicates(ids):
+def duplicates(ids: np.ndarray) -> np.ndarray:
     """finds the duplicate ids"""
     counts = np.bincount(ids)
     return np.where(counts > 1)[0]
 
 
-def is_monotonic(int_array: np.ndarray) -> bool:
+def is_monotonic(int_array: np.ndarray,
+                 is_strict: bool=False,
+                 ) -> bool:
     """is the array monotonic?"""
-    return np.all(int_array[1:] >= int_array[:-1])
+    diff = np.diff(int_array, n=1)
+    if is_strict:
+        out = np.all(diff > 0)
+    else:
+        out = np.all(diff >= 0)
+    return out
 
 
 def unique_rows(A: np.ndarray, return_index=False, return_inverse=False):

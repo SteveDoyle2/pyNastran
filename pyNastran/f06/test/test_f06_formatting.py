@@ -1,10 +1,12 @@
 import unittest
 from pyNastran.f06.f06_formatting import (
     write_floats_8p4f, write_floats_8p1e,
-    write_floats_10e, write_floats_12e,
+    write_float_10e, write_floats_10e,
+    write_float_12e, write_floats_12e,
     write_imag_floats_13e)
 from pyNastran.f06.f06_writer import (
     make_end, sorted_bulk_data_header, make_f06_header, make_stamp)
+
 
 class TestF06Formatting(unittest.TestCase):
 
@@ -81,6 +83,36 @@ class TestF06Formatting(unittest.TestCase):
         expected = '-1.000E+00'
         self.check_floats(func, val, expected)
 
+    def test_write_float_10e(self):
+        """testing write_float_10e"""
+        func = write_float_10e
+        val = 0.0
+        expected = ' 0.0'
+        self.check_float(func, val, expected)
+
+        val = 1.0
+        expected = ' 1.000E+00'
+        self.check_float(func, val, expected)
+
+        val = -1.0
+        expected = '-1.000E+00'
+        self.check_float(func, val, expected)
+
+    def test_write_float12e(self):
+        """testing write_float_12e"""
+        func = write_float_12e
+        val = 0.0
+        expected = ' 0.0'
+        self.check_float(func, val, expected)
+
+        val = 1.0
+        expected = ' 1.00000E+00'
+        self.check_float(func, val, expected)
+
+        val = -1.0
+        expected = '-1.00000E+00'
+        self.check_float(func, val, expected)
+
     def test_write_floats12e(self):
         """testing write_floats_12e"""
         func = write_floats_12e
@@ -96,7 +128,14 @@ class TestF06Formatting(unittest.TestCase):
         expected = '-1.00000E+00'
         self.check_floats(func, val, expected)
 
-    def check_floats(self, func, val, expected):
+    def check_float(self, func, val: float, expected: str):
+        """helper method"""
+        actual = func(val)
+        actuali = actual
+        self.assertEqual(actuali, expected, msg='\nactual  =%r len(actual)=%d\nexpected=%r len(expected)=%d' % (
+            actuali, len(actuali), expected, len(expected)))
+
+    def check_floats(self, func, val: float, expected: str):
         """helper method"""
         actual = func([val])
         actuali = actual[0]
@@ -155,7 +194,10 @@ class TestF06Formatting(unittest.TestCase):
         is_mag_phase = False
         self.check_imag_floats(func, val, expected_real, expected_imag, is_mag_phase)
 
-    def check_imag_floats(self, func, val, expected_real, expected_imag, is_mag_phase):
+    def check_imag_floats(self, func, val: complex,
+                          expected_real: str,
+                          expected_imag: str,
+                          is_mag_phase: bool):
         """helper method"""
         actual_real, actual_imag = func([val], is_mag_phase)
         self.assertEqual(actual_real, expected_real,
@@ -173,6 +215,7 @@ class TestF06Formatting(unittest.TestCase):
         sorted_bulk_data_header()
         make_f06_header()
         make_stamp(title=None)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

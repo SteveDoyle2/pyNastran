@@ -239,7 +239,17 @@ class Fluent:
                                                              np.ndarray, np.ndarray]:
         tri_nodes = tris[:, 2:]
         quad_nodes = quads[:, 2:]
-        return self.get_area_centroid_normal_from_nodes(tri_nodes, quad_nodes)
+        out = self.get_area_centroid_normal_from_nodes(tri_nodes, quad_nodes)
+        (
+            tri_area, quad_area,
+            tri_centroid, quad_centroid,
+            tri_normal, quad_normal,
+        ) = out
+        return (
+            tri_area, quad_area,
+            tri_centroid, quad_centroid,
+            tri_normal, quad_normal)
+        return
 
     def get_area_centroid_normal_from_nodes(self, tri_nodes: np.ndarray,
                                             quad_nodes: np.ndarray) -> tuple[np.ndarray, np.ndarray,

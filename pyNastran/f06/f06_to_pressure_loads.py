@@ -14,9 +14,9 @@ def f06_to_pressure_loads(f06_filename: PathLike,
                           loads_filename: PathLike,
                           nid_csv_filename: PathLike='',
                           eid_csv_filename: PathLike='',
-                          log: Optional[SimpleLogger]=None,
                           nlines_max: int=1_000_000,
-                          debug: bool=False) -> None:
+                          log: Optional[SimpleLogger]=None,
+                          debug: bool=False) -> dict:
     caero_model = read_bdf(aerobox_caero_filename, log=log,
                            xref=False, validate=False, debug=debug)
     log = caero_model.log
@@ -35,7 +35,13 @@ def f06_to_pressure_loads(f06_filename: PathLike,
 
     element_pressure_dict = {}
     for subcase, apress in trim_results.aero_pressure.items():
-        element_pressure = apress.get_element_pressure(nid_to_eid_map)
+        is_eid_default = apress.elements.max() == -1
+        if is_eid_default:
+            element_pressure = apress.get_element_pressure(nid_to_eid_map)
+        else:
+            element_pressure = {}
+            for eidi, pressurei in zip(apress.elements, apress.pressure):
+                element_pressure[eidi] = pressurei
         element_pressure_dict[subcase] = element_pressure
 
     if loads_filename is not None:
@@ -105,7 +111,8 @@ def f06_to_pressure_loads(f06_filename: PathLike,
                 cpi = np.mean(cps)
                 cp_list.append(cpi)
             cps_list.append(cp_list)
-            line0 = line0.rstrip(',') + '\n'
+
+        line0 = line0.rstrip(',') + '\n'
         cp_array = np.column_stack(cps_list)
         assert cp_array.shape == (neids, nsubcases), f'actual_shape={cp_array.shape} expected=({neids},{nsubcases})'
 
@@ -118,3 +125,7 @@ def f06_to_pressure_loads(f06_filename: PathLike,
         log.info(f'finished writing {eid_csv_filename}')
     #print(out)
     #tables = out['tables']
+    out_loads = {
+        #'eid_cp': (eids, cp_array),
+    }
+    return out_loads

@@ -9,9 +9,29 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestContact(unittest.TestCase):
 
+    def test_bctparm(self):
+        """tests a BCPARM"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        params = {
+            'PENN': 10.0,
+            'PENT': 0.5,
+            'CTOL': 0.001,
+            'SHLTHK': 1,
+            'A': 2,
+            'B': 3,
+            'C': 4,
+            'D': 5,
+        }
+        bcparm = model.add_bctparm(1, params)
+        str(bcparm)
+        bcparm.raw_fields()
+        save_load_deck(model)
+
     def test_bgset_bgadd(self):
         """checks the BGADD, BGSET cards"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         glue_id = 10
         sids = [11, 12]
         tids = [13, 14]
@@ -30,7 +50,8 @@ class TestContact(unittest.TestCase):
 
     def test_contact_01(self):
         """checks the BSURF cards"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
 
         lines = [
             'BSURF          3       1       2       3       4       5       6       7',
@@ -45,7 +66,8 @@ class TestContact(unittest.TestCase):
 
     def test_contact_2(self):
         eids = [1, 2, 3]
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         sid = 42
         bsurf = model.add_bsurf(sid, eids, comment='bsurf')
         bsurf.raw_fields()
@@ -240,7 +262,13 @@ class TestContact(unittest.TestCase):
         bctpara1.raw_fields()
         bctpara1.write_card(size=8)
         bctpara1.write_card(size=16)
-        save_load_deck(model)
+        model_out = save_load_deck(model)
+        # from io import StringIO
+        # stringio = StringIO()
+        # model_out.write_bdf(stringio, close=False)
+        # stringio.seek(0)
+        # msg = stringio.read()
+        # print(msg)
 
 
 if __name__ == '__main__':  # pragma: no cover

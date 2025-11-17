@@ -10,7 +10,7 @@ import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.utils import PathLike
 #from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 
@@ -139,7 +139,7 @@ def remove_unused(bdf_filename: PathLike,
         # glue
         'BGADD', 'BGSET',
         # contact
-        'BCBODY', 'BCPARA',
+        'BCBODY', 'BCPARA', 'BCTPARM',
 
         # aero
         'AESURFS', 'CSSCHD', 'AECOMP',

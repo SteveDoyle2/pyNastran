@@ -29,8 +29,10 @@ if IS_MATPLOTLIB:
     plt.switch_backend('Agg')
 
 import pyNastran
+from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+
 from pyNastran.f06.utils import (
     split_float_colons, split_int_colon,
     cmd_line_plot_flutter, cmd_line as cmd_line_f06)
@@ -40,6 +42,7 @@ from pyNastran.f06.parse_flutter import (
 )
 from pyNastran.f06.flutter_response import _reshape_eigenvectors
 from pyNastran.f06.parse_trim import read_f06_trim
+from pyNastran.f06.f06_matrix_parser import _parse_real_row_lines, _parse_complex_row_lines
 from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
@@ -49,6 +52,7 @@ DIRNAME = os.path.dirname(__file__)
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = PKG_PATH / '..' / 'models'
 AERO_PATH = MODEL_PATH / 'aero'
+
 #pyNastran\bdf\cards\aero\examples\flutter\case6
 AERO_EXAMPLES = PKG_PATH / 'bdf' / 'cards' / 'aero' / 'examples'
 assert AERO_EXAMPLES.exists(), print_bad_path(AERO_EXAMPLES)
@@ -177,15 +181,28 @@ class TestF06Flutter(unittest.TestCase):
         """tests read_f06_trim"""
         log = get_logger(log=None, level=None, encoding='utf-8')
         f06_filename = AERO_PATH / 'pt145.f06'
-        #trim_results = read_f06_trim(f06_filename,
-        #                             log=None, nlines_max=1_000_000, debug=None)
-        #assert len(trim_results.aero_force.keys()) == 0
-        #assert len(trim_results.aero_pressure.keys()) == 0
-        #assert len(trim_results.controller_state.keys()) == 0
-        #assert len(trim_results.trim_variables.keys()) == 0
-        #assert len(trim_results.structural_monitor_loads.keys()) == 4
-        argv = ['f06', 'plot_145', str(f06_filename), '--tas',
-                '--out_units', 'english_in']
+
+        plot_methods = [
+            '--eas', '--tas', '--rho', '--alt',
+            '--mach', '--q', '--index',
+        ]
+        for plot_method in plot_methods:
+            argv = ['f06', 'plot_145', str(f06_filename),
+                    plot_method]
+            cmd_line_plot_flutter(argv=argv, plot=False,
+                                  show=False, log=log)
+
+        argv = [
+            'f06', 'plot_145', str(f06_filename),
+            '--tas',
+            '--in_units', 'si',
+            '--out_units', 'english_in',
+            '--freq_tol', '0.02',
+            '--freq_tol_remove', '0.01',
+            '--vd_limit', '100.',
+            '--ylimfreq', '0:',
+            '--damping_limit', '0.001',
+        ]
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB,
                               show=False, log=log)
 
@@ -219,7 +236,9 @@ class TestF06Flutter(unittest.TestCase):
 
         has issues with writing the subcase...
         """
-        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
+        dirname = AERO_PATH / '2_mode_flutter'
+        f06_filename = dirname / '0012_flutter.f06'
+
         #log = get_logger(log=None, level=None, encoding='utf-8')
         log = get_logger(log=None, level=False, encoding='utf-8')
 
@@ -239,10 +258,10 @@ class TestF06Flutter(unittest.TestCase):
             f06_units='si', out_units=None,
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
-            export_csv_filename='nastran.csv',
-            export_f06_filename='nastran.f06',
-            export_veas_filename='nastran.veas',
-            export_zona_filename='zona.f06',
+            export_csv_filename=dirname/'nastran.csv',
+            export_f06_filename=dirname/'nastran.f06',
+            export_veas_filename=dirname/'nastran.veas',
+            export_zona_filename=dirname/'zona.f06',
             vg_filename='vg_subcase_%i.png',
             vg_vf_filename='vg_vf_subcase_%i.png',
             kfreq_damping_filename='kfreq_damping_subcase_%i.png',
@@ -266,10 +285,10 @@ class TestF06Flutter(unittest.TestCase):
             os.remove('kfreq_damping_subcase_1.png')
             os.remove('root_locus_subcase_1.png')
 
-            os.remove('nastran.csv')
-            os.remove('nastran.f06')
-            os.remove('nastran.veas')
-            os.remove('zona.f06')
+            os.remove(dirname/'nastran.csv')
+            os.remove(dirname/'nastran.f06')
+            os.remove(dirname/'nastran.veas')
+            os.remove(dirname/'zona.f06')
 
         with self.assertRaises(NotImplementedError):
             plot_flutter_f06(
@@ -707,13 +726,15 @@ class TestZonaFlutter(unittest.TestCase):
 class TestF06Utils(unittest.TestCase):
 
     def test_f06_trim_bwb(self):
+        """tests f06_to_pressure_loads"""
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.bdf'
         aerobox_caero_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.caero.bdf'
         f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.f06'
         loads_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.blk'
         nid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.nid'
         eid_csv_filename = MODEL_PATH / 'bwb' / 'bwb_saero_trim.eid'
-        model = read_bdf(bdf_filename, debug=None)
+        log = SimpleLogger(level='warning')
+        model = read_bdf(bdf_filename, log=log)
         # export_caero_mesh(
         #     model,
         #     caero_bdf_filename=aerobox_caero_filename,
@@ -728,14 +749,30 @@ class TestF06Utils(unittest.TestCase):
             pid_method='caero',
             write_panel_xyz=True)
 
+        # auto-generated files
         trim_results = f06_to_pressure_loads(
-            f06_filename, aerobox_caero_filename, loads_filename,
-            log=None, nlines_max=1_000_000, debug=None)
+            f06_filename, aerobox_caero_filename,
+            loads_filename,
+            log=log, nlines_max=1_000_000)
+
+        # set the file names?
         trim_results = f06_to_pressure_loads(
-            f06_filename, aerobox_caero_filename, loads_filename,
+            f06_filename, aerobox_caero_filename,
+            loads_filename,
             nid_csv_filename=nid_csv_filename,
             eid_csv_filename=eid_csv_filename,
-            log=None, nlines_max=1_000_000, debug=None)
+            log=log, nlines_max=1_000_000)
+
+        argv = [
+            'f06', 'plot_144', str(f06_filename),
+            '--aerobox', str(aerobox_caero_filename)]
+        #log = get_logger(log=None, level=None, encoding='utf-8')
+        cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB,
+                     show=False, log=log)
+
+        argv = ['f06', 'plot_144', str(f06_filename)]
+        cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB,
+                     show=False, log=log)
 
     def test_f06_trim_freedlm(self):
         """tests read_f06_trim"""
@@ -804,10 +841,12 @@ class TestF06Utils(unittest.TestCase):
         a = split_float_colons('1:')
         b = split_float_colons('1:5')
         c = split_float_colons(':4')
+        d = split_float_colons(None)
 
         assert a == [1.0, None], a
         assert b == [1.0, 5.0], b
         assert c == [None, 4.0], c
+        assert d is None, d
         with self.assertRaises(AssertionError):
             split_float_colons('1:5:2')
 
@@ -829,8 +868,45 @@ class TestF06Utils(unittest.TestCase):
         d = split_int_colon('1:5,10:15')
         assert d == [1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15], d
 
-        d = split_int_colon('10:15,1:5')
-        assert d == [1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15], d
+        e = split_int_colon('10:15,1:5')
+        assert e == [1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15], e
+
+        f = split_int_colon('1,3,5')
+        assert f == [1, 3, 5], f
+
+    def test_parse_real_row_lines(self):
+        lines = [
+            '        1)    1.1010E+01  1.3762E+00 -4.2021E+00 -5.2526E-01',
+        ]
+        row1, data1 = _parse_real_row_lines(lines)
+        assert np.array_equal(row1, [1, 2, 3, 4])
+        assert np.array_equal(data1, [1.1010E+01, 1.3762E+00, -4.2021E+00, -5.2526E-01])
+
+    def test_parse_complex_row_lines(self):
+        lines = [
+            '        1) -3.5846E+01,-1.3275E+02  -1.5510E+01, 2.3578E-01  -3.2339E+01,-4.9373E+00   6.8078E+01, 1.3428E+01   3.0262E+01, 2.4554E+01',
+            '        6)  1.5360E-04,-1.1042E-04  -4.7606E-04, 2.3069E-04   1.0359E-03,-1.5668E-04  -1.3075E-03, 7.8472E-04   2.3471E-04,-4.8359E-04',
+        ]
+        row1, data1 = _parse_complex_row_lines(lines)
+        assert np.array_equal(row1, [1, 2, 3, 4, 5,
+                                        6, 7, 8, 9, 10]), row1
+        reals = [
+            -3.5846E+01, -1.5510E+01, -3.2339E+01,  6.8078E+01, 3.0262E+01,
+            1.5360E-04,  -4.7606E-04,  1.0359E-03, -1.3075E-03, 2.3471E-04]
+        imags = [
+            -1.3275E+02, 2.3578E-01, -4.9373E+00, 1.3428E+01,  2.4554E+01,
+            -1.1042E-04, 2.3069E-04, -1.5668E-04, 7.8472E-04, -4.8359E-04]
+        assert np.array_equal(data1.real, reals)
+        assert np.array_equal(data1.imag, imags)
+
+        lines = [
+            '        1) -3.5846E+01,-1.3275E+02',
+            '        6)  1.5360E-04,-1.1042E-04',
+        ]
+        row2, data2 = _parse_complex_row_lines(lines)
+        assert np.array_equal(row2, [1, 6])
+        assert np.array_equal(data2.real, [-3.5846E+01, 1.5360E-04])
+        assert np.array_equal(data2.imag, [-1.3275E+02, -1.1042E-04])
 
 
 if __name__ == '__main__':  # pragma: no cover

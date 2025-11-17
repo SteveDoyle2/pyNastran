@@ -4,25 +4,27 @@ defines:
 
 """
 import math
-from typing import TextIO, TYPE_CHECKING
+from typing import TextIO
 import numpy as np
 
 from pyNastran.utils import PathLike
+from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 from pyNastran.bdf.bdf import read_bdf, BDF, Coord, AELIST
 from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
-def export_caero_mesh(model: BDF,
+def export_caero_mesh(bdf_filename: PathLike | BDF,
                       caero_bdf_filename: PathLike='caero.bdf',
                       is_aerobox_model: bool=True,
                       pid_method: str='aesurf',
                       rotate_panel_angle_deg: float=0.0,
-                      write_panel_xyz: bool=True) -> None:
+                      write_panel_xyz: bool=True,
+                      xref: bool=True) -> None:
     """
     Write the CAERO cards as CQUAD4s that can be visualized
 
-    model: BDF
+    model: str | Path | BDF
         a valid geometry
     caero_bdf_filename : str
         the file to write
@@ -43,6 +45,23 @@ def export_caero_mesh(model: BDF,
         $$        1        2    0.0988    0.2500    0.0000    0.0988    0.5000    0.1234
     """
     rotate_panel_angle = np.radians(rotate_panel_angle_deg)
+
+    cards_to_include = [
+        'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+        'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
+        'SET1', 'SET2', 'SET3',
+        'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',
+        'AELIST', 'AESURF',
+        # for aero ooord
+        'AEROS', 'AERO',
+        'CORD1R', 'CORD1S', 'CORD1C',
+        'CORD2R', 'CORD2S', 'CORD2C',
+        'GRID',
+    ]
+    model = get_bdf_model(
+        bdf_filename, xref=xref,
+        cards_to_include=cards_to_include,
+        log=None, debug=False)
     if isinstance(model, PathLike):
         model = read_bdf(model)
     log = model.log
@@ -432,30 +451,30 @@ def _write_subcases_loads(model: BDF,
                 )
             isubcase += 2
 
-            ## TODO: assume first column is forces & second column is moments...verify
-            #loads += f'$ {name} - FORCE\n'
-            #loads += '$ PLOAD2 SID P EID1\n'
-            #for ieid, value in enumerate(data[:, 0].ravel()):
-                #eid = aero_eid_map[ieid]
-                #loads += f'PLOAD2,{isubcase},{value},{eid}\n'
-            #isubcase += 1
-
-            #subcases += (
-                #f'SUBCASE {isubcase}\n'
-                #f'  SUBTITLE = DMI {name} - MOMENT\n'
-                #f'  LOAD = {isubcase}\n')
-            #loads += f'$ {name} - MOMENT\n'
-            #loads += '$ PLOAD2 SID P EID1\n'
-            #for irow, value in enumerate(data[:, 1].ravel()):
-                #row = rows[irow]
-                #eid = row[0]
-                #loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+            # TODO: assume first column is forces & second column is moments...verify
+            # loads += f'$ {name} - FORCE\n'
+            # loads += '$ PLOAD2 SID P EID1\n'
+            # for ieid, value in enumerate(data[:, 0].ravel()):
+            #     eid = aero_eid_map[ieid]
+            #     loads += f'PLOAD2,{isubcase},{value},{eid}\n'
+            # isubcase += 1
+            #
+            # subcases += (
+            #     f'SUBCASE {isubcase}\n'
+            #     f'  SUBTITLE = DMI {name} - MOMENT\n'
+            #     f'  LOAD = {isubcase}\n')
+            # loads += f'$ {name} - MOMENT\n'
+            # loads += '$ PLOAD2 SID P EID1\n'
+            # for irow, value in enumerate(data[:, 1].ravel()):
+            #     row = rows[irow]
+            #     eid = row[0]
+            #     loads += f'PLOAD2,{isubcase},{value},{eid}\n'
         else:
             raise NotImplementedError(msg)
 
     if not is_aerobox_model:
         # we put this here to test
-        #model.log.warning('cannot export "loads" because not an aerobox model')
+        model.log.warning('cannot export "loads" because not an aerobox model')
         subcases = ''
         loads = ''
     return subcases, loads

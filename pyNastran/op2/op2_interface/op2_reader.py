@@ -3872,6 +3872,9 @@ class OP2Reader:
         IS_TESTING = op2.IS_TESTING
         if self.binary_debug:
             self.binary_debug.write('-' * 60 + '\n')
+
+        # if table_name == b'GEOM2':
+        #     self.show(100)
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
         if self.is_debug_file:
@@ -4852,10 +4855,11 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
             assert isinstance(subtitle, str), subtitle
             assert isinstance(label, str), label
             # assert isinstance(subcase_id, integer_types), subcase_id
+            elements = -np.ones(len(nodes), dtype=nodes.dtype)
             apress = AeroPressure(
                 subcase_id,
                 mach, q, cref, bref, sref,
-                nodes, cp, pressure,  # labels,
+                nodes, elements, cp, pressure,  # labels,
                 title=title, subtitle=subtitle, label=label)
 
             assert subcase_key not in op2.op2_results.trim.aero_force

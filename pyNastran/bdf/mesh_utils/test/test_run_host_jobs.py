@@ -4,11 +4,30 @@ import unittest
 import pyNastran
 from pyNastran.bdf.mesh_utils.run_jobs import get_bdf_filenames_to_run, cmd_line_run_jobs
 from pyNastran.bdf.mesh_utils.host_jobs import cmd_line_host_jobs
+from pyNastran.utils.nastran_utils import _get_keywords_list
+
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 class TestRunHostJobs(unittest.TestCase):
+    def test_keyworks(self):
+        keywords_strs = [
+            'scr=yes', 'old=no', 'news=no', 'mem=16gb',
+            'parallel=8', 'auth=123@host', 'endian=little',
+            'bat=no', 'fake=cat',
+        ]
+        for keywords_str in keywords_strs:
+            keywords_list = _get_keywords_list(keywords_str)
+        keywords_list = _get_keywords_list(keywords_strs)
+
+        keyword_dict = {
+            'scr': 'yes',
+            'old': 'no',
+            'news': "no",
+        }
+        keywords_list = _get_keywords_list(keyword_dict)
+
     def test_host_jobs(self):
         str_model_path = str(MODEL_PATH)
         args = ['bdf', 'host_jobs', str_model_path, '--test', '--nmax', '2']

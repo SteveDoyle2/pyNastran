@@ -93,7 +93,7 @@ class RealBoltArray(RealTableArray):
         if self.size == fdtype.itemsize:
             pass
         else:
-            warnings.warn(f'downcasting {self.class_name}...this is buggy')
+            # warnings.warn(f'downcasting {self.class_name}...this is buggy')
             #idtype = np.int32(1)
             fdtype = np.float32(1.0)
 

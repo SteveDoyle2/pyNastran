@@ -295,6 +295,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             is_lax_parser: bool=False,
             allow_duplicates: bool=False,
             allow_similar_eid: bool=True,
+            skip_cards: Optional[list[str]]=None,
             sort_cards: bool=True,
             stop: bool=False, nastran: str='', post: int=-1,
             dynamic_vars=None,
@@ -405,6 +406,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         sum_load=sum_load, size=size, is_double=is_double,
         is_lax_parser=is_lax_parser,
         allow_similar_eid=allow_similar_eid,
+        skip_cards=skip_cards,
         sort_cards=sort_cards,
         allow_tabs=allow_tabs,
         allow_duplicates=allow_duplicates,
@@ -450,6 +452,7 @@ def run_and_compare_fems(
         allow_tabs: bool=True,
         allow_duplicates: bool=False,
         allow_similar_eid: bool=True,
+        skip_cards: Optional[list[str]] = None,
         sort_cards: bool=True,
         stop: bool=False,
         nastran: str='',
@@ -483,6 +486,16 @@ def run_and_compare_fems(
     fem1 = BDF(debug=debug, log=log)
     fem1.allow_tabs = allow_tabs
     fem1.allow_duplicate_element_rbe_mass = allow_similar_eid
+
+    read_cards = []
+    if read_cards and skip_cards:  # pragma: no cover
+        msg = f'read_cards={read_cards} skip_cards={skip_cards} cannot be used at the same time'
+        raise NotImplementedError(msg)
+    if skip_cards:
+        fem1.disable_cards(skip_cards)
+    elif read_cards:  # pragma: no cover
+        fem1.enable_cards(read_cards)
+
     #fem1.force_echo_off = False
     log = fem1.log
     if is_lax_parser:
@@ -918,41 +931,65 @@ def _test_hdf5(fem1: BDF, hdf5_filename: str) -> None:
 
 
 def get_dof_map(model: BDF,
-                spc_id: int,
+                spc_id: int=0,
                 mpc_id: int=0,
                 suport1_id: int=0):
     """
+    Considers:
+      - MPC, RBE1, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE
+      - SUPORT / SUPORT1
+      - SPC / SPC1
     doesn't consider:
       - GRID PS
       - loads
-      - SPC
-      - SUPORT
+      - RSSCON
     """
     log = model.log
-    dep_nid_to_comp = get_dependent_nid_to_components(model)
+    dep_nid_to_comp = get_dependent_nid_to_components(
+        model, mpc_id=mpc_id)
     spc_nid_to_components = {}
     if spc_id:
-        spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True)
+        try:
+            spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True)
+        except KeyError:
+            log.error(f'Could not find SPC={spc_id}')
+            spcs = []
         for spc in spcs:
             # TODO: add SPC
             if spc.type == 'SPC1':
                 for nid in spc.nodes:
                     spc_nid_to_components[nid] = spc.components
+            elif spc.type == 'SPC':
+                # components: ['123456']
+                # nodes: [9]
+                assert len(spc.nodes) == len(spc.components), spc.get_stats()
+                for nid, comps in zip(spc.nodes, spc.components):
+                    # for comp in comps:
+                    spc_nid_to_components[nid] = spc.components
+            elif spc.type == 'GMSPC':
+                log.warning(f'skipping\n{str(spc)}{spc.get_stats()}')
             else:
-                log.warning('skipping\n%s' % spc)
+                log.error('skipping\n%s' % spc)
                 raise RuntimeError(spc.get_stats())
 
     suport_nid_to_components = {}
     if suport1_id:
         suport1 = model.suport1[suport1_id]
+        assert len(suport1.nodes) == len(suport1.Cs), suport1.get_stats()
         for nid, comp in zip(suport1.nodes, suport1.Cs):
             suport_nid_to_components[nid] = comp
-        # TODO: add SUPORT
 
+    for suport in model.suport:
+        assert len(suport.nodes) == len(suport.Cs), suport.get_stats()
+        for nid, comp in zip(suport.nodes, suport.Cs):
+            suport_nid_to_components[nid] = comp
+
+    loads_nid_to_components = {}
     dof_map = {
         'm': dep_nid_to_comp,
         's': spc_nid_to_components,
         'r': suport_nid_to_components,
+        'p': loads_nid_to_components,
     }
     verify_dof_map(model, dof_map)
     return dof_map
@@ -1394,7 +1431,11 @@ def check_case(sol: int,
     spc_id = 0 if 'SPC' not in subcase else subcase['SPC'][0]
     suport1_id = 0 if 'SUPORT1' not in subcase else subcase['SUPORT1'][0]
     log.info(f'subcase={subcase.id}: MPC={mpc_id} SPC={spc_id} SUPORT1={suport1_id}')
-    dof_map = get_dof_map(fem2, spc_id=mpc_id, mpc_id=spc_id, suport1_id=suport1_id)
+    dof_map = get_dof_map(
+        fem2,
+        spc_id=spc_id,
+        mpc_id=mpc_id,
+        suport1_id=suport1_id)
 
     if fem2.is_acoustic():
         pass
@@ -2220,13 +2261,8 @@ def compute(cards1: dict[str, int],
         else:
             value2 = 0
 
-        if key == 'INCLUDE':
-            if not quiet:
-                msg += '    key=%-7s value1=%-7s value2=%-7s' % (
-                    key, value1, value2)
-        else:
-            msg += '   *key=%-7s value1=%-7s value2=%-7s' % (
-                key, value1, value2)
+        star = ' ' if key == 'INCLUDE' else '*'
+        msg += f'   {star}key={key:-7s} value1={value1:<7d} value2={value2:<7d}\n'
         msg = msg.rstrip()
         if msg:
             print(msg)
@@ -2346,6 +2382,8 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument('--dumplines', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
                                '(pyNastran_dump.bdf)')
+    parent_parser.add_argument('--skip_cards', type=str,
+                               help='Define cards to skip')
     parent_parser.add_argument('--dictsort', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
                                '(pyNastran_dict.bdf)')
@@ -2437,7 +2475,7 @@ def get_test_bdf_usage_args_examples(encoding):
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--ignore I] [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
-        '              [--skip_loads] [--skip_mass] [--lax] [--nosort] [--duplicate]\n'
+        '              [--skip_loads] [--skip_mass] [--lax] [--nosort] [--duplicate] [skip_cards CARDS]\n'
     )
     usage = (
         "Usage:\n"
@@ -2499,9 +2537,10 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_mass    skip the mass properties calculations (default=False)\n'
         '  --skip_aero    skip the processing of the caero mesh (default=False)\n'
         '  --skip_skin    skip the solid skinning (default=False)\n'
-        '  --skip_eid_checks  skips some element checks (default=False)\n'
-        '  --skip_mcid        skip the material coordinate system exporting (default=False)\n'
-        '  --no_similar_eid   No duplicate eids among elements, rigids, and masses\n'
+        '  --skip_eid_checks   skips some element checks (default=False)\n'
+        '  --skip_mcid         skip the material coordinate system exporting (default=False)\n'
+        '  --no_similar_eid    No duplicate eids among elements, rigids, and masses\n'
+        '  --skip_cards CARDS  CSV list of cards (e.g., GRID,CONM2)\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2537,6 +2576,8 @@ def main(argv=None):
     data['run_eid_checks'] = not data['skip_eid_checks']
     data['run_mcid'] = not data['skip_mcid']
     allow_similar_eid = not data['no_similar_eid']
+    skip_cards = data['skip_cards']
+    skip_cards_list = [] if skip_cards is None else skip_cards.split(',')
     save_file_structure = data['ifile']
 
     is_double = False
@@ -2588,6 +2629,7 @@ def main(argv=None):
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
             allow_similar_eid=allow_similar_eid,
+            skip_cards=skip_cards_list,
             save_file_structure=save_file_structure,
 
             is_lax_parser=data['lax'],
@@ -2647,6 +2689,7 @@ def main(argv=None):
             run_mcid=data['run_mcid'],
             run_extract_bodies=False,
             allow_similar_eid=allow_similar_eid,
+            skip_cards=skip_cards_list,
             save_file_structure=save_file_structure,
 
             is_lax_parser=data['lax'],

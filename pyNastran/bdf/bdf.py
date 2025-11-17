@@ -20,7 +20,6 @@ from collections import Counter
 from io import StringIO, IOBase
 from pathlib import PurePath
 from functools import wraps
-#from functools import partial
 from collections import defaultdict
 import traceback
 
@@ -29,9 +28,6 @@ from typing import (
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
-# from cpylog import get_logger2 as get_logger, CPYLOG_VERSION
-# if CPYLOG_VERSION > (1, 6, 0):
-#     from cpylog import get_logger
 
 from pyNastran.utils import PathLike, object_attributes, check_path, deprecated as _deprecated
 from .utils import parse_patran_syntax
@@ -39,6 +35,7 @@ from .bdf_interface.utils import (
     _parse_pynastran_header, to_fields, to_fields_line0,
     parse_executive_control_deck,
     fill_dmigs, _get_card_name, _parse_dynamic_syntax,
+    _prep_comment,
 )
 from pyNastran.bdf.bdf_interface.attributes import map_version, map_update
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
@@ -2852,7 +2849,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'NLPARM': (NLPARM, add_methods.add_nlparm_object),
             'NLPCI': (NLPCI, add_methods.add_nlpci_object),
             'TSTEP': (TSTEP, add_methods.add_tstep_object),
-            'TSTEP1': (TSTEP1, add_methods.add_tstepnl_object),
+            'TSTEP1': (TSTEP1, add_methods.add_tstep_object),
             'TSTEPNL': (TSTEPNL, add_methods.add_tstepnl_object),
 
             'TF': (TF, add_methods.add_tf_object),
@@ -3070,7 +3067,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #return
 
         if card_name not in self.card_count:
-            if card_name == '#INCLUDE':
+            if card_name in ['#INCLUDE', 'SUBCASE']:
                 raise RuntimeError(card_lines)
             _check_for_spaces(card_name, card_lines, comment, self.log)
             #raise RuntimeError(card_name)
@@ -5293,16 +5290,6 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
     #             pass
     #     model.get_bdf_stats()
     return model
-
-
-def _prep_comment(comment: str) -> str:
-    return comment.rstrip()
-    #print('comment = %r' % comment)
-    #comment = '  this\n  is\n  a comment\n'
-    #print(comment.rstrip('\n').split('\n'))
-    #sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
-             #for comment in comment.rstrip().split('\n')]
-    #print('sline = ', sline)
 
 
 def _check_replicated_cards(replicated_cards):

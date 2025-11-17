@@ -30,6 +30,7 @@ try:
     IS_MATPLOTLIB = True
 except ModuleNotFoundError:  # pragma: no cover
     IS_MATPLOTLIB = False
+
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2  # FatalError, FortranMarkerError

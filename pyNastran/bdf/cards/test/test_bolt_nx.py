@@ -3,7 +3,25 @@ import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
-class TestBolt(unittest.TestCase):
+class TestBoltMSC(unittest.TestCase):
+    def test_bolt_msc_1(self):
+        model = BDF(debug=False)
+        bolt_id = 42
+        gridc = 10
+        nids_top = [11]
+        nids_btm = [12]
+        bolt = model.add_bolt_msc(
+            bolt_id, gridc,
+             nids_top=nids_top,
+             nids_btm=nids_btm,
+             comment='bolt_msc')
+        bolt.cross_reference(model)
+        model.cross_reference()
+        str(bolt)
+        bolt.raw_fields()
+        save_load_deck(model, run_save_load_hdf5=False, run_op2_writer=False)
+
+class TestBoltNX(unittest.TestCase):
     def test_bolt_nx_1(self):
         model = BDF(debug=False)
         model.case_control_deck

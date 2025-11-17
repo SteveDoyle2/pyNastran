@@ -208,7 +208,7 @@ def get_dependent_nid_to_components(model: BDF, mpc_id=None,
     """
     dependent_nid_to_components = {}
 
-    if mpc_id is not None:
+    if mpc_id is not None and mpc_id != 0:
         mpcs = get_mpcs(model, mpc_id)
         for mpc in mpcs:
             if mpc.type == 'MPC':

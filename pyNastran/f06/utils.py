@@ -1,15 +1,18 @@
 """
 defines:
  - cmd_line_plot_flutter()
+ - cmd_line_plot_trim()
+ - cmd_line_plot_optimization()
 
 """
 from __future__ import annotations
+import os
 import sys
 from typing import Optional, TYPE_CHECKING
 
 from docopt import docopt, __version__ as docopt_version
 import pyNastran
-
+from pyNastran.utils import PathLike, print_bad_path
 
 #import matplotlib
 #matplotlib.use('Qt5Agg')
@@ -18,36 +21,20 @@ import pyNastran
 #matplotlib.use(matplotlib_backend)
 #from pyNastran.gui.qt_version import qt_version
 
-PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q|--index]'
-AXES = '[--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-EXPORTS = '[--export_csv] [--export_zona] [--export_f06]'
-USAGE_145 = (
-    'Usage:\n'
-    '  f06 plot_145 F06_FILENAME [--modes MODES] [--subcases SUB] '
-    f'{PLOT_TYPES} [--kfreq] [--rootlocus] '
-    '[--in_units IN] [--out_units OUT] [--rhoref] '
-    f'[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] {AXES} '
-    f'[--noline] [--nopoints] [--ncol NCOL] {EXPORTS} '
-    '[--modal IVEL MODE] [--freq_tol FREQ_TOL] [--freq_tol_remove FREQ_TOL_REMOVE] [--mag_tol MAG_TOL]\n'
-)
-USAGE_144 = (
-    'Usage:\n'
-    '  f06 plot_144 F06_FILENAME SUBPANEL_CAERO_FILENAME\n'
-)
-
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.f06.flutter_response import FlutterResponse
 
 
+USAGE_144 = (
+    'Usage:\n'
+    '  f06 plot_144 F06_FILENAME [--aerobox AEROBOX_CAERO_FILENAME] | [--bdf BDF_FILENAME]\n'
+)
+
+
 def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
                        log: Optional[SimpleLogger]=None):
     """the interface to ``f06 plot_144`` on the command line"""
-    import os
-    from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
-    if argv is None:  # pragma: no cover
-        argv = sys.argv
-
     msg = (
         USAGE_144 +
         '  f06 plot_144 -h | --help\n'
@@ -56,7 +43,10 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
 
         'Positional Arguments:\n'
         '  F06_FILENAME            path to input F06 file\n'
-        '  AEROBOX_CAERO_FILENAME  path to input CAERO file\n'
+        
+        'Options:\n'
+        '  --aerobox AEROBOX_CAERO_FILENAME  path to exported CAERO file\n'
+        '  --bdf     BDF_FILENAME            path to input BDF file containing CAEROs\n'
         '\n'
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
@@ -69,17 +59,72 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
     if len(argv) == 1:
         sys.exit(msg)
 
+    #print(f'argv = {argv}')
     ver = str(pyNastran.__version__)
-    assert docopt_version >= '0.9.0', docopt_version
-    data = docopt(msg, version=ver, argv=argv[1:])
-    f06_filename = data['F06_FILENAME']
-    aerobox_caero_filename = data['AEROBOX_CAERO_FILENAME']
+
+    if 1:
+        if argv is None:
+            argv = sys.argv[1:]  # ['run_jobs'] + sys.argv[2:]
+        else:
+            # FILE = os.path.abspath(__file__)
+            argv = ['f06'] + argv[2:]  # ['run_jobs'] + sys.argv[2:]
+            # print(argv)
+
+        import argparse
+        parent_parser = argparse.ArgumentParser(prog='plot_trim')
+        # positional arguments
+        parent_parser.add_argument('F06_FILENAME', help='path to input F06 file', type=str)
+        # _add_parser_arguments(parent_parser, ['--lax'])
+
+        bdf_aero_group = parent_parser.add_mutually_exclusive_group()
+        bdf_aero_group.add_argument('--bdf', type=str, help='path to input BDF file containing CAEROs')
+        bdf_aero_group.add_argument('--aerobox', type=str, help='path to exported CAERO file')
+        #bdf_aero_group.add_argument('--encoding', help=f'the encoding method (default=None -> {repr(encoding)})', type=str)
+        parent_parser.add_argument('-v', '--version', action='version', version=ver)
+        args = parent_parser.parse_args(args=argv[1:])
+
+        f06_filename = args.F06_FILENAME
+        aerobox_caero_filename = args.aerobox
+        bdf_filename = args.bdf
+    else:  # pragma: no cover
+        if argv is None:  # pragma: no cover
+            argv = sys.argv
+        assert docopt_version >= '0.9.0', docopt_version
+        data = docopt(msg, version=ver, argv=argv[1:])
+        if data['--bdf'] is False:
+            data['--bdf'] = None
+
+        # print(data)
+        f06_filename = data['F06_FILENAME']
+        aerobox_caero_filename = data['--aerobox']  # 0.9.0
+        # happens if you mess up the docopt `msg` and things are consistent
+        # aerobox_caero_filename = data['AEROBOX_CAERO_FILENAME']
+        bdf_filename = data['--bdf']
 
     dirname = os.path.dirname(f06_filename)
-    loads_filename = os.path.join(dirname, 'loads.inc')
+    base, ext = os.path.splitext(f06_filename)
+    if aerobox_caero_filename is None:
+        if bdf_filename is None:
+            bdf_filename = base + '.bdf'
+        assert os.path.exists(bdf_filename), print_bad_path(bdf_filename)
+
+        from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
+        base_bdf, ext_bdf = os.path.splitext(bdf_filename)
+        aerobox_caero_filename = f'{base_bdf}.aerobox{ext_bdf}'
+        export_caero_mesh(
+            bdf_filename,
+            caero_bdf_filename=aerobox_caero_filename,
+            is_aerobox_model=True,
+            pid_method='caero',
+            write_panel_xyz=False)
+
+    assert os.path.exists(aerobox_caero_filename), print_bad_path(aerobox_caero_filename)
+    assert isinstance(aerobox_caero_filename, PathLike), aerobox_caero_filename
+    loads_filename = os.path.join(dirname, 'loads.blk')
     base = os.path.splitext(f06_filename)[0]
     if f06_filename.lower().endswith(('.bdf', '.op2')):
         f06_filename = base + '.f06'
+
     from pyNastran.f06.f06_to_pressure_loads import f06_to_pressure_loads
     nid_csv_filename = os.path.join(dirname, 'nid_pyNastran.csv')
     eid_csv_filename = os.path.join(dirname, 'eid_pyNastran.csv')
@@ -94,10 +139,23 @@ def cmd_line_plot_trim(argv=None, plot: bool=True, show: bool=True,
     return loads
 
 
+PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q|--index]'
+AXES = '[--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
+EXPORTS = '[--export_csv] [--export_zona] [--export_f06]'
+USAGE_145 = (
+    'Usage:\n'
+    '  f06 plot_145 F06_FILENAME [--modes MODES] [--subcases SUB] '
+    f'{PLOT_TYPES} [--kfreq] [--rootlocus] '
+    '[--in_units IN] [--out_units OUT] [--rhoref] '
+    f'[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT] {AXES} '
+    f'[--noline] [--nopoints] [--ncol NCOL] {EXPORTS} '
+    '[--modal IVEL MODE] [--freq_tol FREQ_TOL] [--freq_tol_remove FREQ_TOL_REMOVE] [--mag_tol MAG_TOL]\n'
+)
+
+
 def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
                           log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
     """the interface to ``f06 plot_145`` on the command line"""
-    import os
     from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
     if argv is None:  # pragma: no cover
         argv = sys.argv
@@ -237,7 +295,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
         else:
             in_units = data['--in_units']
     in_units = in_units.lower()
-    assert in_units in {'si', 'si_mm', 'english_in', 'english_ft', 'english_kt'}, 'in_units=%r' % in_units
+    assert in_units in {'si', 'si_mm', 'english_in', 'english_ft', 'english_kt'}, f'in_units={in_units!r}'
 
     # The default used to be SI, but it's really weird when I'm working in
     # English units and my output is in SI
@@ -267,7 +325,7 @@ def cmd_line_plot_flutter(argv=None, plot: bool=True, show: bool=True,
     elif data['--index']:
         plot_type = 'index'
     else:
-        sys.stderr.write('plot_type assumed to be --tas\n')
+        sys.stderr.write('plot_type not set; assumed to be --tas\n')
 
     vd_limit = None
     if data['--vd_limit']:
