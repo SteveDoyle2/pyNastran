@@ -254,6 +254,13 @@ class BDFInputPy:
 
         main_lines = self.get_main_lines(bdf_filename)
         all_lines, ilines = self.lines_to_deck_lines(main_lines)
+        debug_ilines = False
+        if debug_ilines and make_ilines:  # pragma: no cover
+            with open('spike_lines.bdf', 'w') as spike_file:
+                spike_file.write('ifile,iline: line\n')
+                for line, ifile_iline in zip(all_lines, ilines):
+                    ifile, iline = ifile_iline
+                    spike_file.write(f'{ifile},{iline}: {line.rstrip()}\n')
         if not make_ilines:
             ilines = None
 
@@ -272,6 +279,14 @@ class BDFInputPy:
                 msg = 'len(bulk_data_lines)=%s len(bulk_data_ilines)=%s' % (
                     len(bulk_data_lines), len(bulk_data_ilines))
                 self.log.warning(msg)
+
+            if debug_ilines and make_ilines:  # pragma: no cover
+                with open('spike_lines2.bdf', 'w') as spike_file:
+                    spike_file.write('ifile,iline: line\n')
+                    #assert len(bulk_data_ilines) == len(bulk_data_ilines)
+                    for lines, ifile_iline in zip(bulk_data_lines, bulk_data_ilines):
+                        ifile, iline = ifile_iline
+                        spike_file.write(f'{ifile},{iline}: {str(lines)}\n')
         else:
             #print(self.use_new_parser, nastran_format != 'optistruct')
             self.log.debug('using old deck splitter')
@@ -786,10 +801,11 @@ class BDFInputPy:
         # bdf_filename
         self._validate_open_file(bdf_filename_inc, check)
 
+        #ifile = len(self.active_filenames)
         if is_file_case_sensitive(bdf_filename_inc):
-            self.log.debug('opening %r' % bdf_filename_inc)
+            self.log.debug(f'opening {bdf_filename_inc!r}')
         else:
-            self.log.warning('opening %r (not case sensitive)' % bdf_filename_inc)
+            self.log.warning(f'opening {bdf_filename_inc!r} (not case sensitive)')
 
         self.active_filenames.append(bdf_filename_inc)
         self.loaded_filenames.append(bdf_filename_inc)

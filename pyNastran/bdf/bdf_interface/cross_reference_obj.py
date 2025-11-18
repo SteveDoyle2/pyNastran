@@ -11,6 +11,7 @@ from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.optimization import DESVAR, DCONSTR
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF, GRID
+    from pyNastran.bdf.cards.base_card import BaseCard
 
 
 class CrossReference:
@@ -71,17 +72,24 @@ class CrossReference:
                 if model.bdf_filename and not isinstance(model.bdf_filename, StringIO):
                     filename_note = f' in {os.path.abspath(model.bdf_filename)!r}'
                 msg = f'There are cross-reference errors{filename_note}.\n\n'
-                for (card, an_error) in self._stored_xref_errors:
-                    msg += '%scard=%s\n' % (an_error[0], card)
+                for (card, lines) in self._stored_xref_errors:
+                    fname = _add_file(self.model, card)
+                    an_error = ''.join(lines)
+                    msg += '%s%scard=%s\n' % (fname, an_error, card)
                     is_error = True
 
                 if is_error and self._stop_on_xref_error:
                     raise CrossReferenceError(msg.rstrip())
 
-    def _store_xref_error(self, error, card) -> None:
+    def _store_xref_error(self, error, card: BaseCard) -> None:
+        """stores cross-reference errors and raises the errors when the threshold is reached"""
         self._ixref_errors += 1
-        var = traceback.format_exception_only(type(error), error)
-        self._stored_xref_errors.append((card, var))
+        #line = traceback.format_exc()
+        lines = traceback.format_exception_only(type(error), error)
+        #lines2 = [line.replace(r'\\n', '\n').rstrip() for line in lines]
+        #self.model.log.warning(lines)
+        #self.model.log.warning(lines2)
+        self._stored_xref_errors.append((card, lines))
         if self._ixref_errors > self._nxref_errors:
             self.pop_xref_errors()
 
@@ -1054,3 +1062,14 @@ def _check_caero_box_overlap(model: BDF) -> int:
         msg += 'isort = %s' % str(isort)
         raise RuntimeError(msg)
     return naeroboxes
+
+
+def _add_file(model: BDF, obj: BaseCard) -> str:
+    """adds the tag of the active file"""
+    msg = ''
+    if obj is not None and hasattr(obj, 'ifile'):
+        filename = model.active_filenames[obj.ifile]
+        tag = f' ({obj.type}={obj.eid:d})' if hasattr(obj, 'eid') else ''
+        msg = f'file[{obj.ifile:d}]={filename}{tag}\n'
+        #msg += f'active: {model.active_filenames}\n'
+    return msg

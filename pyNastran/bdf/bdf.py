@@ -1906,6 +1906,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                       bulk_data_ilines: Optional[Any]=None,
                       use_dict: bool=True) -> tuple[Any, Any, Any]:
         """Parses the BDF lines into a list of card_lines"""
+        #self.log.warning('get_bdf_cards')
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
@@ -1916,6 +1917,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         card_count: dict[str, int] = defaultdict(int)
         full_comment = ''
         card_lines = []
+        card_ilines = []
         old_ifile_iline = None
         old_card_name = None
         backup_comment = ''
@@ -1963,11 +1965,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         cards_dict[old_card_name].append([_prep_comment(full_comment),
                                                           card_lines, ifile_iline])
                     else:
+                        # cards_list.append([old_card_name, _prep_comment(full_comment),
+                        #                    card_lines, old_ifile_iline])
                         cards_list.append([old_card_name, _prep_comment(full_comment),
-                                           card_lines, old_ifile_iline])
+                                           card_lines, card_ilines[-1]])
 
                     card_count[old_card_name] += 1
                     card_lines = []
+                    card_ilines = []
                     full_comment = ''
 
                     if old_card_name == 'ECHOON':
@@ -1992,6 +1997,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #      but not parsed cards
             if line.rstrip():
                 card_lines.append(line)
+                card_ilines.append(ifile_iline)
                 if backup_comment:
                     if comment:
                         full_comment += backup_comment + comment + '\n'
@@ -2025,8 +2031,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 cards_dict[old_card_name].append([_prep_comment(
                     backup_comment + full_comment), card_lines, ifile_iline])
             else:
+                # cards_list.append([old_card_name, _prep_comment(
+                #     backup_comment + full_comment), card_lines, ifile_iline])
                 cards_list.append([old_card_name, _prep_comment(
-                    backup_comment + full_comment), card_lines, ifile_iline])
+                    backup_comment + full_comment), card_lines, card_ilines[-1]])
             card_count[old_card_name] += 1
         self.echo = False
         return cards_list, cards_dict, card_count
@@ -3709,6 +3717,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 print(msg)
                 raise
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
+                # don't catch NameError
                 self._iparse_errors += 1
                 self.log.error(card_obj)
                 var = traceback.format_exception_only(type(exception), exception)
@@ -4569,6 +4578,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                      cards_dict: dict[str, list[str]],
                      card_count: dict[str, int]) -> None:
         """creates card objects and adds the parsed cards to the deck"""
+        #self.log.warning('_parse_cards')
         # we don't want replication markers in the card_count
         card_names_to_remove = (card_name for card_name in list(card_count.keys())
                                 if '=' in card_name)
@@ -4610,12 +4620,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _parse_cards_list(self, cards_list: list[str]):
         """parses the cards that are in list format"""
+        #self.log.warning('_parse_cards_list')
         add_card = self.add_card if self.is_strict_card_parser else self.add_card_lax
 
         save_file_structure = self.save_file_structure
         if save_file_structure:
             for icard, card in enumerate(cards_list):
                 card_name, comment, card_lines, (ifile, unused_iline) = card
+                #print(ifile, unused_iline, card_lines[0])
                 card_name = cast(str, card_name)
                 comment = cast(str, comment)
                 card_lines = cast(list[str], card_lines)
