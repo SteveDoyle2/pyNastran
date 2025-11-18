@@ -38,8 +38,9 @@ def nastran_to_tecplot(model: BDF) -> Tecplot:
     tris = []
     quads = []
     tets = []
-    hexas = []
+    pyrams = []
     pentas = []
+    hexas = []
     #i = 0
     #pids = np.zeros(nelements, dtype='int32')
     #mids = np.zeros(nelements, dtype='int32')
@@ -51,6 +52,8 @@ def nastran_to_tecplot(model: BDF) -> Tecplot:
             quads.append(element.node_ids)
         elif element.type == 'CTETRA':
             tets.append(element.node_ids[:4])
+        elif element.type == 'CPYRAM':
+            pyrams.append(element.node_ids[:5])
         elif element.type == 'CPENTA':
             pentas.append(element.node_ids[:6])
         elif element.type == 'CHEXA':
@@ -78,19 +81,23 @@ def nastran_to_tecplot(model: BDF) -> Tecplot:
     del tris, quads
 
     ntet = len(tets)
+    npyram = len(pyrams)
     npenta = len(pentas)
     nhexa = len(hexas)
     tet_elements = np.array(tets, dtype='int32') - 1
+    pyram_elements = np.array(pyrams, dtype='int32') - 1
     penta_elements = np.array(pentas, dtype='int32') - 1
     hexa_elements = np.array(hexas, dtype='int32') - 1
-    del tets, pentas, hexas
+    del tets, pyrams, pentas, hexas
 
     nshell = ntri + nquad
-    nsolid = ntet + npenta + nhexa
+    nsolid = ntet + npyram + npenta + nhexa
     nnot_tri = nquad
     nnot_quad = ntri
-    nnot_tet = npenta + nhexa
-    nnot_hexa = ntet + npenta
+    nnot_tet = npyram + npenta + nhexa
+    # nnot_penta = ntet + npyram + nhexa
+    # nnot_pyram = ntet + npenta + nhexa
+    nnot_hexa = ntet + npyram + npenta
 
     if ntri and not nnot_tri and not nsolid:
         zone.tri_elements = tri_elements
@@ -98,46 +105,49 @@ def nastran_to_tecplot(model: BDF) -> Tecplot:
     elif nquad and not nnot_quad and not nsolid:
         zone.quad_elements = quad_elements
         zone_type = 'FEQUADRILATERAL'
-    elif ntet and not nnot_tet and not nshell:
-        zone.tet_elements = tet_elements
-        zone_type = 'FETETRAHEDRON'
-    elif npenta and not nhexa and not nshell:
-        zone.hexa_elements = penta_elements
-        zone_type = 'FEBRICK'
-    elif nhexa and not nnot_hexa and not nshell:
-        zone.hexa_elements = hexa_elements
-        zone_type = 'FEBRICK'
     elif not nshell:
-        elements = np.zeros((nelement, 8), dtype='int32')
-        if ntet:
-            elements[:ntet, :4] = tet_elements
-            elements[:ntet, 4:] = tet_elements[:, 3]
-            # elements[:ntet, 4] = tet_elements[:, 3]
-            # elements[:ntet, 5] = tet_elements[:, 3]
-            # elements[:ntet, 6] = tet_elements[:, 3]
-            # elements[:ntet, 7] = tet_elements[:, 3]
-        if npenta:
-            # penta6
-            n0 = ntet
-            n1 = ntet + npenta
-            elements[n0:n1, :6] = penta_elements
-            elements[n0:n1, 6:] = penta_elements[:, 5]
-            # elements[n0:n1, 6] = penta_elements[:, 5]
-            # elements[n0:n1, 7] = penta_elements[:, 5]
-        if nhexa:
-            n0 = ntet + npenta
-            n1 = ntet + npenta + nhexa
-            elements[n0:n1, :] = hexa_elements
-        zone.hexa_elements = elements
-        zone_type = 'FEBRICK'
-    elif not nsolid:
-        elements = np.zeros((nelement, 4), dtype='int32')
-        tris = np.array(tris, dtype='int32') - 1
-        elements[:ntri, :3] = tris
-        elements[:ntri, 4] = elements[:ntet, 3]
+        if ntet and not nnot_tet:
+            zone.tet_elements = tet_elements
+            zone_type = 'FETETRAHEDRON'
+        elif npenta and not nhexa:
+            zone.hexa_elements = penta_elements
+            zone_type = 'FEBRICK'
+        elif nhexa and not nnot_hexa:
+            zone.hexa_elements = hexa_elements
+            zone_type = 'FEBRICK'
+        elif nsolid:
+            elements = np.zeros((nsolid, 8), dtype='int32')
+            n0 = 0
+            if ntet:
+                elements[:ntet, :4] = tet_elements
+                elements[:ntet, 4:] = tet_elements[:, 3]
+                n0 = ntet
+            if npyram:
+                # pyram5
+                n1 = n0 + npyram
+                elements[n0:n1, :5] = pyram_elements
+                elements[n0:n1, 5:] = pyram_elements[:, 4]
+                n0 = n1
+            if npenta:
+                # penta6
+                n1 = n0 + npenta
+                elements[n0:n1, :6] = penta_elements
+                elements[n0:n1, 6:] = penta_elements[:, 5]
+                n0 = n1
+            if nhexa:
+                n1 = n0 + nhexa
+                elements[n0:n1, :] = hexa_elements
+            zone.hexa_elements = elements
+            zone_type = 'FEBRICK'
+        else:
+            raise RuntimeError((ntet, npyram, npenta, nhexa, nshell))
 
-        quads = np.array(quads, dtype='int32') - 1
-        elements[ntri:, :] = quads
+    elif nshell:
+        elements = np.zeros((nshell, 4), dtype='int32')
+        elements[:ntri, :3] = tri_elements
+        elements[:ntri, 3] = tri_elements[:, 2]
+        elements[ntri:, :] = quad_elements
+        zone.quad_elements = elements
         zone_type = 'FEQUADRILATERAL'
     else:
         msg = 'Only solids or shells are allowed (not both)\n'

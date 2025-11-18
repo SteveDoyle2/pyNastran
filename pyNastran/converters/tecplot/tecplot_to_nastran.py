@@ -181,7 +181,7 @@ def _write_solids(bdf_file: TextIO, zone: Zone, pid: int, log,
             elif nnodes_unique == 8:
                 card = ['CHEXA', ielem + ihex, pid] + list(inode + hexa)
             else:
-                raise RuntimeError(f'nnodes_unique={nnodes_unique:d}, nids={ihex}')
+                raise RuntimeError(f'nnodes_unique={nnodes_unique:d}, nids={nids}; hexa={hexa}')
             bdf_file.write(print_card_8(card))
         ielem += ihex + 1
     return ielem, removed_nodes

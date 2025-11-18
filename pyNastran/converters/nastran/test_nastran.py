@@ -586,6 +586,31 @@ class TestNastran(unittest.TestCase):
         assert elem.type == 'CQUAD4', elem
         os.remove(bdf_filename)
 
+    def test_nastran_to_tecplot_cquad4(self):
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 1., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [1., 0., 0.])
+        model.add_cquad4(10, 100, [1, 2, 3, 4])
+        model.add_ctria3(11, 100, [1, 2, 3])
+        tecplot = nastran_to_tecplot(model)
+        zone = tecplot.zones[0]
+        assert len(zone.tri_elements) == 0, zone
+        assert len(zone.quad_elements) == 2, zone
+        assert len(zone.tet_elements) == 0, zone
+        assert len(zone.hexa_elements) == 0, zone
+
+        bdf_filename = DIRNAME / 'tri_quad.bdf'
+        tecplot_to_nastran(tecplot, bdf_filename)
+        model2 = read_bdf(bdf_filename)
+        assert len(model2.elements) == 2, model.elements
+        elem1 = model2.elements[1]
+        elem2 = model2.elements[2]
+        assert elem1.type == 'CTRIA3', elem1
+        assert elem2.type == 'CQUAD4', elem1
+        os.remove(bdf_filename)
+
     def test_nastran_to_tecplot_cpenta(self):
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
@@ -664,6 +689,66 @@ class TestNastran(unittest.TestCase):
         elem2 = model.elements[2]
         assert elem1.type == 'CPENTA', elem1
         assert elem2.type == 'CHEXA', elem2
+        os.remove(bdf_filename)
+
+    def test_nastran_to_tecplot_cpyram(self):
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 1., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [1., 0., 0.])
+        model.add_grid(5, [0., 0., 1.])
+        model.add_cpyram(12, 100, [1, 2, 3, 4, 5])
+
+        tecplot = nastran_to_tecplot(model)
+        zone = tecplot.zones[0]
+        assert len(zone.tri_elements) == 0, zone
+        assert len(zone.quad_elements) == 0, zone
+        assert len(zone.tet_elements) == 0, zone
+        assert len(zone.hexa_elements) == 1, zone
+
+        bdf_filename = DIRNAME / 'pyram.bdf'
+        tecplot_to_nastran(tecplot, bdf_filename)
+        model2 = read_bdf(bdf_filename)
+        assert len(model2.elements) == 1, model2.elements
+        elem1 = model2.elements[1]
+        assert elem1.type == 'CPYRAM', elem2
+        os.remove(bdf_filename)
+
+    def test_nastran_to_tecplot_ctetra_cpenta_cpyram_chexa(self):
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 1., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [1., 0., 0.])
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [0., 1., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [1., 0., 1.])
+        model.add_ctetra(11, 100, [1, 2, 3, 4])
+        model.add_cpyram(12, 100, [1, 2, 3, 4, 5])
+        model.add_cpenta(13, 100, [1, 2, 3, 4, 5, 6])
+        model.add_chexa(14, 100, [1, 2, 3, 4, 5, 6, 7, 8])
+
+        tecplot = nastran_to_tecplot(model)
+        zone = tecplot.zones[0]
+        assert len(zone.tri_elements) == 0, zone
+        assert len(zone.quad_elements) == 0, zone
+        assert len(zone.tet_elements) == 0, zone
+        assert len(zone.hexa_elements) == 4, zone
+
+        bdf_filename = DIRNAME / 'tetra_penta_pyram_hexa.bdf'
+        tecplot_to_nastran(tecplot, bdf_filename)
+        model2 = read_bdf(bdf_filename)
+        assert len(model2.elements) == 4, model2.elements
+        elem1 = model2.elements[1]
+        elem2 = model2.elements[2]
+        elem3 = model2.elements[3]
+        elem4 = model2.elements[4]
+        assert elem1.type == 'CTETRA', elem1
+        assert elem2.type == 'CPYRAM', elem2
+        assert elem3.type == 'CPENTA', elem3
+        assert elem4.type == 'CHEXA', elem4
         os.remove(bdf_filename)
 
     def test_nastran_to_ugrid_01(self):
