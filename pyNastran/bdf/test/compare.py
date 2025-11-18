@@ -45,7 +45,8 @@ def compare_card_count(fem1: BDF,
         print(fem1.get_bdf_stats())
     else:
         fem1.get_bdf_stats()
-    return compute_ints(cards1, cards2, fem1, quiet=quiet)
+    lines = compute_ints(cards1, cards2, fem1, quiet=quiet)
+    return lines
 
 
 def compute_ints(cards1: dict[str, int],
@@ -67,6 +68,7 @@ def compute_ints(cards1: dict[str, int],
     The * indicates a change, which may or may not be a problem.
 
     """
+    fem1.log.debug('compute_ints')
     card_keys1 = set(cards1.keys())
     card_keys2 = set(cards2.keys())
     all_keys = card_keys1.union(card_keys2)
@@ -76,7 +78,7 @@ def compute_ints(cards1: dict[str, int],
     list_keys1 = list(card_keys1)
     list_keys2 = list(card_keys2)
     if diff_keys1 or diff_keys2:
-        print(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
+        fem1.log.debug(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
 
     for key in sorted(all_keys):
         msg = ''
@@ -115,6 +117,7 @@ def get_element_stats(fem1: BDF,
                       unused_fem2: BDF,
                       run_mass: bool=True, quiet: bool=False) -> None:
     """verifies that the various element methods work"""
+    fem1.log.debug('get_element_stats')
     for (unused_key, loads) in sorted(fem1.loads.items()):
         for load in loads:
             try:
@@ -168,6 +171,10 @@ def check_mass(fem1: BDF, run_mass: bool=True, quiet: bool=False):
 
 def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
     """Verifies the dmig.get_matrix() method works."""
+    is_matrix = len(fem1.dmig) or len(fem1.dmi) or len(fem1.dmij) or len(fem1.dmik) or len(fem1.dmiji)
+    if not is_matrix:
+        return
+    fem1.log.debug('get_matrix_stats')
     for (unused_key, dmig) in sorted(fem1.dmig.items()):
         try:
             if isinstance(dmig, NastranMatrix):
