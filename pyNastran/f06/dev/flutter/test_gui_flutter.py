@@ -7,7 +7,7 @@ from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.f06.dev.flutter.action import Action
 from pyNastran.f06.dev.flutter.utils import (
-    get_plot_flags,
+    validate_json, get_plot_flags,
     load_f06_op2, get_png_filename, get_plot_file,
     point_removal_str_to_point_removal,
     get_point_removal_str,
@@ -144,6 +144,28 @@ class TestGuiFlutter(unittest.TestCase):
         assert point_removal_list == point_removal, point_removal_list
         out = get_point_removal_str(point_removal_list)
         assert out == msg, f'out={out!r} expected={msg!r}'
+
+    def test_validate_json(self):
+        log = SimpleLogger(level='debug')
+        mydict = {}
+        is_valid = validate_json(mydict, log)
+        assert not is_valid, is_valid
+
+        mydict = {
+            'units_in': 'fakeenglish_in',
+            'units_out': 'fakesi',
+            'plot_type': 'fakex-damp-freq',
+        }
+        is_valid = validate_json(mydict, log)
+        assert not is_valid, is_valid
+
+        mydict = {
+            'units_in': 'english_in',
+            'units_out': 'si',
+            'plot_type': 'x-damp-freq',
+        }
+        is_valid = validate_json(mydict, log)
+        assert is_valid, is_valid
 
 
 if __name__ == '__main__':

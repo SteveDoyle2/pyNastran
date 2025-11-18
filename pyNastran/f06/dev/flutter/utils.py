@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import shutil
 import traceback
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 from matplotlib import pyplot as plt
 from pyNastran.f06.parse_flutter import make_flutter_response, get_flutter_units
 
@@ -18,6 +18,7 @@ PLOT_TYPES = ['x-damp-freq', 'x-damp-kfreq', 'root-locus', 'modal-participation'
               'zimmerman']
 UNITS_IN = ['english_in', 'english_kt', 'english_ft',
             'si', 'si_mm']
+UNITS_OUT = UNITS_IN
 MODE_SWITCH_METHODS = ['None', 'Frequency', 'Damping']
 
 def load_f06_op2(f06_filename: str, log: SimpleLogger,
@@ -317,3 +318,29 @@ def get_plot_flags(plot_type: str,
         'show_zimmerman': show_zimmerman,
     }
     return flags
+
+
+def validate_json(data: dict[str, Any],
+                  log: SimpleLogger) -> bool:
+    is_valid = True
+    # log.warning(f'keys = {list(data.keys())}')
+    key_allowed_values = [
+        ('units_in', UNITS_IN),
+        ('units_out', UNITS_OUT),
+        ('plot_type', PLOT_TYPES),
+    ]
+    for (key, allowed_values) in key_allowed_values:
+        if key not in data:
+            is_valid = False
+            log.error(f'data[{key}] is missing; defaulting to {allowed_values[0]}')
+            default_value = allowed_values[0]
+            data[key] = default_value
+            continue
+
+        value = data[key]
+        if value not in allowed_values:
+            is_valid = False
+            log.error(f'{key}={value!r} not in {allowed_values}; defaulting to {allowed_values[0]}')
+            default_value = allowed_values[0]
+            data[key] = default_value
+    return is_valid

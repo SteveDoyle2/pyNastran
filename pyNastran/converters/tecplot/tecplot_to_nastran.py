@@ -28,7 +28,7 @@ def tecplot_to_nastran(tecplot_filename: PathLike | Tecplot,
                        log: Optional[SimpleLogger]=None,
                        debug: bool=True) -> Optional[BDF]:
     """Converts a Tecplot file to Nastran."""
-    if isinstance(tecplot_filename, str):
+    if isinstance(tecplot_filename, PathLike):
         model = read_tecplot(tecplot_filename, log=log, debug=debug)
     else:
         model = tecplot_filename
@@ -159,6 +159,8 @@ def _write_solids(bdf_file: TextIO, zone: Zone, pid: int, log,
     if len(zone.hexa_elements):
         #log.debug('hexa')
         # need to split out the CTETRA and CPENTA elements
+        # print(zone)
+        # print(zone.xyz)
         for ihex, hexa in enumerate(zone.hexa_elements):
             uhexa = np.unique(hexa)
             nnodes_unique = len(uhexa)
@@ -178,6 +180,8 @@ def _write_solids(bdf_file: TextIO, zone: Zone, pid: int, log,
                 assert len(card) == 9, len(card)
             elif nnodes_unique == 8:
                 card = ['CHEXA', ielem + ihex, pid] + list(inode + hexa)
+            else:
+                raise RuntimeError(f'nnodes_unique={nnodes_unique:d}, nids={ihex}')
             bdf_file.write(print_card_8(card))
         ielem += ihex + 1
     return ielem, removed_nodes

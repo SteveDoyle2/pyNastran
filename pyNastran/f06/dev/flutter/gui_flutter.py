@@ -58,15 +58,16 @@ from pyNastran.f06.parse_flutter import get_flutter_units
 
 # FONT_SIZE = 12
 from pyNastran.f06.dev.flutter.utils import (
+    validate_json,
     get_point_removal_str,
     point_removal_str_to_point_removal,
     _float_passed_to_default, _to_str,
     get_plot_flags, get_plot_file,
     update_ylog_style, get_png_filename,
     load_f06_op2,
-    X_PLOT_TYPES, PLOT_TYPES, UNITS_IN, MODE_SWITCH_METHODS,
+    X_PLOT_TYPES, PLOT_TYPES, UNITS_IN, UNITS_OUT,
+    MODE_SWITCH_METHODS,
 )
-UNITS_OUT = UNITS_IN
 
 import pyNastran
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -2179,32 +2180,6 @@ def get_selected_items_flat(list_widget: QListWidget) -> list[str]:
         text = item.text()
         texts.append(text)
     return texts
-
-
-def validate_json(data: dict[str, Any],
-                  log: SimpleLogger) -> bool:
-    is_valid = True
-    # log.warning(f'keys = {list(data.keys())}')
-    key_allowed_values = [
-        ('units_in', UNITS_IN),
-        ('units_out', UNITS_OUT),
-        ('plot_type', PLOT_TYPES),
-    ]
-    for (key, allowed_values) in key_allowed_values:
-        if key not in data:
-            is_valid = False
-            log.error(f'data[{key}] is missing; defaulting to {allowed_values[0]}')
-            default_value = allowed_values[0]
-            data[key] = default_value
-            continue
-
-        value = data[key]
-        if value not in allowed_values:
-            is_valid = False
-            log.error(f'{key}={value!r} not in {allowed_values}; defaulting to {allowed_values[0]}')
-            default_value = allowed_values[0]
-            data[key] = default_value
-    return is_valid
 
 
 def get_list_float_or_none(list_line_edit: list[QLineEdit]) -> tuple[list[Optional[float | str]], bool]:

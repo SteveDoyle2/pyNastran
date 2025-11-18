@@ -64,7 +64,7 @@ def nastran_to_tecplot(model: BDF) -> Tecplot:
         #i += 1
 
     for etype in unhandled_types:
-        print('ignoring %s' % etype)
+        print(f'ignoring {etype}')
 
     # only supports nodal results
     #tecplot.nodal_results = vstack([pids, mids])#.T
@@ -73,57 +73,70 @@ def nastran_to_tecplot(model: BDF) -> Tecplot:
 
     ntri = len(tris)
     nquad = len(quads)
-    nshell = ntri + nquad
+    tri_elements = np.array(tris, dtype='int32') - 1
+    quad_elements = np.array(quads, dtype='int32') - 1
+    del tris, quads
 
     ntet = len(tets)
     npenta = len(pentas)
     nhexa = len(hexas)
+    tet_elements = np.array(tets, dtype='int32') - 1
+    penta_elements = np.array(pentas, dtype='int32') - 1
+    hexa_elements = np.array(hexas, dtype='int32') - 1
+    del tets, pentas, hexas
+
+    nshell = ntri + nquad
     nsolid = ntet + npenta + nhexa
     nnot_tri = nquad
     nnot_quad = ntri
     nnot_tet = npenta + nhexa
     nnot_hexa = ntet + npenta
+
     if ntri and not nnot_tri and not nsolid:
-        zone.tri_elements = np.array(tris, dtype='int32')
+        zone.tri_elements = tri_elements
         zone_type = 'FETRIANGLE'
     elif nquad and not nnot_quad and not nsolid:
-        zone.quad_elements = np.array(quads, dtype='int32')
+        zone.quad_elements = quad_elements
         zone_type = 'FEQUADRILATERAL'
     elif ntet and not nnot_tet and not nshell:
-        zone.tet_elements = np.array(tets, dtype='int32')
+        zone.tet_elements = tet_elements
         zone_type = 'FETETRAHEDRON'
+    elif npenta and not nhexa and not nshell:
+        zone.hexa_elements = penta_elements
+        zone_type = 'FEBRICK'
     elif nhexa and not nnot_hexa and not nshell:
-        zone.hexa_elements = np.array(hexas, dtype='int32')
+        zone.hexa_elements = hexa_elements
         zone_type = 'FEBRICK'
     elif not nshell:
         elements = np.zeros((nelement, 8), dtype='int32')
         if ntet:
-            tets = np.array(tets, dtype='int32')
-            elements[:ntet, :4] = tets
-            elements[:ntet, 4] = elements[:ntet, 3]
-            elements[:ntet, 5] = elements[:ntet, 3]
-            elements[:ntet, 6] = elements[:ntet, 3]
-            elements[:ntet, 7] = elements[:ntet, 3]
+            elements[:ntet, :4] = tet_elements
+            elements[:ntet, 4:] = tet_elements[:, 3]
+            # elements[:ntet, 4] = tet_elements[:, 3]
+            # elements[:ntet, 5] = tet_elements[:, 3]
+            # elements[:ntet, 6] = tet_elements[:, 3]
+            # elements[:ntet, 7] = tet_elements[:, 3]
         if npenta:
             # penta6
-            pentas = np.array(pentas, dtype='int32')
-            elements[ntet:ntet + npenta, :6] = pentas
-            elements[ntet:ntet + npenta, 6] = elements[ntet:ntet + npenta, 5]
-            elements[ntet:ntet + npenta, 7] = elements[ntet:ntet + npenta, 5]
+            n0 = ntet
+            n1 = ntet + npenta
+            elements[n0:n1, :6] = penta_elements
+            elements[n0:n1, 6:] = penta_elements[:, 5]
+            # elements[n0:n1, 6] = penta_elements[:, 5]
+            # elements[n0:n1, 7] = penta_elements[:, 5]
         if nhexa:
-            hexas = np.array(hexas, dtype='int32')
-            elements[ntet + npenta:ntet + npenta + nhexa, :] = hexas
-            elements[ntet + npenta:ntet + npenta + nhexa, 6] = elements[ntets + npentas:ntet + npenta + nhexa, 5]
-            elements[ntet + npenta:ntet + npenta + nhexa, 7] = elements[ntets + npentas:ntet + npenta + nhexa, 5]
-        zone.hexa_elements = np.array(elements)
+            n0 = ntet + npenta
+            n1 = ntet + npenta + nhexa
+            elements[n0:n1, :] = hexa_elements
+        zone.hexa_elements = elements
         zone_type = 'FEBRICK'
     elif not nsolid:
         elements = np.zeros((nelement, 4), dtype='int32')
-        tris = np.array(tris, dtype='int32')
+        tris = np.array(tris, dtype='int32') - 1
         elements[:ntri, :3] = tris
         elements[:ntri, 4] = elements[:ntet, 3]
 
-        quads = np.array(quads, dtype='int32')
+        quads = np.array(quads, dtype='int32') - 1
         elements[ntri:, :] = quads
         zone_type = 'FEQUADRILATERAL'
     else:

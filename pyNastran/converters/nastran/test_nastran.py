@@ -15,6 +15,8 @@ from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl, nastran_
 from pyNastran.converters.nastran.nastran_to_surf import nastran_to_surf, clear_out_solids
 from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot, nastran_to_tecplot_filename
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
+
+from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran
 from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid
 from pyNastran.converters.cart3d.cart3d import read_cart3d
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
@@ -32,9 +34,9 @@ from pyNastran.converters.nastran.gui.result_objects.plate_stress_results import
 from pyNastran.converters.nastran.gui.result_objects.solid_stress_results import SolidStrainStressResults2
 
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = Path(os.path.join(PKG_PATH, '..', 'models'))
-DIRNAME = os.path.dirname(__file__)
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / '..' / 'models'
+DIRNAME = Path(os.path.dirname(__file__))
 RED = (1., 0., 0.)
 
 
@@ -554,6 +556,14 @@ class TestNastran(unittest.TestCase):
         assert len(zone.tet_elements) == 0, zone
         assert len(zone.hexa_elements) == 0, zone
 
+        bdf_filename = DIRNAME / 'tri.bdf'
+        tecplot_to_nastran(tecplot, bdf_filename)
+        model = read_bdf(bdf_filename)
+        assert len(model.elements) == 1, model.elements
+        elem = model.elements[1]
+        assert elem.type == 'CTRIA3', elem
+        os.remove(bdf_filename)
+
     def test_nastran_to_tecplot_cquad4(self):
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
@@ -567,6 +577,14 @@ class TestNastran(unittest.TestCase):
         assert len(zone.quad_elements) == 1, zone
         assert len(zone.tet_elements) == 0, zone
         assert len(zone.hexa_elements) == 0, zone
+
+        bdf_filename = DIRNAME / 'quad.bdf'
+        tecplot_to_nastran(tecplot, bdf_filename)
+        model = read_bdf(bdf_filename)
+        assert len(model.elements) == 1, model.elements
+        elem = model.elements[1]
+        assert elem.type == 'CQUAD4', elem
+        os.remove(bdf_filename)
 
     def test_nastran_to_tecplot_cpenta(self):
         model = BDF(debug=False)
@@ -584,6 +602,14 @@ class TestNastran(unittest.TestCase):
         assert len(zone.tet_elements) == 0, zone
         assert len(zone.hexa_elements) == 1, zone
 
+        bdf_filename = DIRNAME / 'penta.bdf'
+        tecplot_to_nastran(tecplot, bdf_filename)
+        model = read_bdf(bdf_filename)
+        assert len(model.elements) == 1, model.elements
+        elem = model.elements[1]
+        assert elem.type == 'CPENTA', elem
+        os.remove(bdf_filename)
+
     def test_nastran_to_tecplot_chexa(self):
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
@@ -595,12 +621,20 @@ class TestNastran(unittest.TestCase):
         model.add_grid(7, [1., 1., 1.])
         model.add_grid(8, [1., 0., 1.])
         model.add_chexa(10, 100, [1, 2, 3, 4, 5, 6, 7, 8])
+
+        bdf_filename = DIRNAME / 'hexa.bdf'
         tecplot = nastran_to_tecplot(model)
         zone = tecplot.zones[0]
         assert len(zone.tri_elements) == 0, zone
         assert len(zone.quad_elements) == 0, zone
         assert len(zone.tet_elements) == 0, zone
         assert len(zone.hexa_elements) == 1, zone
+        tecplot_to_nastran(tecplot, bdf_filename)
+        model = read_bdf(bdf_filename)
+        assert len(model.elements) == 1, model.elements
+        elem = model.elements[1]
+        assert elem.type == 'CHEXA', elem
+        os.remove(bdf_filename)
 
     def test_nastran_to_tecplot_chexa_cpenta(self):
         model = BDF(debug=False)
@@ -614,12 +648,23 @@ class TestNastran(unittest.TestCase):
         model.add_grid(8, [1., 0., 1.])
         model.add_cpenta(11, 100, [1, 2, 3, 4, 5, 6])
         model.add_chexa(10, 100, [1, 2, 3, 4, 5, 6, 7, 8])
+
         tecplot = nastran_to_tecplot(model)
         zone = tecplot.zones[0]
         assert len(zone.tri_elements) == 0, zone
         assert len(zone.quad_elements) == 0, zone
         assert len(zone.tet_elements) == 0, zone
         assert len(zone.hexa_elements) == 2, zone
+
+        bdf_filename = DIRNAME / 'penta_hexa.bdf'
+        tecplot_to_nastran(tecplot, bdf_filename)
+        model = read_bdf(bdf_filename)
+        assert len(model.elements) == 2, model.elements
+        elem1 = model.elements[1]
+        elem2 = model.elements[2]
+        assert elem1.type == 'CPENTA', elem1
+        assert elem2.type == 'CHEXA', elem2
+        os.remove(bdf_filename)
 
     def test_nastran_to_ugrid_01(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
@@ -819,6 +864,7 @@ class TestNastran(unittest.TestCase):
         assert len(model.elements) == 1, len(model.elements)
         os.remove(bdf_filename)
         os.remove(bdf_clean_filename)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
