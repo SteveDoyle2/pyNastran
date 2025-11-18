@@ -311,7 +311,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             run_export_caero: bool=True,
             save_file_structure: bool=False,
             nerrors: int=0, dev: bool=False,
-            crash_cards=None, cards_to_ignore=None,
+            crash_cards=None,
             safe_xref: bool=False, run_pickle: bool=False,
             version: Optional[str]=None,
             validate_case_control: bool=True,
@@ -377,7 +377,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         tests pickling
     crash_cards: list[str]; default=None
         crash on cards to find specific cards
-    cards_to_ignore: list[str]; default=None
+    skip_cards: list[str]; default=None
         don't read specific cards
 
     """
@@ -387,8 +387,6 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         dynamic_vars = {}
     if crash_cards is None:
         crash_cards = []
-    if cards_to_ignore is None:
-        cards_to_ignore = []
 
     bdf_model = bdf_filename
     if not quiet:
@@ -414,7 +412,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         dynamic_vars=dynamic_vars,
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
         nerrors=nerrors, dev=dev,
-        crash_cards=crash_cards, cards_to_ignore=cards_to_ignore,
+        crash_cards=crash_cards,
         safe_xref=safe_xref,
         version=version,
         limit_mesh_opt=limit_mesh_opt,
@@ -465,7 +463,6 @@ def run_and_compare_fems(
         nerrors: int=0,
         dev: bool=False,
         crash_cards=None,
-        cards_to_ignore=None,
         version: Optional[str]=None,
         limit_mesh_opt: bool=False,
         safe_xref: bool=True,
@@ -512,8 +509,6 @@ def run_and_compare_fems(
 
     fem1.set_error_storage(nparse_errors=nerrors, stop_on_parsing_error=True,
                            nxref_errors=nerrors, stop_on_xref_error=True)
-    if cards_to_ignore:
-        fem1.disable_cards(cards_to_ignore)
     if dynamic_vars:
         fem1.set_dynamic_syntax(dynamic_vars)
 
@@ -569,8 +564,6 @@ def run_and_compare_fems(
         test_get_cards_by_card_types(fem2)
 
         fem2.update_model_by_desvars(xref)
-        #except Exception:
-            #return 1, 2, 3
 
         run_nastran(bdf_model, nastran_cmd, post, size, is_double)
 
@@ -674,16 +667,16 @@ def run_nastran(bdf_model: str, nastran: str, post: int=-1,
         pch_model = os.path.join(dirname, f'out_{basename}.pch')
         asm_model = os.path.join(dirname, f'out_{basename}.asm')
         master_model = os.path.join(dirname, f'out_{basename}.master')
-        #op2_model = os.path.join(dirname, 'out_%s.op2' % basename)
+        # op2_model = os.path.join(dirname, 'out_%s.op2' % basename)
 
-        #cwd = os.getcwd()
+        # cwd = os.getcwd()
         cwd = dirname
         bdf_model2 = os.path.join(cwd, f'out_{basename}.bdf')
         op2_model2 = os.path.join(cwd, f'out_{basename}.op2')
-        #f06_model2 = os.path.join(cwd, 'out_%s.f06' % basename)
+        # f06_model2 = os.path.join(cwd, 'out_%s.f06' % basename)
         print(bdf_model2)
-        #if os.path.exists(bdf_model2):
-            #os.remove(bdf_model2)
+        # if os.path.exists(bdf_model2):
+        #     os.remove(bdf_model2)
 
         # make sure we're writing an OP2
         bdf = read_bdf(bdf_model, debug=False)
@@ -1255,15 +1248,15 @@ def _validate_case_control(fem: BDF, p0: Any, sol_base: int,
             pass
         elif sol_base is None:
             raise RuntimeError(f'subcase: {subcase}\n')
-        #print('case\n%s' % subcase)
-        #if sol_base == 200:
-            #analysis = subcase.get_parameter('ANALYSIS')[0]
-            #sol = sol_200_map[analysis]
-            #if sol is None:
-                #msg = 'sol=%s analysis=%r' % (sol, analysis)
-                #raise NotImplementedError(msg)
-        #else:
-            #sol = sol_base
+        # print('case\n%s' % subcase)
+        # if sol_base == 200:
+        #     analysis = subcase.get_parameter('ANALYSIS')[0]
+        #     sol = sol_200_map[analysis]
+        #     if sol is None:
+        #         msg = 'sol=%s analysis=%r' % (sol, analysis)
+        #         raise NotImplementedError(msg)
+        # else:
+        #     sol = sol_base
         ierror = check_case(
             sol_base, subcase, fem, p0, isubcase, subcases,
             sum_load=sum_load,
@@ -1344,7 +1337,7 @@ def check_sol(sol: int,
 
 def check_subcase_dmig_matrices(fem: BDF, subcase: Subcase) -> None:
     """verifies that all the DMIG matrices exist"""
-     # acoustic/fluid-structure coupling matrix
+    # acoustic/fluid-structure coupling matrix
     check_subcase_dmig_matrix(fem, subcase, 'A2GG')
 
     # mass matrices
@@ -1444,8 +1437,8 @@ def check_case(sol: int,
         _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD'), msg
     elif sol == 64:
-        #assert 'NLPARM' in subcase, subcase
-        #_assert_has_spc(subcase, fem2)
+        # assert 'NLPARM' in subcase, subcase
+        # _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD'), msg
     elif sol == 66:
         assert 'NLPARM' in subcase, subcase
@@ -1498,8 +1491,8 @@ def check_case(sol: int,
         ierror = check_for_optional_param(
             ('CMETHOD', ),
             subcase, msg, RuntimeError, log, ierror, nerrors)
-        #ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
-                                          #RuntimeError, log, ierror, nerrors)
+        # ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
+        #                                   RuntimeError, log, ierror, nerrors)
     elif sol in {8, 108}:  # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol in {109, 'DTRAN', 'SEDTRAN'}:  # time
@@ -1663,9 +1656,9 @@ def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase
     flutter_id: int = subcase.get_int_parameter('FMETHOD')
     flutter = fem2.Flutter(flutter_id, msg=', which is required by test_bdf')
 
-    #valid methods = [K, KE,
-                     #PKS, PKNLS, PKNL, PKE]
-    #if flutter.method in ['PK', 'PKNL']: # not supported in SOL 200
+    # valid methods = [K, KE,
+    #                  PKS, PKNLS, PKNL, PKE]
+    # if flutter.method in ['PK', 'PKNL']: # not supported in SOL 200
     if flutter.method == 'K':
         # EIGC
         ierror = require_cards(['CMETHOD'], log, soltype, sol, subcase,
@@ -2377,14 +2370,12 @@ def test_bdf_argparse(argv=None):
     #'Developer:\n'
     parent_parser.add_argument('--crash', nargs=1, type=str,
                                help='Crash on specific cards (e.g. CGEN,EGRID)')
-    parent_parser.add_argument('--ignore', nargs=1, type=str,
-                               help='Ignores specific cards (e.g. DMI,RBE2)\n')
+    parent_parser.add_argument('--skip_cards', nargs=1, type=str,
+                               help="Define cards to skip (e.g. 'DMI,RBE2')")
 
     parent_parser.add_argument('--dumplines', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
                                '(pyNastran_dump.bdf)')
-    parent_parser.add_argument('--skip_cards', type=str,
-                               help='Define cards to skip')
     parent_parser.add_argument('--dictsort', action='store_true',
                                help='Writes the BDF exactly as read with the INCLUDEs processed\n'
                                '(pyNastran_dict.bdf)')
@@ -2475,7 +2466,7 @@ def get_test_bdf_usage_args_examples(encoding):
     formats = '--msc|--nx|--optistruct|--mystran'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
-        f'              [--ignore I] [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
+        f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
         '              [--skip_loads] [--skip_mass] [--lax] [--nosort] [--duplicate] [skip_cards CARDS]\n'
     )
     usage = (
@@ -2503,17 +2494,15 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --safe         Use safe cross-reference (default=False)\n'
         '  -p, --punch    disables reading the executive and case control decks in the BDF\n'
         '                 (default=False -> reads entire deck)\n'
-        '  -c, --check    disables BDF checks.  Checks run the methods on \n'
-        '                 every element/property to test them.  May fails if a \n'
+        '  -c, --check    disables BDF checks.  Checks run the methods on\n'
+        '                 every element/property to test them.  May fails if a\n'
         '                 card is fully not supported (default=False)\n'
         '  --lax          dont be strict on float parsing\n'
-        '  --nosort       Dont sort the nodes, elements, ... (default=False -> nosort)\n'
         '  --duplicate    overwrite duplicate GRIDs\n'
         '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
-        #'  --loads        Disables forces/moments summation for the different subcases (default=True)\n'
+        '  --no_similar_eid   No duplicate eids among elements, rigids, and masses\n'
         #'  --filter       Filters unused cards\n'
-
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
         f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n' +
         '  -q, --quiet        prints debug messages (default=False)\n'
@@ -2521,12 +2510,12 @@ def get_test_bdf_usage_args_examples(encoding):
         '\n'
         'Developer:\n'
         '  --crash C     Crash on specific cards (e.g. CGEN,EGRID)\n'
-        '  --ignore I    Ignores specific cards (e.g. DMI,PBAR)\n'
         '  --stop        Stop after first read/write (default=False)\n'
         '  --dumplines   Writes the BDF exactly as read with the INCLUDEs processed\n'
         '                (pyNastran_dump.bdf)\n'
         '  --dictsort    Writes the BDF exactly as read with the INCLUDEs processed\n'
         '                (pyNastran_dict.bdf)\n'
+        '  --nosort      Dont sort the nodes, elements, ... (default=False -> sort)\n'
         '  --profile     Profiles the code (default=False)\n'
         '  --pickle      Pickles the data objects (default=False)\n'
         '  --hdf5        Save/load the BDF in HDF5 format\n'
@@ -2540,8 +2529,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_skin    skip the solid skinning (default=False)\n'
         '  --skip_eid_checks   skips some element checks (default=False)\n'
         '  --skip_mcid         skip the material coordinate system exporting (default=False)\n'
-        '  --no_similar_eid    No duplicate eids among elements, rigids, and masses\n'
-        '  --skip_cards CARDS  CSV list of cards (e.g., GRID,CONM2)\n'
+        "  --skip_cards CARDS  CSV list of cards (e.g., 'DMI,RBE2')\n"
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2594,11 +2582,6 @@ def main(argv=None):
     crash_cards = []
     if data['crash']:
         crash_cards = data['crash'].split(',')
-    cards_to_ignore = []
-    if data['ignore']:
-        ignore_data = data['ignore']
-        assert len(ignore_data) == 1, data
-        cards_to_ignore = ignore_data[0].split(',')
 
     debug = True
     if data['quiet']:
@@ -2642,7 +2625,6 @@ def main(argv=None):
             nerrors=data['nerrors'],
             encoding=data['encoding'],
             crash_cards=crash_cards,
-            cards_to_ignore=cards_to_ignore,
             run_pickle=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
@@ -2702,7 +2684,6 @@ def main(argv=None):
             nerrors=data['nerrors'],
             encoding=data['encoding'],
             crash_cards=crash_cards,
-            cards_to_ignore=cards_to_ignore,
             run_pickle=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],

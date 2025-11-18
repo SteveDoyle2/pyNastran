@@ -149,16 +149,17 @@ class GetMethods(BDFAttributes):
 
         """
         nodes = []
-        bad_nids = []
+        failed_ids = []
         for nid in nids:
             try:
                 nodes.append(self.EmptyNode(nid, msg=msg))
             except KeyError:
-                bad_nids.append(nid)
+                failed_ids.append(nid)
 
-        if bad_nids:
+        if failed_ids:
+            failed_ids2 = np.unique(failed_ids).tolist()
             nid_list = _unique_keys(self.nodes)
-            msg = 'nids=%s are not a GRID, SPOINT, or EPOINT%s\n' % (bad_nids, msg)
+            msg = 'nids=%s are not a GRID, SPOINT, or EPOINT%s\n' % (failed_ids2, msg)
             msg += 'nids=%s\n' % nid_list
             if self.spoints:
                 msg += 'spoints=%s\n' % _unique_keys(self.spoints)
@@ -173,7 +174,7 @@ class GetMethods(BDFAttributes):
 
         """
         nodes = []
-        nids_failed = []
+        failed_ids = []
         for nid in nids:
             assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
 
@@ -185,13 +186,14 @@ class GetMethods(BDFAttributes):
             elif nid in self.epoints:
                 node = self.epoints[nid]
             else:
-                nids_failed.append(nid)
+                failed_ids.append(nid)
                 continue
             nodes.append(node)
 
-        if len(nids_failed):
+        if len(failed_ids):
+            failed_ids2 = np.unique(failed_ids).tolist()
             nid_list = _unique_keys(self.nodes)
-            msg = f'nids={nids_failed} are not a GRID, SPOINT, or EPOINT{msg}\n'
+            msg = f'nids={failed_ids2} are not a GRID, SPOINT, or EPOINT{msg}\n'
             msg += 'nids=%s\n' % nid_list
             if self.spoints:
                 msg += 'spoints=%s\n' % _unique_keys(self.spoints)
@@ -241,15 +243,16 @@ class GetMethods(BDFAttributes):
 
         """
         elements = []
-        failed_eids = []
+        failed_ids = []
         for eid in eids:
             try:
                 elements.append(self.Element(eid, msg))
             except KeyError:
-                failed_eids.append(eid)
-        if failed_eids:
+                failed_ids.append(eid)
+        if failed_ids:
+            failed_ids2 = np.unique(failed_ids).tolist()
             msg = 'eids=%s not found%s.  Allowed elements=%s' % (
-                failed_eids, msg, _unique_keys(self.elements))
+                failed_ids2, msg, _unique_keys(self.elements))
             raise KeyError(msg)
         return elements
 
@@ -290,16 +293,17 @@ class GetMethods(BDFAttributes):
 
         """
         properties = []
-        failed_pids = []
+        failed_ids = []
         for pid in pids:
             try:
                 properties.append(self.Property(pid))
             except KeyError:
-                failed_pids.append(pid)
+                failed_ids.append(pid)
                 continue
-        if failed_pids:
+        if failed_ids:
+            failed_ids2 = np.unique(failed_ids).tolist()
             msg = 'pids=%s not found%s.  Allowed properties=%s' % (
-                failed_pids, msg, _unique_keys(self.properties))
+                failed_ids2, msg, _unique_keys(self.properties))
             raise KeyError(msg)
         return properties
 

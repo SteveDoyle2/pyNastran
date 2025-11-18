@@ -75,7 +75,7 @@ class CrossReference:
                 for (card, lines) in self._stored_xref_errors:
                     fname = _add_file(self.model, card)
                     an_error = ''.join(lines)
-                    msg += '%s%scard=%s\n' % (fname, an_error, card)
+                    msg += '%s%scard:\n%s\n' % (fname, an_error, card)
                     is_error = True
 
                 if is_error and self._stop_on_xref_error:
@@ -1069,7 +1069,8 @@ def _add_file(model: BDF, obj: BaseCard) -> str:
     msg = ''
     if obj is not None and hasattr(obj, 'ifile'):
         filename = model.active_filenames[obj.ifile]
-        tag = f' ({obj.type}={obj.eid:d})' if hasattr(obj, 'eid') else ''
-        msg = f'file[{obj.ifile:d}]={filename}{tag}\n'
+        # tag = f' ({obj.type}={obj.eid:d})' if hasattr(obj, 'eid') else ''
+        # msg = f'file[{obj.ifile:d}]={filename}{tag}\n'
         #msg += f'active: {model.active_filenames}\n'
+        msg = f'file={filename}\n'
     return msg

@@ -109,7 +109,7 @@ class SafeXrefMesh(XrefMesh):
 
     def safe_empty_nodes(self, nids: list[int],
                          msg: str='') -> tuple[list[GRID], list[int]]:
-        """safe xref version of self.Nodes(nid, msg='')"""
+        """safe xref version of self.EmptyNodes(nid, msg='')"""
         nodes = []
         missing_nodes = []
         for nid in nids:

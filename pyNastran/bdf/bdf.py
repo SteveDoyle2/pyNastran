@@ -3103,7 +3103,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #_check_for_spaces(card_name, card_lines, comment, self.log)
             self.log.info(f'    rejecting card_name = {card_name}')
 
-    def _prepare_bolt(self, card: list[str], card_obj: BDFCard, comment: str='') -> list[BOLT | BOLT_MSC]:
+    def _prepare_bolt(self, card: list[str], card_obj: BDFCard,
+                      comment: str='') -> list[BOLT | BOLT_MSC]:
         """adds a BOLT"""
         card_obj.card = [value.upper() if isinstance(value, str) else value
                          for value in card_obj.card]
