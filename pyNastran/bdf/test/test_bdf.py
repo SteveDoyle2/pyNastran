@@ -939,10 +939,10 @@ def get_dof_map(model: BDF,
     Considers:
       - MPC, RBE1, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE
       - SUPORT / SUPORT1
+      - SPC / SPC1
     doesn't consider:
       - GRID PS
       - loads
-      - SPC
       - RSSCON
     """
     log = model.log
@@ -2264,20 +2264,6 @@ def compute(cards1: dict[str, int],
 
         star = ' ' if key == 'INCLUDE' else '*'
         msg += f'   {star}key={key:-7s} value1={value1:<7d} value2={value2:<7d}\n'
-        #if star == '*': #value1 != value2:
-        #    asdf
-        #    if len(lost_keys):
-        #        msg += f'   lost:  {lost_keys}\n'
-        #    if len(extra_keys):
-        #        msg += f'   extra: {extra_keys}\n'
-
-        # if key == 'INCLUDE':
-        #     if not quiet:
-        #         msg += '    key=%-7s value1=%-7s value2=%-7s' % (
-        #             key, value1, value2)
-        # else:
-        #     msg += '   *key=%-7s value1=%-7s value2=%-7s' % (
-        #         key, value1, value2)
         msg = msg.rstrip()
         if msg:
             print(msg)

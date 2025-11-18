@@ -113,8 +113,8 @@ def nastran_to_tecplot(model: BDF) -> Tecplot:
         if nhexa:
             hexas = np.array(hexas, dtype='int32')
             elements[ntet + npenta:ntet + npenta + nhexa, :] = hexas
-            # elements[ntet + npenta:ntet + npenta + nhexa, 6] = elements[ntets + npentas:ntet + npenta + nhexa, 5]
-            # elements[ntet + npenta:ntet + npenta + nhexa, 7] = elements[ntets + npentas:ntet + npenta + nhexa, 5]
+            elements[ntet + npenta:ntet + npenta + nhexa, 6] = elements[ntets + npentas:ntet + npenta + nhexa, 5]
+            elements[ntet + npenta:ntet + npenta + nhexa, 7] = elements[ntets + npentas:ntet + npenta + nhexa, 5]
         zone.hexa_elements = np.array(elements)
         zone_type = 'FEBRICK'
     elif not nsolid:

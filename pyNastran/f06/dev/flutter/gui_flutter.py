@@ -1027,7 +1027,6 @@ class FlutterGui(LoggableGui):
         show_zimmerman = flags['show_zimmerman']
         show_modal_participation = flags['show_modal_participation']
 
-
         # print(f'x_plot_type={x_plot_type} show_damp={show_damp}; show_xlim={show_xlim}')
         # assert show_xlim is False, show_xlim
 

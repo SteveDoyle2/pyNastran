@@ -5,8 +5,6 @@ import numpy as np
 from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.f06.dev.flutter.nastran_utils import (
-    get_element_table, get_property_table, get_material_table)
 from pyNastran.f06.dev.flutter.action import Action
 from pyNastran.f06.dev.flutter.utils import (
     get_plot_flags,
@@ -18,6 +16,8 @@ from pyNastran.f06.dev.flutter.utils import (
 
 IS_DEV = pyNastran.DEV
 if IS_DEV:
+    from pyNastran.f06.dev.flutter.nastran_utils import (
+        get_element_table, get_property_table, get_material_table)
     from pyNastran.dev.bdf_vectorized3.bdf import read_bdf
 
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -26,6 +26,7 @@ AERO_PATH = MODEL_PATH / 'aero'
 
 
 class TestGuiFlutter(unittest.TestCase):
+    @unittest.skipIf(not IS_DEV, 'no flutter-dev')
     def test_nastran_utils(self) -> None:
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
         model = read_bdf(bdf_filename, debug='warning')

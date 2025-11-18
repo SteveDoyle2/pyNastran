@@ -24,10 +24,7 @@ try:
 except ImportError:
     pass
 
-try:
-    import pyNastran.f06.dev.flutter.utils
-except ImportError:
-    pass
+import pyNastran.f06.dev.flutter.utils
 
 try:
     import pyNastran.f06.dev.flutter.actions_builder

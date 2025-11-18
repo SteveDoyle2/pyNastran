@@ -1404,7 +1404,7 @@ class BCTPARM(BaseCard):
 
     def __init__(self, csid: int,
                  params: dict[str, int | float],
-    comment: str=''):
+                 comment: str=''):
         """
         Creates a BCTPARM card
 
