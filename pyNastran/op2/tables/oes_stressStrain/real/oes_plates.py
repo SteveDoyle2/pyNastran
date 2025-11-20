@@ -289,9 +289,11 @@ class RealPlateArray(OES_Object):
                 names=names,
             )
         else:
-            # option B - nice!
-            df1 = pd.DataFrame(element_node).T
-            df1.columns = ['ElementID', 'NodeID', 'Location']
+            df1 = pd.DataFrame({
+                'ElementID': self.element_node[:, 0],
+                'NodeID': node,
+                'Location': fd,
+            })
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)

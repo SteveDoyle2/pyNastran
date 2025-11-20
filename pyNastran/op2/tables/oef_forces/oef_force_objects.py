@@ -489,7 +489,7 @@ class FailureIndicesArray(RealForceObject):
                    'failure_index_for_bonding (interlaminar stresss)', 'max_value']
         return headers
 
-    def __eq__(self, table):
+    def __eq__(self, table) -> bool:
         return True
 
     def add_sort1(self, dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
@@ -1528,10 +1528,6 @@ class RealCBeamForceArray(RealForceObject):
         """creates a pandas dataframe"""
         import pandas as pd
         headers = self.get_headers()
-        element_location = [
-            self.element_node[:, 0],
-            self.data[0, :, 0],
-        ]
         if self.nonlinear_factor not in (None, np.nan):
             #Mode                                           1             2             3
             #Freq                                1.482246e-10  3.353940e-09  1.482246e-10
@@ -1553,13 +1549,20 @@ class RealCBeamForceArray(RealForceObject):
             #                   total_torque    -4.240346e-16  2.742446e-09  1.522254e-15
             #                   warping_torque   0.000000e+00  0.000000e+00  0.000000e+00
             column_names, column_values = self._build_dataframe_transient_header()
+            element_location = [
+                self.element_node[:, 0],
+                self.data[0, :, 0],
+            ]
+            # TODO: doesn't handle mixed type arrays
             data_frame = self._build_pandas_transient_element_node(
                 column_values, column_names,
-                headers[1:], element_location, self.data[:, :, 1:], from_tuples=False, from_array=True)
+                headers[1:], element_location, self.data[:, :, 1:],
+                from_tuples=False, from_array=True)
             data_frame.index.names = ['ElementID', 'Location', 'Item']
         else:
-            df1 = pd.DataFrame(element_location).T
-            df1.columns = ['ElementID', 'Location']
+            df1 = pd.DataFrame({
+                'ElementID': self.element_node[:, 0],
+                'Location': self.data[0, :, 0]})
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join([df2])
@@ -4451,19 +4454,21 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         """creates a pandas dataframe"""
         import pandas as pd
         headers = self.get_headers()
-        element_location = [
-            self.element,
-            self.data[0, :, 0],
-        ]
         if self.nonlinear_factor not in (None, np.nan):
+            element_location = [
+                self.element,
+                self.data[0, :, 0],
+            ]
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
                                        major_axis=element_location, minor_axis=headers[1:]).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Location', 'Item']
         else:
-            df1 = pd.DataFrame(element_location).T
-            df1.columns = ['ElementID', 'Location']
+            df1 = pd.DataFrame({
+                'ElementID': self.element,
+                'Location': self.data[0, :, 0],
+            })
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             self.data_frame = df1.join([df2])
