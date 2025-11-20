@@ -6,7 +6,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import (
         BDF, Element, Property, Material, ThermalMaterial,
         CYAX, CYJOIN,
-        TOPVAR, MPCAX, CORD3G,
+        TOPVAR,  # MPCAX, CORD3G,
         SESUPORT, SEUSET, SEUSET1,
         FREQs,
     )
@@ -28,30 +28,30 @@ if TYPE_CHECKING:  # pragma: no cover
     #)
     from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
 
-    #from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
-        #AXIF, RINGFL,
-        #AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
-    #from pyNastran.bdf.cards.elements.axisymmetric_shells import (
-        #CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
+    # from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
+    #     AXIF, RINGFL,
+    #     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
+    # from pyNastran.bdf.cards.elements.axisymmetric_shells import (
+    #     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
     from pyNastran.bdf.cards.elements.shell import (
-        #CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
-        #CTRIA3, CTRIA6, CTRIAR,
-        #CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
-        #CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
+        # CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
+        # CTRIA3, CTRIA6, CTRIAR,
+        # CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
+        # CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
         SNORM,
     )
-    #from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
-    #from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
+    # from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
+    # from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
+    # from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
+    #                                                  CDAMP5)
     from pyNastran.bdf.cards.properties.bush import PBUSHT  # PBUSH, PBUSH1D, PBUSH2D
-    #from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
-    #                                                 CDAMP5)
     from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
-    #from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
+    # from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
     from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND, BAROR
     from pyNastran.bdf.cards.elements.beam import CBEAM, BEAMOR
-    #from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
-    #from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
-    #from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
+    # from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
+    # from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
+    # from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
     # CMASS5
     from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
     from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
@@ -59,8 +59,8 @@ if TYPE_CHECKING:  # pragma: no cover
                                                  MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                                  GMSPC)
     from pyNastran.bdf.cards.coordinate_systems import (
-        #CORD1R, CORD1C, CORD1S,
-        #CORD2R, CORD2C, CORD2S, #CORD3G,
+        # CORD1R, CORD1C, CORD1S,
+        # CORD2R, CORD2C, CORD2S, #CORD3G,
         MATCID, Coord)
     from pyNastran.bdf.cards.deqatn import DEQATN
     from pyNastran.bdf.cards.dynamic import (
@@ -101,10 +101,10 @@ if TYPE_CHECKING:  # pragma: no cover
         AERO, FLFACT, FLUTTER,
         GUST, GUST2,
         MKAERO1, MKAERO2)
-    #from pyNastran.bdf.cards.aero.zona import (
-        #ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
-        #SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
-        #ZONA)
+    # from pyNastran.bdf.cards.aero.zona import (
+    #     ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
+    #     SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
+    #     ZONA)
 
     from pyNastran.bdf.cards.optimization import (
         DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,

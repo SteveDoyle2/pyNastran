@@ -5481,12 +5481,6 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._iparse_errors = 0
         self._stored_parse_errors = []
         self.values_to_skip = None
-        self._duplicate_elements = None
-        self._duplicate_properties = None
-        self._duplicate_masses = None
-        self._duplicate_materials = None
-        self._duplicate_coords = None
-        self._duplicate_thermal_materials = None
         self._stop_on_parsing_error = True
         self._stop_on_xref_error = True
 

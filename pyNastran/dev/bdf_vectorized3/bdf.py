@@ -4997,17 +4997,17 @@ def map_update(fem: BDF, version: str):
     func()
 
 
-#if mode == 'msc':
-    #self.set_as_msc()
-#elif mode == 'nx':
-    #self.set_as_nx()
-#elif mode == 'mystran':
-    #self.set_as_mystran()
-#elif mode == 'zona':
-    #self.set_as_zona()
-#else:  # pragma: no cover
-    #msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, mystran]'
-    #raise NotImplementedError(msg)
+# if mode == 'msc':
+#     self.set_as_msc()
+# elif mode == 'nx':
+#     self.set_as_nx()
+# elif mode == 'mystran':
+#     self.set_as_mystran()
+# elif mode == 'zona':
+#     self.set_as_zona()
+# else:  # pragma: no cover
+#     msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, mystran]'
+#     raise NotImplementedError(msg)
 
 
 def main():  # pragma: no cover

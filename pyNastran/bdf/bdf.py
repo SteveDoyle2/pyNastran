@@ -31,6 +31,7 @@ import numpy as np  # type: ignore
 
 from pyNastran.utils import PathLike, object_attributes, check_path, deprecated as _deprecated
 from .utils import parse_patran_syntax
+from .bdf_interface.add_methods import _get_tag
 from .bdf_interface.utils import (
     _parse_pynastran_header, to_fields, to_fields_line0,
     parse_executive_control_deck,
@@ -1774,6 +1775,27 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.punch = punch
         assert ext != '.op2', bdf_filename2
 
+    def _pop_error(self, is_error: bool, msg: str,
+                   element_word: str,
+                   elements_dict_word: str,
+                   duplicate_elements,
+                   elements_dict: dict[int, Any]) -> tuple[bool, str]:
+        if duplicate_elements:
+            duplicate_eids = [elem.eid for elem in duplicate_elements]
+            uduplicate_eids = np.unique(duplicate_eids)
+            msg += f'self.{elements_dict_word} IDs are not unique={str(uduplicate_eids)}\n'
+            for eid in uduplicate_eids:
+                old_obj = elements_dict[eid]
+                msg += f'old_{element_word}=\n{str(old_obj)}\n'
+                msg += f'new_{element_word}=\n'
+                for elem, eidi in zip(duplicate_elements, duplicate_eids):
+                    if eidi == eid:
+                        msg += str(elem)
+                        msg += _get_tag(self, elem, old_obj)
+                msg += '\n'
+                is_error = True
+        return is_error, msg
+
     def pop_parse_errors(self) -> None:
         """raises an error if there are parsing errors"""
         if self._stop_on_parsing_error:
@@ -1781,83 +1803,36 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 raise
             is_error = False
             msg = ''
-            if self._duplicate_elements:
-                duplicate_eids = [elem.eid for elem in self._duplicate_elements]
-                uduplicate_eids = np.unique(duplicate_eids)
-                msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
-                for eid in uduplicate_eids:
-                    msg += 'old_element=\n%s\n' % str(self.elements[eid])
-                    msg += 'new_elements=\n'
-                    for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
-                        if eidi == eid:
-                            msg += str(elem)
-                    msg += '\n'
-                    is_error = True
+            
+            is_error, msg = self._pop_error(
+                is_error, msg,
+                'element', 'elements',
+                self._duplicate_elements, self.elements)
 
-            if self._duplicate_properties:
-                duplicate_pids = [prop.pid for prop in self._duplicate_properties]
-                uduplicate_pids = np.unique(duplicate_pids)
-                msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
-                for pid in duplicate_pids:
-                    msg += 'old_property=\n%s\n' % str(self.properties[pid])
-                    msg += 'new_properties=\n'
-                    for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
-                        if pidi == pid:
-                            msg += str(prop)
-                    msg += '\n'
-                    is_error = True
+            is_error, msg = self._pop_error(
+                is_error, msg,
+                'property', 'properties',
+                self._duplicate_properties, self.properties)
 
-            if self._duplicate_masses:
-                duplicate_eids = [elem.eid for elem in self._duplicate_masses]
-                uduplicate_eids = np.unique(duplicate_eids)
-                msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
-                for eid in uduplicate_eids:
-                    msg += 'old_mass=\n%s\n' % str(self.masses[eid])
-                    msg += 'new_masses=\n'
-                    for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
-                        if eidi == eid:
-                            msg += str(elem)
-                    msg += '\n'
-                    is_error = True
+            is_error, msg = self._pop_error(
+                is_error, msg,
+                'mass', 'masses',
+                self._duplicate_masses, self.masses)
 
-            if self._duplicate_materials:
-                duplicate_mids = [mat.mid for mat in self._duplicate_materials]
-                uduplicate_mids = np.unique(duplicate_mids)
-                msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
-                for mid in uduplicate_mids:
-                    msg += 'old_material=\n%s\n' % str(self.materials[mid])
-                    msg += 'new_materials=\n'
-                    for mat, midi in zip(self._duplicate_materials, duplicate_mids):
-                        if midi == mid:
-                            msg += str(mat)
-                    msg += '\n'
-                    is_error = True
+            is_error, msg = self._pop_error(
+                is_error, msg,
+                'material', 'materials',
+                self._duplicate_materials, self.materials)
 
-            if self._duplicate_thermal_materials:
-                duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
-                uduplicate_mids = np.unique(duplicate_mids)
-                msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
-                for mid in uduplicate_mids:
-                    msg += 'old_thermal_material=\n%s\n' % str(self.thermal_materials[mid])
-                    msg += 'new_thermal_materials=\n'
-                    for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
-                        if midi == mid:
-                            msg += str(mat)
-                    msg += '\n'
-                    is_error = True
+            is_error, msg = self._pop_error(
+                is_error, msg,
+                'material', 'thermal_materials',
+                self._duplicate_thermal_materials, self.thermal_materials)
 
-            if self._duplicate_coords:
-                duplicate_cids = [coord.cid for coord in self._duplicate_coords]
-                uduplicate_cids = np.unique(duplicate_cids)
-                msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
-                for cid in uduplicate_cids:
-                    msg += 'old_coord=\n%s\n' % str(self.coords[cid])
-                    msg += 'new_coords=\n'
-                    for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
-                        if cidi == cid:
-                            msg += str(coord)
-                    msg += '\n'
-                    is_error = True
+            is_error, msg = self._pop_error(
+                is_error, msg,
+                'coord', 'coords',
+                self._duplicate_coords, self.coords)
 
             if is_error:
                 msg = 'There are duplicate cards.\n\n' + msg
@@ -2431,6 +2406,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             add_mass_object = add_methods.add_mass_object
             add_rigid_element_object = add_methods.add_rigid_element_object
         else:
+            self.log.info(f'allow_duplicate_element_rbe_mass = {self.allow_duplicate_element_rbe_mass}')
             add_mass_object = add_methods.add_element_object
             add_rigid_element_object = add_methods.add_element_object
 
@@ -4653,7 +4629,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     continue
 
                 if self.is_reject(card_name):  # pragma: no cover
-                    msg = f"save_file_structure=True doesn't support {card_name}"
+                    msg = f"save_file_structure=True doesn't support {card_name}\n"
+                    msg += f'card_lines = {card_lines}'
                     raise NotImplementedError(msg)
                     #self.reject_card_lines(card_name, card_lines, comment)
                 else:

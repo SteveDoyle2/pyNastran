@@ -83,7 +83,7 @@ if TYPE_CHECKING:  # pragma: no cover
         DCONADD, DCONSTR, DOPTPRM,
         DMNCON, GROUP,
         # contact
-        BCPARA, BCBODY, BCTPARAM, BGSET, BCTADD, BSURF, BSURFS, BCONP, BLSEG, BFRIC,
+        BCPARA, BCBODY, BCTPARM, BGSET, BCTADD, BSURF, BSURFS, BCONP, BLSEG, BFRIC,
         BCTSET, BCTPARA, BGADD, BCTPARA, BCRPARA,
         # superelements
         SEBULK, SENQSET, SENQSET1, SEBNDRY, RELEASE, SELOC, SEMPLN, SETREE,
@@ -761,6 +761,23 @@ class BDFAttributes:
         self._stop_on_duplicate_error = True
         self._stored_parse_errors: list[str] = []
 
+        # self._duplicates: dict[str, list[str]] = {
+        #     'nodes': [],
+        #     'elements': [],
+        #     'rigid_elements': [],
+        #     'properties': [],
+        #     'materials': [],
+        #     'thermal_materials': [],
+        #     'coords': [],
+        # }
+        # self._duplicate_nodes = self._duplicates['nodes']
+        # self._duplicate_elements = self._duplicates['elements']
+        # self._duplicate_rigid_elements = self._duplicates['rigid_elements']
+        # self._duplicate_properties = self._duplicates['properties']
+        # self._duplicate_materials = self._duplicates['materials']
+        # self._duplicate_masses = self._duplicates['materials']
+        # self._duplicate_thermal_materials = self._duplicates['thermal_materials']
+        # self._duplicate_coords = self._duplicates['coords']
         self._duplicate_nodes: list[str] = []
         self._duplicate_elements: list[str] = []
         self._duplicate_rigid_elements: list[str] = []
@@ -1129,7 +1146,7 @@ class BDFAttributes:
         self.bfric: dict[int, BFRIC] = {}
         self.bgadds: dict[int, BGADD] = {}
         self.bgsets: dict[int, BGSET] = {}
-        self.bctparms: dict[int, BCTPARAM] = {}
+        self.bctparms: dict[int, BCTPARM] = {}
 
         #--------------------------superelements------------------------------
         self.setree: dict[int, SETREE] = {}

@@ -482,7 +482,10 @@ def run_and_compare_fems(
     assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDF(debug=debug, log=log)
     fem1.allow_tabs = allow_tabs
-    fem1.allow_duplicate_element_rbe_mass = allow_similar_eid
+    # fem1.log.warning(f'allow_similar_eid={allow_similar_eid}')
+    if not allow_similar_eid:
+        fem1.allow_duplicate_element_rbe_mass = allow_similar_eid
+        fem1._make_card_parser()
 
     read_cards = []
     if read_cards and skip_cards:  # pragma: no cover
@@ -543,7 +546,7 @@ def run_and_compare_fems(
                 print('card_count:')
                 print('-----------')
                 for card_name, card_count in sorted(fem1.card_count.items()):
-                    print('key=%-8s value=%s' % (card_name, card_count))
+                    print(f'key={card_name:<8s} value={card_count}')
             return fem1, None, None
 
         ierror = 0
@@ -2352,7 +2355,7 @@ def test_bdf_argparse(argv=None):
                                help='skip the element checks (default=False)')
     parent_parser.add_argument('--skip_mcid', action='store_true',
                                help='skip the material coordinate system exporting (default=False)')
-    parent_parser.add_argument('--no_similar_eid', action='store_false',
+    parent_parser.add_argument('--no_similar_eid', action='store_true',
                                help='No duplicate eids among elements, rigids, and masses (default=False)')
     parent_parser.add_argument('--lax', action='store_true',
                                help='use the lax card parser (default=False)')
@@ -2565,6 +2568,7 @@ def main(argv=None):
     data['run_eid_checks'] = not data['skip_eid_checks']
     data['run_mcid'] = not data['skip_mcid']
     allow_similar_eid = not data['no_similar_eid']
+    #print(f'allow_similar_eid = {allow_similar_eid}')
     skip_cards = data['skip_cards']
     skip_cards_list = [] if skip_cards is None else skip_cards.split(',')
     save_file_structure = data['ifile']
