@@ -47,6 +47,8 @@ ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CTRIAR_LINEAR': 227,
     'CQUADR_LINEAR': 228,
 }
+
+
 class RealPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
@@ -58,10 +60,10 @@ class RealPlateArray(OES_Object):
         self.nelements = 0  # result specific
         self.nnodes = None
 
-        #if is_sort1:
-            #pass
-        #else:
-            #raise NotImplementedError('SORT2')
+        # if is_sort1:
+        #     pass
+        # else:
+        #     raise NotImplementedError('SORT2')
 
     @property
     def is_real(self) -> bool:
@@ -126,21 +128,21 @@ class RealPlateArray(OES_Object):
         #print('nnodes_per_element =', nnodes_per_element)
         nlayers_per_element = 2 * nnodes_per_element
 
-        #print('nnodes_per_element[%s, %s] = %s' % (
-            #self.isubcase, self.element_type, nnodes_per_element))
+        # print('nnodes_per_element[%s, %s] = %s' % (
+        #     self.isubcase, self.element_type, nnodes_per_element))
         self.nnodes = nnodes_per_element
-        #self.nelements //= nnodes_per_element
+        # self.nelements //= nnodes_per_element
         self.nelements //= self.ntimes
-        #self.ntotal //= factor
+        # self.ntotal //= factor
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
 
-        #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
-            #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
-            #self.nelements, self.ntotal))
+        # print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
+        #     self.element_name, self.element_type, nnodes_per_element, self.ntimes,
+        #     self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         if self.is_sort1:
@@ -152,27 +154,26 @@ class RealPlateArray(OES_Object):
             #***nelements=956 nlayers_per_element=2 ntimes=201 nlayers=1912
             #***nelements=27  nlayers_per_element=2 ntimes=201
 
-            #print(self.ntimes, self.nelements, self.ntotal, self._ntotals)
-            nelements = self.ntimes # good
+            # print(self.ntimes, self.nelements, self.ntotal, self._ntotals)
+            nelements = self.ntimes  # good
             ntimes = self._ntotals[0] // nlayers_per_element
             nlayers = nelements * nlayers_per_element
-            #print(f'***nelements={nelements} nlayers_per_element={nlayers_per_element} ntimes={ntimes} -> nlayers={nlayers}')
-            #nelements = self._ntotals[0]  # good
-            #nlayers += 1
-            #ntimes = nlayers // nelements
+            # print(f'***nelements={nelements} nlayers_per_element={nlayers_per_element} ntimes={ntimes} -> nlayers={nlayers}')
+            # nelements = self._ntotals[0]  # good
+            # nlayers += 1
+            # ntimes = nlayers // nelements
             assert nlayers % nelements == 0
-            #print('***', self.element_name, nlayers)
-            #assert nelements == 4, self.ntimes
-            #nelements = 4
-            #nelements = = self.ntimes // 2
-            #print(f'ntimes={ntimes} nelements={nelements} nlayers={nlayers}; '
-                  #f'nlayers_per_element={nlayers_per_element}')
-            #bbb
-            #assert ntimes == 1, ntimes
-            #print(self.code_information())
+            # print('***', self.element_name, nlayers)
+            # assert nelements == 4, self.ntimes
+            # nelements = 4
+            # nelements = = self.ntimes // 2
+            # print(f'ntimes={ntimes} nelements={nelements} nlayers={nlayers}; '
+            #       f'nlayers_per_element={nlayers_per_element}')
+            # assert ntimes == 1, ntimes
+            # print(self.code_information())
 
         if self.analysis_code == 1:
-            #ntimes = 1
+            # ntimes = 1
             if ntimes != 1:
                 # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\acc002.op2
                 warnings.warn(f'ntimes != 1; {self.element_name}-{self.element_type}\n'
@@ -186,8 +187,8 @@ class RealPlateArray(OES_Object):
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         data = np.zeros((ntimes, nlayers, 8), dtype=fdtype)
         if self.load_as_h5:
-            #for key, value in sorted(self.data_code.items()):
-                #print(key, value)
+            # for key, value in sorted(self.data_code.items()):
+            #     print(key, value)
             group = self._get_result_group()
             self._times = group.create_dataset('_times', data=_times)
             self.element_node = group.create_dataset('element_node', data=element_node)
@@ -204,6 +205,7 @@ class RealPlateArray(OES_Object):
         omin = self.data[:, :, 6]
         abs_principal = get_abs_max(omin, omax, dtype=omin.dtype)
         return abs_principal
+
     def von_mises(self) -> np.ndarray:
         """hasn't been checked for strain; 2d von mises"""
         if self.is_von_mises:
@@ -211,8 +213,9 @@ class RealPlateArray(OES_Object):
         σxx = self.data[:, :, 1]
         σyy = self.data[:, :, 2]
         τxy = self.data[:, :, 3]
-        ovm = np.sqrt(σxx**2 + σyy**2 - σxx*σyy +3*(τxy**2) )
+        ovm = np.sqrt(σxx**2 + σyy**2 - σxx*σyy + 3*(τxy**2))
         return ovm
+
     def max_shear(self) -> np.ndarray:
         """hasn't been checked for strain"""
         if not self.is_von_mises:
@@ -237,14 +240,6 @@ class RealPlateArray(OES_Object):
 
         node = pd.Series(data=self.element_node[:, 1])
         node.replace(to_replace=0, value='CEN', inplace=True)
-        element_node = [
-            self.element_node[:, 0],
-            node,
-            fd,
-        ]
-        # for key in headers:
-        #     element_node.append()
-        # print([len(en) for en in element_node])
 
         if self.nonlinear_factor not in (None, np.nan):
             # Mode                                                 1             2             3
@@ -285,12 +280,31 @@ class RealPlateArray(OES_Object):
             #                 Bottom   von_mises       100.566292
             #
             column_names, column_values = self._build_dataframe_transient_header()
+            # if self.element_type == 144:  # hacks to see the data
+            #     nmode = 2
+            #     nelement = 5
+            #     nlayer = nelement * 2  # top/bottom
+            #     column_values = [values[:nmode] for values in column_values]
+            #     self.data = self.data[:nmode, :nlayer, :]
+            #     self.element_node = self.element_node[:nlayer, :]
+            #     node = pd.Series(data=self.element_node[:, 1])
+            #     node.replace(to_replace=0, value='CEN', inplace=True)
+
+            element_node = [
+                self.element_node[:, 0],
+                node,
+                fd,
+            ]
             names = ['ElementID', 'NodeID', 'Location', 'Item']
             data_frame = self._build_pandas_transient_element_node(
                 column_values, column_names,
-                headers, element_node, self.data, from_tuples=False, from_array=True,
+                headers[:], element_node, self.data[:, :, :],  # 1:
+                from_tuples=False, from_array=True,
                 names=names,
             )
+            # if self.element_type == 144:
+            #     print(data_frame)
+            #     asdf
         else:
             data = {
                 'ElementID': self.element_node[:, 0],
@@ -338,7 +352,7 @@ class RealPlateArray(OES_Object):
         s_code = get_scode(stress_bits)
 
         # stress
-        assert stress_bits[1] == stress_bits[3], 'stress_bits=%s' % (stress_bits)
+        assert stress_bits[1] == stress_bits[3], f'stress_bits={str(stress_bits)}'
         data_code['stress_bits'] = stress_bits
         data_code['s_code'] = s_code
 
@@ -479,21 +493,20 @@ class RealPlateArray(OES_Object):
         else:  # pragma: no cover
             raise NotImplementedError((self.element_name, self.element_type, inid))
 
-
         #inid = self.ielement % nnodes
         #itotal = self.itotal
         #if itime >= self.data.shape[0]:# or itotal >= self.element_node.shape[0]:
         ielement = self.itime
-        #if self.element_name == 'CQUAD8':
-            #print(f'*SORT2 {self.element_name}: itime={itime} ielement={ielement} ilayer={ilayer}  inid={inid} itotal={itotal} dt={dt} eid={eid} nid={nid}')
-            #print(f'*SORT2 {self.element_name}: itime={itime} ielement={ielement} ilayer=False inid={inid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
-            #print(self.data.shape)
-            #print(self.element_node.shape)
-        #else:
-        #aaa
-        #print(itime, inid, ielement)
+        # if self.element_name == 'CQUAD8':
+        #     print(f'*SORT2 {self.element_name}: itime={itime} ielement={ielement} ilayer={ilayer}  inid={inid} itotal={itotal} dt={dt} eid={eid} nid={nid}')
+        #     print(f'*SORT2 {self.element_name}: itime={itime} ielement={ielement} ilayer=False inid={inid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
+        #     print(self.data.shape)
+        #     print(self.element_node.shape)
+        # else:
+        # aaa
+        # print(itime, inid, ielement)
 
-        #ibase = 2 * ielement # ctria3/cquad4-33
+        # ibase = 2 * ielement # ctria3/cquad4-33
         if debug:
             print(f'ielement={ielement} nnodes={nnodes} inid={inid}')
         ibase = 2 * (ielement * nnodes + inid)
@@ -501,13 +514,13 @@ class RealPlateArray(OES_Object):
         ie_upper = ibase
         ie_lower = ibase + 1
 
-        #if self.element_name == 'CTRIAR': # and self.table_name == 'OESATO2':
-        #debug = False
-        #if self.element_name == 'CTRIAR': # and self.table_name in ['OSTRRMS1', 'OSTRRMS2']:
-            #debug = True
-        #if debug:
-            #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_upper={ie_upper} ielement={self.itime} inid={inid} nid={nid} itotal={itotal} dt={dt} eid={eid} nid={nid}')
-            #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_lower={ie_lower} ielement={self.itime} inid={inid} nid={nid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
+        # if self.element_name == 'CTRIAR': # and self.table_name == 'OESATO2':
+        # debug = False
+        # if self.element_name == 'CTRIAR': # and self.table_name in ['OSTRRMS1', 'OSTRRMS2']:
+        #     debug = True
+        # if debug:
+        #     print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_upper={ie_upper} ielement={self.itime} inid={inid} nid={nid} itotal={itotal} dt={dt} eid={eid} nid={nid}')
+        #     print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_lower={ie_lower} ielement={self.itime} inid={inid} nid={nid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
         return itime, ie_upper, ie_lower
 
     def add_new_eid_sort2(self, dt, eid, node_id,
@@ -516,7 +529,6 @@ class RealPlateArray(OES_Object):
         assert isinstance(eid, integer_types), eid
         assert isinstance(node_id, integer_types), node_id
         #itime, itotal = self._get_sort2_itime_ielement_from_itotal()
-
 
         itime, ie_upper, ie_lower = self._get_sort2_itime_ilower_iupper_from_itotal(dt, eid, node_id)
         try:
@@ -531,11 +543,11 @@ class RealPlateArray(OES_Object):
                 dt, eid, node_id, debug=True)
             print(f'SORT2: itime={itime} -> dt={dt};   ie_upper={ie_upper} -> eid={eid} ({self.element_name})')
             raise
-        #print(self.element_node)
-        #self.data[self.itime, ie_upper, :] = [fiber_dist1, oxx1, oyy1, txy1, angle1,
-                                              #major_principal1, minor_principal1, ovm1]
-        #self.data[self.itime, ie_lower, :] = [fiber_dist2, oxx2, oyy2, txy2, angle2,
-                                              #major_principal2, minor_principal2, ovm2]
+        # print(self.element_node)
+        # self.data[self.itime, ie_upper, :] = [fiber_dist1, oxx1, oyy1, txy1, angle1,
+        #                                       major_principal1, minor_principal1, ovm1]
+        # self.data[self.itime, ie_lower, :] = [fiber_dist2, oxx2, oyy2, txy2, angle2,
+        #                                       major_principal2, minor_principal2, ovm2]
         self.itotal += 2
         #self.ielement += 1
 
@@ -554,7 +566,7 @@ class RealPlateArray(OES_Object):
         self.element_node[ie_lower, :] = [eid, node_id]
         #print(self.element_node.tolist())
         self.data[itime, ie_upper, :] = [fiber_dist1, oxx1, oyy1, txy1, angle1,
-                                       major_principal1, minor_principal1, ovm1]
+                                         major_principal1, minor_principal1, ovm1]
         self.data[itime, ie_lower, :] = [fiber_dist2, oxx2, oyy2, txy2, angle2,
                                          major_principal2, minor_principal2, ovm2]
         self.itotal += 2
@@ -598,7 +610,7 @@ class RealPlateArray(OES_Object):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = np.searchsorted(eids, self.element_node[:, 0])  #[0]
+        itot = np.searchsorted(eids, self.element_node[:, 0])  # [0]
         return itot
 
     def eid_to_element_node_index(self, eids):
@@ -865,15 +877,15 @@ class RealPlateArray(OES_Object):
         op2_ascii.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')  # 1+16
 
         op2_ascii.write('  #elementi = [eid_device, node1, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-        op2_ascii.write('  #                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n') # 1 + 17*5
+        op2_ascii.write('  #                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')  # 1 + 17*5
         op2_ascii.write('  #elementi = [            node2, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-        op2_ascii.write('  #                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n') # 17
+        op2_ascii.write('  #                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')  # 17
         op2_ascii.write('  #elementi = [            node3, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-        op2_ascii.write('  #                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n') # 17
+        op2_ascii.write('  #                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')  # 17
         op2_ascii.write('  #elementi = [            node4, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-        op2_ascii.write('  #                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n') # 17
+        op2_ascii.write('  #                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')  # 17
         op2_ascii.write('  #elementi = [            node5, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-        op2_ascii.write('  #                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n') # 17
+        op2_ascii.write('  #                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')  # 17
 
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
@@ -1063,6 +1075,7 @@ def _get_plate_msg(self):
     else:  # pragma: no cover
         raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
     return msg, nnodes, cen
+
 
 def set_element_node_fiber_case(cls, data_code, is_sort1, isubcase,
                                 nnodes, element_node, fiber_distance, data, times):

@@ -269,7 +269,7 @@ REMOVED_CARDS = {
 }
 
 SOL_700 = {
-    ## Explicit Nonlinear (SOL 700)
+    # Explicit Nonlinear (SOL 700)
     'ABINFL', 'AIRBAG', 'ATBACC', 'ATBJNT', 'ATBSEG',
     'BARRIER',
     'BCBODY', 'BCBODY1', 'BCBOX', 'BCELIPS', 'BCGRID', 'BCMATL', 'BCONECT',
@@ -319,18 +319,18 @@ MISSING_CARDS = {
     # ----------------------------
     'RJOINT', 'RTRPLT', 'RTRPLT1', 'DYNRED',
 
-    ## fatigue
+    # fatigue
     'FTGDEF', 'FTGPARM', 'FTGEVNT', 'FTGLOAD', 'FTGSEQ',
     'MATFTG', 'PFTG', 'TABLFTG', 'UDNAME', 'SET4',
     'TOPSTR', 'TOPDMG',
 
-    ## acoustic
+    # acoustic
     'CACINF3', 'CACINF4',
 
-    ## Non Linear (SOL 400)
+    # Non Linear (SOL 400)
     'BCBODY', 'BSURF', 'BCTABLE', 'BCPARA', 'PSLDN1',
 
-    ## Implicit Nonlinear (SOL 600) - marc
+    # Implicit Nonlinear (SOL 600) - marc
     'PARAMARC', 'MARCIN', 'MARCOUT',
     'RESTART',
     'MATD001', 'MATD003', 'MATD005', 'MATD006', 'MATD007', 'MATD009',
@@ -375,13 +375,13 @@ MISSING_CARDS = {
     'MPHEAT', 'NLHEAT', 'MCHSTAT', 'MINSTAT',
     'MHEATSHL', 'MTHERM',
 
-    ## nx bolts
+    # nx bolts
     'BOLT', 'BOLTFRC', 'BOLTFOR', 'BOLTLD', 'BOLTSEQ',
 
-    ## msc bolts?
+    # msc bolts?
     'MBOLT', 'MBOLTUS',  # 'BOLT'
 
-    ## uds
+    # uds
     'PORUDS', 'YLDUDS', 'SHRUDS', 'FAILUDS', 'COMPUDS',
     'FLOWUDS', 'BCONUDS', 'ELEMUDS', 'UDSESV', 'MATUDS',
     'TICEUDS', 'EOSUDS', 'TABLUDS', 'GENUDS', 'ENTUDS',
@@ -409,10 +409,10 @@ MISSING_CARDS = {
     'CBUTT',
     'PCOHE',
 
-    ## rigid_elements
+    # rigid_elements
     'RSPINT', 'RSPINR', 'RBE2GS',
 
-    ## materials
+    # materials
     'MATF', 'MATEP', 'MATVE', 'MCOHE', 'MATM',
     'MATDT01', 'MATDIGI', 'MATUSR', 'MATTC',
     'MATORT', 'MATTORT', 'MATTHE', 'MATPLCY',
@@ -420,29 +420,29 @@ MISSING_CARDS = {
     'MATPOR',  # 'MATDMG',
     'MAT2F', 'MAT8F',
 
-    ## loads
+    # loads
     'FORCDST', 'PLOADX', 'PLOADB3', 'PLOADG', 'QBDY4', 'SLOADN1',
     'TEMPP1', 'TTEMP', 'RGYRO', 'PLOADE1', 'RCROSSC', 'LOADCYT',
     'TEMPN1',
 
-    ## boundaries
+    # boundaries
     'BNDFREE', 'BNDFREE1',
     'BNDFIX', 'BNDFIX1',
     'SPCR',
 
-    ## aero
+    # aero
     'UXVEC', 'GUST2', 'RVDOF', 'RVDOF1', 'AEFORCE', 'AEPRESS',
 
-    ## acoustics
+    # acoustics
     'MICPNT',
 
-    ## coords
+    # coords
     'CORD1RX', 'CORD3G',
 
-    ## brakes
+    # brakes
     'BRKSQL',
 
-    ## d2r
+    # d2r
     'D2R0000', 'D2RAUTO', 'D2RINER',
 
     'MATD016', 'MATD029', 'MATD053', 'MATD066', 'MATD067', 'MATD069',
@@ -658,28 +658,28 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # nodes
             'GRID', 'GRDSET', 'SPOINT', 'EPOINT', 'SEQGP',
-            #'GRIDB', (removed)
+            # 'GRIDB', (removed)
 
             # points
             'POINT',
-            #'GRIDG'
+            # 'GRIDG'
 
-            ## ringfl
-            #'RINGFL', (removed)
-            ## ringaxs
-            #'RINGAX', 'POINTAX', (removed)
+            # ringfl
+            # 'RINGFL', (removed)
+            # ringaxs
+            # 'RINGAX', 'POINTAX', (removed)
 
-            ## masses
+            # masses
             'CONM1', 'CONM2',
             'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
 
-            ## nsms
+            # nsms
             'NSM', 'NSM1', 'NSML', 'NSML1',
 
-            ## nsmadds
+            # nsmadds
             'NSMADD',
 
-            ## elements
+            # elements
             # springs
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',  # 'CELAS5',
             # bushings
@@ -696,7 +696,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
             'SNORM',
             # nastran95
-            #'CTRSHL', 'CQUAD1',
+            # 'CTRSHL', 'CQUAD1',
 
             'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',  # plate strain
             'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',  # plate stress
@@ -706,19 +706,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PACABS', 'PAABSF', 'PACBAR', 'ACMODL',
 
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-            #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',  # nastran95-removed
+            # 'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',  # nastran95-removed
             'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
             'CGAP',
             'GENEL',
 
-            ## rigid_elements
+            # rigid_elements
             'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON',
 
-            ## plotels
+            # plotels
             'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
             'PLOTTET', 'PLOTPYR', 'PLOTPEN', 'PLOTHEX',
 
-            ## properties
+            # properties
             'PMASS',
             'PELAS', 'PGAP', 'PFAST', 'PWELD', 'PLPLANE', 'PPLANE', 'PGPLSN',
             'PBUSH', 'PBUSH1D', 'PBUSH2D',
@@ -733,59 +733,59 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PMIC',
 
             # axixsymmetric - removed
-            #'CCONEAX', # element
-            #'PCONEAX', # property
-            #'AXIC', # axic
-            #'AXIF', # axif
-            #'FORCEAX', # loads
+            # 'CCONEAX', # element
+            # 'PCONEAX', # property
+            # 'AXIC', # axic
+            # 'AXIF', # axif
+            # 'FORCEAX', # loads
 
-            ## pdampt
+            # pdampt
             'PDAMPT',
 
-            ## pelast
+            # pelast
             'PELAST',
 
-            ## pbusht
+            # pbusht
             'PBUSHT',
 
-            ## creep_materials
+            # creep_materials
             'CREEP',
 
-            ## materials
+            # materials
             'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11', 'MAT3D',
             'MATG', 'MATHE', 'MATHP', 'MATEV',
 
-            ## Material dependence - MATT1/MATT2/etc.
+            # Material dependence - MATT1/MATT2/etc.
             'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9', 'MATT11',
             'MATS1',  # 'MATS3', 'MATS8',
             'MATDMG',
             # 'MATHE'
             # 'EQUIV', # testing only, should never be activated...
 
-            ## nxstrats
+            # nxstrats
             'NXSTRAT',
 
-            ## thermal_materials
+            # thermal_materials
             'MAT4', 'MAT5',
 
-            ## spcs
+            # spcs
             'SPC', 'SPCADD', 'SPC1', 'SPCOFF', 'SPCOFF1',  # 'SPCAX',
 
-            ## mpcs
+            # mpcs
             'MPC', 'MPCADD',
 
-            ## suport/suport1/se_suport
+            # suport/suport1/se_suport
             'SUPORT', 'SUPORT1', 'SESUP',
 
-            ## dloads
+            # dloads
             'DLOAD',
 
-            ## dload_entries
+            # dload_entries
             'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             'QVECT',
             'RANDPS', 'RANDT1',  # random
 
-            ## loads
+            # loads
             'LOAD', 'CLOAD', 'LSEQ', 'LOADCYN', 'LOADCYH',
             'SLOAD',
             'FORCE', 'FORCE1', 'FORCE2',
@@ -795,7 +795,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PLOADX1', 'RFORCE', 'RFORCE1',
             'SPCD', 'DEFORM',
 
-            ## acoustic
+            # acoustic
             'ACPLNW', 'AMLREG', 'MATPOR', 'MICPNT',
 
             # msgmesh
@@ -809,39 +809,39 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'QVOL',
 
             # aero cards
-            'AERO',  ## aero
-            'AEROS',  ## aeros
-            'GUST',  ## gusts
-            'FLUTTER',  ## flutters
-            'FLFACT',   ## flfacts
-            'MKAERO1', 'MKAERO2',  ## mkaeros
-            'AECOMP', 'AECOMPL',   ## aecomps
-            'AEFACT',  ## aefacts
-            'AELINK',  ## aelinks
-            'AELIST',  ## aelists
-            'AEPARM',  ## aeparams
-            'AESTAT',  ## aestats
-            'AESURF',  ## aesurf
-            'AESURFS',  ## aesurfs
-            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',  ## caeros
-            'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',  ## paeros
+            'AERO',  # aero
+            'AEROS',  # aeros
+            'GUST',  # gusts
+            'FLUTTER',  # flutters
+            'FLFACT',   # flfacts
+            'MKAERO1', 'MKAERO2',  # mkaeros
+            'AECOMP', 'AECOMPL',   # aecomps
+            'AEFACT',  # aefacts
+            'AELINK',  # aelinks
+            'AELIST',  # aelists
+            'AEPARM',  # aeparams
+            'AESTAT',  # aestats
+            'AESURF',  # aesurf
+            'AESURFS',  # aesurfs
+            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',  # caeros
+            'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',  # paeros
 
-            'MONPNT1', 'MONPNT2', 'MONPNT3', 'MONDSP1',  ## monitor_points
-            'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
+            'MONPNT1', 'MONPNT2', 'MONPNT3', 'MONDSP1',  # monitor_points
+            'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  # splines
             'SPLINE6', 'SPLINE7',
-            'TRIM', 'TRIM2',  ## trims
-            'UXVEC',  ## uxvec,
-            'CSSCHD',  ## csschds
-            'DIVERG',  ## divergs
+            'TRIM', 'TRIM2',  # trims
+            'UXVEC',  # uxvec,
+            'CSSCHD',  # csschds
+            'DIVERG',  # divergs
 
-            ## coords
+            # coords
             'CORD1R', 'CORD1C', 'CORD1S',
             'CORD2R', 'CORD2C', 'CORD2S',
 
             'MATCID',
 
             # temperature cards
-            'TEMP', 'TEMPD', 'TEMPB3',  #'TEMPAX',
+            'TEMP', 'TEMPD', 'TEMPB3',  # 'TEMPAX',
             'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
             'CHBDYE', 'CHBDYG', 'CHBDYP',
             'PCONV', 'PCONVM', 'PHBDY',
@@ -849,21 +849,21 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'RADM', 'VIEW', 'VIEW3D',  # TODO: not validated
 
 
-            'RADCAV',  ## radcavs
+            'RADCAV',  # radcavs
 
             # ---- dynamic cards ---- #
-            'DAREA',  ## dareas
-            'DPHASE',  ## dphases
-            'DELAY',  ## delays
-            'NLPARM',  ## nlparms
-            'ROTORG', 'ROTORD',  ## rotors
-            'NLPCI',  ## nlpcis
-            'TSTEP',  ## tsteps
-            'TSTEPNL', 'TSTEP1',  ## tstepnls
-            'TF',  ## transfer_functions
-            'TIC',  ## initial conditions - sid (set ID)
+            'DAREA',  # dareas
+            'DPHASE',  # dphases
+            'DELAY',  # delays
+            'NLPARM',  # nlparms
+            'ROTORG', 'ROTORD',  # rotors
+            'NLPCI',  # nlpcis
+            'TSTEP',  # tsteps
+            'TSTEPNL', 'TSTEP1',  # tstepnls
+            'TF',  # transfer_functions
+            'TIC',  # initial conditions - sid (set ID)
 
-            ## frequencies
+            # frequencies
             'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5',
 
             # direct matrix input cards
@@ -883,13 +883,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'DVTREL1', 'GROUP', 'DMNCON',
 
             # sets
-            'SET1', 'SET2', 'SET3',  ## sets
-            'ASET', 'ASET1',  ## asets
-            'OMIT', 'OMIT1',  ## omits
-            'BSET', 'BSET1',  ## bsets
-            'CSET', 'CSET1',  ## csets
-            'QSET', 'QSET1',  ## qsets
-            'USET', 'USET1',  ## usets
+            'SET1', 'SET2', 'SET3',  # sets
+            'ASET', 'ASET1',  # asets
+            'OMIT', 'OMIT1',  # omits
+            'BSET', 'BSET1',  # bsets
+            'CSET', 'CSET1',  # csets
+            'QSET', 'QSET1',  # qsets
+            'USET', 'USET1',  # usets
 
             'RADSET',  # radset
 
@@ -899,21 +899,21 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SELOAD', 'RELEASE',
 
             # super-element sets
-            'SESET',  ## se_sets
+            'SESET',  # se_sets
 
-            'SEBSET', 'SEBSET1',  ## se_bsets
-            'SECSET', 'SECSET1',  ## se_csets
-            'SEQSET', 'SEQSET1',  ## se_qsets
-            #'SEUSET', 'SEUSET1',  ## se_usets
+            'SEBSET', 'SEBSET1',  # se_bsets
+            'SECSET', 'SECSET1',  # se_csets
+            'SEQSET', 'SEQSET1',  # se_qsets
+            # 'SEUSET', 'SEUSET1',  # se_usets
             'SEQSEP',
 
             #------------------------------------------------------------------
-            ## parametric
+            # parametric
             'PSET', 'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE',
             'GMSPC',  # spcs
 
             #------------------------------------------------------------------
-            ## tables
+            # tables
             'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
             'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
 
@@ -923,10 +923,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # material tables - stress (MATS1, CREEP, MATHP)
             'TABLES1',
 
-            ## modal damping table - tables_sdamping
+            # modal damping table - tables_sdamping
             'TABDMP1',
 
-            ## random_tables
+            # random_tables
             # PSD=func(freq); used by RANDPS card
             'TABRND1',
             # gust for aeroelastic response; used by RANDPS card
@@ -946,36 +946,36 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MODTRAK',
 
             #: contact
-            'BCBODY',  ## bcbody
-            'BCPARA',  ## bcpara
-            'BCTPARA',  ## bctpara
-            'BCRPARA',  ## bcrpara
-            'BCTPARM',  ## bctparm
-            'BGADD',  ## bgadds
-            'BGSET',  ## bgsets
-            'BCTADD',  ## bctadds
-            'BCTSET',  ## bctsets
-            'BSURF',  ## bsurf
-            'BSURFS',  ## bsurfs
-            'BCONP',  ## bconp
-            'BLSEG',  ## blseg
-            'BFRIC',  ## bfric
+            'BCBODY',  # bcbody
+            'BCPARA',  # bcpara
+            'BCTPARA',  # bctpara
+            'BCRPARA',  # bcrpara
+            'BCTPARM',  # bctparm
+            'BGADD',  # bgadds
+            'BGSET',  # bgsets
+            'BCTADD',  # bctadds
+            'BCTSET',  # bctsets
+            'BSURF',  # bsurf
+            'BSURFS',  # bsurfs
+            'BCONP',  # bconp
+            'BLSEG',  # blseg
+            'BFRIC',  # bfric
 
             'TEMPBC',
-            #'RADMT',
-            'RADLST', 'RADMTX',  #'RADBND',
-            #'TEMPP1',
+            # 'RADMT',
+            'RADLST', 'RADMTX',  # 'RADBND',
+            # 'TEMPP1',
             'TEMPRB',
             'CONVM',
-            ## ???
+            # ???
             #'PANEL', 'SWLDPRM',
             # 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP',
-            #'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
-            #'AEFORCE', 'UXVEC', 'GUST2',
+            # 'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
+            # 'AEFORCE', 'UXVEC', 'GUST2',
 
-            #'BNDGRID',
-            #'BNDFREE', 'BNDFREE1',
-            #'BNDFIX', 'BNDFIX1',
+            # 'BNDGRID',
+            # 'BNDFREE', 'BNDFREE1',
+            # 'BNDFIX', 'BNDFIX1',
 
             # cyclic
             'CYJOIN', 'CYAX',
@@ -998,9 +998,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         self._xref = False
 
-        #case_control_cards = {'FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
-                              #'TEMP', 'TSTEPNL', 'INCLUDE'}
-        #self._unique_bulk_data_cards = self.cards_to_read.difference(CASE_CONTROL_CARDS)
+        # case_control_cards = {'FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
+        #                       'TEMP', 'TSTEPNL', 'INCLUDE'}
+        # self._unique_bulk_data_cards = self.cards_to_read.difference(CASE_CONTROL_CARDS)
 
         #: / is the delete from restart card
         self.special_cards = ['DEQATN', '/']
@@ -1159,9 +1159,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 continue
 
             val = getattr(obj, key)
-            #print(key)
-            #if isinstance(val, types.FunctionType):
-                #continue
+            # print(key)
+            # if isinstance(val, types.FunctionType):
+            #     continue
             try:
                 setattr(self, key, val)
             except AttributeError:  # pragma: no cover
@@ -1460,10 +1460,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         cards_list, cards_dict, card_count = self.get_bdf_cards(
             bulk_data_lines, bulk_data_ilines, use_dict=False)
         assert len(cards_dict) == 0, cards_dict
-        #for card in cards_list:
-            #card_name = card[0]
-            #if card_name == 'CBAR':
-                #print(card)
+        # for card in cards_list:
+        #     card_name = card[0]
+        #     if card_name == 'CBAR':
+        #         print(card)
         # self._parse_cards(cards_list, cards_dict, card_count)
 
         # is_list : bool; default=True
@@ -1778,8 +1778,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def _pop_error(self, is_error: bool, msg: str,
                    element_word: str,
                    elements_dict_word: str,
-                   duplicate_elements,
+                   #duplicate_elements,
                    elements_dict: dict[int, Any]) -> tuple[bool, str]:
+        duplicate_elements = self._duplicate[elements_dict_word]
         if duplicate_elements:
             duplicate_eids = [elem.eid for elem in duplicate_elements]
             uduplicate_eids = np.unique(duplicate_eids)
@@ -1807,32 +1808,32 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             is_error, msg = self._pop_error(
                 is_error, msg,
                 'element', 'elements',
-                self._duplicate_elements, self.elements)
+                self.elements)
 
             is_error, msg = self._pop_error(
                 is_error, msg,
                 'property', 'properties',
-                self._duplicate_properties, self.properties)
+                self.properties)
 
             is_error, msg = self._pop_error(
                 is_error, msg,
                 'mass', 'masses',
-                self._duplicate_masses, self.masses)
+                self.masses)
 
             is_error, msg = self._pop_error(
                 is_error, msg,
                 'material', 'materials',
-                self._duplicate_materials, self.materials)
+                self.materials)
 
             is_error, msg = self._pop_error(
                 is_error, msg,
                 'material', 'thermal_materials',
-                self._duplicate_thermal_materials, self.thermal_materials)
+                self.thermal_materials)
 
             is_error, msg = self._pop_error(
                 is_error, msg,
                 'coord', 'coords',
-                self._duplicate_coords, self.coords)
+                self.coords)
 
             if is_error:
                 msg = 'There are duplicate cards.\n\n' + msg
@@ -4407,29 +4408,29 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         is_star_lines = any('*' in line for line in card_lines_old)
         if is_star_lines:
-            #new_fields = to_fields_replication(card_lines_old)
+            # new_fields = to_fields_replication(card_lines_old)
             old_card = to_fields_replication(card_lines_old)
         else:
-            #old_card, unused_card = self.create_card_object(
-                #card_lines_old, card_name,
-                #is_list=False, has_none=True)
-            #print(card_lines_old)
+            # old_card, unused_card = self.create_card_object(
+            #     card_lines_old, card_name,
+            #     is_list=False, has_none=True)
+            # print(card_lines_old)
             old_card = self._old_card_fields(card_lines_old, card_name, self.log,
                                              is_list=False, has_none=True,
                                              is_dynamic_syntax=self._is_dynamic_syntax)
-            #print(old_card)
-            #assert '=' not in card_name
+            # print(old_card)
+            # assert '=' not in card_name
 
         nlines = len(card_lines_new)
-        #print(dig_str, "card_lines_new =", card_lines_new)
+        # print(dig_str, "card_lines_new =", card_lines_new)
         new_card = to_fields_replication(card_lines_new)
         assert len(card_lines_new) == nlines, card_lines_new
 
-        #print(dig_str, 'old_card =', old_card)
-        #print(dig_str, 'card_name = %r' % card_name)
+        # print(dig_str, 'old_card =', old_card)
+        # print(dig_str, 'card_name = %r' % card_name)
         old_card_real = None
         if old_card[0] == '=':
-            #print(dig_str, 'A!!!')
+            # print(dig_str, 'A!!!')
             if dig is False:
                 raise ReplicationError(f'dig=False...old_card=\n{old_card}')
 
@@ -4446,54 +4447,54 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                                              is_list=True, has_none=True,
                                              is_dynamic_syntax=self._is_dynamic_syntax)
         elif '=' in card_name:
-            #print(dig_str, 'B!!!')
-            #print(dig_str, 'old_card =', old_card)
-            #print(dig_str, 'card_lines_new =', card_lines_new)
-            #print(dig_str, 'card_name = %r' % card_name)
+            # print(dig_str, 'B!!!')
+            # print(dig_str, 'old_card =', old_card)
+            # print(dig_str, 'card_lines_new =', card_lines_new)
+            # print(dig_str, 'card_name = %r' % card_name)
 
             # good
-            #new_card = [u'=3']
-            #old_card = [u'CQUAD4', u'64', u'1', u'88', u'89', u'101', u'100']
-            #old_card_real = [u'=', u'*1', u'=', u'*1', u'*1', u'*1', u'*1']
+            # new_card = [u'=3']
+            # old_card = [u'CQUAD4', u'64', u'1', u'88', u'89', u'101', u'100']
+            # old_card_real = [u'=', u'*1', u'=', u'*1', u'*1', u'*1', u'*1']
 
             # bad
-            #card_name = u'=(7)'
-            #new_card = [u'=(7)', u'*(10)', u'=', u'=', u'=', u'*(1.0)']
-            #old_card = [u'grid', u'1001', None, u'0.', u'0.', u'0.']
-            #old_card_real = [u'grid', u'1001', None, u'0.', u'0.', u'0.']
+            # card_name = u'=(7)'
+            # new_card = [u'=(7)', u'*(10)', u'=', u'=', u'=', u'*(1.0)']
+            # old_card = [u'grid', u'1001', None, u'0.', u'0.', u'0.']
+            # old_card_real = [u'grid', u'1001', None, u'0.', u'0.', u'0.']
             old_card_real = new_card
-        #else:
-            #print('old_card[0] %r' % old_card[0])
+        # else:
+        #     print('old_card[0] %r' % old_card[0])
 
-        #print(dig_str, "old_card =", old_card)
-        #print(dig_str, "new_card =", new_card)
+        # print(dig_str, "old_card =", old_card)
+        # print(dig_str, "new_card =", new_card)
         for ifield, field in enumerate(new_card):
             if field is None:
                 field2 = old_card.field(ifield)
-                #print(' %i: %r -> %r' % (ifield, field, field2))
-                #assert field2 is None, 'field=%s field2=%s' % (field, field2)
+                # print(' %i: %r -> %r' % (ifield, field, field2))
+                # assert field2 is None, 'field=%s field2=%s' % (field, field2)
                 card.append(field2)
                 continue
 
-            #if field == '':
-                #pass
+            # if field == '':
+            #     pass
 
             field = field.strip()
             if field == '=':
                 field2 = old_card[ifield]
-                #field2 = old_card.field(ifield)
+                # field2 = old_card.field(ifield)
             elif field == '==':
                 # just append the remaining fields
                 card.extend(old_card[ifield:])
-                #print(dig_str, ' %i : extending %s' % (ifield, old_card[ifield:]))
-                #print(dig_str, ' break _expand_replication...')
+                # print(dig_str, ' %i : extending %s' % (ifield, old_card[ifield:]))
+                # print(dig_str, ' break _expand_replication...')
                 break
             elif '=' in field:
                 # =4
                 assert ifield == 0, f'ifield={ifield} field={field!r} new_card={new_card}'
                 nrepeats = get_nrepeats(field, old_card, new_card)
                 if old_card_real is None:
-                    #old_card_real = old_card
+                    # old_card_real = old_card
                     msg = (
                         'Invalid Replication Syntax (continuations arent supported)\n'
                         'old:\n%s\n'
@@ -4501,29 +4502,29 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         % (old_card, new_card))
                     raise RuntimeError(msg)
 
-                #new_card = [u'=3']
-                #old_card = [u'CQUAD4', u'64', u'1', u'88', u'89', u'101', u'100']
-                #old_card_real = [u'=', u'*1', u'=', u'*1', u'*1', u'*1', u'*1']
+                # new_card = [u'=3']
+                # old_card = [u'CQUAD4', u'64', u'1', u'88', u'89', u'101', u'100']
+                # old_card_real = [u'=', u'*1', u'=', u'*1', u'*1', u'*1', u'*1']
 
-                #print('---')
-                #print(dig_str, "nrepeats =", nrepeats)
+                # print('---')
+                # print(dig_str, "nrepeats =", nrepeats)
                 new_card[0] = '='
-                #print(dig_str, "new_card =", new_card)
-                #print(dig_str, "old_card =", old_card)
-                #print(dig_str, "old_card_real =", old_card_real)
+                # print(dig_str, "new_card =", new_card)
+                # print(dig_str, "old_card =", old_card)
+                # print(dig_str, "old_card_real =", old_card_real)
                 for unused_irepeat in range(nrepeats):
                     repeated_cards = repeat_cards(old_card, old_card_real)
                     if len(repeated_cards) != 1:
                         for repeated_card in repeated_cards:
                             print("  repeated_card =", repeated_card)
                         raise RuntimeError('too many repeated cards')
-                    #for repeated_card in repeated_cards:
-                        #print("  repeated_card =", repeated_card)
+                    # for repeated_card in repeated_cards:
+                    #     print("  repeated_card =", repeated_card)
                     repeated_card = repeated_cards[0]
                     cards.append(repeated_card)
                     old_card = repeated_card
-                    #print(dig_str, "  repeated_card =", repeated_card)
-                #print(dig_str, 'breaking...')
+                #     print(dig_str, "  repeated_card =", repeated_card)
+                # print(dig_str, 'breaking...')
                 return cards
 
             elif '*' in field:
@@ -4556,7 +4557,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                      cards_dict: dict[str, list[str]],
                      card_count: dict[str, int]) -> None:
         """creates card objects and adds the parsed cards to the deck"""
-        #self.log.warning('_parse_cards')
+        # self.log.warning('_parse_cards')
         # we don't want replication markers in the card_count
         card_names_to_remove = (card_name for card_name in list(card_count.keys())
                                 if '=' in card_name)
@@ -4605,7 +4606,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if save_file_structure:
             for icard, card in enumerate(cards_list):
                 card_name, comment, card_lines, (ifile, unused_iline) = card
-                #print(ifile, unused_iline, card_lines[0])
+                # print(ifile, unused_iline, card_lines[0])
                 card_name = cast(str, card_name)
                 comment = cast(str, comment)
                 card_lines = cast(list[str], card_lines)
@@ -4615,7 +4616,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     raise RuntimeError(msg)
 
                 if '=' in card_name:
-                    #print(card)
+                    # print(card)
                     try:
                         replicated_cards = self._expand_replication(
                             card_name, icard, cards_list, card_lines)
@@ -4633,7 +4634,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     msg = f"save_file_structure=True doesn't support {card_name}\n"
                     msg += f'card_lines = {card_lines}'
                     raise NotImplementedError(msg)
-                    #self.reject_card_lines(card_name, card_lines, comment)
+                    # self.reject_card_lines(card_name, card_lines, comment)
                 else:
                     self.add_card_ifile(ifile, card_lines, card_name, comment=comment,
                                         is_list=False, has_none=False)
@@ -4641,14 +4642,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:
             for icard, card in enumerate(cards_list):
                 card_name, comment, card_lines, (ifile, unused_iline) = card
-                #print(unused_iline, card_lines[0])
+                # print(unused_iline, card_lines[0])
                 if card_name is None:
                     msg = f'card_name = {card_name!r}\n'
                     msg += f'card_lines = {card_lines}'
                     raise RuntimeError(msg)
 
                 if '=' in card_name:
-                    #print(card)
+                    # print(card)
                     try:
                         replicated_cards = self._expand_replication(
                             card_name, icard, cards_list, card_lines)
@@ -4851,12 +4852,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         .. code-block:: python
 
            >>> bdf_filename = 'fem.bdf'
-           >>> bdf_filename2 = 'fem_out.bdf'
+           >>> bdf_filename_out = 'fem_out.bdf'
            >>> model = read_bdf(bdf_filename, xref=True)
            >>> node1 = model.Node(1)
            >>> print(node1.get_position())
            [10.0, 12.0, 42.0]
-           >>> model.write_bdf(bdf_filename2)
+           >>> model.write_bdf(bdf_filename_out)
            >>> print(model.get_bdf_stats())
 
            ---BDF Statistics---
@@ -5386,12 +5387,12 @@ def _get_coords_to_update(coords: dict[int, Coord],
             cord1s_to_update_list.sort()
 
     ncoords = len(cord1s_to_update_list) + len(cord2s_to_update_list)
-    #if ncoords == 0:
-        #msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
-            #cps_to_check, cord1s_to_update, cord2s_to_update)
-        #for cp in (cord1s_to_update + cord2s_to_update):
-            #msg += str(cp)
-        #raise RuntimeError(msg)
+    # if ncoords == 0:
+    #     msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
+    #         cps_to_check, cord1s_to_update, cord2s_to_update)
+    #     for cp in (cord1s_to_update + cord2s_to_update):
+    #         msg += str(cp)
+    #     raise RuntimeError(msg)
     return ncoords, cord1s_to_update_list, cord2s_to_update_list, nids_checked
 
 
