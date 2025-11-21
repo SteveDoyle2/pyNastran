@@ -974,10 +974,15 @@ class BaseElement(ScalarObject):
         #print(data_frame)
         return data_frame
 
-    def _build_pandas_transient_element_node(self, column_values, column_names, headers,
+    def _build_pandas_transient_element_node(self,
+                                             column_values, column_names, headers: list[str],
                                              element_node, data, names=None,
-                                             from_tuples=True, from_array=False):
-        """common method to build a transient dataframe"""
+                                             from_tuples: bool=True,
+                                             from_array: bool=False):
+        """
+        common method to build a transient dataframe
+        TODO: doesn't handle mixed type arrays for element_node
+        """
         # Freq                  0.00001  10.00000 20.00000 30.00000                 40.00000 50.00000 60.00000
         # ElementID NodeID Item
         # 1         0      oxx        0j       0j       0j       0j    (3200.0806+6017.714j)       0j       0j
