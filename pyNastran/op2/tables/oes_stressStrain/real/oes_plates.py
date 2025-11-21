@@ -242,6 +242,9 @@ class RealPlateArray(OES_Object):
             node,
             fd,
         ]
+        # for key in headers:
+        #     element_node.append()
+        # print([len(en) for en in element_node])
 
         if self.nonlinear_factor not in (None, np.nan):
             # Mode                                                 1             2             3
@@ -289,14 +292,19 @@ class RealPlateArray(OES_Object):
                 names=names,
             )
         else:
-            df1 = pd.DataFrame({
+            data = {
                 'ElementID': self.element_node[:, 0],
                 'NodeID': node,
                 'Location': fd,
-            })
-            df2 = pd.DataFrame(self.data[0])
-            df2.columns = headers
-            data_frame = df1.join(df2)
+            }
+            for i, key in enumerate(headers):
+                data[key] = self.data[0, :, i]
+            # mydata = {key: len(datai) for key, datai in data.items()}
+            # print('mydata', mydata)
+            data_frame = pd.DataFrame(data)
+            # df2 = pd.DataFrame(self.data[0])
+            # df2.columns = headers
+            # data_frame = df1.join(df2)
             data_frame = data_frame.reset_index().set_index(['ElementID', 'NodeID', 'Location'])
         self.data_frame = data_frame
 
