@@ -1533,84 +1533,84 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 raise
             is_error = False
             msg = ''
-            if self._duplicate_elements:
-                duplicate_eids = [elem.eid for elem in self._duplicate_elements]
-                uduplicate_eids = np.unique(duplicate_eids)
-                msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
-                for eid in uduplicate_eids:
-                    msg += 'old_element=\n%s\n' % str(self.elements[eid])
-                    msg += 'new_elements=\n'
-                    for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
-                        if eidi == eid:
-                            msg += str(elem)
-                    msg += '\n'
-                    is_error = True
-                    raise DuplicateIDsError(msg)
-
-            if self._duplicate_properties:
-                duplicate_pids = [prop.pid for prop in self._duplicate_properties]
-                uduplicate_pids = np.unique(duplicate_pids)
-                msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
-                for pid in duplicate_pids:
-                    msg += 'old_property=\n%s\n' % str(self.properties[pid])
-                    msg += 'new_properties=\n'
-                    for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
-                        if pidi == pid:
-                            msg += str(prop)
-                    msg += '\n'
-                    is_error = True
-
-            if self._duplicate_masses:
-                duplicate_eids = [elem.eid for elem in self._duplicate_masses]
-                uduplicate_eids = np.unique(duplicate_eids)
-                msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
-                for eid in uduplicate_eids:
-                    msg += 'old_mass=\n%s\n' % str(self.masses[eid])
-                    msg += 'new_masses=\n'
-                    for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
-                        if eidi == eid:
-                            msg += str(elem)
-                    msg += '\n'
-                    is_error = True
-
-            if self._duplicate_materials:
-                duplicate_mids = [mat.mid for mat in self._duplicate_materials]
-                uduplicate_mids = np.unique(duplicate_mids)
-                msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
-                for mid in uduplicate_mids:
-                    msg += 'old_material=\n%s\n' % str(self.materials[mid])
-                    msg += 'new_materials=\n'
-                    for mat, midi in zip(self._duplicate_materials, duplicate_mids):
-                        if midi == mid:
-                            msg += str(mat)
-                    msg += '\n'
-                    is_error = True
-
-            if self._duplicate_thermal_materials:
-                duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
-                uduplicate_mids = np.unique(duplicate_mids)
-                msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
-                for mid in uduplicate_mids:
-                    msg += 'old_thermal_material=\n%s\n' % str(self.thermal_materials[mid])
-                    msg += 'new_thermal_materials=\n'
-                    for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
-                        if midi == mid:
-                            msg += str(mat)
-                    msg += '\n'
-                    is_error = True
-
-            if self._duplicate_coords:
-                duplicate_cids = [coord.cid for coord in self._duplicate_coords]
-                uduplicate_cids = np.unique(duplicate_cids)
-                msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
-                for cid in uduplicate_cids:
-                    msg += 'old_coord=\n%s\n' % str(self.coords[cid])
-                    msg += 'new_coords=\n'
-                    for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
-                        if cidi == cid:
-                            msg += str(coord)
-                    msg += '\n'
-                    is_error = True
+            # if self._duplicate_elements:
+            #     duplicate_eids = [elem.eid for elem in self._duplicate_elements]
+            #     uduplicate_eids = np.unique(duplicate_eids)
+            #     msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
+            #     for eid in uduplicate_eids:
+            #         msg += 'old_element=\n%s\n' % str(self.elements[eid])
+            #         msg += 'new_elements=\n'
+            #         for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
+            #             if eidi == eid:
+            #                 msg += str(elem)
+            #         msg += '\n'
+            #         is_error = True
+            #         raise DuplicateIDsError(msg)
+            #
+            # if self._duplicate_properties:
+            #     duplicate_pids = [prop.pid for prop in self._duplicate_properties]
+            #     uduplicate_pids = np.unique(duplicate_pids)
+            #     msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
+            #     for pid in duplicate_pids:
+            #         msg += 'old_property=\n%s\n' % str(self.properties[pid])
+            #         msg += 'new_properties=\n'
+            #         for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
+            #             if pidi == pid:
+            #                 msg += str(prop)
+            #         msg += '\n'
+            #         is_error = True
+            #
+            # if self._duplicate_masses:
+            #     duplicate_eids = [elem.eid for elem in self._duplicate_masses]
+            #     uduplicate_eids = np.unique(duplicate_eids)
+            #     msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
+            #     for eid in uduplicate_eids:
+            #         msg += 'old_mass=\n%s\n' % str(self.masses[eid])
+            #         msg += 'new_masses=\n'
+            #         for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
+            #             if eidi == eid:
+            #                 msg += str(elem)
+            #         msg += '\n'
+            #         is_error = True
+            #
+            # if self._duplicate_materials:
+            #     duplicate_mids = [mat.mid for mat in self._duplicate_materials]
+            #     uduplicate_mids = np.unique(duplicate_mids)
+            #     msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
+            #     for mid in uduplicate_mids:
+            #         msg += 'old_material=\n%s\n' % str(self.materials[mid])
+            #         msg += 'new_materials=\n'
+            #         for mat, midi in zip(self._duplicate_materials, duplicate_mids):
+            #             if midi == mid:
+            #                 msg += str(mat)
+            #         msg += '\n'
+            #         is_error = True
+            #
+            # if self._duplicate_thermal_materials:
+            #     duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
+            #     uduplicate_mids = np.unique(duplicate_mids)
+            #     msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
+            #     for mid in uduplicate_mids:
+            #         msg += 'old_thermal_material=\n%s\n' % str(self.thermal_materials[mid])
+            #         msg += 'new_thermal_materials=\n'
+            #         for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
+            #             if midi == mid:
+            #                 msg += str(mat)
+            #         msg += '\n'
+            #         is_error = True
+            #
+            # if self._duplicate_coords:
+            #     duplicate_cids = [coord.cid for coord in self._duplicate_coords]
+            #     uduplicate_cids = np.unique(duplicate_cids)
+            #     msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
+            #     for cid in uduplicate_cids:
+            #         msg += 'old_coord=\n%s\n' % str(self.coords[cid])
+            #         msg += 'new_coords=\n'
+            #         for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
+            #             if cidi == cid:
+            #                 msg += str(coord)
+            #         msg += '\n'
+            #         is_error = True
 
             if is_error:
                 msg = 'There are duplicate cards.\n\n' + msg

@@ -131,11 +131,11 @@ dependencies = [
 #]
 
 nogui = [
-    'pandas>=1.0,<3.0',
+    'pandas>=1.4,<3.0',
     'h5py',     # hdf5
 ]
 gui_pyqt5 = [
-    'pandas>=1.0,<3.0',
+    'pandas>=1.4,<3.0',
     'h5py',     # hdf5
     'PyQt5',    # gui library
     'vtk>=9.0', # rendering library
@@ -144,7 +144,7 @@ gui_pyqt5 = [
     'pillow >= 8.4.0',  # 2021/10
 ]
 gui_pyside2 = [
-    'pandas>=1.0,<3.0',
+    'pandas>=1.4,<3.0',
     'h5py',     # hdf5
     'PySide2',  # gui library
     'vtk>=9.0', # rendering library

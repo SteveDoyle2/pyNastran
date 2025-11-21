@@ -41,9 +41,9 @@ class AddCard(BDFAttributes):
         key = param.key
         if key in self.params and not allow_overwrites:
             if not param == self.params[key]:
-                #if param.key in self.params:
-                    #msg = 'key=%s param=%s old_param=%s' % (key, param, self.params[key])
-                    #raise KeyError(msg)
+                # if param.key in self.params:
+                #     msg = 'key=%s param=%s old_param=%s' % (key, param, self.params[key])
+                #     raise KeyError(msg)
                 self.log.warning('key=%s param=%s old_param=%s' %
                                  (key, param, self.params[key]))
                 self.params[key] = param
@@ -56,11 +56,11 @@ class AddCard(BDFAttributes):
         key = elem.eid
         assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
         if not allow_overwrites:
-            #if key in self.elements:
-                #if elem ==self.elements[key]:
-                    #self._duplicate_elements.append(elem)
-                    #if self._stop_on_duplicate_error:
-                        #self.pop_parse_errors()
+            # if key in self.elements:
+            #     if elem ==self.elements[key]:
+            #         self._duplicate_elements.append(elem)
+            #         if self._stop_on_duplicate_error:
+            #             self.pop_parse_errors()
             if key in self.plotels:
                 if not elem == self.plotels[key]:
                     assert elem.eid not in self.plotels, 'eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, self.plotels[elem.eid], elem)
@@ -70,7 +70,6 @@ class AddCard(BDFAttributes):
     def _add_doptprm_object(self, doptprm, comment=''):
         """adds a DOPTPRM"""
         self.doptprm = doptprm
-
 
     def _add_rigid_element_object(self, elem, allow_overwrites=False):
         key = elem.eid
@@ -127,7 +126,6 @@ class AddCard(BDFAttributes):
         self.bsurfs[key] = card
         self._type_to_id_map[card.type].append(key)
 
-
     def _add_aero_object(self, aero):
         """adds an AERO object"""
         # only one AERO card allowed
@@ -146,7 +144,7 @@ class AddCard(BDFAttributes):
         """adds an AEFACT object"""
         key = aefact.sid
         if key in self.aefacts and not allow_overwrites:
-            if not aefact ==self.aefacts[key]:
+            if not aefact == self.aefacts[key]:
                 assert key not in self.aefacts, 'AEFACT.sid=%s\nold=\n%snew=\n%s' % (key, self.aefacts[key], aefact)
         else:
             assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
@@ -431,7 +429,6 @@ class AddCard(BDFAttributes):
             assert key > 0, 'sid=%s tstepnl=\n%s' % (key, tstepnl)
             self.tstepnls[key] = tstepnl
             self._type_to_id_map[tstepnl.type].append(key)
-
 
     def _add_set_object(self, set_obj):
         """adds an SET1/SET3 object"""

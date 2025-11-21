@@ -12,9 +12,9 @@ try:
     IS_PANDAS = True
     # per http://stackoverflow.com/questions/35175949/ignore-pandas-warnings
     # doesn't work...
-    #warnings.filterwarnings(
-        #'ignore',
-        #'.*unorderable dtypes; returning scalar but in the future this will be an error.*')
+    # warnings.filterwarnings(
+    #     'ignore',
+    #     '.*unorderable dtypes; returning scalar but in the future this will be an error.*')
 except ModuleNotFoundError:
     IS_PANDAS = False
 
@@ -42,8 +42,8 @@ from pyNastran.bdf.test.test_bdf_unit_tests import Tester
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.bdf_interface.compare_card_content import compare_elements
 
-#from pyNastran.op2.tables.oef_forces.oef_force_objects import (
-    #RealPlateBilinearForceArray, RealPlateForceArray)
+# from pyNastran.op2.tables.oef_forces.oef_force_objects import (
+#     RealPlateBilinearForceArray, RealPlateForceArray)
 #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.vector_utils import filter1d, abs_max_min_global, abs_max_min_vector
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
@@ -136,13 +136,13 @@ class TestOP2Unit(Tester):
             [1., 0., 0., 0., 0., 0.],  # 24 - answer=same as 23
             [1., 0., 0., 0., 0., 0.],  # 25 - [-1, 0., 0.]
 
-            #[1., 0., 0., 0., 0., 0.], # 31 - [0,1,0]
-            #[1., 0., 0., 0., 0., 0.], # 32 - [0,-1,0]
+            # [1., 0., 0., 0., 0., 0.], # 31 - [0,1,0]
+            # [1., 0., 0., 0., 0., 0.], # 32 - [0,-1,0]
         ]])
         #--------------------------------------------
-        #out = bdf_model.get_displacement_index_xyz_cp_cd(
-            #fdtype='float64', idtype='int32', sort_ids=True)
-        #out = icd_transform, icp_transform, xyz_cp, nid_cp_cd
+        # out = bdf_model.get_displacement_index_xyz_cp_cd(
+        #     fdtype='float64', idtype='int32', sort_ids=True)
+        # out = icd_transform, icp_transform, xyz_cp, nid_cp_cd
         out = bdf_model.get_xyz_in_coord_array(
             cid=0, fdtype='float64', idtype='int32')
         unused_nid_cp_cd, xyz_cid0, unused_xyz_cp, icd_transform, unused_icp_transform = out
@@ -182,8 +182,8 @@ class TestOP2Unit(Tester):
             #[0., -1.,],  # 32
         ])
         assert is_array_close(dispi, expected_disp)
-        #print(is_array_close(dispi, expected_disp))
-        #print(dispi)
+        # print(is_array_close(dispi, expected_disp))
+        # print(dispi)
 
         ## TODO: fix the thetad in the cid=3 coordinates (nid=33,34)
 
@@ -270,12 +270,12 @@ class TestOP2Functions(unittest.TestCase):
         ])))
 
         # not an array
-        #print(abs_max_min([
-            #[0.0, 2.0, 1.0],
-            #[0.0, 2.0, -1.0],
-            #[0.0, 2.0, -3.0],
-            #[0.0, 2.0, 4.0],
-        #]))
+        # print(abs_max_min([
+        #     [0.0, 2.0, 1.0],
+        #     [0.0, 2.0, -1.0],
+        #     [0.0, 2.0, -3.0],
+        #     [0.0, 2.0, 4.0],
+        # ]))
 
 
 class TestAutodeskOP2(Tester):
@@ -349,13 +349,13 @@ class TestAutodeskOP2(Tester):
         assert len(stress.ctetra_stress) == 4, len(stress.ctetra_stress)
         assert len(op2.nonlinear_ctetra_stress_strain) == 4, len(op2.nonlinear_ctetra_stress_strain)
 
-        #isubcase = 1
-        #ctetra_stress = op2.ctetra_stress[isubcase]
-        #if IS_PANDAS:
-            #ctetra_stress.build_dataframe()
-        #nelements = 36
-        #assert ctetra_stress.nelements == nelements, ctetra_stress.nelements
-        #assert ctetra_stress.data.shape == (1, nelements*5, 10), ctetra_stress.data.shape
+        # isubcase = 1
+        # ctetra_stress = op2.ctetra_stress[isubcase]
+        # if IS_PANDAS:
+        #     ctetra_stress.build_dataframe()
+        # nelements = 36
+        # assert ctetra_stress.nelements == nelements, ctetra_stress.nelements
+        # assert ctetra_stress.data.shape == (1, nelements*5, 10), ctetra_stress.data.shape
 
         assert len(strain_energy.ctetra_strain_energy) == 0, len(strain_energy.ctetra_strain_energy)
         assert len(stress.cpenta_stress) == 0, len(stress.cpenta_stress)
@@ -449,16 +449,15 @@ class TestSATKOP2(Tester):
         op2_filename = MODEL_PATH / 'satk' / 'pn_mwe_s-solution_1.op2'
 
         #  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
 
         unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
-        #model.safe_cross_reference()
-
-        #save_load_deck(model, run_save_load=False)
+        # model.safe_cross_reference()
+        # save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
@@ -482,16 +481,15 @@ class TestSATKOP2(Tester):
                                     'pn_mwe_s-response_dynamics_1-random_base_excitation_1.op2')
 
         #  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
-
-        #unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
-        #model.safe_cross_reference()
-
-        #save_load_deck(model, run_save_load=False)
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+        #
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+        # save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
         op2, is_passed = run_op2(
@@ -538,131 +536,131 @@ class TestSATKOP2(Tester):
             stop_on_failure=True, dev=False,
             build_pandas=True, log=log)
         assert is_passed, is_passed
-        #op2_results.psds.accelerations:
-            # (subtitle, analysis_code, stress_strain_flag, node, dof)
-            #('SUBCASE - MODAL FREQUENCY 1', 9, 4)
-
-        #op2_results.psds.force:
-            # (subtitle, analysis_code, stress_strain_flag, node, dof)
-            #('SUBCASE - MODAL FREQUENCY 1', 2, 2)
-            #('SUBCASE - MODAL FREQUENCY 1', 8, 2)
-
-        #op2_results.eqexin: EQEXIN(nid, ndof, doftype); nnodes=7
-        #op2_results.gpdt: GPDT(nid_cp_cd_ps, xyz); nnodes=7
-        #op2_results.bgpdt: BGPDT(cd, xyz); nnodes=7
+        # op2_results.psds.accelerations:
+        #     (subtitle, analysis_code, stress_strain_flag, node, dof)
+        #     ('SUBCASE - MODAL FREQUENCY 1', 9, 4)
+        #
+        # op2_results.psds.force:
+        #     (subtitle, analysis_code, stress_strain_flag, node, dof)
+        #     ('SUBCASE - MODAL FREQUENCY 1', 2, 2)
+        #     ('SUBCASE - MODAL FREQUENCY 1', 8, 2)
+        #
+        # op2_results.eqexin: EQEXIN(nid, ndof, doftype); nnodes=7
+        # op2_results.gpdt: GPDT(nid_cp_cd_ps, xyz); nnodes=7
+        # op2_results.bgpdt: BGPDT(cd, xyz); nnodes=7
         assert len(op2.op2_results.force.cbush_force[1].modes) == 8
-            #type=RealCBushForceArray ntimes=8 nelements=1
-            #data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
-            #data.shape = (8, 1, 6)
-            #element.shape = (1,)
-            #element name: CBUSH
-            #sort1
-            #modes = [1 2 3 4 5 6 7 8]; dtype=int32
-            #eigns = [1.607e+05 1.607e+05 2.224e+07 1.204e+09 1.204e+09 1.102e+10 1.102e+10
-                   #2.544e+10]; dtype=float64
-            #cycles = [   63.804    63.804   750.561  5522.769  5522.769 16707.479 16707.479
-                       #25385.576]; dtype=float64
+        # type=RealCBushForceArray ntimes=8 nelements=1
+        # data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
+        # data.shape = (8, 1, 6)
+        # element.shape = (1,)
+        # element name: CBUSH
+        # sort1
+        # modes = [1 2 3 4 5 6 7 8]; dtype=int32
+        # eigns = [1.607e+05 1.607e+05 2.224e+07 1.204e+09 1.204e+09 1.102e+10 1.102e+10
+        #        2.544e+10]; dtype=float64
+        # cycles = [   63.804    63.804   750.561  5522.769  5522.769 16707.479 16707.479
+        #            25385.576]; dtype=float64
 
         assert len(op2.op2_results.force.cbar_force[1].modes) == 8
-            #type=RealCBarForceArray ntimes=8 nelements=5; table_name='OEF1'
-            #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1,
-            #                                   bending_moment_b2, shear1, shear2, axial, torque]
-            #data.shape = (8, 5, 8)
-            #element.shape = (5,)
-            #element name: CBAR-34
-            #sort1
-            #modes = [1 2 3 4 5 6 7 8]; dtype=int32
-            #eigns = [1.607e+05 1.607e+05 2.224e+07 1.204e+09 1.204e+09 1.102e+10 1.102e+10
-                   #2.544e+10]; dtype=float64
-            #cycles = [   63.804    63.804   750.561  5522.769  5522.769 16707.479 16707.479
-                       #25385.576]; dtype=float64
+        # type=RealCBarForceArray ntimes=8 nelements=5; table_name='OEF1'
+        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1,
+        #                                   bending_moment_b2, shear1, shear2, axial, torque]
+        # data.shape = (8, 5, 8)
+        # element.shape = (5,)
+        # element name: CBAR-34
+        # sort1
+        # modes = [1 2 3 4 5 6 7 8]; dtype=int32
+        # eigns = [1.607e+05 1.607e+05 2.224e+07 1.204e+09 1.204e+09 1.102e+10 1.102e+10
+        #        2.544e+10]; dtype=float64
+        # cycles = [   63.804    63.804   750.561  5522.769  5522.769 16707.479 16707.479
+        #            25385.576]; dtype=float64
 
         assert len(op2.op2_results.psd.accelerations[(3, 5, 2, 0, 0, '', 'RANDOM  103')].freqs) == 127
-            #isubcase = 3
-            #type=RealAccelerationArray ntimes=127 nnodes=7, table_name=OUGPSD1
-            #data: [t1, t2, t3, r1, r2, r3] shape=[127, 7, 6] dtype=float32
-            #node_gridtype.shape = (7, 2)
-            #sort1
-            #freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
+        # isubcase = 3
+        # type=RealAccelerationArray ntimes=127 nnodes=7, table_name=OUGPSD1
+        # data: [t1, t2, t3, r1, r2, r3] shape=[127, 7, 6] dtype=float32
+        # node_gridtype.shape = (7, 2)
+        # sort1
+        # freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
 
         assert len(op2.op2_results.psd.cbar_force[(3, 5, 2, 0, 0, '', 'RANDOM  103')].freqs) == 127
-            #type=RealCBarForceArray ntimes=127 nelements=5; table_name='OEFPSD1'
-            #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
-            #data.shape = (127, 10, 8)
-            #element.shape = (5,)
-            #element name: CBAR-34
-            #sort1
-            #freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
+        # type=RealCBarForceArray ntimes=127 nelements=5; table_name='OEFPSD1'
+        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+        # data.shape = (127, 10, 8)
+        # element.shape = (5,)
+        # element name: CBAR-34
+        # sort1
+        # freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
 
         assert len(op2.op2_results.psd.cbush_force[(3, 5, 2, 0, 0, '', 'RANDOM  103')].freqs) == 127
-            #type=RealCBushForceArray ntimes=1 nelements=127
-            #data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
-            #data.shape = (127, 1, 6)
-            #element.shape = (1,)
-            #element name: CBUSH
-            #sort1
-            #freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
+        # type=RealCBushForceArray ntimes=1 nelements=127
+        # data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
+        # data.shape = (127, 1, 6)
+        # element.shape = (1,)
+        # element name: CBUSH
+        # sort1
+        # freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
 
         assert len(op2.op2_results.rms.accelerations[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
-            #isubcase = 3
-            #type=RealAccelerationArray ntimes=1 nnodes=7, table_name=OUGRMS1
-            #data: [t1, t2, t3, r1, r2, r3] shape=[1, 7, 6] dtype=float32
-            #node_gridtype.shape = (7, 2)
-            #sort1
-            #freqs = [0.]; dtype=float32
+        # isubcase = 3
+        # type=RealAccelerationArray ntimes=1 nnodes=7, table_name=OUGRMS1
+        # data: [t1, t2, t3, r1, r2, r3] shape=[1, 7, 6] dtype=float32
+        # node_gridtype.shape = (7, 2)
+        # sort1
+        # freqs = [0.]; dtype=float32
 
         assert len(op2.op2_results.rms.cbar_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
-            #type=RealCBarForceArray ntimes=1 nelements=5; table_name='OEFRMS1'
-            #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
-            #data.shape = (1, 5, 8)
-            #element.shape = (5,)
-            #element name: CBAR-34
-            #sort1
-            #freqs = [0.]; dtype=float32
+        # type=RealCBarForceArray ntimes=1 nelements=5; table_name='OEFRMS1'
+        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+        # data.shape = (1, 5, 8)
+        # element.shape = (5,)
+        # element name: CBAR-34
+        # sort1
+        # freqs = [0.]; dtype=float32
 
         assert len(op2.op2_results.rms.cbush_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
-            #type=RealCBushForceArray ntimes=1 nelements=1
-            #data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
-            #data.shape = (1, 1, 6)
-            #element.shape = (1,)
-            #element name: CBUSH
-            #sort1
-            #freqs = [0.]; dtype=float32
+        # type=RealCBushForceArray ntimes=1 nelements=1
+        # data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
+        # data.shape = (1, 1, 6)
+        # element.shape = (1,)
+        # element name: CBUSH
+        # sort1
+        # freqs = [0.]; dtype=float32
 
         assert len(op2.op2_results.no.accelerations[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
-            #isubcase = 3
-            #type=RealAccelerationArray ntimes=1 nnodes=7, table_name=OUGNO1
-            #data: [t1, t2, t3, r1, r2, r3] shape=[1, 7, 6] dtype=float32
-            #node_gridtype.shape = (7, 2)
-            #sort1
-            #freqs = [0.]; dtype=float32
+        # isubcase = 3
+        # type=RealAccelerationArray ntimes=1 nnodes=7, table_name=OUGNO1
+        # data: [t1, t2, t3, r1, r2, r3] shape=[1, 7, 6] dtype=float32
+        # node_gridtype.shape = (7, 2)
+        # sort1
+        # freqs = [0.]; dtype=float32
 
         assert len(op2.op2_results.no.cbar_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
-            #type=RealCBarForceArray nelements=5; table_name='OEFNO1'
-            #data: [1, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
-            #data.shape = (1, 5, 8)
-            #element.shape = (5,)
-            #element name: CBAR-34
-            #sort1
-            #freqs = [0.]; dtype=float32
+        # type=RealCBarForceArray nelements=5; table_name='OEFNO1'
+        # data: [1, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+        # data.shape = (1, 5, 8)
+        # element.shape = (5,)
+        # element name: CBAR-34
+        # sort1
+        # freqs = [0.]; dtype=float32
 
         assert len(op2.op2_results.no.cbush_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
-            #type=RealCBushForceArray nelements=1
-            #data: [1, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
-            #data.shape = (1, 1, 6)
-            #element.shape = (1,)
-            #element name: CBUSH
-            #sort1
-            #freqs = [0.]; dtype=float32
+        # type=RealCBushForceArray nelements=1
+        # data: [1, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
+        # data.shape = (1, 1, 6)
+        # element.shape = (1,)
+        # element name: CBUSH
+        # sort1
+        # freqs = [0.]; dtype=float32
 
         str(op2.eigenvalues[''])
-            #type=RealEigenvalues neigenvalues=8
-            #title, extraction_order, eigenvalues, radians, cycles, generalized_mass, generalized_stiffness
+        # type=RealEigenvalues neigenvalues=8
+        # title, extraction_order, eigenvalues, radians, cycles, generalized_mass, generalized_stiffness
 
         str(op2.matrices['BHH'])
         str(op2.matrices['KHH'])
-            #Matrix['BHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=float64;   desc=symmetric
-            #Matrix['KHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=complex128; desc=symmetric
+        # Matrix['BHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=float64;   desc=symmetric
+        # Matrix['KHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=complex128; desc=symmetric
 
         str(op2.get_op2_stats())
 
@@ -681,39 +679,39 @@ class TestSATKOP2(Tester):
         #op2_results.gpdt: GPDT(nid_cp_cd_ps, xyz); nnodes=7
 
         assert len(op2.op2_results.psd.displacements[(1, 5, 2, 0, 0, '', '')].freqs) == 298
-          #isubcase = 1
-          #type=RealDisplacementArray ntimes=298 nnodes=6, table_name=OUGPSD1
-          #data: [t1, t2, t3, r1, r2, r3] shape=[298, 6, 6] dtype=float32
-          #node_gridtype.shape = (6, 2)
-          #sort1
-          #freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
+        # isubcase = 1
+        # type=RealDisplacementArray ntimes=298 nnodes=6, table_name=OUGPSD1
+        # data: [t1, t2, t3, r1, r2, r3] shape=[298, 6, 6] dtype=float32
+        # node_gridtype.shape = (6, 2)
+        # sort1
+        # freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
 
         assert len(op2.op2_results.psd.accelerations[(1, 5, 2, 0, 0, '', '')].freqs) == 298
-          #isubcase = 1
-          #type=RealAccelerationArray ntimes=298 nnodes=6, table_name=OUGPSD1
-          #data: [t1, t2, t3, r1, r2, r3] shape=[298, 6, 6] dtype=float32
-          #node_gridtype.shape = (6, 2)
-          #sort1
-          #freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
+        # isubcase = 1
+        # type=RealAccelerationArray ntimes=298 nnodes=6, table_name=OUGPSD1
+        # data: [t1, t2, t3, r1, r2, r3] shape=[298, 6, 6] dtype=float32
+        # node_gridtype.shape = (6, 2)
+        # sort1
+        # freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
 
         assert len(op2.op2_results.psd.cbar_force[(1, 5, 2, 0, 0, '', '')].freqs) == 298
-          #type=RealCBarForceArray ntimes=298 nelements=5; table_name='OEFPSD1'
-          #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2,
-          #                                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
-          #data.shape = (298, 10, 8)
-          #element.shape = (5,)
-          #element name: CBAR-34
-          #sort1
-          #freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
+        # type=RealCBarForceArray ntimes=298 nelements=5; table_name='OEFPSD1'
+        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2,
+        #                                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+        # data.shape = (298, 10, 8)
+        # element.shape = (5,)
+        # element name: CBAR-34
+        # sort1
+        # freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
 
         assert len(op2.op2_results.psd.cbush_force[(1, 5, 2, 0, 0, '', '')].freqs) == 298
-          #type=RealCBushForceArray ntimes=1 nelements=298
-          #data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
-          #data.shape = (298, 1, 6)
-          #element.shape = (1,)
-          #element name: CBUSH
-          #sort1
-          #freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
+        # type=RealCBushForceArray ntimes=1 nelements=298
+        # data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
+        # data.shape = (298, 1, 6)
+        # element.shape = (1,)
+        # element name: CBUSH
+        # sort1
+        # freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
 
         rms = op2.op2_results.rms
         assert len(rms.displacements[(1, 5, 1, 0, 0, '', '')].freqs) == 1
@@ -729,7 +727,7 @@ class TestNX(Tester):
         folder = MODEL_PATH / 'nx' / 'rotor'
         op2_filename = folder / 'rotor049.op2'
         bdf_filename = folder / 'rotor049.dat'
-        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+        # unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
         op2_model, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
@@ -738,7 +736,7 @@ class TestNX(Tester):
             exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
-        cddata = op2_model.op2_results.cddata # campbell_data
+        cddata = op2_model.op2_results.cddata  # campbell_data
         campbell_data = cddata[2]
         assert campbell_data.is_sort1() is True
         assert campbell_data.is_sort2() is False
@@ -1063,6 +1061,7 @@ class TestNX(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
+
 class TestMSC(Tester):
     def test_cantilever_plate_nonlinear_msc_2021(self):
         log = get_logger(level='debug')
@@ -1087,7 +1086,6 @@ class TestMSC(Tester):
             exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
-
 
     def test_msc_force_vector(self):
         log = get_logger(level='warning')
@@ -1213,16 +1211,15 @@ class TestMSC(Tester):
         op2_filename = MODEL_PATH / 'msc' / 'units_mass_spring_damper' / 'units_mass_spring_damper.op2'
 
         #  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
-
-        #model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
-        #model.safe_cross_reference()
-
-        #save_load_deck(model, run_save_load=False)
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
+        #
+        # model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # model.safe_cross_reference()
+        # save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
         with self.assertRaises(NotImplementedError):
@@ -1342,10 +1339,10 @@ class TestMSC(Tester):
 
 class TestOP2Main(Tester):
     """various OP2 tests"""
-    #def _spike(self):
-        #op2 = OP2()
-        #op2.set_results('solidStress.oxx')
-        #op2.read_op2(op2_filename, vectorized=False)
+    # def _spike(self):
+    #     op2 = OP2()
+    #     op2.set_results('solidStress.oxx')
+    #     op2.read_op2(op2_filename, vectorized=False)
 
     def test_generalized_tables(self):
         """tests that set_additional_generalized_tables_to_read overwrites the GEOM1S class"""
@@ -1636,20 +1633,20 @@ class TestOP2Main(Tester):
         """tests a large number of elements and results in SOL 107-complex modes"""
         log = get_logger(level='warning')
         unused_bdf_filename = MODEL_PATH / 'elements' / 'modes_elements_post4.op2'
-        #f06_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.test_op2.f06'
+        # f06_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.test_op2.f06'
         csv_filename = MODEL_PATH / 'elements' / 'modes_elements_post4.csv'
         op2_filename = MODEL_PATH / 'elements' / 'modes_elements_post4.op2'
-        #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
+        # fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
 
-        #read_op2(op2_filename=op2_filename, combine=True, subcases=None,
-                 #exclude_results=None, include_results=None,
-                 #log=None, debug=True, debug_file=None,
-                 #build_dataframe=False,
-                 #skip_undefined_matrices=True, mode='msc',
-                 #encoding=None)
+        # read_op2(op2_filename=op2_filename, combine=True, subcases=None,
+        #          exclude_results=None, include_results=None,
+        #          log=None, debug=True, debug_file=None,
+        #          build_dataframe=False,
+        #          skip_undefined_matrices=True, mode='msc',
+        #          encoding=None)
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
             write_f06=True, write_op2=False,

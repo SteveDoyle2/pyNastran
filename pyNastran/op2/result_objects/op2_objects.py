@@ -21,117 +21,117 @@ Date = tuple[int, int, int]
 
 NULL_GRIDTYPE = {538976288, 1065353216}
 GRID_TYPE_INT_TO_STR = {
-    1 : 'G', # GRID
-    2 : 'S', # SPOINT
-    3 : 'E', # EXTRA POINT
-    4 : 'M', # MODAL POINT
-    7 : 'L', # RIGID POINT (e.g. RBE3)
-    0 : 'H', # SECTOR/HARMONIC/RING POINT
-    -1 : '',
+    1: 'G',  # GRID
+    2: 'S',  # SPOINT
+    3: 'E',  # EXTRA POINT
+    4: 'M',  # MODAL POINT
+    7: 'L',  # RIGID POINT (e.g. RBE3)
+    0: 'H',  # SECTOR/HARMONIC/RING POINT
+    -1: '',
 }
 GRID_TYPE_TO_STR_MAP = {
-    'G' : 1, # GRID
-    'S' : 2, # SPOINT
-    'L' : 7, # RIGID POINT (e.g. RBE3)
-    'H' : 0, # SECTOR/HARMONIC/RING POINT
+    'G': 1,  # GRID
+    'S': 2,  # SPOINT
+    'L': 7,  # RIGID POINT (e.g. RBE3)
+    'H': 0,  # SECTOR/HARMONIC/RING POINT
 }
 
 SORT2_TABLE_NAME_MAP = {
     # sort2_name : sort1_name
     # displacement
-    'OUGATO2' : 'OUGATO1',
-    'OUGCRM2' : 'OUGCRM1',
-    'OUGNO2' : 'OUGNO1',
-    'OUGPSD2' : 'OUGPSD1',
-    'OUGRMS2' : 'OUGRMS1',
+    'OUGATO2': 'OUGATO1',
+    'OUGCRM2': 'OUGCRM1',
+    'OUGNO2': 'OUGNO1',
+    'OUGPSD2': 'OUGPSD1',
+    'OUGRMS2': 'OUGRMS1',
 
     # velocity
-    'OVGATO2' : 'OVGATO1',
-    'OVGCRM2' : 'OVGCRM1',
-    'OVGNO2' : 'OVGNO1',
-    'OVGPSD2' : 'OVGPSD1',
-    'OVGRMS2' : 'OVGRMS1',
+    'OVGATO2': 'OVGATO1',
+    'OVGCRM2': 'OVGCRM1',
+    'OVGNO2': 'OVGNO1',
+    'OVGPSD2': 'OVGPSD1',
+    'OVGRMS2': 'OVGRMS1',
 
     # acceleration
-    'OAGATO2' : 'OAGATO1',
-    'OAGCRM2' : 'OAGCRM1',
-    'OAGNO2' : 'OAGNO1',
-    'OAGPSD2' : 'OAGPSD1',
-    'OAGRMS2' : 'OAGRMS1',
+    'OAGATO2': 'OAGATO1',
+    'OAGCRM2': 'OAGCRM1',
+    'OAGNO2': 'OAGNO1',
+    'OAGPSD2': 'OAGPSD1',
+    'OAGRMS2': 'OAGRMS1',
 
     # spc forces
-    'OQGATO2' : 'OQGATO1',
-    'OQGCRM2' : 'OQGCRM1',
-    'OQGNO2' : 'OQGNO1',
-    'OQGPSD2' : 'OQGPSD1',
-    'OQGRMS2' : 'OQGRMS1',
+    'OQGATO2': 'OQGATO1',
+    'OQGCRM2': 'OQGCRM1',
+    'OQGNO2': 'OQGNO1',
+    'OQGPSD2': 'OQGPSD1',
+    'OQGRMS2': 'OQGRMS1',
 
     # mpc forces
-    'OQMATO2' : 'OQMATO1',
-    'OQMCRM2' : 'OQMCRM1',
-    'OQMNO2' : 'OQMNO1',
-    'OQMPSD2' : 'OQMPSD1',
-    'OQMRMS2' : 'OQMRMS1',
+    'OQMATO2': 'OQMATO1',
+    'OQMCRM2': 'OQMCRM1',
+    'OQMNO2': 'OQMNO1',
+    'OQMPSD2': 'OQMPSD1',
+    'OQMRMS2': 'OQMRMS1',
 
     # load vectors
-    'OPGATO2' : 'OPGATO1',
-    'OPGCRM2' : 'OPGCRM1',
-    'OPGNO2' : 'OPGNO1',
-    'OPGPSD2' : 'OPGPSD1',
-    'OPGRMS2' : 'OPGRMS1',
+    'OPGATO2': 'OPGATO1',
+    'OPGCRM2': 'OPGCRM1',
+    'OPGNO2': 'OPGNO1',
+    'OPGPSD2': 'OPGPSD1',
+    'OPGRMS2': 'OPGRMS1',
 
     # pressure
-    'OPRATO2' : 'OPRATO1',
-    'OPRCRM2' : 'OPRCRM1',
-    'OPRNO2'  : 'OPRNO1',
-    'OPRPSD2' : 'OPRPSD1',
-    'OPRRMS2' : 'OPRRMS1',
+    'OPRATO2': 'OPRATO1',
+    'OPRCRM2': 'OPRCRM1',
+    'OPRNO2': 'OPRNO1',
+    'OPRPSD2': 'OPRPSD1',
+    'OPRRMS2': 'OPRRMS1',
 
     #'OUG2' : 'OUG1',
-    'OUGV2' : 'OUGV1',
-    'OQG2' : 'OQG1',
-    'OQMG2' : 'OQMG1',
-    'OPG2' : 'OPG1',
-    'OPNL2' : 'OPNL1',
-    'OUXY2' : 'OUXY1',
-    'OQGGF2' : 'OQGGF1',
-    'OQGCF2' : 'OQGCF1',
-    'OUGF2' : 'OUGF1',
+    'OUGV2': 'OUGV1',
+    'OQG2': 'OQG1',
+    'OQMG2': 'OQMG1',
+    'OPG2': 'OPG1',
+    'OPNL2': 'OPNL1',
+    'OUXY2': 'OUXY1',
+    'OQGGF2': 'OQGGF1',
+    'OQGCF2': 'OQGCF1',
+    'OUGF2': 'OUGF1',
     # --------------------
     # OES
-    'OES2' : 'OES1',
-    'OES2C' : 'OES1C',
-    'OESATO2' : 'OESATO1',
-    'OESCRM2' : 'OESCRM1',
-    'OESNO2' : 'OESNO1',
-    'OESPSD2' : 'OESPSD1',
-    'OESRMS2' : 'OESRMS1',
-    'OESNLXR2' : 'OESNLXR',
-    'OESVM2' : 'OESVM1',
-    'OESNL2' : 'OESNL1',
-    'OESPSD2C' : 'OESPSD1C',
+    'OES2': 'OES1',
+    'OES2C': 'OES1C',
+    'OESATO2': 'OESATO1',
+    'OESCRM2': 'OESCRM1',
+    'OESNO2': 'OESNO1',
+    'OESPSD2': 'OESPSD1',
+    'OESRMS2': 'OESRMS1',
+    'OESNLXR2': 'OESNLXR',
+    'OESVM2': 'OESVM1',
+    'OESNL2': 'OESNL1',
+    'OESPSD2C': 'OESPSD1C',
 
     # OSTR
-    'OSTR2' : 'OSTR1',
-    'OSTR2C' : 'OSTR1C',
-    'OSTRATO2' : 'OSTRATO1',
-    'OSTRCRM2' : 'OSTRCRM1',
-    'OSTRNO2' : 'OSTRNO1',
-    'OSTRPSD2' : 'OSTRPSD1',
-    'OSTRRMS2' : 'OSTRRMS1',
-    'OSTRVM2' : 'OSTRVM1',
-    'OSTPSD2C' : 'OSTPSD1C',
+    'OSTR2': 'OSTR1',
+    'OSTR2C': 'OSTR1C',
+    'OSTRATO2': 'OSTRATO1',
+    'OSTRCRM2': 'OSTRCRM1',
+    'OSTRNO2': 'OSTRNO1',
+    'OSTRPSD2': 'OSTRPSD1',
+    'OSTRRMS2': 'OSTRRMS1',
+    'OSTRVM2': 'OSTRVM1',
+    'OSTPSD2C': 'OSTPSD1C',
 
     # OEF
-    'OEF2' : 'OEF1',
-    'OEFATO2' : 'OEFATO1',
-    'OEFCRM2' : 'OEFCRM1',
-    'OEFPSD2' : 'OEFPSD1',
-    'OEFRMS2' : 'OEFRMS1',
-    'OEFNO2' : 'OEFNO1',
+    'OEF2': 'OEF1',
+    'OEFATO2': 'OEFATO1',
+    'OEFCRM2': 'OEFCRM1',
+    'OEFPSD2': 'OEFPSD1',
+    'OEFRMS2': 'OEFRMS1',
+    'OEFNO2': 'OEFNO1',
 
     # ONR / OEE
-    'ONRGY2' : 'ONRGY1',
+    'ONRGY2': 'ONRGY1',
 }
 
 SORT1_TABLES = list(SORT2_TABLE_NAME_MAP.values())
@@ -388,17 +388,17 @@ class ScalarObject(BaseScalarObject):
         if 'dataframe' in state:
             del state['dataframe']
 
-        #for key, value in state.items():
-            #if isinstance(value, (int, float, str, np.ndarray, list)) or value is None:
-                #continue
-            #print(' %s = %s' % (key, value))
-        #print(state)
+        # for key, value in state.items():
+        #     if isinstance(value, (int, float, str, np.ndarray, list)) or value is None:
+        #         continue
+        #     print(' %s = %s' % (key, value))
+        # print(state)
         return state
 
     def _get_result_group(self):
         """gets the h5 result group"""
         code = self._get_code()
-        case_name = 'Subcase=%s' % str(code) # (self.isubcase)
+        case_name = 'Subcase=%s' % str(code)  # (self.isubcase)
         if case_name in self.h5_file:
             subcase_group = self.h5_file[case_name]
         else:
@@ -411,16 +411,16 @@ class ScalarObject(BaseScalarObject):
         ogs = 0
         if hasattr(self, 'ogs'):
             ogs = self.ogs
-        #if self.binary_debug:
-            #self.binary_debug.write(self.code_information(include_time=True))
+        # if self.binary_debug:
+        #     self.binary_debug.write(self.code_information(include_time=True))
 
         code = (self.isubcase, self.analysis_code, self._sort_method(), self._count, ogs,
                 self.superelement_adaptivity_index, self.pval_step)
-        #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
-                #self.superelement_adaptivity_index, self.table_name_str)
-        #print('%r' % self.subtitle)
-        #self.code = code
-        #self.log.debug('code = %s' % str(self.code))
+        # code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
+        #         self.superelement_adaptivity_index, self.table_name_str)
+        # print('%r' % self.subtitle)
+        # self.code = code
+        # self.log.debug('code = %s' % str(self.code))
         return code
 
     #@property
@@ -582,7 +582,7 @@ class ScalarObject(BaseScalarObject):
         try:
             grid_type_str = GRID_TYPE_INT_TO_STR[grid_type]
         except KeyError:
-            if grid_type in NULL_GRIDTYPE: # 32/64 bit error...
+            if grid_type in NULL_GRIDTYPE:  # 32/64 bit error...
                 warnings.warn(''.join(self.get_stats()))
             raise RuntimeError(f'grid_type={grid_type!r}')
         return grid_type_str
@@ -604,17 +604,17 @@ class ScalarObject(BaseScalarObject):
         self.apply_data_code()
         msg = 'update_dt not implemented in the %s class' % self.__class__.__name__
         raise RuntimeError(msg)
-        #assert dt>=0.
-        #print("updating dt...dt=%s" % dt)
-        #if dt is not None:
-            #self.dt = dt
-            #self.add_new_transient()
+        # assert dt>=0.
+        # print("updating dt...dt=%s" % dt)
+        # if dt is not None:
+        #     self.dt = dt
+        #     self.add_new_transient()
 
     def _build_dataframe_transient_header(self):
         """builds the header for the Pandas DataFrame/table"""
         assert isinstance(self.name, (str, bytes)), 'name=%s type=%s' % (self.name, type(self.name))
-        #print('self.name = %r' % self.name)
-        #name = self.name #data_code['name']
+        # print('self.name = %r' % self.name)
+        # name = self.name #data_code['name']
         times = self._times
         utimes = np.unique(times)
         if not len(times) == len(utimes):
@@ -636,26 +636,26 @@ class ScalarObject(BaseScalarObject):
                 column_names.append('Mode')
                 column_values.append(times)
 
-                #if freq not in data_names:
-                #if name == 'freq':
-                ##if hasattr(self, 'freqs'):
-                    #column_names.append('Freq')
-                    #column_values.append(self.freqs)
-                #elif name == 'eigr':
-                    #column_names.append('eigenvalue_real')
-                    #column_values.append(self.eigrs)
-                #elif hasattr(self, 'eigrs') and 0:
-                    #try:
-                        #abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
-                    #except FloatingPointError:
-                        #msg = 'Cant analyze freq = sqrt(eig)/(2*pi)\neigr=%s\n' % (self.eigrs)
-                        #abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
-                        #msg += 'freq = sqrt(abs(self.eigrs)) / (2 * np.pi)=%s' % abs_freqs
-                        #raise FloatingPointError(msg)
-                    #column_names.append('Freq')
-                    #column_values.append(abs_freqs)
-                #else:
-                    #pass
+                # if freq not in data_names:
+                # if name == 'freq':
+                # #if hasattr(self, 'freqs'):
+                #     column_names.append('Freq')
+                #     column_values.append(self.freqs)
+                # elif name == 'eigr':
+                #     column_names.append('eigenvalue_real')
+                #     column_values.append(self.eigrs)
+                # elif hasattr(self, 'eigrs') and 0:
+                #     try:
+                #         abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                #     except FloatingPointError:
+                #         msg = 'Cant analyze freq = sqrt(eig)/(2*pi)\neigr=%s\n' % (self.eigrs)
+                #         abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                #         msg += 'freq = sqrt(abs(self.eigrs)) / (2 * np.pi)=%s' % abs_freqs
+                #         raise FloatingPointError(msg)
+                #     column_names.append('Freq')
+                #     column_values.append(abs_freqs)
+                # else:
+                #     pass
 
                 # Convert eigenvalues to frequencies
                 # TODO: add damping header
@@ -741,6 +741,7 @@ def real_modes_to_omega_freq(eigns: np.ndarray) -> tuple[np.ndarray, np.ndarray]
     abs_freqs = omega_radians / (2 * np.pi)
     return omega_radians, abs_freqs
 
+
 def complex_damping_frequency(eigr: np.ndarray,
                               eigi: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """eigenvalue = eigr + eigi*1j"""
@@ -748,13 +749,13 @@ def complex_damping_frequency(eigr: np.ndarray,
     eigr[eigr == -0.] = 0.
     eigi[eigi == -0.] = 0.
     damping = np.zeros(len(eigr), dtype=eigr.dtype)
-    if 0:
+    if 0:  # pragma: no cover
         denom = np.sqrt(eigr ** 2 + eigi ** 2)
         inonzero = np.where(denom != 0)[0]
         if len(inonzero):
             damping[inonzero] = -eigr[inonzero] / denom[inonzero]
 
-        ## not sure
+        # not sure
         abs_freqs = np.sqrt(np.abs(eigi)) / (2 * np.pi)
     else:
         # flutter
@@ -767,29 +768,29 @@ def complex_damping_frequency(eigr: np.ndarray,
             damping[inonzero] = 2 * eigr[inonzero] / eigi[inonzero]
     return damping, abs_freqs
 
+
 def _write_table_header(op2_file, fascii,
                         date: Date,
                         table_name: str,
                         subtable_name: bytes,
                         include_date: bool=True) -> None:
     endian = b'<'
-    table_name = '%-8s' % table_name # 'BOUGV1  '
+    table_name = '%-8s' % table_name  # 'BOUGV1  '
     fascii.write(f'{table_name}._write_table_header\n')
-    #get_nmarkers- [4, 0, 4]
-    #marker = [4, 2, 4]
-    #table_header = [8, 'BOUGV1  ', 8]
+    # get_nmarkers- [4, 0, 4]
+    # marker = [4, 2, 4]
+    # table_header = [8, 'BOUGV1  ', 8]
     write_table_header(op2_file, fascii, table_name)
 
+    # read_markers -> [4, -1, 4]
+    # get_nmarkers- [4, 0, 4]
+    # read_record - marker = [4, 7, 4]
+    # read_record - record = [28, recordi, 28]
 
-    #read_markers -> [4, -1, 4]
-    #get_nmarkers- [4, 0, 4]
-    #read_record - marker = [4, 7, 4]
-    #read_record - record = [28, recordi, 28]
-
-    #write_markers(op2_file, fascii, '  %s header1a' % table_name, [-1, 0, 7])
+    # write_markers(op2_file, fascii, '  %s header1a' % table_name, [-1, 0, 7])
     data_a = [4, -1, 4,]
-    #data_a = []
-    #data_b = [4, -1, 4,]
+    # data_a = []
+    # data_b = [4, -1, 4,]
     data_c = [4, 7, 4,]
     fmt_header = endian + b'6i'
     data = data_a + data_c
@@ -854,6 +855,7 @@ def _write_table_header(op2_file, fascii,
     fascii.write('%s header2b = %s\n' % (table_name, table2))
     op2_file.write(pack(table2_format, *table2))
 
+
 def get_sort_element_sizes(self, debug: bool=False) -> tuple[int, int, int]:
     if self.is_sort1:
         ntimes = self.ntimes
@@ -876,6 +878,7 @@ def get_sort_element_sizes(self, debug: bool=False) -> tuple[int, int, int]:
         raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
     #assert nelements == ntotal or ntimes == ntotal, (ntimes, nelements, ntotal)
     return ntimes, nelements, ntotal
+
 
 def get_sort_node_sizes(self, debug: bool=False) -> tuple[int, int, int]:
     if self.is_sort1:
@@ -1034,6 +1037,7 @@ class BaseElement(ScalarObject):
         #print(data_frame)
         return data_frame
 
+
 def get_times_dtype(nonlinear_factor: int | float, size: int,
                     analysis_code_fmt=None) -> tuple[str, str, str]:
     dtype = 'float'
@@ -1054,21 +1058,23 @@ def get_times_dtype(nonlinear_factor: int | float, size: int,
         return dtype, idtype, fdtype
     return dtype, idtype, fdtype
 
+
 def get_complex_times_dtype(size: int) -> tuple[str, str]:
-    #assert isinstance()
-    #dtype = 'float'
-    #if isinstance(nonlinear_factor, integer_types):
-        #dtype = 'int'
+    # assert isinstance()
+    # dtype = 'float'
+    # if isinstance(nonlinear_factor, integer_types):
+    #     dtype = 'int'
 
     if size == 4:
-        #dtype += '32'
+        # dtype += '32'
         cfdtype = 'complex64'
         idtype = 'int32'
     else:
-        #dtype += '64'
+        # dtype += '64'
         cfdtype = 'complex128'
         idtype = 'int64'
     return idtype, cfdtype
+
 
 def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger) -> None:
     """checks the ``element_node`` variable"""
@@ -1100,7 +1106,7 @@ def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger) 
     if eid_min <= 0:
         if nshape == 1:
             msg = (f'{table1}\ntable_name={table1.table_name}\n'
-                      f'eids={element}.min = {eid_min}')
+                   f'eids={element}.min = {eid_min}')
             log.error(msg)
         else:
             if table1.table_name not in ['ONRGY1', 'ONRGY2', 'OEKE1']:
@@ -1110,6 +1116,7 @@ def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger) 
                     if eid_min <= 0:
                         msg += f'{table1}\neids[{i}]={eidsi}.min = {eid_min}\n'
                 log.error(msg)
+
 
 def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLogger) -> None:
     """checks the ``element_node`` variable"""
@@ -1145,6 +1152,7 @@ def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLog
         log.error(f'{table1}\neids={eids}.min={eids.min()}; n={len(eids)}')
         raise ValueError(f'{table1}\neids={eids}.min={eids.min()}; n={len(eids)}')
 
+
 def set_as_sort1(obj):
     #print('set_as_sort1: table_name=%r' % obj.table_name)
     if obj.is_sort1:
@@ -1153,8 +1161,8 @@ def set_as_sort1(obj):
         else:
             name = obj.name
             setattr(obj, name + 's', obj._times)
-            #if name == 'mode':
-                #print('obj._times', 'modes', obj._times)
+            # if name == 'mode':
+            #     print('obj._times', 'modes', obj._times)
         return
 
     # sort2
@@ -1169,15 +1177,15 @@ def set_as_sort1(obj):
             print(obj.object_stats())
             raise
 
-    #print(obj.get_stats())
-    #print(obj.data.shape)
+    # print(obj.get_stats())
+    # print(obj.data.shape)
     obj.sort_method = 1
     obj.sort_bits[1] = 0
     bit0, bit1, bit2 = obj.sort_bits
     obj.table_name = SORT2_TABLE_NAME_MAP[obj.table_name]
     obj.sort_code = bit0 + 2*bit1 + 4*bit2
-    #print(obj.code_information())
-    assert obj.is_sort1
+    print(obj.code_information())
+    # assert obj.is_sort1
 
     if analysis_method != 'N/A':
         obj.data_names[0] = analysis_method

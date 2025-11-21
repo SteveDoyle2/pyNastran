@@ -1699,22 +1699,22 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if self._is_cards_dict:
             cards_dict, card_count = self.get_bdf_cards_dict(
                 bulk_data_lines, bulk_data_ilines)
-            #if 0:
-                #with open('dump.bdf', 'w') as bdf_file_obj:
-                    #bdf_file_obj.write('\n'.join(executive_control_lines))
-                    #bdf_file_obj.write(str(case_control_deck))
-                    #for cardname, cards in cards.items():
-                        #for (comment, cardlines) in cards:
-                            ##bdf_file_obj.write(comment + '\n')
-                            #bdf_file_obj.write('\n'.join(cardlines) + '\n')
-                        #bdf_file_obj.write('\n')
+            # if 0:
+            #     with open('dump.bdf', 'w') as bdf_file_obj:
+            #         bdf_file_obj.write('\n'.join(executive_control_lines))
+            #         bdf_file_obj.write(str(case_control_deck))
+            #         for cardname, cards in cards.items():
+            #             for (comment, cardlines) in cards:
+            #                 #bdf_file_obj.write(comment + '\n')
+            #                 bdf_file_obj.write('\n'.join(cardlines) + '\n')
+            #             bdf_file_obj.write('\n')
         else:
             cards_list, cards_dict, card_count = self.get_bdf_cards(
                 bulk_data_lines, bulk_data_ilines)
-            #for card in cards_list:
-                #card_name = card[0]
-                #if card_name == 'CBAR':
-                    #print(card)
+            # for card in cards_list:
+            #     card_name = card[0]
+            #     if card_name == 'CBAR':
+            #         print(card)
         self._parse_cards(cards_list, cards_dict, card_count)
 
         if self.values_to_skip:
@@ -2647,7 +2647,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'RSSCON': (RSSCON, add_rigid_element_object),
 
 
-            ## there is no MAT6 or MAT7
+            # there is no MAT6 or MAT7
             'MAT1': (MAT1, add_methods.add_structural_material_object),
             'MAT2': (MAT2, add_methods.add_structural_material_object),
             'MAT3': (MAT3, add_methods.add_structural_material_object),
@@ -2704,7 +2704,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SPCOFF1': (SPCOFF1, add_methods.add_constraint_spcoff_object),
             #'SPCAX': (SPCAX, add_methods.add_constraint_spc_object),  # removed
             'SPCADD': (SPCADD, add_methods.add_constraint_spcadd_object),
-            ## parametric
+            # parametric
             'GMSPC': (GMSPC, add_methods.add_constraint_spc_object),
 
             'SESUP': (SESUP, add_methods.add_sesuport_object),  # pseudo-constraint
@@ -3075,8 +3075,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def _write_reject_message(self, card_name, unused_card_obj, comment=''):
         """common method to not write duplicate reject card names"""
         if card_name not in self.card_count:
-            #if ' ' in card_name:
-                #_check_for_spaces(card_name, card_lines, comment, self.log)
+            # if ' ' in card_name:
+            #     _check_for_spaces(card_name, card_lines, comment, self.log)
             self.log.info(f'    rejecting card_name = {card_name}')
 
     def _prepare_bolt(self, card: list[str], card_obj: BDFCard,
@@ -3714,6 +3714,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 self._stored_parse_errors.append((card, var))
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
+                obj = None
 
             if obj is None:
                 print(add_card_function)
@@ -3734,8 +3735,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def _add_card_helper_lax(self, card_obj: BDFCard, card: list[str],
                              card_name: str, ifile: int,
                              comment: str='') -> None:
-        #if card_name not in ['GRID', 'CQUAD4', 'CTRIA3']:
-            #print(card_obj)
+        # if card_name not in ['GRID', 'CQUAD4', 'CTRIA3']:
+        #     print(card_obj)
 
         if card_name == 'ECHOON':
             self.echo = True
@@ -4136,12 +4137,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             if cps_to_check:
                 nids_checked.append(nids_checkedi)
-                #print("nids_checkedi =", nids_checkedi)
+                # print("nids_checkedi =", nids_checkedi)
                 out = _get_coords_to_update(
                     self.coords, cps_to_check, cps_checked, nids_checked)
                 unused_ncoords_to_setup, cord1s_to_update, cord2s_to_update, nids_checked = out
-                #print('CPs not handled=%s\n  cord1s_to_update=%s\n  cord2s_to_update=%s' % (
-                    #cps_to_check, cord1s_to_update, cord2s_to_update))
+                # print('CPs not handled=%s\n  cord1s_to_update=%s\n  cord2s_to_update=%s' % (
+                #     cps_to_check, cord1s_to_update, cord2s_to_update))
 
                 for cp in cord2s_to_update:
                     coord = self.coords[cp]
@@ -4220,15 +4221,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             return xyz_cid0
 
         # transform the grids to the local coordinate system
-        #is_beta = np.diagonal(beta2).min() != 1.
-        #is_origin = np.abs(coord2.origin).max() != 0.
-        #if is_beta and is_origin:
+        # is_beta = np.diagonal(beta2).min() != 1.
+        # is_origin = np.abs(coord2.origin).max() != 0.
+        # if is_beta and is_origin:
         xyz_cid = coord2.transform_node_to_local_array(xyz_cid0)
-        #xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
-        #elif is_beta:
-            #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 @ beta2.T)
-        #else:
-            #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
+        # xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
+        # elif is_beta:
+        #     xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 @ beta2.T)
+        # else:
+        #     xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 
         if atol is not None:
             xyz_cid_correct = self.get_xyz_in_coord(cid=cid)

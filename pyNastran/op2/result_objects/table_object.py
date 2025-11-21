@@ -402,26 +402,24 @@ class TableArray(ScalarObject):  # displacement style table
         broken: 0.25.0
         """
         import pandas as pd
-        #is_v25 = pd.__version__ >= '0.25'
 
         headers = self.get_headers()
-        #headers = [0, 1, 2, 3, 4, 5]
-        #node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
-
-        #letter_dims = [
-            #('G', 6),
-            #('E', 1),
-            #('S', 1),
-            #('H', 6),
-            #('L', 6),
-        #]
+        # headers = [0, 1, 2, 3, 4, 5]
+        # node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
+        # letter_dims = [
+        #     ('G', 6),
+        #     ('E', 1),
+        #     ('S', 1),
+        #     ('H', 6),
+        #     ('L', 6),
+        # ]
         ntimes, nnodes = self.data.shape[:2]
 
         ugridtype_str = np.unique(self.gridtype_str)
         if self.nonlinear_factor not in (None, np.nan):
-            #if not self.is_sort1:
-                #print("skipping %s because it's not SORT1" % self.class_name)
-                #return
+            # if not self.is_sort1:
+            #     print("skipping %s because it's not SORT1" % self.class_name)
+            #     return
             column_names, column_values = self._build_dataframe_transient_header()
             #if is_v25:
             #  we start out like this...
@@ -487,7 +485,6 @@ class TableArray(ScalarObject):  # displacement style table
                     node_gridtype_item.extend([[nid, gridtype, 'r1']])
                     node_gridtype_item.extend([[nid, gridtype, 'r2']])
                     node_gridtype_item.extend([[nid, gridtype, 'r3']])
-
 
                 names = ['NodeID', 'Type', 'Item']
                 index = pd.MultiIndex.from_tuples(node_gridtype_item, names=names)

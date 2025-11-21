@@ -5,6 +5,7 @@ import copy
 import warnings
 from abc import abstractmethod
 import inspect
+from typing import TextIO
 
 import numpy as np
 from numpy import zeros, searchsorted, allclose
@@ -14,7 +15,7 @@ from pyNastran.op2.result_objects.op2_objects import (
     BaseElement, get_times_dtype, get_sort_element_sizes, set_as_sort1)
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long,
-    write_float_13e, write_float_13e_long, # write_float_12e,
+    write_float_13e, write_float_13e_long,  # write_float_12e,
     write_floats_12e,
     _eigenvalue_header,
 )
@@ -28,39 +29,40 @@ from pyNastran.op2.writer.utils import fix_table3_types
 
 
 TABLE_NAME_TO_TABLE_CODE = {
-    'OEF1' : 4,
-    'OEF1X' : 4,
+    'OEF1': 4,
+    'OEF1X': 4,
 }
 
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
-    'CROD' : 1,
+    'CROD': 1,
     'CBEAM': 2,
-    'CTUBE' : 3,
-    'CONROD' : 10,
+    'CTUBE': 3,
+    'CONROD': 10,
 
     'CBAR': 34,
 
-    'CELAS1' : 11,
-    'CELAS2' : 12,
-    'CELAS3' : 13,
-    'CELAS4' : 14,
+    'CELAS1': 11,
+    'CELAS2': 12,
+    'CELAS3': 13,
+    'CELAS4': 14,
 
     'CDAMP1': 20,
     'CDAMP2': 21,
     'CDAMP3': 22,
     'CDAMP4': 23,
 
-    'CSHEAR' : 4,
+    'CSHEAR': 4,
     'CVISC': 24,
 }
+
 
 def oef_complex_data_code(table_name: str,
                           element_name: str, num_wide: int,
                           is_sort1: bool=True, is_random: bool=False,
                           random_code=0, title='', subtitle='', label='',
                           is_msc=True):
-    dtype_code = 1 # complex
+    dtype_code = 1  # complex
     data_code = _oef_data_code(table_name,
                                element_name, num_wide, dtype_code,
                                is_sort1=is_sort1,
@@ -68,18 +70,20 @@ def oef_complex_data_code(table_name: str,
                                title=title, subtitle=subtitle, label=label, is_msc=is_msc)
     return data_code
 
+
 def oef_real_data_code(table_name: str,
                        element_name: str, num_wide: int,
                        is_sort1: bool=True, is_random: bool=False,
                        random_code=0, title='', subtitle='', label='',
                        is_msc=True):
-    dtype_code = 0 # real
+    dtype_code = 0  # real
     assert isinstance(element_name, str), element_name
     data_code = _oef_data_code(table_name, element_name, num_wide, dtype_code,
                                is_sort1=is_sort1,
                                is_random=is_random, random_code=random_code,
                                title=title, subtitle=subtitle, label=label, is_msc=is_msc)
     return data_code
+
 
 def _oef_data_code(table_name: str,
                    element_name: str, num_wide: int, dtype_code: int,
@@ -97,44 +101,44 @@ def _oef_data_code(table_name: str,
     sort1_sort_bit = 0 if is_sort1 else 1
     random_sort_bit = 1 if is_random else 0
     sort_method = 1 if is_sort1 else 2
-    #if format_code == 1:
-        #format_word = "Real"
-    #elif format_code == 2:
-        #format_word = "Real/Imaginary"
-    #elif format_code == 3:
-        #format_word = "Magnitude/Phase"
-    #DEVICE_CODE_MAP = {
-        #1 : "Print",
-        #2 : "Plot",
-        #3 : "Print and Plot",
-        #4 : "Punch",
-        #5 : "Print and Punch",
-        #6 : "Plot and Punch",
-        #7 : "Print, Plot, and Punch",
-    #}
+    # if format_code == 1:
+    #     format_word = "Real"
+    # elif format_code == 2:
+    #     format_word = "Real/Imaginary"
+    # elif format_code == 3:
+    #     format_word = "Magnitude/Phase"
+    # DEVICE_CODE_MAP = {
+    #     1 : "Print",
+    #     2 : "Plot",
+    #     3 : "Print and Plot",
+    #     4 : "Punch",
+    #     5 : "Print and Punch",
+    #     6 : "Plot and Punch",
+    #     7 : "Print, Plot, and Punch",
+    # }
 
     table_code = TABLE_NAME_TO_TABLE_CODE[table_name]
-    sort_code = 1 # TODO: what should this be???
+    sort_code = 1  # TODO: what should this be???
 
-    #table_code = tCode % 1000
-    #sort_code = tCode // 1000
+    # table_code = tCode % 1000
+    # sort_code = tCode // 1000
     tCode = table_code * 1000 + sort_code
 
     device_code = 2  # Plot
-    #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
+    # print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
     data_code = {
         'nonlinear_factor': None,
-        'sort_bits': [dtype_code, sort1_sort_bit, random_sort_bit], # real, sort1, random
-        'sort_method' : sort_method,
+        'sort_bits': [dtype_code, sort1_sort_bit, random_sort_bit],  # real, sort1, random
+        'sort_method': sort_method,
         'is_msc': is_msc,
-        'format_code': 1, # real
+        'format_code': 1,  # real
         'table_code': table_code,
         'tCode': tCode,
-        'table_name': table_name, ## TODO: should this be a string?
-        'device_code' : device_code,
-        'random_code' : random_code,
+        'table_name': table_name,  ## TODO: should this be a string?
+        'device_code': device_code,
+        'random_code': random_code,
         'thermal': 0,
-        'title' : title,
+        'title': title,
         'subtitle': subtitle,
         'label': label,
         'num_wide': num_wide,
@@ -142,6 +146,7 @@ def _oef_data_code(table_name: str,
         #'num_wide' : 8, # displacement-style table
     }
     return data_code
+
 
 class ForceObject(BaseElement):
     def __init__(self, data_code, isubcase, apply_data_code=True):
@@ -170,24 +175,24 @@ class ForceObject(BaseElement):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = searchsorted(eids, self.element)  # [0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
+        # ind = ravel([searchsorted(self.element == eid) for eid in eids])
         ind = searchsorted(eids, self.element)
-        #ind = ind.reshape(ind.size)
-        #ind.sort()
+        # ind = ind.reshape(ind.size)
+        # ind.sort()
         return ind
 
-    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
+    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime):  # itable=-3, itime=0):
         import inspect
         from struct import pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-        #print('new_result=%s itable=%s' % (new_result, itable))
+        # print('new_result=%s itable=%s' % (new_result, itable))
         if new_result and itable != -3:
             header = [
                 4, 146, 4,
@@ -207,17 +212,17 @@ class ForceObject(BaseElement):
         isubcase = self.isubcase
         element_type = self.element_type
         assert isinstance(self.element_type, int), self.element_type
-        #[
-            #'aCode', 'tCode', 'element_type', 'isubcase',
-            #'???', '???', '???', 'load_set'
-            #'format_code', 'num_wide', 's_code', '???',
-            #'???', '???', '???', '???',
-            #'???', '???', '???', '???',
-            #'???', '???', '???', '???',
-            #'???', 'Title', 'subtitle', 'label']
-        #random_code = self.random_code
+        # [
+        #     'aCode', 'tCode', 'element_type', 'isubcase',
+        #     '???', '???', '???', 'load_set'
+        #     'format_code', 'num_wide', 's_code', '???',
+        #     '???', '???', '???', '???',
+        #     '???', '???', '???', '???',
+        #     '???', '???', '???', '???',
+        #     '???', 'Title', 'subtitle', 'label']
+        # random_code = self.random_code
         format_code = self.format_code
-        s_code = 0 # self.s_code
+        s_code = 0  # self.s_code
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = self.thermal
@@ -225,7 +230,7 @@ class ForceObject(BaseElement):
         subtitle = b'%-128s' % self.subtitle.encode('ascii')
         label = b'%-128s' % self.label.encode('ascii')
         ftable3 = b'50i 128s 128s 128s'
-        #oCode = 0
+        # oCode = 0
         load_set = 0
         #print(self.code_information())
 
@@ -240,15 +245,15 @@ class ForceObject(BaseElement):
             field7 = self.cycles[itime]
             assert isinstance(field6, float), type(field6)
             assert isinstance(field7, float), type(field7)
-            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
-            ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
+            ftable3 = set_table3_field(ftable3, 6, b'f')  # field 6
+            ftable3 = set_table3_field(ftable3, 7, b'f')  # field 7
         elif self.analysis_code == 5:
             try:
                 field5 = self.freqs[itime]
             except AttributeError:  # pragma: no cover
                 print(self)
                 raise
-            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+            ftable3 = set_table3_field(ftable3, 5, b'f')  # field 5
         elif self.analysis_code == 6:
             if hasattr(self, 'times'):
                 field5 = self.times[itime]
@@ -257,12 +262,12 @@ class ForceObject(BaseElement):
             else:  # pragma: no cover
                 print(self.get_stats())
                 raise NotImplementedError('cant find times or dts on analysis_code=8')
-            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+            ftable3 = set_table3_field(ftable3, 5, b'f')  # field 5
         elif self.analysis_code == 7:  # pre-buckling
-            field5 = self.loadIDs[itime] # load set number
+            field5 = self.loadIDs[itime]  # load set number
         elif self.analysis_code == 8:  # post-buckling
             if hasattr(self, 'lsdvmns'):
-                field5 = self.lsdvmns[itime] # load set number
+                field5 = self.lsdvmns[itime]  # load set number
             elif hasattr(self, 'loadIDs'):
                 field5 = self.loadIDs[itime]
             else:  # pragma: no cover
@@ -277,7 +282,7 @@ class ForceObject(BaseElement):
                 print(self.get_stats())
                 raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')
             assert isinstance(field6, float_types), type(field6)
-            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            ftable3 = set_table3_field(ftable3, 6, b'f')  # field 6
         elif self.analysis_code == 9:  # complex eigenvalues
             field5 = self.modes[itime]
             if hasattr(self, 'eigns'):
@@ -287,14 +292,14 @@ class ForceObject(BaseElement):
             else:  # pragma: no cover
                 print(self.get_stats())
                 raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')
-            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            ftable3 = set_table3_field(ftable3, 6, b'f')  # field 6
             field7 = self.eigis[itime]
-            ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
+            ftable3 = set_table3_field(ftable3, 7, b'f')  # field 7
         elif self.analysis_code == 10:  # nonlinear statics
             field5 = self.load_steps[itime]
-            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step
+            ftable3 = set_table3_field(ftable3, 5, b'f')  # field 5; load step
         elif self.analysis_code == 11:  # old geometric nonlinear statics
-            field5 = self.loadIDs[itime] # load set number
+            field5 = self.loadIDs[itime]  # load set number
         else:
             raise NotImplementedError(self.analysis_code)
 
@@ -341,7 +346,7 @@ class RealForceObject(ForceObject):
                                   random_code=random_code,
                                   title=title, subtitle=subtitle, label=label,
                                   is_msc=is_msc)
-        data_code['loadIDs'] = [0] # TODO: ???
+        data_code['loadIDs'] = [0]  # TODO: ???
         data_code['data_names'] = []
 
         element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
@@ -403,6 +408,8 @@ class RealForceObject(ForceObject):
                                                                       31.4861
                          3        14122.1221   -2
 """
+
+
 class FailureIndicesArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceObject.__init__(self, data_code, isubcase)
@@ -483,8 +490,8 @@ class FailureIndicesArray(RealForceObject):
         self.data_frame = data_frame
 
     def get_headers(self) -> list[str]:
-        #headers = ['eid', 'failure_theory', 'ply', 'failure_index_for_ply (direct stress/strain)',
-                   #'failure_index_for_bonding (interlaminar stresss)', 'failure_index_for_element', 'flag']
+        # headers = ['eid', 'failure_theory', 'ply', 'failure_index_for_ply (direct stress/strain)',
+        #            'failure_index_for_bonding (interlaminar stresss)', 'failure_index_for_element', 'flag']
         headers = ['failure_index_for_ply (direct stress/strain)',
                    'failure_index_for_bonding (interlaminar stresss)', 'max_value']
         return headers
@@ -534,7 +541,7 @@ class FailureIndicesArray(RealForceObject):
         return msg
 
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
-        return [] # raise NotImplementedError('this should be overwritten by %s' % (self.__class__.__name__))
+        return []  # raise NotImplementedError('this should be overwritten by %s' % (self.__class__.__name__))
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
@@ -544,30 +551,30 @@ class FailureIndicesArray(RealForceObject):
         f06_file.write('skipping FailureIndices f06\n')
 
         return page_num
-        #NotImplementedError(self.code_information())
-        #asd
-        #if self.is_sort1:
-            #page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg_temp)
-        #else:
-            #raise NotImplementedError(self.code_information())
-            #page_num = self._write_sort2_as_sort2(header, page_stamp, page_num, f06_file, msg_temp)
-
-        #'          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'
-        #'   ELEMENT  FAILURE        PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG\n'
-        #'     ID      THEORY         ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES\n'
-        #'         1   HOFFMAN       101      6.987186E-02      \n'
-        #'                                                                     1.687182E-02                                              \n'
-        #'                           102      9.048269E-02      \n'
-        #'                                                                     1.721401E-02                                               \n'
-        #return page_num
+        # NotImplementedError(self.code_information())
+        # asd
+        # if self.is_sort1:
+        #     page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg_temp)
+        # else:
+        #     raise NotImplementedError(self.code_information())
+        #     page_num = self._write_sort2_as_sort2(header, page_stamp, page_num, f06_file, msg_temp)
+        #
+        # '          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'
+        # '   ELEMENT  FAILURE        PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG\n'
+        # '     ID      THEORY         ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES\n'
+        # '         1   HOFFMAN       101      6.987186E-02      \n'
+        # '                                                                     1.687182E-02                                              \n'
+        # '                           102      9.048269E-02      \n'
+        # '                                                                     1.721401E-02                                               \n'
+        # return page_num
 
 
 class RealSpringDamperForceArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
-        #if not is_sort1:
-            #raise NotImplementedError('SORT2')
+        # if not is_sort1:
+        #     raise NotImplementedError('SORT2')
 
     @classmethod
     def add_static_case(cls, table_name, element_name, element, data, isubcase,
@@ -665,7 +672,6 @@ class RealSpringDamperForceArray(RealForceObject):
         #[force]
         self.data = zeros((ntimes, nelements, 1), dtype=fdtype)
 
-
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
@@ -696,7 +702,6 @@ class RealSpringDamperForceArray(RealForceObject):
             data_frame.index.name = 'ElementID'
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
-
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -735,7 +740,7 @@ class RealSpringDamperForceArray(RealForceObject):
                         (force1, stress1) = t1
                         (force2, stress2) = t2
                         if not allclose(t1, t2):
-                        #if not np.array_equal(t1, t2):
+                            # if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s)\n  (%s, %s)\n' % (
                                 eid,
                                 force1, stress1,
@@ -821,7 +826,8 @@ class RealSpringDamperForceArray(RealForceObject):
         name = str(self.__class__.__name__)
         if write_header:
             csv_file.write('# %s\n' % name)
-            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'Fx', 'BLANK', 'BLANK', 'BLANK', 'BLANK', 'BLANK']
+            headers = ['Flag', 'SubcaseID', 'iTime', 'Eid', 'BLANK', 'BLANK', 'Fx',
+                       'BLANK', 'BLANK', 'BLANK', 'BLANK', 'BLANK']
             csv_file.write('# ' + ','.join(headers) + '\n')
 
         # stress vs. strain
@@ -1198,8 +1204,8 @@ class RealRodForceArray(RealForceObject):
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.itotal += 1
-        #if self.ielement == self.nelements:
-            #self.ielement = 0
+        # if self.ielement == self.nelements:
+        #     self.ielement = 0
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
@@ -1241,6 +1247,8 @@ class RealRodForceArray(RealForceObject):
             msg = conrod_msg
         elif 'CTUBE' in self.element_name:
             msg = ctube_msg
+        else:  # pragma: no cover
+            raise RuntimeError(self.element_name)
         return self.element_name, msg
 
     def write_csv(self, csv_file: TextIO,
@@ -1469,11 +1477,11 @@ class RealCBeamForceArray(RealForceObject):
         self.itime = 0
         self.nelements = 0  # result specific
 
-        #if is_sort1:
-            ##sort1
-            #pass
-        #else:
-            #raise NotImplementedError('SORT2')
+        # if is_sort1:
+        #     #sort1
+        #     pass
+        # else:
+        #     raise NotImplementedError('SORT2')
 
     def build(self):
         """sizes the vectorized attributes of the RealCBeamForceArray"""
@@ -1590,8 +1598,8 @@ class RealCBeamForceArray(RealForceObject):
                                   title, subtitle, label)
         data_code['num_wide'] = 100
         obj = set_modal_case(cls, is_sort1, isubcase, data_code,
-                              set_element_node_xxb_case, (element_node, xxb, data),
-                              modes, eigns, freqs)
+                             set_element_node_xxb_case, (element_node, xxb, data),
+                             modes, eigns, freqs)
         return obj
 
     @classmethod
@@ -1651,7 +1659,7 @@ class RealCBeamForceArray(RealForceObject):
                         (sd1, bm11, bm21, ts11, ts21, af1, ttrq1, wtrq1) = t1
                         (sd2, bm12, bm22, ts12, ts22, af2, ttrq2, wtrq2) = t2
                         if not np.allclose(t1, t2):
-                        #if not np.array_equal(t1, t2):
+                            # if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
                                 sd1, bm11, bm21, ts11, ts21, af1, ttrq1, wtrq1,
@@ -1696,6 +1704,7 @@ class RealCBeamForceArray(RealForceObject):
         new_table.data[:, :, 1:] = new_data
         return new_table
     # __radd__: reverse order adding (b+a)
+
     def __iadd__(self, table: RealCBeamForceArray) -> RealCBeamForceArray:
         """inplace adding; a += b"""
         if isinstance(table, RealCBeamForceArray):
@@ -1766,7 +1775,6 @@ class RealCBeamForceArray(RealForceObject):
         #ttrq = self.data[itime, :, 6]
         #wtrq = self.data[itime, :, 7]
         #return
-
 
         #sxc = data[:, :, 0]
         #sxd = data[:, :, 1]
@@ -1839,18 +1847,18 @@ class RealCBeamForceArray(RealForceObject):
             '                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
             '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
             '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
-        #else:
-            #raise NotImplementedError('CBEAM-SORT2')
+        # else:
+        #     raise NotImplementedError('CBEAM-SORT2')
 
         if self.is_sort1:
-            #assert self.is_sort1 is True, str(self)
-            #if is_sort1:
+            # assert self.is_sort1 is True, str(self)
+            # if is_sort1:
             page_num = self._write_sort1_as_sort1(f06_file, page_num, page_stamp, header, msg_temp)
-            #else:
-                #self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, msg_temp)
+            # else:
+            #     self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, msg_temp)
         else:
             print(f'skipping {self.__class__.__name__} because its sort2')
-            #assert self.is_sort1 is True, str(self)
+            # assert self.is_sort1 is True, str(self)
         return page_num - 1
 
     def get_headers(self) -> list[str]:
@@ -1922,29 +1930,29 @@ class RealCBeamForceArray(RealForceObject):
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
-        #long_form = False
-        #if nids.min() == 0:
-            #long_form = True
-        #if isinstance(self.nonlinear_factor, float):
-            #op2_format = '%sif' % (7 * self.ntimes)
-            #raise NotImplementedError()
-        #else:
-            #op2_format = 'i21f'
-        #s = Struct(op2_format)
-
-        #xxbs = self.xxb
-        #print(xxbs)
+        # long_form = False
+        # if nids.min() == 0:
+        #     long_form = True
+        # if isinstance(self.nonlinear_factor, float):
+        #     op2_format = '%sif' % (7 * self.ntimes)
+        #     raise NotImplementedError()
+        # else:
+        #     op2_format = 'i21f'
+        # s = Struct(op2_format)
+        #
+        # xxbs = self.xxb
+        # print(xxbs)
 
         eids_device = eids * 10 + self.device_code
         ueids = np.unique(eids)
-        #ieid = np.searchsorted(eids, ueids)
+        # ieid = np.searchsorted(eids, ueids)
         # table 4 info
-        #ntimes = self.data.shape[0]
-        #nnodes = self.data.shape[1]
+        # ntimes = self.data.shape[0]
+        # nnodes = self.data.shape[1]
         nelements = len(ueids)
 
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
-        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+        # ntotal = ((nnodes * 21) + 1) + (nelements * 4)
 
         ntotali = self.num_wide
         ntotal = ntotali * nelements
@@ -1990,7 +1998,7 @@ class RealCBeamForceArray(RealForceObject):
                 if icount == 0:
                     eid_device = eids_device[ielement]
                     nid = nids[ielement]
-                    data = [eid_device, nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi] # 10
+                    data = [eid_device, nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]  # 10
                     op2_file.write(struct1.pack(*data))
                     ielement += 1
                     icount = 1
@@ -1998,7 +2006,7 @@ class RealCBeamForceArray(RealForceObject):
                     # 11 total nodes, with 1, 11 getting an nid; the other 9 being
                     # xxb sections
                     data = [0, 0., 0., 0., 0., 0., 0., 0., 0.]
-                    #print('***adding %s\n' % (10-icount))
+                    # print('***adding %s\n' % (10-icount))
                     for unused_i in range(10 - icount):
                         op2_file.write(struct2.pack(*data))
                         nwide += len(data)
@@ -2006,17 +2014,17 @@ class RealCBeamForceArray(RealForceObject):
                     eid_device2 = eids_device[ielement]
                     assert eid_device == eid_device2
                     nid = nids[ielement]
-                    data = [nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi] # 9
+                    data = [nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]  # 9
                     op2_file.write(struct2.pack(*data))
                     ielement += 1
                     icount = 0
                 elif nid == 0 and icount > 0:
                     eid_device2 = eids_device[ielement]
-                    data = [nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi] # 9
+                    data = [nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]  # 9
                     op2_file.write(struct2.pack(*data))
                     ielement += 1
-                    #data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
-                    #op2_file.write(struct2.pack(*data))
+                    # data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
+                    # op2_file.write(struct2.pack(*data))
                     icount += 1
                 elif nid == 0 and icount > 0:  # pragma: no cover
                     raise RuntimeError('OEF-CBEAM op2 writer')
@@ -2040,14 +2048,13 @@ class RealCShearForceArray(RealForceObject):
         self.element_type = None
         self.element_name = None
         RealForceObject.__init__(self, data_code, isubcase)
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.ntimes = 0  # or frequency/mode
-        #self.ntotal = 0
+        # self.code = [self.format_code, self.sort_code, self.s_code]
+        # self.ntimes = 0  # or frequency/mode
+        # self.ntotal = 0
         self.nelements = 0  # result specific
 
-        #if not is_sort1:
-            #raise NotImplementedError('SORT2')
+        # if not is_sort1:
+        #     raise NotImplementedError('SORT2')
 
     @property
     def nnodes_per_element(self) -> int:
@@ -2313,10 +2320,10 @@ class RealCShearForceArray(RealForceObject):
             kick4 = self.data[itime, :, 14]
             tau41 = self.data[itime, :, 15]
 
-            #zip_in = [
-                #f14, f12, f21, f23, f32, f34, f43, f41,
-                #kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
-            #]
+            # zip_in = [
+            #     f14, f12, f21, f23, f32, f34, f43, f41,
+            #     kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
+            # ]
             for (eid, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
                  kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i) in zip(
                     eids, f14, f12, f21, f23, f32, f34, f43, f41,
@@ -2380,10 +2387,10 @@ class RealCShearForceArray(RealForceObject):
             kick4 = self.data[itime, :, 14]
             tau41 = self.data[itime, :, 15]
 
-            #zip_in = [
-                #f14, f12, f21, f23, f32, f34, f43, f41,
-                #kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
-            #]
+            # zip_in = [
+            #     f14, f12, f21, f23, f32, f34, f43, f41,
+            #     kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
+            # ]
             for (eid, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
                  kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i) in zip(
                     eids, f14, f12, f21, f23, f32, f34, f43, f41,
@@ -2531,12 +2538,12 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceObject.__init__(self, data_code, isubcase)
 
-        #self.ntimes = 0  # or frequency/mode
-        #self.ntotal = 0
+        # self.ntimes = 0  # or frequency/mode
+        # self.ntotal = 0
         self.nelements = 0  # result specific
 
-        #if not is_sort1:
-            #raise NotImplementedError('SORT2')
+        # if not is_sort1:
+        #     raise NotImplementedError('SORT2')
 
     @property
     def nnodes_per_element(self) -> int:
@@ -2828,12 +2835,12 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         self.nelements = 0
         assert self.element_name != 'RBAR', self.data_code
 
-        #if is_sort1:
-            #if dt is not None:
-                #self.add = self.add_sort1
-        #else:
-            #assert dt is not None
-            #self.add = self.add_sort2
+        # if is_sort1:
+        #     if dt is not None:
+        #         self.add = self.add_sort1
+        # else:
+        #     assert dt is not None
+        #     self.add = self.add_sort2
 
     def _get_msgs(self):
         raise NotImplementedError()
@@ -2972,13 +2979,13 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         self.element[self.itotal] = eid
         self.data[itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
-        #raise NotImplementedError('SORT2')
-        #if dt not in self.mx:
-            #self.add_new_transient(dt)
-        #self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        # raise NotImplementedError('SORT2')
+        # if dt not in self.mx:
+        #     self.add_new_transient(dt)
+        # self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
 
     @property
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         return 1
 
     def get_stats(self, short: bool=False) -> list[str]:
@@ -3271,12 +3278,12 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         self.dt = dt
         self.nelements = 0
 
-        #if is_sort1:
-            #if dt is not None:
-                #self.add = self.add_sort1
-        #else:
-            #assert dt is not None
-            #self.add = self.add_sort2
+        # if is_sort1:
+        #     if dt is not None:
+        #         self.add = self.add_sort1
+        # else:
+        #     assert dt is not None
+        #     self.add = self.add_sort2
 
     def _get_msgs(self):
         raise NotImplementedError()
@@ -3286,17 +3293,17 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
     def build(self):
         """sizes the vectorized attributes of the RealPlateBilinearForceArray"""
-         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        # print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
-        #self.names = []
-        #self.nelements //= self.ntimes
+        # self.names = []
+        # self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        #self.ntimes = 0
-        #self.nelements = 0
+        # self.ntimes = 0
+        # self.nelements = 0
 
         dtype, idtype, fdtype = get_times_dtype(
             self.nonlinear_factor, self.size, self.analysis_fmt)
@@ -3307,8 +3314,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         # -MEMBRANE FORCES-   -BENDING MOMENTS- -TRANSVERSE SHEAR FORCES -
         #     FX FY FXY           MX MY MXY            QX QY
-        #[fx, fy, fxy,  mx,  my,  mxy, qx, qy]
-        #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        # [fx, fy, fxy,  mx,  my,  mxy, qx, qy]
+        # [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.data = zeros((ntimes, ntotal, 8), dtype=fdtype)
 
     def _get_sort_element_sizes(self, debug: bool=False):
@@ -3337,10 +3344,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         headers = self.get_headers()
 
         node = pd.Series(self.element_node[:, 1])
-        if pd.__version__ > '1.1':
-            node.replace({0:'CEN'}, inplace=True)
-        else:
-            node.replace({'NodeID': {0:'CEN'}}, inplace=True)
+        node.replace({'NodeID': {0: 'CEN'}}, inplace=True)  # >= 1.4
         element_node = [self.element_node[:, 0], node]
 
         if self.nonlinear_factor not in (None, np.nan):
@@ -3421,20 +3425,17 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         #ndata_total = self.data.shape[1]
         jelement = ielement * self.nnodes_per_element + inode
 
-        #print(f'RealPlateBilinearForceArray SORT2 '
-              #f'dt={dt} eid={eid} nid={nid} inode={inode}\n  '
-              ##f'self.itime={self.itime} self.ielement={self.ielement} self.itotal={self.itotal}\n  '
-              #f'itime={itime}/{len(self._times)} jelement={jelement}/{nelement_node_total}'
-              ##f'itime={itime}/{len(self._times)} '
-              ##f'ielement={ielement}/{nelement_node_total} itotal={self.itotal}/{ndata_total}'
-              #)
+        # print(f'RealPlateBilinearForceArray SORT2 '
+        #       f'dt={dt} eid={eid} nid={nid} inode={inode}\n  '
+        #       #f'self.itime={self.itime} self.ielement={self.ielement} self.itotal={self.itotal}\n  '
+        #       f'itime={itime}/{len(self._times)} jelement={jelement}/{nelement_node_total}'
+        #       #f'itime={itime}/{len(self._times)} '
+        #       #f'ielement={ielement}/{nelement_node_total} itotal={self.itotal}/{ndata_total}'
+        #       )
         self._times[itime] = dt
 
-        #try:
         self.element_node[jelement] = [eid, nid]
         self.data[itime, jelement, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        #except:
-            #pass
         self.itotal += 1
 
     @property
@@ -3486,13 +3487,13 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
     def get_f06_header(self, is_mag_phase=True):
         # if 'CTRIA3' in self.element_name:
-            # msg = [
-                # '                             F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'
-                # ' \n'
-                # '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -\n'
-                # '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n'
-            # ]
-            # nnodes = 3
+        #     msg = [
+        #         '                             F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'
+        #         ' \n'
+        #         '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -\n'
+        #         '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n'
+        #     ]
+        #     nnodes = 3
 
         if self.element_type == 70:
             # CQUAD4
@@ -3608,11 +3609,11 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
         cen_word = 'CEN/%i' % nnodes
-        if self.element_type  in [64, 82, 144]: # CQUAD8, CQUADR, CQUAD4
+        if self.element_type in [64, 82, 144]:  # CQUAD8, CQUADR, CQUAD4
             cyci = [0, 1, 2, 3, 4]
             #cyc = cycle([0, 1, 2, 3, 4])  # TODO: this is totally broken...
             nnodes_per_eid = 5
-        elif self.element_type  in [70, 75]: # CTRIAR, CTRIA6
+        elif self.element_type in [70, 75]:  # CTRIAR, CTRIA6
             cyci = [0, 1, 2, 3]
             #cyc = cycle([0, 1, 2, 3])  # TODO: this is totally broken...
             nnodes_per_eid = 4
@@ -3676,11 +3677,11 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
-        if self.element_type  in [64, 82, 144]: # CQUAD8, CQUADR, CQUAD4
+        if self.element_type in [64, 82, 144]:  # CQUAD8, CQUADR, CQUAD4
             cyci = [0, 1, 2, 3, 4]
             #cyc = cycle([0, 1, 2, 3, 4])  # TODO: this is totally broken...
             nnodes_per_eid = 5
-        elif self.element_type  in [70, 75]: # CTRIAR, CTRIA6
+        elif self.element_type in [70, 75]:  # CTRIAR, CTRIA6
             cyci = [0, 1, 2, 3]
             #cyc = cycle([0, 1, 2, 3])  # TODO: this is totally broken...
             nnodes_per_eid = 4
@@ -3825,10 +3826,10 @@ class RealCBarFastForceArray(RealForceObject):
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        #self.ntimes = 0
-        #self.nelements = 0
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        if self.is_sort1: #  or self.table_name in ['OEFRMS2']
+        # self.ntimes = 0
+        # self.nelements = 0
+        # print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_sort1:  # or self.table_name in ['OEFRMS2']
             ntimes = self.ntimes
             nelements = self.nelements
             ntotal = self.ntotal
@@ -3878,8 +3879,8 @@ class RealCBarFastForceArray(RealForceObject):
         """unvectorized method for adding SORT1 transient data"""
         assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        #[eid, bending_moment_a1, bending_moment_a2,
-         #bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
+        # [eid, bending_moment_a1, bending_moment_a2,
+        #  bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [
@@ -3893,11 +3894,11 @@ class RealCBarFastForceArray(RealForceObject):
         """unvectorized method for adding SORT2 transient data"""
         assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        #[eid, bending_moment_a1, bending_moment_a2,
-         #bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
+        # [eid, bending_moment_a1, bending_moment_a2,
+        # bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
         itime = self.ielement
         ielement = self.itime
-        #print(f'{self.table_name} itime={itime} ielement={ielement} time={dt} eid={eid} axial={axial}')
+        # print(f'{self.table_name} itime={itime} ielement={ielement} time={dt} eid={eid} axial={axial}')
         self._times[itime] = dt
         self.element[ielement] = eid
         self.data[itime, ielement, :] = [
@@ -3916,7 +3917,7 @@ class RealCBarFastForceArray(RealForceObject):
 
         nelements = self.nelements
         ntimes = self.ntimes
-        #ntotal = self.ntotal
+        # ntotal = self.ntotal
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
@@ -3932,7 +3933,7 @@ class RealCBarFastForceArray(RealForceObject):
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append(f'  element.shape = {self.element.shape}\n')
-        #msg.append('  element type: %s\n' % self.element_type)
+        # msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
@@ -4093,6 +4094,7 @@ class RealCBarFastForceArray(RealForceObject):
     def _words(self) -> list[str]:
         return []
 
+
 class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
     """34-CBAR"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -4162,10 +4164,12 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
         return words
 
+
 class RealCWeldForceArray(RealCBarFastForceArray):  # 34-CBAR
     """117-CWELD"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
 
 class RealCWeldForceArrayMSC(RealCBarFastForceArray):  # 118-WELDP
     """118-WELDP"""
@@ -4173,31 +4177,30 @@ class RealCWeldForceArrayMSC(RealCBarFastForceArray):  # 118-WELDP
         RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def _words(self) -> list[str]:
-        words = ['                                  F O R C E S   I N   W E L D   E L E M E N T S   ( C W E L D P )\n',
-        ' \n',
-        '    ELEMENT           BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
-        '      ID          PLANE 1 (MZ)  PLANE 2 (MY)   PLANE 1 (MZ)  PLANE 2 (MY)   PLANE 1 (FY)  PLANE 2 (FZ)     FORCE FX      TORQUE MX\n',
-        #'        179      -2.607303E-02 -5.365749E-02   2.622905E-02  5.209560E-02  -5.230208E-02 -1.057531E-01  -2.476445E-02  -1.661023E-03\n',
+        words = [
+            '                                  F O R C E S   I N   W E L D   E L E M E N T S   ( C W E L D P )\n',
+            ' \n',
+            '    ELEMENT           BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+            '      ID          PLANE 1 (MZ)  PLANE 2 (MY)   PLANE 1 (MZ)  PLANE 2 (MY)   PLANE 1 (FY)  PLANE 2 (FZ)     FORCE FX      TORQUE MX\n',
+            # '        179      -2.607303E-02 -5.365749E-02   2.622905E-02  5.209560E-02  -5.230208E-02 -1.057531E-01  -2.476445E-02  -1.661023E-03\n',
         ]
-        #words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
-                 #'0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
-                 #'       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
         return words
+
 
 class RealCFastForceArrayNX(RealCBarFastForceArray):  # 34-CBAR
     """119-CFAST"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+
 class RealConeAxForceArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
         RealForceObject.__init__(self, data_code, isubcase)
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.ntimes = 0  # or frequency/mode
-        #self.ntotal = 0
+        # self.code = [self.format_code, self.sort_code, self.s_code]
+        # self.ntimes = 0  # or frequency/mode
+        # self.ntotal = 0
         self.nelements = 0  # result specific
 
         if not is_sort1:
@@ -4213,33 +4216,33 @@ class RealConeAxForceArray(RealForceObject):
         ]
         return headers
 
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
+    # def get_headers(self):
+    #     headers = ['axial', 'torque']
+    #     return headers
 
     def build(self):
         """sizes the vectorized attributes of the RealConeAxForceArray"""
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        # print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
-        #self.names = []
+        # self.names = []
         self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        #self.ntimes = 0
-        #self.nelements = 0
+        # self.ntimes = 0
+        # self.nelements = 0
 
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        # print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.nelements, dtype=idtype)
 
-        #[hopa, bmu, bmv, tm, su, sv]
+        # [hopa, bmu, bmv, tm, su, sv]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
     def build_dataframe(self):
@@ -4258,7 +4261,7 @@ class RealConeAxForceArray(RealForceObject):
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             self.data_frame = df1.join([df2])
-        #print(self.data_frame)
+        # print(self.data_frame)
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
@@ -4288,7 +4291,7 @@ class RealConeAxForceArray(RealForceObject):
                         if i > 10:
                             print(msg)
                             raise ValueError(msg)
-                #print(msg)
+                # print(msg)
                 if i > 0:
                     raise ValueError(msg)
         return True
@@ -4302,14 +4305,14 @@ class RealConeAxForceArray(RealForceObject):
         self.data[self.itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
         self.ielement += 1
 
-    #def add_sort2(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
-        #"""unvectorized method for adding SORT2 transient data"""
-        #assert self.is_sort2, self
-        #assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        #self._times[itime] = dt
-        #self.element[self.ielement] = eid
-        #self.data[itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
-        #self.ielement += 1
+    # def add_sort2(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
+    #     """unvectorized method for adding SORT2 transient data"""
+    #     assert self.is_sort2, self
+    #     assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+    #     self._times[itime] = dt
+    #     self.element[self.ielement] = eid
+    #     self.data[itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
+    #     self.ielement += 1
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
@@ -4381,8 +4384,8 @@ class RealConeAxForceArray(RealForceObject):
                 [hopai, bmui, bmvi, tmi, sui, svi] = vals2
 
                 # TODO: hopa is probably the wrong type
-                              # hopa        # Mu       Mv      twist       Vy       Vu
-                f06_file.write(' %8i  %-13s  %-13s %-13s     %-13s     %-13s     %-13s     %s\n' % (
+                #               hopa        # Mu       Mv      twist       Vy       Vu
+                f06_file.write(' %8d  %-13s  %-13s %-13s     %-13s     %-13s     %-13s     %s\n' % (
                     eid, 0.0, hopai, bmui, bmvi, tmi, sui, svi))
             f06_file.write(page_stamp % page_num)
             page_num += 1
@@ -4535,10 +4538,10 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             '0    ELEMENT  STATION         BEND-MOMENT                      SHEAR FORCE                     AXIAL\n'
             '       ID.     (PCT)     PLANE 1        PLANE 2           PLANE 1        PLANE 2               FORCE              TORQUE\n']
             # '        15893   0.000   1.998833E+02   9.004551E+01      2.316835E+00   1.461960E+00         -2.662207E+03       9.795244E-02'
-        #msg = []
-        #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+        # msg = []
+        # header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
         eids = self.element
-        #f.write(''.join(words))
+        # f.write(''.join(words))
 
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
@@ -4606,22 +4609,22 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if self.is_sort1:
-            struct1 = Struct(endian + b'i2f')
-        else:
-            raise NotImplementedError('SORT2')
+        # if self.is_sort1:
+        #     struct1 = Struct(endian + b'i2f')
+        # else:
+        #     raise NotImplementedError('SORT2')
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         eids = self.element
-        #f.write(''.join(words))
+        # f.write(''.join(words))
 
-        #ntimes = self.data.shape[0]
+        # ntimes = self.data.shape[0]
         struct1 = Struct(endian + b'i7f')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
-            #print('stress itable = %s' % itable)
+            # print('stress itable = %s' % itable)
             itable -= 1
             header = [4, itable, 4,
                       4, 1, 4,
@@ -4922,8 +4925,8 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element_node = zeros((nelements, 3), dtype=idtype)
 
-        #[bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a
-        # bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b]
+        # [bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a
+        #  bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b]
         self.data = zeros((ntimes, ntotal, 12), dtype=fdtype)
 
     def build_dataframe(self):
@@ -4976,29 +4979,29 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         itime = self.itotal
         jelement = self.itime
         ielement = self.itotal // self.ntotal
-        #print(f'RealBendForceArray SORT2 itime={itime}/{len(self._times)} '
-              #f'ielement={ielement}/{len(self.element_node)} jelement={jelement}, '
-              #f'itotal={self.itotal}/{self.data.shape[1]}'
-              #f' -> dt={dt:g} eid={eid}')
+        # print(f'RealBendForceArray SORT2 itime={itime}/{len(self._times)} '
+        #       f'ielement={ielement}/{len(self.element_node)} jelement={jelement}, '
+        #       f'itotal={self.itotal}/{self.data.shape[1]}'
+        #       f' -> dt={dt:g} eid={eid}')
         self._times[itime] = dt
         self.element_node[jelement, :] = [eid, nid_a, nid_b]
-        #print('RealBendForceArray', '%g' % dt, eid, nid_a, nid_b)
-        #self.data[0, ielement, :] = [
-            #bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
-            #bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b,
-        #]
-        #self.data[itime, 0, :] = [
-            #bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
-            #bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b,
-        #]
+        # print('RealBendForceArray', '%g' % dt, eid, nid_a, nid_b)
+        # self.data[0, ielement, :] = [
+        #     bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
+        #     bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b,
+        # ]
+        # self.data[itime, 0, :] = [
+        #     bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
+        #     bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b,
+        # ]
         warnings.warn('RealBendForceArray add_sort2 skipped')
         self.data[itime, ielement, :] = [
             bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
             bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b,
         ]
-        #if self.itotal == self.ntotal:
-            #self.itotal = 0
-            #self.ielement += 1
+        # if self.itotal == self.ntotal:
+        #     self.itotal = 0
+        #     self.ielement += 1
         self.itotal += 1
 
     def get_stats(self, short: bool=False) -> list[str]:
@@ -5071,7 +5074,6 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
             axial_b = self.data[itime, :, 10]
             torque_b = self.data[itime, :, 11]
 
-
             for (eid,
                  nid_ai, bending_moment_1ai, bending_moment_2ai, shear_1ai, shear_2ai, axial_ai, torque_ai,
                  nid_bi, bending_moment_1bi, bending_moment_2bi, shear_1bi, shear_2bi, axial_bi, torque_bi) in zip(
@@ -5142,14 +5144,13 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         self.element_type = None
         self.element_name = None
         RealForceObject.__init__(self, data_code, isubcase)
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.ntimes = 0  # or frequency/mode
-        #self.ntotal = 0
+        # self.code = [self.format_code, self.sort_code, self.s_code]
+        # self.ntimes = 0  # or frequency/mode
+        # self.ntotal = 0
         self.nelements = 0  # result specific
 
-        #if not is_sort1:
-            #raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
+        # if not is_sort1:
+        #     raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self) -> None:
         self.itotal = 0
@@ -5377,14 +5378,13 @@ class RealForceMomentArray(RealForceObject):
         self.element_type = None
         self.element_name = None
         RealForceObject.__init__(self, data_code, isubcase)
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.ntimes = 0  # or frequency/mode
-        #self.ntotal = 0
+        # self.code = [self.format_code, self.sort_code, self.s_code]
+        # self.ntimes = 0  # or frequency/mode
+        # self.ntotal = 0
         self.nelements = 0  # result specific
 
-        #if not is_sort1:
-            #raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
+        # if not is_sort1:
+        #     raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     @property
     def nnodes_per_element(self) -> int:
@@ -5434,32 +5434,32 @@ class RealForceMomentArray(RealForceObject):
             data_frame = self._build_pandas_transient_elements(
                 column_values, column_names,
                 headers, self.element, self.data)
-            #data_frame = pd.Panel(self.data, items=column_values,
-                                  #major_axis=self.element, minor_axis=headers).to_frame()
-            #data_frame.columns.names = column_names
-            #data_frame.index.names = ['ElementID', 'Item']
+            # data_frame = pd.Panel(self.data, items=column_values,
+            #                       major_axis=self.element, minor_axis=headers).to_frame()
+            # data_frame.columns.names = column_names
+            # data_frame.index.names = ['ElementID', 'Item']
         else:
             # >=25.0
-            #Static         fx   fy   fz   mx   my   mz
-            #ElementID
-            #1          1000.0  0.0  0.0  0.0  0.0  0.0
+            # Static         fx   fy   fz   mx   my   mz
+            # ElementID
+            # 1          1000.0  0.0  0.0  0.0  0.0  0.0
             #
             # <=24.2
-            #Static               0
-            #ElementID Item
-            #1         fx    1000.0
-            #          fy       0.0
-            #          fz       0.0
-            #          mx       0.0
-            #          my       0.0
-            #          mz       0.0
+            # Static               0
+            # ElementID Item
+            # 1         fx    1000.0
+            #           fy       0.0
+            #           fz       0.0
+            #           mx       0.0
+            #           my       0.0
+            #           mz       0.0
             data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
             data_frame.index.name = 'ElementID'
             data_frame.columns.names = ['Static']
-            #data_frame = pd.Panel(self.data,
-                                  #major_axis=self.element, minor_axis=headers).to_frame()
-            #data_frame.columns.names = ['Static']
-            #data_frame.index.names = ['ElementID', 'Item']
+            # data_frame = pd.Panel(self.data,
+            #                       major_axis=self.element, minor_axis=headers).to_frame()
+            # data_frame.columns.names = ['Static']
+            # data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
@@ -5499,7 +5499,7 @@ class RealForceMomentArray(RealForceObject):
                         (fx1, fy1, fz1, mx1, my1, mz1) = t1
                         (fx2, fy2, fz2, mx2, my2, mz2) = t2
                         if not allclose(t1, t2):
-                        #if not np.array_equal(t1, t2):
+                            #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
                                 fx1, fy1, fz1, mx1, my1, mz1,
@@ -5572,14 +5572,14 @@ class RealForceMomentArray(RealForceObject):
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = searchsorted(eids, self.element)  # [0]
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
+        # ind = ravel([searchsorted(self.element == eid) for eid in eids])
         ind = searchsorted(eids, self.element)
-        #ind = ind.reshape(ind.size)
-        #ind.sort()
+        # ind = ind.reshape(ind.size)
+        # ind.sort()
         return ind
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
@@ -5699,7 +5699,6 @@ class RealForceMomentArray(RealForceObject):
         return itable
 
 
-
 class RealCBushForceArray(RealForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -5709,32 +5708,33 @@ class RealCBushForceArray(RealForceMomentArray):
             '                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
             ' \n'
             '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
-           #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+            # '0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
         return msg
+
 
 class RealCBearForceArray(RealForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def get_f06_header(self):
-        if self.element_type == 0: # 'CBUSH':
-
+        if self.element_type == 0:  # 'CBUSH':
             msg = [
                 '                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
                 ' \n'
                 '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
-               #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
-        elif self.element_type == 280: # 'CBEAR':
+                # '0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+        elif self.element_type == 280:  # 'CBEAR':
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\rotbr60f.op2
             msg = [
                 '                              F O R C E S   I N   B E A R I N G   E L E M E N T S        ( C B E A R )\n'
                 ' \n'
                 '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
-               #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+                # '0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
         else:
             msg = f'element_name={self.element_name} self.element_type={self.element_type}'
             raise NotImplementedError(msg)
         return msg
+
 
 class RealCFastForceArrayMSC(RealForceMomentArray):
     """126-CFAST-MSC"""
@@ -5746,55 +5746,56 @@ class RealCFastForceArrayMSC(RealForceMomentArray):
             '                               F O R C E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )\n'
             ' \n'
             '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
-           #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+            # '0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
         return msg
 
-def oef_data_code(table_name,
+
+def oef_data_code(table_name: str,
                   is_sort1=True, is_random=False,
                   random_code=0, title='', subtitle='', label='', is_msc=True):
     sort1_sort_bit = 0 if is_sort1 else 1
     random_sort_bit = 1 if is_random else 0
     sort_method = 1 if is_sort1 else 2
-    #if format_code == 1:
-        #format_word = "Real"
-    #elif format_code == 2:
-        #format_word = "Real/Imaginary"
-    #elif format_code == 3:
-        #format_word = "Magnitude/Phase"
-    #DEVICE_CODE_MAP = {
-        #1 : "Print",
-        #2 : "Plot",
-        #3 : "Print and Plot",
-        #4 : "Punch",
-        #5 : "Print and Punch",
-        #6 : "Plot and Punch",
-        #7 : "Print, Plot, and Punch",
-    #}
+    # if format_code == 1:
+    #     format_word = "Real"
+    # elif format_code == 2:
+    #     format_word = "Real/Imaginary"
+    # elif format_code == 3:
+    #     format_word = "Magnitude/Phase"
+    # DEVICE_CODE_MAP = {
+    #     1 : "Print",
+    #     2 : "Plot",
+    #     3 : "Print and Plot",
+    #     4 : "Punch",
+    #     5 : "Print and Punch",
+    #     6 : "Plot and Punch",
+    #     7 : "Print, Plot, and Punch",
+    # }
 
     table_code = TABLE_NAME_TO_TABLE_CODE[table_name]
-    sort_code = 1 # TODO: what should this be???
+    sort_code = 1  # TODO: what should this be???
 
-    #table_code = tCode % 1000
-    #sort_code = tCode // 1000
+    # table_code = tCode % 1000
+    # sort_code = tCode // 1000
     tCode = table_code * 1000 + sort_code
 
     device_code = 2  # Plot
-    #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
+    # print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
     data_code = {
         'nonlinear_factor': None,
-        'sort_bits': [0, sort1_sort_bit, random_sort_bit], # real, sort1, random
-        'sort_method' : sort_method,
+        'sort_bits': [0, sort1_sort_bit, random_sort_bit],  # real, sort1, random
+        'sort_method': sort_method,
         'is_msc': is_msc,
-        'format_code': 1, # real
+        'format_code': 1,  # real
         'table_code': table_code,
         'tCode': tCode,
-        'table_name': table_name, ## TODO: should this be a string?
-        'device_code' : device_code,
-        'random_code' : random_code,
+        'table_name': table_name,  ## TODO: should this be a string?
+        'device_code': device_code,
+        'random_code': random_code,
         'thermal': 0,
-        'title' : title,
+        'title': title,
         'subtitle': subtitle,
         'label': label,
-        #'num_wide' : 8, # displacement-style table
+        # 'num_wide' : 8, # displacement-style table
     }
     return data_code

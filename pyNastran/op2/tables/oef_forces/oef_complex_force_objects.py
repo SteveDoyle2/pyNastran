@@ -2614,10 +2614,6 @@ class ComplexCBeamForceArray(ComplexForceObject):
             self.element_node[:, 0],
             self.data[0, :, 0].real,
         ]
-        is_v25 = pd.__version__ >= '0.25'
-        if is_v25:
-            print(f'skipping pandas {self.class_name}')
-            return
         # wrong type for ElementID
         #data_frame = self._build_pandas_transient_element_node(
             #column_values, column_names,
