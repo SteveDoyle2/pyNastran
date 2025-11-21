@@ -803,7 +803,7 @@ if len(NX_RESULT_TABLES) != len(np.unique(NX_RESULT_TABLES)):  # pragma: no cove
 
 NX_RESULT_TABLES += NX_EXTRA_TABLES
 
-NX_TABLE_CONTENT = {
+NX_TABLE_CONTENT: dict[int, str] = {
     # nx 8.5
     0: '',
     1: 'OUG - Displacement vector',
@@ -844,82 +844,87 @@ NX_TABLE_CONTENT = {
     36: 'OEE - Element kinetic energy',
     37: 'OEE - Element energy loss',
 
-    38 : 'OMSEC - Constant modal strain energy',
-    39 : 'OMSED - Oscillating modal strain energy',
-    40 : 'OMKEC - Constant modal kinetic energy',
-    41 : 'OMKED - Oscillating modal kinetic energy',
-    42 : 'OMECON - Constant total modal energy',
-    43 : 'OMEOSC - Oscillating total modal energy',
-    44 : 'OUGMC - Displacement/velocity/acceleration modal contributions',
-    45 : 'OEFMC - Element force modal contributions',
-    46 : 'OESMC - Element stress modal contributions',
-    47 : 'OSTRMC - Element strain modal contributions',
-    48 : 'OQGMC - SPC force modal contributions',
-    49 : 'OUGPC - Panel contributions',
-    50 : 'OUGGC - Grid contributions',
-    51 : 'OUGRC - Reciprocal panel contributions',
+    38: 'OMSEC - Constant modal strain energy',
+    39: 'OMSED - Oscillating modal strain energy',
+    40: 'OMKEC - Constant modal kinetic energy',
+    41: 'OMKED - Oscillating modal kinetic energy',
+    42: 'OMECON - Constant total modal energy',
+    43: 'OMEOSC - Oscillating total modal energy',
+    44: 'OUGMC - Displacement/velocity/acceleration modal contributions',
+    45: 'OEFMC - Element force modal contributions',
+    46: 'OESMC - Element stress modal contributions',
+    47: 'OSTRMC - Element strain modal contributions',
+    48: 'OQGMC - SPC force modal contributions',
+    49: 'OUGPC - Panel contributions',
+    50: 'OUGGC - Grid contributions',
+    51: 'OUGRC - Reciprocal panel contributions',
     #
-    53 : 'OACVELO - Acoustic velocity',
-    54 : 'OACINT - Acoustic intensity',
-    55 : 'OACPWR - Acoustic power',
-    56 : 'OACPWRI - Acoustic incident power',
-    57 : 'OACPWRT - Acoustic transmitted power',
-    58 : 'OACTRLS - Acoustic transmission loss',
+    53: 'OACVELO - Acoustic velocity',
+    54: 'OACINT - Acoustic intensity',
+    55: 'OACPWR - Acoustic power',
+    56: 'OACPWRI - Acoustic incident power',
+    57: 'OACPWRT - Acoustic transmitted power',
+    58: 'OACTRLS - Acoustic transmission loss',
     #
-    61 : 'OGK - Gasket Element Results',
-    62 : 'OBC - Contact Pressure and Traction Results',
-    63 : 'OQG - Contact Force Results',
-    64 : 'OSPDSI - Contact Separation Distance - Initial',
-    65 : 'OSPDS - Contact Separation Distance',
-    66 : 'OBG - Glue force results (normal and in-plane tractions)',
-    67 : 'OQG - Glue force results ???',
-    68 : 'ELRSCALV - Tosca normalized material properties',
-    69 : 'OERP - Element equivalent radiated power (panel output)',
-    70 : 'OERPEL - Element equivalent radiated power (element output)',
-    71 : 'Reserved for FE-Design',
-    72 : 'OTEMP - Grid point temperature output',
-    73 : 'JINT - Crack front J-integral output',
-    74 : 'SLIDE - Contact/Glue slide output',
-    75 : 'CONSTAT - Contact status output',
-    76 : 'OERR - Error estimator output',
-    77 : 'OPRESS - Grid point pressure output',
-    78 : 'STATE - Variables output',
-    79 : 'INITSTR - Initial strain output',
-    80 : 'OBOLT - Bolt preload output',
+    61: 'OGK - Gasket Element Results',
+    62: 'OBC - Contact Pressure and Traction Results',
+    63: 'OQG - Contact Force Results',
+    64: 'OSPDSI - Contact Separation Distance - Initial',
+    65: 'OSPDS - Contact Separation Distance',
+    66: 'OBG - Glue force results (normal and in-plane tractions)',
+    67: 'OQG - Glue force results ???',
+    68: 'ELRSCALV - Tosca normalized material properties',
+    69: 'OERP - Element equivalent radiated power (panel output)',
+    70: 'OERPEL - Element equivalent radiated power (element output)',
+    71: 'Reserved for FE-Design',
+    72: 'OTEMP - Grid point temperature output',
+    73: 'JINT - Crack front J-integral output',
+    74: 'SLIDE - Contact/Glue slide output',
+    75: 'CONSTAT - Contact status output',
+    76: 'OERR - Error estimator output',
+    77: 'OPRESS - Grid point pressure output',
+    78: 'STATE - Variables output',
+    79: 'INITSTR - Initial strain output',
+    80: 'OBOLT - Bolt preload output',
 
-    81 : 'OCKGAP1 - Opening gap values for chocking elements',
-    82 : 'ODAMGCZD - Damage values for cohesive elements',
-    83 : 'ODAMGCZR - Relative displacements for cohesive elements',
-    84 : 'ODAMGCZT - Tractions for cohesive elements',
-    85 : 'ODAMGPFD - Damage values for PFA',
-    86 : 'ODAMGPFE - Damage energy for PFA',
-    87 : 'ODAMGPFS - Damage status for PFA',
-    88 : 'ODAMGPFR - Damage crack density for PFA / EUD',
-    89 : '??? - Composite strength ratios',
-    90 : 'TRMBD - Transformation matrices from deformed to basic',
-    91 : 'TRMBU - Transfomration matrices from undeformed to basic',
-    92 : 'ONMD - Normalized material density for topology optimization output',
-    93 : 'OBCKL - SORT2 output for Load Factor versus Cumulative Arc-length from a SOL 401 arc-length solution',
+    81: 'OCKGAP1 - Opening gap values for chocking elements',
+    82: 'ODAMGCZD - Damage values for cohesive elements',
+    83: 'ODAMGCZR - Relative displacements for cohesive elements',
+    84: 'ODAMGCZT - Tractions for cohesive elements',
+    85: 'ODAMGPFD - Damage values for PFA',
+    86: 'ODAMGPFE - Damage energy for PFA',
+    87: 'ODAMGPFS - Damage status for PFA',
+    88: 'ODAMGPFR - Damage crack density for PFA / EUD',
+    89: '??? - Composite strength ratios',
+    90: 'TRMBD - Transformation matrices from deformed to basic',
+    91: 'TRMBU - Transfomration matrices from undeformed to basic',
+    92: 'ONMD - Normalized material density for topology optimization output',
+    93: 'OBCKL - SORT2 output for Load Factor versus Cumulative Arc-length from a SOL 401 arc-length solution',
 
-    401 : 'OUGPK1 - Peak to Peak Random Displacement',  # SATK
-    410 : 'OUGPK1 - Peak to Peak Random Velocity',  # SATK
-    411 : 'OUGPK1 - Peak to Peak Random Acceleration',  # SATK
+    401: 'OUGPK1 - Peak to Peak Random Displacement',  # SATK
+    410: 'OUGPK1 - Peak to Peak Random Velocity',  # SATK
+    411: 'OUGPK1 - Peak to Peak Random Acceleration',  # SATK
 
-    404 : 'OEFPK1 - Peak to Peak Random Element Force',  # SATK
+    404: 'OEFPK1 - Peak to Peak Random Element Force',  # SATK
 
     #
     # nx 2019.2
     #
-    504 : 'OEFCRM1 - Cumulative Root Mean Square output',
-    505 : 'OSTRCRM1 - Cumulative Root Mean Square output',
-    604 : 'OEFPSD2 - ???',
-    605 : 'OSTPSD2C - ???',
-    804 : 'OEFRMS1 - ???',
-    805 : 'OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.',
-    904 : 'OEFNO1 - Cumulative Root Mean Square output',
-    905 : 'OESXNO1C - Cumulative Root Mean Square output',
-}  # type: dict[int, str]
+    502: 'OPGCRM1 - Cumulative Root Mean Square output',
+    503: '???',
+    504: 'OEFCRM1 - Cumulative Root Mean Square output',
+    505: 'OSTRCRM1 - Cumulative Root Mean Square output',
+    602: 'OPGPSD1 - Applied Load Power Spectral Density',
+    603: 'OQMPSD1 - MPC Force Power Spectral Density',
+    604: 'OEFPSD2 - Element Force Power Spectral Density',
+    605: 'OSTPSD2C - Composite Strain Power Spectral Density',
+    802: 'OPGRMS1 - RMS Load',
+    804: 'OEFRMS1 - RMS Element Force',
+    805: 'OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.',
 
+    904: 'OEFNO1 - Cumulative Root Mean Square output',
+    905: 'OESXNO1C - Cumulative Root Mean Square output',
+}
 NX_OEF_REAL_MAPPER = {
     1: 3,    # CROD
     2: 1 + (10 - 1) * 11,  # CBEAM

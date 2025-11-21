@@ -4077,8 +4077,8 @@ class TestOP2Main(Tester):
     def test_random_ctria3_oesrmx1(self):
         """runs a random test"""
         log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'random')
-        op2_filename = os.path.join(folder, 'rms_tri_oesrmx1.op2')
+        folder = MODEL_PATH / 'random'
+        op2_filename = folder / 'rms_tri_oesrmx1.op2'
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
         unused_op2, unused_is_passed = run_op2(
