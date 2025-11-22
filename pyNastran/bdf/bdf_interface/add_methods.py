@@ -274,7 +274,7 @@ class AddMethods:
         model = self.model
         assert key > 0, 'nid=%s node=%s' % (key, node)
         add_object_to_dict_no_dupes(model, key, 'node', node, model.nodes,
-                                    model._duplicate_nodes, allow_overwrites)
+                                    model._duplicate['nodes'], allow_overwrites)
 
     # def add_gridb_object(self, node: GRIDB, allow_overwrites: bool=False) -> None:
     #     """adds a GRIDB card"""
@@ -445,7 +445,7 @@ class AddMethods:
         if not allow_overwrites:
             if key in self.model.elements:
                 if elem == self.model.elements[key]:
-                    self.model._duplicate_elements.append(elem)
+                    self.model._duplicate['elements'].append(elem)
                     if self.model._stop_on_duplicate_error:
                         self.model.pop_parse_errors()
             elif key in self.model.plotels:
@@ -472,7 +472,7 @@ class AddMethods:
             #model._type_to_id_map[elem.type].append(key)
         else:
             model.log.error(f'duplicate element {key}:\n{model.elements[key]}with:\n{elem}')
-            model._duplicate_elements.append(elem)
+            model._duplicate['elements'].append(elem)
             if model._stop_on_duplicate_error:
                 model.pop_parse_errors()
             #raise RuntimeError('eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, model.elements[key], elem))
@@ -485,7 +485,7 @@ class AddMethods:
         assert key > 0, 'eid=%s must be positive; elem_flag=\n%s' % (key, elem_flag)
         if key in model.ao_element_flags and not allow_overwrites:
             if not elem_flag == model.ao_element_flags[key]:
-                # self.model._duplicate_elements.append(elem_flag)
+                # self.model._duplicate['elements'].append(elem_flag)
                 # if self.model._stop_on_duplicate_error:
                 #     self.model.pop_parse_errors()
                 assert elem_flag.eid not in self.model.ao_element_flags, 'eid=%s\nold_ao_element=\n%snew_ao_element=\n%s' % (
@@ -525,7 +525,7 @@ class AddMethods:
         assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)
         if key in model.masses and not allow_overwrites:
             if not mass == self.model.masses[key]:
-                model._duplicate_masses.append(mass)
+                model._duplicate['masses'].append(mass)
         else:
             model.masses[key] = mass
             model._type_to_id_map[mass.type].append(key)
@@ -540,7 +540,7 @@ class AddMethods:
         model = self.model
         assert key > 0, 'eid=%s elem=%s' % (key, elem)
         add_object_to_dict_no_dupes(model, key, 'element', elem, model.rigid_elements,
-                                    model._duplicate_rigid_elements, allow_overwrites)
+                                    model._duplicate['rigid_elements'], allow_overwrites)
 
     def add_thermal_element_object(self, elem: CHBDYE | CHBDYG | CHBDYP) -> None:
         """same as add_element at the moment..."""
@@ -600,7 +600,7 @@ class AddMethods:
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         model = self.model
         add_object_to_dict_no_dupes(model, key, 'property', prop, model.properties,
-                                    model._duplicate_properties, allow_overwrites)
+                                    model._duplicate['properties'], allow_overwrites)
 
     def add_property_mass_object(self, prop: PMASS, allow_overwrites: bool=False) -> None:
         """adds an PMASS object"""
@@ -801,7 +801,7 @@ class AddMethods:
         model = self.model
         if key in model.materials and not allow_overwrites:
             if not material == model.materials[key]:
-                model._duplicate_materials.append(material)
+                model._duplicate['materials'].append(material)
         else:
             model.materials[key] = material
             model._type_to_id_map[material.type].append(key)
@@ -814,7 +814,7 @@ class AddMethods:
         model = self.model
         if key in model.thermal_materials and not allow_overwrites:
             if not material == model.thermal_materials[key]:
-                model._duplicate_thermal_materials.append(material)
+                model._duplicate['thermal_materials'].append(material)
         else:
             model.thermal_materials[key] = material
             model._type_to_id_map[material.type].append(key)
@@ -892,13 +892,13 @@ class AddMethods:
         model = self.model
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)
         # add_object_to_dict_no_dupes(model, key, 'coords', coord, model.coords,
-        #                             model._duplicate_coords, allow_overwrites)
+        #                             model._duplicate['coords'], allow_overwrites)
 
         # v1.4
         # if key in self.model.coords:
         #     #if not allow_overwrites:
         #     if not coord == self.model.coords[key]:
-        #         self.model._duplicate_coords.append(coord)
+        #         self.model._duplicate['coords'].append(coord)
         # else:
         #     self.model.coords[key] = coord
         #     self.model._type_to_id_map[coord.type].append(key)

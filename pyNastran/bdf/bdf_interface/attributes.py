@@ -761,31 +761,16 @@ class BDFAttributes:
         self._stop_on_duplicate_error = True
         self._stored_parse_errors: list[str] = []
 
-        # self._duplicates: dict[str, list[str]] = {
-        #     'nodes': [],
-        #     'elements': [],
-        #     'rigid_elements': [],
-        #     'properties': [],
-        #     'materials': [],
-        #     'thermal_materials': [],
-        #     'coords': [],
-        # }
-        # self._duplicate_nodes = self._duplicates['nodes']
-        # self._duplicate_elements = self._duplicates['elements']
-        # self._duplicate_rigid_elements = self._duplicates['rigid_elements']
-        # self._duplicate_properties = self._duplicates['properties']
-        # self._duplicate_materials = self._duplicates['materials']
-        # self._duplicate_masses = self._duplicates['materials']
-        # self._duplicate_thermal_materials = self._duplicates['thermal_materials']
-        # self._duplicate_coords = self._duplicates['coords']
-        self._duplicate_nodes: list[str] = []
-        self._duplicate_elements: list[str] = []
-        self._duplicate_rigid_elements: list[str] = []
-        self._duplicate_properties: list[str] = []
-        self._duplicate_materials: list[str] = []
-        self._duplicate_masses: list[str] = []
-        self._duplicate_thermal_materials: list[str] = []
-        self._duplicate_coords: list[str] = []
+        self._duplicate: dict[str, list[str]] = {
+            'nodes': [],
+            'elements': [],
+            'rigid_elements': [],
+            'properties': [],
+            'materials': [],
+            'thermal_materials': [],
+            'masses': [],
+            'coords': [],
+        }
         self.values_to_skip: dict[str, list[int]] = {}
 
         # ------------------------ structural defaults -----------------------

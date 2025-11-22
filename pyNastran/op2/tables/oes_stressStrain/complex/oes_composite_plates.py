@@ -62,64 +62,64 @@ class ComplexLayeredCompositesArray(OES_Object):
         """
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-        #print(self._ntotals, self.ntotal)
-        #print(self.code_information())
+        # print(self._ntotals, self.ntotal)
+        # print(self.code_information())
 
-        #self.names = []
-        #self.nelements //= nnodes
+        # self.names = []
+        # self.nelements //= nnodes
         self.nelements //= self.ntimes
-        #print('element_type=%r ntimes=%s nelements=%s nnodes=%s ntotal=%s subtitle=%s' % (
-            #self.element_type, self.ntimes, self.nelements, nnodes, self.ntotal, self.subtitle))
+        # print('element_type=%r ntimes=%s nelements=%s nnodes=%s ntotal=%s subtitle=%s' % (
+        #     self.element_type, self.ntimes, self.nelements, nnodes, self.ntotal, self.subtitle))
 
-        #self.ntotal = self.nelements * nnodes * 2
-        #self.ntotal
+        # self.ntotal = self.nelements * nnodes * 2
+        # self.ntotal
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
+        # print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         idtype, cfdtype = get_complex_times_dtype(self.size)
 
         if self.is_sort1:
             ntimes = self.ntimes
             nlayers = self.ntotal
-            #print(f'  SORT1: ntimes={ntimes} nlayers={nlayers} {self.element_name}-{self.element_type}')
+            # print(f'  SORT1: ntimes={ntimes} nlayers={nlayers} {self.element_name}-{self.element_type}')
         else:
             raise NotImplementedError(self.code_information())
-        #elif self.is_sort2:
-            #nelements = self.ntimes
-            #nlayers = nelements * 2 * nnodes
-            #ntimes = self.ntotal
-            #print(f'  SORT2: ntimes={ntimes} nlayers={nlayers} {self.element_name}-{self.element_type}')
-        #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
+        # elif self.is_sort2:
+        #     nelements = self.ntimes
+        #     nlayers = nelements * 2 * nnodes
+        #     ntimes = self.ntotal
+        #     print(f'  SORT2: ntimes={ntimes} nlayers={nlayers} {self.element_name}-{self.element_type}')
+        # print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
 
         self._times = zeros(ntimes, dtype=self.analysis_fmt)
-        #self.ntotal = self.nelements * nnodes
+        # self.ntotal = self.nelements * nnodes
 
         # the number is messed up because of the offset for the element's properties
-        #if not self.nelements * nnodes * 2 == self.ntotal:
-            #msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
-                #self.ntimes, self.nelements, nnodes,
-                #self.nelements * nnodes, self.ntotal)
-            #raise RuntimeError(msg)
+        # if not self.nelements * nnodes * 2 == self.ntotal:
+        #     msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+        #         self.ntimes, self.nelements, nnodes,
+        #         self.nelements * nnodes, self.ntotal)
+        #     raise RuntimeError(msg)
 
         # [o1a, o2a, t12a, o1za, o2za,
         # o1b, o2b, t12b, o1zb, e2zb, ovm]
         self.data = zeros((ntimes, nlayers, 11), dtype=cfdtype)
 
         self.element_layer = zeros((nlayers, 2), dtype=idtype)
-        #print(self.data.shape, self.element_node.shape)
+        # print(self.data.shape, self.element_node.shape)
 
-    #def build_dataframe(self) -> None:
-        #"""creates a pandas dataframe"""
-        #headers = self.get_headers()
-        #column_names, column_values = self._build_dataframe_transient_header()
-
-        #data_frame = self._build_pandas_transient_element_node(
-            #column_values, column_names,
-            #headers, self.element_node, self.data)
-        ##print(data_frame)
-        #self.data_frame = data_frame
+    # def build_dataframe(self) -> None:
+    #     """creates a pandas dataframe"""
+    #     headers = self.get_headers()
+    #     column_names, column_values = self._build_dataframe_transient_header()
+    #
+    #     data_frame = self._build_pandas_transient_element_node(
+    #         column_values, column_names,
+    #         headers, self.element_node, self.data)
+    #     #print(data_frame)
+    #     self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1

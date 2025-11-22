@@ -764,7 +764,7 @@ class OP2(OP2_Scalar, OP2Writer):
                     self.log.error(f'build_dataframe is broken for {class_name}')
                     raise
 
-    def load_hdf5_filename(self, hdf5_filename: str, combine: bool=True) -> None:
+    def load_hdf5_filename(self, hdf5_filename: PathLike, combine: bool=True) -> None:
         """
         Loads an h5 file into an OP2 object
 

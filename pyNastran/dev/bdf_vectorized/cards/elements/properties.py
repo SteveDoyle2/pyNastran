@@ -151,6 +151,7 @@ class Properties:
     def __getitem__(self, property_ids):
         return self.model.elements.get_properties(property_ids)
 
+
 def check_duplicate(name, objs, log):
     unique_vals = set()
     for obj in objs:

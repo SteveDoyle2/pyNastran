@@ -200,6 +200,7 @@ class VectorizedBaseCard:
     @property
     def _ids(self) -> np.ndarray:
         return getattr(self, self._id_name)
+
     @_ids.setter
     def _ids(self, ids: np.ndarray) -> None:
         return setattr(self, self._id_name, ids)

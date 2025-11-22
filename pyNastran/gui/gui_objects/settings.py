@@ -181,6 +181,10 @@ class OtherSettings:
     def reset_settings(self) -> None:
         self.cart3d_fluent_include = ()
         self.cart3d_fluent_remove = ()
+        self.sref = 1.0
+        self.bref = 1.0
+        self.cref = 1.0
+        self.xyz_ref = np.array([0., 0., 0.])
         #('in', 'lbf', 's', 'psi')
         self.units_model_in = ('unitless', '', '', '')
         self.units_length = 'in'

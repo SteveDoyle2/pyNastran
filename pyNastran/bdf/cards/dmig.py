@@ -79,13 +79,13 @@ class DTI_UNITS(BaseCard):
                 else:
                     h5_group.create_dataset(str(i), data=value)
                 i += 1
-            #fields = {
-                #'mass' : mass,
-                #'force' : force,
-                #'length' : length,
-                #'time' : time,
-                #'temp_stress' : temp_stress
-            #}
+            # fields = {
+            #     'mass' : mass,
+            #     'force' : force,
+            #     'length' : length,
+            #     'time' : time,
+            #     'temp_stress' : temp_stress
+            # }
 
     def __init__(self, name: str, fields: list, comment: str=''):
         """

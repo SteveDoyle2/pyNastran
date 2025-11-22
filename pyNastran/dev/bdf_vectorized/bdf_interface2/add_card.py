@@ -58,7 +58,7 @@ class AddCard(BDFAttributes):
         if not allow_overwrites:
             # if key in self.elements:
             #     if elem ==self.elements[key]:
-            #         self._duplicate_elements.append(elem)
+            #         self._duplicate['elements'].append(elem)
             #         if self._stop_on_duplicate_error:
             #             self.pop_parse_errors()
             if key in self.plotels:

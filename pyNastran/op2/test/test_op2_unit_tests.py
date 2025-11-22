@@ -585,7 +585,8 @@ class TestSATKOP2(Tester):
 
         assert len(op2.op2_results.psd.cbar_force[(3, 5, 2, 0, 0, '', 'RANDOM  103')].freqs) == 127
         # type=RealCBarForceArray ntimes=127 nelements=5; table_name='OEFPSD1'
-        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
+        #                                    shear1, shear2, axial, torque]
         # data.shape = (127, 10, 8)
         # element.shape = (5,)
         # element name: CBAR-34
@@ -611,7 +612,8 @@ class TestSATKOP2(Tester):
 
         assert len(op2.op2_results.rms.cbar_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
         # type=RealCBarForceArray ntimes=1 nelements=5; table_name='OEFRMS1'
-        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+        # data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2,
+        #        bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
         # data.shape = (1, 5, 8)
         # element.shape = (5,)
         # element name: CBAR-34
@@ -637,7 +639,8 @@ class TestSATKOP2(Tester):
 
         assert len(op2.op2_results.no.cbar_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
         # type=RealCBarForceArray nelements=5; table_name='OEFNO1'
-        # data: [1, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+        # data: [1, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
+        #                               shear1, shear2, axial, torque]
         # data.shape = (1, 5, 8)
         # element.shape = (5,)
         # element name: CBAR-34
@@ -2326,8 +2329,8 @@ class TestOP2Main(Tester):
         model.safe_cross_reference()
 
         # run_op2_reader - super strange PLOAD4 bug
-        #save_load_deck(model, xref=False, run_renumber=False,
-                       #run_op2_reader=False, run_op2_writer=False)
+        # save_load_deck(model, xref=False, run_renumber=False,
+        #                run_op2_reader=False, run_op2_writer=False)
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
@@ -2403,13 +2406,13 @@ class TestOP2Main(Tester):
         bdf_filename = MODEL_PATH / 'other' / 'ehbus69.bdf'
         op2_filename = MODEL_PATH / 'other' / 'ehbus69.op2'
 
-        ##  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename,
-            #run_skin_solids=False, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename,
+        #     run_skin_solids=False, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
 
         model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         model.safe_cross_reference()
@@ -2435,7 +2438,7 @@ class TestOP2Main(Tester):
         bdf_filename = MODEL_PATH / 'other' / 'tst1d3.bdf'
         op2_filename = MODEL_PATH / 'other' / 'tst1d3.op2'
 
-        ##  can't parse replication
+        # can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename,
             run_skin_solids=False, log=log)
@@ -2465,7 +2468,7 @@ class TestOP2Main(Tester):
         bdf_filename = MODEL_PATH / 'other' / 'trncomp12.bdf'
         op2_filename = MODEL_PATH / 'other' / 'trncomp12.op2'
 
-        ##  can't parse replication
+        # can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename,
             run_skin_solids=False, log=log)
@@ -2495,15 +2498,15 @@ class TestOP2Main(Tester):
         bdf_filename = MODEL_PATH / 'other' / 'tr1091x.bdf'
         op2_filename = MODEL_PATH / 'other' / 'tr1091x.op2'
 
-        ##  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename,
-            #run_skin_solids=False, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename,
+        #     run_skin_solids=False, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
 
-        #unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         model = BDF(debug=True, log=log, mode='msc')
         model._add_disabled_cards()
         model.read_bdf(bdf_filename=bdf_filename, validate=True, xref=False,
@@ -2533,15 +2536,15 @@ class TestOP2Main(Tester):
         bdf_filename = MODEL_PATH / 'other' / 'ac10804.bdf'
         op2_filename = MODEL_PATH / 'other' / 'ac10804.op2'
 
-        ##  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename,
-            #run_skin_solids=False, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename,
+        #     run_skin_solids=False, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
 
-        #unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        # unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         model = BDF(debug=True, log=log, mode='msc')
         model._add_disabled_cards()
         model.read_bdf(bdf_filename=bdf_filename, validate=True, xref=False,
@@ -2627,17 +2630,17 @@ class TestOP2Main(Tester):
         bdf_filename = MODEL_PATH / 'other' / 'htrussx.bdf'
         op2_filename = MODEL_PATH / 'other' / 'htrussx.op2'
 
-        #  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
+        # can't parse replication
+        # unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+        #     '', bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
 
         unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
-        #model.safe_cross_reference()
+        # model.safe_cross_reference()
 
-        #save_load_deck(model, run_save_load=False)
+        # save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
@@ -3040,22 +3043,22 @@ class TestOP2Main(Tester):
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
-        #fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
+        # fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, log=log)
+        # diff_cards2 = list(set(diff_cards))
+        # diff_cards2.sort()
+        # assert len(diff_cards2) == 0, diff_cards2
 
-        #for fem in [fem1, fem2]:
-            #assert fem.card_count['CONM2'] == 3, fem.card_count
-            #assert fem.card_count['SPOINT'] == 1, fem.card_count
-            #assert fem.card_count['EPOINT'] == 1, fem.card_count
-            #assert fem.card_count['PARAM'] == 1, fem.card_count
-            #assert fem.card_count['CELAS2'] == 2, fem.card_count
-            #assert fem.card_count['GRID'] == 3, fem.card_count
-            #assert fem.card_count['EIGR'] == 1, fem.card_count
-            #assert fem.card_count['EIGC'] == 1, fem.card_count
-            #assert fem.card_count['MPC'] == 1, fem.card_count
-            #assert fem.card_count['TF'] == 2, fem.card_count
+        # for fem in [fem1, fem2]:
+        #     assert fem.card_count['CONM2'] == 3, fem.card_count
+        #     assert fem.card_count['SPOINT'] == 1, fem.card_count
+        #     assert fem.card_count['EPOINT'] == 1, fem.card_count
+        #     assert fem.card_count['PARAM'] == 1, fem.card_count
+        #     assert fem.card_count['CELAS2'] == 2, fem.card_count
+        #     assert fem.card_count['GRID'] == 3, fem.card_count
+        #     assert fem.card_count['EIGR'] == 1, fem.card_count
+        #     assert fem.card_count['EIGC'] == 1, fem.card_count
+        #     assert fem.card_count['MPC'] == 1, fem.card_count
+        #     assert fem.card_count['TF'] == 2, fem.card_count
 
     def test_monpnt3(self):
         """creates the MONPNT3 table"""
@@ -3779,18 +3782,18 @@ class TestOP2Main(Tester):
             # no index 0; fortran 1-based
             acc.extract_xyplot(nids, 0, 'real')
 
-        #if IS_PANDAS:
-            #acc.build_dataframe()
+        # if IS_PANDAS:
+        #     acc.build_dataframe()
         unused_accx = acc.extract_xyplot(nids, 1, 'real')
         unused_accxi = acc.extract_xyplot(nids, 1, 'imag')
-        #print(accx)
-        #print(accxi)
-        #make_geom = False
-        #write_bdf = False
-        #write_f06 = True
-        #run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
-                #write_f06=write_f06,
-                #debug=debug, stopOnFailure=True)
+        # print(accx)
+        # print(accxi)
+        # make_geom = False
+        # write_bdf = False
+        # write_f06 = True
+        # run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
+        #         write_f06=write_f06,
+        #         debug=debug, stopOnFailure=True)
 
     def test_op2_good_sine_02(self):
         """tests freq_sine/good_sine.op2"""
@@ -4213,34 +4216,34 @@ class TestOP2Main(Tester):
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
-    #def test_bdf_op2_random_small_plate(self):
-        #"""checks small_plate.op2, which tests PSD tables"""
-        #log = get_logger(level='info')
-        ##bdf_filename = os.path.join(MODEL_PATH, 'small_plate', 'small_plate.dat')
-        #op2_filename = os.path.join(MODEL_PATH, 'small_plate', 'small_plate.op2')
-
-        ##  can't parse replication
-        ##unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            ##'', bdf_filename, log=log)
-        ##diff_cards2 = list(set(diff_cards))
-        ##diff_cards2.sort()
-        ##assert len(diff_cards2) == 0, diff_cards2
-
-        ##model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
-        ##model.safe_cross_reference()
-
-        #save_load_deck(model, run_save_load=True, run_renumber=False)
-
-        #log = get_logger(level='warning')
-        #run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                #write_f06=True, write_op2=False,
-                #is_mag_phase=False,
-                #is_sort2=False, is_nx=None, delete_f06=True,
-                #subcases=None, exclude_results=None, short_stats=False,
-                #compare=False, debug=False, binary_debug=True,
-                #quiet=True,
-                #stop_on_failure=True, dev=False,
-                #build_pandas=True, log=log)
+    # def test_bdf_op2_random_small_plate(self):
+    #     """checks small_plate.op2, which tests PSD tables"""
+    #     log = get_logger(level='info')
+    #     #bdf_filename = os.path.join(MODEL_PATH, 'small_plate', 'small_plate.dat')
+    #     op2_filename = os.path.join(MODEL_PATH, 'small_plate', 'small_plate.op2')
+    #
+    #     can't parse replication
+    #     unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+    #         '', bdf_filename, log=log)
+    #     diff_cards2 = list(set(diff_cards))
+    #     diff_cards2.sort()
+    #     assert len(diff_cards2) == 0, diff_cards2
+    #
+    #     model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+    #     model.safe_cross_reference()
+    #
+    #     save_load_deck(model, run_save_load=True, run_renumber=False)
+    #
+    #     log = get_logger(level='warning')
+    #     run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+    #             write_f06=True, write_op2=False,
+    #             is_mag_phase=False,
+    #             is_sort2=False, is_nx=None, delete_f06=True,
+    #             subcases=None, exclude_results=None, short_stats=False,
+    #             compare=False, debug=False, binary_debug=True,
+    #             quiet=True,
+    #             stop_on_failure=True, dev=False,
+    #             build_pandas=True, log=log)
 
 
 def _verify_ids(bdf, op2: OP2, isubcase=1):

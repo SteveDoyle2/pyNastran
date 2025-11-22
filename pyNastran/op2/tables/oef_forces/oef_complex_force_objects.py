@@ -25,12 +25,13 @@ ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CDAMP3': 22,
     'CDAMP4': 23,
 
-    'CROD' : 1,
-    'CONROD' : 10,
-    'CTUBE' : 3,
+    'CROD': 1,
+    'CONROD': 10,
+    'CTUBE': 3,
 
     'CSHEAR': 4,
 }
+
 
 class ComplexForceObject(ForceObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
@@ -102,10 +103,10 @@ class ComplexRodForceArray(ComplexForceObject):
         column_names, column_values = self._build_dataframe_transient_header()
         data_frame = self._build_pandas_transient_elements(column_values, column_names,
                                                            headers, self.element, self.data)
-        #data_frame = pd.Panel(self.data, items=column_values,
-                              #major_axis=self.element, minor_axis=headers).to_frame()
-        #data_frame.columns.names = column_names
-        #data_frame.index.names = ['ElementID', 'Item']
+        # data_frame = pd.Panel(self.data, items=column_values,
+        #                       major_axis=self.element, minor_axis=headers).to_frame()
+        # data_frame.columns.names = column_names
+        # data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
     @classmethod
@@ -222,13 +223,13 @@ class ComplexRodForceArray(ComplexForceObject):
         return msg
 
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
-        if self.element_type == 1: # CROD
+        if self.element_type == 1:  # CROD
             msg = ['                             C O M P L E X   F O R C E S   I N   R O D   E L E M E N T S   ( C R O D )\n']
-        elif self.element_type == 10: # CONROD
+        elif self.element_type == 10:  # CONROD
             msg = ['                           C O M P L E X   F O R C E S   I N   R O D   E L E M E N T S   ( C O N R O D )\n']
-        elif self.element_type == 3: # CTUBE
+        elif self.element_type == 3:  # CTUBE
             msg = ['                            C O M P L E X   F O R C E S   I N   R O D   E L E M E N T S   ( C T U B E )\n']
-            #pass
+            # pass
         else:
             raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
 
@@ -246,13 +247,11 @@ class ComplexRodForceArray(ComplexForceObject):
             #'                      14                  0.0          /  0.0                           0.0          /  0.0'
         else:
             raise NotImplementedError('sort2')
-
-
         return self.element_name, msg
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element)  #[0]
+        itot = searchsorted(eids, self.element)  # [0]
         return itot
 
     def eid_to_element_node_index(self, eids):
@@ -272,11 +271,11 @@ class ComplexRodForceArray(ComplexForceObject):
         ntimes = self.data.shape[0]
 
         eids = self.element
-        #is_odd = False
-        #nwrite = len(eids)
-        #if len(eids) % 2 == 1:
-            #nwrite -= 1
-            #is_odd = True
+        # is_odd = False
+        # nwrite = len(eids)
+        # if len(eids) % 2 == 1:
+        #     nwrite -= 1
+        #     is_odd = True
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
         for itime in range(ntimes):
@@ -380,10 +379,10 @@ class ComplexCShearForceArray(BaseElement):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        #if is_sort1:
-            #pass
-        #else:
-            #raise NotImplementedError('SORT2')
+        # if is_sort1:
+        #     pass
+        # else:
+        #     raise NotImplementedError('SORT2')
 
     @property
     def is_real(self) -> bool:
@@ -2611,37 +2610,17 @@ class ComplexCBeamForceArray(ComplexForceObject):
         import pandas as pd
         headers = self.get_headers()[1:]
         column_names, column_values = self._build_dataframe_transient_header()
+        location = self.data[0, :, 0].real
         element_location = [
             self.element_node[:, 0],
-            self.data[0, :, 0].real,
+            location,
         ]
         # wrong type for ElementID
-        #data_frame = self._build_pandas_transient_element_node(
-            #column_values, column_names,
-            #headers, element_location, self.data[:, :, 1:])
-        #data_frame.index.names = ['ElementID', 'Location', 'Item']
-        #data_frame.index['ElementID', :]# .astype('int32')
-        #print(data_frame)
-
-        headers = self.get_headers()
-        column_names, column_values = self._build_dataframe_transient_header()
-
-        # element_node is (nelements, 3)
-        element = self.element_node[:, 0]
-        return
         data_frame = self._build_pandas_transient_element_node(
             column_values, column_names,
-            headers[1:], element_location, self.data[:, :, :1],
-            names=['ElementID', 'Location'],
-            from_tuples=False,
-            from_array=True,
-        )
-        # data_frame = pd.Panel(
-        #     self.data[:, :, 1:], items=column_values,
-        #     major_axis=element_location, minor_axis=headers).to_frame()
-        # data_frame.columns.names = column_names
-        # data_frame.index.names = ['ElementID', 'Location', 'Item']
-        #print(data_frame)
+            headers, element_location, self.data[:, :, 1:],
+            from_tuples=False, from_array=True)
+        data_frame.index.names = ['ElementID', 'Location', 'Item']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover

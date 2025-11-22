@@ -610,7 +610,7 @@ class ScalarObject(BaseScalarObject):
         #     self.dt = dt
         #     self.add_new_transient()
 
-    def _build_dataframe_transient_header(self):
+    def _build_dataframe_transient_header(self) -> tuple[list[str], list[np.ndarray]]:
         """builds the header for the Pandas DataFrame/table"""
         assert isinstance(self.name, (str, bytes)), 'name=%s type=%s' % (self.name, type(self.name))
         # print('self.name = %r' % self.name)
@@ -1009,6 +1009,7 @@ class BaseElement(ScalarObject):
             ntotal = ntimes * nelements * nheaders
             print(f'data.shape={data.shape}; ntimes={ntimes} nelements={nelements} nheaders={nheaders}; ntotal={ntotal}')
             raise
+        assert ntimes == len(column_values[0]), (ntimes, column_values[0])
 
         if names is None:
             names = ['ElementID', 'NodeID', 'Item']
