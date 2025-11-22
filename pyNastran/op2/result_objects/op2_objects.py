@@ -1021,15 +1021,35 @@ class BaseElement(ScalarObject):
             for eid, nid in element_node:
                 for header in headers:
                     eid_nid_item.append([eid, nid, header])
+            # print('neid_item =', len(eid_nid_item))
             index = pd.MultiIndex.from_tuples(eid_nid_item, names=names)
         elif from_array:
             nvars = len(element_node)
             assert len(names) == nvars + 1, f'names={names} element_node={element_node} (n={len(element_node)})'
             eid_nid_item = []
+            neid = len(element_node[0])
             for eid in element_node:
                 eidi = np.vstack([eid]*nheaders)
                 eid_nid_item.append(eidi.ravel())
-            eid_nid_item.append(headers * nelements)
+            if 1:
+                all_headers = headers * nelements
+                print(all_headers)
+            if 0:
+                all_headers = headers * neid
+                print(all_headers)
+            if 0:
+                ndata = len(element_node[0])
+                neid = len(np.unique(element_node[0]))
+            if 0:
+                names_list = []
+                for header in headers:
+                    namei = np.full(nelements, header)
+                    names_list.append(namei)
+                all_headers = np.hstack(names_list)
+                print(all_headers)
+            eid_nid_item.append(all_headers)
+            # print('nheaders = ', len(all_headers))
+
             index = pd.MultiIndex.from_arrays(eid_nid_item, names=names)
         else:  # pragma: no cover
             raise RuntimeError('from_tuple, from_array')

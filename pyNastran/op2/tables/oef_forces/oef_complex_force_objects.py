@@ -1347,8 +1347,9 @@ class ComplexPlateForceArray(ComplexForceObject):
         #          ty         0j       0j       0j       0j   (-61.92162-116.44288j)       0j       0j
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        data_frame = self._build_pandas_transient_elements(column_values, column_names,
-                                                           headers, self.element, self.data)
+        data_frame = self._build_pandas_transient_elements(
+            column_values, column_names,
+            headers, self.element, self.data)
         #data_frame = pd.Panel(self.data, items=column_values,
                                    #major_axis=self.element, minor_axis=headers).to_frame()
         #data_frame.columns.names = column_names
@@ -2622,10 +2623,24 @@ class ComplexCBeamForceArray(ComplexForceObject):
         #data_frame.index['ElementID', :]# .astype('int32')
         #print(data_frame)
 
-        data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
-                              major_axis=element_location, minor_axis=headers).to_frame()
-        data_frame.columns.names = column_names
-        data_frame.index.names = ['ElementID', 'Location', 'Item']
+        headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
+
+        # element_node is (nelements, 3)
+        element = self.element_node[:, 0]
+        return
+        data_frame = self._build_pandas_transient_element_node(
+            column_values, column_names,
+            headers[1:], element_location, self.data[:, :, :1],
+            names=['ElementID', 'Location'],
+            from_tuples=False,
+            from_array=True,
+        )
+        # data_frame = pd.Panel(
+        #     self.data[:, :, 1:], items=column_values,
+        #     major_axis=element_location, minor_axis=headers).to_frame()
+        # data_frame.columns.names = column_names
+        # data_frame.index.names = ['ElementID', 'Location', 'Item']
         #print(data_frame)
         self.data_frame = data_frame
 
