@@ -16,7 +16,7 @@ from pyNastran import DEV
 from pyNastran.gui.qt_version import qt_version
 from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
 from qtpy import QtCore
-from qtpy.QtWidgets import QMessageBox, QApplication
+from qtpy.QtWidgets import QApplication
 
 #from qtpy.QtCore import QEvent
 

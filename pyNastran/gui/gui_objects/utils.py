@@ -1,11 +1,18 @@
-def get_setting(settings, setting_keys, setting_names, default, auto_type=None):
+import numpy as np
+from typing import Optional, Callable
+
+
+def get_setting(settings, setting_keys: list[str],
+                setting_names: list[str],
+                default: int | float | str | np.ndarray,
+                auto_type: Optional[Callable]=None):
     """
     helper method for ``reapply_settings``
 
     does this, but for a variable number of input names, but one output name:
         screen_shape = settings.value("screen_shape", screen_shape_default)
 
-    If the registry key is not defined, the default is used.
+    If the key is not defined, the default is used.
     """
     unused_set_name = setting_names[0]
     pull_name = None
@@ -20,7 +27,7 @@ def get_setting(settings, setting_keys, setting_names, default, auto_type=None):
         try:
             value = settings.value(pull_name, default)
         except (TypeError, ValueError, RuntimeError):
-            #print('couldnt load %s; using default' % pull_name)
+            # print('couldnt load %s; using default' % pull_name)
             value = default
 
     if value is None and default is not None:
@@ -37,7 +44,9 @@ def autotype_value(value, auto_type):
     if auto_type is None:
         return value
 
-    if isinstance(value, list):
+    if isinstance(value, np.ndarray):
+        value = np.array([auto_type(valuei) for valuei in value])
+    elif isinstance(value, list):
         value = [auto_type(valuei) for valuei in value]
     elif isinstance(value, tuple):
         value = [auto_type(valuei) for valuei in value]

@@ -4,6 +4,7 @@ import os
 import json
 
 #from pyNastran.gui.qt_version import qt_int, qt_version
+import numpy as np
 from qtpy import QtCore
 from pyNastran.utils.numpy_utils import integer_types, float_types
 
@@ -17,6 +18,7 @@ class QSettingsLike2:
         'nastran_caero_color', 'nastran_rbe_line_color',
         'nastran_plotel_color',
         'cart3d_fluent_include', 'cart3d_fluent_remove',
+        'xyz_ref',
         'units_model_in',
     }
     def __init__(self):
@@ -93,13 +95,31 @@ class QSettingsLike2:
                 value2 = bytes(value.toBase64())
                 data[key] = value2.decode('ascii')
             elif key in self._tuples:
+                value = totuple(key, value)
                 assert isinstance(value, tuple), (key, value)
                 data[key] = value
             else:  # pragma: no cover
+                print(f'error...{key!r}={value} type={str(type(value))}')
                 raise NotImplementedError(f'key={key!r} value={value!r}')
 
         with open(self._filename, 'w') as json_file:
             json.dump(data, json_file, indent=True)
-        #x = 1
+
+
+def totuple(key: str, value) -> tuple:
+    """json requires lists and arrays be tuples"""
+    if isinstance(value, tuple):
+        return value
+
+    if isinstance(value, np.ndarray):
+        value = tuple(value.tolist())
+    elif isinstance(value, list):
+        value = tuple(value)
+    else:  # pragma: no cover
+        print(f'error...{key!r}={value} type={str(type(value))}')
+        raise NotImplementedError(f'key={key!r} value={value!r}')
+    return value
+
+#x = 1
 #QSettingsLike = QtCore.QSettings
 QSettingsLike = QSettingsLike2

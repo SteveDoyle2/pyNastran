@@ -162,11 +162,11 @@ class PreferencesWindow(PyDialog):
             data['highlight_color'])
 
         self.caero_color_float, self.caero_color_int = check_color(
-            data['caero_color'])
+            data['nastran_caero_color'])
         self.rbe_line_color_float, self.rbe_line_color_int = check_color(
-            data['rbe_line_color'])
+            data['nastran_rbe_line_color'])
         self.plotel_color_float, self.plotel_color_int = check_color(
-            data['plotel_color'])
+            data['nastran_plotel_color'])
 
         #self._shear_moment_torque_opacity = data['shear_moment_torque_opacity']
         #self._shear_moment_torque_point_size = data['shear_moment_torque_point_size']
@@ -1637,9 +1637,9 @@ def main():  # pragma: no cover
         'annotation_size': 11,
         'picker_size': 10.,
 
-        'caero_color': (0.2, 0.7, 0.4),
-        'rbe_line_color': (0.5, 0.6, 0.7),
-        'plotel_color': (0.5, 0.6, 0.7),
+        'nastran_caero_color': (0.2, 0.7, 0.4),
+        'nastran_rbe_line_color': (0.5, 0.6, 0.7),
+        'nastran_plotel_color': (0.5, 0.6, 0.7),
         'nastran_version': 'MSC',
 
         'min_clip': 0.,
