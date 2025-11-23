@@ -14,14 +14,11 @@ import os
 from typing import Callable, TYPE_CHECKING
 
 import numpy as np
-
-#import PyQt5
-#import PySide2
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox,
-    QFrame, QWidget)
+    QFrame)
 
 from qtpy.QtGui import QColor  # QHeaderView
 
@@ -41,10 +38,16 @@ from pyNastran.gui.utils.wildcards import wildcard_csv
 from pyNastran.gui.menus.cutting_plane.cutting_plane import get_zaxis
 from pyNastran.gui.menus.preferences.preferences import (
     create_shear_moment_torque_edits)
+from pyNastran.gui.menus.cutting_plane.shear_moment_torque import (
+    # get_pulldown_text,
+    set_object_fonts,
+    fill_grid_layout_by_list,
+    on_zaxis_method, on_axis_method, on_validate_plane,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings
-    from .shear_moment_torque_object import ShearMomentTorqueObject
+    from .moment_of_inertia_object import MomentOfInertiaObject
     from pyNastran.gui.typing import ColorInt, ColorFloat
     from pyNastran.gui.main_window import MainWindow
 
@@ -57,10 +60,10 @@ MAX_LENGTH = 100_000
 USE_LINE_EDIT = True
 
 
-class ShearMomentTorqueWindow(PyDialog):
+class MomentOfInertiaWindow(PyDialog):
     """
     +-------------------------+
-    | ShearMomentTorqueWindow |
+    | MomentOfInertiaWindow   |
     +-------------------------+
     | Origin      cid  x y z  |
     | P2          cid  x y z  |
@@ -78,15 +81,12 @@ class ShearMomentTorqueWindow(PyDialog):
         PyDialog.__init__(self, data, win_parent)
 
         self._updated_preference = False
-
         self._default_font_size = data['font_size']
 
         #self.dim_max = data['dim_max']
         self.model_name = data['model_name']
-        self.icase = data['icase']
         self.cids = data['cids']
         self.elements_pound = data['elements_pound']
-        self.gpforce = None
         #self.gpforce = data['gpforce']
         #self._origin = data['origin']
         #self._p1 = data['origin']
@@ -108,7 +108,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self._imanual = self.zaxis_methods.index('Manual')
         self._zaxis_method = 0  # Global Z - nope...
 
-        self.setWindowTitle('Shear, Moment, Torque')
+        self.setWindowTitle('Moment of Inertia')
         self.create_widgets()
         self.create_layout()
         self.set_connections()
@@ -151,7 +151,6 @@ class ShearMomentTorqueWindow(PyDialog):
         bold_font = make_font(font_size, is_bold=True)
         objs = [
             self.additional_params_label,
-            self.case_info_label,
             self.plane_label, self.location_label, self.cid_label,
             self.x_label, self.y_label, self.z_label,
             self.plot_info, self.unit_label, self.scale_label,
@@ -167,7 +166,7 @@ class ShearMomentTorqueWindow(PyDialog):
 
         #AutoResizingTextEdit
         desc = AutoResizingTextEdit(
-            'Creates a shear force/bending moment diagram by creating '
+            'Creates a moment of inertia diagram by creating '
             'a series of section cuts.')
         desc.append('')
         desc.append(' 1. Create a vector to march down (from the origin/start '
@@ -179,7 +178,7 @@ class ShearMomentTorqueWindow(PyDialog):
             'The goal is to orient the cutting plane in the direction that '
             'want to expose forces/moments.')
         desc.append('In other words, point the x-axis roughly down the '
-                    'march axis to define what torque is.')
+                    'march axis to define what Ixx is.')
         desc.append('')
         desc.setReadOnly(True)
         desc.viewport().setAutoFillBackground(False)
@@ -191,9 +190,9 @@ class ShearMomentTorqueWindow(PyDialog):
         self.p1_label = QLabel('Origin:')
         self.p3_label = QLabel('End:')
         self.p2_label = QLabel('XZ Plane:')
-        self.p1_label.setToolTip('Defines the starting point for the shear, moment, torque plot')
-        self.p3_label.setToolTip('Defines the end point for the shear, moment, torque plot')
-        self.p2_label.setToolTip('Defines the XZ plane for the shears/moments')
+        self.p1_label.setToolTip('Defines the starting point for the plot')
+        self.p3_label.setToolTip('Defines the end point for the plot')
+        self.p2_label.setToolTip('Defines the XZ plane for the cg and inertias')
 
         self.station_location_label = QLabel('Station Label:')
         self.station_location_pulldown = QComboBox()
@@ -277,8 +276,6 @@ class ShearMomentTorqueWindow(PyDialog):
         self.zaxis_z_edit = QFloatEdit('')
 
         self.additional_params_label = QLabel('Plane Parameters:')
-        self.case_info_label = QLabel('Case Info:')
-
         self.p2_label = QLabel('XZ Plane:')
 
         # Plane Color
@@ -290,8 +287,7 @@ class ShearMomentTorqueWindow(PyDialog):
             self.vector_point_size,
             self.vector_line_width,
             self.plane_color_int,
-            word='shear-moment-torque',
-        )
+            word='moment-of-inertia')
 
         self.point_size_label = QLabel("Point Size:")
         self.point_size_edit = point_size_edit
@@ -308,28 +304,6 @@ class ShearMomentTorqueWindow(PyDialog):
         if 0:
             self.flip_coord_label = QLabel('Flip Coordinate System:')
             self.flip_coord_checkbox = QCheckBox()
-
-        #-----------------------------------------------------------------------
-        self.icase_label = QLabel('iCase:')
-        self.icase_edit = QSpinBox()
-        self.icase_edit.setMinimum(0)
-        self.icase_edit.setMaximum(1000)
-        self.icase_edit.setValue(self.icase)
-        self.icase_edit.setToolTip('Defines the GridPointForces result to be analyzed.\n'
-                                   'Check the log for the case id')
-
-        if IS_TIME:
-            self.time_label = QLabel('Time:')
-            if self.gpforce is None:  # pragma: no cover
-                # for debugging; not real
-                times = ['0.', '0.5', '1.', '1.5', '2.']
-                time = '0.'
-            else:
-                times = [func_str(time) for time in self.gpforce._times]
-                time = times[0]
-            self.times_pulldown = make_combo_box(times, time)
-            self.time_label.setEnabled(False)
-            self.times_pulldown.setEnabled(False)
 
         #name = 'main'
         #win_parent = self
@@ -416,8 +390,7 @@ class ShearMomentTorqueWindow(PyDialog):
         self.remove2_button = QPushButton('Remove')
         #-----------------------------------------------------------------------
         self.plot_info = QLabel('Plot Info:')
-        self.force_label = QLabel('Force:')
-        self.moment_label = QLabel('Moment:')
+        self.mass_label = QLabel('Mass:')
         self.length_label = QLabel('Length:')
         self.unit_label = QLabel('Unit')
         self.scale_label = QLabel('Scale')
@@ -426,19 +399,15 @@ class ShearMomentTorqueWindow(PyDialog):
         self.scale_label.setAlignment(Qt.AlignCenter)
 
         self.length_unit_edit = QLineEdit('')
-        self.force_unit_edit = QLineEdit('')
-        self.moment_unit_edit = QLineEdit('')
+        self.mass_unit_edit = QLineEdit('')
         self.length_scale_edit = QFloatEdit('1.0')
-        self.force_scale_edit = QFloatEdit('1.0')
-        self.moment_scale_edit = QFloatEdit('1.0')
+        self.mass_scale_edit = QFloatEdit('1.0')
 
         self.length_unit_edit.setToolTip('Define the length unit for the output')
-        self.force_unit_edit.setToolTip('Define the force unit for the output')
-        self.moment_unit_edit.setToolTip('Define the moment unit for the output')
+        self.mass_unit_edit.setToolTip('Define the mass unit for the output')
 
         self.length_scale_edit.setToolTip('Scale the output length by this')
-        self.force_scale_edit.setToolTip('Scale the output force by this')
-        self.moment_scale_edit.setToolTip('Scale the output moment by this')
+        self.mass_scale_edit.setToolTip('Scale the output mass by this')
         #-----------------------------------------------------------------------
         # closing
         self.plot_plane_button = QPushButton('Plot Plane')
@@ -448,63 +417,28 @@ class ShearMomentTorqueWindow(PyDialog):
         self.set_bold_font(self._default_font_size)
 
         if IS_DEMO:  # pragma: no cover
-            if 0:  # bwb
-                # start
-                self.p1_x_edit.setText('1389')
-                self.p1_y_edit.setText('1262')
-                self.p1_z_edit.setText('87')
+            # wingbox
+            self.p1_x_edit.setText('128')
+            self.p1_y_edit.setText('0.1')
+            self.p1_z_edit.setText('23')
 
-                # end
-                self.p3_x_edit.setText('911')
-                self.p3_y_edit.setText('0.1')
-                self.p3_z_edit.setText('0.')
+            # end
+            self.p3_x_edit.setText('128')
+            self.p3_y_edit.setText('96')
+            self.p3_z_edit.setText('23')
 
-                # z-axis
-                self.p2_x_edit.setText('0')
-                self.p2_y_edit.setText('-1')
-                self.p2_z_edit.setText('0')
-                self.nplanes_spinner.setValue(50)
+            # xz-plane
+            self.p2_x_edit.setText('0')
+            self.p2_y_edit.setText('1')
+            self.p2_z_edit.setText('0')
 
-            elif 0:  # solid_shell_bar
-                self.p1_x_edit.setText('0')
-                self.p1_y_edit.setText('0')
-                self.p1_z_edit.setText('-2')
+            # z-axis
+            self.zaxis_x_edit.setText('1')
+            self.zaxis_y_edit.setText('0')
+            self.zaxis_z_edit.setText('0')
 
-                self.p3_x_edit.setText('0')
-                self.p3_y_edit.setText('0')
-                self.p3_z_edit.setText('3')
-
-                self.p2_x_edit.setText('0')
-                self.p2_y_edit.setText('0')
-                self.p2_z_edit.setText('1')
-
-                self.zaxis_x_edit.setText('1')
-                self.zaxis_y_edit.setText('0')
-                self.zaxis_z_edit.setText('0')
-
-                self.nplanes_spinner.setValue(5)
-            elif 1:  # wingbox
-                self.p1_x_edit.setText('128')
-                self.p1_y_edit.setText('0.1')
-                self.p1_z_edit.setText('23')
-
-                # end
-                self.p3_x_edit.setText('128')
-                self.p3_y_edit.setText('96')
-                self.p3_z_edit.setText('23')
-
-                # xz-plane
-                self.p2_x_edit.setText('0')
-                self.p2_y_edit.setText('1')
-                self.p2_z_edit.setText('0')
-
-                # z-axis
-                self.zaxis_x_edit.setText('1')
-                self.zaxis_y_edit.setText('0')
-                self.zaxis_z_edit.setText('0')
-
-                self.nplanes_spinner.setValue(20)
-                self.element_edit.setText('1633:1856')
+            self.nplanes_spinner.setValue(20)
+            self.element_edit.setText('1633:1856')
 
     @property
     def gui(self) -> MainWindow:
@@ -617,29 +551,18 @@ class ShearMomentTorqueWindow(PyDialog):
              self.zaxis_x_edit, self.zaxis_y_edit, self.zaxis_z_edit],
             [self.p2_label, self.p2_cid_pulldown,
              self.p2_x_edit, self.p2_y_edit, self.p2_z_edit],
-            [self.case_info_label],
-            [self.icase_label, self.icase_edit],
-        ]
-        irow = fill_grid_layout_by_list(grid, data_list, irow=0)
-
-        if IS_TIME:
-            data_list2 = [self.time_label, self.times_pulldown]
-            irow = fill_grid_layout_by_list(grid, data_list2, irow=irow)
-
-        data_list3 = [
-            [self.nplanes_label, self.nplanes_spinner],
             [self.additional_params_label],
+            [self.nplanes_label, self.nplanes_spinner],
             [self.plane_color_label, self.plane_color_edit],
             [self.plane_opacity_label, self.plane_opacity_edit],
             [self.point_size_label, self.point_size_edit],
             [self.line_width_label, self.line_width_edit],
             [self.plot_info, self.unit_label, self.scale_label],
             [self.length_label, self.length_unit_edit, self.length_scale_edit],
-            [self.force_label, self.moment_unit_edit, self.force_scale_edit],
-            [self.moment_label, self.force_unit_edit, self.moment_scale_edit],
+            [self.mass_label, self.mass_unit_edit, self.mass_scale_edit],
             [self.station_location_label, self.station_location_pulldown],
         ]
-        irow = fill_grid_layout_by_list(grid, data_list3, irow=irow)
+        irow = fill_grid_layout_by_list(grid, data_list, irow=0)
         return grid
 
     def set_connections(self) -> None:
@@ -666,11 +589,6 @@ class ShearMomentTorqueWindow(PyDialog):
 
     def on_zaxis_method(self, method_int=None) -> None:
         on_zaxis_method(self, method_int)
-
-    def _update_plane_settings(self) -> None:
-        obj: ShearMomentTorqueObject = self.win_parent.shear_moment_torque_obj
-        obj.set_plane_properties()
-        return
 
     def on_plane_opacity(self) -> None:
         """ Sets the plane opacity"""
@@ -763,36 +681,34 @@ class ShearMomentTorqueWindow(PyDialog):
     #---------------------------------------------------------------------------
 
     def on_validate(self) -> bool:
-        is_valid, out_data = on_validate_plane()
-        length_scale, length_flag = check_float(self.length_scale_edit)
-        force_scale, force_flag = check_float(self.force_scale_edit)
-        moment_scale, moment_flag = check_float(self.moment_scale_edit)
+        is_passed, out_data = on_validate_plane()
 
-        flags = [is_valid, length_flag, force_flag, moment_flag]
+        length_scale, length_flag = check_float(self.length_scale_edit)
+        mass_scale, mass_flag = check_float(self.mass_scale_edit)
+
+        flags = [is_passed, length_flag, mass_flag]
 
         length_unit = self.length_unit_edit.text()
-        force_unit = self.force_unit_edit.text()
-        moment_unit = self.moment_unit_edit.text()
+        mass_unit = self.mass_unit_edit.text()
 
         if all(flags):
             self.out_data.update(out_data)
             self.out_data['length'] = [length_scale, length_unit]
-            self.out_data['force'] = [force_scale, force_unit]
-            self.out_data['moment'] = [moment_scale, moment_unit]
+            self.out_data['mass'] = [mass_scale, mass_unit]
             self.out_data['clicked_ok'] = True
             return True
         return False
 
     def on_clear_plane(self) -> None:
         if self.win_parent is not None:
-            obj: ShearMomentTorqueObject = self.win_parent.shear_moment_torque_obj
+            obj: MomentOfInertiaObject = self.win_parent.shear_moment_torque_obj
             obj.on_clear_plane_actors()
         return
 
     def on_plot_plane(self) -> bool:
         passed = self.on_validate()
         if passed and self.win_parent is not None:
-            obj: ShearMomentTorqueObject = self.win_parent.shear_moment_torque_obj
+            obj: MomentOfInertiaObject = self.win_parent.shear_moment_torque_obj
             obj.make_plane_from_data(self.out_data)
             #self.win_parent.make_smt_from_data(self.out_data)
         return passed
@@ -800,7 +716,7 @@ class ShearMomentTorqueWindow(PyDialog):
     def on_apply(self) -> bool:
         passed = self.on_validate()
         if passed and self.win_parent is not None:
-            obj: ShearMomentTorqueObject = self.win_parent.shear_moment_torque_obj
+            obj: MomentOfInertiaObject = self.win_parent.shear_moment_torque_obj
             obj.make_smt_from_data(self.out_data, show=True)
             #self.win_parent.make_smt_from_data(self.out_data)
         return passed
@@ -808,219 +724,6 @@ class ShearMomentTorqueWindow(PyDialog):
     def on_cancel(self) -> None:
         self.out_data['close'] = True
         self.close()
-
-
-def on_validate_plane(self) -> bool:
-    station_location = self.station_location_pulldown.currentText()
-    method = self.method_pulldown.currentText()
-    assert method in self.methods, f'method={method!r}'
-
-    p1_cidi = self.p1_cid_pulldown.currentText()
-    p2_cidi = self.p2_cid_pulldown.currentText()
-    p3_cidi = self.p3_cid_pulldown.currentText()
-    zaxis_cidi = self.zaxis_cid_pulldown.currentText()
-    p1_cid = int(p1_cidi) if CID_GLOBAL_STR not in p1_cidi else 0
-    p2_cid = int(p2_cidi) if CID_GLOBAL_STR not in p2_cidi else 0
-    p3_cid = int(p3_cidi) if CID_GLOBAL_STR not in p3_cidi else 0
-    zaxis_cid = int(zaxis_cidi) if CID_GLOBAL_STR not in zaxis_cidi else 0
-    # print('p1_cidi=%r p2_cidi=%r p3_cidi=%r' % (p1_cidi, p2_cidi, zaxis_cidi))
-    # print('p2_cid=%r p2_cid=%r p3_cidi=%r' % (p2_cid, p2_cid, zaxis_cid))
-
-    p1_x, flag1 = check_float(self.p1_x_edit)
-    p1_y, flag2 = check_float(self.p1_y_edit)
-    p1_z, flag3 = check_float(self.p1_z_edit)
-    p1_flag = all([flag1, flag2, flag3])
-    p1 = [p1_x, p1_y, p1_z]
-
-    p3_x, flag7 = check_float(self.p3_x_edit)
-    p3_y, flag8 = check_float(self.p3_y_edit)
-    p3_z, flag9 = check_float(self.p3_z_edit)
-    p3_flag = all([flag7, flag8, flag9])
-    p3 = [p3_x, p3_y, p3_z]
-
-    if method == 'Coord ID':
-        p2_flag = True
-        p2 = [0., 0., 0.]
-
-        zaxis_cid = -1
-        zaxis = np.full(3, np.nan)
-        zaxis_flag = True
-    else:
-        p2_x, flag4 = check_float(self.p2_x_edit)
-        p2_y, flag5 = check_float(self.p2_y_edit)
-        p2_z, flag6 = check_float(self.p2_z_edit)
-        p2 = [p2_x, p2_y, p2_z]
-        p2_flag = all([flag4, flag5, flag6])
-
-        flag10, flag11, flag12, zaxis_cid, zaxis = get_zaxis(
-            self.win_parent,  # for camera
-            self.zaxis_method_pulldown,
-            self.zaxis_x_edit, self.zaxis_y_edit, self.zaxis_z_edit)
-        zaxis_flag = all([flag10, flag11, flag12])
-
-    nplanes = self.nplanes_spinner.value()
-
-    csv_filename = None
-    csv_flag = True
-    if self.export_checkbox.isChecked():
-        csv_filename, csv_flag = check_save_path(self.csv_edit)
-
-    element_ids = None
-    eids_flag = True
-    if self.element_node_checkbox.isChecked():
-        element_ids, eids_flag = check_patran_syntax(
-            self.element_edit, self.elements_pound)
-    else:
-        self.element_node_checkbox.setStyleSheet(QLINEEDIT_GOOD)
-
-    flags = [
-        p1_flag, p2_flag, p3_flag,
-        zaxis_flag,
-        csv_flag,
-        eids_flag,]
-
-    is_passed = all(flags)
-    out_data = {}
-    if all(flags):
-        # Z-Axis Method
-        # p1: origin
-        # p2: xz_plane
-        # p3: end
-        out_data = {
-            'method': method,
-            'station_location': station_location,
-            'p1': [p1_cid, p1],  # origin
-            'p2': [p2_cid, p2],  # xzplane
-            'p3': [p3_cid, p3],  # end
-            'zaxis': [zaxis_cid, zaxis],
-            'nplanes': nplanes,
-            'csv_filename': csv_filename,
-            'element_ids': element_ids,
-        }
-    return is_passed, out_data
-
-def on_axis_method(self, method_int=None):
-    method = get_pulldown_text(method_int, self.methods, self.method_pulldown)
-
-    is_p2_cid_enabled = True
-    is_zaxis_cid_enabled = True
-    zaxis_method_visible = False
-    show_zaxis_xyz = True
-    show_p2_xyz = True
-    if method == 'CORD2R':
-        self._zaxis_method = self.zaxis_method_pulldown.currentIndex()
-        # set to manual
-        #self.on_zaxis_method(method_int=2)  # manual
-
-        self.plane_label.setText('Points on Plane:')
-        self.zaxis_label.setText('Origin + Z Axis:')
-        self.p2_label.setText('Origin + XZ Plane:')
-
-        #self.zaxis_method_label.setText('Origin + Z-Axis')
-        self.zaxis_method_pulldown.setCurrentIndex(self._imanual)
-        self.on_zaxis_method()  # update
-
-    elif method == 'Vector':
-        is_p2_cid_enabled = False
-        is_zaxis_cid_enabled = False
-        self.plane_label.setText('Vectors:')
-        self.zaxis_label.setText('Z Axis:')
-        self.p2_label.setText('XZ Plane Axis:')
-        #self.zaxis_method_label.setText('Z-Axis')
-        self.zaxis_method_pulldown.setCurrentIndex(self._imanual)
-        self.on_zaxis_method()  # update
-
-    elif method == 'Coord ID':
-        is_p2_cid_enabled = True
-        is_zaxis_cid_enabled = False
-        self.zaxis_method_pulldown.setVisible(False)
-        self.zaxis_method_label.setVisible(False)
-
-        self.zaxis_method_pulldown.setVisible(False)
-
-        zaxis_method_visible = False
-        show_zaxis_xyz = False
-        self.zaxis_method_label.setVisible(False)
-
-        show_p2_xyz = False
-        self.p2_label.setText('Output Coord:')
-
-    elif method == 'Z-Axis Projection':
-        #is_p2_cid_enabled = False
-        is_zaxis_cid_enabled = False
-        zaxis_method_visible = True
-        self.plane_label.setText('Point on Plane/Vector:')
-        self.zaxis_label.setText('Z Axis:')
-        self.p2_label.setText('Origin + XZ Plane:')
-
-        #self.zaxis_method_label.setText('Z-Axis')
-        self.zaxis_method_pulldown.setCurrentIndex(self._zaxis_method)
-        self.on_zaxis_method()  # update
-    else:  # pragma: no cover
-        raise NotImplementedError(method)
-
-    self.p2_cid_pulldown.setEnabled(is_p2_cid_enabled)
-    self.zaxis_cid_pulldown.setEnabled(is_zaxis_cid_enabled)
-
-    self.zaxis_method_pulldown.setEnabled(zaxis_method_visible)
-    self.zaxis_method_pulldown.setVisible(zaxis_method_visible)
-    self.zaxis_method_label.setEnabled(zaxis_method_visible)
-
-    self.p2_x_edit.setVisible(show_p2_xyz)
-    self.p2_y_edit.setVisible(show_p2_xyz)
-    self.p2_z_edit.setVisible(show_p2_xyz)
-
-    self.zaxis_x_edit.setVisible(show_zaxis_xyz)
-    self.zaxis_y_edit.setVisible(show_zaxis_xyz)
-    self.zaxis_z_edit.setVisible(show_zaxis_xyz)
-
-def on_zaxis_method(self, method_int):
-    method = get_pulldown_text(method_int, self.zaxis_methods,
-                               self.zaxis_method_pulldown)
-
-    if method == 'Global Z':
-        is_visible = False
-    #elif method == 'Camera Normal':
-        #is_visible = False
-    elif method == 'Manual':
-        is_visible = True
-    else:  # pragma: no cover
-        raise NotImplementedError(method)
-
-    self.zaxis_cid_pulldown.setVisible(is_visible)
-    self.zaxis_x_edit.setVisible(is_visible)
-    self.zaxis_y_edit.setVisible(is_visible)
-    self.zaxis_z_edit.setVisible(is_visible)
-
-def fill_grid_layout_by_list(grid: QGridLayout,
-                             datalist: list[QWidget | str],
-                             irow: int=0):
-    """adds the items to the grid"""
-    for objs in datalist:
-        for j, obj in enumerate(objs):
-            if isinstance(obj, str):
-                assert obj == '', obj
-            else:
-                grid.addWidget(obj, irow, j)
-        irow += 1
-    return irow
-
-
-
-def set_object_fonts(font, objs: list[QLabel]):
-    for obj in objs:
-        obj.setFont(font)
-
-def get_pulldown_text(method_int: int,
-                      methods: list[str],
-                      pulldown: QComboBox):
-    if method_int is None:
-        #method = pulldown.getText()
-        method = pulldown.currentText()
-    else:
-        method = methods[method_int]
-    return method
-
 
 def main() -> None:  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
@@ -1037,7 +740,6 @@ def main() -> None:  # pragma: no cover
     #gpforce = None
     data = {
         'font_size': 8,
-        'icase': 42,
         #'cids' : [0, 1, 2, 3],
         'cids': [0],
         'elements_pound': 5000,
@@ -1045,12 +747,10 @@ def main() -> None:  # pragma: no cover
         'plane_opacity': 0.9,
         'vector_line_width': 0.9,
         'vector_point_size': 0.9,
-        #'gpforce': gpforce,
-        #'itime': 0,
         'word': 'Static',
         'model_name': 'main',
     }
-    main_window = ShearMomentTorqueWindow(data)
+    main_window = MomentOfInertiaWindow(data)
     main_window.show()
     # Enter the main loop
     app.exec_()

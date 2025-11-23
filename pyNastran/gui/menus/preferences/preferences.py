@@ -272,7 +272,9 @@ class PreferencesWindow(PyDialog):
                 self._shear_moment_torque_opacity,
                 self._shear_moment_torque_point_size,
                 self._shear_moment_torque_line_thickness,
-                self._shear_moment_torque_color_int)
+                self._shear_moment_torque_color_int,
+                word='shear-moment-torque',
+            )
             self.shear_moment_torque_opacity_edit = opacity_edit
             self.shear_moment_torque_point_size_edit = point_size_edit
             self.shear_moment_torque_line_width_edit = line_width_edit
@@ -1501,15 +1503,15 @@ class PreferencesWindow(PyDialog):
 def create_shear_moment_torque_edits(
     parent,
     opacity: float, point_size, line_width,
-    color: ColorInt) -> tuple[QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox, QPushButtonColor]:
+    color: ColorInt, word: str='') -> tuple[QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox, QPushButtonColor]:
     opacity_edit = create_opacity_edit(parent, opacity)
-    opacity_edit.setToolTip('Sets the shear-moment-torque opacity (0=invisible, 1=solid)')
+    opacity_edit.setToolTip(f'Sets the {word} opacity (0=invisible, 1=solid)')
 
     point_size_edit = create_point_size_edit(parent, point_size)
-    point_size_edit.setToolTip('Sets the shear-moment-torque node size')
+    point_size_edit.setToolTip(f'Sets the {word} node size')
 
     line_width_edit = create_line_width_edit(parent, line_width)
-    line_width_edit.setToolTip('Sets the shear-moment-torque line width')
+    line_width_edit.setToolTip(f'Sets the {word} line width')
 
     color_edit = QPushButtonColor(color)
     color_edit.setToolTip('Sets the shear-moment-torque color')

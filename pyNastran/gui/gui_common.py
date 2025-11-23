@@ -326,11 +326,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             }
 
         is_visible = True
+        #                   flag,label,picture,shortcut,tooltip             func
+        file_tools: list[tuple[str, str, str, str, Callable]] = []
         if tools is None:
             recent_file_tools: list[Tool] = self.get_recent_file_tools(self.settings.recent_files)
 
-            # flag,  label,   picture,     shortcut, tooltip             func
-            file_tools: list[tuple[str, str, str, str, Callable]] = [
+            file_tools += [
                 # flag,  label,   picture,     tooltip             func
                 ('exit', '&Exit', 'texit.png', 'Exit application', self.closeEvent, is_visible),
 
@@ -419,7 +420,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('front_view',  'Front View',  'front.png',  'Flips to -X Axis', lambda: self.view_actions.update_camera('-x'), is_visible),
                 ('left_view',   'Left View',   'left.png',   'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y'), is_visible),
                 ('bottom_view', 'Bottom View', 'bottom.png', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z'), is_visible),
-
 
                 ('edges',       'Show/Hide Edges',   'tedges.png',       'Show/Hide Model Edges', self.on_flip_edge_visibility, is_visible),
                 ('edges_black', 'Color Edges Black', 'tedges_color.png', 'Set Edge Color to Color/Black', self.on_flip_edge_color, is_visible),
@@ -671,7 +671,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.actions['show_warning'].setChecked(settings.show_warning)
         self.actions['show_error'].setChecked(settings.show_error)
 
-
     def _populate_menu(self, menu_items: dict[str, tuple[Any, Any]],
                        actions=None) -> None:
         """populate menus and toolbar"""
@@ -709,7 +708,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                     menu.addAction(action)
         #self._create_plane_from_points(None)
 
-    def _update_menu(self, menu_items):
+    def _update_menu(self, menu_items: dict[str, tuple[QMenu, Any]]):
         assert isinstance(menu_items, dict), menu_items
         for unused_name, (menu, unused_items) in menu_items.items():
             menu.clear()
@@ -830,10 +829,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             # the function
             with contextlib.suppress(RuntimeError):
                 action.triggered.disconnect()
-            #if not is_visible:
-                # i don't think removing the shortcut is neccessary
-                # since we disconnect the function
-                #action.setShortcut(QKeySequence())  # remove shortcut
+            # if not is_visible:
+            #     i don't think removing the shortcut is neccessary
+            #     since we disconnect the function
+            #     action.setShortcut(QKeySequence())  # remove shortcut
             update_shortcut_tip_func_visible(used_shortcuts, action, name,
                                              shortcut, tooltip, func, is_visible,
                                              text=label)
@@ -1707,18 +1706,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             animates the model; don't make any images/gif
             stop_animation overrides animate_in_gui
             animate_in_gui overrides make_gif
-
-        Pick One
-        --------
         animate_scale : bool; default=True
             does a deflection plot (single subcase)
         animate_phase : bool; default=False
             does a complex deflection plot (single subcase)
         animate_time : bool; default=False
             does a deflection plot (multiple subcases)
-
-        Other
-        -----
         istep : int
             the png file number (let's you pick a subset of images)
             useful for when you press ``Step``
@@ -1726,9 +1719,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             the runtime of the gif (seconds)
         fps : int; default=30
             the frames/second
-
-        Case Selection
-        --------------
         icase_fringe/disp/vector : int; default=None
             None : unused
             int : the result case to plot the deflection for
@@ -1745,16 +1735,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             step size
             None : unused
             int : active if animate_time=True
-
-        Time Plot Options
-        -----------------
         max_value : float; default=None
             the max value on the plot
         min_value : float; default=None
             the min value on the plot
-
-        Options
-        -------
         animation_profile : str; default='0 to scale'
             animation profile to follow
                 '0 to Scale',
@@ -1766,18 +1750,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             0 : loop infinitely
             1 : loop 1 time
             2 : loop 2 times
-
-        Final Control Options
-        ---------------------
         make_images : bool; default=True
             make the images
         delete_images : bool; default=False
             cleanup the png files at the end
         make_gif : bool; default=True
             actually make the gif at the end
-
-        Other local variables
-        ---------------------
         duration : float
            frame time (seconds)
 
@@ -2067,13 +2045,21 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         ----------
         gif_filename : str
             path to the output gif & png folder
-        icases_fringe/disp/vector : int / list[int]
+        icases_fringe : int / list[int]
+            the result case to plot the deflection for
+        icases_disp : int / list[int]
+            the result case to plot the deflection for
+        icases_vector : int / list[int]
             the result case to plot the deflection for
         scales : list[float]
             list[float] : the deflection scale factors; true scale
         phases : list[float]; default=None
             list[float] : the phase angles (degrees)
             None -> animate scale
+        animate_fringe : bool; default=False
+            animate the fringe/colors
+        animate_vector : bool; default=False
+            animate the arrow actor
         max_value : float; default=None
             the max value on the plot
         min_value : float; default=None
@@ -2088,9 +2074,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             We don't need to take extra pictures if they're just copies.
         fps : int; default=30
             the frames/second
-
-        Options
-        -------
         onesided : bool; default=True
             should the animation go up and back down
             True : the video will use images [0...N]
@@ -2099,20 +2082,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             0 : loop infinitely
             1 : loop 1 time
             2 : loop 2 times
-
-        Final Control Options
-        ---------------------
         make_images : bool; default=True
             make the images
         delete_images : bool; default=False
             cleanup the png files at the end
         make_gif : bool; default=True
             actually make the gif at the end
-
-        Other local variables
-        ---------------------
-        duration : float
-           frame time (seconds)
+        magnify : int; default=1
+            magnification factor to increase the resolution
 
         For one sided data
         ------------------
@@ -2131,7 +2108,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         assert fps >= 1, fps
         nframes = ceil(analysis_time * fps)
         assert nframes >= 2, nframes
-        unused_duration = time / nframes
+        unused_duration = time / nframes  # frame time
         nframes = int(nframes)
 
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales = update_animation_inputs(
