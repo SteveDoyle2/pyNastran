@@ -242,8 +242,8 @@ class TestF06Flutter(unittest.TestCase):
         f06_filename = dirname / '0012_flutter.f06'
 
         #log = get_logger(log=None, level=None, encoding='utf-8')
-        log = get_logger(log=None, level=False, encoding='utf-8')
-
+        # log = get_logger(log=None, level=False, encoding='utf-8')
+        log = SimpleLogger(level='warning')
         plot_flutter_f06(
             f06_filename,
             modes=[2],
@@ -716,7 +716,7 @@ class TestZonaFlutter(unittest.TestCase):
         #bdf_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.bdf'
         f06_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.out'
         png_filename = AERO_EXAMPLES / 'flutter' / 'case6' / 'agardztran.png'
-        responses, mass = read_zona_out(f06_filename)
+        responses, mass = read_zona_out(f06_filename, debug=False)
         # plot_sol_200(f06_filename, png_filename=png_filename,
         #              show=True)
         if len(responses) == 1:
@@ -742,8 +742,10 @@ class TestF06Utils(unittest.TestCase):
         """tests optimization"""
         f06_filename = MODEL_PATH / 'other' / 'mdb200.f06'
         png_filename = MODEL_PATH / 'other' / 'mdb200.png'
-        plot_sol_200(f06_filename, png_filename=png_filename,
-                     show=True)
+        log = SimpleLogger(level='warning')
+        plot_sol_200(
+            f06_filename, png_filename=png_filename,
+            log=log, show=True)
 
     def test_f06_trim_bwb(self):
         """tests f06_to_pressure_loads"""

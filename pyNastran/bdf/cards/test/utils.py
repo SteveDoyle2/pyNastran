@@ -1,5 +1,6 @@
 """defines testing utils"""
 import os
+import copy
 from io import StringIO
 from collections import ChainMap
 import inspect
@@ -61,6 +62,7 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
     model.pop_parse_errors()
     model.pop_xref_errors()
     bdf_file = StringIO()
+    # copy.deepcopy(model)
     model.write_bdf(bdf_file, size=8, close=False)
     bdf_file.seek(0)
     model.write_bdf(bdf_file, size=16, close=False)

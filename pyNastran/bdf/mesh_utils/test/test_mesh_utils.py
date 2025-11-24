@@ -132,9 +132,10 @@ class TestMeshUtilsAero(unittest.TestCase):
         """tests ``map_aero_model``"""
         bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         bdf_filename_out = BWB_PATH / 'bwb_saero_mapped.bdf'
-        model_old = read_bdf(bdf_filename)
-        copy.deepcopy(model)
-        model_new = read_bdf(bdf_filename, xref=False)
+        log = SimpleLogger(level='warning')
+        model_old = read_bdf(bdf_filename, log=log)
+        copy.deepcopy(model_old)
+        model_new = read_bdf(bdf_filename, xref=False, log=log)
 
         # make the results garbage
         for set1 in model_new.sets.values():
